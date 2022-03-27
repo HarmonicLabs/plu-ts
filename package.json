@@ -4,11 +4,32 @@
   "description": "library for an easy Cardano protocol interaction",
   "main": "./src/index.ts",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "jest"
   },
+  "publishConfig": {
+    "registry": "https://npm.pkg.github.com"
+  },
+  "keywords": [
+    "cardano", "plutus",
+    "blockchain",
+    "offchain",
+    "ada", "ADA",
+    "dApp"
+  ],
   "author": "Michele Nuzzi",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/HarmonicPool/plu-ts.git"
+  },
+  "bugs": {
+    "url": "https://github.com/HarmonicPool/plu-ts/issues"
+  },
+  "homepage": "https://github.com/HarmonicPool/cardano-wallet-interface#readme",
   "dependencies": {
     "typescript": "^4.6.3"
+  },
+  "devDependencies": {
+    "jest": "^27.5.1"
   }
 }
