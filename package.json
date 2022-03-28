@@ -10,10 +10,12 @@
     "registry": "https://npm.pkg.github.com"
   },
   "keywords": [
-    "cardano", "plutus",
+    "cardano",
+    "plutus",
     "blockchain",
     "offchain",
-    "ada", "ADA",
+    "ada",
+    "ADA",
     "dApp"
   ],
   "author": "Michele Nuzzi",
@@ -27,6 +29,7 @@
   },
   "homepage": "https://github.com/HarmonicPool/cardano-wallet-interface#readme",
   "dependencies": {
+    "buffer": "^6.0.3",
     "typescript": "^4.6.3"
   },
   "devDependencies": {

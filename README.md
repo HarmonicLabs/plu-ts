@@ -25,4 +25,4 @@ this library will allow for an easy intearction with the [Cardano Protocol](http
 - SC interaction
   > Minting Policies and Smart contracts require a differen encodings the the one used up until now, expected 2 weeks, 1 month in the worst scenario
 - Certificates management ( registration and deregistration )
-  > at this point most of the copde should be reusable the time remininig will be used for this step
+  > at this point most of the code should be reusable the time remininig will be used for this step
