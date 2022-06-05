@@ -23,10 +23,10 @@ at the moment of writing few options are aviable for developers to write offchai
     
     Written entirely in [rust](https://www.rust-lang.org/) is probably the library most used at the moment but also the most hated
 
-    many other options often do have this library (or some derivative) as dependency, inheriting all the drawbacks of this one
-
     infact lacks severly of documentation and the [docs page reported by the library](https://docs.cardano.org/cardano-components/cardano-serialization-lib) basically just says "go get a PhD, understand abstract formulas with meaningless names for variables and then come back"
-
+    
+     many other options often do have this library (or some derivative) as dependency, inheriting all the drawbacks of this one
+     
     it comes in various format:
     - node
     - browser/webassebly
@@ -40,6 +40,8 @@ at the moment of writing few options are aviable for developers to write offchai
     { ptr: 11190 } // wtf is this?
     */
     ```
+    and if the lack of documentation and the poor debug functionalities are not enough, for the webassebly version a lot of extra configuration has to be added by hand and is not always clear (again the lack of documentation) how and where should be added
+    
 - [cardano-transaction-lib](https://github.com/Plutonomicon/cardano-transaction-lib)
 
     among other libaries is worth noting the ```cardano-transaction-lib``` which seems to be doing a good job with limited potential to developers engagement, infact
