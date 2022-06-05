@@ -39,6 +39,8 @@ at the moment of writing few options are aviable for developers to write offchai
     { ptr: 11190 } // wtf is this?
     */
     ```
+    and if the lack of documentation and the poor debug functionalities are not enough, for the webassebly version a lot of extra configuration has to be added by hand and is not always clear (again the lack of documentation) how and where should be added
+    
 - [cardano-transaction-lib](https://github.com/Plutonomicon/cardano-transaction-lib)
 
     among other libaries is worth noting the ```cardano-transaction-lib``` which seems to be doing a good job with limited potential to developers engagement, infact
