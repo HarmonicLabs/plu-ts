@@ -54,6 +54,8 @@ at the moment of writing few options are aviable for developers to write offchai
 
 re-implementing everything in Typescript
 
+see [the timeline](./timeline.md) to have a look at the planned features
+
 ### Benefits of this approach
 
 - testable code
