@@ -1,6 +1,6 @@
 # Offchain development timeline
 
-total of 6 months
+estimated 6 to 7 months
 
 > **_NOTE:_** intended in case of proposal approvement, which will allow me to focus entirely on the project
 
