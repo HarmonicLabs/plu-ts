@@ -4,7 +4,21 @@
 
 at the moment of writing few options are aviable for developers to write offchain code, all with important drawbacks:
 
--  [@emurgo/cardano-serialization-lib](https://github.com/Emurgo/cardano-serialization-lib)
+- [plutus-pab](https://github.com/input-output-hk/plutus-apps/tree/main/plutus-pab) part of the [input-output-hk/plutus-apps](https://github.com/input-output-hk/plutus-apps) repository
+
+    the PAB is great and allows to write offchain code in the same (and at the moment only) programming language of the actual on-chain code
+
+    BUT
+
+    the main drawback that here I explain in two words is too big to not be considered
+
+    IS
+    CENTRALIZED
+
+    infact, as the name Plutus Application Backend suggests, this is a "Backend", therefore a **centralized server** building transactions with smartcontracts
+    this means that if for whatever reason, the server, goes down (or worse is hacked) ther is no more Application (an no, it cannot be called dApp)
+
+- [@emurgo/cardano-serialization-lib](https://github.com/Emurgo/cardano-serialization-lib)
     
     Written entirely in [rust](https://www.rust-lang.org/) is probably the library most used at the moment but also the most hated
 
