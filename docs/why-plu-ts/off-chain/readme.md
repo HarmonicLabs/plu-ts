@@ -8,15 +8,16 @@ at the moment of writing few options are aviable for developers to write offchai
 
     the PAB is great and allows to write offchain code in the same (and at the moment only) programming language of the actual on-chain code
 
-    BUT
+    **BUT**
 
     the main drawback that here I explain in two words is too big to not be considered
 
-    IS
-    CENTRALIZED
+    **IS**
+    **CENTRALIZED**
 
-    infact, as the name Plutus Application Backend suggests, this is a "Backend", therefore a **centralized server** building transactions with smartcontracts
-    this means that if for whatever reason, the server, goes down (or worse is hacked) ther is no more Application (an no, it cannot be called dApp)
+    infact, as the name "Plutus Application Backend" suggests, this is a "Backend", therefore a **centralized server** building transactions with smartcontracts
+
+    this means that if for whatever reason, the server, goes down (or worse is hacked) ther is no more Application (and no, it cannot be called dApp)
 
 - [@emurgo/cardano-serialization-lib](https://github.com/Emurgo/cardano-serialization-lib)
     
@@ -49,7 +50,7 @@ at the moment of writing few options are aviable for developers to write offchai
 
 ## the solution
 
-re implementing everything in Typescript
+re-implementing everything in Typescript
 
 ### Benefits of this approach
 
