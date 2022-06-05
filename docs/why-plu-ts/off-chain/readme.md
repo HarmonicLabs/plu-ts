@@ -22,10 +22,10 @@ at the moment of writing few options are aviable for developers to write offchai
     
     Written entirely in [rust](https://www.rust-lang.org/) is probably the library most used at the moment but also the most hated
 
-    many other options often do have this library (or some derivative) as dependency, inheriting all the drawbacks of this one
-
     infact lacks severly of documentation and the [docs page reported by the library](https://docs.cardano.org/cardano-components/cardano-serialization-lib) basically just says "go get a PhD, understand abstract formulas with meaningless names for variables and then come back"
-
+    
+     many other options often do have this library (or some derivative) as dependency, inheriting all the drawbacks of this one
+     
     it comes in various format:
     - node
     - browser/webassebly
