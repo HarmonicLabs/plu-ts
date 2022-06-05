@@ -2,16 +2,19 @@
 
 ## the problem
 
-- Haskell and GHC
+Currently smart contract creation is limited to the ```haskell``` programming language, the language itself is not much of a problem but the way we can use it is
+
+As an example, this limit the great potential of parametrized smart contracts that do need to be created on-the-fly by a Plutus Application Backand
+
 ## the solution
 
 implement the Untyped Plutus Core specification in Typescript
 
 ## How ?
 
-to see how this would be acheived have a look at the [proof-of-concept folder](../../../proof-of-concept)
+The high-level idea is to construct the AST (Abstract Syntax Tree) of an UPLC (Untyped Plutus Core) Program as an object using utility fiunctions, and at the moment of compilation serialize it
 
-However the high-leverl idea is to construct the AST (Abstract Syntax Tree) of an UPLC (Untyped Plutus Core) Program as an object using utility fiunctions, and at the moment of compilation
+to see how this would be acheived have a look at the [proof-of-concept folder](../../../proof-of-concept)
 
 ### Benefits of this approach
 
@@ -22,10 +25,10 @@ alongside everything specified in the [offchain readme](../off-chain/readme.md):
 - worst case scenario: reverse engineering via inspecting the code in a language that is familiar to the developer
 
 there are benefits in contrast to the haskell implementation
-- no template magic stuff ( even if possible thanks to some [meta-programming features of javascript](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Meta_programming) )
+- no necessity of complex meta-programming magic and gives overall more controll ( even if the meta-programming approach is possible thanks to some [meta-programming features of javascript](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Meta_programming) it will not be used )
 - GHC not messing around with names
 
-In particoular, the creation of smart contracts in Typescript would allow for
+In particular, the creation of smart contracts in Typescript would allow for
 - client-side parametrized smart contracts
 - PABs (Plutus Application Backends) running on ```nodejs``` or ```deno```
 
