@@ -4,18 +4,46 @@ total of 6 months
 
 > **_NOTE:_** intended in case of proposal approvement, which will allow me to focus entirely on the project
 
-- ensuring efficient CBOR interoperability 
-  > 1 to 1 month and a half from the start of the project
-  - JSON serializables object implementation
-  - PlutusData implementation
-- sending a simple Transaction, lovelaces only as value 
-  > migth require from 2 up to 3 month from the finish of the previous step
-  - building transaction object
-    - implement transaction serialization to [CIP-0030 standard](https://github.com/cardano-foundation/CIPs/tree/master/CIP-0030#apisigntxtx-cbortransaction-partialsign-bool--false-promisecbortransaction_witness_set) format
-- sending multiasset transaction
-  > depending from the previous step implementation, most of the code should be reusable, 1 month from the previous step in the worst case )
-- Minting policies interacion
-- SC interaction
-  > Minting Policies and Smart contracts require a differen encodings the the one used up until now, expected 2 weeks, 1 month in the worst scenario
-- Certificates management ( registration and deregistration )
-  > at this point most of the code should be reusable the time remininig will be used for this step
+- safe primitives datatypes implemetation to overcome javascript limits ( 1 week )
+  - examples:
+    - ```uint64``` for big integers to overcome 53-bit long javascript numbers
+    - ```uint128``` and ```uint256``` for hashes 
+    - ```Integer``` class to simulate ```haskell``` variable length integers
+    - ```HexString```s
+    - etc.
+
+- Plutus-optimized JSON-CBOR interoperability ( 2-3 weeks )
+  > **_note:_** "Plutus-optimized" stands for efficent support for plutus specifics tag codes
+  - PlutusData implementation ( 1 week )
+  - JSON serializable object implementation ( 1-2 weeks )
+
+- protocol-level datatypes implementation ( 4-6 weeks )
+  - including:
+    - Addresses
+    - Keys (private and public)
+    - UTxOs
+    - Assets and Values
+    - algorithm representations (Linear Fee Cost-model etc.)
+
+- transaction-related datatypes implementation ( 6 weeks - 2 months )
+  - including:
+    - Metadata
+    - Witnesses
+    - Certificates
+    - Transactions
+    - etc.
+
+- ```BlockchainQueryier``` common interface ( 2 weeks )
+  > a class to help executing query againist the Cardano blockchain
+  - general ```BlockchainQueryier``` implementation
+  - default implementations:
+    - ```koiosQueryier```
+    - ```ogmiosQueryier```
+    - ```blockfrostQueryier```
+    - etc.
+
+- Smart Contract interaction ( 4-6 weeks )
+  > **_NOTE:_** we are talking of the offchain code here, you'll need the smart contract bytecode to create instances, 
+  > the bytecode is agnostic to the origin, could come from ```plu-ts/onchain``` or not
+  - ```SmartContract``` class
+  - ```MintingPolicy``` and ```StakeValidator``` classes
