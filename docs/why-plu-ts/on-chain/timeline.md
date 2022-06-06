@@ -3,7 +3,7 @@
 total of 7-8 months (take 8 to be sure)
 
 
-> **_NOTE:_** intended in case of proposal approvement, which will allow me to focus entirely on the project
+> **_NOTE:_** intended in case of proposal approvement, which will allow full focus on the project
 
 - UPLC AST implementation (3 weeks)
   including:
