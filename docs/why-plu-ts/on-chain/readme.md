@@ -14,7 +14,7 @@ implement the Untyped Plutus Core specification in Typescript
 
 The high-level idea is to construct the AST (Abstract Syntax Tree) of an UPLC (Untyped Plutus Core) Program as an object using utility fiunctions, and at the moment of compilation serialize it
 
-to see how this would be acheived have a look at the [proof-of-concept folder](../../../proof-of-concept)
+to see how this would be acheived have a look at the [proof-of-concept folder](../../proof-of-concept/)
 
 ### Benefits of this approach
 
@@ -43,7 +43,7 @@ In particular, the creation of smart contracts in Typescript would allow for
 
     there are 2 potential solutions to this
     - reimplementing ```flat``` from the bottom up
-    - implementing a specialized subset of ```flat``` in order to be avble to work only with what is needed for the AST (Abstract Syntax Tree) of UPLC (Untyped Plutus Core) Programs
+    - implementing a specialized subset of ```flat``` in order to be able to work only with what is needed for the AST (Abstract Syntax Tree) of UPLC (Untyped Plutus Core) Programs
 
-    for more informations follow the [timeline](./timeline.md) migth help to have an idea
+    for more informations the [timeline](./timeline.md) migth help to have an idea
     or follow either [my youtube channel](https://www.youtube.com/channel/UCirs7UT6W4cQFNb8FS4bNjw) or [my twitter](https://twitter.com/MicheleHarmonic) to stay updated

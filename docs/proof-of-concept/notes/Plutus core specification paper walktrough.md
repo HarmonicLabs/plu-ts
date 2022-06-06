@@ -5,9 +5,9 @@ Here you find the [Plutus core specification paper](https://hydra.iohk.io/build/
 ## If you are on hurry
 
 important parts for ```plu-ts``` implementation are:
-[Section 2 - Syntax]
-[Section 7 - Untyped Plutus Core]
-[Appendix D]
+- [Section 2 - Syntax](#section2)
+- [Section 7 - Untyped Plutus Core](#section7)
+- [Appendix D - ```flat``` serialization](#appendixD)
 
 
 ## Section 1 - Abstract
@@ -15,6 +15,8 @@ important parts for ```plu-ts``` implementation are:
 High level explanation of how Plutus core is meant to work
 
 nothing practical but a great introduction give it a read if you are familiar with some computer sience specific terms
+
+<a name="section2"></a>
 
 ## Section 2 - Syntax
 
@@ -91,6 +93,8 @@ which is the "program" runt on the cardano node when executing Smart-Contracts
 
 as already said the goal of  ```plu-ts``` is not to reimplement the whole protocol.
 
+<a name="section5"></a>
+
 ## Section 5 - Built in types, functions, and values
 
 Section 5 is about formalizing builtin functions
@@ -123,4 +127,84 @@ provide some expmles of ```.plc``` programs
 
 may turn useful in test cases
 
+<a name="section7"></a>
+
 ## Section 7 - Untyped Plutus Core
+
+( [page 18 of the plutus core specification](https://hydra.iohk.io/build/5988492/download/1/plutus-core-specification.pdf#Untyped%20Plutus%20Core))
+
+the Untyped version of Plutus Core programs is the one that goes on-chain
+this is done in order to minimize the amount of informations on chain (ence minimize the size of the transaction)
+
+untyped programs are not a problem if derived from typed ones ( think at Typescript transpiled to (untyped) Javascript )
+the library will take care only of UPLC laveraging the Typescript type system
+
+**Figure 15** specifies the grammar used in UPLC programs
+
+in particoular specifies the ```Term``` datatype definition
+
+in the paper a ```Term``` value is indicated either by _```L```_,_```M```_ or _```N```_
+
+with that we know that a ```Term``` can be
+
+- a _free_ variable
+- a constant value
+- a lambda abstraction with a _bounded_ variable and a ```Term``
+- a lazy evaluated ```Term```
+- an _Application_ between ```Term```
+    - <details>
+        <summary>what Term Application means in Lamda calculus</summary>
+        <p>
+        if you come from an imperative programming language you can think at ```Term``` Applications as being simple function calls
+
+        as an example say we have a lambda term like this, which computes a the ```f^2``` of any given ```f```
+        ```
+        λf. λx. f ( f x )
+        ```
+        which would be translated in ```haskell``` as
+        ```
+        \ f x -> f ( f x )
+        ```
+        and in ```typescript``` as
+        ```ts
+        ( f: (x: any) => any ) => { return ( x: any ) => f( f(x) ) }
+        ```
+
+        if we were to apply this ```Term``` in lambda calculus
+        we would have to write something like
+        ```
+        (λf. λx. f ( f x ))( λx. x + 2 )
+        ```
+        and this has the effect of **substituting** any instance of the first bounded variable in the first ```Term``` with the second ```Term```
+        thus resulting in
+        ```
+        (λx. ( x + 2 ) + 2 )
+        ```
+        and finally with an other ```Term``` Application such as
+        ```
+        (λx. ( x + 2 ) + 2 ) ( 5 )
+        ```
+        to get the final result **substituting** any ```x``` with the given value
+        ```
+        ( 5 + 2 ) + 2 -- = 7 + 2 = 9
+        ```
+
+        we se that in any intermediate passage the resut of a _```Term``` Application_ is once again a valid ```Term```
+        </p>
+      </details>
+- a forced evaluation of a ```Term```
+- a builtin Value (see [section 5](#section5))
+- an error, failing the smart contract
+
+from this definition is easy to see that ```Term``` is a _recoursive_ datatype, in particoular, is the definition of the AST (Abstract Syntax Tree) of UPLC Programs
+
+for this reason, **any** language that is capable of representing _recoursive datatypes_ is also capable of construct an UPLC Program
+a ```Typescript``` representation of this formalism is given in the [plutus-core-spec/index.ts](../plutus-core-spec/index.ts#171) file
+
+for this AST to be usable on chain we have to serialize it, n b
+
+<a name="appendixD"></a>
+
+## Appendix D - Serialization
+
+moved to [Appendix D](./Appendix%20D.md)
