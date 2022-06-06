@@ -42,8 +42,8 @@ In particular, the creation of smart contracts in Typescript would allow for
     the reason for this is that the ```haskell``` equivalent laverages the builtin  haskell typeclass of ```Generics``` in order to have an idea of the datastructure to serialize
 
     there are 2 potential solutions to this
-    - reimplementing ```flat``` from the bottom up
-    - implementing a specialized subset of ```flat``` in order to be able to work only with what is needed for the AST (Abstract Syntax Tree) of UPLC (Untyped Plutus Core) Programs
+    - reimplementing ```flat``` from the bottom up (not convenient)
+    - implementing a specialized subset of ```flat``` in order to be able to work only with what is needed for the AST (Abstract Syntax Tree) of UPLC (Untyped Plutus Core) Programs ( see [Appendix D](../../proof-of-concept/notes/Appendix%20D.md) to understand how this would be acheived )
 
     for more informations the [timeline](./timeline.md) migth help to have an idea
     or follow either [my youtube channel](https://www.youtube.com/channel/UCirs7UT6W4cQFNb8FS4bNjw) or [my twitter](https://twitter.com/MicheleHarmonic) to stay updated
