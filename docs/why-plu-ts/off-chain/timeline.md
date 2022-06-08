@@ -2,7 +2,7 @@
 
 estimated 6 to 7 months
 
-> **_NOTE:_** intended in case of proposal approvement, which will allow me to focus entirely on the project
+> **_NOTE:_** intended in case of proposal approvement, which will allow full focus on the project
 
 - safe primitives datatypes implemetation to overcome javascript limits ( 1 week )
   - examples:

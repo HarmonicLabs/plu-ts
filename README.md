@@ -24,7 +24,7 @@ old proposals:
 
 ## timeline
 
-both the timelines for on-chain and oof-chain development are specified in the respecive [docs/why-plu-ts folder](./docs/why-plu-ts/)
+both the timelines for on-chain and off-chain development are specified in the respecive [docs/why-plu-ts folder](./docs/why-plu-ts/)
 
 - [on-chain implementation ideal timeline](./docs/why-plu-ts/on-chain/timeline.md)
 - [off-chain implementation ideal timeline](./docs/why-plu-ts/off-chain/timeline.md)
