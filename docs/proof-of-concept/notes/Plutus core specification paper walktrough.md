@@ -1,4 +1,4 @@
-# Plutus core specification paper walktrough
+# Plutus core specification paper walkthrough
 
 Here you find the [Plutus core specification paper](https://hydra.iohk.io/build/5988492/download/1/plutus-core-specification.pdf)
 
