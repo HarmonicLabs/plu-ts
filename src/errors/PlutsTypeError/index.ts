@@ -1,6 +1,6 @@
-import BasePluTsError from "../BasePlutsError";
+import BasePlutsError from "../BasePlutsError";
 
-export default class PlutsTypeError extends BasePluTsError
+export default class PlutsTypeError extends BasePlutsError
 {
     constructor( msg: string )
     {

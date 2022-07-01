@@ -1,5 +1,6 @@
-import Debug from "../../utils/Debug";
-import JsRuntime from "../../utils/JsRuntime";
+import Debug from "../../../utils/Debug";
+import JsRuntime from "../../../utils/JsRuntime";
+import Word32 from "../Word32";
 
 
 /**
@@ -35,7 +36,7 @@ export default class Int32
     {
         JsRuntime.assert(
             Int32.isInt32( int ),
-            "trying to construct a Int32 instance using " + int.toString() + " as input. keep in mind",
+            "trying to construct a Int32 instance using " + int.toString() + " as input. keep in mind that int32 is signed",
             new Debug.AddInfos({
                 input: int,
                 asInt32: Int32.toInt32Num( int ),
@@ -45,6 +46,16 @@ export default class Int32
         );
 
         this._int = Int32.toInt32Num( int );
+    }
+
+    toNumber(): number
+    {
+        return this._int;
+    }
+
+    toWord32(): Word32
+    {
+        return new Word32( this._int );
     }
 
 }

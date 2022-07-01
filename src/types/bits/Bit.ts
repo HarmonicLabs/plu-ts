@@ -1,8 +1,8 @@
 
 export type RawBit = 0 | 1;
 
-export type BitOffset = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7;
-export function isBitOffset( offset: BitOffset ): boolean
+export type InByteOffset = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7;
+export function isInByteOffset( offset: InByteOffset ): boolean
 {
     return (  
         offset === 0 ||
@@ -22,11 +22,7 @@ export default class Bit
 
     constructor( bit: RawBit | boolean )
     {
-        bit = typeof bit === "boolean" ? ( bit ? 1 : 0) : bit;
-        // think in javascript
-        bit = bit == 0 ? 0 : 1;
-        
-        this._bit = bit;
+        this._bit = typeof bit === "boolean" ? ( bit ? 1 : 0) : bit;
     }
     
     get() : RawBit

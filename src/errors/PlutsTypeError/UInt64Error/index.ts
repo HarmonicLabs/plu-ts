@@ -1,4 +1,4 @@
-import PluTsTypeError from "../../PluTsTypeError";
+import PluTsTypeError from "..";
 
 export default class UInt64Error extends PluTsTypeError
 {

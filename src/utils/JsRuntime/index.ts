@@ -1,7 +1,7 @@
 import BasePlutsError from "../../errors/BasePlutsError";
 import AdditionalInfo from "../Debug/AdditionalInfo";
 
-
+type Constructable<ReturnT, ConstructorParams extends any[] = any[]> = { new(...args: ConstructorParams): ReturnT }
 /**
  * @static
  */
@@ -42,7 +42,17 @@ export default class JsRuntime
                 {
                     throw new BasePlutsError("attempt to access a private property");
                 }
-                return Reflect.get( instance, property, ...other );
+                const prop = Reflect.get( instance, property, ...other );
+
+                if(typeof prop === "function")
+                {
+                    // if accessing a method
+                    // return the method binded to the pure javascript version
+                    // so that ignores the proxy
+                    return prop.bind(instance);
+                }
+
+                return prop;
             },
 
             set: function ( instance, property, value, ...other )
@@ -71,45 +81,23 @@ export default class JsRuntime
         })
     }
 
-    static extendClassWithUnderscoreAsPrivate<T extends object, Constructor extends (...args: any[]) => T>( classConstructor: Constructor ) 
+    static withUnderscoreAsPrivate
+        <T extends Constructable<any>, ConstructorParams extends any[] = any[]>( 
+            classConstructor: T
+        ) : T
     {
-        const ExtendedWithPrivates = function( ...args: any[] ) {};
-        ExtendedWithPrivates.prototype = Object.create( classConstructor.prototype );
 
-        ExtendedWithPrivates.prototype.constructor = new Proxy( ExtendedWithPrivates, {
+        return new Proxy( classConstructor, {
 
-            construct: function(target, args) {
-                
-                const obj = Object.create( ExtendedWithPrivates.prototype );
-                
-                this.apply(target, obj, args);
-                
-                return JsRuntime.objWithUnderscoreAsPrivate( obj );
-            },
-
-            apply: function( _target, that, args) {
-                classConstructor.apply(that, args);
-                ExtendedWithPrivates.apply(that, args);
+            construct: function( originalConstructor : Constructable<T> , args: ConstructorParams ): T
+            {
+                return JsRuntime.objWithUnderscoreAsPrivate(
+                    Reflect.construct( originalConstructor, args )
+                );
             }
 
         });
 
-        return ExtendedWithPrivates.prototype.constructor;
     }
 }
 
-function extend(sup, base) {
-    base.prototype = Object.create(sup.prototype);
-    base.prototype.constructor = new Proxy(base, {
-      construct: function(target, args) {
-        const obj = Object.create(base.prototype);
-        this.apply(target, obj, args);
-        return obj;
-      },
-      apply: function(target, that, args) {
-        sup.apply(that, args);
-        base.apply(that, args);
-      }
-    });
-    return base.prototype.constructor;
-  }
