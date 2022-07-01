@@ -10,9 +10,16 @@ export default class HexString
         this._hex = hexString.toLowerCase();
     }
 
-    constructor( hexString : string )
+    constructor( hexString : string | Buffer )
     {
+        if( Buffer.isBuffer( hexString ) )
+        {
+            hexString = hexString.toString("hex");
+        }
+
         hexString = hexString.split(" ").join("").toLowerCase();
+
+        // if it wasn't a Buffer originally, the string may contain invalid chars
         HexString._assertHex( hexString );
 
         this._hex = hexString.toLowerCase();
@@ -35,6 +42,9 @@ export default class HexString
      */
     public static isHex( anyString: string ): boolean
     {
+        // always think in javasript
+        if( typeof anyString !== "string" ) return false;
+        
         const str = anyString.toLowerCase();
         const validHex = "987654321abcdef0";
 

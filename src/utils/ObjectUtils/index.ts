@@ -234,6 +234,105 @@ export default class ObjectUtils
         // boolean
         return obj;
     }
+
+    static writableProperty     = 0b001;
+    static enumerableProperty   = 0b010;
+    static configurableProperty = 0b100;
+    /**
+     * 
+     * @param obj {object} to define the property on
+     * @param name {PropertyKey} name of the property
+     * @param value {any} value of the property
+     * @param accessLevel writable / enumerable / configurable
+     * 
+     * enumerable   = 0b010, if ```false``` is not showed
+     * configurable = 0b100, if ```false``` cannot be deleted or changed
+     * 
+     * 0 -> none // hidden object-specific descriptor
+     * 
+     * 1 -> writable only // hidden, modifiable, non deletable
+     * 
+     * 2 -> enumerable only // showed object-specific descriptor
+     * 
+     * 3 -> writable AND enumerable // non deletable
+     * 
+     * 4 -> configurable only // hidden object-specific deleteable descriptor
+     * 
+     * 5 -> configurable AND writable // hidden, modifiable, deletable
+     * 
+     * 6 -> configurable AND enumerable // showed, non modifiable, deletable
+     * 
+     * 7 -> all // showed, modifiable, deletable
+     * 
+     */
+    static defineProperty< ValT, ObjT extends object >( obj: ObjT, name: PropertyKey, value: ValT, accessLevel : 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 = 0 ): void
+    {
+        Object.defineProperty(
+            obj, name, 
+            {
+                value: value,
+                writable:       ( accessLevel & ObjectUtils.writableProperty )      == ObjectUtils.writableProperty,
+                enumerable:     ( accessLevel & ObjectUtils.enumerableProperty )    == ObjectUtils.enumerableProperty,
+                configurable:   ( accessLevel & ObjectUtils.configurableProperty )  == ObjectUtils.configurableProperty,
+            }
+        )
+    }
+
+    static defineReadOnlyHiddenProperty< ValT, ObjT extends object >( obj: ObjT, name: PropertyKey, value: ValT): void
+    {
+        ObjectUtils.defineProperty(
+            obj, name, value, 0
+        )
+    }
+
+    static defineWritableHiddenProperty< ValT, ObjT extends object >( obj: ObjT, name: PropertyKey, value: ValT): void
+    {
+        ObjectUtils.defineProperty(
+            obj, name, value, 1
+        )
+    }
+
+    static defineStaticProperty< ValT, ObjT extends object >( obj: ObjT, name: PropertyKey, value: ValT): void
+    {
+        ObjectUtils.defineProperty(
+            obj, name, value, 2
+        )
+    }
+
+    static defineNonDeletableNormalProperty< ValT, ObjT extends object >( obj: ObjT, name: PropertyKey, value: ValT): void
+    {
+        ObjectUtils.defineProperty(
+            obj, name, value, 3
+        )
+    }
+
+    static defineDeletableDescriptor< ValT, ObjT extends object >( obj: ObjT, name: PropertyKey, value: ValT): void
+    {
+        ObjectUtils.defineProperty(
+            obj, name, value, 4
+        )
+    }
+
+    static defineHiddenNormalProperty< ValT, ObjT extends object >( obj: ObjT, name: PropertyKey, value: ValT): void
+    {
+        ObjectUtils.defineProperty(
+            obj, name, value, 5
+        )
+    }
+
+    static defineFixedDeletableProperty< ValT, ObjT extends object >( obj: ObjT, name: PropertyKey, value: ValT): void
+    {
+        ObjectUtils.defineProperty(
+            obj, name, value, 6
+        )
+    }
+
+    static defineNormalProperty< ValT, ObjT extends object >( obj: ObjT, name: PropertyKey, value: ValT): void
+    {
+        ObjectUtils.defineProperty(
+            obj, name, value, 7
+        )
+    }
 }
 
 function cloneFunc( func: Function ): Function
