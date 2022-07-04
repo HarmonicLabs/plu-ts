@@ -236,6 +236,7 @@ export default class BitStream
         if( this.isEmpty() )
         {
             this._bits = other._bits;
+            this._nInitialZeroes = other.nInitialZeroes;
             return;
         }
 
