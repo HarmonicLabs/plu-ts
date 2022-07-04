@@ -1,2 +1,4 @@
 # dependecies can be retreived via ```npm install``` as long ```package.json``` is present
 node_modules/
+# can be retreived by running tests
+coverage/
