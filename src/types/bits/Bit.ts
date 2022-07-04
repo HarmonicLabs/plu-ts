@@ -16,6 +16,11 @@ export function isInByteOffset( offset: InByteOffset ): boolean
     );
 }
 
+export function forceInByteOffset( offset: number ): InByteOffset
+{
+    return (Math.round( Math.abs( offset ) ) % 8) as InByteOffset;
+}
+
 export default class Bit
 {
     private _bit: RawBit;

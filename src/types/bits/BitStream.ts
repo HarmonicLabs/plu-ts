@@ -1,149 +1,278 @@
-import BufferUtils from "../../utils/BufferUtils";
-import Cloneable from "../interfaces/Cloneable";
-import Word32 from "../ints/Word32";
-import { InByteOffset, isInByteOffset } from "./Bit";
-import Word32List from "./Word32List";
+import { Buffer  } from "buffer";
+import BigIntUtils from "../../utils/BigIntUtils";
+import BitUtils from "../../utils/BitUtils";
+import Debug from "../../utils/Debug";
+import JsRuntime from "../../utils/JsRuntime";
+import Int32 from "../ints/Int32";
+import { forceInByteOffset, InByteOffset } from "./Bit";
 
-/**
- * defaults to
- * ```js
- * {
- *     startOffset: 0,
- *     endOffset: undefined
- * }
- * ```
- * 
- * if ```startOffset``` is provided becomes
- * 
- * ```js
- * {
- *     startOffset: startOffset,
- *     endOffset: undefined
- * }
- * ```
- * 
- * if only ```endOffset``` is provided becomes
- * ```js
- * {
- *     startOffset: undefined,
- *     endOffset: endOffset
- * }
- * ```
- * 
- * if both ```startOffset``` and ```endOffset``` are provided becomes
- * ```js
- * {
- *     startOffset: startOffset,
- *     endOffset: undefined
- * }
- * ```
- */
-export interface BitStreamConstructorOptions
-{
-    /**
-     * if provided will try to construct the ```BitStream``` instance with ```startOffset``` bits from the start setted to 0 and marked as undefined
-     * 
-     * if not provided checks for ```endOffset```, if ```endOffset``` is undefined or missing ```startOffset``` defaults to 0
-     */
-    startOffset?: InByteOffset
-    /**
-     * if ```startOffset``` is not provided will try to construct the ```BitStream``` instance
-     * with ```endOffset``` bits form the end settet to zero and marked as unused
-     * 
-     * if not provided ```startOffset``` defaults to ```0``` and ```endOffset``` to ```undefined```
-     */
-    endOffset?: InByteOffset
-}
 
-/**
- * bit orienetd buffer, doesn't cares about bytes
- * 
- * we could use ```bigint``` as representation as it should be better also from the performance side
- * 
- * but using a duble linked list is more practical
- */
 export default class BitStream
-    implements Cloneable<BitStream>
 {
-    private _chunks: Word32List
+    private _bits: bigint;
+    /**
+     * a ```BitStream``` could start with a series of zeroes 
+     * that would not be tracked otherwhise
+     */
+    private _nInitialZeroes: number
 
-    /*
-    the tracked bits do not have to fit in a byte, that is why whe need to track the offset
-
-    we track two offste (start and end) because it MAY turn more efficient with BitStreams concatenation,
-    
-    concatenation is an operation that maight be executed often when concsturcting a flat-serialized UPLC program
-    */
-    private _startOffset: InByteOffset;
-    private _endOffset: InByteOffset;
-
-    private _leftUnusedByets : 0 | 1 | 2 | 3 | 4;
-    private _rightUnisedBytes: 0 | 1 | 2 | 3 | 4;
-
-    private constructor( 
-        buffer: Buffer | Word32List , 
-        {
-            startOffset: _startOffset,
-            endOffset: _endOffset
-        } : BitStreamConstructorOptions = {}
-    )
+    get nInitialZeroes(): number
     {
-        let startOffset : InByteOffset | undefined = _startOffset === undefined ? ( _endOffset === undefined ? 0 : undefined) : _startOffset ;
-        let endOffset   : InByteOffset | undefined = _startOffset !== undefined ? _endOffset : undefined; 
+        return this._nInitialZeroes;
     }
 
-    clone(): BitStream
+    get length(): number
     {
-        const bitStream : BitStream =  new BitStream( 
-            new Word32List({
-                chunk: new Word32( 0 ),
-                prev: null,
-                next: null
+        if( this._bits < BigInt( 0 ) ) return 0;
+
+        return this._nInitialZeroes + BitUtils.getNOfUsedBits( this._bits );
+    }
+
+    get lengthInBytes(): number
+    {
+        return BitStream.getMinBytesForLength( this.length );
+    }
+
+    static getMinBytesForLength( length: number )
+    {
+        length = Math.round( Math.abs( length ) );
+        
+        // even one bit requires a new byte,
+        // that's why ceil
+        return Math.ceil( length / 8 );
+    }
+
+    constructor( bytes?: undefined )
+    constructor( bytes: bigint, nInitialZeroes?: number )
+    constructor( bytes: Buffer, nZeroesAsEndPadding?: InByteOffset )
+    constructor( bytes: bigint | Buffer | undefined , nInitialZeroes: number = 0 )
+    {
+        // case empty BitStream
+        // aka. new BitStream() || new BitStream( undefined )
+        if( bytes === undefined )
+        {
+            this._bits = BigInt( -1 );
+            this._nInitialZeroes = 0;
+            return;
+        }
+
+        // nInitialZeroes has to be an integer
+        JsRuntime.assert(
+            Math.round( Math.abs( nInitialZeroes ) ) === nInitialZeroes,
+            "invalid numebr of nInitialZeroes passed, expected non-negative integer, got: " + nInitialZeroes.toString()
+        )
+
+        // construct form bigint
+        if( typeof bytes == "bigint" )
+        {
+            this._nInitialZeroes = nInitialZeroes;
+            
+            this._bits = BigIntUtils.abs( bytes );
+            return;
+        }
+
+        // construct form Buffer
+
+        // assert got Buffer instance as input
+        JsRuntime.assert(
+            Buffer.isBuffer( bytes ),
+            "expected a Buffer instance", new Debug.AddInfos({
+                got: bytes,
+                nativeType: typeof bytes
             })
         );
 
-        bitStream._chunks = this._chunks.clone();
-        bitStream._startOffset = this._startOffset;
-        bitStream._endOffset = this._endOffset;
-
-        return bitStream;
-    }
-
-    private _parseShiftOffset( offset: number, opposite: ( offset: number ) => void ) : { offset: InByteOffset , shouldProceed: boolean }
-    {
-        if( offset < 0 )
+        if( bytes.length === 0 )
         {
-            opposite( -offset );
-            return {
-                offset: 0,
-                shouldProceed: false
-            };
-        };
+            this._bits = BigInt( -1 );
+            this._nInitialZeroes = 0;
+            return;
+        }
 
-        offset = Math.round( Math.abs( offset ) ) % 8;
-        
-        if( offset == 0 ) return {
-            offset: 0,
-            shouldProceed: false
-        };
+        const nZeroesAsEndPadding = forceInByteOffset( nInitialZeroes );
+        //this._nInitialZeroes = 0;
 
-        return {
-            offset: offset as InByteOffset,
-            shouldProceed: true
+        const veryFirstByte = bytes.readUint8();
+
+        this._nInitialZeroes = 8 - BitUtils.getNOfUsedBits( BigInt( veryFirstByte ) )
+        JsRuntime.assert(
+            this._nInitialZeroes >= 0,
+            JsRuntime.makeNotSupposedToHappenError(
+                "this._nInitialZeroes was setted badly in a BitStreamCreation using a Buffer as input."
+            )
+        )
+        //*/
+
+        this._bits = BigIntUtils.fromBuffer( bytes );
+        if( nZeroesAsEndPadding !== 0 )
+        {
+            this._bits <<= BigInt( nZeroesAsEndPadding );
         }
     }
-
-    shiftr( _offset : number )
+    
+    asBigInt(): bigint
     {
-        let { shouldProceed, offset } = this._parseShiftOffset( _offset, this.shiftl );
-        if( !shouldProceed ) return;
+        if( this._bits < BigInt( 0 ) ) return BigInt( 0 );
+
+        return this._bits;
+    }
+    
+    /**
+     * 
+     * @returns {object} 
+     *      with a @property {Buffer} buffer containing the buffer
+     *      and a @property {InByteOffset} nZeroesAsEndPadding 
+     *      containing a number between 7 and 1 both included,
+     *      indicating how many of the end bits should be ignored
+     */
+    toBuffer(): {
+        buffer: Buffer,
+        nZeroesAsEndPadding: InByteOffset
+    }
+    {
+        if( this._bits < BigInt( 0 ) ) return {
+            buffer: Buffer.from( [] ),
+            nZeroesAsEndPadding: 0
+        };
+
+        // we don't want to modify our hown bits
+        let bits = this._bits;
+
+        // Array is provided with usefull operation
+        // unshift
+        // push
+        const bitsArr = 
+            Array.from<number>( 
+                BigIntUtils.toBuffer( bits ) 
+            );
+        
+        // add whole seroes bytes at the beginning
+        if( this._nInitialZeroes >= 8 )
+        {
+            bitsArr.unshift(
+                ...Array<number>(
+                    // number of whole bytes as zeroes
+                    Math.floor( this._nInitialZeroes / 8 )
+                ).fill( 0 )
+            );
+        }
+
+        // remaining zeroes bits
+        const nInBytesInitialZeroes : InByteOffset = (this._nInitialZeroes % 8) as InByteOffset;
+
+        // no bits (whole bytes only)
+        if( nInBytesInitialZeroes === 0 )
+        {
+            return {
+                buffer: Buffer.from( bitsArr ),
+                nZeroesAsEndPadding: 0
+            };
+        }
+
+        // shiftr carrying the bits
+        let lostBits : number = 0;
+        let prevLostBits: number = 0;
+        for( 
+            let i = 
+                // ingore setted zeroes
+                Math.floor( this._nInitialZeroes / 8 );
+            i < bitsArr.length;
+            i++        
+        )
+        {
+            prevLostBits = 
+                BitUtils.getNLastBitsInt( 
+                    new Int32( bitsArr[i] ),
+                    new Int32( nInBytesInitialZeroes )
+                ).toNumber();
+
+            bitsArr[i] = (bitsArr[i] >> nInBytesInitialZeroes) | lostBits;
+            
+            lostBits = prevLostBits
+                // prepares lostBits to be used in the biwise or
+                << (8 - nInBytesInitialZeroes);
+        }
+
+
+        // add one final byte containing bits tha would have be lost
+        bitsArr.push( lostBits ); 
+
+        return {
+            buffer: Buffer.from( bitsArr ),
+            nZeroesAsEndPadding: (8 - nInBytesInitialZeroes) as InByteOffset 
+        };
     }
 
-    shiftl( _offset : number )
+    /**
+     * @param byOffset number of bits to move to
+     * @returns {bigint} lost bits as big integer
+     */
+    shiftr( byOffset: bigint ): bigint
     {
-        let { shouldProceed, offset } = this._parseShiftOffset( _offset, this.shiftr );
-        if( !shouldProceed ) return;
+        const lostBits = BitUtils.getNLastBits( this._bits, byOffset );
 
+        this._bits >>= byOffset;
+
+        return lostBits;
+    }
+
+    shiftl( byOffset: bigint )
+    {
+        this._bits <<= byOffset;
+    }
+
+    append( other: BitStream ): void
+    {
+        ///*
+        Debug.log(
+            "this: ", this,
+            "\n\n", this._bits.toString( 16 ),
+            //"\n\n", this.toBuffer().buffer.toString( "hex" )
+        );
+        Debug.log( 
+            "other: ", other,
+            "\n\n", other._bits.toString( 16 ),
+            //"\n\n", other.toBuffer().buffer.toString( "hex" )
+        );
+        //*/
+
+        if( this._bits < BigInt( 0 ) )
+        {
+            this._bits = other._bits;
+            return;
+        }
+
+        if( other._bits < BigInt( 0 ) )
+        {
+            return;
+        }
+        
+        // make some space
+        this._bits = this._bits << BigInt( other.length );
+
+        Debug.log( "this._bits after shiftl in append: " + this._bits.toString(16) );
+
+        // other.length keeps track also of possible initial zeroes
+        // so those have been added when shifting
+        this._bits = this._bits | other._bits;
+
+        Debug.log( "this._bits AFTER logic OR in append: " + this._bits.toString(16) );
+
+        Debug.log( "FINAL this: ", this , 
+        "\n\n", this._bits.toString(16),
+        "\n\n", BigIntUtils.toBuffer( this._bits ).toString("hex"),
+        "\n\n", this.toBuffer().buffer.toString("hex")
+        );
 
     }
+
+    /*
+    static concat( a: BitStream, b: BitStream ): BitStream
+    {
+        let bits = a.asBigInt();
+        bits = bits << BigInt( b.length );
+        bits = bits | b.asBigInt();
+        return new BitStream(bits, a._nInitialZeroes)
+    }
+    //*/
 }

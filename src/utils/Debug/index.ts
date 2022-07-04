@@ -66,7 +66,15 @@ export default class Debug
 
         if( condition ) return;
 
-        console.error(...args);
+        args.length > 0 && console.error(...args);
+        throw (new BasePluTsError( errorMessage ) as E)
+    }
+
+    static throw<E extends BasePluTsError>( errorMessage: string, ...args: any[])
+    {
+        if( !Debug.isDeugging() ) return;
+
+        args.length > 0 && console.error(...args);
         throw (new BasePluTsError( errorMessage ) as E)
     }
 }

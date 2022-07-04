@@ -1,4 +1,5 @@
 import JsRuntime from "..";
+import Debug from "../../Debug";
 
 /** 
  * CONVETION USED IN NAMING
@@ -149,9 +150,9 @@ describe( "underscores seen as private on class instances", () => {
 
         expect( withPrivate.getY() ).toBe( "hidden" );
         
-        console.log("_y before setY:", withPrivate.getY() );
+        // Debug.log("_y before setY:", withPrivate.getY() );
         withPrivate.setY( "not original value");
-        console.log("_y after setY:", withPrivate.getY() );
+        // Debug.log("_y after setY:", withPrivate.getY() );
 
         expect( withPrivate.getY() ).not.toBe( "hidden" );
         expect( withPrivate.getY() ).toBe( "not original value" );

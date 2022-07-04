@@ -1,5 +1,5 @@
 import { Buffer } from "buffer";
-import HexError from "../../errors/PluTsTypeError/HexError";
+import HexError from "../../errors/PlutsTypeError/HexError";
 
 export default class HexString
 {
