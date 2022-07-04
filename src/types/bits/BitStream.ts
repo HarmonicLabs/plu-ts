@@ -33,6 +33,11 @@ export default class BitStream
         return BitStream.getMinBytesForLength( this.length );
     }
 
+    isEmpty(): boolean
+    {
+        return this._bits < BigInt( 0 );
+    }
+
     static getMinBytesForLength( length: number )
     {
         length = Math.round( Math.abs( length ) );
@@ -223,46 +228,24 @@ export default class BitStream
 
     append( other: BitStream ): void
     {
-        ///*
-        Debug.log(
-            "this: ", this,
-            "\n\n", this._bits.toString( 16 ),
-            //"\n\n", this.toBuffer().buffer.toString( "hex" )
-        );
-        Debug.log( 
-            "other: ", other,
-            "\n\n", other._bits.toString( 16 ),
-            //"\n\n", other.toBuffer().buffer.toString( "hex" )
-        );
-        //*/
+        if( other.isEmpty() )
+        {
+            return;
+        }
 
-        if( this._bits < BigInt( 0 ) )
+        if( this.isEmpty() )
         {
             this._bits = other._bits;
             return;
         }
 
-        if( other._bits < BigInt( 0 ) )
-        {
-            return;
-        }
         
         // make some space
         this._bits = this._bits << BigInt( other.length );
 
-        Debug.log( "this._bits after shiftl in append: " + this._bits.toString(16) );
-
         // other.length keeps track also of possible initial zeroes
         // so those have been added when shifting
         this._bits = this._bits | other._bits;
-
-        Debug.log( "this._bits AFTER logic OR in append: " + this._bits.toString(16) );
-
-        Debug.log( "FINAL this: ", this , 
-        "\n\n", this._bits.toString(16),
-        "\n\n", BigIntUtils.toBuffer( this._bits ).toString("hex"),
-        "\n\n", this.toBuffer().buffer.toString("hex")
-        );
 
     }
 
