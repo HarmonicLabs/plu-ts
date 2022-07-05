@@ -93,22 +93,14 @@ export default class BitStream
             })
         );
 
-        Debug.log(" --------------------------------------- constructing from Buffer --------------------------------------- ");
-
         if( bytes.length === 0 )
         {
-            Debug.log( " input was of length 0 " );
-
             this._bits = BigInt( -1 );
             this._nInitialZeroes = 0;
             return;
         }
 
-        Debug.log( "input is: ", bytes.toString("hex") );
-
         const nZeroesAsEndPadding = forceInByteOffset( nInitialZeroes );
-        Debug.log( `nZeroesAsEndPadding (input): ${nZeroesAsEndPadding}` );
-
 
         let firstNonZeroByte = 0;
         let allZeroesBytes = 0; 
@@ -121,10 +113,6 @@ export default class BitStream
 
             allZeroesBytes++ 
         }
-
-        Debug.log( `firstNonZeroByte: ${firstNonZeroByte.toString(16)}` );
-        Debug.log( `allZeroesBytes: ${allZeroesBytes}` );
-
 
         if( allZeroesBytes === bytes.length )
         {
@@ -144,14 +132,10 @@ export default class BitStream
 
         this._bits = BigIntUtils.fromBuffer( bytes );
 
-        Debug.log( `this._bits: ${this._bits};\nthis._bits.toString(16): ${this._bits.toString(16)}`);
-
         if( nZeroesAsEndPadding !== 0 )
         {
             this._bits <<= BigInt( nZeroesAsEndPadding );
         }
-        
-        Debug.log( "final constructed \"this\": ", this );
     }
     
     asBigInt(): bigint
@@ -174,8 +158,6 @@ export default class BitStream
         nZeroesAsEndPadding: InByteOffset
     }
     {
-        Debug.log(" --------------------------------------- toBuffer --------------------------------------- ");
-
         if( this.isEmpty() ) return {
             buffer: Buffer.from( [] ),
             nZeroesAsEndPadding: 0
@@ -189,13 +171,8 @@ export default class BitStream
                 (8 - forceInByteOffset( this._nInitialZeroes ))  as InByteOffset
         }
 
-        Debug.log("buffer was not empty")
-
-
         // we don't want to modify our hown bits
         let bits = this._bits;
-
-        Debug.log( `this._bits.toString(16): ${this._bits.toString(16)}`)
 
         // Array is provided with usefull operation
         // unshift
@@ -207,9 +184,6 @@ export default class BitStream
             );
         const firstNonZeroByte = bitsArr[0];
         
-        Debug.log( `bitsArr (this._bits as Array): ${bitsArr}` );
-
-        Debug.log(`nInitialZeroes: ${this._nInitialZeroes}`)
         // add whole bytes of zeroes at the beginning if needed
         if( this._nInitialZeroes >= 8 )
         {
@@ -219,15 +193,10 @@ export default class BitStream
                     Math.floor( this._nInitialZeroes / 8 )
                 ).fill( 0 )
             );
-
-            Debug.log( `added ${Math.floor( this._nInitialZeroes / 8 )} bytes of zeroes at the beginning`)
         }
-
-        Debug.log( `bitsArr (this._bits as Array): ${bitsArr}` );
 
         // remaining zeroes bits
         const nInBytesInitialZeroes : InByteOffset = (this._nInitialZeroes % 8) as InByteOffset;
-        Debug.log(`nInByteInitialZeroes: ${nInBytesInitialZeroes}`)
 
         if( 
             // no bits (whole bytes only)
@@ -241,8 +210,6 @@ export default class BitStream
                 nZeroesAsEndPadding: 0
             };
         }
-
-        Debug.log( `(this._nInitialZeroes % 8) is NOT  0: ${nInBytesInitialZeroes}` );
 
         // shiftr carrying the bits
         let lostBits : number = 0;
@@ -263,17 +230,10 @@ export default class BitStream
 
             bitsArr[i] = (bitsArr[i] >>> nInBytesInitialZeroes) | lostBits;
             
-            Debug.log( 
-                `byte shifted from ${prevByte} to ${bitsArr[i]}; 
-                in bits: from ${prevByte.toString(2).padStart( 8 ,'0' )} to ${bitsArr[i].toString(2).padStart( 8 ,'0' )}`
-            );
-
             lostBits = prevLostBits
                 // prepares lostBits to be used in the biwise or
                 << (8 - nInBytesInitialZeroes);
         }
-
-        Debug.log( `bitsArr after shift: ${bitsArr}` );
 
         // add one final byte containing bits tha would have be lost
         bitsArr.push( lostBits ); 
