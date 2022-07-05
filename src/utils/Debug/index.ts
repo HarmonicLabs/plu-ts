@@ -1,8 +1,9 @@
 import BasePluTsError from "../../errors/BasePlutsError";
 import AdditionalInfos from "./AdditionalInfo";
+import DebugProxies from "./Proxies";
 
 // update this manually for production
-const _isDebugging: boolean = true;
+const _isDebugging: boolean = !true;
 
 export default class Debug
 {
@@ -29,7 +30,9 @@ export default class Debug
     // static class
     private constructor() {};
 
-    static AddInfos = AdditionalInfos
+    static AddInfos = AdditionalInfos;
+
+    static Proxies = DebugProxies;
 
     static log(...args: any[])
     {

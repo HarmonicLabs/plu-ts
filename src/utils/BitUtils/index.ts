@@ -66,6 +66,7 @@ export default class BitUtils
      */
     static getNOfUsedBits( bits: bigint ): number
     {
+        if( bits === BigInt( 0 ) ) return 0;
         return bits.toString(2).length;
     }
 }

@@ -9,7 +9,7 @@ export default class AdditionalInfo
             ObjectUtils.defineStaticProperty(
                 this,
                 key,
-                addInfos[key]
+                (addInfos as any)[key]
             )
         }
     }

@@ -46,6 +46,16 @@ export default class BigIntUtils
 
     static toBuffer( bigint: bigint, nBytes: number | undefined = undefined ): Buffer
     {
+        if( bigint == BigInt( 0 ) )
+        {
+            if(nBytes === undefined)
+            {
+                return Buffer.from( [] );
+            }
+
+            return Buffer.from( "00".repeat(nBytes), "hex" )
+        }
+        
         let buffHexString = bigint.toString(16);
         buffHexString = buffHexString.length % 2 === 0 ? buffHexString : '0' + buffHexString;
 
@@ -64,7 +74,7 @@ export default class BigIntUtils
             if( buffHexString.length > nBytes * 2 )
             {
                 console.warn(
-                    "required buffer size is smaller than the one used effectively by the given bigint"
+                    "required buffer size is smaller than the one used effectively by the given bigint, truncating the initial bytes as overflow"
                 );
 
                 buffHexString = buffHexString.slice( buffHexString.length - (nBytes * 2) );

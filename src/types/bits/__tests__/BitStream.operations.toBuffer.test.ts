@@ -2,59 +2,6 @@ import BigIntUtils from "../../../utils/BigIntUtils";
 import BitStream from "../BitStream";
 
 
-describe("BitStream.toBuffer()", () => {
-
-
-
-})
-
-describe("BitStream.toBuffer().nZeroesAsPadding", () => {
-
-    it("is always 0 when initial zeroes are multiple of 8", () => {
-
-        for( let mult8 = 0; mult8 <= 8 * 20; mult8 += 8 )
-        {
-            expect(
-                new BitStream( BigInt( 100 ), mult8 ).toBuffer().nZeroesAsEndPadding
-            ).toBe( 0 );
-        }
-
-    });
-
-    it("is (8 - (nInitialZeroes % 8)) when initial zeroes are not multiple of 8", () => {
-        
-        for( let i = 0; i <= 100; i++ )
-        {
-            if( i % 8 === 0 ) continue;
-            expect(
-                new BitStream( BigInt( 100 ), i ).toBuffer().nZeroesAsEndPadding
-            ).toBe( 8 - (i % 8) );
-        }
-
-        let rand: number = 0;
-        try
-        {
-            for( let i = 0; i <= 100; i++ )
-            {
-                rand = Math.round(Math.random() * 950_000) + 100;
-
-                if( rand % 8 === 0 ) continue;
-
-                expect(
-                    new BitStream( BigInt( 100 ), rand ).toBuffer().nZeroesAsEndPadding
-                ).toBe( 8 - (rand % 8) );
-            }
-        }
-        catch (e)
-        {
-            console.error( "rand was: ", rand )
-            throw e;
-        }
-
-    });
-
-})
-
 describe("new BitStream( bigint, some_initial_n_zeroes ).toBuffer()", () => {
 
     it("some_initial_n_zeroes is multiple of 8 => bitStream.toBuffer().buffer == BigIntUtils.toBuffer( bigint , bitStream.lengthInBytes )", () => {

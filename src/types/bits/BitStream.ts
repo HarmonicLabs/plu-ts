@@ -23,7 +23,7 @@ export default class BitStream
 
     get length(): number
     {
-        if( this._bits < BigInt( 0 ) ) return 0;
+        if( this.isEmpty() ) return 0;
 
         return this._nInitialZeroes + BitUtils.getNOfUsedBits( this._bits );
     }
@@ -31,11 +31,6 @@ export default class BitStream
     get lengthInBytes(): number
     {
         return BitStream.getMinBytesForLength( this.length );
-    }
-
-    isEmpty(): boolean
-    {
-        return this._bits < BigInt( 0 );
     }
 
     static getMinBytesForLength( length: number )
@@ -47,11 +42,22 @@ export default class BitStream
         return Math.ceil( length / 8 );
     }
 
+    isEmpty(): boolean
+    {
+        return this._bits < BigInt( 0 ) && this.nInitialZeroes <= 0;
+    }
+
+    isAllZeroes(): boolean
+    {
+        return this._bits < BigInt( 0 ) && this.nInitialZeroes > 0;
+    }
+
     constructor( bytes?: undefined )
     constructor( bytes: bigint, nInitialZeroes?: number )
     constructor( bytes: Buffer, nZeroesAsEndPadding?: InByteOffset )
     constructor( bytes: bigint | Buffer | undefined , nInitialZeroes: number = 0 )
     {
+
         // case empty BitStream
         // aka. new BitStream() || new BitStream( undefined )
         if( bytes === undefined )
@@ -87,37 +93,70 @@ export default class BitStream
             })
         );
 
+        Debug.log(" --------------------------------------- constructing from Buffer --------------------------------------- ");
+
         if( bytes.length === 0 )
         {
+            Debug.log( " input was of length 0 " );
+
             this._bits = BigInt( -1 );
             this._nInitialZeroes = 0;
             return;
         }
 
+        Debug.log( "input is: ", bytes.toString("hex") );
+
         const nZeroesAsEndPadding = forceInByteOffset( nInitialZeroes );
-        //this._nInitialZeroes = 0;
+        Debug.log( `nZeroesAsEndPadding (input): ${nZeroesAsEndPadding}` );
 
-        const veryFirstByte = bytes.readUint8();
 
-        this._nInitialZeroes = 8 - BitUtils.getNOfUsedBits( BigInt( veryFirstByte ) )
+        let firstNonZeroByte = 0;
+        let allZeroesBytes = 0; 
+
+        while( allZeroesBytes < bytes.length )
+        {
+            firstNonZeroByte = bytes.readUint8( allZeroesBytes );
+
+            if( firstNonZeroByte > 0 ) break;
+
+            allZeroesBytes++ 
+        }
+
+        Debug.log( `firstNonZeroByte: ${firstNonZeroByte.toString(16)}` );
+        Debug.log( `allZeroesBytes: ${allZeroesBytes}` );
+
+
+        if( allZeroesBytes === bytes.length )
+        {
+            this._bits = BigInt( -1 );
+            this._nInitialZeroes = 8 * allZeroesBytes;
+            return;
+        }
+
+        this._nInitialZeroes = (8 * allZeroesBytes) + (8 - BitUtils.getNOfUsedBits( BigInt( firstNonZeroByte ) ) );
+        
         JsRuntime.assert(
             this._nInitialZeroes >= 0,
             JsRuntime.makeNotSupposedToHappenError(
-                "this._nInitialZeroes was setted badly in a BitStreamCreation using a Buffer as input."
+                "this._nInitialZeroes was setted badly in a BitStream creation using a Buffer as input."
             )
         )
-        //*/
 
         this._bits = BigIntUtils.fromBuffer( bytes );
+
+        Debug.log( `this._bits: ${this._bits};\nthis._bits.toString(16): ${this._bits.toString(16)}`);
+
         if( nZeroesAsEndPadding !== 0 )
         {
             this._bits <<= BigInt( nZeroesAsEndPadding );
         }
+        
+        Debug.log( "final constructed \"this\": ", this );
     }
     
     asBigInt(): bigint
     {
-        if( this._bits < BigInt( 0 ) ) return BigInt( 0 );
+        if( this.isEmpty() ) return BigInt( 0 );
 
         return this._bits;
     }
@@ -135,23 +174,43 @@ export default class BitStream
         nZeroesAsEndPadding: InByteOffset
     }
     {
-        if( this._bits < BigInt( 0 ) ) return {
+        Debug.log(" --------------------------------------- toBuffer --------------------------------------- ");
+
+        if( this.isEmpty() ) return {
             buffer: Buffer.from( [] ),
             nZeroesAsEndPadding: 0
         };
 
+        if( this.isAllZeroes() ) return {
+            buffer: Buffer.from( "00".repeat( Math.ceil( this.nInitialZeroes / 8 ) ), "hex" ),
+            nZeroesAsEndPadding: 
+                this._nInitialZeroes % 8 === 0 ? 
+                0 : 
+                (8 - forceInByteOffset( this._nInitialZeroes ))  as InByteOffset
+        }
+
+        Debug.log("buffer was not empty")
+
+
         // we don't want to modify our hown bits
         let bits = this._bits;
+
+        Debug.log( `this._bits.toString(16): ${this._bits.toString(16)}`)
 
         // Array is provided with usefull operation
         // unshift
         // push
+        // at the moment doesnt contain any initial zero
         const bitsArr = 
             Array.from<number>( 
                 BigIntUtils.toBuffer( bits ) 
             );
+        const firstNonZeroByte = bitsArr[0];
         
-        // add whole seroes bytes at the beginning
+        Debug.log( `bitsArr (this._bits as Array): ${bitsArr}` );
+
+        Debug.log(`nInitialZeroes: ${this._nInitialZeroes}`)
+        // add whole bytes of zeroes at the beginning if needed
         if( this._nInitialZeroes >= 8 )
         {
             bitsArr.unshift(
@@ -160,13 +219,22 @@ export default class BitStream
                     Math.floor( this._nInitialZeroes / 8 )
                 ).fill( 0 )
             );
+
+            Debug.log( `added ${Math.floor( this._nInitialZeroes / 8 )} bytes of zeroes at the beginning`)
         }
+
+        Debug.log( `bitsArr (this._bits as Array): ${bitsArr}` );
 
         // remaining zeroes bits
         const nInBytesInitialZeroes : InByteOffset = (this._nInitialZeroes % 8) as InByteOffset;
+        Debug.log(`nInByteInitialZeroes: ${nInBytesInitialZeroes}`)
 
-        // no bits (whole bytes only)
-        if( nInBytesInitialZeroes === 0 )
+        if( 
+            // no bits (whole bytes only)
+            nInBytesInitialZeroes === 0  ||
+            // nInBytesInitialZeroes already tracked
+            nInBytesInitialZeroes === (8 - BitUtils.getNOfUsedBits( BigInt( firstNonZeroByte ) ) )
+        )
         {
             return {
                 buffer: Buffer.from( bitsArr ),
@@ -174,13 +242,13 @@ export default class BitStream
             };
         }
 
+        Debug.log( `(this._nInitialZeroes % 8) is NOT  0: ${nInBytesInitialZeroes}` );
+
         // shiftr carrying the bits
         let lostBits : number = 0;
         let prevLostBits: number = 0;
         for( 
-            let i = 
-                // ingore setted zeroes
-                Math.floor( this._nInitialZeroes / 8 );
+            let i = 0;
             i < bitsArr.length;
             i++        
         )
@@ -191,13 +259,21 @@ export default class BitStream
                     new Int32( nInBytesInitialZeroes )
                 ).toNumber();
 
-            bitsArr[i] = (bitsArr[i] >> nInBytesInitialZeroes) | lostBits;
+            const prevByte = bitsArr[i];
+
+            bitsArr[i] = (bitsArr[i] >>> nInBytesInitialZeroes) | lostBits;
             
+            Debug.log( 
+                `byte shifted from ${prevByte} to ${bitsArr[i]}; 
+                in bits: from ${prevByte.toString(2).padStart( 8 ,'0' )} to ${bitsArr[i].toString(2).padStart( 8 ,'0' )}`
+            );
+
             lostBits = prevLostBits
                 // prepares lostBits to be used in the biwise or
                 << (8 - nInBytesInitialZeroes);
         }
 
+        Debug.log( `bitsArr after shift: ${bitsArr}` );
 
         // add one final byte containing bits tha would have be lost
         bitsArr.push( lostBits ); 
@@ -237,6 +313,13 @@ export default class BitStream
         {
             this._bits = other._bits;
             this._nInitialZeroes = other.nInitialZeroes;
+            return;
+        }
+
+        if( this.isAllZeroes() )
+        {
+            this._bits = other._bits;
+            this._nInitialZeroes = this._nInitialZeroes + other.nInitialZeroes; 
             return;
         }
 

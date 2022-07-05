@@ -27,18 +27,17 @@ class BufferUtils
         return hex.asBytes;
     }
 
-    static randomBufferOfLength( length: number ): Buffer
+    static randomBufferOfLength( length: number, mustStartWith: number[] = [] ): Buffer
     {
         length = Math.round( Math.abs( length ) );
 
-        const hexDigits = "0123456789abcef";
-        let hexBuffer = "";
+        let byteNums: number[] = mustStartWith.map( n => Math.round( Math.abs(n) ) % 256 );
 
         for( let i = 0; i < length * 2; i++ )
         {
-            hexBuffer += hexDigits[ Math.round(Math.random() * hexDigits.length ) ];
+            byteNums.push( Math.round(Math.random() * 255 ) );
         }
 
-        return Buffer.from( hexBuffer, "hex" );
+        return Buffer.from( byteNums );
     }
 }

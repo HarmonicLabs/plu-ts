@@ -33,6 +33,7 @@ describe("BigIntUtils.toBuffer", () => {
 
     it("truncates the left-most part of the buffer (bigint) if requred buffer size is less than actual size", () => {
 
+        console.log( "next 3 \"console.warn\" calls are expected");
         expect( 
             BigIntUtils.toBuffer( 
                 BigInt( 0xffff ), 0
