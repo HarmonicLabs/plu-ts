@@ -14,8 +14,8 @@ to know more see the folder ```docs/why-plu-ts```
   - [on-chain/readme.md](./docs//why-plu-ts/on-chain/readme.md)
 
 there are a few proposals to speed up the development of this repository:
-- [Typescript smart-contracts]() link will be updated as soon the proposal is written
-- [100% Typescript offchain code]() link will be updated as soon the proposal is written
+- [Typescript smart-contracts](https://cardano.ideascale.com/c/idea/414103)
+- [100% Typescript offchain code](https://cardano.ideascale.com/c/idea/414144)
 
 old proposals:
 
