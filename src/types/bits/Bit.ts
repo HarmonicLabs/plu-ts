@@ -1,3 +1,5 @@
+import Debug from "../../utils/Debug";
+import JsRuntime from "../../utils/JsRuntime";
 
 export type RawBit = 0 | 1;
 
@@ -27,11 +29,22 @@ export default class Bit
 
     constructor( bit: RawBit | boolean )
     {
+        JsRuntime.assert(
+            bit === 0 || bit === 1 || bit === false || bit === true,
+            "invalid Bit value passed, expecte boolean or either 0 or 1, got: ", new Debug.AddInfos({
+                input: bit
+            })
+        );
         this._bit = typeof bit === "boolean" ? ( bit ? 1 : 0) : bit;
     }
     
-    get() : RawBit
+    asNumber() : RawBit
     {
         return this._bit;
+    }
+
+    asBoolean() : boolean
+    {
+        return this._bit === 1;
     }
 }

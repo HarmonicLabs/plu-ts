@@ -1,15 +1,45 @@
-import { Buffer  } from "buffer";
+import { Buffer } from "buffer";
 import BigIntUtils from "../../utils/BigIntUtils";
 import BitUtils from "../../utils/BitUtils";
 import Debug from "../../utils/Debug";
 import JsRuntime from "../../utils/JsRuntime";
+import Cloneable from "../interfaces/Cloneable";
+import Indexable from "../interfaces/Indexable";
 import Int32 from "../ints/Int32";
-import { forceInByteOffset, InByteOffset } from "./Bit";
+import Bit, { forceInByteOffset, InByteOffset } from "./Bit";
+import BitStreamIterator from "./BitStream/BitStreamIterator";
 
 
 export default class BitStream
+    implements Cloneable<BitStream>, Indexable< Bit >
 {
     private _bits: bigint;
+
+    /**
+     * **IMPORTANT**
+     * 
+     * this property returns the raw bigint stored in the instance
+     * 
+     * this means that if the instance represents an empty ```BitStream``` ,
+     * or one composed by an undefinite series of zeroes, you'll likely get an different result than the expected one
+     * 
+     * for a more appropriate result you should use the ```asBigInt``` method
+     * 
+     * example:
+     * ```ts
+     * const myBitStream = new BitStream();
+     * 
+     * myBitStream.bits // -> -1n
+     * myBitStream.asBigInt().bigint // -> 0n
+     * 
+     * ```
+     * 
+     */
+    get bits(): bigint
+    {
+        return this._bits;
+    }
+
     /**
      * a ```BitStream``` could start with a series of zeroes 
      * that would not be tracked otherwhise
@@ -49,7 +79,7 @@ export default class BitStream
 
     isAllZeroes(): boolean
     {
-        return this._bits < BigInt( 0 ) && this.nInitialZeroes > 0;
+        return this._bits <= BigInt( 0 ) && this.nInitialZeroes >= 0;
     }
 
     constructor( bytes?: undefined )
@@ -57,7 +87,6 @@ export default class BitStream
     constructor( bytes: Buffer, nZeroesAsEndPadding?: InByteOffset )
     constructor( bytes: bigint | Buffer | undefined , nInitialZeroes: number = 0 )
     {
-
         // case empty BitStream
         // aka. new BitStream() || new BitStream( undefined )
         if( bytes === undefined )
@@ -134,15 +163,72 @@ export default class BitStream
 
         if( nZeroesAsEndPadding !== 0 )
         {
-            this._bits <<= BigInt( nZeroesAsEndPadding );
+            this._bits = this.bits << BigInt( nZeroesAsEndPadding );
         }
     }
-    
-    asBigInt(): bigint
-    {
-        if( this.isEmpty() ) return BigInt( 0 );
 
-        return this._bits;
+    /**
+     * allows to use ```BitStream```s in ```for..of``` loops
+     * 
+     * e.g.:
+     * ```ts
+     * for( let bit of bitStream )
+     * {
+     *    // ```bit``` si an object of type ```Bit```
+     * }
+     * ```
+     */
+    [Symbol.iterator] = () => new BitStreamIterator( this );
+
+    at( index: number ): Bit
+    {
+        if( index >= this.length || index < 0 ) throw RangeError("cannot access bit at index " + index.toString() )
+    
+        if( index < this.nInitialZeroes ) return new Bit( 0 );
+
+        index = Math.round( index );
+
+        Debug.log(
+            `this.bits: ${this.bits.toString(2).padStart(8, '0' )}`,
+            `\nmask:      ${BigInt( 1 << (this.length - index - 1) ).toString(2).padStart(8, '0' )}`,
+            `\nresult:    ${(this.bits & BigInt( 1 << (this.length - index - 1) ) ).toString(2).padStart(8, '0' )}`,
+        );
+
+        return new Bit(
+            Boolean(
+                this.bits & BigInt( 1 << (this.length - index - 1) )
+            )
+        )
+        
+    }
+    
+    /**
+     * 
+     * @returns {object} 
+     *      with a @property {Buffer} bigint containing the bigint
+     *      and a @property {InByteOffset} nInitialZeroes 
+     *      containing a non-negative integer
+     *      indicating how many (non-tracked in the bigint) zeroes are present in the ```BitStream```
+     */
+    asBigInt(): {
+        bigint: bigint,
+        nInitialZeroes: number
+    }
+    {
+        if( this.isEmpty() ) return {
+            bigint: BigInt( 0 ),
+            nInitialZeroes: 0
+        }
+
+        if( this.isAllZeroes() ) return {
+            bigint: BigInt( 0 ),
+            nInitialZeroes: this.nInitialZeroes
+        }
+
+        return {
+            bigint: this.bits,
+            nInitialZeroes: this.nInitialZeroes
+        }
     }
     
     /**
@@ -164,15 +250,15 @@ export default class BitStream
         };
 
         if( this.isAllZeroes() ) return {
-            buffer: Buffer.from( "00".repeat( Math.ceil( this.nInitialZeroes / 8 ) ), "hex" ),
+            buffer: this.nInitialZeroes <= 0 ? Buffer.from( [] ) : Buffer.from( "00".repeat( Math.ceil( this.nInitialZeroes / 8 ) ), "hex" ),
             nZeroesAsEndPadding: 
                 this._nInitialZeroes % 8 === 0 ? 
                 0 : 
                 (8 - forceInByteOffset( this._nInitialZeroes ))  as InByteOffset
         }
 
-        // we don't want to modify our hown bits
-        let bits = this._bits;
+        // we don't want to modify our own bits
+        let bits = this.bits;
 
         // Array is provided with usefull operation
         // unshift
@@ -183,26 +269,45 @@ export default class BitStream
                 BigIntUtils.toBuffer( bits ) 
             );
         const firstNonZeroByte = bitsArr[0];
-        
+
         // add whole bytes of zeroes at the beginning if needed
-        if( this._nInitialZeroes >= 8 )
+        if( this.nInitialZeroes >= 8 )
         {
             bitsArr.unshift(
                 ...Array<number>(
                     // number of whole bytes as zeroes
-                    Math.floor( this._nInitialZeroes / 8 )
+                    Math.floor( this.nInitialZeroes / 8 )
                 ).fill( 0 )
             );
         }
 
+        if( firstNonZeroByte === undefined )
+        {
+            console.error( firstNonZeroByte )
+            console.log("toBuffer called on: ", this);
+            console.log(
+                `this.isEmpty(): ${this.isEmpty()}`,
+                `this.isAllZeroes(): ${this.isAllZeroes()}`,
+            );
+        }
+
         // remaining zeroes bits
-        const nInBytesInitialZeroes : InByteOffset = (this._nInitialZeroes % 8) as InByteOffset;
+        const supposedInByteInitialZeroes : InByteOffset = (this.nInitialZeroes % 8) as InByteOffset;
+        const effectiveInByteInitialZeroes: InByteOffset = ( 8 - BitUtils.getNOfUsedBits( BigInt( firstNonZeroByte ?? 0 ) ) ) as InByteOffset ;
+
+        JsRuntime.assert(
+            (effectiveInByteInitialZeroes >= 0 && effectiveInByteInitialZeroes <= 7) &&
+            Math.round( effectiveInByteInitialZeroes ) == effectiveInByteInitialZeroes,
+            JsRuntime.makeNotSupposedToHappenError(
+                "unexpected numebr of effectiveInByteInitialZeroes; should be 'InByteOffset'; got: " + effectiveInByteInitialZeroes.toString()
+            )
+        );
 
         if( 
             // no bits (whole bytes only)
-            nInBytesInitialZeroes === 0  ||
-            // nInBytesInitialZeroes already tracked
-            nInBytesInitialZeroes === (8 - BitUtils.getNOfUsedBits( BigInt( firstNonZeroByte ) ) )
+            // supposedInByteInitialZeroes === 0  ||
+            // supposedInByteInitialZeroes already tracked
+            supposedInByteInitialZeroes === effectiveInByteInitialZeroes
         )
         {
             return {
@@ -211,37 +316,92 @@ export default class BitStream
             };
         }
 
-        // shiftr carrying the bits
-        let lostBits : number = 0;
-        let prevLostBits: number = 0;
-        for( 
-            let i = 0;
-            i < bitsArr.length;
-            i++        
-        )
+        /*
+        
+        example:
+        if( 5 < 7 ) means
+        the first (non-zero) byte is like `0b0000_0111`
+        whereas it should be              `0b0000_0001`
+
+        if that's the case we shift right by 2 ( 7 - 5 )
+        */
+        if( effectiveInByteInitialZeroes < supposedInByteInitialZeroes )
         {
-            prevLostBits = 
-                BitUtils.getNLastBitsInt( 
-                    new Int32( bitsArr[i] ),
-                    new Int32( nInBytesInitialZeroes )
-                ).toNumber();
+            // shiftr carrying the bits
+            const shiftBy = supposedInByteInitialZeroes - effectiveInByteInitialZeroes;
 
-            const prevByte = bitsArr[i];
+            let lostBits : number = 0
+            let prevLostBits: number = 0;
+            for( 
+                let i = 
+                    //skip the bytes manually setted to zero before (line 245)
+                    Math.floor( this.nInitialZeroes / 8 );
+                i < bitsArr.length;
+                i++        
+            )
+            {
+                prevLostBits = 
+                    BitUtils.getNLastBitsInt( 
+                        new Int32( bitsArr[i] ),
+                        new Int32( shiftBy )
+                    ).toNumber();
 
-            bitsArr[i] = (bitsArr[i] >>> nInBytesInitialZeroes) | lostBits;
-            
-            lostBits = prevLostBits
-                // prepares lostBits to be used in the biwise or
-                << (8 - nInBytesInitialZeroes);
+                bitsArr[i] = (bitsArr[i] >>> shiftBy) | lostBits;
+                
+                lostBits = prevLostBits
+                    // prepares lostBits to be used in the biwise or
+                    << (8 - shiftBy);
+            }
+
+            // add one final byte containing bits tha would have be lost
+            bitsArr.push( lostBits ); 
+
+            return {
+                buffer: Buffer.from( bitsArr ),
+                nZeroesAsEndPadding: (8 - shiftBy) as InByteOffset 
+            };
         }
 
-        // add one final byte containing bits tha would have be lost
-        bitsArr.push( lostBits ); 
+        /* 
+        otherwhise it means
+        effectiveInByteInitialZeroes > supposedInByteInitialZeroes
+
+        so the situation is like:
+
+        first (non-zero) byte `0b0000_0001`
+        whereas it should be  `0b0000_0111`
+
+        so we are supposed to shif left by "effectiveInByteInitialZeroes - supposedInByteInitialZeroes" (in this case 2)
+        */
+
+        const shiftBy = effectiveInByteInitialZeroes - supposedInByteInitialZeroes;
+
+        /**
+         * this is quick and dirty, we are basically re-doin what did before
+         * @fixme should be moved above to remove code duplication
+         */
+        const shiftedlBitsArr = 
+            Array.from<number>(
+                // let bigint do the dirty work
+                BigIntUtils.toBuffer( bits << BigInt( shiftBy ) ) 
+            );
+        
+        // add whole bytes of zeroes at the beginning if needed
+        if( this.nInitialZeroes >= 8 )
+        {
+            shiftedlBitsArr.unshift(
+                ...Array<number>(
+                    // number of whole bytes as zeroes
+                    Math.floor( this.nInitialZeroes / 8 )
+                ).fill( 0 )
+            );
+        }
 
         return {
-            buffer: Buffer.from( bitsArr ),
-            nZeroesAsEndPadding: (8 - nInBytesInitialZeroes) as InByteOffset 
+            buffer: Buffer.from( shiftedlBitsArr ),
+            nZeroesAsEndPadding: shiftBy as InByteOffset 
         };
+
     }
 
     /**
@@ -262,7 +422,7 @@ export default class BitStream
         this._bits <<= byOffset;
     }
 
-    append( other: BitStream ): void
+    append( other: Readonly<BitStream> ): void
     {
         if( other.isEmpty() )
         {
@@ -271,35 +431,42 @@ export default class BitStream
 
         if( this.isEmpty() )
         {
-            this._bits = other._bits;
+            this._bits = other.bits;
             this._nInitialZeroes = other.nInitialZeroes;
             return;
         }
 
         if( this.isAllZeroes() )
         {
-            this._bits = other._bits;
+            this._bits = other.bits;
             this._nInitialZeroes = this._nInitialZeroes + other.nInitialZeroes; 
             return;
         }
-
         
         // make some space
-        this._bits = this._bits << BigInt( other.length );
+        this._bits = this.bits << BigInt( other.length );
 
         // other.length keeps track also of possible initial zeroes
         // so those have been added when shifting
-        this._bits = this._bits | other._bits;
+        this._bits = this.bits | other.bits;
 
     }
 
-    /*
+    clone(): BitStream
+    {
+        return new BitStream(
+            this.bits,
+            this.nInitialZeroes
+        )
+    }
+
     static concat( a: BitStream, b: BitStream ): BitStream
     {
-        let bits = a.asBigInt();
-        bits = bits << BigInt( b.length );
-        bits = bits | b.asBigInt();
-        return new BitStream(bits, a._nInitialZeroes)
+        const bitStream = a.clone();
+
+        // .append argument is readonly
+        bitStream.append( b );
+
+        return bitStream;
     }
-    //*/
 }

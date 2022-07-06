@@ -7,6 +7,18 @@ const _isDebugging: boolean = !true;
 
 export default class Debug
 {
+    static ignore = {
+        isDeugging(): boolean { return this.isDeugging() },
+        overrideDebugForNChecks( ...args: any[] ): void {},
+        log( ...args: any[] ): void {},
+        warn( ...args: any[] ): void {},
+        err( ...args: any[] ): void {},
+        assert( ...args: any[] ): void {},
+        throw( ...args: any[] ): void {},
+        Proxies: {
+            withNoisySet<T extends object>( obj: T ): T { return obj }
+        }
+    }
 
     static isDeugging(): boolean
     {

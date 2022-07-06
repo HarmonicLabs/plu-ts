@@ -26,6 +26,18 @@ export default class BigIntUtils
     }
 
     /**
+     * @returns {bigint} a ```bigint``` between ```0``` and ```Number.MAX_SAFE_INTEGER``` so that is safe to convert to Number for whatever reason 
+     */
+    static random(): bigint
+    {
+        return BigInt(
+            Math.round(
+                Math.random() * Number.MAX_SAFE_INTEGER
+            )
+        );
+    }
+
+    /**
      * Big-Endian default
      */
     static fromBuffer( buffer: Buffer )
@@ -46,6 +58,11 @@ export default class BigIntUtils
 
     static toBuffer( bigint: bigint, nBytes: number | undefined = undefined ): Buffer
     {
+        JsRuntime.assert(
+            bigint >= BigInt( 0 ),
+            "cannot convert negative bigint to buffer"
+        );
+
         if( bigint == BigInt( 0 ) )
         {
             if(nBytes === undefined)
