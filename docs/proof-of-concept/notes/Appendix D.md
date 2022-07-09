@@ -114,11 +114,11 @@ respectively
 
 tag         | meaning
 ------------|----------------------------------
- 0 (Variable)    | name ( UTF8 string, variable length ?? or DeBruijin ? )
+ 0 (Variable)    | name ( DeBruijin - unsigned integer encoded as variable length )
  1 (delay)       | term ( other 4 bits will tell what to do )
- 2 (lambda)      | name( bounded var, UTF8 string, variable length ?? or DeBruijin ? ) && term ( other 4 bits will tell what to do  
- 3 (application) | term (4 bit + payload ) ```:*:``` term (4 bit + payload 
- 4 (constant)    | constant (see D.2 section ) (4 bit + payload ) 
+ 2 (lambda)      | name( bounded var,DeBruijin - unsigned integer (0) encoded as variable length ) && term ( other 4 bits will tell what to do ) 
+ 3 (application) | term ( 4 bit + serialized term ) ```:*:``` term ( 4 bit + serialized term )
+ 4 (constant)    | constant (see D.2 section ) ( 4 bit + serialized term) 
  5 (force)       | term ( other 4 bits will tell what to do )
  6 (error)       | term ( other 4 bits will tell what to do )
  7 (builtin)     | ( uniquely identified by 5-bit tag )
