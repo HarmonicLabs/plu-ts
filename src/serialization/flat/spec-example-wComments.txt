@@ -1,0 +1,11 @@
+00001011 00010110 00100001 (*program version /*program 11.22.33*/ *)
+
+01001000 00000101 10000001
+
+0100 (*tag constant*)
+	1(*variable length Cons*)
+		000 0(*constant tag for integer*)
+	0(*variable length Nil*)
+	0(*variable length Nil (for integer)*)
+		00101 10(*22 in 7 bits*)
+000001(*end of program, padding to fill bytes*)

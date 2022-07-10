@@ -1,4 +1,12 @@
+import BasePlutsError from "../../../errors/BasePlutsError";
+import UPLCSerializable from "../../../serialization/flat/ineterfaces/UPLCSerializable";
+import BigIntUtils from "../../../utils/BigIntUtils";
+import BitUtils from "../../../utils/BitUtils";
 import BufferUtils from "../../../utils/BufferUtils"
+import JsRuntime from "../../../utils/JsRuntime";
+import UPLCFlatUtils from "../../../utils/UPLCFlatUtils";
+import BinaryString from "../../bits/BinaryString";
+import BitStream from "../../bits/BitStream";
 
 /**
  * javascript already has a builtin support for arbitrary length integers,
@@ -23,25 +31,44 @@ import BufferUtils from "../../../utils/BufferUtils"
  * 
  */
 export default class Integer
+    implements UPLCSerializable
 {
-    private _bigint : bigint ;
+    protected _bigint : bigint;
+
+    get asBigInt(): bigint
+    {
+        return this._bigint;
+    }
 
     constructor( bigint: bigint | number )
     {
-        this._bigint = typeof bigint == "bigint" ? bigint : BigInt( bigint );
+        if( typeof bigint === "number" )
+        {
+            if( !Integer.isInteger( bigint ) )
+            {
+                throw new BasePlutsError("input to the 'Integer' class was not an integer; got: " + bigint.toString())
+            }
+
+            bigint = BigInt( bigint );
+        }
+
+        this._bigint = bigint;
     }
 
-    /* FIXME add bytes interoperability
-    toBytes(): Uint8Array
+    toZigZag(): ZigZagInteger
     {
-
+        return ZigZagInteger.fromInteger( this );
     }
 
-    static fromBytes( bytes: Buffer ): Integer
+    static fromZigZag( zigzagged: ZigZagInteger ): Integer
     {
-        return new Integer( bytes );
+        return zigzagged.toInteger();
     }
-    */
+
+    toUPLCBitStream(): BitStream
+    {
+        return this.toZigZag().toUPLCBitStream();
+    }
 
     static isInteger( int: number ): boolean
     {
@@ -56,5 +83,129 @@ export default class Integer
     static formBigInt( int: bigint ): Integer
     {
         return new Integer( int );
+    }
+}
+
+export class ZigZagInteger
+    implements UPLCSerializable
+{
+    private _zigzagged: bigint;
+
+    get asBigInt(): bigint
+    {
+        return this._zigzagged;
+    }
+
+    private constructor( integer : Integer )
+    {
+        if(!( integer instanceof Integer ))
+        {
+            throw new BasePlutsError("expected instance of 'Integer' class to construct a 'ZigZagInteger';");
+        }
+
+        const bigint = integer.asBigInt ;
+
+        this._zigzagged = 
+            (
+                bigint >> 
+                    (
+                        BigInt( 
+                            BitUtils.getNOfUsedBits( bigint ) 
+                        )
+                    )
+            ) ^ // XOR
+            ( bigint << BigInt( 1 ) );
+    }
+
+    static fromNumber( num: number ): ZigZagInteger
+    {
+        return ZigZagInteger.fromInteger(
+            new Integer( num )
+        )
+    }
+
+    static fromInteger( integer: Integer )
+    {
+        // the constructor takes care of the encoding
+        return new ZigZagInteger( integer );
+    }
+
+    static fromAlreadyZigZagged( zigzagged: bigint ): ZigZagInteger
+    {
+        JsRuntime.assert(
+            typeof zigzagged == "bigint" && zigzagged >= BigInt(0),
+            "already zigzagged integer cannot be negative; input:" + zigzagged.toString()
+        )
+
+        const res = ZigZagInteger.fromNumber( 0 );
+        res._zigzagged = zigzagged;
+
+        return res;
+    }
+    
+    toInteger(): Integer
+    {
+        const bigint = this.asBigInt;
+
+        // decode
+        return new Integer(
+            (
+                (bigint >> BigInt(1))
+            )^ 
+            -( bigint & BigInt(1) )
+        )
+    }
+
+    toUPLCBitStream(): BitStream
+    {
+       return UPLCFlatUtils.encodeBigIntAsVariableLengthBitStream( this.asBigInt );
+    }
+}
+
+export class UInteger extends Integer
+    implements UPLCSerializable
+{
+    
+    constructor( bigint: bigint | number )
+    {
+        if( typeof bigint === "number" )
+        {
+            if( !UInteger.isUInteger( bigint ) )
+            {
+                throw new BasePlutsError("input to the 'Integer' class was not an **unsigned** integer; got: " + bigint.toString())
+            }
+
+            bigint = BigInt( bigint );
+        }
+
+        super( BigIntUtils.abs( bigint ) );
+    }
+
+    toZigZag(): ZigZagInteger
+    {
+        return ZigZagInteger.fromInteger( new Integer( this.asBigInt ) );
+    }
+
+    toUPLCBitStream(): BitStream
+    {
+       return UPLCFlatUtils.encodeBigIntAsVariableLengthBitStream( this.asBigInt );
+    }
+
+    static isUInteger( int: number | bigint ): boolean
+    {
+        if( typeof int === "number")
+            return Math.round( Math.abs( int ) ) === int;
+
+        return BigIntUtils.abs( int ) === int;
+    }
+
+    static fromNumber( int: number ): UInteger
+    {
+        return new UInteger( Math.round( Math.abs( int ) ) )
+    }
+
+    static formBigInt( int: bigint ): Integer
+    {
+        return new UInteger( BigIntUtils.abs( int ) );
     }
 }

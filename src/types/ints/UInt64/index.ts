@@ -3,7 +3,7 @@ import UInt64Error from "../../../errors/PlutsTypeError/UInt64Error";
 
 const wouldOverflowError = new UInt64Error("can't construct an Uint64 with less than 8 bytes")
 
-// very useful for CBOR
+// useful for CBOR
 /**
  * javascript safe uint64 representation
  */
@@ -19,6 +19,8 @@ export default class UInt64
     private _isNegative: boolean = false;
 
     /**
+     * @fixme this thing is orrible but needed for negatives in CBOR
+     * 
      * "dangerously" because this function does not change the byte rappresentation
      * 
      * @param isNegative ```true``` if the UInt64 is meant to represent a negative number ```false``` otherwise

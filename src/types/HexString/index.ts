@@ -14,10 +14,12 @@ export default class HexString
     {
         if( Buffer.isBuffer( hexString ) )
         {
-            hexString = hexString.toString("hex");
+            this._hex = hexString.toString("hex");
+            return;
         }
 
-        hexString = hexString.split(" ").join("").toLowerCase();
+        // remove spaces
+        hexString = hexString.trim().split(" ").join("").toLowerCase();
 
         // if it wasn't a Buffer originally, the string may contain invalid chars
         HexString._assertHex( hexString );

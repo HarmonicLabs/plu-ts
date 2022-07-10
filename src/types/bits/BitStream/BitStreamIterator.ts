@@ -14,6 +14,19 @@ export default class BitStreamIterator
 
     constructor( bitStream: Readonly<BitStream> )
     {
+        if( bitStream.length === 0 )
+        {
+            this._bitStreamBuff = Buffer.from( [] );
+            this._nZeroesAsPadding = 0;
+
+            this._currByteIndex = 0;
+            this._currByte = 0;
+            this._currBitIndex = 0;
+
+            this._isDone = () => true;
+            return;
+        }
+
         const { buffer, nZeroesAsEndPadding } = bitStream.toBuffer();
         
         this._bitStreamBuff = buffer;
@@ -29,10 +42,10 @@ export default class BitStreamIterator
 
     next(): {
         done: boolean
-        value?: Bit 
+        value: Bit 
     }
     {
-        if( this._isDone() ) return { done: true };
+        if( this._isDone() ) return { done: true, value: new Bit( 0 ) };
 
         /*
         Debug.ignore.log(

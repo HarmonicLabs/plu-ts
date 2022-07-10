@@ -6,12 +6,13 @@ import JsRuntime from "../../utils/JsRuntime";
 import Cloneable from "../interfaces/Cloneable";
 import Indexable from "../interfaces/Indexable";
 import Int32 from "../ints/Int32";
+import BinaryString from "./BinaryString";
 import Bit, { forceInByteOffset, InByteOffset } from "./Bit";
 import BitStreamIterator from "./BitStream/BitStreamIterator";
 
 
 export default class BitStream
-    implements Cloneable<BitStream>, Indexable< Bit >
+    implements Cloneable<BitStream>, Indexable<Bit>
 {
     private _bits: bigint;
 
@@ -70,6 +71,13 @@ export default class BitStream
         // even one bit requires a new byte,
         // that's why ceil
         return Math.ceil( length / 8 );
+    }
+
+    getNBitsMissingToByte() : InByteOffset
+    {
+        const lengthMod8 = this.length % 8;
+        if(lengthMod8 === 0) return 0;
+        return (8 - lengthMod8) as InByteOffset;
     }
 
     isEmpty(): boolean
@@ -167,6 +175,30 @@ export default class BitStream
         }
     }
 
+    static fromBinStr( binStr : BinaryString ): BitStream
+    {
+        JsRuntime.assert(
+            binStr instanceof BinaryString,
+            "expected an instance of the 'BinsryString' class; got: " + binStr.toString()
+        );
+
+        const rawBinStr = binStr.asString;
+        const firstOneAt = rawBinStr.indexOf('1');
+
+        if( firstOneAt < 0 ) // case all zeroes
+        {
+            return new BitStream(
+                BigInt( 0 ),
+                rawBinStr.length
+            )
+        }
+
+        return new BitStream(
+            BigInt( `0b${rawBinStr.slice(firstOneAt)}`),
+            firstOneAt
+        )
+    }
+
     /**
      * allows to use ```BitStream```s in ```for..of``` loops
      * 
@@ -188,7 +220,7 @@ export default class BitStream
 
         index = Math.round( index );
 
-        Debug.log(
+        Debug.ignore.log(
             `this.bits: ${this.bits.toString(2).padStart(8, '0' )}`,
             `\nmask:      ${BigInt( 1 << (this.length - index - 1) ).toString(2).padStart(8, '0' )}`,
             `\nresult:    ${(this.bits & BigInt( 1 << (this.length - index - 1) ) ).toString(2).padStart(8, '0' )}`,
@@ -412,14 +444,14 @@ export default class BitStream
     {
         const lostBits = BitUtils.getNLastBits( this._bits, byOffset );
 
-        this._bits >>= byOffset;
+        this._bits = this.bits >> byOffset;
 
         return lostBits;
     }
 
     shiftl( byOffset: bigint )
     {
-        this._bits <<= byOffset;
+        this._bits = this.bits << byOffset;
     }
 
     append( other: Readonly<BitStream> ): void
