@@ -2,11 +2,9 @@ import UPLCSerializable from "../../../../serialization/flat/ineterfaces/UPLCSer
 import BitStream from "../../../../types/bits/BitStream";
 import UPLCTerm from "../UPLCTerm";
 import BinaryString from "../../../../types/bits/BinaryString";
-import Delay from "./Delay";
-import UPLCEvaluableToPrimitive from "../UPLCPrimitive/interfaces/UPLCEvaluableToPrimitive";
 
 export default class Force
-    implements UPLCSerializable, UPLCEvaluableToPrimitive
+    implements UPLCSerializable
 {
     private static UPLCTag: BitStream = BitStream.fromBinStr(
         new BinaryString( "0101" )
@@ -14,8 +12,15 @@ export default class Force
 
     private _toForce : UPLCTerm;
 
+    get termToForce(): UPLCTerm
+    {
+        return this._toForce;
+    }
+
     /**
-     * ```Force``` takes any ```UPLCTerm``` as argument that ultimately **evaluates** to a Deleyed one, not only ```Delay``` terms
+     * ```Force``` takes any ```UPLCTerm``` as argument;
+     * not necessarely ```Delayed``` ones, a great example are
+     * "type parametrized" builtin-functions
      */
     constructor( rawTerm: UPLCTerm )
     {
@@ -25,7 +30,7 @@ export default class Force
     toUPLCBitStream(): BitStream
     {
         const result = Force.UPLCTag.clone();
-        result.append( this._toForce.toUPLCBitStream() );
+        result.append( this.termToForce.toUPLCBitStream() );
         return result;
     }
 }

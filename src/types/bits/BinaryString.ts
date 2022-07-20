@@ -4,11 +4,6 @@ export default class BinaryString
 {
     private _bin: string;
 
-    protected set bin( binString: string )
-    {
-        this._bin = binString.toLowerCase();
-    }
-
     constructor( binString : string )
     {
         JsRuntime.assert(
@@ -17,6 +12,8 @@ export default class BinaryString
         )
 
         // remove spaces
+        // this makes strings like "0010 0101 0000 1111" and " 0 000 10110 0000001" valid
+        // and potentially improves readability
         binString = binString.trim().split(" ").join("").toLowerCase();
 
         // the string may contain invalid chars
@@ -28,6 +25,11 @@ export default class BinaryString
     get asString(): string
     {
         return this._bin;
+    }
+
+    get length(): number
+    {
+        return this._bin.length;
     }
 
     /**

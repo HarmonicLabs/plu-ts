@@ -33,6 +33,16 @@ import BitStream from "../../bits/BitStream";
 export default class Integer
     implements UPLCSerializable
 {
+    get [Symbol.toStringTag](): string
+    {
+        return "Integer";
+    }
+
+    static isStrictInstance( any: any ): boolean
+    {
+        return any.__proto__ === Integer.prototype
+    }
+
     protected _bigint : bigint;
 
     get asBigInt(): bigint
@@ -89,6 +99,16 @@ export default class Integer
 export class ZigZagInteger
     implements UPLCSerializable
 {
+    get [Symbol.toStringTag](): "ZigZagInteger"
+    {
+        return "ZigZagInteger";
+    }
+
+    static isStrictInstance( any: any ): boolean
+    {
+        return any.__proto__ === ZigZagInteger.prototype
+    }
+
     private _zigzagged: bigint;
 
     get asBigInt(): bigint
@@ -165,6 +185,15 @@ export class ZigZagInteger
 export class UInteger extends Integer
     implements UPLCSerializable
 {
+    get [Symbol.toStringTag](): "UInteger"
+    {
+        return "UInteger";
+    }
+
+    static isStrictInstance(any: any): boolean
+    {
+        return any.__proto__ === UInteger.prototype;    
+    }
     
     constructor( bigint: bigint | number )
     {
@@ -179,6 +208,11 @@ export class UInteger extends Integer
         }
 
         super( BigIntUtils.abs( bigint ) );
+    }
+
+    toSigned(): Integer
+    {
+        return new Integer( this.asBigInt );
     }
 
     toZigZag(): ZigZagInteger

@@ -2,10 +2,9 @@ import UPLCSerializable from "../../../../serialization/flat/ineterfaces/UPLCSer
 import BitStream from "../../../../types/bits/BitStream";
 import UPLCTerm from "../UPLCTerm";
 import BinaryString from "../../../../types/bits/BinaryString";
-import UPLCEvaluableToPrimitive from "../UPLCPrimitive/interfaces/UPLCEvaluableToPrimitive";
 
 export default class Application
-    implements UPLCSerializable, UPLCEvaluableToPrimitive
+    implements UPLCSerializable
 {
     private static UPLCTag: BitStream = BitStream.fromBinStr(
         new BinaryString( "0011" )
@@ -13,6 +12,16 @@ export default class Application
 
     private _func: UPLCTerm
     private _arg : UPLCTerm;
+
+    get funcTerm(): UPLCTerm
+    {
+        return this._func;
+    }
+
+    get argTerm(): UPLCTerm
+    {
+        return this._arg;
+    }
 
     constructor( func: UPLCTerm, arg: UPLCTerm )
     {
@@ -23,8 +32,8 @@ export default class Application
     toUPLCBitStream(): BitStream
     {
         const result = Application.UPLCTag.clone();
-        result.append( this._func.toUPLCBitStream() );
-        result.append( this._arg.toUPLCBitStream() );
+        result.append( this.funcTerm.toUPLCBitStream() );
+        result.append( this.argTerm.toUPLCBitStream() );
         return result;
     }
 }

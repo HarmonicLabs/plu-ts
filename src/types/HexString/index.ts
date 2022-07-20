@@ -3,6 +3,11 @@ import HexError from "../../errors/PlutsTypeError/HexError";
 
 export default class HexString
 {
+    get [Symbol.toStringTag](): string
+    {
+        return "HexString";
+    }
+
     private _hex: string;
 
     protected set hex( hexString: string )

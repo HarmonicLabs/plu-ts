@@ -35,22 +35,30 @@
 import UPLCSerializable from "../../../../../serialization/flat/ineterfaces/UPLCSerializable";
 import BinaryString from "../../../../../types/bits/BinaryString";
 import BitStream from "../../../../../types/bits/BitStream";
-import { UPLCBool } from "../../UPLCPrimitive/UPLCBool";
-import UPLCEvaluableToPrimitive from "../../UPLCPrimitive/interfaces/UPLCEvaluableToPrimitive";
-import BuiltinTaggable from "./interfaces/BuiltinTaggable";
-import UPLCBuiltinTag, { UPLCBuiltinTagNumber, UPLCBuiltinTagToBitStream } from "./UPLCBuiltinTag";
+import JsRuntime from "../../../../../utils/JsRuntime";
+import UPLCBuiltinTag, { isUPLCBuiltinTag } from "./UPLCBuiltinTag";
 
 
 export default class Builtin
-    implements UPLCSerializable, UPLCEvaluableToPrimitive
+    implements UPLCSerializable
 {
     private static UPLCTag: BitStream = BitStream.fromBinStr(
         new BinaryString( "0111" )
     );
 
+    private _tag: UPLCBuiltinTag;
 
-    constructor(  )
+    get tag(): UPLCBuiltinTag
     {
+        return this._tag;
+    }
+
+    constructor( tag: UPLCBuiltinTag )
+    {
+        JsRuntime.assert(
+            isUPLCBuiltinTag( tag ),
+            "cannot instatinitate a 'Builtin' using tag: " + tag.toString()
+        );
     }
 
     toUPLCBitStream(): BitStream

@@ -12,15 +12,20 @@ export default class Delay
 
     private _delayedTerm : UPLCTerm;
 
-    constructor( rawTerm: UPLCTerm )
+    get delayedTerm()
     {
-        this._delayedTerm = rawTerm;
+        return this._delayedTerm;
+    }
+
+    constructor( toDelay: UPLCTerm )
+    {
+        this._delayedTerm = toDelay;
     }
 
     toUPLCBitStream(): BitStream
     {
         const result = Delay.UPLCTag.clone();
-        result.append( this._delayedTerm.toUPLCBitStream() );
+        result.append( this.delayedTerm.toUPLCBitStream() );
         return result;
     }
 }

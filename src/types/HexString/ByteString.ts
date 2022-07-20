@@ -6,6 +6,16 @@ import BitStream from "../bits/BitStream";
 export default class ByteString extends HexString
     implements UPLCSerializable
 {
+    get [Symbol.toStringTag](): string
+    {
+        return "ByteString";
+    }
+
+    static isStrictInstance( any: any ): boolean
+    {
+        return any.__proto__ === ByteString.prototype
+    }
+
     constructor( bs: string | Buffer )
     {
         if( typeof bs == "string" )
@@ -25,6 +35,9 @@ export default class ByteString extends HexString
         we can't use 'UPLCFlatUtils.encodeBigIntAsVariableLengthBitStream' here
         because converting a bytestring like "0x000002abc..." to a bigint
         would lose track of the starting zeroes
+        */
+        /*
+        latest specification specifies how bytestrings are bytealigned before and the first byte indicates the length
         */
 
         

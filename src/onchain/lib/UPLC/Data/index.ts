@@ -10,7 +10,7 @@ type Data
 
 export default Data;
 
-export function isData( something: any ): boolean
+export function isData( something: Data ): boolean
 {
     return (
         something instanceof DataConstr ||

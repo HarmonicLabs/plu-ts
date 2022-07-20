@@ -6,16 +6,17 @@ import Const from "./UPLCTerms/Const";
 import Force from "./UPLCTerms/Force";
 import ErrorUPLC from "./UPLCTerms/ErrorUPLC";
 import Builtin from "./UPLCTerms/Builtin";
+import JsRuntime from "../../../utils/JsRuntime";
 
 type UPLCTerm 
-    = UPLCVar       // UPLCEvaluableToPrimitive
+    = UPLCVar
     | Delay
     | Lambda
-    | Application   // UPLCEvaluableToPrimitive
-    | Const         // UPLCEvaluableToPrimitive
-    | Force         // UPLCEvaluableToPrimitive
-    | ErrorUPLC     // UPLCEvaluableToPrimitive
-    | Builtin;      // UPLCEvaluableToPrimitive
+    | Application
+    | Const
+    | Force
+    | ErrorUPLC
+    | Builtin;
 
 export default UPLCTerm;
 
@@ -31,4 +32,53 @@ export function isUPLCTerm( t: UPLCTerm ): boolean
         t instanceof ErrorUPLC      ||
         t instanceof Builtin
     );
+}
+
+export function isClosedTerm( term: UPLCTerm ): boolean
+{
+    function _isClosedTerm( maxDeBruijn: bigint, t: UPLCTerm ): boolean
+    {
+        JsRuntime.assert(
+            isUPLCTerm( t ),
+            "'isClosedTerm' functions only works on **raw** UPLCTerms"
+        );
+
+        if( t instanceof UPLCVar )
+            return maxDeBruijn >= t.deBruijn.asBigInt;
+
+        else if( t instanceof Delay )
+            return _isClosedTerm( maxDeBruijn , t.delayedTerm );
+        
+        else if( t instanceof Lambda )
+            // increment max debruijn
+            return _isClosedTerm( maxDeBruijn + BigInt( 1 ), t.body );
+
+        else if( t instanceof Application )
+            return _isClosedTerm( maxDeBruijn , t.funcTerm ) && _isClosedTerm( maxDeBruijn , t.argTerm )
+        
+        else if( t instanceof Const )
+            // `Const` has no variables in it, ence always closed
+            return true;
+        
+        else if( t instanceof Force )
+            return _isClosedTerm( maxDeBruijn, t.termToForce );
+
+        else if( t instanceof ErrorUPLC )
+            // `ErrorUPLC` has no variables in it, ence always closed
+            return true;
+
+        else if( t instanceof Builtin )
+            // builtin per-se is just the function,
+            // arguments are passed using the `Apply` Term
+            // so it is the `t instanceof Apply` case 
+            // job to take care of checking for the arguments to be closed
+            return true;
+        else
+            throw JsRuntime.makeNotSupposedToHappenError(
+                "unexpected execution flow in 'isClodeTerm'; all possibilieties should have already been handled; input term is: " + (t as any).toString()
+            )
+
+    }
+
+    return _isClosedTerm( BigInt( 0 ) , term );
 }
