@@ -1,6 +1,5 @@
-import Debug from "../../../../../../utils/Debug";
-import ConstType, { constT, constTypeToStirng, ConstTyTag, isWellFormedConstType } from "../ConstType";
-import { makeRandomWellFormed } from "./utils";
+import ConstType, { constT, constTypeToStirng, ConstTyTag, isWellFormedConstType } from "..";
+import { makeRandomWellFormed } from "../test_utils";
 
 
 describe("isWellFormedConstType", () => {

@@ -1,6 +1,6 @@
-import BasePlutsError from "../../../../../errors/BasePlutsError";
-import Debug from "../../../../../utils/Debug";
-import JsRuntime from "../../../../../utils/JsRuntime";
+import BasePlutsError from "../../../../../../errors/BasePlutsError";
+import Debug from "../../../../../../utils/Debug";
+import JsRuntime from "../../../../../../utils/JsRuntime";
 
 export const enum ConstTyTag {
     int = 0,

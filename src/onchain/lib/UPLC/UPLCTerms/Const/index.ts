@@ -75,6 +75,47 @@ export default class Const
         return new Const( constT.int , int );
     }
 
+    static byteString( bs: ByteString ): Const
+    {
+        return new Const( constT.byteStr, bs );
+    }
+
+    static str( str: string ): Const
+    {
+        return new Const( constT.str, str );
+    }
+
+    static get unit(): Const
+    {
+        return new Const( constT.unit, undefined );
+    }
+
+    static bool( bool: boolean ): Const
+    {
+        return new Const( constT.bool, bool );
+    }
+
+    static listOf( typeArg: ConstType ): ( ( values: ConstValue[] ) => Const )
+    {
+        return function ( values: ConstValue[] ): Const
+        {
+            return new Const( constT.listOf( typeArg ), values );
+        };
+    }
+
+    static pairOf( typeArgFirst: ConstType, typeArgSecond: ConstType ): ( ( first: ConstValue, second: ConstValue ) => Const )
+    {
+        return function ( first: ConstValue, second: ConstValue ): Const
+        {
+            return new Const( constT.pairOf( typeArgFirst, typeArgSecond ), new Pair( first, second ) );
+        };
+    }
+
+    static data( data: Data ): Const
+    {
+        return new Const( constT.data, data );
+    }
+
     toUPLCBitStream(): BitStream
     {
         throw Error("not implemented");

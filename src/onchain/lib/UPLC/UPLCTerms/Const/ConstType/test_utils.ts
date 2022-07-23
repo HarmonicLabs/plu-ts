@@ -1,4 +1,4 @@
-import ConstType, { constT, ConstTyTag } from "../ConstType";
+import ConstType, { constT, ConstTyTag } from ".";
 
 export function makeRandomWellFormed(): ConstType
 {

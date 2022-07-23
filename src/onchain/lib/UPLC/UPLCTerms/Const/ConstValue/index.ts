@@ -1,10 +1,10 @@
-import ByteString from "../../../../../types/HexString/ByteString";
-import Integer, { UInteger } from "../../../../../types/ints/Integer";
-import Pair from "../../../../../types/structs/Pair";
-import Debug from "../../../../../utils/Debug";
-import JsRuntime from "../../../../../utils/JsRuntime";
-import Data, { isData } from "../../Data";
-import ConstType, { constTypeEq, constT, constTypeToStirng, ConstTyTag, isWellFormedConstType, constListTypeUtils, constPairTypeUtils } from "./ConstType";
+import ByteString from "../../../../../../types/HexString/ByteString";
+import Integer, { UInteger } from "../../../../../../types/ints/Integer";
+import Pair from "../../../../../../types/structs/Pair";
+import Debug from "../../../../../../utils/Debug";
+import JsRuntime from "../../../../../../utils/JsRuntime";
+import Data, { isData } from "../../../Data";
+import ConstType, { constTypeEq, constT, constTypeToStirng, ConstTyTag, isWellFormedConstType, constListTypeUtils, constPairTypeUtils } from "../ConstType";
 
 
 type ConstValue
@@ -19,6 +19,8 @@ type ConstValue
 
 export default ConstValue;
 
+// mutually recursive on arrays (list values)
+// inferConstTypeFromConstValue -> isConstValue -> isConstValueList (on list element) -> inferConstTypeFromConstValue
 /**
  * 
  * @param val 
@@ -30,16 +32,16 @@ export function inferConstTypeFromConstValue( val: ConstValue ): (ConstType | un
         isConstValue(
             val
         ),
-        "'inferConstTypeFromConstValue' expects a valid 'CoinstValue' type, input was: " + ( val?.toString() ?? "undefined" )
+        "'inferConstTypeFromConstValue' expects a valid 'CoinstValue' type, input was: " + val
     )
 
     if( val === undefined ) return constT.unit;
     
-    if( (val as any)[Symbol.toStringTag] === "Integer" ) return constT.int;
+    if( val instanceof Integer && Integer.isStrictInstance( val ) ) return constT.int;
 
-    if( (val as any)[Symbol.toStringTag] === "ByteString" ) return constT.byteStr;
+    if( val instanceof ByteString && ByteString.isStrictInstance( val ) ) return constT.byteStr;
 
-    if( typeof val === "string" ) return constT.byteStr;
+    if( typeof val === "string" ) return constT.str;
 
     if( typeof val === "boolean" ) return constT.bool;
     
@@ -47,9 +49,14 @@ export function inferConstTypeFromConstValue( val: ConstValue ): (ConstType | un
     {
         if( val.length === 0 ) return undefined;
 
-        const firstElemTy = inferConstTypeFromConstValue(
-            val[0]
-        )
+        let firstElemTy: ConstType | undefined = undefined;
+
+        for( let i = 0; i < val.length && firstElemTy === undefined; i++ )
+        {
+            firstElemTy = inferConstTypeFromConstValue(
+                val[i]
+            );
+        }
 
         if( firstElemTy === undefined ) return undefined;
 
@@ -57,7 +64,7 @@ export function inferConstTypeFromConstValue( val: ConstValue ): (ConstType | un
             val.every(
                 listElem => canConstValueBeOfConstType(
                     listElem,
-                    firstElemTy
+                    firstElemTy as ConstType
                 )
             ),
             "'inferConstTypeFromConstValue': incongruent elements of constant list"
@@ -66,14 +73,12 @@ export function inferConstTypeFromConstValue( val: ConstValue ): (ConstType | un
         return constT.listOf( firstElemTy );
     }
 
-    if( (val as any)[Symbol.toStringTag] === "Pair" )
+    if( val instanceof Pair && Pair.isStrictInstance( val ) )
     {
-        const value = val as Pair< ConstValue, ConstValue >;
-
-        const fstTy = inferConstTypeFromConstValue( value.fst );
+        const fstTy = inferConstTypeFromConstValue( val.fst );
         if( fstTy === undefined ) return undefined;
         
-        const sndTy = inferConstTypeFromConstValue( value.snd );
+        const sndTy = inferConstTypeFromConstValue( val.snd );
         if( sndTy === undefined ) return undefined;
 
         return constT.pairOf( fstTy, sndTy );
@@ -167,15 +172,22 @@ export function isConstValueList( val: ConstValue  ): boolean
     for( let i = 0; i < val.length && firstElemTy === undefined; i++ )
     {
         firstElemTy = inferConstTypeFromConstValue(
-            val[0]
+            val[i]
         );
     }
 
     if( firstElemTy === undefined )
     {
-        return val.every(
-            elem => Array.isArray( elem ) && elem.length === 0
-        );
+        function isArrayOfEmptyArray( arr: any[] ): boolean
+        {
+            if( !Array.isArray( arr ) ) return false;
+
+            return arr.every(
+                elem => Array.isArray( elem ) && elem.length === 0 || isArrayOfEmptyArray( elem )
+            );
+        }
+        
+        return isArrayOfEmptyArray( val );
     }
 
     return val.every(
@@ -188,17 +200,16 @@ export function isConstValueList( val: ConstValue  ): boolean
 
 export function isConstValue( value: ConstValue ): boolean
 {
-    const val = value as any;
-
     return (
-        val === undefined                                                   ||
-        (val instanceof Integer && Integer.isStrictInstance( val ) )        ||
-        (val instanceof ByteString && ByteString.isStrictInstance( val ) )  ||
-        typeof val === "string"                                             ||
-        typeof val === "boolean"                                            ||
-        isConstValueList( val )                                             ||
-        (val instanceof Pair && Pair.isStrictInstance( val ))               ||
-        isData( val )
+        value === undefined                                                     ||
+        (value instanceof Integer && Integer.isStrictInstance( value ) )        ||
+        (value instanceof ByteString && ByteString.isStrictInstance( value ) )  ||
+        typeof value === "string"                                               ||
+        typeof value === "boolean"                                              ||
+        isConstValueList( value )                                               ||
+        (value instanceof Pair && Pair.isStrictInstance( value )) &&
+        isConstValue( value.fst ) && isConstValue( value.snd )                  ||
+        isData( value )
     )
 }
 

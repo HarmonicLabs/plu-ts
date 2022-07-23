@@ -3,7 +3,7 @@ import Debug from "../Debug";
 /**
  * @static
  */
-export default class ByetsUtils
+export default class BytesUtils
 {
     private constructor() {};
 
