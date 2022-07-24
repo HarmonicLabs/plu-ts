@@ -202,17 +202,18 @@ export class UInteger extends Integer
     
     constructor( bigint: bigint | number )
     {
+        if( !UInteger.isUInteger( bigint ) )
+        {
+            throw new BasePlutsError("input to the 'Integer' class was not an **unsigned** integer; got: " + bigint.toString())
+        }
+
         if( typeof bigint === "number" )
         {
-            if( !UInteger.isUInteger( bigint ) )
-            {
-                throw new BasePlutsError("input to the 'Integer' class was not an **unsigned** integer; got: " + bigint.toString())
-            }
-
             bigint = BigInt( bigint );
         }
 
-        super( BigIntUtils.abs( bigint ) );
+        // isUInteger at the beginnign of the constructor guarantees the number is non-negative
+        super( bigint );
     }
 
     toSigned(): Integer
