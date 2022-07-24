@@ -10,6 +10,10 @@ import BinaryString from "./BinaryString";
 import Bit, { forceInByteOffset, InByteOffset } from "./Bit";
 import BitStreamIterator from "./BitStream/BitStreamIterator";
 
+export interface BitStreamPadToByteOptions {
+    onByteAllignedAddNewByte: boolean
+    withOneAsEndPadding: boolean
+}
 
 export default class BitStream
     implements Cloneable<BitStream>, Indexable<Bit>
@@ -76,7 +80,7 @@ export default class BitStream
     getNBitsMissingToByte() : InByteOffset
     {
         const lengthMod8 = this.length % 8;
-        if(lengthMod8 === 0) return 0;
+        if(lengthMod8 === 0) return 0; // would have returned 8 (8 - 0) otherwise
         return (8 - lengthMod8) as InByteOffset;
     }
 
@@ -114,7 +118,16 @@ export default class BitStream
         if( typeof bytes == "bigint" )
         {
             this._nInitialZeroes = nInitialZeroes;
+
+            // throws in debug only
+            if( bytes < BigInt( 0 ) )
+            {
+                Debug.throw(
+                    "cannot construct a BitStream using negative numbers"
+                );
+            }
             
+            // silently adapts the input if negative in produciton
             this._bits = BigIntUtils.abs( bytes );
             return;
         }
@@ -175,8 +188,14 @@ export default class BitStream
         }
     }
 
-    static fromBinStr( binStr : BinaryString ): BitStream
+    static fromBinStr( binStr : BinaryString | string ): BitStream
     {
+        if( typeof binStr === "string" )
+        {
+            // asserts it is a binary string
+            binStr = new BinaryString( binStr );
+        };
+
         JsRuntime.assert(
             binStr instanceof BinaryString,
             "expected an instance of the 'BinsryString' class; got: " + binStr.toString()
@@ -486,6 +505,8 @@ export default class BitStream
 
     clone(): BitStream
     {
+        if( this.isEmpty() ) return new BitStream();
+
         return new BitStream(
             this.bits,
             this.nInitialZeroes
@@ -501,4 +522,84 @@ export default class BitStream
 
         return bitStream;
     }
+    
+
+    // -------------------------------------------------------------------------------------------------------------------------- //
+    // ------------------------------------------------------- Operations ------------------------------------------------------- //
+    // -------------------------------------------------------------------------------------------------------------------------- //
+
+    static eq( a: BitStream, b: BitStream ): boolean
+    {
+        // if same object (same reference) return true
+        // Ω(1) // Omega(1)
+        if( a === b ) return true;
+
+        return (
+            a.nInitialZeroes === b.nInitialZeroes &&
+            a.bits === b.bits
+        );
+    }
+
+    static padToByteDefaultOptions: Readonly<BitStreamPadToByteOptions> = Object.freeze({
+        onByteAllignedAddNewByte: true,
+        withOneAsEndPadding: true
+    });
+
+    /**
+     * **_SIDE EFFECT_**: modifies the ```toPad``` ```BitStream``` passed as first argument
+     * 
+     * @param toPad 
+     * @param options 
+     * @returns 
+     */
+    static padToByte(
+        toPad: BitStream, 
+        options?: Partial<BitStreamPadToByteOptions> 
+    ): void
+    {
+        const opts = {
+            ...BitStream.padToByteDefaultOptions,
+            ...( options === undefined ? {} : options )
+        };
+
+        const nBitsMissingToByte = toPad.getNBitsMissingToByte();
+
+        if( nBitsMissingToByte === 0 )
+        {
+            if( opts.onByteAllignedAddNewByte )
+            {
+                toPad.append(
+                    BitStream.fromBinStr(
+                        new BinaryString( ( opts.withOneAsEndPadding ? "1" : "0" ).padStart( 8 , '0' ) )
+                    )
+                );
+            }
+            else
+            {
+                // do nothing, already alligned
+            }
+
+            return;
+        }
+
+        toPad.append(
+            BitStream.fromBinStr(
+                new BinaryString( ( opts.withOneAsEndPadding ? "1" : "0" ).padStart( nBitsMissingToByte , '0' ) )
+            )
+        );
+
+        return;
+    }
+
+    static padToByteAndAppend(
+        toPad: BitStream,
+        toAppend: BitStream,
+        padOptions?: Partial<BitStreamPadToByteOptions>
+    ): void
+    {
+        BitStream.padToByte( toPad , padOptions );
+        toPad.append( toAppend );
+        return;
+    }
+
 }

@@ -76,8 +76,4 @@ export default class UPLCFlatUtils
         );
     }
 
-    static encodeBitStreamAsVariableLength( bitStream: Readonly<BitStream> ) : BitStream
-    {
-        
-    }
 }

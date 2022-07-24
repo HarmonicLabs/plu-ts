@@ -29,16 +29,28 @@ export default class ByteString extends HexString
         super( bs );
     }
 
+    /**
+     * latest specification (**_section D.2.5 Bytestrings; page 27_**)
+     * specifies how bytestrings are byte-alligned before and the first byte indicates the length
+     * 
+     * this function takes care of the length
+     * 
+     * if this ```BitStream``` needs to be appended to an other that is intended to be an ```UPLCScript```
+     * then the ```BitStream``` to append the result of this method is assumed to be byte alligned
+     * 
+     * so in order to append a ```ByteString``` to a ```BitStream``` in the intended way the following code should be runt
+     * ```ts
+     * const myBits: BitStream = new BitStream()
+     * const byBytes: ByteString = new BytesTring( "abcd" );
+     * 
+     * BitStream.padToByte( myBits );
+     * myBits.append( myBytes.toUPLCBitStream() );
+     * 
+     * ```
+     * 
+     */
     toUPLCBitStream(): BitStream
     {
-        /* 
-        we can't use 'UPLCFlatUtils.encodeBigIntAsVariableLengthBitStream' here
-        because converting a bytestring like "0x000002abc..." to a bigint
-        would lose track of the starting zeroes
-        */
-        /*
-        latest specification specifies how bytestrings are bytealigned before and the first byte indicates the length
-        */
 
         
     }

@@ -29,4 +29,12 @@ export default class Pair< A, B >
         this._fst = a;
         this._snd = b;
     }
+
+    asObj(): { fst: A, snd: B }
+    {
+        return {
+            fst: this.fst,
+            snd: this.snd
+        };
+    }
 }

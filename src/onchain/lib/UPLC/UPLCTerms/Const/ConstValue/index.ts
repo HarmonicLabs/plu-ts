@@ -1,9 +1,10 @@
+import BitStream from "../../../../../../types/bits/BitStream";
 import ByteString from "../../../../../../types/HexString/ByteString";
 import Integer, { UInteger } from "../../../../../../types/ints/Integer";
 import Pair from "../../../../../../types/structs/Pair";
 import Debug from "../../../../../../utils/Debug";
 import JsRuntime from "../../../../../../utils/JsRuntime";
-import Data, { isData } from "../../../Data";
+import Data, { encodeDataToUPLCBitStream, isData } from "../../../Data";
 import ConstType, { constTypeEq, constT, constTypeToStirng, ConstTyTag, isWellFormedConstType, constListTypeUtils, constPairTypeUtils } from "../ConstType";
 
 
@@ -18,6 +19,134 @@ type ConstValue
     | Data;
 
 export default ConstValue;
+
+export function isConstValue( value: ConstValue ): boolean
+{
+    return (
+        value === undefined                                                     ||
+        (value instanceof Integer && Integer.isStrictInstance( value ) )        ||
+        (value instanceof ByteString && ByteString.isStrictInstance( value ) )  ||
+        typeof value === "string"                                               ||
+        typeof value === "boolean"                                              ||
+        isConstValueList( value )                                               ||
+        (value instanceof Pair && Pair.isStrictInstance( value )) &&
+        isConstValue( value.fst ) && isConstValue( value.snd )                  ||
+        isData( value )
+    )
+}
+
+function encodeConstValueToUPLCBitStream( value: ConstValue ): BitStream
+{
+    JsRuntime.assert(
+        isConstValue( value ),
+        "a 'ConstValue' instance was expected; got" + value
+    );
+
+    if( value === undefined ) return new BitStream();
+    if( value instanceof Integer )  return value.toUPLCBitStream();
+    if( value instanceof ByteString )
+    {
+        // see note of the ByteString.toUPLCBitStream method
+        return value.toUPLCBitStream()
+    }
+    if( typeof value === "string" )
+    {
+        /*
+        Section D.2.6 Strings (page 28)
+
+        We have defined values of the string type to be sequences of Unicode characters. As mentioned earlier
+        we do not specify any particular internal representation of Unicode characters, but for serialisation we use
+        the UTF-8 representation to convert between strings and bytestrings **and then use the bytestring encoder
+        and decoder**:
+        */
+        return encodeConstValueToUPLCBitStream(
+            new ByteString(
+                Buffer.from( value, "utf8" )
+            )
+        );
+    }
+    if( typeof value === "boolean" ) return BitStream.fromBinStr( value === true ? "1" : "0" );
+    if( Array.isArray( value ) && isConstValueList( value ) )
+    {
+        const result: BitStream = new BitStream();
+        
+        /*
+        operations on bigints (BitStream underlying type) are O(n)
+        appending first to this BitStream and then to the effective result
+        should give us some performace improvements
+        */
+        let listElem: BitStream;
+
+        for( let i = 0; i < value.length; i++ )
+        {
+            // set the list tag
+            listElem = BitStream.fromBinStr(
+                i === value.length - 1 ? "0" : "1"
+            );
+            
+            // mutually recursive
+            // set the value
+            appendConstValueToBitStream( value[ i ], listElem );
+
+            // append to list
+            result.append( listElem );
+        }
+
+        return result;
+    }
+    if( value instanceof Pair )
+    {
+        const result: BitStream = encodeConstValueToUPLCBitStream( value.fst );
+
+        // mutually recursive
+        appendConstValueToBitStream( value.snd, result );
+        
+        return result;
+    }
+    if( isData( value ) )
+    {
+        return encodeDataToUPLCBitStream( value );
+    }
+
+    throw JsRuntime.makeNotSupposedToHappenError(
+        "'encodeConstValueToUPLCBitStream' did not matched any 'ConstValue' possible type; input was: " + value.toString()
+    );
+}
+
+// mutually recursive for lists and pairs
+/**
+ * **_SIDE EFFECT_**: modifies the ```toAppendTo``` BitStream passed as second argument
+ * 
+ * @param value 
+ * @param toAppendTo 
+ * @returns 
+ */
+export function appendConstValueToBitStream( value: ConstValue, toAppendTo: BitStream ): void
+{
+    // units are removed
+    if( value === undefined ) return;
+
+    if(
+        typeof value === "string" ||
+        value instanceof ByteString
+    )
+    {
+        BitStream.padToByte(
+            toAppendTo,
+            {
+                onByteAllignedAddNewByte: true,
+                withOneAsEndPadding: true
+            }
+        );
+    }
+
+    toAppendTo.append(
+        encodeConstValueToUPLCBitStream(
+            value
+        )
+    );
+    return;
+}
 
 // mutually recursive on arrays (list values)
 // inferConstTypeFromConstValue -> isConstValue -> isConstValueList (on list element) -> inferConstTypeFromConstValue
@@ -198,18 +327,5 @@ export function isConstValueList( val: ConstValue  ): boolean
     );
 }
 
-export function isConstValue( value: ConstValue ): boolean
-{
-    return (
-        value === undefined                                                     ||
-        (value instanceof Integer && Integer.isStrictInstance( value ) )        ||
-        (value instanceof ByteString && ByteString.isStrictInstance( value ) )  ||
-        typeof value === "string"                                               ||
-        typeof value === "boolean"                                              ||
-        isConstValueList( value )                                               ||
-        (value instanceof Pair && Pair.isStrictInstance( value )) &&
-        isConstValue( value.fst ) && isConstValue( value.snd )                  ||
-        isData( value )
-    )
-}
+
 

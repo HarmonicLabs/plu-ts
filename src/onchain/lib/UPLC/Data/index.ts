@@ -1,3 +1,4 @@
+import BitStream from "../../../../types/bits/BitStream";
 import ByteString from "../../../../types/HexString/ByteString";
 import Integer, { UInteger } from "../../../../types/ints/Integer";
 
@@ -19,6 +20,11 @@ export function isData( something: Data ): boolean
         something instanceof DataI      ||
         something instanceof DataB
     );
+}
+
+export function encodeDataToUPLCBitStream( data: Data ): BitStream
+{
+
 }
 
 export class DataConstr

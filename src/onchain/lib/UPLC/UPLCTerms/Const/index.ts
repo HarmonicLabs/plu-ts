@@ -6,16 +6,19 @@ import Integer, { UInteger } from "../../../../../types/ints/Integer";
 import Pair from "../../../../../types/structs/Pair";
 import JsRuntime from "../../../../../utils/JsRuntime";
 import Data, { isData } from "../../Data";
-import ConstType, { constTypeEq, constT, constTypeToStirng, ConstTyTag, isWellFormedConstType } from "./ConstType";
-import ConstValue, { canConstValueBeOfConstType } from "./ConstValue";
+import ConstType, { constTypeEq, constT, constTypeToStirng, ConstTyTag, isWellFormedConstType, encodeConstTypeToUPLCBitStream } from "./ConstType";
+import ConstValue, { appendConstValueToBitStream, canConstValueBeOfConstType } from "./ConstValue";
 
 
 export default class Const
     implements UPLCSerializable
 {
-    private static UPLCTag: BitStream = BitStream.fromBinStr(
-        new BinaryString( "0100" )
-    );
+    private static get UPLCTag(): BitStream
+    {
+        return BitStream.fromBinStr(
+            new BinaryString( "0100" )
+        );
+    };
 
     private _type: ConstType
 
@@ -67,9 +70,12 @@ export default class Const
             int = new Integer( int );
         }
 
-        if( int instanceof UInteger )
+        if( int instanceof Integer )
         {
-            int = int.toSigned();
+            if( !Integer.isStrictInstance( int ) )
+            {
+                int = int.toSigned();
+            }
         }
 
         return new Const( constT.int , int );
@@ -118,6 +124,16 @@ export default class Const
 
     toUPLCBitStream(): BitStream
     {
-        throw Error("not implemented");
+        const constBitStream = Const.UPLCTag;
+        constBitStream.append(
+            encodeConstTypeToUPLCBitStream(
+                this.type
+            )
+        );
+        appendConstValueToBitStream(
+            this.value,
+            constBitStream
+        );
+        return constBitStream;
     }
 }

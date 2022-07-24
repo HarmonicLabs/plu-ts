@@ -65,6 +65,11 @@ export default class Integer
         this._bigint = bigint;
     }
 
+    toSigned(): Integer
+    {
+        return new Integer( this.asBigInt );
+    }
+
     toZigZag(): ZigZagInteger
     {
         return ZigZagInteger.fromInteger( this );

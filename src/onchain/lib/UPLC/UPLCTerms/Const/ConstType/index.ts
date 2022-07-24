@@ -1,4 +1,6 @@
 import BasePlutsError from "../../../../../../errors/BasePlutsError";
+import BinaryString from "../../../../../../types/bits/BinaryString";
+import BitStream from "../../../../../../types/bits/BitStream";
 import Debug from "../../../../../../utils/Debug";
 import JsRuntime from "../../../../../../utils/JsRuntime";
 
@@ -42,7 +44,7 @@ export const enum ConstTyTag {
 */
 type ConstType = ConstTyTag[];
 
-// maybe this one is too strict?
+// maybe this one is to strict?
 //    = [ ConstTyTag.int ]
 //    | [ ConstTyTag.byteStr ]
 //    | [ ConstTyTag.str  ]
@@ -53,60 +55,6 @@ type ConstType = ConstTyTag[];
 //    | [ ConstTyTag.data ];
 
 export default ConstType;
-
-/**
- * **does NOT require the types to be well-formed**
- * 
- * merly checks to have the same tags at the same place
- */
-export function constTypeEq( a: ConstType, b: ConstType ): boolean
-{
-    if( a.length !== b.length ) return false;
-
-    return a.every( ( tyTag, i ) => tyTag === b[ i ] );
-}
-
-/**
- * well formed types
- */
-export const constT : Readonly<{
-    int: ConstType,
-    byteStr: ConstType,
-    str: ConstType,
-    unit: ConstType
-    bool: ConstType
-    listOf: ( tyArg: ConstType ) => ConstType
-    pairOf: ( tyArg1: ConstType, tyArg2: ConstType ) => ConstType
-    data: ConstType
-}> = Object.freeze({
-
-    int:        [ ConstTyTag.int ],
-    byteStr:    [ ConstTyTag.byteStr ],
-    str:        [ ConstTyTag.str ],
-    unit:       [ ConstTyTag.unit ],
-    bool:       [ ConstTyTag.bool ],
-    
-    listOf: ( tyArg: ConstType ) : ConstType => {
-        JsRuntime.assert(
-            isWellFormedConstType( tyArg ),
-            "provided argument to 'constT.listOf' should be a well formed type, try using types exposed by  the 'constT' object itself"
-        );
-
-        return [ ConstTyTag.list, ...tyArg ];
-    },
-    
-    pairOf: ( tyArg1: ConstType, tyArg2: ConstType ) : ConstType  => {
-        JsRuntime.assert(
-            isWellFormedConstType( tyArg1 ) && isWellFormedConstType( tyArg2 ),
-            "provided argument to 'constT.pairOf' should be a well formed type, try using types exposed by  the 'constT' object itself"
-        );
-
-        return [ ConstTyTag.pair, ...tyArg1, ...tyArg2 ];
-    },
-    
-    data:       [ ConstTyTag.data ]
-
-});
 
 export function isWellFormedConstType( type: ConstType | ConstTyTag[] ): boolean
 {
@@ -210,6 +158,121 @@ export function isWellFormedConstType( type: ConstType | ConstTyTag[] ): boolean
 
     return true;
 }
+
+export function encodeConstTypeToUPLCBitStream( type: ConstType ): BitStream
+{
+    JsRuntime.assert(
+        isWellFormedConstType( type ),
+        "cannot encode an UPLC constant type if it is not well formed"
+    );
+
+    /**
+     *
+     * Source: plutus-core-specification-june2022.pdf; section D.3.3; page 31
+     *
+     *  We define the encoder and decoder for types by combining 𝖾 𝗍𝗒𝗉𝖾 and 𝖽 𝗍𝗒𝗉𝖾 with 𝖤
+     *   and decoder for lists of four-bit integers (see Section D.2).
+     * 
+     *  so the tags are preceded by a '1' if an other tag is expected or by a '0' if it is intended to be the last tag
+     * 
+     * @param type 
+     * @param expectOtherTagNext 
+     * @returns 
+     */
+    function _encodeConstTyTagToUPLCBinaryString( typeTag: ConstTyTag, expectOtherTagNext: boolean ): string
+    {
+        const lastTagPrefix = expectOtherTagNext ? "1" : "0";
+
+        if( typeTag === ConstTyTag.list )
+        {
+            return (
+                "1" + "0111" +              // listCons + (7).toString(2).padStart( 4, '0' ) // type application
+                lastTagPrefix + "0101"      // lastTagPrefix + (5).toString(2).padStart( 4, '0' ) // list
+            );
+        }
+        else if( typeTag === ConstTyTag.pair )
+        {
+            return (
+                "1" + "0111" + // listCons + (7).toString(2).padStart( 4, '0' ) // type application
+                "1" + "0111" + // listCons + (7).toString(2).padStart( 4, '0' ) // type application
+                lastTagPrefix + "0110"   // lastTagPrefix + (5).toString(2).padStart( 4, '0' ) // pair
+            );
+        }
+        else
+        {
+            return (
+                lastTagPrefix + typeTag.toString(2).padStart( 4, '0' )
+            ); 
+        }
+    }
+
+    return BitStream.fromBinStr(
+        new BinaryString(
+            type.map(
+                ( tyTag, i ) => _encodeConstTyTagToUPLCBinaryString(
+                    tyTag,
+                    i !== type.length - 1 // if index different than the last index, expect other tags
+                )
+            ).join('')
+        )
+    );
+}
+
+/**
+ * **does NOT require the types to be well-formed**
+ * 
+ * merly checks to have the same tags at the same place
+ */
+export function constTypeEq( a: ConstType, b: ConstType ): boolean
+{
+    if( a.length !== b.length ) return false;
+
+    return a.every( ( tyTag, i ) => tyTag === b[ i ] );
+}
+
+/**
+ * well formed types
+ */
+export const constT : Readonly<{
+    int: ConstType,
+    byteStr: ConstType,
+    str: ConstType,
+    unit: ConstType
+    bool: ConstType
+    listOf: ( tyArg: ConstType ) => ConstType
+    pairOf: ( tyArg1: ConstType, tyArg2: ConstType ) => ConstType
+    data: ConstType
+}> = Object.freeze({
+
+    int:        [ ConstTyTag.int ],
+    byteStr:    [ ConstTyTag.byteStr ],
+    str:        [ ConstTyTag.str ],
+    unit:       [ ConstTyTag.unit ],
+    bool:       [ ConstTyTag.bool ],
+    
+    listOf: ( tyArg: ConstType ) : ConstType => {
+        JsRuntime.assert(
+            isWellFormedConstType( tyArg ),
+            "provided argument to 'constT.listOf' should be a well formed type, try using types exposed by  the 'constT' object itself"
+        );
+
+        return [ ConstTyTag.list, ...tyArg ];
+    },
+    
+    pairOf: ( tyArg1: ConstType, tyArg2: ConstType ) : ConstType  => {
+        JsRuntime.assert(
+            isWellFormedConstType( tyArg1 ) && isWellFormedConstType( tyArg2 ),
+            "provided argument to 'constT.pairOf' should be a well formed type, try using types exposed by  the 'constT' object itself"
+        );
+
+        return [ ConstTyTag.pair, ...tyArg1, ...tyArg2 ];
+    },
+    
+    data:       [ ConstTyTag.data ]
+
+});
+
+
 
 export function isConstTypeTag( constTy: Readonly<ConstTyTag> ): boolean
 {
