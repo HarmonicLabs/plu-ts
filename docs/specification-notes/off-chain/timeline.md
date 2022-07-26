@@ -2,8 +2,6 @@
 
 estimated 6 to 7 months
 
-> **_NOTE:_** intended in case of proposal approvement, which will allow full focus on the project
-
 - safe primitives datatypes implemetation to overcome javascript limits ( 1 week )
   - examples:
     - ```uint64``` for big integers to overcome 53-bit long javascript numbers

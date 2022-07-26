@@ -54,10 +54,6 @@ Section 4 is where beta-reduction is formalized
 
 here is explained how plutus core is evaluated
 
-**the goal of  ```plu-ts``` is not to reimplement the whole protocol, only to make it more accessible**
-therefore I'm reporting some intermpretations of mine for seek of completness,
-but this section is not vital
-
 ### Section 4.1 
 Section 4.1 is about "beta-reduction applied to types"
 
@@ -88,10 +84,7 @@ pluts-core spec         | Haskell
 ### Section 4.3
 
 Section 4.3 formalizes the CK machine,
-which is the "program" runt on the cardano node when executing Smart-Contracts
-
-
-as already said the goal of  ```plu-ts``` is not to reimplement the whole protocol.
+which is the "program" run on the cardano nodes when executing Smart Contracts
 
 <a name="section5"></a>
 
@@ -151,7 +144,7 @@ with that we know that a ```Term``` can be
 - a constant value
 - a lambda abstraction with a _bounded_ variable and a ```Term``
 - a lazy evaluated ```Term```
-- an _Application_ between ```Term```
+- an _Application_ between ```Term```s
     - <details>
         <summary>what Term Application means in Lamda calculus</summary>
         <p>
@@ -196,12 +189,7 @@ with that we know that a ```Term``` can be
 - a builtin Value (see [section 5](#section5))
 - an error, failing the smart contract
 
-from this definition is easy to see that ```Term``` is a _recoursive_ datatype, in particoular, is the definition of the AST (Abstract Syntax Tree) of UPLC Programs
-
-for this reason, **any** language that is capable of representing _recoursive datatypes_ is also capable of construct an UPLC Program
-a ```Typescript``` representation of this formalism is given in the [plutus-core-spec/index.ts](../plutus-core-spec/index.ts#171) file
-
-for this AST to be usable on chain we have to serialize it, n b
+from this definition is easy to see that ```Term``` is a _recursive_ datatype, in particoular, is the definition of the AST (Abstract Syntax Tree) of UPLC Programs
 
 <a name="appendixD"></a>
 

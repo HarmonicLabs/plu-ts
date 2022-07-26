@@ -6,9 +6,12 @@ import BinaryString from "../../../../types/bits/BinaryString";
 export default class Force
     implements UPLCSerializable
 {
-    private static UPLCTag: BitStream = BitStream.fromBinStr(
-        new BinaryString( "0101" )
-    );
+    private static get UPLCTag(): BitStream
+    {
+        return BitStream.fromBinStr(
+            new BinaryString( "0101" )
+        );
+    }
 
     private _toForce : UPLCTerm;
 

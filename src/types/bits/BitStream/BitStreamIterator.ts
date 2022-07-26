@@ -1,6 +1,6 @@
 import Debug from "../../../utils/Debug";
 import Bit, { InByteOffset } from "../Bit";
-import BitStream from "../BitStream";
+import BitStream from ".";
 
 
 export default class BitStreamIterator

@@ -212,7 +212,7 @@ export class UInteger extends Integer
             bigint = BigInt( bigint );
         }
 
-        // isUInteger at the beginnign of the constructor guarantees the number is non-negative
+        // isUInteger at the beginning of the constructor guarantees the number is non-negative
         super( bigint );
     }
 

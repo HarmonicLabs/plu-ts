@@ -8,9 +8,12 @@ import JsRuntime from "../../../../../utils/JsRuntime";
 export default class UPLCVar
     implements UPLCSerializable
 {
-    private static UPLCTag: BitStream = BitStream.fromBinStr(
-        new BinaryString( "0000" )
-    );
+    private static get UPLCTag(): BitStream
+    {
+        return BitStream.fromBinStr(
+            new BinaryString( "0000" )
+        );
+    }
 
     private _deBruijn: UInteger;
 
@@ -25,7 +28,8 @@ export default class UPLCVar
             deBruijn.asBigInt >= BigInt( 1 ),
             "only lambdas are allowed to have 0-indexed variables as DeBruijn; while creating an 'UPLCVar' instance, got: "
                 + deBruijn.asBigInt.toString()
-        )
+        );
+        
         this._deBruijn = deBruijn;
     }
 

@@ -7,9 +7,12 @@ import Delay from "./Delay";
 export default class ErrorUPLC
     implements UPLCSerializable
 {
-    private static UPLCTag: BitStream = BitStream.fromBinStr(
-        new BinaryString( "0110" )
-    );
+    private static get UPLCTag(): BitStream
+    {
+        return BitStream.fromBinStr(
+            new BinaryString( "0110" )
+        );
+    } 
 
     constructor() {};
 

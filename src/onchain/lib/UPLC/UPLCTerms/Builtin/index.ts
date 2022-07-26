@@ -42,9 +42,12 @@ import UPLCBuiltinTag, { isUPLCBuiltinTag } from "./UPLCBuiltinTag";
 export default class Builtin
     implements UPLCSerializable
 {
-    private static UPLCTag: BitStream = BitStream.fromBinStr(
-        new BinaryString( "0111" )
-    );
+    private static get UPLCTag(): BitStream
+    {
+        return BitStream.fromBinStr(
+            new BinaryString( "0111" )
+        );
+    }
 
     private _tag: UPLCBuiltinTag;
 

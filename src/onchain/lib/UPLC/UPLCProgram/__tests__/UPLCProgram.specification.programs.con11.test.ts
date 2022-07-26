@@ -8,6 +8,7 @@ describe("con11 UPLCProgram", () => {
 
     it("serializes as in specification", () => {
         
+        // https://hydra.iohk.io/build/5988492/download/1/plutus-core-specification.pdf#Example
         const plutsCompiled = new UPLCProgram(
                 [ 11, 22, 33 ],
                 Const.int( 11 )
@@ -20,7 +21,6 @@ describe("con11 UPLCProgram", () => {
                     "0" + "0010110",    // last list elem + 22.toString(2)
                     "0" + "0100001",    // last list elem + 33.toString(2)
                     "0100",             // term tag: constant
-
                                         // constant type tags encoded as list of tags
                     "1" + "0000" + "0", // list cons + tag 0 for integer type + list nil
                                         // integer as list of 7 bits
@@ -34,7 +34,7 @@ describe("con11 UPLCProgram", () => {
         const { nInitialZeroes: manualInit0s, bigint: manualBI } = manuallyCompiled.asBigInt();
 
         Debug.log(
-            "compilation result:\n\t" + 
+            '',"compilation result:\n\t" + 
             "0".repeat( plutsInit0s ) + plutsBI.toString(2), "\n",
             "specification expected:\n\t" +
             "0".repeat( manualInit0s ) + manualBI.toString(2)
@@ -46,7 +46,6 @@ describe("con11 UPLCProgram", () => {
             "0".repeat( manualInit0s ) + manualBI.toString(2)
         )
 
-        // https://hydra.iohk.io/build/5988492/download/1/plutus-core-specification.pdf#Example
         expect(
             BitStream.eq(
                 plutsCompiled,

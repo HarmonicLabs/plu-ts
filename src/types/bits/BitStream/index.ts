@@ -1,14 +1,14 @@
 import { Buffer } from "buffer";
-import BigIntUtils from "../../utils/BigIntUtils";
-import BitUtils from "../../utils/BitUtils";
-import Debug from "../../utils/Debug";
-import JsRuntime from "../../utils/JsRuntime";
-import Cloneable from "../interfaces/Cloneable";
-import Indexable from "../interfaces/Indexable";
-import Int32 from "../ints/Int32";
-import BinaryString from "./BinaryString";
-import Bit, { forceInByteOffset, InByteOffset } from "./Bit";
-import BitStreamIterator from "./BitStream/BitStreamIterator";
+import BigIntUtils from "../../../utils/BigIntUtils";
+import BitUtils from "../../../utils/BitUtils";
+import Debug from "../../../utils/Debug";
+import JsRuntime from "../../../utils/JsRuntime";
+import Cloneable from "../../interfaces/Cloneable";
+import Indexable from "../../interfaces/Indexable";
+import Int32 from "../../ints/Int32";
+import BinaryString from "../BinaryString";
+import Bit, { forceInByteOffset, InByteOffset } from "../Bit";
+import BitStreamIterator from "./BitStreamIterator";
 
 export interface BitStreamPadToByteOptions {
     onByteAllignedAddNewByte: boolean

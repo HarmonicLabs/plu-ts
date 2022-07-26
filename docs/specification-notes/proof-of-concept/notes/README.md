@@ -1,5 +1,5 @@
 
-In [Plutus core specification paper walktrough](./Plutus%20core%20specification%20paper%20walktrough.md) are highlighted the important part of the specification nedded for the libray implementation
+In [Plutus core specification paper walkthrough](./Plutus%20core%20specification%20paper%20walkthrough.md) are highlighted the important part of the specification nedded for the libray implementation
 
 ## References
 
