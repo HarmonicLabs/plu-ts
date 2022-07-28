@@ -6,12 +6,6 @@
 > 
 > this documentation is mainly useful for developer who wants to help with the developments of the project.
 
-## documentaiton structure
-
-the structure of the ```dev-docs``` folder follows the structire of the ```src``` one, exept for the ```dev-docs/notes``` and the ```dev-docs/best-practices``` folders (more below)
-
-so if you are having a look at the ```src/types/bits/BitStream/index.ts``` file you will find the related documentation at ```dev-docs/types/bits/BitStream/index.md``` file
-
 ### the ```notes``` folder
 
 eventually the implementation present in some file uses some concept shared in the project; if that is the case, rather than rewriting the same notes many times, a link to the ```dev-docs/notes``` folder will be present.
@@ -35,8 +29,16 @@ in this folder are included informations about style choices and best practices 
 
 - [notes](./notes)
 - [best-practices](./best-practices)
+    - [code style guide](./best-practices/code-style-guide.md)
+    - [documenting](./best-practices/documenting)
+        - [comments](./best-practices/documenting/comments.md)
+        - [markdown](./best-practices/documenting/markdown.md)
+    - [testing](./best-practices/testing)
+        - [tests naming conventions](./best-practices/testing/naming-conventions.md)
 
-### ```src```-like
+### ```src```-like folders
+
+[```dev-docs/src``` folder](./src/) 
 
 - [errors](./errors)
 - [offchain](./offchain)

@@ -63,7 +63,7 @@ see [the timeline](./timeline.md) to have a look at the planned features
 
 - inline documentation
     > even if everything will be documented separately it is easy to add inline documentation for everything in VSCode
-    > ![documentation on hover example](../../assets/docs_on_hover.gif)
+    > ![documentation on hover example](../../../assets/docs_on_hover.gif)
 
 - useful debug features
     if evertingh is ```ts/js``` coded, even in cases of classes with private fields doing something like

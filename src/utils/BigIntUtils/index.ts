@@ -10,12 +10,31 @@ export default class BigIntUtils
 {
     private constructor () {};
 
+    /**
+     * same as ```Math.abs``` but for bigints
+     */
     static abs( n: bigint ): bigint
     {
         return n < BigInt( 0 ) ? -n : n;
     }
 
-    static fromBufferLE( buffer: Buffer )
+    /**
+     * @returns {bigint} a ```bigint``` between ```0``` and ```Number.MAX_SAFE_INTEGER``` so that is safe to convert to Number for whatever reason 
+     */
+     static random(): bigint
+     {
+         return BigInt(
+             Math.round(
+                 Math.random() * Number.MAX_SAFE_INTEGER
+             )
+         );
+     }
+
+    /**
+     * uses the bytes of the buffer to construct a BigInteger
+     * > **IMPORTANT** the bytes are considered in Little Endian order; use ```BigIntUtils.fromBuffer``` for Big Endian
+     */
+    static fromBufferLE( buffer: Buffer ): bigint
     {
         return BigIntUtils.fromBuffer(
             // need to copy so that it doesn't reverses the original buffer
@@ -26,21 +45,10 @@ export default class BigIntUtils
     }
 
     /**
-     * @returns {bigint} a ```bigint``` between ```0``` and ```Number.MAX_SAFE_INTEGER``` so that is safe to convert to Number for whatever reason 
-     */
-    static random(): bigint
-    {
-        return BigInt(
-            Math.round(
-                Math.random() * Number.MAX_SAFE_INTEGER
-            )
-        );
-    }
-
-    /**
+     * converts a Buffer to a ```bigint```
      * Big-Endian default
      */
-    static fromBuffer( buffer: Buffer )
+    static fromBuffer( buffer: Buffer ): bigint
     {
         JsRuntime.assert(
             Buffer.isBuffer( buffer ),
@@ -56,6 +64,14 @@ export default class BigIntUtils
         return BigInt( `0x${hexBuff}` );
     }
 
+    /**
+     * converts a ```bigint``` to a ```Buffer``` of length ```nBytes``` given as second argument
+     * 
+     * if ```nBytes``` is not specified the Buffer takes only the bytes needed
+     * @param bigint 
+     * @param nBytes 
+     * @returns 
+     */
     static toBuffer( bigint: bigint, nBytes: number | undefined = undefined ): Buffer
     {
         JsRuntime.assert(

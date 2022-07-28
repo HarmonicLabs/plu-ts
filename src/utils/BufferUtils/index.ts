@@ -2,8 +2,7 @@ import { Buffer } from "buffer";
 import HexString from "../../types/HexString";
 import JsRuntime from "../JsRuntime";
 
-export default
-class BufferUtils
+export default class BufferUtils
 {
     private constructor() {};
 
@@ -33,9 +32,9 @@ class BufferUtils
 
         let byteNums: number[] = mustStartWith.map( n => Math.round( Math.abs(n) ) % 256 );
 
-        for( let i = 0; i < length * 2; i++ )
+        for( let i = byteNums.length; i < length; i++ )
         {
-            byteNums.push( Math.round(Math.random() * 255 ) );
+            byteNums.push( Math.round( Math.random() * 255 ) );
         }
 
         return Buffer.from( byteNums );

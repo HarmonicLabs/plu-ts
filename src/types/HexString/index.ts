@@ -1,5 +1,5 @@
 import { Buffer } from "buffer";
-import HexError from "../../errors/PlutsTypeError/HexError";
+import HexStringError from "../../errors/PlutsTypeError/HexStringError";
 
 export default class HexString
 {
@@ -66,7 +66,7 @@ export default class HexString
 
     private static _assertHex( str: string ) : void
     {
-        if( !HexString.isHex( str ) ) throw new HexError("provided string is expected to be a valid hex value; inpur was: " + str);
+        if( !HexString.isHex( str ) ) throw new HexStringError("provided string is expected to be a valid hex value; inpur was: " + str);
     }
 
     public static fromAscii( asciiStr: string ): HexString

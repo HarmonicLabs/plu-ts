@@ -1,9 +1,3 @@
-import PluTsTypeError from "..";
+import PlutsTypeError from "..";
 
-export default class UInt64Error extends PluTsTypeError
-{
-    constructor( msg: string )
-    {
-        super( msg );
-    }
-}
+export default class UInt64Error extends PlutsTypeError {}

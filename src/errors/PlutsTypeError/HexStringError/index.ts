@@ -1,6 +1,6 @@
 import PlutsTypeError from "..";
 
-export default class HexError extends PlutsTypeError
+export default class HexStringError extends PlutsTypeError
 {
     constructor( msg: string )
     {
