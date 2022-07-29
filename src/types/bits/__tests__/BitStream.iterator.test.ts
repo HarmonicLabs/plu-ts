@@ -13,7 +13,7 @@ function bitsArrFromString( bitsStr: string ): Bit[]
 
 describe("BitStream[Symbol.iterator]", () => {
 
-    it("general test", () => {
+    it.concurrent("general test", () => {
 
         let bint: bigint;
         let nInitialZeroes: number;

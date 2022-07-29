@@ -93,16 +93,63 @@ export function isUPLCBuiltinTag( tag: UPLCBuiltinTag | UPLCBuiltinTagNumber ): 
     );
 }
 
-export function UPLCBuiltinTagToBitStream( tag: UPLCBuiltinTag ): BitStream
+export function getNRequiredForces( tag: UPLCBuiltinTag ): ( 0 | 1 | 2 )
+{
+    JsRuntime.assert(
+        isUPLCBuiltinTag( tag ),
+        `in getNRequiredForces; the function is specific for UPLCBuiltinTags; input was: ${tag}`
+    );
+
+    // tags from 0 to 25 and from 37 to 53 are all fixed in type; no forces requred
+    if(
+        tag <= 25 || 
+        ( tag >= UPLCBuiltinTag.constrData && tag < 53 )
+    ) 
+    {
+        return 0;
+    }
+
+    // tags that do have one type parameter; 1 force
+    if(
+        tag === UPLCBuiltinTag.ifThenElse ||
+        tag === UPLCBuiltinTag.chooseUnit ||
+        tag === UPLCBuiltinTag.trace      ||
+        tag === UPLCBuiltinTag.mkCons     ||
+        tag === UPLCBuiltinTag.headList   ||
+        tag === UPLCBuiltinTag.tailList   ||
+        tag === UPLCBuiltinTag.nullList   ||
+        tag === UPLCBuiltinTag.chooseData
+    )
+    {
+        return 1;
+    }
+
+    // tags that do have two types paramters; two forces
+    if(
+        tag === UPLCBuiltinTag.fstPair ||
+        tag === UPLCBuiltinTag.sndPair ||
+        tag === UPLCBuiltinTag.chooseList
+    )
+    {
+        return 2;
+    }
+
+    throw JsRuntime.makeNotSupposedToHappenError(
+        "'getNRequiredForces' did not match any tag; the input was: " + tag
+    )
+}
+
+export function uplcBuiltinTagToBitStream( tag: UPLCBuiltinTag ): BitStream
 {
     JsRuntime.assert(
         isUPLCBuiltinTag( tag ),
         `in UPLCBuiltinTagToBitStream; cannot convert ${tag} to builtin, tag not found`
     );
-
+    
     return BitStream.fromBinStr(
         new BinaryString(
-            tag.toString(2).padStart( 7 , '0' )
+            "0101".repeat( getNRequiredForces( tag ) ) +    // "force" tag repeated as necessary
+            tag.toString(2).padStart( 7 , '0' )             // builtin tag itself
         )
     );
 }

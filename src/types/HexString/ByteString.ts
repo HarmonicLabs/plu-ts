@@ -51,7 +51,31 @@ export default class ByteString extends HexString
      */
     toUPLCBitStream(): BitStream
     {
+        let missingBytes = this.asString;
+        const hexChunks: string[] = [];
 
+        while( missingBytes.length > 0b1111_1111 )
+        {
+            hexChunks.push( "ff" + missingBytes.slice( 0, 255 * 2 ) );
+            missingBytes = missingBytes.slice( 255 * 2 );
+        }
+
+        if( missingBytes.length !== 0 )
+        {
+            hexChunks.push(
+                missingBytes.length.toString(16).padStart( 2, '0' ) +
+                missingBytes
+            );
+        }
         
+        hexChunks.push( "00" );
+
+        return new BitStream(
+            Buffer.from(
+                hexChunks.join(''),
+                "hex"
+            ),
+            0
+        );
     }
 }

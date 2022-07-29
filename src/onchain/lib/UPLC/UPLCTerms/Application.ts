@@ -6,9 +6,12 @@ import BinaryString from "../../../../types/bits/BinaryString";
 export default class Application
     implements UPLCSerializable
 {
-    private static UPLCTag: BitStream = BitStream.fromBinStr(
-        new BinaryString( "0011" )
-    );
+    private static get UPLCTag(): BitStream
+    {
+        return BitStream.fromBinStr(
+            new BinaryString( "0011" )
+        );
+    }
 
     private _func: UPLCTerm
     private _arg : UPLCTerm;

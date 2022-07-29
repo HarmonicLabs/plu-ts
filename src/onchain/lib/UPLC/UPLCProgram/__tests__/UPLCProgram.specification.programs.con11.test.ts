@@ -30,20 +30,17 @@ describe("con11 UPLCProgram", () => {
             )
         );
 
-        const { nInitialZeroes: plutsInit0s, bigint: plutsBI } = plutsCompiled.asBigInt();
-        const { nInitialZeroes: manualInit0s, bigint: manualBI } = manuallyCompiled.asBigInt();
-
         Debug.log(
             '',"compilation result:\n\t" + 
-            "0".repeat( plutsInit0s ) + plutsBI.toString(2), "\n",
+            plutsCompiled.toBinStr().asString, "\n",
             "specification expected:\n\t" +
-            "0".repeat( manualInit0s ) + manualBI.toString(2)
+            manuallyCompiled.toBinStr().asString
         );
 
         expect(
-            "0".repeat( plutsInit0s ) + plutsBI.toString(2)
+            plutsCompiled.toBinStr().asString
         ).toBe(
-            "0".repeat( manualInit0s ) + manualBI.toString(2)
+            manuallyCompiled.toBinStr().asString
         )
 
         expect(

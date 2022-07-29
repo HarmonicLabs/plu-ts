@@ -44,7 +44,7 @@ function makeSpecificBufferCase( hexBuff1: string | number[] , hexBuff2: string 
 
 describe("BitStream.append both inputs generated from buffer", () => {
 
-    it("appends form entire buffers are just fine",() => {
+    it.concurrent("appends form entire buffers are just fine",() => {
 
         let someBuffer1 : Buffer;
         let someBuffer2 : Buffer;
@@ -57,13 +57,13 @@ describe("BitStream.append both inputs generated from buffer", () => {
 
         for(let i = 0; i < 1000; i++ )
         {
-            someBuffer1 =  
+            someBuffer1 =
                 BufferUtils.randomBufferOfLength(
                     Math.round( Math.random() * 100 )
                 );
             someBits1 = new BitStream( someBuffer1 );
 
-            someBuffer2 = 
+            someBuffer2 =
                 BufferUtils.randomBufferOfLength(
                     Math.round( Math.random() * 100 )
                 );
@@ -88,6 +88,27 @@ describe("BitStream.append both inputs generated from buffer", () => {
                 someBits1.nInitialZeroes
             );
 
+            // 69fc058cc9de32ce8e0537d37f83a8df0365e9342ed1480d4cacdb32a75d2302c1974aceae7e2f69466ddaf5b815058432f5dfed5f4d66919f51461ee831cd0aa765b42da28a22157e93eb9f36584d250a362d6da032bf880700
+
+            if(
+                effectiveBits.toBuffer().buffer.toString( "hex" ) !==
+                Buffer.from(
+                    Array.from<number>(
+                        someBuffer1
+                    ).concat(
+                        Array.from<number>(
+                            someBuffer2
+                        ) 
+                    )
+                ).toString( "hex" )
+            )
+            {
+                throw [
+                    "concatenation failed on inputs:",
+                    someBuffer1.toString("hex"),
+                    someBuffer2.toString("hex")
+                ];
+            }
             expect( 
                 effectiveBits.toBuffer().buffer.toString( "hex" )
             ).toEqual(
@@ -169,6 +190,15 @@ describe("BitStream.append both inputs generated from buffer", () => {
         makeSpecificBufferCase(
             "789788a4e347",
             "98f7235b25f4b1fec898cf566c416935748c46536768"
+        );
+
+    })
+
+    it("specific case: second.isAllZeroes() === true", () => {
+
+        makeSpecificBufferCase(
+            "69fc058cc9de32ce8e0537d37f83a8df0365e9342ed1480d4cacdb32a75d2302c1974aceae7e2f69466ddaf5b815058432f5dfed5f4d66919f51461ee831cd0aa765b42da28a22157e93eb9f36584d250a362d6da032bf8807",
+            "00"
         );
 
     })

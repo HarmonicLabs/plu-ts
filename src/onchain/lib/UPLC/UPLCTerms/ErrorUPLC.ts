@@ -18,7 +18,6 @@ export default class ErrorUPLC
 
     toUPLCBitStream(): BitStream
     {
-        // we don't want to modify the static tag
         return ErrorUPLC.UPLCTag.clone();;
     }
 }

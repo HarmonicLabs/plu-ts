@@ -218,6 +218,14 @@ export default class BitStream
         )
     }
 
+    toBinStr(): BinaryString
+    {
+        const { bigint, nInitialZeroes } = this.asBigInt();
+        return new BinaryString(
+            "0".repeat( nInitialZeroes ) + bigint.toString(2)
+        );
+    }
+
     /**
      * allows to use ```BitStream```s in ```for..of``` loops
      * 
@@ -491,6 +499,12 @@ export default class BitStream
         {
             this._bits = other.bits;
             this._nInitialZeroes = this._nInitialZeroes + other.nInitialZeroes; 
+            return;
+        }
+
+        if( other.isAllZeroes() )
+        {
+            this._bits = this._bits << BigInt( other.nInitialZeroes );
             return;
         }
         

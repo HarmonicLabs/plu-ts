@@ -11,7 +11,7 @@ describe("ConstType :: encodeConstTypeToUPLCBitStream", () => {
                 encodeConstTypeToUPLCBitStream(
                     constT.int
                 ),
-                BitStream.fromBinStr( "0" + "0000" )
+                BitStream.fromBinStr( "1" + "0000" + "0" )
             )
         ).toBe( true );
 
@@ -20,7 +20,7 @@ describe("ConstType :: encodeConstTypeToUPLCBitStream", () => {
                 encodeConstTypeToUPLCBitStream(
                     constT.byteStr
                 ),
-                BitStream.fromBinStr( "0" + "0001" )
+                BitStream.fromBinStr( "1" + "0001" + "0" )
             )
         ).toBe( true );
 
@@ -29,7 +29,7 @@ describe("ConstType :: encodeConstTypeToUPLCBitStream", () => {
                 encodeConstTypeToUPLCBitStream(
                     constT.str
                 ),
-                BitStream.fromBinStr( "0" + "0010" )
+                BitStream.fromBinStr( "1" + "0010" + "0" )
             )
         ).toBe( true );
 
@@ -38,7 +38,7 @@ describe("ConstType :: encodeConstTypeToUPLCBitStream", () => {
                 encodeConstTypeToUPLCBitStream(
                     constT.unit
                 ),
-                BitStream.fromBinStr( "0" + "0011" )
+                BitStream.fromBinStr( "1" + "0011" + "0" )
             )
         ).toBe( true );
 
@@ -47,7 +47,7 @@ describe("ConstType :: encodeConstTypeToUPLCBitStream", () => {
                 encodeConstTypeToUPLCBitStream(
                     constT.bool
                 ),
-                BitStream.fromBinStr( "0" + "0100" )
+                BitStream.fromBinStr( "1" + "0100" + "0" )
             )
         ).toBe( true );
 
@@ -56,7 +56,7 @@ describe("ConstType :: encodeConstTypeToUPLCBitStream", () => {
                 encodeConstTypeToUPLCBitStream(
                     constT.data
                 ),
-                BitStream.fromBinStr( "0" + "1000" )
+                BitStream.fromBinStr( "1" + "1000" + "0" )
             )
         ).toBe( true );
 
@@ -72,7 +72,8 @@ describe("ConstType :: encodeConstTypeToUPLCBitStream", () => {
                 BitStream.fromBinStr(
                     "1" + "0111" + // cons + tyApp
                     "1" + "0101" + // cons + list
-                    "0" + "0000"   // nil + int
+                    "1" + "0000" + // cons + int
+                    "0"
                 )
             )
         ).toBe( true );
@@ -91,7 +92,8 @@ describe("ConstType :: encodeConstTypeToUPLCBitStream", () => {
                     "1" + "0101" + // cons + list
                     "1" + "0111" + // cons + tyApp
                     "1" + "0101" + // cons + list
-                    "0" + "0000"   // nil + int
+                    "1" + "0000" + // cons + int
+                    "0"
                 )
             )
         ).toBe( true );
@@ -101,19 +103,17 @@ describe("ConstType :: encodeConstTypeToUPLCBitStream", () => {
     it("encodes pairs as [tyApp, tyApp, pair, ...tyArg1, ...tyArg2]", () => {
 
         expect(
-            BitStream.eq(
-                encodeConstTypeToUPLCBitStream(
-                    constT.pairOf( constT.int, constT.bool )
-                ),
-                BitStream.fromBinStr(
-                    "1" + "0111" + // cons + tyApp
-                    "1" + "0111" + // cons + tyApp
-                    "1" + "0110" + // cons + pair
-                    "1" + "0000" + // cons + int
-                    "0" + "0100"   // nil + bool
-                )
-            )
-        ).toBe( true );
+            encodeConstTypeToUPLCBitStream(
+                constT.pairOf( constT.int, constT.bool )
+            ).toBinStr().asString
+        ).toBe( 
+            "1" + "0111" + // cons + tyApp
+            "1" + "0111" + // cons + tyApp
+            "1" + "0110" + // cons + pair
+            "1" + "0000" + // cons + int
+            "1" + "0100" + // cons + bool
+            "0"            // nil
+         );
 
         expect(
             BitStream.eq(
@@ -132,7 +132,8 @@ describe("ConstType :: encodeConstTypeToUPLCBitStream", () => {
                     "1" + "0111" + // cons + tyApp
                     "1" + "0101" + // cons + list
                     "1" + "0000" + // cons + int
-                    "0" + "0000"   // nil + int
+                    "1" + "0000" + // cons + int
+                    "0"
                 )
             )
         ).toBe( true );

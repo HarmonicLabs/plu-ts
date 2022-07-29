@@ -29,10 +29,13 @@ export default class UPLCFlatUtils
             "expected a bigint as input; got instance of type: " + typeof integer
         );
 
+        if( integer === BigInt( 0 ) ) return BitStream.fromBinStr( "00000000" );
+
         JsRuntime.assert(
-            integer >= BigInt( 0 ),
+            integer > BigInt( 0 ),
             "'UPLCFlatUtils.encodeBigIntAsVariableLengthBitStream' can only encode non-negative integers; the given input was: " + integer.toString()
         )
+
 
         // store binary string for easy BitStream creation
         const chunks: string[] = [];

@@ -203,14 +203,14 @@ export function encodeConstTypeToUPLCBitStream( type: ConstType ): BitStream
         else
         {
             return (
-                "1" + typeTag.toString(2).padStart( 4, '0' ) + "0"
+                "1" + typeTag.toString(2).padStart( 4, '0' )
             ); 
         }
     }
 
     return BitStream.fromBinStr(
         new BinaryString(
-            type.map( _encodeConstTyTagToUPLCBinaryString ).join('')
+            type.map( _encodeConstTyTagToUPLCBinaryString ).join('') + "0"
         )
     );
 }
