@@ -36,7 +36,6 @@ export default class UPLCFlatUtils
             "'UPLCFlatUtils.encodeBigIntAsVariableLengthBitStream' can only encode non-negative integers; the given input was: " + integer.toString()
         )
 
-
         // store binary string for easy BitStream creation
         const chunks: string[] = [];
         let mask: bigint = BigInt( 0b0111_1111 );
