@@ -1,13 +1,12 @@
-import UPLCSerializable, { getUpdatedCtxAfterAppend, UPLCSerializationContex } from "../../../../serialization/flat/ineterfaces/UPLCSerializable";
+import UPLCSerializable, { UPLCSerializationContex } from "../../../../serialization/flat/ineterfaces/UPLCSerializable";
 import BitStream from "../../../../types/bits/BitStream";
 import UPLCTerm from "../UPLCTerm";
 import BinaryString from "../../../../types/bits/BinaryString";
 import UPLCVar from "./UPLCVar";
 import Lambda from "./Lambda";
 import Builtin from "./Builtin";
-import { forceInByteOffset } from "../../../../types/bits/Bit";
 import UPLCFlatUtils from "../../../../utils/UPLCFlatUtils";
-import Debug from "../../../../utils/Debug";
+import Force from "./Force";
 
 export default class Application
     implements UPLCSerializable
@@ -19,10 +18,10 @@ export default class Application
         );
     }
 
-    private _func: UPLCVar | Lambda | Application | Builtin 
+    private _func: UPLCVar | Lambda | Application | Builtin | Force
     private _arg : UPLCTerm;
 
-    get funcTerm(): UPLCVar | Lambda | Application | Builtin 
+    get funcTerm(): UPLCVar | Lambda | Application | Builtin | Force
     {
         return this._func;
     }
@@ -33,7 +32,7 @@ export default class Application
     }
 
     constructor(
-        func: UPLCVar | Lambda | Application | Builtin , 
+        func: UPLCVar | Lambda | Application | Builtin | Force , 
         arg: UPLCTerm
     )
     {

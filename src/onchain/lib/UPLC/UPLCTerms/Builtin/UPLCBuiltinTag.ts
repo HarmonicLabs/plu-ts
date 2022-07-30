@@ -139,6 +139,9 @@ export function getNRequiredForces( tag: UPLCBuiltinTag ): ( 0 | 1 | 2 )
     )
 }
 
+/**
+ * @returns {BitStream} 7-bits tag
+ */
 export function uplcBuiltinTagToBitStream( tag: UPLCBuiltinTag ): BitStream
 {
     JsRuntime.assert(
@@ -148,7 +151,6 @@ export function uplcBuiltinTagToBitStream( tag: UPLCBuiltinTag ): BitStream
     
     return BitStream.fromBinStr(
         new BinaryString(
-            "0101".repeat( getNRequiredForces( tag ) ) +    // "force" tag repeated as necessary
             tag.toString(2).padStart( 7 , '0' )             // builtin tag itself
         )
     );

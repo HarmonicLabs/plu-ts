@@ -1,14 +1,13 @@
 import UPLCSerializable, { UPLCSerializationContex } from "../../../../../serialization/flat/ineterfaces/UPLCSerializable";
 import BinaryString from "../../../../../types/bits/BinaryString";
-import { forceInByteOffset } from "../../../../../types/bits/Bit";
 import BitStream from "../../../../../types/bits/BitStream";
 import ByteString from "../../../../../types/HexString/ByteString";
-import Integer, { UInteger } from "../../../../../types/ints/Integer";
+import Integer from "../../../../../types/ints/Integer";
 import Pair from "../../../../../types/structs/Pair";
 import JsRuntime from "../../../../../utils/JsRuntime";
-import Data, { isData } from "../../Data";
-import ConstType, { constTypeEq, constT, constTypeToStirng, ConstTyTag, isWellFormedConstType, encodeConstTypeToUPLCBitStream } from "./ConstType";
-import ConstValue, { appendConstValueToBitStream, canConstValueBeOfConstType, encodeConstValueToUPLCBitStream } from "./ConstValue";
+import Data from "../../Data";
+import ConstType, { constT, constTypeToStirng, isWellFormedConstType, encodeConstTypeToUPLCBitStream } from "./ConstType";
+import ConstValue, { canConstValueBeOfConstType, encodeConstValueToUPLCBitStream } from "./ConstValue";
 
 
 export default class Const

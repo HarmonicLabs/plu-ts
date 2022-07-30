@@ -1,7 +1,7 @@
 import UPLCSerializable, { UPLCSerializationContex } from "../../../../../serialization/flat/ineterfaces/UPLCSerializable";
 import BinaryString from "../../../../../types/bits/BinaryString";
 import BitStream from "../../../../../types/bits/BitStream";
-import { UInteger } from "../../../../../types/ints/Integer";
+import { CanBeUInteger, forceUInteger, UInteger } from "../../../../../types/ints/Integer";
 import JsRuntime from "../../../../../utils/JsRuntime";
 
 
@@ -22,20 +22,23 @@ export default class UPLCVar
         return this._deBruijn;
     }
 
-    constructor( deBruijn: UInteger )
+    constructor( deBruijn: CanBeUInteger )
     {
+        const _deBruijn: UInteger = forceUInteger( deBruijn );
+
         JsRuntime.assert(
-            deBruijn.asBigInt >= BigInt( 1 ),
+            _deBruijn.asBigInt >= BigInt( 1 ),
             "only lambdas are allowed to have 0-indexed variables as DeBruijn; while creating an 'UPLCVar' instance, got: "
-                + deBruijn.asBigInt.toString()
+                + _deBruijn
         );
         
-        this._deBruijn = deBruijn;
+        this._deBruijn = _deBruijn;
     }
 
     toUPLCBitStream( ctx: UPLCSerializationContex ): BitStream
     {
         const result = UPLCVar.UPLCTag.clone();
+        
         result.append( this.deBruijn.toUPLCBitStream() );
 
         ctx.updateWithBitStreamAppend( result );

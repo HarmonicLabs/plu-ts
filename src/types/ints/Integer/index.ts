@@ -3,6 +3,7 @@ import UPLCSerializable from "../../../serialization/flat/ineterfaces/UPLCSerial
 import BigIntUtils from "../../../utils/BigIntUtils";
 import BitUtils from "../../../utils/BitUtils";
 import BufferUtils from "../../../utils/BufferUtils"
+import Debug from "../../../utils/Debug";
 import JsRuntime from "../../../utils/JsRuntime";
 import UPLCFlatUtils from "../../../utils/UPLCFlatUtils";
 import BinaryString from "../../bits/BinaryString";
@@ -249,3 +250,36 @@ export class UInteger extends Integer
         return new UInteger( BigIntUtils.abs( int ) );
     }
 }
+
+export type CanBeUInteger
+    = UInteger
+    | Integer
+    | number;
+
+export function forceUInteger( toForce: CanBeUInteger ): UInteger
+{
+    if( toForce instanceof UInteger && UInteger.isStrictInstance( toForce ) )
+    {
+        return toForce;
+    }
+    if( toForce instanceof Integer )
+    {
+        // makes sure is integer strict instance
+        toForce = toForce.toSigned();
+
+        if( toForce.asBigInt < BigInt( 0 ) )
+        {
+            Debug.throw( "trying to convert an integer to an unsigned Integer, the integer was negative" );
+            return new UInteger( BigIntUtils.abs( toForce.asBigInt ) );
+        }
+        
+        return new UInteger( toForce.asBigInt );
+    }
+
+    if( toForce < 0 )
+    {
+        Debug.throw( "trying to convert an integer to an unsigned Integer, the number was negative" );
+    }
+
+    return new UInteger( Math.abs( Math.round( toForce ) ) );
+} 

@@ -37,7 +37,7 @@ import BinaryString from "../../../../../types/bits/BinaryString";
 import BitStream from "../../../../../types/bits/BitStream";
 import Debug from "../../../../../utils/Debug";
 import JsRuntime from "../../../../../utils/JsRuntime";
-import UPLCBuiltinTag, { isUPLCBuiltinTag, uplcBuiltinTagToBitStream } from "./UPLCBuiltinTag";
+import UPLCBuiltinTag, { getNRequiredForces, isUPLCBuiltinTag, uplcBuiltinTagToBitStream } from "./UPLCBuiltinTag";
 
 
 export default class Builtin
@@ -69,8 +69,14 @@ export default class Builtin
 
     toUPLCBitStream( ctx: UPLCSerializationContex ): BitStream
     {
-        const result = Builtin.UPLCTag;
+        const result = BitStream.fromBinStr(
+            "0101".repeat( getNRequiredForces( this._tag ) ) // "force" tag repeated as necessary
+        );
 
+        result.append(
+            Builtin.UPLCTag
+        );
+        
         result.append(
             uplcBuiltinTagToBitStream( this._tag )
         );
