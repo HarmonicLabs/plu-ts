@@ -1,7 +1,9 @@
-import UPLCSerializable from "../../../../serialization/flat/ineterfaces/UPLCSerializable";
+import UPLCSerializable, { UPLCSerializationContex } from "../../../../serialization/flat/ineterfaces/UPLCSerializable";
 import BitStream from "../../../../types/bits/BitStream";
 import UPLCTerm from "../UPLCTerm";
 import BinaryString from "../../../../types/bits/BinaryString";
+import { forceInByteOffset } from "../../../../types/bits/Bit";
+import UPLCFlatUtils from "../../../../utils/UPLCFlatUtils";
 
 export default class Force
     implements UPLCSerializable
@@ -30,10 +32,17 @@ export default class Force
         this._toForce = rawTerm;
     }
 
-    toUPLCBitStream(): BitStream
+    toUPLCBitStream( ctx: UPLCSerializationContex ): BitStream
     {
         const result = Force.UPLCTag.clone();
-        result.append( this.termToForce.toUPLCBitStream() );
+        ctx.updateWithBitStreamAppend( result );
+
+        UPLCFlatUtils.appendTermAndUpdateContext(
+            result,
+            this.termToForce,
+            ctx
+        );
+
         return result;
     }
 }

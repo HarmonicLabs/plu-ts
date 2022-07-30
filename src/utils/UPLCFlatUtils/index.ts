@@ -1,7 +1,16 @@
+import UPLCTerm from "../../onchain/lib/UPLC/UPLCTerm";
+import { UPLCSerializationContex } from "../../serialization/flat/ineterfaces/UPLCSerializable";
 import BinaryString from "../../types/bits/BinaryString";
+import { InByteOffset, isInByteOffset } from "../../types/bits/Bit";
 import BitStream from "../../types/bits/BitStream";
 import BitUtils from "../BitUtils";
+import Debug from "../Debug";
 import JsRuntime from "../JsRuntime";
+
+export interface BitStreamPadToByteOptions {
+    onByteAllignedAddNewByte: boolean
+    withOneAsEndPadding: boolean
+}
 
 /**
  * @static
@@ -42,13 +51,14 @@ export default class UPLCFlatUtils
 
         // 1. Converting to binary
         const nBits = BitUtils.getNOfUsedBits( integer );
-        
+
         for( let nAddedBits = 0; nAddedBits < nBits; nAddedBits += 7 )
         {            
             // 3. Reorder chunks (least significant chunk first)
             // 
-            // push at the start so that "the least significant chunk[s are] first"
-            chunks.unshift(
+            // push at the end because the mask starts from the last signigficat chunk first
+            // so chunk[1] is the second least significant and so on
+            chunks.push(
 
                 // 2. Split into 7 bit chunks
                 // take 7 bits
@@ -76,6 +86,126 @@ export default class UPLCFlatUtils
                 chunks.join('')
             )
         );
+    }
+
+    static getPadBitStream( n: InByteOffset ): BitStream
+    {
+        JsRuntime.assert(
+            isInByteOffset( n ),
+            "addPadTo only works for pads from 0 inclusive to 7 inclusive"
+        );
+
+        if( n === 0 )
+        {
+            return BitStream.fromBinStr(
+                new BinaryString(
+                    "1".padStart( 8 , '0' )
+                )
+            )
+        }
+
+        return BitStream.fromBinStr(
+            new BinaryString(
+                "1".padStart( n , '0' )
+            )
+        );
+    }
+
+    /**
+     * **_SIDE EFFECT_**: modifies the ```toPad``` ```BitStream``` passed as first argument
+     * 
+     * @param toPad 
+     * @param n
+     * @returns 
+     */
+    static addPadTo( toPad: BitStream, n: InByteOffset ): void
+    {
+        JsRuntime.assert(
+            BitStream.isStrictInstance( toPad ),
+            "BitStream strict instance expected as first argument in 'UPLCFlatUtils.addPadTo'"
+        );
+        
+        toPad.append(
+            UPLCFlatUtils.getPadBitStream( n )
+        );
+
+        return;
+    }
+
+    static get padToByteDefaultOptions(): Readonly<BitStreamPadToByteOptions>
+    {
+        return Object.freeze({
+            onByteAllignedAddNewByte: true,
+            withOneAsEndPadding: true
+        });
+    }
+
+    /**
+     * **_SIDE EFFECT_**: modifies the ```toPad``` ```BitStream``` passed as first argument
+     * 
+     * @param toPad 
+     * @param options 
+     * @returns 
+     */
+     static padToByte(
+        toPad: BitStream, 
+        options?: Partial<BitStreamPadToByteOptions> 
+    ): void
+    {
+        const opts = {
+            ...UPLCFlatUtils.padToByteDefaultOptions,
+            ...( options === undefined ? {} : options )
+        };
+
+        const nBitsMissingToByte = toPad.getNBitsMissingToByte();
+
+        if( nBitsMissingToByte === 0 )
+        {
+            if( opts.onByteAllignedAddNewByte )
+            {
+                toPad.append(
+                    BitStream.fromBinStr(
+                        new BinaryString( ( opts.withOneAsEndPadding ? "1" : "0" ).padStart( 8 , '0' ) )
+                    )
+                );
+            }
+            else
+            {
+                // do nothing, already alligned
+            }
+
+            return;
+        }
+
+        toPad.append(
+            BitStream.fromBinStr(
+                new BinaryString( ( opts.withOneAsEndPadding ? "1" : "0" ).padStart( nBitsMissingToByte , '0' ) )
+            )
+        );
+
+        return;
+    }
+
+    static appendTermAndUpdateContext(
+        toAppendTo: Readonly<BitStream>,
+        toBeAppended: Readonly<UPLCTerm>,
+        ctx: UPLCSerializationContex
+    ): void
+    {
+        const dbg_ctxInitialLength = ctx.currLength;
+
+        // "toUPLCBitStream updates the context as needed"
+        const toBeAppendedBitStream = toBeAppended.toUPLCBitStream( ctx );
+        
+        toAppendTo.append(
+            toBeAppendedBitStream
+        );
+
+        Debug.log(
+            `\nctx.currLength: ${dbg_ctxInitialLength}`,
+            `\ntoBeAppended.length: ${toBeAppendedBitStream.length}`,
+            `\nctx.currLength after update: ${ctx.currLength}`
+        )
     }
 
 }

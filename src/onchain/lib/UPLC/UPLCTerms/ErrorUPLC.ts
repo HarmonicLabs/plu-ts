@@ -1,4 +1,4 @@
-import UPLCSerializable from "../../../../serialization/flat/ineterfaces/UPLCSerializable";
+import UPLCSerializable, { UPLCSerializationContex } from "../../../../serialization/flat/ineterfaces/UPLCSerializable";
 import BitStream from "../../../../types/bits/BitStream";
 import UPLCTerm from "../UPLCTerm";
 import BinaryString from "../../../../types/bits/BinaryString";
@@ -16,8 +16,9 @@ export default class ErrorUPLC
 
     constructor() {};
 
-    toUPLCBitStream(): BitStream
+    toUPLCBitStream( ctx: UPLCSerializationContex ): BitStream
     {
-        return ErrorUPLC.UPLCTag.clone();;
+        ctx.updateWithBitStreamAppend( ErrorUPLC.UPLCTag );
+        return ErrorUPLC.UPLCTag.clone();
     }
 }

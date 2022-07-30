@@ -1,7 +1,13 @@
-import UPLCSerializable from "../../../../serialization/flat/ineterfaces/UPLCSerializable";
+import UPLCSerializable, { getUpdatedCtxAfterAppend, UPLCSerializationContex } from "../../../../serialization/flat/ineterfaces/UPLCSerializable";
 import BitStream from "../../../../types/bits/BitStream";
 import UPLCTerm from "../UPLCTerm";
 import BinaryString from "../../../../types/bits/BinaryString";
+import UPLCVar from "./UPLCVar";
+import Lambda from "./Lambda";
+import Builtin from "./Builtin";
+import { forceInByteOffset } from "../../../../types/bits/Bit";
+import UPLCFlatUtils from "../../../../utils/UPLCFlatUtils";
+import Debug from "../../../../utils/Debug";
 
 export default class Application
     implements UPLCSerializable
@@ -13,10 +19,10 @@ export default class Application
         );
     }
 
-    private _func: UPLCTerm
+    private _func: UPLCVar | Lambda | Application | Builtin 
     private _arg : UPLCTerm;
 
-    get funcTerm(): UPLCTerm
+    get funcTerm(): UPLCVar | Lambda | Application | Builtin 
     {
         return this._func;
     }
@@ -26,17 +32,32 @@ export default class Application
         return this._arg;
     }
 
-    constructor( func: UPLCTerm, arg: UPLCTerm )
+    constructor(
+        func: UPLCVar | Lambda | Application | Builtin , 
+        arg: UPLCTerm
+    )
     {
         this._func = func;
         this._arg = arg;
     }
 
-    toUPLCBitStream(): BitStream
+    toUPLCBitStream( ctx: UPLCSerializationContex ): BitStream
     {
         const result = Application.UPLCTag.clone();
-        result.append( this.funcTerm.toUPLCBitStream() );
-        result.append( this.argTerm.toUPLCBitStream() );
+        ctx.updateWithBitStreamAppend( result );
+
+        UPLCFlatUtils.appendTermAndUpdateContext(
+            result,
+            this.funcTerm,
+            ctx
+        );
+
+        UPLCFlatUtils.appendTermAndUpdateContext(
+            result,
+            this.argTerm,
+            ctx
+        );
+
         return result;
     }
 }

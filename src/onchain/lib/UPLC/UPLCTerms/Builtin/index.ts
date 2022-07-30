@@ -32,9 +32,10 @@
  */
 
 
-import UPLCSerializable from "../../../../../serialization/flat/ineterfaces/UPLCSerializable";
+import UPLCSerializable, { RawUPLCSerializationContex, UPLCSerializationContex } from "../../../../../serialization/flat/ineterfaces/UPLCSerializable";
 import BinaryString from "../../../../../types/bits/BinaryString";
 import BitStream from "../../../../../types/bits/BitStream";
+import Debug from "../../../../../utils/Debug";
 import JsRuntime from "../../../../../utils/JsRuntime";
 import UPLCBuiltinTag, { isUPLCBuiltinTag, uplcBuiltinTagToBitStream } from "./UPLCBuiltinTag";
 
@@ -66,76 +67,81 @@ export default class Builtin
         this._tag = tag;
     }
 
-    toUPLCBitStream(): BitStream
+    toUPLCBitStream( ctx: UPLCSerializationContex ): BitStream
     {
         const result = Builtin.UPLCTag;
+
         result.append(
             uplcBuiltinTagToBitStream( this._tag )
         );
+
+        // previous BitStreams creation do no require the context;
+        // this allows only a single update before return
+        ctx.updateWithBitStreamAppend( result );
         return result;
     }
 
-    static get addInteger()        { return new Builtin( UPLCBuiltinTag.addInteger ) }
-    static get subtractInteger()   { return new Builtin( UPLCBuiltinTag.subtractInteger ) }
-    static get multiplyInteger()   { return new Builtin( UPLCBuiltinTag.multiplyInteger ) }
-    static get divideInteger()     { return new Builtin( UPLCBuiltinTag.divideInteger ) }
-    static get quotientInteger()   { return new Builtin( UPLCBuiltinTag.quotientInteger ) }
-    static get remainderInteger()  { return new Builtin( UPLCBuiltinTag.remainderInteger ) }
-    static get modInteger()        { return new Builtin( UPLCBuiltinTag.modInteger ) }
-    // integers comparison operaitons
-    static get equalsInteger()        { return new Builtin( UPLCBuiltinTag.equalsInteger ) }
-    static get lessThanInteger()      { return new Builtin( UPLCBuiltinTag.lessThanInteger ) }
-    static get lessThanEqualInteger() { return new Builtin( UPLCBuiltinTag.lessThanEqualInteger ) }
+    static get addInteger(): Builtin        { return new Builtin( UPLCBuiltinTag.addInteger ) }
+    static get subtractInteger(): Builtin   { return new Builtin( UPLCBuiltinTag.subtractInteger ) }
+    static get multiplyInteger(): Builtin   { return new Builtin( UPLCBuiltinTag.multiplyInteger ) }
+    static get divideInteger(): Builtin     { return new Builtin( UPLCBuiltinTag.divideInteger ) }
+    static get quotientInteger(): Builtin   { return new Builtin( UPLCBuiltinTag.quotientInteger ) }
+    static get remainderInteger(): Builtin  { return new Builtin( UPLCBuiltinTag.remainderInteger ) }
+    static get modInteger(): Builtin        { return new Builtin( UPLCBuiltinTag.modInteger ) }
+    // integers comparison operaitons: Builtin
+    static get equalsInteger(): Builtin        { return new Builtin( UPLCBuiltinTag.equalsInteger ) }
+    static get lessThanInteger(): Builtin      { return new Builtin( UPLCBuiltinTag.lessThanInteger ) }
+    static get lessThanEqualInteger(): Builtin { return new Builtin( UPLCBuiltinTag.lessThanEqualInteger ) }
     // bytestring operations
-    static get appendByteString()     { return new Builtin( UPLCBuiltinTag.appendByteString ) }
-    static get consByteString()       { return new Builtin( UPLCBuiltinTag.consByteString ) }
-    static get sliceByteString()      { return new Builtin( UPLCBuiltinTag.sliceByteString ) }
-    static get lengthOfByteString()   { return new Builtin( UPLCBuiltinTag.lengthOfByteString ) }
-    static get indexByteString()      { return new Builtin( UPLCBuiltinTag.indexByteString ) }
-    // bytestrign comparison operations
-    static get equalsByteString()         { return new Builtin( UPLCBuiltinTag.equalsByteString ) }
-    static get lessThanByteString()       { return new Builtin( UPLCBuiltinTag.lessThanByteString ) }
-    static get lessThanEqualsByteString() { return new Builtin( UPLCBuiltinTag.lessThanEqualsByteString ) }
+    static get appendByteString(): Builtin     { return new Builtin( UPLCBuiltinTag.appendByteString ) }
+    static get consByteString(): Builtin       { return new Builtin( UPLCBuiltinTag.consByteString ) }
+    static get sliceByteString(): Builtin      { return new Builtin( UPLCBuiltinTag.sliceByteString ) }
+    static get lengthOfByteString(): Builtin   { return new Builtin( UPLCBuiltinTag.lengthOfByteString ) }
+    static get indexByteString(): Builtin      { return new Builtin( UPLCBuiltinTag.indexByteString ) }
+    // bytestrign comparison operations: Builtin
+    static get equalsByteString(): Builtin         { return new Builtin( UPLCBuiltinTag.equalsByteString ) }
+    static get lessThanByteString(): Builtin       { return new Builtin( UPLCBuiltinTag.lessThanByteString ) }
+    static get lessThanEqualsByteString(): Builtin { return new Builtin( UPLCBuiltinTag.lessThanEqualsByteString ) }
     // hashes
-    static get sha2_256()                 { return new Builtin( UPLCBuiltinTag.sha2_256 ) }
-    static get sha3_256()                 { return new Builtin( UPLCBuiltinTag.sha3_256 ) }
-    static get blake2b_256()              { return new Builtin( UPLCBuiltinTag.blake2b_256 ) }
-    static get verifyEd25519Signature()   { return new Builtin( UPLCBuiltinTag.verifyEd25519Signature ) }
+    static get sha2_256(): Builtin                 { return new Builtin( UPLCBuiltinTag.sha2_256 ) }
+    static get sha3_256(): Builtin                 { return new Builtin( UPLCBuiltinTag.sha3_256 ) }
+    static get blake2b_256(): Builtin              { return new Builtin( UPLCBuiltinTag.blake2b_256 ) }
+    static get verifyEd25519Signature(): Builtin   { return new Builtin( UPLCBuiltinTag.verifyEd25519Signature ) }
     // string operations
-    static get appendString()         { return new Builtin( UPLCBuiltinTag.appendString ) }
-    static get equalsString()         { return new Builtin( UPLCBuiltinTag.equalsString ) }
-    static get encodeUtf8()           { return new Builtin( UPLCBuiltinTag.encodeUtf8 ) }
-    static get decodeUtf8()           { return new Builtin( UPLCBuiltinTag.decodeUtf8 ) }
+    static get appendString(): Builtin         { return new Builtin( UPLCBuiltinTag.appendString ) }
+    static get equalsString(): Builtin         { return new Builtin( UPLCBuiltinTag.equalsString ) }
+    static get encodeUtf8(): Builtin           { return new Builtin( UPLCBuiltinTag.encodeUtf8 ) }
+    static get decodeUtf8(): Builtin           { return new Builtin( UPLCBuiltinTag.decodeUtf8 ) }
     // control flow
-    static get ifThenElse()           { return new Builtin( UPLCBuiltinTag.ifThenElse ) }
-    static get chooseUnit()           { return new Builtin( UPLCBuiltinTag.chooseUnit ) }
+    static get ifThenElse(): Builtin           { return new Builtin( UPLCBuiltinTag.ifThenElse ) }
+    static get chooseUnit(): Builtin           { return new Builtin( UPLCBuiltinTag.chooseUnit ) }
     // tracing
-    static get trace()                { return new Builtin( UPLCBuiltinTag.trace ) }
+    static get trace(): Builtin                { return new Builtin( UPLCBuiltinTag.trace ) }
     // data
-    static get fstPair()              { return new Builtin( UPLCBuiltinTag.fstPair ) }
-    static get sndPair()              { return new Builtin( UPLCBuiltinTag.sndPair ) }
-    static get chooseList()           { return new Builtin( UPLCBuiltinTag.chooseList ) }
-    static get mkCons()               { return new Builtin( UPLCBuiltinTag.mkCons ) }
-    static get headList()             { return new Builtin( UPLCBuiltinTag.headList ) }
-    static get tailList()             { return new Builtin( UPLCBuiltinTag.tailList ) }
-    static get nullList()             { return new Builtin( UPLCBuiltinTag.nullList ) }
-    static get chooseData()           { return new Builtin( UPLCBuiltinTag.chooseData ) }
-    static get constrData()           { return new Builtin( UPLCBuiltinTag.constrData ) }
-    static get mapData()              { return new Builtin( UPLCBuiltinTag.mapData ) }
-    static get listData()             { return new Builtin( UPLCBuiltinTag.listData ) }
-    static get iData()                { return new Builtin( UPLCBuiltinTag.iData ) }
-    static get bData()                { return new Builtin( UPLCBuiltinTag.bData ) }
-    static get unConstrData()         { return new Builtin( UPLCBuiltinTag.unConstrData ) }
-    static get unMapData()            { return new Builtin( UPLCBuiltinTag.unMapData ) }
-    static get unListData()           { return new Builtin( UPLCBuiltinTag.unListData ) }
-    static get unIData()              { return new Builtin( UPLCBuiltinTag.unIData ) }
-    static get unBData()              { return new Builtin( UPLCBuiltinTag.unBData ) }
-    static get equalsData()           { return new Builtin( UPLCBuiltinTag.equalsData ) }
-    static get mkPairData()           { return new Builtin( UPLCBuiltinTag.mkPairData ) }
-    static get mkNilData()            { return new Builtin( UPLCBuiltinTag.mkNilData ) }
-    static get mkNilPairData()        { return new Builtin( UPLCBuiltinTag.mkNilPairData ) }
-    // Vasil (Plutus V2)
-    static get serialiseData()                   { return new Builtin( UPLCBuiltinTag.serialiseData ) }
-    static get verifyEcdsaSecp256k1Signature()   { return new Builtin( UPLCBuiltinTag.verifyEcdsaSecp256k1Signature ) }
-    static get verifySchnorrSecp256k1Signature() { return new Builtin( UPLCBuiltinTag.verifySchnorrSecp256k1Signature ) }
+    static get fstPair(): Builtin              { return new Builtin( UPLCBuiltinTag.fstPair ) }
+    static get sndPair(): Builtin              { return new Builtin( UPLCBuiltinTag.sndPair ) }
+    static get chooseList(): Builtin           { return new Builtin( UPLCBuiltinTag.chooseList ) }
+    static get mkCons(): Builtin               { return new Builtin( UPLCBuiltinTag.mkCons ) }
+    static get headList(): Builtin             { return new Builtin( UPLCBuiltinTag.headList ) }
+    static get tailList(): Builtin             { return new Builtin( UPLCBuiltinTag.tailList ) }
+    static get nullList(): Builtin             { return new Builtin( UPLCBuiltinTag.nullList ) }
+    static get chooseData(): Builtin           { return new Builtin( UPLCBuiltinTag.chooseData ) }
+    static get constrData(): Builtin           { return new Builtin( UPLCBuiltinTag.constrData ) }
+    static get mapData(): Builtin              { return new Builtin( UPLCBuiltinTag.mapData ) }
+    static get listData(): Builtin             { return new Builtin( UPLCBuiltinTag.listData ) }
+    static get iData(): Builtin                { return new Builtin( UPLCBuiltinTag.iData ) }
+    static get bData(): Builtin                { return new Builtin( UPLCBuiltinTag.bData ) }
+    static get unConstrData(): Builtin         { return new Builtin( UPLCBuiltinTag.unConstrData ) }
+    static get unMapData(): Builtin            { return new Builtin( UPLCBuiltinTag.unMapData ) }
+    static get unListData(): Builtin           { return new Builtin( UPLCBuiltinTag.unListData ) }
+    static get unIData(): Builtin              { return new Builtin( UPLCBuiltinTag.unIData ) }
+    static get unBData(): Builtin              { return new Builtin( UPLCBuiltinTag.unBData ) }
+    static get equalsData(): Builtin           { return new Builtin( UPLCBuiltinTag.equalsData ) }
+    static get mkPairData(): Builtin           { return new Builtin( UPLCBuiltinTag.mkPairData ) }
+    static get mkNilData(): Builtin            { return new Builtin( UPLCBuiltinTag.mkNilData ) }
+    static get mkNilPairData(): Builtin        { return new Builtin( UPLCBuiltinTag.mkNilPairData ) }
+    // Vasil (Plutus V2: Builtin)
+    static get serialiseData(): Builtin                   { return new Builtin( UPLCBuiltinTag.serialiseData ) }
+    static get verifyEcdsaSecp256k1Signature(): Builtin   { return new Builtin( UPLCBuiltinTag.verifyEcdsaSecp256k1Signature ) }
+    static get verifySchnorrSecp256k1Signature(): Builtin { return new Builtin( UPLCBuiltinTag.verifySchnorrSecp256k1Signature ) }
 }

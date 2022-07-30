@@ -1,5 +1,7 @@
-import UPLCSerializable from "../../../../serialization/flat/ineterfaces/UPLCSerializable";
+import UPLCSerializable, { UPLCSerializationContex } from "../../../../serialization/flat/ineterfaces/UPLCSerializable";
+import { forceInByteOffset } from "../../../../types/bits/Bit";
 import BitStream from "../../../../types/bits/BitStream";
+import UPLCFlatUtils from "../../../../utils/UPLCFlatUtils";
 import UPLCTerm from "../UPLCTerm";
 import UPLCVersion, { CanBeUInteger } from "./UPLCVersion";
 
@@ -33,8 +35,18 @@ export default class UPLCProgram
     toUPLCBitStream(): BitStream
     {
         const result = this.version.toUPLCBitStream();
-        result.append( this.body.toUPLCBitStream() );
-        BitStream.padToByte( result );
+
+        result.append(
+            this.body.toUPLCBitStream(
+                new UPLCSerializationContex({
+                    currLength: result.length
+                })
+            )
+        );
+        
+        UPLCFlatUtils.padToByte( result );
+        
         return result;
     }
+
 }

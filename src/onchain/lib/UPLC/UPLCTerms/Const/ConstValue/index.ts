@@ -1,3 +1,5 @@
+import { UPLCSerializationContex } from "../../../../../../serialization/flat/ineterfaces/UPLCSerializable";
+import { forceInByteOffset } from "../../../../../../types/bits/Bit";
 import BitStream from "../../../../../../types/bits/BitStream";
 import ByteString from "../../../../../../types/HexString/ByteString";
 import Integer, { UInteger } from "../../../../../../types/ints/Integer";
@@ -35,7 +37,7 @@ export function isConstValue( value: ConstValue ): boolean
     )
 }
 
-function encodeConstValueToUPLCBitStream( value: ConstValue ): BitStream
+export function encodeConstValueToUPLCBitStream( value: ConstValue, ctx: UPLCSerializationContex ): BitStream
 {
     JsRuntime.assert(
         isConstValue( value ),
@@ -43,11 +45,16 @@ function encodeConstValueToUPLCBitStream( value: ConstValue ): BitStream
     );
 
     if( value === undefined ) return new BitStream();
-    if( value instanceof Integer )  return value.toUPLCBitStream();
+    if( value instanceof Integer ) 
+    {
+        Debug.log( "encoding Const int; Integer: ", value, value.toUPLCBitStream().toBinStr().asString );
+        return value.toUPLCBitStream();
+    }
     if( value instanceof ByteString )
     {
+        // padding is added based on context passed
         // see note of the ByteString.toUPLCBitStream method
-        return value.toUPLCBitStream()
+        return value.toUPLCBitStream( ctx )
     }
     if( typeof value === "string" )
     {
@@ -56,13 +63,15 @@ function encodeConstValueToUPLCBitStream( value: ConstValue ): BitStream
 
         We have defined values of the string type to be sequences of Unicode characters. As mentioned earlier
         we do not specify any particular internal representation of Unicode characters, but for serialisation we use
-        the UTF-8 representation to convert between strings and bytestrings **and then use the bytestring encoder
-        and decoder**:
+        the UTF-8 representation to convert between strings and bytestrings
+        
+        **and then use the bytestring encoder and decoder**:
         */
         return encodeConstValueToUPLCBitStream(
             new ByteString(
                 Buffer.from( value, "utf8" )
-            )
+            ),
+            ctx
         );
     }
     if( typeof value === "boolean" ) return BitStream.fromBinStr( value === true ? "1" : "0" );
@@ -83,12 +92,18 @@ function encodeConstValueToUPLCBitStream( value: ConstValue ): BitStream
             listElem = BitStream.fromBinStr(
                 i === value.length - 1 ? "0" : "1"
             );
-            
-            // mutually recursive
-            // set the value
-            appendConstValueToBitStream( value[ i ], listElem );
 
-            // append to list
+            // set list element
+            listElem.append(
+                encodeConstValueToUPLCBitStream(
+                    value,
+                    {
+                        bitsToByte: forceInByteOffset( ctx.bitsToByte + listElem.length )
+                    }
+                )
+            );
+            
+            // append element
             result.append( listElem );
         }
 
@@ -96,16 +111,24 @@ function encodeConstValueToUPLCBitStream( value: ConstValue ): BitStream
     }
     if( value instanceof Pair )
     {
-        const result: BitStream = encodeConstValueToUPLCBitStream( value.fst );
+        const result: BitStream = encodeConstValueToUPLCBitStream( value.fst, ctx );
 
-        // mutually recursive
-        appendConstValueToBitStream( value.snd, result );
-        
+        result.append(
+            encodeConstValueToUPLCBitStream(
+                value.snd,
+                {
+                    // if 'value.fst' needed to byte-allign something it has been done based on the context
+                    // so the offest is the same of the partial result length % 8
+                    bitsToByte: forceInByteOffset( ctx.bitsToByte + result.length )
+                } 
+            )
+        );
+
         return result;
     }
     if( isData( value ) )
     {
-        return encodeDataToUPLCBitStream( value );
+        return encodeDataToUPLCBitStream( value , ctx );
     }
 
     throw JsRuntime.makeNotSupposedToHappenError(
@@ -117,6 +140,8 @@ function encodeConstValueToUPLCBitStream( value: ConstValue ): BitStream
 /**
  * **_SIDE EFFECT_**: modifies the ```toAppendTo``` BitStream passed as second argument
  * 
+ * @deprecated
+ * 
  * @param value 
  * @param toAppendTo 
  * @returns 
@@ -126,23 +151,12 @@ export function appendConstValueToBitStream( value: ConstValue, toAppendTo: BitS
     // units are removed
     if( value === undefined ) return;
 
-    if(
-        typeof value === "string" ||
-        value instanceof ByteString
-    )
-    {
-        BitStream.padToByte(
-            toAppendTo,
-            {
-                onByteAllignedAddNewByte: true,
-                withOneAsEndPadding: true
-            }
-        );
-    }
-
     toAppendTo.append(
         encodeConstValueToUPLCBitStream(
-            value
+            value,
+            {
+                bitsToByte: forceInByteOffset( toAppendTo.length )
+            }
         )
     );
     return;

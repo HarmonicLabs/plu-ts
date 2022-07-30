@@ -1,5 +1,6 @@
-import UPLCSerializable from "../../../../../serialization/flat/ineterfaces/UPLCSerializable";
+import UPLCSerializable, { UPLCSerializationContex } from "../../../../../serialization/flat/ineterfaces/UPLCSerializable";
 import BinaryString from "../../../../../types/bits/BinaryString";
+import { forceInByteOffset } from "../../../../../types/bits/Bit";
 import BitStream from "../../../../../types/bits/BitStream";
 import ByteString from "../../../../../types/HexString/ByteString";
 import Integer, { UInteger } from "../../../../../types/ints/Integer";
@@ -7,7 +8,7 @@ import Pair from "../../../../../types/structs/Pair";
 import JsRuntime from "../../../../../utils/JsRuntime";
 import Data, { isData } from "../../Data";
 import ConstType, { constTypeEq, constT, constTypeToStirng, ConstTyTag, isWellFormedConstType, encodeConstTypeToUPLCBitStream } from "./ConstType";
-import ConstValue, { appendConstValueToBitStream, canConstValueBeOfConstType } from "./ConstValue";
+import ConstValue, { appendConstValueToBitStream, canConstValueBeOfConstType, encodeConstValueToUPLCBitStream } from "./ConstValue";
 
 
 export default class Const
@@ -61,6 +62,30 @@ export default class Const
         this._value = value;
     }
 
+    toUPLCBitStream( ctx: UPLCSerializationContex ): BitStream
+    {
+        const constBitStream = Const.UPLCTag;
+        
+        constBitStream.append(
+            encodeConstTypeToUPLCBitStream(
+                this.type
+            )
+        );
+
+        ctx.updateWithBitStreamAppend( constBitStream );
+
+        const valueBitStream = encodeConstValueToUPLCBitStream(
+            this.value,
+            ctx
+        );
+
+        constBitStream.append( valueBitStream );
+
+        ctx.updateWithBitStreamAppend( valueBitStream );
+
+        return constBitStream;
+    }
+    
     static int( int: Integer | number | bigint ): Const
     {
         // new Integer works for both number | bigint
@@ -120,20 +145,5 @@ export default class Const
     static data( data: Data ): Const
     {
         return new Const( constT.data, data );
-    }
-
-    toUPLCBitStream(): BitStream
-    {
-        const constBitStream = Const.UPLCTag;
-        constBitStream.append(
-            encodeConstTypeToUPLCBitStream(
-                this.type
-            )
-        );
-        appendConstValueToBitStream(
-            this.value,
-            constBitStream
-        );
-        return constBitStream;
     }
 }

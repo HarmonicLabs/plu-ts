@@ -116,7 +116,7 @@ export class ZigZagInteger
 
     private _zigzagged: bigint;
 
-    get asBigInt(): bigint
+    get zigzagged(): bigint
     {
         return this._zigzagged;
     }
@@ -170,7 +170,7 @@ export class ZigZagInteger
     
     toInteger(): Integer
     {
-        const bigint = this.asBigInt;
+        const bigint = this.zigzagged;
 
         // decode
         return new Integer(
@@ -183,7 +183,7 @@ export class ZigZagInteger
 
     toUPLCBitStream(): BitStream
     {
-       return UPLCFlatUtils.encodeBigIntAsVariableLengthBitStream( this.asBigInt );
+       return UPLCFlatUtils.encodeBigIntAsVariableLengthBitStream( this.zigzagged );
     }
 }
 

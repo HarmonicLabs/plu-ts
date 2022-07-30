@@ -1,4 +1,4 @@
-import UPLCSerializable from "../../../../../serialization/flat/ineterfaces/UPLCSerializable";
+import UPLCSerializable, { UPLCSerializationContex } from "../../../../../serialization/flat/ineterfaces/UPLCSerializable";
 import BinaryString from "../../../../../types/bits/BinaryString";
 import BitStream from "../../../../../types/bits/BitStream";
 import { UInteger } from "../../../../../types/ints/Integer";
@@ -33,10 +33,13 @@ export default class UPLCVar
         this._deBruijn = deBruijn;
     }
 
-    toUPLCBitStream(): BitStream
+    toUPLCBitStream( ctx: UPLCSerializationContex ): BitStream
     {
         const result = UPLCVar.UPLCTag.clone();
         result.append( this.deBruijn.toUPLCBitStream() );
+
+        ctx.updateWithBitStreamAppend( result );
+        
         return result;
     }
 }

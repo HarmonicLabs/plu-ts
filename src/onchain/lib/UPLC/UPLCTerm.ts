@@ -67,12 +67,11 @@ export function isClosedTerm( term: UPLCTerm ): boolean
             // `ErrorUPLC` has no variables in it, ence always closed
             return true;
 
-        // todo, check for arguments
         else if( t instanceof Builtin )
-            // builtin per-se is just the function,
+            // builtin per-se is just the function (ence a valid value),
             // arguments are passed using the `Apply` Term
             // so it is the `t instanceof Apply` case job
-            // to take care of checking for the arguments to be closed
+            // to be sure the arguments are closed
             return true;
         else
             throw JsRuntime.makeNotSupposedToHappenError(

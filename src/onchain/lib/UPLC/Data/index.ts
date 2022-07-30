@@ -1,3 +1,4 @@
+import { UPLCSerializationContex } from "../../../../serialization/flat/ineterfaces/UPLCSerializable";
 import BitStream from "../../../../types/bits/BitStream";
 import ByteString from "../../../../types/HexString/ByteString";
 import Integer, { UInteger } from "../../../../types/ints/Integer";
@@ -22,7 +23,7 @@ export function isData( something: Data ): boolean
     );
 }
 
-export function encodeDataToUPLCBitStream( data: Data ): BitStream
+export function encodeDataToUPLCBitStream( data: Data, ctx :UPLCSerializationContex ): BitStream
 {
 
 }
