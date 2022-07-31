@@ -1,4 +1,4 @@
-import UPLCSerializable, { UPLCSerializationContex } from "../../../serialization/flat/ineterfaces/UPLCSerializable";
+import UPLCSerializable from "..//UPLCEncoder/ineterfaces/UPLCSerializable";
 import BitStream from "../../../types/bits/BitStream";
 import UPLCTerm from "../UPLCTerm";
 import BinaryString from "../../../types/bits/BinaryString";
@@ -8,7 +8,7 @@ import UPLCFlatUtils from "../../../utils/UPLCFlatUtils";
 export default class Force
     implements UPLCSerializable
 {
-    private static get UPLCTag(): BitStream
+    static get UPLCTag(): BitStream
     {
         return BitStream.fromBinStr(
             new BinaryString( "0101" )
@@ -32,17 +32,4 @@ export default class Force
         this._toForce = rawTerm;
     }
 
-    toUPLCBitStream( ctx: UPLCSerializationContex ): BitStream
-    {
-        const result = Force.UPLCTag.clone();
-        ctx.updateWithBitStreamAppend( result );
-
-        UPLCFlatUtils.appendTermAndUpdateContext(
-            result,
-            this.termToForce,
-            ctx
-        );
-
-        return result;
-    }
 }

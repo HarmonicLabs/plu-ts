@@ -31,6 +31,7 @@ import UPLCProgram from "..";
 import BinaryString from "../../../../types/bits/BinaryString";
 import BitStream from "../../../../types/bits/BitStream";
 import Debug from "../../../../utils/Debug";
+import UPLCEncoder from "../../UPLCEncoder";
 import Application from "../../UPLCTerms/Application";
 import Builtin from "../../UPLCTerms/Builtin";
 import Const from "../../UPLCTerms/Const";
@@ -40,32 +41,34 @@ describe("overapplication", () => {
 
     it("serializes as in the example", () => {
 
-        const plutsCompiled = new UPLCProgram(
-            [ 1, 0, 0 ],
-            new Application(
+        const plutsCompiled = UPLCEncoder.compile( 
+            new UPLCProgram(
+                [ 1, 0, 0 ],
                 new Application(
                     new Application(
                         new Application(
                             new Application(
-                                // takes care of the force too
-                                Builtin.ifThenElse,
                                 new Application(
+                                    // takes care of the force too
+                                    Builtin.ifThenElse,
                                     new Application(
-                                        Builtin.lessThanInteger,
-                                        Const.int( 0 )
-                                    ),
-                                    Const.int( 3 )
-                                )
+                                        new Application(
+                                            Builtin.lessThanInteger,
+                                            Const.int( 0 )
+                                        ),
+                                        Const.int( 3 )
+                                    )
+                                ),
+                                Builtin.addInteger
                             ),
-                            Builtin.addInteger
+                            Builtin.subtractInteger
                         ),
-                        Builtin.subtractInteger
+                        Const.int( 0 )
                     ),
-                    Const.int( 0 )
-                ),
-                Const.int( 3 )
+                    Const.int( 3 )
+                )
             )
-        ).toUPLCBitStream();
+        );
 
         const manuallyCompiled = BitStream.fromBinStr(
             new BinaryString(

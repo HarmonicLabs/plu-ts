@@ -159,62 +159,6 @@ export function isWellFormedConstType( type: ConstType | ConstTyTag[] ): boolean
     return true;
 }
 
-export function encodeConstTypeToUPLCBitStream( type: ConstType ): BitStream
-{
-    JsRuntime.assert(
-        isWellFormedConstType( type ),
-        "cannot encode an UPLC constant type if it is not well formed"
-    );
-
-    /**
-     *
-     * Source: plutus-core-specification-june2022.pdf; section D.3.3; page 31
-     *
-     *  We define the encoder and decoder for types by combining 𝖾 𝗍𝗒𝗉𝖾 and 𝖽 𝗍𝗒𝗉𝖾 with 𝖤
-     *  and decoder for lists of four-bit integers (see Section D.2).
-     * 
-     * Section D.2 ( D.2.2 )
-     * 
-     * Suppose that we have a set 𝑋 for which we have defined an encoder 𝖤 𝑋 and a decoder 𝖣 𝑋 ; we define an
-⃖⃗     * 𝑋 which encodes lists of elements of 𝑋 by emitting the encodings of the elements of the list,
-     * encoder 𝖤
-     * **each preceded by a 𝟷 bit, then emitting a 𝟶 bit to mark the end of the list.**
-     * 
-     */
-    function _encodeConstTyTagToUPLCBinaryString( typeTag: ConstTyTag ): string
-    {
-        if( typeTag === ConstTyTag.list )
-        {
-            return (
-                "1" + "0111" +              // cons + (7).toString(2).padStart( 4, '0' ) // type application
-                "1" + "0101"                // cons + (5).toString(2).padStart( 4, '0' ) // list
-                // "0"                        // nil // not needed (well formed) types do expects other tags after list
-            );
-        }
-        else if( typeTag === ConstTyTag.pair )
-        {
-            return (
-                "1" + "0111" + // cons + (7).toString(2).padStart( 4, '0' ) // type application
-                "1" + "0111" + // cons + (7).toString(2).padStart( 4, '0' ) // type application
-                "1" + "0110"   // cons + (5).toString(2).padStart( 4, '0' ) // pair
-                // "0"            // nil // not needed (well formed) types do expects other tags after pairs
-            );
-        }
-        else
-        {
-            return (
-                "1" + typeTag.toString(2).padStart( 4, '0' )
-            ); 
-        }
-    }
-
-    return BitStream.fromBinStr(
-        new BinaryString(
-            type.map( _encodeConstTyTagToUPLCBinaryString ).join('') + "0"
-        )
-    );
-}
-
 /**
  * **does NOT require the types to be well-formed**
  * 

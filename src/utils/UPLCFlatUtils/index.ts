@@ -22,6 +22,29 @@ export default class UPLCFlatUtils
      */
     private constructor() {};
 
+    static zizagBigint( bigint: bigint ): bigint
+    {
+        return (
+            bigint >> 
+                (
+                    BigInt( 
+                        BitUtils.getNOfUsedBits( bigint ) 
+                    )
+                )
+        ) ^ // XOR
+        ( bigint << BigInt( 1 ) );
+    }
+
+    static unzizagBigint( bigint: bigint ): bigint
+    {
+        return (
+            (
+                (bigint >> BigInt(1))
+            ) ^ // XOR
+            -( bigint & BigInt(1) )
+        );
+    }
+
     /**
      * source: https://hydra.iohk.io/build/5988492/download/1/plutus-core-specification.pdf#Variable%20length%20data
      * 

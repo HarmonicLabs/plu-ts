@@ -13,6 +13,7 @@ import UPLCProgram from "..";
 import BinaryString from "../../../../types/bits/BinaryString";
 import BitStream from "../../../../types/bits/BitStream";
 import Debug from "../../../../utils/Debug";
+import UPLCEncoder from "../../UPLCEncoder";
 import Delay from "../../UPLCTerms/Delay";
 import Lambda from "../../UPLCTerms/Lambda";
 import UPLCVar from "../../UPLCTerms/UPLCVar";
@@ -22,16 +23,18 @@ describe("churchZero", () => {
 
     it("serializes as in the example", () => {
 
-        const plutsCompiled = new UPLCProgram(
-            [ 1, 0, 0 ],
-            new Delay(
-                new Lambda(
+        const plutsCompiled = UPLCEncoder.compile(
+            new UPLCProgram(
+                [ 1, 0, 0 ],
+                new Delay(
                     new Lambda(
-                        new UPLCVar( 2 )
+                        new Lambda(
+                            new UPLCVar( 2 )
+                        )
                     )
                 )
             )
-        ).toUPLCBitStream();
+        );
 
         const manuallyCompiled = BitStream.fromBinStr(
             new BinaryString(

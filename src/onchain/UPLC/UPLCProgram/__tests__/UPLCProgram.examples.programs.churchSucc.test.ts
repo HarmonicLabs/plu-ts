@@ -13,6 +13,7 @@ import UPLCProgram from "..";
 import BinaryString from "../../../../types/bits/BinaryString";
 import BitStream from "../../../../types/bits/BitStream";
 import Debug from "../../../../utils/Debug";
+import UPLCEncoder from "../../UPLCEncoder";
 import Application from "../../UPLCTerms/Application";
 import Delay from "../../UPLCTerms/Delay";
 import Force from "../../UPLCTerms/Force";
@@ -24,29 +25,31 @@ describe("churchSucc", () => {
 
     it("serializes as in the example", () => {
 
-        const plutsCompiled = new UPLCProgram(
-            [ 1, 0, 0 ],
-            new Lambda( // n
-                new Delay(
-                    new Lambda( // z
-                        new Lambda( // f
-                            new Application(
-                                new UPLCVar( 1 ), // f
+        const plutsCompiled = UPLCEncoder.compile(
+            new UPLCProgram(
+                [ 1, 0, 0 ],
+                new Lambda( // n
+                    new Delay(
+                        new Lambda( // z
+                            new Lambda( // f
                                 new Application(
+                                    new UPLCVar( 1 ), // f
                                     new Application(
-                                        new Force(
-                                           new UPLCVar( 3 ) // n
+                                        new Application(
+                                            new Force(
+                                            new UPLCVar( 3 ) // n
+                                            ),
+                                            new UPLCVar( 2 ) // z
                                         ),
-                                        new UPLCVar( 2 ) // z
-                                    ),
-                                    new UPLCVar( 1 ) // f
+                                        new UPLCVar( 1 ) // f
+                                    )
                                 )
                             )
                         )
                     )
                 )
             )
-        ).toUPLCBitStream();
+        );
 
         const manuallyCompiled = BitStream.fromBinStr(
             new BinaryString(

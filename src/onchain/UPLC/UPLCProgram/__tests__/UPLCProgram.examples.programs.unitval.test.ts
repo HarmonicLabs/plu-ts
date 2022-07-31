@@ -10,9 +10,10 @@ cabal run uplc -- example -s unitval
 */
 
 import UPLCProgram from "..";
-import BinaryString from "../../../../../types/bits/BinaryString";
-import BitStream from "../../../../../types/bits/BitStream";
-import Debug from "../../../../../utils/Debug";
+import BinaryString from "../../../../types/bits/BinaryString";
+import BitStream from "../../../../types/bits/BitStream";
+import Debug from "../../../../utils/Debug";
+import UPLCEncoder from "../../UPLCEncoder";
 import Const from "../../UPLCTerms/Const";
 
 
@@ -20,10 +21,12 @@ describe("unitval", () => {
 
     it("serializes as in the example", () => {
 
-        const plutsCompiled = new UPLCProgram(
-            [ 1, 0, 0 ],
-            Const.unit
-        ).toUPLCBitStream();
+        const plutsCompiled = UPLCEncoder.compile(
+            new UPLCProgram(
+                [ 1, 0, 0 ],
+                Const.unit
+            )
+        );
 
         const manuallyCompiled = BitStream.fromBinStr(
             new BinaryString(

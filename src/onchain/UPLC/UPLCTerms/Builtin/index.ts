@@ -32,17 +32,17 @@
  */
 
 
-import UPLCSerializable, { RawUPLCSerializationContex, UPLCSerializationContex } from "../../../../serialization/flat/ineterfaces/UPLCSerializable";
+import UPLCSerializable from "../../UPLCEncoder/ineterfaces/UPLCSerializable";
 import BinaryString from "../../../../types/bits/BinaryString";
 import BitStream from "../../../../types/bits/BitStream";
 import JsRuntime from "../../../../utils/JsRuntime";
-import UPLCBuiltinTag, { getNRequiredForces, isUPLCBuiltinTag, uplcBuiltinTagToBitStream } from "./UPLCBuiltinTag";
+import UPLCBuiltinTag, { isUPLCBuiltinTag } from "./UPLCBuiltinTag";
 
 
 export default class Builtin
     implements UPLCSerializable
 {
-    private static get UPLCTag(): BitStream
+    static get UPLCTag(): BitStream
     {
         return BitStream.fromBinStr(
             new BinaryString( "0111" )
@@ -66,26 +66,6 @@ export default class Builtin
         this._tag = tag;
     }
 
-    toUPLCBitStream( ctx: UPLCSerializationContex ): BitStream
-    {
-        const result = BitStream.fromBinStr(
-            "0101".repeat( getNRequiredForces( this._tag ) ) // "force" tag repeated as necessary
-        );
-
-        result.append(
-            Builtin.UPLCTag
-        );
-        
-        result.append(
-            uplcBuiltinTagToBitStream( this._tag )
-        );
-
-        // previous BitStreams creation do no require the context;
-        // this allows only a single update before return
-        ctx.updateWithBitStreamAppend( result );
-        return result;
-    }
-
     static get addInteger(): Builtin        { return new Builtin( UPLCBuiltinTag.addInteger ) }
     static get subtractInteger(): Builtin   { return new Builtin( UPLCBuiltinTag.subtractInteger ) }
     static get multiplyInteger(): Builtin   { return new Builtin( UPLCBuiltinTag.multiplyInteger ) }
@@ -93,7 +73,7 @@ export default class Builtin
     static get quotientInteger(): Builtin   { return new Builtin( UPLCBuiltinTag.quotientInteger ) }
     static get remainderInteger(): Builtin  { return new Builtin( UPLCBuiltinTag.remainderInteger ) }
     static get modInteger(): Builtin        { return new Builtin( UPLCBuiltinTag.modInteger ) }
-    // integers comparison operaitons: Builtin
+    // integers comparison operaitons
     static get equalsInteger(): Builtin        { return new Builtin( UPLCBuiltinTag.equalsInteger ) }
     static get lessThanInteger(): Builtin      { return new Builtin( UPLCBuiltinTag.lessThanInteger ) }
     static get lessThanEqualInteger(): Builtin { return new Builtin( UPLCBuiltinTag.lessThanEqualInteger ) }
@@ -103,7 +83,7 @@ export default class Builtin
     static get sliceByteString(): Builtin      { return new Builtin( UPLCBuiltinTag.sliceByteString ) }
     static get lengthOfByteString(): Builtin   { return new Builtin( UPLCBuiltinTag.lengthOfByteString ) }
     static get indexByteString(): Builtin      { return new Builtin( UPLCBuiltinTag.indexByteString ) }
-    // bytestrign comparison operations: Builtin
+    // bytestring comparison operations
     static get equalsByteString(): Builtin         { return new Builtin( UPLCBuiltinTag.equalsByteString ) }
     static get lessThanByteString(): Builtin       { return new Builtin( UPLCBuiltinTag.lessThanByteString ) }
     static get lessThanEqualsByteString(): Builtin { return new Builtin( UPLCBuiltinTag.lessThanEqualsByteString ) }

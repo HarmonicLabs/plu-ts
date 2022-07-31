@@ -139,23 +139,6 @@ export function getNRequiredForces( tag: UPLCBuiltinTag ): ( 0 | 1 | 2 )
     )
 }
 
-/**
- * @returns {BitStream} 7-bits tag
- */
-export function uplcBuiltinTagToBitStream( tag: UPLCBuiltinTag ): BitStream
-{
-    JsRuntime.assert(
-        isUPLCBuiltinTag( tag ),
-        `in UPLCBuiltinTagToBitStream; cannot convert ${tag} to builtin, tag not found`
-    );
-    
-    return BitStream.fromBinStr(
-        new BinaryString(
-            tag.toString(2).padStart( 7 , '0' )             // builtin tag itself
-        )
-    );
-}
-
 export function isV1Supported( tag: UPLCBuiltinTag | UPLCBuiltinTagNumber ): boolean
 {
     return (

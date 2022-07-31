@@ -1,4 +1,4 @@
-import UPLCSerializable, { UPLCSerializationContex } from "../../../../serialization/flat/ineterfaces/UPLCSerializable";
+import UPLCSerializable from "../../UPLCEncoder/ineterfaces/UPLCSerializable";
 import BinaryString from "../../../../types/bits/BinaryString";
 import BitStream from "../../../../types/bits/BitStream";
 import ByteString from "../../../../types/HexString/ByteString";
@@ -6,14 +6,14 @@ import Integer from "../../../../types/ints/Integer";
 import Pair from "../../../../types/structs/Pair";
 import JsRuntime from "../../../../utils/JsRuntime";
 import Data from "../../Data";
-import ConstType, { constT, constTypeToStirng, isWellFormedConstType, encodeConstTypeToUPLCBitStream } from "./ConstType";
-import ConstValue, { canConstValueBeOfConstType, encodeConstValueToUPLCBitStream } from "./ConstValue";
+import ConstType, { constT, constTypeToStirng, isWellFormedConstType } from "./ConstType";
+import ConstValue, { canConstValueBeOfConstType } from "./ConstValue";
 
 
 export default class Const
     implements UPLCSerializable
 {
-    private static get UPLCTag(): BitStream
+    static get UPLCTag(): BitStream
     {
         return BitStream.fromBinStr(
             new BinaryString( "0100" )
@@ -24,7 +24,8 @@ export default class Const
 
     get type(): ConstType
     {
-        return this._type;
+        // clone
+        return this._type.map( tag => tag );
     }
 
     private _value: ConstValue
@@ -61,29 +62,29 @@ export default class Const
         this._value = value;
     }
 
-    toUPLCBitStream( ctx: UPLCSerializationContex ): BitStream
-    {
-        const constBitStream = Const.UPLCTag;
-        
-        constBitStream.append(
-            encodeConstTypeToUPLCBitStream(
-                this.type
-            )
-        );
-
-        ctx.updateWithBitStreamAppend( constBitStream );
-
-        const valueBitStream = encodeConstValueToUPLCBitStream(
-            this.value,
-            ctx
-        );
-
-        constBitStream.append( valueBitStream );
-
-        ctx.updateWithBitStreamAppend( valueBitStream );
-
-        return constBitStream;
-    }
+    // toUPLCBitStream( ctx: UPLCSerializationContex ): BitStream
+    // {
+    //     const constBitStream = Const.UPLCTag;
+    //     
+    //     constBitStream.append(
+    //         encodeConstTypeToUPLCBitStream(
+    //             this.type
+    //         )
+    //     );
+// 
+    //     ctx.updateWithBitStreamAppend( constBitStream );
+// 
+    //     const valueBitStream = encodeConstValueToUPLCBitStream(
+    //         this.value,
+    //         ctx
+    //     );
+// 
+    //     constBitStream.append( valueBitStream );
+// 
+    //     ctx.updateWithBitStreamAppend( valueBitStream );
+// 
+    //     return constBitStream;
+    // }
     
     static int( int: Integer | number | bigint ): Const
     {

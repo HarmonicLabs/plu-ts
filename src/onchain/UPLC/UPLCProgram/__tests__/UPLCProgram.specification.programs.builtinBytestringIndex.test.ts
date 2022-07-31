@@ -1,8 +1,9 @@
 import UPLCProgram from ".."
-import BinaryString from "../../../../../types/bits/BinaryString"
-import BitStream from "../../../../../types/bits/BitStream"
-import ByteString from "../../../../../types/HexString/ByteString"
-import Debug from "../../../../../utils/Debug"
+import BinaryString from "../../../../types/bits/BinaryString"
+import BitStream from "../../../../types/bits/BitStream"
+import ByteString from "../../../../types/HexString/ByteString"
+import Debug from "../../../../utils/Debug"
+import UPLCEncoder from "../../UPLCEncoder"
 import Application from "../../UPLCTerms/Application"
 import Builtin from "../../UPLCTerms/Builtin"
 import Const from "../../UPLCTerms/Const"
@@ -11,7 +12,8 @@ describe("bnBytestrIdx UPLCProgram", () => {
 
     it("serializes as in specification", () => {
         
-        const plutsCompiled = new UPLCProgram(
+        const plutsCompiled = UPLCEncoder.compile(
+            new UPLCProgram(
                 [ 5, 0, 2 ],
                 new Application(
                     new Application(
@@ -24,7 +26,8 @@ describe("bnBytestrIdx UPLCProgram", () => {
                     ),
                     Const.int( 54321 )
                 )
-            ).toUPLCBitStream();
+            )
+        );
 
         const manuallyCompiled = BitStream.fromBinStr(
             new BinaryString(

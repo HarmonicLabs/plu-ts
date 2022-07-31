@@ -10,10 +10,11 @@ cabal run uplc -- example -s succInteger
 */
 
 import UPLCProgram from "..";
-import BinaryString from "../../../../../types/bits/BinaryString";
-import BitStream from "../../../../../types/bits/BitStream";
-import ByteString from "../../../../../types/HexString/ByteString";
-import Debug from "../../../../../utils/Debug";
+import BinaryString from "../../../../types/bits/BinaryString";
+import BitStream from "../../../../types/bits/BitStream";
+import ByteString from "../../../../types/HexString/ByteString";
+import Debug from "../../../../utils/Debug";
+import UPLCEncoder from "../../UPLCEncoder";
 import Application from "../../UPLCTerms/Application";
 import Builtin from "../../UPLCTerms/Builtin";
 import Const from "../../UPLCTerms/Const";
@@ -25,18 +26,20 @@ describe("succInteger", () => {
 
     it("serializes as in the example", () => {
 
-        const plutsCompiled = new UPLCProgram(
-            [ 1, 0, 0 ],
-            new Lambda(
-                new Application(
+        const plutsCompiled = UPLCEncoder.compile(
+            new UPLCProgram(
+                [ 1, 0, 0 ],
+                new Lambda(
                     new Application(
-                        Builtin.addInteger,
-                        new UPLCVar( 1 )
-                    ),
-                    Const.int( 1 )
+                        new Application(
+                            Builtin.addInteger,
+                            new UPLCVar( 1 )
+                        ),
+                        Const.int( 1 )
+                    )
                 )
             )
-        ).toUPLCBitStream();
+        );
 
         const manuallyCompiled = BitStream.fromBinStr(
             new BinaryString(

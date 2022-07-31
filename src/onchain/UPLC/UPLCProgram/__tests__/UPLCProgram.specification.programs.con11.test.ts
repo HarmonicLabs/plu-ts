@@ -1,7 +1,8 @@
 import UPLCProgram from ".."
-import BinaryString from "../../../../../types/bits/BinaryString"
-import BitStream from "../../../../../types/bits/BitStream"
-import Debug from "../../../../../utils/Debug"
+import BinaryString from "../../../../types/bits/BinaryString"
+import BitStream from "../../../../types/bits/BitStream"
+import Debug from "../../../../utils/Debug"
+import UPLCEncoder from "../../UPLCEncoder"
 import Const from "../../UPLCTerms/Const"
 
 describe("con11 UPLCProgram", () => {
@@ -9,10 +10,12 @@ describe("con11 UPLCProgram", () => {
     it("serializes as in specification", () => {
         
         // https://hydra.iohk.io/build/5988492/download/1/plutus-core-specification.pdf#Example
-        const plutsCompiled = new UPLCProgram(
+        const plutsCompiled = UPLCEncoder.compile(
+            new UPLCProgram(
                 [ 11, 22, 33 ],
                 Const.int( 11 )
-            ).toUPLCBitStream();
+            )
+        );
 
         const manuallyCompiled = BitStream.fromBinStr(
             new BinaryString(

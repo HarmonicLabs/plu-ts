@@ -13,6 +13,7 @@ import UPLCProgram from "..";
 import BinaryString from "../../../../types/bits/BinaryString";
 import BitStream from "../../../../types/bits/BitStream";
 import Debug from "../../../../utils/Debug";
+import UPLCEncoder from "../../UPLCEncoder";
 import Const from "../../UPLCTerms/Const";
 
 
@@ -20,10 +21,12 @@ describe("true", () => {
 
     it("serializes as in the example", () => {
 
-        const plutsCompiled = new UPLCProgram(
-            [ 1, 0, 0 ],
-            Const.bool( true )
-        ).toUPLCBitStream();
+        const plutsCompiled = UPLCEncoder.compile(
+            new UPLCProgram(
+                [ 1, 0, 0 ],
+                Const.bool( true )
+            )
+        );
 
         const manuallyCompiled = BitStream.fromBinStr(
             new BinaryString(

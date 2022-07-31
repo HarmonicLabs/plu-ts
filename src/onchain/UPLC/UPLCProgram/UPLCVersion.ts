@@ -1,4 +1,4 @@
-import UPLCSerializable from "../../../serialization/flat/ineterfaces/UPLCSerializable";
+import UPLCSerializable from "../UPLCEncoder/ineterfaces/UPLCSerializable";
 import BitStream from "../../../types/bits/BitStream";
 import { CanBeUInteger, forceUInteger, UInteger } from "../../../types/ints/Integer";
 
@@ -20,11 +20,13 @@ export default class UPLCVersion
         this._patch = forceUInteger( patch );
     }
 
-    toUPLCBitStream(): BitStream
-    {
-        const result = this.major.toUPLCBitStream();
-        result.append( this.minor.toUPLCBitStream() );
-        result.append( this.patch.toUPLCBitStream() );
-        return result;
-    }
+    // deprecated
+    //
+    // toUPLCBitStream(): BitStream
+    // {
+    //     const result = this.major.toUPLCBitStream();
+    //     result.append( this.minor.toUPLCBitStream() );
+    //     result.append( this.patch.toUPLCBitStream() );
+    //     return result;
+    // }
 }

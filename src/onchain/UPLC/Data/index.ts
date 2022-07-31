@@ -1,4 +1,4 @@
-import { UPLCSerializationContex } from "../../../serialization/flat/ineterfaces/UPLCSerializable";
+import { UPLCSerializationContex } from "../UPLCEncoder/ineterfaces/UPLCSerializable";
 import BitStream from "../../../types/bits/BitStream";
 import ByteString from "../../../types/HexString/ByteString";
 import Integer, { UInteger } from "../../../types/ints/Integer";

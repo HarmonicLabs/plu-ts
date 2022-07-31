@@ -1,4 +1,4 @@
-import UPLCSerializable, { UPLCSerializationContex } from "../../../serialization/flat/ineterfaces/UPLCSerializable";
+import UPLCSerializable from "../UPLCEncoder/ineterfaces/UPLCSerializable";
 import BitStream from "../../../types/bits/BitStream";
 import UPLCTerm from "../UPLCTerm";
 import BinaryString from "../../../types/bits/BinaryString";
@@ -11,7 +11,7 @@ import Force from "./Force";
 export default class Application
     implements UPLCSerializable
 {
-    private static get UPLCTag(): BitStream
+    static get UPLCTag(): BitStream
     {
         return BitStream.fromBinStr(
             new BinaryString( "0011" )
@@ -40,23 +40,23 @@ export default class Application
         this._arg = arg;
     }
 
-    toUPLCBitStream( ctx: UPLCSerializationContex ): BitStream
-    {
-        const result = Application.UPLCTag.clone();
-        ctx.updateWithBitStreamAppend( result );
-
-        UPLCFlatUtils.appendTermAndUpdateContext(
-            result,
-            this.funcTerm,
-            ctx
-        );
-
-        UPLCFlatUtils.appendTermAndUpdateContext(
-            result,
-            this.argTerm,
-            ctx
-        );
-
-        return result;
-    }
+    // toUPLCBitStream( ctx: UPLCSerializationContex ): BitStream
+    // {
+    //     const result = Application.UPLCTag.clone();
+    //     ctx.updateWithBitStreamAppend( result );
+// 
+    //     UPLCFlatUtils.appendTermAndUpdateContext(
+    //         result,
+    //         this.funcTerm,
+    //         ctx
+    //     );
+// 
+    //     UPLCFlatUtils.appendTermAndUpdateContext(
+    //         result,
+    //         this.argTerm,
+    //         ctx
+    //     );
+// 
+    //     return result;
+    // }
 }
