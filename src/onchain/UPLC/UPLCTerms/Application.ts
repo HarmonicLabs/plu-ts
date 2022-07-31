@@ -1,11 +1,11 @@
-import UPLCSerializable, { UPLCSerializationContex } from "../../../../serialization/flat/ineterfaces/UPLCSerializable";
-import BitStream from "../../../../types/bits/BitStream";
+import UPLCSerializable, { UPLCSerializationContex } from "../../../serialization/flat/ineterfaces/UPLCSerializable";
+import BitStream from "../../../types/bits/BitStream";
 import UPLCTerm from "../UPLCTerm";
-import BinaryString from "../../../../types/bits/BinaryString";
+import BinaryString from "../../../types/bits/BinaryString";
 import UPLCVar from "./UPLCVar";
 import Lambda from "./Lambda";
 import Builtin from "./Builtin";
-import UPLCFlatUtils from "../../../../utils/UPLCFlatUtils";
+import UPLCFlatUtils from "../../../utils/UPLCFlatUtils";
 import Force from "./Force";
 
 export default class Application

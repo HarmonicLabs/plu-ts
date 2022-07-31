@@ -1,8 +1,8 @@
-import BasePlutsError from "../../../../../../errors/BasePlutsError";
-import BinaryString from "../../../../../../types/bits/BinaryString";
-import BitStream from "../../../../../../types/bits/BitStream";
-import Debug from "../../../../../../utils/Debug";
-import JsRuntime from "../../../../../../utils/JsRuntime";
+import BasePlutsError from "../../../../../errors/BasePlutsError";
+import BinaryString from "../../../../../types/bits/BinaryString";
+import BitStream from "../../../../../types/bits/BitStream";
+import Debug from "../../../../../utils/Debug";
+import JsRuntime from "../../../../../utils/JsRuntime";
 
 export const enum ConstTyTag {
     int = 0,

@@ -10,9 +10,9 @@ cabal run uplc -- example -s churchSucc
 */
 
 import UPLCProgram from "..";
-import BinaryString from "../../../../../types/bits/BinaryString";
-import BitStream from "../../../../../types/bits/BitStream";
-import Debug from "../../../../../utils/Debug";
+import BinaryString from "../../../../types/bits/BinaryString";
+import BitStream from "../../../../types/bits/BitStream";
+import Debug from "../../../../utils/Debug";
 import Application from "../../UPLCTerms/Application";
 import Delay from "../../UPLCTerms/Delay";
 import Force from "../../UPLCTerms/Force";

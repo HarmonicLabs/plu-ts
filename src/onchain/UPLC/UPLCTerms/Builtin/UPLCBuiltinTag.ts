@@ -1,6 +1,6 @@
-import BinaryString from "../../../../../types/bits/BinaryString";
-import BitStream from "../../../../../types/bits/BitStream";
-import JsRuntime from "../../../../../utils/JsRuntime";
+import BinaryString from "../../../../types/bits/BinaryString";
+import BitStream from "../../../../types/bits/BitStream";
+import JsRuntime from "../../../../utils/JsRuntime";
 
 export type UPLCBuiltinTagNumber
     = 0  | 1  | 2  | 3  | 4  | 5  | 6  | 7  | 8  | 9  

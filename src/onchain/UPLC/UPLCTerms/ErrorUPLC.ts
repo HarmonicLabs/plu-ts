@@ -1,7 +1,7 @@
-import UPLCSerializable, { UPLCSerializationContex } from "../../../../serialization/flat/ineterfaces/UPLCSerializable";
-import BitStream from "../../../../types/bits/BitStream";
+import UPLCSerializable, { UPLCSerializationContex } from "../../../serialization/flat/ineterfaces/UPLCSerializable";
+import BitStream from "../../../types/bits/BitStream";
 import UPLCTerm from "../UPLCTerm";
-import BinaryString from "../../../../types/bits/BinaryString";
+import BinaryString from "../../../types/bits/BinaryString";
 import Delay from "./Delay";
 
 export default class ErrorUPLC

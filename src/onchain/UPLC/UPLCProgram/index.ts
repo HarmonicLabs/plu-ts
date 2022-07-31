@@ -1,9 +1,9 @@
-import UPLCSerializable, { UPLCSerializationContex } from "../../../../serialization/flat/ineterfaces/UPLCSerializable";
-import { forceInByteOffset } from "../../../../types/bits/Bit";
-import BitStream from "../../../../types/bits/BitStream";
-import UPLCFlatUtils from "../../../../utils/UPLCFlatUtils";
+import UPLCSerializable, { UPLCSerializationContex } from "../../../serialization/flat/ineterfaces/UPLCSerializable";
+import BitStream from "../../../types/bits/BitStream";
+import { CanBeUInteger } from "../../../types/ints/Integer";
+import UPLCFlatUtils from "../../../utils/UPLCFlatUtils";
 import UPLCTerm from "../UPLCTerm";
-import UPLCVersion, { CanBeUInteger } from "./UPLCVersion";
+import UPLCVersion from "./UPLCVersion";
 
 
 export default class UPLCProgram

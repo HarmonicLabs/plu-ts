@@ -10,9 +10,9 @@ cabal run uplc -- example -s false
 */
 
 import UPLCProgram from "..";
-import BinaryString from "../../../../../types/bits/BinaryString";
-import BitStream from "../../../../../types/bits/BitStream";
-import Debug from "../../../../../utils/Debug";
+import BinaryString from "../../../../types/bits/BinaryString";
+import BitStream from "../../../../types/bits/BitStream";
+import Debug from "../../../../utils/Debug";
 import Const from "../../UPLCTerms/Const";
 
 

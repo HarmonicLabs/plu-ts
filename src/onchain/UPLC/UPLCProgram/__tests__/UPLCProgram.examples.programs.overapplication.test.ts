@@ -28,9 +28,9 @@ cabal run uplc -- example -s overapplication
 */
 
 import UPLCProgram from "..";
-import BinaryString from "../../../../../types/bits/BinaryString";
-import BitStream from "../../../../../types/bits/BitStream";
-import Debug from "../../../../../utils/Debug";
+import BinaryString from "../../../../types/bits/BinaryString";
+import BitStream from "../../../../types/bits/BitStream";
+import Debug from "../../../../utils/Debug";
 import Application from "../../UPLCTerms/Application";
 import Builtin from "../../UPLCTerms/Builtin";
 import Const from "../../UPLCTerms/Const";

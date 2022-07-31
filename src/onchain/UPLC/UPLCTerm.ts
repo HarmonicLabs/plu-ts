@@ -6,7 +6,7 @@ import Const from "./UPLCTerms/Const";
 import Force from "./UPLCTerms/Force";
 import ErrorUPLC from "./UPLCTerms/ErrorUPLC";
 import Builtin from "./UPLCTerms/Builtin";
-import JsRuntime from "../../../utils/JsRuntime";
+import JsRuntime from "../../utils/JsRuntime";
 
 type UPLCTerm 
     = UPLCVar

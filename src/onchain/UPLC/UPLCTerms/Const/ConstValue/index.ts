@@ -1,11 +1,11 @@
-import { UPLCSerializationContex } from "../../../../../../serialization/flat/ineterfaces/UPLCSerializable";
-import { forceInByteOffset } from "../../../../../../types/bits/Bit";
-import BitStream from "../../../../../../types/bits/BitStream";
-import ByteString from "../../../../../../types/HexString/ByteString";
-import Integer, { UInteger } from "../../../../../../types/ints/Integer";
-import Pair from "../../../../../../types/structs/Pair";
-import Debug from "../../../../../../utils/Debug";
-import JsRuntime from "../../../../../../utils/JsRuntime";
+import { UPLCSerializationContex } from "../../../../../serialization/flat/ineterfaces/UPLCSerializable";
+import { forceInByteOffset } from "../../../../../types/bits/Bit";
+import BitStream from "../../../../../types/bits/BitStream";
+import ByteString from "../../../../../types/HexString/ByteString";
+import Integer, { UInteger } from "../../../../../types/ints/Integer";
+import Pair from "../../../../../types/structs/Pair";
+import Debug from "../../../../../utils/Debug";
+import JsRuntime from "../../../../../utils/JsRuntime";
 import Data, { encodeDataToUPLCBitStream, isData } from "../../../Data";
 import ConstType, { constTypeEq, constT, constTypeToStirng, ConstTyTag, isWellFormedConstType, constListTypeUtils, constPairTypeUtils } from "../ConstType";
 

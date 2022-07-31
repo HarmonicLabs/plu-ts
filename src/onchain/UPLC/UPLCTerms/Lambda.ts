@@ -1,11 +1,8 @@
-import UPLCSerializable, { getUpdatedCtxAfterAppend, updateSerializationCtx, UPLCSerializationContex } from "../../../../serialization/flat/ineterfaces/UPLCSerializable";
-import BitStream from "../../../../types/bits/BitStream";
+import UPLCSerializable, { UPLCSerializationContex } from "../../../serialization/flat/ineterfaces/UPLCSerializable";
+import BitStream from "../../../types/bits/BitStream";
 import UPLCTerm from "../UPLCTerm";
-import BinaryString from "../../../../types/bits/BinaryString";
-import Var from "./UPLCVar";
-import { UInteger } from "../../../../types/ints/Integer";
-import { forceInByteOffset } from "../../../../types/bits/Bit";
-import UPLCFlatUtils from "../../../../utils/UPLCFlatUtils";
+import BinaryString from "../../../types/bits/BinaryString";
+import UPLCFlatUtils from "../../../utils/UPLCFlatUtils";
 
 export default class Lambda
     implements UPLCSerializable

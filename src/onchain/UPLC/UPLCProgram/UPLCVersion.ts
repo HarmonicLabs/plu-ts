@@ -1,6 +1,6 @@
-import UPLCSerializable from "../../../../serialization/flat/ineterfaces/UPLCSerializable";
-import BitStream from "../../../../types/bits/BitStream";
-import { CanBeUInteger, forceUInteger, UInteger } from "../../../../types/ints/Integer";
+import UPLCSerializable from "../../../serialization/flat/ineterfaces/UPLCSerializable";
+import BitStream from "../../../types/bits/BitStream";
+import { CanBeUInteger, forceUInteger, UInteger } from "../../../types/ints/Integer";
 
 export default class UPLCVersion
     implements UPLCSerializable
