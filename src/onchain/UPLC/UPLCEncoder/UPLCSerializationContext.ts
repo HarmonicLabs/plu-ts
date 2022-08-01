@@ -5,7 +5,7 @@ export interface RawUPLCSerializationContex
     currLength: number
 }
 
-export class UPLCSerializationContex
+export default class UPLCSerializationContex
 {
     private _rawCtx: RawUPLCSerializationContex;
     

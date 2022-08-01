@@ -1,4 +1,3 @@
-import UPLCSerializable from "../../UPLCEncoder/ineterfaces/UPLCSerializable";
 import BinaryString from "../../../../types/bits/BinaryString";
 import BitStream from "../../../../types/bits/BitStream";
 import ByteString from "../../../../types/HexString/ByteString";
@@ -11,7 +10,6 @@ import ConstValue, { canConstValueBeOfConstType } from "./ConstValue";
 
 
 export default class Const
-    implements UPLCSerializable
 {
     static get UPLCTag(): BitStream
     {

@@ -3,8 +3,8 @@
  
 */
 import { Buffer } from "buffer";
-import CborString from "../../types/HexString/CborString";
-import JsonCbor from "./JsonCbor";
+import CborString from "../CborString";
+import JsonCbor from "../JsonCbor";
 
 /**
  * static class that allows CBOR encoding and decoding

@@ -1,9 +1,6 @@
-import UPLCSerializable from "../UPLCEncoder/ineterfaces/UPLCSerializable";
-import BitStream from "../../../types/bits/BitStream";
 import { CanBeUInteger, forceUInteger, UInteger } from "../../../types/ints/Integer";
 
 export default class UPLCVersion
-    implements UPLCSerializable
 {
     private _major: UInteger
     private _minor: UInteger

@@ -6,13 +6,13 @@ import Pair from "../../../types/structs/Pair";
 import Debug from "../../../utils/Debug";
 import JsRuntime from "../../../utils/JsRuntime";
 import UPLCFlatUtils from "../../../utils/UPLCFlatUtils";
-import { isData, encodeDataToUPLCBitStream } from "../Data";
+import Data, { isData } from "../../../types/Data";
 import UPLCProgram from "../UPLCProgram";
 import UPLCVersion from "../UPLCProgram/UPLCVersion";
-import UPLCTerm, { isUPLCTerm } from "../UPLCTerm";
+import UPLCTerm from "../UPLCTerm";
 import Application from "../UPLCTerms/Application";
 import Builtin from "../UPLCTerms/Builtin";
-import UPLCBuiltinTag, { getNRequiredForces, isUPLCBuiltinTag } from "../UPLCTerms/Builtin/UPLCBuiltinTag";
+import { getNRequiredForces, isUPLCBuiltinTag } from "../UPLCTerms/Builtin/UPLCBuiltinTag";
 import Const from "../UPLCTerms/Const";
 import ConstType, { ConstTyTag, isWellFormedConstType } from "../UPLCTerms/Const/ConstType";
 import ConstValue, { isConstValue, isConstValueList } from "../UPLCTerms/Const/ConstValue";
@@ -21,7 +21,7 @@ import ErrorUPLC from "../UPLCTerms/ErrorUPLC";
 import Force from "../UPLCTerms/Force";
 import Lambda from "../UPLCTerms/Lambda";
 import UPLCVar from "../UPLCTerms/UPLCVar";
-import { UPLCSerializationContex } from "./UPLCSerializationContext";
+import UPLCSerializationContex from "./UPLCSerializationContext";
 
 /*
  * --------------------------- [encode vs serialize methods] ---------------------------
@@ -79,7 +79,7 @@ function serializeUPLCVar( uplcVar: UPLCVar ): BitStream
     return result;
 }
 
-function serializeConstTypeToUPLCBitStream( type: ConstType ): BitStream
+function serializeConstType( type: ConstType ): BitStream
 {
     JsRuntime.assert(
         isWellFormedConstType( type ),
@@ -289,7 +289,7 @@ export default class UPLCEncoder
         const result = Const.UPLCTag
         
         result.append(
-            serializeConstTypeToUPLCBitStream(
+            serializeConstType(
                 uplcConst.type
             )
         );
@@ -316,14 +316,14 @@ export default class UPLCEncoder
         if( value === undefined ) return new BitStream();
         if( value instanceof Integer ) 
         {
-            Debug.log( "encoding Const int; Integer: ", value, value.toUPLCBitStream().toBinStr().asString );
-            return value.toUPLCBitStream();
+            return UPLCFlatUtils.encodeBigIntAsVariableLengthBitStream(
+                UPLCFlatUtils.zizagBigint( value.asBigInt )
+            );
         }
         if( value instanceof ByteString )
         {
-            // padding is added based on context passed
-            // see note of the ByteString.toUPLCBitStream method
-            return value.toUPLCBitStream( this._ctx )
+            // padding is added based on context
+            return this.encodeConstValueByteString( value )
         }
         if( typeof value === "string" )
         {
@@ -388,12 +388,85 @@ export default class UPLCEncoder
         }
         if( isData( value ) )
         {
-            return encodeDataToUPLCBitStream( value , this._ctx );
+            return this.encodeConstValueData( value );
         }
     
         throw JsRuntime.makeNotSupposedToHappenError(
             "'this.encodeConstValue' did not matched any 'ConstValue' possible type; input was: " + value.toString()
         );
+    }
+
+    /**
+     * ### Section D.3.5
+     * The ```data``` type
+     * 
+     * The 𝚍𝚊𝚝𝚊 type is encoded by converting to a bytestring using the CBOR encoding described in Note 1 of
+     * Appendix B.2 and then using 𝖤 𝕌 ∗ . The decoding process is the opposite of this: a bytestring is obtained
+     * using 𝖣 𝕌 ∗ and this is then decoded from CBOR to obtain a 𝚍𝚊𝚝𝚊 object.
+     * 
+     * ### Section B.2
+     * 
+     * **Note 1.** Serialising 𝚍𝚊𝚝𝚊 objects. The ```serialiseData``` function takes a 𝚍𝚊𝚝𝚊 object and converts it
+     * into a CBOR (Bormann and Hoffman [2020]) object. The encoding is based on the Haskell Data type
+     * described in Section A.1. A detailed description of the encoding will appear here at a later date, but for
+     * the time being see the Haskell code in 
+     * [plutus-core/plutus-core/src/PlutusCore/Data.hs](https://github.com/input-output-hk/plutus/blob/master/plutus-core/plutus-core/src/PlutusCore/Data.hs) 
+     * ([```encodeData``` line](https://github.com/input-output-hk/plutus/blob/9ef6a65067893b4f9099215ff7947da00c5cd7ac/plutus-core/plutus-core/src/PlutusCore/Data.hs#L139))
+     * in the Plutus GitHub repository IOHK [2019] for a definitive implementation.
+     */
+    encodeConstValueData( data: Data ): BitStream
+    {
+        
+    }
+
+    /**
+     * latest specification (**_section D.2.5 Bytestrings; page 27_**)
+     * specifies how bytestrings are byte-alligned before and the first byte indicates the length
+     * 
+     * **this function takes care of the length AND padding**
+     * 
+     */
+    encodeConstValueByteString( bs: ByteString ): BitStream
+    {
+        let missingBytes = bs.asString;
+        const hexChunks: string[] = [];
+
+        while( (missingBytes.length / 2) > 0b1111_1111 )
+        {
+            hexChunks.push( "ff" + missingBytes.slice( 0, 255 * 2 ) );
+            missingBytes = missingBytes.slice( 255 * 2 );
+        }
+
+        if( missingBytes.length !== 0 )
+        {
+            hexChunks.push(
+                (missingBytes.length / 2).toString(16).padStart( 2, '0' ) +
+                missingBytes
+            );
+        }
+        
+        // end chunk
+        hexChunks.push( "00" );
+
+        const nPadBits = 8 - (this._ctx.currLength % 8);
+
+        // add initial padding as needed by context
+        const result = BitStream.fromBinStr(
+            "1".padStart( nPadBits , '0' )
+        );
+
+        // append chunks
+        result.append(
+            new BitStream(
+                Buffer.from(
+                    hexChunks.join(''),
+                    "hex"
+                ),
+                0
+            )
+        );
+
+        return result; 
     }
 
     encodeForceTerm( force: Force ): BitStream

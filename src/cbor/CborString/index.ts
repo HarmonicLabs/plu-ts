@@ -1,10 +1,9 @@
-import HexString from "../../../types/HexString";
+import HexString from "../../types/HexString";
 import JsonCbor from "../JsonCbor";
 import Cbor from "../Cbor";
 
 export default
-class CborString
-    extends HexString
+class CborString extends HexString
 {
     constructor( cbor: string | Buffer )
     {

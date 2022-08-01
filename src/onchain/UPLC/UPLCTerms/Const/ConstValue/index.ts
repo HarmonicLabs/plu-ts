@@ -2,7 +2,7 @@ import ByteString from "../../../../../types/HexString/ByteString";
 import Integer from "../../../../../types/ints/Integer";
 import Pair from "../../../../../types/structs/Pair";
 import JsRuntime from "../../../../../utils/JsRuntime";
-import Data, { isData } from "../../../Data";
+import Data, { isData } from "../../../../../types/Data";
 import ConstType, { constTypeEq, constT, constTypeToStirng, ConstTyTag, isWellFormedConstType, constListTypeUtils, constPairTypeUtils } from "../ConstType";
 
 

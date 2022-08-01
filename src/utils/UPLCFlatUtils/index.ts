@@ -1,5 +1,5 @@
-import UPLCTerm from "../../onchain/lib/UPLC/UPLCTerm";
-import { UPLCSerializationContex } from "../../serialization/flat/ineterfaces/UPLCSerializable";
+import UPLCTerm from "../../onchain/UPLC/UPLCTerm";
+import UPLCSerializationContex from "../../onchain/UPLC/UPLCEncoder/UPLCSerializationContext";
 import BinaryString from "../../types/bits/BinaryString";
 import { InByteOffset, isInByteOffset } from "../../types/bits/Bit";
 import BitStream from "../../types/bits/BitStream";
@@ -207,28 +207,6 @@ export default class UPLCFlatUtils
         );
 
         return;
-    }
-
-    static appendTermAndUpdateContext(
-        toAppendTo: Readonly<BitStream>,
-        toBeAppended: Readonly<UPLCTerm>,
-        ctx: UPLCSerializationContex
-    ): void
-    {
-        const dbg_ctxInitialLength = ctx.currLength;
-
-        // "toUPLCBitStream updates the context as needed"
-        const toBeAppendedBitStream = toBeAppended.toUPLCBitStream( ctx );
-        
-        toAppendTo.append(
-            toBeAppendedBitStream
-        );
-
-        Debug.log(
-            `\nctx.currLength: ${dbg_ctxInitialLength}`,
-            `\ntoBeAppended.length: ${toBeAppendedBitStream.length}`,
-            `\nctx.currLength after update: ${ctx.currLength}`
-        )
     }
 
 }

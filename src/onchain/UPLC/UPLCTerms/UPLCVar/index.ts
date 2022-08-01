@@ -1,4 +1,3 @@
-import UPLCSerializable from "../../UPLCEncoder/ineterfaces/UPLCSerializable";
 import BinaryString from "../../../../types/bits/BinaryString";
 import BitStream from "../../../../types/bits/BitStream";
 import { CanBeUInteger, forceUInteger, UInteger } from "../../../../types/ints/Integer";
@@ -6,7 +5,6 @@ import JsRuntime from "../../../../utils/JsRuntime";
 
 
 export default class UPLCVar
-    implements UPLCSerializable
 {
     static get UPLCTag(): BitStream
     {

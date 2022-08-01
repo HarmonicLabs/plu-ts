@@ -1,13 +1,9 @@
-import UPLCSerializable from "../UPLCEncoder/ineterfaces/UPLCSerializable";
-import BitStream from "../../../types/bits/BitStream";
 import { CanBeUInteger } from "../../../types/ints/Integer";
-import UPLCFlatUtils from "../../../utils/UPLCFlatUtils";
 import UPLCTerm from "../UPLCTerm";
 import UPLCVersion from "./UPLCVersion";
 
 
 export default class UPLCProgram
-    implements UPLCSerializable
 {
     private _version: UPLCVersion
     get version(): UPLCVersion { return this._version };

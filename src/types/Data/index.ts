@@ -1,7 +1,5 @@
-import { UPLCSerializationContex } from "../UPLCEncoder/ineterfaces/UPLCSerializable";
-import BitStream from "../../../types/bits/BitStream";
-import ByteString from "../../../types/HexString/ByteString";
-import Integer, { UInteger } from "../../../types/ints/Integer";
+import ByteString from "../HexString/ByteString";
+import Integer, { UInteger } from "../ints/Integer";
 
 type Data 
     = DataConstr
@@ -21,11 +19,6 @@ export function isData( something: Data ): boolean
         something instanceof DataI      ||
         something instanceof DataB
     );
-}
-
-export function encodeDataToUPLCBitStream( data: Data, ctx :UPLCSerializationContex ): BitStream
-{
-
 }
 
 export class DataConstr

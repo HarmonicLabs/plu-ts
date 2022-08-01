@@ -31,8 +31,6 @@
  *      in their treatment of negative arguments.
  */
 
-
-import UPLCSerializable from "../../UPLCEncoder/ineterfaces/UPLCSerializable";
 import BinaryString from "../../../../types/bits/BinaryString";
 import BitStream from "../../../../types/bits/BitStream";
 import JsRuntime from "../../../../utils/JsRuntime";
@@ -40,7 +38,6 @@ import UPLCBuiltinTag, { isUPLCBuiltinTag } from "./UPLCBuiltinTag";
 
 
 export default class Builtin
-    implements UPLCSerializable
 {
     static get UPLCTag(): BitStream
     {

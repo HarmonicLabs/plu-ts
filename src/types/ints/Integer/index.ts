@@ -1,13 +1,6 @@
 import BasePlutsError from "../../../errors/BasePlutsError";
-import UPLCSerializable from "../../../serialization/flat/ineterfaces/UPLCSerializable";
 import BigIntUtils from "../../../utils/BigIntUtils";
-import BitUtils from "../../../utils/BitUtils";
-import BufferUtils from "../../../utils/BufferUtils"
 import Debug from "../../../utils/Debug";
-import JsRuntime from "../../../utils/JsRuntime";
-import UPLCFlatUtils from "../../../utils/UPLCFlatUtils";
-import BinaryString from "../../bits/BinaryString";
-import BitStream from "../../bits/BitStream";
 
 /**
  * javascript already has a builtin support for arbitrary length integers,
@@ -32,7 +25,6 @@ import BitStream from "../../bits/BitStream";
  * 
  */
 export default class Integer
-    implements UPLCSerializable
 {
     get [Symbol.toStringTag](): string
     {
@@ -71,21 +63,6 @@ export default class Integer
         return new Integer( this.asBigInt );
     }
 
-    toZigZag(): ZigZagInteger
-    {
-        return ZigZagInteger.fromInteger( this );
-    }
-
-    static fromZigZag( zigzagged: ZigZagInteger ): Integer
-    {
-        return zigzagged.toInteger();
-    }
-
-    toUPLCBitStream(): BitStream
-    {
-        return this.toZigZag().toUPLCBitStream();
-    }
-
     static isInteger( int: number ): boolean
     {
         return Math.round( int ) === int;
@@ -102,94 +79,7 @@ export default class Integer
     }
 }
 
-export class ZigZagInteger
-    implements UPLCSerializable
-{
-    get [Symbol.toStringTag](): "ZigZagInteger"
-    {
-        return "ZigZagInteger";
-    }
-
-    static isStrictInstance( any: any ): boolean
-    {
-        return any.__proto__ === ZigZagInteger.prototype
-    }
-
-    private _zigzagged: bigint;
-
-    get zigzagged(): bigint
-    {
-        return this._zigzagged;
-    }
-
-    private constructor( integer : Integer )
-    {
-        if(!( integer instanceof Integer ))
-        {
-            throw new BasePlutsError("expected instance of 'Integer' class to construct a 'ZigZagInteger';");
-        }
-
-        const bigint = integer.asBigInt ;
-
-        this._zigzagged = 
-            (
-                bigint >> 
-                    (
-                        BigInt( 
-                            BitUtils.getNOfUsedBits( bigint ) 
-                        )
-                    )
-            ) ^ // XOR
-            ( bigint << BigInt( 1 ) );
-    }
-
-    static fromNumber( num: number ): ZigZagInteger
-    {
-        return ZigZagInteger.fromInteger(
-            new Integer( num )
-        )
-    }
-
-    static fromInteger( integer: Integer )
-    {
-        // the constructor takes care of the encoding
-        return new ZigZagInteger( integer );
-    }
-
-    static fromAlreadyZigZagged( zigzagged: bigint ): ZigZagInteger
-    {
-        JsRuntime.assert(
-            typeof zigzagged == "bigint" && zigzagged >= BigInt(0),
-            "already zigzagged integer cannot be negative; input:" + zigzagged.toString()
-        )
-
-        const res = ZigZagInteger.fromNumber( 0 );
-        res._zigzagged = zigzagged;
-
-        return res;
-    }
-    
-    toInteger(): Integer
-    {
-        const bigint = this.zigzagged;
-
-        // decode
-        return new Integer(
-            (
-                (bigint >> BigInt(1))
-            )^ 
-            -( bigint & BigInt(1) )
-        )
-    }
-
-    toUPLCBitStream(): BitStream
-    {
-       return UPLCFlatUtils.encodeBigIntAsVariableLengthBitStream( this.zigzagged );
-    }
-}
-
 export class UInteger extends Integer
-    implements UPLCSerializable
 {
     get [Symbol.toStringTag](): "UInteger"
     {
@@ -220,16 +110,6 @@ export class UInteger extends Integer
     toSigned(): Integer
     {
         return new Integer( this.asBigInt );
-    }
-
-    toZigZag(): ZigZagInteger
-    {
-        return ZigZagInteger.fromInteger( new Integer( this.asBigInt ) );
-    }
-
-    toUPLCBitStream(): BitStream
-    {
-       return UPLCFlatUtils.encodeBigIntAsVariableLengthBitStream( this.asBigInt );
     }
 
     static isUInteger( int: number | bigint ): boolean
