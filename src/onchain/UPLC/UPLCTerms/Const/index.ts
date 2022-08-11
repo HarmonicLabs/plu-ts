@@ -4,7 +4,7 @@ import ByteString from "../../../../types/HexString/ByteString";
 import Integer from "../../../../types/ints/Integer";
 import Pair from "../../../../types/structs/Pair";
 import JsRuntime from "../../../../utils/JsRuntime";
-import Data from "../../Data";
+import Data from "../../../../types/Data";
 import ConstType, { constT, constTypeToStirng, isWellFormedConstType } from "./ConstType";
 import ConstValue, { canConstValueBeOfConstType } from "./ConstValue";
 

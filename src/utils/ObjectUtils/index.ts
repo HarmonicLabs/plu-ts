@@ -197,6 +197,11 @@ export default class ObjectUtils
         
         return false;
     }
+
+    static jsonClone<T extends any>( obj: T ): T
+    {
+        return JSON.parse( JSON.stringify( obj ) );
+    }
     
     static deepClone<T extends any = any>( obj: T ): T
     {

@@ -1,10 +1,15 @@
-import HexString from "../../types/HexString";
-import JsonCbor from "../JsonCbor";
+import CborObj from "../CborObj";
 import Cbor from "../Cbor";
+import ByteString from "../../types/HexString/ByteString";
 
 export default
-class CborString extends HexString
+class CborString extends ByteString
 {
+    static isStrictInstance( any: any ): boolean
+    {
+        return any.__proto__ === CborString.prototype
+    }
+
     constructor( cbor: string | Buffer )
     {
         if( typeof cbor === "string" )
@@ -18,12 +23,12 @@ class CborString extends HexString
         super( cbor );
     }
 
-    static fromJsonCbor( jsonCbor : JsonCbor ): CborString
+    static fromCborObj( jsonCbor : CborObj ): CborString
     {
         return Cbor.encode( jsonCbor );
     }
 
-    toJsonCbor(): JsonCbor
+    toCborObj(): CborObj
     {
         return Cbor.parse( this );
     }
