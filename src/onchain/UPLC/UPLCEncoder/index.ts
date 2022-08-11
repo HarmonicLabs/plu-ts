@@ -3,7 +3,6 @@ import BitStream from "../../../types/bits/BitStream";
 import ByteString from "../../../types/HexString/ByteString";
 import Integer, { UInteger } from "../../../types/ints/Integer";
 import Pair from "../../../types/structs/Pair";
-import Debug from "../../../utils/Debug";
 import JsRuntime from "../../../utils/JsRuntime";
 import UPLCFlatUtils from "../../../utils/UPLCFlatUtils";
 import Data, { isData } from "../../../types/Data";
@@ -22,6 +21,7 @@ import Force from "../UPLCTerms/Force";
 import Lambda from "../UPLCTerms/Lambda";
 import UPLCVar from "../UPLCTerms/UPLCVar";
 import UPLCSerializationContex from "./UPLCSerializationContext";
+import CborString from "../../../cbor/CborString";
 
 /*
  * --------------------------- [encode vs serialize methods] ---------------------------
@@ -57,9 +57,11 @@ function serializeInt( int: Integer ): BitStream
         "try using int.toSigned() if you are using a derived class; inpout was: " + int
     )
 
-    return UPLCFlatUtils.encodeBigIntAsVariableLengthBitStream(
-        UPLCFlatUtils.zizagBigint(
-            int.asBigInt
+    return serializeUInt(
+        new UInteger(
+            UPLCFlatUtils.zizagBigint(
+                int.asBigInt
+            )
         )
     );
 }
@@ -189,7 +191,7 @@ export default class UPLCEncoder
     
     static get compile(): ( program: UPLCProgram ) => BitStream
     {
-        return ( program: UPLCProgram ) =>{
+        return ( program: UPLCProgram ) => {
             return (new UPLCEncoder()).compile( program )
         };
     }
@@ -316,11 +318,14 @@ export default class UPLCEncoder
         if( value === undefined ) return new BitStream();
         if( value instanceof Integer ) 
         {
-            return UPLCFlatUtils.encodeBigIntAsVariableLengthBitStream(
-                UPLCFlatUtils.zizagBigint( value.asBigInt )
-            );
+            return serializeInt( value );
         }
-        if( value instanceof ByteString )
+        if( value instanceof ByteString &&
+            (
+                ByteString.isStrictInstance( value ) ||
+                !(value instanceof CborString)
+            )
+        )
         {
             // padding is added based on context
             return this.encodeConstValueByteString( value )
