@@ -9,7 +9,7 @@ export default class ByteString extends HexString
 
     static isStrictInstance( any: any ): boolean
     {
-        return any.__proto__ === ByteString.prototype
+        return Object.getPrototypeOf( any ) === ByteString.prototype
     }
 
     constructor( bs: string | Buffer )

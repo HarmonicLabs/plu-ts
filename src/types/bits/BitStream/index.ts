@@ -15,7 +15,7 @@ export default class BitStream
 {
     static isStrictInstance( value: any ): boolean
     {
-        return value.__proto__ === BitStream.prototype;
+        return Object.getPrototypeOf( value ) === BitStream.prototype;
     }
 
     private _bits: bigint;

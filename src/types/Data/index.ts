@@ -12,6 +12,8 @@ export default Data;
 
 export function isData( something: Data ): boolean
 {
+    const proto = Object.getPrototypeOf( something );
+
     return (
         something instanceof DataConstr ||
         something instanceof DataMap    ||

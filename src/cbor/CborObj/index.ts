@@ -3,15 +3,14 @@ Intermediate data type that allows an easier conversion from (and to) CBOR to (a
 */
 
 import JsRuntime from "../../utils/JsRuntime";
-import ObjectUtils from "../../utils/ObjectUtils";
-import CborArray, { RawCborArray } from "./CborArray";
-import CborBytes, { RawCborBytes } from "./CborBytes";
-import CborMap, { RawCborMap } from "./CborMap";
-import CborNegativeInt, { RawCborNegativeInt } from "./CborNegativeInt";
-import CborSimple, { isSimpleCborValue, RawCborSimple } from "./CborSimple";
-import CborTag, { RawCborTag } from "./CborTag";
-import CborText, { RawCborText } from "./CborText";
-import CborUnsignedInt, { RawCborUnsignedInt } from "./CborUnsignedInt";
+import CborArray, { isRawCborArray, RawCborArray } from "./CborArray";
+import CborBytes, { isRawCborBytes, RawCborBytes } from "./CborBytes";
+import CborMap, { isRawCborMap, RawCborMap } from "./CborMap";
+import CborNegativeInt, { isRawCborNegative, RawCborNegativeInt } from "./CborNegativeInt";
+import CborSimple, { isRawCborSimple, isSimpleCborValue, RawCborSimple } from "./CborSimple";
+import CborTag, { isRawCborTag, RawCborTag } from "./CborTag";
+import CborText, { isRawCborText, RawCborText } from "./CborText";
+import CborUnsignedInt, { isRawCborUnsigned, RawCborUnsignedInt } from "./CborUnsignedInt";
 
 export  type RawCborObj
     = RawCborUnsignedInt
@@ -35,10 +34,9 @@ type CborObj
 
 export default CborObj;
 
-
 export function isCborObj( cborObj: CborObj ): boolean
 {
-    const proto = (cborObj as any).__proto__;
+    const proto = Object.getPrototypeOf( cborObj );
     
     // only strict instances
     return (
@@ -86,127 +84,6 @@ export function isRawCborObj( rawCborObj: RawCborObj ): boolean
         // tag done in the two keys case
 
         ( k === "simple" && isSimpleCborValue( (rawCborObj as RawCborSimple).simple ) )
-    );
-}
-
-export function isRawCborNegative( neg: RawCborNegativeInt ): boolean
-{
-    if( typeof neg !== "object" ) return false;
-    
-    const keys = Object.keys( neg );
-
-    return (
-        keys.length === 1 &&
-        keys[0] === "negative"  &&
-        typeof neg.negative === "bigint"
-    );
-}
-
-export function isRawCborUnsigned( unsign: RawCborUnsignedInt ): boolean
-{
-    if( typeof unsign !== "object" ) return false;
-    
-    const keys = Object.keys( unsign );
-
-    return (
-        keys.length === 1 &&
-        keys[0] === "unsigned"  &&
-        typeof unsign.unsigned === "bigint"
-    );
-}
-
-export function isRawCborBytes( b: RawCborBytes ): boolean
-{
-    if( typeof b !== "object" ) return false;
-    
-    const keys = Object.keys( b );
-
-    return (
-        keys.length === 1 &&
-        keys[0] === "bytes"  &&
-        Buffer.isBuffer( b.bytes )
-    );
-}
-
-export function isRawCborText( t: RawCborText ): boolean
-{
-    if( typeof t !== "object" ) return false;
-
-    const keys = Object.keys( t );
-
-    return (
-        keys.length === 1 &&
-        keys[0] === "text" &&
-        typeof t.text === "string"
-    );
-}
-
-export function isRawCborArray( arr: RawCborArray ): boolean
-{
-    if( typeof arr !== "object" ) return false;
-
-    const keys = Object.keys( arr );
-
-    return (
-        keys.length === 1 &&
-        keys[0] === "array" &&
-        Array.isArray( arr.array ) &&
-        arr.array.every( isRawCborObj )
-    );
-}
-
-
-export function isRawCborMap( m: RawCborMap ): boolean
-{
-    if( typeof m !== "object" ) return false;
-
-    const keys = Object.keys( m );
-
-    return (
-        keys.length === 1 &&
-        keys[0] === "map" &&
-        Array.isArray( m.map ) &&
-        m.map.every( entry => {
-            if( typeof entry !== "object" ) return false;
-
-            const entryKeys = Object.keys( entry ); 
-            
-            return (
-                entryKeys.length === 2      &&
-                entryKeys.includes( "k" )   &&
-                isRawCborObj( entry.k )     &&
-                entryKeys.includes( "v" )   &&
-                isRawCborObj( entry.v )
-            );
-        } )
-    );
-}
-
-export function isRawCborTag( t: RawCborTag ): boolean
-{
-    if( typeof t !== "object" ) return false;
-
-    const keys = Object.keys( t );
-
-    return (
-        keys.length === 2 &&
-        keys.includes( "tag" ) &&
-        keys.includes( "data" ) &&
-        typeof t.tag === "number" &&
-        isRawCborObj( t.data )
-    );
-}
-
-export function isRawCborSimple( s: RawCborSimple ): boolean
-{
-    if( typeof s !== "object" ) return false;
-
-    const keys = Object.keys( s );
-
-    return (
-        keys.length === 1 &&
-        keys[0] === "simple" &&
-        isSimpleCborValue( s.simple )
     );
 }
 

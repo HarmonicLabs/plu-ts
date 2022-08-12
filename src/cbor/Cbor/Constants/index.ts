@@ -3,8 +3,8 @@ export enum MajorType {
     unsigned = 0,   // 000x_xxxx // 
     negative = 1,   // 001x_xxxx // 
     bytes    = 2,   // 010x_xxxx // 
-    string   = 3,   // 011x_xxxx // 
-    list     = 4,   // 100x_xxxx // 
+    text     = 3,   // 011x_xxxx // 
+    array    = 4,   // 100x_xxxx // 
     map      = 5,   // 101x_xxxx // 
     tag      = 6,   // 110x_xxxx // 
     float_or_simple    = 7    // 111x_xxxx // 

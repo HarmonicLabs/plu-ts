@@ -5,6 +5,19 @@ export type RawCborNegativeInt = {
     negative: bigint
 }
 
+export function isRawCborNegative( neg: RawCborNegativeInt ): boolean
+{
+    if( typeof neg !== "object" ) return false;
+    
+    const keys = Object.keys( neg );
+
+    return (
+        keys.length === 1 &&
+        keys[0] === "negative"  &&
+        typeof neg.negative === "bigint"
+    );
+}
+
 export default class CborNegativeInt
     implements ToRawObj
 {

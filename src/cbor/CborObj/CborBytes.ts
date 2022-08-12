@@ -6,6 +6,19 @@ export type RawCborBytes = {
     bytes: Buffer
 }
 
+export function isRawCborBytes( b: RawCborBytes ): boolean
+{
+    if( typeof b !== "object" ) return false;
+    
+    const keys = Object.keys( b );
+
+    return (
+        keys.length === 1 &&
+        keys[0] === "bytes"  &&
+        Buffer.isBuffer( b.bytes )
+    );
+}
+
 export default class CborBytes
     implements ToRawObj
 {

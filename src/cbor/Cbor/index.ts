@@ -4,9 +4,18 @@
 */
 import { Buffer } from "buffer";
 import CborString from "../CborString";
-import CborObj from "../CborObj";
+import CborObj, { isCborObj } from "../CborObj";
 import JsRuntime from "../../utils/JsRuntime";
 import CborConstants, { isMajorTypeTag, MajorType } from "./Constants";
+import CborUnsignedInt from "../CborObj/CborUnsignedInt";
+import CborNegativeInt from "../CborObj/CborNegativeInt";
+import CborBytes from "../CborObj/CborBytes";
+import CborText from "../CborObj/CborText";
+import CborArray from "../CborObj/CborArray";
+import CborMap from "../CborObj/CborMap";
+import CborTag from "../CborObj/CborTag";
+import CborSimple from "../CborObj/CborSimple";
+import BufferUtils from "../../utils/BufferUtils";
 
 
 /**
@@ -16,6 +25,13 @@ class CborEncoding
 {
     private _buff: Buffer;
     private _len: number;
+
+    get bytes(): Buffer
+    {
+        return BufferUtils.copy(
+            this._buff.slice( 0, this._len )
+        );
+    }
 
     constructor()
     {
@@ -127,6 +143,21 @@ class CborEncoding
         this._commitAppendOfByteLength( 8 );
     }
 
+    appendRawBytes( bytes: Buffer )
+    {
+        JsRuntime.assert(
+            Buffer.isBuffer( bytes ),
+            "invalid bytes passed"
+        );
+        
+        this._prepareAppendOfByteLength( bytes.length );
+        for( let i = 0; i < bytes.length; i++ )
+        {
+            this._buff.writeUInt8( bytes.readUInt8( i ) , this._len + i );
+        }
+        this._commitAppendOfByteLength( bytes.length );
+    }
+
     appendTypeAndLength( cborType: MajorType , length: number | bigint ): void
     {
         JsRuntime.assert(
@@ -179,6 +210,116 @@ class CborEncoding
         }
     }
 
+    appendCborObjEncoding( cObj: CborObj ): void
+    {
+        JsRuntime.assert(
+            isCborObj( cObj ),
+            "expected 'CborObj' strict instance; got: " + cObj
+        );
+
+        if( cObj instanceof CborUnsignedInt )
+        {
+            JsRuntime.assert(
+                cObj.num >= BigInt( 0 ),
+                "encoding invalid unsigned integer as CBOR"
+            );
+            this.appendTypeAndLength( MajorType.unsigned, cObj.num );
+            return;
+        }
+
+        if( cObj instanceof CborNegativeInt )
+        {
+            JsRuntime.assert(
+                cObj.num < BigInt( 0 ),
+                "encoding invalid negative integer as CBOR"
+            );
+            this.appendTypeAndLength( MajorType.negative , -(cObj.num + BigInt( 1 ) ) );
+            return;
+        }
+
+        if( cObj instanceof CborBytes )
+        {
+            const bs = cObj.buffer;
+            this.appendTypeAndLength( MajorType.bytes , bs.length );
+            this.appendRawBytes( bs );
+            return;
+        }
+
+        if( cObj instanceof CborText )
+        {
+            const bs = Buffer.from( cObj.text, "utf-8" );
+            this.appendTypeAndLength( MajorType.text , bs.length );
+            this.appendRawBytes( bs );
+            return;
+        }
+
+        if( cObj instanceof CborArray )
+        {
+            const arr = cObj.array;
+
+            this.appendTypeAndLength( MajorType.array, arr.length );
+            for( let i = 0; i < arr.length; i++ )
+            {
+                this.appendCborObjEncoding( arr[i] );
+            }
+
+            return;
+        }
+
+        if( cObj instanceof CborMap )
+        {
+            const map = cObj.map;
+
+            this.appendTypeAndLength( MajorType.map, map.length );
+            for( let i = 0; i < map.length; i++ )
+            {
+                this.appendCborObjEncoding( map[i].k );
+                this.appendCborObjEncoding( map[i].v );
+            }
+
+            return;
+        }
+
+        if( cObj instanceof CborTag )
+        {
+            this.appendTypeAndLength( MajorType.tag, cObj.tag );
+            this.appendCborObjEncoding( cObj.data )
+            return;
+        }
+
+        if( cObj instanceof CborSimple )
+        {
+            const simpValue = cObj.simple;
+
+            if (simpValue === false)
+                return this.appendUInt8(0xf4); // major type 6 (tag) | 20
+            if (simpValue === true)
+                return this.appendUInt8(0xf5); // major type 6 (tag) | 21
+            if (simpValue === null)
+                return this.appendUInt8(0xf6); // major type 6 (tag) | 22
+            if (simpValue === undefined)
+                return this.appendUInt8(0xf7); // major type 6 (tag) | 23
+
+            if( cObj.numAs === "simple" &&
+                simpValue >= 0 && simpValue <= 255 &&
+                simpValue === Math.round( simpValue ) 
+            )
+            {
+                this.appendTypeAndLength( MajorType.float_or_simple, simpValue );
+                return;
+            }
+
+            this.appendUInt8(0xfb) // (MajorType.float_or_simple << 5) | 27 (double precidison float)
+            this.appendFloat64( simpValue );
+
+            return;
+        }
+
+        throw JsRuntime.makeNotSupposedToHappenError(
+            "'CborEncoding.appendCborObjEncoding' did not match any possible 'CborObj'"
+        );
+    }
+
 }
 
 /**
@@ -207,6 +348,10 @@ export default class Cbor
     public static encode( cborObj: CborObj ): CborString
     {
         const encoded = new CborEncoding();
+
+        encoded.appendCborObjEncoding( cborObj );
+
+        return new CborString( encoded.bytes );
     }
 
     public static parse( cbor: CborString | Buffer ): CborObj

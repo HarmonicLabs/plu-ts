@@ -1,10 +1,23 @@
-import CborObj, { cborObjFromRaw, isCborObj, RawCborObj } from ".";
+import CborObj, { cborObjFromRaw, isCborObj, isRawCborObj, RawCborObj } from ".";
 import JsRuntime from "../../utils/JsRuntime";
-import ObjectUtils from "../../utils/ObjectUtils";
 import ToRawObj from "./interfaces/ToRawObj";
 
 export type RawCborArray = {
     array: RawCborObj[]
+}
+
+export function isRawCborArray( arr: RawCborArray ): boolean
+{
+    if( typeof arr !== "object" ) return false;
+
+    const keys = Object.keys( arr );
+
+    return (
+        keys.length === 1 &&
+        keys[0] === "array" &&
+        Array.isArray( arr.array ) &&
+        arr.array.every( isRawCborObj )
+    );
 }
 
 export default class CborArray

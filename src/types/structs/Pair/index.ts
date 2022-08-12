@@ -9,7 +9,7 @@ export default class Pair< A, B >
 
     static isStrictInstance( any: any ): boolean
     {
-        return any.__proto__ === Pair.prototype;
+        return Object.getPrototypeOf( any ) === Pair.prototype;
     }
 
     private _fst: A;

@@ -1,4 +1,4 @@
-import CborObj, { cborObjFromRaw, RawCborObj } from ".";
+import CborObj, { cborObjFromRaw, isRawCborObj, RawCborObj } from ".";
 import ObjectUtils from "../../utils/ObjectUtils";
 import ToRawObj from "./interfaces/ToRawObj";
 
@@ -9,6 +9,32 @@ export type RawCborMapEntry = {
 
 export type RawCborMap = {
     map: RawCborMapEntry[]
+}
+
+export function isRawCborMap( m: RawCborMap ): boolean
+{
+    if( typeof m !== "object" ) return false;
+
+    const keys = Object.keys( m );
+
+    return (
+        keys.length === 1 &&
+        keys[0] === "map" &&
+        Array.isArray( m.map ) &&
+        m.map.every( entry => {
+            if( typeof entry !== "object" ) return false;
+
+            const entryKeys = Object.keys( entry ); 
+            
+            return (
+                entryKeys.length === 2      &&
+                entryKeys.includes( "k" )   &&
+                isRawCborObj( entry.k )     &&
+                entryKeys.includes( "v" )   &&
+                isRawCborObj( entry.v )
+            );
+        } )
+    );
 }
 
 export type CborMapEntry = {

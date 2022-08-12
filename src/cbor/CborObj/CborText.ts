@@ -5,6 +5,19 @@ export type RawCborText = {
     text: string
 }
 
+export function isRawCborText( t: RawCborText ): boolean
+{
+    if( typeof t !== "object" ) return false;
+
+    const keys = Object.keys( t );
+
+    return (
+        keys.length === 1 &&
+        keys[0] === "text" &&
+        typeof t.text === "string"
+    );
+}
+
 export default class CborText
     implements ToRawObj
 {

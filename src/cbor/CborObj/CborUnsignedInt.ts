@@ -5,6 +5,19 @@ export type RawCborUnsignedInt = {
     unsigned: bigint
 }
 
+export function isRawCborUnsigned( unsign: RawCborUnsignedInt ): boolean
+{
+    if( typeof unsign !== "object" ) return false;
+    
+    const keys = Object.keys( unsign );
+
+    return (
+        keys.length === 1 &&
+        keys[0] === "unsigned"  &&
+        typeof unsign.unsigned === "bigint"
+    );
+}
+
 export default class CborUnsignedInt
     implements ToRawObj
 {
