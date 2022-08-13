@@ -1,12 +1,13 @@
+import UPLCFlatUtils from "../../../utils/UPLCFlatUtils";
 import BinaryString from "../BinaryString"
 import BitStream from "../BitStream"
 
 
-describe("BitStream.padToByte; default options", () => {
+describe("UPLCFlatUtils.padToByte; default options", () => {
 
     function pad( toPad: BitStream ): BitStream
     {
-        BitStream.padToByte( toPad );
+        UPLCFlatUtils.padToByte( toPad );
         return toPad;
     }
 
@@ -82,13 +83,13 @@ describe("BitStream.padToByte; default options", () => {
     })
 })
 
-describe("BitStream.padToByte; with options", () => {
+describe("UPLCFlatUtils.padToByte; with options", () => {
 
     it("no final 1 as end padding, adds Byte", () => {
 
         function pad( toPad: BitStream ): BitStream
         {
-            BitStream.padToByte( toPad , { withOneAsEndPadding: false } );
+            UPLCFlatUtils.padToByte( toPad , { withOneAsEndPadding: false } );
             return toPad;
         }
 

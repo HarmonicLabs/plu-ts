@@ -1,5 +1,5 @@
-import { constT, encodeConstTypeToUPLCBitStream } from ".."
-import BitStream from "../../../../../../../types/bits/BitStream"
+import { constT } from "..";
+import BitStream from "../../../../../../types/bits/BitStream";
 
 
 describe("ConstType :: encodeConstTypeToUPLCBitStream", () => {

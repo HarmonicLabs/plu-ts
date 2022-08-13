@@ -1,8 +1,8 @@
 import ConstValue, { isConstValue, isConstValueList } from ".."
-import ByteString from "../../../../../../../types/HexString/ByteString";
-import Integer, { UInteger } from "../../../../../../../types/ints/Integer";
 import { Buffer } from "buffer";
-import Pair from "../../../../../../../types/structs/Pair";
+import ByteString from "../../../../../../types/HexString/ByteString";
+import Integer, { UInteger } from "../../../../../../types/ints/Integer";
+import Pair from "../../../../../../types/structs/Pair";
 
 describe("ConstValue :: isConstValue, simple values", () => {
 
