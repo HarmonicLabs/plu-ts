@@ -59,7 +59,7 @@ function serializeInt( int: Integer ): BitStream
 
     return serializeUInt(
         new UInteger(
-            UPLCFlatUtils.zizagBigint(
+            UPLCFlatUtils.zigzagBigint(
                 int.asBigInt
             )
         )

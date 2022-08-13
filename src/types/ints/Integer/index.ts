@@ -1,6 +1,5 @@
 import BasePlutsError from "../../../errors/BasePlutsError";
 import BigIntUtils from "../../../utils/BigIntUtils";
-import Debug from "../../../utils/Debug";
 
 /**
  * javascript already has a builtin support for arbitrary length integers,
@@ -149,8 +148,7 @@ export function forceUInteger( toForce: CanBeUInteger ): UInteger
 
         if( toForce.asBigInt < BigInt( 0 ) )
         {
-            Debug.throw( "trying to convert an integer to an unsigned Integer, the integer was negative" );
-            return new UInteger( BigIntUtils.abs( toForce.asBigInt ) );
+            throw new BasePlutsError( "trying to convert an integer to an unsigned Integer, the integer was negative" );
         }
         
         return new UInteger( toForce.asBigInt );
@@ -158,8 +156,8 @@ export function forceUInteger( toForce: CanBeUInteger ): UInteger
 
     if( toForce < 0 )
     {
-        Debug.throw( "trying to convert an integer to an unsigned Integer, the number was negative" );
+        throw new BasePlutsError( "trying to convert an integer to an unsigned Integer, the number was negative" );
     }
 
-    return new UInteger( Math.abs( Math.round( toForce ) ) );
+    return new UInteger( Math.round( toForce ) );
 } 

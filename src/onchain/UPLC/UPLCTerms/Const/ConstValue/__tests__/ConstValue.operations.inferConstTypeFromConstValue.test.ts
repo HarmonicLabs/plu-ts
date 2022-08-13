@@ -1,8 +1,7 @@
 import { inferConstTypeFromConstValue } from ".."
-import ByteString from "../../../../../../../types/HexString/ByteString";
-import Integer from "../../../../../../../types/ints/Integer";
+import ByteString from "../../../../../../types/HexString/ByteString";
+import Integer from "../../../../../../types/ints/Integer";
 import { constT } from "../../ConstType"
-
 
 
 describe("ConstValue :: inferConstTypeFromConstValue", () => {

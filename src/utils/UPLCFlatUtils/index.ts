@@ -19,7 +19,7 @@ export default class UPLCFlatUtils
      */
     private constructor() {};
 
-    static zizagBigint( bigint: bigint ): bigint
+    static zigzagBigint( bigint: bigint ): bigint
     {
         return (
             bigint >> 
@@ -32,7 +32,7 @@ export default class UPLCFlatUtils
         ( bigint << BigInt( 1 ) );
     }
 
-    static unzizagBigint( bigint: bigint ): bigint
+    static unzigzagBigint( bigint: bigint ): bigint
     {
         return (
             (
