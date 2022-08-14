@@ -48,7 +48,8 @@ export default class CborSimple
         if(
             interpretNumAs === undefined     &&
             typeof simple === "number"       &&
-            simple === Math.abs( Math.round( simple ) )
+            simple >= 0 && simple <= 255 &&
+            simple === Math.round( simple )
         )
         interpretNumAs = "simple";
 

@@ -6,15 +6,15 @@ import JsRuntime from "../../utils/JsRuntime";
 import CborArray, { isRawCborArray, RawCborArray } from "./CborArray";
 import CborBytes, { isRawCborBytes, RawCborBytes } from "./CborBytes";
 import CborMap, { isRawCborMap, RawCborMap } from "./CborMap";
-import CborNegativeInt, { isRawCborNegative, RawCborNegativeInt } from "./CborNegativeInt";
+import CborNegInt, { RawCborNegInt, isRawCborNegative } from "./CborNegInt";
 import CborSimple, { isRawCborSimple, isSimpleCborValue, RawCborSimple } from "./CborSimple";
 import CborTag, { isRawCborTag, RawCborTag } from "./CborTag";
 import CborText, { isRawCborText, RawCborText } from "./CborText";
-import CborUnsignedInt, { isRawCborUnsigned, RawCborUnsignedInt } from "./CborUnsignedInt";
+import CborUInt, { RawCborUInt, isRawCborUnsigned } from "./CborUInt";
 
 export  type RawCborObj
-    = RawCborUnsignedInt
-    | RawCborNegativeInt
+    = RawCborUInt
+    | RawCborNegInt
     | RawCborBytes
     | RawCborText
     | RawCborArray
@@ -23,8 +23,8 @@ export  type RawCborObj
     | RawCborSimple;
 
 type CborObj
-    = CborNegativeInt
-    | CborUnsignedInt
+    = CborNegInt
+    | CborUInt
     | CborBytes
     | CborText
     | CborArray
@@ -40,8 +40,8 @@ export function isCborObj( cborObj: CborObj ): boolean
     
     // only strict instances
     return (
-        proto === CborNegativeInt.prototype ||
-        proto === CborUnsignedInt.prototype ||
+        proto === CborNegInt.prototype ||
+        proto === CborUInt.prototype ||
         proto === CborBytes.prototype       ||
         proto === CborText.prototype        ||
         proto === CborArray.prototype       ||
@@ -53,7 +53,7 @@ export function isCborObj( cborObj: CborObj ): boolean
 
 export function isRawCborObj( rawCborObj: RawCborObj ): boolean
 {
-    if( typeof rawCborObj !== "object" )  return false;
+    if( typeof rawCborObj !== "object" || rawCborObj === null || Array.isArray( rawCborObj ) ) return false;
 
     const keys = Object.keys( rawCborObj );
 
@@ -66,8 +66,12 @@ export function isRawCborObj( rawCborObj: RawCborObj ): boolean
     const k = keys[0];
 
     return (
-        ( k === "negative" && typeof (rawCborObj as RawCborNegativeInt).negative === "bigint" ) || 
-        ( k === "unsigned" && typeof (rawCborObj as RawCborUnsignedInt).unsigned === "bigint" ) ||
+        ( k === "neg"                                              &&
+        typeof (rawCborObj as RawCborNegInt).neg === "bigint" &&
+        (rawCborObj as RawCborNegInt).neg < 0 )                                       || 
+        ( k === "uint" &&
+        typeof (rawCborObj as RawCborUInt).uint === "bigint" &&
+        (rawCborObj as RawCborUInt).uint >= 0)                                       ||
         ( k === "bytes" && Buffer.isBuffer( (rawCborObj as RawCborBytes).bytes ) )              ||
         ( k === "text" && typeof (rawCborObj as RawCborText).text === "string")                 ||
 
@@ -87,49 +91,54 @@ export function isRawCborObj( rawCborObj: RawCborObj ): boolean
     );
 }
 
-export function cborObjFromRaw( rawCborObj: RawCborObj ): CborObj
+export function cborObjFromRaw( _rawCborObj: RawCborObj ): CborObj
 {
     JsRuntime.assert(
-        isRawCborObj( rawCborObj ),
-        "expected a vaild 'RawCborObj' as input; got: " + rawCborObj
+        isRawCborObj( _rawCborObj ),
+        "expected a vaild 'RawCborObj' as input; got: " + _rawCborObj
     );
 
-    if( isRawCborNegative( rawCborObj as RawCborNegativeInt ) )
-        return new CborNegativeInt( (rawCborObj as RawCborNegativeInt).negative );
+    function _cborObjFromRaw( rawCborObj: RawCborObj ): CborObj
+    {
+        if( isRawCborNegative( rawCborObj as RawCborNegInt ) )
+            return new CborNegInt( (rawCborObj as RawCborNegInt).neg );
 
-    if( isRawCborUnsigned( rawCborObj as RawCborUnsignedInt ) )
-        return new CborUnsignedInt( (rawCborObj as RawCborUnsignedInt).unsigned );
+        if( isRawCborUnsigned( rawCborObj as RawCborUInt ) )
+            return new CborUInt( (rawCborObj as RawCborUInt).uint );
 
-    if( isRawCborBytes( rawCborObj as RawCborBytes ) )
-        return new CborBytes( (rawCborObj as RawCborBytes).bytes );
+        if( isRawCborBytes( rawCborObj as RawCborBytes ) )
+            return new CborBytes( (rawCborObj as RawCborBytes).bytes );
 
-    if( isRawCborText( rawCborObj as RawCborText ) )
-        return new CborText( (rawCborObj as RawCborText).text );
+        if( isRawCborText( rawCborObj as RawCborText ) )
+            return new CborText( (rawCborObj as RawCborText).text );
 
-    if( isRawCborArray( rawCborObj as RawCborArray ) )
-        return new CborArray(
-            (rawCborObj as RawCborArray).array
-            .map( cborObjFromRaw )
+        if( isRawCborArray( rawCborObj as RawCborArray ) )
+            return new CborArray(
+                (rawCborObj as RawCborArray).array
+                .map( _cborObjFromRaw )
+            );
+
+        if( isRawCborMap( rawCborObj as RawCborMap ) )
+            return new CborMap(
+                (rawCborObj as RawCborMap).map
+                .map( entry => {
+                    return {
+                        k: _cborObjFromRaw( entry.k ),
+                        v: _cborObjFromRaw( entry.v )
+                    }
+                })
+            );
+
+        if( isRawCborTag( rawCborObj as RawCborTag ) )
+            return new CborTag( (rawCborObj as RawCborTag).tag, _cborObjFromRaw( (rawCborObj as RawCborTag).data ) );
+
+        if( isRawCborSimple( rawCborObj as RawCborSimple ) )
+            return new CborSimple( (rawCborObj as RawCborSimple).simple );
+
+        throw JsRuntime.makeNotSupposedToHappenError(
+            "'cborObjFromRaw' did not match any possible 'RawCborObj'"
         );
+    }
 
-    if( isRawCborMap( rawCborObj as RawCborMap ) )
-        return new CborMap(
-            (rawCborObj as RawCborMap).map
-            .map( entry => {
-                return {
-                    k: cborObjFromRaw( entry.k ),
-                    v: cborObjFromRaw( entry.v )
-                }
-            })
-        );
-
-    if( isRawCborTag( rawCborObj as RawCborTag ) )
-        return new CborTag( (rawCborObj as RawCborTag).tag, cborObjFromRaw( (rawCborObj as RawCborTag).data ) );
-
-    if( isRawCborSimple( rawCborObj as RawCborSimple ) )
-        return new CborSimple( (rawCborObj as RawCborSimple).simple );
-
-    throw JsRuntime.makeNotSupposedToHappenError(
-        "'cborObjFromRaw' did not match any possible 'RawCborObj'"
-    );
+    return _cborObjFromRaw( _rawCborObj );
 }
