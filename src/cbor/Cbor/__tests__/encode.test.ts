@@ -19,6 +19,12 @@ describe( "Cbor.encode", () => {
             })
         ) ).toEqual( new CborString( "01" ) );
 
+        expect( Cbor.encode(
+            cborObjFromRaw({
+                uint: BigInt( Number.MAX_SAFE_INTEGER )
+            })
+        ) ).toEqual( new CborString( "1b001fffffffffffff" ) );
+
     });
 
     test("negative", () => {
@@ -35,6 +41,11 @@ describe( "Cbor.encode", () => {
             })
         ) ).toEqual( new CborString( "24" ) );
         
+        expect( Cbor.encode(
+            cborObjFromRaw({
+                neg: BigInt( -Number.MAX_SAFE_INTEGER )
+            })
+        ) ).toEqual( new CborString( "3b001ffffffffffffe" ) );
     });
     
     test("text", () => {
@@ -96,6 +107,13 @@ describe( "Cbor.encode", () => {
     });
 
     test("tags", () => {
+
+        expect( Cbor.encode(
+            cborObjFromRaw({
+                tag: 6,
+                data: { array: [] }
+            })
+        ) ).toEqual( new CborString( "C680" ) );
 
         expect( Cbor.encode(
             cborObjFromRaw({

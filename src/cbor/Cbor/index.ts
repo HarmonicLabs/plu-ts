@@ -179,6 +179,7 @@ class CborEncoding
             
             this.appendUInt8( (cborType << 5) | 27 /*expect_uint64*/ );
             this.appendUInt64( length );
+            return;
         }
 
         if( typeof length === "bigint" ) length = Number( length );
@@ -210,6 +211,7 @@ class CborEncoding
             );
             this.appendUInt32( length );
         }
+        
     }
 
     appendCborObjEncoding( cObj: CborObj ): void
@@ -651,10 +653,10 @@ export default class Cbor
                     
                     const nLen = Number( length );
 
-                    if( nLen === 20 ) return new CborSimple( false, "simple" );
-                    if( nLen === 21 ) return new CborSimple( true, "simple" );
-                    if( nLen === 22 ) return new CborSimple( null, "simple" );
-                    if( nLen === 23 ) return new CborSimple( undefined, "simple" );
+                    if( nLen === 20 ) return new CborSimple( false );
+                    if( nLen === 21 ) return new CborSimple( true );
+                    if( nLen === 22 ) return new CborSimple( null );
+                    if( nLen === 23 ) return new CborSimple( undefined );
 
                     // flaots handled at the beginning of the function
                     // since length isn't required
