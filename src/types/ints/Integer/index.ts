@@ -1,5 +1,6 @@
 import BasePlutsError from "../../../errors/BasePlutsError";
 import BigIntUtils from "../../../utils/BigIntUtils";
+import Cloneable from "../../interfaces/Cloneable";
 
 /**
  * javascript already has a builtin support for arbitrary length integers,
@@ -24,6 +25,7 @@ import BigIntUtils from "../../../utils/BigIntUtils";
  * 
  */
 export default class Integer
+    implements Cloneable<Integer>
 {
     get [Symbol.toStringTag](): string
     {
@@ -76,9 +78,15 @@ export default class Integer
     {
         return new Integer( int );
     }
+
+    clone(): Integer
+    {
+        return new Integer( this._bigint );
+    }
 }
 
 export class UInteger extends Integer
+    implements Cloneable<UInteger>
 {
     get [Symbol.toStringTag](): "UInteger"
     {
@@ -127,6 +135,11 @@ export class UInteger extends Integer
     static formBigInt( int: bigint ): Integer
     {
         return new UInteger( BigIntUtils.abs( int ) );
+    }
+
+    clone(): UInteger
+    {
+        return new UInteger( this._bigint );
     }
 }
 
