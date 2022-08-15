@@ -146,6 +146,7 @@ export class UInteger extends Integer
 export type CanBeUInteger
     = UInteger
     | Integer
+    | bigint
     | number;
 
 export function forceUInteger( toForce: CanBeUInteger ): UInteger
@@ -172,5 +173,5 @@ export function forceUInteger( toForce: CanBeUInteger ): UInteger
         throw new BasePlutsError( "trying to convert an integer to an unsigned Integer, the number was negative" );
     }
 
-    return new UInteger( Math.round( toForce ) );
+    return new UInteger( typeof toForce === "number" ? Math.round( toForce ) : toForce );
 } 
