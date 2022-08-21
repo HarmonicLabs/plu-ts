@@ -2,6 +2,7 @@ import BinaryString from "../../../../types/bits/BinaryString";
 import BitStream from "../../../../types/bits/BitStream";
 import { CanBeUInteger, forceUInteger, UInteger } from "../../../../types/ints/Integer";
 import JsRuntime from "../../../../utils/JsRuntime";
+import UPLCTerm from "../../UPLCTerm";
 
 
 export default class UPLCVar
@@ -14,33 +15,17 @@ export default class UPLCVar
     }
 
     private _deBruijn: UInteger;
-
-    get deBruijn(): UInteger
-    {
-        return this._deBruijn;
-    }
+    get deBruijn(): UInteger { return this._deBruijn; }
 
     constructor( deBruijn: CanBeUInteger )
     {
-        const _deBruijn: UInteger = forceUInteger( deBruijn );
+        this._deBruijn = forceUInteger( deBruijn );
 
         JsRuntime.assert(
-            _deBruijn.asBigInt >= BigInt( 1 ),
-            "only lambdas are allowed to have 0-indexed variables as DeBruijn; while creating an 'UPLCVar' instance, got: "
-                + _deBruijn
+            this._deBruijn.asBigInt >= BigInt( 0 ),
+            "invalid deBruijn index; while creating 'UPLCVar' instance, deBruijn index was: "
+                + this._deBruijn
         );
-        
-        this._deBruijn = _deBruijn;
     }
 
-    // toUPLCBitStream( ctx: UPLCSerializationContex ): BitStream
-    // {
-    //     const result = UPLCVar.UPLCTag.clone();
-    //     
-    //     result.append( this.deBruijn.toUPLCBitStream() );
-    //
-    //     ctx.updateWithBitStreamAppend( result );
-    //     
-    //     return result;
-    // }
 }

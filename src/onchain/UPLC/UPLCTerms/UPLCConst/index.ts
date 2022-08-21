@@ -9,7 +9,7 @@ import ConstType, { constT, constTypeToStirng, isWellFormedConstType } from "./C
 import ConstValue, { canConstValueBeOfConstType } from "./ConstValue";
 
 
-export default class Const
+export default class UPLCConst
 {
     static get UPLCTag(): BitStream
     {
@@ -62,7 +62,7 @@ export default class Const
 
     // toUPLCBitStream( ctx: UPLCSerializationContex ): BitStream
     // {
-    //     const constBitStream = Const.UPLCTag;
+    //     const constBitStream = UPLCConst.UPLCTag;
     //     
     //     constBitStream.append(
     //         encodeConstTypeToUPLCBitStream(
@@ -84,7 +84,7 @@ export default class Const
     //     return constBitStream;
     // }
     
-    static int( int: Integer | number | bigint ): Const
+    static int( int: Integer | number | bigint ): UPLCConst
     {
         // new Integer works for both number | bigint
         if( !(int instanceof Integer) )
@@ -101,47 +101,47 @@ export default class Const
             }
         }
 
-        return new Const( constT.int , int );
+        return new UPLCConst( constT.int , int );
     }
 
-    static byteString( bs: ByteString ): Const
+    static byteString( bs: ByteString ): UPLCConst
     {
-        return new Const( constT.byteStr, bs );
+        return new UPLCConst( constT.byteStr, bs );
     }
 
-    static str( str: string ): Const
+    static str( str: string ): UPLCConst
     {
-        return new Const( constT.str, str );
+        return new UPLCConst( constT.str, str );
     }
 
-    static get unit(): Const
+    static get unit(): UPLCConst
     {
-        return new Const( constT.unit, undefined );
+        return new UPLCConst( constT.unit, undefined );
     }
 
-    static bool( bool: boolean ): Const
+    static bool( bool: boolean ): UPLCConst
     {
-        return new Const( constT.bool, bool );
+        return new UPLCConst( constT.bool, bool );
     }
 
-    static listOf( typeArg: ConstType ): ( ( values: ConstValue[] ) => Const )
+    static listOf( typeArg: ConstType ): ( ( values: ConstValue[] ) => UPLCConst )
     {
-        return function ( values: ConstValue[] ): Const
+        return function ( values: ConstValue[] ): UPLCConst
         {
-            return new Const( constT.listOf( typeArg ), values );
+            return new UPLCConst( constT.listOf( typeArg ), values );
         };
     }
 
-    static pairOf( typeArgFirst: ConstType, typeArgSecond: ConstType ): ( ( first: ConstValue, second: ConstValue ) => Const )
+    static pairOf( typeArgFirst: ConstType, typeArgSecond: ConstType ): ( ( first: ConstValue, second: ConstValue ) => UPLCConst )
     {
-        return function ( first: ConstValue, second: ConstValue ): Const
+        return function ( first: ConstValue, second: ConstValue ): UPLCConst
         {
-            return new Const( constT.pairOf( typeArgFirst, typeArgSecond ), new Pair( first, second ) );
+            return new UPLCConst( constT.pairOf( typeArgFirst, typeArgSecond ), new Pair( first, second ) );
         };
     }
 
-    static data( data: Data ): Const
+    static data( data: Data ): UPLCConst
     {
-        return new Const( constT.data, data );
+        return new UPLCConst( constT.data, data );
     }
 }

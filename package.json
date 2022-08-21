@@ -1,7 +1,7 @@
 {
   "name": "plu-ts",
   "version": "0.0.0",
-  "description": "library for an easy Cardano protocol interaction",
+  "description": "An embedded DSL for Cardano smart contracts creation coupled with a library for Cardano transactions, all in Typescript",
   "main": "./src/index.ts",
   "type": "module",
   "scripts": {
@@ -14,8 +14,16 @@
   "keywords": [
     "cardano",
     "plutus",
+    "smart contract",
+    "smart-contract",
+    "smart contracts",
+    "smart-contracts",
+    "transaction",
     "blockchain",
+    "block chain",
+    "block-chain",
     "offchain",
+    "onchain",
     "ada",
     "ADA",
     "dApp"

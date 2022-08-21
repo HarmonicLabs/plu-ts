@@ -17,7 +17,7 @@ import Debug from "../../../../utils/Debug";
 import UPLCEncoder from "../../UPLCEncoder";
 import Application from "../../UPLCTerms/Application";
 import Builtin from "../../UPLCTerms/Builtin";
-import Const from "../../UPLCTerms/Const";
+import UPLCConst from "../../UPLCTerms/UPLCConst";
 import Lambda from "../../UPLCTerms/Lambda";
 import UPLCVar from "../../UPLCTerms/UPLCVar";
 
@@ -35,7 +35,7 @@ describe("succInteger", () => {
                             Builtin.addInteger,
                             new UPLCVar( 1 )
                         ),
-                        Const.int( 1 )
+                        UPLCConst.int( 1 )
                     )
                 )
             )
@@ -53,7 +53,7 @@ describe("succInteger", () => {
                                     "0000000", // addInteger
                                 "0000", // Var tag
                                     "0" + "0000001", // nil constructor + unsinged 1 ( deBruijn )
-                                "0100", // Const tag
+                                "0100", // UPLCConst tag
                                     "1" + "0000" + "0", // const type int
                                     "0" + "0000010", // zigzag(1) ( === 2 ) binary
                     "001" // padding

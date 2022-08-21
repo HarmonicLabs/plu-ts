@@ -42,7 +42,7 @@ export default class CborTag
         JsRuntime.assert(
             typeof tag === "bigint" &&
             isCborObj( data ),
-            "using direct value constructor; either 'tag' is nota n umber or 'data' is missing"
+            "using direct value constructor; either 'tag' is not a number or 'data' is missing"
         );
 
         this._tag = tag;

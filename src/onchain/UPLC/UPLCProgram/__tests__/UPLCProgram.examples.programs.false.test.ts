@@ -14,7 +14,7 @@ import BinaryString from "../../../../types/bits/BinaryString";
 import BitStream from "../../../../types/bits/BitStream";
 import Debug from "../../../../utils/Debug";
 import UPLCEncoder from "../../UPLCEncoder";
-import Const from "../../UPLCTerms/Const";
+import UPLCConst from "../../UPLCTerms/UPLCConst";
 
 
 describe("false", () => {
@@ -24,7 +24,7 @@ describe("false", () => {
         const plutsCompiled = UPLCEncoder.compile(
             new UPLCProgram(
                 [ 1, 0, 0 ],
-                Const.bool( false )
+                UPLCConst.bool( false )
             )
         );
 

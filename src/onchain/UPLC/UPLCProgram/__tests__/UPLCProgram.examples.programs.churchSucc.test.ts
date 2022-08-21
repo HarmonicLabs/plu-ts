@@ -37,7 +37,7 @@ describe("churchSucc", () => {
                                     new Application(
                                         new Application(
                                             new Force(
-                                            new UPLCVar( 3 ) // n
+                                                new UPLCVar( 3 ) // n
                                             ),
                                             new UPLCVar( 2 ) // z
                                         ),

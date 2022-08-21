@@ -22,18 +22,4 @@ export default class Delay
     {
         this._delayedTerm = toDelay;
     }
-
-    // toUPLCBitStream( ctx: UPLCSerializationContex ): BitStream
-    // {
-    //     const result = Delay.UPLCTag.clone();
-    //     ctx.updateWithBitStreamAppend( result );
-    //
-    //     UPLCFlatUtils.appendTermAndUpdateContext(
-    //         result,
-    //         this.delayedTerm,
-    //         ctx
-    //     );
-    //     
-    //     return result;
-    // }
 }

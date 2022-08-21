@@ -2,7 +2,7 @@ import UPLCVar from "./UPLCTerms/UPLCVar";
 import Delay from "./UPLCTerms/Delay";
 import Lambda from "./UPLCTerms/Lambda";
 import Application from "./UPLCTerms/Application";
-import Const from "./UPLCTerms/Const";
+import UPLCConst from "./UPLCTerms/UPLCConst";
 import Force from "./UPLCTerms/Force";
 import ErrorUPLC from "./UPLCTerms/ErrorUPLC";
 import Builtin from "./UPLCTerms/Builtin";
@@ -13,24 +13,27 @@ type UPLCTerm
     | Delay
     | Lambda
     | Application
-    | Const
+    | UPLCConst
     | Force
     | ErrorUPLC
     | Builtin;
 
 export default UPLCTerm;
 
-export function isUPLCTerm( t: UPLCTerm ): boolean
+export function isUPLCTerm( t: UPLCTerm ): t is UPLCTerm
 {
+    const proto = Object.getPrototypeOf( t );
+
+    // only strict instances
     return (
-        t instanceof UPLCVar        ||
-        t instanceof Delay          ||
-        t instanceof Lambda         ||
-        t instanceof Application    ||
-        t instanceof Const          ||
-        t instanceof Force          ||
-        t instanceof ErrorUPLC      ||
-        t instanceof Builtin
+        proto === UPLCVar.prototype        ||
+        proto === Delay.prototype          ||
+        proto === Lambda.prototype         ||
+        proto === Application.prototype    ||
+        proto === UPLCConst.prototype          ||
+        proto === Force.prototype          ||
+        proto === ErrorUPLC.prototype      ||
+        proto === Builtin.prototype
     );
 }
 
@@ -56,8 +59,8 @@ export function isClosedTerm( term: UPLCTerm ): boolean
         else if( t instanceof Application )
             return _isClosedTerm( maxDeBruijn , t.funcTerm ) && _isClosedTerm( maxDeBruijn , t.argTerm )
         
-        else if( t instanceof Const )
-            // `Const` has no variables in it, ence always closed
+        else if( t instanceof UPLCConst )
+            // `UPLCConst` has no variables in it, ence always closed
             return true;
         
         else if( t instanceof Force )

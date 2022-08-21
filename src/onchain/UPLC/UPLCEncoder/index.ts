@@ -12,9 +12,9 @@ import UPLCTerm from "../UPLCTerm";
 import Application from "../UPLCTerms/Application";
 import Builtin from "../UPLCTerms/Builtin";
 import { getNRequiredForces, isUPLCBuiltinTag } from "../UPLCTerms/Builtin/UPLCBuiltinTag";
-import Const from "../UPLCTerms/Const";
-import ConstType, { ConstTyTag, isWellFormedConstType } from "../UPLCTerms/Const/ConstType";
-import ConstValue, { isConstValue, isConstValueList } from "../UPLCTerms/Const/ConstValue";
+import UPLCConst from "../UPLCTerms/UPLCConst";
+import ConstType, { ConstTyTag, isWellFormedConstType } from "../UPLCTerms/UPLCConst/ConstType";
+import ConstValue, { isConstValue, isConstValueList } from "../UPLCTerms/UPLCConst/ConstValue";
 import Delay from "../UPLCTerms/Delay";
 import ErrorUPLC from "../UPLCTerms/ErrorUPLC";
 import Force from "../UPLCTerms/Force";
@@ -22,6 +22,7 @@ import Lambda from "../UPLCTerms/Lambda";
 import UPLCVar from "../UPLCTerms/UPLCVar";
 import UPLCSerializationContex from "./UPLCSerializationContext";
 import CborString from "../../../cbor/CborString";
+import dataFromCbor from "../../../types/Data/fromCbor";
 
 /*
  * --------------------------- [encode vs serialize methods] ---------------------------
@@ -209,7 +210,7 @@ export default class UPLCEncoder
         if( term instanceof Delay )         return this.encodeDelayTerm( term );
         if( term instanceof Lambda )        return this.encodeLambdaTerm( term );
         if( term instanceof Application )   return this.encodeApplicationTerm( term );
-        if( term instanceof Const )         return this.encodeConstTerm( term );
+        if( term instanceof UPLCConst )         return this.encodeConstTerm( term );
         if( term instanceof Force )         return this.encodeForceTerm( term );
         if( term instanceof ErrorUPLC )     return this.encodeUPLCError( term );
         if( term instanceof Builtin )       return this.encodeBuiltin( term );
@@ -272,6 +273,25 @@ export default class UPLCEncoder
     
     encodeApplicationTerm( app: Application ): BitStream
     {
+        if( app.argTerm instanceof Builtin )
+        {
+            /**
+             * @todo inline Builtins (if not requiring 2 or more forces) since Builtins will always take less space
+            */ 
+        }
+
+        if( app.funcTerm instanceof Lambda )
+        {
+            /**
+             * @todo compile only the argument if introduced variable is never referenced
+             * 
+             * AND THE VARIABLE IS NOT A ( VALIDATOR | MINTING POLICY | STAKE VALIDATOR ) required input 
+            */
+            /**
+             * @todo inline if only referenced once
+            */
+        }
+
         const result = Application.UPLCTag;
         this._ctx.incrementLengthBy( result.length );
 
@@ -286,9 +306,9 @@ export default class UPLCEncoder
         return result;
     }
 
-    encodeConstTerm( uplcConst: Const ): BitStream
+    encodeConstTerm( uplcConst: UPLCConst ): BitStream
     {
-        const result = Const.UPLCTag
+        const result = UPLCConst.UPLCTag
         
         result.append(
             serializeConstType(
@@ -348,7 +368,7 @@ export default class UPLCEncoder
             );
         }
         if( typeof value === "boolean" ) return BitStream.fromBinStr( value === true ? "1" : "0" );
-        if( Array.isArray( value ) && isConstValueList( value ) )
+        if( isConstValueList( value ) )
         {
             const result: BitStream = new BitStream();
             
@@ -391,7 +411,12 @@ export default class UPLCEncoder
     
             return result;
         }
-        if( isData( value ) )
+
+        if( value instanceof CborString )
+        {
+            value = dataFromCbor( value );
+        }
+        if(isData( value ) )
         {
             return this.encodeConstValueData( value );
         }

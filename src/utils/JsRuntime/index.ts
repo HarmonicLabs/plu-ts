@@ -156,7 +156,7 @@ export default class JsRuntime
                 {
                     // proxies the sets of the object too,
                     // note this is happens for arrays also
-                    return JsRuntime.objAsReadonly( propValue );
+                    return JsRuntime.objAsReadonly( propValue as object );
                 }
 
                 return propValue;

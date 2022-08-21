@@ -174,7 +174,7 @@ export function canConstValueBeOfConstType( val: ConstValue, ty: ConstType ): bo
 }
 
 
-export function isConstValueList( val: ConstValue  ): boolean
+export function isConstValueList( val: ConstValue  ): val is ConstValue[]
 {
     if( !Array.isArray( val ) ) return false;
     

@@ -3,7 +3,7 @@ import BinaryString from "../../../../types/bits/BinaryString"
 import BitStream from "../../../../types/bits/BitStream"
 import Debug from "../../../../utils/Debug"
 import UPLCEncoder from "../../UPLCEncoder"
-import Const from "../../UPLCTerms/Const"
+import UPLCConst from "../../UPLCTerms/UPLCConst"
 
 describe("con11 UPLCProgram", () => {
 
@@ -13,7 +13,7 @@ describe("con11 UPLCProgram", () => {
         const plutsCompiled = UPLCEncoder.compile(
             new UPLCProgram(
                 [ 11, 22, 33 ],
-                Const.int( 11 )
+                UPLCConst.int( 11 )
             )
         );
 

@@ -113,6 +113,14 @@ describe( "dataFromCborObj( dataToCborObj( data ) ) === data", () => {
         identityTestFor(new DataConstr( 54321 , [] ));
         identityTestFor(new DataConstr( Number.MAX_SAFE_INTEGER , [] ));
 
-
+        identityTestFor(
+            new DataConstr(
+                0 , 
+                [
+                    new DataI( 42 ),
+                ]
+            )
+        );
+        
     })
 })

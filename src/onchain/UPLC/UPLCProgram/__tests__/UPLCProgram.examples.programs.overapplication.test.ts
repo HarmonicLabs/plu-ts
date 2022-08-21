@@ -34,7 +34,7 @@ import Debug from "../../../../utils/Debug";
 import UPLCEncoder from "../../UPLCEncoder";
 import Application from "../../UPLCTerms/Application";
 import Builtin from "../../UPLCTerms/Builtin";
-import Const from "../../UPLCTerms/Const";
+import UPLCConst from "../../UPLCTerms/UPLCConst";
 
 
 describe("overapplication", () => {
@@ -54,18 +54,18 @@ describe("overapplication", () => {
                                     new Application(
                                         new Application(
                                             Builtin.lessThanInteger,
-                                            Const.int( 0 )
+                                            UPLCConst.int( 0 )
                                         ),
-                                        Const.int( 3 )
+                                        UPLCConst.int( 3 )
                                     )
                                 ),
                                 Builtin.addInteger
                             ),
                             Builtin.subtractInteger
                         ),
-                        Const.int( 0 )
+                        UPLCConst.int( 0 )
                     ),
-                    Const.int( 3 )
+                    UPLCConst.int( 3 )
                 )
             )
         );

@@ -6,7 +6,7 @@ import Debug from "../../../../utils/Debug"
 import UPLCEncoder from "../../UPLCEncoder"
 import Application from "../../UPLCTerms/Application"
 import Builtin from "../../UPLCTerms/Builtin"
-import Const from "../../UPLCTerms/Const"
+import UPLCConst from "../../UPLCTerms/UPLCConst"
 
 describe("bnBytestrIdx UPLCProgram", () => {
 
@@ -18,13 +18,13 @@ describe("bnBytestrIdx UPLCProgram", () => {
                 new Application(
                     new Application(
                         Builtin.indexByteString,
-                        Const.byteString(
+                        UPLCConst.byteString(
                             new ByteString(
                                 "1a5f783625ee8c"
                             )
                         )
                     ),
-                    Const.int( 54321 )
+                    UPLCConst.int( 54321 )
                 )
             )
         );

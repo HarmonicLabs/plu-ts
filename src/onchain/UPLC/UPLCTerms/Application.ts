@@ -6,6 +6,22 @@ import Lambda from "./Lambda";
 import Builtin from "./Builtin";
 import Force from "./Force";
 
+export type UPLCApplicationBody = UPLCVar | Lambda | Application | Builtin | Force
+
+export function isUPLCApplicationBody( uplc: UPLCTerm ): uplc is UPLCApplicationBody
+{
+    const proto = Object.getPrototypeOf( uplc );
+
+    // only strict instances
+    return (
+        proto === UPLCVar.prototype         ||
+        proto === Lambda.prototype          ||
+        proto === Application.prototype     ||
+        proto === Force.prototype           ||
+        proto === Builtin.prototype
+    );
+}
+
 export default class Application
 {
     static get UPLCTag(): BitStream
@@ -15,10 +31,10 @@ export default class Application
         );
     }
 
-    private _func: UPLCVar | Lambda | Application | Builtin | Force
+    private _func: UPLCTerm
     private _arg : UPLCTerm;
 
-    get funcTerm(): UPLCVar | Lambda | Application | Builtin | Force
+    get funcTerm(): UPLCTerm
     {
         return this._func;
     }
@@ -29,31 +45,11 @@ export default class Application
     }
 
     constructor(
-        func: UPLCVar | Lambda | Application | Builtin | Force , 
+        func: UPLCTerm,
         arg: UPLCTerm
     )
     {
         this._func = func;
         this._arg = arg;
     }
-
-    // toUPLCBitStream( ctx: UPLCSerializationContex ): BitStream
-    // {
-    //     const result = Application.UPLCTag.clone();
-    //     ctx.updateWithBitStreamAppend( result );
-// 
-    //     UPLCFlatUtils.appendTermAndUpdateContext(
-    //         result,
-    //         this.funcTerm,
-    //         ctx
-    //     );
-// 
-    //     UPLCFlatUtils.appendTermAndUpdateContext(
-    //         result,
-    //         this.argTerm,
-    //         ctx
-    //     );
-// 
-    //     return result;
-    // }
 }
