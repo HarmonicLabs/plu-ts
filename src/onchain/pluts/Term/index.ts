@@ -1,5 +1,5 @@
-import UPLCTerm from "../UPLC/UPLCTerm";
-import PType from "./PType";
+import UPLCTerm from "../../UPLC/UPLCTerm";
+import PType from "../PType";
 
 
 export default class Term<A extends PType>

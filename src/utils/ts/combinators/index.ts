@@ -1,4 +1,5 @@
 import { Params } from "../TyFn";
+import { Head, Tail } from "../TyLists";
 
 export type CurriedFn< Args extends any[], Output > =
     Args extends [] ? () => Output:
@@ -43,7 +44,7 @@ export type CurriedFn< Args extends any[], Output > =
 export function curry<Args extends any[], Output,>
     ( fn: (...args: Args ) => Output ): CurriedFn<Args, Output>
 {
-    if( fn.length === 0 ) return fn as any;
+    if( fn.length === 0 ) return ( () => (fn as any)() )as any;
 
     function curryMem( uncurried: (...args: any[] ) => any, argsMem: any[], lastCallRest: any[] )
     {
@@ -56,6 +57,16 @@ export function curry<Args extends any[], Output,>
     }
 
     return curryMem( fn, [], [] );
+}
+
+export function curryFirst<Args extends [ any, ...any[] ], Output>
+    ( fn: ( arg1: Head<Args>, ...args: Tail<Args> ) => Output )
+    : ( arg1: Head<Args> ) => ( ...args: Tail<Args> ) => Output
+{
+    if( fn.length === 0 ) return ( () => (fn as any)() )as any;
+    if( fn.length === 1 ) return ( ( arg: Head<Args> ) => (fn as any)( arg ) )as any;
+
+    return ( arg: Head<Args> ) => ( ...args: Tail<Args> ) => fn( arg, ...args )
 }
 
 /**
