@@ -1,29 +1,36 @@
 import PFn from ".";
-import { Head } from "../../../../utils/ts/TyLists";
+import Cloneable, { isCloneable } from "../../../../types/interfaces/Cloneable";
 import PType from "../../PType"
 import Term from "../../Term";
 
 
 export default class PLam<A extends PType, B extends PType > extends PType
+    implements Cloneable<PLam<A,B>>
 {
     // phantom
-    private _input?: A
-    private _output?: B
+    private _input: A
+    private _output: B
+
+    constructor( input: A = new PType as A, output: B = new PType as B )
+    {
+        super();
+        this._input = input;
+        this._output = output;
+    }
+
+    static get default(): PLam<PType, PType> { return new PLam( new PType, new PType ) }
+
+    clone(): PLam<A,B>
+    {
+        return new PLam(
+            isCloneable( this._input ) ? this._input.clone() : this._input ,
+            isCloneable( this._output ) ? this._output.clone() : this._output 
+        ) as PLam<A,B>;
+    }
 }
 
 export type  PLamIn< PLamInstance extends PLam< PType, PType > > = PLamInstance extends PLam< infer PIn, any >  ? PIn  : never;
 export type PLamOut< PLamInstance extends PLam< PType, PType > > = PLamInstance extends PLam< any, infer POut > ? POut : never;
-
-// export type ApplicableTerm<In extends PType, Out extends PType> =
-//     Term<PLam<In, Out>> 
-//     & { $: ( input: Term<In> ) => 
-//             (Out extends PLam< infer PLamIn extends PType, infer PLamOut extends PType > ? 
-//                 ApplicableTerm<PLamIn, PLamOut> :
-//             Out extends PType ?
-//                 Term<Out> :
-//                 never
-//             )
-//     }
 
 export type TermFn<Ins extends [ PType, ...PType[] ] , Out extends PType> =
     Ins extends [ infer PInstance extends PType ] ? Term<PLam< PInstance, Out>> & { $: ( input: Term< PInstance > ) => Term< Out > } :

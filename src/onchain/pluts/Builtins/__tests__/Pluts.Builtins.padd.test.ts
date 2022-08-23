@@ -1,10 +1,10 @@
 import { padd } from "..";
-import { pint } from "../../PTypes/PInt";
+import { pInt } from "../../PTypes/PInt";
 
 test("padd", () => {
 
     console.log(
-        padd.$( pint( 1 ) ).$( pint( 2 ) ).toUPLC( 0 )
+        padd.$( pInt( 1 ) ).$( pInt( 2 ) ).toUPLC( 0 )
     );
 
 })
