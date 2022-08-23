@@ -3,7 +3,7 @@ import AdditionalInfos from "./AdditionalInfo";
 import DebugProxies from "./Proxies";
 
 // update this manually for production
-const _isDebugging: boolean = true;
+const _isDebugging: boolean = !true;
 
 export default class Debug
 {

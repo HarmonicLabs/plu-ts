@@ -44,7 +44,7 @@ export type CurriedFn< Args extends any[], Output > =
 export function curry<Args extends any[], Output,>
     ( fn: (...args: Args ) => Output ): CurriedFn<Args, Output>
 {
-    if( fn.length === 0 ) return ( () => (fn as any)() )as any;
+    if( fn.length === 0 ) return ( ( ...restArgs: any[] ) => (fn as any)( ...restArgs ) )as any;
 
     function curryMem( uncurried: (...args: any[] ) => any, argsMem: any[], lastCallRest: any[] )
     {

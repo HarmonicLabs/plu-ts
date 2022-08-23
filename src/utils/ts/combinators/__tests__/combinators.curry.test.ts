@@ -116,7 +116,7 @@ describe( "curry", () => {
 
         expect( typeof curryAddMany ).toBe( "function" );
         expect( typeof curryAddMany( 1 ) ).toBe( "number" );
-        expect( curryAddMany( 1 ) ).toBe( 1 );
+        expect( curryAddMany( 1 ) ).toBe( addMany( 1 ) );
         expect( curryAddMany( 1, 2, 3 ) ).toBe( 6 );
     });
 

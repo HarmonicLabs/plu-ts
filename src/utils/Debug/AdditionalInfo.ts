@@ -6,7 +6,7 @@ export default class AdditionalInfo
     {
         for(let key in addInfos )
         {
-            ObjectUtils.defineStaticProperty(
+            ObjectUtils.defineReadOnlyProperty(
                 this,
                 key,
                 (addInfos as any)[key]

@@ -5,7 +5,7 @@ import PInt, { pInt } from "../../PTypes/PInt";
 test("pif", () => {
 
     console.log(
-        pif<PInt>().$( pBool( true ) ).$( pInt( 42 ) ).$( pInt( 69 )).toUPLC( 0 )
+        pif<PInt>( PInt ).$( pBool( true ) ).$( pInt( 42 ) ).$( pInt( 69 )).toUPLC( 0 )
     );
 
 })
