@@ -247,6 +247,9 @@ type InputToPTerm< Input extends any > =
     Input extends Term<infer PT extends PType> ? Term<PT> :
     undefined
 
+/**
+ * **EXPERIMENTAL**
+ */
 export function pconst<InputT extends any>(
     jsValue: InputT | InputToPTerm<InputT> ,
     disambiguateTypeArg?:
@@ -365,5 +368,3 @@ export function pconst<InputT extends any>(
             return undefined as any;
     }
 }
-
-const test = pconst( true )

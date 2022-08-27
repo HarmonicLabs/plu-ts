@@ -1,7 +1,9 @@
+import BasePlutsError from "../../../errors/BasePlutsError";
 import ObjectUtils from "../../../utils/ObjectUtils";
 import { Head, Tail } from "../../../utils/ts";
 import Application from "../../UPLC/UPLCTerms/Application";
 import Builtin from "../../UPLC/UPLCTerms/Builtin";
+import UPLCConst from "../../UPLC/UPLCTerms/UPLCConst";
 import PType, { ToCtors } from "../PType";
 import PBool from "../PTypes/PBool";
 import PByteString from "../PTypes/PByteString";
@@ -538,8 +540,8 @@ type CaseConstrFn<RetT extends PType> = ( constrCase: Term< RetT > ) =>
 /*
 @fixme implement a recursive utility function to
 
-automatically add delays to all alrguments exept the first;
-add aliases for the applications exept the first;
+automatically add delays to all alrguments except the first;
+add aliases for the applications except the first;
 force the last application (once provided argument and delayed)
 */
 export function pchooseData< ReturnT extends PType >( returnT: new () => ReturnT )
@@ -661,4 +663,121 @@ export function pchooseData< ReturnT extends PType >( returnT: new () => ReturnT
             ) as any;
         }
     ) as any;
+}
+
+export const pconstrData: TermFn<[ PInt, PList<PData> ], PData >
+    = addApplications<[ PInt, PList<PData> ], PData >(
+        new Term(
+            _dbn => Builtin.constrData,
+            makePLamObj( new PInt, new PList([ new PData ]), new PData )
+        ),
+        [ PInt, PList as new () => PList<PData>, PData ]
+    );
+
+export const pmapData: TermFn<[ PList<PPair<PData, PData>> ], PData > 
+    = addApplications<[ PList<PPair<PData, PData>> ], PData >(
+        new Term<PLam<PList<PPair<PData,PData>>, PData>>(
+            _dbn => Builtin.mapData,
+            makePLamObj( new PList([ new PPair( new PData, new PData ) ]), new PData )
+        ),
+        [ PList as new () => PList<PPair<PData,PData>>, PData ]
+    );
+
+export const plistData: TermFn<[ PList<PData> ], PData > 
+    = addApplications<[ PList<PData> ], PData >(
+        new Term<PLam<PList<PData>, PData >>(
+            _dbn => Builtin.listData,
+            makePLamObj( new PList([ new PData ]), new PData )
+        ),
+        [ PList as new () => PList<PData>, PData ]
+    );
+
+export const piData: TermFn<[ PInt ], PData > 
+    = addApplications<[ PInt ], PData >(
+        new Term<PLam<PInt, PData >>(
+            _dbn => Builtin.iData,
+            new PLam( new PInt, new PData )
+        ),
+        [ PInt, PData ]
+    );
+
+export const pbData: TermFn<[ PByteString ], PData > 
+    = addApplications<[ PByteString ], PData >(
+        new Term<PLam<PByteString, PData >>(
+            _dbn => Builtin.bData,
+            new PLam( new PByteString, new PData )
+        ),
+        [ PByteString, PData ]
+    );
+
+export const peqData: TermFn<[ PData, PData ], PBool >
+    = addApplications<[ PData, PData ], PBool >(
+        new Term<PLam<PData, PLam< PData, PBool > >>(
+            _dbn => Builtin.equalsData,
+            new PLam( new PData, new PLam( new PData, new PBool ) )
+        ),
+        [ PData, PData, PBool ]
+    );
+
+export function peq<PT extends PInt | PByteString | PString | PData >( pt: new () => PT )
+    : TermFn<[ PT, PT ], PBool >
+{
+    if( pt.prototype === PInt.prototype )           return peqInt as any;
+    if( pt.prototype === PByteString.prototype )    return peqBs as any;
+    if( pt.prototype === PData.prototype )          return peqData as any;
+    if( pt.prototype === PString.prototype )        return peqStr as any
+
+    /**
+     * @fixme add proper error
+    */
+    throw new BasePlutsError(
+        "unsupported low level equality using 'peq'"
+    );
+}
+
+export const ppairData: TermFn<[ PData, PData ], PPair<PData,PData> >
+    = addApplications<[ PData, PData ], PPair<PData,PData> >(
+        new Term<PLam<PData, PLam< PData, PPair<PData,PData> > >>(
+            _dbn => Builtin.mkPairData,
+            new PLam( new PData, new PLam( new PData, new PPair( new PData, new PData ) ) )
+        ),
+        [ PData, PData, PPair ]
+    );
+
+/**
+ * @fixme **hoist**
+ */
+export const pnilData: Term<PList< PData > >
+    = new Term(
+        _dbn => new Application( Builtin.mkNilData, UPLCConst.unit ),
+        new PList([ new PData ])
+    );
+
+/**
+ * @fixme **hoist**
+ */
+export const pnilPairData: Term<PList< PPair<PData, PData>>>
+    = new Term(
+        _dbn => new Application( Builtin.mkNilPairData, UPLCConst.unit ),
+        new PList([ new PPair( new PData, new PData) ])
+    );
+
+export function pnil<PListElem extends PData | PPair<PData,PData> >( elemT: new () => PListElem )
+    : Term<PList< PListElem > >
+{
+    if( elemT.prototype === PData.prototype )
+    {
+        return pnilData as any;
+    }
+    if( elemT.prototype === PPair.prototype )
+    {
+        return pnilPairData as any;
+    }
+
+    /**
+     * @fixme add proper error
+    */
+     throw new BasePlutsError(
+        "unsupported low level 'nil' element'"
+    );
 }
