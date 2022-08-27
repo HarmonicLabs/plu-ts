@@ -7,7 +7,7 @@ export default class Pair< A, B >
         return "Pair";
     }
 
-    static isStrictInstance( any: any ): boolean
+    static isStrictInstance( any: any ): any is Pair<any,any>
     {
         return Object.getPrototypeOf( any ) === Pair.prototype;
     }

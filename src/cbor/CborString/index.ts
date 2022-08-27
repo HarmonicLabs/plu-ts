@@ -5,9 +5,9 @@ import ByteString from "../../types/HexString/ByteString";
 export default
 class CborString extends ByteString
 {
-    static isStrictInstance( any: any ): boolean
+    static isStrictInstance( cborStr: any ): cborStr is CborString
     {
-        return Object.getPrototypeOf( any ) === CborString.prototype
+        return Object.getPrototypeOf( cborStr ) === CborString.prototype
     }
 
     constructor( cbor: string | Buffer )

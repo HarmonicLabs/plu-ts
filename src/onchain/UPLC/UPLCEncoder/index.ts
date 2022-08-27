@@ -342,8 +342,7 @@ export default class UPLCEncoder
         }
         if( value instanceof ByteString &&
             (
-                ByteString.isStrictInstance( value ) ||
-                !(value instanceof CborString)
+                ByteString.isStrictInstance( value )
             )
         )
         {
@@ -422,7 +421,7 @@ export default class UPLCEncoder
         }
     
         throw JsRuntime.makeNotSupposedToHappenError(
-            "'this.encodeConstValue' did not matched any 'ConstValue' possible type; input was: " + value.toString()
+            "'this.encodeConstValue' did not matched any 'ConstValue' possible type; input was: " + value
         );
     }
 

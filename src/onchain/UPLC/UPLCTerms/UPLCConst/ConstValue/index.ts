@@ -6,19 +6,28 @@ import Data, { isData } from "../../../../../types/Data";
 import ConstType, { constTypeEq, constT, constTypeToStirng, ConstTyTag, isWellFormedConstType, constListTypeUtils, constPairTypeUtils } from "../ConstType";
 
 
+export type ConstValueList
+    = Integer[]
+    | ByteString[]
+    | string[]
+    | undefined[]
+    | ConstValueList[]
+    | Pair<ConstValue,ConstValue>[]
+    | Data[];
+
 type ConstValue
     = Integer 
     | ByteString 
     | string
     | undefined 
     | boolean
-    | ConstValue[]
+    | ConstValueList
     | Pair<ConstValue,ConstValue>
     | Data;
 
 export default ConstValue;
 
-export function isConstValue( value: ConstValue ): boolean
+export function isConstValue( value: ConstValue ): value is ConstValue
 {
     return (
         value === undefined                                                     ||
@@ -27,9 +36,9 @@ export function isConstValue( value: ConstValue ): boolean
         typeof value === "string"                                               ||
         typeof value === "boolean"                                              ||
         isConstValueList( value )                                               ||
-        (value instanceof Pair && Pair.isStrictInstance( value )) &&
-        isConstValue( value.fst ) && isConstValue( value.snd )                  ||
-        isData( value )
+        (Pair.isStrictInstance( value ) &&
+            isConstValue( value.fst ) && isConstValue( value.snd ))             ||
+        ( !Pair.isStrictInstance(value) && isData( value ) )
     )
 }
 
@@ -75,7 +84,7 @@ export function inferConstTypeFromConstValue( val: ConstValue ): (ConstType | un
         if( firstElemTy === undefined ) return undefined;
 
         JsRuntime.assert(
-            val.every(
+            (val as ConstValue[]).every(
                 listElem => canConstValueBeOfConstType(
                     listElem,
                     firstElemTy as ConstType
@@ -154,7 +163,7 @@ export function canConstValueBeOfConstType( val: ConstValue, ty: ConstType ): bo
     if( ty[ 0 ] === ConstTyTag.list )
         return (
             Array.isArray( val ) && 
-            val.every( valueElement => 
+            (val as ConstValue[]).every( valueElement => 
                 canConstValueBeOfConstType(
                     valueElement,
                     constListTypeUtils.getTypeArgument( ty as [ ConstTyTag.list, ...ConstType ] ) 
@@ -174,7 +183,7 @@ export function canConstValueBeOfConstType( val: ConstValue, ty: ConstType ): bo
 }
 
 
-export function isConstValueList( val: ConstValue  ): val is ConstValue[]
+export function isConstValueList( val: ConstValue  ): val is ConstValueList
 {
     if( !Array.isArray( val ) ) return false;
     
@@ -204,7 +213,7 @@ export function isConstValueList( val: ConstValue  ): val is ConstValue[]
         return isArrayOfEmptyArray( val );
     }
 
-    return val.every(
+    return (val as ConstValue[]).every(
         listElem => canConstValueBeOfConstType(
             listElem,
             firstElemTy as ConstType

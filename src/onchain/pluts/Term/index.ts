@@ -3,6 +3,8 @@ import UPLCTerm from "../../UPLC/UPLCTerm";
 import PType from "../PType";
 
 
+export type UnTerm<T extends Term<PType>> = T extends Term<infer PT extends PType > ? PT : never;
+
 export default class Term<A extends PType>
 {
     /**

@@ -42,7 +42,7 @@ export const enum ConstTyTag {
  * > ```
  * 
 */
-type ConstType = ConstTyTag[];
+type ConstType = [ ConstTyTag, ...ConstTyTag[] ];
 
 // maybe this one is to strict?
 //    = [ ConstTyTag.int ]
@@ -56,7 +56,7 @@ type ConstType = ConstTyTag[];
 
 export default ConstType;
 
-export function isWellFormedConstType( type: ConstType | ConstTyTag[] ): boolean
+export function isWellFormedConstType( type: any/*ConstType | ConstTyTag[]*/ ): type is ConstType
 {
     if( !Array.isArray( type ) ) return false;
     if( type.length === 0 ) return false;
@@ -79,7 +79,7 @@ export function isWellFormedConstType( type: ConstType | ConstTyTag[] ): boolean
         type[0] !== ConstTyTag.pair
     )
     {
-        Debug.warn( constTypeToStirng( type ) );
+        Debug.warn( constTypeToStirng( type as ConstType ) );
         // should never get here because of the first check
         Debug.throw("type which doesn'take arguments was passed with arguments")
         // returning false anyway in producton, type has too many arguments, not well-formed
@@ -180,8 +180,8 @@ export const constT : Readonly<{
     str: ConstType,
     unit: ConstType
     bool: ConstType
-    listOf: ( tyArg: ConstType ) => ConstType
-    pairOf: ( tyArg1: ConstType, tyArg2: ConstType ) => ConstType
+    listOf: ( tyArg: ConstType ) => [ ConstTyTag.list, ...ConstType ]
+    pairOf: ( tyArg1: ConstType, tyArg2: ConstType ) => [ ConstTyTag.pair , ...ConstType, ...ConstType ]
     data: ConstType
 }> = Object.freeze({
 
@@ -191,7 +191,7 @@ export const constT : Readonly<{
     unit:       [ ConstTyTag.unit ],
     bool:       [ ConstTyTag.bool ],
     
-    listOf: ( tyArg: ConstType ) : ConstType => {
+    listOf: ( tyArg: ConstType ) : [ ConstTyTag.list, ...ConstType ] => {
         JsRuntime.assert(
             isWellFormedConstType( tyArg ),
             "provided argument to 'constT.listOf' should be a well formed type, try using types exposed by  the 'constT' object itself"
@@ -200,7 +200,7 @@ export const constT : Readonly<{
         return [ ConstTyTag.list, ...tyArg ];
     },
     
-    pairOf: ( tyArg1: ConstType, tyArg2: ConstType ) : ConstType  => {
+    pairOf: ( tyArg1: ConstType, tyArg2: ConstType ) : [ ConstTyTag.pair , ...ConstType, ...ConstType ]  => {
         JsRuntime.assert(
             isWellFormedConstType( tyArg1 ) && isWellFormedConstType( tyArg2 ),
             "provided argument to 'constT.pairOf' should be a well formed type, try using types exposed by  the 'constT' object itself"
@@ -276,7 +276,7 @@ function getConstListTypeArgument( listTy: [ ConstTyTag.list, ...ConstType ] ) :
         "in 'constListTypeUtils.getTypeArgument', input type was not a valid list type"
     );
 
-    return listTy.slice( 1 );
+    return listTy.slice( 1 ) as ConstType;
 };
 
 function getNonWellFormedConstListTypeArgument( listTy: [ ConstTyTag.list, ...ConstType ] ) : (ConstType | undefined)
@@ -290,7 +290,7 @@ function getNonWellFormedConstListTypeArgument( listTy: [ ConstTyTag.list, ...Co
 
     if( rawArg.length === 0 ) return undefined;
 
-    if( isWellFormedConstType( rawArg ) ) return rawArg;
+    if( isWellFormedConstType( rawArg ) ) return rawArg as ConstType;
 
     if( 
         rawArg[0] !== ConstTyTag.list &&
@@ -432,7 +432,7 @@ function getConstPairSecondTypeArgument( pairTy: [ ConstTyTag.pair, ...ConstType
     // if pairTy is not well formed throws
     // if doesn't throw is well formed
     // if it is well formed the sliced part is the well formed type
-    return pairTy.slice( 1 + getConstPairFirstTypeArgument( pairTy ).length );
+    return pairTy.slice( 1 + getConstPairFirstTypeArgument( pairTy ).length ) as ConstType;
 }
 
 function getNonWellFormedConstPairFirstTypeArgument( pairTy: [ ConstTyTag.pair, ...ConstType ] | ConstType ): (ConstType | undefined)

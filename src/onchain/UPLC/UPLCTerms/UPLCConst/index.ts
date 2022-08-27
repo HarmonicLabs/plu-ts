@@ -1,12 +1,12 @@
 import BinaryString from "../../../../types/bits/BinaryString";
 import BitStream from "../../../../types/bits/BitStream";
 import ByteString from "../../../../types/HexString/ByteString";
-import Integer from "../../../../types/ints/Integer";
+import Integer, { UInteger } from "../../../../types/ints/Integer";
 import Pair from "../../../../types/structs/Pair";
 import JsRuntime from "../../../../utils/JsRuntime";
 import Data from "../../../../types/Data";
 import ConstType, { constT, constTypeToStirng, isWellFormedConstType } from "./ConstType";
-import ConstValue, { canConstValueBeOfConstType } from "./ConstValue";
+import ConstValue, { canConstValueBeOfConstType, ConstValueList } from "./ConstValue";
 
 
 export default class UPLCConst
@@ -23,7 +23,7 @@ export default class UPLCConst
     get type(): ConstType
     {
         // clone
-        return this._type.map( tag => tag );
+        return this._type.map( tag => tag ) as ConstType;
     }
 
     private _value: ConstValue
@@ -38,7 +38,7 @@ export default class UPLCConst
     private constructor( type: ConstType, value: string )
     private constructor( type: ConstType, value?: undefined )
     private constructor( type: ConstType, value: boolean )
-    private constructor( type: ConstType, value: ConstValue[] )
+    private constructor( type: ConstType, value: ConstValueList )
     private constructor( type: ConstType, value: Pair< ConstValue, ConstValue > )
     private constructor( type: ConstType, value: Data )
     private constructor(
@@ -97,7 +97,7 @@ export default class UPLCConst
         {
             if( !Integer.isStrictInstance( int ) )
             {
-                int = int.toSigned();
+                int = (int as UInteger).toSigned();
             }
         }
 
@@ -124,9 +124,9 @@ export default class UPLCConst
         return new UPLCConst( constT.bool, bool );
     }
 
-    static listOf( typeArg: ConstType ): ( ( values: ConstValue[] ) => UPLCConst )
+    static listOf( typeArg: ConstType ): ( ( values: ConstValueList ) => UPLCConst )
     {
-        return function ( values: ConstValue[] ): UPLCConst
+        return function ( values: ConstValueList ): UPLCConst
         {
             return new UPLCConst( constT.listOf( typeArg ), values );
         };

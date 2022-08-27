@@ -11,9 +11,9 @@ export default class ByteString
         return "ByteString";
     }
 
-    static isStrictInstance( any: any ): boolean
+    static isStrictInstance( bs: any ): bs is ByteString
     {
-        return Object.getPrototypeOf( any ) === ByteString.prototype
+        return Object.getPrototypeOf( bs ) === ByteString.prototype
     }
 
     private _bytes: Buffer;

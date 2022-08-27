@@ -32,9 +32,9 @@ export default class Integer
         return "Integer";
     }
 
-    static isStrictInstance( any: any ): boolean
+    static isStrictInstance( int: any ): int is Integer
     {
-        return Object.getPrototypeOf( any ) === Integer.prototype
+        return Object.getPrototypeOf( int ) === Integer.prototype
     }
 
     protected _bigint : bigint;
@@ -93,9 +93,9 @@ export class UInteger extends Integer
         return "UInteger";
     }
 
-    static isStrictInstance(any: any): boolean
+    static isStrictInstance( uint: any): uint is UInteger
     {
-        return Object.getPrototypeOf( any ) === UInteger.prototype;    
+        return Object.getPrototypeOf( uint ) === UInteger.prototype;    
     }
     
     constructor( bigint: bigint | number )
