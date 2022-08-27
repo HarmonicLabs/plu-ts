@@ -155,6 +155,17 @@ export const pblake2b_256: TermFn<[ PByteString ], PByteString > =
         [ PByteString, PByteString ]
     );
 
+/**
+ * performs cryptographic signature verification using the Ed25519 scheme
+ * 
+ * @param {PByteString} key ```PByteString``` of length 32 ( ```PubKeyHash``` )
+ * @param {PByteString} message abitrary length ```PByteString```
+ * @param {PByteString} signature ```PByteString``` of length 64
+ * @returns {PBool} 
+ * 
+ * @throws
+ * @fails
+ */
 export const pverifyEd25519: TermFn<[ PByteString, PByteString, PByteString ], PBool > =
     addApplications<[ PByteString, PByteString, PByteString ], PBool >(
         new Term(
@@ -781,3 +792,65 @@ export function pnil<PListElem extends PData | PPair<PData,PData> >( elemT: new 
         "unsupported low level 'nil' element'"
     );
 }
+
+
+// --------------------------------------------------------------------------------------------------------------------- //
+// ----------------------------------------------- [ VASIL (Plutus V2) ] ----------------------------------------------- //
+// --------------------------------------------------------------------------------------------------------------------- //
+
+export const pserialiseData: TermFn<[ PData ], PByteString >
+    = addApplications<[ PData ], PByteString >(
+        new Term(
+            _dbn => Builtin.serialiseData,
+            new PLam( new PData, new PByteString )
+        ),
+        [ PData, PByteString ]
+    );
+
+/**
+ * performs elliptic curve digital signature verification (ANSI [2005, 2020], Johnson and Menezes)
+ * over the secp256k1 curve (see Certicom Research [2010], §2.4.1) and conforms to the interface described in
+ * Note 5 of Section A.2. The arguments must have the following sizes:
+ * • 𝑘: 64 bytes
+ * • 𝑚: 32 bytes
+ * • 𝑠: 64 bytes.
+ * The ECDSA scheme admits two distinct valid signatures for a given message and private key. We follow
+ * the restriction imposed by Bitcoin (see Lau and Wuilie [2016], LOW_S) and only accept the smaller
+ * signature: verifyEcdsaSecp256k1Signature will return false if the larger one is supplied.
+ * 
+ * @param {PByteString} key ```PByteString``` of length 32 ( ```PubKeyHash``` )
+ * @param {PByteString} message ```PByteString``` of length 32
+ * @param {PByteString} signature ```PByteString``` of length 64
+ * @returns {PBool} 
+ * 
+ * @throws
+ * @fails
+ */
+export const pverifySecp256k1ECDSA: TermFn<[ PByteString, PByteString, PByteString ], PBool > =
+    addApplications<[ PByteString, PByteString, PByteString ], PBool >(
+        new Term(
+            _dbn => Builtin.verifyEcdsaSecp256k1Signature,
+            new PLam( new PByteString , new PLam( new PByteString , new PLam( new PByteString , new PBool ) ) )
+        ),
+        [ PByteString, PByteString, PByteString, PBool ]
+    );
+
+/**
+ * performs verification of Schnorr signatures ( Schnorr [1989], Lau et al. [2020]) over the secp256k1 curve
+ * 
+ * @param {PByteString} key ```PByteString``` of length 64
+ * @param {PByteString} message abitrary length ```PByteString```
+ * @param {PByteString} signature ```PByteString``` of length 64
+ * @returns {PBool} 
+ * 
+ * @throws
+ * @fails
+ */
+export const pverifySecp256k1Schnorr: TermFn<[ PByteString, PByteString, PByteString ], PBool > =
+    addApplications<[ PByteString, PByteString, PByteString ], PBool >(
+        new Term(
+            _dbn => Builtin.verifySchnorrSecp256k1Signature,
+            new PLam( new PByteString , new PLam( new PByteString , new PLam( new PByteString , new PBool ) ) )
+        ),
+        [ PByteString, PByteString, PByteString, PBool ]
+    );
