@@ -31,25 +31,15 @@ export default class Application
         );
     }
 
-    private _func: UPLCTerm
-    private _arg : UPLCTerm;
-
-    get funcTerm(): UPLCTerm
-    {
-        return this._func;
-    }
-
-    get argTerm(): UPLCTerm
-    {
-        return this._arg;
-    }
-
+    public funcTerm: UPLCTerm
+    public argTerm : UPLCTerm;
+    
     constructor(
         func: UPLCTerm,
         arg: UPLCTerm
     )
     {
-        this._func = func;
-        this._arg = arg;
+        this.funcTerm = func;
+        this.argTerm = arg;
     }
 }

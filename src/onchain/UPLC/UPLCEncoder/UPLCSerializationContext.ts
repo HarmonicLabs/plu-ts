@@ -1,17 +1,31 @@
 import BitStream from "../../../types/bits/BitStream";
+import UPLCVersion from "../UPLCProgram/UPLCVersion";
 
 export interface RawUPLCSerializationContex
 {
-    currLength: number
+    currLength: number,
+    version : {
+        major: bigint,
+        minor: bigint,
+        patch: bigint
+    }
 }
 
 export default class UPLCSerializationContex
 {
     private _rawCtx: RawUPLCSerializationContex;
     
-    constructor( rawCtx: RawUPLCSerializationContex )
+    constructor( rawCtx: Partial<RawUPLCSerializationContex> )
     {
-        this._rawCtx = rawCtx;
+        this._rawCtx = {
+            currLength : 0,
+            version : {
+                major: BigInt( 1 ),
+                minor: BigInt( 0 ),
+                patch: BigInt( 0 )
+            },
+            ...rawCtx
+        };
     }
 
     get currLength(): number
@@ -19,7 +33,7 @@ export default class UPLCSerializationContex
         return this._rawCtx.currLength;
     }
 
-    updateWith( updatedFields: Partial< RawUPLCSerializationContex > ): void
+    private _updateWith( updatedFields: Partial< RawUPLCSerializationContex > ): void
     {
         this._rawCtx = {
             ...this._rawCtx,
@@ -27,9 +41,20 @@ export default class UPLCSerializationContex
         }
     }
 
+    updateVersion( uplcVersion: UPLCVersion )
+    {
+        this._updateWith({
+            version: {
+                major: uplcVersion.major.asBigInt,
+                minor: uplcVersion.minor.asBigInt,
+                patch: uplcVersion.patch.asBigInt,
+            }
+        })
+    }
+
     incrementLengthBy( n: number ): void
     {
-        this.updateWith({
+        this._updateWith({
             currLength: this._rawCtx.currLength + n
         })
     }

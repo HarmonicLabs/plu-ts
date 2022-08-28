@@ -1,10 +1,6 @@
 import BitStream from "../../../types/bits/BitStream";
 import UPLCTerm from "../UPLCTerm";
 import BinaryString from "../../../types/bits/BinaryString";
-import UPLCVar from "./UPLCVar";
-import Delay from "./Delay";
-import Application from "./Application";
-import Force from "./Force";
 
 export default class Lambda
 {
@@ -15,13 +11,11 @@ export default class Lambda
         );
     }
     
-    private readonly _body : UPLCTerm;
-    get body(): UPLCTerm { return this._body; }
-
+    public body : UPLCTerm;
 
     constructor( body: UPLCTerm )
     {
-        this._body = body
+        this.body = body
     }
 
     /* 
@@ -51,26 +45,6 @@ export default class Lambda
         }
 
         return this._references;
-    }
-
-    getNReferences(): number
-    {
-        if( this._references === undefined )
-        {
-            return this._getReferences().length;
-        }
-
-        return this._references.length;
-    }
-
-    updateReferencesWithNewValue( referencedValue: UPLCTerm ): void
-    {
-        if( this._references === undefined )
-        {
-            this._getReferences();
-        }
-
-        this._references!.forEach( (uVar: UPLCVar) => { uVar.referencedTerm = referencedValue } );
     }
     */
 }

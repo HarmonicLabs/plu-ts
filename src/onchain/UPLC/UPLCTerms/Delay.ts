@@ -11,15 +11,10 @@ export default class Delay
         );
     }
 
-    private _delayedTerm : UPLCTerm;
-
-    get delayedTerm()
-    {
-        return this._delayedTerm;
-    }
+    public delayedTerm: UPLCTerm;
 
     constructor( toDelay: UPLCTerm )
     {
-        this._delayedTerm = toDelay;
+        this.delayedTerm = toDelay;
     }
 }

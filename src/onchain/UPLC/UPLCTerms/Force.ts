@@ -49,12 +49,7 @@ export default class Force
         );
     }
 
-    private _toForce : UPLCTerm;
-
-    get termToForce(): UPLCTerm
-    {
-        return this._toForce;
-    }
+    public termToForce : UPLCTerm;
 
     constructor( term: UPLCTerm )
     {
@@ -63,7 +58,7 @@ export default class Force
             "while constructing 'Force'; UPLCTerm is not Forceable"
         );
 
-        this._toForce = term;
+        this.termToForce = term;
     }
 
 }

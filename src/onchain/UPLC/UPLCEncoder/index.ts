@@ -8,7 +8,7 @@ import UPLCFlatUtils from "../../../utils/UPLCFlatUtils";
 import Data, { isData } from "../../../types/Data";
 import UPLCProgram from "../UPLCProgram";
 import UPLCVersion from "../UPLCProgram/UPLCVersion";
-import UPLCTerm from "../UPLCTerm";
+import  UPLCTerm, { getHoistedTerms, isPureUPLCTerm, PureUPLCTerm } from "../UPLCTerm";
 import Application from "../UPLCTerms/Application";
 import Builtin from "../UPLCTerms/Builtin";
 import { getNRequiredForces, isUPLCBuiltinTag } from "../UPLCTerms/Builtin/UPLCBuiltinTag";
@@ -23,6 +23,7 @@ import UPLCVar from "../UPLCTerms/UPLCVar";
 import UPLCSerializationContex from "./UPLCSerializationContext";
 import CborString from "../../../cbor/CborString";
 import dataFromCbor from "../../../types/Data/fromCbor";
+import HoistedUPLC, { getSortedHoistedSet } from "../UPLCTerms/HoistedUPLC";
 
 /*
  * --------------------------- [encode vs serialize methods] ---------------------------
@@ -164,6 +165,106 @@ function serializeBuiltin( bn: Builtin ): BitStream
     return result;
 } 
 
+
+
+// ------------------------------------------------------------------------------------------------------------------- //
+// --------------------------------------------------- UPLCEncoder --------------------------------------------------- //
+// ------------------------------------------------------------------------------------------------------------------- //
+
+/**
+ * ### !! Important !!
+ * 
+ * **_SIDE-EFFECT_**: modifies the input; in particular replaces
+ * ```HoistedTerm```s with ```UPLCVar```s that are free in the term
+ * 
+ * @param uplc **after this call is not guaranteed the term passed is closed**
+ * 
+ * @returns {PureUPLCTerm} a term without HoistedUPLC, closed if the input was closed
+ */
+function replaceHoistedTermsInplace( uplc: UPLCTerm ): PureUPLCTerm
+{
+    /**
+     * reference to the outermost term
+    */
+    let program = uplc;
+
+    const sortedHoistedSet = getSortedHoistedSet( getHoistedTerms( uplc ) );
+
+    // adds the actual terms
+    for( let i = sortedHoistedSet.length - 1; i >= 0; i-- )
+    {
+        program = new Application(
+            new Lambda( program ),
+            sortedHoistedSet[i].UPLC
+        );
+    }
+
+    function getUPLCVarForHoistedAtLevel( _hoisted: HoistedUPLC, level: number ): UPLCVar
+    {
+        const levelOfTerm = sortedHoistedSet.findIndex( sortedH => BitStream.eq( sortedH.compiled, _hoisted.compiled ) );
+        return new UPLCVar( level - levelOfTerm );
+    }
+
+    // replaces HoistedUPLC instances with UPLCVar
+    // (HoistedTerms with dependecies included)
+    function replaceWithUPLCVar( t: UPLCTerm, dbnLevel: number ): void
+    {
+        if( t instanceof UPLCVar ) return;
+        if( t instanceof Delay )
+        {
+            if( t.delayedTerm instanceof HoistedUPLC )
+                t.delayedTerm = getUPLCVarForHoistedAtLevel( t.delayedTerm, dbnLevel );
+            else replaceWithUPLCVar( t.delayedTerm, dbnLevel );
+            return;
+        }
+        if( t instanceof Lambda )
+        {
+            if( t.body instanceof HoistedUPLC )
+                t.body = getUPLCVarForHoistedAtLevel( t.body, dbnLevel + 1 );
+            else replaceWithUPLCVar( t.body , dbnLevel + 1 )
+            return;
+        }
+        if( t instanceof Application )
+        {
+            if( t.argTerm instanceof HoistedUPLC )
+                t.argTerm = getUPLCVarForHoistedAtLevel( t.argTerm, dbnLevel );
+            else replaceWithUPLCVar( t.argTerm, dbnLevel );
+            
+            if( t.funcTerm instanceof HoistedUPLC )
+                t.funcTerm = getUPLCVarForHoistedAtLevel( t.funcTerm, dbnLevel );
+            else replaceWithUPLCVar( t.funcTerm, dbnLevel );
+
+            return;
+        }
+        if( t instanceof UPLCConst ) return;
+        if( t instanceof Force )
+        {
+            if( t.termToForce instanceof HoistedUPLC )
+                t.termToForce = getUPLCVarForHoistedAtLevel( t.termToForce, dbnLevel );
+            else replaceWithUPLCVar( t.termToForce, dbnLevel );
+
+            return;
+        }
+        if( t instanceof ErrorUPLC ) return;
+        if( t instanceof Builtin )   return;
+        if( t instanceof HoistedUPLC )
+        {
+            throw JsRuntime.makeNotSupposedToHappenError(
+                "'replaceWithUPLCVar', local funciton in 'replaceHoistedTermsInplace';" +
+                "encountered an 'HoistedUPLC'; this was supposed to be replaced in the parent term case."
+            );
+        }
+
+        throw JsRuntime.makeNotSupposedToHappenError(
+            "'replaceWithUPLCVar', local funciton in 'replaceHoistedTermsInplace'; did not match any 'UPLCTerm' constructor"
+        )
+    }
+
+    replaceWithUPLCVar( program, 0 );
+
+    return program;
+}
+
 export default class UPLCEncoder
 {
     private _ctx: UPLCSerializationContex
@@ -177,11 +278,23 @@ export default class UPLCEncoder
 
     compile( program: UPLCProgram ): BitStream
     {
-        const result = this.encodeVersion( program.version );
+        const v = program.version
+        const result = this.encodeVersion( v );
+        this._ctx.updateVersion( v );
+
+        const uplc = program.body;
+        
+        const progrTerm = replaceHoistedTermsInplace( uplc );
+        if( !isPureUPLCTerm( progrTerm ) )
+        {
+            throw JsRuntime.makeNotSupposedToHappenError(
+                "'replaceHoisteTerm' did not returned a 'PureUPLCTerm'"
+            );
+        }
 
         result.append(
             this.encodeTerm(
-                program.body
+                progrTerm
             )
         );
         
@@ -204,19 +317,19 @@ export default class UPLCEncoder
         return serialized;
     }
 
-    encodeTerm( term: UPLCTerm ): BitStream
+    encodeTerm( term: PureUPLCTerm ): BitStream
     {
         if( term instanceof UPLCVar )       return this.encodeUPLCVar( term );
         if( term instanceof Delay )         return this.encodeDelayTerm( term );
         if( term instanceof Lambda )        return this.encodeLambdaTerm( term );
         if( term instanceof Application )   return this.encodeApplicationTerm( term );
-        if( term instanceof UPLCConst )         return this.encodeConstTerm( term );
+        if( term instanceof UPLCConst )     return this.encodeConstTerm( term );
         if( term instanceof Force )         return this.encodeForceTerm( term );
         if( term instanceof ErrorUPLC )     return this.encodeUPLCError( term );
         if( term instanceof Builtin )       return this.encodeBuiltin( term );
 
         throw JsRuntime.makeNotSupposedToHappenError(
-            "'serializeTerm' did not match any Term"
+            "'UPLCEncoder.encodeTerm' did not match any 'PureUPLCTerm'"
         );
     }
 
