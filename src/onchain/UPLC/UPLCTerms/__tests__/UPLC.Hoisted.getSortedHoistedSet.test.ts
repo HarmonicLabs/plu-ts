@@ -45,11 +45,7 @@ describe("getSortedHoistedSet",() => {
             new HoistedUPLC( UPLCConst.int( 32 ) )
         ]);
 
-        expect( getSortedHoistedSet([
-           hoistedId
-        ])).toEqual([
-            hoistedId
-        ]);
+        expect( getSortedHoistedSet([ hoistedId ]) ).toEqual([ hoistedId ]);
 
     });
 

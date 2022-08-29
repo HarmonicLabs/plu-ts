@@ -17,7 +17,7 @@ export function getSortedHoistedSet( hoistedTerms: HoistedUPLC[] ): HoistedUPLC[
 {
     const set: HoistedUPLC[] = [];
     const compiledSet: BitStream[] = [];
-    
+     
     /**
      * **O((n * m) * d)**
      * 
@@ -104,7 +104,7 @@ export default class HoistedUPLC
      */
     get dependencies(): HoistedUPLC[] { return this._deps; }
 
-    readonly nDeps: number;
+    get nDeps(): number { return this._deps.length };
 
     readonly UPLC: UPLCTerm;
 
@@ -121,7 +121,6 @@ export default class HoistedUPLC
         );
 
         this._deps = getSortedHoistedSet( getHoistedTerms( UPLC ) );
-        this.nDeps = this._deps.length;
 
         this.UPLC = UPLC;
         // encodes as default version term (1.0.0)

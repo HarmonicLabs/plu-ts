@@ -8,6 +8,7 @@ import ErrorUPLC from "./UPLCTerms/ErrorUPLC";
 import Builtin from "./UPLCTerms/Builtin";
 import JsRuntime from "../../utils/JsRuntime";
 import HoistedUPLC from "./UPLCTerms/HoistedUPLC";
+import BitStream from "../../types/bits/BitStream";
 
 export type PureUPLCTerm 
     = UPLCVar
@@ -141,3 +142,88 @@ export function getHoistedTerms( t: UPLCTerm ): HoistedUPLC[]
 
     return [];
 }
+
+type HoistedRef = {
+    compiled: BitStream,
+    number: number
+};
+
+type HoistedRefs = HoistedRef[]
+
+function mergeRefs( a: HoistedRefs, b: HoistedRefs ): HoistedRefs
+{
+    const aCompiled = a.map( ref => ref.compiled );
+    const bCompiled = b.map( ref => ref.compiled );
+    const result: HoistedRefs = a;
+
+    for( const bComp of bCompiled )
+    {
+        if( aCompiled.some( aComp => BitStream.eq( aComp, bComp ) ) )
+        {
+            // b hoisted already present between a's ones
+            const idx = result.findIndex( href => BitStream.eq( href.compiled, bComp ) )
+            
+            // add number to exsisting ref
+            result[ idx ] = {
+                compiled: result[ idx ].compiled,
+                number: result[ idx ].number +
+                    ( b.find( bRef => BitStream.eq( bRef.compiled, bComp ) )?.number ?? 0 ) 
+            }
+        }
+        else // hoisted not present in the a refs
+        {
+            // add new entry from b;
+            result.push({
+                compiled: bComp.clone(),
+                number: b.find( bRef => BitStream.eq( bRef.compiled, bComp ) )?.number ?? 0
+            })
+        }
+    }
+
+    return result;
+}
+
+/* experimental: getHoistedTermsAndRefs
+
+just like ```getHoistedTerms``` but returns also the number of references per hoisted term found
+
+@fixme ```HoistedUPLC``` currently "hides" the number of refernces of its dependecies
+
+export function getHoistedTermsAndRefs( t: UPLCTerm )
+    : {
+        terms: HoistedUPLC[],
+        refs: HoistedRefs
+    }
+{
+    const empty: {
+        terms: HoistedUPLC[],
+        refs: HoistedRefs
+    } = {
+        terms: [],
+        refs: []
+    };
+
+    if( !isUPLCTerm( t ) ) return empty;
+
+    if( t instanceof UPLCVar )
+        return empty;
+    if( t instanceof Delay )        return getHoistedTermsAndRefs( t.delayedTerm );
+    if( t instanceof Lambda )       return getHoistedTermsAndRefs( t.body );
+    if( t instanceof Application )
+    {
+        const argResult = getHoistedTermsAndRefs( t.argTerm ) ;
+        const funcResult = getHoistedTermsAndRefs( t.funcTerm ); 
+        return {
+            terms: [ ...argResult.terms , ...funcResult.terms ],
+            refs:  mergeRefs( argResult.refs, funcResult.refs )
+        };
+    }
+    if( t instanceof UPLCConst )    return empty;
+    if( t instanceof Force )        return getHoistedTermsAndRefs( t.termToForce );
+    if( t instanceof ErrorUPLC )    return empty;
+    if( t instanceof Builtin )      return empty;
+    if( t instanceof HoistedUPLC )  return [ t, ...t.dependencies ];
+
+    return empty;
+}
+// experimental: getHoistedTermsAndRefs */

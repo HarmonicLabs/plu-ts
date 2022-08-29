@@ -8,8 +8,9 @@ export class HoistedTerm<PInstance extends PType> extends Term<PInstance>
     constructor( toUPLC: ( dbn: bigint ) => UPLCTerm, pInstance: PInstance )
     {
         super(
-            (_dbn) =>
-                //throws if the term is not closed 
+            _dbn =>
+                // throws if the term is not closed
+                // for how terms are created it should never be the case
                 new HoistedUPLC(
                     toUPLC( BigInt( 0 ) )
                 ),

@@ -180,8 +180,10 @@ function serializeBuiltin( bn: Builtin ): BitStream
  * @param uplc **after this call is not guaranteed the term passed is closed**
  * 
  * @returns {PureUPLCTerm} a term without HoistedUPLC, closed if the input was closed
+ * 
+ * exported for only for testing
  */
-function replaceHoistedTermsInplace( uplc: UPLCTerm ): PureUPLCTerm
+export function replaceHoistedTermsInplace( uplc: UPLCTerm ): PureUPLCTerm
 {
     /**
      * reference to the outermost term
@@ -202,11 +204,13 @@ function replaceHoistedTermsInplace( uplc: UPLCTerm ): PureUPLCTerm
     function getUPLCVarForHoistedAtLevel( _hoisted: HoistedUPLC, level: number ): UPLCVar
     {
         const levelOfTerm = sortedHoistedSet.findIndex( sortedH => BitStream.eq( sortedH.compiled, _hoisted.compiled ) );
-        return new UPLCVar( level - levelOfTerm );
+        return new UPLCVar( level - (levelOfTerm + 1) );
     }
 
-    // replaces HoistedUPLC instances with UPLCVar
-    // (HoistedTerms with dependecies included)
+    /**
+     * replaces HoistedUPLC instances with UPLCVar
+     * (HoistedTerms with dependecies included)
+     */ 
     function replaceWithUPLCVar( t: UPLCTerm, dbnLevel: number ): void
     {
         if( t instanceof UPLCVar ) return;
