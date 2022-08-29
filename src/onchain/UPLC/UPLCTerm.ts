@@ -124,6 +124,114 @@ export function isClosedTerm( term: UPLCTerm ): boolean
     return _isClosedTerm( BigInt( 0 ) , term );
 }
 
+
+function isVarImSearchingFor( uplcVar: UPLCTerm, dbn: bigint ): boolean
+{
+    return uplcVar instanceof UPLCVar && uplcVar.deBruijn.asBigInt === dbn;
+}
+
+/**
+ * 
+ * @param {number | bigint} varDeBruijn ```number | bigint```; debruijn level (at the term level) of the variable to search for
+ * @param {UPLCTerm} t ```UPLCTerm``` to search in
+ * @returns {boolean} ```true``` if the variable has **at least** 1 or more references; ```false``` otherwise 
+ */
+export function hasAnyRefsInTerm( varDeBruijn: number | bigint, t: UPLCTerm ): boolean
+{
+    JsRuntime.assert(
+        isUPLCTerm( t ),
+        "'getUPLCVarRefsInTerm' expects an UPLCTerms"
+    );
+
+    const dbn = BigInt( varDeBruijn );
+
+    if( t instanceof UPLCVar )      return t.deBruijn.asBigInt === dbn;
+    if( t instanceof Delay )        return hasAnyRefsInTerm( dbn, t.delayedTerm );
+    if( t instanceof Lambda )       return hasAnyRefsInTerm( dbn + BigInt(1), t.body );
+    if( t instanceof Application )  return hasAnyRefsInTerm( dbn, t.funcTerm ) || hasAnyRefsInTerm( dbn, t.argTerm );
+    if( t instanceof UPLCConst )    return false;
+    if( t instanceof Force )        return hasAnyRefsInTerm( dbn, t.termToForce );
+    if( t instanceof ErrorUPLC )    return false;
+    if( t instanceof Builtin )      return false
+    // hoisted terms are closed, ence do not have references to external variables for sure
+    if( t instanceof HoistedUPLC )  return false;
+
+    throw JsRuntime.makeNotSupposedToHappenError(
+        "'hasAnyRefsInTerm' did not matched any possible 'UPLCTerm' constructor"
+    );
+}
+ 
+
+/**
+ * 
+ * @param {number | bigint} varDeBruijn ```number | bigint```; debruijn level (at the term level) of the variable to search for
+ * @param {UPLCTerm} term ```UPLCTerm``` to search in
+ * @returns {boolean} ```true``` if the variable has 2 or more references; ```false``` otherwise 
+ */
+export function hasMultipleRefsInTerm( varDeBruijn: number | bigint, t: UPLCTerm ): boolean
+{
+    JsRuntime.assert(
+        isUPLCTerm( t ),
+        "'getUPLCVarRefsInTerm' expects an UPLCTerms"
+    );
+
+    const dbn = BigInt( varDeBruijn );
+
+    if( t instanceof UPLCVar )      return false; // single ref; caseo of multple refs is handled in 'Application' using 'hasAnyRefsInTerm'
+    if( t instanceof Delay )        return hasMultipleRefsInTerm( dbn, t.delayedTerm );
+    if( t instanceof Lambda )       return hasMultipleRefsInTerm( dbn + BigInt(1), t.body );
+    if( t instanceof Application ) 
+        return (
+            ( hasAnyRefsInTerm( dbn, t.funcTerm ) && hasAnyRefsInTerm( dbn, t.argTerm ) )   ||  // referenced at least once in both terms
+            hasMultipleRefsInTerm( dbn, t.funcTerm )                                        ||  // referenced multiple times in func 
+            hasMultipleRefsInTerm( dbn, t.argTerm )                                             // referenced multiple times in arg
+        );
+    if( t instanceof UPLCConst )    return false;
+    if( t instanceof Force )        return hasMultipleRefsInTerm( dbn, t.termToForce )
+    if( t instanceof ErrorUPLC )    return false;
+    if( t instanceof Builtin )      return false;
+    // hoisted terms are closed, ence do not have references to external variables for sure
+    if( t instanceof HoistedUPLC )  return false;;
+
+    throw JsRuntime.makeNotSupposedToHappenError(
+        "getUPLCVarRefsInTerm did not matched any possible 'UPLCTerm' constructor"
+    );
+}
+
+/**
+ * 
+ * @param {number | bigint} varDeBruijn ```number | bigint```; debruijn level (at the term level) of the variable to search for
+ * @param {UPLCTerm} term ```UPLCTerm``` to search in
+ * @returns {number} number of references to the variable
+ */
+export function getUPLCVarRefsInTerm( term: UPLCTerm, varDeBruijn: number | bigint = 0 ): number
+{
+    function _getUPLCVarRefsInTerm( dbn: bigint, t: UPLCTerm, countedUntilNow: number ): number
+    {
+        JsRuntime.assert(
+            isUPLCTerm( t ),
+            "'getUPLCVarRefsInTerm' expects an UPLCTerms"
+        );
+
+        if( t instanceof UPLCVar )      return countedUntilNow + (t.deBruijn.asBigInt === dbn ? 1 : 0);
+        if( t instanceof Delay )        return _getUPLCVarRefsInTerm( dbn, t.delayedTerm, countedUntilNow );
+        if( t instanceof Lambda )       return _getUPLCVarRefsInTerm( dbn + BigInt( 1 ) , t.body, countedUntilNow );
+        if( t instanceof Application )  return _getUPLCVarRefsInTerm( dbn , t.funcTerm, countedUntilNow ) + _getUPLCVarRefsInTerm( dbn , t.argTerm, countedUntilNow );
+        if( t instanceof UPLCConst )    return countedUntilNow;
+        if( t instanceof Force )        return _getUPLCVarRefsInTerm( dbn, t.termToForce, countedUntilNow );
+        if( t instanceof ErrorUPLC )    return countedUntilNow;
+        if( t instanceof Builtin )      return countedUntilNow;
+        // hoisted terms are closed, ence do not have references to external variables for sure
+        if( t instanceof HoistedUPLC )  return countedUntilNow;
+
+        throw JsRuntime.makeNotSupposedToHappenError(
+            "getUPLCVarRefsInTerm did not matched any possible 'UPLCTerm' constructor"
+        );
+    }
+
+    return _getUPLCVarRefsInTerm( BigInt( varDeBruijn ), term, 0 );
+}
+
 export function getHoistedTerms( t: UPLCTerm ): HoistedUPLC[]
 {
     if( !isUPLCTerm( t ) ) return [];

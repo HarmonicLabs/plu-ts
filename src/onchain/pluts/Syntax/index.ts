@@ -7,6 +7,7 @@ import Pair from "../../../types/structs/Pair";
 import ObjectUtils from "../../../utils/ObjectUtils";
 import { DefaultNever, DefaultUndefined, Head, NonEmptyTail, Tail } from "../../../utils/ts";
 import { curryFirst } from "../../../utils/ts/combinators";
+import { hasMultipleRefsInTerm } from "../../UPLC/UPLCTerm";
 import Application from "../../UPLC/UPLCTerms/Application";
 import Delay from "../../UPLC/UPLCTerms/Delay";
 import Force from "../../UPLC/UPLCTerms/Force";
@@ -175,8 +176,10 @@ export function plet<PVar extends PType, PExprResult extends PType>( varT: new (
 {
     return ( varValue: Term<PVar> ) => {
         return {
-            in: ( expr: (value: Term<PVar>) => Term<PExprResult> ): Term<PExprResult> =>
-                new Term(
+            in: ( expr: (value: Term<PVar>) => Term<PExprResult> ): Term<PExprResult> => {
+
+                // const multiRefsCase =
+                return new Term(
                     dbn => new Application(
                         new Lambda(
                             expr( new Term(
@@ -187,7 +190,28 @@ export function plet<PVar extends PType, PExprResult extends PType>( varT: new (
                         varValue.toUPLC( dbn )
                     ),
                     new exprResT
-                )
+                );
+
+                /*
+                this causes to compile twice the term at compiletime
+
+                one time here when checking
+                and the second one at the actual compilation
+
+                @fixme this should be handled at actual compile time with a similar process done for HoistedUPLC
+
+                return hasMultipleRefsInTerm(
+                        BigInt( -1 ), // var introduced in the term itself
+                        multiRefsCase.toUPLC( 0 )
+                    ) ?
+                    multiRefsCase :
+                    // inline the value in the variable if not referenced more than once
+                    new Term(
+                        dbn => expr( varValue ).toUPLC( dbn ),
+                        new exprResT
+                    );
+                */
+            }
         };
     }
 }
