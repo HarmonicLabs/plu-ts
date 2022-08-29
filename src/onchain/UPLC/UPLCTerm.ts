@@ -26,6 +26,11 @@ type UPLCTerm
 
 export default UPLCTerm;
 
+/**
+ * **_O(1)_**
+ * @param {UPLCTerm} t ```UPLCTerm``` to check 
+ * @returns {boolean} ```true``` if the argument is instance of any of the ```UPLCTerm``` constructors, ```false``` otherwise
+ */
 export function isUPLCTerm( t: UPLCTerm ): t is UPLCTerm
 {
     const proto = Object.getPrototypeOf( t );
@@ -65,8 +70,6 @@ export function isPureUPLCTerm( t: UPLCTerm ): t is PureUPLCTerm
 
     return false;
 }
-
-
 
 export function isClosedTerm( term: UPLCTerm ): boolean
 {

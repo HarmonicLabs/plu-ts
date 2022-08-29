@@ -12,7 +12,7 @@ import Delay from "../../UPLC/UPLCTerms/Delay";
 import Force from "../../UPLC/UPLCTerms/Force";
 import Lambda from "../../UPLC/UPLCTerms/Lambda";
 import UPLCConst from "../../UPLC/UPLCTerms/UPLCConst";
-import ConstType, { constT, ConstTyTag, isWellFormedConstType } from "../../UPLC/UPLCTerms/UPLCConst/ConstType";
+import ConstType, { constT, isWellFormedConstType } from "../../UPLC/UPLCTerms/UPLCConst/ConstType";
 import ConstValue, { isConstValue } from "../../UPLC/UPLCTerms/UPLCConst/ConstValue";
 import UPLCVar from "../../UPLC/UPLCTerms/UPLCVar";
 import PType, { ToCtors } from "../PType";
@@ -168,6 +168,33 @@ export function pforce<PInstance extends PType>( ctor: new () => PInstance )
     }
 }
 
+export function plet<PVar extends PType, PExprResult extends PType>( varT: new () => PVar, exprResT: new () => PExprResult )
+    : ( varValue: Term<PVar> ) => {
+        in: ( expr: (value: Term<PVar>) => Term<PExprResult> ) => Term<PExprResult>
+    }
+{
+    return ( varValue: Term<PVar> ) => {
+        return {
+            in: ( expr: (value: Term<PVar>) => Term<PExprResult> ): Term<PExprResult> =>
+                new Term(
+                    dbn => new Application(
+                        new Lambda(
+                            expr( new Term(
+                                dbnExpr => new UPLCVar( dbn - ( dbnExpr + BigInt(1) ) ), // point to the lambda generated here
+                                new varT 
+                            )).toUPLC( dbn )
+                        ),
+                        varValue.toUPLC( dbn )
+                    ),
+                    new exprResT
+                )
+        };
+    }
+}
+
+/**
+ * **EXPERIMENTAL**
+ */
 function getReprConstType( jsValue: ConstValue | bigint | number | Buffer ): ConstType | undefined
 {
     switch( typeof jsValue )
@@ -212,6 +239,9 @@ function getReprConstType( jsValue: ConstValue | bigint | number | Buffer ): Con
     }
 }
 
+/**
+ * **EXPERIMENTAL**
+ */
 type InputToPTerm< Input extends any > =
     Input extends boolean ? Term<PBool> :
     Input extends Integer | bigint | number ? Term<PInt> :
