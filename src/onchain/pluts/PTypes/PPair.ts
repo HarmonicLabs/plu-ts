@@ -1,4 +1,5 @@
 import PType from "../PType";
+import PList from "./PList";
 
 export default class PPair<A extends PType, B extends PType > extends PType
 {
@@ -21,3 +22,5 @@ export default class PPair<A extends PType, B extends PType > extends PType
     override get ctor(): new () => PPair<PType, PType> { return PPair };
 
 }
+
+export type PMap<PKey extends PType, PValue extends PType> = PList<PPair<PKey,PValue>>

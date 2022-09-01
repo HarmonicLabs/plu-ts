@@ -8,7 +8,7 @@ export default class DataI
     private _int: Integer
     get int(): Integer { return this._int.clone() }
 
-    constructor( I: Integer | number | bigint )
+    constructor( I: Integer | number | bigint = 0 )
     {
         if( typeof I === "number" || typeof I === "bigint" )
         {

@@ -3,10 +3,12 @@ import DataConstr from "./DataConstr";
 import DataI from "./DataI";
 import DataList from "./DataList";
 import DataMap from "./DataMap";
+import DataPair from "./DataPair";
 
 type Data 
     = DataConstr
-    | DataMap
+    | DataPair<Data,Data>
+    | DataMap<Data,Data>
     | DataList
     | DataI
     | DataB;

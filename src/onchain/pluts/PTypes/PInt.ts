@@ -1,6 +1,7 @@
 import Cloneable from "../../../types/interfaces/Cloneable";
 import Integer from "../../../types/ints/Integer";
 import UPLCConst from "../../UPLC/UPLCTerms/UPLCConst";
+import TermInt, { addPIntMethods } from "../Builtins/TermInt";
 import PType from "../PType";
 import Term from "../Term";
 
@@ -28,7 +29,12 @@ export default class PInt extends PType
     }
 }
 
-export function pInt( int: Integer | number | bigint ): Term<PInt>
+export function pInt( int: Integer | number | bigint ): TermInt
 {
-    return new Term<PInt>( dbn => UPLCConst.int( int ), new PInt( int ) )
+    return addPIntMethods(
+        new Term<PInt>(
+            _dbn => UPLCConst.int( int ),
+            new PInt( int )
+        )
+    );
 }

@@ -1,4 +1,4 @@
-import { pchooseList } from "..";
+import { pchooseList } from "../Builtins";
 import Application from "../../../UPLC/UPLCTerms/Application";
 import Builtin from "../../../UPLC/UPLCTerms/Builtin";
 import Delay from "../../../UPLC/UPLCTerms/Delay";
@@ -7,7 +7,6 @@ import UPLCConst from "../../../UPLC/UPLCTerms/UPLCConst";
 import { constT } from "../../../UPLC/UPLCTerms/UPLCConst/ConstType";
 import PBool, { pBool } from "../../PTypes/PBool";
 import PInt from "../../PTypes/PInt";
-import { pList } from "../../PTypes/PList";
 
 describe.skip("pchooseList", () => {
 

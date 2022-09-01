@@ -10,6 +10,7 @@ import { curryFirst } from "../../../utils/ts/combinators";
 import { hasMultipleRefsInTerm } from "../../UPLC/UPLCTerm";
 import Application from "../../UPLC/UPLCTerms/Application";
 import Delay from "../../UPLC/UPLCTerms/Delay";
+import ErrorUPLC from "../../UPLC/UPLCTerms/ErrorUPLC";
 import Force from "../../UPLC/UPLCTerms/Force";
 import Lambda from "../../UPLC/UPLCTerms/Lambda";
 import UPLCConst from "../../UPLC/UPLCTerms/UPLCConst";
@@ -169,14 +170,14 @@ export function pforce<PInstance extends PType>( ctor: new () => PInstance )
     }
 }
 
-export function plet<PVar extends PType, PExprResult extends PType>( varT: new () => PVar, exprResT: new () => PExprResult )
-    : ( varValue: Term<PVar> ) => {
-        in: ( expr: (value: Term<PVar>) => Term<PExprResult> ) => Term<PExprResult>
+export function plet< PVar extends PType, TermPVar extends Term<PVar> & {}, PExprResult extends PType>( varT: new () => PVar, exprResT: new () => PExprResult )
+    : ( varValue: TermPVar ) => {
+        in: ( expr: (value: TermPVar) => Term<PExprResult> ) => Term<PExprResult>
     }
 {
-    return ( varValue: Term<PVar> ) => {
+    return ( varValue: TermPVar ) => {
         return {
-            in: ( expr: (value: Term<PVar>) => Term<PExprResult> ): Term<PExprResult> => {
+            in: ( expr: (value: TermPVar) => Term<PExprResult> ): Term<PExprResult> => {
 
                 // const multiRefsCase =
                 return new Term(
@@ -185,7 +186,7 @@ export function plet<PVar extends PType, PExprResult extends PType>( varT: new (
                             expr( new Term(
                                 dbnExpr => new UPLCVar( dbn - ( dbnExpr + BigInt(1) ) ), // point to the lambda generated here
                                 new varT 
-                            )).toUPLC( dbn )
+                            ) as TermPVar ).toUPLC( dbn )
                         ),
                         varValue.toUPLC( dbn )
                     ),
@@ -193,7 +194,7 @@ export function plet<PVar extends PType, PExprResult extends PType>( varT: new (
                 );
 
                 /*
-                this causes to compile twice the term at compiletime
+                this causes to compile twice the term at compile-time
 
                 one time here when checking
                 and the second one at the actual compilation
@@ -215,6 +216,15 @@ export function plet<PVar extends PType, PExprResult extends PType>( varT: new (
         };
     }
 }
+
+export function perror<MockT extends PType>( mockCtor: new () => MockT ): Term<MockT>
+{
+    return new Term(
+        _dbn => new ErrorUPLC,
+        new mockCtor
+    );
+}
+
 
 /**
  * **EXPERIMENTAL**

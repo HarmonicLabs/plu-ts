@@ -1,6 +1,5 @@
 import { papp } from "..";
-import { padd } from "../../Builtins";
-import { pint } from "../../PTypes/PInt";
+import { padd } from "../../Prelude/Builtins";
 
 
 describe("plam", () => {

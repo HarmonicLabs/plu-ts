@@ -1,35 +1,32 @@
 import Data, { isData } from ".";
 import JsRuntime from "../../utils/JsRuntime";
 import Cloneable from "../interfaces/Cloneable";
+import DataPair from "./DataPair";
 
 
-export type DataPair = [Data,Data];
-
-export default class DataMap
-    implements Cloneable<DataMap>
+export default class DataMap<DataKey extends Data, DataValue extends Data>
+    implements Cloneable<DataMap<DataKey,DataValue>>
 {
-    private _map: DataPair[];
-    get map(): DataPair[] { return this._map.map( pair => [ pair[0].clone(), pair[1].clone() ] ) };
+    private _map: DataPair<DataKey, DataValue>[];
+    get map(): DataPair<DataKey, DataValue>[] { return this._map.map( pair => pair.clone() ) };
 
-    constructor( map: DataPair[] )
+    constructor( map: DataPair<DataKey, DataValue>[] )
     {
         JsRuntime.assert(
-            map.every( entry => {
-                return (
-                    Array.isArray( entry ) && entry.length === 2 &&
-                    isData( entry[0] ) && isData( entry[1] )
-                )
-            }),
-            "invalid map passed to constructor"
+            map.every( entry =>
+                Object.getPrototypeOf( entry ) === DataPair.prototype &&
+                isData( entry.fst ) && isData( entry.snd )
+            ),
+            "invalid map passed to 'DataPair' constructor"
         );
 
         this._map = map;
     }
 
-    clone(): DataMap
+    clone(): DataMap<DataKey,DataValue>
     {
         return new DataMap(
-            this._map.map( pair => [ pair[0].clone(), pair[1].clone() ] )
+            this._map.map( pair => pair.clone() )
         );
     }
 }

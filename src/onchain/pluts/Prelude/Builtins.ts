@@ -1,27 +1,44 @@
 import BasePlutsError from "../../../errors/BasePlutsError";
+import Pair from "../../../types/structs/Pair";
 import ObjectUtils from "../../../utils/ObjectUtils";
-import { Head, Tail } from "../../../utils/ts";
+import { Head, ReturnT, Tail } from "../../../utils/ts";
 import Application from "../../UPLC/UPLCTerms/Application";
 import Builtin from "../../UPLC/UPLCTerms/Builtin";
+import Lambda from "../../UPLC/UPLCTerms/Lambda";
 import UPLCConst from "../../UPLC/UPLCTerms/UPLCConst";
+import UPLCVar from "../../UPLC/UPLCTerms/UPLCVar";
 import PType, { ToCtors } from "../PType";
-import PBool from "../PTypes/PBool";
+import PBool, { pBool } from "../PTypes/PBool";
 import PByteString from "../PTypes/PByteString";
 import PData from "../PTypes/PData";
+import PDataBS from "../PTypes/PData/PDataBS";
+import PDataConstr from "../PTypes/PData/PDataConstr";
+import PDataInt from "../PTypes/PData/PDataInt";
+import PDataList from "../PTypes/PData/PDataList";
+import PDataMap from "../PTypes/PData/PDataMap";
 import PDelayed from "../PTypes/PDelayed";
 import PFn from "../PTypes/PFn";
 import PLam, { TermFn } from "../PTypes/PFn/PLam";
 import PInt from "../PTypes/PInt";
 import PList from "../PTypes/PList";
-import PPair from "../PTypes/PPair";
-import PString, { pStr } from "../PTypes/PString";
+import PPair, { PMap } from "../PTypes/PPair";
+import PString from "../PTypes/PString";
 import PUnit from "../PTypes/PUnit";
-import { papp, pdelay, pforce, plam } from "../Syntax";
+import { papp, pdelay, pfn, pforce, plam } from "../Syntax";
 import Term from "../Term";
+import phoist, { HoistedTerm } from "../Term/HoistedTerm";
+import TermBool, { addPBoolMethods } from "./TermBool";
+import TermBS, { addPByteStringMethods } from "./TermBS";
+import TermInt, { addPIntMethods } from "./TermInt";
+import TermStr, { addPStringMethods } from "./TermStr";
 
-function addApplications<Ins extends [ PType, ...PType[] ], Out extends PType>
-    ( lambdaTerm: Term< PFn< Ins, Out > >, types: ToCtors<[ ...Ins, Out ]> )
-    : TermFn< Ins, Out >
+function addApplications<Ins extends [ PType, ...PType[] ], Out extends PType, TermOutput extends TermFn< Ins, Out > = TermFn< Ins, Out >>
+    (
+        lambdaTerm: Term< PFn< Ins, Out > >,
+        types: ToCtors<[ ...Ins, Out ]>,
+        addOutputMethods?: ( termOut: Term<Out> ) => TermOutput
+    )
+    : TermOutput
 {
     const inTysLength = types.length - 1;
 
@@ -30,7 +47,16 @@ function addApplications<Ins extends [ PType, ...PType[] ], Out extends PType>
         return ObjectUtils.defineReadOnlyProperty(
             lambdaTerm,
             "$",
-            ( input: Term< Head<Ins> > ) => papp( types[ inTysLength ] )( lambdaTerm as any, input )
+            ( input: Term< Head<Ins> > ) => {
+                let output: any = papp( types[ inTysLength ] )( lambdaTerm as any, input );
+
+                if( addOutputMethods !== undefined )
+                {
+                    output = addOutputMethods( output );
+                }
+
+                return output;
+            }
         ) as any;
     }
 
@@ -43,7 +69,8 @@ function addApplications<Ins extends [ PType, ...PType[] ], Out extends PType>
             // Source provides no match for required element at position 0 in target
             addApplications< Tail<Ins>, Out >(
                 papp( PLam )( lambdaTerm as any, input ) as any,
-                types.slice( 1 )
+                types.slice( 1 ),
+                addOutputMethods
             )
     ) as any;
 }
@@ -61,79 +88,377 @@ function makePLamObj<A extends PType,B extends PType, Cs extends PType[]>
     return new PLam( a, makePLamObj( b , ptypes[0] , ...ptypes.slice(1) ) ) as MultiPLam<[A, B, ...Cs]>;
 }
 
-function intBinOp<Out extends PType>( builtin: Builtin, out: new () => Out ): TermFn<[ PInt, PInt ], Out >
-{
-    return addApplications<[ PInt, PInt ], Out>(
-        new Term(
-            dbn => builtin,
-            new PLam( new PInt , new PLam( new PInt , new out ) )
-        ), [ PInt, PInt, out ]
-    );
+type IntBinOPToInt = Term< PLam< PInt, PLam< PInt, PInt >>>
+& {
+    $: ( input: Term<PInt> ) => 
+        Term<PLam<PInt,PInt>>
+        & {
+            $: ( input: Term<PInt> ) => 
+                TermInt
+        }
 }
 
+function intBinOpToInt( builtin: Builtin )
+    : IntBinOPToInt
+{
+    const op = new Term(
+        _dbn => builtin,
+        new PLam( new PInt , new PLam( new PInt , new PInt ) )
+    );
+
+    return  ObjectUtils.defineReadOnlyProperty(
+        op,
+        "$",
+        ( fstIn: Term<PInt> ): Term<PLam<PInt, PInt>> => {
+            const oneIn = papp( PLam )( op, fstIn );
+
+            return ObjectUtils.defineReadOnlyProperty(
+                oneIn,
+                "$",
+                ( sndIn: Term<PInt> ): TermInt => {
+                    return addPIntMethods( papp( PInt )( oneIn as any, sndIn ) )
+                }
+            ) as any;
+        }
+    ) as any;
+}
+
+type IntBinOPToBool = Term< PLam< PInt, PLam< PInt, PInt >>>
+& {
+    $: ( input: Term<PInt> ) => 
+        Term<PLam<PInt,PInt>>
+        & {
+            $: ( input: Term<PInt> ) => 
+                TermBool
+        }
+}
+
+function intBinOpToBool( builtin: Builtin )
+    : IntBinOPToBool
+{
+    const op = new Term(
+        _dbn => builtin,
+        new PLam( new PInt , new PLam( new PInt , new PBool ) )
+    );
+
+    return  ObjectUtils.defineReadOnlyProperty(
+        op,
+        "$",
+        ( fstIn: Term<PInt> ): Term<PLam<PInt, PInt>> => {
+            const oneIn = papp( PLam )( op, fstIn );
+
+            return ObjectUtils.defineReadOnlyProperty(
+                oneIn,
+                "$",
+                ( sndIn: Term<PInt> ): TermBool => {
+                    return addPBoolMethods( papp( PBool )( oneIn as any, sndIn ) )
+                }
+            ) as any;
+        }
+    ) as any;
+}
+
+/**
+ * @deprecated use 'byteStrBinOpTo<Output>'
+*/
 function byteStringBinOp<Out extends PType>( builtin: Builtin, out: new () => Out ): TermFn<[ PByteString, PByteString ], Out >
 {
     return addApplications<[ PByteString, PByteString ], Out>(
         new Term(
-            dbn => builtin,
+            _dbn => builtin,
             new PLam( new PByteString , new PLam( new PByteString , new out ) )
         ), [ PByteString, PByteString, out ]
     );
 }
 
-export const padd: TermFn<[ PInt , PInt ], PInt >    = intBinOp< PInt >( Builtin.addInteger, PInt );
-export const psub: TermFn<[ PInt , PInt ], PInt >    = intBinOp< PInt >( Builtin.subtractInteger, PInt );
-export const pmult: TermFn<[ PInt , PInt ], PInt >   = intBinOp< PInt >( Builtin.multiplyInteger, PInt );
-export const pdiv: TermFn<[ PInt , PInt ], PInt >    = intBinOp< PInt >( Builtin.divideInteger, PInt );
-export const pquot: TermFn<[ PInt , PInt ], PInt >   = intBinOp< PInt >( Builtin.quotientInteger, PInt );
-export const prem: TermFn<[ PInt , PInt ], PInt >    = intBinOp< PInt >( Builtin.remainderInteger, PInt );
-export const pmod: TermFn<[ PInt , PInt ], PInt >    = intBinOp< PInt >( Builtin.modInteger, PInt );
+type ByteStrBinOPToBS = Term< PLam< PByteString, PLam< PByteString, PByteString >>>
+& {
+    $: ( input: Term<PByteString> ) => 
+        Term<PLam<PByteString,PByteString>>
+        & {
+            $: ( input: Term<PByteString> ) => 
+                TermBS
+        }
+}
 
-export const peqInt: TermFn<[ PInt , PInt ], PBool > = intBinOp< PBool >( Builtin.equalsInteger, PBool );
-export const plessInt: TermFn<[ PInt , PInt ], PBool > = intBinOp< PBool >( Builtin.lessThanInteger, PBool );
-export const plessEqInt: TermFn<[ PInt , PInt ], PBool > = intBinOp< PBool >( Builtin.lessThanEqualInteger, PBool );
+function byteStrBinOpToBS( builtin: Builtin )
+    : ByteStrBinOPToBS
+{
+    const op = new Term(
+        _dbn => builtin,
+        new PLam( new PByteString , new PLam( new PByteString , new PByteString ) )
+    );
 
-export const pappendBs: TermFn<[ PByteString , PByteString ], PByteString > = byteStringBinOp< PByteString >( Builtin.appendByteString, PByteString );
-export const pconstBs: TermFn<[ PInt , PByteString ], PByteString > =
-    addApplications< [ PInt, PByteString ], PByteString >(
-        new Term(
-            dbn => Builtin.consByteString,
-            new PLam( new PInt, new PLam( new PByteString, new PByteString ) )
-        ),
-        [ PInt, PByteString, PByteString ]
+    return  ObjectUtils.defineReadOnlyProperty(
+        op,
+        "$",
+        ( fstIn: Term<PByteString> ): Term<PLam<PByteString, PByteString>> => {
+            const oneIn = papp( PLam )( op, fstIn );
+
+            return ObjectUtils.defineReadOnlyProperty(
+                oneIn,
+                "$",
+                ( sndIn: Term<PByteString> ): TermBS => {
+                    return addPByteStringMethods( papp( PByteString )( oneIn as any, sndIn ) )
+                }
+            ) as any;
+        }
+    ) as any;
+}
+
+type ByteStrBinOPToBool = Term< PLam< PByteString, PLam< PByteString, PBool >>>
+& {
+    $: ( input: Term<PByteString> ) => 
+        Term<PLam<PByteString,PBool>>
+        & {
+            $: ( input: Term<PByteString> ) => 
+                TermBool
+        }
+}
+
+function byteStrBinOpToBool( builtin: Builtin )
+    : ByteStrBinOPToBool
+{
+    const op = new Term(
+        _dbn => builtin,
+        new PLam( new PByteString , new PLam( new PByteString , new PBool ) )
     );
-export const psliceBs: TermFn<[ PInt , PInt, PByteString ], PByteString > = 
-    addApplications<[ PInt , PInt, PByteString ], PByteString >(
-        new Term(
-            _dbn => Builtin.sliceByteString,
-            new PLam( new PInt, new PLam( new PInt, new PLam( new PByteString , new PByteString) ) )
-        ),
-        [ PInt , PInt, PByteString, PByteString ]
+
+    return  ObjectUtils.defineReadOnlyProperty(
+        op,
+        "$",
+        ( fstIn: Term<PByteString> ): Term<PLam<PByteString, PBool>> => {
+            const oneIn = papp( PLam )( op, fstIn );
+
+            return ObjectUtils.defineReadOnlyProperty(
+                oneIn,
+                "$",
+                ( sndIn: Term<PByteString> ): TermBool => {
+                    return addPBoolMethods( papp( PBool )( oneIn as any, sndIn ) )
+                }
+            ) as any;
+        }
+    ) as any;
+}
+
+export function pflip< A extends PType, B extends PType, ReturnT extends PType>
+    ( aCtor: new () => A, bCtor: new () => B, returnCtor: new () => ReturnT )
+        : TermFn<[ PFn<[ A, B ], ReturnT > ], PFn<[ B, A ], ReturnT>>
+        & {
+            $: ( toBeFlipped: TermFn<[A, B], ReturnT> ) => TermFn<[ B, A ], ReturnT>
+        }
+{
+    return phoist(
+        plam<PFn<[ A, B ], ReturnT >, PFn<[ B, A ], ReturnT >>( PLam, PLam )
+        (( toBeFlipped: Term<PFn<[ A, B ], ReturnT>>): TermFn<[ B, A ], ReturnT> => {
+            return new Term(
+                dbn => new Lambda( // b
+                    new Lambda( // a
+                        new Application(
+                            new Application(
+                                toBeFlipped.toUPLC(dbn + BigInt( 2 )),
+                                new UPLCVar( 0 ) // a
+                            ),
+                            new UPLCVar( 1 ) // b
+                        )
+                    )
+                ),
+                new PLam( new bCtor, new PLam( new aCtor, new returnCtor ) )
+            ) as any
+        })
+    ) as any;        
+}
+
+export const padd   = intBinOpToInt( Builtin.addInteger);
+export const psub   = intBinOpToInt( Builtin.subtractInteger);
+export const pmult  = intBinOpToInt( Builtin.multiplyInteger);
+export const pdiv   = intBinOpToInt( Builtin.divideInteger);
+export const pquot  = intBinOpToInt( Builtin.quotientInteger);
+export const prem   = intBinOpToInt( Builtin.remainderInteger);
+export const pmod   = intBinOpToInt( Builtin.modInteger);
+
+export const peqInt     = intBinOpToBool( Builtin.equalsInteger );
+export const plessInt   = intBinOpToBool( Builtin.lessThanInteger );
+export const plessEqInt = intBinOpToBool( Builtin.lessThanEqualInteger );
+
+export const pgreaterInt: IntBinOPToBool =
+    phoist(
+        pfn<[ PInt , PInt ], PBool>( PInt, PInt, PBool )(
+            ( a: Term<PInt>, b: Term<PInt> ): TermBool => plessInt.$( b ).$( a )
+        )
+    ) as any;
+
+export const pgreaterEqInt: IntBinOPToBool =
+    phoist(
+        pfn<[ PInt , PInt ], PBool>( PInt, PInt, PBool )(
+            ( a: Term<PInt>, b: Term<PInt> ): TermBool => plessEqInt.$( b ).$( a )
+        )
+    ) as any;
+
+export const pappendBs = byteStrBinOpToBS( Builtin.appendByteString );
+export const pconsBs: Term<PLam<PInt, PLam< PByteString, PByteString>>>
+& {
+    $: ( input: Term<PInt> ) => 
+        Term<PLam<PByteString,PByteString>>
+        & {
+            $: ( input: Term<PByteString> ) => 
+                TermBS
+        }
+} = (() => {
+    const consByteString = new Term(
+        _dbn => Builtin.consByteString,
+        new PLam( new PInt , new PLam( new PByteString , new PByteString ) )
     );
-export const plengthBs: TermFn<[ PByteString ], PInt > =
-    addApplications<[ PByteString ], PInt >(
-        new Term(
-            dbn => Builtin.lengthOfByteString,
+
+    return  ObjectUtils.defineReadOnlyProperty(
+        consByteString,
+        "$",
+        ( byte: Term<PInt> ): Term<PLam<PByteString, PByteString>> => {
+            const consByteStringFixedByte = papp( PLam )( consByteString, byte );
+
+            return ObjectUtils.defineReadOnlyProperty(
+                consByteStringFixedByte,
+                "$",
+                ( toByteString: Term<PByteString> ): TermBS => {
+                    return addPByteStringMethods( papp( PByteString )( consByteStringFixedByte as any, toByteString ) )
+                }
+            ) as any;
+        }
+    ) as any;
+})()
+
+export const psliceBs: Term<PLam<PInt, PLam< PInt, PLam< PByteString, PByteString>>>>
+& {
+    $: ( fromIndex: Term<PInt> ) => 
+        Term<PLam< PInt, PLam<PByteString,PByteString>>>
+        & {
+            $: ( ofLength: Term<PInt> ) => 
+                Term<PLam<PByteString,PByteString>>
+                & {
+                    $: ( onByteString: Term<PByteString> ) => TermBS
+                }
+        }
+} = (() => {
+    const sliceBs = new Term(
+        _dbn => Builtin.sliceByteString,
+        new PLam( new PInt , new PLam( new PInt , new PLam( new PByteString, new PByteString ) ) )
+    );
+
+    return ObjectUtils.defineReadOnlyProperty(
+        sliceBs,
+        "$",
+        ( fromIndex: Term<PInt> ): Term<PLam< PInt, PLam<PByteString,PByteString>>>
+        & {
+            $: ( ofLength: Term<PInt> ) => 
+                Term<PLam<PByteString,PByteString>>
+                & {
+                    $: ( onByteString: Term<PByteString> ) => TermBS
+                }
+        } =>{
+            const sliceBsFromIdx = papp( PLam )( sliceBs, fromIndex );
+            
+            return ObjectUtils.defineReadOnlyProperty(
+                sliceBsFromIdx,
+                "$",
+                ( ofLength: Term<PInt> ): Term<PLam< PInt, PLam<PByteString,PByteString>>>
+                & {
+                    $: ( ofLength: Term<PInt> ) => 
+                        Term<PLam<PByteString,PByteString>>
+                        & {
+                            $: ( onByteString: Term<PByteString> ) => TermBS
+                        }
+                } => {
+                    const sliceBsFromIdxOfLength = papp( PLam )( sliceBsFromIdx as any, ofLength );
+
+                    return ObjectUtils.defineReadOnlyProperty(
+                        sliceBsFromIdxOfLength,
+                        "$",
+                        ( onByteString: Term<PByteString> ): TermBS =>
+                            addPByteStringMethods( papp( PByteString )( sliceBsFromIdxOfLength as any, onByteString ) )
+                    ) as any
+                }
+            ) as any
+        }
+    )
+})();
+
+export const plengthBs
+    :TermFn<[ PByteString ], PInt >
+    & {
+        $: ( ofByteString: Term<PByteString> ) => TermInt
+    }
+    = (() => {
+        const lenBS = new Term(
+            _dbn => Builtin.lengthOfByteString,
             new PLam( new PByteString, new PInt )
-        ),
-        [ PByteString, PInt ]
-    );
-export const pindexBs: TermFn<[ PByteString, PInt ], PInt > =
-    addApplications<[ PByteString, PInt ], PInt >(
-        new Term(
-            dbn => Builtin.indexByteString,
-            new PLam( new PByteString, new PLam( new PInt, new PInt ) )
-        ),
-        [ PByteString, PInt, PInt ]
-    );
-export const peqBs: TermFn<[ PByteString, PByteString ], PBool > = byteStringBinOp< PBool >( Builtin.equalsByteString, PBool );
-export const plessBs: TermFn<[ PByteString, PByteString ], PBool > = byteStringBinOp< PBool >( Builtin.lessThanByteString, PBool );
-export const plessEqBs: TermFn<[ PByteString, PByteString ], PBool > = byteStringBinOp< PBool >( Builtin.lessThanEqualsByteString, PBool );
+        );
+
+        return ObjectUtils.defineReadOnlyProperty(
+            lenBS,
+            "$",
+            ( ofByteString: Term<PByteString> ): TermInt =>
+                addPIntMethods( papp( PInt )( lenBS, ofByteString ) )
+        );
+    })();
+
+export const pindexBs
+    : Term<PLam<PByteString, PLam<PInt , PInt>>>
+    & {
+        $: ( ofByteString: Term<PByteString> ) =>
+            Term<PLam<PInt, PInt>>
+            & {
+                $: ( index: Term<PInt> ) => TermInt
+            }
+    }
+    = (() => {
+        const idxBS = new Term(
+                _dbn => Builtin.indexByteString,
+                new PLam( new PByteString, new PLam( new PInt, new PInt ) )
+            );
+        
+        return ObjectUtils.defineReadOnlyProperty(
+            idxBS,
+            "$",
+            ( ofByteString: Term<PByteString> ):
+                Term<PLam<PInt, PInt>>
+                & {
+                    $: ( index: Term<PInt> ) => TermInt
+                } =>
+            {
+                const idxOfBS = papp( PLam )( idxBS, ofByteString );
+
+                return ObjectUtils.defineReadOnlyProperty(
+                    idxOfBS,
+                    "$",
+                    ( index: Term<PInt> ): TermInt =>
+                        addPIntMethods( papp( PInt )( idxOfBS as any, index ) )
+                ) as any;
+            }
+        )
+    })();
+
+export const peqBs      = byteStrBinOpToBool( Builtin.equalsByteString );
+export const plessBs    = byteStrBinOpToBool( Builtin.lessThanByteString );
+export const plessEqBs  = byteStrBinOpToBool( Builtin.lessThanEqualsByteString );
+
+export const pgreaterBS: ByteStrBinOPToBool =
+    phoist(
+        pfn<[ PByteString , PByteString ], PBool>( PByteString, PByteString, PBool )(
+            ( a: Term<PByteString>, b: Term<PByteString> ): TermBool => plessBs.$( b ).$( a )
+        )
+    ) as any;
+
+export const pgreaterEqBS: ByteStrBinOPToBool =
+    phoist(
+        pfn<[ PByteString , PByteString ], PBool>( PByteString, PByteString, PBool )(
+            ( a: Term<PByteString>, b: Term<PByteString> ): TermBool => plessEqBs.$( b ).$( a )
+        )
+    ) as any;
 
 export const psha2_256: TermFn<[ PByteString ], PByteString > =
     addApplications<[ PByteString ], PByteString >(
         new Term(
-            dbn => Builtin.sha2_256,
+            _dbn => Builtin.sha2_256,
             new PLam( new PByteString , new PByteString )
         ),
         [ PByteString, PByteString ]
@@ -141,7 +466,7 @@ export const psha2_256: TermFn<[ PByteString ], PByteString > =
 export const psha3_256: TermFn<[ PByteString ], PByteString > =
     addApplications<[ PByteString ], PByteString >(
         new Term(
-            dbn => Builtin.sha3_256,
+            _dbn => Builtin.sha3_256,
             new PLam( new PByteString , new PByteString )
         ),
         [ PByteString, PByteString ]
@@ -149,7 +474,7 @@ export const psha3_256: TermFn<[ PByteString ], PByteString > =
 export const pblake2b_256: TermFn<[ PByteString ], PByteString > =
     addApplications<[ PByteString ], PByteString >(
         new Term(
-            dbn => Builtin.blake2b_256,
+            _dbn => Builtin.blake2b_256,
             new PLam( new PByteString , new PByteString )
         ),
         [ PByteString, PByteString ]
@@ -175,39 +500,105 @@ export const pverifyEd25519: TermFn<[ PByteString, PByteString, PByteString ], P
         [ PByteString, PByteString, PByteString, PBool ]
     );
 
-export const pappendStr: TermFn<[ PString, PString ], PString > =
-    addApplications<[ PString, PString ], PString >(
-        new Term(
-            _dbn => Builtin.appendString,
-            new PLam( new PString, new PLam( new PString , new PString ) )
-        ),
-        [ PString, PString, PString ]
-    );
-export const peqStr: TermFn<[ PString, PString ], PBool > =
-    addApplications<[ PString, PString ], PBool >(
-        new Term(
-            dbn => Builtin.equalsString,
-            new PLam( new PString, new PLam( new PString, new PBool ) )
-        ),
-        [ PString, PString, PBool ]
+
+
+type StrBinOPToStr = Term< PLam< PString, PLam< PString, PString >>>
+& {
+    $: ( input: Term<PString> ) => 
+        Term<PLam<PString,PString>>
+        & {
+            $: ( input: Term<PString> ) => 
+                TermStr
+        }
+}
+
+export const pappendStr: StrBinOPToStr = (() => {
+    const op = new Term(
+        _dbn => Builtin.appendString,
+        new PLam( new PString , new PLam( new PString , new PString ) )
     );
 
-export const pencodeUtf8: TermFn<[ PString ], PByteString > =
-    addApplications<[ PString ], PByteString >(
-        new Term(
+    return  ObjectUtils.defineReadOnlyProperty(
+        op,
+        "$",
+        ( fstIn: Term<PString> ): Term<PLam<PString, PString>> => {
+            const oneIn = papp( PLam )( op, fstIn );
+
+            return ObjectUtils.defineReadOnlyProperty(
+                oneIn,
+                "$",
+                ( sndIn: Term<PString> ): TermStr => {
+                    return addPStringMethods( papp( PString )( oneIn as any, sndIn ) )
+                }
+            ) as any;
+        }
+    ) as any;
+})();
+
+type StrBinOPToBool = Term< PLam< PString, PLam< PString, PBool >>>
+& {
+    $: ( input: Term<PString> ) => 
+        Term<PLam<PString,PBool>>
+        & {
+            $: ( input: Term<PString> ) => 
+                TermBool
+        }
+}
+export const peqStr: StrBinOPToBool = (() => {
+    const op = new Term(
+        _dbn => Builtin.equalsString,
+        new PLam( new PString , new PLam( new PString , new PBool ) )
+    );
+
+    return  ObjectUtils.defineReadOnlyProperty(
+        op,
+        "$",
+        ( fstIn: Term<PString> ): Term<PLam<PString, PBool>> => {
+            const oneIn = papp( PLam )( op, fstIn );
+
+            return ObjectUtils.defineReadOnlyProperty(
+                oneIn,
+                "$",
+                ( sndIn: Term<PString> ): TermBool => {
+                    return addPBoolMethods( papp( PBool )( oneIn as any, sndIn ) )
+                }
+            ) as any;
+        }
+    ) as any;
+})();
+
+export const pencodeUtf8: Term<PLam<PString, PByteString>>
+& {
+    $: ( str: Term<PString> ) => TermBS
+} = (() => {
+    const encodeUtf8  =new Term(
             _dbn => Builtin.encodeUtf8,
             new PLam( new PString, new PByteString )
-        ),
-        [ PString, PByteString ]
-    );
-export const pdecodeUtf8: TermFn<[ PByteString ], PString > =
-    addApplications<[ PByteString ], PString >(
-        new Term(
+        );
+
+    return ObjectUtils.defineReadOnlyProperty(
+        encodeUtf8,
+        "$",
+        ( str: Term<PString> ): TermBS => addPByteStringMethods( papp( PByteString )( encodeUtf8 as any, str ) )
+    )
+})()
+
+export const pdecodeUtf8: Term<PLam<PByteString, PString>>
+& {
+    $: ( str: Term<PByteString> ) => TermStr
+} = (() => {
+    const decodeUtf8  =new Term(
             _dbn => Builtin.decodeUtf8,
             new PLam( new PByteString, new PString )
-        ),
-        [ PByteString, PString ]
-    );
+        );
+
+    return ObjectUtils.defineReadOnlyProperty(
+        decodeUtf8,
+        "$",
+        ( byteStr: Term<PByteString> ): TermStr => addPStringMethods( papp( PString )( decodeUtf8 as any, byteStr ) )
+    )
+})()
+
 
 export function pstrictIf<ReturnT extends PType>( returnT: new () => ReturnT ): TermFn<[ PBool, ReturnT, ReturnT ], ReturnT>
 {
@@ -220,7 +611,7 @@ export function pstrictIf<ReturnT extends PType>( returnT: new () => ReturnT ): 
     );
 }
 
-export function pif<ReturnT extends PType>( returnT: new () => ReturnT )
+export function pif<ReturnT extends PType>( returnT: new () => ReturnT = PType as any )
     : Term<PLam<PBool, PLam<ReturnT, PLam<ReturnT, ReturnT>>>> 
     & {
         $: (condition: Term<PBool>) =>
@@ -301,6 +692,67 @@ export function pif<ReturnT extends PType>( returnT: new () => ReturnT )
         })()
     ) as any;
 }
+
+export const pnot
+    : Term<PLam<PBool, PBool>>
+    & {
+        $: ( bool: Term<PBool> ) => TermBool
+    }
+    =
+    phoist(
+        plam( PBool, PBool )
+        ( bool => 
+            addPBoolMethods(
+                pstrictIf( PBool ).$( bool )
+                .$( pBool( false ) )
+                .$( pBool( true  ) )
+            )
+        )
+    ) as any;
+
+export const pand
+    : Term<PLam<PBool, PLam<PBool, PBool>>>
+    & {
+        $: ( bool: Term<PBool> ) =>
+            Term<PLam<PBool, PBool>>
+            & {
+                $: ( bool: Term<PBool> ) => TermBool
+            }
+    }
+    = phoist(
+        pfn<[ PBool, PBool ], PBool >( PBool, PBool, PBool )
+        (( a: Term<PBool>, b: Term<PBool> ) =>
+            addPBoolMethods(
+                pforce( PBool )(
+                    pstrictIf( PDelayed as new () => PDelayed<PBool> ).$( a )
+                    .$( pdelay( PBool )( b ) )
+                    .$( pBool( false ) as any )
+                )
+            )
+        )
+    ) as any;
+
+export const por
+    : Term<PLam<PBool, PLam<PBool, PBool>>>
+    & {
+        $: ( bool: Term<PBool> ) =>
+            Term<PLam<PBool, PBool>>
+            & {
+                $: ( bool: Term<PBool> ) => TermBool
+            }
+    }
+    = phoist(
+        pfn<[ PBool, PBool ], PBool >( PBool, PBool, PBool )
+        (( a: Term<PBool>, b: Term<PBool> ) =>
+            addPBoolMethods(
+                pforce( PBool )(
+                    pstrictIf( PDelayed as new () => PDelayed<PBool> ).$( a )
+                    .$( pBool( true ) as any )
+                    .$( pdelay( PBool )( b ) )
+                )
+            )
+        )
+    ) as any;
 
 export function pchooseUnit<ReturnT extends PType>( returnT: new () => ReturnT )
     : TermFn<[ PUnit, ReturnT ], ReturnT >
@@ -676,34 +1128,42 @@ export function pchooseData< ReturnT extends PType >( returnT: new () => ReturnT
     ) as any;
 }
 
-export const pconstrData: TermFn<[ PInt, PList<PData> ], PData >
-    = addApplications<[ PInt, PList<PData> ], PData >(
+export const pConstrToData: TermFn<[ PInt, PList<PData> ], PDataConstr >
+    = addApplications<[ PInt, PList<PData> ], PDataConstr >(
         new Term(
             _dbn => Builtin.constrData,
-            makePLamObj( new PInt, new PList([ new PData ]), new PData )
+            makePLamObj( new PInt, new PList([ new PData ]), new PDataConstr )
         ),
-        [ PInt, PList as new () => PList<PData>, PData ]
+        [ PInt, PList as new () => PList<PData>, PDataConstr ]
     );
 
-export const pmapData: TermFn<[ PList<PPair<PData, PData>> ], PData > 
-    = addApplications<[ PList<PPair<PData, PData>> ], PData >(
-        new Term<PLam<PList<PPair<PData,PData>>, PData>>(
+export function pMapToData<PDataKey extends PData, PDataVal extends PData>
+    ( keyCtor: new () => PDataKey, valCtor: new () => PDataVal )
+    : TermFn<[ PMap<PDataKey, PDataVal> ], PDataMap<PDataKey, PDataVal>>
+{
+    return addApplications<[ PList<PPair<PDataKey, PDataVal>> ], PDataMap<PDataKey, PDataVal> >(
+        new Term(
             _dbn => Builtin.mapData,
-            makePLamObj( new PList([ new PPair( new PData, new PData ) ]), new PData )
+            makePLamObj( new PList([ new PPair( new keyCtor, new valCtor ) ]), new PData )
         ),
-        [ PList as new () => PList<PPair<PData,PData>>, PData ]
+        [ PList as new () => PList<PPair<PDataKey,PDataVal>>, PData ]
     );
+}
 
-export const plistData: TermFn<[ PList<PData> ], PData > 
-    = addApplications<[ PList<PData> ], PData >(
-        new Term<PLam<PList<PData>, PData >>(
+export function pListToData<PDataListElem extends PData>
+    ( dataListElemCtor: new () => PDataListElem )
+    : TermFn<[ PList<PDataListElem> ], PDataList<PDataListElem> >
+{
+    return addApplications<[ PList<PDataListElem> ], PDataList<PDataListElem>>(
+        new Term(
             _dbn => Builtin.listData,
-            makePLamObj( new PList([ new PData ]), new PData )
+            makePLamObj( new PList([ new dataListElemCtor ]), new PDataList )
         ),
-        [ PList as new () => PList<PData>, PData ]
+        [ PList , PDataList ]
     );
+} 
 
-export const piData: TermFn<[ PInt ], PData > 
+export const pIntToData: TermFn<[ PInt ], PDataInt > 
     = addApplications<[ PInt ], PData >(
         new Term<PLam<PInt, PData >>(
             _dbn => Builtin.iData,
@@ -712,7 +1172,7 @@ export const piData: TermFn<[ PInt ], PData >
         [ PInt, PData ]
     );
 
-export const pbData: TermFn<[ PByteString ], PData > 
+export const pBSToData: TermFn<[ PByteString ], PDataBS > 
     = addApplications<[ PByteString ], PData >(
         new Term<PLam<PByteString, PData >>(
             _dbn => Builtin.bData,
@@ -720,6 +1180,64 @@ export const pbData: TermFn<[ PByteString ], PData >
         ),
         [ PByteString, PData ]
     );
+
+export const punConstrData: TermFn<[ PDataConstr ], PPair<PInt, PList<PData>>>
+    = addApplications<[ PDataConstr ], PPair<PInt, PList<PData>>>(
+        new Term(
+            _dbn => Builtin.unConstrData,
+            new PLam( new PDataConstr, new PPair( new PInt, new PList([ new PData ]) ) )
+        ),
+        [ PData, PPair ]
+    );
+    
+export function punMapData<PDataKey extends PData, PDataVal extends PData>
+    ( keyCtor: new () => PDataKey, valCtor: new () => PDataVal )
+    : TermFn<[ PData ], PList<PPair<PData, PData>>>
+    {
+        return addApplications<[ PData ], PList<PPair<PData, PData>>>(
+            new Term(
+                _dbn => Builtin.unMapData,
+                new PLam( new PData, new PList([ new PPair( new keyCtor, new valCtor ) ]))
+            ),
+            [ PData, PList ]
+        );
+
+    }
+
+export const punListData: TermFn<[ PData ], PList<PData>>
+    = addApplications<[ PData ], PList<PData>>(
+        new Term(
+            _dbn => Builtin.unListData,
+            new PLam( new PData, new PList([ new PData ]))
+        ),
+        [ PData, PList ]
+    );
+
+export const punIData: TermFn<[ PDataInt ], PInt>
+    = addApplications<[ PDataInt ], PInt>(
+        new Term(
+            _dbn => Builtin.unIData,
+            new PLam( new PData, new PInt)
+        ),
+        [ PData, PInt ]
+    );
+
+export const punBData: Term<PLam<PDataBS, PByteString>>
+& {
+    $: ( dataBS: Term<PDataBS> ) => TermBS
+} = (() => {
+    const unBData = new Term(
+        _dbn => Builtin.unBData,
+        new PLam( new PDataBS, new PByteString)
+    );
+
+    return ObjectUtils.defineReadOnlyProperty(
+        unBData,
+        "$",
+        ( dataBS: Term<PDataBS> ): TermBS =>
+            addPByteStringMethods( papp( PByteString )( unBData, dataBS ) )
+    );
+})()
 
 export const peqData: TermFn<[ PData, PData ], PBool >
     = addApplications<[ PData, PData ], PBool >(
