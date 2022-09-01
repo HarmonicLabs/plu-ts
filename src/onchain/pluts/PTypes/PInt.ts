@@ -1,7 +1,7 @@
 import Cloneable from "../../../types/interfaces/Cloneable";
 import Integer from "../../../types/ints/Integer";
 import UPLCConst from "../../UPLC/UPLCTerms/UPLCConst";
-import TermInt, { addPIntMethods } from "../Builtins/TermInt";
+import TermInt, { addPIntMethods } from "../Prelude/TermInt";
 import PType from "../PType";
 import Term from "../Term";
 

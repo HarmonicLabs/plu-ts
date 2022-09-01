@@ -1,4 +1,4 @@
-import { padd } from "..";
+import { padd } from "../Builtins";
 import { pInt } from "../../PTypes/PInt";
 
 test("padd", () => {

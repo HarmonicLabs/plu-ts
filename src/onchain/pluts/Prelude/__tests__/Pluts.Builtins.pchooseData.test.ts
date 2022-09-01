@@ -1,4 +1,4 @@
-import { pchooseData } from "..";
+import { pchooseData } from "../Builtins";
 import DataConstr from "../../../../types/Data/DataConstr";
 import Application from "../../../UPLC/UPLCTerms/Application";
 import Builtin from "../../../UPLC/UPLCTerms/Builtin";

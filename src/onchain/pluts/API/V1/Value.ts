@@ -1,6 +1,6 @@
-import { peqInt, pif, plengthBs, punBData } from "../../Builtins";
-import TermBS from "../../Builtins/TermBS";
-import TermInt from "../../Builtins/TermInt";
+import { peqInt, pif, plengthBs, punBData } from "../../Prelude/Builtins";
+import TermBS from "../../Prelude/TermBS";
+import TermInt from "../../Prelude/TermInt";
 import PType from "../../PType";
 import PBool from "../../PTypes/PBool";
 import PByteString from "../../PTypes/PByteString";

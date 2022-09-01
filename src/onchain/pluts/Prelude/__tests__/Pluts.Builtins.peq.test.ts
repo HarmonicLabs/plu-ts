@@ -1,4 +1,4 @@
-import { peq, peqBs, peqData, peqInt, peqStr } from ".."
+import { peq, peqBs, peqData, peqInt, peqStr } from "../Builtins"
 import PByteString from "../../PTypes/PByteString";
 import PData from "../../PTypes/PData";
 import PInt from "../../PTypes/PInt"

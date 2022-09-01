@@ -1,4 +1,4 @@
-import { pif, pstrictIf } from "..";
+import { pif, pstrictIf } from "../Builtins";
 import Application from "../../../UPLC/UPLCTerms/Application";
 import Builtin from "../../../UPLC/UPLCTerms/Builtin";
 import Delay from "../../../UPLC/UPLCTerms/Delay";

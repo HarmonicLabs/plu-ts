@@ -1,4 +1,4 @@
-import { padd, psub, pmult, pdiv, pquot, prem, pmod, peqInt, plessInt, plessEqInt, pgreaterInt, pgreaterEqInt } from "."
+import { padd, psub, pmult, pdiv, pquot, prem, pmod, peqInt, plessInt, plessEqInt, pgreaterInt, pgreaterEqInt } from "./Builtins"
 import ObjectUtils from "../../../utils/ObjectUtils"
 import PInt from "../PTypes/PInt"
 import Term from "../Term"

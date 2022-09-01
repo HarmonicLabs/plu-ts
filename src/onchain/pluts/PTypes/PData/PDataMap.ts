@@ -3,7 +3,7 @@ import DataI from "../../../../types/Data/DataI";
 import DataMap from "../../../../types/Data/DataMap";
 import DataPair from "../../../../types/Data/DataPair";
 import UPLCConst from "../../../UPLC/UPLCTerms/UPLCConst";
-import { pMapToData, punMapData } from "../../Builtins";
+import { pMapToData, punMapData } from "../../Prelude/Builtins";
 import Term from "../../Term";
 import { PMap } from "../PPair";
 import PDataList from "./PDataList";
