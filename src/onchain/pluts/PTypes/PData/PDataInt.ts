@@ -4,6 +4,7 @@ import Integer from "../../../../types/ints/Integer";
 import UPLCConst from "../../../UPLC/UPLCTerms/UPLCConst";
 import { pIntToData, punIData } from "../../Prelude/Builtins";
 import Term from "../../Term";
+import Type from "../../Term/Type";
 import PInt from "../PInt";
 
 export default class PDataInt extends PData // (PData extends PType => PDataInt extends PType too)
@@ -17,8 +18,8 @@ export default class PDataInt extends PData // (PData extends PType => PDataInt 
 export function pDataI( int: number | bigint | Integer ): Term<PDataInt>
 {
     return new Term(
-        _dbn => UPLCConst.data( new DataI( int ) ),
-        new PDataInt( int )
+        Type.Data.Int,
+        _dbn => UPLCConst.data( new DataI( int ) )
     );
 }
 

@@ -27,6 +27,7 @@ import PUnit from "../PTypes/PUnit";
 import { papp, pdelay, pfn, pforce, plam } from "../Syntax";
 import Term from "../Term";
 import phoist, { HoistedTerm } from "../Term/HoistedTerm";
+import Type from "../Term/Type";
 import TermBool, { addPBoolMethods } from "./TermBool";
 import TermBS, { addPByteStringMethods } from "./TermBS";
 import TermInt, { addPIntMethods } from "./TermInt";
@@ -48,7 +49,7 @@ function addApplications<Ins extends [ PType, ...PType[] ], Out extends PType, T
             lambdaTerm,
             "$",
             ( input: Term< Head<Ins> > ) => {
-                let output: any = papp( types[ inTysLength ] )( lambdaTerm as any, input );
+                let output: any = papp( lambdaTerm, input );
 
                 if( addOutputMethods !== undefined )
                 {
@@ -68,7 +69,7 @@ function addApplications<Ins extends [ PType, ...PType[] ], Out extends PType, T
             // Type 'PType[]' is not assignable to type '[PType, ...PType[]]'.
             // Source provides no match for required element at position 0 in target
             addApplications< Tail<Ins>, Out >(
-                papp( PLam )( lambdaTerm as any, input ) as any,
+                papp( lambdaTerm , input ) as any,
                 types.slice( 1 ),
                 addOutputMethods
             )
@@ -102,15 +103,15 @@ function intBinOpToInt( builtin: Builtin )
     : IntBinOPToInt
 {
     const op = new Term(
-        _dbn => builtin,
-        new PLam( new PInt , new PLam( new PInt , new PInt ) )
+        Type.Fn([ Type.Int, Type.Int ], Type.Int ),
+        _dbn => builtin
     );
 
     return  ObjectUtils.defineReadOnlyProperty(
         op,
         "$",
         ( fstIn: Term<PInt> ): Term<PLam<PInt, PInt>> => {
-            const oneIn = papp( PLam )( op, fstIn );
+            const oneIn = papp( op, fstIn );
 
             return ObjectUtils.defineReadOnlyProperty(
                 oneIn,

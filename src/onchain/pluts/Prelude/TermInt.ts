@@ -29,63 +29,63 @@ export function addPIntMethods( term: Term<PInt> )
     ObjectUtils.defineReadOnlyProperty(
         term,
         "add",
-        ( other: Term<PInt> ) => addPIntMethods( padd.$( term ).$( other ) )
+        ( other: Term<PInt> ): TermInt => padd.$( term ).$( other )
     );
     ObjectUtils.defineReadOnlyProperty(
         term,
         "sub",
-        ( other: Term<PInt> ) => addPIntMethods( psub.$( term ).$( other ) )
+        ( other: Term<PInt> ): TermInt => psub.$( term ).$( other )
     );
     ObjectUtils.defineReadOnlyProperty(
         term,
         "mult",
-        ( other: Term<PInt> ) => addPIntMethods( pmult.$( term ).$( other ) )
+        ( other: Term<PInt> ): TermInt => pmult.$( term ).$( other )
     );
     ObjectUtils.defineReadOnlyProperty(
         term,
         "div",
-        ( other: Term<PInt> ) => addPIntMethods( pdiv.$( term ).$( other ) )
+        ( other: Term<PInt> ): TermInt => pdiv.$( term ).$( other )
     );
     ObjectUtils.defineReadOnlyProperty(
         term,
         "quot",
-        ( other: Term<PInt> ) => addPIntMethods( pquot.$( term ).$( other ) )
+        ( other: Term<PInt> ): TermInt => pquot.$( term ).$( other )
     );
     ObjectUtils.defineReadOnlyProperty(
         term,
         "remainder",
-        ( other: Term<PInt> ) => addPIntMethods( prem.$( term ).$( other ) )
+        ( other: Term<PInt> ): TermInt => prem.$( term ).$( other )
     );
     ObjectUtils.defineReadOnlyProperty(
         term,
         "mod",
-        ( other: Term<PInt> ) => addPIntMethods( pmod.$( term ).$( other ) )
+        ( other: Term<PInt> ): TermInt => pmod.$( term ).$( other )
     );
 
     ObjectUtils.defineReadOnlyProperty(
         term,
         "eq",
-        ( other: Term<PInt> ) => addPBoolMethods( peqInt.$( term ).$( other ) )
+        ( other: Term<PInt> ): TermBool => peqInt.$( term ).$( other )
     );
     ObjectUtils.defineReadOnlyProperty(
         term,
         "lt",
-        ( other: Term<PInt> ) => addPBoolMethods( plessInt.$( term ).$( other ) )
+        ( other: Term<PInt> ): TermBool => plessInt.$( term ).$( other )
     );
     ObjectUtils.defineReadOnlyProperty(
         term,
         "ltEq",
-        ( other: Term<PInt> ) => addPBoolMethods( plessEqInt.$( term ).$( other ) )
+        ( other: Term<PInt> ): TermBool => plessEqInt.$( term ).$( other )
     );
     ObjectUtils.defineReadOnlyProperty(
         term,
         "gt",
-        ( other: Term<PInt> ) => addPBoolMethods( pgreaterInt.$( term ).$( other ) )
+        ( other: Term<PInt> ): TermBool => pgreaterInt.$( term ).$( other )
     );
     ObjectUtils.defineReadOnlyProperty(
         term,
         "gtEq",
-        ( other: Term<PInt> ) => addPBoolMethods( pgreaterEqInt.$( term ).$( other ) )
+        ( other: Term<PInt> ): TermBool => pgreaterEqInt.$( term ).$( other )
     );
 
     return term as any;

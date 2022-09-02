@@ -4,6 +4,7 @@ import UPLCConst from "../../UPLC/UPLCTerms/UPLCConst";
 import TermInt, { addPIntMethods } from "../Prelude/TermInt";
 import PType from "../PType";
 import Term from "../Term";
+import Type from "../Term/Type";
 
 export default class PInt extends PType
     implements Cloneable<PInt>
@@ -33,8 +34,8 @@ export function pInt( int: Integer | number | bigint ): TermInt
 {
     return addPIntMethods(
         new Term<PInt>(
-            _dbn => UPLCConst.int( int ),
-            new PInt( int )
+            Type.Int,
+            _dbn => UPLCConst.int( int )
         )
     );
 }

@@ -16,12 +16,12 @@ export function addPBoolMethods( term: Term<PBool> ): TermBool
     ObjectUtils.defineReadOnlyProperty(
         term,
         "or",
-        ( other: Term<PBool> ) => addPBoolMethods( por.$( term ).$( other ) )
+        ( other: Term<PBool> ): TermBool => por.$( term ).$( other )
     );
     ObjectUtils.defineReadOnlyProperty(
         term,
         "and",
-        ( other: Term<PBool> ) => addPBoolMethods( pand.$( term ).$( other ) )
+        ( other: Term<PBool> ): TermBool => pand.$( term ).$( other )
     );
 
     return term as any;

@@ -8,6 +8,7 @@ import DataPair from "../../../../types/Data/DataPair";
 import UPLCConst from "../../../UPLC/UPLCTerms/UPLCConst";
 import PType from "../../PType";
 import Term from "../../Term";
+import Type from "../../Term/Type";
 import PDataBS from "./PDataBS";
 import PDataConstr from "./PDataConstr";
 import PDataInt from "./PDataInt";
@@ -23,8 +24,11 @@ export * from "./PDataMap";
 export type PDataFromData<DataInstance extends Data> = 
     DataInstance extends DataI ? PDataInt :
     DataInstance extends DataB ? PDataBS :
-    DataInstance extends DataPair<infer DataFst extends Data, infer DataSnd extends Data> ? PDataPair<PDataFromData<DataFst>,PDataFromData<DataSnd>> :
-    DataInstance extends DataMap<infer DataKey extends Data, infer DataVal extends Data > ? PDataMap< PDataFromData<DataKey>, PDataFromData<DataVal> > :
+    DataInstance extends DataPair<infer DataFst extends Data, infer DataSnd extends Data> ?
+        //@ts-ignore Type instantiation is excessively deep and possibly infinite
+        PDataPair<PDataFromData<DataFst>,PDataFromData<DataSnd>> :
+    DataInstance extends DataMap<infer DataKey extends Data, infer DataVal extends Data > ?
+        PDataMap< PDataFromData<DataKey>, PDataFromData<DataVal> > :
     DataInstance extends DataList ? PDataList<PData> :
     DataInstance extends DataConstr ? PDataConstr :
     PData
@@ -53,11 +57,11 @@ export default class PData extends PType
 }
 
 export function pData<DataInstance extends Data>
-    (
-        data: DataInstance,
-        dataCtor: new () => PDataFromData<DataInstance> = new PData as any
-    )
+    ( data: DataInstance )
     : Term<PDataFromData<DataInstance>>
 {
-    return new Term( dbn => UPLCConst.data( data ), new dataCtor );
+    return new Term(
+        Type.Data.Int as any, //@fixme; get type based on Data constructor
+        _dbn => UPLCConst.data( data )
+    );
 }

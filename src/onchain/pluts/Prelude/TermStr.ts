@@ -22,18 +22,18 @@ export function addPStringMethods( term: Term<PString> ): TermStr
         term,
         "concat",
         ( other: Term<PString> ): TermStr => pappendStr.$( term ).$( other )
-    )
+    );
     ObjectUtils.defineReadOnlyProperty(
         term,
         "toBytesUtf8",
         (): TermBS => pencodeUtf8.$( term )
-    )
+    );
 
     ObjectUtils.defineReadOnlyProperty(
         term,
         "eq",
         ( other: Term<PString> ): TermBool => peqStr.$( term ).$( other )
-    )
+    );
 
     return term as any;
 }

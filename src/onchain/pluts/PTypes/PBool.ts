@@ -2,6 +2,7 @@ import Cloneable from "../../../types/interfaces/Cloneable";
 import UPLCConst from "../../UPLC/UPLCTerms/UPLCConst";
 import PType from "../PType";
 import Term from "../Term";
+import Type from "../Term/Type";
 
 export default class PBool extends PType
     implements Cloneable< PBool >
@@ -24,5 +25,8 @@ export default class PBool extends PType
 
 export function pBool( bool: boolean ): Term<PBool>
 {
-    return new Term<PBool>( dbn => UPLCConst.bool( bool ), new PBool( bool ) );
+    return new Term<PBool>(
+        Type.Bool,
+        _dbn => UPLCConst.bool( bool )
+    );
 }
