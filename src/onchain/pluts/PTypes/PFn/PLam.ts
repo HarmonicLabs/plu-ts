@@ -33,9 +33,9 @@ export type  PLamIn< PLamInstance extends PLam< PType, PType > > = PLamInstance 
 export type PLamOut< PLamInstance extends PLam< PType, PType > > = PLamInstance extends PLam< any, infer POut > ? POut : never;
 
 export type TermFn<Ins extends [ PType, ...PType[] ] , Out extends PType> =
-    Ins extends [ infer PInstance extends PType ] ? Term<PLam< PInstance, Out>> & { $: ( input: Term< PInstance > ) => Term< Out > } :
+    Ins extends [ infer PInstance extends PType ] ? Term<PLam<PInstance, Out>> & { $: ( input: Term<PInstance> ) => Term<Out> } :
     Ins extends [ infer PInstance extends PType, ...infer RestIns extends [ PType, ...PType[] ] ] ?
-        Term<PLam<PInstance, PFn< RestIns, Out > > >
+        Term<PLam<PInstance,PFn<RestIns, Out>>>
         & { $: ( input: Term< PInstance > ) => TermFn< RestIns, Out > } :
     never
 

@@ -81,7 +81,8 @@ export function isClosedTerm( term: UPLCTerm ): boolean
         );
 
         if( t instanceof UPLCVar )
-            return maxDeBruijn >= t.deBruijn.asBigInt;
+            // deBruijn variables are 0 indexed (as arrays)
+            return maxDeBruijn > t.deBruijn.asBigInt;
 
         else if( t instanceof Delay )
             return _isClosedTerm( maxDeBruijn , t.delayedTerm );

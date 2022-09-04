@@ -1,3 +1,4 @@
+import BasePlutsError from "../../../errors/BasePlutsError";
 import { Params } from "../TyFn";
 import { Head, Tail } from "../TyLists";
 
@@ -66,7 +67,48 @@ export function curryFirst<Args extends [ any, ...any[] ], Output>
     if( fn.length === 0 ) return ( () => (fn as any)() )as any;
     if( fn.length === 1 ) return ( ( arg: Head<Args> ) => (fn as any)( arg ) )as any;
 
+    /*
+    !!!  IMPORTANT !!!
+
     return ( arg: Head<Args> ) => ( ...args: Tail<Args> ) => fn( arg, ...args )
+    
+    doesn't work because  ```( ...args: Tail<Args> ) => ...``` has ```length``` of  ```0```
+    */
+    if( fn.length === 2 ) return ( arg: Head<Args> ) =>
+        ( ( args_0: Tail<Args> ) => fn( arg, ...[ args_0 ] as Tail<Args> ) ) as any;
+
+    if( fn.length === 3 ) return ( arg: Head<Args> ) =>
+        ( ( args_0: any, args_1: any ) => fn( arg, ...[ args_0, args_1 ] as Tail<Args> ) ) as any;
+
+    if( fn.length === 4 ) return ( arg: Head<Args> ) =>
+        ( ( args_0: any, args_1: any, args_2: any ) => fn( arg, ...[ args_0, args_1, args_2 ] as Tail<Args> ) ) as any;
+
+    if( fn.length === 5 ) return ( arg: Head<Args> ) =>
+        ( ( args_0: any, args_1: any, args_2: any, args_3: any ) => fn( arg, ...[ args_0, args_1, args_2, args_3 ] as Tail<Args> ) ) as any;
+
+    if( fn.length === 6 ) return ( arg: Head<Args> ) =>
+        ( ( args_0: any, args_1: any, args_2: any, args_3: any, args_4: any ) => 
+            fn( arg, ...[ args_0, args_1, args_2, args_3, args_4 ] as Tail<Args> ) ) as any;
+
+    if( fn.length === 7 ) return ( arg: Head<Args> ) =>
+        ( ( args_0: any, args_1: any, args_2: any, args_3: any, args_4: any, args_5: any ) => 
+            fn( arg, ...[ args_0, args_1, args_2, args_3, args_4, args_5 ] as Tail<Args> ) ) as any;
+        
+    if( fn.length === 8 ) return ( arg: Head<Args> ) =>
+        ( ( args_0: any, args_1: any, args_2: any, args_3: any, args_4: any, args_5: any, args_6: any ) => 
+            fn( arg, ...[ args_0, args_1, args_2, args_3, args_4, args_5, args_6 ] as Tail<Args> ) ) as any;
+            
+    if( fn.length === 9 ) return ( arg: Head<Args> ) =>
+        ( ( args_0: any, args_1: any, args_2: any, args_3: any, args_4: any, args_5: any, args_6: any, args_7: any ) => 
+            fn( arg, ...[ args_0, args_1, args_2, args_3, args_4, args_5, args_6, args_7 ] as Tail<Args> ) ) as any;
+
+    if( fn.length === 10 ) return ( arg: Head<Args> ) =>
+        ( ( args_0: any, args_1: any, args_2: any, args_3: any, args_4: any, args_5: any, args_6: any, args_7: any, args_8: any ) => 
+            fn( arg, ...[ args_0, args_1, args_2, args_3, args_4, args_5, args_6, args_7, args_8 ] as Tail<Args> ) ) as any;
+
+    throw new BasePlutsError(
+        "functions with more thatn 10 parameters not supported for conversion; try gruping paramters in structured types"
+    );
 }
 
 /**

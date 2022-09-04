@@ -1,10 +1,8 @@
-import PData, { DataFromPData, PDataFromData } from ".";
-import Data from "../../../../types/Data";
+import PData, { DataFromPData } from ".";
 import DataList from "../../../../types/Data/DataList";
 import UPLCConst from "../../../UPLC/UPLCTerms/UPLCConst";
 import { pListToData, punListData } from "../../Prelude/Builtins";
 import Term from "../../Term";
-import Type from "../../Term/Type";
 import PList from "../PList";
 
 export default class PDataList<PDataInstance extends PData> extends PData // (PData extends PType => PDataList extends PType too)
@@ -18,7 +16,7 @@ export default class PDataList<PDataInstance extends PData> extends PData // (PD
 export function pDataList<PDataInstance extends PData>( datas: DataFromPData<PDataInstance>[] ): Term<PDataList<PDataInstance>>
 {
     return new Term(
-        Type.Data.List( Type.Data.Int ), // @fixme; add element type based on data consturctor
+        // Type.Data.List( Type.Data.Int ), // @fixme; add element type based on data consturctor
         _dbn => UPLCConst.data( new DataList( datas ) )
     );
 }

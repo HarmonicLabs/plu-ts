@@ -1,7 +1,7 @@
 import BasePlutsError from "../../../errors/BasePlutsError";
 import ObjectUtils from "../../../utils/ObjectUtils";
-import { Head, NoInfer, Tail } from "../../../utils/ts";
-import { curryFirst } from "../../../utils/ts/combinators";
+import { NoInfer } from "../../../utils/ts";
+import { CurriedFn, curry } from "../../../utils/ts/combinators";
 import Application from "../../UPLC/UPLCTerms/Application";
 import Delay from "../../UPLC/UPLCTerms/Delay";
 import ErrorUPLC from "../../UPLC/UPLCTerms/ErrorUPLC";
@@ -11,10 +11,11 @@ import UPLCVar from "../../UPLC/UPLCTerms/UPLCVar";
 import PType from "../PType";
 import PDelayed from "../PTypes/PDelayed";
 import PLam, { TermFn } from "../PTypes/PFn/PLam";
-import Type, { FromPType, ToPType, Type as Ty } from "../Term/Type";
+import Type, { FromPType, PrimType, ToPType, ToPTypeArr, ToTermArrNonEmpty, Type as Ty } from "../Term/Type";
 import Term from "../Term";
 import JsRuntime from "../../../utils/JsRuntime";
-import { areTypesEquals, isDelayedType, isLambdaType } from "../Term/Type/utils";
+import { isDelayedType, isLambdaType, typeExtends } from "../Term/Type/utils";
+import Debug from "../../../utils/Debug";
 
 
 export function papp<Input extends PType, Output extends PType >( a: Term<PLam<Input,Output>>, b: Term<Input> ): Term<Output>
@@ -26,11 +27,15 @@ export function papp<Input extends PType, Output extends PType >( a: Term<PLam<I
     );
 
     JsRuntime.assert(
-        areTypesEquals( lambdaType[ 1 ], b.type ),
+        typeExtends( b.type, lambdaType[ 1 ] ),
         "while applying 'Lambda'; unexpected type of input; expected type was: \"" + lambdaType[1] +
         "\"; received input was of type: \"" + b.type + "\""
     );
 
+    Debug.log(
+        "\nApplying Term of Type: " + lambdaType +
+        "\nto Term of Type: " + b.type
+    )
 
     return new Term(
         lambdaType[ 2 ] as FromPType<Output>,
@@ -43,17 +48,17 @@ export function papp<Input extends PType, Output extends PType >( a: Term<PLam<I
     );
 }
 
-export function plam<A extends PType, B extends PType >( inputType: Ty, outputType: Ty )
-    : ( termFunc : ( input: Term<A> ) => Term<B> ) => TermFn<[A], B>
+export function plam<A extends Ty, B extends Ty >( inputType: A, outputType: B )
+    : ( termFunc : ( input: Term<ToPType<A>> ) => Term<ToPType<B>> ) => TermFn<[ToPType<A>], ToPType<B>>
 {
-    return ( termFunc: ( input: Term<A> ) => Term<B> ): TermFn<[A],B> =>
+    return ( termFunc: ( input: Term<ToPType<A>> ) => Term<ToPType<B>> ): TermFn<[ToPType<A>],ToPType<B>> =>
     {
-        const lambdaTerm  = new Term<PLam<A,B>>(
+        const lambdaTerm  = new Term<PLam<ToPType<A>,ToPType<B>>>(
             Type.Lambda( inputType, outputType ),
             dbn => {
                 const thisLambdaPtr = dbn + BigInt( 1 );
 
-                const boundVar = new Term<A>(
+                const boundVar = new Term<ToPType<A>>(
                     inputType as any,
                     dbnAccessLevel => new UPLCVar( dbnAccessLevel - thisLambdaPtr )
                 );
@@ -69,7 +74,7 @@ export function plam<A extends PType, B extends PType >( inputType: Ty, outputTy
         return ObjectUtils.defineReadOnlyProperty(
             lambdaTerm,
             "$",
-            ( input: Term<A> ) => papp( lambdaTerm, input )
+            ( input: Term<ToPType<A>> ) => papp( lambdaTerm, input )
         );
     }   
 }
@@ -86,13 +91,14 @@ type Test1 = MapTermOver<[ PType ]>
 type Test2 = MapTermOver<[ PType, PType ]>
 type Test3 = MapTermOver<[ PType, PType, PType ]>
 
+type T  = MapTermOver<ToPTypeArr<[[PrimType.Unit], [PrimType.Int]]>>
 /**
  * @fixme "ts-ignore"
-*/
-export function pfn< Inputs extends [ PType, ...PType[] ], Output extends PType >( inputs: Ty[], output: Ty )
+// * /
+export function pfn< Inputs extends [ Ty, ...Ty[] ], Output extends Ty >( inputs: Inputs, output: Output )
 {
-    return ( termFunc: ( fstInput: Term< Head< Inputs > >, ...ins: MapTermOver< Tail< Inputs > > ) => Term< Output > )
-        : TermFn< Inputs, Output > =>
+    return ( termFunc: ( ...ins: ToTermArr<Inputs> ) => Term<ToPType<Output>> )
+        : TermFn<ToPTypeArrNonEmpty<Inputs>,ToPType<Output>> =>
     {
         if( termFunc.length === 0 ) throw new BasePlutsError( "unsupported '(void) => any' type at Pluts level" );
         if( termFunc.length === 1 ) return plam( inputs[0], output )( termFunc as any ) as any;
@@ -102,7 +108,13 @@ export function pfn< Inputs extends [ PType, ...PType[] ], Output extends PType 
             //@ts-ignore
             ( input: Term< Head< Inputs > > ) =>
             {
-                return pfn( inputs.slice(1), output )( 
+                return pfn(
+                    // @ts-ignore
+                    // Argument of type 'Type[]' is not assignable to parameter of type '[Type, ...Type[]]'
+                    // if we get here inputs has at least length 2
+                    inputs.slice(1),
+                    output
+                )( 
                     curryFirst(
                         /*
                         Argument of type '(fstInput: Term<Head<Inputs>>, ...ins: MapTermOver<Tail<Inputs>>) => Term<Output>'
@@ -111,7 +123,7 @@ export function pfn< Inputs extends [ PType, ...PType[] ], Output extends PType 
                                 Type 'any[]' is not assignable to type 'MapTermOver<Tail<Inputs>>'
 
                         basically typescript desn't recognizes 'MapTermOver<Tail<Inputs>>' to be an array of types (which is)
-                        */
+                        * /
                         //@ts-ignore
                         termFunc
                     )( input )
@@ -119,6 +131,77 @@ export function pfn< Inputs extends [ PType, ...PType[] ], Output extends PType 
             }
 
                 
+        );
+    }
+}
+//*/
+
+// type PFn<Inputs extends [ PType, ...PType[] ], Output extends PType > = 
+type PFnFromTypes<Ins extends [ Ty, ...Ty[] ], Out extends Ty> =
+    Ins extends [ infer T extends Ty ] ?
+        PLam<ToPType<T>, ToPType<Out>> :
+    Ins extends [ infer T extends Ty, ...infer RestTs extends [ Ty, ...Ty[] ] ] ?
+        PLam<ToPType<T>, PFnFromTypes<RestTs, Out>>:
+    never
+
+// type PFnTest1 = PFnFromTypes<[[PrimType.Bool]], [PrimType.Bool]>
+
+type TermFnFromTypes<Ins extends [ Ty, ...Ty[] ], Out extends Ty> =
+    Ins extends [ infer T extends Ty ] ? Term<PLam<ToPType<T>, ToPType<Out>>> & { $: ( input: Term<ToPType<T>> ) => Term<ToPType<Out>> } :
+    Ins extends [ infer T extends Ty, ...infer RestIns extends [ Ty, ...Ty[] ] ] ?
+        Term<PLam<ToPType<T>,PFnFromTypes<RestIns, Out>>>
+        & { $: ( input: Term<ToPType<T>> ) => TermFnFromTypes< RestIns, Out > } :
+    never
+
+type TsTermFunctionArgs<InputsTypes extends [ Ty, ...Ty[] ]> =
+    InputsTypes extends [] ? never :
+    InputsTypes extends [ infer T extends Ty ] ? [ a: Term<ToPType<T>> ] :
+    InputsTypes extends [ infer T1 extends Ty, infer T2 extends Ty ] ? [ a: Term<ToPType<T1>>, b: Term<ToPType<T2>> ] :
+    InputsTypes extends [ infer T extends Ty, ...infer RestTs extends [ Ty, ...Ty[] ] ] ? [ a: Term<ToPType<T>>, ...bs: TsTermFunctionArgs<RestTs> ] :
+    never;
+
+// type TsTermFunctionReturnT<OutputType extends Ty> = Term<ToPType<OutputType>>;
+
+type TsTermFunction<InputsTypes extends [ Ty, ...Ty[] ], OutputType extends Ty> = (...args: TsTermFunctionArgs<InputsTypes> ) => Term<ToPType<OutputType>>
+
+export function pfn<InputsTypes extends [ Ty, ...Ty[] ], OutputType extends Ty>( inputsTypes: InputsTypes, outputType: OutputType )
+    : ( termFunction: TsTermFunction<InputsTypes,OutputType> ) => 
+        TermFnFromTypes< InputsTypes, OutputType>
+{
+    function plamNCurried(
+        curriedFn:
+            CurriedFn<
+                ToTermArrNonEmpty<InputsTypes>,
+                Term<ToPType<OutputType>>
+            >,
+        nMissingArgs: number
+    ): TermFnFromTypes<InputsTypes, OutputType>
+    {
+        if( nMissingArgs === 1 ) return plam( inputsTypes[ inputsTypes.length - 1 ], outputType )( curriedFn as any ) as any;
+
+        const currentInputIndex = inputsTypes.length - nMissingArgs;
+
+        return plam(
+            inputsTypes[ currentInputIndex ],
+            Type.Fn( inputsTypes.slice( currentInputIndex + 1 ) as any, outputType )
+        )(
+            ( someInput: Term<PType> ) => plamNCurried( curriedFn( someInput ) as any , nMissingArgs - 1 )
+        ) as any;
+    }
+
+    return ( termFunction: ( ...args: ToTermArrNonEmpty<InputsTypes> ) => Term<ToPType<OutputType>> ) =>
+    {
+        if( termFunction.length <= 0 )
+            throw new BasePlutsError("'(void) => any' cannot be translated to a Pluts function");
+
+        JsRuntime.assert(
+            termFunction.length === inputsTypes.length,
+            "number of inputs of the function doesn't match the number of types specified for the input"
+        );
+
+        return plamNCurried(
+            curry( termFunction ),
+            termFunction.length
         );
     }
 }
@@ -138,12 +221,14 @@ export function pdelay<PInstance extends PType>(toDelay: Term<PInstance>): Term<
 
 export function pforce<PInstance extends PType>( toForce: Term<PDelayed<PInstance>> ): Term<PInstance>
 {
-    if(!( isDelayedType( toForce.type ) ) ) throw JsRuntime.makeNotSupposedToHappenError(
+    Debug.log( "foorcing type: " + toForce.type );
+
+    if(!( isDelayedType( toForce.type ) ) ) throw new BasePlutsError(
         "cannot force a Term that is not Delayed first"
     );
 
     return new Term(
-        toForce.type[ 1 ],
+        toForce.type[ 1 ] as any,
         (dbn) => {
             const toForceUPLC = toForce.toUPLC( dbn );
 

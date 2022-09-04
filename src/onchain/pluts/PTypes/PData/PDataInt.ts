@@ -1,3 +1,4 @@
+
 import PData from ".";
 import DataI from "../../../../types/Data/DataI";
 import Integer from "../../../../types/ints/Integer";
@@ -7,7 +8,7 @@ import Term from "../../Term";
 import Type from "../../Term/Type";
 import PInt from "../PInt";
 
-export default class PDataInt extends PData // (PData extends PType => PDataInt extends PType too)
+export default class PDataInt extends PData
 {
     constructor( int: number | bigint | Integer = 0 )
     {

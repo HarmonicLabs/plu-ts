@@ -6,7 +6,8 @@
   "type": "module",
   "scripts": {
     "test": "jest",
-    "test-watch": "jest --watchman"
+    "test-watch": "jest --watchman",
+    "test-coverage": "jest --coverage"
   },
   "publishConfig": {
     "registry": "https://npm.pkg.github.com"

@@ -4,6 +4,7 @@ import { Type as Ty, DataConstructor, DataType, PrimType, TypeName } from ".";
 export function isTypeNameOfPrimitive( tyName: TypeName ): tyName is PrimType
 {
     return (
+        tyName === PrimType.Any     ||
         tyName === PrimType.Int     ||
         tyName === PrimType.BS      ||
         tyName === PrimType.Str     ||
@@ -19,6 +20,7 @@ export function isTypeNameOfPrimitive( tyName: TypeName ): tyName is PrimType
 export function isTypeNameOfData( tyName: TypeName ): tyName is DataConstructor
 {
     return (
+        tyName === DataConstructor.Any      ||
         tyName === DataConstructor.Constr   ||
         tyName === DataConstructor.Pair     ||
         tyName === DataConstructor.List     ||
@@ -39,7 +41,8 @@ export function isDataType( t: Ty ): t is DataType
     {
         return (
             t[ 0 ] === DataConstructor.BS   ||
-            t[ 0 ] === DataConstructor.Int
+            t[ 0 ] === DataConstructor.Int  ||
+            t[ 0 ] === DataConstructor.Any
         )
     }
     if( t.length === 2 )
@@ -136,6 +139,9 @@ export function isPairType( t: Ty ): t is [ PrimType.Pair, Ty, Ty ]
     );
 }
 
+/**
+ * @deprecated use ```typeExtends``` instead
+ */
 export function areTypesEquals( a: Ty, b: Ty ): boolean
 {
     if(!(
@@ -154,4 +160,69 @@ export function areTypesEquals( a: Ty, b: Ty ): boolean
     }
 
     return uncheckedTyEq( a, b )
+}
+
+export function dataTypeExtends( extending: DataType, extended: DataType ): boolean
+{
+    if(!(
+        isDataType( extended  ) &&
+        isDataType( extending )
+    )) return false;
+
+    function unchecked( a: DataType, b: DataType ): boolean
+    {
+        if( b[ 0 ] === DataConstructor.Any ) return true;
+        if( a[ 0 ] === DataConstructor.Any ) return false;
+
+        const bTyArgs = b.slice( 1 ) as DataType[];
+        return (
+            a[ 0 ] === b[ 0 ] &&
+            a.length === b.length &&
+            ( a.slice( 1 ) as DataType[] ).every( (aTyArg, idx) => dataTypeExtends( aTyArg, bTyArgs[ idx ] ) )
+        );
+    }
+
+    return unchecked( extending, extended );
+}
+
+/*
+ * equivalent to ```A extends B``` but at plu-ts level
+ */
+export function typeExtends( extending: Ty, extended: Ty ): boolean
+{
+    if(!(
+        isWellFormedType( extending ) &&
+        isWellFormedType( extended  )
+    )) return false;
+
+    function unchecked( a: Ty, b: Ty ): boolean
+    {
+        if( b[0] === PrimType.Any ) return true;
+        if( a[0] === PrimType.Any ) return false;
+
+        if( isTypeNameOfData( b[0] ) )
+        {
+            if( !isTypeNameOfData( a[0] ) ) return false;
+
+            // checks for correct data type construction;
+            // actually already checked in the ```isWellFormedType``` call above
+            return dataTypeExtends( a as any, b as any );
+        }
+
+        const bTyArgs = b.slice(1) as Ty[];
+        return (
+            a[ 0 ] === b[ 0 ] &&
+            // a.length === b.length && // not a check because of ```PrimType.Any```
+            ( a.slice( 1 ) as Ty[] ).every( (aTyArg, idx) => unchecked( aTyArg, bTyArgs[ idx ] ) )
+        );
+    }
+
+    return unchecked( extending, extended );
+}
+
+export function getNRequiredArgs( type: Ty ): number
+{
+    if( type[0] !== PrimType.Lambda ) return 0;
+
+    return 1 + getNRequiredArgs( type[2] )
 }
