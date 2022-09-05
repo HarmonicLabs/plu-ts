@@ -1,7 +1,7 @@
 <p align="center">
   <img width="100px" src="./assets/logo/plu-ts.svg" align="center"/>
   <h1 align="center">plu-ts</h1>
-  <p align="center">plu-ts is a library, which wants to allow Cardano smart contract creation and protocol interaction only using Typescript</p>
+  <p align="center">An embedded DSL for Cardano smart contracts creation coupled with a library for Cardano transactions, all in Typescript</p>
 
   <p align="center">
     <img src="https://img.shields.io/github/commit-activity/m/harmonicpool/plu-ts?style=for-the-badge" />
@@ -21,7 +21,7 @@ there is the need for decentralized applications, however the tools to build a [
 ## what is plu-ts?
 ---
 
-```plu-ts``` wants to be a library to allow Cardano-related software to be written entirely in [typescript](https://www.typescriptlang.org/), allowing a for a wider developer ecosystem adoption and easier integration.
+```plu-ts``` wants to be a library to allow Cardano-related software to be written entirely in [typescript](https://www.typescriptlang.org/), in support for a wider developer ecosystem adoption and easier integration.
 
 the project will be composed mainly of two parts: on-chain and off-chain;
 
