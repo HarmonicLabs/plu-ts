@@ -141,9 +141,9 @@ function intBinOpToBool( builtin: Builtin )
     return  ObjectUtils.defineReadOnlyProperty(
         op,
         "$",
-        ( fstIn: Term<PInt> ): Term<PLam<PInt, PInt>> => {
+        ( fstIn: Term<PInt> ): Term<PLam<PInt, PBool>> => {
             const oneIn = papp( op, fstIn );
-
+            
             return ObjectUtils.defineReadOnlyProperty(
                 oneIn,
                 "$",

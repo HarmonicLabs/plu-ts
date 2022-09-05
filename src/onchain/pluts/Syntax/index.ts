@@ -16,9 +16,28 @@ import Term from "../Term";
 import JsRuntime from "../../../utils/JsRuntime";
 import { isDelayedType, isLambdaType, typeExtends } from "../Term/Type/utils";
 import Debug from "../../../utils/Debug";
+import PInt from "../PTypes/PInt";
+import PUnit from "../PTypes/PUnit";
 
+type PappResult<Output extends PType> =
+    Output extends PLam<infer OutIn extends PType, infer OutOut extends PType> ?
+        Term<PLam<OutIn,OutOut>>
+        & {
+            $: ( someInput: Term<OutIn> ) => PappResult<OutOut>
+        } :
+    Term<Output>
 
-export function papp<Input extends PType, Output extends PType >( a: Term<PLam<Input,Output>>, b: Term<Input> ): Term<Output>
+type test = PappResult<PLam<PInt,PLam<PUnit, PInt>>>
+/**
+ * 
+ * @param {Term<PLam<Input, Output>>} a Term that evalueates to an UPLC function ( type: ```Type.Lambda( inputT, outputT )``` ) 
+ * @param {Term<Input>} b the argument of to provide to the first parameter 
+ * @returns {Term<Output>} the result of the calculation
+ * 
+ * if the type of the output extends the type ```Type.Lambda( Type.Any, Type.Any )```
+ */
+export function papp<Input extends PType, Output extends PType >( a: Term<PLam<Input,Output>>, b: Term<Input> )
+    : PappResult<Output>
 {
     let lambdaType: Ty = a.type;
 
@@ -32,13 +51,9 @@ export function papp<Input extends PType, Output extends PType >( a: Term<PLam<I
         "\"; received input was of type: \"" + b.type + "\""
     );
 
-    Debug.log(
-        "\nApplying Term of Type: " + lambdaType +
-        "\nto Term of Type: " + b.type
-    )
-
-    return new Term(
-        lambdaType[ 2 ] as FromPType<Output>,
+    const outputType = lambdaType[ 2 ] as FromPType<Output>;
+    const outputTerm = new Term(
+        outputType,
         dbn => {
             return new Application(
                 a.toUPLC( dbn ),
@@ -46,12 +61,26 @@ export function papp<Input extends PType, Output extends PType >( a: Term<PLam<I
             )
         }
     );
+
+    if( isLambdaType( outputType ) && ( !ObjectUtils.hasOwn( outputTerm, "$" ) ))
+        // defined "$" property can be overridden but not deleted
+        // override is necessary to allow a more specific implementation
+        // 
+        // example is for lazy builtins such as ```pif``` that need to modify the input
+        // wrapping it into a "Delay"
+        return ObjectUtils.defineNonDeletableNormalProperty(
+            outputTerm,
+            "$",
+            ( someInput: any ) => papp( outputTerm as any, someInput )
+        ) as any;
+    
+    return outputTerm as any;
 }
 
 export function plam<A extends Ty, B extends Ty >( inputType: A, outputType: B )
-    : ( termFunc : ( input: Term<ToPType<A>> ) => Term<ToPType<B>> ) => TermFn<[ToPType<A>], ToPType<B>>
+    : ( termFunc : ( input: Term<ToPType<A>> ) => Term<ToPType<B>> ) => PappResult<PLam<ToPType<A>,ToPType<B>>>
 {
-    return ( termFunc: ( input: Term<ToPType<A>> ) => Term<ToPType<B>> ): TermFn<[ToPType<A>],ToPType<B>> =>
+    return ( termFunc: ( input: Term<ToPType<A>> ) => Term<ToPType<B>> ): PappResult<PLam<ToPType<A>,ToPType<B>>> =>
     {
         const lambdaTerm  = new Term<PLam<ToPType<A>,ToPType<B>>>(
             Type.Lambda( inputType, outputType ),
@@ -76,65 +105,8 @@ export function plam<A extends Ty, B extends Ty >( inputType: A, outputType: B )
             "$",
             ( input: Term<ToPType<A>> ) => papp( lambdaTerm, input )
         );
-    }   
+    };
 }
-
-type MapTermOver< PTypes extends PType[] > =
-    PTypes extends [] ? []:
-    PTypes extends [ infer PInstance extends PType ] ? [ Term< PInstance > ] : 
-    PTypes extends [ infer PInstance extends PType , ...infer PInstances extends PType[] ] ? 
-        [ Term< PInstance > , ...MapTermOver< PInstances  > ] :
-    never;
-
-type Test0 = MapTermOver<[]>
-type Test1 = MapTermOver<[ PType ]>
-type Test2 = MapTermOver<[ PType, PType ]>
-type Test3 = MapTermOver<[ PType, PType, PType ]>
-
-type T  = MapTermOver<ToPTypeArr<[[PrimType.Unit], [PrimType.Int]]>>
-/**
- * @fixme "ts-ignore"
-// * /
-export function pfn< Inputs extends [ Ty, ...Ty[] ], Output extends Ty >( inputs: Inputs, output: Output )
-{
-    return ( termFunc: ( ...ins: ToTermArr<Inputs> ) => Term<ToPType<Output>> )
-        : TermFn<ToPTypeArrNonEmpty<Inputs>,ToPType<Output>> =>
-    {
-        if( termFunc.length === 0 ) throw new BasePlutsError( "unsupported '(void) => any' type at Pluts level" );
-        if( termFunc.length === 1 ) return plam( inputs[0], output )( termFunc as any ) as any;
-
-        //@ts-ignore
-        return plam( inputs[0] , Type.Fn( inputs.slice(1) as any, output ) )(
-            //@ts-ignore
-            ( input: Term< Head< Inputs > > ) =>
-            {
-                return pfn(
-                    // @ts-ignore
-                    // Argument of type 'Type[]' is not assignable to parameter of type '[Type, ...Type[]]'
-                    // if we get here inputs has at least length 2
-                    inputs.slice(1),
-                    output
-                )( 
-                    curryFirst(
-                        /*
-                        Argument of type '(fstInput: Term<Head<Inputs>>, ...ins: MapTermOver<Tail<Inputs>>) => Term<Output>'
-                        is not assignable to parameter of type '(arg1: any, ...args: any[]) => Term<Output>'.
-                            Types of parameters 'ins' and 'args' are incompatible.
-                                Type 'any[]' is not assignable to type 'MapTermOver<Tail<Inputs>>'
-
-                        basically typescript desn't recognizes 'MapTermOver<Tail<Inputs>>' to be an array of types (which is)
-                        * /
-                        //@ts-ignore
-                        termFunc
-                    )( input )
-                )
-            }
-
-                
-        );
-    }
-}
-//*/
 
 // type PFn<Inputs extends [ PType, ...PType[] ], Output extends PType > = 
 type PFnFromTypes<Ins extends [ Ty, ...Ty[] ], Out extends Ty> =
@@ -221,7 +193,7 @@ export function pdelay<PInstance extends PType>(toDelay: Term<PInstance>): Term<
 
 export function pforce<PInstance extends PType>( toForce: Term<PDelayed<PInstance>> ): Term<PInstance>
 {
-    Debug.log( "foorcing type: " + toForce.type );
+    Debug.ignore.log( "forcing type: " + toForce.type );
 
     if(!( isDelayedType( toForce.type ) ) ) throw new BasePlutsError(
         "cannot force a Term that is not Delayed first"

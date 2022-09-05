@@ -62,6 +62,8 @@ export default class ObjectUtils
         );
     }
 
+    static hasOwn: ( obj: object, propName: string | number | symbol ) => boolean = ((Object as any).hasOwn ?? Object.prototype.hasOwnProperty.call) ?? ObjectUtils.containsKeys;
+
 
     static isSerializable( obj: object ): boolean
     {
@@ -318,8 +320,13 @@ export default class ObjectUtils
      * cannot be deleted
      */
     static defineReadOnlyProperty<ObjT extends object, PropKey extends keyof any , ValT >
-        ( obj: ObjT, name: PropKey, value: ValT)
+        ( obj: ObjT, name: PropKey, value: ValT): ObjT & Record<PropKey, ValT>
     {
+        if(
+            ObjectUtils.hasOwn( obj, name ) &&  // if the object has already a property with the same name
+            (!( Object.getOwnPropertyDescriptor( obj, name )?.writable )) // and it cannot be overridden
+        ) return obj as any;                           // return that object;
+
         return ObjectUtils.defineProperty(
             obj, name, value, 2
         )
@@ -328,6 +335,11 @@ export default class ObjectUtils
     static defineNonDeletableNormalProperty<ObjT extends object, PropKey extends keyof any , ValT >
         ( obj: ObjT, name: PropKey, value: ValT)
     {
+        if(
+            ObjectUtils.hasOwn( obj, name ) &&  // if the object has already a property with the same name
+            (!( Object.getOwnPropertyDescriptor( obj, name )?.writable )) // and it cannot be overridden
+        ) return obj;                           // return that object;
+        
         return ObjectUtils.defineProperty(
             obj, name, value, 3
         )

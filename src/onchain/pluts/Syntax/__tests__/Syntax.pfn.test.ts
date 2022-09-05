@@ -1,9 +1,13 @@
 import { pfn, plam } from ".."
+import Application from "../../../UPLC/UPLCTerms/Application"
+import Builtin from "../../../UPLC/UPLCTerms/Builtin"
+import Lambda from "../../../UPLC/UPLCTerms/Lambda"
 import UPLCConst from "../../../UPLC/UPLCTerms/UPLCConst"
+import UPLCVar from "../../../UPLC/UPLCTerms/UPLCVar"
 import { plessEqInt } from "../../Prelude/Builtins"
 import PBool from "../../PTypes/PBool"
 import PLam from "../../PTypes/PFn/PLam"
-import PInt from "../../PTypes/PInt"
+import PInt, { pInt } from "../../PTypes/PInt"
 import PUnit from "../../PTypes/PUnit"
 import Term from "../../Term"
 import Type from "../../Term/Type"
@@ -47,13 +51,13 @@ describe("pfn", () => {
     });
 
 
-    test("", () => {
+    test("binary operation got using 'pfn' is the same as 'plam( x => plam( y => binOp.$( x ).$( y ) ) )' (double 'plam')", () => {
 
         const pfnBinOp = pfn([ Type.Int, Type.Int ], Type.Bool )(
             ( a: Term<PInt>, b: Term<PInt> ) => plessEqInt.$( b ).$( a )
         )
         const plamBinOp = plam( Type.Int, Type.Lambda( Type.Int, Type.Bool ) )(
-            ( a: Term<PInt> ): Term<PLam<PInt, PBool>> =>
+            ( a: Term<PInt> ) =>
                 plam( Type.Int, Type.Bool )(
                     ( b: Term<PInt> ): Term<PBool> => plessEqInt.$( b ).$( a )
                 )
@@ -65,6 +69,50 @@ describe("pfn", () => {
             plamBinOp.toUPLC( 0 )
         );
 
+        const pfnUPLC = pfnBinOp.$( pInt( 2 ) ).$( pInt( 3 ) ).toUPLC( 0 );
+        const targetUPLC =
+            new Application(
+                new Application(
+                    new Lambda(
+                        new Lambda(
+                            new Application(
+                                new Application(
+                                    Builtin.lessThanEqualInteger,
+                                    new UPLCVar( 0 )
+                                ),
+                                new UPLCVar( 1 )
+                            )
+                        )
+                    ),
+                    UPLCConst.int( 2 )
+                ),
+                UPLCConst.int( 3 )
+            );
+
+        expect(
+            pfnUPLC
+        ).not.toEqual(
+            new Application(
+                new Application(
+                    Builtin.lessThanEqualInteger,
+                    UPLCConst.int( 3 )
+                ),
+                UPLCConst.int( 2 )
+            )
+        );
+
+        expect(
+            pfnUPLC
+        ).toEqual(
+            targetUPLC
+        )
+
+        expect(
+            plamBinOp.$( pInt( 2 ) ).$( pInt( 3 ) ).toUPLC( 0 )
+        ).toEqual(
+            targetUPLC
+        );
+        
     })
 
 })
