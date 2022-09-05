@@ -4,6 +4,12 @@ import PType from "../../PType";
 import PBool from "../../PTypes/PBool";
 import PByteString from "../../PTypes/PByteString";
 import PData from "../../PTypes/PData";
+import PDataBS from "../../PTypes/PData/PDataBS";
+import PDataConstr from "../../PTypes/PData/PDataConstr";
+import PDataInt from "../../PTypes/PData/PDataInt";
+import PDataList from "../../PTypes/PData/PDataList";
+import PDataMap from "../../PTypes/PData/PDataMap";
+import PDataPair from "../../PTypes/PData/PDataPair";
 import PDelayed from "../../PTypes/PDelayed";
 import PLam from "../../PTypes/PFn/PLam";
 import PInt from "../../PTypes/PInt";
@@ -55,6 +61,7 @@ const Type: {
     readonly Bool:  [ PrimType.Bool ];
     readonly List:  <T extends Type>(ofElem: T) => [ PrimType.List, T ];
     readonly Pair:  <FstT extends Type, SndT extends Type>(fst: FstT, snd: SndT) => [ PrimType.Pair, FstT, SndT ] ;
+    readonly Map:   <KeyT extends Type, ValT extends Type>(k: KeyT, v: ValT) => [PrimType.List, [PrimType.Pair, KeyT, ValT]]
     readonly Delayed: <T extends Type>(toDelay: T) => [ PrimType.Delayed, T ];
     readonly Lambda: <InT extends Type, OutT extends Type>(input: Type, output: Type) => [ PrimType.Lambda, InT, OutT ];
     readonly Fn: <InsTs extends [ Type, ...Type[] ], OutT extends Type>( inputs: InsTs, output: OutT ) => FnType<InsTs, OutT>
@@ -76,6 +83,7 @@ const Type: {
     Bool:       Object.freeze([ PrimType.Bool ]),
     List:       <T extends Type>( ofElem: T ): readonly [ PrimType.List, T ] => Object.freeze([ PrimType.List, ofElem ]) ,
     Pair:       <FstT extends Type, SndT extends Type>( fst: FstT, snd: SndT ): readonly [ PrimType.Pair, FstT, SndT ] => Object.freeze([ PrimType.Pair, fst, snd ]),
+    Map:        <KeyT extends Type, ValT extends Type>( k: KeyT, v: ValT ) => Type.List( Type.Pair( k, v ) ),
     Delayed:    <T extends Type>( toDelay: T ): readonly [ PrimType.Delayed, T ] => Object.freeze([ PrimType.Delayed, toDelay ]),
     Lambda:     <InT extends Type, OutT extends Type>( input: InT, output: OutT ): LambdaType< InT, OutT > => Object.freeze([ PrimType.Lambda, input, output ]),
     Fn:         <InsTs extends [ Type, ...Type[] ], OutT extends Type>( inputs: InsTs , output: Type ): FnType<InsTs, OutT> => {
@@ -104,7 +112,41 @@ export default Type;
 // Type = TypeName followed by optional (nested) Types
 export type Type = readonly [ TypeName, ...Type[] ];
 
-export type ToPType< T extends Type > =
+export type ToPDataType<DT extends DataType> =
+    DT extends [ DataConstructor.Int ] ? PDataInt :
+    DT extends [ DataConstructor.BS  ] ? PDataBS  :
+    DT extends [ DataConstructor.List, [ DataConstructor.Pair, infer DataK extends DataType, infer DataV extends DataType] ] ? PDataMap<ToPDataType<DataK>, ToPDataType<DataV>> :
+    DT extends [ DataConstructor.List, infer DataElemT extends DataType ] ? PDataList<ToPDataType<DataElemT>> :
+    DT extends [ DataConstructor.Pair, infer DataFst extends DataType, infer DataSnd extends DataType ] ? PDataPair<ToPDataType<DataFst>,ToPDataType<DataSnd>> :
+    DT extends [ DataConstructor.Constr, ...infer FieldsDataTypes extends DataType[] ] ? PDataConstr<ToPDataTypeArr<FieldsDataTypes>> :
+    DT extends DataType ? PData :
+    never;
+
+export type ToPDataTypeArr<DTArr extends DataType[]> =
+    DTArr extends [] ? [] & PData[] :
+    DTArr extends [ infer DT extends DataType ] ? [ ToPDataType<DT> ] :
+    DTArr extends [ infer DT extends DataType, ...infer RestDTs extends DataType[] ] ? [ ToPDataType<DT>, ...ToPDataTypeArr<RestDTs> ] :
+    never;
+
+export type FromPDataType<PDT extends PData> =
+    PDT extends PDataInt ? [ DataConstructor.Int ] :
+    PDT extends PDataBS  ? [ DataConstructor.BS  ] :
+    PDT extends PDataMap<infer PDataK extends PData, infer PDataV extends PData> ?
+        [ DataConstructor.List, [ DataConstructor.Pair, FromPDataType<PDataK>, FromPDataType<PDataV> ] ] :
+    PDT extends PDataList<infer PDataElemT extends PData> ? [ DataConstructor.List, FromPDataType<PDataElemT> ] :
+    PDT extends PDataPair<infer PDataFst extends PData, infer PDataSnd extends PData> ?
+        [ DataConstructor.Pair, FromPDataType<PDataFst>, FromPDataType<PDataSnd> ]:
+    PDT extends PDataConstr<infer PDataConstrArgs extends PData[]> ? [ DataConstructor.Constr, ...FromPDataTypeArr<PDataConstrArgs> ] :
+    PDT extends PData ? DataType :
+    never;
+
+export type FromPDataTypeArr<PDTArr extends PData[]> =
+    PDTArr extends [] ? [] & DataType[] :
+    PDTArr extends [ infer PDT extends PData ] ? [ FromPDataType<PDT> ] :
+    PDTArr extends [ infer PDT extends PData, ...infer RestPDTs extends PData[] ] ? [ FromPDataType<PDT>, ...FromPDataTypeArr<RestPDTs> ] :
+    never;
+
+export type ToPType<T extends Type> =
     T extends [ PrimType.Int ]   ? PInt :
     T extends [ PrimType.BS ]    ? PByteString :
     T extends [ PrimType.Str ]   ? PString :

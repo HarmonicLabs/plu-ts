@@ -1,7 +1,5 @@
-import UPLCConst from "../../UPLC/UPLCTerms/UPLCConst";
-import { ConstValueList } from "../../UPLC/UPLCTerms/UPLCConst/ConstValue";
 import PType from "../PType";
-import Term from "../Term";
+import PData from "./PData";
 
 
 export default class PList<A extends PType> extends PType
@@ -14,12 +12,12 @@ export default class PList<A extends PType> extends PType
 
         this._elems = elements
     }
+}
 
-    static override get default(): PList< PType >
+export class PConstrArgs<DataArgs extends PData[]> extends PList<PData>
+{
+    constructor( dataCtorArgs: DataArgs )
     {
-        return new PList( [] )    
+        super( dataCtorArgs );
     }
-
-    override get ctor(): new () => PList<PType> { return PList };
-
 }

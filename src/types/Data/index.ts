@@ -6,7 +6,7 @@ import DataMap from "./DataMap";
 import DataPair from "./DataPair";
 
 type Data 
-    = DataConstr
+    = DataConstr<Data[]>
     | DataPair<Data,Data>
     | DataMap<Data,Data>
     | DataList

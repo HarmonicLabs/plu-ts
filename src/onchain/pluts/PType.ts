@@ -1,9 +1,5 @@
 import Cloneable from "../../types/interfaces/Cloneable";
-import Defaultable from "../../types/interfaces/Defaultable";
 import UPLCTerm from "../UPLC/UPLCTerm";
-import UPLCConst from "../UPLC/UPLCTerms/UPLCConst";
-import ConstType, { constT, ConstTyTag } from "../UPLC/UPLCTerms/UPLCConst/ConstType";
-import Term from "./Term";
 
 
 export type PTypeCtor< PInstance extends PType > = new (...args: any[]) => PInstance;
@@ -31,8 +27,4 @@ export default class PType
     private readonly _PTypeUPLCTerm?: UPLCTerm;
 
     constructor() {}
-
-    static get default(): PType { return new PType };
-
-    get ctor(): new () => PType { return PType };
 };

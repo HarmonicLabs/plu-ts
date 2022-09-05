@@ -60,8 +60,8 @@ export function dataToCborObj( data: Data ): CborObj
         return new CborMap(
             data.map.map( pair => {
                 return {
-                    k: dataToCborObj( pair[ 0 ] ),
-                    v: dataToCborObj( pair[ 1 ] )
+                    k: dataToCborObj( pair.fst ),
+                    v: dataToCborObj( pair.snd )
                 }
             })
         );

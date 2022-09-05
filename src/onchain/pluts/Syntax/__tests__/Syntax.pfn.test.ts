@@ -1,7 +1,6 @@
 import { pfn, plam } from ".."
 import UPLCConst from "../../../UPLC/UPLCTerms/UPLCConst"
 import { plessEqInt } from "../../Prelude/Builtins"
-import TermBool from "../../Prelude/TermBool"
 import PBool from "../../PTypes/PBool"
 import PLam from "../../PTypes/PFn/PLam"
 import PInt from "../../PTypes/PInt"

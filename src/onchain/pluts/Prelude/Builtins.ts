@@ -17,13 +17,13 @@ import PDelayed from "../PTypes/PDelayed";
 import PFn from "../PTypes/PFn";
 import PLam, { TermFn } from "../PTypes/PFn/PLam";
 import PInt from "../PTypes/PInt";
-import PList from "../PTypes/PList";
+import PList, { PConstrArgs } from "../PTypes/PList";
 import PPair, { PMap } from "../PTypes/PPair";
 import PString from "../PTypes/PString";
 import PUnit from "../PTypes/PUnit";
 import { papp, pdelay, pfn, pforce, plam } from "../Syntax";
 import phoist from "../Term/HoistedTerm";
-import Type, { DataType, ToPType, Type as Ty } from "../Term/Type";
+import Type, { DataType, FromPDataTypeArr, ToPDataType, ToPDataTypeArr, ToPType, Type as Ty } from "../Term/Type";
 import TermBool, { addPBoolMethods } from "./TermBool";
 import TermBS, { addPByteStringMethods } from "./TermBS";
 import TermInt, { addPIntMethods } from "./TermInt";
@@ -1084,9 +1084,11 @@ export function pchooseData<ReturnT extends Ty>( returnT: ReturnT )
     ) as any;
 }
 
-export function pConstrToData( fieldsTypes: DataType[] ): TermFn<[ PInt, PList<PData> ], PDataConstr>
+export function pConstrToData<FieldsDataTypes extends DataType[]>
+    ( fieldsTypes: FieldsDataTypes ):
+    TermFn<[ PInt, PConstrArgs<ToPDataTypeArr<FieldsDataTypes>> ], PDataConstr<ToPDataTypeArr<FieldsDataTypes>>>
 {
-    return addApplications<[ PInt, PList<PData> ], PDataConstr >(
+    return addApplications<[ PInt, PConstrArgs<ToPDataTypeArr<FieldsDataTypes>> ], PDataConstr<ToPDataTypeArr<FieldsDataTypes>> >(
         new Term(
             Type.Fn([ Type.Int, Type.List( Type.Data.Any ) ], Type.Data.Constr( fieldsTypes ) ),
             _dbn => Builtin.constrData
@@ -1095,25 +1097,28 @@ export function pConstrToData( fieldsTypes: DataType[] ): TermFn<[ PInt, PList<P
 }
 
 export function pMapToData<DataKey extends DataType, DataVal extends DataType>
-    ( keyT: DataKey, valT: DataVal )
-    : TermFn<[ PMap<PDataKey, PDataVal> ], PDataMap<PDataKey, PDataVal>>
+    ( keyDataT: DataKey, valDataT: DataVal )
+    : TermFn<[ PMap<ToPDataType<DataKey>, ToPDataType<DataVal>> ], PDataMap<ToPDataType<DataKey>, ToPDataType<DataVal>>>
 {
-    return addApplications<[ PList<PPair<PDataKey, PDataVal>> ], PDataMap<PDataKey, PDataVal> >(
+    return addApplications<[ PList<PPair<ToPDataType<DataKey>, ToPDataType<DataVal>>> ], PDataMap<ToPDataType<DataKey>, ToPDataType<DataVal>> >(
         new Term(
-            _dbn => Builtin.mapData,
-            makePLamObj( new PList([ new PPair( new keyCtor, new valCtor ) ]), new PData )
+            Type.Lambda(
+                Type.Map( keyDataT, valDataT ),// keyDataT and valDataT are already as "Data" Types
+                Type.Data.Map( keyDataT, valDataT )
+            ),
+            _dbn => Builtin.mapData
         )
     );
 }
 
-export function pListToData<PDataListElem extends PData>
-    ( dataListElemCtor: new () => PDataListElem )
-    : TermFn<[ PList<PDataListElem> ], PDataList<PDataListElem> >
+export function pListToData<DataListElemT extends DataType>
+    ( dataListElemT: DataListElemT )
+    : TermFn<[ PList<ToPDataType<DataListElemT>> ], PDataList<ToPDataType<DataListElemT>> >
 {
-    return addApplications<[ PList<PDataListElem> ], PDataList<PDataListElem>>(
+    return addApplications<[ PList<ToPDataType<DataListElemT>> ], PDataList<ToPDataType<DataListElemT>>>(
         new Term(
-            _dbn => Builtin.listData,
-            makePLamObj( new PList([ new dataListElemCtor ]), new PDataList )
+            Type.List( dataListElemT ),
+            _dbn => Builtin.listData
         )
     );
 } 
@@ -1121,53 +1126,58 @@ export function pListToData<PDataListElem extends PData>
 export const pIntToData: TermFn<[ PInt ], PDataInt > 
     = addApplications<[ PInt ], PData >(
         new Term<PLam<PInt, PData >>(
-            _dbn => Builtin.iData,
-            new PLam( new PInt, new PData )
+            Type.Lambda( Type.Int, Type.Data.Int ),
+            _dbn => Builtin.iData
         )
     );
 
 export const pBSToData: TermFn<[ PByteString ], PDataBS > 
     = addApplications<[ PByteString ], PData >(
         new Term<PLam<PByteString, PData >>(
-            _dbn => Builtin.bData,
-            new PLam( new PByteString, new PData )
+            Type.Lambda( Type.BS, Type.Data.BS ),
+            _dbn => Builtin.bData
         )
     );
 
-export const punConstrData: TermFn<[ PDataConstr ], PPair<PInt, PList<PData>>>
-    = addApplications<[ PDataConstr ], PPair<PInt, PList<PData>>>(
+export function punConstrData<ConstrArgs extends DataType[]>( ctorArgs: ConstrArgs )
+    : TermFn<[ PDataConstr<ToPDataTypeArr<ConstrArgs>> ], PPair<PInt, PConstrArgs<ToPDataTypeArr<ConstrArgs>>>>
+{
+    return addApplications<[ PDataConstr<ToPDataTypeArr<ConstrArgs>> ], PPair<PInt, PConstrArgs<ToPDataTypeArr<ConstrArgs>>>>(
         new Term(
-            _dbn => Builtin.unConstrData,
-            new PLam( new PDataConstr, new PPair( new PInt, new PList([ new PData ]) ) )
+            Type.Lambda( Type.Data.Constr( ctorArgs ), Type.Pair( Type.Int, Type.List( Type.Data.Any ))), // @fixme @todo keep track of the data types in ```Type.List( Type.Data.Any )```
+            _dbn => Builtin.unConstrData
         )
     );
-    
-export function punMapData<PDataKey extends PData, PDataVal extends PData>
-    ( keyCtor: new () => PDataKey, valCtor: new () => PDataVal )
-    : TermFn<[ PData ], PList<PPair<PData, PData>>>
-    {
-        return addApplications<[ PData ], PList<PPair<PData, PData>>>(
-            new Term(
-                _dbn => Builtin.unMapData,
-                new PLam( new PData, new PList([ new PPair( new keyCtor, new valCtor ) ]))
-            )
-        );
+}
 
-    }
-
-export const punListData: TermFn<[ PData ], PList<PData>>
-    = addApplications<[ PData ], PList<PData>>(
+export function punMapData<DataK extends DataType, DataV extends DataType>
+    ( keyDataT: DataK, valDataT: DataV )
+    : TermFn<[ PDataMap<ToPDataType<DataK>, ToPDataType<DataV>> ], PList<PPair<ToPDataType<DataK>, ToPDataType<DataV>>>>
+{
+    return addApplications<[ PDataMap<ToPDataType<DataK>, ToPDataType<DataV>> ], PList<PPair<ToPDataType<DataK>, ToPDataType<DataV>>>>(
         new Term(
-            _dbn => Builtin.unListData,
-            new PLam( new PData, new PList([ new PData ]))
+            Type.Lambda( Type.Data.Map( keyDataT, valDataT ), Type.Map( keyDataT, valDataT ) ),
+            _dbn => Builtin.unMapData
         )
     );
+
+}
+
+export function punListData<DataElemT extends DataType>( dataElemT: DataElemT ): TermFn<[ PDataList<ToPDataType<DataElemT>> ], PList<ToPDataType<DataElemT>>>
+{
+    return addApplications<[ PDataList<ToPDataType<DataElemT>> ], PList<ToPDataType<DataElemT>>>(
+        new Term(
+            Type.Lambda( Type.Data.List( dataElemT ), Type.List( dataElemT ) ),
+            _dbn => Builtin.unListData
+        )
+    );
+}
 
 export const punIData: TermFn<[ PDataInt ], PInt>
     = addApplications<[ PDataInt ], PInt>(
         new Term(
+            Type.Lambda( Type.Data.Int, Type.Int ),
             _dbn => Builtin.unIData,
-            new PLam( new PData, new PInt)
         )
     );
 
@@ -1175,24 +1185,24 @@ export const punBData: Term<PLam<PDataBS, PByteString>>
 & {
     $: ( dataBS: Term<PDataBS> ) => TermBS
 } = (() => {
-    const unBData = new Term(
-        _dbn => Builtin.unBData,
-        new PLam( new PDataBS, new PByteString)
+    const unBData = new Term<PLam<PDataBS, PByteString>>(
+        Type.Lambda( Type.Data.BS, Type.BS ),
+        _dbn => Builtin.unBData
     );
 
     return ObjectUtils.defineReadOnlyProperty(
         unBData,
         "$",
         ( dataBS: Term<PDataBS> ): TermBS =>
-            addPByteStringMethods( papp( PByteString )( unBData, dataBS ) )
+            addPByteStringMethods( papp( unBData, dataBS ) )
     );
 })()
 
 export const peqData: TermFn<[ PData, PData ], PBool >
     = addApplications<[ PData, PData ], PBool >(
         new Term<PLam<PData, PLam< PData, PBool > >>(
-            _dbn => Builtin.equalsData,
-            new PLam( new PData, new PLam( new PData, new PBool ) )
+            Type.Fn([ Type.Data.Any, Type.Data.Any ], Type.Bool ),
+            _dbn => Builtin.equalsData
         )
     );
 
@@ -1212,31 +1222,28 @@ export function peq<PT extends PInt | PByteString | PString | PData >( pt: new (
     );
 }
 
-export const ppairData: TermFn<[ PData, PData ], PPair<PData,PData> >
-    = addApplications<[ PData, PData ], PPair<PData,PData> >(
-        new Term<PLam<PData, PLam< PData, PPair<PData,PData> > >>(
-            _dbn => Builtin.mkPairData,
-            new PLam( new PData, new PLam( new PData, new PPair( new PData, new PData ) ) )
+export function ppairData<DataFst extends DataType, DataSnd extends DataType>( dataFst: DataFst, dataSnd: DataSnd):
+    TermFn<[ ToPDataType<DataFst>, ToPDataType<DataSnd> ], PPair<ToPDataType<DataFst>,ToPDataType<DataSnd>>>
+{
+    return addApplications<[ ToPDataType<DataFst>,ToPDataType<DataSnd> ], PPair<ToPDataType<DataFst>,ToPDataType<DataSnd>> >(
+        new Term<PLam<ToPDataType<DataFst>, PLam< ToPDataType<DataSnd>, PPair<ToPDataType<DataFst>,ToPDataType<DataSnd>> > >>(
+            Type.Fn([ dataFst, dataSnd ], Type.Pair( dataFst, dataSnd )),
+            _dbn => Builtin.mkPairData
         )
     );
+}
 
-/**
- * @fixme **hoist**
- */
 export const pnilData: Term<PList< PData > >
-    = new Term(
-        _dbn => new Application( Builtin.mkNilData, UPLCConst.unit ),
-        new PList([ new PData ])
-    );
+    = phoist( new Term(
+        Type.List( Type.Any ),
+        _dbn => new Application( Builtin.mkNilData, UPLCConst.unit )
+    ));
 
-/**
- * @fixme **hoist**
- */
 export const pnilPairData: Term<PList< PPair<PData, PData>>>
-    = new Term(
-        _dbn => new Application( Builtin.mkNilPairData, UPLCConst.unit ),
-        new PList([ new PPair( new PData, new PData) ])
-    );
+    = phoist( new Term(
+        Type.List( Type.Pair( Type.Any, Type.Any ) ),
+        _dbn => new Application( Builtin.mkNilPairData, UPLCConst.unit )
+    ));
 
 export function pnil<PListElem extends PData | PPair<PData,PData> >( elemT: new () => PListElem )
     : Term<PList< PListElem > >
@@ -1266,8 +1273,8 @@ export function pnil<PListElem extends PData | PPair<PData,PData> >( elemT: new 
 export const pserialiseData: TermFn<[ PData ], PByteString >
     = addApplications<[ PData ], PByteString >(
         new Term(
-            _dbn => Builtin.serialiseData,
-            new PLam( new PData, new PByteString )
+            Type.Lambda( Type.Data.Any, Type.BS ),
+            _dbn => Builtin.serialiseData
         )
     );
 
@@ -1293,8 +1300,8 @@ export const pserialiseData: TermFn<[ PData ], PByteString >
 export const pverifySecp256k1ECDSA: TermFn<[ PByteString, PByteString, PByteString ], PBool > =
     addApplications<[ PByteString, PByteString, PByteString ], PBool >(
         new Term(
-            _dbn => Builtin.verifyEcdsaSecp256k1Signature,
-            new PLam( new PByteString , new PLam( new PByteString , new PLam( new PByteString , new PBool ) ) )
+            Type.Fn([ Type.BS, Type.BS, Type.BS ], Type.Bool),
+            _dbn => Builtin.verifyEcdsaSecp256k1Signature
         )
     );
 
@@ -1312,7 +1319,7 @@ export const pverifySecp256k1ECDSA: TermFn<[ PByteString, PByteString, PByteStri
 export const pverifySecp256k1Schnorr: TermFn<[ PByteString, PByteString, PByteString ], PBool > =
     addApplications<[ PByteString, PByteString, PByteString ], PBool >(
         new Term(
-            _dbn => Builtin.verifySchnorrSecp256k1Signature,
-            new PLam( new PByteString , new PLam( new PByteString , new PLam( new PByteString , new PBool ) ) )
+            Type.Fn([ Type.BS, Type.BS, Type.BS ], Type.Bool),
+            _dbn => Builtin.verifySchnorrSecp256k1Signature
         )
     );

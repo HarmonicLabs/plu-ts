@@ -1,4 +1,4 @@
-import PData, { DataFromPData } from ".";
+import PData from ".";
 import DataList from "../../../../types/Data/DataList";
 import UPLCConst from "../../../UPLC/UPLCTerms/UPLCConst";
 import { pListToData, punListData } from "../../Prelude/Builtins";
