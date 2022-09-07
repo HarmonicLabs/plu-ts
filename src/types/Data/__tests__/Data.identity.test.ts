@@ -78,7 +78,7 @@ describe( "dataFromCborObj( dataToCborObj( data ) ) === data", () => {
 
     })
 
-    test( "DataMap", () => {
+    test.skip( "DataMap", () => {
 
         identityTestFor(new DataMap([]));
 

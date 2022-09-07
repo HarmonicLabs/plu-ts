@@ -8,6 +8,7 @@ import UPLCConst from "../../../UPLC/UPLCTerms/UPLCConst";
 import { pBool } from "../../PTypes/PBool";
 import { pData } from "../../PTypes/PData";
 import PInt, { pInt } from "../../PTypes/PInt";
+import Type from "../../Term/Type";
 
 describe("pchooseData", () => {
 
@@ -36,7 +37,7 @@ describe("pchooseData", () => {
         );
     
         expect(
-            pchooseData( PInt ).$( pData( new DataConstr( 0, [] ) ) )
+            pchooseData( Type.Int ).$( pData( new DataConstr( 0, [] ) ) )
             .$         ( pInt( 69420 ) )
             .caseMap   ( pInt( 42069 ) )
             .caseList  ( pInt( 420   ) )
@@ -47,7 +48,7 @@ describe("pchooseData", () => {
         ).toEqual( target )
     
         expect(
-            pchooseData( PInt ).$( pData( new DataConstr( 0, [] ) ) )
+            pchooseData( Type.Int ).$( pData( new DataConstr( 0, [] ) ) )
             .caseConstr( pInt( 69420 ) )
             .$         ( pInt( 42069 ) )
             .caseList  ( pInt( 420   ) )
@@ -58,7 +59,7 @@ describe("pchooseData", () => {
         ).toEqual( target )
     
         expect(
-            pchooseData( PInt ).$( pData( new DataConstr( 0, [] ) ) )
+            pchooseData( Type.Int ).$( pData( new DataConstr( 0, [] ) ) )
             .caseConstr( pInt( 69420 ) )
             .caseMap   ( pInt( 42069 ) )
             .$         ( pInt( 420   ) )
@@ -69,7 +70,7 @@ describe("pchooseData", () => {
         ).toEqual( target )
     
         expect(
-            pchooseData( PInt ).$( pData( new DataConstr( 0, [] ) ) )
+            pchooseData( Type.Int ).$( pData( new DataConstr( 0, [] ) ) )
             .caseConstr( pInt( 69420 ) )
             .caseMap   ( pInt( 42069 ) )
             .caseList  ( pInt( 420   ) )
@@ -80,7 +81,7 @@ describe("pchooseData", () => {
         ).toEqual( target )
     
         expect(
-            pchooseData( PInt ).$( pData( new DataConstr( 0, [] ) ) )
+            pchooseData( Type.Int ).$( pData( new DataConstr( 0, [] ) ) )
             .caseConstr( pInt( 69420 ) )
             .caseMap   ( pInt( 42069 ) )
             .caseList  ( pInt( 420   ) )
@@ -91,7 +92,7 @@ describe("pchooseData", () => {
         ).toEqual( target );
         
         expect(
-            pchooseData( PInt ).$( pData( new DataConstr( 0, [] ) ) )
+            pchooseData( Type.Int ).$( pData( new DataConstr( 0, [] ) ) )
             .$         ( pInt( 69420 ) )
             .caseMap   ( pInt( 42069 ) )
             .$         ( pInt( 420   ) )
@@ -102,7 +103,7 @@ describe("pchooseData", () => {
         ).toEqual( target );
 
         expect(
-            pchooseData( PInt ).$( pData( new DataConstr( 0, [] ) ) )
+            pchooseData( Type.Int ).$( pData( new DataConstr( 0, [] ) ) )
             .caseConstr( pInt( 69420 ) )
             .$         ( pInt( 42069 ) )
             .caseList  ( pInt( 420   ) )

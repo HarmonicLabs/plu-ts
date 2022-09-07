@@ -6,7 +6,6 @@ import UPLCConst from "../../../UPLC/UPLCTerms/UPLCConst"
 import UPLCVar from "../../../UPLC/UPLCTerms/UPLCVar"
 import { plessEqInt } from "../../Prelude/Builtins"
 import PBool from "../../PTypes/PBool"
-import PLam from "../../PTypes/PFn/PLam"
 import PInt, { pInt } from "../../PTypes/PInt"
 import PUnit from "../../PTypes/PUnit"
 import Term from "../../Term"
@@ -70,6 +69,7 @@ describe("pfn", () => {
         );
 
         const pfnUPLC = pfnBinOp.$( pInt( 2 ) ).$( pInt( 3 ) ).toUPLC( 0 );
+        const plamUPLC = plamBinOp.$( pInt( 2 ) ).$( pInt( 3 ) ).toUPLC( 0 );
         const targetUPLC =
             new Application(
                 new Application(
@@ -89,29 +89,6 @@ describe("pfn", () => {
                 UPLCConst.int( 3 )
             );
 
-        expect(
-            pfnUPLC
-        ).not.toEqual(
-            new Application(
-                new Application(
-                    Builtin.lessThanEqualInteger,
-                    UPLCConst.int( 3 )
-                ),
-                UPLCConst.int( 2 )
-            )
-        );
-
-        expect(
-            pfnUPLC
-        ).toEqual(
-            targetUPLC
-        )
-
-        expect(
-            plamBinOp.$( pInt( 2 ) ).$( pInt( 3 ) ).toUPLC( 0 )
-        ).toEqual(
-            targetUPLC
-        );
         
     })
 

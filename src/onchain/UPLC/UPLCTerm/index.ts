@@ -1,14 +1,14 @@
-import UPLCVar from "./UPLCTerms/UPLCVar";
-import Delay from "./UPLCTerms/Delay";
-import Lambda from "./UPLCTerms/Lambda";
-import Application from "./UPLCTerms/Application";
-import UPLCConst from "./UPLCTerms/UPLCConst";
-import Force from "./UPLCTerms/Force";
-import ErrorUPLC from "./UPLCTerms/ErrorUPLC";
-import Builtin from "./UPLCTerms/Builtin";
-import JsRuntime from "../../utils/JsRuntime";
-import HoistedUPLC from "./UPLCTerms/HoistedUPLC";
-import BitStream from "../../types/bits/BitStream";
+import UPLCVar from "../UPLCTerms/UPLCVar";
+import Delay from "../UPLCTerms/Delay";
+import Lambda from "../UPLCTerms/Lambda";
+import Application from "../UPLCTerms/Application";
+import UPLCConst from "../UPLCTerms/UPLCConst";
+import Force from "../UPLCTerms/Force";
+import ErrorUPLC from "../UPLCTerms/ErrorUPLC";
+import Builtin from "../UPLCTerms/Builtin";
+import JsRuntime from "../../../utils/JsRuntime";
+import HoistedUPLC from "../UPLCTerms/HoistedUPLC";
+import BitStream from "../../../types/bits/BitStream";
 
 export type PureUPLCTerm 
     = UPLCVar
@@ -161,7 +161,6 @@ export function hasAnyRefsInTerm( varDeBruijn: number | bigint, t: UPLCTerm ): b
         "'hasAnyRefsInTerm' did not matched any possible 'UPLCTerm' constructor"
     );
 }
- 
 
 /**
  * 
@@ -169,7 +168,7 @@ export function hasAnyRefsInTerm( varDeBruijn: number | bigint, t: UPLCTerm ): b
  * @param {UPLCTerm} term ```UPLCTerm``` to search in
  * @returns {boolean} ```true``` if the variable has 2 or more references; ```false``` otherwise 
  */
-export function hasMultipleRefsInTerm( varDeBruijn: number | bigint, t: UPLCTerm ): boolean
+export function hasMultipleRefsInTerm( varDeBruijn: number | bigint, t: Readonly<UPLCTerm> ): boolean
 {
     JsRuntime.assert(
         isUPLCTerm( t ),
@@ -178,7 +177,7 @@ export function hasMultipleRefsInTerm( varDeBruijn: number | bigint, t: UPLCTerm
 
     const dbn = BigInt( varDeBruijn );
 
-    if( t instanceof UPLCVar )      return false; // single ref; caseo of multple refs is handled in 'Application' using 'hasAnyRefsInTerm'
+    if( t instanceof UPLCVar )      return false; // single ref; case of multple refs is handled in 'Application' using 'hasAnyRefsInTerm'
     if( t instanceof Delay )        return hasMultipleRefsInTerm( dbn, t.delayedTerm );
     if( t instanceof Lambda )       return hasMultipleRefsInTerm( dbn + BigInt(1), t.body );
     if( t instanceof Application ) 
@@ -255,6 +254,8 @@ export function getHoistedTerms( t: UPLCTerm ): HoistedUPLC[]
     return [];
 }
 
+/* experimental: getHoistedTermsAndRefs
+
 type HoistedRef = {
     compiled: BitStream,
     number: number
@@ -295,7 +296,6 @@ function mergeRefs( a: HoistedRefs, b: HoistedRefs ): HoistedRefs
     return result;
 }
 
-/* experimental: getHoistedTermsAndRefs
 
 just like ```getHoistedTerms``` but returns also the number of references per hoisted term found
 

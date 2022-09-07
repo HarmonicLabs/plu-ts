@@ -1,11 +1,13 @@
 import PData from "."
-import Data from "../../../../types/Data"
+import Data, { isData } from "../../../../types/Data"
 import DataB from "../../../../types/Data/DataB"
 import DataConstr from "../../../../types/Data/DataConstr"
 import DataI from "../../../../types/Data/DataI"
 import DataList from "../../../../types/Data/DataList"
 import DataMap from "../../../../types/Data/DataMap"
 import DataPair from "../../../../types/Data/DataPair"
+import JsRuntime from "../../../../utils/JsRuntime"
+import Type, { DataType } from "../../Term/Type"
 import PDataBS from "./PDataBS"
 import PDataConstr from "./PDataConstr"
 import PDataInt from "./PDataInt"
@@ -25,6 +27,8 @@ export type PDataFromData<DataInstance extends Data> =
     DataInstance extends DataConstr<infer DataArgs extends Data[]> ? PDataConstr<PDataFromDataArr<DataArgs>> :
     PData
 
+export type DataToPData<DataInstance extends Data> = PDataFromData<DataInstance>
+
 export type PDataToData<PDataInstance extends PData> = 
     PDataInstance extends PDataInt ? DataI :
     PDataInstance extends PDataBS ? DataB :
@@ -32,6 +36,8 @@ export type PDataToData<PDataInstance extends PData> =
     PDataInstance extends PDataList<PData> ? DataList :
     PDataInstance extends PDataConstr<infer PDataArgs extends PData[]> ? DataConstr<PDataToDataArr<PDataArgs>> :
     Data
+
+export type DataFromPData<PDataInstance extends PData> = PDataToData<PDataInstance>
 
 export type PDataToDataArr<PDataArr extends PData[]> =
     PDataArr extends [] ? [] & Data[] :
@@ -44,3 +50,33 @@ export type PDataFromDataArr<DataArr extends Data[]> =
     DataArr extends [infer DataInstance extends Data] ? [ PDataFromData<DataInstance> ] :
     DataArr extends [infer DataInstance extends Data, ...infer RestData extends Data[] ] ? [ PDataFromData<DataInstance>, PDataFromDataArr<RestData> ] :
     never;
+
+
+export function inferDataValueType( dataValue: Data ): DataType
+{
+    JsRuntime.assert(
+        isData( dataValue ),
+        "cannot infer 'DataType' from a value that is not an instance of 'Data'"
+    );
+
+    if( dataValue instanceof DataConstr ) return Type.Data.Constr( dataValue.fields.map( inferDataValueType ) );
+    if( dataValue instanceof DataMap )
+    {
+        const listOfPairs = dataValue.map;
+        if( listOfPairs.length === 0 ) return Type.Data.Map( Type.Data.Any,Type.Data.Any );
+        return Type.Data.Map( inferDataValueType( listOfPairs[0].fst ), inferDataValueType( listOfPairs[0].snd ) )
+    }
+    if( dataValue instanceof DataList ) 
+    {
+        const list = dataValue.list;
+        if( list.length === 0 ) return Type.Data.List( Type.Data.Any );
+        return Type.Data.List( inferDataValueType( list[0] ) );
+    }
+    if( dataValue instanceof DataPair ) return Type.Data.Pair( inferDataValueType( dataValue.fst ), inferDataValueType( dataValue.snd ) );
+    if( dataValue instanceof DataI ) return Type.Data.Int;
+    if( dataValue instanceof DataB ) return Type.Data.BS;
+
+    throw JsRuntime.makeNotSupposedToHappenError(
+        "'inferDataValueType' did not match any possible 'Data' constructor"
+    );
+}

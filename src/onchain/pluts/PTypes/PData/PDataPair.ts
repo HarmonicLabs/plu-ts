@@ -1,6 +1,7 @@
-import PData, { DataFromPData } from ".";
+import PData from ".";
 import DataI from "../../../../types/Data/DataI";
 import DataPair from "../../../../types/Data/DataPair";
+import { DataFromPData } from "./conversion";
 
 
 export default class PDataPair<PDataFst extends PData, PDataSnd extends PData> extends PData // (PData extends PType => PDataList extends PType too)

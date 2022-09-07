@@ -10,12 +10,11 @@ import Lambda from "../../UPLC/UPLCTerms/Lambda";
 import UPLCVar from "../../UPLC/UPLCTerms/UPLCVar";
 import PType from "../PType";
 import PDelayed from "../PTypes/PDelayed";
-import PLam, { TermFn } from "../PTypes/PFn/PLam";
-import Type, { FromPType, PrimType, ToPType, ToPTypeArr, ToTermArrNonEmpty, Type as Ty } from "../Term/Type";
+import PLam from "../PTypes/PFn/PLam";
+import Type, { FromPType, ToPType, ToTermArrNonEmpty, Type as Ty } from "../Term/Type";
 import Term from "../Term";
 import JsRuntime from "../../../utils/JsRuntime";
 import { isDelayedType, isLambdaType, typeExtends } from "../Term/Type/utils";
-import Debug from "../../../utils/Debug";
 import PInt from "../PTypes/PInt";
 import PUnit from "../PTypes/PUnit";
 
@@ -28,6 +27,7 @@ type PappResult<Output extends PType> =
     Term<Output>
 
 type test = PappResult<PLam<PInt,PLam<PUnit, PInt>>>
+
 /**
  * 
  * @param {Term<PLam<Input, Output>>} a Term that evalueates to an UPLC function ( type: ```Type.Lambda( inputT, outputT )``` ) 
@@ -51,18 +51,19 @@ export function papp<Input extends PType, Output extends PType >( a: Term<PLam<I
         "\"; received input was of type: \"" + b.type + "\""
     );
 
-    const outputType = lambdaType[ 2 ] as FromPType<Output>;
     const outputTerm = new Term(
-        outputType,
+        lambdaType[ 2 ] as FromPType<Output>,
         dbn => {
-            return new Application(
+            const app = new Application(
                 a.toUPLC( dbn ),
                 b.toUPLC( dbn )
-            )
+            );
+
+            return app; 
         }
     );
 
-    if( isLambdaType( outputType ) && ( !ObjectUtils.hasOwn( outputTerm, "$" ) ))
+    if( isLambdaType( outputTerm.type ) && ( !ObjectUtils.hasOwn( outputTerm, "$" ) ))
         // defined "$" property can be overridden but not deleted
         // override is necessary to allow a more specific implementation
         // 
@@ -98,7 +99,7 @@ export function plam<A extends Ty, B extends Ty >( inputType: A, outputType: B )
         );
     
         // allows ```lambdaTerm.$( input )``` syntax
-        // rather than ```papp( outCtor )( lambdaTerm, input )```
+        // rather than ```papp( lambdaTerm, input )```
         // preserving Term Type
         return ObjectUtils.defineReadOnlyProperty(
             lambdaTerm,
@@ -193,7 +194,7 @@ export function pdelay<PInstance extends PType>(toDelay: Term<PInstance>): Term<
 
 export function pforce<PInstance extends PType>( toForce: Term<PDelayed<PInstance>> ): Term<PInstance>
 {
-    Debug.ignore.log( "forcing type: " + toForce.type );
+    // Debug.ignore.log( "forcing type: " + toForce.type );
 
     if(!( isDelayedType( toForce.type ) ) ) throw new BasePlutsError(
         "cannot force a Term that is not Delayed first"

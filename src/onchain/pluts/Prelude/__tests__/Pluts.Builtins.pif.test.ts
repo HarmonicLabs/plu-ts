@@ -6,6 +6,7 @@ import Force from "../../../UPLC/UPLCTerms/Force";
 import UPLCConst from "../../../UPLC/UPLCTerms/UPLCConst";
 import { pBool } from "../../PTypes/PBool";
 import PInt, { pInt } from "../../PTypes/PInt";
+import Type from "../../Term/Type";
 
 describe("pif", () => {
 
@@ -22,7 +23,7 @@ describe("pif", () => {
         );
     
         expect(
-            pif( PInt ).$( pBool( true ) )
+            pif( Type.Int ).$( pBool( true ) )
             .then( pInt( 42 ) )
             .else( pInt( 69 ))
     
@@ -31,7 +32,7 @@ describe("pif", () => {
     
         expect(
     
-            pif( PInt ).$( pBool( true ) )
+            pif( Type.Int ).$( pBool( true ) )
             .$( pInt( 42 ) )
             .else( pInt( 69 ))
     
@@ -41,7 +42,7 @@ describe("pif", () => {
     
         expect(
     
-            pif( PInt ).$( pBool( true ) )
+            pif( Type.Int ).$( pBool( true ) )
             .then( pInt( 42 ) )
             .$( pInt( 69 ))
     
@@ -51,7 +52,7 @@ describe("pif", () => {
     
         expect(
     
-            pif( PInt ).$( pBool( true ) )
+            pif( Type.Int ).$( pBool( true ) )
             .$( pInt( 42 ) )
             .$( pInt( 69 ))
     
@@ -64,7 +65,7 @@ describe("pif", () => {
 
     expect(
 
-        pstrictIf( PInt ).$( pBool( true ) )
+        pstrictIf( Type.Int ).$( pBool( true ) )
         .$( pInt( 42 ) )
         .$( pInt( 69 ))
 

@@ -53,11 +53,11 @@ export default class Force
 
     constructor( term: UPLCTerm )
     {
-        JsRuntime.assert(
-            isForceableTerm( term ),
-            "while constructing 'Force'; UPLCTerm is not Forceable"
-        );
-
+        //JsRuntime.assert(
+        //    isForceableTerm( term ),
+        //    "while constructing 'Force'; UPLCTerm is not Forceable"
+        //);
+        
         this.termToForce = term;
     }
 

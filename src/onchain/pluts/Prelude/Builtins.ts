@@ -993,7 +993,7 @@ export function pchooseData<ReturnT extends Ty>( returnT: ReturnT )
         >
     >(
         Type.Fn(
-            [ Type.Data.Any, Type.Delayed( returnT ), Type.Delayed( returnT ), Type.Delayed( returnT ), Type.Delayed( returnT ), Type.Delayed( returnT ) ], returnT
+            [ Type.Data.Any, Type.Delayed( returnT ), Type.Delayed( returnT ), Type.Delayed( returnT ), Type.Delayed( returnT ), Type.Delayed( returnT ) ], Type.Delayed( returnT )
         ),
         _dbn => Builtin.chooseData
     );
