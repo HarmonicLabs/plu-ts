@@ -13,11 +13,3 @@ export default class PList<A extends PType> extends PType
         this._elems = elements
     }
 }
-
-export class PConstrArgs<DataArgs extends PData[]> extends PList<PData>
-{
-    constructor( dataCtorArgs: DataArgs )
-    {
-        super( dataCtorArgs );
-    }
-}

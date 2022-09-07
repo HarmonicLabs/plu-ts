@@ -67,7 +67,7 @@ const Type: {
     readonly Fn: <InsTs extends [ Type, ...Type[] ], OutT extends Type>( inputs: InsTs, output: OutT ) => FnType<InsTs, OutT>
     readonly Data: {
         readonly Any: [ DataConstructor.Any ];
-        readonly Constr: (fieldsTypes: DataType[]) => DataType;
+        readonly Constr: [ DataConstructor.Constr ];
         readonly Map: (keyType: DataType, valueType: DataType) => DataType;
         readonly Pair: (fstType: DataType, sndType: DataType) => DataType;
         readonly List: (elements: DataType) => DataType;
@@ -98,7 +98,7 @@ const Type: {
     },
     Data: Object.freeze({
         Any:    Object.freeze([ DataConstructor.Any ]),
-        Constr: ( fieldsTypes: DataType[] ) => Object.freeze([ DataConstructor.Constr, ...fieldsTypes ]),
+        Constr: Object.freeze([ DataConstructor.Constr ]),
         Map:    ( keyType: DataType, valueType: DataType ) => Object.freeze( Type.Data.List( Type.Data.Pair( keyType, valueType) ) ),
         Pair:   ( fstType: DataType, sndType: DataType ) => Object.freeze([ DataConstructor.Pair, fstType, sndType ]),
         List:   ( elements: DataType ) => Object.freeze([ DataConstructor.List, elements ]),
@@ -118,7 +118,7 @@ export type ToPDataType<DT extends DataType> =
     DT extends [ DataConstructor.List, [ DataConstructor.Pair, infer DataK extends DataType, infer DataV extends DataType] ] ? PDataMap<ToPDataType<DataK>, ToPDataType<DataV>> :
     DT extends [ DataConstructor.List, infer DataElemT extends DataType ] ? PDataList<ToPDataType<DataElemT>> :
     DT extends [ DataConstructor.Pair, infer DataFst extends DataType, infer DataSnd extends DataType ] ? PDataPair<ToPDataType<DataFst>,ToPDataType<DataSnd>> :
-    DT extends [ DataConstructor.Constr, ...infer FieldsDataTypes extends DataType[] ] ? PDataConstr<ToPDataTypeArr<FieldsDataTypes>> :
+    DT extends [ DataConstructor.Constr ] ? PDataConstr :
     DT extends DataType ? PData :
     never;
 
@@ -136,7 +136,7 @@ export type FromPDataType<PDT extends PData> =
     PDT extends PDataList<infer PDataElemT extends PData> ? [ DataConstructor.List, FromPDataType<PDataElemT> ] :
     PDT extends PDataPair<infer PDataFst extends PData, infer PDataSnd extends PData> ?
         [ DataConstructor.Pair, FromPDataType<PDataFst>, FromPDataType<PDataSnd> ]:
-    PDT extends PDataConstr<infer PDataConstrArgs extends PData[]> ? [ DataConstructor.Constr, ...FromPDataTypeArr<PDataConstrArgs> ] :
+    PDT extends PDataConstr ? [ DataConstructor.Constr ] :
     PDT extends PData ? DataType :
     never;
 

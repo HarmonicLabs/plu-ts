@@ -17,7 +17,7 @@ import PDelayed from "../PTypes/PDelayed";
 import PFn from "../PTypes/PFn";
 import PLam, { TermFn } from "../PTypes/PFn/PLam";
 import PInt from "../PTypes/PInt";
-import PList, { PConstrArgs } from "../PTypes/PList";
+import PList from "../PTypes/PList";
 import PPair, { PMap } from "../PTypes/PPair";
 import PString from "../PTypes/PString";
 import PUnit from "../PTypes/PUnit";
@@ -1084,17 +1084,14 @@ export function pchooseData<ReturnT extends Ty>( returnT: ReturnT )
     ) as any;
 }
 
-export function pConstrToData<FieldsDataTypes extends DataType[]>
-    ( fieldsTypes: FieldsDataTypes ):
-    TermFn<[ PInt, PConstrArgs<ToPDataTypeArr<FieldsDataTypes>> ], PDataConstr<ToPDataTypeArr<FieldsDataTypes>>>
-{
-    return addApplications<[ PInt, PConstrArgs<ToPDataTypeArr<FieldsDataTypes>> ], PDataConstr<ToPDataTypeArr<FieldsDataTypes>> >(
+export const pConstrToData:
+    TermFn<[ PInt, PList<PData> ], PDataConstr>
+    = addApplications<[ PInt, PList<PData> ], PDataConstr>(
         new Term(
-            Type.Fn([ Type.Int, Type.List( Type.Data.Any ) ], Type.Data.Constr( fieldsTypes ) ),
+            Type.Fn([ Type.Int, Type.List( Type.Data.Any ) ], Type.Data.Constr ),
             _dbn => Builtin.constrData
         )
     );
-}
 
 export function pMapToData<DataKey extends DataType, DataVal extends DataType>
     ( keyDataT: DataKey, valDataT: DataVal )
@@ -1139,16 +1136,14 @@ export const pBSToData: TermFn<[ PByteString ], PDataBS >
         )
     );
 
-export function punConstrData<ConstrArgs extends DataType[]>( ctorArgs: ConstrArgs )
-    : TermFn<[ PDataConstr<ToPDataTypeArr<ConstrArgs>> ], PPair<PInt, PConstrArgs<ToPDataTypeArr<ConstrArgs>>>>
-{
-    return addApplications<[ PDataConstr<ToPDataTypeArr<ConstrArgs>> ], PPair<PInt, PConstrArgs<ToPDataTypeArr<ConstrArgs>>>>(
+export const punConstrData
+    : TermFn<[ PDataConstr ], PPair<PInt, PList<PData>>>
+    = addApplications<[ PDataConstr ], PPair<PInt, PList<PData>>>(
         new Term(
-            Type.Lambda( Type.Data.Constr( ctorArgs ), Type.Pair( Type.Int, Type.List( Type.Data.Any ))), // @fixme @todo keep track of the data types in ```Type.List( Type.Data.Any )```
+            Type.Lambda( Type.Data.Constr, Type.Pair( Type.Int, Type.List( Type.Data.Any ))), // @fixme @todo keep track of the data types in ```Type.List( Type.Data.Any )```
             _dbn => Builtin.unConstrData
         )
     );
-}
 
 export function punMapData<DataK extends DataType, DataV extends DataType>
     ( keyDataT: DataK, valDataT: DataV )

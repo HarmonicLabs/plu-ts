@@ -40,8 +40,9 @@ export function isDataType( t: Ty ): t is DataType
     if( t.length === 1 )
     {
         return (
-            t[ 0 ] === DataConstructor.BS   ||
-            t[ 0 ] === DataConstructor.Int  ||
+            t[ 0 ] === DataConstructor.Constr   ||
+            t[ 0 ] === DataConstructor.BS       ||
+            t[ 0 ] === DataConstructor.Int      ||
             t[ 0 ] === DataConstructor.Any
         )
     }
@@ -56,22 +57,17 @@ export function isDataType( t: Ty ): t is DataType
             isDataType( t[ 1 ] ) && isDataType( t[ 2 ] )
         );
     
-    return (
-        t[ 0 ] === DataConstructor.Constr &&
-        ( t.slice( 1 ) as Ty[] ).every( isDataType )
-    );
+    return false;
 }
 
 export function isWellFormedType( t: Ty ): t is Ty
 {
     if(!( Array.isArray( t ) && t.length > 0 &&  isTypeName( t[0] ) )) return false;
     
-    if( t.length === 1) return true;
-    if( isDataType( t ) ) return true;
-
-    // DataConstructor.Constr can be of indefinite length
+    if( t.length === 1) return true;    
     if( t.length > 3 ) return false;
-
+    
+    if( isDataType( t ) ) return true;
     if( t.length === 2 )
     {        
         if(

@@ -4,16 +4,16 @@ import Cloneable from "../interfaces/Cloneable";
 import { UInteger, CanBeUInteger, forceUInteger } from "../ints/Integer";
 
 
-export default class DataConstr<ArgsDataTypes extends Data[]>
-    implements Cloneable<DataConstr<ArgsDataTypes>>
+export default class DataConstr
+    implements Cloneable<DataConstr>
 {
     private _constr: UInteger;
     get constr(): UInteger { return this._constr.clone() };
 
-    private _fields: ArgsDataTypes
-    get fields(): ArgsDataTypes { return this._fields.map( dataElem => dataElem.clone() ) as ArgsDataTypes };
+    private _fields: Data[]
+    get fields(): Data[] { return this._fields.map( dataElem => dataElem.clone() ) };
 
-    constructor( constr: CanBeUInteger, fields: ArgsDataTypes )
+    constructor( constr: CanBeUInteger, fields: Data[] )
     {
         JsRuntime.assert(
             fields.every( isData ),
@@ -24,11 +24,11 @@ export default class DataConstr<ArgsDataTypes extends Data[]>
         this._fields = fields;
     }
 
-    clone(): DataConstr<ArgsDataTypes>
+    clone(): DataConstr
     {
         return new DataConstr(
             this._constr.clone(),
-            this._fields.map( dataElem => dataElem.clone() ) as ArgsDataTypes
+            this._fields.map( dataElem => dataElem.clone() ) as Data[]
         );
     }
 }
