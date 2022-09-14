@@ -23,7 +23,7 @@ export default class ObjectUtils
             typeof obj === "object" &&
             ObjectUtils.isNotArray( obj ) &&
             obj !== null &&
-            obj !== undefined // maybe useless since "typeof" would have returned "undefined"
+            obj !== undefined // useless since "typeof" would have returned "undefined", but better safe than sorry :P
         )
     }
 
@@ -295,7 +295,7 @@ export default class ObjectUtils
     }
 
     static defineReadOnlyHiddenProperty<ObjT extends object, PropKey extends keyof any , ValT >
-        ( obj: ObjT, name: PropKey, value: ValT )
+        ( obj: ObjT, name: PropKey, value: ValT ): ObjT
     {
         return ObjectUtils.defineProperty(
             obj, name, value, 0

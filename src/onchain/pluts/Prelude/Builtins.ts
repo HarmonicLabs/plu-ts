@@ -1174,6 +1174,7 @@ export const punIData: TermFn<[ PDataInt ], PInt>
             Type.Lambda( Type.Data.Int, Type.Int ),
             _dbn => Builtin.unIData,
         )
+        //, addPIntMethods
     );
 
 export const punBData: Term<PLam<PDataBS, PByteString>>
@@ -1239,26 +1240,6 @@ export const pnilPairData: Term<PList< PPair<PData, PData>>>
         Type.List( Type.Pair( Type.Any, Type.Any ) ),
         _dbn => new Application( Builtin.mkNilPairData, UPLCConst.unit )
     ));
-
-export function pnil<PListElem extends PData | PPair<PData,PData> >( elemT: new () => PListElem )
-    : Term<PList< PListElem > >
-{
-    if( elemT.prototype === PData.prototype )
-    {
-        return pnilData as any;
-    }
-    if( elemT.prototype === PPair.prototype )
-    {
-        return pnilPairData as any;
-    }
-
-    /**
-     * @fixme add proper error
-    */
-     throw new BasePlutsError(
-        "unsupported low level 'nil' element'"
-    );
-}
 
 
 // --------------------------------------------------------------------------------------------------------------------- //

@@ -178,7 +178,49 @@ export function pfn<InputsTypes extends [ Ty, ...Ty[] ], OutputType extends Ty>(
         );
     }
 }
-    
+
+/**
+ * for reference the "Z combinator in js": https://medium.com/swlh/y-and-z-combinators-in-javascript-lambda-calculus-with-real-code-31f25be934ec
+ * 
+ * ```js
+ *  const Zcombinator = (
+ *  	Z => (
+ *  		toRecurse => Z( value => toRecurse(toRecurse)(value) )
+ *  	)( toRecurse => Z( value => toRecurse(toRecurse)(value)) )
+ *  );
+ * ```
+ * of type
+ * ```js
+ * Z => toRecurse => value => result
+ * ```
+ * and ```toRecurse``` has to be of type
+ * ```js
+ * self => value => result
+ * ```
+ */
+export const precursive =
+    phoist(
+        plam()( Z =>
+            plam()( toRecurse =>
+                papp(
+                    Z,
+                    plam()( value =>
+                        papp( papp( toRecurse, toRecurse ), value ) 
+                    )
+                )
+            ) 
+            .$(
+                plam()( toRecurse =>
+                    papp(
+                        Z,
+                        plam()( value =>
+                            papp( papp( toRecurse, toRecurse ), value ) 
+                        )
+                    )
+                )
+            )
+        )
+    )
 
 export function pdelay<PInstance extends PType>(toDelay: Term<PInstance>): Term<PDelayed<PInstance>>
 {
@@ -221,51 +263,52 @@ export function pforce<PInstance extends PType>( toForce: Term<PDelayed<PInstanc
     );
 }
 
-export function plet<PExprResult extends PType, PVar extends PType = NoInfer<PType>, TermPVar extends Term<PVar> = NoInfer<Term<PVar>>>( varValue: TermPVar )
+export function plet<PExprResult extends PType, PVar extends PType, TermPVar extends Term<PVar>>( varValue: TermPVar )
 {
-    return {
-        in: ( expr: (value: TermPVar) => Term<PExprResult> ): Term<PExprResult> => {
+    const continuation = ( expr: (value: TermPVar) => Term<PExprResult> ): Term<PExprResult> => {
 
-            // only to extracts the type; never compiled
-            const outType = expr( new Term(
-                varValue.type,
-                _dbn => new UPLCVar( 0 ) // mock variable
-            ) as TermPVar ).type;
+        // only to extracts the type; never compiled
+        const outType = expr( new Term(
+            varValue.type,
+            _dbn => new UPLCVar( 0 ) // mock variable
+        ) as TermPVar ).type;
 
-            return new Term(
-                outType,
-                dbn => new Application(
-                    new Lambda(
-                        expr( new Term(
-                            varValue.type,
-                            dbnExpr => new UPLCVar( dbn - ( dbnExpr + BigInt(1) ) ) // point to the lambda generated here
-                        ) as TermPVar ).toUPLC( dbn )
-                    ),
-                    varValue.toUPLC( dbn )
-                )
+        return new Term(
+            outType,
+            dbn => new Application(
+                new Lambda(
+                    expr( new Term(
+                        varValue.type,
+                        dbnExpr => new UPLCVar( dbn - ( dbnExpr ) ) // point to the lambda generated here
+                    ) as TermPVar ).toUPLC( dbn )
+                ),
+                varValue.toUPLC( dbn )
+            )
+        );
+
+        /*
+        this causes to compile twice the term at compile-time
+
+        one time here when checking
+        and the second one at the actual compilation
+
+        @fixme this should be handled at actual compile time with a similar process done for HoistedUPLC
+
+        // multiRefsCase is the term returned above
+        return hasMultipleRefsInTerm(
+                BigInt( -1 ), // var introduced in the term itself
+                multiRefsCase.toUPLC( 0 )
+            ) ?
+            multiRefsCase :
+            // inline the value in the variable if not referenced more than once
+            new Term(
+                dbn => expr( varValue ).toUPLC( dbn ),
+                new exprResT
             );
-
-            /*
-            this causes to compile twice the term at compile-time
-
-            one time here when checking
-            and the second one at the actual compilation
-
-            @fixme this should be handled at actual compile time with a similar process done for HoistedUPLC
-
-            // multiRefsCase is the term returned above
-            return hasMultipleRefsInTerm(
-                    BigInt( -1 ), // var introduced in the term itself
-                    multiRefsCase.toUPLC( 0 )
-                ) ?
-                multiRefsCase :
-                // inline the value in the variable if not referenced more than once
-                new Term(
-                    dbn => expr( varValue ).toUPLC( dbn ),
-                    new exprResT
-                );
-            */
-        }
+        */
+    }
+    return {
+        in: continuation
     };
 }
 

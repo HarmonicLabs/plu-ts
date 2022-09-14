@@ -16,6 +16,7 @@ import PInt from "../../PTypes/PInt";
 import PList from "../../PTypes/PList";
 import PPair from "../../PTypes/PPair";
 import PString from "../../PTypes/PString";
+import { PStructExtension } from "../../PTypes/PStruct";
 import PUnit from "../../PTypes/PUnit";
 
 export const enum PrimType {
@@ -40,53 +41,57 @@ export const enum DataConstructor {
     BS = "DataByteString",
 }
 
-export type TypeName = PrimType | DataConstructor
+export type TermTypeParameter = symbol;
+
+export type TypeName = PrimType | DataConstructor | TermTypeParameter
 
 export type DataType = [ DataConstructor, ...DataType[] ]
 
-type LambdaType<InT extends Type, OutT extends Type> = readonly [ PrimType.Lambda, InT, OutT ];
-type FnType<Ins extends [ Type, ...Type[] ], OutT extends Type> =
-    Ins extends [] ? Type :
-    Ins extends [ infer In extends Type ] ? LambdaType<In, OutT> :
-    Ins extends [ infer In extends Type, ...infer RestIns extends [ Type, ...Type[] ] ] ? LambdaType<In, FnType< RestIns, OutT >> :
-    Type;
+type LambdaType<InT extends TermType, OutT extends TermType> = readonly [ PrimType.Lambda, InT, OutT ];
+type FnType<Ins extends [ TermType, ...TermType[] ], OutT extends TermType> =
+    Ins extends [] ? TermType :
+    Ins extends [ infer In extends TermType ] ? LambdaType<In, OutT> :
+    Ins extends [ infer In extends TermType, ...infer RestIns extends [ TermType, ...TermType[] ] ] ? LambdaType<In, FnType< RestIns, OutT >> :
+    TermType;
 
 //@ts-ignore
 const Type: {
+    readonly Var:   ( description?: any ) => [ TermTypeParameter ]
     readonly Any:   [ PrimType.Any ];
     readonly Int:   [ PrimType.Int ];
     readonly BS:    [ PrimType.BS ];
     readonly Str:   [ PrimType.Str ];
     readonly Unit:  [ PrimType.Unit ];
     readonly Bool:  [ PrimType.Bool ];
-    readonly List:  <T extends Type>(ofElem: T) => [ PrimType.List, T ];
-    readonly Pair:  <FstT extends Type, SndT extends Type>(fst: FstT, snd: SndT) => [ PrimType.Pair, FstT, SndT ] ;
-    readonly Map:   <KeyT extends Type, ValT extends Type>(k: KeyT, v: ValT) => [PrimType.List, [PrimType.Pair, KeyT, ValT]]
-    readonly Delayed: <T extends Type>(toDelay: T) => [ PrimType.Delayed, T ];
-    readonly Lambda: <InT extends Type, OutT extends Type>(input: Type, output: Type) => [ PrimType.Lambda, InT, OutT ];
-    readonly Fn: <InsTs extends [ Type, ...Type[] ], OutT extends Type>( inputs: InsTs, output: OutT ) => FnType<InsTs, OutT>
+    readonly List:  <T extends TermType>(ofElem: T) => [ PrimType.List, T ];
+    readonly Pair:  <FstT extends TermType, SndT extends TermType>(fst: FstT, snd: SndT) => [ PrimType.Pair, FstT, SndT ] ;
+    readonly Map:   <KeyT extends TermType, ValT extends TermType>(k: KeyT, v: ValT) => [PrimType.List, [PrimType.Pair, KeyT, ValT]]
+    readonly Delayed: <T extends TermType>(toDelay: T) => [ PrimType.Delayed, T ];
+    readonly Lambda: <InT extends TermType, OutT extends TermType>(input: TermType, output: TermType) => [ PrimType.Lambda, InT, OutT ];
+    readonly Fn: <InsTs extends [ TermType, ...TermType[] ], OutT extends TermType>( inputs: InsTs, output: OutT ) => FnType<InsTs, OutT>
     readonly Data: {
         readonly Any: [ DataConstructor.Any ];
         readonly Constr: [ DataConstructor.Constr ];
         readonly Map: (keyType: DataType, valueType: DataType) => DataType;
         readonly Pair: (fstType: DataType, sndType: DataType) => DataType;
         readonly List: (elements: DataType) => DataType;
-        readonly Int: DataType;
-        readonly BS: DataType;
+        readonly Int: FixedTermDataType;
+        readonly BS: FixedTermDataType;
     }
  } = Object.freeze({
+    Var:        ( description?: any ) => Object.freeze([ Symbol( description ) ]),
     Any:        Object.freeze([ PrimType.Any ]),
     Int:        Object.freeze([ PrimType.Int ]),
     BS:         Object.freeze([ PrimType.BS ]),
     Str:        Object.freeze([ PrimType.Str ]),
     Unit:       Object.freeze([ PrimType.Unit ]),
     Bool:       Object.freeze([ PrimType.Bool ]),
-    List:       <T extends Type>( ofElem: T ): readonly [ PrimType.List, T ] => Object.freeze([ PrimType.List, ofElem ]) ,
-    Pair:       <FstT extends Type, SndT extends Type>( fst: FstT, snd: SndT ): readonly [ PrimType.Pair, FstT, SndT ] => Object.freeze([ PrimType.Pair, fst, snd ]),
-    Map:        <KeyT extends Type, ValT extends Type>( k: KeyT, v: ValT ) => Type.List( Type.Pair( k, v ) ),
-    Delayed:    <T extends Type>( toDelay: T ): readonly [ PrimType.Delayed, T ] => Object.freeze([ PrimType.Delayed, toDelay ]),
-    Lambda:     <InT extends Type, OutT extends Type>( input: InT, output: OutT ): LambdaType< InT, OutT > => Object.freeze([ PrimType.Lambda, input, output ]),
-    Fn:         <InsTs extends [ Type, ...Type[] ], OutT extends Type>( inputs: InsTs , output: Type ): FnType<InsTs, OutT> => {
+    List:       <T extends TermType>( ofElem: T ): readonly [ PrimType.List, T ] => Object.freeze([ PrimType.List, ofElem ]) ,
+    Pair:       <FstT extends TermType, SndT extends TermType>( fst: FstT, snd: SndT ): readonly [ PrimType.Pair, FstT, SndT ] => Object.freeze([ PrimType.Pair, fst, snd ]),
+    Map:        <KeyT extends TermType, ValT extends TermType>( k: KeyT, v: ValT ) => Type.List( Type.Pair( k, v ) ),
+    Delayed:    <T extends TermType>( toDelay: T ): readonly [ PrimType.Delayed, T ] => Object.freeze([ PrimType.Delayed, toDelay ]),
+    Lambda:     <InT extends TermType, OutT extends TermType>( input: InT, output: OutT ): LambdaType< InT, OutT > => Object.freeze([ PrimType.Lambda, input, output ]),
+    Fn:         <InsTs extends [ TermType, ...TermType[] ], OutT extends TermType>( inputs: InsTs , output: TermType ): FnType<InsTs, OutT> => {
         JsRuntime.assert(
             inputs.length > 0,
             "unsupported '(void) => any' type at Pluts level"
@@ -94,23 +99,64 @@ const Type: {
 
         if( inputs.length === 1 ) return Object.freeze( Type.Lambda( inputs[0], output ) ) as any;
 
-        return Object.freeze( Type.Lambda( inputs[ 0 ], Type.Fn( inputs.slice( 1 ) as [ Type, ...Type[] ], output ) ) ) as any;
+        return Object.freeze( Type.Lambda( inputs[ 0 ], Type.Fn( inputs.slice( 1 ) as [ TermType, ...TermType[] ], output ) ) ) as any;
     },
     Data: Object.freeze({
         Any:    Object.freeze([ DataConstructor.Any ]),
-        Constr: Object.freeze([ DataConstructor.Constr ]),
+        Constr: Object.freeze([ DataConstructor.Constr as FixedDataTypeName ]),
         Map:    ( keyType: DataType, valueType: DataType ) => Object.freeze( Type.Data.List( Type.Data.Pair( keyType, valueType) ) ),
         Pair:   ( fstType: DataType, sndType: DataType ) => Object.freeze([ DataConstructor.Pair, fstType, sndType ]),
         List:   ( elements: DataType ) => Object.freeze([ DataConstructor.List, elements ]),
-        Int:    Object.freeze([ DataConstructor.Int ]),
-        BS:     Object.freeze([ DataConstructor.BS ])
+        Int:    Object.freeze([ DataConstructor.Int as FixedDataTypeName ]),
+        BS:     Object.freeze([ DataConstructor.BS as FixedDataTypeName ])
     })
 });
 
 export default Type;
 
 // Type = TypeName followed by optional (nested) Types
-export type Type = readonly [ TypeName, ...Type[] ];
+export type TermType = readonly [ TypeName, ...TermType[] ];
+/**
+ * @deprecated use ```TermType```
+ */
+export type Type = TermType
+
+export type FixedDataTypeName
+    = DataConstructor.Constr
+    | DataConstructor.List
+    | DataConstructor.Pair
+    | DataConstructor.Int
+    | DataConstructor.BS;
+
+export type FixedTermDataType = [ FixedDataTypeName, ...FixedTermDataType[] ]
+
+export type FixedTypeName
+    = PrimType.Int
+    | PrimType.BS
+    | PrimType.Bool
+    | PrimType.Delayed
+    | PrimType.Lambda
+    | PrimType.List
+    | PrimType.Pair
+    | PrimType.Str
+    | PrimType.Unit;
+
+/**
+ * ```TermType``` without ```Any``` or parameters
+*/
+export type FixedTermType = [ FixedTypeName, ...FixedTermType[] ] | FixedTermDataType
+
+export type ConstantableTypeName
+    = PrimType.Int
+    | PrimType.BS
+    | PrimType.Bool
+    | PrimType.List
+    | PrimType.Pair
+    | PrimType.Str
+    | PrimType.Unit
+    | DataConstructor;
+
+export type ConstantableTermType = [ ConstantableTypeName, ...ConstantableTermType[] ];
 
 export type ToPDataType<DT extends DataType> =
     DT extends [ DataConstructor.Int ] ? PDataInt :
@@ -146,23 +192,25 @@ export type FromPDataTypeArr<PDTArr extends PData[]> =
     PDTArr extends [ infer PDT extends PData, ...infer RestPDTs extends PData[] ] ? [ FromPDataType<PDT>, ...FromPDataTypeArr<RestPDTs> ] :
     never;
 
-export type ToPType<T extends Type> =
+export type ToPType<T extends TermType> =
     T extends [ PrimType.Int ]   ? PInt :
     T extends [ PrimType.BS ]    ? PByteString :
     T extends [ PrimType.Str ]   ? PString :
     T extends [ PrimType.Unit ]  ? PUnit :
     T extends [ PrimType.Bool ]  ? PBool :
-    T extends [ PrimType.List, infer ListTyArg extends Type ]  ? PList< ToPType<ListTyArg> > :
-    T extends [ PrimType.Pair, infer FstTyArg extends Type, infer SndTyArg extends Type ]  ? PPair< ToPType<FstTyArg>, ToPType<SndTyArg> > :
-    T extends [ PrimType.Delayed, infer TyArg extends Type ]  ? PDelayed< ToPType<TyArg> > :
-    T extends [ PrimType.Lambda, infer InputTyArg extends Type, infer OutputTyArg extends Type ]  ? PLam< ToPType<InputTyArg>, ToPType<OutputTyArg> > :
+    T extends [ PrimType.List, infer ListTyArg extends TermType ]  ? PList< ToPType<ListTyArg> > :
+    T extends [ PrimType.Pair, infer FstTyArg extends TermType, infer SndTyArg extends TermType ]  ? PPair< ToPType<FstTyArg>, ToPType<SndTyArg> > :
+    T extends [ PrimType.Delayed, infer TyArg extends TermType ]  ? PDelayed< ToPType<TyArg> > :
+    T extends [ PrimType.Lambda, infer InputTyArg extends TermType, infer OutputTyArg extends TermType ]  ? PLam< ToPType<InputTyArg>, ToPType<OutputTyArg> > :
     T extends [ DataConstructor, ...DataType[] ] ? PData :
-    T extends Type ? PType :
+    // covers ```TermTypeParameter```s too
+    T extends TermType ? PType :
     // T extends FromPType<infer PT extends PType> ? PT :
     never;
 
-export type FromPType< PT extends PType | ToPType<Type> > =
-    PT extends ToPType<infer T extends Type> ? T : // !!! IMPORTANT !!! can only be present in one of the two types; breaks TypeScript LSP otherwise
+export type FromPType< PT extends PType | ToPType<Type> | PStructExtension<any> > =
+    PT extends PStructExtension<any> ? [ DataConstructor.Constr ] :
+    PT extends ToPType<infer T extends TermType> ? T : // !!! IMPORTANT !!! can only be present in one of the two types; breaks TypeScript LSP otherwise
     PT extends PInt         ? [ PrimType.Int ] :
     PT extends PByteString  ? [ PrimType.BS  ] :
     PT extends PString      ? [ PrimType.Str ] :
@@ -173,8 +221,8 @@ export type FromPType< PT extends PType | ToPType<Type> > =
     PT extends PDelayed<infer TyArg extends PType>  ? [ PrimType.Delayed, FromPType< TyArg > ] :
     PT extends PLam<infer FstTyArg extends PType, infer SndTyArg extends PType>     ? [ PrimType.Lambda, FromPType< FstTyArg >, FromPType< SndTyArg > ] :
     PT extends PData    ? [ DataConstructor, ...DataType[] ] :
-    PT extends PType    ? Type :
-    // PT extends ToPType<infer T extends Type> ? T :
+    PT extends PType    ? TermType :
+    // PT extends ToPType<infer T extends TermType> ? T :
     never;
 
 export type FromPTypeArr<PTs extends PType[]> =
@@ -183,28 +231,28 @@ export type FromPTypeArr<PTs extends PType[]> =
     PTs extends [ infer PT extends PType, ...infer RestPTs extends PType[] ] ? [ FromPType<PT>, ...FromPTypeArr<RestPTs> ] :
     never;
 
-export type ToPTypeArr<Ts extends Type[]> =
+export type ToPTypeArr<Ts extends TermType[]> =
     Ts extends [] ? [] & PType[] :
-    Ts extends [infer T extends Type] ? [ ToPType<T> ] & [ PType ] :
-    Ts extends [infer T extends Type, ...infer RestTs extends [ Type, ...Type[] ] ] ? [ ToPType<T>, ...ToPTypeArr<RestTs> ] & [ PType, ...PType[] ] :
+    Ts extends [infer T extends TermType] ? [ ToPType<T> ] & [ PType ] :
+    Ts extends [infer T extends TermType, ...infer RestTs extends [ TermType, ...TermType[] ] ] ? [ ToPType<T>, ...ToPTypeArr<RestTs> ] & [ PType, ...PType[] ] :
     never;
 
-export type ToPTypeArrNonEmpty<Ts extends[ Type, ...Type[] ]> =
+export type ToPTypeArrNonEmpty<Ts extends[ TermType, ...TermType[] ]> =
     Ts extends [] ? never :
-    Ts extends [infer T extends Type] ? [ ToPType<T> ] & [ PType ] :
-    Ts extends [infer T extends Type, ...infer RestTs extends [ Type, ...Type[] ] ] ? [ ToPType<T>, ...ToPTypeArr<RestTs> ] & [ PType, ...PType[] ] :
+    Ts extends [infer T extends TermType] ? [ ToPType<T> ] & [ PType ] :
+    Ts extends [infer T extends TermType, ...infer RestTs extends [ TermType, ...TermType[] ] ] ? [ ToPType<T>, ...ToPTypeArr<RestTs> ] & [ PType, ...PType[] ] :
     never;
 
-export type ToTermArr<Ts extends Type[]> =
+export type ToTermArr<Ts extends TermType[]> =
     Ts extends [] ? [] & Term<PType>[] :
-    Ts extends [infer T extends Type] ? [ Term<ToPType<T>>] & [ Term<PType> ] :
-    Ts extends [infer T extends Type, ...infer RestTs extends [ Type, ...Type[] ] ] ? [ Term<ToPType<T>>, ...ToTermArr<RestTs> ] & [ Term<PType>, ...Term<PType>[] ] :
+    Ts extends [infer T extends TermType] ? [ Term<ToPType<T>>] & [ Term<PType> ] :
+    Ts extends [infer T extends TermType, ...infer RestTs extends [ TermType, ...TermType[] ] ] ? [ Term<ToPType<T>>, ...ToTermArr<RestTs> ] & [ Term<PType>, ...Term<PType>[] ] :
     never;
 
-export type ToTermArrNonEmpty<Ts extends [ Type, ...Type[] ]> =
+export type ToTermArrNonEmpty<Ts extends [ TermType, ...TermType[] ]> =
     Ts extends [] ? never & Term<PType>[] :
-    Ts extends [infer T extends Type] ? [ Term<ToPType<T>>] & [ Term<PType> ] :
-    Ts extends [infer T extends Type, ...infer RestTs extends [ Type, ...Type[] ] ] ? [ Term<ToPType<T>>, ...ToTermArr<RestTs> ] & [ Term<PType>, ...Term<PType>[] ] :
+    Ts extends [infer T extends TermType] ? [ Term<ToPType<T>>] & [ Term<PType> ] :
+    Ts extends [infer T extends TermType, ...infer RestTs extends [ TermType, ...TermType[] ] ] ? [ Term<ToPType<T>>, ...ToTermArr<RestTs> ] & [ Term<PType>, ...Term<PType>[] ] :
     never;
 
 

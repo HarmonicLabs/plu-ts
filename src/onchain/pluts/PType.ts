@@ -1,5 +1,9 @@
 import Cloneable from "../../types/interfaces/Cloneable";
+import JsRuntime from "../../utils/JsRuntime";
 import UPLCTerm from "../UPLC/UPLCTerm";
+import PData from "./PTypes/PData";
+import Term from "./Term";
+import Type, { Type as Ty } from "./Term/Type";
 
 
 export type PTypeCtor< PInstance extends PType > = new (...args: any[]) => PInstance;
@@ -23,8 +27,16 @@ export default class PType
      * 
      * here only to make a difference from any generic object
     */
-    private readonly _isPType: true = true;
-    private readonly _PTypeUPLCTerm?: UPLCTerm;
+    protected readonly _isPType: true = true;
+    protected readonly _PTypeUPLCTerm?: UPLCTerm;
 
     constructor() {}
+
+    static get termType(): Ty { return Type.Any };
+
+    static get fromData(): ( data: Term<PData> ) => Term<PType> {
+        throw JsRuntime.makeNotSupposedToHappenError(
+            "'PType' is an abstract class; an extension of the class did not implemented the 'fromData' static method"
+        );
+    }
 };

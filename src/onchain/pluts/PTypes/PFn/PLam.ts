@@ -1,8 +1,9 @@
 import PFn from ".";
+import BasePlutsError from "../../../../errors/BasePlutsError";
 import Cloneable, { isCloneable } from "../../../../types/interfaces/Cloneable";
 import PType from "../../PType"
 import Term from "../../Term";
-
+import PData from "../PData";
 
 export default class PLam<A extends PType, B extends PType > extends PType
     implements Cloneable<PLam<A,B>>
@@ -18,14 +19,23 @@ export default class PLam<A extends PType, B extends PType > extends PType
         this._output = output;
     }
 
-    static get default(): PLam<PType, PType> { return new PLam( new PType, new PType ) }
-
     clone(): PLam<A,B>
     {
         return new PLam(
             isCloneable( this._input ) ? this._input.clone() : this._input ,
             isCloneable( this._output ) ? this._output.clone() : this._output 
         ) as PLam<A,B>;
+    }
+
+    /**
+     * @deprecated
+     * do not use
+     * here only to ovverride 'PType' static method; which also shouldn't be used
+     */
+     static override get fromData(): (data: Term<PData>) => Term<PLam<PType,PType>> {
+        throw new BasePlutsError(
+            "lambda terms cannot be obtained form data"
+        )
     }
 }
 
