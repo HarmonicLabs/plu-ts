@@ -2,7 +2,7 @@ import Term from ".."
 import UPLCVar from "../../../UPLC/UPLCTerms/UPLCVar"
 import { pgreaterInt } from "../../Prelude/Builtins"
 import { pInt } from "../../PTypes/PInt"
-import phoist from "../HoistedTerm"
+import { phoist } from "../../Syntax"
 import Type from "../Type"
 
 

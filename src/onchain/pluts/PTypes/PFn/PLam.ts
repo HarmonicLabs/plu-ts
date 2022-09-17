@@ -1,6 +1,7 @@
 import PFn from ".";
 import BasePlutsError from "../../../../errors/BasePlutsError";
 import Cloneable, { isCloneable } from "../../../../types/interfaces/Cloneable";
+import { Tail } from "../../../../utils/ts";
 import PType from "../../PType"
 import Term from "../../Term";
 import PData from "../PData";
@@ -27,22 +28,13 @@ export default class PLam<A extends PType, B extends PType > extends PType
         ) as PLam<A,B>;
     }
 
-    /**
-     * @deprecated
-     * do not use
-     * here only to ovverride 'PType' static method; which also shouldn't be used
-     */
-     static override get fromData(): (data: Term<PData>) => Term<PLam<PType,PType>> {
-        throw new BasePlutsError(
-            "lambda terms cannot be obtained form data"
-        )
-    }
 }
 
 export type  PLamIn< PLamInstance extends PLam< PType, PType > > = PLamInstance extends PLam< infer PIn, any >  ? PIn  : never;
 export type PLamOut< PLamInstance extends PLam< PType, PType > > = PLamInstance extends PLam< any, infer POut > ? POut : never;
 
 export type TermFn<Ins extends [ PType, ...PType[] ] , Out extends PType> =
+    Out extends PLam<infer A extends PType, infer B extends PType> ? TermFn<[ Ins[0], ...Tail<Ins> , A ], B> :
     Ins extends [ infer PInstance extends PType ] ? Term<PLam<PInstance, Out>> & { $: ( input: Term<PInstance> ) => Term<Out> } :
     Ins extends [ infer PInstance extends PType, ...infer RestIns extends [ PType, ...PType[] ] ] ?
         Term<PLam<PInstance,PFn<RestIns, Out>>>

@@ -3,7 +3,7 @@ import JsRuntime from "../../utils/JsRuntime";
 import UPLCTerm from "../UPLC/UPLCTerm";
 import PData from "./PTypes/PData";
 import Term from "./Term";
-import Type, { Type as Ty } from "./Term/Type";
+import Type, { TermType } from "./Term/Type";
 
 
 export type PTypeCtor< PInstance extends PType > = new (...args: any[]) => PInstance;
@@ -32,11 +32,26 @@ export default class PType
 
     constructor() {}
 
-    static get termType(): Ty { return Type.Any };
+    static get termType(): TermType { return Type.Any };
+};
 
-    static get fromData(): ( data: Term<PData> ) => Term<PType> {
+/**
+ * @abstract
+ */
+export class PDataRepresentable extends PType
+{
+    constructor() { super(); }
+
+    static fromData( data: Term<PData> ): Term<any>
+    {
         throw JsRuntime.makeNotSupposedToHappenError(
-            "'PType' is an abstract class; an extension of the class did not implemented the 'fromData' static method"
+            "'PDataRepresentable' is an abstract class; an extension of the class did not implemented the 'fromData' static method"
         );
     }
-};
+
+    static toData( term: Term<any> ): Term<PData> {
+        throw JsRuntime.makeNotSupposedToHappenError(
+            "'PDataRepresentable' is an abstract class; an extension of the class did not implemented the 'toData' static method"
+        );
+    }
+}

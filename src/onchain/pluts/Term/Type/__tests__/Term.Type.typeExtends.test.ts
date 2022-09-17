@@ -1,5 +1,5 @@
-import Type from "..";
-import { typeExtends } from "../utils";
+import Type, { TermType } from "..";
+import { termTypeToString, termTyToConstTy, typeExtends } from "../utils";
 
 
 
@@ -27,6 +27,14 @@ const allTypes = [
 
 describe("typeExtends", () => {
 
+    test("same type is true", () => {
+
+        allTypes.forEach( t => {
+            expect( typeExtends( t, t ) ).toBe(true)
+        });
+
+    })
+
     describe("tyParams", () => {
 
         test("single TyParam works as 'Type.Any'", () => {
@@ -37,6 +45,33 @@ describe("typeExtends", () => {
             });
 
         });
+
+        test("same typeParam", () => {
+
+            const sameTy = Type.Var("same type paramteter");
+
+            function testSameTyParam( t: TermType, expected: boolean = true ): void
+            {
+                console.log( termTypeToString( t ) )
+                expect(
+                    typeExtends(
+                        t,
+                        Type.Pair( sameTy, sameTy )
+                    )
+                ).toBe(expected)
+            }
+
+            allTypes.forEach( t => {
+                testSameTyParam( Type.Pair( t, t ) )
+            });
+
+            testSameTyParam( Type.Pair( Type.Int, Type.Str ), false );
+            
+            testSameTyParam( Type.Pair( Type.Int, Type.Any ), false );
+            testSameTyParam( Type.Pair( Type.Any, Type.Any ), false );
+            testSameTyParam( Type.Pair( Type.Any, Type.Int ), false );
+
+        })
 
         describe("multiple params", () => {
 
@@ -59,68 +94,6 @@ describe("typeExtends", () => {
                         ).toBe( true );
                     });
 
-                });
-
-            });
-
-            test("same tyVar, constraints to the most generic", () => {
-
-                allTypes.forEach( t1 => {
-
-                    allTypes.forEach( t2 => {
-                        
-                        const sameTyVar = Type.Var("same");
-
-                        expect(
-                            typeExtends( 
-                                Type.Pair( t1, t2 ),
-                                Type.Pair( sameTyVar, sameTyVar )
-                            )
-                        // false if the types are not related
-                        // true if eiter one extends the other
-                        ).toBe( typeExtends( t2, t1 ) || typeExtends( t1, t2 ) );
-
-                    });
-                    
-                });
-
-            });
-
-            test("same tyVar, constraints to the most generic, different tyVar is unrelated", () => {
-
-                allTypes.forEach( t1 => {
-
-                    allTypes.forEach( t2 => {
-
-                        const sameTyVar = Type.Var("same");
-                        
-                        allTypes.forEach( t3 => {
-                        
-                            const otherTyVar = Type.Var("other");
-    
-                            // false if the types are not related
-                            // true if eiter one extends the other
-                            // third type doesn't matter since unrelated
-                            const expected = typeExtends( t2, t1 ) || typeExtends( t1, t2 );
-
-                            expect(
-                                typeExtends( 
-                                    Type.Pair( t1, Type.Pair( t3, t2 ) ),
-                                    Type.Pair( sameTyVar, Type.Pair( otherTyVar, sameTyVar ) )
-                                )
-                            ).toBe( expected );
-
-                            expect(
-                                typeExtends( 
-                                    Type.Pair( t1, Type.Pair( t3, t2 ) ),
-                                    Type.Pair( sameTyVar, Type.Pair( Type.Any, sameTyVar ) )
-                                )
-                            ).toBe( expected );
-    
-                        });
-
-                    });
-                    
                 });
 
             });

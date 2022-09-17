@@ -36,10 +36,7 @@ export function isFixedTypeNameOfPrim( tyName: TypeName ): tyName is FixedTypeNa
 
 export function isTypeNameOfPrimitive( tyName: TypeName ): tyName is PrimType
 {
-    return (
-        tyName === PrimType.Any     ||
-        isFixedTypeName( tyName )
-    );
+    return ( isFixedTypeName( tyName ) );
 }
 
 export function isFixedDataTypeName( tyName: TypeName ): tyName is FixedDataTypeName
@@ -303,10 +300,10 @@ export function areTypesEquals( a: TermType, b: TermType ): boolean
  */
 export function replaceTypeParam( tyParam: Readonly<TermTypeParameter> | [ Readonly<TermTypeParameter> ] , withTermType: Readonly<FixedTermType>, toBeReplacedIn: Readonly<TermType> ): TermType
 {
-    JsRuntime.assert(
-        isFixedType( withTermType ),
-        "cannot replace a type paramter with a non fixed TermType"
-    );
+    // JsRuntime.assert(
+    //     isFixedType( withTermType ),
+    //     "cannot replace a type paramter with a non fixed TermType"
+    // );
 
     if( typeof tyParam !== "symbol" ) tyParam = tyParam[0];
 
@@ -401,39 +398,62 @@ export function typeExtends<ExtendedTy extends TermType>( extending: TermType, e
         isWellFormedType( extended  )
     )) return false;
 
-    const paramsMem: {
-        tyVarExtended: symbol
-        tyArgExtending: TermType
-    }[] = [];
+    type TyPair = {
+        tyVar: symbol
+        tyArg: TermType
+    };
+
+    const subs: TyPair[] = [];
+
+    function findSym( tVar: symbol ): TyPair | undefined
+    {
+        return subs.find( pair => pair.tyVar === tVar )
+    }
 
     function unchecked( a: TermType, b: TermType ): boolean
     {
-        if( b[0] === PrimType.Any ) return true;
-
         if( isTypeParam( b[0] ) )
         {
             if( b[0] === a[0] ) return true; // same symbol
 
-            const thisTyArg = paramsMem.find( knownParam => knownParam.tyVarExtended === b[0] );
-            let arg = thisTyArg?.tyArgExtending; 
-            if( arg === undefined )
+            const thisTyPair = findSym( b[0] );
+            
+            // type paramteter never found before
+            if( thisTyPair === undefined )
             {
-                paramsMem.push({
-                    tyVarExtended: b[0],
-                    tyArgExtending: a // fixme; on unknown take most generic typaram present
-                })
-                return true; 
-            }
-            if( unchecked( arg, a ) )
-            {
-                // this type argument is more general than the registered one
-                (thisTyArg as any).tyArgExtending = a;
+                subs.push({
+                    tyVar: b[0],
+                    tyArg: a
+                });
                 return true;
             }
-            return unchecked( a, arg );
+
+            // type parameter was found and is a parameter
+            if( isTypeParam( thisTyPair.tyArg[0] ) )
+            {
+                // if this value is a parameter (just like the one found before)
+                if( isTypeParam( a[0] ) )
+                {
+                    // make sure is the same paramter since
+                    // is corresponding to the same paramter in 'b' (the extended type)
+                    return a[0] === thisTyPair.tyArg[0];
+                }
+                // else should update with more specific one
+
+                // check if previous type is still assignable to new (more specific) argument
+                // return false if not, since the previous is too genreic
+                if( !unchecked( thisTyPair.tyArg, a ) ) return false;
+                
+                // update with specific type
+                thisTyPair.tyArg = a;
+                return true;
+            }
+
+            // thisTyPair.tyArg is a fixed type
+            return unchecked( a, thisTyPair.tyArg )
         }
 
-        if( a[0] === PrimType.Any ) return false;
+        if( isTypeParam( a[0] ) ) return false;
 
         if( isTypeNameOfData( b[0] ) )
         {
@@ -447,12 +467,130 @@ export function typeExtends<ExtendedTy extends TermType>( extending: TermType, e
         const bTyArgs = b.slice(1) as TermType[];
         return (
             a[ 0 ] === b[ 0 ] &&
-            // a.length === b.length && // not a check because of possible ```PrimType.Any``` as type arguments
+            // a.length === b.length && // not a check because of possible ```Type.Var()``` as type arguments
             ( a.slice( 1 ) as TermType[] ).every( (aTyArg, idx) => unchecked( aTyArg, bTyArgs[ idx ] ) )
         );
     }
 
     return unchecked( extending, extended );
+}
+
+/**
+ * **pure**
+ * @param referenceRestriction 
+ * @param toBeRestricted 
+ * @returns {TermType | undefined} ```TermType | undefined```; the least generic type that can extend the ```referenceRestriction``` param;
+ *  ```undefined``` if ```toBeRestricted``` is not an extension of ```referenceRestriction``` **OR**
+ *  if the result would be MORE generic than the already generic type
+ * 
+ * @example
+ * ```ts
+ * restrictExtensionWith( Type.Int, Type.Var() ) // -> Type.Int
+ * 
+ * restrictExtensionWith(
+ *      Type.Pair( Type.Int, Type.Var("something") ),
+ *      Type.Pair( Type.Var("a"), Type.Var("b") )
+ * ) // -> Type.Pair( Type.Int, Type.Var("some_other_b") )
+ * 
+ * restrictExtensionWith(
+ *      Type.Pair( Type.Int, Type.Int ),
+ *      Type.Pair( Type.Var("a"), Type.Var("b") )
+ * ) // -> Type.Pair( Type.Int, Type.Int )
+ * 
+ * const same_a = Type.Var("same_a");
+ * restrictExtensionWith(
+ *      Type.Pair( Type.Int, Type.Any ),
+ *      Type.Pair( same_a , same_a  )
+ * ) // -> undefined
+ * 
+ * restrictExtensionWith(
+ *      Type.Str,
+ *      Type.Int
+ * ) // -> undefined // first type cannot be assigned to the second
+ * 
+ * restrictExtensionWith(
+ *      Type.Pair( Type.Int, Type.Any ),
+ *      Type.Pair( Type.Int, Type.Int )
+ * ) // -> undefined // first type cannot be assigned to the second
+ * 
+ * ```
+ */
+export function restrictExtensionWith( referenceRestriction: Readonly<TermType>, toBeRestricted: Readonly<TermType> ): TermType | undefined
+{
+    /* checked in ```typeExtends```
+    if(!(
+        isWellFormedType( referenceRestriction ) &&
+        isWellFormedType( toBeRestricted  )
+    )) return undefined;
+    */
+    if( !typeExtends( referenceRestriction, toBeRestricted ) ) return undefined;
+
+    type TyPair = {
+        tyVar: symbol
+        tyArg: TermType
+    };
+
+    const subs: TyPair[] = [];
+
+    function findSym( tVar: symbol ): TyPair | undefined
+    {
+        return subs.find( pair => pair.tyVar === tVar )
+    }
+
+    function assignSub( k: symbol, value: TermType, tyPair: TyPair | undefined = undefined ): void
+    {
+        const thisTyPair = tyPair !== undefined && tyPair.tyVar === k ? tyPair : findSym( k );
+
+        if( thisTyPair !== undefined && !typeExtends( value, thisTyPair.tyArg ) )
+        {
+            console.log(
+                termTypeToString(value) + " extends "
+                + termTypeToString(thisTyPair.tyArg) + ": ",
+                typeExtends( value, thisTyPair.tyArg )
+            );
+
+            throw JsRuntime.makeNotSupposedToHappenError(
+                "sub type (" + termTypeToString( value ) + ") does not extends other subtype (" + termTypeToString( thisTyPair.tyArg ) + ") to be restircted; " +
+                "this case suld have already returned 'undefined' at the initial check of 'restrictExtensionWith'"
+            );
+        }
+
+        if( thisTyPair === undefined )
+        {
+            subs.push({
+                tyVar: k,
+                tyArg: value
+            });
+        }
+        else if( typeExtends( thisTyPair.tyArg, value ) )
+        {
+            // this type arument is more general than the previous registered
+            thisTyPair.tyArg = value;
+        }
+    }
+
+    function findSubs( a: Readonly<TermType>, b: Readonly<TermType> ): void
+    {
+        if( isTypeParam( b[0] ) )
+        {
+            assignSub( b[0], a );
+        }
+
+        (b.slice(1) as TermType[])
+        .forEach( (bTyArg, i) =>
+            findSubs( a[ i + 1 ] as TermType, bTyArg )
+        );
+    }
+
+    findSubs( referenceRestriction, toBeRestricted );
+
+    let result = toBeRestricted;
+    for(const sub of subs)
+    {
+        result = replaceTypeParam( sub.tyVar, sub.tyArg as any, result );
+    }
+
+    return result;
 }
 
 export function getNRequiredLambdaArgs( type: TermType ): number
@@ -491,4 +629,11 @@ export function termTyToConstTy( termT: ConstantableTermType ): ConstType
     }
 
     return unchecked( termT );
+}
+
+export function termTypeToString( t: TermType ): string
+{
+    if( typeof t[0] === "symbol" ) return "tyParam("+ t[0].description +")";
+    const tyArgs = t.slice(1) as TermType[];
+    return ( t[0] + (tyArgs.length > 0 ? ',': "") + tyArgs.map( termTypeToString ).toString() );
 }

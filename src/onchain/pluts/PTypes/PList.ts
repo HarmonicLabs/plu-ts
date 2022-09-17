@@ -2,15 +2,16 @@ import Data, { isData } from "../../../types/Data";
 import JsRuntime from "../../../utils/JsRuntime";
 import UPLCConst from "../../UPLC/UPLCTerms/UPLCConst";
 import { constT } from "../../UPLC/UPLCTerms/UPLCConst/ConstType";
-import { punListData } from "../Prelude/Builtins";
-import PType from "../PType";
+import { pListToData, pnilData, pnilPairData, punListData } from "../Prelude/Builtins";
+import PType, { PDataRepresentable } from "../PType";
 import Term from "../Term";
 import Type, { ToPType, TermType, ConstantableTermType } from "../Term/Type";
-import { isConstantableTermType, termTyToConstTy, typeExtends } from "../Term/Type/utils";
+import { isConstantableTermType, termTypeToString, termTyToConstTy, typeExtends } from "../Term/Type/utils";
 import PData from "./PData";
+import PDataList from "./PData/PDataList";
 
 
-export default class PList<A extends PType> extends PType
+export default class PList<A extends PType> extends PDataRepresentable
 {
     private _elems: A[];
 
@@ -22,8 +23,13 @@ export default class PList<A extends PType> extends PType
     }
 
     static override get termType(): TermType { return Type.List( Type.Any )}
-    static override get fromData(): (data: Term<PData>) => Term<PList<PType>> {
+    static override get fromData(): (data: Term<PData>) => Term<PList<PData>>
+    {
         return (data: Term<PData>) => punListData( Type.Data.Any ).$( data );
+    }
+    static override toData(term: Term<PList<PData>>): Term<PDataList<PData>>
+    {
+        return pListToData( Type.Data.Any ).$( term )
     }
 }
 
@@ -38,6 +44,12 @@ function assertValidListType( elemsT: ConstantableTermType ): void
 export function pnil<ElemsT extends ConstantableTermType>( elemsT: ElemsT ): Term<PList<ToPType<ElemsT>>>
 {
     assertValidListType( elemsT );
+
+    if( typeExtends( elemsT, Type.Data.Any ) )
+    {
+        if( typeExtends( elemsT, Type.Data.Pair( Type.Data.Any, Type.Data.Any ) ) ) return pnilPairData as any;
+        return pnilData as any;
+    }
 
     return new Term<PList<ToPType<ElemsT>>>(
         Type.List( elemsT ),
@@ -60,6 +72,8 @@ export function pconstList<ElemsT extends ConstantableTermType>( elemsT: ElemsT 
             ),
             "invalid array of elements to construct a list with"
         );
+
+        if( elems.length === 0 ) return pnil( elemsT );
 
         return new Term<PList<ToPType<ElemsT>>>(
             Type.List( elemsT ),
@@ -127,6 +141,7 @@ export function pList<ElemsT extends ConstantableTermType>( elemsT: ElemsT ): ( 
 
 export function pDataList( datas: Data[] ): Term<PList<PData>>
 {
+    console.log( datas );
     JsRuntime.assert(
         Array.isArray( datas ) && datas.every( isData ),
         "invalid list of data passed to 'pDataList'"

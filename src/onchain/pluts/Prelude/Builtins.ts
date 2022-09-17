@@ -4,7 +4,7 @@ import { Head } from "../../../utils/ts";
 import Application from "../../UPLC/UPLCTerms/Application";
 import Builtin from "../../UPLC/UPLCTerms/Builtin";
 import UPLCConst from "../../UPLC/UPLCTerms/UPLCConst";
-import PType, { ToCtors } from "../PType";
+import PType from "../PType";
 import PBool, { pBool } from "../PTypes/PBool";
 import PByteString from "../PTypes/PByteString";
 import PData from "../PTypes/PData";
@@ -13,7 +13,6 @@ import PDataConstr from "../PTypes/PData/PDataConstr";
 import PDataInt from "../PTypes/PData/PDataInt";
 import PDataList from "../PTypes/PData/PDataList";
 import PDataMap from "../PTypes/PData/PDataMap";
-import PDelayed from "../PTypes/PDelayed";
 import PFn from "../PTypes/PFn";
 import PLam, { TermFn } from "../PTypes/PFn/PLam";
 import PInt from "../PTypes/PInt";
@@ -21,9 +20,8 @@ import PList from "../PTypes/PList";
 import PPair, { PMap } from "../PTypes/PPair";
 import PString from "../PTypes/PString";
 import PUnit from "../PTypes/PUnit";
-import { papp, pdelay, pfn, pforce, plam } from "../Syntax";
-import phoist from "../Term/HoistedTerm";
-import Type, { DataType, FromPDataTypeArr, ToPDataType, ToPDataTypeArr, ToPType, Type as Ty } from "../Term/Type";
+import { papp, phoist, pdelay, pfn, pforce, plam } from "../Syntax";
+import Type, { DataType, ToPDataType, ToPType, TermType } from "../Term/Type";
 import TermBool, { addPBoolMethods } from "./TermBool";
 import TermBS, { addPByteStringMethods } from "./TermBS";
 import TermInt, { addPIntMethods } from "./TermInt";
@@ -552,7 +550,7 @@ export const pdecodeUtf8: Term<PLam<PByteString, PString>>
 })()
 
 
-export function pstrictIf<ReturnT extends Ty>( returnT: ReturnT ): TermFn<[ PBool, ToPType<ReturnT>, ToPType<ReturnT> ], ToPType<ReturnT>>
+export function pstrictIf<ReturnT extends TermType>( returnT: ReturnT ): TermFn<[ PBool, ToPType<ReturnT>, ToPType<ReturnT> ], ToPType<ReturnT>>
 {
     return addApplications<[ PBool, ToPType<ReturnT>, ToPType<ReturnT> ], ToPType<ReturnT>>(
         new Term<
@@ -574,7 +572,7 @@ export function pstrictIf<ReturnT extends Ty>( returnT: ReturnT ): TermFn<[ PBoo
     ) as any;
 }
 
-export function pif<ReturnT extends Ty>( returnT: ReturnT )
+export function pif<ReturnT extends TermType>( returnT: ReturnT )
     : Term<PLam<PBool, PLam<ToPType<ReturnT>, PLam<ToPType<ReturnT>, ToPType<ReturnT>>>>> 
     & {
         $: (condition: Term<PBool>) =>
@@ -666,7 +664,7 @@ export function pif<ReturnT extends Ty>( returnT: ReturnT )
                 "then",
                 _lambdaIfThenApp.$
             );
-        })()
+        })() as any
     ) as any;
 }
 
@@ -727,7 +725,7 @@ export const por
         )
     ) as any;
 
-export function pchooseUnit<ReturnT extends Ty>( returnT: ReturnT )
+export function pchooseUnit<ReturnT extends TermType>( returnT: ReturnT )
     : TermFn<[ PUnit, ToPType<ReturnT> ], ToPType<ReturnT>>
 {
     return addApplications<[ PUnit, ToPType<ReturnT> ], ToPType<ReturnT>>(
@@ -738,7 +736,7 @@ export function pchooseUnit<ReturnT extends Ty>( returnT: ReturnT )
     );
 }
 
-export function ptracet<ReturnT extends Ty>( returnT: ReturnT )
+export function ptracet<ReturnT extends TermType>( returnT: ReturnT )
     : TermFn<[ PString, ToPType<ReturnT> ], ToPType<ReturnT>>
 {
     return addApplications<[ PString, ToPType<ReturnT> ], ToPType<ReturnT> >(
@@ -749,7 +747,7 @@ export function ptracet<ReturnT extends Ty>( returnT: ReturnT )
     );
 }
 
-export function pfstPair<A extends Ty, B extends Ty>( a: A, b: B )
+export function pfstPair<A extends TermType, B extends TermType>( a: A, b: B )
     : TermFn<[ PPair<ToPType<A>,ToPType<B>> ], ToPType<A> >
 {
     return addApplications<[ PPair<ToPType<A>,ToPType<B>> ], ToPType<A> >(
@@ -760,7 +758,7 @@ export function pfstPair<A extends Ty, B extends Ty>( a: A, b: B )
     );
 }
 
-export function psndPair<A extends Ty, B extends Ty>( a: A, b: B )
+export function psndPair<A extends TermType, B extends TermType>( a: A, b: B )
     : TermFn<[ PPair<ToPType<A>,ToPType<B>> ], ToPType<B>>
 {
     return addApplications<[ PPair<ToPType<A>,ToPType<B>> ], ToPType<B>>(
@@ -771,7 +769,7 @@ export function psndPair<A extends Ty, B extends Ty>( a: A, b: B )
     );
 }
 
-export function pstrictChooseList<ListElemT extends Ty, ReturnT extends Ty>( listElemT: ListElemT, returnT: ReturnT )
+export function pstrictChooseList<ListElemT extends TermType, ReturnT extends TermType>( listElemT: ListElemT, returnT: ReturnT )
     : TermFn<[ PList< ToPType<ListElemT> > , ToPType<ReturnT>, ToPType<ReturnT> ], ToPType<ReturnT> >
 {
     return addApplications<[ PList< ToPType<ListElemT> > , ToPType<ReturnT>, ToPType<ReturnT> ], ToPType<ReturnT> >(
@@ -783,7 +781,7 @@ export function pstrictChooseList<ListElemT extends Ty, ReturnT extends Ty>( lis
 }
 
 
-export function pchooseList<ListElemT extends Ty, ReturnT extends Ty>( listElemT: ListElemT, returnT: ReturnT )
+export function pchooseList<ListElemT extends TermType, ReturnT extends TermType>( listElemT: ListElemT, returnT: ReturnT )
     : Term<PLam< PList< ToPType<ListElemT> > , PLam<ToPType<ReturnT>, PLam<ToPType<ReturnT>, ToPType<ReturnT>>>>>
     & {
         $: ( list: Term<PList< ToPType<ListElemT> >>) =>
@@ -865,7 +863,7 @@ export function pchooseList<ListElemT extends Ty, ReturnT extends Ty>( listElemT
     ) as any;
 }
 
-export function pprepend<ListElemT extends Ty>( listElemT: ListElemT )
+export function pprepend<ListElemT extends TermType>( listElemT: ListElemT )
     : TermFn<[ ToPType<ListElemT> , PList< ToPType<ListElemT> > ], PList< ToPType<ListElemT> > >
 {
     return addApplications<[ ToPType<ListElemT> , PList< ToPType<ListElemT> > ], PList< ToPType<ListElemT> > >(
@@ -876,7 +874,7 @@ export function pprepend<ListElemT extends Ty>( listElemT: ListElemT )
     );
 }
 
-export function phead<ListElemT extends Ty>( listElemT: ListElemT )
+export function phead<ListElemT extends TermType>( listElemT: ListElemT )
     : TermFn<[ PList<ToPType<ListElemT>> ], ToPType<ListElemT>>
 {
     return addApplications<[ PList< ToPType<ListElemT> > ], ToPType<ListElemT> >(
@@ -887,7 +885,7 @@ export function phead<ListElemT extends Ty>( listElemT: ListElemT )
     );
 }
 
-export function ptail<ListElemT extends Ty>( listElemT: ListElemT )
+export function ptail<ListElemT extends TermType>( listElemT: ListElemT )
     : TermFn<[ PList< ToPType<ListElemT> > ], PList< ToPType<ListElemT> > >
 {
     return addApplications<[ PList< ToPType<ListElemT> > ], PList< ToPType<ListElemT> > >(
@@ -911,7 +909,7 @@ export const pisEmpty: TermFn<[PList<PType>], PBool> = addApplications<[ PList<P
  * 
  * plu-ts wont support that in favor of type determinism
  */
-export function pstrictChooseData<ReturnT extends Ty>( returnT: ReturnT )
+export function pstrictChooseData<ReturnT extends TermType>( returnT: ReturnT )
     : TermFn<[ PData, ToPType<ReturnT>, ToPType<ReturnT>, ToPType<ReturnT>, ToPType<ReturnT>, ToPType<ReturnT> ], ToPType<ReturnT> >
 {
     return addApplications<[ PData, ToPType<ReturnT>, ToPType<ReturnT>, ToPType<ReturnT>, ToPType<ReturnT>, ToPType<ReturnT> ], ToPType<ReturnT> >(
@@ -959,7 +957,7 @@ automatically add delays to all alrguments except the first;
 add aliases for the applications except the first;
 force the last application (once provided argument and delayed)
 */
-export function pchooseData<ReturnT extends Ty>( returnT: ReturnT )
+export function pchooseData<ReturnT extends TermType>( returnT: ReturnT )
     : Term< PLam< PData, PLam< ToPType<ReturnT>, PLam<ToPType<ReturnT>, PLam<ToPType<ReturnT>, PLam<ToPType<ReturnT>, PLam<ToPType<ReturnT> , ToPType<ReturnT> >>>>>>>
     & {
         $: ( pdata: Term<PData> ) =>
@@ -1231,13 +1229,13 @@ export function ppairData<DataFst extends DataType, DataSnd extends DataType>( d
 
 export const pnilData: Term<PList< PData > >
     = phoist( new Term(
-        Type.List( Type.Any ),
+        Type.List( Type.Data.Any ),
         _dbn => new Application( Builtin.mkNilData, UPLCConst.unit )
     ));
 
 export const pnilPairData: Term<PList< PPair<PData, PData>>>
     = phoist( new Term(
-        Type.List( Type.Pair( Type.Any, Type.Any ) ),
+        Type.List( Type.Pair( Type.Data.Any, Type.Data.Any ) ),
         _dbn => new Application( Builtin.mkNilPairData, UPLCConst.unit )
     ));
 

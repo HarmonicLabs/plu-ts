@@ -44,7 +44,7 @@ export default class Term<A extends PType>
     {
         JsRuntime.assert(
             isWellFormedType( type ),
-            "invalid type constructing Term: " + type
+            "invalid type while constructing Term: " //+ type.toString()
         );
 
         ObjectUtils.defineReadOnlyProperty(

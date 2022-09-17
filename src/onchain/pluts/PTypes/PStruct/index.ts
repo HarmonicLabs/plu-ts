@@ -1,45 +1,38 @@
-import DataConstr from "../../../../types/Data/DataConstr";
-import ByteString from "../../../../types/HexString/ByteString";
 import Pair from "../../../../types/structs/Pair";
 import JsRuntime from "../../../../utils/JsRuntime";
 import ObjectUtils from "../../../../utils/ObjectUtils";
-import { NoInfer, ReturnT } from "../../../../utils/ts";
-import UPLCTerm from "../../../UPLC/UPLCTerm";
-import UPLCConst from "../../../UPLC/UPLCTerms/UPLCConst";
-import { pConstrToData, pfstPair, punConstrData } from "../../Prelude/Builtins";
-import PType from "../../PType";
-import { plet } from "../../Syntax";
+import { ConcreteInstanceType, ReturnT } from "../../../../utils/ts";
+import { pConstrToData } from "../../Prelude/Builtins";
+import PType, { PDataRepresentable } from "../../PType";
 import Term from "../../Term";
-import Type, { Type as Ty } from "../../Term/Type";
-import { dataTypeExtends, typeExtends } from "../../Term/Type/utils";
-import PBool from "../PBool";
-import PByteString, { pByteString } from "../PByteString";
+import Type, { TermType } from "../../Term/Type";
+import { typeExtends } from "../../Term/Type/utils";
 import PData from "../PData";
 import PInt, { pInt } from "../PInt";
-import { pDataList } from "../PList";
-import PUnit from "../PUnit";
+import { pDataList, pList } from "../PList";
+import PString from "../PString";
 
 /**
  * intermediate class useful to differentiate structs form primitives
  */
-export class PStruct extends PType
+class _PStruct extends PDataRepresentable
 {
-    constructor()
+    protected constructor()
     {
         super();
     }
 }
 
-export type StructFields = {
-    [field: string | number]: new () => PType
+export type StructFieldsTypes = {
+    [field: string | number]: new () => PDataRepresentable
 }
 
-type StructFieldsInstance<SFields extends StructFields> = {
-    [Field in keyof SFields]: Term<ReturnT<SFields[Field]>>
+type StructFieldsInstance<SFieldsTys extends StructFieldsTypes> = {
+    [Field in keyof SFieldsTys]: Term<ReturnT<SFieldsTys[Field]>>
 }
 
 export type StructDefinition = {
-    [constructor: string]: StructFields
+    [constructor: string]: StructFieldsTypes
 }
 
 /**
@@ -60,27 +53,29 @@ export function isStructDefinition( descriptor: object ): descriptor is StructDe
     return true;
 }
 
-export type PStructExtension<StructDefinition> = {
-    new(): PStruct
+export type PStruct<StructDefinition> = {
+    new(): _PStruct
 
-    termType: Ty;
-    fromData: ( data: Term<PData> ) => Term<PStructExtension<StructDefinition>>;
+    termType: TermType;
+    fromData: ( data: Term<PData> ) => Term<PStruct<StructDefinition>>;
+    toData: ( data: Term<PStruct<StructDefinition>> ) => Term<PData>;
 
-} & PType & {
+} & PDataRepresentable & {
     [Ctor in keyof StructDefinition]:
-        //@ts-ignore Type 'StructDefinition[Ctor]' does not satisfy the constraint 'StructFields'.
-        ( ctorFields: StructFieldsInstance<StructDefinition[Ctor]> ) => Term<PStructExtension<StructDefinition>>
+        //@ts-ignore Type 'StructDefinition[Ctor]' does not satisfy the constraint 'StructFieldsTypes'.
+        ( ctorFields: StructFieldsInstance<StructDefinition[Ctor]> ) => Term<PStruct<StructDefinition>>
 }
 
-export default function pstruct<SDescriptor extends StructDefinition>( descriptor: SDescriptor ): PStructExtension<SDescriptor>
+export default function pstruct<StructDef extends StructDefinition>( descriptor: StructDef ): PStruct<StructDef>
 {
     JsRuntime.assert(
         isStructDefinition( descriptor ),
-        "cannot construct 'PStruct' type; invalid constructors"
+        "cannot construct '_PStruct' type; invalid constructors"
     );
 
-    class PStructExt extends PStruct
+    class PStructExt extends _PStruct
     {
+        static _isPType: true = true;
         // private constructors are not a thing at js runtime
         // in any case constructing an instance is useless
         // private allows the typescript LSP to rise errors (not runtime) whet trying to extend the class
@@ -89,8 +84,10 @@ export default function pstruct<SDescriptor extends StructDefinition>( descripto
             super();
         }
 
-        static termType: Ty;
-        static fromData: ( data: Term<PData> ) => Term<PStructExtension<SDescriptor>>
+        static termType: TermType;
+        static fromData: <Ext extends PStructExt = PStructExt>( data: Term<PData> ) => Term<Ext>
+        static toData:   <Ext extends PStructExt>( data: Term<Ext> ) => Term<PData>;
+
     }
 
     ObjectUtils.defineReadOnlyProperty(
@@ -102,7 +99,7 @@ export default function pstruct<SDescriptor extends StructDefinition>( descripto
     ObjectUtils.defineReadOnlyProperty(
         PStructExt.prototype,
         "fromData",
-        ( data: Term<PData> ): Term<PStructExtension<SDescriptor>> => {
+        ( data: Term<PData> ): Term<PStructExt> => {
 
             JsRuntime.assert(
                 typeExtends( data.type, Type.Data.Constr ),
@@ -135,7 +132,7 @@ export default function pstruct<SDescriptor extends StructDefinition>( descripto
         ObjectUtils.defineReadOnlyProperty(
             PStructExt.prototype,
             ctorName,
-            ( jsStruct: StructFieldsInstance<any> ): Term<PStructExtension<SDescriptor>> => {
+            ( jsStruct: StructFieldsInstance<any> ): Term<PStructExt> => {
                 JsRuntime.assert(
                     ObjectUtils.isObject( jsStruct ),
                     "cannot build a plu-ts structure if the input is not an object with named fields"
@@ -147,44 +144,67 @@ export default function pstruct<SDescriptor extends StructDefinition>( descripto
                 JsRuntime.assert(
                     // same number of parameters as in struct definition
                     jsStructKeys.length === Object.keys( thisCtor ).length &&
-                    // every parameter is a Term
-                    jsStructKeys.every( fieldKey => jsStruct[fieldKey] instanceof Term/*thisCtor[fieldKey]*/ ),
+                    jsStructKeys.every( fieldKey =>
+                        // every parameter is a Term
+                        jsStruct[fieldKey] instanceof Term /*thisCtor[fieldKey]*/ &&
+                        typeExtends(
+                            jsStruct[fieldKey].type,
+                            (thisCtor[fieldKey] as any).termType
+                        )
+                    ),
                     "the fields passed do not match the struct definition for constructor: " + ctorName
                 );
 
+                
                 const dataReprTerm =
                     pConstrToData
                         .$( pInt( i ) )
-                        .$( pDataList( jsStructKeys.map<Term<any>>(
-                                structKey =>
-                                    // access PType constructor
-                                    (descriptor[ctorName][structKey] as any)
+                        .$( pList( Type.Data.Any )( jsStructKeys.map<Term<any>>(
+                                structKey =>{
+                                    // access PDataRepresentable constructor
+                                    return (descriptor[ctorName][structKey] as any)
                                     // toData static method
                                     .toData( jsStruct[ structKey ] )
-                                )
+                                })
                             )
                         );
                     
-                return new Term(
-                    // just mock ts
-                    dataReprTerm.type as any,
-                    dataReprTerm.toUPLC
+                return ObjectUtils.defineReadOnlyHiddenProperty(
+                    new Term(
+                        // just mock ts return type
+                        dataReprTerm.type as any,
+                        dataReprTerm.toUPLC
+                    ),
+                    "_pIsConstantStruct",
+                    true
                 );
             }
+        );
+
+        ObjectUtils.defineReadOnlyProperty(
+            PStructExt,
+            ctorName,
+            (PStructExt.prototype as any)[ctorName]
         );
     }
     //*/
     
 
     /*
-    type 'typeof PStructExt' is not assignable to type 'PStructExtension<SDescriptor>'.
-        Property '_isPType' is missing in type 'typeof PStructExt' but required in type 'PType'
+    Type 'typeof PStructExt' is not assignable to type 'PStruct<StructDef>'
     
     Why is this?
     */
     return PStructExt as any;
 }
 
+type PDataRepreArrToTyArgs<PTyArgs extends [ PDataRepresentable, ...PDataRepresentable[] ] > =
+    PTyArgs extends [ infer PTyArg extends PDataRepresentable ] ? [ { new (): PTyArg, termType: TermType } ] :
+    PTyArgs extends [ infer PTyArg extends PDataRepresentable, ...infer RestPTyArg extends [ PDataRepresentable, ...PDataRepresentable[] ] ] ?
+        [ { new (): PTyArg, termType: TermType }, ...PDataRepreArrToTyArgs<RestPTyArg> ] :
+    never & { new (): PDataRepresentable, termType: TermType }[];
+
+type PDataReprCtor = new () => PDataRepresentable
 /**
  * @fixme add fixed length parameters in ```getDescriptor``` and the actual instantiation (last function)
  * @fixme throw if the length is not the same at js runtime
@@ -192,7 +212,10 @@ export default function pstruct<SDescriptor extends StructDefinition>( descripto
  * @param getDescriptor 
  * @returns 
  */
-export function pgenericStruct<SDescriptor extends StructDefinition>( getDescriptor: ( ...tyArgs: { new (): NoInfer<PType>, termType: Ty }[] ) => SDescriptor )
+export function pgenericStruct<StructDef extends StructDefinition>
+    (
+        getDescriptor: ( ...tyArgs: [ PDataReprCtor, ...PDataReprCtor[] ] ) => StructDef
+    ): ( ...tyArgs: [ PDataReprCtor, ...PDataReprCtor[] ] ) => PStruct<StructDef>
 {
     /*
     lambda called immediately
@@ -202,11 +225,11 @@ export function pgenericStruct<SDescriptor extends StructDefinition>( getDescrip
     for **every** generic structure;
     */
     return (() => {
-        const tyArgsCache: Pair<string, PStructExtension<SDescriptor>>[] = []
+        const tyArgsCache: Pair<string, PStruct<StructDef>>[] = []
 
-        return ( ...tyArgs: { new (): NoInfer<PType>, termType: Ty }[] ) => {
+        return ( ...tyArgs: [ PDataReprCtor, ...PDataReprCtor[] ] ): PStruct<StructDef> => {
 
-            const thisTyArgsKey = tyArgs.map( tyArg => tyArg.termType.join() ).join();
+            const thisTyArgsKey = tyArgs.map( tyArg => (tyArg as any).termType.join() ).join();
             const keys = tyArgsCache.map( pair => pair.fst );
 
             if( keys.includes( thisTyArgsKey ) )
@@ -215,23 +238,28 @@ export function pgenericStruct<SDescriptor extends StructDefinition>( getDescrip
                 if( cachedResult !== undefined ) return cachedResult.snd;
             }
             
-            const newTypeArgsStruct = pstruct<SDescriptor>( getDescriptor( ...tyArgs ) );
-            tyArgsCache.push( new Pair<string, PStructExtension<SDescriptor>>( thisTyArgsKey, newTypeArgsStruct ) );
+            const result = pstruct( getDescriptor( tyArgs[0], ...tyArgs.slice(1) ) );
+            tyArgsCache.push( new Pair<string, PStruct<StructDef>>( thisTyArgsKey, result ) );
 
-            return newTypeArgsStruct;
+            return result;
         }
     })();
 };
 
-const PEither = pgenericStruct(
-    ( A, B ) => {
-        return {
-            Left:  { value: A },
-            Rigth: { value: B }
-        }
+const MyAuctionRedeemer = pstruct({
+    Bid: { bidAmount: PInt },
+    CloseAuction: {}
+})
+
+const PMaybe = pgenericStruct( tyArg => {
+    return {
+        Just: { value: tyArg },
+        Nothing: {}
     }
-)
+})
 
-const PPubKeyHash = pstruct({ PPubKeyHash: { _0: PByteString } })
+const PMInt = PMaybe( PInt );
 
-const so = PPubKeyHash.PPubKeyHash({ _0: pByteString( ByteString.fromAscii("hello") ) })
+const bid42 = MyAuctionRedeemer.Bid({ bidAmount: pInt( 42 ) });
+
+const maybe69 = PMaybe( PInt ).Just({ value: pInt( 69 ) });

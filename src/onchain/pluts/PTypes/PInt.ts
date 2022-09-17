@@ -1,14 +1,13 @@
 import Integer from "../../../types/ints/Integer";
 import UPLCConst from "../../UPLC/UPLCTerms/UPLCConst";
-import { punIData } from "../Prelude/Builtins";
+import { pIntToData, punIData } from "../Prelude/Builtins";
 import TermInt, { addPIntMethods } from "../Prelude/TermInt";
-import PType from "../PType";
+import { PDataRepresentable } from "../PType";
 import Term from "../Term";
 import Type, { TermType } from "../Term/Type";
-import PData from "./PData";
 import PDataInt from "./PData/PDataInt";
 
-export default class PInt extends PType
+export default class PInt extends PDataRepresentable
 //    implements Cloneable<PInt>
 {
     private _pint: bigint
@@ -25,8 +24,13 @@ export default class PInt extends PType
     }
 
     static override get termType(): TermType { return Type.Int }
-    static override get fromData(): (data: Term<PDataInt>) => TermInt {
-        return (data: Term<PDataInt>) => addPIntMethods( punIData.$( data ) )
+    static override fromData(data: Term<PDataInt>): TermInt
+    {
+        return addPIntMethods( punIData.$( data ) )
+    }
+    static override toData( int: Term<PInt> ): Term<PDataInt>
+    {
+        return pIntToData.$( int );
     }
 }
 

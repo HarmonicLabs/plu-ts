@@ -16,11 +16,11 @@ import PInt from "../../PTypes/PInt";
 import PList from "../../PTypes/PList";
 import PPair from "../../PTypes/PPair";
 import PString from "../../PTypes/PString";
-import { PStructExtension } from "../../PTypes/PStruct";
+import { PStruct } from "../../PTypes/PStruct";
 import PUnit from "../../PTypes/PUnit";
 
 export const enum PrimType {
-    Any  = "GenericType",
+
     Int  = "Int",
     BS   = "ByteString",
     Str  = "Str",
@@ -47,8 +47,8 @@ export type TypeName = PrimType | DataConstructor | TermTypeParameter
 
 export type DataType = [ DataConstructor, ...DataType[] ]
 
-type LambdaType<InT extends TermType, OutT extends TermType> = readonly [ PrimType.Lambda, InT, OutT ];
-type FnType<Ins extends [ TermType, ...TermType[] ], OutT extends TermType> =
+export type LambdaType<InT extends TermType, OutT extends TermType> = readonly [ PrimType.Lambda, InT, OutT ];
+export type FnType<Ins extends [ TermType, ...TermType[] ], OutT extends TermType> =
     Ins extends [] ? TermType :
     Ins extends [ infer In extends TermType ] ? LambdaType<In, OutT> :
     Ins extends [ infer In extends TermType, ...infer RestIns extends [ TermType, ...TermType[] ] ] ? LambdaType<In, FnType< RestIns, OutT >> :
@@ -57,7 +57,7 @@ type FnType<Ins extends [ TermType, ...TermType[] ], OutT extends TermType> =
 //@ts-ignore
 const Type: {
     readonly Var:   ( description?: any ) => [ TermTypeParameter ]
-    readonly Any:   [ PrimType.Any ];
+    readonly Any:   [ TermTypeParameter ];
     readonly Int:   [ PrimType.Int ];
     readonly BS:    [ PrimType.BS ];
     readonly Str:   [ PrimType.Str ];
@@ -78,9 +78,10 @@ const Type: {
         readonly Int: FixedTermDataType;
         readonly BS: FixedTermDataType;
     }
- } = Object.freeze({
+ } = Object.freeze(
+    Object.defineProperty({
     Var:        ( description?: any ) => Object.freeze([ Symbol( description ) ]),
-    Any:        Object.freeze([ PrimType.Any ]),
+    // Any:        Object.freeze([ PrimType.Any ]),
     Int:        Object.freeze([ PrimType.Int ]),
     BS:         Object.freeze([ PrimType.BS ]),
     Str:        Object.freeze([ PrimType.Str ]),
@@ -110,7 +111,7 @@ const Type: {
         Int:    Object.freeze([ DataConstructor.Int as FixedDataTypeName ]),
         BS:     Object.freeze([ DataConstructor.BS as FixedDataTypeName ])
     })
-});
+}, "Any", {configurable: false, enumerable: true, get: () => Type.Var("Type.Any"), set: ( _v?: any ) => {} }));
 
 export default Type;
 
@@ -208,8 +209,7 @@ export type ToPType<T extends TermType> =
     // T extends FromPType<infer PT extends PType> ? PT :
     never;
 
-export type FromPType< PT extends PType | ToPType<Type> | PStructExtension<any> > =
-    PT extends PStructExtension<any> ? [ DataConstructor.Constr ] :
+export type FromPType< PT extends PType | ToPType<TermType> | PStruct<any> > =
     PT extends ToPType<infer T extends TermType> ? T : // !!! IMPORTANT !!! can only be present in one of the two types; breaks TypeScript LSP otherwise
     PT extends PInt         ? [ PrimType.Int ] :
     PT extends PByteString  ? [ PrimType.BS  ] :
@@ -221,6 +221,7 @@ export type FromPType< PT extends PType | ToPType<Type> | PStructExtension<any> 
     PT extends PDelayed<infer TyArg extends PType>  ? [ PrimType.Delayed, FromPType< TyArg > ] :
     PT extends PLam<infer FstTyArg extends PType, infer SndTyArg extends PType>     ? [ PrimType.Lambda, FromPType< FstTyArg >, FromPType< SndTyArg > ] :
     PT extends PData    ? [ DataConstructor, ...DataType[] ] :
+    PT extends PStruct<any> ? [ DataConstructor.Constr ] :
     PT extends PType    ? TermType :
     // PT extends ToPType<infer T extends TermType> ? T :
     never;

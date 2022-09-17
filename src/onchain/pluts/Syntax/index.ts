@@ -10,13 +10,14 @@ import Lambda from "../../UPLC/UPLCTerms/Lambda";
 import UPLCVar from "../../UPLC/UPLCTerms/UPLCVar";
 import PType from "../PType";
 import PDelayed from "../PTypes/PDelayed";
-import PLam from "../PTypes/PFn/PLam";
-import Type, { FromPType, ToPType, ToTermArrNonEmpty, Type as Ty } from "../Term/Type";
+import PLam, { TermFn } from "../PTypes/PFn/PLam";
+import Type, { FromPType, ToPType, ToTermArrNonEmpty, TermType } from "../Term/Type";
 import Term from "../Term";
 import JsRuntime from "../../../utils/JsRuntime";
-import { isDelayedType, isLambdaType, typeExtends } from "../Term/Type/utils";
+import { isDelayedType, isLambdaType, termTypeToString, typeExtends } from "../Term/Type/utils";
 import PInt from "../PTypes/PInt";
 import PUnit from "../PTypes/PUnit";
+import HoistedUPLC from "../../UPLC/UPLCTerms/HoistedUPLC";
 
 type PappResult<Output extends PType> =
     Output extends PLam<infer OutIn extends PType, infer OutOut extends PType> ?
@@ -39,7 +40,7 @@ type test = PappResult<PLam<PInt,PLam<PUnit, PInt>>>
 export function papp<Input extends PType, Output extends PType >( a: Term<PLam<Input,Output>>, b: Term<Input> )
     : PappResult<Output>
 {
-    let lambdaType: Ty = a.type;
+    let lambdaType: TermType = a.type;
 
     if(!( isLambdaType( lambdaType ) )) throw JsRuntime.makeNotSupposedToHappenError(
         "a term not representing a Lambda (aka. Type.Lambda) was passed to an application"
@@ -47,8 +48,8 @@ export function papp<Input extends PType, Output extends PType >( a: Term<PLam<I
 
     JsRuntime.assert(
         typeExtends( b.type, lambdaType[ 1 ] ),
-        "while applying 'Lambda'; unexpected type of input; expected type was: \"" + lambdaType[1] +
-        "\"; received input was of type: \"" + b.type + "\""
+        "while applying 'Lambda'; unexpected type of input; expected input type: \"" + termTypeToString( lambdaType[1] ) +
+        "\"; received input type: \"" + termTypeToString( b.type ) + "\""
     );
 
     const outputTerm = new Term(
@@ -78,7 +79,7 @@ export function papp<Input extends PType, Output extends PType >( a: Term<PLam<I
     return outputTerm as any;
 }
 
-export function plam<A extends Ty, B extends Ty >( inputType: A, outputType: B )
+export function plam<A extends TermType, B extends TermType >( inputType: A, outputType: B )
     : ( termFunc : ( input: Term<ToPType<A>> ) => Term<ToPType<B>> ) => PappResult<PLam<ToPType<A>,ToPType<B>>>
 {
     return ( termFunc: ( input: Term<ToPType<A>> ) => Term<ToPType<B>> ): PappResult<PLam<ToPType<A>,ToPType<B>>> =>
@@ -110,34 +111,34 @@ export function plam<A extends Ty, B extends Ty >( inputType: A, outputType: B )
 }
 
 // type PFn<Inputs extends [ PType, ...PType[] ], Output extends PType > = 
-type PFnFromTypes<Ins extends [ Ty, ...Ty[] ], Out extends Ty> =
-    Ins extends [ infer T extends Ty ] ?
+type PFnFromTypes<Ins extends [ TermType, ...TermType[] ], Out extends TermType> =
+    Ins extends [ infer T extends TermType ] ?
         PLam<ToPType<T>, ToPType<Out>> :
-    Ins extends [ infer T extends Ty, ...infer RestTs extends [ Ty, ...Ty[] ] ] ?
+    Ins extends [ infer T extends TermType, ...infer RestTs extends [ TermType, ...TermType[] ] ] ?
         PLam<ToPType<T>, PFnFromTypes<RestTs, Out>>:
     never
 
 // type PFnTest1 = PFnFromTypes<[[PrimType.Bool]], [PrimType.Bool]>
 
-type TermFnFromTypes<Ins extends [ Ty, ...Ty[] ], Out extends Ty> =
-    Ins extends [ infer T extends Ty ] ? Term<PLam<ToPType<T>, ToPType<Out>>> & { $: ( input: Term<ToPType<T>> ) => Term<ToPType<Out>> } :
-    Ins extends [ infer T extends Ty, ...infer RestIns extends [ Ty, ...Ty[] ] ] ?
+type TermFnFromTypes<Ins extends [ TermType, ...TermType[] ], Out extends TermType> =
+    Ins extends [ infer T extends TermType ] ? Term<PLam<ToPType<T>, ToPType<Out>>> & { $: ( input: Term<ToPType<T>> ) => Term<ToPType<Out>> } :
+    Ins extends [ infer T extends TermType, ...infer RestIns extends [ TermType, ...TermType[] ] ] ?
         Term<PLam<ToPType<T>,PFnFromTypes<RestIns, Out>>>
         & { $: ( input: Term<ToPType<T>> ) => TermFnFromTypes< RestIns, Out > } :
     never
 
-type TsTermFunctionArgs<InputsTypes extends [ Ty, ...Ty[] ]> =
+type TsTermFunctionArgs<InputsTypes extends [ TermType, ...TermType[] ]> =
     InputsTypes extends [] ? never :
-    InputsTypes extends [ infer T extends Ty ] ? [ a: Term<ToPType<T>> ] :
-    InputsTypes extends [ infer T1 extends Ty, infer T2 extends Ty ] ? [ a: Term<ToPType<T1>>, b: Term<ToPType<T2>> ] :
-    InputsTypes extends [ infer T extends Ty, ...infer RestTs extends [ Ty, ...Ty[] ] ] ? [ a: Term<ToPType<T>>, ...bs: TsTermFunctionArgs<RestTs> ] :
+    InputsTypes extends [ infer T extends TermType ] ? [ a: Term<ToPType<T>> ] :
+    InputsTypes extends [ infer T1 extends TermType, infer T2 extends TermType ] ? [ a: Term<ToPType<T1>>, b: Term<ToPType<T2>> ] :
+    InputsTypes extends [ infer T extends TermType, ...infer RestTs extends [ TermType, ...TermType[] ] ] ? [ a: Term<ToPType<T>>, ...bs: TsTermFunctionArgs<RestTs> ] :
     never;
 
-// type TsTermFunctionReturnT<OutputType extends Ty> = Term<ToPType<OutputType>>;
+// type TsTermFunctionReturnT<OutputType extends TermType> = Term<ToPType<OutputType>>;
 
-type TsTermFunction<InputsTypes extends [ Ty, ...Ty[] ], OutputType extends Ty> = (...args: TsTermFunctionArgs<InputsTypes> ) => Term<ToPType<OutputType>>
+type TsTermFunction<InputsTypes extends [ TermType, ...TermType[] ], OutputType extends TermType> = (...args: TsTermFunctionArgs<InputsTypes> ) => Term<ToPType<OutputType>>
 
-export function pfn<InputsTypes extends [ Ty, ...Ty[] ], OutputType extends Ty>( inputsTypes: InputsTypes, outputType: OutputType )
+export function pfn<InputsTypes extends [ TermType, ...TermType[] ], OutputType extends TermType>( inputsTypes: InputsTypes, outputType: OutputType )
     : ( termFunction: TsTermFunction<InputsTypes,OutputType> ) => 
         TermFnFromTypes< InputsTypes, OutputType>
 {
@@ -179,48 +180,142 @@ export function pfn<InputsTypes extends [ Ty, ...Ty[] ], OutputType extends Ty>(
     }
 }
 
+export function phoist<PInstance extends PType, SomeExtension extends {} >( closedTerm: Term<PInstance> & SomeExtension ): Term<PInstance> & SomeExtension
+{
+    const hoisted = new Term(
+        closedTerm.type,
+        _dbn => 
+            // throws if the term is not closed
+            // for how terms are created it should never be the case
+            new HoistedUPLC(
+                closedTerm.toUPLC( 0 )
+            )
+    ) as any;
+
+    Object.keys( closedTerm ).forEach( k => {
+
+        if( k === "_type" || k === "_toUPLC" ) return;
+        
+        ObjectUtils.defineReadOnlyProperty(
+            hoisted,
+            k,
+            (closedTerm as any)[ k ]
+        )
+
+    });
+
+    return hoisted as any;
+}
+
+export function punsafeConvertType<FromPInstance extends PType, SomeExtension extends {}, ToTermType extends TermType>
+    ( someTerm: Term<FromPInstance> & SomeExtension, toType: ToTermType ): Term<ToPType<ToTermType>> & SomeExtension
+{
+    const converted = new Term(
+        toType,
+        someTerm.toUPLC
+    ) as any;
+
+    Object.keys( someTerm ).forEach( k => {
+
+        if( k === "_type" || k === "_toUPLC" ) return;
+        
+        ObjectUtils.defineReadOnlyProperty(
+            converted,
+            k,
+            (someTerm as any)[ k ]
+        )
+
+    });
+
+    return converted;
+}
+
 /**
  * for reference the "Z combinator in js": https://medium.com/swlh/y-and-z-combinators-in-javascript-lambda-calculus-with-real-code-31f25be934ec
  * 
  * ```js
  *  const Zcombinator = (
  *  	Z => (
- *  		toRecurse => Z( value => toRecurse(toRecurse)(value) )
- *  	)( toRecurse => Z( value => toRecurse(toRecurse)(value)) )
+ *  		toMakeRecursive => Z( value => toMakeRecursive(toMakeRecursive)(value) )
+ *  	)( toMakeRecursive => Z( value => toMakeRecursive(toMakeRecursive)(value)) )
  *  );
  * ```
  * of type
  * ```js
- * Z => toRecurse => value => result
+ * Z => toMakeRecursive => value => result
  * ```
- * and ```toRecurse``` has to be of type
+ * and ```toMakeRecursive``` has to be of type
  * ```js
  * self => value => result
  * ```
  */
-export const precursive =
-    phoist(
-        plam()( Z =>
-            plam()( toRecurse =>
-                papp(
-                    Z,
-                    plam()( value =>
-                        papp( papp( toRecurse, toRecurse ), value ) 
-                    )
-                )
-            ) 
-            .$(
-                plam()( toRecurse =>
-                    papp(
-                        Z,
-                        plam()( value =>
-                            papp( papp( toRecurse, toRecurse ), value ) 
-                        )
-                    )
+export function precursive<A extends PType, B extends PType>
+    ( fnBody:
+        Term<PLam<
+            PLam<PLam<A,B>,PLam<A,B>>,  // self
+            PLam<A,B>>                  // the actual function 
+        >
+    ): TermFn<[ A ], B >
+{
+    const a = Type.Var("recursive_fn_a");
+    const b = Type.Var("recursive_fn_b");
+
+    JsRuntime.assert(
+        typeExtends(
+            fnBody.type,
+            Type.Lambda(
+                Type.Lambda( a, b ),
+                Type.Lambda( a, b )
+            )
+        ),
+        "passed function body cannot be made recursive "+
+        "since the first argument type is not a lambda or it doesn't take any input"
+    );
+
+    const innerZ = new Lambda( // toMakeRecursive
+        new Application(
+            new UPLCVar( 1 ), // Z
+            new Lambda( // value
+                new Application(
+                    new Application(
+                        new UPLCVar( 1 ), // toMakeRecursive
+                        new UPLCVar( 1 )  // toMakeRecursive
+                    ),
+                    new UPLCVar( 0 ) // value
                 )
             )
         )
-    )
+    );
+
+    /** 
+     * @hoisted
+    **/
+    const Z = new Term<
+            PLam<
+                PLam<
+                    PLam<PType,PType>,
+                    PLam<PType,PType>
+                >,
+            PLam<PType,PType>
+            >
+        >(
+            Type.Lambda(
+                Type.Lambda( Type.Lambda( a, b ), Type.Lambda( a, b ) ),
+                Type.Lambda( a, b ),
+            ),
+            _dbn => new HoistedUPLC(
+                new Lambda( // Z
+                    new Application(
+                        innerZ,
+                        innerZ
+                    )
+                )
+            )
+        );
+
+    return punsafeConvertType( papp( Z, fnBody ), fnBody.type[2] ) as any;
+}
+//*/
 
 export function pdelay<PInstance extends PType>(toDelay: Term<PInstance>): Term<PDelayed<PInstance>>
 {
@@ -312,7 +407,7 @@ export function plet<PExprResult extends PType, PVar extends PType, TermPVar ext
     };
 }
 
-export function perror<T extends Ty>( type: T ): Term<ToPType<T>>
+export function perror<T extends TermType>( type: T ): Term<ToPType<T>>
 {
     return new Term(
         type as any,
