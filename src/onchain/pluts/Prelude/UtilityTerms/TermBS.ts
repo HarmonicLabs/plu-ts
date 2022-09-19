@@ -1,8 +1,8 @@
-import { pappendBs, pdecodeUtf8, peqBs, pgreaterBS, pgreaterEqBS, pindexBs, plengthBs, plessBs, plessEqBs, psliceBs, psub } from "./Builtins";
-import ObjectUtils from "../../../utils/ObjectUtils";
-import PByteString from "../PTypes/PByteString";
-import PInt from "../PTypes/PInt";
-import Term from "../Term";
+import { pappendBs, pdecodeUtf8, peqBs, pgreaterBS, pgreaterEqBS, pindexBs, plengthBs, plessBs, plessEqBs, psliceBs, psub } from "../Builtins";
+import ObjectUtils from "../../../../utils/ObjectUtils";
+import PByteString from "../../PTypes/PByteString";
+import PInt from "../../PTypes/PInt";
+import Term from "../../Term";
 import TermBool from "./TermBool";
 import TermInt from "./TermInt";
 import TermStr from "./TermStr";

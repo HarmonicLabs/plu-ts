@@ -1,7 +1,7 @@
-import { padd, psub, pmult, pdiv, pquot, prem, pmod, peqInt, plessInt, plessEqInt, pgreaterInt, pgreaterEqInt } from "./Builtins"
-import ObjectUtils from "../../../utils/ObjectUtils"
-import PInt from "../PTypes/PInt"
-import Term from "../Term"
+import { padd, psub, pmult, pdiv, pquot, prem, pmod, peqInt, plessInt, plessEqInt, pgreaterInt, pgreaterEqInt } from "../Builtins"
+import ObjectUtils from "../../../../utils/ObjectUtils"
+import PInt from "../../PTypes/PInt"
+import Term from "../../Term"
 import TermBool, { addPBoolMethods } from "./TermBool"
 
 type TermInt = Term<PInt>

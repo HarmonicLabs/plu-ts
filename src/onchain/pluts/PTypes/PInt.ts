@@ -1,7 +1,7 @@
 import Integer from "../../../types/ints/Integer";
 import UPLCConst from "../../UPLC/UPLCTerms/UPLCConst";
 import { pIntToData, punIData } from "../Prelude/Builtins";
-import TermInt, { addPIntMethods } from "../Prelude/TermInt";
+import TermInt, { addPIntMethods } from "../Prelude/UtilityTerms/TermInt";
 import { PDataRepresentable } from "../PType";
 import Term from "../Term";
 import Type, { TermType } from "../Term/Type";

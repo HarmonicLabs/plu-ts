@@ -26,16 +26,4 @@ export default class PDelayed< DelayedPType extends PType > extends PType
     }
 
     static override get termType(): TermType { return Type.Delayed( Type.Any ) }
-    /**
-     * @deprecated
-     * do not use
-     * here only to ovverride 'PType' static method; which also shouldn't be used
-     * 
-     * ```PDelayed``` is not a ```PType``` representable in terms of ```Data```
-     */
-    static override get fromData(): (data: Term<PData>) => Term<PDelayed<PType>> {
-        throw new BasePlutsError(
-            "delayed term cannot be obtained form data"
-        )
-    }
 }

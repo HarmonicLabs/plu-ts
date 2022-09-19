@@ -1,13 +1,14 @@
 import ByteString from "../../../types/HexString/ByteString";
 import UPLCConst from "../../UPLC/UPLCTerms/UPLCConst";
-import { punBData } from "../Prelude/Builtins";
-import TermBS, { addPByteStringMethods } from "../Prelude/TermBS";
-import PType from "../PType";
+import { pBSToData, punBData } from "../Prelude/Builtins";
+import TermBS, { addPByteStringMethods } from "../Prelude/UtilityTerms/TermBS";
+import { PDataRepresentable } from "../PType";
 import Term from "../Term";
-import Type, { Type as Ty } from "../Term/Type";
+import Type, { TermType } from "../Term/Type";
+import PData from "./PData";
 import PDataBS from "./PData/PDataBS";
 
-export default class PByteString extends PType
+export default class PByteString extends PDataRepresentable
 {
     private _pbytestring: ByteString
 
@@ -17,9 +18,14 @@ export default class PByteString extends PType
         this._pbytestring = bs;
     }
 
-    static override get termType(): Ty { return Type.BS }
-    static override get fromData(): (data: Term<PDataBS>) => TermBS {
+    static override get termType(): TermType { return Type.BS }
+    static override get fromData(): (data: Term<PDataBS>) => TermBS
+    {
         return (data: Term<PDataBS>) => addPByteStringMethods( punBData.$( data ) )
+    }
+    static override toData(term: Term<PByteString>): Term<PDataBS>
+    {
+        return pBSToData.$( term );
     }
 }
 

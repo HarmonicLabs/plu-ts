@@ -2,10 +2,11 @@ import { isCloneable } from "../../../types/interfaces/Cloneable";
 import JsRuntime from "../../../utils/JsRuntime";
 import ObjectUtils from "../../../utils/ObjectUtils";
 import UPLCTerm from "../../UPLC/UPLCTerm";
+import HoistedUPLC from "../../UPLC/UPLCTerms/HoistedUPLC";
 import UPLCConst from "../../UPLC/UPLCTerms/UPLCConst";
 import PType from "../PType";
 import { FromPType, Type } from "./Type";
-import { isWellFormedType } from "./Type/utils";
+import { isWellFormedType, termTypeToString } from "./Type/utils";
 
 
 export type UnTerm<T extends Term<PType>> = T extends Term<infer PT extends PType > ? PT : never;
@@ -44,7 +45,7 @@ export default class Term<A extends PType>
     {
         JsRuntime.assert(
             isWellFormedType( type ),
-            "invalid type while constructing Term: " //+ type.toString()
+            "invalid type while constructing Term: " + termTypeToString( type )
         );
 
         ObjectUtils.defineReadOnlyProperty(
@@ -85,5 +86,18 @@ export default class Term<A extends PType>
         );
         // calls the `set` function of the descriptor above;
         (this as any).isConstant = isConstant;
+
+        ObjectUtils.defineReadOnlyHiddenProperty(
+            this,
+            "hoist",
+            () => {
+                this._toUPLC = _dbn =>
+                    // throws if the term is not closed
+                    // for how terms are created it should never be the case
+                    new HoistedUPLC(
+                        this._toUPLC( BigInt( 0 ) )
+                    )
+            }
+        )
     }
 }

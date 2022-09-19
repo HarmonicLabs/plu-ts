@@ -130,7 +130,6 @@ type TermFnFromTypes<Ins extends [ TermType, ...TermType[] ], Out extends TermTy
 type TsTermFunctionArgs<InputsTypes extends [ TermType, ...TermType[] ]> =
     InputsTypes extends [] ? never :
     InputsTypes extends [ infer T extends TermType ] ? [ a: Term<ToPType<T>> ] :
-    InputsTypes extends [ infer T1 extends TermType, infer T2 extends TermType ] ? [ a: Term<ToPType<T1>>, b: Term<ToPType<T2>> ] :
     InputsTypes extends [ infer T extends TermType, ...infer RestTs extends [ TermType, ...TermType[] ] ] ? [ a: Term<ToPType<T>>, ...bs: TsTermFunctionArgs<RestTs> ] :
     never;
 
@@ -182,29 +181,23 @@ export function pfn<InputsTypes extends [ TermType, ...TermType[] ], OutputType 
 
 export function phoist<PInstance extends PType, SomeExtension extends {} >( closedTerm: Term<PInstance> & SomeExtension ): Term<PInstance> & SomeExtension
 {
-    const hoisted = new Term(
-        closedTerm.type,
-        _dbn => 
-            // throws if the term is not closed
-            // for how terms are created it should never be the case
-            new HoistedUPLC(
-                closedTerm.toUPLC( 0 )
-            )
-    ) as any;
+    /*
+    the implementation has been moved to a method of the term
+    since all 'phoist' is doing is wrapping whatever UPLC the 'Term' represent
+    into an 'HoistedUPLC'
 
-    Object.keys( closedTerm ).forEach( k => {
+    however proevious implementaiton achieved this by creating a new term and then copying eventual extension
+    however the extension methods are defined using the **raw** UPLC rather than the hoisted
 
-        if( k === "_type" || k === "_toUPLC" ) return;
-        
-        ObjectUtils.defineReadOnlyProperty(
-            hoisted,
-            k,
-            (closedTerm as any)[ k ]
-        )
+    causing the hoisted result not to be actually hoisted if accessed using the methods
 
-    });
+    moving the "wrapping" of the 'toUPLC' method inside the term, preserves the same 'Term' object
+    but the same 'Term' object is now properly hoisted
 
-    return hoisted as any;
+    this also removes the `O(n)` operation of copying the methods; since the methods are already there
+    */
+    (closedTerm as any).hoist();
+    return closedTerm;
 }
 
 export function punsafeConvertType<FromPInstance extends PType, SomeExtension extends {}, ToTermType extends TermType>
@@ -252,7 +245,7 @@ export function punsafeConvertType<FromPInstance extends PType, SomeExtension ex
 export function precursive<A extends PType, B extends PType>
     ( fnBody:
         Term<PLam<
-            PLam<PLam<A,B>,PLam<A,B>>,  // self
+            PLam<A,B>,  // self
             PLam<A,B>>                  // the actual function 
         >
     ): TermFn<[ A ], B >
@@ -358,9 +351,11 @@ export function pforce<PInstance extends PType>( toForce: Term<PDelayed<PInstanc
     );
 }
 
-export function plet<PExprResult extends PType, PVar extends PType, TermPVar extends Term<PVar>>( varValue: TermPVar )
+export function plet<PVarT extends PType, SomeExtension extends object>( varValue: Term<PVarT> & SomeExtension )
 {
-    const continuation = ( expr: (value: TermPVar) => Term<PExprResult> ): Term<PExprResult> => {
+    type TermPVar = Term<PVarT> & SomeExtension;
+    
+    const continuation = <PExprResult extends PType>( expr: (value: TermPVar) => Term<PExprResult> ): Term<PExprResult> => {
 
         // only to extracts the type; never compiled
         const outType = expr( new Term(

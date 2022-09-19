@@ -22,12 +22,12 @@ import PString from "../PTypes/PString";
 import PUnit from "../PTypes/PUnit";
 import { papp, phoist, pdelay, pfn, pforce, plam } from "../Syntax";
 import Type, { DataType, ToPDataType, ToPType, TermType } from "../Term/Type";
-import TermBool, { addPBoolMethods } from "./TermBool";
-import TermBS, { addPByteStringMethods } from "./TermBS";
-import TermInt, { addPIntMethods } from "./TermInt";
-import TermStr, { addPStringMethods } from "./TermStr";
-import Term from "../Term/index";
-import { getNRequiredArgs } from "../Term/Type/utils";
+import TermBool, { addPBoolMethods } from "./UtilityTerms/TermBool";
+import TermBS, { addPByteStringMethods } from "./UtilityTerms/TermBS";
+import TermInt, { addPIntMethods } from "./UtilityTerms/TermInt";
+import TermStr, { addPStringMethods } from "./UtilityTerms/TermStr";
+import Term from "../Term";
+import { getNRequiredLambdaArgs } from "../Term/Type/utils";
 
 export function addApplications<Ins extends [ PType, ...PType[] ], Out extends PType, TermOutput extends TermFn< Ins, Out > = TermFn< Ins, Out >>
     (
@@ -36,7 +36,7 @@ export function addApplications<Ins extends [ PType, ...PType[] ], Out extends P
     )
     : TermOutput
 {
-    const nMissingArgs = getNRequiredArgs( lambdaTerm.type );
+    const nMissingArgs = getNRequiredLambdaArgs( lambdaTerm.type );
 
     if( nMissingArgs <= 1 )
     {
@@ -736,7 +736,7 @@ export function pchooseUnit<ReturnT extends TermType>( returnT: ReturnT )
     );
 }
 
-export function ptracet<ReturnT extends TermType>( returnT: ReturnT )
+export function ptrace<ReturnT extends TermType>( returnT: ReturnT )
     : TermFn<[ PString, ToPType<ReturnT> ], ToPType<ReturnT>>
 {
     return addApplications<[ PString, ToPType<ReturnT> ], ToPType<ReturnT> >(

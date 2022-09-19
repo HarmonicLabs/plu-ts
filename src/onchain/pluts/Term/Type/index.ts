@@ -202,7 +202,8 @@ export type ToPType<T extends TermType> =
     T extends [ PrimType.List, infer ListTyArg extends TermType ]  ? PList< ToPType<ListTyArg> > :
     T extends [ PrimType.Pair, infer FstTyArg extends TermType, infer SndTyArg extends TermType ]  ? PPair< ToPType<FstTyArg>, ToPType<SndTyArg> > :
     T extends [ PrimType.Delayed, infer TyArg extends TermType ]  ? PDelayed< ToPType<TyArg> > :
-    T extends [ PrimType.Lambda, infer InputTyArg extends TermType, infer OutputTyArg extends TermType ]  ? PLam< ToPType<InputTyArg>, ToPType<OutputTyArg> > :
+    T extends [ PrimType.Lambda, infer InputTyArg extends TermType, infer OutputTyArg extends TermType ] ? PLam< ToPType<InputTyArg>, ToPType<OutputTyArg> > :
+    T extends LambdaType<infer InputTyArg extends TermType, infer OutputTyArg extends TermType> ? PLam< ToPType<InputTyArg>, ToPType<OutputTyArg> > :
     T extends [ DataConstructor, ...DataType[] ] ? PData :
     // covers ```TermTypeParameter```s too
     T extends TermType ? PType :

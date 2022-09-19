@@ -1,7 +1,7 @@
-import { por, pand } from "./Builtins";
-import ObjectUtils from "../../../utils/ObjectUtils";
-import PBool from "../PTypes/PBool";
-import Term from "../Term";
+import { por, pand } from "../Builtins";
+import ObjectUtils from "../../../../utils/ObjectUtils";
+import PBool from "../../PTypes/PBool";
+import Term from "../../Term";
 
 type TermBool = Term<PBool> 
 & {

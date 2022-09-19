@@ -1,7 +1,7 @@
-import { pappendStr, pencodeUtf8, peqStr } from "./Builtins";
-import ObjectUtils from "../../../utils/ObjectUtils";
-import PString from "../PTypes/PString";
-import Term from "../Term";
+import { pappendStr, pencodeUtf8, peqStr } from "../Builtins";
+import ObjectUtils from "../../../../utils/ObjectUtils";
+import PString from "../../PTypes/PString";
+import Term from "../../Term";
 import TermBool from "./TermBool";
 import TermBS from "./TermBS";
 

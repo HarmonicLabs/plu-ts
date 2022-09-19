@@ -163,8 +163,8 @@ export default function pstruct<StructDef extends StructDefinition>( descriptor:
                                 structKey =>{
                                     // access PDataRepresentable constructor
                                     return (descriptor[ctorName][structKey] as any)
-                                    // toData static method
-                                    .toData( jsStruct[ structKey ] )
+                                        // toData static method
+                                        .toData( jsStruct[ structKey ] )
                                 })
                             )
                         );

@@ -128,6 +128,8 @@ export default class UPLCConst
     {
         return function ( values: ConstValueList ): UPLCConst
         {
+            if( typeof values[0] === "number" || typeof values[0] === "bigint" )
+                values = values.map( v => new Integer( v ) );
             return new UPLCConst( constT.listOf( typeArg ), values );
         };
     }

@@ -2,7 +2,7 @@ import Data, { isData } from "../../../types/Data";
 import JsRuntime from "../../../utils/JsRuntime";
 import UPLCConst from "../../UPLC/UPLCTerms/UPLCConst";
 import { constT } from "../../UPLC/UPLCTerms/UPLCConst/ConstType";
-import { pListToData, pnilData, pnilPairData, punListData } from "../Prelude/Builtins";
+import { pListToData, pnilData, pnilPairData, pprepend, punListData } from "../Prelude/Builtins";
 import PType, { PDataRepresentable } from "../PType";
 import Term from "../Term";
 import Type, { ToPType, TermType, ConstantableTermType } from "../Term/Type";
@@ -134,7 +134,12 @@ export function pList<ElemsT extends ConstantableTermType>( elemsT: ElemsT ): ( 
         // all the elements where constants
         if( nConstantFromEnd === elems.length ) return plist;
 
-        //@ts-expect-error
+        for( let i = elems.length - nConstantFromEnd - 1; i >= 0; i-- )
+        {
+            plist = pprepend( elemsT ).$( elems[i] ).$( plist );
+        }
+
+        console.log( plist.toUPLC( 0 ) );
         return plist;
     }
 }
