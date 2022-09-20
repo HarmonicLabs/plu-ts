@@ -8,12 +8,12 @@ import Term from "../Term";
 import Type, { TermType } from "../Term/Type";
 import PData from "./PData";
 import { pInt } from "./PInt";
-import pstruct from "./PStruct";
-
-export const PDBool = pstruct({
-    True: {},
-    False: {}
-})
+// import pstruct from "./PStruct";
+// 
+// export const PDBool = pstruct({
+//     True: {},
+//     False: {}
+// })
 
 export default class PBool extends PDataRepresentable
     implements Cloneable< PBool >

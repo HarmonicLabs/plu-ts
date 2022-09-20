@@ -53,11 +53,25 @@ export default class Term<A extends PType>
             "_type",
             type
         );
-        ObjectUtils.defineReadOnlyProperty(
+
+        const proofSym = Symbol("overwrite_toUPLC_proofSym");
+
+        let _toUPLC = toUPLC;
+        Object.defineProperty(
             this,
             "_toUPLC",
-            toUPLC
-        );
+            {
+                get: () => _toUPLC,
+                set: ( v: { proof: symbol, value: ( dbn: bigint ) => UPLCTerm }) => {
+                    if( v.proof === proofSym )
+                    {
+                        _toUPLC = v.value;
+                    }
+                },
+                configurable: false,
+                enumerable: true
+            }
+        )
 
         let _isConstant: boolean = false;
         Object.defineProperty(
@@ -91,7 +105,7 @@ export default class Term<A extends PType>
             this,
             "hoist",
             () => {
-                this._toUPLC = _dbn =>
+                this._toUPLC = (_dbn : bigint) => 
                     // throws if the term is not closed
                     // for how terms are created it should never be the case
                     new HoistedUPLC(

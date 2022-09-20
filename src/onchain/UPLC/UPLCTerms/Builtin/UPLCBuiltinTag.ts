@@ -33,7 +33,7 @@ const enum UPLCBuiltinTag {
     sliceByteString             = 12, // 0001100
     lengthOfByteString          = 13, // 0001101
     indexByteString             = 14, // 0001110
-    // bytestrign comparison operations
+    // bytestring comparison operations
     equalsByteString            = 15, // 0001111
     lessThanByteString          = 16, // 0010000
     lessThanEqualsByteString    = 17, // 0010001
