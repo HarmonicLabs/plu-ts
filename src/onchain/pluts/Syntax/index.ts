@@ -322,16 +322,12 @@ export function pdelay<PInstance extends PType>(toDelay: Term<PInstance>): Term<
     );
 }
 
-export function pforce<PInstance extends PType>( toForce: Term<PDelayed<PInstance>> ): Term<PInstance>
+export function pforce<PInstance extends PType>( toForce: Term<PDelayed<PInstance>> | Term<PInstance> ): Term<PInstance>
 {
-    // Debug.ignore.log( "forcing type: " + toForce.type );
-
-    if(!( isDelayedType( toForce.type ) ) ) throw new BasePlutsError(
-        "cannot force a Term that is not Delayed first"
-    );
+    const outType = isDelayedType( toForce.type ) ? toForce.type[ 1 ] : toForce.type 
 
     return new Term(
-        toForce.type[ 1 ] as any,
+        outType as any,
         (dbn) => {
             const toForceUPLC = toForce.toUPLC( dbn );
 
@@ -343,7 +339,7 @@ export function pforce<PInstance extends PType>( toForce: Term<PDelayed<PInstanc
                 return toForceUPLC.delayedTerm;
             }
 
-            // any other case that evaluates to Delay
+            // any other case
             return new Force(
                 toForceUPLC
             );

@@ -71,6 +71,22 @@ export default class Term<A extends PType>
                 configurable: false,
                 enumerable: true
             }
+        );
+
+        ObjectUtils.defineReadOnlyHiddenProperty(
+            this,
+            "hoist",
+            () => {
+                this._toUPLC = {
+                    proof: proofSym,
+                    value: (_dbn : bigint) => 
+                        // throws if the term is not closed
+                        // for how terms are created it should never be the case
+                        new HoistedUPLC(
+                            this._toUPLC( BigInt( 0 ) )
+                        )
+                } as any;
+            }
         )
 
         let _isConstant: boolean = false;
@@ -100,18 +116,6 @@ export default class Term<A extends PType>
         );
         // calls the `set` function of the descriptor above;
         (this as any).isConstant = isConstant;
-
-        ObjectUtils.defineReadOnlyHiddenProperty(
-            this,
-            "hoist",
-            () => {
-                this._toUPLC = (_dbn : bigint) => 
-                    // throws if the term is not closed
-                    // for how terms are created it should never be the case
-                    new HoistedUPLC(
-                        this._toUPLC( BigInt( 0 ) )
-                    )
-            }
-        )
+        
     }
 }

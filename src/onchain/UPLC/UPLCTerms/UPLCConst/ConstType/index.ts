@@ -162,7 +162,7 @@ export function isWellFormedConstType( type: any/*ConstType | ConstTyTag[]*/ ): 
  * 
  * merly checks to have the same tags at the same place
  */
-export function constTypeEq( a: ConstType, b: ConstType ): boolean
+export function constTypeEq( a: Readonly<ConstType>, b: Readonly<ConstType> ): boolean
 {
     if( a.length !== b.length ) return false;
 

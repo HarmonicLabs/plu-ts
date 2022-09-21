@@ -1,4 +1,5 @@
 import PlutsCEKUnboundVarError from "../../errors/PlutsCEKError/PlutsCEKComputeError/PlutsCEKUnboundVarError";
+import Term from "../pluts/Term";
 import UPLCTerm, { isPureUPLCTerm, PureUPLCTerm } from "../UPLC/UPLCTerm";
 import Application from "../UPLC/UPLCTerms/Application";
 import Builtin from "../UPLC/UPLCTerms/Builtin";
@@ -19,7 +20,7 @@ import RApp from "./CEKFrames/RApp";
 
 
 export default function evalScript(
-    script: UPLCTerm,
+    script: UPLCTerm | Term<any>,
     _env: CEKEnv = new CEKEnv(),
     _frames: CEKFrames = new CEKFrames()
 ): PureUPLCTerm
@@ -29,10 +30,6 @@ export default function evalScript(
 
     function compute( uplc: UPLCTerm ): PureUPLCTerm
     {
-        console.log("compute; env: ", env);
-        console.log("compute; computing value: ", uplc);
-        console.log("--------------------------------------------------");
-
         if( uplc instanceof HoistedUPLC )
         {
             return compute( uplc.UPLC );
@@ -43,7 +40,7 @@ export default function evalScript(
         {
             const varValue = env.get( uplc.deBruijn );
             if( varValue === undefined ) throw new PlutsCEKUnboundVarError();
-            return CEKValue( varValue );
+            return returnCEK( varValue );
         }
 
         if(
@@ -53,7 +50,7 @@ export default function evalScript(
             uplc instanceof Builtin
         )
         {
-            return CEKValue( uplc instanceof Builtin ? new PartialBuiltin( uplc.tag ) : uplc  );
+            return returnCEK( uplc instanceof Builtin ? new PartialBuiltin( uplc.tag ) : uplc  );
         }
 
         if( uplc instanceof Force )
@@ -71,18 +68,14 @@ export default function evalScript(
         return new ErrorUPLC;
     }
 
-    function CEKValue( uplc: UPLCTerm | PartialBuiltin ): PureUPLCTerm
+    function returnCEK( uplc: UPLCTerm | PartialBuiltin ): PureUPLCTerm
     {
-        console.log("CEKValue; frames: ", frames);
-        console.log("CEKValue; value: ", uplc);
-        console.log("--------------------------------------------------");
-
         if( uplc instanceof HoistedUPLC ) return compute( uplc.UPLC );
         if( uplc instanceof ErrorUPLC ) return uplc;
 
         if( uplc instanceof PartialBuiltin )
         {
-            if( uplc.nMissingArgs === 0 ) return CEKValue( BnCEK.eval( uplc ) )
+            if( uplc.nMissingArgs === 0 ) return returnCEK( BnCEK.eval( uplc ) )
             if( frames.isEmpty ) return new ErrorUPLC;
         }
 
@@ -93,6 +86,7 @@ export default function evalScript(
         if( topFrame instanceof ForceFrame )
         {
             if( uplc instanceof Delay ) return compute( uplc.delayedTerm );
+            return compute( uplc );
         }
         // builtin forces are added only at compile time
         // ence not present in plu-ts UPLCTerm
@@ -107,7 +101,9 @@ export default function evalScript(
         {
             if( topFrame.func instanceof Lambda )
             {
-                env.push( compute( uplc ) );
+                // do not compute here
+                // compute migth add unwanted frames to the stack
+                env.push( uplc );
                 return compute( topFrame.func.body );
             }
             
@@ -122,17 +118,17 @@ export default function evalScript(
                     bn = new PartialBuiltin( bn.tag );
                 }
 
-                if( bn.nMissingArgs === 0 ) return CEKValue( BnCEK.eval( bn ) );
+                if( bn.nMissingArgs === 0 ) return returnCEK( BnCEK.eval( bn ) );
 
                 bn.apply( uplc )
 
                 // choose what to do based on the frames
-                return CEKValue( bn );
+                return returnCEK( bn );
             }
         }
 
-        return new ErrorUPLC
+        return new ErrorUPLC;
     }
 
-    return compute( script );
+    return compute( script instanceof Term ? script.toUPLC( 0 ) : script );
 }
