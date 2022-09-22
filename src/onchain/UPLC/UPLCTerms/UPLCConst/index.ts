@@ -33,15 +33,15 @@ export default class UPLCConst
         return this._value;
     }
 
-    private constructor( type: ConstType, value: Integer )
-    private constructor( type: ConstType, value: ByteString )
-    private constructor( type: ConstType, value: string )
-    private constructor( type: ConstType, value?: undefined )
-    private constructor( type: ConstType, value: boolean )
-    private constructor( type: ConstType, value: ConstValueList )
-    private constructor( type: ConstType, value: Pair< ConstValue, ConstValue > )
-    private constructor( type: ConstType, value: Data )
-    private constructor(
+    constructor( type: ConstType, value: Integer )
+    constructor( type: ConstType, value: ByteString )
+    constructor( type: ConstType, value: string )
+    constructor( type: ConstType, value?: undefined )
+    constructor( type: ConstType, value: boolean )
+    constructor( type: ConstType, value: ConstValueList )
+    constructor( type: ConstType, value: Pair< ConstValue, ConstValue > )
+    constructor( type: ConstType, value: Data )
+    constructor(
         typeTag: ConstType,
         value: ConstValue
     )
