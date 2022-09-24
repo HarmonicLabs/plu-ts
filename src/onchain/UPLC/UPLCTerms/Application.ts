@@ -5,6 +5,7 @@ import UPLCVar from "./UPLCVar";
 import Lambda from "./Lambda";
 import Builtin from "./Builtin";
 import Force from "./Force";
+import Cloneable from "../../../types/interfaces/Cloneable";
 
 export type UPLCApplicationBody = UPLCVar | Lambda | Application | Builtin | Force
 
@@ -23,6 +24,7 @@ export function isUPLCApplicationBody( uplc: UPLCTerm ): uplc is UPLCApplication
 }
 
 export default class Application
+    implements Cloneable<Application>
 {
     static get UPLCTag(): BitStream
     {
@@ -41,5 +43,13 @@ export default class Application
     {
         this.funcTerm = func;
         this.argTerm = arg;
+    }
+
+    clone(): Application
+    {
+        return new Application(
+            this.funcTerm.clone(),
+            this.argTerm.clone()
+        );
     }
 }

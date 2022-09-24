@@ -139,13 +139,13 @@ function intBinOp( a: UPLCTerm, b: UPLCTerm , op: (a: bigint, b: bigint) => bigi
     return UPLCConst.int( result );
 }
 
-function haskellQuot( a: bigint, b: bigint ): bigint | undefined
+export function haskellQuot( a: bigint, b: bigint ): bigint | undefined
 {
     if( b === BigInt( 0 ) ) return undefined;
     return a / b;
 }
 
-function haskellRem( a: bigint, b: bigint ): bigint | undefined
+export function haskellRem( a: bigint, b: bigint ): bigint | undefined
 {
     if( b === BigInt( 0 ) ) return undefined;
     return a % b;
@@ -190,14 +190,14 @@ function haskellDivMod( a: bigint, b: bigint ): [ div: bigint, mod: bigint ] | u
     return haskellQuotRem( a, b );
 }
 
-function haskellDiv( a: bigint, b: bigint ): bigint | undefined
+export function haskellDiv( a: bigint, b: bigint ): bigint | undefined
 {
     const dm = haskellDivMod( a, b );
     if( dm === undefined ) return undefined;
     return dm[0];
 }
 
-function haskellMod( a: bigint, b: bigint ): bigint | undefined
+export function haskellMod( a: bigint, b: bigint ): bigint | undefined
 {
     const dm = haskellDivMod( a, b );
     if( dm === undefined ) return undefined;

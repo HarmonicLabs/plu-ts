@@ -1,5 +1,6 @@
 import BasePlutsError from "../../../errors/BasePlutsError";
 import BitStream from "../../../types/bits/BitStream";
+import Cloneable from "../../../types/interfaces/Cloneable";
 import Debug from "../../../utils/Debug";
 import JsRuntime from "../../../utils/JsRuntime";
 import UPLCEncoder from "../UPLCEncoder";
@@ -90,6 +91,7 @@ export function isSortedHoistedSet( hoistedTerms: HoistedUPLC[] ): boolean
 }
 
 export default class HoistedUPLC
+    implements Cloneable<HoistedUPLC>
 {
     private readonly _compiled: BitStream;
     get compiled(): BitStream { return this._compiled.clone() }
@@ -125,6 +127,11 @@ export default class HoistedUPLC
         this.UPLC = UPLC;
         // encodes as default version term (1.0.0)
         this._compiled = UPLCEncoder.compile( new UPLCProgram( new UPLCVersion( 1, 0 ,0 ), UPLC ));
+    }
+
+    clone(): HoistedUPLC
+    {
+        return new HoistedUPLC( this.UPLC.clone() )
     }
 
 }

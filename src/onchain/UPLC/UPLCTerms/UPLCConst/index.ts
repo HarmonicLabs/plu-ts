@@ -7,9 +7,11 @@ import JsRuntime from "../../../../utils/JsRuntime";
 import Data from "../../../../types/Data";
 import ConstType, { constT, constTypeToStirng, isWellFormedConstType } from "./ConstType";
 import ConstValue, { canConstValueBeOfConstType, ConstValueList } from "./ConstValue";
+import Cloneable from "../../../../types/interfaces/Cloneable";
 
 
 export default class UPLCConst
+    implements Cloneable<UPLCConst>
 {
     static get UPLCTag(): BitStream
     {
@@ -58,6 +60,14 @@ export default class UPLCConst
         
         this._type = typeTag;
         this._value = value;
+    }
+
+    clone(): UPLCConst
+    {
+        return new UPLCConst(
+            this.type,
+            this.value as any
+        );
     }
 
     // toUPLCBitStream( ctx: UPLCSerializationContex ): BitStream
@@ -129,7 +139,7 @@ export default class UPLCConst
         return function ( values: ConstValueList ): UPLCConst
         {
             if( typeof values[0] === "number" || typeof values[0] === "bigint" )
-                values = values.map( v => new Integer( v ) );
+                values = values.map( v => new Integer( v as any ) );
             return new UPLCConst( constT.listOf( typeArg ), values );
         };
     }

@@ -1,8 +1,10 @@
+import Cloneable from "../../../types/interfaces/Cloneable";
 import UPLCTerm from "../../UPLC/UPLCTerm";
 import UPLCBuiltinTag from "../../UPLC/UPLCTerms/Builtin/UPLCBuiltinTag";
 
 
 export default class PartialBuiltin
+    implements Cloneable<PartialBuiltin>
 {
     private _tag: UPLCBuiltinTag;
     private _args: UPLCTerm[];
@@ -11,11 +13,16 @@ export default class PartialBuiltin
     get tag(): UPLCBuiltinTag { return this._tag; }
     get args(): UPLCTerm[] { return this._args; }
 
-    constructor( tag: UPLCBuiltinTag )
+    constructor( tag: UPLCBuiltinTag, args: UPLCTerm[] = [] )
     {
         this._tag = tag;
-        this._args = [];
+        this._args = args;
         this._nRequiredArgs = PartialBuiltin.getNRequiredArgsFor( tag );
+    }
+
+    clone(): PartialBuiltin
+    {
+        return new PartialBuiltin( this._tag, this._args );
     }
 
     get nMissingArgs(): number

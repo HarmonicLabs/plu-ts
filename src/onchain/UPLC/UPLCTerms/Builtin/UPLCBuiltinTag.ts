@@ -153,3 +153,69 @@ export function isV2Supported( tag: UPLCBuiltinTag | UPLCBuiltinTagNumber ): boo
         isUPLCBuiltinTag( tag )
     );
 }
+
+export function builtinTagToString( tag: UPLCBuiltinTag ): string
+{
+    switch( tag )
+        {
+            case UPLCBuiltinTag.addInteger :                        return "addInteger";
+            case UPLCBuiltinTag.subtractInteger :                   return "subtractInteger";
+            case UPLCBuiltinTag.multiplyInteger :                   return "multiplyInteger";
+            case UPLCBuiltinTag.divideInteger :                     return "divideInteger";
+            case UPLCBuiltinTag.quotientInteger :                   return "quotientInteger";
+            case UPLCBuiltinTag.remainderInteger :                  return "remainderInteger";
+            case UPLCBuiltinTag.modInteger :                        return "modInteger";
+            case UPLCBuiltinTag.equalsInteger :                     return "equalsInteger";
+            case UPLCBuiltinTag.lessThanInteger :                   return "lessThanInteger";
+            case UPLCBuiltinTag.lessThanEqualInteger :              return "lessThanEqualInteger";
+            case UPLCBuiltinTag.appendByteString :                  return "appendByteString";
+            case UPLCBuiltinTag.consByteString :                    return "consByteString";
+            case UPLCBuiltinTag.sliceByteString :                   return "sliceByteString";
+            case UPLCBuiltinTag.lengthOfByteString :                return "lengthOfByteString";
+            case UPLCBuiltinTag.indexByteString :                   return "indexByteString";
+            case UPLCBuiltinTag.equalsByteString :                  return "equalsByteString";
+            case UPLCBuiltinTag.lessThanByteString :                return "lessThanByteString";
+            case UPLCBuiltinTag.lessThanEqualsByteString :          return "lessThanEqualsByteString";
+            case UPLCBuiltinTag.sha2_256 :                          return "sha2_256";
+            case UPLCBuiltinTag.sha3_256 :                          return "sha3_256";
+            case UPLCBuiltinTag.blake2b_256 :                       return "blake2b_256";
+            case UPLCBuiltinTag.verifyEd25519Signature:             return "verifyEd25519Signature";
+            case UPLCBuiltinTag.appendString :                      return "appendString";
+            case UPLCBuiltinTag.equalsString :                      return "equalsString";
+            case UPLCBuiltinTag.encodeUtf8 :                        return "encodeUtf8";
+            case UPLCBuiltinTag.decodeUtf8 :                        return "decodeUtf8";
+            case UPLCBuiltinTag.ifThenElse :                        return "ifThenElse";
+            case UPLCBuiltinTag.chooseUnit :                        return "chooseUnit";
+            case UPLCBuiltinTag.trace :                             return "trace";
+            case UPLCBuiltinTag.fstPair :                           return "fstPair";
+            case UPLCBuiltinTag.sndPair :                           return "sndPair";
+            case UPLCBuiltinTag.chooseList :                        return "chooseList";
+            case UPLCBuiltinTag.mkCons :                            return "mkCons";
+            case UPLCBuiltinTag.headList :                          return "headList";
+            case UPLCBuiltinTag.tailList :                          return "tailList";
+            case UPLCBuiltinTag.nullList :                          return "nullList";
+            case UPLCBuiltinTag.chooseData :                        return "chooseData";
+            case UPLCBuiltinTag.constrData :                        return "constrData";
+            case UPLCBuiltinTag.mapData :                           return "mapData";
+            case UPLCBuiltinTag.listData :                          return "listData";
+            case UPLCBuiltinTag.iData    :                          return "iData";
+            case UPLCBuiltinTag.bData    :                          return "bData";
+            case UPLCBuiltinTag.unConstrData :                      return "unConstrData";
+            case UPLCBuiltinTag.unMapData    :                      return "unMapData";
+            case UPLCBuiltinTag.unListData   :                      return "unListData";
+            case UPLCBuiltinTag.unIData      :                      return "unIData";
+            case UPLCBuiltinTag.unBData      :                      return "unBData";
+            case UPLCBuiltinTag.equalsData   :                      return "equalsData";
+            case UPLCBuiltinTag.mkPairData   :                      return "mkPairData";
+            case UPLCBuiltinTag.mkNilData    :                      return "mkNilData";
+            case UPLCBuiltinTag.mkNilPairData:                      return "mkNilPairData";
+            case UPLCBuiltinTag.serialiseData:                      return "serialiseData";
+            case UPLCBuiltinTag.verifyEcdsaSecp256k1Signature:      return "verifyEcdsaSecp256k1Signature";
+            case UPLCBuiltinTag.verifySchnorrSecp256k1Signature:    return "verifySchnorrSecp256k1Signature";
+
+            
+            default:
+                // tag; // check that is of type 'never'
+                return "";
+        }
+}

@@ -8,7 +8,8 @@ import ErrorUPLC from "../UPLCTerms/ErrorUPLC";
 import Builtin from "../UPLCTerms/Builtin";
 import JsRuntime from "../../../utils/JsRuntime";
 import HoistedUPLC from "../UPLCTerms/HoistedUPLC";
-import BitStream from "../../../types/bits/BitStream";
+import { constTypeToStirng } from "../UPLCTerms/UPLCConst/ConstType";
+import UPLCBuiltinTag, { builtinTagToString } from "../UPLCTerms/Builtin/UPLCBuiltinTag";
 
 export type PureUPLCTerm 
     = UPLCVar
@@ -123,6 +124,27 @@ export function isClosedTerm( term: UPLCTerm ): boolean
     }
 
     return _isClosedTerm( BigInt( 0 ) , term );
+}
+
+export function showUPLC( t: UPLCTerm, dbn: number ): string
+{
+    const vars = "abcdefghilmopqrstuvzwxyjkABCDEFGHILJMNOPQRSTUVZWXYJK";
+
+    if( t instanceof UPLCVar ) return vars.split('')[ dbn - Number( t.deBruijn.asBigInt ) ];
+    if( t instanceof Delay ) return `(delay ${ showUPLC( t.delayedTerm, dbn ) })`;
+    if( t instanceof Lambda ) 
+    {
+        const thisVar = vars.split('')[ dbn + 1 ];
+        return `(lam ${thisVar} ${ showUPLC( t.body, dbn + 1 ) })`;
+    }
+    if( t instanceof Application ) return `[${ showUPLC( t.funcTerm, dbn ) } ${ showUPLC( t.argTerm, dbn ) }]`;
+    if( t instanceof UPLCConst ) return `(con ${constTypeToStirng(t.type)} ${(t.value as any).asBigInt})`;
+    if( t instanceof Force ) return `(force ${ showUPLC( t.termToForce, dbn ) })`;
+    if( t instanceof ErrorUPLC ) return "(error)";
+    if( t instanceof Builtin ) return `(builtin ${builtinTagToString( t.tag )})`
+    if( t instanceof HoistedUPLC ) return showUPLC( t.UPLC, dbn )
+    
+    return "";
 }
 
 

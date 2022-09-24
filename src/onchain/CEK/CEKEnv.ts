@@ -1,13 +1,20 @@
+import Cloneable from "../../types/interfaces/Cloneable";
 import Integer from "../../types/ints/Integer";
 import { PureUPLCTerm } from "../UPLC/UPLCTerm";
 
 export default class CEKEnv
+    implements Cloneable<CEKEnv>
 {
     private _env: PureUPLCTerm[];
 
-    constructor()
+    constructor( init: PureUPLCTerm[] = [] )
     {
-        this._env = [];
+        this._env = init;
+    }
+
+    clone(): CEKEnv
+    {
+        return new CEKEnv( this._env.map( uplc => uplc.clone() ) )
     }
 
     push( varValue: PureUPLCTerm ): void

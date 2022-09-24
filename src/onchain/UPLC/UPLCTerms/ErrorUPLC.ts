@@ -10,5 +10,15 @@ export default class ErrorUPLC
         );
     } 
 
-    constructor() {};
+    public msg?: string;
+    
+    constructor( msg?: string )
+    {
+        this.msg = msg;
+    };
+
+    clone(): ErrorUPLC
+    {
+        return new ErrorUPLC();
+    }
 }

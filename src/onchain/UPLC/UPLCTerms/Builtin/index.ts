@@ -33,11 +33,13 @@
 
 import BinaryString from "../../../../types/bits/BinaryString";
 import BitStream from "../../../../types/bits/BitStream";
+import Cloneable from "../../../../types/interfaces/Cloneable";
 import JsRuntime from "../../../../utils/JsRuntime";
 import UPLCBuiltinTag, { isUPLCBuiltinTag } from "./UPLCBuiltinTag";
 
 
 export default class Builtin
+    implements Cloneable<Builtin>
 {
     static get UPLCTag(): BitStream
     {
@@ -61,6 +63,11 @@ export default class Builtin
         );
 
         this._tag = tag;
+    }
+
+    clone(): Builtin
+    {
+        return new Builtin( this.tag );
     }
 
     static get addInteger(): Builtin        { return new Builtin( UPLCBuiltinTag.addInteger ) }

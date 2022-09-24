@@ -1,2 +1,3 @@
+import CEKEnv from "../CEKEnv";
 
-export default class ForceFrame {};
+export default class ForceFrame  {};

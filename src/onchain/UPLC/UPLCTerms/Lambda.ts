@@ -1,8 +1,10 @@
 import BitStream from "../../../types/bits/BitStream";
 import UPLCTerm from "../UPLCTerm";
 import BinaryString from "../../../types/bits/BinaryString";
+import Cloneable from "../../../types/interfaces/Cloneable";
 
 export default class Lambda
+    implements Cloneable<Lambda>
 {
     static get UPLCTag(): BitStream
     {
@@ -16,6 +18,11 @@ export default class Lambda
     constructor( body: UPLCTerm )
     {
         this.body = body
+    }
+
+    clone(): Lambda
+    {
+        return new Lambda( this.body.clone() );
     }
 
     /* 

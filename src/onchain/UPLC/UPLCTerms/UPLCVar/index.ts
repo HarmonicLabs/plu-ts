@@ -1,11 +1,13 @@
 import BinaryString from "../../../../types/bits/BinaryString";
 import BitStream from "../../../../types/bits/BitStream";
+import Cloneable from "../../../../types/interfaces/Cloneable";
 import { CanBeUInteger, forceUInteger, UInteger } from "../../../../types/ints/Integer";
 import JsRuntime from "../../../../utils/JsRuntime";
 import UPLCTerm from "../../UPLCTerm";
 
 
 export default class UPLCVar
+    implements Cloneable<UPLCVar>
 {
     static get UPLCTag(): BitStream
     {
@@ -26,6 +28,11 @@ export default class UPLCVar
             "invalid deBruijn index; while creating 'UPLCVar' instance, deBruijn index was: "
                 + this._deBruijn
         );
+    }
+
+    clone(): UPLCVar
+    {
+        return new UPLCVar( this.deBruijn );
     }
 
 }

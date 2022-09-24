@@ -10,6 +10,7 @@ import UPLCConst from "./UPLCConst";
 import ErrorUPLC from "./ErrorUPLC";
 import Builtin from "./Builtin";
 import { getNRequiredForces } from "./Builtin/UPLCBuiltinTag";
+import Cloneable from "../../../types/interfaces/Cloneable";
 
 export type ForceableTerm
     = UPLCVar
@@ -41,6 +42,7 @@ export function isForceableTerm( term: UPLCTerm ): boolean
 }
 
 export default class Force
+    implements Cloneable<Force>
 {
     static get UPLCTag(): BitStream
     {
@@ -59,6 +61,11 @@ export default class Force
         //);
         
         this.termToForce = term;
+    }
+
+    clone(): Force
+    {
+        return new Force( this.termToForce )
     }
 
 }

@@ -61,6 +61,7 @@ describe("CEK :: evalScript", () => {
                     pstrictIf( Type.Any ).$( pInt( 0 ).eq( pInt( 0 ) ) )
                     .$( pInt( 1 ) )
                     .$( pInt( 2 ) )
+                    .toUPLC( 0 )
                 )
             ).toEqual(
                 UPLCConst.int( 1 )
@@ -68,7 +69,7 @@ describe("CEK :: evalScript", () => {
             
         })
 
-        test.only("partial forced", () => {
+        test("partial forced", () => {
 
             const mkPartialForce = ( condition: boolean ) => {
                 return new Force(
