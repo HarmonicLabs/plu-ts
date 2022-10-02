@@ -9,7 +9,7 @@ import PData from "./PData";
 import PList from "./PList";
 import PPair from "./PPair";
 
-const pUnit = new Term<PUnit>(
+export const pmakeUnit = () => new Term<PUnit>(
     Type.Unit,
     _dbn => UPLCConst.unit
 );
@@ -48,7 +48,7 @@ export default class PUnit extends PDataRepresentable
                                             )
                                         )
                                     )
-                                    .then( pUnit )
+                                    .then( pmakeUnit() )
                                     .else( perror( Type.Unit ) )
                             }
                         )

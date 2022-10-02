@@ -5,8 +5,10 @@ import UPLCTerm from "../../UPLC/UPLCTerm";
 import HoistedUPLC from "../../UPLC/UPLCTerms/HoistedUPLC";
 import UPLCConst from "../../UPLC/UPLCTerms/UPLCConst";
 import PType from "../PType";
-import { FromPType, Type } from "./Type";
-import { isWellFormedType, termTypeToString } from "./Type/utils";
+import { FromPType } from "./Type";
+import { inferTypeFromUPLC } from "./Type/infer";
+import { isTypeParam, isWellFormedType } from "./Type/kinds";
+import { termTypeToString } from "./Type/utils";
 
 
 export type UnTerm<T extends Term<PType>> = T extends Term<infer PT extends PType > ? PT : never;
@@ -29,7 +31,9 @@ export default class Term<A extends PType>
     }
 
     protected _type!: FromPType<A>;
-    get type(): FromPType<A> { return this._type };
+    get type(): FromPType<A> {
+        return this._type
+    };
 
     protected _toUPLC!: ( deBruijnLevel: bigint ) => UPLCTerm
     get toUPLC(): ( deBruijnLevel: bigint | number ) => UPLCTerm
@@ -56,6 +60,9 @@ export default class Term<A extends PType>
 
         const proofSym = Symbol("overwrite_toUPLC_proofSym");
 
+        // "copying" the functionref is neededto prevent potential "external" js override
+        // 'toUPLC' (the constructor param) si used to override in case of hoisting
+        // '_toUPLC' is used to get and set the property
         let _toUPLC = toUPLC;
         Object.defineProperty(
             this,
@@ -83,7 +90,7 @@ export default class Term<A extends PType>
                         // throws if the term is not closed
                         // for how terms are created it should never be the case
                         new HoistedUPLC(
-                            this._toUPLC( BigInt( 0 ) )
+                            toUPLC( BigInt( 0 ) )
                         )
                 } as any;
             }
@@ -118,4 +125,5 @@ export default class Term<A extends PType>
         (this as any).isConstant = isConstant;
         
     }
+    
 }

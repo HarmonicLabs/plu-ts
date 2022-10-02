@@ -471,7 +471,7 @@ export default class BnCEK
         if( !isConstOfType( unit, constT.unit ) ) return new ErrorUPLC;
         return b;
     }
-    static trace( _ignoredInEvaluation: any, result: UPLCTerm ): UPLCTerm
+    static trace( _ignoredWhileEval: any, result: UPLCTerm ): UPLCTerm
     {
         return result;
     }
@@ -497,12 +497,6 @@ export default class BnCEK
     }
     static chooseList( list: UPLCTerm, whateverA: UPLCTerm, whateverB: UPLCTerm ): UPLCTerm 
     {
-        if(!(
-            whateverA instanceof UPLCConst &&
-            whateverB instanceof UPLCConst &&
-            constTypeEq( whateverA.type, whateverB.type )
-        )) return new ErrorUPLC;
-
         const l = getList( list );
         if( l === undefined ) return new ErrorUPLC;
 
@@ -520,7 +514,7 @@ export default class BnCEK
         const l = getList( list );
         if( l === undefined ) return new ErrorUPLC;
 
-        l.unshift( elem  as any );
+        l.unshift( elem.value );
 
         return new UPLCConst(
             list.type,

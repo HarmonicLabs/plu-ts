@@ -20,7 +20,6 @@ import { PStruct } from "../../PTypes/PStruct";
 import PUnit from "../../PTypes/PUnit";
 
 export const enum PrimType {
-
     Int  = "Int",
     BS   = "ByteString",
     Str  = "Str",
@@ -49,7 +48,7 @@ export type DataType = [ DataConstructor, ...DataType[] ]
 
 export type LambdaType<InT extends TermType, OutT extends TermType> = readonly [ PrimType.Lambda, InT, OutT ];
 export type FnType<Ins extends [ TermType, ...TermType[] ], OutT extends TermType> =
-    Ins extends [] ? TermType :
+    Ins extends [] ? OutT :
     Ins extends [ infer In extends TermType ] ? LambdaType<In, OutT> :
     Ins extends [ infer In extends TermType, ...infer RestIns extends [ TermType, ...TermType[] ] ] ? LambdaType<In, FnType< RestIns, OutT >> :
     TermType;
@@ -67,7 +66,7 @@ const Type: {
     readonly Pair:  <FstT extends TermType, SndT extends TermType>(fst: FstT, snd: SndT) => [ PrimType.Pair, FstT, SndT ] ;
     readonly Map:   <KeyT extends TermType, ValT extends TermType>(k: KeyT, v: ValT) => [PrimType.List, [PrimType.Pair, KeyT, ValT]]
     readonly Delayed: <T extends TermType>(toDelay: T) => [ PrimType.Delayed, T ];
-    readonly Lambda: <InT extends TermType, OutT extends TermType>(input: TermType, output: TermType) => [ PrimType.Lambda, InT, OutT ];
+    readonly Lambda: <InT extends TermType, OutT extends TermType>(input: InT, output: OutT) => [ PrimType.Lambda, InT, OutT ];
     readonly Fn: <InsTs extends [ TermType, ...TermType[] ], OutT extends TermType>( inputs: InsTs, output: OutT ) => FnType<InsTs, OutT>
     readonly Data: {
         readonly Any: [ DataConstructor.Any ];
@@ -114,6 +113,33 @@ const Type: {
 }, "Any", {configurable: false, enumerable: true, get: () => Type.Var("Type.Any"), set: ( _v?: any ) => {} }));
 
 export default Type;
+
+/**
+ * Utility object to get fixed type
+ * 
+ * > example usage:
+ * >
+ * >  ```ts
+ * >  const { fn, lam, int } = TypeShortcut;
+ * >  
+ * >  // both equivalent to:    Type.Lambda( Type.Int, Type.Lambda( Type.Int, Type.Int ) );
+ * >  const intBinOpType =      lam( int, lam( int, int ) );
+ * >  const same =              fn([ int, int ], int);
+ * >  ```
+ */
+export const TypeShortcut = Object.freeze({
+    int: Type.Int,
+    bs: Type.BS,
+    str: Type.Str,
+    unit: Type.Unit,
+    bool: Type.Bool,
+    list: Type.List,
+    pair: Type.Pair,
+    map: Type.Map,
+    delayed: Type.Delayed,
+    lam: Type.Lambda,
+    fn: Type.Fn
+})
 
 // Type = TypeName followed by optional (nested) Types
 export type TermType = readonly [ TypeName, ...TermType[] ];

@@ -81,7 +81,7 @@ export function pconstList<ElemsT extends ConstantableTermType>( elemsT: ElemsT 
                 ( 
                     elems.map(
                         el => ( el.toUPLC( dbn ) as UPLCConst ).value
-                    )
+                    ) as any
                 ),
             true
         );
@@ -139,14 +139,12 @@ export function pList<ElemsT extends ConstantableTermType>( elemsT: ElemsT ): ( 
             plist = pprepend( elemsT ).$( elems[i] ).$( plist );
         }
 
-        console.log( plist.toUPLC( 0 ) );
         return plist;
     }
 }
 
 export function pDataList( datas: Data[] ): Term<PList<PData>>
 {
-    console.log( datas );
     JsRuntime.assert(
         Array.isArray( datas ) && datas.every( isData ),
         "invalid list of data passed to 'pDataList'"

@@ -14,12 +14,15 @@ import PLam, { TermFn } from "../PTypes/PFn/PLam";
 import Type, { FromPType, ToPType, ToTermArrNonEmpty, TermType } from "../Term/Type";
 import Term from "../Term";
 import JsRuntime from "../../../utils/JsRuntime";
-import { isDelayedType, isLambdaType, termTypeToString, typeExtends } from "../Term/Type/utils";
 import PInt from "../PTypes/PInt";
 import PUnit from "../PTypes/PUnit";
 import HoistedUPLC from "../../UPLC/UPLCTerms/HoistedUPLC";
+import { typeExtends } from "../Term/Type/extension";
+import { isLambdaType, isDelayedType } from "../Term/Type/kinds";
+import { termTypeToString } from "../Term/Type/utils";
+import applyLambdaType from "../Term/Type/applyLambdaType";
 
-type PappResult<Output extends PType> =
+export type PappResult<Output extends PType> =
     Output extends PLam<infer OutIn extends PType, infer OutOut extends PType> ?
         Term<PLam<OutIn,OutOut>>
         & {
@@ -48,12 +51,12 @@ export function papp<Input extends PType, Output extends PType >( a: Term<PLam<I
 
     JsRuntime.assert(
         typeExtends( b.type, lambdaType[ 1 ] ),
-        "while applying 'Lambda'; unexpected type of input; expected input type: \"" + termTypeToString( lambdaType[1] ) +
-        "\"; received input type: \"" + termTypeToString( b.type ) + "\""
+        "while applying 'Lambda'; unexpected type of input; it should be possible to assign the input to \"" + termTypeToString( lambdaType[1] ) +
+        "\"; received input was of type: \"" + termTypeToString( b.type ) + "\""
     );
 
     const outputTerm = new Term(
-        lambdaType[ 2 ] as FromPType<Output>,
+        applyLambdaType( lambdaType, b.type ),
         dbn => {
             const app = new Application(
                 a.toUPLC( dbn ),
@@ -261,8 +264,8 @@ export function precursive<A extends PType, B extends PType>
                 Type.Lambda( a, b )
             )
         ),
-        "passed function body cannot be made recursive "+
-        "since the first argument type is not a lambda or it doesn't take any input"
+        "passed function body cannot be recursive; "+
+        "the first argument is not a lambda or it doesn't take any input"
     );
 
     const innerZ = new Lambda( // toMakeRecursive

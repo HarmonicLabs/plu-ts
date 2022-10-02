@@ -1,17 +1,17 @@
-import PType, { PDataRepresentable } from "../PType";
-import PBool, { pBool } from "../PTypes/PBool";
-import PLam, { TermFn } from "../PTypes/PFn/PLam";
-import PInt, { pInt } from "../PTypes/PInt";
-import PList, { pnil } from "../PTypes/PList";
-import { papp, perror, pfn, phoist, plam, plet, precursive } from "../Syntax";
-import Term from "../Term";
-import Type, { ConstantableTermType, TermType, ToPType } from "../Term/Type";
-import { pchooseList, phead, pif, pisEmpty, pstrictIf, ptail } from "./Builtins";
-import PMaybe, { PMaybeT } from "./PMaybe";
+import PType, { PDataRepresentable } from "../../PType";
+import PBool, { pBool } from "../../PTypes/PBool";
+import PLam, { TermFn } from "../../PTypes/PFn/PLam";
+import PInt, { pInt } from "../../PTypes/PInt";
+import PList, { pnil } from "../../PTypes/PList";
+import { papp, perror, pfn, phoist, plam, plet, precursive } from "../../Syntax";
+import Term from "../../Term";
+import Type, { ConstantableTermType, TermType, ToPType } from "../../Term/Type";
+import { pchooseList, phead, pif, pisEmpty, pstrictIf, ptail } from "../Builtins";
+import PMaybe, { PMaybeT } from "../PMaybe";
 
 
-export function pmatchList<ReturnT  extends TermType>( returnT: ReturnT )
-    : TermFn<[ PType, PLam<PType,PLam<PList<PType>, ToPType<ReturnT>>> ], ToPType<ReturnT>>
+export function pmatchList<ReturnT  extends TermType, PElemsT extends PType = PType>( returnT: ReturnT )
+    : TermFn<[ PElemsT, PLam<PElemsT,PLam<PList<PElemsT>, ToPType<ReturnT>>>, PList<PElemsT> ], ToPType<ReturnT>>
 {
     const elemsT = Type.Var("elemsT");
     return phoist(
@@ -177,51 +177,4 @@ export function pfindList<ElemsT extends ConstantableTermType, PElemsT extends T
             ) as any
         )
     )
-}
-
-export function plistIncludes<ElemsT extends ConstantableTermType, PElemsT extends ToPType<ElemsT>>( elemsT: ConstantableTermType )
-{
-    return phoist(
-        plam(
-            Type.Lambda(
-                Type.List( elemsT ),
-                Type.Bool
-            ),
-            Type.Bool
-        )(
-            ( predicate: Term<PLam<PElemsT, PBool>> ): Term<PBool> =>
-                precursiveList( Type.Bool )
-                .$(
-                    plam( Type.Lambda( Type.List( elemsT ), Type.Bool ), Type.Bool )
-                    ( (_self: Term<PLam<PList<PElemsT,PBool>>>) => pBool( false ) ) as any
-                )
-                .$(
-                    pfn(
-                        [
-                            Type.Lambda( Type.List( elemsT ), Type.Bool ), // self
-                            elemsT, // x
-                            Type.List( elemsT ) // xs
-                        ],
-                        Type.Bool
-                    )(
-                        (
-                            self: Term<PLam<PList<PElemsT>,PBool>>,
-                            head: Term<PElemsT>,
-                            rest: Term<PList<PElemsT>>
-                        ) => pif( elemsT ).$(
-                            papp(
-                                predicate,
-                                head
-                            )
-                        ).then( pBool( true ) )
-                        .else(
-                            papp(
-                                self,
-                                rest
-                            )
-                        )
-                    )
-                )
-            )
-        )
 }

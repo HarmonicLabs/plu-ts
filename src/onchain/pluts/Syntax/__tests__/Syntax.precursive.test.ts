@@ -75,22 +75,18 @@ describe("precursive", () => {
 
     })
 
-    test("pfactoral", () => {
+    test("pfactorial", () => {
 
         const pfactorial = precursive(
-            pfn<[
-                [ PrimType.Lambda, [ PrimType.Int ], [ PrimType.Int ] ],
-                [ PrimType.Int ]
-            ], [ PrimType.Int ]>(
+            pfn(
                 [
-                    Type.Lambda( Type.Int, Type.Int ),
+                    Type.Lambda<[PrimType.Int], [PrimType.Int]>( Type.Int, Type.Int ),
                     Type.Int
                 ],
                 Type.Int
-            )(
-                ( self , n ) => {
+            )( ( self , n ) => {
 
-                    const _n: TermInt = addPIntMethods( n );
+                    const _n = addPIntMethods( n );
                     
                     return pif( Type.Int ).$( _n.ltEq( pInt( 1 ) ) )
                         .then( pInt( 1 ) )
@@ -138,7 +134,9 @@ describe("precursive", () => {
         function testFactBig( n: bigint ): void
         {
             const res = jsFactorialBig( n );
+            
             // console.log( `${n}! === ${res}` );
+
             expect(
                 evalScript(
                     pfactorial.$( pInt( n ) )
@@ -146,7 +144,8 @@ describe("precursive", () => {
                 )
             ).toEqual(
                 UPLCConst.int( res )
-            )
+            );
+
         };
         
         for(let i = BigInt(20); i < 25; i++)

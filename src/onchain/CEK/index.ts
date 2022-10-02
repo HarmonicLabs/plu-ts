@@ -2,7 +2,7 @@ import PlutsCEKError from "../../errors/PlutsCEKError";
 import PlutsCEKUnboundVarError from "../../errors/PlutsCEKError/PlutsCEKComputeError/PlutsCEKUnboundVarError";
 import Debug from "../../utils/Debug";
 import Term from "../pluts/Term";
-import UPLCTerm, { isPureUPLCTerm, PureUPLCTerm } from "../UPLC/UPLCTerm";
+import UPLCTerm, { PureUPLCTerm } from "../UPLC/UPLCTerm";
 import Application from "../UPLC/UPLCTerms/Application";
 import Builtin from "../UPLC/UPLCTerms/Builtin";
 import Delay from "../UPLC/UPLCTerms/Delay";
@@ -23,12 +23,12 @@ import CEKSteps, { ComputeStep, ReturnStep } from "./CEKSteps";
 import DelayCEK from "./DelayCEK";
 import LambdaCEK from "./LambdaCEK";
 
-export default function evalScript( _term: UPLCTerm ): PureUPLCTerm
+export default function evalScript( _term: UPLCTerm | Term<any> ): PureUPLCTerm
 {
     const frames = new CEKFrames();
     const steps = new CEKSteps();
 
-    compute( _term, new CEKEnv() );
+    compute( _term instanceof Term ? _term.toUPLC(0) : _term, new CEKEnv() );
 
     while( !frames.isEmpty || steps.topIsCompute )
     {
@@ -150,11 +150,6 @@ export default function evalScript( _term: UPLCTerm ): PureUPLCTerm
             steps.push( new ComputeStep( v.UPLC, new CEKEnv() ) );
             return;
         }
-        if( v instanceof ErrorUPLC )
-        {
-            steps.push( new ReturnStep( v ) );
-            return;
-        }
 
         if( v instanceof PartialBuiltin )
         {
@@ -178,6 +173,12 @@ export default function evalScript( _term: UPLCTerm ): PureUPLCTerm
         }
 
         const topFrame = frames.pop();
+
+        if( v instanceof ErrorUPLC )
+        {
+            steps.push( new ReturnStep( v ) );
+            return;
+        }
 
         if( topFrame instanceof ForceFrame )
         {
