@@ -21,13 +21,14 @@ import PPair, { PMap } from "../PTypes/PPair";
 import PString from "../PTypes/PString";
 import PUnit from "../PTypes/PUnit";
 import { papp, phoist, pdelay, pfn, pforce, plam } from "../Syntax";
-import Type, { DataType, ToPDataType, ToPType, TermType } from "../Term/Type";
 import TermBool, { addPBoolMethods } from "./UtilityTerms/TermBool";
 import TermBS, { addPByteStringMethods } from "./UtilityTerms/TermBS";
 import TermInt, { addPIntMethods } from "./UtilityTerms/TermInt";
 import TermStr, { addPStringMethods } from "./UtilityTerms/TermStr";
 import Term from "../Term";
 import { getNRequiredLambdaArgs } from "../Term/Type/utils";
+import PDataPair from "../PTypes/PData/PDataPair";
+import Type, { TermType, ToPType, DataType, ToPDataType } from "../Term/Type";
 
 export function addApplications<Ins extends [ PType, ...PType[] ], Out extends PType, TermOutput extends TermFn< Ins, Out > = TermFn< Ins, Out >>
     (
@@ -581,12 +582,12 @@ export function pif<ReturnT extends TermType>( returnT: ReturnT )
                 then: ( caseTrue: Term<ToPType<ReturnT>> ) =>
                     TermFn<[ ToPType<ReturnT> ], ToPType<ReturnT> >
                     & {
-                        else: ( caseTrue: Term<ToPType<ReturnT>> ) =>
+                        else: ( caseFalse: Term<ToPType<ReturnT>> ) =>
                         Term<ToPType<ReturnT>> 
                     },
                 $: ( caseTrue: Term<ToPType<ReturnT>> ) =>
                     TermFn<[ ToPType<ReturnT> ], ToPType<ReturnT> > & {
-                        else: ( caseTrue: Term<ToPType<ReturnT>> ) =>
+                        else: ( caseFalse: Term<ToPType<ReturnT>> ) =>
                         Term<ToPType<ReturnT>> 
                     }
             }
@@ -1217,11 +1218,11 @@ export function peq<PT extends PInt | PByteString | PString | PData >( pt: new (
 }
 
 export function ppairData<DataFst extends DataType, DataSnd extends DataType>( dataFst: DataFst, dataSnd: DataSnd):
-    TermFn<[ ToPDataType<DataFst>, ToPDataType<DataSnd> ], PPair<ToPDataType<DataFst>,ToPDataType<DataSnd>>>
+    TermFn<[ ToPDataType<DataFst>, ToPDataType<DataSnd> ], PDataPair<ToPDataType<DataFst>,ToPDataType<DataSnd>>>
 {
-    return addApplications<[ ToPDataType<DataFst>,ToPDataType<DataSnd> ], PPair<ToPDataType<DataFst>,ToPDataType<DataSnd>> >(
-        new Term<PLam<ToPDataType<DataFst>, PLam< ToPDataType<DataSnd>, PPair<ToPDataType<DataFst>,ToPDataType<DataSnd>> > >>(
-            Type.Fn([ dataFst, dataSnd ], Type.Pair( dataFst, dataSnd )),
+    return addApplications<[ ToPDataType<DataFst>,ToPDataType<DataSnd> ], PDataPair<ToPDataType<DataFst>,ToPDataType<DataSnd>> >(
+        new Term<PLam<ToPDataType<DataFst>, PLam< ToPDataType<DataSnd>, PDataPair<ToPDataType<DataFst>,ToPDataType<DataSnd>> > >>(
+            Type.Fn([ dataFst, dataSnd ], Type.Data.Pair( dataFst, dataSnd )),
             _dbn => Builtin.mkPairData
         )
     );

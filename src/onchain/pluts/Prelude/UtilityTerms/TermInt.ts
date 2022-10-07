@@ -2,7 +2,7 @@ import { padd, psub, pmult, pdiv, pquot, prem, pmod, peqInt, plessInt, plessEqIn
 import ObjectUtils from "../../../../utils/ObjectUtils"
 import PInt from "../../PTypes/PInt"
 import Term from "../../Term"
-import TermBool, { addPBoolMethods } from "./TermBool"
+import TermBool from "./TermBool"
 
 type TermInt = Term<PInt>
 & {

@@ -6,7 +6,9 @@ import { pListToData, pnilData, pnilPairData, pprepend, punListData } from "../P
 import PType, { PDataRepresentable } from "../PType";
 import Term from "../Term";
 import Type, { ToPType, TermType, ConstantableTermType } from "../Term/Type";
-import { isConstantableTermType, termTypeToString, termTyToConstTy, typeExtends } from "../Term/Type/utils";
+import { termTyToConstTy } from "../Term/Type/constTypeConversion";
+import { typeExtends } from "../Term/Type/extension";
+import { isConstantableTermType } from "../Term/Type/kinds";
 import PData from "./PData";
 import PDataList from "./PData/PDataList";
 

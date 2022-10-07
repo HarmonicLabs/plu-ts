@@ -80,7 +80,7 @@ describe("precursive", () => {
         const pfactorial = precursive(
             pfn(
                 [
-                    Type.Lambda<[PrimType.Int], [PrimType.Int]>( Type.Int, Type.Int ),
+                    Type.Lambda( Type.Int, Type.Int ),
                     Type.Int
                 ],
                 Type.Int

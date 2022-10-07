@@ -1,7 +1,5 @@
 import Cloneable from "../../../types/interfaces/Cloneable";
-import JsRuntime from "../../../utils/JsRuntime";
 import UPLCConst from "../../UPLC/UPLCTerms/UPLCConst";
-import ConstType, { constT, ConstTyTag } from "../../UPLC/UPLCTerms/UPLCConst/ConstType";
 import { pBSToData, pdecodeUtf8, pencodeUtf8, punBData } from "../Prelude/Builtins";
 import TermStr from "../Prelude/UtilityTerms/TermStr";
 import { PDataRepresentable } from "../PType";

@@ -6,8 +6,7 @@ import HoistedUPLC from "../../UPLC/UPLCTerms/HoistedUPLC";
 import UPLCConst from "../../UPLC/UPLCTerms/UPLCConst";
 import PType from "../PType";
 import { FromPType } from "./Type";
-import { inferTypeFromUPLC } from "./Type/infer";
-import { isTypeParam, isWellFormedType } from "./Type/kinds";
+import { isWellFormedType } from "./Type/kinds";
 import { termTypeToString } from "./Type/utils";
 
 

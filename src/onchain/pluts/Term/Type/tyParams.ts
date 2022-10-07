@@ -75,12 +75,12 @@ export function replaceTypeParam( tyParam: Readonly<TermTypeParameter> | [ Reado
     return unchecked( tyParam, withTermType, toBeReplacedIn );
 }
 
-type TySubsEntry = {
+type TyParam = {
     tyVar: symbol
     tyArg: TermType
 };
 
-export function findSubsToRestrict( restriction: Readonly<TermType>, toBeRestricted: Readonly<TermType> ): TySubsEntry[] 
+export function findSubsToRestrict( restriction: Readonly<TermType>, toBeRestricted: Readonly<TermType> ): TyParam[] 
 {
     /* checked in ```typeExtends```
     if(!(
@@ -90,42 +90,47 @@ export function findSubsToRestrict( restriction: Readonly<TermType>, toBeRestric
     */
     if( !typeExtends( restriction, toBeRestricted ) ) return [];
 
-    const subs: TySubsEntry[] = [];
+    const subs: TyParam[] = [];
 
-    function findSym( tVar: symbol ): TySubsEntry | undefined
+    function findSym( tVar: symbol ): TyParam | undefined
     {
         return subs.find( pair => pair.tyVar === tVar )
     }
 
-    function assignSub( k: symbol, value: TermType, tyPair: TySubsEntry | undefined = undefined ): void
+    function assignSub( k: symbol, value: TermType, tyParam: TyParam | undefined = undefined ): void
     {
-        const thisTyPair = tyPair !== undefined && tyPair.tyVar === k ? tyPair : findSym( k );
+        const thisTyParam =
+            // previously found tyParam was passed
+            tyParam !== undefined &&
+            // AND the type variable corresponds to the symbol to substitute
+            tyParam.tyVar === k ? tyParam : findSym( k );
 
-        if( thisTyPair !== undefined && !typeExtends( value, thisTyPair.tyArg ) )
+        // tyParams could not be present, causing findSym to return undefined
+        if( thisTyParam !== undefined && !typeExtends( value, thisTyParam.tyArg ) )
         {
             console.log(
                 termTypeToString(value) + " extends "
-                + termTypeToString(thisTyPair.tyArg) + ": ",
-                typeExtends( value, thisTyPair.tyArg )
+                + termTypeToString(thisTyParam.tyArg) + ": ",
+                typeExtends( value, thisTyParam.tyArg )
             );
 
             throw JsRuntime.makeNotSupposedToHappenError(
-                "sub type (" + termTypeToString( value ) + ") does not extends other subtype (" + termTypeToString( thisTyPair.tyArg ) + ") to be restircted; " +
+                "sub type (" + termTypeToString( value ) + ") does not extends other subtype (" + termTypeToString( thisTyParam.tyArg ) + ") to be restircted; " +
                 "this case suld have already returned 'undefined' at the initial check of 'restrictExtensionWith'"
             );
         }
 
-        if( thisTyPair === undefined )
+        if( thisTyParam === undefined )
         {
             subs.push({
                 tyVar: k,
                 tyArg: value
             });
         }
-        else if( typeExtends( thisTyPair.tyArg, value ) )
+        else if( typeExtends( thisTyParam.tyArg, value ) )
         {
             // this type arument is more general than the previous registered
-            thisTyPair.tyArg = value;
+            thisTyParam.tyArg = value;
         }
     }
 

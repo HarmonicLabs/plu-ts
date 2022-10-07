@@ -1,5 +1,6 @@
-import { TermType, PrimType, DataConstructor } from ".";
+import { TermType, PrimType, DataConstructor, structType, anyStruct } from ".";
 import JsRuntime from "../../../../utils/JsRuntime";
+import { StructCtorDef, StructDefinition } from "../../PTypes/PStruct";
 
 export function getNRequiredLambdaArgs( type: TermType ): number
 {
@@ -13,8 +14,46 @@ export function getNRequiredLambdaArgs( type: TermType ): number
  */
 export const getNRequiredArgs = getNRequiredLambdaArgs;
 
+function ctorDefToString( ctorDef: StructCtorDef ): string
+{
+    const fields = Object.keys( ctorDef );
+
+    let str = "{";
+
+    for( const fieldName of fields )
+    {
+        str += ' ' + fieldName + ": " + termTypeToString( ctorDef[ fieldName ] );
+    }
+
+    str += " }";
+
+    return str;
+}
+
+function structDefToString( def: StructDefinition ): string
+{
+    const ctors = Object.keys( def );
+
+    let str = "{";
+
+    for( const ctor of ctors )
+    {
+        str += ' ' + ctor + ": " + ctorDefToString( def[ctor] ) + " },"
+    }
+
+    str = str.slice( 0, str.length - 1 ) + " }";
+
+    return  str
+}
+
 export function termTypeToString( t: TermType ): string
 {
+    if( t[0] === structType )
+    {
+        return "struct(" + (
+            t[1] === anyStruct ? "anyStruct" : structDefToString( t[1] as StructDefinition )
+        ) + ")";
+    }
     if( typeof t[0] === "symbol" ) return "tyParam("+ t[0].description +")";
     const tyArgs = t.slice(1) as TermType[];
     return ( t[0] + (tyArgs.length > 0 ? ',': "") + tyArgs.map( termTypeToString ).toString() );

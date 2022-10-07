@@ -1,6 +1,6 @@
 import { pgenericStruct } from "..";
 import { Params } from "../../../../../utils/ts";
-import PInt from "../../PInt";
+import { int } from "../../../Term/Type";
 import { pStr } from "../../PString";
 
 
@@ -22,8 +22,8 @@ describe("pgenericStruct", () => {
         expect( PMaybe1 === PMaybe1 ).toBe( true );
         expect( PMaybe2 === PMaybe2 ).toBe( true );
 
-        expect( PMaybe1( PInt ) === PMaybe1( PInt ) ).toBe( true );
-        expect( PMaybe1( PInt ) === PMaybe2( PInt ) ).toBe( false );
+        expect( PMaybe1( int ) === PMaybe1( int ) ).toBe( true );
+        expect( PMaybe1( int ) === PMaybe2( int ) ).toBe( false );
     });
 
     test( "throws on wrong type, even if typescript is stupid", () => {
@@ -36,7 +36,7 @@ describe("pgenericStruct", () => {
         });
 
         expect( () =>
-            PMaybe( PInt ).Just({ value: pStr("") })
+            PMaybe( int ).Just({ value: pStr("") })
         ).toThrow();
 
     })

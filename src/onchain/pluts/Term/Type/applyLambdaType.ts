@@ -1,4 +1,4 @@
-import { PrimType, TermType, _unsafe_untyped_ } from ".";
+import { PrimType, TermType } from ".";
 import BasePlutsError from "../../../../errors/BasePlutsError";
 import { typeExtends } from "./extension";
 import { findSubsToRestrict, replaceTypeParam } from "./tyParams";

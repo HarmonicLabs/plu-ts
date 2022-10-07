@@ -1,13 +1,11 @@
 import UPLCConst from "../../UPLC/UPLCTerms/UPLCConst";
-import { peqInt, pfstPair, psndPair, pisEmpty, pif, punConstrData } from "../Prelude/Builtins";
-import PType, { PDataRepresentable } from "../PType";
+import { pfstPair, psndPair, pisEmpty, pif, punConstrData } from "../Prelude/Builtins";
+import { PDataRepresentable } from "../PType";
 import { perror, phoist, plam, plet } from "../Syntax";
 import Term from "../Term";
 import Type, { TermType } from "../Term/Type";
-import PInt, { pInt } from "./PInt";
+import { pInt } from "./PInt";
 import PData from "./PData";
-import PList from "./PList";
-import PPair from "./PPair";
 
 export const pmakeUnit = () => new Term<PUnit>(
     Type.Unit,

@@ -1,6 +1,5 @@
 import BasePlutsError from "../../../errors/BasePlutsError";
 import ObjectUtils from "../../../utils/ObjectUtils";
-import { NoInfer } from "../../../utils/ts";
 import { CurriedFn, curry } from "../../../utils/ts/combinators";
 import Application from "../../UPLC/UPLCTerms/Application";
 import Delay from "../../UPLC/UPLCTerms/Delay";
@@ -11,16 +10,20 @@ import UPLCVar from "../../UPLC/UPLCTerms/UPLCVar";
 import PType from "../PType";
 import PDelayed from "../PTypes/PDelayed";
 import PLam, { TermFn } from "../PTypes/PFn/PLam";
-import Type, { FromPType, ToPType, ToTermArrNonEmpty, TermType } from "../Term/Type";
+import Type, { ToPType, ToTermArrNonEmpty, TermType, int, list } from "../Term/Type";
 import Term from "../Term";
 import JsRuntime from "../../../utils/JsRuntime";
-import PInt from "../PTypes/PInt";
+import PInt, { pInt } from "../PTypes/PInt";
 import PUnit from "../PTypes/PUnit";
 import HoistedUPLC from "../../UPLC/UPLCTerms/HoistedUPLC";
 import { typeExtends } from "../Term/Type/extension";
 import { isLambdaType, isDelayedType } from "../Term/Type/kinds";
 import { termTypeToString } from "../Term/Type/utils";
 import applyLambdaType from "../Term/Type/applyLambdaType";
+import { ConstantableStructCtorDef, ConstantableStructDefinition, isConstantableStructDefiniton, PStruct, StructInstance } from "../PTypes/PStruct";
+import { pfstPair, pif, psndPair, punConstrData } from "../Prelude/Builtins";
+import PData from "../PTypes/PData";
+import PList from "../PTypes/PList";
 
 export type PappResult<Output extends PType> =
     Output extends PLam<infer OutIn extends PType, infer OutOut extends PType> ?
@@ -121,8 +124,6 @@ type PFnFromTypes<Ins extends [ TermType, ...TermType[] ], Out extends TermType>
         PLam<ToPType<T>, PFnFromTypes<RestTs, Out>>:
     never
 
-// type PFnTest1 = PFnFromTypes<[[PrimType.Bool]], [PrimType.Bool]>
-
 type TermFnFromTypes<Ins extends [ TermType, ...TermType[] ], Out extends TermType> =
     Ins extends [ infer T extends TermType ] ? Term<PLam<ToPType<T>, ToPType<Out>>> & { $: ( input: Term<ToPType<T>> ) => Term<ToPType<Out>> } :
     Ins extends [ infer T extends TermType, ...infer RestIns extends [ TermType, ...TermType[] ] ] ?
@@ -135,8 +136,6 @@ type TsTermFunctionArgs<InputsTypes extends [ TermType, ...TermType[] ]> =
     InputsTypes extends [ infer T extends TermType ] ? [ a: Term<ToPType<T>> ] :
     InputsTypes extends [ infer T extends TermType, ...infer RestTs extends [ TermType, ...TermType[] ] ] ? [ a: Term<ToPType<T>>, ...bs: TsTermFunctionArgs<RestTs> ] :
     never;
-
-// type TsTermFunctionReturnT<OutputType extends TermType> = Term<ToPType<OutputType>>;
 
 type TsTermFunction<InputsTypes extends [ TermType, ...TermType[] ], OutputType extends TermType> = (...args: TsTermFunctionArgs<InputsTypes> ) => Term<ToPType<OutputType>>
 
@@ -189,9 +188,9 @@ export function phoist<PInstance extends PType, SomeExtension extends {} >( clos
     since all 'phoist' is doing is wrapping whatever UPLC the 'Term' represent
     into an 'HoistedUPLC'
 
-    however proevious implementaiton achieved this by creating a new term and then copying eventual extension
-    however the extension methods are defined using the **raw** UPLC rather than the hoisted
+    however proevious implementaiton achieved this by creating a new term and then **copying** eventual extension
 
+    this was a problem since the extension methods are defined using the **raw** UPLC rather than the hoisted
     causing the hoisted result not to be actually hoisted if accessed using the methods
 
     moving the "wrapping" of the 'toUPLC' method inside the term, preserves the same 'Term' object
@@ -249,7 +248,7 @@ export function precursive<A extends PType, B extends PType>
     ( fnBody:
         Term<PLam<
             PLam<A,B>,  // self
-            PLam<A,B>>                  // the actual function 
+            PLam<A,B>>  // the actual function 
         >
     ): TermFn<[ A ], B >
 {
@@ -309,9 +308,33 @@ export function precursive<A extends PType, B extends PType>
             )
         );
 
-    return punsafeConvertType( papp( Z, fnBody ), fnBody.type[2] ) as any;
+    return punsafeConvertType( papp( Z, fnBody ), fnBody.type[2] as TermType ) as any;
 }
-//*/
+
+type TsTermRecursiveFunctionArgs<InputsTypes extends [ TermType, ...TermType[] ], OutputType extends TermType> =
+    InputsTypes extends [] ? never :
+    InputsTypes extends [ infer T extends TermType ] ? [ self: TsTermFunction<InputsTypes, OutputType>, arg: Term<ToPType<T>> ] :
+    InputsTypes extends [ infer T extends TermType, ...infer RestTs extends [ TermType, ...TermType[] ] ] ?
+        [ arg: Term<ToPType<T>>, ...args: TsTermRecursiveFunctionArgs<RestTs, OutputType> ] :
+    never;
+
+type TsTermRecursiveFunction<InputsTypes extends [ TermType, ...TermType[] ], OutputType extends TermType> =
+    (...args: TsTermRecursiveFunctionArgs<InputsTypes, OutputType> ) => Term<ToPType<OutputType>>
+
+export function precursiveFn<InputsTypes extends [ TermType, ...TermType[] ], OutputType extends TermType>( inputsTypes: InputsTypes, outputType: OutputType )
+    : ( termFunction: TsTermRecursiveFunction<InputsTypes,OutputType> ) => 
+        TermFnFromTypes< InputsTypes, OutputType>
+{
+    return ( termFn ) => precursive(
+        pfn([
+            Type.Fn( inputsTypes, outputType ),
+            ...inputsTypes
+        ],
+        outputType
+        )( termFn as any ) as  any
+    ) as any
+}
+
 
 export function pdelay<PInstance extends PType>(toDelay: Term<PInstance>): Term<PDelayed<PInstance>>
 {
@@ -408,4 +431,3 @@ export function perror<T extends TermType>( type: T ): Term<ToPType<T>>
         _dbn => new ErrorUPLC
     );
 }
-

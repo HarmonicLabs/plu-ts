@@ -1,22 +1,21 @@
-import { ReturnT } from "../../../utils/ts/TyFn";
-import { PDataRepresentable } from "../PType";
 import { pgenericStruct, PStruct } from "../PTypes/PStruct";
+import { DataReprTermType } from "../Term/Type";
 
-export type PMaybeT<PDT extends PDataRepresentable> = PStruct<{
-    Just: { value: PDT },
+export type PMaybeT<T extends DataReprTermType> = PStruct<{
+    Just: { value: T },
     Nothing: {}
 }>
 
-const _PMaybe = pgenericStruct( _tyArg => {
+const _PMaybe = pgenericStruct( tyArg => {
     return {
-        Just: { value: _tyArg },
+        Just: { value: tyArg },
         Nothing: {}
     }
  })
 
-function PMaybe<PDT extends PDataRepresentable>( tyArg: new () => PDT ): PMaybeT<PDT>
+function PMaybe<T extends DataReprTermType>( tyArg: T ): PMaybeT<T>
 {
-    return _PMaybe( tyArg ) as unknown as PMaybeT<ReturnT<typeof tyArg>>;
+    return _PMaybe( tyArg ) as unknown as PMaybeT<T>;
 }
 
 export default PMaybe;

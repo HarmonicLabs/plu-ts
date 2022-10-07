@@ -5,7 +5,6 @@ import TermBS, { addPByteStringMethods } from "../Prelude/UtilityTerms/TermBS";
 import { PDataRepresentable } from "../PType";
 import Term from "../Term";
 import Type, { TermType } from "../Term/Type";
-import PData from "./PData";
 import PDataBS from "./PData/PDataBS";
 
 export default class PByteString extends PDataRepresentable

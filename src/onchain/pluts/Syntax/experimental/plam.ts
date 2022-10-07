@@ -6,7 +6,6 @@ import PType from "../../PType";
 import PLam from "../../PTypes/PFn/PLam";
 import Term from "../../Term";
 import Type, { FromPType } from "../../Term/Type";
-import { inferType, inferTypeFromUPLC } from "../../Term/Type/infer";
 
 export function plam<PTypeA extends PType, PTypeB extends PType>
 (

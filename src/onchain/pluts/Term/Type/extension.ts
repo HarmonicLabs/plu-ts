@@ -1,5 +1,7 @@
-import { DataConstructor, DataType, TermType } from ".";
-import { isDataType, isTypeNameOfData, isTypeParam, isWellFormedType } from "./kinds";
+import { anyStruct, DataConstructor, DataType, StructType, TermType } from ".";
+import { StructCtorDef } from "../../PTypes/PStruct";
+import { isDataType, isStructType, isTypeNameOfData, isTypeParam, isWellFormedType } from "./kinds";
+import { termTypeToString } from "./utils";
 
 /**
  * @deprecated use ```typeExtends``` instead
@@ -48,38 +50,158 @@ export function dataTypeExtends<ExtendedDataTy extends DataType>( extending: Dat
     return unchecked( extending, extended );
 }
 
+/**
+ * needed for
+ * 
+ * ```ctorDefExtends```
+ * ```structExtends```
+ * ```typeExtends```
+ */
+type TyParam = {
+    tyVar: symbol
+    tyArg: TermType
+};
+
+/**
+ * 
+ * @param a extending ctor
+ * @param b extended ctor
+ * @returns 
+ */
+function ctorDefExtends( a: StructCtorDef, b: StructCtorDef, subs: TyParam[] = [] ): boolean
+{
+    const aFields = Object.keys( a );
+    const bFields = Object.keys( b );
+
+    if( aFields.length !== bFields.length ) return false
+
+    function findSym( tVar: symbol ): TyParam | undefined
+    {
+        return subs.find( pair => pair.tyVar === tVar )
+    }
+
+    for( let i = 0; i < aFields.length; i++ )
+    {
+        // fields have to have the same order;
+        // oterwhise it would imply a different order in the `Data` onchain
+        if( aFields[i] !== bFields[i] ) return false;
+        const field = aFields[i];
+
+        if( (typeof b[field][0]) === "symbol" )
+        {
+            const tyVar = b[field][0] as symbol;
+            const tyArg = a[field];
+            const thisTyParam = findSym( tyVar );
+
+            if( thisTyParam === undefined )
+            {
+                subs.push({
+                    tyVar: tyVar,
+                    tyArg: tyArg
+                });
+                continue;
+            }
+
+            if( isTypeParam( tyArg[0] ) )
+            {
+                if( tyArg[0] === thisTyParam.tyArg[0] ) continue;
+                else return false;
+            }
+
+            // type argument corresponding to type var doesn't match some of the argument previously found
+            // covers case of generic 'tyArg'
+            if( !typeExtends( tyArg, thisTyParam.tyArg, subs ) ) return false;
+
+            if( !typeExtends( thisTyParam.tyArg, tyArg, subs ) )
+            {
+                // this type arument is more general than the previous registered
+                thisTyParam.tyArg = tyArg;
+                continue;
+            }
+
+            continue;
+        }
+
+        if( !typeExtends( a[ field ], b[ field ], subs ) ) return false
+    }
+
+    return true;
+}
+
+export function structExtends( t: TermType, struct: StructType, subs: TyParam[] = [] ): t is StructType
+{
+    // should this throw?
+    if( !isStructType( struct ) ) return false;
+    
+    if( !isStructType( t ) ) return false;
+
+    if( struct[1] === anyStruct ) return true;
+    if( t[1] === anyStruct ) return false;
+
+    const sDef = struct[1];
+    const ctorNames = Object.keys( sDef );
+
+    const extendingDef = t[1];
+    const extendingCtors = Object.keys( extendingDef );
+
+    if( ctorNames.length !== extendingCtors.length ) return false;
+
+    // first check the names only in order
+    // not to do useless (potentially expensive)
+    // ctor definiton extension checks
+    for( let i = 0; i < ctorNames.length; i++ )
+    {
+        if(
+            // ctors have to be in the same position; otherwhise is a different struct;
+            ctorNames[i] !== extendingCtors[i]
+        ) return false;
+    }
+
+    for( let i = 0; i < ctorNames.length; i++ )
+    {
+        if(
+            // check for the same fields and the extending types to extend the given struct ones
+            !ctorDefExtends(
+                extendingDef[ extendingCtors[i] ],
+                sDef[ ctorNames[i] ],
+                subs
+            )
+        ) return false
+    }
+
+    return true;
+}
+
 /*
  * equivalent to ```A extends B``` but at plu-ts level
  */
-export function typeExtends<ExtendedTy extends TermType>( extending: TermType, extended: ExtendedTy ): extending is ExtendedTy
+export function typeExtends<ExtendedTy extends TermType>( extending: TermType, extended: ExtendedTy, subs: TyParam[] = [] ): extending is ExtendedTy
 {
     if(!(
         isWellFormedType( extending ) &&
         isWellFormedType( extended  )
     )) return false;
 
-    type TyPair = {
-        tyVar: symbol
-        tyArg: TermType
-    };
-
-    const subs: TyPair[] = [];
-
-    function findSym( tVar: symbol ): TyPair | undefined
+    function findSym( tVar: symbol ): TyParam | undefined
     {
         return subs.find( pair => pair.tyVar === tVar )
     }
 
     function unchecked( a: TermType, b: TermType ): boolean
     {
+        if( isStructType( b ) )
+        {
+            return structExtends( a, b, subs );
+        }
+
         if( isTypeParam( b[0] ) )
         {
             if( b[0] === a[0] ) return true; // same symbol
 
-            const thisTyPair = findSym( b[0] );
+            const thisTyParam = findSym( b[0] );
             
             // type paramteter never found before
-            if( thisTyPair === undefined )
+            if( thisTyParam === undefined )
             {
                 subs.push({
                     tyVar: b[0],
@@ -89,34 +211,35 @@ export function typeExtends<ExtendedTy extends TermType>( extending: TermType, e
             }
 
             // type parameter was found and is a parameter
-            if( isTypeParam( thisTyPair.tyArg[0] ) )
+            if( isTypeParam( thisTyParam.tyArg[0] ) )
             {
                 // if this value is a parameter (just like the one found before)
                 if( isTypeParam( a[0] ) )
                 {
                     // make sure is the same paramter since
-                    // is corresponding to the same paramter in 'b' (the extended type)
-                    return a[0] === thisTyPair.tyArg[0];
+                    // is corresponding to the same paramter in the extended type ('b')
+                    return a[0] === thisTyParam.tyArg[0];
                 }
                 // else should update with more specific one
 
                 // check if previous type is still assignable to new (more specific) argument
                 // return false if not, since the previous is too genreic
-                if( !unchecked( thisTyPair.tyArg, a ) ) return false;
+                if( !unchecked( thisTyParam.tyArg, a ) ) return false;
                 
                 // update with specific type
-                thisTyPair.tyArg = a;
+                thisTyParam.tyArg = a;
                 return true;
             }
 
-            // thisTyPair.tyArg is a fixed type
-            return unchecked( a, thisTyPair.tyArg )
+            // thisTyParam.tyArg is a fixed type
+            return unchecked( a, thisTyParam.tyArg )
         }
 
         if( isTypeParam( a[0] ) ) return false;
 
         if( isTypeNameOfData( b[0] ) )
         {
+            if( isStructType( a ) ) return b[0] === DataConstructor.Any || b[0] === DataConstructor.Constr;
             if( !isTypeNameOfData( a[0] ) ) return false;
 
             // checks for correct data type construction;

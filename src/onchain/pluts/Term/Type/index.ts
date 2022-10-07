@@ -16,7 +16,7 @@ import PInt from "../../PTypes/PInt";
 import PList from "../../PTypes/PList";
 import PPair from "../../PTypes/PPair";
 import PString from "../../PTypes/PString";
-import { PStruct } from "../../PTypes/PStruct";
+import { ConstantableStructDefinition, PStruct, StructCtorDef, StructDefinition } from "../../PTypes/PStruct";
 import PUnit from "../../PTypes/PUnit";
 
 export const enum PrimType {
@@ -42,6 +42,16 @@ export const enum DataConstructor {
 
 export type TermTypeParameter = symbol;
 
+export const structType = Symbol("structType");
+export const anyStruct  = Symbol("anyStruct");
+
+/**
+ * type of a struct with all types defined
+ */
+export type ConstantableStructType  = readonly [ typeof structType, ConstantableStructDefinition ];
+export type GenericStructType       = readonly [ typeof structType, StructDefinition | typeof anyStruct ];
+export type StructType              = readonly [ typeof structType, StructDefinition | typeof anyStruct ];
+
 export type TypeName = PrimType | DataConstructor | TermTypeParameter
 
 export type DataType = [ DataConstructor, ...DataType[] ]
@@ -52,6 +62,33 @@ export type FnType<Ins extends [ TermType, ...TermType[] ], OutT extends TermTyp
     Ins extends [ infer In extends TermType ] ? LambdaType<In, OutT> :
     Ins extends [ infer In extends TermType, ...infer RestIns extends [ TermType, ...TermType[] ] ] ? LambdaType<In, FnType< RestIns, OutT >> :
     TermType;
+
+// needed to avoid circuar dependecies
+function cloneStructCtorDef<CtorDef extends StructCtorDef>( ctorDef: Readonly<CtorDef> ): CtorDef
+{
+    const clone: CtorDef = {} as any;
+
+    for( const fieldName in ctorDef )
+    {
+        clone[ fieldName ] = ctorDef[ fieldName ];
+    }
+
+    return clone;
+}
+
+// needed to avoid circuar dependecies
+function cloneStructDef<SDef extends StructDefinition>( def: Readonly<SDef> ): SDef
+{
+    const clone: SDef = {} as SDef;
+
+    for( const ctorName in def )
+    {
+        clone[ ctorName ] = cloneStructCtorDef( def[ ctorName ] ) as any;
+    }
+
+    return clone;
+}
+
 
 //@ts-ignore
 const Type: {
@@ -68,6 +105,7 @@ const Type: {
     readonly Delayed: <T extends TermType>(toDelay: T) => [ PrimType.Delayed, T ];
     readonly Lambda: <InT extends TermType, OutT extends TermType>(input: InT, output: OutT) => [ PrimType.Lambda, InT, OutT ];
     readonly Fn: <InsTs extends [ TermType, ...TermType[] ], OutT extends TermType>( inputs: InsTs, output: OutT ) => FnType<InsTs, OutT>
+    readonly Struct: ( def: StructDefinition | typeof anyStruct ) => StructType
     readonly Data: {
         readonly Any: [ DataConstructor.Any ];
         readonly Constr: [ DataConstructor.Constr ];
@@ -101,6 +139,13 @@ const Type: {
 
         return Object.freeze( Type.Lambda( inputs[ 0 ], Type.Fn( inputs.slice( 1 ) as [ TermType, ...TermType[] ], output ) ) ) as any;
     },
+    Struct:     ( def: StructDefinition | typeof anyStruct ): StructType =>
+        Object.freeze([ 
+            structType,
+            typeof def === "symbol" ?
+                def :
+                Object.freeze( cloneStructDef( def ) )
+        ]),
     Data: Object.freeze({
         Any:    Object.freeze([ DataConstructor.Any ]),
         Constr: Object.freeze([ DataConstructor.Constr as FixedDataTypeName ]),
@@ -136,17 +181,29 @@ export const TypeShortcut = Object.freeze({
     list: Type.List,
     pair: Type.Pair,
     map: Type.Map,
+    struct: Type.Struct,
     delayed: Type.Delayed,
     lam: Type.Lambda,
     fn: Type.Fn
 })
 
+export const int        = Type.Int;
+export const bs         = Type.BS;
+export const str        = Type.Str;
+export const unit       = Type.Unit;
+export const bool       = Type.Bool;
+export const list       = Type.List;
+export const pair       = Type.Pair;
+export const map        = Type.Map;
+export const lam        = Type.Lambda;
+export const fn         = Type.Fn;
+export const delayed    = Type.Delayed;
+export const tyVar      = Type.Var;
+export const struct     = Type.Struct;
+
+
 // Type = TypeName followed by optional (nested) Types
-export type TermType = readonly [ TypeName, ...TermType[] ];
-/**
- * @deprecated use ```TermType```
- */
-export type Type = TermType
+export type TermType = readonly [ TypeName, ...TermType[] ] | StructType;
 
 export type FixedDataTypeName
     = DataConstructor.Constr
@@ -183,7 +240,7 @@ export type ConstantableTypeName
     | PrimType.Unit
     | DataConstructor;
 
-export type ConstantableTermType = [ ConstantableTypeName, ...ConstantableTermType[] ];
+export type ConstantableTermType = [ ConstantableTypeName, ...ConstantableTermType[] ] | ConstantableStructType;
 
 export type ToPDataType<DT extends DataType> =
     DT extends [ DataConstructor.Int ] ? PDataInt :
@@ -228,8 +285,12 @@ export type ToPType<T extends TermType> =
     T extends [ PrimType.List, infer ListTyArg extends TermType ]  ? PList< ToPType<ListTyArg> > :
     T extends [ PrimType.Pair, infer FstTyArg extends TermType, infer SndTyArg extends TermType ]  ? PPair< ToPType<FstTyArg>, ToPType<SndTyArg> > :
     T extends [ PrimType.Delayed, infer TyArg extends TermType ]  ? PDelayed< ToPType<TyArg> > :
-    T extends [ PrimType.Lambda, infer InputTyArg extends TermType, infer OutputTyArg extends TermType ] ? PLam< ToPType<InputTyArg>, ToPType<OutputTyArg> > :
-    T extends LambdaType<infer InputTyArg extends TermType, infer OutputTyArg extends TermType> ? PLam< ToPType<InputTyArg>, ToPType<OutputTyArg> > :
+    T extends [ PrimType.Lambda, infer InputTyArg extends TermType, infer OutputTyArg extends TermType ] ?
+        PLam< ToPType<InputTyArg>, ToPType<OutputTyArg> > :
+    T extends LambdaType<infer InputTyArg extends TermType, infer OutputTyArg extends TermType> ?
+        PLam< ToPType<InputTyArg>, ToPType<OutputTyArg> > :
+    T extends [ typeof structType, infer SDef extends ( StructDefinition | typeof anyStruct ) ] ?
+        ( SDef extends ConstantableStructDefinition ? PStruct<SDef> : PData ):
     T extends [ DataConstructor, ...DataType[] ] ? PData :
     // covers ```TermTypeParameter```s too
     T extends TermType ? PType :
@@ -248,7 +309,7 @@ export type FromPType< PT extends PType | ToPType<TermType> | PStruct<any> > =
     PT extends PDelayed<infer TyArg extends PType>  ? [ PrimType.Delayed, FromPType< TyArg > ] :
     PT extends PLam<infer FstTyArg extends PType, infer SndTyArg extends PType>     ? [ PrimType.Lambda, FromPType< FstTyArg >, FromPType< SndTyArg > ] :
     PT extends PData    ? [ DataConstructor, ...DataType[] ] :
-    PT extends PStruct<any> ? [ DataConstructor.Constr ] :
+    PT extends PStruct<infer SDef extends ConstantableStructDefinition> ? [ typeof structType, SDef ] :
     PT extends PType    ? TermType :
     // PT extends ToPType<infer T extends TermType> ? T :
     never;
