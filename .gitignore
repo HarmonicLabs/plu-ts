@@ -2,3 +2,5 @@
 node_modules/
 # can be retreived by running tests
 coverage/
+
+.vscode*

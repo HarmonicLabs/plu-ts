@@ -1,5 +1,6 @@
-import { pgenericStruct, pmatch } from ".."
-import { int } from "../../../Term/Type";
+import pstruct, { pgenericStruct, pmatch, PMatchOptions } from ".."
+import { int, PrimType, str } from "../../../Term/Type";
+import { pInt } from "../../PInt";
 
 const PMaybe = pgenericStruct( tyArg => {
     return {
@@ -8,13 +9,25 @@ const PMaybe = pgenericStruct( tyArg => {
     }
 });
 
+const FixStruct = pstruct({
+    A: { _0: int, _1: str },
+    B: { _0: int },
+    C: {}
+})
+
 describe("pmatch", () => {
 
-    test("pmatch( PMaybe(int).Nothing() )", () => {
+    test("pmatch(FixStruct.<...>)", () => {
 
-        const matchNothing: any = pmatch( PMaybe(int).Nothing({}) );
+        const matchFixStruct = pmatch( FixStruct.C({}) )
         
-        /*
+    })
+
+    test("pmatch( PMaybe(int).Nothing({}) )", () => {
+
+        const matchNothing = pmatch( PMaybe(int).Nothing({}) );
+        
+        //*
         expect(
             matchNothing
         ).toEqual({
@@ -22,7 +35,7 @@ describe("pmatch", () => {
             onNothing: matchNothing.onNothing
         })
     
-        const matchNothingOnJust = matchNothing.onJust( () => {} );
+        const matchNothingOnJust = matchNothing.onJust( rawFields => pInt( 0 ) );
 
         expect(
             matchNothingOnJust
@@ -30,7 +43,7 @@ describe("pmatch", () => {
             onNothing: matchNothingOnJust.onNothing
         })
         
-        const matchNothingOnNothing = matchNothing.onNothing( () => {} );
+        const matchNothingOnNothing = matchNothing.onNothing( rawFields => pInt( 0 ) );
         expect(
             matchNothingOnNothing
         ).toEqual({
@@ -40,8 +53,8 @@ describe("pmatch", () => {
         
         console.log(
             matchNothing
-            .onJust( () => {} )
-            .onNothing( () => {} )
+            .onNothing( rawFields => pInt( 0 ) )
+            .onJust( rawFields => pInt( 0 ) )
         )
 
     })

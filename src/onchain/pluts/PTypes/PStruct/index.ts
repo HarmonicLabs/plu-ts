@@ -180,9 +180,9 @@ export type PStruct<SDef extends ConstantableStructDefinition> = {
     toData: ( data: Term<PStruct<SDef>> ) => Term<PData>;
 
 } & PDataRepresentable & {
-    [Ctor in keyof StructDefinition]:
+    [Ctor in keyof SDef]:
         //@ts-ignore Type 'StructDefinition[Ctor]' does not satisfy the constraint 'StructCtorDef'.
-        ( ctorFields: StructInstance<StructDefinition[Ctor]> ) => Term<PStruct<StructDefinition>>
+        ( ctorFields: StructInstance<SDef[Ctor]> ) => Term<PStruct<SDef>>
 }
 
 function isStructInstanceOfDefinition<SCtorDef extends StructCtorDef>
@@ -384,8 +384,8 @@ export function pgenericStruct<ConstStructDef extends ConstantableStructDefiniti
     (
         getDescriptor: ( ...tyArgs: TypeArgs ) => ConstStructDef
     ): (
-        (( ...tyArgs: TypeArgs ) => PStruct<ConstStructDef>) &
-        { termType: [ typeof structType, GenericStructDefinition ] }
+        (<TyArgs extends TypeArgs>( ...tyArgs: TyArgs ) => PStruct<ConstStructDef>) &
+        { type: [ typeof structType, GenericStructDefinition ] }
     )
 {
     /*
@@ -426,7 +426,7 @@ export function pgenericStruct<ConstStructDef extends ConstantableStructDefiniti
 
                 return result;
             },
-            "termType",
+            "type",
             typeofGenericStruct( getDescriptor as any )
         ) as any;
     })();
@@ -477,11 +477,19 @@ function getFinalPMatchExpr( callbacks: (( rawFields: object ) => Term<PType>)[]
     return res;
 }
 
-function definePMatchPermutations(
+export type PMatchOptions<SDef extends ConstantableStructDefinition> = {
+    [Ctor in keyof SDef as `on${Capitalize<string & Ctor>}`]
+        : ( cb: ( rawFields: any ) => Term<PType> )
+            =>  Omit<SDef,Ctor> extends { [x: string | number | symbol ]: never } ?
+                Term<PType> :
+                PMatchOptions<Omit<SDef,Ctor>>
+}
+
+function definePMatchPermutations<SDef extends ConstantableStructDefinition>(
     obj: object,
-    def: ConstantableStructDefinition,
+    def: SDef,
     struct: Term<PStruct<ConstantableStructDefinition>>
-)
+): PMatchOptions<SDef>
 {
     const ctors = Object.keys( def );
     const callbacks: (( rawFields: object ) => Term<PType>)[] = Array( ctors.length );
@@ -548,10 +556,10 @@ function definePMatchPermutations(
         return obj;
     }
 
-    return loop( obj, ctors );
+    return loop( obj, ctors ) as any;
 }
 
-export function pmatch<SDef extends ConstantableStructDefinition>( struct: Term<PStruct<SDef>> )
+export function pmatch<SDef extends ConstantableStructDefinition>( struct: Term<PStruct<SDef>> ): PMatchOptions<SDef>
 {
     const sDef = struct.type[1] as ConstantableStructDefinition;
     if( !isConstantableStructDefiniton( sDef ) )
@@ -564,5 +572,5 @@ export function pmatch<SDef extends ConstantableStructDefinition>( struct: Term<
         );
     }
 
-    return definePMatchPermutations( {}, sDef, struct )
+    return definePMatchPermutations( {}, sDef, struct as any ) as any;
 }
