@@ -1,4 +1,6 @@
 import pstruct, { pgenericStruct, pmatch, PMatchOptions } from ".."
+import evalScript from "../../../../CEK";
+import { showUPLC } from "../../../../UPLC/UPLCTerm";
 import { int, PrimType, str } from "../../../Term/Type";
 import { pInt } from "../../PInt";
 
@@ -52,9 +54,12 @@ describe("pmatch", () => {
         //*/
         
         console.log(
-            matchNothing
-            .onNothing( rawFields => pInt( 0 ) )
-            .onJust( rawFields => pInt( 0 ) )
+            showUPLC(
+                matchNothing
+                .onNothing( rawFields => pInt( 1 ) )
+                .onJust( rawFields => pInt( 0 ) )
+                .toUPLC(0)
+            )
         )
 
     })

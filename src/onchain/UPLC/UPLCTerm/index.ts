@@ -9,7 +9,13 @@ import Builtin from "../UPLCTerms/Builtin";
 import JsRuntime from "../../../utils/JsRuntime";
 import HoistedUPLC from "../UPLCTerms/HoistedUPLC";
 import { constTypeToStirng } from "../UPLCTerms/UPLCConst/ConstType";
-import UPLCBuiltinTag, { builtinTagToString } from "../UPLCTerms/Builtin/UPLCBuiltinTag";
+import { builtinTagToString, getNRequiredForces } from "../UPLCTerms/Builtin/UPLCBuiltinTag";
+import ConstValue from "../UPLCTerms/UPLCConst/ConstValue";
+import Integer from "../../../types/ints/Integer";
+import ByteString from "../../../types/HexString/ByteString";
+import { isData } from "../../../types/Data";
+import dataToCbor from "../../../types/Data/toCbor";
+import Pair from "../../../types/structs/Pair";
 
 export type PureUPLCTerm 
     = UPLCVar
@@ -126,22 +132,47 @@ export function isClosedTerm( term: UPLCTerm ): boolean
     return _isClosedTerm( BigInt( 0 ) , term );
 }
 
-export function showUPLC( t: UPLCTerm, dbn: number ): string
+function showUPLCConstValue( v: ConstValue ): string
+{
+    if( v === undefined ) return "()";
+    if( v instanceof Integer ) return v.asBigInt.toString();
+    if( typeof v === "string" ) return `"${v}"`;
+    if( typeof v === "boolean" )  return v ? "True" : "False";
+    if( v instanceof ByteString ) return "#" + v.asString;
+    if( isData( v ) ) return "#" + dataToCbor( v ).asString;
+    if( Array.isArray( v ) ) return "[" + v.map( showUPLCConstValue ).join(',') + "]";
+    if( v instanceof Pair ) return `(${showUPLCConstValue(v.fst)},${showUPLCConstValue(v.snd)})`;
+    
+    throw JsRuntime.makeNotSupposedToHappenError(
+        "'showUPLCConstValue' did not matched any possible constant value"
+    );
+}
+
+export function showUPLC( t: UPLCTerm, dbn: number = 0 ): string
 {
     const vars = "abcdefghilmopqrstuvzwxyjkABCDEFGHILJMNOPQRSTUVZWXYJK";
 
-    if( t instanceof UPLCVar ) return vars.split('')[ dbn - Number( t.deBruijn.asBigInt ) ];
+    if( t instanceof UPLCVar )
+    {
+        const idx = dbn - 1 - Number( t.deBruijn.asBigInt );
+        return vars.split('')[ idx ] ?? `(${idx.toString()})`;
+    }
     if( t instanceof Delay ) return `(delay ${ showUPLC( t.delayedTerm, dbn ) })`;
     if( t instanceof Lambda ) 
     {
-        const thisVar = vars.split('')[ dbn + 1 ];
+        const thisVar = vars.split('')[ dbn ];
         return `(lam ${thisVar} ${ showUPLC( t.body, dbn + 1 ) })`;
     }
     if( t instanceof Application ) return `[${ showUPLC( t.funcTerm, dbn ) } ${ showUPLC( t.argTerm, dbn ) }]`;
-    if( t instanceof UPLCConst ) return `(con ${constTypeToStirng(t.type)} ${(t.value as any).asBigInt})`;
+    if( t instanceof UPLCConst ) return `( con ${constTypeToStirng(t.type)} ${ showUPLCConstValue( t.value ) } )`;
     if( t instanceof Force ) return `(force ${ showUPLC( t.termToForce, dbn ) })`;
     if( t instanceof ErrorUPLC ) return "(error)";
-    if( t instanceof Builtin ) return `(builtin ${builtinTagToString( t.tag )})`
+    if( t instanceof Builtin )
+    {
+        const nForces = getNRequiredForces( t.tag );
+
+        return "(force ".repeat( nForces ) +`(builtin ${builtinTagToString( t.tag )})` + ')'.repeat( nForces )
+    }
     if( t instanceof HoistedUPLC ) return showUPLC( t.UPLC, dbn )
     
     return "";

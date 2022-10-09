@@ -463,14 +463,20 @@ function getFinalPMatchExpr( callbacks: (( rawFields: object ) => Term<PType>)[]
 {
     const last = callbacks.length - 1;
 
-    let res = pif( Type.Any ).$( pInt( last ).eq( ctorIdx ) )
-        .then( callbacks[last]( toRawFields( rawDataFields, fieldsOfCtorN[ last ] ) ) )
-        .else( perror( Type.Any ) );
+    const results = callbacks.map( (cb, i) => cb( ( fieldsOfCtorN[ i ] ) ) );
+
+    // struct definitions must have at least one constructor
+    // element 0 must be present;
+    const returnT = results[0].type;
+
+    let res = pif( returnT ).$( pInt( last ).eq( ctorIdx ) )
+        .then( results[ last ] )
+        .else( perror( returnT ) );
 
     for( let i = callbacks.length - 2; i >= 0; i-- )
     {
-        res = pif( Type.Any ).$( pInt( i ).eq( ctorIdx ) )
-        .then( callbacks[ i ]( fieldsOfCtorN[ i ] ) )
+        res = pif( returnT ).$( pInt( i ).eq( ctorIdx ) )
+        .then( results[ i ] )
         .else( res )
     }
 

@@ -114,7 +114,7 @@ function getPair( pair: UPLCTerm ): Pair<ConstValue,ConstValue> | undefined
         Pair.isStrictInstance( pair.value )
     )) return undefined;
 
-    return pair.value;
+    return pair.clone().value as any;
 }
 
 function getData( data: UPLCTerm ): Data | undefined
@@ -128,13 +128,13 @@ function getData( data: UPLCTerm ): Data | undefined
     return data.value;
 }
 
-function intBinOp( a: UPLCTerm, b: UPLCTerm , op: (a: bigint, b: bigint) => bigint | undefined ): UPLCConst | ErrorUPLC
+function intBinOp( a: UPLCTerm, b: UPLCTerm , op: (a: bigint, b: bigint) => bigint | undefined ): ConstOrErr
 {
     const ints = getInts( a, b );
-    if( ints === undefined ) return new ErrorUPLC;
+    if( ints === undefined ) return new ErrorUPLC("");
 
     const result = op( ints.a, ints.b);
-    if( result === undefined ) return new ErrorUPLC;
+    if( result === undefined ) return new ErrorUPLC("");
 
     return UPLCConst.int( result );
 }
@@ -204,11 +204,20 @@ export function haskellMod( a: bigint, b: bigint ): bigint | undefined
     return dm[1];
 }
 
+type ConstOrErr = UPLCConst | ErrorUPLC;
+
 export default class BnCEK
 {
     private constructor() {};
 
-    static eval( bn: PartialBuiltin ): UPLCConst | ErrorUPLC
+    // static eval( bn: PartialBuiltin ): ConstOrErr
+    // {
+    //     const res = BnCEK._eval( bn );
+    //     console.log( `${bn.tag} evaluation result:`, res );
+    //     return res;
+    // }
+
+    static eval( bn: PartialBuiltin ): ConstOrErr
     {
         switch( bn.tag )
         {
@@ -270,68 +279,68 @@ export default class BnCEK
             
             default:
                 // tag; // check that is of type 'never'
-                return new ErrorUPLC;
+                return new ErrorUPLC("unrecognized builtin tag");
         }
     }
 
-    static addInteger( a: UPLCTerm, b: UPLCTerm ): UPLCConst | ErrorUPLC         { return intBinOp( a , b, (a, b) => a + b ); }
-    static subtractInteger( a: UPLCTerm, b: UPLCTerm ): UPLCConst | ErrorUPLC    { return intBinOp( a , b, (a, b) => a - b ); }
-    static multiplyInteger( a: UPLCTerm, b: UPLCTerm ): UPLCConst | ErrorUPLC    { return intBinOp( a , b, (a, b) => a * b ); }
-    static divideInteger( a: UPLCTerm, b: UPLCTerm ): UPLCConst | ErrorUPLC      { return intBinOp( a , b, haskellDiv      ); }
-    static quotientInteger( a: UPLCTerm, b: UPLCTerm ): UPLCConst | ErrorUPLC    { return intBinOp( a , b, haskellQuot     ); }
-    static remainderInteger( a: UPLCTerm, b: UPLCTerm ): UPLCConst | ErrorUPLC   { return intBinOp( a , b, haskellRem      ); }
-    static modInteger( a: UPLCTerm, b: UPLCTerm ): UPLCConst | ErrorUPLC         { return intBinOp( a , b, haskellMod      ); }
-    static equalsInteger( a: UPLCTerm, b: UPLCTerm ): UPLCConst | ErrorUPLC
+    static addInteger( a: UPLCTerm, b: UPLCTerm ): ConstOrErr         { return intBinOp( a , b, (a, b) => a + b ); }
+    static subtractInteger( a: UPLCTerm, b: UPLCTerm ): ConstOrErr    { return intBinOp( a , b, (a, b) => a - b ); }
+    static multiplyInteger( a: UPLCTerm, b: UPLCTerm ): ConstOrErr    { return intBinOp( a , b, (a, b) => a * b ); }
+    static divideInteger( a: UPLCTerm, b: UPLCTerm ): ConstOrErr      { return intBinOp( a , b, haskellDiv      ); }
+    static quotientInteger( a: UPLCTerm, b: UPLCTerm ): ConstOrErr    { return intBinOp( a , b, haskellQuot     ); }
+    static remainderInteger( a: UPLCTerm, b: UPLCTerm ): ConstOrErr   { return intBinOp( a , b, haskellRem      ); }
+    static modInteger( a: UPLCTerm, b: UPLCTerm ): ConstOrErr         { return intBinOp( a , b, haskellMod      ); }
+    static equalsInteger( a: UPLCTerm, b: UPLCTerm ): ConstOrErr
     {
         const ints = getInts( a, b );
-        if( ints === undefined ) return new ErrorUPLC;
+        if( ints === undefined ) return new ErrorUPLC("not integers");
 
         return UPLCConst.bool( ints.a === ints.b );
     }
-    static lessThanInteger( a: UPLCTerm, b: UPLCTerm ): UPLCConst | ErrorUPLC
+    static lessThanInteger( a: UPLCTerm, b: UPLCTerm ): ConstOrErr
     {
         const ints = getInts( a, b );
-        if( ints === undefined ) return new ErrorUPLC;
+        if( ints === undefined ) return new ErrorUPLC("not integers");
 
         return UPLCConst.bool( ints.a < ints.b );
     }
-    static lessThanEqualInteger( a: UPLCTerm, b: UPLCTerm ): UPLCConst | ErrorUPLC
+    static lessThanEqualInteger( a: UPLCTerm, b: UPLCTerm ): ConstOrErr
     {
         const ints = getInts( a, b );
-        if( ints === undefined ) return new ErrorUPLC;
+        if( ints === undefined ) return new ErrorUPLC("not integers");
 
         return UPLCConst.bool( ints.a <= ints.b );
     }
-    static appendByteString( a: UPLCTerm, b: UPLCTerm ): UPLCConst | ErrorUPLC
+    static appendByteString( a: UPLCTerm, b: UPLCTerm ): ConstOrErr
     {
         const _a = getBS( a );
-        if( _a === undefined ) return new ErrorUPLC;
+        if( _a === undefined ) return new ErrorUPLC("not BS");
         const _b = getBS( b );
-        if(_b === undefined ) return new ErrorUPLC;
+        if(_b === undefined ) return new ErrorUPLC("not BS");
 
         return UPLCConst.byteString(  new ByteString( _a.asString + _b.asString ) );
     }
-    static consByteString( a: UPLCTerm, b: UPLCTerm ): UPLCConst | ErrorUPLC
+    static consByteString( a: UPLCTerm, b: UPLCTerm ): ConstOrErr
     {
         let _a = getInt( a );
-        if( _a === undefined ) return new ErrorUPLC;
+        if( _a === undefined ) return new ErrorUPLC("not Int");
         _a = BigIntUtils.abs( _a ) % BigInt( 256 );
 
         const _b = getBS( b );
-        if(_b === undefined ) return new ErrorUPLC;
+        if(_b === undefined ) return new ErrorUPLC("not BS");
 
         return UPLCConst.byteString(  new ByteString( _a.toString(16).padStart( 2, '0' ) + _b.asString ) );
     }
-    static sliceByteString( fromIdx: UPLCTerm, ofLength: UPLCTerm, bs: UPLCTerm ): UPLCConst | ErrorUPLC
+    static sliceByteString( fromIdx: UPLCTerm, ofLength: UPLCTerm, bs: UPLCTerm ): ConstOrErr
     {
         const idx = getInt( fromIdx );
-        if( idx === undefined ) return new ErrorUPLC;
+        if( idx === undefined ) return new ErrorUPLC("not int");
 
         const length = getInt( ofLength );
-        if( length === undefined ) return new ErrorUPLC;
+        if( length === undefined ) return new ErrorUPLC("not int");
 
         const _bs = getBS( bs );
-        if( _bs === undefined ) return new ErrorUPLC;
+        if( _bs === undefined ) return new ErrorUPLC("not BS");
 
         const i = idx < BigInt( 0 ) ? BigInt( 0 ) : idx;
 
@@ -352,43 +361,43 @@ export default class BnCEK
             )
         );
     }
-    static lengthOfByteString( bs: UPLCTerm ): UPLCConst | ErrorUPLC
+    static lengthOfByteString( bs: UPLCTerm ): ConstOrErr
     {
         const _bs = getBS( bs );
-        if( _bs === undefined ) return new ErrorUPLC;
+        if( _bs === undefined ) return new ErrorUPLC("not BS");
 
         return UPLCConst.int( _bs.asBytes.length );
     }
-    static indexByteString( bs: UPLCTerm, idx: UPLCTerm ): UPLCConst | ErrorUPLC
+    static indexByteString( bs: UPLCTerm, idx: UPLCTerm ): ConstOrErr
     {
         const _bs = getBS( bs );
-        if( _bs === undefined ) return new ErrorUPLC;
+        if( _bs === undefined ) return new ErrorUPLC("not BS");
         
         const i = getInt( idx );
-        if( i === undefined || i >= _bs.asBytes.length || i < BigInt( 0 ) ) return new ErrorUPLC;
+        if( i === undefined || i >= _bs.asBytes.length || i < BigInt( 0 ) ) return new ErrorUPLC("not int");
 
         const result = _bs.asBytes.at( Number( i ) );
-        if( result === undefined ) return new ErrorUPLC;
+        if( result === undefined ) return new ErrorUPLC("out of bytestring length");
 
         return UPLCConst.int( result );
     }
-    static equalsByteString( a: UPLCTerm, b: UPLCTerm ): UPLCConst | ErrorUPLC
+    static equalsByteString( a: UPLCTerm, b: UPLCTerm ): ConstOrErr
     {
         const _a = getBS( a );
-        if( _a === undefined ) return new ErrorUPLC;
+        if( _a === undefined ) return new ErrorUPLC("not BS");
         
         const _b = getBS( b );
-        if( _b === undefined ) return new ErrorUPLC;
+        if( _b === undefined ) return new ErrorUPLC("not BS");
 
         return UPLCConst.bool( _a.asString === _b.asString );
     }
-    static lessThanByteString( a: UPLCTerm, b: UPLCTerm ): UPLCConst | ErrorUPLC
+    static lessThanByteString( a: UPLCTerm, b: UPLCTerm ): ConstOrErr
     {
         const _a = getBS( a );
-        if( _a === undefined ) return new ErrorUPLC;
+        if( _a === undefined ) return new ErrorUPLC("not BS");
         
         const _b = getBS( b );
-        if( _b === undefined ) return new ErrorUPLC;
+        if( _b === undefined ) return new ErrorUPLC("not BS");
 
         const aBytes = _a.asBytes;
         const bBytes = _b.asBytes;
@@ -407,13 +416,13 @@ export default class BnCEK
         }
         return UPLCConst.bool( false );
     }
-    static lessThanEqualsByteString( a: UPLCTerm, b: UPLCTerm ): UPLCConst | ErrorUPLC
+    static lessThanEqualsByteString( a: UPLCTerm, b: UPLCTerm ): ConstOrErr
     {
         const _a = getBS( a );
-        if( _a === undefined ) return new ErrorUPLC;
+        if( _a === undefined ) return new ErrorUPLC("not BS");
         
         const _b = getBS( b );
-        if( _b === undefined ) return new ErrorUPLC;
+        if( _b === undefined ) return new ErrorUPLC("not BS");
 
         if( _a.asString === _b.asString ) return UPLCConst.bool( true );
         return BnCEK.lessThanByteString( a, b );
@@ -426,69 +435,69 @@ export default class BnCEK
     // static blake2b_256
     // static verifyEd25519Signature
 
-    static appendString( a: UPLCTerm, b: UPLCTerm ): UPLCConst | ErrorUPLC
+    static appendString( a: UPLCTerm, b: UPLCTerm ): ConstOrErr
     {
         const _a = getStr( a );
-        if( _a === undefined ) return new ErrorUPLC;
+        if( _a === undefined ) return new ErrorUPLC("not Str");
         
         const _b = getStr( b );
-        if( _b === undefined ) return new ErrorUPLC;
+        if( _b === undefined ) return new ErrorUPLC("not Str");
 
         return UPLCConst.str( _a + _b )
     }
-    static equalsString( a: UPLCTerm, b: UPLCTerm ): UPLCConst | ErrorUPLC
+    static equalsString( a: UPLCTerm, b: UPLCTerm ): ConstOrErr
     {
         const _a = getStr( a );
-        if( _a === undefined ) return new ErrorUPLC;
+        if( _a === undefined ) return new ErrorUPLC("not Str");
         
         const _b = getStr( b );
-        if( _b === undefined ) return new ErrorUPLC;
+        if( _b === undefined ) return new ErrorUPLC("not Str");
 
         return UPLCConst.bool( _a === _b )
     }
-    static encodeUtf8( a: UPLCTerm ): UPLCConst | ErrorUPLC
+    static encodeUtf8( a: UPLCTerm ): ConstOrErr
     {
         const _a = getStr( a );
-        if( _a === undefined ) return new ErrorUPLC;
+        if( _a === undefined ) return new ErrorUPLC("not Str");
 
         return UPLCConst.byteString( new ByteString( Buffer.from( _a , "utf8" ) ) );
     }
-    static decodeUtf8( a: UPLCTerm ): UPLCConst | ErrorUPLC
+    static decodeUtf8( a: UPLCTerm ): ConstOrErr
     {
         const _a = getBS( a );
-        if( _a === undefined ) return new ErrorUPLC;
+        if( _a === undefined ) return new ErrorUPLC("not BS");
 
         return UPLCConst.str( _a.asBytes.toString("utf8") );
     }
-    static ifThenElse( condition: UPLCTerm, caseTrue: UPLCConst | ErrorUPLC, caseFalse: UPLCConst | ErrorUPLC ): UPLCConst | ErrorUPLC
+    static ifThenElse( condition: UPLCTerm, caseTrue: ConstOrErr, caseFalse: ConstOrErr ): ConstOrErr
     {
-        if(! isConstOfType( condition, constT.bool ) ) return new ErrorUPLC;
+        if(! isConstOfType( condition, constT.bool ) ) return new ErrorUPLC("not a boolean");
         
         return condition.value ? caseTrue : caseFalse;
     }
     static chooseUnit( unit: UPLCTerm, b: UPLCTerm ): UPLCTerm
     {
-        if( !isConstOfType( unit, constT.unit ) ) return new ErrorUPLC;
+        if( !isConstOfType( unit, constT.unit ) ) return new ErrorUPLC("nota a unit");
         return b;
     }
     static trace( _ignoredWhileEval: any, result: UPLCTerm ): UPLCTerm
     {
         return result;
     }
-    static fstPair( pair: UPLCTerm ): UPLCConst | ErrorUPLC
+    static fstPair( pair: UPLCTerm ): ConstOrErr
     {
         const p = getPair( pair );
-        if( p === undefined ) return new ErrorUPLC;
+        if( p === undefined ) return new ErrorUPLC("not a pair");
 
         return new UPLCConst(
             constPairTypeUtils.getFirstTypeArgument( (pair as UPLCConst).type ),
             p.fst as any
         );
     }
-    static sndPair( pair: UPLCTerm ): UPLCConst | ErrorUPLC
+    static sndPair( pair: UPLCTerm ): ConstOrErr
     {
         const p = getPair( pair );
-        if( p === undefined ) return new ErrorUPLC;
+        if( p === undefined ) return new ErrorUPLC("not a pair");
 
         return new UPLCConst(
             constPairTypeUtils.getSecondTypeArgument( (pair as UPLCConst).type ),
@@ -498,7 +507,7 @@ export default class BnCEK
     static chooseList( list: UPLCTerm, whateverA: UPLCTerm, whateverB: UPLCTerm ): UPLCTerm 
     {
         const l = getList( list );
-        if( l === undefined ) return new ErrorUPLC;
+        if( l === undefined ) return new ErrorUPLC("not a list");
 
         return l.length === 0 ? whateverA : whateverB;
     }
@@ -509,10 +518,10 @@ export default class BnCEK
             list instanceof UPLCConst &&
             list.type[0] === ConstTyTag.list &&
             constTypeEq( elem.type, constListTypeUtils.getTypeArgument( list.type as any ) )
-        )) return new ErrorUPLC;
+        )) return new ErrorUPLC("incongruent list types");
 
         const l = getList( list );
-        if( l === undefined ) return new ErrorUPLC;
+        if( l === undefined ) return new ErrorUPLC("not a list");
 
         l.unshift( elem.value );
 
@@ -521,37 +530,37 @@ export default class BnCEK
             l as any
         );
     }
-    static headList( list: UPLCTerm ): UPLCConst | ErrorUPLC 
+    static headList( list: UPLCTerm ): ConstOrErr 
     {
         const l = getList( list );
-        if( l === undefined || l.length === 0 ) return new ErrorUPLC;
+        if( l === undefined || l.length === 0 ) return new ErrorUPLC(l === undefined ? "not a list" : "empty list passed to 'head'");
 
         return new UPLCConst(
             constListTypeUtils.getTypeArgument( (list as UPLCConst).type as any ),
             l[0] as any
         );
     }
-    static tailList( list: UPLCTerm ): UPLCConst | ErrorUPLC 
+    static tailList( list: UPLCTerm ): ConstOrErr 
     {
         const l = getList( list );
-        if( l === undefined || l.length === 0 ) return new ErrorUPLC;
+        if( l === undefined || l.length === 0 ) return new ErrorUPLC(l === undefined ? "not a list" : "empty list passed to 'tail'");
 
         return new UPLCConst(
             (list as UPLCConst).type,
             l.slice(1) as any
         );
     }
-    static nullList( list: UPLCTerm ): UPLCConst | ErrorUPLC 
+    static nullList( list: UPLCTerm ): ConstOrErr 
     {
         const l = getList( list );
-        if( l === undefined ) return new ErrorUPLC;
+        if( l === undefined ) return new ErrorUPLC("not a list");
 
         return UPLCConst.bool( l.length === 0 )
     }
-    static chooseData( data: UPLCTerm, constr: UPLCTerm, map: UPLCTerm, list: UPLCTerm, int: UPLCTerm, bs: UPLCTerm ): UPLCConst | ErrorUPLC
+    static chooseData( data: UPLCTerm, constr: UPLCTerm, map: UPLCTerm, list: UPLCTerm, int: UPLCTerm, bs: UPLCTerm ): ConstOrErr
     {
         const d = getData( data );
-        if( d === undefined ) return new ErrorUPLC;
+        if( d === undefined ) return new ErrorUPLC("not data");
 
         if( d instanceof DataConstr ) return constr;
         if( d instanceof DataMap ) return map;
@@ -559,27 +568,27 @@ export default class BnCEK
         if( d instanceof DataI ) return int;
         if( d instanceof DataB ) return bs;
 
-        return new ErrorUPLC;
+        return new ErrorUPLC("unrecognized data, possibly DataPair");
     }
-    static constrData( idx: UPLCTerm, fields: UPLCTerm ): UPLCConst | ErrorUPLC
+    static constrData( idx: UPLCTerm, fields: UPLCTerm ): ConstOrErr
     {
         const i = getInt( idx );
-        if( i === undefined ) return new ErrorUPLC;
+        if( i === undefined ) return new ErrorUPLC("not int");
 
-        if( !constTypeEq( (fields as any).type, constT.listOf( constT.data ) ) ) return new ErrorUPLC;
+        if( !constTypeEq( (fields as any).type, constT.listOf( constT.data ) ) ) return new ErrorUPLC("passed fields are not a list of Data");
         
         const f: Data[] | undefined = getList( fields ) as any;
-        if( f === undefined ) return new ErrorUPLC;
+        if( f === undefined ) return new ErrorUPLC("not a list");
 
         // assert we got a list of data
         // ( the type has been forced but not the value )
-        if( !f.every( field => isData( field ) ) ) return new ErrorUPLC;
+        if( !f.every( field => isData( field ) ) ) return new ErrorUPLC("some of the fields are not Data, mismatching type btw");
 
         return UPLCConst.data(
             new DataConstr( i, f )
         );
     }
-    static mapData( listOfPair: UPLCTerm ): UPLCConst | ErrorUPLC
+    static mapData( listOfPair: UPLCTerm ): ConstOrErr
     {
         if(!(
             listOfPair instanceof UPLCConst &&
@@ -592,10 +601,10 @@ export default class BnCEK
                     )
                 )
             )
-        )) return new ErrorUPLC;
+        )) return new ErrorUPLC("not a const map");
 
         const list: Pair<Data,Data>[] | undefined = getList( listOfPair ) as any ;
-        if( list === undefined ) return new ErrorUPLC;
+        if( list === undefined ) return new ErrorUPLC("not a list");
 
         // assert we got a list of pair of datas
         // ( the type has been forced but not the value )
@@ -605,7 +614,7 @@ export default class BnCEK
                 isData( pair.fst ) &&
                 isData( pair.snd ) 
             )
-        ) return new ErrorUPLC;
+        ) return new ErrorUPLC("some elements are not a pair, mismatching type btw");
 
         return UPLCConst.data(
             new DataMap(
@@ -613,7 +622,7 @@ export default class BnCEK
             )
         );
     }
-    static listData( listOfData: UPLCTerm ): UPLCConst | ErrorUPLC
+    static listData( listOfData: UPLCTerm ): ConstOrErr
     {
         if(!(
             listOfData instanceof UPLCConst &&
@@ -623,111 +632,111 @@ export default class BnCEK
                     constT.data
                 )
             )
-        )) return new ErrorUPLC;
+        )) return new ErrorUPLC("not a list of data");
 
         const list: Data[] | undefined = getList( listOfData ) as any ;
-        if( list === undefined ) return new ErrorUPLC;
+        if( list === undefined ) return new ErrorUPLC("not a list");
 
         // assert we got a list of data
         // ( the type has been forced but not the value )
-        if( !list.every( data => isData( data ) ) ) return new ErrorUPLC;
+        if( !list.every( data => isData( data ) ) ) return new ErrorUPLC("some of the elements are not data, mismatching type btw");
 
         return UPLCConst.data(
             new DataList( list )
         );
     }
-    static iData( int: UPLCTerm ): UPLCConst | ErrorUPLC
+    static iData( int: UPLCTerm ): ConstOrErr
     {
         const i = getInt( int );
-        if( i === undefined ) return new ErrorUPLC;
+        if( i === undefined ) return new ErrorUPLC("not an int");
 
         return UPLCConst.data( new DataI( i ) );
     }
-    static bData( bs: UPLCTerm ): UPLCConst | ErrorUPLC
+    static bData( bs: UPLCTerm ): ConstOrErr
     {
         const b = getBS( bs );
-        if( b === undefined ) return new ErrorUPLC;
+        if( b === undefined ) return new ErrorUPLC("not BS");
 
         return UPLCConst.data( new DataB( b ) );
     }
-    static unConstrData( data: UPLCTerm ): UPLCConst | ErrorUPLC
+    static unConstrData( data: UPLCTerm ): ConstOrErr
     {
         const d = getData( data );
-        if( d === undefined ) return new ErrorUPLC;
+        if( d === undefined ) return new ErrorUPLC("not data");
 
-        if( !( d instanceof DataConstr ) ) return new ErrorUPLC;
+        if( !( d instanceof DataConstr ) ) return new ErrorUPLC("not a data constructor");
 
         return UPLCConst.pairOf( constT.int, constT.listOf( constT.data ) )(
             d.constr,
             d.fields
         );
     }
-    static unMapData( data: UPLCTerm ): UPLCConst | ErrorUPLC
+    static unMapData( data: UPLCTerm ): ConstOrErr
     {
         const d = getData( data );
-        if( d === undefined ) return new ErrorUPLC;
+        if( d === undefined ) return new ErrorUPLC("not data");
 
-        if( !( d instanceof DataMap ) ) return new ErrorUPLC;
+        if( !( d instanceof DataMap ) ) return new ErrorUPLC("not a data map");
 
         return UPLCConst.listOf( constT.pairOf( constT.data, constT.data ) )(
             d.map.map( dataPair => new Pair<Data,Data>( dataPair.fst, dataPair.snd ) )
         );
     }
-    static unListData( data: UPLCTerm ): UPLCConst | ErrorUPLC
+    static unListData( data: UPLCTerm ): ConstOrErr
     {
         const d = getData( data );
-        if( d === undefined ) return new ErrorUPLC;
+        if( d === undefined ) return new ErrorUPLC("not data");
 
-        if( !( d instanceof DataList ) ) return new ErrorUPLC;
+        if( !( d instanceof DataList ) ) return new ErrorUPLC("not a data list");
 
         return UPLCConst.listOf( constT.data )(
             d.list
         );
     }
-    static unIData( data: UPLCTerm ): UPLCConst | ErrorUPLC
+    static unIData( data: UPLCTerm ): ConstOrErr
     {
         const d = getData( data );
-        if( d === undefined ) return new ErrorUPLC;
+        if( d === undefined ) return new ErrorUPLC("not data");
 
-        if( !( d instanceof DataI ) ) return new ErrorUPLC;
+        if( !( d instanceof DataI ) ) return new ErrorUPLC("not a data integer");
 
         return UPLCConst.int( d.int );
     }
-    static unBData( data: UPLCTerm ): UPLCConst | ErrorUPLC
+    static unBData( data: UPLCTerm ): ConstOrErr
     {
         const d = getData( data );
-        if( d === undefined ) return new ErrorUPLC;
+        if( d === undefined ) return new ErrorUPLC("not data");
 
-        if( !( d instanceof DataB ) ) return new ErrorUPLC;
+        if( !( d instanceof DataB ) ) return new ErrorUPLC("not a data BS");
 
         return UPLCConst.byteString( d.bytes );
     }
-    static equalsData( a: UPLCTerm, b: UPLCTerm ): UPLCConst | ErrorUPLC
+    static equalsData( a: UPLCTerm, b: UPLCTerm ): ConstOrErr
     {
         const _a = getData( a );
-        if( _a === undefined ) return new ErrorUPLC;
+        if( _a === undefined ) return new ErrorUPLC("not data");
         const _b = getData( b );
-        if( _b === undefined ) return new ErrorUPLC;
+        if( _b === undefined ) return new ErrorUPLC("not data");
         
         return UPLCConst.bool( eqData( _a, _b ) );
     }
-    static mkPairData( a: UPLCTerm, b: UPLCTerm ): UPLCConst | ErrorUPLC
+    static mkPairData( a: UPLCTerm, b: UPLCTerm ): ConstOrErr
     {
         const _a = getData( a );
-        if( _a === undefined ) return new ErrorUPLC;
+        if( _a === undefined ) return new ErrorUPLC("not data");
         const _b = getData( b );
-        if( _b === undefined ) return new ErrorUPLC;
+        if( _b === undefined ) return new ErrorUPLC("not data");
         
         return UPLCConst.pairOf( constT.data, constT.data )( _a, _b );
     }
-    static mkNilData( unit: UPLCTerm ): UPLCConst | ErrorUPLC
+    static mkNilData( unit: UPLCTerm ): ConstOrErr
     {
-        if( !isConstOfType( unit, constT.unit ) ) return new ErrorUPLC;
+        if( !isConstOfType( unit, constT.unit ) ) return new ErrorUPLC("not unit");
         return UPLCConst.listOf( constT.data )([]);
     }
-    static mkNilPairData( unit: UPLCTerm ): UPLCConst | ErrorUPLC
+    static mkNilPairData( unit: UPLCTerm ): ConstOrErr
     {
-        if( !isConstOfType( unit, constT.unit ) ) return new ErrorUPLC;
+        if( !isConstOfType( unit, constT.unit ) ) return new ErrorUPLC("not unit");
         return UPLCConst.listOf( constT.pairOf( constT.data, constT.data ) )([]);
     }
 

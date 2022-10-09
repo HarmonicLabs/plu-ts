@@ -9,6 +9,7 @@ export default class Pair< A, B >
 
     static isStrictInstance( any: any ): any is Pair<any,any>
     {
+        if( any === undefined || any === null ) return false;
         return Object.getPrototypeOf( any ) === Pair.prototype;
     }
 

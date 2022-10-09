@@ -15,7 +15,7 @@ import PDataList from "../PTypes/PData/PDataList";
 import PDataMap from "../PTypes/PData/PDataMap";
 import PFn from "../PTypes/PFn";
 import PLam, { TermFn } from "../PTypes/PFn/PLam";
-import PInt from "../PTypes/PInt";
+import PInt, { pInt } from "../PTypes/PInt";
 import PList from "../PTypes/PList";
 import PPair, { PMap } from "../PTypes/PPair";
 import PString from "../PTypes/PString";
@@ -550,9 +550,68 @@ export const pdecodeUtf8: Term<PLam<PByteString, PString>>
     )
 })()
 
+/*
 
-export function pstrictIf<ReturnT extends TermType>( returnT: ReturnT ): TermFn<[ PBool, ToPType<ReturnT>, ToPType<ReturnT> ], ToPType<ReturnT>>
+// alternative implementaiton of polymorphic functions
+//
+// pros:
+//  - is not a function but a constant
+//  - infers terms
+//
+// cons:
+//  - type parameters typescript types must be the generic 'PType'
+//    this may be annoyng, especially working whit higer order functions
+//  - type must be manually specified
+//  
+const _pstrictIf_: Term<PLam<PBool, PLam<PType, PLam<PType , PType>>>> &
 {
+    $: ( condtion: Term<PBool> ) => 
+        Term<PFn<[PType, PType], PType>> &
+        {
+            $: <PReturnT extends PType>( caseTrue: Term<PReturnT> ) =>
+                Term<PLam<PReturnT,PReturnT>> &
+                {
+                    $: ( caseFalse: Term<PReturnT> ) => Term<PReturnT>
+                }
+        }
+} = (() => {
+    const returnT = Type.Var("pstrictIf_returnType");
+
+    const term = new Term<PFn<[ PBool, PType, PType ], PType>>(
+        Type.Fn([ Type.Bool, returnT, returnT ], returnT ),
+        _dbn => Builtin.ifThenElse
+    );
+
+    return ObjectUtils.defineReadOnlyProperty(
+        term,
+        "$",
+        ( conditon: Term<PBool> ) => {
+
+            const _if = papp( term, conditon );
+
+            return ObjectUtils.defineReadOnlyProperty(
+                _if,
+                "$",
+                <PReturnT extends PType>( caseTrue: Term<PReturnT> ) => {
+
+                    const _ifThen: Term<PLam<PReturnT, PReturnT>> = papp( _if, caseTrue ) as any;
+
+                    return ObjectUtils.defineReadOnlyProperty(
+                        _ifThen,
+                        "$",
+                        ( caseFalse: Term<PReturnT> ) => papp( _ifThen, caseFalse )
+                    )
+                }
+            )
+        }
+    );
+})();
+// */
+
+export function pstrictIf<ReturnT extends TermType>( returnType: ReturnT | undefined = undefined ): TermFn<[ PBool, ToPType<ReturnT>, ToPType<ReturnT> ], ToPType<ReturnT>>
+{
+    const returnT = returnType ?? Type.Var("pstrictIf_returnType");
+
     return addApplications<[ PBool, ToPType<ReturnT>, ToPType<ReturnT> ], ToPType<ReturnT>>(
         new Term<
             PLam<
@@ -573,7 +632,7 @@ export function pstrictIf<ReturnT extends TermType>( returnT: ReturnT ): TermFn<
     ) as any;
 }
 
-export function pif<ReturnT extends TermType>( returnT: ReturnT )
+export function pif<ReturnT extends TermType>( returnType: ReturnT | undefined = undefined )
     : Term<PLam<PBool, PLam<ToPType<ReturnT>, PLam<ToPType<ReturnT>, ToPType<ReturnT>>>>> 
     & {
         $: (condition: Term<PBool>) =>
@@ -593,6 +652,9 @@ export function pif<ReturnT extends TermType>( returnT: ReturnT )
             }
     }
 {
+
+    const returnT = returnType ?? Type.Var("pif_returnType");
+
     // new term identical to the strict one in order to define new (different) "$" properties
     const _lambdaIf = new Term<
         PLam<
@@ -726,9 +788,11 @@ export const por
         )
     ) as any;
 
-export function pchooseUnit<ReturnT extends TermType>( returnT: ReturnT )
+export function pchooseUnit<ReturnT extends TermType>( returnType: ReturnT | undefined = undefined )
     : TermFn<[ PUnit, ToPType<ReturnT> ], ToPType<ReturnT>>
 {
+    const returnT = returnType ?? Type.Var("pchooseUnit_returnType");
+    
     return addApplications<[ PUnit, ToPType<ReturnT> ], ToPType<ReturnT>>(
         new Term(
             Type.Fn([ Type.Unit, returnT ], returnT ),
@@ -737,9 +801,11 @@ export function pchooseUnit<ReturnT extends TermType>( returnT: ReturnT )
     );
 }
 
-export function ptrace<ReturnT extends TermType>( returnT: ReturnT )
+export function ptrace<ReturnT extends TermType>( returnType: ReturnT | undefined = undefined )
     : TermFn<[ PString, ToPType<ReturnT> ], ToPType<ReturnT>>
 {
+    const returnT = returnType ?? Type.Var("ptrace_returnType");
+    
     return addApplications<[ PString, ToPType<ReturnT> ], ToPType<ReturnT> >(
         new Term(
             Type.Fn([ Type.Str, returnT ], returnT ),
@@ -748,9 +814,12 @@ export function ptrace<ReturnT extends TermType>( returnT: ReturnT )
     );
 }
 
-export function pfstPair<A extends TermType, B extends TermType>( a: A, b: B )
+export function pfstPair<A extends TermType, B extends TermType>( fstType: A | undefined, sndType: B | undefined )
     : TermFn<[ PPair<ToPType<A>,ToPType<B>> ], ToPType<A> >
 {
+    const a = fstType ?? Type.Var("pfstPair_fstType");
+    const b = sndType ?? Type.Var("pfstPair_sndType");
+
     return addApplications<[ PPair<ToPType<A>,ToPType<B>> ], ToPType<A> >(
         new Term(
             Type.Lambda( Type.Pair( a, b ), a ),
@@ -759,9 +828,12 @@ export function pfstPair<A extends TermType, B extends TermType>( a: A, b: B )
     );
 }
 
-export function psndPair<A extends TermType, B extends TermType>( a: A, b: B )
+export function psndPair<A extends TermType, B extends TermType>( fstType: A | undefined, sndType: B | undefined )
     : TermFn<[ PPair<ToPType<A>,ToPType<B>> ], ToPType<B>>
 {
+    const a = fstType ?? Type.Var("psndPair_fstType");
+    const b = sndType ?? Type.Var("psndPair_sndType");
+    
     return addApplications<[ PPair<ToPType<A>,ToPType<B>> ], ToPType<B>>(
         new Term(
             Type.Lambda( Type.Pair( a, b ), b ),
@@ -770,9 +842,12 @@ export function psndPair<A extends TermType, B extends TermType>( a: A, b: B )
     );
 }
 
-export function pstrictChooseList<ListElemT extends TermType, ReturnT extends TermType>( listElemT: ListElemT, returnT: ReturnT )
+export function pstrictChooseList<ListElemT extends TermType, ReturnT extends TermType>( listElemType: ListElemT, returnType: ReturnT )
     : TermFn<[ PList< ToPType<ListElemT> > , ToPType<ReturnT>, ToPType<ReturnT> ], ToPType<ReturnT> >
 {
+    const listElemT = listElemType ?? Type.Var("pstrictChooseList_listElemType");
+    const returnT = returnType ?? Type.Var("pstrictChooseList_returnType");
+
     return addApplications<[ PList< ToPType<ListElemT> > , ToPType<ReturnT>, ToPType<ReturnT> ], ToPType<ReturnT> >(
         new Term(
             Type.Fn([ Type.List( listElemT ), returnT, returnT ], returnT ),
@@ -782,7 +857,10 @@ export function pstrictChooseList<ListElemT extends TermType, ReturnT extends Te
 }
 
 
-export function pchooseList<ListElemT extends TermType, ReturnT extends TermType>( listElemT: ListElemT, returnT: ReturnT )
+export function pchooseList<ListElemT extends TermType, ReturnT extends TermType>(
+        listElemType: ListElemT | undefined = undefined ,
+        returnType: ReturnT | undefined = undefined
+    )
     : Term<PLam< PList< ToPType<ListElemT> > , PLam<ToPType<ReturnT>, PLam<ToPType<ReturnT>, ToPType<ReturnT>>>>>
     & {
         $: ( list: Term<PList< ToPType<ListElemT> >>) =>
@@ -802,6 +880,9 @@ export function pchooseList<ListElemT extends TermType, ReturnT extends TermType
             }
     }
 {
+    const listElemT = listElemType ?? Type.Var("pchooseList_listElemType");
+    const returnT   = returnType   ?? Type.Var("pchooseList_returnType");
+
     // new term identical to the strict one in order to define new (different) "$" properties
     const _chooseList = new Term<
         PLam<
@@ -864,9 +945,11 @@ export function pchooseList<ListElemT extends TermType, ReturnT extends TermType
     ) as any;
 }
 
-export function pprepend<ListElemT extends TermType>( listElemT: ListElemT )
+export function pprepend<ListElemT extends TermType>( listElemType: ListElemT | undefined = undefined )
     : TermFn<[ ToPType<ListElemT> , PList< ToPType<ListElemT> > ], PList< ToPType<ListElemT> > >
 {
+    const listElemT = listElemType ?? Type.Var("pprepend_listElemType");
+
     return addApplications<[ ToPType<ListElemT> , PList< ToPType<ListElemT> > ], PList< ToPType<ListElemT> > >(
         new Term(
             Type.Fn([ listElemT, Type.List( listElemT ) ], Type.List( listElemT ) ),
@@ -875,9 +958,11 @@ export function pprepend<ListElemT extends TermType>( listElemT: ListElemT )
     );
 }
 
-export function phead<ListElemT extends TermType>( listElemT: ListElemT )
+export function phead<ListElemT extends TermType>( listElemType: ListElemT | undefined = undefined )
     : TermFn<[ PList<ToPType<ListElemT>> ], ToPType<ListElemT>>
 {
+    const listElemT = listElemType ?? Type.Var("pprepend_listElemType");
+
     return addApplications<[ PList< ToPType<ListElemT> > ], ToPType<ListElemT> >(
         new Term(
             Type.Lambda( Type.List( listElemT ), listElemT ),

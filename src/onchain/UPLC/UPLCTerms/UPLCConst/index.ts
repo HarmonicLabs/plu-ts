@@ -6,7 +6,7 @@ import Pair from "../../../../types/structs/Pair";
 import JsRuntime from "../../../../utils/JsRuntime";
 import Data from "../../../../types/Data";
 import ConstType, { constT, constTypeToStirng, isWellFormedConstType } from "./ConstType";
-import ConstValue, { canConstValueBeOfConstType, ConstValueList } from "./ConstValue";
+import ConstValue, { canConstValueBeOfConstType, ConstValueList, inferConstTypeFromConstValue } from "./ConstValue";
 import Cloneable from "../../../../types/interfaces/Cloneable";
 
 
@@ -55,7 +55,9 @@ export default class UPLCConst
 
         JsRuntime.assert(
             canConstValueBeOfConstType( value, typeTag ),
-            `trying to construct an UPLC constant with an invalid value for type "${constTypeToStirng( typeTag )}"; input value was: ${value?.toString()}`
+            `trying to construct an UPLC constant with an invalid value for type "${constTypeToStirng( typeTag )}";
+             input value was: ${value}; 
+             of inferred type: ${constTypeToStirng( inferConstTypeFromConstValue(value) ?? constT.unit )}`
         )
         
         this._type = typeTag;

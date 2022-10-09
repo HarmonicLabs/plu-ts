@@ -10,20 +10,16 @@ import UPLCVar from "../../UPLC/UPLCTerms/UPLCVar";
 import PType from "../PType";
 import PDelayed from "../PTypes/PDelayed";
 import PLam, { TermFn } from "../PTypes/PFn/PLam";
-import Type, { ToPType, ToTermArrNonEmpty, TermType, int, list } from "../Term/Type";
+import Type, { ToPType, ToTermArrNonEmpty, TermType } from "../Term/Type";
 import Term from "../Term";
 import JsRuntime from "../../../utils/JsRuntime";
-import PInt, { pInt } from "../PTypes/PInt";
+import PInt from "../PTypes/PInt";
 import PUnit from "../PTypes/PUnit";
 import HoistedUPLC from "../../UPLC/UPLCTerms/HoistedUPLC";
 import { typeExtends } from "../Term/Type/extension";
 import { isLambdaType, isDelayedType } from "../Term/Type/kinds";
 import { termTypeToString } from "../Term/Type/utils";
 import applyLambdaType from "../Term/Type/applyLambdaType";
-import { ConstantableStructCtorDef, ConstantableStructDefinition, isConstantableStructDefiniton, PStruct, StructInstance } from "../PTypes/PStruct";
-import { pfstPair, pif, psndPair, punConstrData } from "../Prelude/Builtins";
-import PData from "../PTypes/PData";
-import PList from "../PTypes/PList";
 
 export type PappResult<Output extends PType> =
     Output extends PLam<infer OutIn extends PType, infer OutOut extends PType> ?
@@ -385,14 +381,15 @@ export function plet<PVarT extends PType, SomeExtension extends object>( varValu
             _dbn => new UPLCVar( 0 ) // mock variable
         ) as TermPVar ).type;
 
+        // return papp( plam( varValue.type, outType )( expr as any ), varValue as any ) as any;
         return new Term(
             outType,
             dbn => new Application(
                 new Lambda(
                     expr( new Term(
                         varValue.type,
-                        dbnExpr => new UPLCVar( dbn - ( dbnExpr ) ) // point to the lambda generated here
-                    ) as TermPVar ).toUPLC( dbn )
+                        dbnExpr => new UPLCVar( dbnExpr - ( dbn + BigInt(1) ) ) // point to the lambda generated here
+                    ) as TermPVar ).toUPLC( ( dbn + BigInt(1) ) )
                 ),
                 varValue.toUPLC( dbn )
             )

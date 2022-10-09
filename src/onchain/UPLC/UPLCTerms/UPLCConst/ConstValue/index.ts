@@ -31,7 +31,7 @@ export function isConstValue( value: ConstValue ): value is ConstValue
 {
     return (
         value === undefined                                                     ||
-        (value instanceof Integer && Integer.isStrictInstance( value ) )        ||
+        (value instanceof Integer)        ||
         (value instanceof ByteString && ByteString.isStrictInstance( value ) )  ||
         typeof value === "string"                                               ||
         typeof value === "boolean"                                              ||
@@ -52,15 +52,13 @@ export function isConstValue( value: ConstValue ): value is ConstValue
 export function inferConstTypeFromConstValue( val: ConstValue ): (ConstType | undefined)
 {
     JsRuntime.assert(
-        isConstValue(
-            val
-        ),
-        "'inferConstTypeFromConstValue' expects a valid 'CoinstValue' type, input was: " + val
+        isConstValue( val ),
+        "'inferConstTypeFromConstValue' expects a valid 'ConstValue' type, input was: " + val
     )
 
     if( val === undefined ) return constT.unit;
     
-    if( val instanceof Integer && Integer.isStrictInstance( val ) ) return constT.int;
+    if( val instanceof Integer ) return constT.int;
 
     if( val instanceof ByteString && ByteString.isStrictInstance( val ) ) return constT.byteStr;
 
@@ -158,7 +156,7 @@ export function canConstValueBeOfConstType( val: ConstValue, ty: ConstType ): bo
     if( constTypeEq( ty, constT.bool ) )        return typeof val === "boolean";
     if( constTypeEq( ty, constT.byteStr ) )     return (val instanceof ByteString && ByteString.isStrictInstance( val ) );
     if( constTypeEq( ty, constT.data ) )        return val === undefined ? false : isData( val );
-    if( constTypeEq( ty, constT.int ) )         return (val instanceof Integer && Integer.isStrictInstance( val ) );
+    if( constTypeEq( ty, constT.int ) )         return (val instanceof Integer);
     if( constTypeEq( ty, constT.str ) )         return typeof val === "string";
     if( ty[ 0 ] === ConstTyTag.list )
         return (

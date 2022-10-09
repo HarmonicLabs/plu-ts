@@ -19,6 +19,6 @@ export default class ErrorUPLC
 
     clone(): ErrorUPLC
     {
-        return new ErrorUPLC();
+        return new ErrorUPLC(this.msg);
     }
 }
