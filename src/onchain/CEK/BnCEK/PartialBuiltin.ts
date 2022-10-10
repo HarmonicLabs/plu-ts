@@ -32,7 +32,6 @@ export default class PartialBuiltin
 
     apply( arg: UPLCTerm ): void
     {
-        console.log( this.tag, "pushing", arg );
         this._args.push( arg );
     }
 

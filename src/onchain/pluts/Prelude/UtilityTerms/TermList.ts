@@ -103,7 +103,7 @@ export function addPListMethods<PElemsT extends PType>( list: Term<PList<PElemsT
         list,
         "at",
         ( index : Term<PInt> ): TryUtitlityFromPType<PElemsT> => {
-            return pindexList( elemsT ).$( index ).$( list ) as TryUtitlityFromPType<PElemsT>
+            return pindexList( elemsT ).$( list ).$( index ) as TryUtitlityFromPType<PElemsT>
         }
     )
 

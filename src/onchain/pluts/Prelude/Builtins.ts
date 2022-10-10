@@ -27,7 +27,6 @@ import TermInt, { addPIntMethods } from "./UtilityTerms/TermInt";
 import TermStr, { addPStringMethods } from "./UtilityTerms/TermStr";
 import Term from "../Term";
 import { getNRequiredLambdaArgs } from "../Term/Type/utils";
-import PDataPair from "../PTypes/PData/PDataPair";
 import Type, { TermType, ToPType, DataType, ToPDataType } from "../Term/Type";
 
 export function addApplications<Ins extends [ PType, ...PType[] ], Out extends PType, TermOutput extends TermFn< Ins, Out > = TermFn< Ins, Out >>
@@ -1255,7 +1254,7 @@ export function punListData<DataElemT extends DataType>( dataElemT: DataElemT ):
 export const punIData: TermFn<[ PDataInt ], PInt>
     = addApplications<[ PDataInt ], PInt>(
         new Term(
-            Type.Lambda( Type.Data.Int, Type.Int ),
+            Type.Lambda( Type.Data.Any, Type.Int ),
             _dbn => Builtin.unIData,
         )
         //, addPIntMethods
@@ -1303,10 +1302,10 @@ export function peq<PT extends PInt | PByteString | PString | PData >( pt: new (
 }
 
 export function ppairData<DataFst extends DataType, DataSnd extends DataType>( dataFst: DataFst, dataSnd: DataSnd):
-    TermFn<[ ToPDataType<DataFst>, ToPDataType<DataSnd> ], PDataPair<ToPDataType<DataFst>,ToPDataType<DataSnd>>>
+    TermFn<[ ToPDataType<DataFst>, ToPDataType<DataSnd> ], PPair<ToPDataType<DataFst>,ToPDataType<DataSnd>>>
 {
-    return addApplications<[ ToPDataType<DataFst>,ToPDataType<DataSnd> ], PDataPair<ToPDataType<DataFst>,ToPDataType<DataSnd>> >(
-        new Term<PLam<ToPDataType<DataFst>, PLam< ToPDataType<DataSnd>, PDataPair<ToPDataType<DataFst>,ToPDataType<DataSnd>> > >>(
+    return addApplications<[ ToPDataType<DataFst>,ToPDataType<DataSnd> ], PPair<ToPDataType<DataFst>,ToPDataType<DataSnd>> >(
+        new Term<PLam<ToPDataType<DataFst>, PLam< ToPDataType<DataSnd>, PPair<ToPDataType<DataFst>,ToPDataType<DataSnd>> > >>(
             Type.Fn([ dataFst, dataSnd ], Type.Data.Pair( dataFst, dataSnd )),
             _dbn => Builtin.mkPairData
         )

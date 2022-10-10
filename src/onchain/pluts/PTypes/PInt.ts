@@ -5,6 +5,7 @@ import TermInt, { addPIntMethods } from "../Prelude/UtilityTerms/TermInt";
 import { PDataRepresentable } from "../PType";
 import Term from "../Term";
 import Type, { TermType } from "../Term/Type";
+import PData from "./PData";
 import PDataInt from "./PData/PDataInt";
 
 export default class PInt extends PDataRepresentable
@@ -24,7 +25,7 @@ export default class PInt extends PDataRepresentable
     }
 
     static override get termType(): TermType { return Type.Int }
-    static override fromData(data: Term<PDataInt>): TermInt
+    static override fromData(data: Term<PData>): TermInt
     {
         return addPIntMethods( punIData.$( data ) )
     }

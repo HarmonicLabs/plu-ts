@@ -1,10 +1,7 @@
-import { pmatchList, precursiveList } from ".."
-import evalScript from "../../../../CEK"
+import { precursiveList } from ".."
 import { pInt } from "../../../PTypes/PInt"
-import { pList } from "../../../PTypes/PList"
-import { pmakeUnit } from "../../../PTypes/PUnit"
 import { papp, pfn, plam } from "../../../Syntax"
-import Type, { PrimType } from "../../../Term/Type"
+import Type from "../../../Term/Type"
 
 
 describe("precursiveList", () => {
@@ -16,7 +13,7 @@ describe("precursiveList", () => {
         const plength = precursiveList( Type.Int )
             .$(
                 plam(
-                    Type.Lambda<[ PrimType.List, [PrimType.Int] ],[PrimType.Int]>( Type.List( elemsT ), Type.Int ),
+                    Type.Lambda( Type.List( elemsT ), Type.Int ),
                     Type.Int
                 )(
                     ( _self ) => pInt( 0 )
@@ -24,7 +21,7 @@ describe("precursiveList", () => {
             )
             .$(
                 pfn([
-                    Type.Lambda<[ PrimType.List, [PrimType.Int] ],[PrimType.Int]>( Type.List( elemsT ), Type.Int ),
+                    Type.Lambda( Type.List( elemsT ), Type.Int ),
                     elemsT,
                     Type.List( elemsT )
                 ],

@@ -388,7 +388,7 @@ export function plet<PVarT extends PType, SomeExtension extends object>( varValu
                 new Lambda(
                     expr( new Term(
                         varValue.type,
-                        dbnExpr => new UPLCVar( dbnExpr - ( dbn + BigInt(1) ) ) // point to the lambda generated here
+                        varAccessDbn => new UPLCVar( varAccessDbn - ( dbn + BigInt(1) ) ) // point to the lambda generated here
                     ) as TermPVar ).toUPLC( ( dbn + BigInt(1) ) )
                 ),
                 varValue.toUPLC( dbn )

@@ -7,7 +7,7 @@ import DataPair from "./DataPair";
 
 type Data 
     = DataConstr
-    | DataPair<Data,Data>
+//    | DataPair<Data,Data>
     | DataMap<Data,Data>
     | DataList
     | DataI

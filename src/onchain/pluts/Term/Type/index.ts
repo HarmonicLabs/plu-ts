@@ -184,7 +184,8 @@ export const TypeShortcut = Object.freeze({
     struct: Type.Struct,
     delayed: Type.Delayed,
     lam: Type.Lambda,
-    fn: Type.Fn
+    fn: Type.Fn,
+    data: Type.Data.Any
 })
 
 export const int        = Type.Int;
@@ -200,6 +201,7 @@ export const fn         = Type.Fn;
 export const delayed    = Type.Delayed;
 export const tyVar      = Type.Var;
 export const struct     = Type.Struct;
+export const data       = Type.Data.Any;
 
 
 // Type = TypeName followed by optional (nested) Types

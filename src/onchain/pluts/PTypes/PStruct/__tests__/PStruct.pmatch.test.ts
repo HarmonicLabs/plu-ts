@@ -1,8 +1,9 @@
-import pstruct, { pgenericStruct, pmatch, PMatchOptions } from ".."
+import pstruct, { pgenericStruct, PStruct } from ".."
 import evalScript from "../../../../CEK";
-import { showUPLC } from "../../../../UPLC/UPLCTerm";
-import { int, PrimType, str } from "../../../Term/Type";
-import { pInt } from "../../PInt";
+import UPLCConst from "../../../../UPLC/UPLCTerms/UPLCConst";
+import { ConstantableTermType, int, PrimType, str } from "../../../Term/Type";
+import PInt, { pInt } from "../../PInt";
+import pmatch from "../pmatch";
 
 const PMaybe = pgenericStruct( tyArg => {
     return {
@@ -19,11 +20,11 @@ const FixStruct = pstruct({
 
 describe("pmatch", () => {
 
-    test("pmatch(FixStruct.<...>)", () => {
-
-        const matchFixStruct = pmatch( FixStruct.C({}) )
-        
-    })
+    // test(" pmatch(FixStruct.<...>) ", () => {
+    //     
+    //     const matchFixStruct = pmatch( FixStruct.C({}) )
+    //     
+    // })
 
     test("pmatch( PMaybe(int).Nothing({}) )", () => {
 
@@ -53,14 +54,48 @@ describe("pmatch", () => {
         })
         //*/
         
-        console.log(
-            showUPLC(
+        expect(
+            evalScript(
                 matchNothing
                 .onNothing( rawFields => pInt( 1 ) )
                 .onJust( rawFields => pInt( 0 ) )
                 .toUPLC(0)
             )
-        )
+        ).toEqual( pInt(1).toUPLC(0) )
+
+    });
+
+    test("pmatch with extraction", () => {
+
+        expect(
+            evalScript(
+                pmatch( PMaybe(int).Just({ value: pInt(42) }) )
+                .onJust( rawFields =>
+                    rawFields.extract("value")
+                    .in( fields => 
+                        fields.value
+                    )
+                )
+                .onNothing( _ => pInt( 0 ) )
+            )
+        ).toEqual(
+            UPLCConst.int( 42 )
+        );
+
+        expect(
+            evalScript(
+                pmatch( PMaybe(int).Nothing({}) )
+                .onJust( rawFields =>
+                    rawFields.extract("value")
+                    .in( fields => 
+                        fields.value
+                    )
+                )
+                .onNothing( _ => pInt( 0 ) )
+            )
+        ).toEqual(
+            UPLCConst.int( 0 )
+        );
 
     })
 })

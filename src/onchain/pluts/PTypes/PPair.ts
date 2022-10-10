@@ -1,9 +1,9 @@
 import JsRuntime from "../../../utils/JsRuntime";
 import { pfstPair, ppairData, psndPair, punMapData } from "../Prelude/Builtins";
 import PType, { PDataRepresentable } from "../PType";
-import { plet } from "../Syntax";
+import { papp, phoist, plam, plet } from "../Syntax";
 import Term from "../Term";
-import Type, { DataType, TermType } from "../Term/Type";
+import Type, { data, DataType, pair, TermType } from "../Term/Type";
 import { typeExtends } from "../Term/Type/extension";
 import PData from "./PData";
 import PDataMap from "./PData/PDataMap";
@@ -37,14 +37,22 @@ export default class PPair<A extends PType, B extends PType > extends PDataRepre
             data.toUPLC
         );
     }
-    static override toData(term: Term<PPair<PData,PData>>): Term<PDataPair<PData, PData>>
+    static override toData(term: Term<PPair<PData,PData>>): Term<PPair<PData, PData>>
     {
-        const data = Type.Data.Any;
-        return plet( term ).in( pair =>
-            ppairData( data, data )
-                .$( pfstPair( data, data ).$( pair ) )
-                .$( psndPair( data, data ).$( pair ) )
+        return term;
+        /*
+        return papp(
+            phoist(
+                plam( pair( data, data ), Type.Data.Pair( data, data ) )
+                (
+                    pair => ppairData( data, data )
+                        .$( pfstPair( data, data ).$( pair ) )
+                        .$( psndPair( data, data ).$( pair ) ) as any
+                )
+            ) as any,
+            term
         );
+        //*/
     }
 }
 

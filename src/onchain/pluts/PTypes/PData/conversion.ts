@@ -1,4 +1,5 @@
 import PData from "."
+import BasePlutsError from "../../../../errors/BasePlutsError"
 import Data, { isData } from "../../../../types/Data"
 import DataB from "../../../../types/Data/DataB"
 import DataConstr from "../../../../types/Data/DataConstr"
@@ -7,7 +8,20 @@ import DataList from "../../../../types/Data/DataList"
 import DataMap from "../../../../types/Data/DataMap"
 import DataPair from "../../../../types/Data/DataPair"
 import JsRuntime from "../../../../utils/JsRuntime"
-import Type, { DataType } from "../../Term/Type"
+import { punsafeConvertType } from "../../Syntax"
+import Term from "../../Term"
+import Type, { anyStruct, bool, bs, ConstantableTermType, DataType, int, list, pair, str, struct, StructType, ToPType, tyVar, unit } from "../../Term/Type"
+import { typeExtends } from "../../Term/Type/extension"
+import { isDataType } from "../../Term/Type/kinds"
+import { termTypeToString } from "../../Term/Type/utils"
+import PBool from "../PBool"
+import PByteString from "../PByteString"
+import PInt from "../PInt"
+import PList from "../PList"
+import PPair from "../PPair"
+import PString from "../PString"
+import { isConstantableStructDefinition, PStruct } from "../PStruct"
+import PUnit from "../PUnit"
 import PDataBS from "./PDataBS"
 import PDataConstr from "./PDataConstr"
 import PDataInt from "./PDataInt"
@@ -19,12 +33,12 @@ export type PDataFromData<DataInstance extends Data> =
     DataInstance extends DataB ? PDataBS :
     DataInstance extends DataPair<infer DataFst extends Data, infer DataSnd extends Data> ?
         //@ts-ignore Type instantiation is excessively deep and possibly infinite
-        PDataPair<PDataFromData<DataFst>,PDataFromData<DataSnd>> :
+        PPair<PDataFromData<DataFst>,PDataFromData<DataSnd>> :
     DataInstance extends DataMap<infer DataKey extends Data, infer DataVal extends Data > ?
         //@ts-ignore Type instantiation is excessively deep and possibly infinite
         PDataMap< PDataFromData<DataKey>, PDataFromData<DataVal> > :
     DataInstance extends DataList ? PDataList<PData> :
-    DataInstance extends DataConstr<infer DataArgs extends Data[]> ? PDataConstr<PDataFromDataArr<DataArgs>> :
+    DataInstance extends DataConstr ? PDataConstr :
     PData
 
 export type DataToPData<DataInstance extends Data> = PDataFromData<DataInstance>
@@ -34,7 +48,7 @@ export type PDataToData<PDataInstance extends PData> =
     PDataInstance extends PDataBS ? DataB :
     PDataInstance extends PDataMap<infer PDataKey extends PData, infer PDataVal extends PData> ? DataMap<PDataToData<PDataKey>, PDataToData<PDataVal>> :
     PDataInstance extends PDataList<PData> ? DataList :
-    PDataInstance extends PDataConstr<infer PDataArgs extends PData[]> ? DataConstr<PDataToDataArr<PDataArgs>> :
+    PDataInstance extends PDataConstr ? DataConstr :
     Data
 
 export type DataFromPData<PDataInstance extends PData> = PDataToData<PDataInstance>
@@ -59,7 +73,7 @@ export function inferDataValueType( dataValue: Data ): DataType
         "cannot infer 'DataType' from a value that is not an instance of 'Data'"
     );
 
-    if( dataValue instanceof DataConstr ) return Type.Data.Constr( dataValue.fields.map( inferDataValueType ) );
+    if( dataValue instanceof DataConstr ) return Type.Data.Constr;
     if( dataValue instanceof DataMap )
     {
         const listOfPairs = dataValue.map;
@@ -78,5 +92,77 @@ export function inferDataValueType( dataValue: Data ): DataType
 
     throw JsRuntime.makeNotSupposedToHappenError(
         "'inferDataValueType' did not match any possible 'Data' constructor"
+    );
+}
+
+export function getToDataForType<T extends ConstantableTermType | StructType>( t: T )
+    :( term: Term<ToPType<T>> ) => Term<PData>
+{
+    if( typeExtends( t, int ) )     return PInt.toData as any;
+    if( typeExtends( t, bs  ) )     return PByteString.toData as any;
+    if( typeExtends( t, str ) )     return PString.toData as any;
+    if( typeExtends( t, unit ) )    return PUnit.toData as any;
+    if( typeExtends( t, bool ) )    return PBool.toData as any;
+    
+    const a = tyVar("a");
+
+    if(
+        typeExtends( t, list( a ) ) &&
+        isDataType( t[1] )
+    )                               return PList.toData as any;
+
+    const b = tyVar("b");
+
+    if(
+        typeExtends( t, pair(a,b) ) &&
+        isDataType( t[1] ) &&
+        isDataType( t[2] )
+    )                               return PPair.toData as any;
+    if(
+        typeExtends( t, struct( anyStruct ) ) &&
+        t[1] !== anyStruct
+    ) return ( ( structTerm: Term<PStruct<any>> ) => punsafeConvertType( structTerm, Type.Data.Any ) ) as any;
+
+    /**
+     * @todo add proper error
+     */
+    throw new BasePlutsError(
+        "'getToDataForType'; type '" + termTypeToString( t ) + "' cannot be converted to data"
+    );
+}
+
+export function getFromDataForType<T extends ConstantableTermType | StructType>( t: T )
+    :( term: Term<PData> ) => Term<ToPType<T>>
+{
+    if( typeExtends( t, int ) )     return PInt.fromData as any;
+    if( typeExtends( t, bs  ) )     return PByteString.fromData as any;
+    if( typeExtends( t, str ) )     return PString.fromData as any;
+    if( typeExtends( t, unit ) )    return PUnit.fromData as any;
+    if( typeExtends( t, bool ) )    return PBool.fromData as any;
+
+    const a = tyVar("a");
+
+    if(
+        typeExtends( t, list( a ) ) &&
+        isDataType( t[1] )
+    )                               return PList.fromData as any;
+
+    const b = tyVar("b");
+
+    if(
+        typeExtends( t, pair(a,b) ) &&
+        isDataType( t[1] ) &&
+        isDataType( t[2] )
+    )                               return PPair.fromData as any;
+    if(
+        typeExtends( t, struct( anyStruct ) ) &&
+        t[1] !== anyStruct && isConstantableStructDefinition( t[1] )
+    ) return ( ( structData: Term<PStruct<any>> ) => punsafeConvertType( structData, struct( t[1] ) ) ) as any;
+
+    /**
+     * @todo add proper error
+     */
+    throw new BasePlutsError(
+        "'getFromDataForType'; type '" + termTypeToString( t ) + "' cannot be converted from data"
     );
 }

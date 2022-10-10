@@ -7,6 +7,8 @@ import Term from "../Term";
 import Type, { TermType } from "../Term/Type";
 import PData from "./PData";
 import { pInt } from "./PInt";
+
+// circular ref
 // import pstruct from "./PStruct";
 // 
 // export const PDBool = pstruct({

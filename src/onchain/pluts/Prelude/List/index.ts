@@ -89,20 +89,20 @@ export function precursiveList<ReturnT  extends TermType, PElemsT extends PType 
 }
 
 export function pindexList<ElemsT extends ConstantableTermType>( elemsT: ElemsT )
-    : TermFn<[ PInt, PList<ToPType<ElemsT>> ], ToPType<ElemsT>>
+    : TermFn<[ PList<ToPType<ElemsT>>, PInt ], ToPType<ElemsT>>
 {
     return phoist(
-        precursive<PInt, PLam<PList<ToPType<ElemsT>>,ToPType<ElemsT>>>(
+        precursive<PList<ToPType<ElemsT>>, PLam<PInt,ToPType<ElemsT>>>(
 
             pfn(
                 [
-                    Type.Fn([ Type.Int, Type.List( elemsT ) ], elemsT),
-                    Type.Int,
-                    Type.List( elemsT )
+                    Type.Fn([ Type.List( elemsT ), Type.Int ], elemsT),
+                    Type.List( elemsT ),
+                    Type.Int
                 ],
                 elemsT
             )(
-                ( self, idx, list ) => 
+                ( self, list, idx ) => 
 
                     pif( elemsT ).$( pisEmpty.$( list ) )
                     .then( perror( elemsT ) )
@@ -114,9 +114,9 @@ export function pindexList<ElemsT extends ConstantableTermType>( elemsT: ElemsT 
                             papp(
                                 papp(
                                     self,
-                                    pInt( -1 ).add( idx )
+                                    ptail( elemsT ).$( list )
                                 ),
-                                ptail( elemsT ).$( list )
+                                pInt( -1 ).add( idx )
                             ) as Term<ToPType<ElemsT>>
                         )
 
