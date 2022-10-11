@@ -1,7 +1,7 @@
 import { pgenericStruct, PStruct } from "../PTypes/PStruct";
-import { DataReprTermType } from "../Term/Type";
+import { ConstantableTermType } from "../Term/Type";
 
-export type PMaybeT<T extends DataReprTermType> = PStruct<{
+export type PMaybeT<T extends ConstantableTermType> = PStruct<{
     Just: { value: T },
     Nothing: {}
 }>
@@ -13,7 +13,7 @@ const _PMaybe = pgenericStruct( tyArg => {
     }
  })
 
-function PMaybe<T extends DataReprTermType>( tyArg: T ): PMaybeT<T>
+function PMaybe<T extends ConstantableTermType>( tyArg: T ): PMaybeT<T>
 {
     return _PMaybe( tyArg ) as unknown as PMaybeT<T>;
 }

@@ -3,6 +3,7 @@ import JsRuntime from "../../../../utils/JsRuntime";
 import ObjectUtils from "../../../../utils/ObjectUtils";
 import { pConstrToData } from "../../Prelude/Builtins";
 import { PDataRepresentable } from "../../PType";
+import { punsafeConvertType } from "../../Syntax";
 import Term from "../../Term";
 import Type, { ConstantableStructType, ConstantableTermType, GenericStructType, struct, structType, StructType, TermType, ToPType } from "../../Term/Type";
 import { typeExtends } from "../../Term/Type/extension";
@@ -212,11 +213,10 @@ function isStructInstanceOfDefinition<SCtorDef extends StructCtorDef>
 }
 
 
-
 export default function pstruct<StructDef extends ConstantableStructDefinition>( def: StructDef ): PStruct<StructDef>
 {
     JsRuntime.assert(
-        isStructDefinition( def ),
+        isConstantableStructDefinition( def ),
         "cannot construct 'PStruct' type; invalid struct definition"
     );
 
@@ -231,7 +231,8 @@ export default function pstruct<StructDef extends ConstantableStructDefinition>(
             super();
         }
 
-        static termType: TermType;
+        static termType: [ typeof structType, StructDef ];
+        static type: [ typeof structType, StructDef ];
         static fromData: <Ext extends PStructExt = PStructExt>( data: Term<PData> ) => Term<Ext>
         static toData:   <Ext extends PStructExt>( data: Term<Ext> ) => Term<PData>;
 
@@ -240,19 +241,19 @@ export default function pstruct<StructDef extends ConstantableStructDefinition>(
     const thisStructType = Type.Struct( def );
 
     ObjectUtils.defineReadOnlyProperty(
-        PStructExt.prototype,
+        PStructExt,
         "type",
         thisStructType
     );
 
     ObjectUtils.defineReadOnlyProperty(
-        PStructExt.prototype,
+        PStructExt,
         "termType",
         thisStructType
     );
 
     ObjectUtils.defineReadOnlyProperty(
-        PStructExt.prototype,
+        PStructExt,
         "fromData",
         ( data: Term<PData> ): Term<PStructExt> => {
 
@@ -270,6 +271,20 @@ export default function pstruct<StructDef extends ConstantableStructDefinition>(
                 "_pIsConstantStruct",
                 false
             );
+        }
+    );
+
+    ObjectUtils.defineReadOnlyProperty(
+        PStructExt,
+        "toData",
+        ( struct: Term<PStructExt> ): Term<PData> => {
+
+            JsRuntime.assert(
+                typeExtends( struct.type, thisStructType ),
+                "trying to conver a struct using the wrong 'toData', perhaps you ment to call the 'toData' method of an other struct?"
+            );
+
+            return punsafeConvertType( struct, Type.Data.Constr )
         }
     );
 
