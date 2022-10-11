@@ -180,7 +180,8 @@ export const isConstantableStructDefinition = getIsStructDefWithTermTypeCheck<Co
 export type PStruct<SDef extends ConstantableStructDefinition> = {
     new(): _PStruct
 
-    termType: TermType;
+    termType: [ typeof structType, SDef ];
+    type: [ typeof structType, SDef ];
     fromData: ( data: Term<PData> ) => Term<PStruct<SDef>>;
     toData: ( data: Term<PStruct<SDef>> ) => Term<PData>;
 
@@ -237,6 +238,12 @@ export default function pstruct<StructDef extends ConstantableStructDefinition>(
     }
 
     const thisStructType = Type.Struct( def );
+
+    ObjectUtils.defineReadOnlyProperty(
+        PStructExt.prototype,
+        "type",
+        thisStructType
+    );
 
     ObjectUtils.defineReadOnlyProperty(
         PStructExt.prototype,
