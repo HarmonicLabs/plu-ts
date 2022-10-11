@@ -68,10 +68,10 @@ export function isRawCborObj( rawCborObj: RawCborObj ): boolean
     return (
         ( k === "neg"                                              &&
         typeof (rawCborObj as RawCborNegInt).neg === "bigint" &&
-        (rawCborObj as RawCborNegInt).neg < 0 )                                       || 
+        (rawCborObj as RawCborNegInt).neg < 0 )                                                 ||
         ( k === "uint" &&
         typeof (rawCborObj as RawCborUInt).uint === "bigint" &&
-        (rawCborObj as RawCborUInt).uint >= 0)                                       ||
+        (rawCborObj as RawCborUInt).uint >= 0)                                                  ||
         ( k === "bytes" && Buffer.isBuffer( (rawCborObj as RawCborBytes).bytes ) )              ||
         ( k === "text" && typeof (rawCborObj as RawCborText).text === "string")                 ||
 

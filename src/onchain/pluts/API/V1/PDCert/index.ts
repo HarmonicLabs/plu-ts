@@ -3,7 +3,7 @@ import { int } from "../../../Term/Type";
 import PStakingCredential from "../Address/PStakingCredential";
 import PPubKeyHash from "../PubKey/PPubKeyHash";
 
-const PDelegationCert = pstruct({
+const PDCert = pstruct({
     KeyRegistration: { _0: PStakingCredential.type },
     KeyDeRegistration: { _0: PStakingCredential.type },
     KeyDelegation: {
@@ -16,10 +16,10 @@ const PDelegationCert = pstruct({
     },
     PoolRetire: {
         _0: PPubKeyHash,
-        _1: int,                    // epoch
+        _1: int,                     // epoch
     },
     Genesis: {},
     Mir: {}
 })
 
-export default PDelegationCert;
+export default PDCert;

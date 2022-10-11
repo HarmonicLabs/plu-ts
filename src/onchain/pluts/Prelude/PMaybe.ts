@@ -1,10 +1,10 @@
 import { pgenericStruct, PStruct } from "../PTypes/PStruct";
-import { ConstantableTermType } from "../Term/Type";
+import { ConstantableStructType, ConstantableTermType } from "../Term/Type";
 
 export type PMaybeT<T extends ConstantableTermType> = PStruct<{
     Just: { value: T },
     Nothing: {}
-}>
+}> & ConstantableStructType
 
 const _PMaybe = pgenericStruct( tyArg => {
     return {

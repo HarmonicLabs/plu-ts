@@ -24,6 +24,7 @@ import UPLCSerializationContex from "./UPLCSerializationContext";
 import CborString from "../../../cbor/CborString";
 import dataFromCbor from "../../../types/Data/fromCbor";
 import HoistedUPLC, { getSortedHoistedSet } from "../UPLCTerms/HoistedUPLC";
+import dataToCbor from "../../../types/Data/toCbor";
 
 /*
  * --------------------------- [encode vs serialize methods] ---------------------------
@@ -562,7 +563,45 @@ export default class UPLCEncoder
      */
     encodeConstValueData( data: Data ): BitStream
     {
-        
+        const cborBytes = dataToCbor( data ).asBytes;
+
+        if( cborBytes.length < 64 ) return this.encodeConstValueByteString( new ByteString( cborBytes ) );
+
+        const head = cborBytes.at(0);
+        if( head === undefined )
+        throw JsRuntime.makeNotSupposedToHappenError(
+            "encoded Data was empty"
+        );
+
+        const lengthAddInfo = (head & 0b000_11111);
+
+        let nLenBytes = 0;
+        if( lengthAddInfo === 27 ) nLenBytes = 8;
+        if( lengthAddInfo === 26 ) nLenBytes = 4;
+        if( lengthAddInfo === 25 ) nLenBytes = 2;
+        if( lengthAddInfo === 24 ) nLenBytes = 1;
+
+        let ptr = nLenBytes + 1 + 1 ;
+
+        let largeCborData = "5f";
+
+        while( ptr < cborBytes.length )
+        {
+            const chunkSize = Math.min( 62, cborBytes.length );
+            const chunkEnd = ptr + chunkSize;
+
+            let header = "";
+            if( chunkSize < 24 ) header = (0b010_00000 & chunkSize).toString(16);
+            else header = "58" + chunkSize.toString(16);
+
+            largeCborData = largeCborData +
+                header +
+                cborBytes.subarray( ptr, chunkEnd ).toString("hex");
+            
+            ptr = chunkEnd;
+        }
+
+        return this.encodeConstValueByteString( new ByteString( Buffer.from( largeCborData + "ff", "hex" ) ) );
     }
 
     /**

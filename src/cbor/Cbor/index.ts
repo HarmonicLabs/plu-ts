@@ -6,7 +6,7 @@ import { Buffer } from "buffer";
 import CborString from "../CborString";
 import CborObj, { isCborObj } from "../CborObj";
 import JsRuntime from "../../utils/JsRuntime";
-import CborConstants, { isMajorTypeTag, MajorType } from "./Constants";
+import { isMajorTypeTag, MajorType } from "./Constants";
 import CborNegativeInt from "../CborObj/CborNegInt";
 import CborBytes from "../CborObj/CborBytes";
 import CborText from "../CborObj/CborText";
@@ -18,7 +18,6 @@ import BufferUtils from "../../utils/BufferUtils";
 import CborUInt from "../CborObj/CborUInt";
 import PlutsCborParseError from "../../errors/PlutsSerialError/PlutsCborError/PlutsCborParseError";
 import CborNegInt from "../CborObj/CborNegInt";
-
 
 /**
  * @private to the module; not needed elsewhere

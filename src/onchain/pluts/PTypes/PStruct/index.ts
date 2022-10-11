@@ -397,7 +397,7 @@ export function pgenericStruct<ConstStructDef extends ConstantableStructDefiniti
         return ObjectUtils.defineReadOnlyProperty(
             ( ...tyArgs: TypeArgs ): PStruct<ConstStructDef> => {
 
-                const thisTyArgsKey = tyArgs.map( termTypeToString ).join();
+                const thisTyArgsKey = tyArgs.map( termTypeToString ).join('|');
                 const keys = tyArgsCache.map( pair => pair.fst );
 
                 if( keys.includes( thisTyArgsKey ) )

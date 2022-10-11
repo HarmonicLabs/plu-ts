@@ -1,9 +1,10 @@
 import pstruct from "../../../PTypes/PStruct";
 import { data, int, list, pair, unit } from "../../../Term/Type";
 import PStakingCredential from "../Address/PStakingCredential";
-import PDelegationCert from "../PDelegationCert";
+import PDCert from "../PDCert";
 import PPubKeyHash from "../PubKey/PPubKeyHash";
 import PDatumHash from "../Scripts/PDatumHash";
+import PPOSIXTimeRange from "../Time";
 import PTxId from "../Tx/PTxId";
 import PTxInInfo from "../Tx/PTxInInfo";
 import PTxOut from "../Tx/PTxOut";
@@ -15,9 +16,9 @@ const PTxInfo = pstruct({
         outputs: list( PTxOut.type ),
         fee: PValue,
         mint: PValue,
-        dCertificates: list( PDelegationCert.type ),
+        dCertificates: list( PDCert.type ),
         withdrawals: list( pair( PStakingCredential.type, int ) ),
-        interval: unit,
+        interval: PPOSIXTimeRange.type,
         signatories: list( PPubKeyHash ),
         datums: list( pair( PDatumHash, data ) ),
         id: PTxId.type

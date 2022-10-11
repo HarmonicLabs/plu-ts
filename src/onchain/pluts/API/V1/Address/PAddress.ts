@@ -10,4 +10,4 @@ const PAddress = pstruct({
     }
 })
 
-export default PStakingCredential;
+export default PStakingCredential;PAddress
