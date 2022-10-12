@@ -7,7 +7,7 @@ import { punsafeConvertType } from "../../Syntax";
 import Term from "../../Term";
 import Type, { ConstantableStructType, ConstantableTermType, GenericStructType, struct, structType, StructType, TermType, ToPType } from "../../Term/Type";
 import { typeExtends } from "../../Term/Type/extension";
-import { isConstantableTermType, isWellFormedType } from "../../Term/Type/kinds";
+import { isConstantableStructDefinition, isConstantableTermType, isWellFormedType } from "../../Term/Type/kinds";
 import { termTypeToString } from "../../Term/Type/utils";
 import PData from "../PData";
 import { getToDataForType } from "../PData/conversion";
@@ -132,51 +132,6 @@ export function structDefEq( a: StructDefinition, b: StructDefinition ): boolean
 
     return true;
 }
-
-function getIsStructDefWithTermTypeCheck<SDef extends StructDefinition>( termTypeCheck: ( t: TermType ) => boolean )
-    : ( def: object ) => def is SDef
-{
-    return ( def: object ): def is SDef => {
-
-        if( !ObjectUtils.isObject( def ) ) return false;
-    
-        const ctorsNames = Object.keys( def );
-    
-        // required at least one constructor
-        if( ctorsNames.length <= 0 ) return false;
-        
-        if( !ctorsNames.every(
-                // all constructor names
-                ctorName =>
-                    // cannot be enpty
-                    ctorName.length > 0 &&
-                    // cannot start with a number
-                    Number.isNaN( parseFloat( ctorName[0] ) )
-            )
-        ) return false;
-    
-        for( let i = 0; i < ctorsNames.length; i++ )
-        {
-            const thisCtorFields = ( def as any)[ ctorsNames[i] ] as StructCtorDef;
-            const thisCtorFieldsNames = Object.keys( thisCtorFields );
-    
-            if(
-                !thisCtorFieldsNames.every( field => termTypeCheck( thisCtorFields[ field ] ) )
-            ) return false;
-        }
-    
-        return true;
-
-    }
-}
-
-export const isStructDefinition = getIsStructDefWithTermTypeCheck(
-    isWellFormedType
-);
-
-export const isConstantableStructDefinition = getIsStructDefWithTermTypeCheck<ConstantableStructDefinition>(
-    isConstantableTermType
-);
 
 export type PStruct<SDef extends ConstantableStructDefinition> = {
     new(): _PStruct

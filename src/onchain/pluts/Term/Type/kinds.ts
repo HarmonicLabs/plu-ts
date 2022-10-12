@@ -1,13 +1,78 @@
-import { TypeName, TermTypeParameter, FixedTypeName, PrimType, FixedDataTypeName, DataConstructor, TermType, FixedTermDataType, FixedTermType, DataType, ConstantableTermType, StructType, structType, anyStruct, ConstantableStructType } from ".";
-import { isStructDefinition } from "../../PTypes/PStruct";
+import {
+    TypeName,
+    TermTypeParameter,
+    FixedTypeName,
+    PrimType,
+    FixedDataTypeName,
+    DataConstructor,
+    TermType,
+    FixedTermDataType,
+    FixedTermType,
+    DataType,
+    ConstantableTermType,
+    StructType,
+    structType,
+    anyStruct,
+    ConstantableStructType,
+    AnyAlias,
+    aliasType
+} from ".";
+import ObjectUtils from "../../../../utils/ObjectUtils";
+import { StructDefinition, StructCtorDef, ConstantableStructDefinition } from "../../PTypes/PStruct";
+
+function getIsStructDefWithTermTypeCheck<SDef extends StructDefinition>( termTypeCheck: ( t: TermType ) => boolean )
+    : ( def: object ) => def is SDef
+{
+    return ( def: object ): def is SDef => {
+
+        if( !ObjectUtils.isObject( def ) ) return false;
+    
+        const ctorsNames = Object.keys( def );
+    
+        // required at least one constructor
+        if( ctorsNames.length <= 0 ) return false;
+        
+        if( !ctorsNames.every(
+                // all constructor names
+                ctorName =>
+                    // cannot be enpty
+                    ctorName.length > 0 &&
+                    // cannot start with a number
+                    Number.isNaN( parseFloat( ctorName[0] ) )
+            )
+        ) return false;
+    
+        for( let i = 0; i < ctorsNames.length; i++ )
+        {
+            const thisCtorFields = ( def as any)[ ctorsNames[i] ] as StructCtorDef;
+            const thisCtorFieldsNames = Object.keys( thisCtorFields );
+    
+            if(
+                !thisCtorFieldsNames.every( field => termTypeCheck( thisCtorFields[ field ] ) )
+            ) return false;
+        }
+    
+        return true;
+
+    }
+}
+
+export const isStructDefinition = getIsStructDefWithTermTypeCheck(
+    isWellFormedType
+);
+
+export const isConstantableStructDefinition = getIsStructDefWithTermTypeCheck<ConstantableStructDefinition>(
+    isConstantableTermType
+);
 
 export function isTypeParam( tyName: TypeName | TermType ): tyName is TermTypeParameter
 {
     return Array.isArray( tyName ) ?
         (tyName.length > 0 && isTypeParam( tyName[0] ) ) :
         (
-            typeof tyName === "symbol" && 
-            tyName !== structType
+            typeof tyName === "symbol"  && 
+            tyName !== structType       &&
+            tyName !== aliasType        // &&
         );
 }
 
@@ -66,7 +131,8 @@ export function isFixedTypeName( tyName: TypeName ): tyName is FixedTypeName
 
 export function isFixedDataType( t: TermType ): t is FixedTermDataType
 {
-    if(!( Array.isArray( t ) && t.length > 0 &&  isFixedDataTypeName( t[0] ) )) return false;
+    if( isAliasType( t ) ) return isFixedDataType( t[1].type )
+    if(!( Array.isArray( t ) && t.length > 0 && isFixedDataTypeName( t[0] ) )) return false;
     if( t.length === 1 )
     {
         return (
@@ -91,6 +157,8 @@ export function isFixedDataType( t: TermType ): t is FixedTermDataType
 
 export function isFixedType( t: TermType ): t is FixedTermType
 {
+    if( isAliasType( t ) ) return isFixedType( t[1].type );
+
     if(!( Array.isArray( t ) && t.length > 0 && isFixedTypeName( t[0] ) )) return false;
     
     if( isFixedDataType( t ) ) return true;
@@ -133,6 +201,8 @@ export function isFixedType( t: TermType ): t is FixedTermType
 
 export function isDataType( t: TermType ): t is DataType
 {
+    if( isAliasType( t ) ) return isDataType( t[1].type );
+
     if(!( Array.isArray( t ) && t.length > 0 &&  isTypeNameOfData( t[0] ) )) return false;
     if( t.length === 1 )
     {
@@ -157,10 +227,29 @@ export function isDataType( t: TermType ): t is DataType
     return false;
 }
 
-
 export function isStructType( t: TermType ): t is StructType
 {
     return t[0] === structType;
+}
+
+export function isAliasType( t: TermType ): t is AnyAlias
+{
+    return (
+        Array.isArray( t ) && t.length === 2 &&
+        t[0] === aliasType &&
+        ObjectUtils.isObject( t[1] ) &&
+        ( ( aliasDef ) => {
+            const aDefKeys = Object.keys( aliasDef );
+
+            return (
+                aDefKeys.length === 2       &&
+                aDefKeys.includes( "id" )   &&
+                aDefKeys.includes( "type" ) &&
+                typeof aliasDef["id"] === "symbol" &&
+                isConstantableTermType( aliasDef["type"] )
+            );
+        })( t[1] )
+    );
 }
 
 export function isConstantableStructType( t: StructType ): t is ConstantableStructType
@@ -187,7 +276,10 @@ export function isConstantableStructType( t: StructType ): t is ConstantableStru
 
 export function isConstantableTermType( t: TermType ): t is ConstantableTermType
 {
-    if(!( Array.isArray( t ) && t.length > 0 &&  (isTypeName( t[0] || t[0] === structType) ) )) return false;
+    // `isAliasType` checks for `t[1]` to be a constantable type 
+    if( isAliasType( t ) ) return true;
+    
+    if(!( Array.isArray( t ) && t.length > 0 && (isTypeName( t[0] || t[0] === structType) ) )) return false;
 
     if( isStructType( t ) )
     {
@@ -224,6 +316,8 @@ export function isConstantableTermType( t: TermType ): t is ConstantableTermType
 
 export function isWellFormedType( t: TermType ): t is TermType
 {
+    if( isAliasType( t ) ) return isWellFormedType( t[1].type );
+
     if(!( Array.isArray( t ) && t.length > 0 && (isTypeName( t[0] ) || t[0] === structType) )) return false;
     
     if( t.length === 1) return true;

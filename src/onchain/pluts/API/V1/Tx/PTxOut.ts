@@ -8,9 +8,9 @@ import POutputDatum from "./POutputDatum";
 const PTxOut = pstruct({
     PTxOut: {
         address: PAddress.type,
-        value: PValue,
+        value: PValue.type,
         datum: POutputDatum.type,
-        refScript: PMaybe( PScriptHash ).type
+        refScript: PMaybe( PScriptHash.type ).type
     }
 })
 

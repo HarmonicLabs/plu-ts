@@ -5,10 +5,63 @@ import UPLCTerm from "../../UPLC/UPLCTerm";
 import HoistedUPLC from "../../UPLC/UPLCTerms/HoistedUPLC";
 import UPLCConst from "../../UPLC/UPLCTerms/UPLCConst";
 import PType from "../PType";
-import { FromPType } from "./Type";
-import { isWellFormedType } from "./Type/kinds";
-import { termTypeToString } from "./Type/utils";
+import { StructCtorDef, StructDefinition } from "../PTypes/PStruct";
+import { anyStruct, FromPType, structType, TermType } from "./Type";
+import { isAliasType, isWellFormedType } from "./Type/kinds";
 
+// avoid circular ref
+function ctorDefToString( ctorDef: StructCtorDef ): string
+{
+    const fields = Object.keys( ctorDef );
+
+    let str = "{";
+
+    for( const fieldName of fields )
+    {
+        str += ' ' + fieldName + ": " + termTypeToString( ctorDef[ fieldName ] );
+    }
+
+    str += " }";
+
+    return str;
+}
+
+// avoid circular ref
+function structDefToString( def: StructDefinition ): string
+{
+    const ctors = Object.keys( def );
+
+    let str = "{";
+
+    for( const ctor of ctors )
+    {
+        str += ' ' + ctor + ": " + ctorDefToString( def[ctor] ) + " },"
+    }
+
+    str = str.slice( 0, str.length - 1 ) + " }";
+
+    return  str
+}
+
+// avoid circular ref
+function termTypeToString( t: TermType ): string
+{
+    if( t[0] === structType )
+    {
+        return "struct(" + (
+            t[1] === anyStruct ? "anyStruct" : structDefToString( t[1] as StructDefinition )
+        ) + ")";
+    }
+    if( isAliasType( t ) )
+    {
+        return "alias(" + (
+            termTypeToString( t[1].type )
+        ) + ")";
+    }
+    if( typeof t[0] === "symbol" ) return "tyParam("+ t[0].description +")";
+    const tyArgs = t.slice(1) as TermType[];
+    return ( t[0] + (tyArgs.length > 0 ? ',': "") + tyArgs.map( termTypeToString ).toString() );
+}
 
 export type UnTerm<T extends Term<PType>> = T extends Term<infer PT extends PType > ? PT : never;
 

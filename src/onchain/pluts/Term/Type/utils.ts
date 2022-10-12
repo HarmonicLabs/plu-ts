@@ -1,6 +1,7 @@
-import { TermType, PrimType, DataConstructor, structType, anyStruct } from ".";
+import { TermType, PrimType, DataConstructor, structType, anyStruct, aliasType, AnyAlias } from ".";
 import JsRuntime from "../../../../utils/JsRuntime";
-import { StructCtorDef, StructDefinition } from "../../PTypes/PStruct";
+import { cloneStructDef, StructCtorDef, StructDefinition } from "../../PTypes/PStruct";
+import { isAliasType, isStructType } from "./kinds";
 
 export function getNRequiredLambdaArgs( type: TermType ): number
 {
@@ -54,6 +55,12 @@ export function termTypeToString( t: TermType ): string
             t[1] === anyStruct ? "anyStruct" : structDefToString( t[1] as StructDefinition )
         ) + ")";
     }
+    if( isAliasType( t ) )
+    {
+        return "alias(" + (
+            termTypeToString( t[1].type )
+        ) + ")";
+    }
     if( typeof t[0] === "symbol" ) return "tyParam("+ t[0].description +")";
     const tyArgs = t.slice(1) as TermType[];
     return ( t[0] + (tyArgs.length > 0 ? ',': "") + tyArgs.map( termTypeToString ).toString() );
@@ -66,6 +73,15 @@ export function cloneTermType( t: TermType ): TermType
     // - simple data types
     // - parameters
     if( t.length === 1 ) return [ ...t ];
+
+    if( isAliasType( t ) )
+    {
+        return Object.freeze([ t[0], { id: t[1].id, type: cloneTermType( t[1].type ) } ]) as AnyAlias;
+    }
+    if( isStructType( t ) )
+    {
+        return [ t[0], typeof t[1] === "symbol" ? t[1] : cloneStructDef( t[1] ) ]
+    }
 
     if( t[0] === PrimType.List ) return [ PrimType.List, cloneTermType( t[1] ) ];
     if( t[0] === PrimType.Delayed ) return [ PrimType.Delayed, cloneTermType( t[1] ) ];

@@ -1,7 +1,7 @@
-import Type, { TermType } from "..";
-import { termTypeToString, termTyToConstTy, typeExtends } from "../utils";
-
-
+import Type, { int, TermType } from "..";
+import palias from "../../../PTypes/PAlias";
+import { typeExtends } from "../extension";
+import { termTypeToString } from "../utils";
 
 const allTypesFixed = [
     Type.Unit,
@@ -52,7 +52,7 @@ describe("typeExtends", () => {
 
             function testSameTyParam( t: TermType, expected: boolean = true ): void
             {
-                console.log( termTypeToString( t ) )
+                // console.log( termTypeToString( t ) )
                 expect(
                     typeExtends(
                         t,
@@ -101,5 +101,70 @@ describe("typeExtends", () => {
         });
 
     });
+
+    describe("palias", () => {
+
+        const FancyInt = palias( int );
+        const FancyierInt = palias( int );
+
+        test("alias can be assigned to original", () => {
+
+            expect(
+                typeExtends(
+                    FancyInt.type,
+                    int
+                )
+            ).toBe( true );
+
+        });
+
+        test("original can't be assigned to alias", () => {
+
+            expect(
+                typeExtends(
+                    int,
+                    FancyInt.type
+                )
+            ).toBe( false );
+
+        });
+
+        test("different aliases of same original are different things", () => {
+
+            expect(
+                typeExtends(
+                    FancyierInt.type,
+                    FancyInt.type
+                )
+            ).toBe( false );
+
+            expect(
+                typeExtends(
+                    FancyInt.type,
+                    FancyierInt.type
+                )
+            ).toBe( false );
+
+        });
+
+        test("same alias is ok", () => {
+
+            expect(
+                typeExtends(
+                    FancyInt.type,
+                    FancyInt.type
+                )
+            ).toBe( true );
+
+            expect(
+                typeExtends(
+                    FancyierInt.type,
+                    FancyierInt.type
+                )
+            ).toBe( true );
+
+        });
+
+    })
 
 })

@@ -1,9 +1,10 @@
+import palias from "../../../PTypes/PAlias";
 import { int } from "../../../Term/Type";
 import PInterval from "../Interval";
 
-// const PPOSIXTime = palias( int );
-export const PPOSIXTime = int;
+export const PPOSIXTime = palias( int );
+// export const PPOSIXTime = int;
 
-const PPOSIXTimeRange = PInterval( PPOSIXTime );
+const PPOSIXTimeRange = PInterval( PPOSIXTime.type );
 
 export default PPOSIXTimeRange;

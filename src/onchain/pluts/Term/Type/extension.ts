@@ -1,31 +1,6 @@
 import { anyStruct, DataConstructor, DataType, StructType, TermType } from ".";
 import { StructCtorDef } from "../../PTypes/PStruct";
-import { isDataType, isStructType, isTypeNameOfData, isTypeParam, isWellFormedType } from "./kinds";
-import { termTypeToString } from "./utils";
-
-/**
- * @deprecated use ```typeExtends``` instead
- */
- export function areTypesEquals( a: TermType, b: TermType ): boolean
- {
-    if(!(
-        isWellFormedType( a ) &&
-        isWellFormedType( b )
-    )) return false;
-
-    function uncheckedTyEq( _a: TermType, _b: TermType ): boolean
-    {
-        const aArgs = _a.slice( 1 ) as TermType[];
-        return (
-            _a[ 0 ] === _b[ 0 ] &&
-            _a.length === _b.length &&
-            ( b.slice(1) as TermType[] ).every( (bTyArg, idx) => uncheckedTyEq( aArgs[ idx ], bTyArg ) )
-        );
-    }
-
-    return uncheckedTyEq( a, b )
-}
-
+import { isAliasType, isDataType, isStructType, isTypeNameOfData, isTypeParam, isWellFormedType } from "./kinds";
 
 export function dataTypeExtends<ExtendedDataTy extends DataType>( extending: DataType, extended: ExtendedDataTy ): extending is ExtendedDataTy
 {
@@ -130,6 +105,8 @@ function ctorDefExtends( a: StructCtorDef, b: StructCtorDef, subs: TyParam[] = [
 
 export function structExtends( t: TermType, struct: StructType, subs: TyParam[] = [] ): t is StructType
 {
+    if( isAliasType( t ) ) return structExtends( t[1].type, struct, subs );
+
     // should this throw?
     if( !isStructType( struct ) ) return false;
     
@@ -177,6 +154,21 @@ export function structExtends( t: TermType, struct: StructType, subs: TyParam[] 
  */
 export function typeExtends<ExtendedTy extends TermType>( extending: TermType, extended: ExtendedTy, subs: TyParam[] = [] ): extending is ExtendedTy
 {
+    if( isAliasType( extended ) )
+    {
+        return (
+            isAliasType( extending )                        &&
+            // same alias id
+            extending[1].id === extended[1].id              &&
+            typeExtends( extending[1].type, extended[1].type, subs )
+        );
+    }
+    
+    if( isAliasType( extending ) )
+    {
+        return typeExtends( extending[1].type, extended, subs );
+    }
+
     if(!(
         isWellFormedType( extending ) &&
         isWellFormedType( extended  )

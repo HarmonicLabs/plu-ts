@@ -1,6 +1,7 @@
 import Term from "..";
 import JsRuntime from "../../../../utils/JsRuntime";
 import PType from "../../PType";
+import { AliasDefinition } from "../../PTypes/PAlias";
 import PBool from "../../PTypes/PBool";
 import PByteString from "../../PTypes/PByteString";
 import PData from "../../PTypes/PData";
@@ -18,6 +19,7 @@ import PPair from "../../PTypes/PPair";
 import PString from "../../PTypes/PString";
 import { ConstantableStructDefinition, PStruct, StructCtorDef, StructDefinition } from "../../PTypes/PStruct";
 import PUnit from "../../PTypes/PUnit";
+import { isConstantableTermType } from "./kinds";
 
 export const enum PrimType {
     Int  = "Int",
@@ -51,6 +53,11 @@ export const anyStruct  = Symbol("anyStruct");
 export type ConstantableStructType  = readonly [ typeof structType, ConstantableStructDefinition ];
 export type GenericStructType       = readonly [ typeof structType, StructDefinition | typeof anyStruct ];
 export type StructType              = readonly [ typeof structType, StructDefinition | typeof anyStruct ];
+
+export const aliasType = Symbol("aliasType");
+
+export type Alias<AliasId extends symbol, T extends ConstantableTermType> = readonly [ typeof aliasType, AliasDefinition<T,AliasId> ];
+export type AnyAlias = Alias<symbol, ConstantableTermType>;
 
 export type TypeName = PrimType | DataConstructor | TermTypeParameter
 
@@ -205,7 +212,7 @@ export const data       = Type.Data.Any;
 
 
 // Type = TypeName followed by optional (nested) Types
-export type TermType = readonly [ TypeName, ...TermType[] ] | StructType;
+export type TermType = readonly [ TypeName, ...TermType[] ] | StructType | AnyAlias ;
 
 export type FixedDataTypeName
     = DataConstructor.Constr
@@ -242,7 +249,13 @@ export type ConstantableTypeName
     | PrimType.Unit
     | DataConstructor;
 
-export type ConstantableTermType = [ ConstantableTypeName, ...ConstantableTermType[] ] | ConstantableStructType;
+export type ConstantableTermType
+    = [ ConstantableTypeName, ...ConstantableTermType[] ]
+    | ConstantableStructType
+    | readonly [typeof aliasType, {
+        id: symbol;
+        type: ConstantableTermType;
+    }];
 
 export type ToPDataType<DT extends DataType> =
     DT extends [ DataConstructor.Int ] ? PDataInt :

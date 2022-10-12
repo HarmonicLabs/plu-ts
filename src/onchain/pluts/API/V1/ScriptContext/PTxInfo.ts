@@ -14,13 +14,13 @@ const PTxInfo = pstruct({
     PTxInfo: {
         inputs: list( PTxInInfo.type ),
         outputs: list( PTxOut.type ),
-        fee: PValue,
-        mint: PValue,
+        fee:  PValue.type,
+        mint: PValue.type,
         dCertificates: list( PDCert.type ),
         withdrawals: list( pair( PStakingCredential.type, int ) ),
         interval: PPOSIXTimeRange.type,
-        signatories: list( PPubKeyHash ),
-        datums: list( pair( PDatumHash, data ) ),
+        signatories: list( PPubKeyHash.type ),
+        datums: list( pair( PDatumHash.type, data ) ),
         id: PTxId.type
     }
 })

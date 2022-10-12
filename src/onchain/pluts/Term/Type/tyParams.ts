@@ -1,7 +1,7 @@
 import Type, { TermTypeParameter, FixedTermType, TermType, PrimType } from ".";
 import JsRuntime from "../../../../utils/JsRuntime";
 import { typeExtends } from "./extension";
-import { isTypeParam } from "./kinds";
+import { isAliasType, isTypeParam } from "./kinds";
 import { termTypeToString } from "./utils";
 
 
@@ -88,7 +88,7 @@ export function findSubsToRestrict( restriction: Readonly<TermType>, toBeRestric
         isWellFormedType( toBeRestricted  )
     )) return undefined;
     */
-    if( !typeExtends( restriction, toBeRestricted ) ) return [];
+    if( isAliasType( toBeRestricted ) || !typeExtends( restriction, toBeRestricted ) ) return [];
 
     const subs: TyParam[] = [];
 

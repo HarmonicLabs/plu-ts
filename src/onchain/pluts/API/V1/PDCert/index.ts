@@ -8,14 +8,14 @@ const PDCert = pstruct({
     KeyDeRegistration: { _0: PStakingCredential.type },
     KeyDelegation: {
         _0: PStakingCredential.type, // delegator
-        _1: PPubKeyHash              // delegatee
+        _1: PPubKeyHash.type              // delegatee
     },
     PoolRegistration: {
-        _0: PPubKeyHash,             // poolId
-        _1: PPubKeyHash,             // pool VFR
+        _0: PPubKeyHash.type,             // poolId
+        _1: PPubKeyHash.type,             // pool VFR
     },
     PoolRetire: {
-        _0: PPubKeyHash,
+        _0: PPubKeyHash.type,
         _1: int,                     // epoch
     },
     Genesis: {},

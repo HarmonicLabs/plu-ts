@@ -1,6 +1,7 @@
 import { PrimType, TermType } from ".";
 import BasePlutsError from "../../../../errors/BasePlutsError";
 import { typeExtends } from "./extension";
+import { isAliasType } from "./kinds";
 import { findSubsToRestrict, replaceTypeParam } from "./tyParams";
 import { cloneTermType } from "./utils";
 
@@ -14,6 +15,10 @@ export default function applyLambdaType( lambdaType: Readonly<[ PrimType.Lambda,
         throw new BasePlutsError(
             "invalid type of input while applying lambda type"
         );
+    }
+    if( isAliasType( lambdaType[1] ) )
+    {
+        return cloneTermType( lambdaType[2] );
     }
 
     const subs = findSubsToRestrict( arg, lambdaType[1] );

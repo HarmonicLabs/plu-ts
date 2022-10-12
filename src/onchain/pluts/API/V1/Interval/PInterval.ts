@@ -1,14 +1,14 @@
 import { pgenericStruct, PStruct } from "../../../PTypes/PStruct";
-import { ConstantableTermType } from "../../../Term/Type";
-import PLowerBound from "./PLowerBound";
-import PUpperBound from "./PUpperBound";
+import { ConstantableStructType, ConstantableTermType } from "../../../Term/Type";
+import PLowerBound, { PLowerBoundT } from "./PLowerBound";
+import PUpperBound, { PUpperBoundT } from "./PUpperBound";
 
 export type PIntervalT<T extends ConstantableTermType> = PStruct<{
     PInterval: {
-        from: T,
-        to: T
+        from: PLowerBoundT<T>,
+        to: PUpperBoundT<T>
     }
-}>
+}> & ConstantableStructType
 
 const _PInterval = pgenericStruct( a => {
     return {

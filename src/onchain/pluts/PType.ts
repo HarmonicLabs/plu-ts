@@ -3,7 +3,7 @@ import JsRuntime from "../../utils/JsRuntime";
 import UPLCTerm from "../UPLC/UPLCTerm";
 import PData from "./PTypes/PData";
 import Term from "./Term";
-import Type, { TermType } from "./Term/Type";
+import Type, { TermType, TermTypeOrAlias } from "./Term/Type";
 
 
 export type PTypeCtor< PInstance extends PType > = new (...args: any[]) => PInstance;
