@@ -1,14 +1,16 @@
 import Pair from "../../../../types/structs/Pair";
 import JsRuntime from "../../../../utils/JsRuntime";
 import ObjectUtils from "../../../../utils/ObjectUtils";
+import { ReturnT } from "../../../../utils/ts";
 import { pConstrToData } from "../../Prelude/Builtins";
 import { PDataRepresentable } from "../../PType";
 import { punsafeConvertType } from "../../Syntax";
 import Term from "../../Term";
-import Type, { ConstantableStructType, ConstantableTermType, GenericStructType, struct, structType, StructType, TermType, ToPType } from "../../Term/Type";
+import Type, { Alias, ConstantableStructType, ConstantableTermType, GenericStructType, int, PrimType, struct, structType, StructType, TermType, ToPType, tyVar } from "../../Term/Type";
 import { typeExtends } from "../../Term/Type/extension";
-import { isConstantableStructDefinition, isConstantableTermType, isWellFormedType } from "../../Term/Type/kinds";
-import { termTypeToString } from "../../Term/Type/utils";
+import { isAliasType, isConstantableStructDefinition, isConstantableTermType, isStructType, isWellFormedType } from "../../Term/Type/kinds";
+import { structDefToString, termTypeToString } from "../../Term/Type/utils";
+import palias, { PAlias } from "../PAlias";
 import PData from "../PData";
 import { getToDataForType } from "../PData/conversion";
 import { pInt } from "../PInt";
@@ -172,7 +174,7 @@ export default function pstruct<StructDef extends ConstantableStructDefinition>(
 {
     JsRuntime.assert(
         isConstantableStructDefinition( def ),
-        "cannot construct 'PStruct' type; invalid struct definition"
+        "cannot construct 'PStruct' type; invalid struct definition: " + structDefToString( def ) 
     );
 
     class PStructExt extends _PStruct
@@ -310,21 +312,74 @@ export default function pstruct<StructDef extends ConstantableStructDefinition>(
     return PStructExt as any;
 }
 
+function replaceAliasesWith(
+    aliases: Alias<symbol,[PrimType.Int]>[],
+    replacements: (ConstantableTermType | StructType | [symbol])[],
+    sDef: GenericStructDefinition
+): void
+{
+    const ctors = Object.keys( sDef );
+
+    for( let i = 0; i < ctors.length; i++ )
+    {
+        const thisCtor = sDef[ ctors[ i ] ];
+        const fields = Object.keys( thisCtor );
+
+        for( let j = 0; j < fields.length; j++ )
+        {
+            const thisField = fields[i];
+            const thisType = thisCtor[ thisField ];
+
+            if( isStructType( thisType ) )
+            {
+                const thisTypeSDefClone = cloneStructDef( thisType[1] as GenericStructDefinition );
+                replaceAliasesWith(
+                    aliases,
+                    replacements,
+                    thisTypeSDefClone
+                );
+                thisCtor[ thisField ] = struct( thisTypeSDefClone );
+            }
+            else if ( isAliasType( thisType ) )
+            {
+                const idx = aliases.findIndex( alias => typeExtends( thisType, alias ) );
+                if( idx < 0 ) continue;
+                thisCtor[ thisField ] = replacements[ idx ];
+            }
+        }
+    }
+}
+
 function typeofGenericStruct(
     genStruct: ( ...tyArgs: [ ConstantableTermType, ...ConstantableTermType[] ] )
         => ConstantableStructDefinition
 ): GenericStructType
 {
     const nArgs = genStruct.length;
-    const tyArgs: [symbol][] = Array( nArgs );
+    const aliases: Alias<symbol,[PrimType.Int]>[] = Array( nArgs );
+    const replacements: [ symbol ][] = Array( nArgs );
 
     for( let i = 0; i < nArgs; i++ )
     {
-        tyArgs[i] = Type.Var();
+        aliases[i] = palias( int ).type;
+        replacements[i] = tyVar();
     };
 
-    //@ts-ignore
-    return struct( genStruct( ...tyArgs ) );
+    
+    const sDef = cloneStructDef(
+        genStruct(
+            //@ts-ignore
+            ...aliases
+        )
+    );
+
+    replaceAliasesWith(
+        aliases,
+        replacements,
+        sDef
+    );
+
+    return struct( sDef );
 }
 
 /**

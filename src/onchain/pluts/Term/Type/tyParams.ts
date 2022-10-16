@@ -1,7 +1,8 @@
-import Type, { TermTypeParameter, FixedTermType, TermType, PrimType } from ".";
+import Type, { TermTypeParameter, FixedTermType, TermType, PrimType, anyStruct, struct } from ".";
 import JsRuntime from "../../../../utils/JsRuntime";
+import { cloneStructDef, GenericStructDefinition } from "../../PTypes/PStruct";
 import { typeExtends } from "./extension";
-import { isAliasType, isTypeParam } from "./kinds";
+import { isAliasType, isConstantableStructDefinition, isConstantableTermType, isStructType, isTypeParam } from "./kinds";
 import { termTypeToString } from "./utils";
 
 
@@ -17,11 +18,12 @@ export function replaceTypeParam( tyParam: Readonly<TermTypeParameter> | [ Reado
 
     if( typeof tyParam !== "symbol" ) tyParam = tyParam[0];
 
-    function unchecked( param: Readonly<TermTypeParameter>, toReplace: Readonly<FixedTermType>, toBeReplaced: Readonly<TermType> ): TermType
+    function unchecked( param: Readonly<TermTypeParameter>, replacement: Readonly<FixedTermType>, toBeReplaced: Readonly<TermType> ): TermType
     {
+        if( isAliasType( toBeReplaced ) ) return unchecked( param, replacement, toBeReplaced[1].type );
         if( toBeReplaced[ 0 ] === param ) // 'symbol' equality
         {
-            return toReplace; // replacing here
+            return replacement; // replacing here
         }
 
         if( toBeReplaced.length === 1 ) return Object.freeze([ ...toBeReplaced ]);
@@ -29,31 +31,56 @@ export function replaceTypeParam( tyParam: Readonly<TermTypeParameter> | [ Reado
         {
             if( toBeReplaced[ 0 ] === PrimType.List )
                 return Type.List(
-                    unchecked( param, toReplace, toBeReplaced[ 1 ] )
+                    unchecked( param, replacement, toBeReplaced[ 1 ] )
                 );
             if( toBeReplaced[ 0 ] === PrimType.Delayed )
                 return Type.Delayed(
-                    unchecked( param, toReplace, toBeReplaced[ 1 ] )
+                    unchecked( param, replacement, toBeReplaced[ 1 ] )
                 );
+            
+            if( isStructType( toBeReplaced ) )
+            {
+                const _sDef = toBeReplaced[1];
+                if( _sDef === anyStruct || isConstantableStructDefinition( _sDef ) ) return toBeReplaced;
+
+                const sDef = cloneStructDef( _sDef );
+
+                const ctors = Object.keys( sDef );
+
+                for( let i = 0; i < ctors.length; i++ )
+                {
+                    const thisCtor = sDef[ ctors[i] ];
+                    const fields = Object.keys( thisCtor );
+
+                    for( let j = 0; j < fields.length; j++ )
+                    {
+                        const thisFieldName = fields[j];
+
+                        thisCtor[ thisFieldName ] = unchecked( param, replacement, thisCtor[ thisFieldName ] ) as any;
+                    }
+                }
+
+                return struct( sDef );
+            }
             
             throw JsRuntime.makeNotSupposedToHappenError(
                 "unexpected type while replacing parameter, " +
                 "'toBeReplaced' was expected to have one type argument " +
-                "but none of the types that require one matched the type;" +
-                "\n'toBeReplaced' was : " + toBeReplaced
+                "but none of the types that may require type parameters matched the 'toBeReplacedType';" +
+                "\n'toBeReplaced' was : " + termTypeToString( toBeReplaced )
             );
         }
         if( toBeReplaced.length === 3 )
         {
             if( toBeReplaced[ 0 ] === PrimType.Lambda )
                 return Type.Lambda(
-                    unchecked( param, toReplace, toBeReplaced[ 1 ] ),
-                    unchecked( param, toReplace, toBeReplaced[ 2 ] )
+                    unchecked( param, replacement, toBeReplaced[ 1 ] ),
+                    unchecked( param, replacement, toBeReplaced[ 2 ] )
                 );
             if( toBeReplaced[ 0 ] === PrimType.Pair )
                 return Type.Pair(
-                    unchecked( param, toReplace, toBeReplaced[ 1 ] ),
-                    unchecked( param, toReplace, toBeReplaced[ 2 ] )
+                    unchecked( param, replacement, toBeReplaced[ 1 ] ),
+                    unchecked( param, replacement, toBeReplaced[ 2 ] )
                 );
 
             throw JsRuntime.makeNotSupposedToHappenError(
@@ -87,8 +114,13 @@ export function findSubsToRestrict( restriction: Readonly<TermType>, toBeRestric
         isWellFormedType( restriction ) &&
         isWellFormedType( toBeRestricted  )
     )) return undefined;
+
+    ```isConstantableTermType``` covers all aliases too
     */
-    if( isAliasType( toBeRestricted ) || !typeExtends( restriction, toBeRestricted ) ) return [];
+    if(
+        isConstantableTermType( toBeRestricted ) ||
+        !typeExtends( restriction, toBeRestricted )
+    ) return [];
 
     const subs: TyParam[] = [];
 
@@ -141,10 +173,37 @@ export function findSubsToRestrict( restriction: Readonly<TermType>, toBeRestric
             assignSub( b[0], a );
         }
 
-        (b.slice(1) as TermType[])
-        .forEach( (bTyArg, i) =>
-            findSubs( a[ i + 1 ] as TermType, bTyArg )
-        );
+        if( isAliasType( b ) ) return;
+        if( isStructType( b ) )
+        {
+            if( b[1] === anyStruct ) return;
+            const _b = b[1] as GenericStructDefinition;
+            // a extends b; so it must be the same or more specific struct
+            const _a = a[1] as GenericStructDefinition;
+
+            const ctors = Object.keys( _b );
+
+            for( let i = 0; i < ctors.length; i++ )
+            {
+                const thisCtor = _b[ ctors[i] ];
+                const fields = Object.keys( thisCtor );
+
+                for( let j = 0; j < fields.length; j++ )
+                {
+                    const thisField_b = thisCtor[ fields[j] ];
+                    const thisField_a = _a[ ctors[i] ][ fields[j] ];
+
+                    findSubs( thisField_a, thisField_b );
+                }
+            }
+        }
+        else
+        {
+            (b.slice(1) as TermType[])
+            .forEach( (bTyArg, i) =>
+                findSubs( a[ i + 1 ] as TermType, bTyArg )
+            );
+        }
     }
 
     findSubs( restriction, toBeRestricted );

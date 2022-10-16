@@ -12,7 +12,7 @@ import { punsafeConvertType } from "../../Syntax"
 import Term from "../../Term"
 import Type, { anyStruct, bool, bs, ConstantableTermType, DataType, int, list, pair, str, struct, StructType, ToPType, tyVar, unit } from "../../Term/Type"
 import { typeExtends } from "../../Term/Type/extension"
-import { isDataType } from "../../Term/Type/kinds"
+import { isConstantableStructDefinition, isConstantableStructType, isConstantableTermType, isDataType } from "../../Term/Type/kinds"
 import { termTypeToString } from "../../Term/Type/utils"
 import PBool from "../PBool"
 import PByteString from "../PByteString"
@@ -20,7 +20,7 @@ import PInt from "../PInt"
 import PList from "../PList"
 import PPair from "../PPair"
 import PString from "../PString"
-import { isConstantableStructDefinition, PStruct } from "../PStruct"
+import { PStruct } from "../PStruct"
 import PUnit from "../PUnit"
 import PDataBS from "./PDataBS"
 import PDataConstr from "./PDataConstr"
@@ -134,6 +134,16 @@ export function getToDataForType<T extends ConstantableTermType | StructType>( t
 export function getFromDataForType<T extends ConstantableTermType | StructType>( t: T )
     :( term: Term<PData> ) => Term<ToPType<T>>
 {
+    if( !isConstantableTermType( t ) )
+    {
+        /**
+         * @todo add proper error
+         */
+        throw new BasePlutsError(
+            "'getFromDataForType'; type '" + termTypeToString( t ) + "' cannot be converted from data"
+        );
+    }
+    if( isDataType( t ) )           return ((x: Term<PData>) => x) as any;
     if( typeExtends( t, int ) )     return PInt.fromData as any;
     if( typeExtends( t, bs  ) )     return PByteString.fromData as any;
     if( typeExtends( t, str ) )     return PString.fromData as any;
@@ -142,21 +152,28 @@ export function getFromDataForType<T extends ConstantableTermType | StructType>(
 
     const a = tyVar("a");
 
-    if(
-        typeExtends( t, list( a ) ) &&
-        isDataType( t[1] )
-    )                               return PList.fromData as any;
+    const extendsConstData = ( _t: any ): boolean =>
+        isDataType( _t ) || isConstantableStructType( _t );
+
+    if( typeExtends( t, list( a ) ) )
+    {
+        if( isDataType( t[1] ) ) return PList.fromData as any;
+        if( isConstantableStructType( t[1] as any ) )
+        {
+            return ( x: Term<PData> ) => punsafeConvertType( PList.fromData( x ), list( t[1] ) ) as any
+        }
+    }
 
     const b = tyVar("b");
 
     if(
         typeExtends( t, pair(a,b) ) &&
-        isDataType( t[1] ) &&
-        isDataType( t[2] )
+        extendsConstData( t[1] ) &&
+        extendsConstData( t[2] )
     )                               return PPair.fromData as any;
     if(
         typeExtends( t, struct( anyStruct ) ) &&
-        t[1] !== anyStruct && isConstantableStructDefinition( t[1] )
+        ( t[1] as any) !== anyStruct && isConstantableStructDefinition( t[1] )
     ) return ( ( structData: Term<PStruct<any>> ) => punsafeConvertType( structData, struct( t[1] ) ) ) as any;
 
     /**

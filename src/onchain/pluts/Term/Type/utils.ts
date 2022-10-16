@@ -31,7 +31,7 @@ function ctorDefToString( ctorDef: StructCtorDef ): string
     return str;
 }
 
-function structDefToString( def: StructDefinition ): string
+export function structDefToString( def: StructDefinition ): string
 {
     const ctors = Object.keys( def );
 

@@ -20,14 +20,15 @@ import PList from "../PTypes/PList";
 import PPair, { PMap } from "../PTypes/PPair";
 import PString from "../PTypes/PString";
 import PUnit from "../PTypes/PUnit";
-import { papp, phoist, pdelay, pfn, pforce, plam } from "../Syntax";
+import { papp, phoist, pdelay, pfn, pforce, plam, punsafeConvertType } from "../Syntax";
 import TermBool, { addPBoolMethods } from "./UtilityTerms/TermBool";
 import TermBS, { addPByteStringMethods } from "./UtilityTerms/TermBS";
 import TermInt, { addPIntMethods } from "./UtilityTerms/TermInt";
 import TermStr, { addPStringMethods } from "./UtilityTerms/TermStr";
 import Term from "../Term";
 import { getNRequiredLambdaArgs } from "../Term/Type/utils";
-import Type, { TermType, ToPType, DataType, ToPDataType } from "../Term/Type";
+import Type, { TermType, ToPType, DataType, ToPDataType, delayed, bool } from "../Term/Type";
+import JsRuntime from "../../../utils/JsRuntime";
 
 export function addApplications<Ins extends [ PType, ...PType[] ], Out extends PType, TermOutput extends TermFn< Ins, Out > = TermFn< Ins, Out >>
     (
@@ -758,13 +759,16 @@ export const pand
     }
     = phoist(
         pfn([ Type.Bool, Type.Bool ], Type.Bool )
-        (( a: Term<PBool>, b: Term<PBool> ) =>
-            addPBoolMethods(
-                pif( Type.Bool ).$( a )
-                .then( b )
-                .else( pBool( false ) )
-            )
-        )
+        (( a: Term<PBool>, b: Term<PBool> ) => {
+
+            return addPBoolMethods(
+                pforce(
+                    pstrictIf( Type.Any ).$( a )
+                    .$( pdelay( b ) )
+                    .$( punsafeConvertType( pBool( false ), delayed( bool ) ) )
+                ) as Term<PBool>
+            );
+        })
     ) as any;
 
 export const por
@@ -778,13 +782,16 @@ export const por
     }
     = phoist(
         pfn([ Type.Bool, Type.Bool ], Type.Bool )
-        (( a: Term<PBool>, b: Term<PBool> ) =>
-            addPBoolMethods(
-                pif( Type.Bool ).$( a )
-                .then( pBool( true ) )
-                .else( b )
-            )
-        )
+        (( a: Term<PBool>, b: Term<PBool> ) => {
+
+            return addPBoolMethods(
+                pforce(
+                    pstrictIf( Type.Any ).$( a )
+                    .$( pBool( true ) )
+                    .$( pdelay( b ) )
+                ) as Term<PBool>
+            );
+        })
     ) as any;
 
 export function pchooseUnit<ReturnT extends TermType>( returnType: ReturnT | undefined = undefined )
@@ -1223,7 +1230,7 @@ export const punConstrData
     : TermFn<[ PDataConstr ], PPair<PInt, PList<PData>>>
     = addApplications<[ PDataConstr ], PPair<PInt, PList<PData>>>(
         new Term(
-            Type.Lambda( Type.Data.Constr, Type.Pair( Type.Int, Type.List( Type.Data.Any ))), // @fixme @todo keep track of the data types in ```Type.List( Type.Data.Any )```
+            Type.Lambda( Type.Data.Any, Type.Pair( Type.Int, Type.List( Type.Data.Any ))), // @fixme @todo keep track of the data types in ```Type.List( Type.Data.Any )```
             _dbn => Builtin.unConstrData
         )
     );
@@ -1234,7 +1241,7 @@ export function punMapData<DataK extends DataType, DataV extends DataType>
 {
     return addApplications<[ PDataMap<ToPDataType<DataK>, ToPDataType<DataV>> ], PList<PPair<ToPDataType<DataK>, ToPDataType<DataV>>>>(
         new Term(
-            Type.Lambda( Type.Data.Map( keyDataT, valDataT ), Type.Map( keyDataT, valDataT ) ),
+            Type.Lambda( Type.Data.Any, Type.Map( keyDataT, valDataT ) ),
             _dbn => Builtin.unMapData
         )
     );
@@ -1245,7 +1252,7 @@ export function punListData<DataElemT extends DataType>( dataElemT: DataElemT ):
 {
     return addApplications<[ PDataList<ToPDataType<DataElemT>> ], PList<ToPDataType<DataElemT>>>(
         new Term(
-            Type.Lambda( Type.Data.List( dataElemT ), Type.List( dataElemT ) ),
+            Type.Lambda( Type.Data.Any, Type.List( dataElemT ) ),
             _dbn => Builtin.unListData
         )
     );
@@ -1265,7 +1272,7 @@ export const punBData: Term<PLam<PDataBS, PByteString>>
     $: ( dataBS: Term<PDataBS> ) => TermBS
 } = (() => {
     const unBData = new Term<PLam<PDataBS, PByteString>>(
-        Type.Lambda( Type.Data.BS, Type.BS ),
+        Type.Lambda( Type.Data.Any, Type.BS ),
         _dbn => Builtin.unBData
     );
 

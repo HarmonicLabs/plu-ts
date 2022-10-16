@@ -48,7 +48,9 @@ function getIsStructDefWithTermTypeCheck<SDef extends StructDefinition>( termTyp
             const thisCtorFieldsNames = Object.keys( thisCtorFields );
     
             if(
-                !thisCtorFieldsNames.every( field => termTypeCheck( thisCtorFields[ field ] ) )
+                !thisCtorFieldsNames.every(field => {
+                    return termTypeCheck( thisCtorFields[ field ] );
+                })
             ) return false;
         }
     
@@ -229,7 +231,12 @@ export function isDataType( t: TermType ): t is DataType
 
 export function isStructType( t: TermType ): t is StructType
 {
-    return t[0] === structType;
+    return (
+        Array.isArray( t ) &&
+        t.length === 2 &&
+        t[0] === structType &&
+        ( t[1] === anyStruct || isStructDefinition( t[1] ) )
+    );
 }
 
 export function isAliasType( t: TermType ): t is AnyAlias
@@ -246,6 +253,9 @@ export function isAliasType( t: TermType ): t is AnyAlias
                 aDefKeys.includes( "id" )   &&
                 aDefKeys.includes( "type" ) &&
                 typeof aliasDef["id"] === "symbol" &&
+                // most of the functions that use ```isAliasType```
+                // are relying on this check;
+                // consider carefully if needs to be romoved or whatever
                 isConstantableTermType( aliasDef["type"] )
             );
         })( t[1] )
@@ -279,7 +289,7 @@ export function isConstantableTermType( t: TermType ): t is ConstantableTermType
     // `isAliasType` checks for `t[1]` to be a constantable type 
     if( isAliasType( t ) ) return true;
     
-    if(!( Array.isArray( t ) && t.length > 0 && (isTypeName( t[0] || t[0] === structType) ) )) return false;
+    if(!( Array.isArray( t ) && t.length > 0 && (isTypeName( t[0] ) || t[0] === structType ) )) return false;
 
     if( isStructType( t ) )
     {

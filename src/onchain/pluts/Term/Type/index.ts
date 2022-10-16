@@ -1,6 +1,6 @@
 import Term from "..";
 import JsRuntime from "../../../../utils/JsRuntime";
-import PType from "../../PType";
+import PType, { PDataRepresentable } from "../../PType";
 import { AliasDefinition } from "../../PTypes/PAlias";
 import PBool from "../../PTypes/PBool";
 import PByteString from "../../PTypes/PByteString";
@@ -312,7 +312,7 @@ export type ToPType<T extends TermType> =
     // T extends FromPType<infer PT extends PType> ? PT :
     never;
 
-export type FromPType< PT extends PType | ToPType<TermType> | PStruct<any> > =
+export type FromPType<PT extends PType | ToPType<TermType> | PStruct<any>> =
     PT extends ToPType<infer T extends TermType> ? T : // !!! IMPORTANT !!! can only be present in one of the two types; breaks TypeScript LSP otherwise
     PT extends PInt         ? [ PrimType.Int ] :
     PT extends PByteString  ? [ PrimType.BS  ] :
@@ -328,6 +328,22 @@ export type FromPType< PT extends PType | ToPType<TermType> | PStruct<any> > =
     PT extends PType    ? TermType :
     // PT extends ToPType<infer T extends TermType> ? T :
     never;
+
+export type FromPTypeConstantable<PTy extends PDataRepresentable | ToPType<ConstantableTermType> | PStruct<any>> =
+    PTy extends ToPType< infer TermTy extends ConstantableTermType > ? TermTy : // !!! IMPORTANT !!! can only be present in one of the two types; breaks TypeScript LSP otherwise
+    PTy extends PInt         ? [ PrimType.Int ] :
+    PTy extends PByteString  ? [ PrimType.BS  ] :
+    PTy extends PString      ? [ PrimType.Str ] :
+    PTy extends PUnit        ? [ PrimType.Unit ] :
+    PTy extends PBool        ? [ PrimType.Bool ] :
+    PTy extends PList<infer TyArg extends PDataRepresentable> ? [ PrimType.List, FromPTypeConstantable< TyArg > ] :
+    PTy extends PPair<infer FstTyArg extends PDataRepresentable, infer SndTyArg extends PDataRepresentable> ?
+        [ PrimType.Pair, FromPTypeConstantable< FstTyArg >, FromPTypeConstantable< SndTyArg > ] :
+    PTy extends PData    ? [ DataConstructor, ...DataType[] ] :
+    PTy extends PStruct<infer SDef extends ConstantableStructDefinition> ? [ typeof structType, SDef ] :
+    never;
+
+
 
 export type FromPTypeArr<PTs extends PType[]> =
     PTs extends [] ? [] :

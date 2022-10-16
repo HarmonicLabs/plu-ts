@@ -62,7 +62,7 @@ function ctorDefExtends( a: StructCtorDef, b: StructCtorDef, subs: TyParam[] = [
         if( aFields[i] !== bFields[i] ) return false;
         const field = aFields[i];
 
-        if( (typeof b[field][0]) === "symbol" )
+        if( isTypeParam( b[field][0] ) )
         {
             const tyVar = b[field][0] as symbol;
             const tyArg = a[field];
@@ -154,20 +154,6 @@ export function structExtends( t: TermType, struct: StructType, subs: TyParam[] 
  */
 export function typeExtends<ExtendedTy extends TermType>( extending: TermType, extended: ExtendedTy, subs: TyParam[] = [] ): extending is ExtendedTy
 {
-    if( isAliasType( extended ) )
-    {
-        return (
-            isAliasType( extending )                        &&
-            // same alias id
-            extending[1].id === extended[1].id              &&
-            typeExtends( extending[1].type, extended[1].type, subs )
-        );
-    }
-    
-    if( isAliasType( extending ) )
-    {
-        return typeExtends( extending[1].type, extended, subs );
-    }
 
     if(!(
         isWellFormedType( extending ) &&
@@ -181,6 +167,21 @@ export function typeExtends<ExtendedTy extends TermType>( extending: TermType, e
 
     function unchecked( a: TermType, b: TermType ): boolean
     {
+        if( isAliasType( b ) )
+        {
+            return (
+                isAliasType( a )                        &&
+                // same alias id
+                a[1].id === b[1].id              &&
+                typeExtends( a[1].type, b[1].type, subs )
+            );
+        }
+        
+        if( isAliasType( a ) )
+        {
+            return typeExtends( a[1].type, extended, subs );
+        }
+
         if( isStructType( b ) )
         {
             return structExtends( a, b, subs );

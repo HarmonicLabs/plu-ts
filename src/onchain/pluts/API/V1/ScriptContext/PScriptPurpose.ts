@@ -5,10 +5,10 @@ import PTxOutRef from "../Tx/PTxOutRef";
 import PCurrencySymbol from "../Value/PCurrencySymbol";
 
 const PScriptPurpose = pstruct({
-    Minting: { _0: PCurrencySymbol.type },
-    Spending: { _0: PTxOutRef.type },
-    Rewarding: { _0: PStakingCredential.type },
-    Certifying: { _0: PDCert.type }
+    Minting: { currencySym: PCurrencySymbol.type },
+    Spending: { utxoRef: PTxOutRef.type },
+    Rewarding: { stakeCredential: PStakingCredential.type },
+    Certifying: { dCert: PDCert.type }
 })
 
 export default PScriptPurpose;

@@ -96,8 +96,11 @@ export function plam<A extends TermType, B extends TermType >( inputType: A, out
                     dbnAccessLevel => new UPLCVar( dbnAccessLevel - thisLambdaPtr )
                 );
                 
+                const body = termFunc( boundVar );
+
+                if( !(body instanceof Term) ) console.log( body );
                 // here the debruijn level is incremented
-                return new Lambda( termFunc( boundVar ).toUPLC( thisLambdaPtr ) );
+                return new Lambda( body.toUPLC( thisLambdaPtr ) );
             }
         );
     

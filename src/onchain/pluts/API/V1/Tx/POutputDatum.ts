@@ -5,7 +5,7 @@ import PDatumHash from "../Scripts/PDatumHash";
 const POutputDatum = pstruct({
     None: {},
     DatumHash: { datumHash: PDatumHash.type },   // V1
-    Datum: { datum: data }                  // inline datum
+    Datum: { datum: data }                       // inline datum
 });
 
 export default POutputDatum;

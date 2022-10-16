@@ -28,11 +28,13 @@ export default class PByteString extends PDataRepresentable
     }
 }
 
-export function pByteString( bs: ByteString ): Term<PByteString>
+export function pByteString( bs: ByteString | Buffer | string ): TermBS
 {
-    return new Term<PByteString>(
+    const _bs = bs instanceof ByteString ? bs : new ByteString( bs );
+
+    return addPByteStringMethods( new Term<PByteString>(
         Type.BS,
-        _dbn => UPLCConst.byteString( bs ),
+        _dbn => UPLCConst.byteString( _bs ),
         true
-    );
+    ) );
 }

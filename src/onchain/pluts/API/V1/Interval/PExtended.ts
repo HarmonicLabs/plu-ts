@@ -1,5 +1,6 @@
 import { pgenericStruct, PStruct } from "../../../PTypes/PStruct";
 import { ConstantableStructType, ConstantableTermType } from "../../../Term/Type";
+import { termTypeToString } from "../../../Term/Type/utils";
 
 export type PExtendedT<T extends ConstantableTermType> = PStruct<{
     PNegInf: {},

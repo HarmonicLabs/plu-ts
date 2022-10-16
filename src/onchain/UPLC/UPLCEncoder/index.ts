@@ -47,9 +47,9 @@ import dataToCbor from "../../../types/Data/toCbor";
  *  ```
 */
 
-function serializeUInt( uint: UInteger ): BitStream
+function serializeUInt( uint: UInteger | bigint ): BitStream
 {
-    return UPLCFlatUtils.encodeBigIntAsVariableLengthBitStream( uint.asBigInt );
+    return UPLCFlatUtils.encodeBigIntAsVariableLengthBitStream( typeof uint === "bigint" ? uint : uint.asBigInt );
 }
 
 function serializeInt( int: Integer ): BitStream
@@ -80,7 +80,13 @@ function serializeVersion( version: UPLCVersion ): BitStream
 function serializeUPLCVar( uplcVar: UPLCVar ): BitStream
 {
     const result = UPLCVar.UPLCTag;
-    result.append( serializeUInt( uplcVar.deBruijn ) );
+    result.append(
+        serializeUInt(
+            // no idea why deBruijn indicies start form 1...s
+            // can dev do something?
+            uplcVar.deBruijn.asBigInt + BigInt( 1 )
+        )
+    );
     return result;
 }
 
