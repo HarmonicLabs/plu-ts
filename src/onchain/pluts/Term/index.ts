@@ -1,13 +1,14 @@
 import { isCloneable } from "../../../types/interfaces/Cloneable";
 import JsRuntime from "../../../utils/JsRuntime";
 import ObjectUtils from "../../../utils/ObjectUtils";
-import UPLCTerm from "../../UPLC/UPLCTerm";
+import UPLCTerm, { isClosedTerm, showUPLC } from "../../UPLC/UPLCTerm";
 import HoistedUPLC from "../../UPLC/UPLCTerms/HoistedUPLC";
 import UPLCConst from "../../UPLC/UPLCTerms/UPLCConst";
 import PType from "../PType";
+import { unwrapAlias } from "../PTypes/PAlias";
 import { StructCtorDef, StructDefinition } from "../PTypes/PStruct";
 import { anyStruct, FromPType, structType, TermType } from "./Type";
-import { isAliasType, isWellFormedType } from "./Type/kinds";
+import { isAliasType, isStructType, isWellFormedType } from "./Type/kinds";
 
 // avoid circular ref
 function ctorDefToString( ctorDef: StructCtorDef ): string
@@ -46,7 +47,7 @@ function structDefToString( def: StructDefinition ): string
 // avoid circular ref
 function termTypeToString( t: TermType ): string
 {
-    if( t[0] === structType )
+    if( isStructType( t ) )
     {
         return "struct(" + (
             t[1] === anyStruct ? "anyStruct" : structDefToString( t[1] as StructDefinition )
@@ -55,7 +56,7 @@ function termTypeToString( t: TermType ): string
     if( isAliasType( t ) )
     {
         return "alias(" + (
-            termTypeToString( t[1].type )
+            termTypeToString( unwrapAlias( t ) )
         ) + ")";
     }
     if( typeof t[0] === "symbol" ) return "tyParam("+ t[0].description +")";
@@ -138,12 +139,18 @@ export default class Term<A extends PType>
             () => {
                 this._toUPLC = {
                     proof: proofSym,
-                    value: (_dbn : bigint) => 
+                    value: (_dbn : bigint) => {
+
+                        const hoisted = toUPLC( BigInt( 0 ) );
+
+                        // console.log( showUPLC( hoisted ) );
+                        
                         // throws if the term is not closed
                         // for how terms are created it should never be the case
-                        new HoistedUPLC(
-                            toUPLC( BigInt( 0 ) )
-                        )
+                        return new HoistedUPLC(
+                            hoisted
+                        );
+                    }
                 } as any;
             }
         )

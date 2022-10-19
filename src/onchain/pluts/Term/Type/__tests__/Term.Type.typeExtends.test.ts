@@ -1,4 +1,5 @@
-import Type, { int, TermType } from "..";
+import Type, { int, pair, TermType } from "..";
+import PValue from "../../../API/V1/Value";
 import palias from "../../../PTypes/PAlias";
 import { typeExtends } from "../extension";
 import { termTypeToString } from "../utils";
@@ -164,6 +165,17 @@ describe("typeExtends", () => {
             ).toBe( true );
 
         });
+
+    })
+
+    test.only("pair( any, any )", () => {
+
+        expect(
+            typeExtends(
+                PValue.type[1].type[1],
+                pair( Type.Any, Type.Any )
+            )
+        ).toBe( true );
 
     })
 

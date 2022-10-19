@@ -1,13 +1,13 @@
 import JsRuntime from "../../../utils/JsRuntime";
-import { pfstPair, ppairData, psndPair, punMapData } from "../Prelude/Builtins";
+import { pfstPair, pid, ppairData, psndPair, punMapData } from "../Prelude/Builtins";
 import PType, { PDataRepresentable } from "../PType";
-import { papp, phoist, plam, plet } from "../Syntax";
+import { phoist, plam, punsafeConvertType } from "../Syntax";
 import Term from "../Term";
 import Type, { data, DataType, pair, TermType } from "../Term/Type";
 import { typeExtends } from "../Term/Type/extension";
 import PData from "./PData";
 import PDataMap from "./PData/PDataMap";
-import PDataPair from "./PData/PDataPair";
+import PLam from "./PFn/PLam";
 import PList from "./PList";
 
 export default class PPair<A extends PType, B extends PType > extends PDataRepresentable
@@ -24,7 +24,13 @@ export default class PPair<A extends PType, B extends PType > extends PDataRepre
     }
 
     static override get termType(): TermType { return Type.Pair( Type.Any, Type.Any ) };
-    static override fromData<PDataFst extends PData, PDataSnd extends PData>(data: Term<PDataPair<PDataFst,PDataSnd>>): Term<PPair<PDataFst, PDataSnd>>
+
+    static override get fromDataTerm(): Term<PLam<PData, PPair<PData,PData>>> & { $: (input: Term<PData>) => Term<PPair<PData,PData>>; }
+    {
+        // hoists to id
+        return phoist( plam( data, pair( data, data ) )( (PPair as any).fromData ) );
+    }
+    static override fromData<PDataFst extends PData, PDataSnd extends PData>(data: Term<PData>): Term<PPair<PDataFst, PDataSnd>>
     {
         JsRuntime.assert(
             typeExtends( data.type , Type.Data.Pair( Type.Data.Any,Type.Data.Any ) ) ||
@@ -37,9 +43,12 @@ export default class PPair<A extends PType, B extends PType > extends PDataRepre
             data.toUPLC
         );
     }
-    static override toData(term: Term<PPair<PData,PData>>): Term<PPair<PData, PData>>
+    /**
+     * @deprecated try to use 'toDataTerm.$'
+     */
+    static override toData(term: Term<PPair<PData,PData>>): Term<PData>
     {
-        return term;
+        return punsafeConvertType( term, Type.Data.Pair( data, data ) );
         /*
         return papp(
             phoist(
@@ -53,19 +62,5 @@ export default class PPair<A extends PType, B extends PType > extends PDataRepre
             term
         );
         //*/
-    }
-}
-
-export class PMap<PKey extends PType, PValue extends PType> extends PList<PPair<PKey,PValue>>
-{
-    constructor(){ super(); }
-
-    static override get fromData():
-        <PDataFst extends PData, PDataSnd extends PData>
-        (data: Term<PDataMap<PDataFst,PDataSnd>>) => Term<PMap<PDataFst, PDataSnd>>
-    {
-        return <PDataFst extends PData, PDataSnd extends PData>(data: Term<PDataMap<PDataFst,PDataSnd>>) => {
-            return punMapData( Type.Data.Any, Type.Data.Any ).$( data ) as any;
-        }
     }
 }

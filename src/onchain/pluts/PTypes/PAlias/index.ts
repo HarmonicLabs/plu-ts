@@ -5,14 +5,15 @@ import PType, { PDataRepresentable } from "../../PType";
 import Term from "../../Term";
 import Type, { Alias, aliasType, ConstantableTermType, TermType, ToPType } from "../../Term/Type";
 import { typeExtends } from "../../Term/Type/extension";
-import { isConstantableTermType } from "../../Term/Type/kinds";
+import { isAliasType, isConstantableTermType } from "../../Term/Type/kinds";
 import { cloneTermType } from "../../Term/Type/utils";
 import PData from "../PData";
-import { getFromDataForType, getToDataForType } from "../PData/conversion";
+import { getFromDataForType } from "../PData/conversion";
+import { getToDataForType } from "../PData/conversion/getToDataTermForType";
 
 /**
  * 
- * avoid circula deps
+ * avoid circular deps
  */
 function punsafeConvertType<FromPInstance extends PType, SomeExtension extends {}, ToTermType extends TermType>
     ( someTerm: Term<FromPInstance> & SomeExtension, toType: ToTermType ): Term<ToPType<ToTermType>> & SomeExtension
@@ -106,7 +107,7 @@ export default function palias<T extends ConstantableTermType>(
         aliasType,
         Object.freeze({
             id: thisAliasId,
-            type: cloneTermType( (type[0] as any) === aliasType ? type[1] as ConstantableTermType : type )
+            type: cloneTermType( isAliasType( type ) ? unwrapAlias( type ) : type )
         })
     ]) as any;
 
@@ -174,4 +175,9 @@ export default function palias<T extends ConstantableTermType>(
     );
 
     return PAliasExtension as unknown as PAlias<T ,typeof thisAliasId, PAliasExtension>;
+}
+
+export function unwrapAlias<T extends ConstantableTermType>( aliasedType: Alias<symbol, T> ): T
+{
+    return aliasedType[1].type;
 }

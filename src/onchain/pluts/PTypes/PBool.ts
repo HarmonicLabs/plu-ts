@@ -1,11 +1,13 @@
 import Cloneable from "../../../types/interfaces/Cloneable";
 import UPLCConst from "../../UPLC/UPLCTerms/UPLCConst";
 import { pConstrToData, peqInt, pfstPair, pif, pnilData, punConstrData } from "../Prelude/Builtins";
-import TermBool from "../Prelude/UtilityTerms/TermBool";
+import TermBool, { addPBoolMethods } from "../Prelude/UtilityTerms/TermBool";
 import { PDataRepresentable } from "../PType";
+import { phoist, plam } from "../Syntax";
 import Term from "../Term";
-import Type, { TermType } from "../Term/Type";
+import Type, { bool, data, TermType } from "../Term/Type";
 import PData from "./PData";
+import PLam from "./PFn/PLam";
 import { pInt } from "./PInt";
 
 // circular ref
@@ -33,6 +35,23 @@ export default class PBool extends PDataRepresentable
     }
 
     static override get termType(): TermType { return Type.Bool }
+    static override get fromDataTerm(): Term<PLam<PData, PBool>> & { $: (input: Term<PData>) => Term<PBool>; }
+    {
+        return phoist(
+            plam( data, bool )
+            (( data: Term<PData> ): TermBool => {
+                return peqInt
+                    .$( 
+                        pfstPair( Type.Int, Type.List( Type.Data.Any ) )
+                        .$( punConstrData.$( data ) )
+                    )
+                    .$( pInt( 0 ) )
+            })
+        )
+    }
+    /**
+     * @deprecated try to use 'fromDataTerm.$'
+     */
     static override get fromData(): (data: Term<PData>) => TermBool {
         return ( data: Term<PData> ): TermBool => {
             return peqInt
@@ -43,6 +62,22 @@ export default class PBool extends PDataRepresentable
                 .$( pInt( 0 ) )
         }
     }
+
+    static override get toDataTerm(): Term<PLam<PBool, PData>> & { $: (input: Term<PBool>) => Term<PData>; }
+    {
+        return phoist(
+            plam( bool, data )
+            ( b =>
+                pif( Type.Data.Constr ).$( b )
+                // 'pnilData' is an hoisted term; no need to 'plet'
+                .then( pConstrToData.$( pInt( 0 ) ).$( pnilData ) )
+                .else( pConstrToData.$( pInt( 1 ) ).$( pnilData ) )
+            )
+        )
+    }
+    /**
+     * @deprecated try to use 'toDataTerm.$'
+     */
     static override toData(term: Term<PBool>): Term<PData>
     {
         return  pif( Type.Data.Constr ).$( term )
@@ -52,13 +87,13 @@ export default class PBool extends PDataRepresentable
     }
 }
 
-
-
-export function pBool( bool: boolean ): Term<PBool>
+export function pBool( bool: boolean ): TermBool
 {
-    return new Term<PBool>(
-        Type.Bool,
-        _dbn => UPLCConst.bool( bool ),
-        true
+    return addPBoolMethods(
+        new Term<PBool>(
+            Type.Bool,
+            _dbn => UPLCConst.bool( bool ),
+            true
+        )
     );
 }

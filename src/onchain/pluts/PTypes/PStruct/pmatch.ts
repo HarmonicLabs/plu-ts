@@ -183,7 +183,7 @@ function definePMatchPermutations<SDef extends ConstantableStructDefinition>(
         return res;
     }
 
-    function loop( partialObj: object, missingCtors: string[] )
+    function loop( missingCtors: string[] )
     {
         if( missingCtors.length <= 0 ) return obj;
         if( missingCtors.length === 1 )
@@ -191,7 +191,7 @@ function definePMatchPermutations<SDef extends ConstantableStructDefinition>(
             const ctor = missingCtors[0] as keyof SDef & string;
 
             return ObjectUtils.defineReadOnlyProperty(
-                partialObj,
+                {},
                 "on" + capitalize( ctor ),
                 ( cb: ( rawFields: RawFields<SDef[typeof ctor]> ) => Term<PType> ): Term<PType> => {
                     const idx = indexOfCtor( ctor );
@@ -211,27 +211,29 @@ function definePMatchPermutations<SDef extends ConstantableStructDefinition>(
             );
         }
 
+        const remainingCtorsObj = {};
+
         missingCtors.forEach( ctor => {
 
             const idx = indexOfCtor( ctor );
 
             ObjectUtils.defineReadOnlyProperty(
-                partialObj,
+                remainingCtorsObj,
                 "on" + capitalize( ctor ),
                 ( cb: ( rawFields: object ) => Term<PType> ) => {
 
                     callbacks[idx] = cb;
 
-                    return loop( {},  missingCtors.filter( c => c !== ctor ) )
+                    return loop( missingCtors.filter( c => c !== ctor ) )
                 }
             );
             
         });
 
-        return obj;
+        return remainingCtorsObj;
     }
 
-    return loop( obj, ctors ) as any;
+    return loop( ctors ) as any;
 }
 
 export default function pmatch<SDef extends ConstantableStructDefinition>( struct: Term<PStruct<SDef>> ): PMatchOptions<SDef>

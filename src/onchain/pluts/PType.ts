@@ -2,8 +2,9 @@ import Cloneable from "../../types/interfaces/Cloneable";
 import JsRuntime from "../../utils/JsRuntime";
 import UPLCTerm from "../UPLC/UPLCTerm";
 import PData from "./PTypes/PData";
+import { TermFn } from "./PTypes/PFn/PLam";
 import Term from "./Term";
-import Type, { TermType, TermTypeOrAlias } from "./Term/Type";
+import Type, { TermType } from "./Term/Type";
 
 
 export type PTypeCtor< PInstance extends PType > = new (...args: any[]) => PInstance;
@@ -42,14 +43,34 @@ export class PDataRepresentable extends PType
 {
     constructor() { super(); }
 
-    static fromData( data: Term<PData> ): Term<any>
+
+    static get fromDataTerm(): TermFn<[ PData ], PDataRepresentable>
+    {
+        throw JsRuntime.makeNotSupposedToHappenError(
+            "'PDataRepresentable' is an abstract class; an extension of the class did not implemented the 'fromData' static method"
+        ); 
+    }
+    /**
+     * @deprecated try to use 'fromDataTerm.$'
+     */
+    static fromData( data: Term<PData> ): Term<PDataRepresentable>
     {
         throw JsRuntime.makeNotSupposedToHappenError(
             "'PDataRepresentable' is an abstract class; an extension of the class did not implemented the 'fromData' static method"
         );
     }
 
-    static toData( term: Term<any> ): Term<PData> {
+    static get toDataTerm(): TermFn<[ any/*PDataRepresentable*/ ], PData>
+    {
+        throw JsRuntime.makeNotSupposedToHappenError(
+            "'PDataRepresentable' is an abstract class; an extension of the class did not implemented the 'toData' static method"
+        );
+    }
+    /**
+     * @deprecated try to use 'toDataTerm.$'
+     */
+    static toData( term: Term<any> ): Term<PData>
+    {
         throw JsRuntime.makeNotSupposedToHappenError(
             "'PDataRepresentable' is an abstract class; an extension of the class did not implemented the 'toData' static method"
         );

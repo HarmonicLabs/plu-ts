@@ -20,6 +20,21 @@ import { typeExtends } from "../Term/Type/extension";
 import { isLambdaType, isDelayedType } from "../Term/Type/kinds";
 import { termTypeToString } from "../Term/Type/utils";
 import applyLambdaType from "../Term/Type/applyLambdaType";
+import UPLCTerm from "../../UPLC/UPLCTerm";
+
+
+
+function isIdentityUPLC( uplc: UPLCTerm ): uplc is Lambda
+{
+    return (
+        ( uplc instanceof HoistedUPLC && isIdentityUPLC( uplc.UPLC ) ) || 
+        (
+            uplc instanceof Lambda && 
+            uplc.body instanceof UPLCVar &&
+            uplc.body.deBruijn.asBigInt === BigInt( 0 )
+        )
+    );
+}
 
 export type PappResult<Output extends PType> =
     Output extends PLam<infer OutIn extends PType, infer OutOut extends PType> ?
@@ -57,9 +72,17 @@ export function papp<Input extends PType, Output extends PType >( a: Term<PLam<I
     const outputTerm = new Term(
         applyLambdaType( lambdaType, b.type ),
         dbn => {
+            const funcUPLC = a.toUPLC( dbn );
+            if( funcUPLC instanceof ErrorUPLC ) return funcUPLC;
+            const argUPLC  = b.toUPLC( dbn );
+            if( argUPLC instanceof ErrorUPLC ) return argUPLC;
+
+            // omit id function
+            if( isIdentityUPLC( funcUPLC ) ) return argUPLC;
+
             const app = new Application(
-                a.toUPLC( dbn ),
-                b.toUPLC( dbn )
+                funcUPLC,
+                argUPLC
             );
 
             return app; 

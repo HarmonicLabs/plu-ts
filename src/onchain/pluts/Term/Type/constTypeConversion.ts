@@ -1,19 +1,22 @@
 import Type, { ConstantableTermType, TypeShortcut } from ".";
 import JsRuntime from "../../../../utils/JsRuntime";
 import ConstType, { constPairTypeUtils, constT, constTypeEq, ConstTyTag } from "../../../UPLC/UPLCTerms/UPLCConst/ConstType";
+import { unwrapAlias } from "../../PTypes/PAlias";
 import { typeExtends } from "./extension";
-import { isConstantableTermType } from "./kinds";
+import { isAliasType, isConstantableTermType } from "./kinds";
+import { termTypeToString } from "./utils";
 
 
 export function termTyToConstTy( termT: ConstantableTermType ): ConstType
 {
     JsRuntime.assert(
         isConstantableTermType( termT ),
-        `cannot convert "${termT}" {TermType} to {ConstType}`
+        `cannot convert "${termTypeToString( termT )}" {TermType} to {ConstType}`
     );
 
     function unchecked( t: ConstantableTermType ): ConstType
     {
+        if( isAliasType( t ) ) return unchecked( unwrapAlias( t ) );
         if( typeExtends( t, Type.BS ) ) return constT.byteStr;
         if( typeExtends( t, Type.Int ) ) return constT.int;
         if( typeExtends( t, Type.Str ) ) return constT.str;
@@ -24,7 +27,7 @@ export function termTyToConstTy( termT: ConstantableTermType ): ConstType
         if( typeExtends( t, Type.Pair( Type.Any, Type.Any ) ) ) return constT.pairOf( unchecked( t[1] as any ), unchecked( t[2] as any ) );
 
         throw JsRuntime.makeNotSupposedToHappenError(
-            "'termTyToConstTy' couldn't match a TermType to convert to ConstType; input TermType was: " + t
+            "'termTyToConstTy' couldn't match a TermType to convert to ConstType; input TermType was: " + termTypeToString( t )
         );
     }
 

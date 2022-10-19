@@ -65,7 +65,7 @@ export default class Force
 
     clone(): Force
     {
-        return new Force( this.termToForce )
+        return new Force( this.termToForce.clone() )
     }
 
 }

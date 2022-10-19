@@ -1,6 +1,12 @@
-import { anyStruct, DataConstructor, DataType, StructType, TermType } from ".";
+import { Alias, anyStruct, ConstantableTermType, DataConstructor, DataType, StructType, TermType } from ".";
 import { StructCtorDef } from "../../PTypes/PStruct";
 import { isAliasType, isDataType, isStructType, isTypeNameOfData, isTypeParam, isWellFormedType } from "./kinds";
+
+// avoid circular deps
+function unwrapAlias<T extends ConstantableTermType>( aliasedType: Alias<symbol, T> ): T
+{
+    return aliasedType[1].type;
+}
 
 export function dataTypeExtends<ExtendedDataTy extends DataType>( extending: DataType, extended: ExtendedDataTy ): extending is ExtendedDataTy
 {
@@ -154,7 +160,6 @@ export function structExtends( t: TermType, struct: StructType, subs: TyParam[] 
  */
 export function typeExtends<ExtendedTy extends TermType>( extending: TermType, extended: ExtendedTy, subs: TyParam[] = [] ): extending is ExtendedTy
 {
-
     if(!(
         isWellFormedType( extending ) &&
         isWellFormedType( extended  )
@@ -169,17 +174,20 @@ export function typeExtends<ExtendedTy extends TermType>( extending: TermType, e
     {
         if( isAliasType( b ) )
         {
+            return unchecked( a, unwrapAlias( b ) );
+            /*
             return (
                 isAliasType( a )                        &&
                 // same alias id
-                a[1].id === b[1].id              &&
-                typeExtends( a[1].type, b[1].type, subs )
+                a[1].id === b[1].id                     &&
+                unchecked( unwrapAlias( a ), unwrapAlias( b ) )
             );
+            //*/
         }
         
         if( isAliasType( a ) )
         {
-            return typeExtends( a[1].type, extended, subs );
+            return unchecked( unwrapAlias( a ), b );
         }
 
         if( isStructType( b ) )
@@ -244,7 +252,9 @@ export function typeExtends<ExtendedTy extends TermType>( extending: TermType, e
         return (
             a[ 0 ] === b[ 0 ] &&
             // a.length === b.length && // not a check because of possible ```Type.Var()``` as type arguments
-            ( a.slice( 1 ) as TermType[] ).every( (aTyArg, idx) => unchecked( aTyArg, bTyArgs[ idx ] ) )
+            ( a.slice( 1 ) as TermType[] ).every( (aTyArg, idx) => {
+                return unchecked( aTyArg, bTyArgs[ idx ] )
+            })
         );
     }
 

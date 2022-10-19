@@ -1,12 +1,11 @@
-import PType, { PDataRepresentable } from "../../PType";
+import PType from "../../PType";
 import PBool, { pBool } from "../../PTypes/PBool";
 import PLam, { TermFn } from "../../PTypes/PFn/PLam";
 import PInt, { pInt } from "../../PTypes/PInt";
 import PList, { pnil } from "../../PTypes/PList";
-import { StructInstance } from "../../PTypes/PStruct";
 import { papp, perror, pfn, phoist, plam, plet, precursive } from "../../Syntax";
 import Term from "../../Term";
-import Type, { bool, ConstantableTermType, fn, FromPTypeConstantable, lam, list, PrimType, TermType, ToPType } from "../../Term/Type";
+import Type, { bool, ConstantableTermType, fn, lam, list, PrimType, TermType, ToPType } from "../../Term/Type";
 import { pand, pchooseList, phead, pif, pisEmpty, pprepend, pstrictIf, ptail } from "../Builtins";
 import PMaybe, { PMaybeT } from "../PMaybe";
 
@@ -238,7 +237,7 @@ export function pfilter<ElemsT extends ConstantableTermType>( elemsT: ElemsT )
 
 
 export function pevery<ElemsT extends ConstantableTermType>( elemsT: ElemsT )
-: TermFn<[ PLam<ToPType<ElemsT>,PBool>, PList<ToPType<ElemsT>> ], PBool>
+    : TermFn<[ PLam<ToPType<ElemsT>,PBool>, PList<ToPType<ElemsT>> ], PBool>
 {
     return phoist(
         plam(
@@ -276,6 +275,42 @@ export function pevery<ElemsT extends ConstantableTermType>( elemsT: ElemsT )
 
                 )
             )
+            // .$( _list )
+        })
+    ) as any;
+}
+
+export function pmap<FromT extends ConstantableTermType, ToT extends ConstantableTermType>( fromT: FromT, toT: ToT )
+    : TermFn<[ PLam<ToPType<FromT>, ToPType<ToT>>, PList<ToPType<FromT>> ], PList<ToPType<ToT>>>
+{
+    return phoist(
+        plam(
+            lam( fromT, toT ),
+            lam(
+                list( fromT ),
+                list( toT )
+            )
+        )(( f ) => {
+
+            return precursiveList( list( toT ) )
+            .$(
+                plam( lam( list( fromT ), list( toT ) ), list( toT ) )
+                ( ( _self ) => pnil( toT ) )
+            )
+            .$(
+                pfn([
+                    lam( list( fromT ), list( toT ) ),
+                    fromT,
+                    list( fromT )
+                ],  list( toT ) )
+                (( self, head, rest ) =>
+
+                    pprepend( toT )
+                    .$( papp( f, head ) as Term<ToPType<ToT>> )
+                    .$( papp( self, rest ) )
+
+                )
+            ) as any;
             // .$( _list )
         })
     ) as any;

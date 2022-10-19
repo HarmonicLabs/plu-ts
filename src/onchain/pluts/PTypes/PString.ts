@@ -24,9 +24,15 @@ export default class PString extends PDataRepresentable
     }
 
     static override get termType(): TermType { return Type.Str }
+    /**
+     * @deprecated try to use 'fromDataTerm.$'
+     */
     static override get fromData(): (data: Term<PDataBS>) => TermStr {
         return (data: Term<PDataBS>) => pdecodeUtf8.$( punBData.$( data ) )
     }
+    /**
+     * @deprecated try to use 'toDataTerm.$'
+     */
     static override toData(term: Term<PString>): Term<PDataBS>
     {
         return pBSToData.$( pencodeUtf8.$( term ) )

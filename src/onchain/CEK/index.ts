@@ -15,7 +15,7 @@ import UPLCVar from "../UPLC/UPLCTerms/UPLCVar";
 import BnCEK from "./BnCEK";
 import PartialBuiltin from "./BnCEK/PartialBuiltin";
 import CEKEnv from "./CEKEnv";
-import CEKFrames from "./CEKFrames";
+import CEKFrames, { showFrames } from "./CEKFrames";
 import ForceFrame from "./CEKFrames/ForceFrame";
 import LApp from "./CEKFrames/LApp";
 import RApp from "./CEKFrames/RApp";

@@ -4,13 +4,16 @@ import UPLCConst from "../../UPLC/UPLCTerms/UPLCConst";
 import { constT } from "../../UPLC/UPLCTerms/UPLCConst/ConstType";
 import { pListToData, pnilData, pnilPairData, pprepend, punListData } from "../Prelude/Builtins";
 import PType, { PDataRepresentable } from "../PType";
+import { punsafeConvertType } from "../Syntax";
 import Term from "../Term";
-import Type, { ToPType, TermType, ConstantableTermType } from "../Term/Type";
+import Type, { ToPType, TermType, ConstantableTermType, int, list } from "../Term/Type";
 import { termTyToConstTy } from "../Term/Type/constTypeConversion";
 import { typeExtends } from "../Term/Type/extension";
 import { isConstantableTermType } from "../Term/Type/kinds";
+import { termTypeToString } from "../Term/Type/utils";
 import PData from "./PData";
 import PDataList from "./PData/PDataList";
+import PLam from "./PFn/PLam";
 
 
 export default class PList<A extends PType> extends PDataRepresentable
@@ -25,10 +28,26 @@ export default class PList<A extends PType> extends PDataRepresentable
     }
 
     static override get termType(): TermType { return Type.List( Type.Any )}
+    
+    static override get fromDataTerm(): Term<PLam<PData, PList<PData>>> & { $: (input: Term<PData>) => Term<PList<PData>>; }
+    {
+        return punListData( Type.Data.Any );
+    }
+    /**
+     * @deprecated try to use 'fromDataTerm.$'
+     */
     static override get fromData(): (data: Term<PData>) => Term<PList<PData>>
     {
         return (data: Term<PData>) => punListData( Type.Data.Any ).$( data );
     }
+
+    static override get toDataTerm(): Term<PLam<PList<PData>, PData>> & { $: (input: Term<PList<PData>>) => Term<PData>; }
+    {
+        return pListToData( Type.Data.Any );
+    }
+    /**
+     * @deprecated try to use 'toDataTerm.$'
+     */
     static override toData(term: Term<PList<PData>>): Term<PDataList<PData>>
     {
         return pListToData( Type.Data.Any ).$( term )
@@ -49,8 +68,9 @@ export function pnil<ElemsT extends ConstantableTermType>( elemsT: ElemsT ): Ter
 
     if( typeExtends( elemsT, Type.Data.Any ) )
     {
-        if( typeExtends( elemsT, Type.Data.Pair( Type.Data.Any, Type.Data.Any ) ) ) return pnilPairData as any;
-        return pnilData as any;
+        if( typeExtends( elemsT, Type.Data.Pair( Type.Data.Any, Type.Data.Any ) ) )
+            return punsafeConvertType( pnilPairData, list( elemsT ) ) as any;
+        return punsafeConvertType( pnilData, list( elemsT ) ) as any;
     }
 
     return new Term<PList<ToPType<ElemsT>>>(

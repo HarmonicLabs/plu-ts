@@ -8,7 +8,7 @@ import UPLCConst from "../../../UPLC/UPLCTerms/UPLCConst";
 import { pListToData, punListData } from "../../Prelude/Builtins";
 import Term from "../../Term";
 import Type, { ToPDataType, ToPType } from "../../Term/Type";
-import { dataTypeExtends } from "../../Term/Type/utils";
+import { dataTypeExtends } from "../../Term/Type/extension";
 import PList from "../PList";
 import { DataFromPData, DataToPData, inferDataValueType } from "./conversion";
 

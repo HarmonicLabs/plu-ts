@@ -32,7 +32,7 @@ export default class UPLCVar
 
     clone(): UPLCVar
     {
-        return new UPLCVar( this.deBruijn );
+        return new UPLCVar( this.deBruijn.clone() );
     }
 
 }

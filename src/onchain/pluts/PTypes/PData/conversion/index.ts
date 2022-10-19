@@ -1,32 +1,36 @@
-import PData from "."
-import BasePlutsError from "../../../../errors/BasePlutsError"
-import Data, { isData } from "../../../../types/Data"
-import DataB from "../../../../types/Data/DataB"
-import DataConstr from "../../../../types/Data/DataConstr"
-import DataI from "../../../../types/Data/DataI"
-import DataList from "../../../../types/Data/DataList"
-import DataMap from "../../../../types/Data/DataMap"
-import DataPair from "../../../../types/Data/DataPair"
-import JsRuntime from "../../../../utils/JsRuntime"
-import { punsafeConvertType } from "../../Syntax"
-import Term from "../../Term"
-import Type, { anyStruct, bool, bs, ConstantableTermType, DataType, int, list, pair, str, struct, StructType, ToPType, tyVar, unit } from "../../Term/Type"
-import { typeExtends } from "../../Term/Type/extension"
-import { isConstantableStructDefinition, isConstantableStructType, isConstantableTermType, isDataType } from "../../Term/Type/kinds"
-import { termTypeToString } from "../../Term/Type/utils"
-import PBool from "../PBool"
-import PByteString from "../PByteString"
-import PInt from "../PInt"
-import PList from "../PList"
-import PPair from "../PPair"
-import PString from "../PString"
-import { PStruct } from "../PStruct"
-import PUnit from "../PUnit"
-import PDataBS from "./PDataBS"
-import PDataConstr from "./PDataConstr"
-import PDataInt from "./PDataInt"
-import PDataList from "./PDataList"
-import PDataMap from "./PDataMap"
+import PData from ".."
+import BasePlutsError from "../../../../../errors/BasePlutsError"
+import Data, { isData } from "../../../../../types/Data"
+import DataB from "../../../../../types/Data/DataB"
+import DataConstr from "../../../../../types/Data/DataConstr"
+import DataI from "../../../../../types/Data/DataI"
+import DataList from "../../../../../types/Data/DataList"
+import DataMap from "../../../../../types/Data/DataMap"
+import DataPair from "../../../../../types/Data/DataPair"
+import JsRuntime from "../../../../../utils/JsRuntime"
+import { pfstPair, ppairData } from "../../../Prelude/Builtins"
+import { pmap } from "../../../Prelude/List"
+import { phoist, plam, punsafeConvertType } from "../../../Syntax"
+import Term from "../../../Term"
+import Type, { anyStruct, bool, bs, ConstantableTermType, data, DataType, int, list, pair, str, struct, StructType, TermType, ToPType, tyVar, unit } from "../../../Term/Type"
+import { typeExtends } from "../../../Term/Type/extension"
+import { isAliasType, isConstantableStructDefinition, isConstantableStructType, isConstantableTermType, isDataType, isStructType } from "../../../Term/Type/kinds"
+import { termTypeToString } from "../../../Term/Type/utils"
+import { unwrapAlias } from "../../PAlias"
+import PBool from "../../PBool"
+import PByteString from "../../PByteString"
+import { TermFn } from "../../PFn/PLam"
+import PInt from "../../PInt"
+import PList, { pDataList } from "../../PList"
+import PPair from "../../PPair"
+import PString from "../../PString"
+import { PStruct } from "../../PStruct"
+import PUnit from "../../PUnit"
+import PDataBS from "../PDataBS"
+import PDataConstr from "../PDataConstr"
+import PDataInt from "../PDataInt"
+import PDataList from "../PDataList"
+import PDataMap from "../PDataMap"
 
 export type PDataFromData<DataInstance extends Data> = 
     DataInstance extends DataI ? PDataInt :
@@ -92,42 +96,6 @@ export function inferDataValueType( dataValue: Data ): DataType
 
     throw JsRuntime.makeNotSupposedToHappenError(
         "'inferDataValueType' did not match any possible 'Data' constructor"
-    );
-}
-
-export function getToDataForType<T extends ConstantableTermType | StructType>( t: T )
-    :( term: Term<ToPType<T>> ) => Term<PData>
-{
-    if( typeExtends( t, int ) )     return PInt.toData as any;
-    if( typeExtends( t, bs  ) )     return PByteString.toData as any;
-    if( typeExtends( t, str ) )     return PString.toData as any;
-    if( typeExtends( t, unit ) )    return PUnit.toData as any;
-    if( typeExtends( t, bool ) )    return PBool.toData as any;
-    
-    const a = tyVar("a");
-
-    if(
-        typeExtends( t, list( a ) ) &&
-        isDataType( t[1] )
-    )                               return PList.toData as any;
-
-    const b = tyVar("b");
-
-    if(
-        typeExtends( t, pair(a,b) ) &&
-        isDataType( t[1] ) &&
-        isDataType( t[2] )
-    )                               return PPair.toData as any;
-    if(
-        typeExtends( t, struct( anyStruct ) ) &&
-        t[1] !== anyStruct
-    ) return ( ( structTerm: Term<PStruct<any>> ) => punsafeConvertType( structTerm, Type.Data.Any ) ) as any;
-
-    /**
-     * @todo add proper error
-     */
-    throw new BasePlutsError(
-        "'getToDataForType'; type '" + termTypeToString( t ) + "' cannot be converted to data"
     );
 }
 

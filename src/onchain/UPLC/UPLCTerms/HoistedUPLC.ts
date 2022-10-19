@@ -6,7 +6,8 @@ import JsRuntime from "../../../utils/JsRuntime";
 import UPLCEncoder from "../UPLCEncoder";
 import UPLCProgram from "../UPLCProgram";
 import UPLCVersion from "../UPLCProgram/UPLCVersion";
-import UPLCTerm, { getHoistedTerms, isClosedTerm } from "../UPLCTerm";
+import UPLCTerm, { getHoistedTerms, isClosedTerm, showUPLC } from "../UPLCTerm";
+import Application from "./Application";
 
 /**
  * basically an insertion sort;
@@ -110,8 +111,29 @@ export default class HoistedUPLC
 
     readonly UPLC: UPLCTerm;
 
-    constructor( UPLC: UPLCTerm )
+    constructor( UPLC_: UPLCTerm )
     {
+        const UPLC = UPLC_.clone();
+        /*
+        if( !isClosedTerm( UPLC ) )
+        {
+            const deps = getSortedHoistedSet( getHoistedTerms( UPLC ) )
+            let withDeps = UPLC;
+
+            for( let i = deps.length - 1; i >= 0; i--)
+            {
+                withDeps = new Application(
+                    withDeps,
+                    deps
+                )
+            }
+
+            console.log( showUPLC( UPLC ) );
+            console.log( showUPLC(
+                UPLC
+            ) );
+        }
+        //*/
         JsRuntime.assert(
             isClosedTerm( UPLC ),
             /**
@@ -124,9 +146,18 @@ export default class HoistedUPLC
 
         this._deps = getSortedHoistedSet( getHoistedTerms( UPLC ) );
 
-        this.UPLC = UPLC;
+        this.UPLC = UPLC_.clone();
         // encodes as default version term (1.0.0)
-        this._compiled = UPLCEncoder.compile( new UPLCProgram( new UPLCVersion( 1, 0 ,0 ), UPLC ));
+        this._compiled = UPLCEncoder.compile(
+            new UPLCProgram( 
+                new UPLCVersion( 1, 0 ,0 ),
+                /**!!! IMPORTANT !!!
+                 * ```UPLCEncoder.compile``` modifies the UPLC
+                 * ```clone``` here is essential
+                **/
+                UPLC.clone()
+            )
+        );
     }
 
     clone(): HoistedUPLC

@@ -7,9 +7,9 @@ import PData from "../PTypes/PData";
 import { getFromDataForType } from "../PTypes/PData/conversion";
 import PLam, { TermFn } from "../PTypes/PFn/PLam";
 import PUnit, { pmakeUnit } from "../PTypes/PUnit";
-import { papp, pdelay, perror, pfn, pforce } from "../Syntax";
+import { papp, pdelay, perror, pfn, pforce, punsafeConvertType } from "../Syntax";
 import Term from "../Term";
-import Type, { bool, data, unit } from "../Term/Type";
+import Type, { bool, data, delayed, unit } from "../Term/Type";
 import { typeExtends } from "../Term/Type/extension";
 import { isConstantableTermType, isLambdaType } from "../Term/Type/kinds";
 import { termTypeToString } from "../Term/Type/utils";
@@ -54,7 +54,7 @@ export function makeValidator( typedValidator: Term<PLam<PDataRepresentable,PLam
         if( !typeExtends( expectedBool, bool ) ) throw err;
 
         return pforce(
-            pstrictIf( Type.Any ).$(
+            pstrictIf( delayed( unit ) ).$(
                 papp(
                     papp(
                         papp(
@@ -66,9 +66,8 @@ export function makeValidator( typedValidator: Term<PLam<PDataRepresentable,PLam
                     getFromDataForType( ctxType )( rawCtx )
                 )
             )
-            .$( pmakeUnit() )
-            .$( pdelay( perror( unit ) )
-            )
+            .$( punsafeConvertType( pmakeUnit(), delayed( unit ) ) )
+            .$( pdelay( perror( unit ) ) )
         ) as Term<PUnit>;
     });
 }

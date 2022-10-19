@@ -8,7 +8,7 @@ import UPLCFlatUtils from "../../../utils/UPLCFlatUtils";
 import Data, { isData } from "../../../types/Data";
 import UPLCProgram from "../UPLCProgram";
 import UPLCVersion from "../UPLCProgram/UPLCVersion";
-import  UPLCTerm, { getHoistedTerms, isPureUPLCTerm, PureUPLCTerm } from "../UPLCTerm";
+import  UPLCTerm, { getHoistedTerms, isPureUPLCTerm, PureUPLCTerm, showUPLC } from "../UPLCTerm";
 import Application from "../UPLCTerms/Application";
 import Builtin from "../UPLCTerms/Builtin";
 import { getNRequiredForces, isUPLCBuiltinTag } from "../UPLCTerms/Builtin/UPLCBuiltinTag";
@@ -295,7 +295,7 @@ export default class UPLCEncoder
 
         const uplc = program.body;
         
-        const progrTerm = replaceHoistedTermsInplace( uplc );
+        const progrTerm = replaceHoistedTermsInplace( uplc.clone() );
         if( !isPureUPLCTerm( progrTerm ) )
         {
             throw JsRuntime.makeNotSupposedToHappenError(

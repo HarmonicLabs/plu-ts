@@ -5,7 +5,7 @@ import Application from "../../UPLC/UPLCTerms/Application";
 import Builtin from "../../UPLC/UPLCTerms/Builtin";
 import UPLCConst from "../../UPLC/UPLCTerms/UPLCConst";
 import PType from "../PType";
-import PBool, { pBool } from "../PTypes/PBool";
+import PBool from "../PTypes/PBool";
 import PByteString from "../PTypes/PByteString";
 import PData from "../PTypes/PData";
 import PDataBS from "../PTypes/PData/PDataBS";
@@ -17,7 +17,7 @@ import PFn from "../PTypes/PFn";
 import PLam, { TermFn } from "../PTypes/PFn/PLam";
 import PInt, { pInt } from "../PTypes/PInt";
 import PList from "../PTypes/PList";
-import PPair, { PMap } from "../PTypes/PPair";
+import PPair from "../PTypes/PPair";
 import PString from "../PTypes/PString";
 import PUnit from "../PTypes/PUnit";
 import { papp, phoist, pdelay, pfn, pforce, plam, punsafeConvertType } from "../Syntax";
@@ -27,8 +27,22 @@ import TermInt, { addPIntMethods } from "./UtilityTerms/TermInt";
 import TermStr, { addPStringMethods } from "./UtilityTerms/TermStr";
 import Term from "../Term";
 import { getNRequiredLambdaArgs } from "../Term/Type/utils";
-import Type, { TermType, ToPType, DataType, ToPDataType, delayed, bool } from "../Term/Type";
+import Type, { TermType, ToPType, DataType, ToPDataType, delayed, bool, lam } from "../Term/Type";
 import JsRuntime from "../../../utils/JsRuntime";
+import Lambda from "../../UPLC/UPLCTerms/Lambda";
+import UPLCVar from "../../UPLC/UPLCTerms/UPLCVar";
+import { PMap } from "../PTypes/PMap";
+
+function pBool( bool: boolean ): TermBool
+{
+    return addPBoolMethods(
+        new Term<PBool>(
+            Type.Bool,
+            _dbn => UPLCConst.bool( bool ),
+            true
+        )
+    );
+}
 
 export function addApplications<Ins extends [ PType, ...PType[] ], Out extends PType, TermOutput extends TermFn< Ins, Out > = TermFn< Ins, Out >>
     (
@@ -1204,7 +1218,7 @@ export function pListToData<DataListElemT extends DataType>
 {
     return addApplications<[ PList<ToPDataType<DataListElemT>> ], PDataList<ToPDataType<DataListElemT>>>(
         new Term(
-            Type.List( dataListElemT ),
+            Type.Lambda( Type.List( dataListElemT ), Type.Data.List( dataListElemT ) ),
             _dbn => Builtin.listData
         )
     );
@@ -1219,8 +1233,8 @@ export const pIntToData: TermFn<[ PInt ], PDataInt >
     );
 
 export const pBSToData: TermFn<[ PByteString ], PDataBS > 
-    = addApplications<[ PByteString ], PData >(
-        new Term<PLam<PByteString, PData >>(
+    = addApplications<[ PByteString ], PDataBS >(
+        new Term<PLam<PByteString, PDataBS >>(
             Type.Lambda( Type.BS, Type.Data.BS ),
             _dbn => Builtin.bData
         )
@@ -1389,3 +1403,22 @@ export const pverifySecp256k1Schnorr: TermFn<[ PByteString, PByteString, PByteSt
             _dbn => Builtin.verifySchnorrSecp256k1Signature
         )
     );
+
+// --------------------------------------------------------------------------------------------------------------------- //
+// ---------------------------------------------------- [ hoisted ] ---------------------------------------------------- //
+// --------------------------------------------------------------------------------------------------------------------- //
+
+export function pid<TermT extends TermType>( termT: TermT ): TermFn<[ ToPType<TermT> ], ToPType<TermT>>
+{
+    const idTerm = new Term<PLam<ToPType<TermT>,ToPType<TermT>>>(
+        lam( termT, termT ),
+        _dbn => new Lambda( new UPLCVar(0) )
+    );
+    return phoist(
+        ObjectUtils.defineReadOnlyProperty(
+            idTerm,
+            "$",
+            ( whatever: Term<ToPType<TermT>> ) => papp( idTerm, whatever )
+        )
+    ) as any;
+}

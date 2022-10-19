@@ -285,7 +285,7 @@ export function getUPLCVarRefsInTerm( term: UPLCTerm, varDeBruijn: number | bigi
     return _getUPLCVarRefsInTerm( BigInt( varDeBruijn ), term, 0 );
 }
 
-export function getHoistedTerms( t: UPLCTerm ): HoistedUPLC[]
+export function getHoistedTerms( t: Readonly<UPLCTerm> ): HoistedUPLC[]
 {
     if( !isUPLCTerm( t ) ) return [];
 
@@ -302,7 +302,7 @@ export function getHoistedTerms( t: UPLCTerm ): HoistedUPLC[]
     if( t instanceof Force )        return getHoistedTerms( t.termToForce );
     if( t instanceof ErrorUPLC )    return [];
     if( t instanceof Builtin )      return [];
-    if( t instanceof HoistedUPLC )  return [ t, ...t.dependencies ];
+    if( t instanceof HoistedUPLC )  return [ ...t.dependencies.map( dep => dep.clone() ), t.clone() ];
 
     return [];
 }

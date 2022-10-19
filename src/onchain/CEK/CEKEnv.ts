@@ -33,7 +33,6 @@ export default class CEKEnv
             dbn instanceof Integer ? Number( dbn.asBigInt ) :
             typeof dbn === "bigint" ? Number( dbn ):
             dbn;
-
         if( (this._env.length - _dbn) < 1 ) return undefined;
         return this._env[ this._env.length - 1 - _dbn ];
     }

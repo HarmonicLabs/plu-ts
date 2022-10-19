@@ -6,13 +6,14 @@ import { pConstrToData } from "../../Prelude/Builtins";
 import { PDataRepresentable } from "../../PType";
 import { punsafeConvertType } from "../../Syntax";
 import Term from "../../Term";
-import Type, { Alias, ConstantableStructType, ConstantableTermType, GenericStructType, int, PrimType, struct, structType, StructType, TermType, ToPType, tyVar } from "../../Term/Type";
+import Type, { Alias, aliasType, ConstantableStructType, ConstantableTermType, GenericStructType, int, PrimType, struct, structType, StructType, TermType, ToPType, tyVar } from "../../Term/Type";
 import { typeExtends } from "../../Term/Type/extension";
 import { isAliasType, isConstantableStructDefinition, isConstantableTermType, isStructType, isWellFormedType } from "../../Term/Type/kinds";
-import { structDefToString, termTypeToString } from "../../Term/Type/utils";
+import { cloneTermType, structDefToString, termTypeToString } from "../../Term/Type/utils";
 import palias, { PAlias } from "../PAlias";
 import PData from "../PData";
-import { getToDataForType } from "../PData/conversion";
+import { getToDataForType } from "../PData/conversion/getToDataTermForType";
+import { TermFn } from "../PFn/PLam";
 import { pInt } from "../PInt";
 import { pList } from "../PList";
 
@@ -138,9 +139,13 @@ export function structDefEq( a: StructDefinition, b: StructDefinition ): boolean
 export type PStruct<SDef extends ConstantableStructDefinition> = {
     new(): _PStruct
 
-    termType: [ typeof structType, SDef ];
-    type: [ typeof structType, SDef ];
+    readonly termType: [ typeof structType, SDef ];
+    readonly type: [ typeof structType, SDef ];
+
+    readonly fromDataTerm: TermFn<[PData],PStruct<SDef>>
     fromData: ( data: Term<PData> ) => Term<PStruct<SDef>>;
+
+    readonly toDataTerm: TermFn<[PStruct<SDef>],PData>
     toData: ( data: Term<PStruct<SDef>> ) => Term<PData>;
 
 } & PDataRepresentable & {
@@ -154,9 +159,11 @@ function isStructInstanceOfDefinition<SCtorDef extends StructCtorDef>
     : structInstance is StructInstance<SCtorDef>
 {
     const jsStructFieldsNames = Object.keys( structInstance );
+    const defKeys = Object.keys( definition );
     
     return (
-        jsStructFieldsNames.length === Object.keys( definition ).length &&
+        jsStructFieldsNames.length === defKeys.length &&
+        defKeys.every( defFieldName => jsStructFieldsNames.includes( defFieldName ) ) &&
         jsStructFieldsNames.every( fieldKey =>
             definition[fieldKey] !== undefined &&
             // every field's value is a Term
@@ -267,8 +274,13 @@ export default function pstruct<StructDef extends ConstantableStructDefinition>(
                 );
 
                 const thisCtorDef = def[ctorName];
-                const jsStructFieldsNames = Object.keys( jsStruct );
+                // const jsStructFieldsNames = Object.keys( jsStruct );
+                
+                // order of fields in the 'jsStruct' migth be different than the order of the definiton
+                // to preserve the order we need to use the keys got form the ctor definition
+                const ctorDefFieldsNames = Object.keys( thisCtorDef );
 
+                // still we must be sure that the jsStruct has at least all the fields
                 JsRuntime.assert(
                     isStructInstanceOfDefinition( jsStruct, thisCtorDef ),
                     "the fields passed do not match the struct definition for constructor: " + ctorName
@@ -277,7 +289,9 @@ export default function pstruct<StructDef extends ConstantableStructDefinition>(
                 const dataReprTerm =
                     pConstrToData
                         .$( pInt( i ) )
-                        .$( pList( Type.Data.Any )( jsStructFieldsNames.map<Term<any>>(
+                        .$( pList( Type.Data.Any )(
+                            
+                            ctorDefFieldsNames.map<Term<any>>(
                                 fieldKey => {
                                     return getToDataForType( thisCtorDef[ fieldKey ] )( jsStruct[ fieldKey ] )
                                 })
@@ -361,7 +375,13 @@ function typeofGenericStruct(
 
     for( let i = 0; i < nArgs; i++ )
     {
-        aliases[i] = palias( int ).type;
+        aliases[i] = Object.freeze([
+            aliasType,
+            Object.freeze({
+                id: Symbol(),
+                type: int
+            })
+        ]);
         replacements[i] = tyVar();
     };
 
