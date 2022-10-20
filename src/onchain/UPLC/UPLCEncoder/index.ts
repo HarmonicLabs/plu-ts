@@ -512,7 +512,7 @@ export default class UPLCEncoder
                 // set list element
                 listElem.append(
                     this.encodeConstValue(
-                        value
+                        value[i]
                     )
                 );
                 

@@ -136,7 +136,7 @@ function intBinOpToInt( builtin: Builtin )
 export type IntBinOPToBool = Term< PLam< PInt, PLam< PInt, PInt >>>
 & {
     $: ( input: Term<PInt> ) => 
-        Term<PLam<PInt,PInt>>
+        Term<PLam<PInt,PBool>>
         & {
             $: ( input: Term<PInt> ) => 
                 TermBool

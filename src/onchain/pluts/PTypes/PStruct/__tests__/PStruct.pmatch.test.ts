@@ -1,8 +1,8 @@
-import pstruct, { pgenericStruct, PStruct } from ".."
+import pstruct, { pgenericStruct } from ".."
 import evalScript from "../../../../CEK";
 import UPLCConst from "../../../../UPLC/UPLCTerms/UPLCConst";
-import { ConstantableTermType, int, PrimType, str } from "../../../Term/Type";
-import PInt, { pInt } from "../../PInt";
+import { int, str } from "../../../Term/Type";
+import { pInt } from "../../PInt";
 import pmatch from "../pmatch";
 
 const PMaybe = pgenericStruct( tyArg => {

@@ -60,7 +60,7 @@ describe("scriptToJsonFormat", () => {
                     ).eq( punBData.$( redeemerBS ) )
                 )
                 .then( pmakeUnit() )
-                .else( perror( unit ) )
+                .else( perror( unit, "wrong BS" ) )
             }
         );
 
@@ -110,15 +110,15 @@ describe("scriptToJsonFormat", () => {
 
                                     pevery( PTxInInfo.type )
                                     .$( plam( PTxInInfo.type, bool )(
-                                        txInput =>
-                                            pmatch( txInput )
+                                        txInputToSelf =>
+                                            pmatch( txInputToSelf )
                                             .onPTxInInfo( rawTxIn => rawTxIn.extract("resolved").in( ({resolved}) =>
 
                                                 pmatch( resolved )
                                                 .onPTxOut( rawResolved => rawResolved.extract("datumHash").in( ({datumHash}) =>
                                                     pmatch( datumHash )
-                                                    .onJust( _ => pBool( true ) )
-                                                    .onNothing( _ => pBool( false ) )
+                                                    .onJust( _ =>       pBool( true  ) )
+                                                    .onNothing( _ =>    pBool( false ) )
                                                 ))
                                                 
                                             )) as Term<PBool>

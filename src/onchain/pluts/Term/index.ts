@@ -1,14 +1,19 @@
 import { isCloneable } from "../../../types/interfaces/Cloneable";
 import JsRuntime from "../../../utils/JsRuntime";
 import ObjectUtils from "../../../utils/ObjectUtils";
-import UPLCTerm, { isClosedTerm, showUPLC } from "../../UPLC/UPLCTerm";
+import UPLCTerm from "../../UPLC/UPLCTerm";
 import HoistedUPLC from "../../UPLC/UPLCTerms/HoistedUPLC";
 import UPLCConst from "../../UPLC/UPLCTerms/UPLCConst";
 import PType from "../PType";
-import { unwrapAlias } from "../PTypes/PAlias";
 import { StructCtorDef, StructDefinition } from "../PTypes/PStruct";
-import { anyStruct, FromPType, structType, TermType } from "./Type";
+import { Alias, anyStruct, ConstantableTermType, FromPType, structType, TermType } from "./Type";
 import { isAliasType, isStructType, isWellFormedType } from "./Type/kinds";
+
+// avoid circular ref
+function unwrapAlias<T extends ConstantableTermType>( aliasedType: Alias<symbol, T> ): T
+{
+    return aliasedType[1].type;
+}
 
 // avoid circular ref
 function ctorDefToString( ctorDef: StructCtorDef ): string

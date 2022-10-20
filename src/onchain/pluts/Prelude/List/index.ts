@@ -3,7 +3,7 @@ import PBool, { pBool } from "../../PTypes/PBool";
 import PLam, { TermFn } from "../../PTypes/PFn/PLam";
 import PInt, { pInt } from "../../PTypes/PInt";
 import PList, { pnil } from "../../PTypes/PList";
-import { papp, perror, pfn, phoist, plam, plet, precursive } from "../../Syntax";
+import { papp, perror, pfn, phoist, plam, plet, precursive, punsafeConvertType } from "../../Syntax";
 import Term from "../../Term";
 import Type, { bool, ConstantableTermType, fn, lam, list, PrimType, TermType, ToPType } from "../../Term/Type";
 import { pand, pchooseList, phead, pif, pisEmpty, pprepend, pstrictIf, ptail } from "../Builtins";
@@ -68,42 +68,38 @@ export function precursiveList<ReturnT  extends TermType, PElemsT extends PType 
                     fn([ finalType, elemsT, list( elemsT ) ], returnT ),
                     list( elemsT )
                 ], 
-                returnT 
+                returnT
             )
-            ( ( self, matchNil, matchCons, list ) => pchooseList( elemsT, returnT ).$( list )
-                .caseNil(
-                    papp(
-                        matchNil,
-                        papp(
-                            papp(
-                                self,
-                                matchNil
-                            ),
-                            matchCons
-                        )
-                    ) as any
-                )
-                .caseCons(
+            // for some reason the Z combinators loops
+            // if the `list` paramter is made implicit
+            ( ( self, matchNil, matchCons, list ) => 
+                plet( 
                     papp(
                         papp(
-                            papp(
-                                matchCons,
-                                papp(
-                                    papp(
-                                        self,
-                                        matchNil
-                                    ),
-                                    matchCons
-                                )
-                            ),
-                            phead( elemsT ).$( list )
+                            self,
+                            matchNil
                         ),
-                        ptail( elemsT ).$( list )
-                    ) as Term<ToPType<ReturnT>>
-                )
-            ) as any
-        ) as any
-    );
+                        matchCons
+                    )
+                ).in( finalSelf =>
+                    pmatchList( returnT )
+                    .$(
+                        papp(
+                            matchNil,
+                            finalSelf
+                        ) as any
+                    )
+                    .$(
+                        papp(
+                            matchCons,
+                            finalSelf
+                        )
+                    )
+                    .$( list )
+                ) as any
+            )
+        )
+    ) as any;
 }
 
 export function pindexList<ElemsT extends ConstantableTermType>( elemsT: ElemsT )
@@ -152,44 +148,28 @@ export function pfindList<ElemsT extends ConstantableTermType, PElemsT extends T
     const PMaybeElem = PMaybe( elemsT ) as PMaybeT<PElemsT>;
 
     return phoist(
-        precursive<PLam<PElemsT,PBool>, PLam<PList<PElemsT>,PMaybeT<PElemsT>>>(
-            pfn(
-                [
-                    Type.Fn([ Type.Lambda( elemsT, Type.Bool ), Type.List( elemsT ) ], PMaybeElem.type ),
-                    Type.Lambda( elemsT, Type.Bool ),
-                    Type.List( elemsT )
-                ],
-                PMaybeElem.type
-            )(
-                ( self, predicate, list ) => {
-
-                    return pif( PMaybeElem.type ).$( pisEmpty.$( list ) )
-                    .$( PMaybe( elemsT ).Nothing({}) )
-                    .$(
-                        plet<PElemsT, Term<PElemsT>>( phead( elemsT ).$( list ) as any ).in(
-                            head => 
-                                pif( PMaybeElem.type ).$(
-                                    papp(
-                                        predicate,
-                                        head
-                                    )
-                                )
-                                .then( PMaybeElem.Just({ val: head as any }) )
-                                .else(
-                                    papp(
-                                        papp(
-                                            self,
-                                            predicate
-                                        ),
-                                        ptail( elemsT ).$( list )
-                                    )
-                                )
-                        )
-                    );
-                }
-            ) as any
+        precursive(
+            pfn([
+                fn([
+                    lam( elemsT, bool ),
+                    list( elemsT )
+                ],  PMaybeElem.type ),
+                lam( elemsT, bool ),
+                list( elemsT )
+            ],  PMaybeElem.type )
+            (( self, predicate, _list ) => 
+                pif( PMaybeElem.type ).$( pisEmpty.$( _list ) )
+                .then( PMaybeElem.Nothing({}) )
+                .else(
+                    plet( phead( elemsT ).$( _list ) ).in( head => 
+                        pif( PMaybeElem.type ).$( papp( predicate, head ) )
+                        .then( PMaybeElem.Just({ val: head as any }))
+                        .else( papp( papp( self, predicate) , ptail( elemsT ).$( _list ) ) )
+                    )
+                )
+            )
         )
-    );
+    ) as any;
 }
 
 
@@ -313,5 +293,39 @@ export function pmap<FromT extends ConstantableTermType, ToT extends Constantabl
             ) as any;
             // .$( _list )
         })
+    ) as any;
+}
+
+export function _pmap<FromT extends ConstantableTermType, ToT extends ConstantableTermType>( fromT: FromT, toT: ToT )
+    : TermFn<[ PLam<ToPType<FromT>, ToPType<ToT>>, PList<ToPType<FromT>> ], PList<ToPType<ToT>>>
+{
+    return phoist(
+        precursive(
+            pfn([
+                fn([
+                    lam( fromT, toT ),
+                    list( fromT )
+                ],  list( toT ) ),
+                lam( fromT, toT ),
+                list( fromT )
+            ],  list( toT ) )
+            ((self, f, _list) => 
+            
+                pif( list( toT ) ).$( pisEmpty.$( _list ) )
+                .then( pnil( toT ) )
+                .else(
+                    pprepend( toT )
+                    .$(
+                        papp( f, phead( fromT ).$( _list ) ) as any
+                    )
+                    .$( 
+                        papp( 
+                            papp( self, f), 
+                            ptail( fromT ).$( _list )
+                        )
+                    )
+                )
+            )
+        )
     ) as any;
 }

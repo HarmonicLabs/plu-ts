@@ -140,7 +140,7 @@ function getFinalPMatchExpr<CtorDefs extends ConstantableStructCtorDef[]>
 
     let res = pif( returnT ).$( pInt( last ).eq( ctorIdx ) )
         .then( punsafeConvertType( results[ last ], returnT ) )
-        .else( perror( returnT ) );
+        .else( perror( returnT , "unmatched constructor; ctorIdx was", { ctorIdx: ctorIdx } ) );
 
     for( let i = callbacks.length - 2; i >= 0; i-- )
     {

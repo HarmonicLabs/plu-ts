@@ -22,7 +22,7 @@ export default class PartialBuiltin
 
     clone(): PartialBuiltin
     {
-        return new PartialBuiltin( this._tag, this._args );
+        return new PartialBuiltin( this._tag, this._args.map( arg =>  arg.clone() ) );
     }
 
     get nMissingArgs(): number

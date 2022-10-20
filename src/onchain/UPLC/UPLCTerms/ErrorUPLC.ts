@@ -11,14 +11,16 @@ export default class ErrorUPLC
     } 
 
     public msg?: string;
+    public addInfos?: object
     
-    constructor( msg?: string )
+    constructor( msg?: string, addInfos?: object )
     {
         this.msg = msg;
+        this.addInfos = addInfos;
     };
 
     clone(): ErrorUPLC
     {
-        return new ErrorUPLC(this.msg);
+        return new ErrorUPLC(this.msg, this.addInfos);
     }
 }

@@ -447,10 +447,10 @@ export function plet<PVarT extends PType, SomeExtension extends object>( varValu
     };
 }
 
-export function perror<T extends TermType>( type: T ): Term<ToPType<T>>
+export function perror<T extends TermType>( type: T , msg: string | undefined = undefined, addInfos: object | undefined = undefined): Term<ToPType<T>>
 {
     return new Term(
         type as any,
-        _dbn => new ErrorUPLC
+        _dbn => new ErrorUPLC( msg, addInfos )
     );
 }

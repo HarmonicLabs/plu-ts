@@ -50,10 +50,10 @@ export default function evalScript( _term: UPLCTerm | Term<any> ): PureUPLCTerm
 
     function compute( term: UPLCTerm, env: CEKEnv ): void
     {
-        Debug.log(
+        console.log(
             "----------------- COMPUTE -----------------",
-            "\nframes: ", frames,
-            "\nenv: ", env,
+            "\nframes: ", (frames as any)._frames,
+            "\nenv: ", (env as any)._env,
             "\nterm: ", term,
             "\n-------------------------------------------"
         );
@@ -138,7 +138,7 @@ export default function evalScript( _term: UPLCTerm | Term<any> ): PureUPLCTerm
 
     function returnCEK( v: UPLCTerm ): void
     {
-        Debug.log(
+        console.log(
             "----------------- RETURN -----------------",
             "\nframes: ", (frames as any)._frames,
             "\nvalue: ", v,
@@ -242,7 +242,7 @@ export default function evalScript( _term: UPLCTerm | Term<any> ): PureUPLCTerm
                 topFrame.func instanceof PartialBuiltin 
             )
             {
-                let bn = topFrame.func
+                let bn = topFrame.func.clone();
                 if( bn instanceof Builtin )
                 {
                     bn = new PartialBuiltin( bn.tag );
@@ -257,9 +257,9 @@ export default function evalScript( _term: UPLCTerm | Term<any> ): PureUPLCTerm
             }
         }
 
-        steps.push( new ReturnStep( new ErrorUPLC("ReturnStep/LApp") ) )
+        steps.push( new ReturnStep( new ErrorUPLC("ReturnStep/LApp", { topFrame: topFrame } ) ) )
         return;
     }
 
-    return (steps.pop() as ReturnStep).value ?? new ErrorUPLC("steps.pop() not a ReturnStep");
+    return (steps.pop() as ReturnStep).value ?? new ErrorUPLC("steps.pop() was not a ReturnStep");
 }
