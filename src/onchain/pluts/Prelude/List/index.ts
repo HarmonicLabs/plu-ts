@@ -6,7 +6,7 @@ import PList, { pnil } from "../../PTypes/PList";
 import { papp, perror, pfn, phoist, plam, plet, precursive, punsafeConvertType } from "../../Syntax";
 import Term from "../../Term";
 import Type, { bool, ConstantableTermType, fn, lam, list, PrimType, TermType, ToPType } from "../../Term/Type";
-import { pand, pchooseList, phead, pif, pisEmpty, pprepend, pstrictIf, ptail } from "../Builtins";
+import { pand, pchooseList, phead, pif, pisEmpty, plessInt, por, pprepend, pstrictIf, ptail } from "../Builtins";
 import PMaybe, { PMaybeT } from "../PMaybe";
 
 
@@ -118,7 +118,13 @@ export function pindexList<ElemsT extends ConstantableTermType>( elemsT: ElemsT 
             )(
                 ( self, list, idx ) => 
 
-                    pif( elemsT ).$( pisEmpty.$( list ) )
+                    pif( elemsT ).$(
+                        por
+                        .$( pisEmpty.$( list ) )
+                        .$( 
+                            plessInt.$( idx ).$( pInt( 0 ) ) 
+                        ) 
+                    )
                     .then( perror( elemsT ) )
                     .else(
 

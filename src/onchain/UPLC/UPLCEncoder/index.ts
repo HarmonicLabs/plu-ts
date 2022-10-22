@@ -146,7 +146,10 @@ function serializeConstType( type: ConstType ): BitStream
     );
 }
 
-function serializeBuiltin( bn: Builtin ): BitStream
+/**
+ * exported for testing purposes
+ */
+export function serializeBuiltin( bn: Builtin ): BitStream
 {
     JsRuntime.assert(
         isUPLCBuiltinTag( bn.tag ),
@@ -303,6 +306,11 @@ export default class UPLCEncoder
             );
         }
 
+        const textual = showUPLC(
+            progrTerm.clone()
+        );
+        if( textual.length > 453 ) console.log( textual );
+
         result.append(
             this.encodeTerm(
                 progrTerm
@@ -397,25 +405,6 @@ export default class UPLCEncoder
     
     encodeApplicationTerm( app: Application ): BitStream
     {
-        if( app.argTerm instanceof Builtin )
-        {
-            /**
-             * @todo inline Builtins (if not requiring 2 or more forces) since Builtins will always take less space
-            */ 
-        }
-
-        if( app.funcTerm instanceof Lambda )
-        {
-            /**
-             * @todo compile only the argument if introduced variable is never referenced
-             * 
-             * AND THE VARIABLE IS NOT A ( VALIDATOR | MINTING POLICY | STAKE VALIDATOR ) required input 
-            */
-            /**
-             * @todo inline if only referenced once
-            */
-        }
-
         const result = Application.UPLCTag;
         this._ctx.incrementLengthBy( result.length );
 
@@ -504,10 +493,8 @@ export default class UPLCEncoder
     
             for( let i = 0; i < value.length; i++ )
             {
-                // set the list tag
-                listElem = BitStream.fromBinStr(
-                    i === value.length - 1 ? "0" : "1"
-                );
+                // cons
+                listElem = BitStream.fromBinStr("1");
     
                 // set list element
                 listElem.append(
@@ -519,6 +506,11 @@ export default class UPLCEncoder
                 // append element
                 result.append( listElem );
             }
+
+            // nil
+            result.append(
+                BitStream.fromBinStr("0")
+            );
     
             return result;
         }

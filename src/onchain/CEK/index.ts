@@ -50,7 +50,7 @@ export default function evalScript( _term: UPLCTerm | Term<any> ): PureUPLCTerm
 
     function compute( term: UPLCTerm, env: CEKEnv ): void
     {
-        console.log(
+        Debug.log(
             "----------------- COMPUTE -----------------",
             "\nframes: ", (frames as any)._frames,
             "\nenv: ", (env as any)._env,
@@ -138,7 +138,7 @@ export default function evalScript( _term: UPLCTerm | Term<any> ): PureUPLCTerm
 
     function returnCEK( v: UPLCTerm ): void
     {
-        console.log(
+        Debug.log(
             "----------------- RETURN -----------------",
             "\nframes: ", (frames as any)._frames,
             "\nvalue: ", v,

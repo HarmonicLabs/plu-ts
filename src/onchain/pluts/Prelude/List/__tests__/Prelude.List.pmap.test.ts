@@ -1,35 +1,43 @@
 import { pmap, _pmap } from ".."
 import evalScript from "../../../../CEK"
 import { showUPLC } from "../../../../UPLC/UPLCTerm"
-import ErrorUPLC from "../../../../UPLC/UPLCTerms/ErrorUPLC"
 import { pInt } from "../../../PTypes/PInt"
 import { pList } from "../../../PTypes/PList"
-import compile from "../../../Script/compile"
+import { plam } from "../../../Syntax"
 import { int } from "../../../Term/Type"
 import { padd } from "../../Builtins"
 
 
 describe("pmap", () => {
 
+    const expected = evalScript(
+        pList( int )([3,4,5].map( pInt ) )
+    );
+
     test("addTwo", () => {
 
-        const addTwo = _pmap( int, int ).$( padd.$( pInt(2) ) );
+        const addTwo = pmap( int, int ).$( padd.$( pInt(2) ) );
 
-        console.log(
-            showUPLC(
-                addTwo.$( pList( int )([1,2,3].map( pInt ) ) )
-                .toUPLC(0)
-            )
-        );
-        
         expect(
             evalScript(
                 addTwo.$( pList( int )([1,2,3].map( pInt ) ) )
             )
         ).toEqual(
-            evalScript(
-                pList( int )([3,4,5].map( pInt ) )
-            )
+            expected
         )
-    })
+    });
+
+    test("addTwo lam", () => {
+
+        const addTwo = pmap( int, int ).$( plam( int, int )( x => pInt(2).add( x ) ) );
+
+        expect(
+            evalScript(
+                addTwo.$( pList( int )([1,2,3].map( pInt ) ) )
+            )
+        ).toEqual(
+            expected
+        )
+    });
+
 })

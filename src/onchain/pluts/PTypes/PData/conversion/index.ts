@@ -118,12 +118,10 @@ export function getFromDataForType<T extends ConstantableTermType | StructType>(
     if( typeExtends( t, unit ) )    return PUnit.fromData as any;
     if( typeExtends( t, bool ) )    return PBool.fromData as any;
 
-    const a = tyVar("a");
-
     const extendsConstData = ( _t: any ): boolean =>
         isDataType( _t ) || isConstantableStructType( _t );
 
-    if( typeExtends( t, list( a ) ) )
+    if( typeExtends( t, list( Type.Any ) ) )
     {
         if( isDataType( t[1] ) ) return PList.fromData as any;
         if( isConstantableStructType( t[1] as any ) )
@@ -132,10 +130,8 @@ export function getFromDataForType<T extends ConstantableTermType | StructType>(
         }
     }
 
-    const b = tyVar("b");
-
     if(
-        typeExtends( t, pair(a,b) ) &&
+        typeExtends( t, pair( Type.Any, Type.Any ) ) &&
         extendsConstData( t[1] ) &&
         extendsConstData( t[2] )
     )                               return PPair.fromData as any;

@@ -8,7 +8,7 @@ import ErrorUPLC from "../UPLCTerms/ErrorUPLC";
 import Builtin from "../UPLCTerms/Builtin";
 import JsRuntime from "../../../utils/JsRuntime";
 import HoistedUPLC from "../UPLCTerms/HoistedUPLC";
-import { constTypeToStirng } from "../UPLCTerms/UPLCConst/ConstType";
+import ConstType, { constListTypeUtils, constPairTypeUtils, constTypeEq, constTypeToStirng, ConstTyTag } from "../UPLCTerms/UPLCConst/ConstType";
 import { builtinTagToString, getNRequiredForces } from "../UPLCTerms/Builtin/UPLCBuiltinTag";
 import ConstValue from "../UPLCTerms/UPLCConst/ConstValue";
 import Integer from "../../../types/ints/Integer";
@@ -16,6 +16,7 @@ import ByteString from "../../../types/HexString/ByteString";
 import { isData } from "../../../types/Data";
 import dataToCbor from "../../../types/Data/toCbor";
 import Pair from "../../../types/structs/Pair";
+import { replaceHoistedTermsInplace } from "../UPLCEncoder";
 
 export type PureUPLCTerm 
     = UPLCVar
@@ -132,7 +133,7 @@ export function isClosedTerm( term: UPLCTerm ): boolean
     return _isClosedTerm( BigInt( 0 ) , term );
 }
 
-function showUPLCConstValue( v: ConstValue ): string
+export function showUPLCConstValue( v: ConstValue ): string
 {
     if( v === undefined ) return "()";
     if( v instanceof Integer ) return v.asBigInt.toString();
@@ -148,34 +149,58 @@ function showUPLCConstValue( v: ConstValue ): string
     );
 }
 
-export function showUPLC( t: UPLCTerm, dbn: number = 0 ): string
+export function showConstType( t: ConstType ): string
 {
-    const vars = "abcdefghilmopqrstuvzwxyjkABCDEFGHILJMNOPQRSTUVZWXYJK";
+    if( t[0] === ConstTyTag.list )
+    {
+        return `[(con list) (con ${showConstType( constListTypeUtils.getTypeArgument( t as any ) )})]`;
+    }
+    if( t[0] === ConstTyTag.pair )
+    {
+        return `[[(con pair) (con ${showConstType( constPairTypeUtils.getFirstTypeArgument( t as any ) )})] (con ${showConstType( constPairTypeUtils.getSecondTypeArgument( t as any ) )})`;
+    }
+    if( t[0] === ConstTyTag.bool ) return "bool";
 
-    if( t instanceof UPLCVar )
-    {
-        const idx = dbn - 1 - Number( t.deBruijn.asBigInt );
-        return vars.split('')[ idx ] ?? `(${idx.toString()})`;
-    }
-    if( t instanceof Delay ) return `(delay ${ showUPLC( t.delayedTerm, dbn ) })`;
-    if( t instanceof Lambda ) 
-    {
-        const thisVar = vars.split('')[ dbn ];
-        return `(lam ${thisVar} ${ showUPLC( t.body, dbn + 1 ) })`;
-    }
-    if( t instanceof Application ) return `[${ showUPLC( t.funcTerm, dbn ) } ${ showUPLC( t.argTerm, dbn ) }]`;
-    if( t instanceof UPLCConst ) return `( con ${constTypeToStirng(t.type)} ${ showUPLCConstValue( t.value ) } )`;
-    if( t instanceof Force ) return `(force ${ showUPLC( t.termToForce, dbn ) })`;
-    if( t instanceof ErrorUPLC ) return "(error)";
-    if( t instanceof Builtin )
-    {
-        const nForces = getNRequiredForces( t.tag );
+    return constTypeToStirng( t );
+}
 
-        return "(force ".repeat( nForces ) +`(builtin ${builtinTagToString( t.tag )})` + ')'.repeat( nForces )
-    }
-    if( t instanceof HoistedUPLC ) return showUPLC( t.UPLC, dbn )
+export function showUPLC( term: UPLCTerm ): string
+{
+    const vars = "abcdefghilmopqrstuvzwxyjkABCDEFGHILJMNOPQRSTUVZWXYJK".split('');
+
+    function loop( t: UPLCTerm, dbn: number ): string
+    {
+        if( t instanceof UPLCVar )
+        {
+            const idx = dbn - 1 - Number( t.deBruijn.asBigInt );
+            return vars[ idx ] ?? `(${idx.toString()})`;
+        }
+        if( t instanceof Delay ) return `(delay ${ loop( t.delayedTerm, dbn ) })`;
+        if( t instanceof Lambda ) 
+        {
+            const thisVar = vars[ dbn ];
+            return `(lam ${thisVar} ${ loop( t.body, dbn + 1 ) })`;
+        }
+        if( t instanceof Application ) return `[${ loop( t.funcTerm, dbn ) } ${ loop( t.argTerm, dbn ) }]`;
+        if( t instanceof UPLCConst ) return `( con ${showConstType(t.type)} ${ showUPLCConstValue( t.value ) } )`;
+        if( t instanceof Force ) return `(force ${ loop( t.termToForce, dbn ) })`;
+        if( t instanceof ErrorUPLC ) return "(error)";
+        if( t instanceof Builtin )
+        {
+            const nForces = getNRequiredForces( t.tag );
     
-    return "";
+            return "(force ".repeat( nForces ) +`(builtin ${builtinTagToString( t.tag )})` + ')'.repeat( nForces )
+        }
+        if( t instanceof HoistedUPLC ) return loop( t.UPLC, dbn )
+        
+        return "";
+    }
+
+        return loop(
+            replaceHoistedTermsInplace( term.clone() ),
+            0
+        );
+
 }
 
 

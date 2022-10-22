@@ -32,7 +32,7 @@ const pfindOwnInput = phoist( pfn([
                 pmatch( txInfos )
                 .onPTxInfo( ({ extract }) => extract("inputs").in( ({ inputs }) =>
                     
-                    pfindList( PTxInInfo.type  )
+                    pfindList( PTxInInfo.type )
                     .$(
                         plam( PTxInInfo.type, bool )(
                             input => 

@@ -802,7 +802,7 @@ export const por
                 pforce(
                     pstrictIf( Type.Any ).$( a )
                     .$( pBool( true ) )
-                    .$( pdelay( b ) )
+                    .$( punsafeConvertType( pdelay( b ), bool ) )
                 ) as Term<PBool>
             );
         })
