@@ -306,11 +306,6 @@ export default class UPLCEncoder
             );
         }
 
-        const textual = showUPLC(
-            progrTerm.clone()
-        );
-        if( textual.length > 453 ) console.log( textual );
-
         result.append(
             this.encodeTerm(
                 progrTerm
@@ -609,6 +604,7 @@ export default class UPLCEncoder
      * **this function takes care of the length AND padding**
      * 
      */
+    
     encodeConstValueByteString( bs: ByteString ): BitStream
     {
         let missingBytes = bs.asString;
@@ -648,6 +644,8 @@ export default class UPLCEncoder
                 0
             )
         );
+
+        this._ctx.incrementLengthBy( result.length );
 
         return result; 
     }

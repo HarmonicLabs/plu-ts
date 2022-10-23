@@ -41,7 +41,7 @@ export default class UPLCDecoder
 {
     private constructor() {}
 
-    static parse( serializedScript: Buffer , format: SerializedScriptFormat = "cbor" ): UPLCProgram
+    static parse( serializedScript: Buffer , format: SerializedScriptFormat = "cbor", debugLogs: boolean = false ): UPLCProgram
     {
         if( !isSerializedScriptFormat( format ) )
         {
@@ -71,12 +71,12 @@ export default class UPLCDecoder
 
         function incrementPtrBy( n: number ): void 
         {
-            currPtr += n 
+            currPtr += n;
         }
 
         function logState(): void
         {
-            if( currPtr > 1000 )
+            if( debugLogs )
             {
                 console.log("UPLCDecoder state: " + JSON.stringify({
                     currPtr,
@@ -139,10 +139,10 @@ export default class UPLCDecoder
             }
         }
 
-        function readNBits( n: number, shouldLogResult: boolean = (currPtr > 1000) ): bigint
+        function readNBits( n: number, shouldLogResult: boolean = false ): bigint
         {
             const logResult = 
-                shouldLogResult ?
+                (shouldLogResult && debugLogs) ?
                 ( result: bigint ): bigint =>
                 {
                     console.log( "red " + n + " bits: "  + result.toString(2).padStart(n,'0') );
@@ -188,8 +188,6 @@ export default class UPLCDecoder
                 currB & getByteMask( missingBitsToByte as any )
             );
 
-            // shouldLogResult && console.log( result );
-
             let missingBitsToRead = n - missingBitsToByte;
             let nWholeBytes = 0;
             for( ; (nWholeBytes + 1) * 8 < missingBitsToRead; nWholeBytes++ )
@@ -208,7 +206,7 @@ export default class UPLCDecoder
         function readPadding(): void
         {
             while( Number( readNBits(1) ) !== 1 ) {}
-            if(!((currPtr % 8) === 1 )) throw new UPLCDeserializaitonError(
+            if( (currPtr % 8) !== 0 ) throw new UPLCDeserializaitonError(
                 "padding was not alligned to byte"
             )
         }
@@ -240,10 +238,7 @@ export default class UPLCDecoder
             logState();
 
             const tag = Number( readNBits(4) );
-            // console.log( "readingTerm with tag: " + tag );
 
-            // logState();
-            
             switch( tag )
             {
                         // serialised debruijn starts form 1;
@@ -293,6 +288,7 @@ export default class UPLCDecoder
 
         function readConst(): UPLCConst
         {
+            logState();
             const constTy = readConstTy();
             const val = 
                 readConstValueOfType( constTy );
@@ -342,23 +338,20 @@ export default class UPLCDecoder
             {
                 readPadding();
 
-                let chunkLen: number;
-                let chunkHeadIdx: number;
                 const hexChunks: string[] = [];
-                do {
-                    chunkHeadIdx = currByteIndex();
-                    chunkLen = currByte();
-                    incrementPtrBy(8);
 
-                    if( chunkLen === 0 ) break;
+                let chunkLen: number = 1; 
+                while( chunkLen !== 0 )
+                {
+                    chunkLen = Number( readNBits(8) );
 
-                    hexChunks.push(
-                        serializedScript.subarray( 
-                            chunkHeadIdx + 1, 
-                            chunkHeadIdx + 1 + chunkLen 
-                        ).toString("hex") 
-                    );
-                } while( true );
+                    for( let i = 0; i < chunkLen; i++ )
+                    {
+                        hexChunks.push(
+                            BigIntUtils.toBuffer( readNBits(8) ).toString("hex")
+                        );
+                    }
+                }
 
                 return new ByteString(
                     Buffer.from(
@@ -414,8 +407,6 @@ export default class UPLCDecoder
                 "'readConstValueOfType': no constant type matched"
             );
         }
-
-        console.log( scriptBits );
 
         return new UPLCProgram(
             new UPLCVersion(readUInt(), readUInt(), readUInt()),

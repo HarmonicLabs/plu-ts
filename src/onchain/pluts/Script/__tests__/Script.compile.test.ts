@@ -1,7 +1,7 @@
 import ByteString from "../../../../types/HexString/ByteString"
 import { showUPLC } from "../../../UPLC/UPLCTerm"
 import compile, { PlutusScriptVersion, scriptToJsonFormat } from "../compile"
-import { peqBs, pif, punBData } from "../../Prelude/Builtins"
+import { pand, peqBs, pif, ptrace, punBData } from "../../Prelude/Builtins"
 import PByteString, { pByteString } from "../../PTypes/PByteString"
 import { pmakeUnit } from "../../PTypes/PUnit"
 import { perror, pfn, plam, plet } from "../../Syntax"
@@ -38,6 +38,9 @@ import PAddress from "../../API/V1/Address"
 import PCredential from "../../API/V1/Address/PCredential"
 import PValidatorHash from "../../API/V1/Scripts/PValidatorHash"
 import Application from "../../../UPLC/UPLCTerms/Application"
+import { ptraceIfFalse } from "../../stdlib/ptrace"
+import { pStr } from "../../PTypes/PString"
+import UPLCDecoder from "../../../UPLC/UPLCDecoder"
 
 
 describe("scriptToJsonFormat", () => {
@@ -97,78 +100,93 @@ describe("scriptToJsonFormat", () => {
         )(
             ( _datum, redeemerBS, ctx_ ) => {
 
-                return pByteString( correctBS ).eq( redeemerBS )
-                    .and(
+                return pand.$(
+                        ptraceIfFalse.$( pStr("wrong bytestring") )
+                        .$( pByteString( correctBS ).eq( redeemerBS ) )
+                    ).$(
 
-                        pmatch( ctx_ )
-                        .onPScriptContext( rawCtx => rawCtx.extract("txInfo","purpose").in( ctx => {
-                            
-                            return plet( pownHash.$( ctx.txInfo ).$( ctx.purpose ) ).in( ownHash => 
+                        ptraceIfFalse.$( pStr("missing datum") )
+                        .$(
+                            pmatch( ctx_ )
+                            .onPScriptContext( rawCtx => rawCtx.extract("txInfo","purpose").in( ctx => {
+                                
+                                return plet( pownHash.$( ctx.txInfo ).$( ctx.purpose ) ).in( ownHash => 
 
-                                pmatch( ctx.txInfo )
-                                .onPTxInfo( rawTxInfo => rawTxInfo.extract("inputs").in( ({ inputs }) =>
+                                    pmatch( ctx.txInfo )
+                                    .onPTxInfo( rawTxInfo => rawTxInfo.extract("inputs").in( ({ inputs }) =>
 
-                                    pevery( PTxInInfo.type )
-                                    .$( plam( PTxInInfo.type, bool )(
-                                        txInputToSelf =>
-                                            pmatch( txInputToSelf )
-                                            .onPTxInInfo( rawTxIn => rawTxIn.extract("resolved").in( ({resolved}) =>
-
-                                                pmatch( resolved )
-                                                .onPTxOut( rawResolved => rawResolved.extract("datumHash").in( ({datumHash}) =>
-                                                    pmatch( datumHash )
-                                                    .onJust( _ =>       pBool( true  ) )
-                                                    .onNothing( _ =>    pBool( false ) )
-                                                ))
-                                                
-                                            )) as Term<PBool>
-                                    ))
-                                    .$( pfilter( PTxInInfo.type )
+                                        pevery( PTxInInfo.type )
                                         .$( plam( PTxInInfo.type, bool )(
-                                            txInput => 
-                                                pmatch( txInput )
+                                            txInputToSelf =>
+                                                pmatch( txInputToSelf )
                                                 .onPTxInInfo( rawTxIn => rawTxIn.extract("resolved").in( ({resolved}) =>
 
                                                     pmatch( resolved )
-                                                    .onPTxOut( rawResolved => rawResolved.extract("address").in( ({ address }) => 
-                                                        pmatch( address )
-                                                        .onPAddress( rawAddr => rawAddr.extract("credential").in( ({ credential }) =>
-                                                            pmatch( credential )
-                                                            .onPScriptCredential( rawScriptCredFields => rawScriptCredFields.extract("valHash").in( ({ valHash }) => {
-                                                                
-                                                                return peqBs.$( ownHash as Term<PByteString> ).$( valHash as Term<PByteString> )
-                                                            }))
-                                                            .onPPubKeyCredential( _ => pBool( false ) )
-                                                        ))
+                                                    .onPTxOut( rawResolved => rawResolved.extract("datumHash").in( ({datumHash}) =>
+                                                        pmatch( datumHash )
+                                                        .onJust( _ =>       pBool( true  ) )
+                                                        .onNothing( _ =>    pBool( false ) )
                                                     ))
+                                                    
                                                 )) as Term<PBool>
                                         ))
-                                        .$( inputs )
-                                    )
+                                        .$( pfilter( PTxInInfo.type )
+                                            .$( plam( PTxInInfo.type, bool )(
+                                                txInput => 
+                                                    pmatch( txInput )
+                                                    .onPTxInInfo( rawTxIn => rawTxIn.extract("resolved").in( ({resolved}) =>
 
-                                ))
-                            )
+                                                        pmatch( resolved )
+                                                        .onPTxOut( rawResolved => rawResolved.extract("address").in( ({ address }) => 
+                                                            pmatch( address )
+                                                            .onPAddress( rawAddr => rawAddr.extract("credential").in( ({ credential }) =>
+                                                                pmatch( credential )
+                                                                .onPScriptCredential( rawScriptCredFields => rawScriptCredFields.extract("valHash").in( ({ valHash }) => {
+                                                                    
+                                                                    return peqBs.$( ownHash as Term<PByteString> ).$( valHash as Term<PByteString> )
+                                                                }))
+                                                                .onPPubKeyCredential( _ => pBool( false ) )
+                                                            ))
+                                                        ))
+                                                    )) as Term<PBool>
+                                            ))
+                                            .$( inputs )
+                                        )
 
-                        })) as Term<PBool>
+                                    ))
+                                )
+
+                            })) as Term<PBool>
+                        )
                     )
             }
         );
 
-        // const compiled = compile( makeValidator( contract ) );
+        const compiled = compile( makeValidator( contract ) );
 
-        console.timeEnd( label );
+        console.timeEnd( label );  
 
-        // console.log( showUPLC( makeValidator( contract ).toUPLC(0) ) )
-// 
-        // console.log(
-        //     JSON.stringify(
-        //         scriptToJsonFormat(
-        //             compiled,
-        //             PlutusScriptVersion.V1
-        //         )
-        //     )
-        // );
+        console.log(
+            JSON.stringify(
+                scriptToJsonFormat(
+                    compiled,
+                    PlutusScriptVersion.V1
+                )
+            )
+        );
 
+        const deserialized = UPLCDecoder.parse(
+            compiled,
+            "flat"
+        );
+
+        console.log(
+            showUPLC(
+                deserialized.body
+            )
+        );
+        
+        /*
         const unitDatumHash = PDatumHash.from( pByteString("923918e403bf43c34b4ef6b48eb2ee04babed17320d8d1b9ff9ad086e86f44ec") );
         const emptyValue = PValue.from( pList( PValue.type[1].type[1] )([]) as any );
 
@@ -230,7 +248,7 @@ describe("scriptToJsonFormat", () => {
 
         const appliedContractUPLC = appliedContract.toUPLC(0);
 
-        //*
+        /*
         console.log(
             evalScript(
                 appliedContractUPLC

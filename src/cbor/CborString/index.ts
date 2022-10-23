@@ -7,7 +7,7 @@ class CborString extends ByteString
 {
     static isStrictInstance( cborStr: any ): cborStr is CborString
     {
-        return Object.getPrototypeOf( cborStr ) === CborString.prototype
+        return ( cborStr !== undefined && cborStr !== null ) && Object.getPrototypeOf( cborStr ) === CborString.prototype
     }
 
     constructor( cbor: string | Buffer )

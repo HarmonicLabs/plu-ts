@@ -168,18 +168,23 @@ export function showUPLC( term: UPLCTerm ): string
 {
     const vars = "abcdefghilmopqrstuvzwxyjkABCDEFGHILJMNOPQRSTUVZWXYJK".split('');
 
+    function getVarNameForDbn( dbn: number ): string
+    {
+        if( dbn < 0 ) return `(${dbn})`;
+        if( dbn < vars.length ) return vars[ dbn ];
+        return vars[ Math.floor( dbn / vars.length ) ] + getVarNameForDbn( dbn - vars.length )
+    }
+
     function loop( t: UPLCTerm, dbn: number ): string
     {
         if( t instanceof UPLCVar )
         {
-            const idx = dbn - 1 - Number( t.deBruijn.asBigInt );
-            return vars[ idx ] ?? `(${idx.toString()})`;
+            return getVarNameForDbn( dbn - 1 - Number( t.deBruijn.asBigInt ) )
         }
         if( t instanceof Delay ) return `(delay ${ loop( t.delayedTerm, dbn ) })`;
         if( t instanceof Lambda ) 
         {
-            const thisVar = vars[ dbn ];
-            return `(lam ${thisVar} ${ loop( t.body, dbn + 1 ) })`;
+            return `(lam ${getVarNameForDbn( dbn )} ${ loop( t.body, dbn + 1 ) })`;
         }
         if( t instanceof Application ) return `[${ loop( t.funcTerm, dbn ) } ${ loop( t.argTerm, dbn ) }]`;
         if( t instanceof UPLCConst ) return `( con ${showConstType(t.type)} ${ showUPLCConstValue( t.value ) } )`;

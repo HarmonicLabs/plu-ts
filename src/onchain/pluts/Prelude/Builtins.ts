@@ -85,18 +85,11 @@ export function addApplications<Ins extends [ PType, ...PType[] ], Out extends P
     ) as any;
 }
 
-export type MultiPLam<Args extends [ PType, PType, ...PType[] ]> =
+type MultiPLam<Args extends [ PType, PType, ...PType[] ]> =
     Args extends [ infer PA extends PType, infer PB extends PType ] ? PLam<PA,PB> :
     Args extends [ infer PA extends PType, infer PB extends PType , infer PC extends PType ] ? PLam<PA,PLam<PB, PC> > :
     Args extends [ infer PA extends PType, ...infer Ps extends [ PType, PType,...PType[] ] ] ? PLam<PA, MultiPLam<Ps> > :
     never
-
-export function makePLamObj<A extends PType,B extends PType, Cs extends PType[]>
-    ( a: A, b: B, ...ptypes: Cs ): MultiPLam<[A,B,...Cs]>
-{
-    if( ptypes.length === 0 ) return new PLam( a, b ) as any;
-    return new PLam( a, makePLamObj( b , ptypes[0] , ...ptypes.slice(1) ) ) as MultiPLam<[A, B, ...Cs]>;
-}
 
 export type IntBinOPToInt = Term< PLam< PInt, PLam< PInt, PInt >>>
 & {

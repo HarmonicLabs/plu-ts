@@ -15,7 +15,7 @@ describe("serializeBuiltin", () => {
 
     describe("ifThenElse", () => {
 
-        test.skip("simple ifThenElse", () => {
+        test("simple ifThenElse", () => {
 
             expect(
                 serializeBuiltin(
@@ -69,54 +69,6 @@ describe("serializeBuiltin", () => {
                     progr
                 )
 
-            })
-
-            test("after some lambdas", () => {
-
-                const noIdeaHowIGotHere =
-                new Application(
-                    new Lambda( // a
-                        new Application(
-                            new Lambda( // b
-                                new Application(
-                                    new Lambda( // c
-                                        new Application(
-                                            new Lambda( // d
-                                                new Lambda( new Lambda( new Lambda( // e f g
-                                                    new Force(
-                                                        new Application( new Application( new Application( 
-                                                            Builtin.ifThenElse,
-                                                            new Application( new Application( new Application(
-                                                                new Lambda( new Lambda( new Lambda( // h i l
-                                                                    new Application(
-                                                                        new Lambda( // m
-                                                                            new Application(
-                                                                                new Lambda( // o
-                                                                                    UPLCConst.unit
-                                                                                ),
-                                                                                UPLCConst.unit
-                                                                            ) 
-                                                                        ),
-                                                                        UPLCConst.unit
-                                                                    )
-                                                                ) ) ), UPLCConst.unit
-                                                            ), UPLCConst.unit ), UPLCConst.unit )
-                                                        ), UPLCConst.unit ), UPLCConst.unit )
-                                                    )
-                                                ) ) )
-                                            ),
-                                            UPLCConst.unit
-                                        )
-                                    ),
-                                    UPLCConst.unit
-                                )
-                            ),
-                            UPLCConst.unit
-                        )
-                    ),
-                    UPLCConst.unit
-                );
-    
             })
     
         })
