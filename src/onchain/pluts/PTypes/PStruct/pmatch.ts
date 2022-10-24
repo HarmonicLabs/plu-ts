@@ -10,7 +10,7 @@ import { plength } from "../../Prelude/List/plength";
 import PType from "../../PType";
 import { pintToStr } from "../../stdlib/pintToStr";
 import { ptraceError } from "../../stdlib/ptrace";
-import { plet, papp, punsafeConvertType } from "../../Syntax";
+import { plet, papp, punsafeConvertType, phoist, perror } from "../../Syntax";
 import Term from "../../Term";
 import Type, { data, int, list } from "../../Term/Type";
 import { isConstantableStructDefinition } from "../../Term/Type/kinds";
@@ -52,7 +52,7 @@ function getToRawFieldsFinalExpr<CtorDef extends ConstantableStructCtorDef, Fiel
     const idx = allFIndexes[0];
     return plet( getFromDataForType( ctorDef[ allFieldsNames[ idx ] ] )( papp( elemAt, pInt( idx ) ) ) ).in( value => {
 
-        ObjectUtils.defineReadOnlyProperty(
+        ObjectUtils.defineNormalProperty(
             partialExtracted,
             allFieldsNames[ idx ],
             // bad solution, hopefully temporary
@@ -146,15 +146,7 @@ function getFinalPMatchExpr<CtorDefs extends ConstantableStructCtorDef[]>
     let res = pif( returnT ).$( pInt( last ).eq( ctorIdx ) )
         .then( punsafeConvertType( results[ last ], returnT ) )
         .else(
-            ptraceError( returnT as any )
-            .$( 
-                pStr("unmatched ctor; max:" + last.toString() + "; idx:")
-                .concat( pintToStr.$( ctorIdx ) )
-                .concat( pStr("; f:") )
-                .concat(
-                    pintToStr.$( plength.$( rawDataFields ) )
-                )
-            )
+            perror( returnT, "unmatched" )
         );
 
     for( let i = ctorCbs.length - 2; i >= 0; i-- )

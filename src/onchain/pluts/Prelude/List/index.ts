@@ -3,12 +3,10 @@ import PBool, { pBool } from "../../PTypes/PBool";
 import PLam, { TermFn } from "../../PTypes/PFn/PLam";
 import PInt, { pInt } from "../../PTypes/PInt";
 import PList, { pnil } from "../../PTypes/PList";
-import { pStr } from "../../PTypes/PString";
-import { ptraceError } from "../../stdlib/ptrace";
-import { papp, pfn, phoist, plam, plet, precursive, punsafeConvertType } from "../../Syntax";
+import { papp, perror, pfn, phoist, plam, plet, precursive } from "../../Syntax";
 import Term from "../../Term";
-import Type, { bool, ConstantableTermType, fn, lam, list, PrimType, TermType, ToPType, tyVar } from "../../Term/Type";
-import { pand, pchooseList, phead, pif, pisEmpty, plessInt, por, pprepend, pstrictIf, ptail, ptrace } from "../Builtins";
+import Type, { bool, ConstantableTermType, fn, lam, list, PrimType, TermType, ToPType } from "../../Term/Type";
+import { pand, pchooseList, phead, pif, pisEmpty, plessInt, por, pprepend, pstrictIf, ptail } from "../Builtins";
 import PMaybe, { PMaybeT } from "../PMaybe";
 
 
@@ -127,7 +125,7 @@ export function pindexList<ElemsT extends ConstantableTermType>( elemsT: ElemsT 
                             plessInt.$( idx ).$( pInt( 0 ) ) 
                         ) 
                     )
-                    .then( ptraceError( elemsT ).$( pStr("index out of bound") ) as any )
+                    .then( perror( elemsT ) )
                     .else(
 
                         pif( elemsT ).$( pInt( 0 ).eq( idx ) )
@@ -165,6 +163,7 @@ export function pfindList<ElemsT extends ConstantableTermType, PElemsT extends T
                 lam( elemsT, bool ),
                 list( elemsT )
             ],  PMaybeElem.type )
+
             (( self, predicate, _list ) => 
                 pif( PMaybeElem.type ).$( pisEmpty.$( _list ) )
                 .then( PMaybeElem.Nothing({}) )
@@ -176,6 +175,7 @@ export function pfindList<ElemsT extends ConstantableTermType, PElemsT extends T
                     )
                 )
             )
+
         )
     ) as any;
 }

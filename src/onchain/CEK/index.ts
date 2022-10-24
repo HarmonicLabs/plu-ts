@@ -33,6 +33,9 @@ export default function evalScript( _term: UPLCTerm | Term<any> ): PureUPLCTerm
     while( !frames.isEmpty || steps.topIsCompute )
     {
         const nextStep = steps.pop();
+
+        // console.log( (frames as any)._frames.length );
+
         if( nextStep === undefined )
         {
             throw new PlutsCEKError("step stack was empty; don't know how to proceed");

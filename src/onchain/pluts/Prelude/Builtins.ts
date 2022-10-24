@@ -769,11 +769,9 @@ export const pand
         (( a: Term<PBool>, b: Term<PBool> ) => {
 
             return addPBoolMethods(
-                pforce(
-                    pstrictIf( Type.Any ).$( a )
-                    .$( pdelay( b ) )
-                    .$( punsafeConvertType( pBool( false ), delayed( bool ) ) )
-                ) as Term<PBool>
+                    pif( bool ).$( a )
+                    .$( b )
+                    .$( pBool( false ) )
             );
         })
     ) as any;
@@ -792,11 +790,9 @@ export const por
         (( a: Term<PBool>, b: Term<PBool> ) => {
 
             return addPBoolMethods(
-                pforce(
-                    pstrictIf( Type.Any ).$( a )
+                    pif( bool ).$( a )
                     .$( pBool( true ) )
-                    .$( punsafeConvertType( pdelay( b ), bool ) )
-                ) as Term<PBool>
+                    .$( b )
             );
         })
     ) as any;

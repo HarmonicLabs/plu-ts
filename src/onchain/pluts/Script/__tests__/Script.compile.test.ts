@@ -1,10 +1,10 @@
 import ByteString from "../../../../types/HexString/ByteString"
 import { showUPLC } from "../../../UPLC/UPLCTerm"
 import compile, { PlutusScriptVersion, scriptToJsonFormat } from "../compile"
-import { pand, pBSToData, peqBs, pif, ptrace, punBData } from "../../Prelude/Builtins"
+import { pand, pBSToData, peqBs, pif, psndPair, ptrace, punBData, punConstrData } from "../../Prelude/Builtins"
 import PByteString, { pByteString } from "../../PTypes/PByteString"
 import { pmakeUnit } from "../../PTypes/PUnit"
-import { papp, perror, pfn, plam, plet } from "../../Syntax"
+import { papp, perror, pfn, plam, plet, punsafeConvertType } from "../../Syntax"
 import Term from "../../Term"
 import Type, { bool, bs, data, fn, int, list, pair, unit } from "../../Term/Type"
 import PScriptContext from "../../API/V1/ScriptContext"
@@ -12,7 +12,7 @@ import pmatch from "../../PTypes/PStruct/pmatch"
 import PBool, { pBool } from "../../PTypes/PBool"
 import PTxInInfo from "../../API/V1/Tx/PTxInInfo"
 import pownHash from "../../API/V1/ScriptContext/PTxInfo/pownHash"
-import { pevery, pfilter } from "../../Prelude/List"
+import { pevery, pfilter, pindexList } from "../../Prelude/List"
 import { makeValidator } from "../makeValidator"
 import evalScript from "../../../CEK"
 import UPLCConst from "../../../UPLC/UPLCTerms/UPLCConst"
@@ -105,27 +105,26 @@ describe("scriptToJsonFormat", () => {
         )(
             ( _datum, redeemerBS, ctx_ ) => {
 
-                return pand.$(
-                        ptraceIfFalse.$( pStr("wrong BS") )
-                        .$( pByteString( correctBS ).eq( redeemerBS ) )
-                    ).$(
+                return pByteString( correctBS ).eq( redeemerBS )
+                    .and(
 
-                        ptraceIfFalse.$( pStr("missing datum") )
-                        .$(
-                            pmatch( ctx_ )
-                            .onPScriptContext( rawCtx => rawCtx.extract("txInfo","purpose").in( ctx => {
-                                
-                                return plet( pownHash.$( ctx.txInfo ).$( ctx.purpose ) ).in( ownHash => 
+                        plet( punConstrData.$( punsafeConvertType( ctx_, data ) ) ).in( ctxPair =>
+                        plet( pindexList( data ).$( psndPair( int, list( data ) ) .$( ctxPair ) ) ).in( ctxFieldN => 
 
-                                    pmatch( ctx.txInfo )
+                            plet( punsafeConvertType( papp( ctxFieldN, pInt( 0 ) ), PTxInfo.type ) ).in( txInfo =>
+                            plet( punsafeConvertType( papp( ctxFieldN, pInt( 1 ) ), PScriptPurpose.type ) ).in( purpose =>
+
+                                plet( pownHash.$( txInfo ).$( purpose ) ).in( ownHash => 
+
+                                    pmatch( txInfo )
                                     .onPTxInfo( rawTxInfo => rawTxInfo.extract("inputs").in( ({ inputs }) =>
-
+    
                                         pevery( PTxInInfo.type )
                                         .$( plam( PTxInInfo.type, bool )(
                                             txInputToSelf =>
                                                 pmatch( txInputToSelf )
                                                 .onPTxInInfo( rawTxIn => rawTxIn.extract("resolved").in( ({resolved}) =>
-
+    
                                                     pmatch( resolved )
                                                     .onPTxOut( rawResolved => rawResolved.extract("datumHash").in( ({datumHash}) =>
                                                         pmatch( datumHash )
@@ -140,7 +139,7 @@ describe("scriptToJsonFormat", () => {
                                                 txInput => 
                                                     pmatch( txInput )
                                                     .onPTxInInfo( rawTxIn => rawTxIn.extract("resolved").in( ({resolved}) =>
-
+    
                                                         pmatch( resolved )
                                                         .onPTxOut( rawResolved => rawResolved.extract("address").in( ({ address }) => 
                                                             pmatch( address )
@@ -157,12 +156,13 @@ describe("scriptToJsonFormat", () => {
                                             ))
                                             .$( inputs )
                                         )
-
+    
                                     ))
                                 )
 
-                            })) as Term<PBool>
-                        )
+                            ))
+                        )) as Term<PBool>
+
                     )
             }
         );
@@ -170,7 +170,8 @@ describe("scriptToJsonFormat", () => {
         const validator = makeValidator( contract );
         const compiled = compile( validator );
 
-        console.timeEnd( label );  
+        console.timeEnd( label );
+        console.log( `${compiled.length} bytes` );
 
         console.log(
             JSON.stringify(

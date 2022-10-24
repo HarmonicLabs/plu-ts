@@ -1,6 +1,6 @@
 import BasePlutsError from "../../../errors/BasePlutsError";
 import PScriptContext from "../API/V1/ScriptContext";
-import { pstrictIf } from "../Prelude/Builtins";
+import { pif, pstrictIf } from "../Prelude/Builtins";
 import { PDataRepresentable } from "../PType";
 import PBool from "../PTypes/PBool";
 import PData from "../PTypes/PData";
@@ -53,8 +53,7 @@ export function makeValidator( typedValidator: Term<PLam<PDataRepresentable,PLam
 
         if( !typeExtends( expectedBool, bool ) ) throw err;
 
-        return pforce(
-            pstrictIf( delayed( unit ) ).$(
+        return pif( unit ).$(
                 papp(
                     papp(
                         papp(
@@ -66,8 +65,7 @@ export function makeValidator( typedValidator: Term<PLam<PDataRepresentable,PLam
                     getFromDataForType( ctxType )( rawCtx )
                 )
             )
-            .$( punsafeConvertType( pmakeUnit(), delayed( unit ) ) )
-            .$( pdelay( perror( unit ) ) )
-        ) as Term<PUnit>;
+            .$( pmakeUnit() )
+            .$( perror( unit ) );
     });
 }
