@@ -18,6 +18,7 @@ export default function applyLambdaType( lambdaType: Readonly<[ PrimType.Lambda,
     }
     if( isAliasType( lambdaType[1] ) )
     {
+        // alias types are constants
         return cloneTermType( lambdaType[2] );
     }
 

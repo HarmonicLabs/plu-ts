@@ -446,7 +446,11 @@ export default class UPLCEncoder
         if( value === undefined ) return new BitStream();
         if( value instanceof Integer ) 
         {
-            return serializeInt( value );
+            const _i = serializeInt( value );
+            // ints are always serialized in chunks of 8 bits
+            // this should be irrelevant but still good to have
+            this._ctx.incrementLengthBy( _i.length );
+            return _i;
         }
         if( value instanceof ByteString &&
             (
@@ -474,7 +478,12 @@ export default class UPLCEncoder
                 )
             );
         }
-        if( typeof value === "boolean" ) return BitStream.fromBinStr( value === true ? "1" : "0" );
+        if( typeof value === "boolean" )
+        {
+            const _b = BitStream.fromBinStr( value === true ? "1" : "0" );
+            this._ctx.incrementLengthBy( _b.length );
+            return _b;
+        }
         if( isConstValueList( value ) )
         {
             const result: BitStream = new BitStream();
@@ -490,7 +499,8 @@ export default class UPLCEncoder
             {
                 // cons
                 listElem = BitStream.fromBinStr("1");
-    
+                this._ctx.incrementLengthBy( 1 );
+
                 // set list element
                 listElem.append(
                     this.encodeConstValue(
@@ -499,6 +509,7 @@ export default class UPLCEncoder
                 );
                 
                 // append element
+                // length already updated since using an "encode" function
                 result.append( listElem );
             }
 
@@ -506,6 +517,7 @@ export default class UPLCEncoder
             result.append(
                 BitStream.fromBinStr("0")
             );
+            this._ctx.incrementLengthBy( 1 );
     
             return result;
         }
@@ -672,8 +684,9 @@ export default class UPLCEncoder
 
     encodeUPLCError( _term: ErrorUPLC ): BitStream
     {
-        this._ctx.incrementLengthBy( ErrorUPLC.UPLCTag.length );
-        return ErrorUPLC.UPLCTag.clone();
+        const errTag = ErrorUPLC.UPLCTag
+        this._ctx.incrementLengthBy( errTag.length );
+        return errTag.clone();
     }
 
     encodeBuiltin( bn: Builtin ): BitStream

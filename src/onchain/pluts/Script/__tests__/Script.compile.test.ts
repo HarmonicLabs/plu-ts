@@ -1,12 +1,12 @@
 import ByteString from "../../../../types/HexString/ByteString"
 import { showUPLC } from "../../../UPLC/UPLCTerm"
 import compile, { PlutusScriptVersion, scriptToJsonFormat } from "../compile"
-import { pand, peqBs, pif, ptrace, punBData } from "../../Prelude/Builtins"
+import { pand, pBSToData, peqBs, pif, ptrace, punBData } from "../../Prelude/Builtins"
 import PByteString, { pByteString } from "../../PTypes/PByteString"
 import { pmakeUnit } from "../../PTypes/PUnit"
-import { perror, pfn, plam, plet } from "../../Syntax"
+import { papp, perror, pfn, plam, plet } from "../../Syntax"
 import Term from "../../Term"
-import Type, { bool, bs, data, int, list, pair, unit } from "../../Term/Type"
+import Type, { bool, bs, data, fn, int, list, pair, unit } from "../../Term/Type"
 import PScriptContext from "../../API/V1/ScriptContext"
 import pmatch from "../../PTypes/PStruct/pmatch"
 import PBool, { pBool } from "../../PTypes/PBool"
@@ -37,7 +37,6 @@ import PMaybe from "../../Prelude/PMaybe"
 import PAddress from "../../API/V1/Address"
 import PCredential from "../../API/V1/Address/PCredential"
 import PValidatorHash from "../../API/V1/Scripts/PValidatorHash"
-import Application from "../../../UPLC/UPLCTerms/Application"
 import { ptraceIfFalse } from "../../stdlib/ptrace"
 import { pStr } from "../../PTypes/PString"
 import UPLCDecoder from "../../../UPLC/UPLCDecoder"
@@ -84,8 +83,14 @@ describe("scriptToJsonFormat", () => {
 
     });
 
+    test("findOwnInput contract", () => {
 
-    test("Cardano <3 plu-ts; unit Datum", () => {
+
+
+    })
+
+
+    test.only("Cardano <3 plu-ts; unit Datum", () => {
 
         const label = "SC generation and compilation";
         console.time( label );
@@ -101,7 +106,7 @@ describe("scriptToJsonFormat", () => {
             ( _datum, redeemerBS, ctx_ ) => {
 
                 return pand.$(
-                        ptraceIfFalse.$( pStr("wrong bytestring") )
+                        ptraceIfFalse.$( pStr("wrong BS") )
                         .$( pByteString( correctBS ).eq( redeemerBS ) )
                     ).$(
 
@@ -162,7 +167,8 @@ describe("scriptToJsonFormat", () => {
             }
         );
 
-        const compiled = compile( makeValidator( contract ) );
+        const validator = makeValidator( contract );
+        const compiled = compile( validator );
 
         console.timeEnd( label );  
 
@@ -175,18 +181,29 @@ describe("scriptToJsonFormat", () => {
             )
         );
 
+        //*
         const deserialized = UPLCDecoder.parse(
             compiled,
             "flat"
         );
 
-        console.log(
-            showUPLC(
-                deserialized.body
-            )
+        const deserializedUPLCText = showUPLC(
+            deserialized.body
         );
+
+        const validatorUPLC = validator.toUPLC(0);
+        const validatorUPLCText = showUPLC(
+            validatorUPLC
+        );
+
+        expect(
+            deserializedUPLCText
+        ).toEqual(
+            validatorUPLCText
+        );
+        //*/
         
-        /*
+        //*
         const unitDatumHash = PDatumHash.from( pByteString("923918e403bf43c34b4ef6b48eb2ee04babed17320d8d1b9ff9ad086e86f44ec") );
         const emptyValue = PValue.from( pList( PValue.type[1].type[1] )([]) as any );
 
@@ -197,6 +214,71 @@ describe("scriptToJsonFormat", () => {
             index: pInt( 0 )
         });
 
+        const appliedDeserialized = papp(
+            papp(
+                papp(
+                    new Term(
+                        fn([data, data, data], unit),
+                        _dbn => deserialized.body
+                    ) as any,
+                    new Term(
+                        data,
+                        _dbn => UPLCConst.data(new DataConstr( 0, []))
+                    ) as any
+                ) as any,
+                pBSToData.$(pByteString( correctBS ))
+            ) as any,
+            PScriptContext.PScriptContext({
+                txInfo: PTxInfo.PTxInfo({
+                    datums: pList( pair( PDatumHash.type, data ) )([]),
+                    dCertificates: pList( PDCert.type )([]),
+                    fee: emptyValue,
+                    mint: emptyValue,
+                    id: PTxId.PTxId({
+                        txId: pByteString("deadbeef")
+                    }),
+                    interval: PPOSIXTimeRange.PInterval({
+                        from: PLowerBound( PPOSIXTime.type ).PLowerBound({
+                            bound: PExtended( PPOSIXTime.type ).PNegInf({}),
+                            inclusive: pBool( false )
+                        }),
+                        to: PUpperBound( PPOSIXTime.type ).PUpperBound({
+                            bound: PExtended( PPOSIXTime.type ).PPosInf({}),
+                            inclusive: pBool( false )
+                        })
+                    }),
+                    signatories: pList( PPubKeyHash.type )([]),
+                    withdrawals: pList( pair( PStakingCredential.type, int ) )([]),
+                    inputs: pList( PTxInInfo.type )([
+                        PTxInInfo.PTxInInfo({
+                            outRef: validatorSpendingUtxo,
+                            resolved: PTxOut.PTxOut({
+                                address: PAddress.PAddress({
+                                    credential: PCredential.PScriptCredential({
+                                        valHash: PValidatorHash.from( pByteString("caffee") )
+                                    }),
+                                    stakingCredential: PMaybe( PStakingCredential.type ).Nothing({})
+                                }),
+                                datumHash: PMaybe( PDatumHash.type ).Just({ val: unitDatumHash }),
+                                value: emptyValue
+                            })
+                        })
+                    ]),
+                    outputs: pList( PTxOut.type )([])
+                }),
+                purpose: PScriptPurpose.Spending({
+                    utxoRef: validatorSpendingUtxo
+                })
+            })
+        );
+
+        console.log(
+            evalScript(
+                appliedDeserialized.toUPLC(0)
+            )
+        )
+
+        /*
         const appliedContract = contract
         .$( new Term(
             data,

@@ -1,7 +1,7 @@
 import Cloneable from "../../../types/interfaces/Cloneable";
 import UPLCConst from "../../UPLC/UPLCTerms/UPLCConst";
 import { pBSToData, pdecodeUtf8, pencodeUtf8, punBData } from "../Prelude/Builtins";
-import TermStr from "../Prelude/UtilityTerms/TermStr";
+import TermStr, { addPStringMethods } from "../Prelude/UtilityTerms/TermStr";
 import { PDataRepresentable } from "../PType";
 import Term from "../Term";
 import Type, { TermType } from "../Term/Type";
@@ -39,12 +39,14 @@ export default class PString extends PDataRepresentable
     }
 }
 
-export function pStr( str: string ): Term<PString>
+export function pStr( str: string ): TermStr
 {
-    return new Term(
-        Type.Str,
-        _dbn => UPLCConst.str( str )
-    )
+    return addPStringMethods(
+        new Term(
+            Type.Str,
+            _dbn => UPLCConst.str( str )
+        )
+    );
 }
 
 export const pString = pStr;

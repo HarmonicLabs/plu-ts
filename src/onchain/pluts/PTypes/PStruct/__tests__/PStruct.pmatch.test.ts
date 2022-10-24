@@ -1,8 +1,11 @@
 import pstruct, { pgenericStruct } from ".."
+import ByteString from "../../../../../types/HexString/ByteString";
 import evalScript from "../../../../CEK";
 import UPLCConst from "../../../../UPLC/UPLCTerms/UPLCConst";
-import { int, str } from "../../../Term/Type";
+import { bs, int, str, unit } from "../../../Term/Type";
+import { pByteString } from "../../PByteString";
 import { pInt } from "../../PInt";
+import { pmakeUnit } from "../../PUnit";
 import pmatch from "../pmatch";
 
 const PMaybe = pgenericStruct( tyArg => {
@@ -18,7 +21,32 @@ const FixStruct = pstruct({
     C: {}
 })
 
+const SingleCtor = pstruct({
+    Ctor : {
+        num: int,
+        name: bs,
+        aUnitCauseWhyNot: unit
+    }
+})
+
 describe("pmatch", () => {
+
+    test.only("pmatch( <single constructor> )", () => {
+
+        expect(
+            evalScript(
+                pmatch( SingleCtor.Ctor({
+                    num: pInt( 42 ),
+                    name: pByteString( ByteString.fromAscii("Cardano NFTs lmaooooo") ),
+                    aUnitCauseWhyNot: pmakeUnit()
+                }))
+                .onCtor( rawFields => rawFields.extract("num").in( ({ num }) => num ) ) 
+            )
+        ).toEqual(
+            UPLCConst.int( 42 )
+        );
+
+    })
 
     // test(" pmatch(FixStruct.<...>) ", () => {
     //     

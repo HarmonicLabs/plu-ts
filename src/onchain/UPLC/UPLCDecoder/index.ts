@@ -142,7 +142,7 @@ export default class UPLCDecoder
         function readNBits( n: number, shouldLogResult: boolean = false ): bigint
         {
             const logResult = 
-                (shouldLogResult && debugLogs) ?
+                (debugLogs || shouldLogResult) ?
                 ( result: bigint ): bigint =>
                 {
                     console.log( "red " + n + " bits: "  + result.toString(2).padStart(n,'0') );
@@ -207,7 +207,7 @@ export default class UPLCDecoder
         {
             while( Number( readNBits(1) ) !== 1 ) {}
             if( (currPtr % 8) !== 0 ) throw new UPLCDeserializaitonError(
-                "padding was not alligned to byte"
+                "padding was not alligned to byte; currPtr was: " + currPtr + "; currPtr % 8: " + currPtr % 8
             )
         }
 
@@ -246,9 +246,9 @@ export default class UPLCDecoder
                 case 0:
                     const _dbn = readUInt();
                     const dbn = Number( _dbn );
-                    const idx = currDbn - dbn;
+                    const idx = currDbn - (dbn - 1);
                     partialUPLC += vars[ idx ] ?? `(${idx.toString()})`;
-                    return new UPLCVar( _dbn );
+                    return new UPLCVar( _dbn - BigInt(1) );
                 case 1:
                     partialUPLC+= "(delay ";
                     const delayed = readTerm();
@@ -272,7 +272,9 @@ export default class UPLCDecoder
                 case 5:
                     partialUPLC += "(force ";
                     const forced = readTerm();
-                    partialUPLC += ')'; 
+                    partialUPLC += ')';
+                    if( forced instanceof Builtin ) return forced;
+                    if( forced instanceof Force && forced.termToForce instanceof Builtin ) return forced.termToForce;
                     return new Force( forced );
                 case 6:
                     partialUPLC += "(error)";

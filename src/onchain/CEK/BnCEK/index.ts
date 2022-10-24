@@ -1,5 +1,5 @@
 import UPLCTerm from "../../UPLC/UPLCTerm";
-import UPLCBuiltinTag from "../../UPLC/UPLCTerms/Builtin/UPLCBuiltinTag";
+import UPLCBuiltinTag, { builtinTagToString } from "../../UPLC/UPLCTerms/Builtin/UPLCBuiltinTag";
 import ErrorUPLC from "../../UPLC/UPLCTerms/ErrorUPLC";
 import UPLCConst from "../../UPLC/UPLCTerms/UPLCConst";
 import ConstType, { constListTypeUtils, constPairTypeUtils, constT, constTypeEq, ConstTyTag } from "../../UPLC/UPLCTerms/UPLCConst/ConstType" 
@@ -17,6 +17,7 @@ import DataI from "../../../types/Data/DataI";
 import DataB from "../../../types/Data/DataB";
 import DataPair from "../../../types/Data/DataPair";
 import PlutsCEKError from "../../../errors/PlutsCEKError";
+import dataToCbor from "../../../types/Data/toCbor";
 
 function isConstOfType( constant: Readonly<UPLCTerm>, ty: Readonly<ConstType> ): constant is UPLCConst
 {
@@ -272,7 +273,7 @@ export default class BnCEK
             case UPLCBuiltinTag.mkPairData   :                      return (BnCEK.mkPairData as any)( ...bn.args );
             case UPLCBuiltinTag.mkNilData    :                      return (BnCEK.mkNilData as any)( ...bn.args );
             case UPLCBuiltinTag.mkNilPairData:                      return (BnCEK.mkNilPairData as any)( ...bn.args );
-            case UPLCBuiltinTag.serialiseData:                      throw new PlutsCEKError("builtin implementation missing"); //return (BnCEK.serialiseData as any)( ...bn.args );
+            case UPLCBuiltinTag.serialiseData:                      return (BnCEK.serialiseData as any)( ...bn.args );
             case UPLCBuiltinTag.verifyEcdsaSecp256k1Signature:      throw new PlutsCEKError("builtin implementation missing"); //return (BnCEK.verifyEcdsaSecp256k1Signature as any)( ...bn.args );
             case UPLCBuiltinTag.verifySchnorrSecp256k1Signature:    throw new PlutsCEKError("builtin implementation missing"); //return (BnCEK.verifySchnorrSecp256k1Signature as any)( ...bn.args );
 
@@ -480,8 +481,10 @@ export default class BnCEK
         if( !isConstOfType( unit, constT.unit ) ) return new ErrorUPLC("nota a unit");
         return b;
     }
-    static trace( _ignoredWhileEval: any, result: UPLCTerm ): UPLCTerm
+    static trace( msg: UPLCConst, result: UPLCTerm ): UPLCTerm
     {
+        const _msg = getStr( msg );
+        console.log("trace: " + _msg ?? "_msg_not_a_str_");
         return result;
     }
     static fstPair( pair: UPLCTerm ): ConstOrErr
@@ -707,7 +710,7 @@ export default class BnCEK
         const d = getData( data );
         if( d === undefined ) return new ErrorUPLC("not data");
 
-        if( !( d instanceof DataB ) ) return new ErrorUPLC("not a data BS");
+        if( !( d instanceof DataB ) ) return new ErrorUPLC("not a data BS", {UPLCTerm: ((data as UPLCConst).value as DataConstr).constr.asBigInt });
 
         return UPLCConst.byteString( d.bytes );
     }
@@ -740,9 +743,15 @@ export default class BnCEK
         return UPLCConst.listOf( constT.pairOf( constT.data, constT.data ) )([]);
     }
 
+    static serialiseData( data: UPLCTerm ): ConstOrErr
+    {
+        const d = getData( data );
+        if( d === undefined ) return new ErrorUPLC("serialiseData: not data input");
+
+        return UPLCConst.byteString( new ByteString( dataToCbor( d ).asBytes ) );
+    } 
     // @todo
-    // 
-    // static serialiseData                  
+    //                   
     // static verifyEcdsaSecp256k1Signature  
     // static verifySchnorrSecp256k1Signature
 }

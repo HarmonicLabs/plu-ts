@@ -72,4 +72,9 @@ export default class PUnit extends PDataRepresentable
             )
         );
     }
+
+    static override toData(term: Term<PUnit>): Term<PData>
+    {
+        return PUnit.toDataTerm.$( term );
+    }
 }

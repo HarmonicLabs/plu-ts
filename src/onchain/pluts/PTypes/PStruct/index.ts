@@ -283,7 +283,7 @@ export default function pstruct<StructDef extends ConstantableStructDefinition>(
                     isStructInstanceOfDefinition( jsStruct, thisCtorDef ),
                     "the fields passed do not match the struct definition for constructor: " + ctorName
                 );
-                
+
                 const dataReprTerm =
                     pConstrToData
                         .$( pInt( i ) )

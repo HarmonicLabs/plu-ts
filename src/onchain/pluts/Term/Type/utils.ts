@@ -15,7 +15,7 @@ export function getNRequiredLambdaArgs( type: TermType ): number
  */
 export const getNRequiredArgs = getNRequiredLambdaArgs;
 
-function ctorDefToString( ctorDef: StructCtorDef ): string
+export function ctorDefToString( ctorDef: StructCtorDef ): string
 {
     const fields = Object.keys( ctorDef );
 

@@ -122,17 +122,20 @@ export default function evalScript( _term: UPLCTerm | Term<any> ): PureUPLCTerm
             return;
         }
 
-        if( term instanceof Builtin )
+        if(
+            term instanceof Builtin ||
+            (term as any) instanceof PartialBuiltin
+        )
         {
             steps.push(
                 new ReturnStep(
-                    new PartialBuiltin( term.tag )
+                    term instanceof PartialBuiltin? term : new PartialBuiltin( term.tag )
                 )
             );
             return;
         }
 
-        steps.push( new ReturnStep( new ErrorUPLC("ComputeStep/no match") ) )
+        steps.push( new ReturnStep( new ErrorUPLC("ComputeStep/no match", { term } ) ) )
         return;
     }
 
