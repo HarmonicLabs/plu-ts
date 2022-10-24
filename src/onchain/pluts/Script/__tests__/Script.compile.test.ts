@@ -12,7 +12,7 @@ import pmatch from "../../PTypes/PStruct/pmatch"
 import PBool, { pBool } from "../../PTypes/PBool"
 import PTxInInfo from "../../API/V1/Tx/PTxInInfo"
 import pownHash from "../../API/V1/ScriptContext/PTxInfo/pownHash"
-import { pevery, pfilter, pindexList } from "../../Prelude/List"
+import { pevery, pfilter, pindexList, pmap } from "../../Prelude/List"
 import { makeValidator } from "../makeValidator"
 import evalScript from "../../../CEK"
 import UPLCConst from "../../../UPLC/UPLCTerms/UPLCConst"
@@ -117,44 +117,37 @@ describe("scriptToJsonFormat", () => {
                                 plet( pownHash.$( txInfo ).$( purpose ) ).in( ownHash => 
 
                                     pmatch( txInfo )
-                                    .onPTxInfo( rawTxInfo => rawTxInfo.extract("inputs").in( ({ inputs }) =>
+                                    .onPTxInfo( rawTxInfo => rawTxInfo.extract("outputs").in( ({ outputs }) =>
     
-                                        pevery( PTxInInfo.type )
-                                        .$( plam( PTxInInfo.type, bool )(
-                                            txInputToSelf =>
-                                                pmatch( txInputToSelf )
-                                                .onPTxInInfo( rawTxIn => rawTxIn.extract("resolved").in( ({resolved}) =>
+                                        pevery( PTxOut.type )
+                                        .$( plam( PTxOut.type, bool )(
+                                            ( resolved ) =>
     
-                                                    pmatch( resolved )
-                                                    .onPTxOut( rawResolved => rawResolved.extract("datumHash").in( ({datumHash}) =>
-                                                        pmatch( datumHash )
-                                                        .onJust( _ =>       pBool( true  ) )
-                                                        .onNothing( _ =>    pBool( false ) )
-                                                    ))
-                                                    
+                                                pmatch( resolved )
+                                                .onPTxOut( rawResolved => rawResolved.extract("datumHash").in( ({datumHash}) =>
+                                                    pmatch( datumHash )
+                                                    .onJust( _ =>       pBool( true  ) )
+                                                    .onNothing( _ =>    pBool( false ) )
                                                 )) as Term<PBool>
                                         ))
-                                        .$( pfilter( PTxInInfo.type )
-                                            .$( plam( PTxInInfo.type, bool )(
-                                                txInput => 
-                                                    pmatch( txInput )
-                                                    .onPTxInInfo( rawTxIn => rawTxIn.extract("resolved").in( ({resolved}) =>
+                                        .$( pfilter( PTxOut.type )
+                                            .$( plam( PTxOut.type, bool )(
+                                                (resolved) =>
     
-                                                        pmatch( resolved )
-                                                        .onPTxOut( rawResolved => rawResolved.extract("address").in( ({ address }) => 
-                                                            pmatch( address )
-                                                            .onPAddress( rawAddr => rawAddr.extract("credential").in( ({ credential }) =>
-                                                                pmatch( credential )
-                                                                .onPScriptCredential( rawScriptCredFields => rawScriptCredFields.extract("valHash").in( ({ valHash }) => {
-                                                                    
-                                                                    return peqBs.$( ownHash as Term<PByteString> ).$( valHash as Term<PByteString> )
-                                                                }))
-                                                                .onPPubKeyCredential( _ => pBool( false ) )
-                                                            ))
+                                                    pmatch( resolved )
+                                                    .onPTxOut( rawResolved => rawResolved.extract("address").in( ({ address }) => 
+                                                        pmatch( address )
+                                                        .onPAddress( rawAddr => rawAddr.extract("credential").in( ({ credential }) =>
+                                                            pmatch( credential )
+                                                            .onPScriptCredential( rawScriptCredFields => rawScriptCredFields.extract("valHash").in( ({ valHash }) => {
+                                                                
+                                                                return peqBs.$( ownHash as Term<PByteString> ).$( valHash as Term<PByteString> )
+                                                            }))
+                                                            .onPPubKeyCredential( _ => pBool( false ) )
                                                         ))
                                                     )) as Term<PBool>
                                             ))
-                                            .$( inputs )
+                                            .$( outputs )
                                         )
     
                                     ))
