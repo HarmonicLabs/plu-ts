@@ -407,7 +407,7 @@ export function plet<PVarT extends PType, SomeExtension extends object>( varValu
             _dbn => new UPLCVar( 0 ) // mock variable
         ) as TermPVar ).type;
 
-        return papp( plam( varValue.type, outType )( expr as any ), varValue as any ) as any;
+        // return papp( plam( varValue.type, outType )( expr as any ), varValue as any ) as any;
         return new Term(
             outType,
             dbn => new Application(

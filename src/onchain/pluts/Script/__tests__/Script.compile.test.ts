@@ -108,6 +108,8 @@ describe("scriptToJsonFormat", () => {
                 return pByteString( correctBS ).eq( redeemerBS )
                     .and(
 
+                        punsafeConvertType(
+                            
                         plet( punConstrData.$( punsafeConvertType( ctx_, data ) ) ).in( ctxPair =>
                         plet( pindexList( data ).$( psndPair( int, list( data ) ) .$( ctxPair ) ) ).in( ctxFieldN => 
 
@@ -154,7 +156,8 @@ describe("scriptToJsonFormat", () => {
                                 )
 
                             ))
-                        )) as Term<PBool>
+                        )),
+                        bool )
 
                     )
             }

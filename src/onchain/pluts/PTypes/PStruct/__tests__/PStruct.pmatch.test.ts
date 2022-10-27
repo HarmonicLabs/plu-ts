@@ -14,13 +14,6 @@ const PMaybe = pgenericStruct( tyArg => {
         Nothing: {}
     }
 });
-
-const FixStruct = pstruct({
-    A: { _0: int, _1: str },
-    B: { _0: int },
-    C: {}
-})
-
 const SingleCtor = pstruct({
     Ctor : {
         num: int,
@@ -31,7 +24,7 @@ const SingleCtor = pstruct({
 
 describe("pmatch", () => {
 
-    test.only("pmatch( <single constructor> )", () => {
+    test("pmatch( <single constructor> )", () => {
 
         expect(
             evalScript(
@@ -48,6 +41,20 @@ describe("pmatch", () => {
 
     })
 
+
+    test("two ctors", () => {
+
+        expect(
+            evalScript(
+                pmatch( PMaybe( int ).Just({ value: pInt(2) }) )
+                .onJust( f => f.extract("value").in( v => v.value ) )
+                .onNothing( _ => pInt( 0 ) )
+            )
+        ).toEqual(
+            UPLCConst.int( 2 )
+        );
+
+    })
     // test(" pmatch(FixStruct.<...>) ", () => {
     //     
     //     const matchFixStruct = pmatch( FixStruct.C({}) )

@@ -16,7 +16,7 @@ describe("typeofGenericStruct", () => {
 
         const PMaybe = pgenericStruct( PMaybeDef )
 
-        const PMaybeTermType = PMaybe.termType;
+        const PMaybeTermType = PMaybe.type;
         const manualType = struct({
             Just: { value: Type.Var() },
             Nothing: {}
