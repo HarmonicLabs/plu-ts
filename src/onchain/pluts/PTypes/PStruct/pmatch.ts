@@ -1,9 +1,8 @@
-import { ConstantableStructCtorDef, RestrictedStructInstance, ConstantableStructDefinition, PStruct, StructDefinition } from ".";
+import { ConstantableStructCtorDef, RestrictedStructInstance, ConstantableStructDefinition, PStruct } from ".";
 import BasePlutsError from "../../../../errors/BasePlutsError";
 import JsRuntime from "../../../../utils/JsRuntime";
 import ObjectUtils from "../../../../utils/ObjectUtils";
-import evalScript from "../../../CEK";
-import { showUPLC } from "../../../UPLC/UPLCTerm";
+import UPLCTerm from "../../../UPLC/UPLCTerm";
 import Application from "../../../UPLC/UPLCTerms/Application";
 import Builtin from "../../../UPLC/UPLCTerms/Builtin";
 import Delay from "../../../UPLC/UPLCTerms/Delay";
@@ -13,23 +12,20 @@ import HoistedUPLC from "../../../UPLC/UPLCTerms/HoistedUPLC";
 import Lambda from "../../../UPLC/UPLCTerms/Lambda";
 import UPLCConst from "../../../UPLC/UPLCTerms/UPLCConst";
 import UPLCVar from "../../../UPLC/UPLCTerms/UPLCVar";
-import { pif, punConstrData, pfstPair, psndPair, pappendStr, peqInt } from "../../Prelude/Builtins";
+import { punConstrData, psndPair, ptrace } from "../../Prelude/Builtins";
 import { pindexList } from "../../Prelude/List";
-import { plength } from "../../Prelude/List/plength";
 import PType from "../../PType";
 import { pintToStr } from "../../stdlib/pintToStr";
-import { ptraceError } from "../../stdlib/ptrace";
-import { plet, papp, punsafeConvertType, phoist, perror, plam, pfn } from "../../Syntax";
+import { plet, papp, punsafeConvertType, phoist, plam, pfn } from "../../Syntax";
 import Term from "../../Term";
-import Type, { data, fn, int, lam, list, struct, TermType, tyVar } from "../../Term/Type";
+import { data, fn, int, lam, list, TermType, tyVar } from "../../Term/Type";
 import { isConstantableStructDefinition } from "../../Term/Type/kinds";
-import { ctorDefToString, termTypeToString } from "../../Term/Type/utils";
+import { termTypeToString } from "../../Term/Type/utils";
 import PData from "../PData";
 import { getFromDataForType } from "../PData/conversion";
 import PLam from "../PFn/PLam";
 import PInt, { pInt } from "../PInt";
 import PList from "../PList";
-import { pStr } from "../PString";
 
 
 export type RawFields<CtorDef extends ConstantableStructCtorDef> = 
@@ -41,7 +37,7 @@ export type RawFields<CtorDef extends ConstantableStructCtorDef> =
     }
 
 
-function getToRawFieldsFinalExpr<CtorDef extends ConstantableStructCtorDef, Fields extends (keyof CtorDef)[], PExprResult extends PType>(
+function getExtractedFieldsExpr<CtorDef extends ConstantableStructCtorDef, Fields extends (keyof CtorDef)[], PExprResult extends PType>(
     elemAt: Term<PLam<PInt, PData>> & {
         $: (input: Term<PInt>) => Term<PData>;
     },
@@ -59,24 +55,21 @@ function getToRawFieldsFinalExpr<CtorDef extends ConstantableStructCtorDef, Fiel
     }
 
     const idx = allFIndexes[0];
-    return plet( getFromDataForType( ctorDef[ allFieldsNames[ idx ] ] )( papp( elemAt, pInt( idx ) ) ) ).in( value => {
+    return plet( getFromDataForType( ctorDef[ allFieldsNames[ idx ] ] )(
+        
+        ptrace( elemAt.type[2] )
+        .$( pintToStr.$( pInt( idx ) ) )
+        .$( papp( elemAt, pInt( idx ) ) ) as Term<PData> )
+
+    ).in( value => {
 
         ObjectUtils.defineNormalProperty(
             partialExtracted,
             allFieldsNames[ idx ],
-            // bad solution, hopefully temporary
-            // for some reason the value ( which is of course an UPLCVar )
-            // would have always evalueated to debruijn 0
-            // resulting always on the last field extracted when extracting multiple fields
-            new Term(
-                value.type,
-                _dbn => new UPLCVar(
-                    allFIndexes.length - 1
-                )
-            )
+            value
         );
 
-        return getToRawFieldsFinalExpr(
+        return getExtractedFieldsExpr(
             elemAt,
             ctorDef,
             allFIndexes.slice(1),
@@ -100,12 +93,13 @@ function defineExtract<CtorDef extends ConstantableStructCtorDef>
             in: <PExprResult extends PType>( expr: ( extracted: RestrictedStructInstance<CtorDef,Fields> ) => Term<PExprResult> ) => Term<PExprResult>
         } => {
 
-            const fieldsIdxs =
+            const fieldsIdxs = Object.freeze(
                 fields
                 .map( f => fieldsNames.findIndex( fName => fName === f ) )
                 // ignore fields not present in the definion or duplicates
                 .filter( (idx, i, thisArr ) => idx >= 0 && thisArr.indexOf( idx ) === i )
-                .sort( ( a,b ) => a < b ? -1 : ( a === b ? 0 : 1 ) );
+                .sort( ( a,b ) => a < b ? -1 : ( a === b ? 0 : 1 ) )
+            );
 
             return ObjectUtils.defineReadOnlyProperty(
                 {},
@@ -115,10 +109,10 @@ function defineExtract<CtorDef extends ConstantableStructCtorDef>
                     if( fieldsIdxs.length === 0 ) return expr({} as any);
 
                     return plet( pindexList( data ).$( _fieldsList ) ).in( elemAt =>
-                        getToRawFieldsFinalExpr(
+                        getExtractedFieldsExpr(
                             elemAt,
                             ctorDef,
-                            fieldsIdxs,
+                            fieldsIdxs as any,
                             expr,
                             {}
                         )
@@ -165,94 +159,96 @@ export function matchNCtorsIdxs( _n: number, returnT: TermType )
 
     const continuationT = lam( list(data), returnT );
 
+    // built immediately; not at compilation
+
     // all this mess just to allow hoisting
     // you have got to reason backwards to understand the process
+
+    let body: UPLCTerm = new ErrorUPLC("matchNCtorsIdxs; unmatched");
+
+    for(let i = n - 1; i >= 0; i-- )
+    {
+        // pif( continuationT ).$( isCtorIdx.$( pInt( i ) ) )
+        // .then( continuation_i )
+        // .else( ... )
+        body = new Force(
+            new Application(
+                new Application(
+                    new Application(
+                        Builtin.ifThenElse,
+                        new Application(
+                            new UPLCVar( 0 ),         // isCtorIdx // last variable introduced (see below)
+                            UPLCConst.int( i )        // .$( pInt( i ) )
+                        )
+                    ),
+                    new Delay( new UPLCVar(
+                        2 + // isCtorIdx and structConstrPair are in scope
+                        i   // continuation_i
+                    ) ) // then matching continuation
+                ),
+                new Delay( body ) // else go check the next index; or error if it was last possible index
+            )
+        );
+    }
+
+    // plet( peqInt.$( pfstPir(...).$( structConstrPair ) ) ).in( isCtorIdx => ... )
+    body = new Application(
+        new Lambda( // isCtorIdx
+            body
+        ),
+        // peqInt.$( pfstPir(...).$( structConstrPair ) )
+        new Application(
+            Builtin.equalsInteger,
+            new Application(
+                Builtin.fstPair,
+                new UPLCVar( 0 ) // structConstrPair // last variable introduced (see below)
+            )
+        )
+    );
+
+    // <whatever continuation was matched>.$( psndPair(...).$( structConstrPair ) )
+    // aka passing the fields to the continuation
+    body = new Application(
+        body,
+        new Application(
+            Builtin.sndPair,
+            new UPLCVar( 0 ), // structConstrPair // last variable introduced (see below)
+        )
+    );
+
+    // plet( punConstrData.$( structData ) )  ).in( structConstrPair => ... )
+    body = new Application(
+        new Lambda( // structConstrPair
+            body
+        ),
+        new Application(
+            Builtin.unConstrData,
+            new UPLCVar( n ) // structData
+        )
+    );
+
+    for(let i = n - 1; i >= 0; i-- )
+    {
+        body = new Lambda( // continuation n - 1 - i
+            body
+        );
+    }
+
+    // seriously, all this mess for this HoistedUPLC
+    body = new HoistedUPLC(
+        new Lambda( // structData
+            body
+        )
+    );
+
     return new Term(
         fn([
             data,
             ...(new Array( n ).fill( continuationT ))
         ],  returnT
         ),
-        _dbn => {
-
-            let body = new ErrorUPLC("matchNCtorsIdxs; unmatched");
-
-            for(let i = n - 1; i >= 0; i-- )
-            {
-                // pif( continuationT ).$( isCtorIdx.$( pInt( i ) ) )
-                // .then( continuation_i )
-                // .else( ... )
-                body = new Force(
-                    new Application(
-                        new Application(
-                            new Application(
-                                Builtin.ifThenElse,
-                                new Application(
-                                    new UPLCVar( 0 ),         // isCtorIdx // last variable introduced (see below)
-                                    UPLCConst.int( i )        // .$( pInt( i ) )
-                                )
-                            ),
-                            new Delay( new UPLCVar(
-                                2 + // isCtorIdx and structConstrPair are in scope
-                                i
-                            ) ) // then matching continuation
-                        ),
-                        new Delay( body ) // else go check the next index; or error if it was last possible index
-                    )
-                );
-            }
-
-            // plet( peqInt.$( pfstPir(...).$( structConstrPair ) ) ).in( isCtorIdx => ... )
-            body = new Application(
-                new Lambda( // isCtorIdx
-                    body
-                ),
-                // peqInt.$( pfstPir(...).$( structConstrPair ) )
-                new Application(
-                    Builtin.equalsInteger,
-                    new Application(
-                        Builtin.fstPair,
-                        new UPLCVar( 0 ) // structConstrPair // last variable introduced (see below)
-                    )
-                )
-            );
-
-            // <whatever continuation was matched>.$( psndPair(...).$( structConstrPair ) )
-            // aka passing the fields to the continuation
-            body = new Application(
-                body,
-                new Application(
-                    Builtin.sndPair,
-                    new UPLCVar( 0 ), // structConstrPair // last variable introduced (see below)
-                )
-            );
-
-            // plet( punConstrData.$( structData ) )  ).in( structConstrPair => ... )
-            body = new Application(
-                new Lambda( // structConstrPair
-                    body
-                ),
-                new Application(
-                    Builtin.unConstrData,
-                    new UPLCVar( n ) // structData
-                )
-            );
-
-            for(let i = n - 1; i >= 0; i-- )
-            {
-                body = new Lambda( // continuation n - 1 - i
-                    body
-                );
-            }
-
-            // seriously, all this mess for this HoistedUPLC
-            return new HoistedUPLC(
-                new Lambda( // structData
-                    body
-                )
-            );
-        }
-    )
+        _dbn => body
+    );
 }
 
 function hoistedMatchCtors<SDef extends ConstantableStructDefinition>( structData: Term<PData>, sDef: SDef, ctorCbs: CtorCallback<SDef>[] )

@@ -3,6 +3,8 @@ import PBool, { pBool } from "../../PTypes/PBool";
 import PLam, { TermFn } from "../../PTypes/PFn/PLam";
 import PInt, { pInt } from "../../PTypes/PInt";
 import PList, { pnil } from "../../PTypes/PList";
+import { pStr } from "../../PTypes/PString";
+import { ptraceIfFalse, ptraceIfTrue } from "../../stdlib/ptrace";
 import { papp, perror, pfn, phoist, plam, plet, precursive } from "../../Syntax";
 import Term from "../../Term";
 import Type, { bool, ConstantableTermType, fn, lam, list, PrimType, TermType, ToPType } from "../../Term/Type";
@@ -120,12 +122,12 @@ export function pindexList<ElemsT extends ConstantableTermType>( elemsT: ElemsT 
 
                     pif( elemsT ).$(
                         por
-                        .$( pisEmpty.$( list ) )
+                        .$( ptraceIfTrue.$( pStr("empty") ).$( pisEmpty.$( list ) ) )
                         .$( 
                             plessInt.$( idx ).$( pInt( 0 ) ) 
                         ) 
                     )
-                    .then( perror( elemsT ) )
+                    .then( perror( elemsT, "pindexList" ) )
                     .else(
 
                         pif( elemsT ).$( pInt( 0 ).eq( idx ) )
@@ -147,8 +149,7 @@ export function pindexList<ElemsT extends ConstantableTermType>( elemsT: ElemsT 
     )
 }
 
-
-export function pfindList<ElemsT extends ConstantableTermType, PElemsT extends ToPType<ElemsT> = ToPType<ElemsT>>( elemsT: ElemsT )
+export function pfind<ElemsT extends ConstantableTermType, PElemsT extends ToPType<ElemsT> = ToPType<ElemsT>>( elemsT: ElemsT )
     : TermFn<[ PLam<PElemsT,PBool>, PList<PElemsT> ], PMaybeT<PElemsT>>
 {
     const PMaybeElem = PMaybe( elemsT ) as PMaybeT<PElemsT>;
@@ -179,6 +180,8 @@ export function pfindList<ElemsT extends ConstantableTermType, PElemsT extends T
         )
     ) as any;
 }
+
+export const pfindList = pfind;
 
 
 export function pfilter<ElemsT extends ConstantableTermType>( elemsT: ElemsT )

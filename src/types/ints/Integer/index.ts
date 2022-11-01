@@ -170,7 +170,7 @@ export function forceUInteger( toForce: CanBeUInteger ): UInteger
 
     if( toForce < 0 )
     {
-        console.error( toForce );
+        // console.error( toForce );
         throw new BasePlutsError( "trying to convert an integer to an unsigned Integer, the number was negative" );
     }
 

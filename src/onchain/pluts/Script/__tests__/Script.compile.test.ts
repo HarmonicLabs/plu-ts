@@ -109,13 +109,9 @@ describe("scriptToJsonFormat", () => {
                     .and(
 
                         punsafeConvertType(
-                            
-                        plet( punConstrData.$( punsafeConvertType( ctx_, data ) ) ).in( ctxPair =>
-                        plet( pindexList( data ).$( psndPair( int, list( data ) ) .$( ctxPair ) ) ).in( ctxFieldN => 
 
-                            plet( punsafeConvertType( papp( ctxFieldN, pInt( 0 ) ), PTxInfo.type ) ).in( txInfo =>
-                            plet( punsafeConvertType( papp( ctxFieldN, pInt( 1 ) ), PScriptPurpose.type ) ).in( purpose =>
-
+                            pmatch( ctx_ )
+                            .onPScriptContext( _ctx_ => _ctx_.extract("purpose","txInfo").in( ({purpose,txInfo}) => 
                                 plet( pownHash.$( txInfo ).$( purpose ) ).in( ownHash => 
 
                                     pmatch( txInfo )
@@ -154,9 +150,8 @@ describe("scriptToJsonFormat", () => {
     
                                     ))
                                 )
-
-                            ))
-                        )),
+                            )),
+                            
                         bool )
 
                     )
@@ -178,7 +173,9 @@ describe("scriptToJsonFormat", () => {
             )
         );
 
-        //*
+        const validatorUPLC = validator.toUPLC(0);
+
+        /*
         const deserialized = UPLCDecoder.parse(
             compiled,
             "flat"
@@ -188,7 +185,6 @@ describe("scriptToJsonFormat", () => {
             deserialized.body
         );
 
-        const validatorUPLC = validator.toUPLC(0);
         const validatorUPLCText = showUPLC(
             validatorUPLC
         );
@@ -202,6 +198,7 @@ describe("scriptToJsonFormat", () => {
         
         //*
         const unitDatumHash = PDatumHash.from( pByteString("923918e403bf43c34b4ef6b48eb2ee04babed17320d8d1b9ff9ad086e86f44ec") );
+        const justUnitDatumHash = PMaybe( PDatumHash.type ).Just({ val: unitDatumHash });
         const emptyValue = PValue.from( pList( PValue.type[1].type[1] )([]) as any );
 
         const validatorSpendingUtxo = PTxOutRef.PTxOutRef({
@@ -210,13 +207,24 @@ describe("scriptToJsonFormat", () => {
             }),
             index: pInt( 0 )
         });
+        const validatorAddr = PAddress.PAddress({
+            credential: PCredential.PScriptCredential({
+                valHash: PValidatorHash.from( pByteString("caffee") )
+            }),
+            stakingCredential: PMaybe( PStakingCredential.type ).Nothing({})
+        });
+        const reslovedValidatorOutput = PTxOut.PTxOut({
+            address: validatorAddr,
+            datumHash: justUnitDatumHash,
+            value: emptyValue
+        });
 
         const appliedDeserialized = papp(
             papp(
                 papp(
                     new Term(
                         fn([data, data, data], unit),
-                        _dbn => deserialized.body
+                        _dbn => validatorUPLC
                     ) as any,
                     new Term(
                         data,
@@ -249,19 +257,10 @@ describe("scriptToJsonFormat", () => {
                     inputs: pList( PTxInInfo.type )([
                         PTxInInfo.PTxInInfo({
                             outRef: validatorSpendingUtxo,
-                            resolved: PTxOut.PTxOut({
-                                address: PAddress.PAddress({
-                                    credential: PCredential.PScriptCredential({
-                                        valHash: PValidatorHash.from( pByteString("caffee") )
-                                    }),
-                                    stakingCredential: PMaybe( PStakingCredential.type ).Nothing({})
-                                }),
-                                datumHash: PMaybe( PDatumHash.type ).Just({ val: unitDatumHash }),
-                                value: emptyValue
-                            })
+                            resolved: reslovedValidatorOutput
                         })
                     ]),
-                    outputs: pList( PTxOut.type )([])
+                    outputs: pList( PTxOut.type )([ reslovedValidatorOutput ])
                 }),
                 purpose: PScriptPurpose.Spending({
                     utxoRef: validatorSpendingUtxo

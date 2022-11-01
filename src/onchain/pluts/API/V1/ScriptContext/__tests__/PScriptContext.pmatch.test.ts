@@ -104,18 +104,57 @@ describe("pmatch( <PScriptContext> )", () => {
 
     });
 
-    test("extract txInfo", () => {
+    test("extract txInfo and purpose", () => {
 
         expect(
             evalScript(
                 pmatch( ctx )
                 .onPScriptContext(
-                    rawCtxFields => rawCtxFields.extract("txInfo").in( ({txInfo}) => txInfo )
+                    rawCtxFields => rawCtxFields.extract("txInfo","purpose").in( ({txInfo}) => txInfo )
                 )
             )
         ).toEqual(
             evalScript(
                 _txInfo
+            )
+        );
+
+        expect(
+            evalScript(
+                pmatch( ctx )
+                .onPScriptContext(
+                    rawCtxFields => rawCtxFields.extract("purpose","txInfo").in( ({txInfo}) => txInfo )
+                )
+            )
+        ).toEqual(
+            evalScript(
+                _txInfo
+            )
+        );
+
+        expect(
+            evalScript(
+                pmatch( ctx )
+                .onPScriptContext(
+                    rawCtxFields => rawCtxFields.extract("txInfo","purpose").in( ({purpose}) => purpose )
+                )
+            )
+        ).toEqual(
+            evalScript(
+                _purp
+            )
+        );
+
+        expect(
+            evalScript(
+                pmatch( ctx )
+                .onPScriptContext(
+                    rawCtxFields => rawCtxFields.extract("purpose","txInfo").in( ({purpose}) => purpose )
+                )
+            )
+        ).toEqual(
+            evalScript(
+                _purp
             )
         );
 

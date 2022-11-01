@@ -14,6 +14,18 @@ import { papp, pdelay, perror, pfn, pforce, phoist, plam } from "../Syntax";
 import Term from "../Term";
 import { bool, ConstantableTermType, delayed, fn, lam, str, TermType, ToPType } from "../Term/Type";
 
+export const ptraceIfTrue = phoist(
+    pfn([
+        str,
+        bool,
+    ],  bool)
+    (( msg, boolean ) => 
+            pif( bool ).$( boolean )
+            .then( ptrace( bool ).$( msg ).$( pBool( true ) ) )
+            .else( pBool( false ) )
+    )
+);
+
 export const ptraceIfFalse = phoist(
     pfn([
         str,

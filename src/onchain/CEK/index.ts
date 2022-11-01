@@ -34,8 +34,6 @@ export default function evalScript( _term: UPLCTerm | Term<any> ): PureUPLCTerm
     {
         const nextStep = steps.pop();
 
-        // console.log( (frames as any)._frames.length );
-
         if( nextStep === undefined )
         {
             throw new PlutsCEKError("step stack was empty; don't know how to proceed");
@@ -53,13 +51,6 @@ export default function evalScript( _term: UPLCTerm | Term<any> ): PureUPLCTerm
 
     function compute( term: UPLCTerm, env: CEKEnv ): void
     {
-        Debug.log(
-            "----------------- COMPUTE -----------------",
-            "\nframes: ", (frames as any)._frames,
-            "\nenv: ", (env as any)._env,
-            "\nterm: ", term,
-            "\n-------------------------------------------"
-        );
 
         if( term instanceof HoistedUPLC )
         {
@@ -91,7 +82,7 @@ export default function evalScript( _term: UPLCTerm | Term<any> ): PureUPLCTerm
         {
             steps.push(
                 new ReturnStep(
-                    new LambdaCEK( term.body.clone(), env )
+                    new LambdaCEK( term.body, env.clone() )
                 )
             );
 
@@ -144,12 +135,6 @@ export default function evalScript( _term: UPLCTerm | Term<any> ): PureUPLCTerm
 
     function returnCEK( v: UPLCTerm ): void
     {
-        Debug.log(
-            "----------------- RETURN -----------------",
-            "\nframes: ", (frames as any)._frames,
-            "\nvalue: ", v,
-            "\n-------------------------------------------"
-        );
 
         if( v instanceof HoistedUPLC )
         {

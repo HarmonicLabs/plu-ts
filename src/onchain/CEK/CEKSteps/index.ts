@@ -35,7 +35,7 @@ export class ReturnStep
     implements Cloneable<ReturnStep>
 {
     private _value: CEKValue;
-    get value(): CEKValue { return this._value.clone(); }
+    get value(): CEKValue { return this._value; }
 
     constructor( value: CEKValue )
     {
@@ -44,7 +44,7 @@ export class ReturnStep
 
     clone(): ReturnStep
     {
-        return new ReturnStep( this._value );
+        return new ReturnStep( this._value.clone() );
     }
 }
 

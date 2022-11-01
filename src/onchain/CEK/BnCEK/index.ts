@@ -2,7 +2,7 @@ import UPLCTerm from "../../UPLC/UPLCTerm";
 import UPLCBuiltinTag, { builtinTagToString } from "../../UPLC/UPLCTerms/Builtin/UPLCBuiltinTag";
 import ErrorUPLC from "../../UPLC/UPLCTerms/ErrorUPLC";
 import UPLCConst from "../../UPLC/UPLCTerms/UPLCConst";
-import ConstType, { constListTypeUtils, constPairTypeUtils, constT, constTypeEq, ConstTyTag } from "../../UPLC/UPLCTerms/UPLCConst/ConstType" 
+import ConstType, { constListTypeUtils, constPairTypeUtils, constT, constTypeEq, constTypeToStirng, ConstTyTag } from "../../UPLC/UPLCTerms/UPLCConst/ConstType" 
 import PartialBuiltin from "./PartialBuiltin";
 import Integer, { UInteger } from "../../../types/ints/Integer";
 import ConstValue from "../../UPLC/UPLCTerms/UPLCConst/ConstValue";
@@ -665,7 +665,7 @@ export default class BnCEK
     static unConstrData( data: UPLCTerm ): ConstOrErr
     {
         const d = getData( data );
-        if( d === undefined ) return new ErrorUPLC("not data");
+        if( d === undefined ) return new ErrorUPLC(`not data; unConstrData${ data instanceof UPLCConst ? "; " + constTypeToStirng(data.type) :""}`);
 
         if( !( d instanceof DataConstr ) ) return new ErrorUPLC("not a data constructor");
 
@@ -677,7 +677,7 @@ export default class BnCEK
     static unMapData( data: UPLCTerm ): ConstOrErr
     {
         const d = getData( data );
-        if( d === undefined ) return new ErrorUPLC("not data");
+        if( d === undefined ) return new ErrorUPLC("not data; unMapData");
 
         if( !( d instanceof DataMap ) ) return new ErrorUPLC("not a data map");
 
@@ -688,7 +688,7 @@ export default class BnCEK
     static unListData( data: UPLCTerm ): ConstOrErr
     {
         const d = getData( data );
-        if( d === undefined ) return new ErrorUPLC("not data");
+        if( d === undefined ) return new ErrorUPLC("not data; unListData");
 
         if( !( d instanceof DataList ) ) return new ErrorUPLC("not a data list");
 
@@ -699,7 +699,7 @@ export default class BnCEK
     static unIData( data: UPLCTerm ): ConstOrErr
     {
         const d = getData( data );
-        if( d === undefined ) return new ErrorUPLC("not data");
+        if( d === undefined ) return new ErrorUPLC("not data; unIData");
 
         if( !( d instanceof DataI ) ) return new ErrorUPLC("not a data integer");
 
@@ -708,7 +708,7 @@ export default class BnCEK
     static unBData( data: UPLCTerm ): ConstOrErr
     {
         const d = getData( data );
-        if( d === undefined ) return new ErrorUPLC("not data");
+        if( d === undefined ) return new ErrorUPLC("not data; unBData");
 
         if( !( d instanceof DataB ) ) return new ErrorUPLC("not a data BS", {UPLCTerm: ((data as UPLCConst).value as DataConstr).constr.asBigInt });
 
@@ -717,18 +717,18 @@ export default class BnCEK
     static equalsData( a: UPLCTerm, b: UPLCTerm ): ConstOrErr
     {
         const _a = getData( a );
-        if( _a === undefined ) return new ErrorUPLC("not data");
+        if( _a === undefined ) return new ErrorUPLC("not data; equalsData <first argument>");
         const _b = getData( b );
-        if( _b === undefined ) return new ErrorUPLC("not data");
+        if( _b === undefined ) return new ErrorUPLC("not data; equalsData <second argument>");
         
         return UPLCConst.bool( eqData( _a, _b ) );
     }
     static mkPairData( a: UPLCTerm, b: UPLCTerm ): ConstOrErr
     {
         const _a = getData( a );
-        if( _a === undefined ) return new ErrorUPLC("not data");
+        if( _a === undefined ) return new ErrorUPLC("not data; mkPairData <frist argument>");
         const _b = getData( b );
-        if( _b === undefined ) return new ErrorUPLC("not data");
+        if( _b === undefined ) return new ErrorUPLC("not data; mkPairData <second argument>");
         
         return UPLCConst.pairOf( constT.data, constT.data )( _a, _b );
     }
