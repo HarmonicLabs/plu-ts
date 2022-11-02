@@ -395,8 +395,7 @@ export default function pmatch<SDef extends ConstantableStructDefinition>( struc
 
                     return permutations( missingCtors.filter( c => c !== ctor ) )
                 }
-            );
-            
+            ); 
         });
 
         return ObjectUtils.defineReadOnlyProperty(
