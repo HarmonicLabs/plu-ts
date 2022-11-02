@@ -390,7 +390,6 @@ export default function pmatch<SDef extends ConstantableStructDefinition>( struc
                 remainingCtorsObj,
                 "on" + capitalize( ctor ),
                 ( cb: ( rawFields: object ) => Term<PType> ) => {
-
                     ctorCbs[idx] = cb;
 
                     return permutations( missingCtors.filter( c => c !== ctor ) )
