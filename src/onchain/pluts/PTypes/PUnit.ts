@@ -8,10 +8,21 @@ import { pInt } from "./PInt";
 import PData from "./PData";
 import PLam from "./PFn/PLam";
 import { pDataList } from "./PList";
+import HoistedUPLC from "../../UPLC/UPLCTerms/HoistedUPLC";
+import DataConstr from "../../../types/Data/DataConstr";
 
 export const pmakeUnit = () => new Term<PUnit>(
     Type.Unit,
     _dbn => UPLCConst.unit
+);
+
+export const pmakeUnitData = () => new Term<PData>(
+    data,
+    _dbn => new HoistedUPLC(
+        UPLCConst.data(
+            new DataConstr( 0, [] )
+        )
+    )
 );
 
 export default class PUnit extends PDataRepresentable

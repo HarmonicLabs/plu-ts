@@ -140,7 +140,7 @@ type TypedPMatchOptions<SDef extends ConstantableStructDefinition, PReturnT exte
             =>  Omit<SDef,Ctor> extends EmptyObject ?
                 Term<PReturnT> :
                 TypedPMatchOptions<Omit<SDef,Ctor>, PReturnT>
-}
+} & MatchRest<PReturnT>
 
 
 export type PMatchOptions<SDef extends ConstantableStructDefinition> = {
@@ -149,8 +149,9 @@ export type PMatchOptions<SDef extends ConstantableStructDefinition> = {
             =>  Omit<SDef,Ctor> extends EmptyObject ?
                 Term<PReturnT> :
                 TypedPMatchOptions<Omit<SDef,Ctor>, PReturnT>
+} & {
+    _: <PReturnT extends PType>( continuation: ( rawFields: TermList<PData> ) => Term<PReturnT> ) => Term<PReturnT>
 }
-
 
 export function matchNCtorsIdxs( _n: number, returnT: TermType )
 {
@@ -252,7 +253,11 @@ export function matchNCtorsIdxs( _n: number, returnT: TermType )
     );
 }
 
-function hoistedMatchCtors<SDef extends ConstantableStructDefinition>( structData: Term<PData>, sDef: SDef, ctorCbs: CtorCallback<SDef>[] )
+function hoistedMatchCtors<SDef extends ConstantableStructDefinition>(
+    structData: Term<PData>,
+    sDef: SDef,
+    ctorCbs: (CtorCallback<SDef> | Term<PLam<PList<PData>, PType>>)[]
+)
     : Term<PType>
 {
     const length = ctorCbs.length;
@@ -264,20 +269,23 @@ function hoistedMatchCtors<SDef extends ConstantableStructDefinition>( structDat
 
     if( length === 1 )
     {
+        const cont = ctorCbs[0];
         return papp(
             papp(
                 matchSingleCtorStruct,
                 structData
             ),
+            cont instanceof Term ?
+            cont :
             plam( list(data), returnT )
             ( fieldsListData => 
-                ctorCbs[0]( 
+                cont( 
                     defineExtract( 
                         fieldsListData, 
                         sDef[ ctors[0] ] as SDef[string]
                     ) 
                 )
-            ) as any
+            )
         );
     }
     
@@ -288,11 +296,14 @@ function hoistedMatchCtors<SDef extends ConstantableStructDefinition>( structDat
 
     for( let i = ctors.length - 1; i >= 0 ; i-- )
     {
+        const thisCont = ctorCbs[i];
         result = papp(
             result as any,
+            thisCont instanceof Term ?
+            thisCont : 
             plam( list(data), returnT )
             ( fieldsListData => 
-                ctorCbs[i]( 
+                thisCont( 
                     defineExtract( 
                         fieldsListData, 
                         sDef[ ctors[i] ] as SDef[string]
@@ -319,7 +330,7 @@ export default function pmatch<SDef extends ConstantableStructDefinition>( struc
     }
 
     const ctors = Object.keys( sDef );
-    const ctorCbs: CtorCallback<SDef>[] = Array( ctors.length );
+    const ctorCbs: CtorCallback<SDef>[] = ctors.map( _ => undefined ) as any;
 
     function indexOfCtor( ctor: string ): number
     {
@@ -344,9 +355,11 @@ export default function pmatch<SDef extends ConstantableStructDefinition>( struc
             const ctor = missingCtors[0] as keyof SDef & string;
             const idx = indexOfCtor( ctor );
 
-            return ObjectUtils.defineReadOnlyProperty(
-                {},
-                "on" + capitalize( ctor ),
+            const matcher = "on" + capitalize( ctor );
+            let result = {};
+            result = ObjectUtils.defineReadOnlyProperty(
+                result,
+                matcher,
                 ( cb: ( rawFields: RawFields<SDef[typeof ctor]> ) => Term<PType> ): Term<PType> => {
 
                     // same stuff of previous ctors
@@ -359,6 +372,11 @@ export default function pmatch<SDef extends ConstantableStructDefinition>( struc
                     );
 
                 }
+            );
+            return ObjectUtils.defineReadOnlyProperty(
+                result,
+                "_",
+                (result as any)[matcher]
             );
         }
 
@@ -380,6 +398,32 @@ export default function pmatch<SDef extends ConstantableStructDefinition>( struc
             );
             
         });
+
+        return ObjectUtils.defineReadOnlyProperty(
+            remainingCtorsObj,
+            "_",
+            ( cb: ( rawFields: Term<PList<PData>> ) => Term<PType> ) => {
+                
+                return plet(
+                    plam( list(data), tyVar("_any_pmatch_cont") )( cb )
+                ).in( othCtorsContinuation => {
+
+                    for( let i = 0; i < ctorCbs.length; i++ )
+                    {
+                        if( ctorCbs[i] === undefined )
+                        {
+                            ctorCbs[i] = othCtorsContinuation as any;
+                        }
+                    }
+
+                    return hoistedMatchCtors(
+                        punsafeConvertType( struct, data ),
+                        sDef,
+                        ctorCbs as any
+                    );
+                })
+            }
+        );
 
         return remainingCtorsObj;
     }

@@ -309,7 +309,7 @@ export type ToPType<T extends TermType> =
     T extends [ DataConstructor, ...DataType[] ] ? PData :
     // covers ```TermTypeParameter```s too
     T extends TermType ? PType :
-    // T extends FromPType<infer PT extends PType> ? PT :
+    // T extends FromPType<infer PT extends PType> ? PT : // !!! IMPORTANT !!! can only be present in one of the two types; breaks TypeScript LSP otherwise
     never;
 
 export type FromPType<PT extends PType | ToPType<TermType> | PStruct<any>> =

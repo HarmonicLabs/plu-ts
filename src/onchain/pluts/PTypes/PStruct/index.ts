@@ -1,6 +1,9 @@
+import DataConstr from "../../../../types/Data/DataConstr";
 import Pair from "../../../../types/structs/Pair";
 import JsRuntime from "../../../../utils/JsRuntime";
 import ObjectUtils from "../../../../utils/ObjectUtils";
+import HoistedUPLC from "../../../UPLC/UPLCTerms/HoistedUPLC";
+import UPLCConst from "../../../UPLC/UPLCTerms/UPLCConst";
 import { pConstrToData } from "../../Prelude/Builtins";
 import { PDataRepresentable } from "../../PType";
 import { punsafeConvertType } from "../../Syntax";
@@ -276,6 +279,20 @@ export default function pstruct<StructDef extends ConstantableStructDefinition>(
                 // order of fields in the 'jsStruct' migth be different than the order of the definiton
                 // to preserve the order we need to use the keys got form the ctor definition
                 const ctorDefFieldsNames = Object.keys( thisCtorDef );
+
+                if( ctorDefFieldsNames.length === 0 )
+                {
+                    return ObjectUtils.defineReadOnlyHiddenProperty(
+                        new Term(
+                            thisStructType,
+                            _dbn => new HoistedUPLC(
+                                UPLCConst.data( new DataConstr( i, [] ) )
+                            )
+                        ),
+                        "_pIsConstantStruct",
+                        true
+                    );
+                }
 
                 // still we must be sure that the jsStruct has at least all the fields
                 JsRuntime.assert(

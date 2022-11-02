@@ -28,13 +28,13 @@ const pownHash = phoist( pfn([
                 .onPAddress( ({extract}) => extract("credential").in( ({credential}) =>
                 
                     pmatch( credential )
-                    .onPScriptCredential( rawScriptCred => rawScriptCred.extract("valHash").in( ({ valHash }) => valHash as Term<typeof PValidatorHash> ) )
-                    .onPPubKeyCredential( _ => punsafeConvertType( perror( PValidatorHash.type, "own input is not a validator hash" ), PValidatorHash.type ) ) as Term<typeof PValidatorHash>
+                    .onPScriptCredential( rawScriptCred => rawScriptCred.extract("valHash").in( ({ valHash }) => valHash ) )
+                    .onPPubKeyCredential( _ => perror( PValidatorHash.type, "own input is not a validator hash" ) as Term<typeof PValidatorHash> )
                 ))
             ))
         ))
     ))
-    .onNothing( _ => perror( PValidatorHash.type, "can't find input" ) ) as Term<typeof PValidatorHash>;
+    .onNothing( _ => perror( PValidatorHash.type, "can't find input" ) as Term<typeof PValidatorHash> );
 
 }));
 

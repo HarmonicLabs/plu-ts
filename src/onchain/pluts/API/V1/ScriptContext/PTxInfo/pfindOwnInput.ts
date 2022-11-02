@@ -64,9 +64,7 @@ const pfindOwnInput = phoist( pfn([
         ))
 
     )))
-    .onCertifying( _ => PMaybeInputInfo.Nothing({}) )
-    .onMinting(    _ => PMaybeInputInfo.Nothing({}) )
-    .onRewarding(  _ => PMaybeInputInfo.Nothing({}) ) as Term<PMaybeT<typeof PTxInInfo>>;
+    ._( _ => PMaybeInputInfo.Nothing({}) as any )
 
     return result;
 
