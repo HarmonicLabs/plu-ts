@@ -1,0 +1,18 @@
+import { psndPair, punConstrData } from "../../Prelude/Builtins";
+import { phoist, pfn, papp } from "../../Syntax";
+import { data, lam, list, int, tyVar } from "../../Term/Type";
+
+const matchSingleCtorStruct = (( returnT ) =>  phoist(
+    pfn([
+        data,
+        lam( list(data), returnT )
+    ],  returnT)
+    ((structData, continuation) => 
+        // it makes no sense to extract the ctor index for datatype defined as single ctors
+        // even from security point of view
+        // an attacker can always change the data to match the ctor index expected 
+        papp( continuation, psndPair( int, list(data) ).$( punConstrData.$( structData ) ) )
+    )
+))( tyVar("matchSingleCtorStruct_returnT") );
+
+export default matchSingleCtorStruct;

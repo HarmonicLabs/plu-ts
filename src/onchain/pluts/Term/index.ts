@@ -118,8 +118,8 @@ export default class Term<A extends PType>
 
         const proofSym = Symbol("overwrite_toUPLC_proofSym");
 
-        // "copying" the functionref is neededto prevent potential "external" js override
-        // 'toUPLC' (the constructor param) si used to override in case of hoisting
+        // "copying" the function ref is needed to prevent potential "external" js override
+        // 'toUPLC' (the constructor param) is used to override in case of hoisting
         // '_toUPLC' is used to get and set the property
         let _toUPLC = toUPLC;
         Object.defineProperty(
@@ -128,7 +128,7 @@ export default class Term<A extends PType>
             {
                 get: () => _toUPLC,
                 set: ( v: { proof: symbol, value: ( dbn: bigint ) => UPLCTerm }) => {
-                    if( v.proof === proofSym )
+                    if( typeof v === "object" && v?.proof === proofSym )
                     {
                         _toUPLC = v.value;
                     }

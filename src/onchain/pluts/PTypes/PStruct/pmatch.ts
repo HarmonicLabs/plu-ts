@@ -14,6 +14,7 @@ import UPLCConst from "../../../UPLC/UPLCTerms/UPLCConst";
 import UPLCVar from "../../../UPLC/UPLCTerms/UPLCVar";
 import { punConstrData, psndPair, ptrace } from "../../Prelude/Builtins";
 import { pindexList } from "../../Prelude/List";
+import TermList from "../../Prelude/UtilityTerms/TermList";
 import PType from "../../PType";
 import { pintToStr } from "../../stdlib/pintToStr";
 import { plet, papp, punsafeConvertType, phoist, plam, pfn } from "../../Syntax";
@@ -26,6 +27,7 @@ import { getFromDataForType } from "../PData/conversion";
 import PLam from "../PFn/PLam";
 import PInt, { pInt } from "../PInt";
 import PList from "../PList";
+import matchSingleCtorStruct from "./matchSingleCtorStruct";
 
 
 export type RawFields<CtorDef extends ConstantableStructCtorDef> = 
@@ -56,11 +58,7 @@ function getExtractedFieldsExpr<CtorDef extends ConstantableStructCtorDef, Field
 
     const idx = allFIndexes[0];
     return plet( getFromDataForType( ctorDef[ allFieldsNames[ idx ] ] )(
-        
-        ptrace( elemAt.type[2] )
-        .$( pintToStr.$( pInt( idx ) ) )
-        .$( papp( elemAt, pInt( idx ) ) ) as Term<PData> )
-
+        papp( elemAt, pInt( idx ) ) )
     ).in( value => {
 
         ObjectUtils.defineNormalProperty(
@@ -130,26 +128,29 @@ function capitalize<s extends string>( str: s ): Capitalize<s>
 
 type CtorCallback<SDef extends ConstantableStructDefinition> = ( rawFields: RawFields<SDef[keyof SDef & string]> ) => Term<PType>;
 
-export type PMatchOptions<SDef extends ConstantableStructDefinition> = {
-    [Ctor in keyof SDef as `on${Capitalize<string & Ctor>}`]
-        : ( cb: ( rawFields: RawFields<SDef[Ctor]> ) => Term<PType> )
-            =>  Omit<SDef,Ctor> extends { [x: string | number | symbol ]: never } ?
-                Term<PType> :
-                PMatchOptions<Omit<SDef,Ctor>>
+type EmptyObject = { [x: string | number | symbol ]: never };
+
+type MatchRest<PReturnT extends PType> = {
+    _: ( continuation: ( rawFields: TermList<PData> ) => Term<PReturnT> ) => Term<PReturnT>
 }
 
-const matchSingleCtorStruct = (( returnT ) =>  phoist(
-    pfn([
-        data,
-        lam( list(data), returnT )
-    ],  returnT)
-    ((structData, continuation) => 
-        // it makes no sense to extract the ctor index for datatype defined as single ctors
-        // even from security point of view
-        // an attacker can always change the data to match the ctor index expected 
-        papp( continuation, psndPair( int, list(data) ).$( punConstrData.$( structData ) ) )
-    )
-))( tyVar("matchSingleCtorStruct_returnT") );
+type TypedPMatchOptions<SDef extends ConstantableStructDefinition, PReturnT extends PType> = {
+    [Ctor in keyof SDef as `on${Capitalize<string & Ctor>}`]
+        : ( cb: ( rawFields: RawFields<SDef[Ctor]> ) => Term<PReturnT> )
+            =>  Omit<SDef,Ctor> extends EmptyObject ?
+                Term<PReturnT> :
+                TypedPMatchOptions<Omit<SDef,Ctor>, PReturnT>
+}
+
+
+export type PMatchOptions<SDef extends ConstantableStructDefinition> = {
+    [Ctor in keyof SDef as `on${Capitalize<string & Ctor>}`]
+        : <PReturnT extends PType>( cb: ( rawFields: RawFields<SDef[Ctor]> ) => Term<PReturnT> )
+            =>  Omit<SDef,Ctor> extends EmptyObject ?
+                Term<PReturnT> :
+                TypedPMatchOptions<Omit<SDef,Ctor>, PReturnT>
+}
+
 
 export function matchNCtorsIdxs( _n: number, returnT: TermType )
 {

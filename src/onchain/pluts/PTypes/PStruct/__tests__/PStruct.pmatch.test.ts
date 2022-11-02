@@ -276,10 +276,10 @@ describe("pmatch", () => {
                             .onTwoNums( rawNums => rawNums.extract("a","b").in( nums =>
                                 nums.a
                             ))
-                            .onThreeNums( _ => perror( bs ) )
+                            .onThreeNums( _ => perror( int ) )
 
                         ))
-                        .onThreeNums( _ => perror( bs ) )
+                        .onThreeNums( _ => perror( int ) )
                     )
                 )
             ).toEqual(
@@ -298,10 +298,10 @@ describe("pmatch", () => {
                             .onTwoNums( rawNums => rawNums.extract("a","b").in( nums =>
                                 nums.b
                             ))
-                            .onThreeNums( _ => perror( bs ) )
+                            .onThreeNums( _ => perror( int ) )
 
                         ))
-                        .onThreeNums( _ => perror( bs ) )
+                        .onThreeNums( _ => perror( int ) )
                     )
                 )
             ).toEqual(

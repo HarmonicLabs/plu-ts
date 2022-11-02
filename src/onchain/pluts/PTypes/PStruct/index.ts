@@ -197,7 +197,6 @@ export default function pstruct<StructDef extends ConstantableStructDefinition>(
         static type: [ typeof structType, StructDef ];
         static fromData: <Ext extends PStructExt = PStructExt>( data: Term<PData> ) => Term<Ext>
         static toData:   <Ext extends PStructExt>( data: Term<Ext> ) => Term<PData>;
-
     }
 
     const thisStructType = Type.Struct( def );

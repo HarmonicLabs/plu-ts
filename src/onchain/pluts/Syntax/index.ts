@@ -21,6 +21,8 @@ import { isLambdaType, isDelayedType } from "../Term/Type/kinds";
 import { termTypeToString } from "../Term/Type/utils";
 import applyLambdaType from "../Term/Type/applyLambdaType";
 import UPLCTerm from "../../UPLC/UPLCTerm";
+import Builtin from "../../UPLC/UPLCTerms/Builtin";
+import { getNRequiredForces } from "../../UPLC/UPLCTerms/Builtin/UPLCBuiltinTag";
 
 
 
@@ -410,37 +412,34 @@ export function plet<PVarT extends PType, SomeExtension extends object>( varValu
         // return papp( plam( varValue.type, outType )( expr as any ), varValue as any ) as any;
         return new Term(
             outType,
-            dbn => new Application(
-                new Lambda(
-                    expr( new Term(
-                        varValue.type,
-                        varAccessDbn => new UPLCVar( varAccessDbn - ( dbn + BigInt(1) ) ) // point to the lambda generated here
-                    ) as TermPVar ).toUPLC( ( dbn + BigInt(1) ) )
-                ),
-                varValue.toUPLC( dbn )
-            )
+            dbn => {
+                const arg = varValue.toUPLC( dbn );
+
+                if(
+                    // inline variables; no need to add an application since already in scope
+                    arg instanceof UPLCVar ||
+                    (
+                        // builtins with less than 2 forces do take less space inlined
+                        // if it has two forces it is convenient to inline only if used once
+                        // if you are using a variable "pletted" once you shouldn't use "plet"
+                        arg instanceof Builtin && getNRequiredForces( arg.tag ) < 2
+                    )
+                )
+                {
+                    return expr( varValue ).toUPLC( dbn );
+                }
+
+                return new Application(
+                    new Lambda(
+                        expr( new Term(
+                            varValue.type,
+                            varAccessDbn => new UPLCVar( varAccessDbn - ( dbn + BigInt(1) ) ) // point to the lambda generated here
+                        ) as TermPVar ).toUPLC( ( dbn + BigInt(1) ) )
+                    ),
+                    arg
+                )
+            }
         );
-
-        /*
-        this causes to compile twice the term at compile-time
-
-        one time here when checking
-        and the second one at the actual compilation
-
-        @fixme this should be handled at actual compile time with a similar process done for HoistedUPLC
-
-        // multiRefsCase is the term returned above
-        return hasMultipleRefsInTerm(
-                BigInt( -1 ), // var introduced in the term itself
-                multiRefsCase.toUPLC( 0 )
-            ) ?
-            multiRefsCase :
-            // inline the value in the variable if not referenced more than once
-            new Term(
-                dbn => expr( varValue ).toUPLC( dbn ),
-                new exprResT
-            );
-        */
     }
     return {
         in: continuation

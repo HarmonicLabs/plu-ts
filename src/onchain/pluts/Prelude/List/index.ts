@@ -3,8 +3,6 @@ import PBool, { pBool } from "../../PTypes/PBool";
 import PLam, { TermFn } from "../../PTypes/PFn/PLam";
 import PInt, { pInt } from "../../PTypes/PInt";
 import PList, { pnil } from "../../PTypes/PList";
-import { pStr } from "../../PTypes/PString";
-import { ptraceIfFalse, ptraceIfTrue } from "../../stdlib/ptrace";
 import { papp, perror, pfn, phoist, plam, plet, precursive } from "../../Syntax";
 import Term from "../../Term";
 import Type, { bool, ConstantableTermType, fn, lam, list, PrimType, TermType, ToPType } from "../../Term/Type";
@@ -122,7 +120,7 @@ export function pindexList<ElemsT extends ConstantableTermType>( elemsT: ElemsT 
 
                     pif( elemsT ).$(
                         por
-                        .$( ptraceIfTrue.$( pStr("empty") ).$( pisEmpty.$( list ) ) )
+                        .$( pisEmpty.$( list ) )
                         .$( 
                             plessInt.$( idx ).$( pInt( 0 ) ) 
                         ) 
