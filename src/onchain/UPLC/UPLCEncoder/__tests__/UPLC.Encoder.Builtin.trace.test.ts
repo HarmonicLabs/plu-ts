@@ -1,7 +1,7 @@
 import BitStream from "../../../../types/bits/BitStream";
 import ByteString from "../../../../types/HexString/ByteString";
 import BigIntUtils from "../../../../utils/BigIntUtils";
-import { ptrace } from "../../../pluts/Prelude/Builtins";
+import { ptrace } from "../../../pluts/stdlib/Builtins";
 import { pByteString } from "../../../pluts/PTypes/PByteString";
 import { pStr } from "../../../pluts/PTypes/PString";
 import { pmakeUnit } from "../../../pluts/PTypes/PUnit";

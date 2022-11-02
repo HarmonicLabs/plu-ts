@@ -1,4 +1,4 @@
-import { pappendStr, pdiv, pif, pmod } from "../Prelude/Builtins";
+import { pappendStr, pdiv, pif, pmod } from "./Builtins";
 import { pInt } from "../PTypes/PInt";
 import { pStr } from "../PTypes/PString";
 import { papp, pfn, phoist, plam, precursive } from "../Syntax";

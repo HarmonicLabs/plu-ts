@@ -2,7 +2,7 @@ import pstruct, { pgenericStruct, RestrictedStructInstance } from ".."
 import ByteString from "../../../../../types/HexString/ByteString";
 import evalScript from "../../../../CEK";
 import UPLCConst from "../../../../UPLC/UPLCTerms/UPLCConst";
-import { padd, pconsBs, pindexBs, plessInt } from "../../../Prelude/Builtins";
+import { padd, pconsBs, pindexBs, plessInt } from "../../../stdlib/Builtins";
 import { perror } from "../../../Syntax";
 import Term from "../../../Term";
 import { bs, int, PrimType, str, structType, unit } from "../../../Term/Type";

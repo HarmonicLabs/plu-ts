@@ -1,4 +1,4 @@
-import PMaybe from "../../../Prelude/PMaybe";
+import PMaybe from "../../../stdlib/PMaybe";
 import pstruct from "../../../PTypes/PStruct";
 import PCredential from "./PCredential";
 import PStakingCredential from "./PStakingCredential";

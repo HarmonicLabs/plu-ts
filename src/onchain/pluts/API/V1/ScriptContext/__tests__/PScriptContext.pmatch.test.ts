@@ -1,5 +1,5 @@
 import evalScript from "../../../../../CEK";
-import PMaybe from "../../../../Prelude/PMaybe";
+import PMaybe from "../../../../stdlib/PMaybe";
 import { pBool } from "../../../../PTypes/PBool";
 import { pByteString } from "../../../../PTypes/PByteString";
 import { pInt } from "../../../../PTypes/PInt";

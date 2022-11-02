@@ -1,5 +1,5 @@
 import PTxInfo from ".";
-import { PMaybeT } from "../../../../Prelude/PMaybe";
+import { PMaybeT } from "../../../../stdlib/PMaybe";
 import pmatch from "../../../../PTypes/PStruct/pmatch";
 import { perror, pfn, phoist, punsafeConvertType } from "../../../../Syntax";
 import Term from "../../../../Term";

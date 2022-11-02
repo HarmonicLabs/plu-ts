@@ -1,4 +1,4 @@
-import { psndPair, punConstrData } from "../../Prelude/Builtins";
+import { psndPair, punConstrData } from "../../stdlib/Builtins";
 import { phoist, pfn, papp } from "../../Syntax";
 import { data, lam, list, int, tyVar } from "../../Term/Type";
 

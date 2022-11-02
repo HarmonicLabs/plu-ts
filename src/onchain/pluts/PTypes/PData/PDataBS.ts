@@ -2,7 +2,7 @@ import PData from ".";
 import DataB from "../../../../types/Data/DataB";
 import ByteString from "../../../../types/HexString/ByteString";
 import UPLCConst from "../../../UPLC/UPLCTerms/UPLCConst";
-import { pBSToData, punBData } from "../../Prelude/Builtins";
+import { pBSToData, punBData } from "../../stdlib/Builtins";
 import Term from "../../Term";
 import Type from "../../Term/Type";
 import PByteString from "../PByteString";

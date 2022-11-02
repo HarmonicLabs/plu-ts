@@ -4,7 +4,7 @@ import JsRuntime from "../../../../utils/JsRuntime";
 import ObjectUtils from "../../../../utils/ObjectUtils";
 import HoistedUPLC from "../../../UPLC/UPLCTerms/HoistedUPLC";
 import UPLCConst from "../../../UPLC/UPLCTerms/UPLCConst";
-import { pConstrToData } from "../../Prelude/Builtins";
+import { pConstrToData } from "../../stdlib/Builtins";
 import { PDataRepresentable } from "../../PType";
 import { punsafeConvertType } from "../../Syntax";
 import Term from "../../Term";

@@ -12,9 +12,9 @@ import HoistedUPLC from "../../../UPLC/UPLCTerms/HoistedUPLC";
 import Lambda from "../../../UPLC/UPLCTerms/Lambda";
 import UPLCConst from "../../../UPLC/UPLCTerms/UPLCConst";
 import UPLCVar from "../../../UPLC/UPLCTerms/UPLCVar";
-import { punConstrData, psndPair, ptrace } from "../../Prelude/Builtins";
-import { pindexList } from "../../Prelude/List";
-import TermList from "../../Prelude/UtilityTerms/TermList";
+import { punConstrData, psndPair, ptrace } from "../../stdlib/Builtins";
+import { pindexList } from "../../stdlib/List";
+import TermList from "../../stdlib/UtilityTerms/TermList";
 import PType from "../../PType";
 import { pintToStr } from "../../stdlib/pintToStr";
 import { plet, papp, punsafeConvertType, phoist, plam, pfn } from "../../Syntax";
@@ -422,8 +422,6 @@ export default function pmatch<SDef extends ConstantableStructDefinition>( struc
                 })
             }
         );
-
-        return remainingCtorsObj;
     }
 
     return permutations( ctors ) as any;

@@ -1,5 +1,5 @@
 import UPLCConst from "../../UPLC/UPLCTerms/UPLCConst";
-import { pfstPair, psndPair, pisEmpty, pif, punConstrData, pConstrToData } from "../Prelude/Builtins";
+import { pfstPair, psndPair, pisEmpty, pif, punConstrData, pConstrToData } from "../stdlib/Builtins";
 import { PDataRepresentable } from "../PType";
 import { perror, phoist, plam, plet } from "../Syntax";
 import Term from "../Term";

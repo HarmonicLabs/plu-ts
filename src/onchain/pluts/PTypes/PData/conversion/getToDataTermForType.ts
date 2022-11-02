@@ -1,7 +1,7 @@
 import PData from "..";
 import BasePlutsError from "../../../../../errors/BasePlutsError";
-import { ppairData, pfstPair } from "../../../Prelude/Builtins";
-import { pmap } from "../../../Prelude/List";
+import { ppairData, pfstPair } from "../../../stdlib/Builtins";
+import { pmap } from "../../../stdlib/List";
 import { phoist, plam, punsafeConvertType } from "../../../Syntax";
 import Term from "../../../Term";
 import Type, { ConstantableTermType, StructType, ToPType, int, bs, str, unit, bool, list, data, pair } from "../../../Term/Type";

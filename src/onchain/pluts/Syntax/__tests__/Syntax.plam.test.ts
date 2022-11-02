@@ -1,5 +1,5 @@
 import { papp } from "..";
-import { padd } from "../../Prelude/Builtins";
+import { padd } from "../../stdlib/Builtins";
 
 
 describe("plam", () => {

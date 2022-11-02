@@ -1,7 +1,7 @@
 import ByteString from "../../../types/HexString/ByteString";
 import UPLCConst from "../../UPLC/UPLCTerms/UPLCConst";
-import { pBSToData, punBData } from "../Prelude/Builtins";
-import TermBS, { addPByteStringMethods } from "../Prelude/UtilityTerms/TermBS";
+import { pBSToData, punBData } from "../stdlib/Builtins";
+import TermBS, { addPByteStringMethods } from "../stdlib/UtilityTerms/TermBS";
 import { PDataRepresentable } from "../PType";
 import Term from "../Term";
 import Type, { TermType } from "../Term/Type";

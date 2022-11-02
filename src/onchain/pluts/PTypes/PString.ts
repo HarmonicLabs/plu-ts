@@ -1,7 +1,7 @@
 import Cloneable from "../../../types/interfaces/Cloneable";
 import UPLCConst from "../../UPLC/UPLCTerms/UPLCConst";
-import { pBSToData, pdecodeUtf8, pencodeUtf8, punBData } from "../Prelude/Builtins";
-import TermStr, { addPStringMethods } from "../Prelude/UtilityTerms/TermStr";
+import { pBSToData, pdecodeUtf8, pencodeUtf8, punBData } from "../stdlib/Builtins";
+import TermStr, { addPStringMethods } from "../stdlib/UtilityTerms/TermStr";
 import { PDataRepresentable } from "../PType";
 import Term from "../Term";
 import Type, { TermType } from "../Term/Type";

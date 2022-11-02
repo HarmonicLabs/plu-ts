@@ -1,4 +1,4 @@
-import PMaybe from "../../../Prelude/PMaybe";
+import PMaybe from "../../../stdlib/PMaybe";
 import pstruct from "../../../PTypes/PStruct";
 import PAddress from "../Address";
 import PDatumHash from "../Scripts/PDatumHash";

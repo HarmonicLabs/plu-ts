@@ -2,7 +2,7 @@ import Data, { isData } from "../../../types/Data";
 import JsRuntime from "../../../utils/JsRuntime";
 import UPLCConst from "../../UPLC/UPLCTerms/UPLCConst";
 import { constT } from "../../UPLC/UPLCTerms/UPLCConst/ConstType";
-import { pListToData, pnilData, pnilPairData, pprepend, punListData } from "../Prelude/Builtins";
+import { pListToData, pnilData, pnilPairData, pprepend, punListData } from "../stdlib/Builtins";
 import PType, { PDataRepresentable } from "../PType";
 import { punsafeConvertType } from "../Syntax";
 import Term from "../Term";

@@ -1,7 +1,7 @@
 import PTxInfo from ".";
-import { peqBs } from "../../../../Prelude/Builtins";
-import { pfindList } from "../../../../Prelude/List";
-import PMaybe, { PMaybeT } from "../../../../Prelude/PMaybe";
+import { peqBs } from "../../../../stdlib/Builtins";
+import { pfindList } from "../../../../stdlib/List";
+import PMaybe, { PMaybeT } from "../../../../stdlib/PMaybe";
 import PBool from "../../../../PTypes/PBool";
 import { TermFn } from "../../../../PTypes/PFn/PLam";
 import pmatch from "../../../../PTypes/PStruct/pmatch";

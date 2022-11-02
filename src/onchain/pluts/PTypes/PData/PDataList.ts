@@ -5,7 +5,7 @@ import DataConstr from "../../../../types/Data/DataConstr";
 import DataList from "../../../../types/Data/DataList";
 import JsRuntime from "../../../../utils/JsRuntime";
 import UPLCConst from "../../../UPLC/UPLCTerms/UPLCConst";
-import { pListToData, punListData } from "../../Prelude/Builtins";
+import { pListToData, punListData } from "../../stdlib/Builtins";
 import Term from "../../Term";
 import Type, { ToPDataType, ToPType } from "../../Term/Type";
 import { dataTypeExtends } from "../../Term/Type/extension";

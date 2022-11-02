@@ -1,5 +1,5 @@
 import JsRuntime from "../../../utils/JsRuntime";
-import { pfstPair, pid, ppairData, psndPair, punMapData } from "../Prelude/Builtins";
+import { pfstPair, pid, ppairData, psndPair, punMapData } from "../stdlib/Builtins";
 import PType, { PDataRepresentable } from "../PType";
 import { phoist, plam, punsafeConvertType } from "../Syntax";
 import Term from "../Term";

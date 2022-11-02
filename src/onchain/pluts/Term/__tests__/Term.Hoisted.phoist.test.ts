@@ -1,6 +1,6 @@
 import Term from ".."
 import UPLCVar from "../../../UPLC/UPLCTerms/UPLCVar"
-import { pgreaterInt } from "../../Prelude/Builtins"
+import { pgreaterInt } from "../../stdlib/Builtins"
 import { pInt } from "../../PTypes/PInt"
 import { phoist } from "../../Syntax"
 import Type from "../Type"

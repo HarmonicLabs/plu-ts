@@ -1,6 +1,6 @@
 import BasePlutsError from "../../../errors/BasePlutsError";
 import PScriptContext from "../API/V1/ScriptContext";
-import { pif, pstrictIf } from "../Prelude/Builtins";
+import { pif, pstrictIf } from "../stdlib/Builtins";
 import { PDataRepresentable } from "../PType";
 import PBool from "../PTypes/PBool";
 import PData from "../PTypes/PData";

@@ -6,7 +6,7 @@ import HoistedUPLC from "../../UPLC/UPLCTerms/HoistedUPLC";
 import Lambda from "../../UPLC/UPLCTerms/Lambda";
 import UPLCConst from "../../UPLC/UPLCTerms/UPLCConst";
 import UPLCVar from "../../UPLC/UPLCTerms/UPLCVar";
-import { pif, ptrace } from "../Prelude/Builtins";
+import { pif, ptrace } from "./Builtins";
 import { pBool } from "../PTypes/PBool";
 import PLam, { TermFn } from "../PTypes/PFn/PLam";
 import PString from "../PTypes/PString";

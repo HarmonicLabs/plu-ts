@@ -1,7 +1,7 @@
 import Cloneable from "../../../types/interfaces/Cloneable";
 import UPLCConst from "../../UPLC/UPLCTerms/UPLCConst";
-import { pConstrToData, peqInt, pfstPair, pif, pnilData, punConstrData } from "../Prelude/Builtins";
-import TermBool, { addPBoolMethods } from "../Prelude/UtilityTerms/TermBool";
+import { pConstrToData, peqInt, pfstPair, pif, pnilData, punConstrData } from "../stdlib/Builtins";
+import TermBool, { addPBoolMethods } from "../stdlib/UtilityTerms/TermBool";
 import { PDataRepresentable } from "../PType";
 import { phoist, plam } from "../Syntax";
 import Term from "../Term";

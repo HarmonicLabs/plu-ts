@@ -1,5 +1,5 @@
 import evalScript from ".."
-import { pif, pstrictIf } from "../../pluts/Prelude/Builtins"
+import { pif, pstrictIf } from "../../pluts/stdlib/Builtins"
 import { pInt } from "../../pluts/PTypes/PInt"
 import Type from "../../pluts/Term/Type"
 import Application from "../../UPLC/UPLCTerms/Application"

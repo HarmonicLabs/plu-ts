@@ -1,4 +1,4 @@
-import { punMapData } from "../Prelude/Builtins";
+import { punMapData } from "../stdlib/Builtins";
 import PType from "../PType";
 import Term from "../Term";
 import Type from "../Term/Type";
