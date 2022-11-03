@@ -64,7 +64,6 @@ export default class ObjectUtils
 
     static hasOwn: ( obj: object, propName: string | number | symbol ) => boolean = ((Object as any).hasOwn ?? Object.prototype.hasOwnProperty.call) ?? ObjectUtils.containsKeys;
 
-
     static isSerializable( obj: object ): boolean
     {
         const keys = Object.keys( obj );
@@ -292,6 +291,26 @@ export default class ObjectUtils
                 configurable:   ( accessLevel & ObjectUtils.configurableProperty )  == ObjectUtils.configurableProperty,
             }
         ) as ObjT & Record< PropKey, ValT >;
+    }
+
+    static definePropertyIfNotPresent<ObjT extends object, PropKey extends keyof any , ValT >
+    ( 
+        obj: ObjT,
+        name: PropKey,
+        descriptor: Partial<{
+            get: () => ValT,
+            set: ( v: ValT ) => void,
+            value: ValT,
+            writable: boolean
+            enumerable: boolean
+            configurable: boolean
+        }>
+    )
+        : ObjT & Record< PropKey, ValT >
+    {
+        if( ObjectUtils.hasOwn( obj, name ) ) return obj as any;
+
+        return Object.defineProperty( obj, name, descriptor ) as any;
     }
 
     static defineReadOnlyHiddenProperty<ObjT extends object, PropKey extends keyof any , ValT >

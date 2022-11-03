@@ -32,9 +32,9 @@ export const ptraceIfFalse = phoist(
         bool,
     ],  bool)
     (( msg, boolean ) => 
-            pif( bool ).$( boolean )
-            .then( pBool( true ) )
-            .else( ptrace( bool ).$( msg ).$( pBool( false ) ) )
+        pif( bool ).$( boolean )
+        .then( pBool( true ) )
+        .else( ptrace( bool ).$( msg ).$( pBool( false ) ) )
     )
 );
 
@@ -45,6 +45,6 @@ export function ptraceError<T extends ConstantableTermType>( t: T )
         plam( str, t )
         ( msg => pforce(
             ptrace( delayed( t ) ).$( msg ).$( pdelay( perror( t ) ) )
-        ))
+        ) as any )
     ) as any;
 }

@@ -78,21 +78,21 @@ export function addPListMethods<PElemsT extends PType>( list: Term<PList<PElemsT
 {
     const elemsT = list.type[1] as ConstantableTermType;
 
-    Object.defineProperty(
+    ObjectUtils.definePropertyIfNotPresent(
         list,
         "head",
         {
-            get: () => phead( list.type ).$( list ) ,
+            get: () => phead( elemsT ).$( list ) ,
             set: () => {},
             configurable: false,
             enumerable: true
         }
     )
-    Object.defineProperty(
+    ObjectUtils.definePropertyIfNotPresent(
         list,
         "tail",
         {
-            get: () => addPListMethods( ptail( list.type ).$( list ) ),
+            get: () => addPListMethods( ptail( elemsT ).$( list ) ),
             set: () => {},
             configurable: false,
             enumerable: true

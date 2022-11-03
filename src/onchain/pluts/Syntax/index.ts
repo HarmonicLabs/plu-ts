@@ -23,6 +23,7 @@ import applyLambdaType from "../Term/Type/applyLambdaType";
 import UPLCTerm from "../../UPLC/UPLCTerm";
 import Builtin from "../../UPLC/UPLCTerms/Builtin";
 import { getNRequiredForces } from "../../UPLC/UPLCTerms/Builtin/UPLCBuiltinTag";
+import addUtilityForType, { UtilityTermOf } from "../stdlib/UtilityTerms/addUtilityForType";
 
 
 
@@ -44,7 +45,7 @@ export type PappResult<Output extends PType> =
         & {
             $: ( someInput: Term<OutIn> ) => PappResult<OutOut>
         } :
-    Term<Output>
+    UtilityTermOf<Output>
 
 type test = PappResult<PLam<PInt,PLam<PUnit, PInt>>>
 
@@ -71,24 +72,27 @@ export function papp<Input extends PType, Output extends PType >( a: Term<PLam<I
         "\"; received input was of type: \"" + termTypeToString( b.type ) + "\""
     );
 
-    const outputTerm = new Term(
-        applyLambdaType( lambdaType, b.type ),
-        dbn => {
-            const funcUPLC = a.toUPLC( dbn );
-            if( funcUPLC instanceof ErrorUPLC ) return funcUPLC;
-            const argUPLC  = b.toUPLC( dbn );
-            if( argUPLC instanceof ErrorUPLC ) return argUPLC;
+    const outputType = applyLambdaType( lambdaType, b.type );
+    const outputTerm = addUtilityForType( outputType )(
+        new Term(
+            outputType,
+            dbn => {
+                const funcUPLC = a.toUPLC( dbn );
+                if( funcUPLC instanceof ErrorUPLC ) return funcUPLC;
+                const argUPLC  = b.toUPLC( dbn );
+                if( argUPLC instanceof ErrorUPLC ) return argUPLC;
 
-            // omit id function
-            if( isIdentityUPLC( funcUPLC ) ) return argUPLC;
+                // omit id function
+                if( isIdentityUPLC( funcUPLC ) ) return argUPLC;
 
-            const app = new Application(
-                funcUPLC,
-                argUPLC
-            );
+                const app = new Application(
+                    funcUPLC,
+                    argUPLC
+                );
 
-            return app; 
-        }
+                return app; 
+            }
+        )
     );
 
     if( isLambdaType( outputTerm.type ) && ( !ObjectUtils.hasOwn( outputTerm, "$" ) ))
@@ -107,9 +111,9 @@ export function papp<Input extends PType, Output extends PType >( a: Term<PLam<I
 }
 
 export function plam<A extends TermType, B extends TermType >( inputType: A, outputType: B )
-    : ( termFunc : ( input: Term<ToPType<A>> ) => Term<ToPType<B>> ) => PappResult<PLam<ToPType<A>,ToPType<B>>>
+    : ( termFunc : ( input: UtilityTermOf<ToPType<A>> ) => Term<ToPType<B>> ) => PappResult<PLam<ToPType<A>,ToPType<B>>>
 {
-    return ( termFunc: ( input: Term<ToPType<A>> ) => Term<ToPType<B>> ): PappResult<PLam<ToPType<A>,ToPType<B>>> =>
+    return ( termFunc: ( input: UtilityTermOf<ToPType<A>> ) => Term<ToPType<B>> ): PappResult<PLam<ToPType<A>,ToPType<B>>> =>
     {
         const lambdaTerm  = new Term<PLam<ToPType<A>,ToPType<B>>>(
             Type.Lambda( inputType, outputType ),
@@ -121,7 +125,7 @@ export function plam<A extends TermType, B extends TermType >( inputType: A, out
                     dbnAccessLevel => new UPLCVar( dbnAccessLevel - thisLambdaPtr )
                 );
                 
-                const body = termFunc( boundVar );
+                const body = termFunc( addUtilityForType( inputType )( boundVar ) );
 
                 if( !(body instanceof Term) ) console.log( body );
                 // here the debruijn level is incremented
@@ -135,8 +139,8 @@ export function plam<A extends TermType, B extends TermType >( inputType: A, out
         return ObjectUtils.defineReadOnlyProperty(
             lambdaTerm,
             "$",
-            ( input: Term<ToPType<A>> ) => papp( lambdaTerm, input )
-        );
+            ( input: UtilityTermOf<ToPType<A>> ) => papp( lambdaTerm, input )
+        ) as any;
     };
 }
 
@@ -149,7 +153,7 @@ type PFnFromTypes<Ins extends [ TermType, ...TermType[] ], Out extends TermType>
     never
 
 type TermFnFromTypes<Ins extends [ TermType, ...TermType[] ], Out extends TermType> =
-    Ins extends [ infer T extends TermType ] ? Term<PLam<ToPType<T>, ToPType<Out>>> & { $: ( input: Term<ToPType<T>> ) => Term<ToPType<Out>> } :
+    Ins extends [ infer T extends TermType ] ? Term<PLam<ToPType<T>, ToPType<Out>>> & { $: ( input: Term<ToPType<T>> ) => UtilityTermOf<ToPType<Out>> } :
     Ins extends [ infer T extends TermType, ...infer RestIns extends [ TermType, ...TermType[] ] ] ?
         Term<PLam<ToPType<T>,PFnFromTypes<RestIns, Out>>>
         & { $: ( input: Term<ToPType<T>> ) => TermFnFromTypes< RestIns, Out > } :
@@ -157,11 +161,15 @@ type TermFnFromTypes<Ins extends [ TermType, ...TermType[] ], Out extends TermTy
 
 type TsTermFunctionArgs<InputsTypes extends [ TermType, ...TermType[] ]> =
     InputsTypes extends [] ? never :
-    InputsTypes extends [ infer T extends TermType ] ? [ a: Term<ToPType<T>> ] :
-    InputsTypes extends [ infer T extends TermType, ...infer RestTs extends [ TermType, ...TermType[] ] ] ? [ a: Term<ToPType<T>>, ...bs: TsTermFunctionArgs<RestTs> ] :
+    InputsTypes extends [ infer T extends TermType ] ? [ a: UtilityTermOf<ToPType<T>> ] :
+    InputsTypes extends [ infer T extends TermType, ...infer RestTs extends [ TermType, ...TermType[] ] ] ? [ a: UtilityTermOf<ToPType<T>>, ...bs: TsTermFunctionArgs<RestTs> ] :
     never;
 
-type TsTermFunction<InputsTypes extends [ TermType, ...TermType[] ], OutputType extends TermType> = (...args: TsTermFunctionArgs<InputsTypes> ) => Term<ToPType<OutputType>>
+type TsTermFunction<InputsTypes extends [ TermType, ...TermType[] ], OutputType extends TermType> = 
+    (...args: TsTermFunctionArgs<InputsTypes> )
+        // important that returns `Term` and NOT `UtilityTermOf`
+        // because it allows ANY term to be the result and the plu-ts handles the rest
+        => Term<ToPType<OutputType>>
 
 export function pfn<InputsTypes extends [ TermType, ...TermType[] ], OutputType extends TermType>( inputsTypes: InputsTypes, outputType: OutputType )
     : ( termFunction: TsTermFunction<InputsTypes,OutputType> ) => 
@@ -188,7 +196,7 @@ export function pfn<InputsTypes extends [ TermType, ...TermType[] ], OutputType 
         ) as any;
     }
 
-    return ( termFunction: ( ...args: ToTermArrNonEmpty<InputsTypes> ) => Term<ToPType<OutputType>> ) =>
+    return (( termFunction: ( ...args: ToTermArrNonEmpty<InputsTypes> ) => Term<ToPType<OutputType>> ) =>
     {
         if( termFunction.length <= 0 )
             throw new BasePlutsError("'(void) => any' cannot be translated to a Pluts function");
@@ -202,7 +210,7 @@ export function pfn<InputsTypes extends [ TermType, ...TermType[] ], OutputType 
             curry( termFunction ),
             termFunction.length
         );
-    }
+    }) as any;
 }
 
 export function phoist<PInstance extends PType, SomeExtension extends {} >( closedTerm: Term<PInstance> & SomeExtension ): Term<PInstance> & SomeExtension
@@ -372,29 +380,32 @@ export function pdelay<PInstance extends PType>(toDelay: Term<PInstance>): Term<
     );
 }
 
-export function pforce<PInstance extends PType>( toForce: Term<PDelayed<PInstance>> | Term<PInstance> ): Term<PInstance>
+export function pforce<PInstance extends PType >
+    ( toForce: Term<PDelayed<PInstance>> | Term<PInstance> ): UtilityTermOf<PInstance>
 {
     const outType = isDelayedType( toForce.type ) ? toForce.type[ 1 ] : toForce.type 
 
-    return new Term(
-        outType as any,
-        (dbn) => {
-            const toForceUPLC = toForce.toUPLC( dbn );
+    return addUtilityForType( outType )(
+        new Term(
+            outType as any,
+            (dbn) => {
+                const toForceUPLC = toForce.toUPLC( dbn );
 
-            // if directly applying to Delay UPLC just remove the delay
-            // example:
-            // (force (delay (con int 11))) === (con int 11)
-            if( toForceUPLC instanceof Delay )
-            {
-                return toForceUPLC.delayedTerm;
+                // if directly applying to Delay UPLC just remove the delay
+                // example:
+                // (force (delay (con int 11))) === (con int 11)
+                if( toForceUPLC instanceof Delay )
+                {
+                    return toForceUPLC.delayedTerm;
+                }
+
+                // any other case
+                return new Force(
+                    toForceUPLC
+                );
             }
-
-            // any other case
-            return new Force(
-                toForceUPLC
-            );
-        }
-    );
+        )
+    ) as any;
 }
 
 export function plet<PVarT extends PType, SomeExtension extends object>( varValue: Term<PVarT> & SomeExtension )
@@ -404,10 +415,14 @@ export function plet<PVarT extends PType, SomeExtension extends object>( varValu
     const continuation = <PExprResult extends PType>( expr: (value: TermPVar) => Term<PExprResult> ): Term<PExprResult> => {
 
         // only to extracts the type; never compiled
-        const outType = expr( new Term(
-            varValue.type,
-            _dbn => new UPLCVar( 0 ) // mock variable
-        ) as TermPVar ).type;
+        const outType = expr(
+            addUtilityForType( varValue.type )(
+                new Term(
+                    varValue.type,
+                    _dbn => new UPLCVar( 0 ) // mock variable
+                ) as any
+            ) as any
+        ).type;
 
         // return papp( plam( varValue.type, outType )( expr as any ), varValue as any ) as any;
         return new Term(

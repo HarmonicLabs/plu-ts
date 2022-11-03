@@ -21,9 +21,11 @@ const pfindOwnInput = phoist( pfn([
     const PMaybeInputInfo = PMaybe( PTxInInfo.type );
 
     const result =  pmatch( purpose )
-    .onSpending( rawPurpose => rawPurpose.extract("utxoRef").in( spendingPurpose =>
+    .onSpending( rawPurpose => rawPurpose.extract("utxoRef").in( spendingPurpose => {
 
-        pmatch( spendingPurpose.utxoRef )
+        // console.log( spendingPurpose );
+
+        return pmatch( spendingPurpose.utxoRef )
         .onPTxOutRef( rawUtxoRef => rawUtxoRef.extract("id").in( utxoRef => 
 
             pmatch( utxoRef.id )
@@ -63,8 +65,10 @@ const pfindOwnInput = phoist( pfn([
             
         ))
 
-    )))
-    ._( _ => PMaybeInputInfo.Nothing({}) as any )
+    )}))
+    .onMinting( _ => PMaybeInputInfo.Nothing({}) as any )
+    .onRewarding( _ => PMaybeInputInfo.Nothing({}) as any )
+    .onCertifying( _ => PMaybeInputInfo.Nothing({}) as any )
 
     return result;
 

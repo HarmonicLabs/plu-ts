@@ -718,7 +718,7 @@ export function pif<ReturnT extends TermType>( returnType: ReturnT | undefined =
                                 (delay caseFalse)
                             ])
                             */
-                            pforce( papp( _lambdaIfThenElse, pdelay( caseFalse ) as any ) as any )
+                            pforce( papp( _lambdaIfThenElse, pdelay( caseFalse ) as any ) as any ) as any
                     );
                     
                     return ObjectUtils.defineReadOnlyProperty(
@@ -1064,7 +1064,7 @@ export function pchooseData<ReturnT extends TermType>( returnT: ReturnT )
     }
 {
     // new term identical to the strict one in order to define new (different) "$" properties
-    const _chooseData  =new Term<
+    const _chooseData  = new Term<
         PLam<
             PData,
             PLam<
@@ -1130,8 +1130,8 @@ export function pchooseData<ReturnT extends TermType>( returnT: ReturnT )
                                                 "$",
                                                 ( bCase: Term<ToPType<ReturnT>> ) : Term<ToPType<ReturnT>> => {
                                                     return pforce(
-                                                        papp( _cDDCMLWithInt, pdelay( bCase ) as any ) as any
-                                                    );
+                                                        papp( _cDDCMLWithInt, pdelay( bCase ) as any )
+                                                    ) as any;
                                                 }
                                             );
 

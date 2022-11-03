@@ -17,6 +17,7 @@ import { getToDataForType } from "../PData/conversion/getToDataTermForType";
 import { TermFn } from "../PFn/PLam";
 import { pInt } from "../PInt";
 import { pList } from "../PList";
+import { UtilityTermOf } from "../../stdlib/UtilityTerms/addUtilityForType";
 
 /**
  * intermediate class useful to reconize structs form primitives
@@ -51,7 +52,7 @@ type Includes<As extends any[], Elem extends any> =
     ): false;
 
 export type RestrictedStructInstance<SCtorDef extends StructCtorDef, Fields extends (keyof SCtorDef)[]> = {
-    [Field in keyof SCtorDef]: Includes<Fields, Field> extends true ? Term<ToPType<SCtorDef[Field]>> : never
+    [Field in keyof SCtorDef]: Includes<Fields, Field> extends true ? UtilityTermOf<ToPType<SCtorDef[Field]>> : never
 }
 
 export type ConstantableStructDefinition = {
