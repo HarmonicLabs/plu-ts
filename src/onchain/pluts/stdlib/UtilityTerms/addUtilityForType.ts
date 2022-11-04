@@ -1,5 +1,5 @@
 import PType from "../../PType";
-import { PAlias, unwrapAlias } from "../../PTypes/PAlias";
+import type { PAlias } from "../../PTypes/PAlias";
 import PBool from "../../PTypes/PBool";
 import PByteString from "../../PTypes/PByteString";
 import PInt from "../../PTypes/PInt";
@@ -7,7 +7,7 @@ import PList from "../../PTypes/PList";
 import PString from "../../PTypes/PString";
 import { ConstantableStructDefinition, PStruct } from "../../PTypes/PStruct";
 import Term from "../../Term";
-import Type, { bool, bs, ConstantableTermType, int, list, str, TermType, ToPType } from "../../Term/Type";
+import Type, { Alias, bool, bs, ConstantableTermType, int, list, str, TermType, ToPType } from "../../Term/Type";
 import { typeExtends } from "../../Term/Type/extension";
 import { isAliasType, isConstantableStructType, isStructType } from "../../Term/Type/kinds";
 import TermBool, { addPBoolMethods } from "./TermBool";
@@ -17,6 +17,10 @@ import TermList, { addPListMethods } from "./TermList";
 import TermStr, { addPStringMethods } from "./TermStr";
 import TermStruct, { addPStructMethods } from "./TermStruct";
 
+function unwrapAlias<T extends ConstantableTermType>( aliasedType: Alias<symbol, T> ): T
+{
+    return aliasedType[1].type;
+}
 
 export type UtilityTermOf<PElem extends PType> = 
     (

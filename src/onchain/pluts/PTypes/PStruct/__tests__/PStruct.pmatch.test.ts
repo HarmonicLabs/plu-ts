@@ -1,12 +1,12 @@
-import pstruct, { pgenericStruct, RestrictedStructInstance } from ".."
+import pstruct, { pgenericStruct } from ".."
 import ByteString from "../../../../../types/HexString/ByteString";
 import evalScript from "../../../../CEK";
 import UPLCConst from "../../../../UPLC/UPLCTerms/UPLCConst";
-import { padd, pconsBs, pindexBs, plessInt } from "../../../stdlib/Builtins";
+import { padd, pconsBs, pindexBs } from "../../../stdlib/Builtins";
 import { perror } from "../../../Syntax";
 import Term from "../../../Term";
-import { bs, int, PrimType, str, structType, unit } from "../../../Term/Type";
-import PByteString, { pByteString } from "../../PByteString";
+import { bs, int, unit } from "../../../Term/Type";
+import { pByteString } from "../../PByteString";
 import { pInt } from "../../PInt";
 import { pmakeUnit } from "../../PUnit";
 import pmatch from "../pmatch";
@@ -24,6 +24,8 @@ const SingleCtor = pstruct({
         aUnitCauseWhyNot: unit
     }
 })
+
+
 
 describe("pmatch", () => {
 
@@ -57,12 +59,6 @@ describe("pmatch", () => {
         );
 
     });
-
-    // test(" pmatch(FixStruct.<...>) ", () => {
-    //     
-    //     const matchFixStruct = pmatch( FixStruct.C({}) )
-    //     
-    // })
 
     test("pmatch( PMaybe(int).Nothing({}) )", () => {
 
@@ -173,7 +169,7 @@ describe("pmatch", () => {
 
         });
 
-        test.only("pmatch: extract multiples Struct firelds", () => {
+        test("pmatch: extract multiples Struct firelds", () => {
             const BSs = pstruct({
                 TwoBS: {
                     a: bs,
@@ -372,5 +368,200 @@ describe("pmatch", () => {
         })
 
     });
+
+    describe("'_' whildcard", () => {
+
+        const OneCtor = pstruct({
+            Ctor : {}
+        })
+        
+        const TwoCtors = pstruct({
+            Fst: {},
+            Snd: {}
+        });
+        
+        const FourCtors = pstruct({
+            A: {}, B: {}, C: {}, D: {}
+        })
+
+        test.only("pmatch( stuff )._( _ => result) === result", () => {
+
+            expect(
+                evalScript(
+                    pmatch( OneCtor.Ctor({}) )
+                    ._( _ => pInt(1) )
+                )
+            ).toEqual(
+                evalScript(
+                    pmatch( OneCtor.Ctor({}) )
+                    .onCtor( _ => pInt(1) )
+                )
+            );
+
+            // ---------------------------------- TwoCtors ---------------------------------- //
+
+            expect(
+                evalScript(
+                    pmatch( TwoCtors.Fst({}) )
+                    .onFst( _ => pInt( 1 ) )
+                    .onSnd( _ => pInt( 2 ) )
+                )
+            ).toEqual(
+                evalScript(
+                    pInt(1)
+                )
+            );
+
+            expect(
+                evalScript(
+                    pmatch( TwoCtors.Fst({}) )
+                    .onFst( _ => pInt( 1 ) )
+                    ._( _ => pInt( 2 ) )
+                )
+            ).toEqual(
+                evalScript(
+                    pInt(1)
+                )
+            );
+
+            expect(
+                evalScript(
+                    pmatch( TwoCtors.Snd({}) )
+                    .onFst( _ => pInt( 1 ) )
+                    .onSnd( _ => pInt( 2 ) )
+                )
+            ).toEqual(
+                evalScript(
+                    pInt(2)
+                )
+            );
+
+            expect(
+                evalScript(
+                    pmatch( TwoCtors.Snd({}) )
+                    .onSnd( _ => pInt( 2 ) )
+                    ._( _ => pInt( 1 ) )
+                )
+            ).toEqual(
+                evalScript(
+                    pInt(2)
+                )
+            );
+
+            expect(
+                evalScript(
+                    pmatch( TwoCtors.Snd({}) )
+                    .onFst( _ => pInt( 1 ) )
+                    ._( _ => pInt( 2 ) )
+                )
+            ).toEqual(
+                evalScript(
+                    pInt(2)
+                )
+            );
+
+            // ---------------------------------- FourCtors ---------------------------------- //
+
+            expect(
+                evalScript(
+                    pmatch( FourCtors.A({}) )
+                    .onA( _ => pInt( 1 ) )
+                    .onB( _ => pInt( 2 ) )
+                    .onC( _ => pInt( 3 ) )
+                    .onD( _ => pInt( 4 ) )
+                )
+            ).toEqual(
+                evalScript(
+                    pInt(1)
+                )
+            );
+
+            expect(
+                evalScript(
+                    pmatch( FourCtors.A({}) )
+                    .onA( _ => pInt( 1 ) )
+                    .onB( _ => pInt( 2 ) )
+                    .onC( _ => pInt( 3 ) )
+                    ._( _ => pInt( 4 ) )
+                )
+            ).toEqual(
+                evalScript(
+                    pInt(1)
+                )
+            );
+
+            expect(
+                evalScript(
+                    pmatch( FourCtors.A({}) )
+                    .onA( _ => pInt( 1 ) )
+                    .onB( _ => pInt( 2 ) )
+                    ._( _ => pInt( 0 ) )
+                )
+            ).toEqual(
+                evalScript(
+                    pInt(1)
+                )
+            );
+
+            expect(
+                evalScript(
+                    pmatch( FourCtors.A({}) )
+                    .onA( _ => pInt( 1 ) )
+                    ._( _ => pInt( 0 ) )
+                )
+            ).toEqual(
+                evalScript(
+                    pInt(1)
+                )
+            );
+
+            expect(
+                evalScript(
+                    pmatch( FourCtors.A({}) )
+                    ._( _ => pInt( 0 ) )
+                )
+            ).toEqual(
+                evalScript(
+                    pInt(0)
+                )
+            );
+
+            expect(
+                evalScript(
+                    pmatch( FourCtors.A({}) )
+                    .onB( _ => pInt( 1 ) )
+                    ._( _ => pInt( 0 ) )
+                )
+            ).toEqual(
+                evalScript(
+                    pInt( 0 )
+                )
+            );
+
+            expect(
+                evalScript(
+                    pmatch( FourCtors.B({}) )
+                    .onB( _ => pInt( 1 ) )
+                    ._( _ => pInt( 0 ) )
+                )
+            ).toEqual(
+                evalScript(
+                    pInt( 1 )
+                )
+            );
+
+            expect(
+                evalScript(
+                    pmatch( FourCtors.B({}) )
+                    .onA( _ => pInt( 1 ) )
+                    ._( _ => pInt( 0 ) )
+                )
+            ).toEqual(
+                evalScript(
+                    pInt( 0 )
+                )
+            );
+        })
+    })
 
 })

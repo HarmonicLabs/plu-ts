@@ -4,7 +4,6 @@ import UPLCConst from "../../UPLC/UPLCTerms/UPLCConst";
 import { constT } from "../../UPLC/UPLCTerms/UPLCConst/ConstType";
 import { pListToData, pnilData, pnilPairData, pprepend, punListData } from "../stdlib/Builtins";
 import PType, { PDataRepresentable } from "../PType";
-import { punsafeConvertType } from "../Syntax";
 import Term from "../Term";
 import Type, { ToPType, TermType, ConstantableTermType, int, list } from "../Term/Type";
 import { termTyToConstTy } from "../Term/Type/constTypeConversion";
@@ -14,6 +13,7 @@ import { termTypeToString } from "../Term/Type/utils";
 import PData from "./PData";
 import PDataList from "./PData/PDataList";
 import PLam from "./PFn/PLam";
+import punsafeConvertType from "../Syntax/punsafeConvertType";
 
 
 export default class PList<A extends PType> extends PDataRepresentable

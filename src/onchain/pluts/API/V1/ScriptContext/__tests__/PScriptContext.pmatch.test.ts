@@ -25,6 +25,7 @@ import PValue from "../../Value";
 import PScriptContext from "../PScriptContext";
 import PScriptPurpose from "../PScriptPurpose";
 import PTxInfo from "../PTxInfo";
+import UPLCConst from "../../../../../UPLC/UPLCTerms/UPLCConst";
 
 
 const unitDatumHash = PDatumHash.from( pByteString("923918e403bf43c34b4ef6b48eb2ee04babed17320d8d1b9ff9ad086e86f44ec") );
@@ -159,5 +160,53 @@ describe("pmatch( <PScriptContext> )", () => {
         );
 
     });
+
+    describe("match Purpose", () => {
+
+        test("all continuations", () => {
+            
+            expect(
+                evalScript(
+                    pmatch( _purp )
+                    .onMinting( _ => pInt( 1 ) )
+                    .onSpending( _ => pInt( 2 ) )
+                    .onRewarding( _ => pInt( 3 ) )
+                    .onCertifying( _ => pInt( 4 ) )
+                )
+            ).toEqual(
+                UPLCConst.int( 2 )
+            )
+
+        })
+
+        test("only mint ( purpose is Spending )", () => {
+            
+            expect(
+                evalScript(
+                    pmatch( _purp )
+                    .onMinting( _ => pInt( 1 ) )
+                    ._( _ => pInt( 2 ) )
+                )
+            ).toEqual(
+                UPLCConst.int( 2 )
+            );
+
+        })
+
+        test("only spend ( purpose is Spending )", () => {
+            
+            expect(
+                evalScript(
+                    pmatch( _purp )
+                    .onSpending( _ => pInt( 1 ) )
+                    ._( _ => pInt( 2 ) )
+                )
+            ).toEqual(
+                UPLCConst.int( 1 )
+            );
+
+        })
+
+    })
 
 })

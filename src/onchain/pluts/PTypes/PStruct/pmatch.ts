@@ -15,7 +15,7 @@ import UPLCVar from "../../../UPLC/UPLCTerms/UPLCVar";
 import { pindexList } from "../../stdlib/List";
 import TermList from "../../stdlib/UtilityTerms/TermList";
 import PType from "../../PType";
-import { plet, papp, punsafeConvertType, plam } from "../../Syntax";
+import { plet, papp, plam } from "../../Syntax";
 import Term from "../../Term";
 import { data, fn, lam, list, TermType, tyVar } from "../../Term/Type";
 import { isConstantableStructDefinition, isLambdaType } from "../../Term/Type/kinds";
@@ -30,6 +30,7 @@ import capitalize from "../../../../utils/ts/capitalize";
 import DataI from "../../../../types/Data/DataI";
 import { constT } from "../../../UPLC/UPLCTerms/UPLCConst/ConstType";
 import addUtilityForType from "../../stdlib/UtilityTerms/addUtilityForType";
+import punsafeConvertType from "../../Syntax/punsafeConvertType";
 
 
 export type RawFields<CtorDef extends ConstantableStructCtorDef> = 
@@ -289,20 +290,6 @@ function hoistedMatchCtors<SDef extends ConstantableStructDefinition>(
     // const returnT = tyVar("single_ctor_match_return_type");
     const ctors = Object.keys(sDef);
 
-    const maxLengthFound = 
-        ctors
-        .map( ctor => Object.keys( sDef[ ctor ] ).length )
-        .reduce( (prev, curr, i ) => Math.max( prev, curr ) , 0 );
-
-    const getReturnTypeOf = <SDef extends ConstantableStructDefinition>(cb: CtorCallback<SDef>) => getReturnTypeFromContinuation(
-        cb,
-        sDef[
-            ctors[
-                ctors.findIndex( ctor => Object.keys( sDef[ ctor ] ).length === maxLengthFound )
-            ]
-        ]
-    )
-
     if( length === 1 )
     {
         const cont = ctorCbs[0];
@@ -326,17 +313,18 @@ function hoistedMatchCtors<SDef extends ConstantableStructDefinition>(
             );
         }
 
+        const thisCtor = sDef[ ctors[0] ] as SDef[string];
         return papp(
             papp(
                 matchSingleCtorStruct,
                 structData
             ),
-            plam( list(data), getReturnTypeOf( cont ) )
+            plam( list(data), getReturnTypeFromContinuation( cont, thisCtor ) )
             ( fieldsListData => 
                 cont( 
                     defineExtract( 
                         fieldsListData, 
-                        sDef[ ctors[0] ] as SDef[string]
+                        thisCtor
                     ) 
                 )
             )
@@ -347,29 +335,30 @@ function hoistedMatchCtors<SDef extends ConstantableStructDefinition>(
 
     let cont = ctorCbs.find( cb => typeof cb === "function" ) ?? ctorCbs[ 0 ];
 
-    let returnT: TermType = 
+    let returnT: TermType | undefined = 
         cont instanceof Term ?
         cont.type[2] as TermType :
-        getReturnTypeOf( cont );
+        undefined
     
     let result = papp(
-        matchNCtorsIdxs( ctors.length, returnT ) as any,
+        matchNCtorsIdxs( ctors.length, tyVar("will_be_substituted_by_lambda_applicaiton") ) as any,
         structData
     );
 
     for( let i = ctors.length - 1; i >= 0 ; i-- )
     {
         const thisCont = ctorCbs[i];
+        const thisCtor = sDef[ ctors[i] ] as SDef[string];
         result = papp(
             result as any,
             thisCont instanceof Term ?
             thisCont : 
-            plam( list(data), returnT )
+            plam( list(data), returnT ?? getReturnTypeFromContinuation( thisCont, thisCtor ) )
             ( fieldsListData => 
                 thisCont( 
                     defineExtract( 
-                        fieldsListData, 
-                        sDef[ ctors[i] ] as SDef[string]
+                        fieldsListData,
+                        thisCtor
                     ) 
                 )
             ) as any
@@ -485,7 +474,7 @@ export default function pmatch<SDef extends ConstantableStructDefinition>( struc
 
                     for( let i = 0; i < ctorCbs.length; i++ )
                     {
-                        if( ctorCbs[i] === undefined )
+                        if( typeof ctorCbs[i] !== "function" )
                         {
                             ctorCbs[i] = othCtorsContinuation as any;
                         }

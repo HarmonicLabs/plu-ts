@@ -1,7 +1,7 @@
 import PTxInfo from ".";
 import { PMaybeT } from "../../../../stdlib/PMaybe";
 import pmatch from "../../../../PTypes/PStruct/pmatch";
-import { perror, pfn, phoist, punsafeConvertType } from "../../../../Syntax";
+import { perror, pfn, phoist } from "../../../../Syntax";
 import Term from "../../../../Term";
 import PValidatorHash from "../../Scripts/PValidatorHash";
 import PTxInInfo from "../../Tx/PTxInInfo";
@@ -15,7 +15,7 @@ const pownHash = phoist( pfn([
 ],  PValidatorHash.type
 )( ( txInfos, purpose ) => {
 
-    return pmatch( pfindOwnInput.$( txInfos ).$( purpose ) as Term<PMaybeT<typeof PTxInInfo>> )
+    return pmatch( pfindOwnInput.$( txInfos ).$( purpose ) )
     .onJust( rawJust => rawJust.extract("val").in( ({ val }) =>
 
         pmatch( val as Term<typeof PTxInInfo> )

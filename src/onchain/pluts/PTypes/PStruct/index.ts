@@ -4,9 +4,7 @@ import JsRuntime from "../../../../utils/JsRuntime";
 import ObjectUtils from "../../../../utils/ObjectUtils";
 import HoistedUPLC from "../../../UPLC/UPLCTerms/HoistedUPLC";
 import UPLCConst from "../../../UPLC/UPLCTerms/UPLCConst";
-import { pConstrToData } from "../../stdlib/Builtins";
 import { PDataRepresentable } from "../../PType";
-import { punsafeConvertType } from "../../Syntax";
 import Term from "../../Term";
 import Type, { Alias, aliasType, ConstantableStructType, ConstantableTermType, GenericStructType, int, PrimType, struct, structType, StructType, ToPType, tyVar } from "../../Term/Type";
 import { typeExtends } from "../../Term/Type/extension";
@@ -15,9 +13,11 @@ import { structDefToString, termTypeToString } from "../../Term/Type/utils";
 import PData from "../PData";
 import { getToDataForType } from "../PData/conversion/getToDataTermForType";
 import { TermFn } from "../PFn/PLam";
-import { pInt } from "../PInt";
 import { pList } from "../PList";
 import { UtilityTermOf } from "../../stdlib/UtilityTerms/addUtilityForType";
+import Application from "../../../UPLC/UPLCTerms/Application";
+import Builtin from "../../../UPLC/UPLCTerms/Builtin";
+import punsafeConvertType from "../../Syntax/punsafeConvertType";
 
 /**
  * intermediate class useful to reconize structs form primitives
@@ -301,17 +301,22 @@ export default function pstruct<StructDef extends ConstantableStructDefinition>(
                     "the fields passed do not match the struct definition for constructor: " + ctorName
                 );
 
-                const dataReprTerm =
-                    pConstrToData
-                        .$( pInt( i ) )
-                        .$( pList( Type.Data.Any )(
+                const dataReprTerm = new Term(
+                    thisStructType,
+                    dbn => new Application(
+                        new Application(
+                            Builtin.constrData,
+                            UPLCConst.int( i )
+                        ),
+                        pList( Type.Data.Any )(
                             
-                            ctorDefFieldsNames.map<Term<any>>(
-                                fieldKey => {
-                                    return getToDataForType( thisCtorDef[ fieldKey ] )( jsStruct[ fieldKey ] )
-                                })
-                            )
-                        );
+                        ctorDefFieldsNames.map<Term<any>>(
+                            fieldKey => {
+                                return getToDataForType( thisCtorDef[ fieldKey ] )( jsStruct[ fieldKey ] )
+                            })
+                        ).toUPLC( dbn )
+                    )
+                )
                     
                 return ObjectUtils.defineReadOnlyHiddenProperty(
                     new Term(

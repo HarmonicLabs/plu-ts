@@ -24,7 +24,7 @@ import UPLCTerm from "../../UPLC/UPLCTerm";
 import Builtin from "../../UPLC/UPLCTerms/Builtin";
 import { getNRequiredForces } from "../../UPLC/UPLCTerms/Builtin/UPLCBuiltinTag";
 import addUtilityForType, { UtilityTermOf } from "../stdlib/UtilityTerms/addUtilityForType";
-
+import punsafeConvertType from "./punsafeConvertType";
 
 
 function isIdentityUPLC( uplc: UPLCTerm ): uplc is Lambda
@@ -234,28 +234,6 @@ export function phoist<PInstance extends PType, SomeExtension extends {} >( clos
     return closedTerm;
 }
 
-export function punsafeConvertType<FromPInstance extends PType, SomeExtension extends {}, ToTermType extends TermType>
-    ( someTerm: Term<FromPInstance> & SomeExtension, toType: ToTermType ): Term<ToPType<ToTermType>> & SomeExtension
-{
-    const converted = new Term(
-        toType,
-        someTerm.toUPLC
-    ) as any;
-
-    Object.keys( someTerm ).forEach( k => {
-
-        if( k === "_type" || k === "_toUPLC" ) return;
-        
-        ObjectUtils.defineReadOnlyProperty(
-            converted,
-            k,
-            (someTerm as any)[ k ]
-        )
-
-    });
-
-    return converted;
-}
 
 /**
  * for reference the "Z combinator in js": https://medium.com/swlh/y-and-z-combinators-in-javascript-lambda-calculus-with-real-code-31f25be934ec
@@ -441,6 +419,7 @@ export function plet<PVarT extends PType, SomeExtension extends object>( varValu
                     )
                 )
                 {
+                    console.log("inlining")
                     return expr( varValue ).toUPLC( dbn );
                 }
 

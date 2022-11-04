@@ -20,7 +20,7 @@ import PList from "../PTypes/PList";
 import PPair from "../PTypes/PPair";
 import PString from "../PTypes/PString";
 import PUnit from "../PTypes/PUnit";
-import { papp, phoist, pdelay, pfn, pforce, plam, punsafeConvertType } from "../Syntax";
+import { papp, phoist, pdelay, pfn, pforce, plam } from "../Syntax";
 import TermBool, { addPBoolMethods } from "./UtilityTerms/TermBool";
 import TermBS, { addPByteStringMethods } from "./UtilityTerms/TermBS";
 import TermInt, { addPIntMethods } from "./UtilityTerms/TermInt";
