@@ -14,7 +14,7 @@ describe("CEK :: evalScript ; builtins", () => {
             test.concurrent(`${a} + ${b} = ${ a + b }`, () => {
                 expect(
                     evalScript(
-                        pInt( a ).add( pInt( b ) )
+                        pInt( a ).add.$( pInt( b ) )
                         .toUPLC(0)
                     )
                 ).toEqual( UPLCConst.int( a + b ) );
@@ -38,7 +38,7 @@ describe("CEK :: evalScript ; builtins", () => {
             test.concurrent(`${a} - ${b} = ${ a - b }`, () => {
                 expect(
                     evalScript(
-                        pInt( a ).sub( pInt( b ) )
+                        pInt( a ).sub.$( pInt( b ) )
                         .toUPLC(0)
                     )
                 ).toEqual( UPLCConst.int( a - b ) );
@@ -63,7 +63,7 @@ describe("CEK :: evalScript ; builtins", () => {
             test.concurrent(`${a} * ${b} = ${ a * b }`, () => {
                 expect(
                     evalScript(
-                        pInt( a ).mult( pInt( b ) )
+                        pInt( a ).mult.$( pInt( b ) )
                         .toUPLC(0)
                     )
                 ).toEqual( UPLCConst.int( a * b ) );
@@ -90,12 +90,19 @@ describe("CEK :: evalScript ; builtins", () => {
             const result = expected ?? haskellDiv( BigInt(a), BigInt(b) );
 
             test.concurrent(`${a} \`div\` ${b} = ${ result ?? "UPLC error" }`, () => {
-                expect(
-                    evalScript(
-                        pInt( a ).div( pInt( b ) )
-                        .toUPLC(0)
-                    )
-                ).toEqual( result === undefined ? new ErrorUPLC : UPLCConst.int( result ) );
+                const plutsRes = evalScript(
+                    pInt( a ).div.$( pInt( b ) )
+                    .toUPLC(0)
+                )
+
+                if( result === undefined )
+                {
+                    expect( plutsRes instanceof ErrorUPLC ).toBe( true );
+                }
+                else
+                    expect(
+                        plutsRes
+                    ).toEqual( UPLCConst.int( result ) );
             })
         }
 
@@ -122,12 +129,20 @@ describe("CEK :: evalScript ; builtins", () => {
             const result = expected ?? haskellQuot( BigInt(a), BigInt(b) );
 
             test.concurrent(`${a} \`quot\` ${b} = ${ result ?? "UPLC error" }`, () => {
-                expect(
-                    evalScript(
-                        pInt( a ).quot( pInt( b ) )
-                        .toUPLC(0)
-                    )
-                ).toEqual( result === undefined ? new ErrorUPLC : UPLCConst.int( result ) );
+
+                const plutsRes = evalScript(
+                    pInt( a ).quot.$( pInt( b ) )
+                    .toUPLC(0)
+                );
+
+                if( result === undefined )
+                {
+                    expect( plutsRes instanceof ErrorUPLC ).toBe( true );
+                }
+                else
+                    expect(
+                        plutsRes
+                    ).toEqual( UPLCConst.int( result ) );
             })
         }
 
@@ -154,12 +169,20 @@ describe("CEK :: evalScript ; builtins", () => {
             const result = expected ?? haskellRem( BigInt(a), BigInt(b) );
 
             test.concurrent(`${a} \`rem\` ${b} = ${ result ?? "UPLC error" }`, () => {
-                expect(
-                    evalScript(
-                        pInt( a ).remainder( pInt( b ) )
-                        .toUPLC(0)
-                    )
-                ).toEqual( result === undefined ? new ErrorUPLC : UPLCConst.int( result ) );
+
+                const plutsRes = evalScript(
+                    pInt( a ).remainder.$( pInt( b ) )
+                    .toUPLC(0)
+                );
+
+                if( result === undefined )
+                {
+                    expect( plutsRes instanceof ErrorUPLC ).toBe( true );
+                }
+                else
+                {
+                    expect( plutsRes ).toEqual( UPLCConst.int( result ) );
+                }
             })
         }
 

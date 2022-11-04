@@ -29,7 +29,7 @@ describe("precursiveList", () => {
                     Type.List( elemsT )
                 ],  Type.Int)
                 (
-                    ( self, _x, xs ) => pInt(1).add( papp( self, xs ) )
+                    ( self, _x, xs ) => pInt(1).add.$( papp( self, xs ) )
                 )
             )
 

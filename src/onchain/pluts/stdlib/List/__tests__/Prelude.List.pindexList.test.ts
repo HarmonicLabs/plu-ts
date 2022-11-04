@@ -1,4 +1,5 @@
 import { pindexList } from ".."
+import Debug from "../../../../../utils/Debug"
 import evalScript from "../../../../CEK"
 import ErrorUPLC from "../../../../UPLC/UPLCTerms/ErrorUPLC"
 import PInt, { pInt } from "../../../PTypes/PInt"
@@ -14,7 +15,7 @@ describe("pindexList", () => {
 
         const evalueated = evalScript( indexOfEmpty );
 
-        console.log( evalueated );
+        Debug.log( evalueated );
         expect( evalueated instanceof ErrorUPLC ).toBe( true );
 
     });
@@ -25,7 +26,7 @@ describe("pindexList", () => {
 
         const evalueated = evalScript( outOfBound );
 
-        console.log( evalueated );
+        Debug.log( evalueated );
         expect( evalueated instanceof ErrorUPLC ).toBe( true );
 
     });
@@ -37,7 +38,7 @@ describe("pindexList", () => {
 
         const evalueatedFst = evalScript( fst );
 
-        console.log( evalueatedFst );
+        Debug.log( evalueatedFst );
         expect( evalueatedFst instanceof ErrorUPLC ).toBe( false );
         expect( evalueatedFst ).toEqual( evalScript( pInt( 1 ) ) );
 
@@ -46,7 +47,7 @@ describe("pindexList", () => {
 
         const evalueated = evalScript( _4 );
 
-        console.log( evalueated );
+        Debug.log( evalueated );
         expect( evalueated instanceof ErrorUPLC ).toBe( false );
         expect( evalueated ).toEqual( evalScript( pInt( 4 ) ) );
 
@@ -56,7 +57,7 @@ describe("pindexList", () => {
 
         const evalueatedLast = evalScript( last );
 
-        console.log( evalueatedLast );
+        Debug.log( evalueatedLast );
         expect( evalueatedLast instanceof ErrorUPLC ).toBe( false );
         expect( evalueatedLast ).toEqual( evalScript( pInt( 7 ) ) );
 

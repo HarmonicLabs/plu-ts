@@ -8,13 +8,14 @@ import { pInt } from "../../../PTypes/PInt"
 import { pList } from "../../../PTypes/PList"
 import pmatch from "../../../PTypes/PStruct/pmatch"
 import PUnit, { pmakeUnit } from "../../../PTypes/PUnit"
-import { makeValidator } from "../../../Script"
 import compile, { PlutusScriptVersion, scriptToJsonFormat } from "../../../Script/compile"
-import { perror, pfn, punsafeConvertType } from "../../../Syntax"
+import { perror, pfn } from "../../../Syntax"
 import Term from "../../../Term"
 import Type, { bool, data, int, list, unit } from "../../../Term/Type"
 import { peqInt, pif, punIData, punListData } from "../../Builtins"
 import PMaybe from "../../PMaybe"
+import punsafeConvertType from "../../../Syntax/punsafeConvertType"
+import Debug from "../../../../../utils/Debug"
 
 describe("pfindList", () => {
 
@@ -117,7 +118,7 @@ describe("pfindList", () => {
             .else( perror( unit ) )
         );
 
-        console.log( showUPLC(
+        Debug.log( showUPLC(
             validatorContract.toUPLC(0)
         ) );
 
@@ -129,9 +130,9 @@ describe("pfindList", () => {
             compiled
         );
 
-        console.log( compiledAsBI.toString(2) );
+        Debug.log( compiledAsBI.toString(2) );
 
-        console.log(
+        Debug.log(
             JSON.stringify(
                 scriptToJsonFormat(
                     compiled,

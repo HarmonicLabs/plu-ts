@@ -1,5 +1,5 @@
 import Type, { FixedTermType, TermType } from ".."
-import { isFixedType, replaceTypeParam } from "../utils"
+import { replaceTypeParam } from "../tyParams";
 
 
 describe("replaceTypeParam", () => {

@@ -18,7 +18,6 @@ describe("ConstValue :: isConstValue, simple values", () => {
         expect( isConstValue( new Integer( 2 ) ) ).toBe( true );
         expect( isConstValue( new Integer( -2 ) ) ).toBe( true );
 
-        expect( isConstValue( new UInteger( 2 ) ) ).toBe( false );
         expect( isConstValue( new UInteger( 2 ).toSigned() ) ).toBe( true );
 
     })

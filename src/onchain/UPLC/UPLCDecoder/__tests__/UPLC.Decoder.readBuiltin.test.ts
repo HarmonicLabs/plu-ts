@@ -19,18 +19,13 @@ describe("readTerm( Builtin )", () => {
                 Builtin.ifThenElse
             );
     
-            const ifThenElseActualProgr = new UPLCProgram(
-                new UPLCVersion( 1, 0, 0 ),
-                new Force( Builtin.ifThenElse )
-            );
-    
             expect(
                 UPLCDecoder.parse(
                     UPLCEncoder.compile( ifThenElseProgr ).toBuffer().buffer,
                     "flat"
                 )
             ).toEqual(
-                ifThenElseActualProgr
+                ifThenElseProgr
             );
 
         });
@@ -45,21 +40,13 @@ describe("readTerm( Builtin )", () => {
                 )
             );
     
-            const ifThenElseActualProgr = new UPLCProgram(
-                new UPLCVersion( 1, 0, 0 ),
-                new Application(
-                    new Force( Builtin.ifThenElse ),
-                    UPLCConst.bool( true )
-                )
-            );
-    
             expect(
                 UPLCDecoder.parse(
                     UPLCEncoder.compile( ifThenElseProgr ).toBuffer().buffer,
                     "flat"
                 )
             ).toEqual(
-                ifThenElseActualProgr
+                ifThenElseProgr
             );
 
         });
@@ -77,24 +64,13 @@ describe("readTerm( Builtin )", () => {
                 )
             );
     
-            const ifThenElseActualProgr = new UPLCProgram(
-                new UPLCVersion( 1, 0, 0 ),
-                new Application(
-                    new Application(
-                        new Force( Builtin.ifThenElse ),
-                        UPLCConst.bool( true )
-                    ),
-                    UPLCConst.int( 69 )
-                )
-            );
-    
             expect(
                 UPLCDecoder.parse(
                     UPLCEncoder.compile( ifThenElseProgr ).toBuffer().buffer,
                     "flat"
                 )
             ).toEqual(
-                ifThenElseActualProgr
+                ifThenElseProgr
             );
 
         });

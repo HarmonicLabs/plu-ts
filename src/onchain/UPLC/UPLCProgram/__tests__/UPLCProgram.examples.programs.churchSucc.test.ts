@@ -21,7 +21,7 @@ import Lambda from "../../UPLCTerms/Lambda";
 import UPLCVar from "../../UPLCTerms/UPLCVar";
 
 
-describe("churchSucc", () => {
+describe.skip("churchSucc", () => {
 
     it("serializes as in the example", () => {
 

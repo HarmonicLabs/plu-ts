@@ -1,5 +1,6 @@
 import UPLCEncoder, { serializeBuiltin } from ".."
 import BitStream from "../../../../types/bits/BitStream"
+import Debug from "../../../../utils/Debug"
 import UPLCDecoder from "../../UPLCDecoder"
 import UPLCProgram from "../../UPLCProgram"
 import UPLCVersion from "../../UPLCProgram/UPLCVersion"
@@ -33,7 +34,7 @@ describe("serializeBuiltin", () => {
 
         describe("manually compiled", () => {
 
-            test.only("with 3 apps", () => {
+            test("with 3 apps", () => {
 
                 const with3Apps = 
                     new Application( 
@@ -47,7 +48,7 @@ describe("serializeBuiltin", () => {
                         UPLCConst.int( 69 )
                     );
 
-                console.log(
+                Debug.log(
                     showUPLC(
                         with3Apps
                     )
@@ -119,7 +120,7 @@ describe("serializeBuiltin", () => {
                 UPLCConst.unit
             );
 
-            console.log(
+            Debug.log(
                 showUPLC(
                     noIdeaHowIGotHere
                 )

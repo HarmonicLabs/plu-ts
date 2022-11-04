@@ -1,5 +1,5 @@
 import Type, { TermType } from "..";
-import { isFixedDataType, isFixedType } from "../utils";
+import { isFixedDataType, isFixedType } from "../kinds";
 
 describe("isFixedDataType", () => {
 

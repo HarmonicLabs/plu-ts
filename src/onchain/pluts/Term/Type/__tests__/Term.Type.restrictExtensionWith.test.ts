@@ -1,5 +1,6 @@
 import Type, { LambdaType, PrimType, TermType } from ".."
-import { restrictExtensionWith, typeExtends } from "../utils"
+import { typeExtends } from "../extension";
+import { restrictExtensionWith } from "../tyParams";
 
 describe("restrictExtensionWith", () => {
 
@@ -26,27 +27,12 @@ describe("restrictExtensionWith", () => {
             ) // -> Type.Pair( Type.Int, Type.Int )
         ).toEqual( Type.Pair( Type.Int, Type.Int ) );
 
-        const same_a = Type.Var("same_a");
-        expect(
-            restrictExtensionWith(
-                Type.Pair( Type.Int, Type.Any ),
-                Type.Pair( same_a , same_a  )
-            ) // -> Type.Pair( Type.Int, Type.Int )
-        ).toEqual( undefined );
-
-        expect(
-            restrictExtensionWith(
-                Type.Str,
-                Type.Int
-            ) // -> undefined // first type cannot be assigned to the second
-        ).toBe( undefined );
-
         expect(
             restrictExtensionWith(
                 Type.Pair( Type.Int, Type.Any ),
                 Type.Pair( Type.Int, Type.Int )
-            ) // -> undefined // first type cannot be assigned to the second
-        ).toBe( undefined )
+            )
+        ).toEqual( Type.Pair( Type.Int, Type.Int ) )
 
     });
 

@@ -34,8 +34,6 @@ describe("readVersion", () => {
             "flat"
         ).version;
 
-        console.log( v );
-
         expect(
             v
         ).toEqual( new UPLCVersion( 128, 2, 3 ) );

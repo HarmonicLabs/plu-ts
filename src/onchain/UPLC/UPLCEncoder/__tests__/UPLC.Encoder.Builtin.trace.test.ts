@@ -5,7 +5,7 @@ import { ptrace } from "../../../pluts/stdlib/Builtins";
 import { pByteString } from "../../../pluts/PTypes/PByteString";
 import { pStr } from "../../../pluts/PTypes/PString";
 import { pmakeUnit } from "../../../pluts/PTypes/PUnit";
-import compile, { PlutusScriptVersion, scriptToJsonFormat } from "../../../pluts/Script/compile";
+import compile from "../../../pluts/Script/compile";
 import { ptraceIfFalse } from "../../../pluts/stdlib/ptrace";
 import { pfn, pforce, pdelay, perror } from "../../../pluts/Syntax";
 import { data, delayed, unit } from "../../../pluts/Term/Type";
@@ -80,7 +80,7 @@ describe("serializeBuiltin", () => {
 
             const correctBS = ByteString.fromAscii( "Cardano <3 plu-ts" )
             const traceBS = ptraceIfFalse.$( pStr("wrong bytestring") )
-            .$( pByteString( correctBS ).eq( pByteString( ByteString.fromAscii("") ) ) );
+            .$( pByteString( correctBS ).eq.$( pByteString( ByteString.fromAscii("") ) ) );
 
             const compiled = compile( traceBS );
 

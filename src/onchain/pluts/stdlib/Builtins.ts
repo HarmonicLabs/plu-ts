@@ -112,9 +112,9 @@ function intBinOpToInt( builtin: Builtin )
                 oneIn,
                 "$",
                 ( sndIn: Term<PInt> ): TermInt => {
-                    return addPIntMethods( papp( oneIn, sndIn ) )
+                    return papp( oneIn, sndIn )
                 }
-            ) as any;
+            );
         }
     ) as any;
 }

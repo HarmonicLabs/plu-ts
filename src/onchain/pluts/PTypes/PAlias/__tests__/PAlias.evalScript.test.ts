@@ -26,48 +26,11 @@ describe("palias", () => {
 
         expect(
             evalScript(
-                pInt(1).add( fancy69 as any )
+                pInt(1).add.$( fancy69 as any )
             )
         ).toEqual( UPLCConst.int( 69 + 1 ) )
 
     });
 
-    test("original types can't be used in place of aliases", () => {
-
-        const fancyAdd = pfn(
-            [
-                FancyInt.type,
-                FancyInt.type
-            ],
-            FancyInt.type
-        )(
-            (fInt1, fInt2) => padd.$( fInt1 as any ).$( fInt2 as any )
-        );
-
-        expect(
-            evalScript(
-                fancyAdd.$( fancy69 ).$( fancy69 )
-            )
-        ).toEqual( UPLCConst.int( 69 * 2 ) );
-
-        expect(
-            () => evalScript(
-                fancyAdd.$( fancy69 ).$( pInt(1) )
-            )
-        ).toThrow();
-
-        expect(
-            () => evalScript(
-                fancyAdd.$( pInt(1) ).$( fancy69 )
-            )
-        ).toThrow();
-
-        expect(
-            () => evalScript(
-                fancyAdd.$( pInt(1) ).$( pInt(1) )
-            )
-        ).toThrow();
-
-    });
 
 })

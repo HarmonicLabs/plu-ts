@@ -86,15 +86,13 @@ describe("precursive", () => {
                 Type.Int
             )( ( self , n ) => {
 
-                    const _n = addPIntMethods( n );
-                    
-                    return pif( Type.Int ).$( _n.ltEq( pInt( 1 ) ) )
+                    return pif( Type.Int ).$( n.ltEq.$( pInt( 1 ) ) )
                         .then( pInt( 1 ) )
                         .else(
-                            _n.mult(
+                            n.mult.$(
                                 papp(
                                     self,
-                                    _n.sub( pInt( 1 ) )
+                                    n.sub.$( pInt( 1 ) )
                                 )
                             )
                         );

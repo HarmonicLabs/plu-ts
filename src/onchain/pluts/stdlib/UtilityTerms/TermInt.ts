@@ -36,7 +36,7 @@ export function addPIntMethods( term: Term<PInt> )
     ObjectUtils.defineReadOnlyProperty(
         term,
         "sub",
-        ( other: Term<PInt> ): TermInt => psub.$( term ).$( other )
+        psub.$( term )
     );
     ObjectUtils.defineReadOnlyProperty(
         term,

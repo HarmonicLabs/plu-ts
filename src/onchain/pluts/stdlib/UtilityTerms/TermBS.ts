@@ -86,10 +86,15 @@ export function addPByteStringMethods( term: Term<PByteString> ): TermBS
         pindexBs.$( term )
     );
 
-    ObjectUtils.defineReadOnlyProperty(
+    ObjectUtils.definePropertyIfNotPresent(
         term,
         "utf8Decoded",
-        pdecodeUtf8.$( term )
+        {
+            get: () => pdecodeUtf8.$( term ),
+            set: () => {},
+            configurable: false,
+            enumerable: true
+        }
     )
 
     ObjectUtils.defineReadOnlyProperty(

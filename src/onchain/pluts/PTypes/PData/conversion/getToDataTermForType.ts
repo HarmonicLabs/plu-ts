@@ -9,7 +9,7 @@ import Type, { ConstantableTermType, StructType, ToPType, int, bs, str, unit, bo
 import { typeExtends } from "../../../Term/Type/extension";
 import { isAliasType, isStructType, isDataType } from "../../../Term/Type/kinds";
 import { termTypeToString } from "../../../Term/Type/utils";
-import { unwrapAlias } from "../../PAlias";
+import unwrapAlias from "../../PAlias/unwrapAlias";
 import PBool from "../../PBool";
 import PByteString from "../../PByteString";
 import { TermFn } from "../../PFn/PLam";

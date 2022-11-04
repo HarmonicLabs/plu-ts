@@ -1,5 +1,5 @@
 import Type, { TermType } from "..";
-import { isConstantableTermType } from "../utils";
+import { isConstantableTermType } from "../kinds";
 
 function truthyTest( equalsBool: boolean, f: ( termT: TermType ) => boolean )
 {

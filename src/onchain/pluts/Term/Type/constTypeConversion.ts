@@ -1,7 +1,7 @@
 import Type, { ConstantableTermType, TypeShortcut } from ".";
 import JsRuntime from "../../../../utils/JsRuntime";
 import ConstType, { constPairTypeUtils, constT, constTypeEq, ConstTyTag } from "../../../UPLC/UPLCTerms/UPLCConst/ConstType";
-import { unwrapAlias } from "../../PTypes/PAlias";
+import unwrapAlias from "../../PTypes/PAlias/unwrapAlias";
 import { typeExtends } from "./extension";
 import { isAliasType, isConstantableTermType } from "./kinds";
 import { termTypeToString } from "./utils";

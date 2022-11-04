@@ -1,4 +1,4 @@
-import { pmap, _pmap } from ".."
+import { pmap } from ".."
 import evalScript from "../../../../CEK"
 import { showUPLC } from "../../../../UPLC/UPLCTerm"
 import { pInt } from "../../../PTypes/PInt"
@@ -29,7 +29,7 @@ describe("pmap", () => {
 
     test("addTwo lam", () => {
 
-        const addTwo = pmap( int, int ).$( plam( int, int )( x => pInt(2).add( x ) ) );
+        const addTwo = pmap( int, int ).$( plam( int, int )( x => pInt(2).add.$( x ) ) );
 
         expect(
             evalScript(
