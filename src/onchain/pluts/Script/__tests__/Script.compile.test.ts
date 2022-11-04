@@ -149,6 +149,7 @@ describe("scriptToJsonFormat", () => {
         console.timeEnd( label );
         console.log( `${compiled.length} bytes` );
 
+        /*
         console.log(
             JSON.stringify(
                 scriptToJsonFormat(
@@ -157,6 +158,7 @@ describe("scriptToJsonFormat", () => {
                 )
             )
         );
+        //*/
 
         const validatorUPLC = validator.toUPLC(0);
 
@@ -253,11 +255,13 @@ describe("scriptToJsonFormat", () => {
             })
         );
 
-        console.log(
+        expect(
             evalScript(
                 appliedDeserialized.toUPLC(0)
             )
-        )
+        ).toEqual(
+            UPLCConst.unit
+        );
 
         /*
         const appliedContract = contract

@@ -27,7 +27,7 @@ type ConstValue
 
 export default ConstValue;
 
-export function isConstValue( value: ConstValue ): value is ConstValue
+export function isConstValue( value: any ): value is ConstValue
 {
     return (
         value === undefined                                                     ||
@@ -181,7 +181,7 @@ export function canConstValueBeOfConstType( val: ConstValue, ty: ConstType ): bo
 }
 
 
-export function isConstValueList( val: ConstValue  ): val is ConstValueList
+export function isConstValueList( val: any ): val is ConstValueList
 {
     if( !Array.isArray( val ) ) return false;
     
