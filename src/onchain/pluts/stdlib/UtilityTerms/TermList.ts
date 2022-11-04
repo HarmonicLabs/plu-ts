@@ -5,14 +5,16 @@ import PBool from "../../PTypes/PBool";
 import PLam, { TermFn } from "../../PTypes/PFn/PLam";
 import PInt from "../../PTypes/PInt";
 import PList from "../../PTypes/PList"
+import { phoist } from "../../Syntax";
 import Term from "../../Term";
-import { ConstantableTermType, FromPType } from "../../Term/Type";
+import { ConstantableTermType, TermType, ToPType } from "../../Term/Type";
 import { phead, pprepend, ptail } from "../Builtins";
 import { pindexList } from "../List";
+import { pflip } from "../PCombinators";
 import { PMaybeT } from "../PMaybe";
 import TermBool from "./TermBool";
 import TermInt from "./TermInt";
-import { TryUtitlityFromPType, TryUtitlityFromTerm, UtitlityFromTerm } from "./types";
+import { TryUtitlityFromPType } from "./types";
 
 type TermList<PElemsT extends PDataRepresentable> = Term<PList<PElemsT>>
 & {
@@ -52,26 +54,28 @@ type TermList<PElemsT extends PDataRepresentable> = Term<PList<PElemsT>>
     readonly length: TermInt
 
     // indexing / query
-    at: ( index : Term<PInt> ) =>  TryUtitlityFromPType<PElemsT>
-    find: ( predicate: Term<PLam<PElemsT,PBool>> ) => Term<PMaybeT<PElemsT>>
-    includes: ( elem: Term<PElemsT> ) => TermBool
-    findIndex: ( predicate: Term<PLam<PElemsT,PBool>> ) => TermInt
-    filter: ( predicate: Term<PLam<PElemsT,PBool>> ) => TermList<PElemsT>
+    readonly at: TermFn<[PInt], PElemsT>
+    readonly find: TermFn<[PLam<PElemsT,PBool>], PMaybeT<PElemsT>>
+    readonly includes: TermFn<[PElemsT], PBool>
+    readonly findIndex: TermFn<[PLam<PElemsT,PBool>], PInt>
+    readonly filter: TermFn<[PLam<PElemsT,PBool>], PList<PElemsT>>
 
     // list creation
-    preprend: ( elem: Term<PElemsT> ) => TermList<PElemsT>
-    concat: ( otherList: Term<PList<PElemsT>> ) => Term<PList<PElemsT>>
+    readonly preprend: TermFn<[PElemsT], PList<PElemsT>>
+    readonly concat: TermFn<[PList<PElemsT>], PList<PElemsT>>
     
     // transform
-    map: <ResultPType extends PType>( f: Term<PLam<PElemsT, ResultPType>> ) => TermList<ResultPType>
-    reduce: <PResultT extends PType>( reduceFunc: Term<PLam<PResultT, PLam<PList<PElemsT>, PResultT>>>, accumulator: Term<PResultT> ) => TryUtitlityFromPType<PResultT>
+    readonly map: <ResultT extends ConstantableTermType>( resultT: ResultT ) => TermFn<[PLam<PElemsT, ToPType<ResultT>>], ToPType<ResultT>>
+    readonly reduce: <ResultT extends ConstantableTermType>( resultT: ResultT ) => TermFn<[PLam<ToPType<ResultT>, PLam<PList<PElemsT>, ToPType<ResultT>>>], ToPType<ResultT>> 
 
     // predicates
-    every: ( predicate: Term<PLam<PElemsT, PBool>> ) => TermBool
-    some:  ( predicate: Term<PLam<PElemsT, PBool>> ) => TermBool
+    readonly every: TermFn<[PLam<PElemsT, PBool>], PBool>
+    readonly some:  TermFn<[PLam<PElemsT, PBool>], PBool>
 };
 
 export default TermList;
+
+const flippedPrepend = ( elemsT: TermType ) => phoist( pflip.$( pprepend( elemsT ) ) )
 
 export function addPListMethods<PElemsT extends PType>( list: Term<PList<PElemsT>> )
     : TermList<PElemsT>
@@ -92,7 +96,7 @@ export function addPListMethods<PElemsT extends PType>( list: Term<PList<PElemsT
         list,
         "tail",
         {
-            get: () => addPListMethods( ptail( elemsT ).$( list ) ),
+            get: () => ptail( elemsT ).$( list ),
             set: () => {},
             configurable: false,
             enumerable: true
@@ -102,19 +106,13 @@ export function addPListMethods<PElemsT extends PType>( list: Term<PList<PElemsT
     ObjectUtils.defineReadOnlyProperty(
         list,
         "at",
-        ( index : Term<PInt> ): TryUtitlityFromPType<PElemsT> => {
-            return pindexList( elemsT ).$( list ).$( index ) as TryUtitlityFromPType<PElemsT>
-        }
+        pindexList( elemsT ).$( list )
     )
 
     ObjectUtils.defineReadOnlyProperty(
         list,
         "prepend",
-        ( elem: Term<PElemsT> ): TermList<PElemsT> => {
-            return addPListMethods<PElemsT>(
-                pprepend( elemsT ).$( elem ).$( list ) as any
-            );
-        }
+        flippedPrepend( elemsT ).$( list )
     )
     
     return list as any;

@@ -173,7 +173,7 @@ type TsTermFunction<InputsTypes extends [ TermType, ...TermType[] ], OutputType 
 
 export function pfn<InputsTypes extends [ TermType, ...TermType[] ], OutputType extends TermType>( inputsTypes: InputsTypes, outputType: OutputType )
     : ( termFunction: TsTermFunction<InputsTypes,OutputType> ) => 
-        TermFnFromTypes< InputsTypes, OutputType>
+        TermFnFromTypes<InputsTypes, OutputType>
 {
     function plamNCurried(
         curriedFn:

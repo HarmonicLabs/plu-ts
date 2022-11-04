@@ -1,39 +1,47 @@
-import JsRuntime from "../../../utils/JsRuntime";
+import PType from "../PType";
+import PFn from "../PTypes/PFn";
 import PLam, { TermFn } from "../PTypes/PFn/PLam";
 import { papp, pfn, phoist } from "../Syntax";
-import { PrimType, TermType, ToPType } from "../Term/Type";
-import { typeExtends } from "../Term/Type/extension";
-import { isLambdaType } from "../Term/Type/kinds";
+import Term from "../Term";
+import { fn, lam, tyVar } from "../Term/Type";
+
+export const pcompose
+: Term<PFn<[
+    PLam<PType,PType>,
+    PLam<PType,PType>,
+    PType
+],  PType>> & {
+    $: <B extends PType, C extends PType>( bToC: Term<PLam<B,C>> )
+        => Term<PFn<[
+            PLam<PType,B>,
+            PType
+        ],  C>> & {
+        $: <A extends PType>( aToB: Term<PLam<A,B>> )
+            => TermFn<[ A ], C>
+    }
+}= (( a, b, c ) => phoist(
+    pfn([
+        lam( b, c ),
+        lam( a, b ),
+        a
+    ],  c)
+    (( bToC, aToB, _a ) => {
+        return papp( bToC, papp( aToB, _a ) ) as any;
+    })
+))( tyVar("pcompose_a"), tyVar("pcompose_b"), tyVar("pcompose_c")) as any
 
 
-export function compose<A extends TermType, B extends TermType, C extends TermType>
-    ( funcBToCType: [ PrimType.Lambda, B, C ] , funcAToBType: [ PrimType.Lambda, A, B ] )
-    : TermFn<[ PLam<ToPType<B>, ToPType<C>>, PLam<ToPType<A>, ToPType<B>>, ToPType<A> ], ToPType<C>>
-{
-    JsRuntime.assert(
-        isLambdaType( funcAToBType ) &&
-        isLambdaType( funcBToCType ),
-        "not lambda types"
-    );
-
-    const a = funcAToBType[1];
-    const _b = funcAToBType[2];
-    const b = funcBToCType[1];
-    const c = funcBToCType[2];
-
-    JsRuntime.assert(
-        typeExtends( _b, b ),
-        "cannot compose funcitons"
-    );
-
-    return phoist(
-        pfn([
-            funcBToCType,
-            funcAToBType,
-            a
-        ],  c
-        )(( bToC, aToB, _a ) => {
-            return papp( bToC, papp( aToB, _a ) ) as any;
-        })
-    ) as any;
-}
+export const pflip
+: Term<PFn<[ PFn<[PType, PType], PType>, PType, PType ], PType>> & {
+    $: <A extends PType, B extends PType, C extends PType>( termFn: Term<PFn<[ A, B ], C >>) =>
+    TermFn<[ B, A ], C>
+} = (( a, b, c ) => phoist(
+    pfn([
+        fn([ a, b ], c ),
+        b,
+        a
+    ],  c)
+    (( toFlip, _b, _a ) =>
+        papp( papp( toFlip, _a ), _b )
+    )
+))( tyVar("pcompose_a"), tyVar("pcompose_b"), tyVar("pcompose_c")) as any

@@ -2,16 +2,17 @@ import { pappendStr, pencodeUtf8, peqStr } from "../Builtins";
 import ObjectUtils from "../../../../utils/ObjectUtils";
 import PString from "../../PTypes/PString";
 import Term from "../../Term";
-import TermBool from "./TermBool";
 import TermBS from "./TermBS";
+import { TermFn } from "../../PTypes/PFn/PLam";
+import PBool from "../../PTypes/PBool";
 
 type TermStr = Term<PString> 
 & {
     // pappendStr
-    concat: ( other: Term<PString> ) => TermStr
-    toBytesUtf8: () => TermBS
+    readonly concat: TermFn<[ PString ], PString>
+    readonly utf8Encoded: TermBS
 
-    eq: ( other: Term<PString> ) => TermBool
+    readonly eq: TermFn<[ PString ], PBool >
 }
 
 export default TermStr;
@@ -21,18 +22,18 @@ export function addPStringMethods( term: Term<PString> ): TermStr
     ObjectUtils.defineReadOnlyProperty(
         term,
         "concat",
-        ( other: Term<PString> ): TermStr => pappendStr.$( term ).$( other )
+        pappendStr.$( term )
     );
     ObjectUtils.defineReadOnlyProperty(
         term,
         "toBytesUtf8",
-        (): TermBS => pencodeUtf8.$( term )
+        pencodeUtf8.$( term )
     );
 
     ObjectUtils.defineReadOnlyProperty(
         term,
         "eq",
-        ( other: Term<PString> ): TermBool => peqStr.$( term ).$( other )
+        peqStr.$( term )
     );
 
     return term as any;

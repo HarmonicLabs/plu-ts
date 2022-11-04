@@ -1,6 +1,7 @@
 import JsRuntime from "../../../../utils/JsRuntime";
 import ObjectUtils from "../../../../utils/ObjectUtils";
 import PType, { PDataRepresentable } from "../../PType";
+import punsafeConvertType from "../../Syntax/punsafeConvertType";
 // import { punsafeConvertType } from "../../Syntax";
 import Term from "../../Term";
 import Type, { Alias, aliasType, ConstantableTermType, TermType, ToPType } from "../../Term/Type";
@@ -10,33 +11,8 @@ import { cloneTermType } from "../../Term/Type/utils";
 import PData from "../PData";
 import { getFromDataForType } from "../PData/conversion";
 import { getToDataForType } from "../PData/conversion/getToDataTermForType";
+import unwrapAlias from "./unwrapAlias";
 
-/**
- * 
- * avoid circular deps
- */
-function punsafeConvertType<FromPInstance extends PType, SomeExtension extends {}, ToTermType extends TermType>
-    ( someTerm: Term<FromPInstance> & SomeExtension, toType: ToTermType ): Term<ToPType<ToTermType>> & SomeExtension
-{
-    const converted = new Term(
-        toType,
-        someTerm.toUPLC
-    ) as any;
-
-    Object.keys( someTerm ).forEach( k => {
-
-        if( k === "_type" || k === "_toUPLC" ) return;
-        
-        ObjectUtils.defineReadOnlyProperty(
-            converted,
-            k,
-            (someTerm as any)[ k ]
-        )
-
-    });
-
-    return converted;
-}
 
 /**
  * intermediate class useful to reconize structs form primitives
@@ -175,9 +151,4 @@ export default function palias<T extends ConstantableTermType>(
     );
 
     return PAliasExtension as unknown as PAlias<T ,typeof thisAliasId, PAliasExtension>;
-}
-
-export function unwrapAlias<T extends ConstantableTermType>( aliasedType: Alias<symbol, T> ): T
-{
-    return aliasedType[1].type;
 }

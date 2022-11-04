@@ -6,32 +6,57 @@ import Term from "../../Term";
 import TermBool from "./TermBool";
 import TermInt from "./TermInt";
 import TermStr from "./TermStr";
+import { TermFn } from "../../PTypes/PFn/PLam";
+import PBool from "../../PTypes/PBool";
+import { pfn, phoist } from "../../Syntax";
+import { bs, int } from "../../Term/Type";
 
 type TermBS = Term<PByteString> 
 & {
     readonly length: TermInt
     
     // pappendBs
-    concat: ( byteStr: Term<PByteString> ) => TermBS
+    readonly concat: TermFn<[PByteString], PByteString>
     // pconsBs
-    prepend: ( byte: Term<PInt> ) => TermBS
+    readonly prepend: TermFn<[PInt], PByteString>
     // psliceBs
-    subByteString: ( fromInclusive: Term<PInt>, ofLength: Term<PInt> ) => TermBS
-    slice: ( fromInclusive: Term<PInt>, toExclusive: Term<PInt> ) => TermBS
+    readonly subByteString: TermFn<[PInt, PInt], PByteString>
+    readonly slice: TermFn<[PInt, PInt], PByteString>
     // pindexBs
-    at: ( index: Term<PInt> ) => TermInt
+    readonly at: TermFn<[PInt], PInt>
 
-    // pencodeUtf8
-    toUtf8String: () => TermStr
+    readonly utf8Decoded: TermStr
 
-    eq: ( other: Term<PByteString> ) => TermBool
-    lt: ( other: Term<PByteString> ) => TermBool
-    ltEq: ( other: Term<PByteString> ) => TermBool
-    gt: ( other: Term<PByteString> ) => TermBool
-    gtEq: ( other: Term<PByteString> ) => TermBool
+    readonly eq:    TermFn<[PByteString], PBool>
+    readonly lt:    TermFn<[PByteString], PBool>
+    readonly ltEq:  TermFn<[PByteString], PBool>
+    readonly gt:    TermFn<[PByteString], PBool>
+    readonly gtEq:  TermFn<[PByteString], PBool>
 }
 
 export default TermBS;
+
+const subByteString = phoist(
+    pfn([
+        bs,
+        int,
+        int
+    ],  bs)
+    (( term, fromInclusive , ofLength ): TermBS =>
+        psliceBs.$( fromInclusive ).$( ofLength ).$( term )
+    )
+)
+
+const jsLikeSlice = phoist(
+    pfn([
+        bs,
+        int,
+        int
+    ],  bs)
+    (( term, fromInclusive , toExclusive ): TermBS =>
+        psliceBs.$( fromInclusive ).$( psub.$( toExclusive ).$( fromInclusive ) ).$( term )
+    )
+)
 
 export function addPByteStringMethods( term: Term<PByteString> ): TermBS
 {
@@ -43,55 +68,54 @@ export function addPByteStringMethods( term: Term<PByteString> ): TermBS
     ObjectUtils.defineReadOnlyProperty(
         term,
         "concat",
-        ( other: Term<PByteString> ) => pappendBs.$( term ).$( other )
+        pappendBs.$( term )
     );
     ObjectUtils.defineReadOnlyProperty(
         term,
         "subByteString",
-        ( fromInclusive: Term<PInt>, ofLength: Term<PInt> ): TermBS => psliceBs.$( fromInclusive ).$( ofLength ).$( term )
+        subByteString.$( term )
     );
     ObjectUtils.defineReadOnlyProperty(
         term,
         "slice",
-        ( fromInclusive: Term<PInt>, toExclusive: Term<PInt> ): TermBS =>
-            psliceBs.$( fromInclusive ).$( psub.$( toExclusive ).$( fromInclusive ) ).$( term )
+        jsLikeSlice.$( term )
     );
     ObjectUtils.defineReadOnlyProperty(
         term,
         "at",
-        ( index: Term<PInt> ): TermInt => pindexBs.$( term ).$( index )
+        pindexBs.$( term )
     );
 
     ObjectUtils.defineReadOnlyProperty(
         term,
-        "toUtf8Stringf",
-        (): TermStr => pdecodeUtf8.$( term )
+        "utf8Decoded",
+        pdecodeUtf8.$( term )
     )
 
     ObjectUtils.defineReadOnlyProperty(
         term,
         "eq",
-        ( other: Term<PByteString> ): TermBool => peqBs.$( term ).$( other )
+        peqBs.$( term )
     );
     ObjectUtils.defineReadOnlyProperty(
         term,
         "lt",
-        ( other: Term<PByteString> ): TermBool => plessBs.$( term ).$( other )
+        plessBs.$( term )
     );
     ObjectUtils.defineReadOnlyProperty(
         term,
         "ltEq",
-        ( other: Term<PByteString> ): TermBool => plessEqBs.$( term ).$( other )
+        plessEqBs.$( term )
     );
     ObjectUtils.defineReadOnlyProperty(
         term,
         "gt",
-        ( other: Term<PByteString> ): TermBool => pgreaterBS.$( term ).$( other )
+        pgreaterBS.$( term )
     );
     ObjectUtils.defineReadOnlyProperty(
         term,
         "gtEq",
-        ( other: Term<PByteString> ): TermBool => pgreaterEqBS.$( term ).$( other )
+        pgreaterEqBS.$( term )
     );
 
     return term as any;

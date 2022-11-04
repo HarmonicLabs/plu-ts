@@ -2,11 +2,12 @@ import { por, pand } from "../Builtins";
 import ObjectUtils from "../../../../utils/ObjectUtils";
 import PBool from "../../PTypes/PBool";
 import Term from "../../Term";
+import { TermFn } from "../../PTypes/PFn/PLam";
 
 type TermBool = Term<PBool> 
 & {
-    or: ( other: Term<PBool> ) => TermBool
-    and: ( other: Term<PBool> ) => TermBool
+    readonly or:  TermFn<[PBool], PBool>
+    readonly and: TermFn<[PBool], PBool>
 }
 
 export default TermBool;
@@ -16,12 +17,12 @@ export function addPBoolMethods( term: Term<PBool> ): TermBool
     ObjectUtils.defineReadOnlyProperty(
         term,
         "or",
-        ( other: Term<PBool> ): TermBool => por.$( term ).$( other )
+        por.$( term )
     );
     ObjectUtils.defineReadOnlyProperty(
         term,
         "and",
-        ( other: Term<PBool> ): TermBool => pand.$( term ).$( other )
+        pand.$( term )
     );
 
     return term as any;

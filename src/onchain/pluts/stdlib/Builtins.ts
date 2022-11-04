@@ -15,7 +15,7 @@ import PDataList from "../PTypes/PData/PDataList";
 import PDataMap from "../PTypes/PData/PDataMap";
 import PFn from "../PTypes/PFn";
 import PLam, { TermFn } from "../PTypes/PFn/PLam";
-import PInt, { pInt } from "../PTypes/PInt";
+import PInt from "../PTypes/PInt";
 import PList from "../PTypes/PList";
 import PPair from "../PTypes/PPair";
 import PString from "../PTypes/PString";
@@ -27,8 +27,7 @@ import TermInt, { addPIntMethods } from "./UtilityTerms/TermInt";
 import TermStr, { addPStringMethods } from "./UtilityTerms/TermStr";
 import Term from "../Term";
 import { getNRequiredLambdaArgs } from "../Term/Type/utils";
-import Type, { TermType, ToPType, DataType, ToPDataType, delayed, bool, lam } from "../Term/Type";
-import JsRuntime from "../../../utils/JsRuntime";
+import Type, { TermType, ToPType, DataType, ToPDataType, bool, lam } from "../Term/Type";
 import Lambda from "../../UPLC/UPLCTerms/Lambda";
 import UPLCVar from "../../UPLC/UPLCTerms/UPLCVar";
 import { PMap } from "../PTypes/PMap";
@@ -47,7 +46,7 @@ function pBool( bool: boolean ): TermBool
 export function addApplications<Ins extends [ PType, ...PType[] ], Out extends PType, TermOutput extends TermFn< Ins, Out > = TermFn< Ins, Out >>
     (
         lambdaTerm: Term< PFn< Ins, Out > >,
-        addOutputMethods?: ( termOut: Term<Out> ) => TermOutput
+        addOutputMethods?: ( termOut: Term<Out> ) => TermOutput // useless since papp handles all that with addUtility...
     )
     : TermOutput
 {
@@ -60,11 +59,6 @@ export function addApplications<Ins extends [ PType, ...PType[] ], Out extends P
             "$",
             ( input: Term< Head<Ins> > ) => {
                 let output: any = papp( lambdaTerm, input );
-
-                if( addOutputMethods !== undefined )
-                {
-                    output = addOutputMethods( output );
-                }
 
                 return output;
             }
@@ -79,8 +73,7 @@ export function addApplications<Ins extends [ PType, ...PType[] ], Out extends P
             // Type 'PType[]' is not assignable to type '[PType, ...PType[]]'.
             // Source provides no match for required element at position 0 in target
             addApplications< Tail<Ins>, Out >(
-                papp( lambdaTerm , input ) as any,
-                addOutputMethods
+                papp( lambdaTerm , input ) as any
             )
     ) as any;
 }
