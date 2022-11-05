@@ -29,7 +29,7 @@ the off-chain one will allow for transaction creation (so will take care of smar
 
 ## Get Started
 
-Documentation is currently being written feel free to contribute to the [`plu-ts-docs` repository](https://github.com/HarmonicLabs/plut-ts-docs)
+Documentation is currently being written feel free to contribute to the [`plu-ts-docs` repository](https://github.com/HarmonicLabs/plu-ts-docs)
 
 Or you can start playing with `plu-ts` by running the following command in your project root directory
 ```
