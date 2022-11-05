@@ -1,4 +1,4 @@
-import { PrimType, TermType } from ".";
+import { PrimType, TermType } from "./base";
 import BasePlutsError from "../../../../errors/BasePlutsError";
 import { typeExtends } from "./extension";
 import { isAliasType } from "./kinds";

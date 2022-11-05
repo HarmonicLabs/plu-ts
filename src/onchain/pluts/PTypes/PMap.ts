@@ -1,8 +1,8 @@
 import { punMapData } from "../stdlib/Builtins";
 import PType from "../PType";
 import Term from "../Term";
-import Type from "../Term/Type";
-import PData from "./PData";
+import Type from "../Term/Type/base";
+import PData from "./PData/PData";
 import PDataMap from "./PData/PDataMap";
 import PList from "./PList";
 import PPair from "./PPair";

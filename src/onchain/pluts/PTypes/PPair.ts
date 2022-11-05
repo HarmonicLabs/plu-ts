@@ -1,11 +1,11 @@
 import JsRuntime from "../../../utils/JsRuntime";
 import { pfstPair, pid, ppairData, psndPair, punMapData } from "../stdlib/Builtins";
 import PType, { PDataRepresentable } from "../PType";
-import { phoist, plam, punsafeConvertType } from "../Syntax";
+import { phoist, plam, punsafeConvertType } from "../Syntax/syntax";
 import Term from "../Term";
-import Type, { data, DataType, pair, TermType } from "../Term/Type";
+import Type, { data, DataType, pair, TermType } from "../Term/Type/base";
 import { typeExtends } from "../Term/Type/extension";
-import PData from "./PData";
+import PData from "./PData/PData";
 import PDataMap from "./PData/PDataMap";
 import PLam from "./PFn/PLam";
 import PList from "./PList";

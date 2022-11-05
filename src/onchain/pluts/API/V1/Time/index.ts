@@ -1,6 +1,6 @@
-import palias from "../../../PTypes/PAlias";
-import { int } from "../../../Term/Type";
-import PInterval from "../Interval";
+import palias from "../../../PTypes/PAlias/palias";
+import { int } from "../../../Term/Type/base";
+import PInterval from "../Interval/PInterval";
 
 export const PPOSIXTime = palias( int );
 // export const PPOSIXTime = int;

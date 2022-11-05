@@ -1,11 +1,11 @@
 
-import PData from ".";
+import PData from "./PData";
 import DataI from "../../../../types/Data/DataI";
 import Integer from "../../../../types/ints/Integer";
 import UPLCConst from "../../../UPLC/UPLCTerms/UPLCConst";
 import { pIntToData, punIData } from "../../stdlib/Builtins";
 import Term from "../../Term";
-import Type from "../../Term/Type";
+import Type from "../../Term/Type/base";
 import PInt from "../PInt";
 
 export default class PDataInt extends PData

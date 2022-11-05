@@ -1,14 +1,14 @@
 import PType from "../../PType";
-import { PAlias } from "../../PTypes/PAlias";
+import { PAlias } from "../../PTypes/PAlias/palias";
 import unwrapAlias from "../../PTypes/PAlias/unwrapAlias";
 import PBool from "../../PTypes/PBool";
 import PByteString from "../../PTypes/PByteString";
 import PInt from "../../PTypes/PInt";
 import PList from "../../PTypes/PList";
 import PString from "../../PTypes/PString";
-import { ConstantableStructDefinition, PStruct } from "../../PTypes/PStruct";
+import { ConstantableStructDefinition, PStruct } from "../../PTypes/PStruct/pstruct";
 import Term from "../../Term";
-import Type, { bool, bs, ConstantableTermType, int, list, str, TermType, ToPType } from "../../Term/Type";
+import Type, { bool, bs, ConstantableTermType, int, list, str, TermType, ToPType } from "../../Term/Type/base";
 import { typeExtends } from "../../Term/Type/extension";
 import { isAliasType, isConstantableStructType, isStructType } from "../../Term/Type/kinds";
 import TermBool, { addPBoolMethods } from "./TermBool";

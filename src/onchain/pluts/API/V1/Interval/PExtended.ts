@@ -1,5 +1,6 @@
-import { pgenericStruct, PStruct } from "../../../PTypes/PStruct";
-import { ConstantableStructType, ConstantableTermType } from "../../../Term/Type";
+import ObjectUtils from "../../../../../utils/ObjectUtils";
+import { pgenericStruct, PStruct } from "../../../PTypes/PStruct/pstruct";
+import { ConstantableStructType, ConstantableTermType } from "../../../Term/Type/base";
 import { termTypeToString } from "../../../Term/Type/utils";
 
 export type PExtendedT<T extends ConstantableTermType> = PStruct<{
@@ -21,4 +22,8 @@ function PExtended<T extends ConstantableTermType>( tyArg: T ): PExtendedT<T>
     return _PExtended( tyArg ) as any;
 }
 
-export default PExtended;
+export default ObjectUtils.defineReadOnlyProperty(
+    PExtended,
+    "type",
+    _PExtended.type
+);

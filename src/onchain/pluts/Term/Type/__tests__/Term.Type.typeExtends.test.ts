@@ -1,6 +1,6 @@
-import Type, { int, pair, TermType } from "..";
+import Type, { int, pair, TermType } from "../base";
 import PValue from "../../../API/V1/Value";
-import palias from "../../../PTypes/PAlias";
+import palias from "../../../PTypes/PAlias/palias";
 import { typeExtends } from "../extension";
 import { termTypeToString } from "../utils";
 

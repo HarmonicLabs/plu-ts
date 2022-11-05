@@ -1,4 +1,4 @@
-import Type, { FixedTermType, TermType } from ".."
+import Type, { FixedTermType, TermType } from "../base"
 import { replaceTypeParam } from "../tyParams";
 
 

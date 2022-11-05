@@ -1,6 +1,6 @@
-import { pgenericStruct } from "..";
+import { pgenericStruct } from "../pstruct";
 import { Params } from "../../../../../utils/ts";
-import { int } from "../../../Term/Type";
+import { int } from "../../../Term/Type/base";
 import { pStr } from "../../PString";
 
 

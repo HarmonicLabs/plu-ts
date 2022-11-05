@@ -1,9 +1,9 @@
 import PType from "../PType";
-import PFn from "../PTypes/PFn";
+import PFn from "../PTypes/PFn/PFn";
 import PLam, { TermFn } from "../PTypes/PFn/PLam";
-import { papp, pfn, phoist } from "../Syntax";
+import { papp, pfn, phoist } from "../Syntax/syntax";
 import Term from "../Term";
-import { fn, lam, tyVar } from "../Term/Type";
+import { fn, lam, tyVar } from "../Term/Type/base";
 
 export const pcompose
 : Term<PFn<[

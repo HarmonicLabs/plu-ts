@@ -1,10 +1,10 @@
-import { precursiveList } from ".."
+import { precursiveList } from "../methods"
 import evalScript from "../../../../CEK"
 import { pInt } from "../../../PTypes/PInt"
 import { pList, pnil } from "../../../PTypes/PList"
 import { pStr } from "../../../PTypes/PString"
-import { papp, pfn, plam } from "../../../Syntax"
-import Type, { int, str } from "../../../Term/Type"
+import { papp, pfn, plam } from "../../../Syntax/syntax"
+import Type, { int, str } from "../../../Term/Type/base"
 
 
 describe("precursiveList", () => {

@@ -1,7 +1,7 @@
-import { precursiveList } from ".";
+import { precursiveList } from "./methods";
 import { pInt } from "../../PTypes/PInt";
-import { plam, pfn, papp } from "../../Syntax";
-import Type, { tyVar } from "../../Term/Type";
+import { plam, pfn, papp } from "../../Syntax/syntax";
+import Type, { tyVar } from "../../Term/Type/base";
 
 export const plength = (() => {
 

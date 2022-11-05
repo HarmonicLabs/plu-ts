@@ -2,8 +2,8 @@ import BasePlutsError from "../../../errors/BasePlutsError";
 import Cloneable, { isCloneable } from "../../../types/interfaces/Cloneable";
 import PType from "../PType";
 import Term from "../Term";
-import Type, { TermType } from "../Term/Type";
-import PData from "./PData";
+import Type, { TermType } from "../Term/Type/base";
+import PData from "./PData/PData";
 
 export default class PDelayed< DelayedPType extends PType > extends PType
     implements Cloneable<PDelayed<DelayedPType>>

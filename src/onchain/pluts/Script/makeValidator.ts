@@ -1,21 +1,33 @@
 import BasePlutsError from "../../../errors/BasePlutsError";
-import PScriptContext from "../API/V1/ScriptContext";
 import { pif, pstrictIf } from "../stdlib/Builtins";
 import { PDataRepresentable } from "../PType";
 import PBool from "../PTypes/PBool";
-import PData from "../PTypes/PData";
+import PData from "../PTypes/PData/PData";
 import { getFromDataForType } from "../PTypes/PData/conversion";
 import PLam, { TermFn } from "../PTypes/PFn/PLam";
 import PUnit, { pmakeUnit } from "../PTypes/PUnit";
-import { papp, pdelay, perror, pfn, pforce, punsafeConvertType } from "../Syntax";
+import { papp, perror, pfn } from "../Syntax/syntax";
 import Term from "../Term";
-import Type, { bool, data, delayed, unit } from "../Term/Type";
+import Type, { bool, data, delayed, unit } from "../Term/Type/base";
 import { typeExtends } from "../Term/Type/extension";
 import { isConstantableTermType, isLambdaType } from "../Term/Type/kinds";
 import { termTypeToString } from "../Term/Type/utils";
+import { V1 , V2 } from "../API";
 
 
-export function makeValidator( typedValidator: Term<PLam<PDataRepresentable,PLam<PDataRepresentable,PLam<typeof PScriptContext, PBool>>>> )
+export default function makeValidator(
+    typedValidator: Term<
+        PLam<
+        PDataRepresentable,
+        PLam<
+            PDataRepresentable,
+            PLam<
+                    typeof V1.PScriptContext | typeof V2.PScriptContext, 
+                    PBool
+                >
+            >
+        >
+    > )
     : TermFn<[PData,PData,PData], PUnit>
 {
     return pfn([

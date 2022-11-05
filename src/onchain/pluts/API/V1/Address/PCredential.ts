@@ -1,6 +1,6 @@
-import pstruct from "../../../PTypes/PStruct";
+import pstruct from "../../../PTypes/PStruct/pstruct";
 import PPubKeyHash from "../PubKey/PPubKeyHash";
-import PValidatorHash from "../Scripts/PValidatorHash";
+import PValidatorHash from "../ScriptsHashes/PValidatorHash";
 
 const PCredential = pstruct({
     PPubKeyCredential: { pkh: PPubKeyHash.type },

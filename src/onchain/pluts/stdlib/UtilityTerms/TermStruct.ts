@@ -2,7 +2,7 @@ import ObjectUtils from "../../../../utils/ObjectUtils";
 import capitalize from "../../../../utils/ts/capitalize";
 import { IsSingleKey } from "../../../../utils/ts/SingleKeyObj";
 import PType from "../../PType";
-import { ConstantableStructDefinition, PStruct, RestrictedStructInstance, StructCtorDef } from "../../PTypes/PStruct";
+import { ConstantableStructDefinition, PStruct, RestrictedStructInstance, StructCtorDef } from "../../PTypes/PStruct/pstruct";
 import pmatch from "../../PTypes/PStruct/pmatch";
 import Term from "../../Term";
 import { isStructDefinition, isStructType } from "../../Term/Type/kinds";

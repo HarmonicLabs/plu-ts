@@ -1,9 +1,10 @@
 import { pappendStr, pdiv, pif, pmod } from "./Builtins";
 import { pInt } from "../PTypes/PInt";
 import { pStr } from "../PTypes/PString";
-import { papp, pfn, phoist, plam, precursive } from "../Syntax";
-import { int, lam, str } from "../Term/Type";
+import { papp, pfn, phoist, plam, precursive } from "../Syntax/syntax";
+import { int, lam, str } from "../Term/Type/base";
 
+// should really be modified; this thing is inefficient as hell
 export const pintToStr = phoist(
     precursive(
         pfn([

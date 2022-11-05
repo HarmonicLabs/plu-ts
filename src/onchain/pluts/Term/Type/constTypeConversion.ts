@@ -1,4 +1,4 @@
-import Type, { ConstantableTermType, TypeShortcut } from ".";
+import Type, { ConstantableTermType, TypeShortcut } from "./base";
 import JsRuntime from "../../../../utils/JsRuntime";
 import ConstType, { constPairTypeUtils, constT, constTypeEq, ConstTyTag } from "../../../UPLC/UPLCTerms/UPLCConst/ConstType";
 import unwrapAlias from "../../PTypes/PAlias/unwrapAlias";

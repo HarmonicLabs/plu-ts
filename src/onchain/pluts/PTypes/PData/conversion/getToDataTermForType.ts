@@ -1,11 +1,11 @@
-import PData from "..";
+import PData from "../PData";
 import BasePlutsError from "../../../../../errors/BasePlutsError";
 import { ppairData, pfstPair } from "../../../stdlib/Builtins";
-import { pmap } from "../../../stdlib/List";
-import { phoist, plam } from "../../../Syntax";
+import { pmap } from "../../../stdlib/List/methods";
+import { phoist, plam } from "../../../Syntax/syntax";
 import punsafeConvertType from "../../../Syntax/punsafeConvertType";
 import Term from "../../../Term";
-import Type, { ConstantableTermType, StructType, ToPType, int, bs, str, unit, bool, list, data, pair } from "../../../Term/Type";
+import Type, { ConstantableTermType, StructType, ToPType, int, bs, str, unit, bool, list, data, pair } from "../../../Term/Type/base";
 import { typeExtends } from "../../../Term/Type/extension";
 import { isAliasType, isStructType, isDataType } from "../../../Term/Type/kinds";
 import { termTypeToString } from "../../../Term/Type/utils";

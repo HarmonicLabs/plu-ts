@@ -5,13 +5,13 @@ import PBool from "../../PTypes/PBool";
 import PLam, { TermFn } from "../../PTypes/PFn/PLam";
 import PInt from "../../PTypes/PInt";
 import PList from "../../PTypes/PList"
-import { phoist } from "../../Syntax";
+import { phoist } from "../../Syntax/syntax";
 import Term from "../../Term";
-import { ConstantableTermType, TermType, ToPType } from "../../Term/Type";
+import { ConstantableTermType, TermType, ToPType } from "../../Term/Type/base";
 import { phead, pprepend, ptail } from "../Builtins";
-import { pevery, pfilter, pindexList, pmap, psome } from "../List";
+import { pevery, pfilter, pindexList, pmap, psome } from "../List/methods";
 import { pflip } from "../PCombinators";
-import { PMaybeT } from "../PMaybe";
+import { PMaybeT } from "../PMaybe/PMaybe";
 import TermBool from "./TermBool";
 import TermInt from "./TermInt";
 import { TryUtitlityFromPType } from "./types";

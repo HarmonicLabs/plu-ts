@@ -1,4 +1,4 @@
-import PData from ".";
+import PData from "./PData";
 import DataI from "../../../../types/Data/DataI";
 import DataPair from "../../../../types/Data/DataPair";
 import { DataFromPData } from "./conversion";

@@ -6,9 +6,9 @@ import Delay from "../../../UPLC/UPLCTerms/Delay";
 import Force from "../../../UPLC/UPLCTerms/Force";
 import UPLCConst from "../../../UPLC/UPLCTerms/UPLCConst";
 import { pBool } from "../../PTypes/PBool";
-import { pData } from "../../PTypes/PData";
+import { pData } from "../../PTypes/PData/PData";
 import PInt, { pInt } from "../../PTypes/PInt";
-import Type from "../../Term/Type";
+import Type from "../../Term/Type/base";
 
 describe("pchooseData", () => {
 

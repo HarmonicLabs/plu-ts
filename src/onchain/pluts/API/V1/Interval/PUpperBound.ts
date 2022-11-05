@@ -1,5 +1,6 @@
-import { pgenericStruct, PStruct } from "../../../PTypes/PStruct";
-import { bool, ConstantableStructType, ConstantableTermType, PrimType } from "../../../Term/Type";
+import ObjectUtils from "../../../../../utils/ObjectUtils";
+import { pgenericStruct, PStruct } from "../../../PTypes/PStruct/pstruct";
+import { bool, ConstantableStructType, ConstantableTermType, PrimType } from "../../../Term/Type/base";
 import PExtended, { PExtendedT } from "./PExtended";
 
 export type PUpperBoundT<T extends ConstantableTermType> = PStruct<{
@@ -23,4 +24,8 @@ function PUpperBound<T extends ConstantableTermType>( tyArg: T ): PUpperBoundT<T
     return _PUpperBound( tyArg ) as any;
 }
 
-export default PUpperBound;
+export default ObjectUtils.defineReadOnlyProperty(
+    PUpperBound,
+    "type",
+    _PUpperBound.type
+);;;

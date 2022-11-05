@@ -1,4 +1,4 @@
-import Type, { TermType } from "..";
+import Type, { TermType } from "../base";
 import { isConstantableTermType } from "../kinds";
 
 function truthyTest( equalsBool: boolean, f: ( termT: TermType ) => boolean )

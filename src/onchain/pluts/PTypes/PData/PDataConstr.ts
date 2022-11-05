@@ -1,4 +1,4 @@
-import PData from ".";
+import PData from "./PData";
 import DataConstr from "../../../../types/Data/DataConstr";
 import { PDataToDataArr } from "./conversion";
 

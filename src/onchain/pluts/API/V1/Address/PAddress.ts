@@ -1,5 +1,5 @@
-import PMaybe from "../../../stdlib/PMaybe";
-import pstruct from "../../../PTypes/PStruct";
+import PMaybe from "../../../stdlib/PMaybe/PMaybe";
+import pstruct from "../../../PTypes/PStruct/pstruct";
 import PCredential from "./PCredential";
 import PStakingCredential from "./PStakingCredential";
 

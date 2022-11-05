@@ -1,4 +1,4 @@
-import PData from ".";
+import PData from "./PData";
 import Data from "../../../../types/Data";
 import DataMap from "../../../../types/Data/DataMap";
 import DataPair from "../../../../types/Data/DataPair";

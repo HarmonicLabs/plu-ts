@@ -1,6 +1,6 @@
 import { peq, peqBs, peqData, peqInt, peqStr } from "../Builtins"
 import PByteString from "../../PTypes/PByteString";
-import PData from "../../PTypes/PData";
+import PData from "../../PTypes/PData/PData";
 import PInt from "../../PTypes/PInt"
 import PString from "../../PTypes/PString";
 import PUnit from "../../PTypes/PUnit";

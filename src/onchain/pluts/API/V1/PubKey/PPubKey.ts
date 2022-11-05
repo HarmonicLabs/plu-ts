@@ -1,5 +1,5 @@
-import palias from "../../../PTypes/PAlias";
-import { bs } from "../../../Term/Type";
+import palias from "../../../PTypes/PAlias/palias";
+import { bs } from "../../../Term/Type/base";
 
 const PPubKey = palias( bs );
 // const PPubKey = bs;

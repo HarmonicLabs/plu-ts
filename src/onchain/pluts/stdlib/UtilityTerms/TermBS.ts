@@ -8,8 +8,8 @@ import TermInt from "./TermInt";
 import TermStr from "./TermStr";
 import { TermFn } from "../../PTypes/PFn/PLam";
 import PBool from "../../PTypes/PBool";
-import { pfn, phoist } from "../../Syntax";
-import { bs, int } from "../../Term/Type";
+import { pfn, phoist } from "../../Syntax/syntax";
+import { bs, int } from "../../Term/Type/base";
 
 type TermBS = Term<PByteString> 
 & {

@@ -1,4 +1,4 @@
-import { int, str, struct, tyVar } from ".."
+import { int, str, struct, tyVar } from "../base"
 import { structExtends } from "../extension";
 
 const a = tyVar("a");

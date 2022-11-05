@@ -1,10 +1,10 @@
-import { pindexList } from ".."
+import { pindexList } from "../methods"
 import Debug from "../../../../../utils/Debug"
 import evalScript from "../../../../CEK"
 import ErrorUPLC from "../../../../UPLC/UPLCTerms/ErrorUPLC"
 import PInt, { pInt } from "../../../PTypes/PInt"
 import { pList, pnil } from "../../../PTypes/PList"
-import { int } from "../../../Term/Type"
+import { int } from "../../../Term/Type/base"
 
 
 describe("pindexList", () => {

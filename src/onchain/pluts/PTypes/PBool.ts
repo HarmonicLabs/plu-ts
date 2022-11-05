@@ -3,10 +3,10 @@ import UPLCConst from "../../UPLC/UPLCTerms/UPLCConst";
 import { pConstrToData, peqInt, pfstPair, pif, pnilData, punConstrData } from "../stdlib/Builtins";
 import TermBool, { addPBoolMethods } from "../stdlib/UtilityTerms/TermBool";
 import { PDataRepresentable } from "../PType";
-import { phoist, plam } from "../Syntax";
+import { phoist, plam } from "../Syntax/syntax";
 import Term from "../Term";
-import Type, { bool, data, TermType } from "../Term/Type";
-import PData from "./PData";
+import Type, { bool, data, TermType } from "../Term/Type/base";
+import PData from "./PData/PData";
 import PLam from "./PFn/PLam";
 import { pInt } from "./PInt";
 

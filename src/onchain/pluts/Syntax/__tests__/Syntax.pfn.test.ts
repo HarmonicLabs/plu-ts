@@ -1,4 +1,4 @@
-import { pfn, plam } from ".."
+import { pfn, plam } from "../syntax"
 import Application from "../../../UPLC/UPLCTerms/Application"
 import Builtin from "../../../UPLC/UPLCTerms/Builtin"
 import Lambda from "../../../UPLC/UPLCTerms/Lambda"
@@ -9,7 +9,7 @@ import PBool from "../../PTypes/PBool"
 import PInt, { pInt } from "../../PTypes/PInt"
 import PUnit from "../../PTypes/PUnit"
 import Term from "../../Term"
-import Type from "../../Term/Type"
+import Type from "../../Term/Type/base"
 
 
 describe("pfn", () => {

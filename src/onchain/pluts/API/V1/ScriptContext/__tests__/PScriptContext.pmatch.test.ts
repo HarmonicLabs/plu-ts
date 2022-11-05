@@ -1,11 +1,11 @@
 import evalScript from "../../../../../CEK";
-import PMaybe from "../../../../stdlib/PMaybe";
+import PMaybe from "../../../../stdlib/PMaybe/PMaybe";
 import { pBool } from "../../../../PTypes/PBool";
 import { pByteString } from "../../../../PTypes/PByteString";
 import { pInt } from "../../../../PTypes/PInt";
 import { pList } from "../../../../PTypes/PList";
 import pmatch from "../../../../PTypes/PStruct/pmatch";
-import { pair, data, int } from "../../../../Term/Type";
+import { pair, data, int } from "../../../../Term/Type/base";
 import PAddress from "../../Address";
 import PCredential from "../../Address/PCredential";
 import PStakingCredential from "../../Address/PStakingCredential";
@@ -14,8 +14,8 @@ import PLowerBound from "../../Interval/PLowerBound";
 import PUpperBound from "../../Interval/PUpperBound";
 import PDCert from "../../PDCert";
 import PPubKeyHash from "../../PubKey/PPubKeyHash";
-import PDatumHash from "../../Scripts/PDatumHash";
-import PValidatorHash from "../../Scripts/PValidatorHash";
+import PDatumHash from "../../ScriptsHashes/PDatumHash";
+import PValidatorHash from "../../ScriptsHashes/PValidatorHash";
 import PPOSIXTimeRange, { PPOSIXTime } from "../../Time";
 import PTxId from "../../Tx/PTxId";
 import PTxInInfo from "../../Tx/PTxInInfo";
@@ -24,7 +24,7 @@ import PTxOutRef from "../../Tx/PTxOutRef";
 import PValue from "../../Value";
 import PScriptContext from "../PScriptContext";
 import PScriptPurpose from "../PScriptPurpose";
-import PTxInfo from "../PTxInfo";
+import PTxInfo from "../PTxInfo/PTxInfo";
 import UPLCConst from "../../../../../UPLC/UPLCTerms/UPLCConst";
 
 

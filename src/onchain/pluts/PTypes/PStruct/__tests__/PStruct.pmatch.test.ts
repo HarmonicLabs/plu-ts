@@ -1,11 +1,11 @@
-import pstruct, { pgenericStruct } from ".."
+import pstruct, { pgenericStruct } from "../pstruct"
 import ByteString from "../../../../../types/HexString/ByteString";
 import evalScript from "../../../../CEK";
 import UPLCConst from "../../../../UPLC/UPLCTerms/UPLCConst";
 import { padd, pconsBs, pindexBs } from "../../../stdlib/Builtins";
-import { perror } from "../../../Syntax";
+import { perror } from "../../../Syntax/syntax";
 import Term from "../../../Term";
-import { bs, int, unit } from "../../../Term/Type";
+import { bs, int, unit } from "../../../Term/Type/base";
 import { pByteString } from "../../PByteString";
 import { pInt } from "../../PInt";
 import { pmakeUnit } from "../../PUnit";

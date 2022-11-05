@@ -1,7 +1,7 @@
 import ObjectUtils from "../../../utils/ObjectUtils";
 import PType from "../PType";
 import Term from "../Term";
-import { TermType, ToPType } from "../Term/Type";
+import { TermType, ToPType } from "../Term/Type/base";
 
 
 export default function punsafeConvertType<FromPInstance extends PType, SomeExtension extends {}, ToTermType extends TermType>

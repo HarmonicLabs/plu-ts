@@ -1,4 +1,4 @@
-import { papp } from "..";
+import { papp } from "../syntax";
 import { padd } from "../../stdlib/Builtins";
 
 

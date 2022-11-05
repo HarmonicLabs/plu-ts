@@ -1,6 +1,6 @@
 import { psndPair, punConstrData } from "../../stdlib/Builtins";
-import { phoist, pfn, papp } from "../../Syntax";
-import { data, lam, list, int, tyVar } from "../../Term/Type";
+import { phoist, pfn, papp } from "../../Syntax/syntax";
+import { data, lam, list, int, tyVar } from "../../Term/Type/base";
 
 const matchSingleCtorStruct = (( returnT ) =>  phoist(
     pfn([

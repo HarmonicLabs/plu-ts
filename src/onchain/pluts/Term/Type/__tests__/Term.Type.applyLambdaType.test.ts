@@ -1,4 +1,4 @@
-import Type, { TypeShortcut } from ".."
+import Type, { TypeShortcut } from "../base"
 import applyLambdaType from "../applyLambdaType"
 
 const { pair, lam, int, str } = TypeShortcut;

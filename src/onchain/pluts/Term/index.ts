@@ -6,8 +6,8 @@ import HoistedUPLC from "../../UPLC/UPLCTerms/HoistedUPLC";
 import UPLCConst from "../../UPLC/UPLCTerms/UPLCConst";
 import PType from "../PType";
 import unwrapAlias from "../PTypes/PAlias/unwrapAlias";
-import { StructCtorDef, StructDefinition } from "../PTypes/PStruct";
-import { anyStruct, FromPType, TermType } from "./Type";
+import { StructCtorDef, StructDefinition } from "../PTypes/PStruct/pstruct";
+import { anyStruct, FromPType, TermType } from "./Type/base";
 import { isAliasType, isStructType, isWellFormedType } from "./Type/kinds";
 
 // avoid circular ref

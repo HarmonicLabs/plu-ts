@@ -1,10 +1,10 @@
-import pstruct from "../../../PTypes/PStruct";
+import pstruct from "../../../PTypes/PStruct/pstruct";
 import PTxOut from "./PTxOut";
 import PTxOutRef from "./PTxOutRef";
 
 const PTxInInfo = pstruct({
     PTxInInfo: {
-        outRef: PTxOutRef.type,
+        utxoRef: PTxOutRef.type,
         resolved: PTxOut.type
     }
 })

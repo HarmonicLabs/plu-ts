@@ -1,12 +1,10 @@
-import PTxInfo from ".";
+import PTxInfo from "./PTxInfo";
 import { peqBs } from "../../../../stdlib/Builtins";
-import { pfindList } from "../../../../stdlib/List";
-import PMaybe from "../../../../stdlib/PMaybe";
-import PBool from "../../../../PTypes/PBool";
+import { pfindList } from "../../../../stdlib/List/methods";
+import PMaybe from "../../../../stdlib/PMaybe/PMaybe";
 import pmatch from "../../../../PTypes/PStruct/pmatch";
-import { pfn, phoist, plam } from "../../../../Syntax";
-import Term from "../../../../Term";
-import { bool } from "../../../../Term/Type";
+import { pfn, phoist, plam } from "../../../../Syntax/syntax";
+import { bool } from "../../../../Term/Type/base";
 import PTxInInfo from "../../Tx/PTxInInfo";
 import PScriptPurpose from "../PScriptPurpose";
 
@@ -37,9 +35,9 @@ const pfindOwnInput = phoist( pfn([
                             input => 
 
                             pmatch( input )
-                            .onPTxInInfo( ({ extract }) => extract("outRef").in( ({ outRef }) =>
+                            .onPTxInInfo( ({ extract }) => extract("utxoRef").in( ({ utxoRef }) =>
 
-                                pmatch( outRef )
+                                pmatch( utxoRef )
                                 .onPTxOutRef( ({ extract }) => extract("id").in( ({ id }) =>
 
                                     pmatch( id )

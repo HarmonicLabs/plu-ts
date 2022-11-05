@@ -4,7 +4,7 @@ import { pBSToData, pdecodeUtf8, pencodeUtf8, punBData } from "../stdlib/Builtin
 import TermStr, { addPStringMethods } from "../stdlib/UtilityTerms/TermStr";
 import { PDataRepresentable } from "../PType";
 import Term from "../Term";
-import Type, { TermType } from "../Term/Type";
+import Type, { TermType } from "../Term/Type/base";
 import PDataBS from "./PData/PDataBS";
 
 export default class PString extends PDataRepresentable

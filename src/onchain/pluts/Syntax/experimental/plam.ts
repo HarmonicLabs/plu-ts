@@ -1,11 +1,11 @@
-import { papp, PappResult } from "..";
+import { papp, PappResult } from "../syntax";
 import ObjectUtils from "../../../../utils/ObjectUtils";
 import Lambda from "../../../UPLC/UPLCTerms/Lambda";
 import UPLCVar from "../../../UPLC/UPLCTerms/UPLCVar";
 import PType from "../../PType";
 import PLam from "../../PTypes/PFn/PLam";
 import Term from "../../Term";
-import Type, { FromPType } from "../../Term/Type";
+import Type, { FromPType } from "../../Term/Type/base";
 
 export function plam<PTypeA extends PType, PTypeB extends PType>
 (

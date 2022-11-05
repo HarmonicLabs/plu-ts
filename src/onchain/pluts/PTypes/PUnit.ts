@@ -1,11 +1,11 @@
 import UPLCConst from "../../UPLC/UPLCTerms/UPLCConst";
 import { pfstPair, psndPair, pisEmpty, pif, punConstrData, pConstrToData } from "../stdlib/Builtins";
 import { PDataRepresentable } from "../PType";
-import { perror, phoist, plam, plet } from "../Syntax";
+import { perror, phoist, plam, plet } from "../Syntax/syntax";
 import Term from "../Term";
-import Type, { data, TermType, unit } from "../Term/Type";
+import Type, { data, TermType, unit } from "../Term/Type/base";
 import { pInt } from "./PInt";
-import PData from "./PData";
+import PData from "./PData/PData";
 import PLam from "./PFn/PLam";
 import { pDataList } from "./PList";
 import HoistedUPLC from "../../UPLC/UPLCTerms/HoistedUPLC";
@@ -51,10 +51,10 @@ export default class PUnit extends PDataRepresentable
                             return pif( Type.Unit )
                                 .$(
                                     pInt( 0 )
-                                    .eq(
+                                    .eq.$(
                                         pfst.$( idxListPair )
                                     )
-                                    .and(
+                                    .and.$(
                                         pisEmpty.$(
                                             psnd.$( idxListPair )
                                         )

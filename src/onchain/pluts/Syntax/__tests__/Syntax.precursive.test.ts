@@ -1,4 +1,4 @@
-import { papp, pfn, precursive } from ".."
+import { papp, pfn, precursive } from "../syntax"
 import evalScript from "../../../CEK"
 import { showUPLC } from "../../../UPLC/UPLCTerm"
 import Application from "../../../UPLC/UPLCTerms/Application"
@@ -13,7 +13,7 @@ import PType from "../../PType"
 import PLam from "../../PTypes/PFn/PLam"
 import PInt, { pInt } from "../../PTypes/PInt"
 import Term from "../../Term"
-import Type, { PrimType } from "../../Term/Type"
+import Type, { PrimType } from "../../Term/Type/base"
 
 
 describe("precursive", () => {

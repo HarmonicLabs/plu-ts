@@ -1,5 +1,5 @@
-import { pgenericStruct } from ".."
-import Type, { ConstantableTermType, int, struct, TermType } from "../../../Term/Type"
+import { pgenericStruct } from "../pstruct"
+import Type, { ConstantableTermType, int, struct, TermType } from "../../../Term/Type/base"
 import { structExtends } from "../../../Term/Type/extension"
 
 

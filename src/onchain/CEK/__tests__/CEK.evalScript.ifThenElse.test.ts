@@ -1,7 +1,7 @@
 import evalScript from ".."
 import { pif, pstrictIf } from "../../pluts/stdlib/Builtins"
 import { pInt } from "../../pluts/PTypes/PInt"
-import Type from "../../pluts/Term/Type"
+import Type from "../../pluts/Term/Type/base"
 import Application from "../../UPLC/UPLCTerms/Application"
 import Builtin from "../../UPLC/UPLCTerms/Builtin"
 import Delay from "../../UPLC/UPLCTerms/Delay"

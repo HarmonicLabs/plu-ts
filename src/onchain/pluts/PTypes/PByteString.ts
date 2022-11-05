@@ -4,8 +4,8 @@ import { pBSToData, punBData } from "../stdlib/Builtins";
 import TermBS, { addPByteStringMethods } from "../stdlib/UtilityTerms/TermBS";
 import { PDataRepresentable } from "../PType";
 import Term from "../Term";
-import Type, { TermType } from "../Term/Type";
-import PData from "./PData";
+import Type, { TermType } from "../Term/Type/base";
+import PData from "./PData/PData";
 import PDataBS from "./PData/PDataBS";
 import PLam from "./PFn/PLam";
 

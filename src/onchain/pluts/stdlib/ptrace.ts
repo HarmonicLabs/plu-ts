@@ -10,9 +10,9 @@ import { pif, ptrace } from "./Builtins";
 import { pBool } from "../PTypes/PBool";
 import PLam, { TermFn } from "../PTypes/PFn/PLam";
 import PString from "../PTypes/PString";
-import { papp, pdelay, perror, pfn, pforce, phoist, plam } from "../Syntax";
+import { papp, pdelay, perror, pfn, pforce, phoist, plam } from "../Syntax/syntax";
 import Term from "../Term";
-import { bool, ConstantableTermType, delayed, fn, lam, str, TermType, ToPType } from "../Term/Type";
+import { bool, ConstantableTermType, delayed, fn, lam, str, TermType, ToPType } from "../Term/Type/base";
 
 export const ptraceIfTrue = phoist(
     pfn([

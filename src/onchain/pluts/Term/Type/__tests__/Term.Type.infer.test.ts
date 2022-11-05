@@ -1,4 +1,4 @@
-import Type, { TypeShortcut } from ".."
+import Type, { TypeShortcut } from "../base"
 import DataConstr from "../../../../../types/Data/DataConstr";
 import ByteString from "../../../../../types/HexString/ByteString";
 import UPLCTerm from "../../../../UPLC/UPLCTerm";

@@ -1,4 +1,4 @@
-import Type, { LambdaType, PrimType, TermType } from ".."
+import Type, { LambdaType, PrimType, TermType } from "../base"
 import { typeExtends } from "../extension";
 import { restrictExtensionWith } from "../tyParams";
 

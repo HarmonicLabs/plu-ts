@@ -6,7 +6,7 @@ import Force from "../../../UPLC/UPLCTerms/Force";
 import UPLCConst from "../../../UPLC/UPLCTerms/UPLCConst";
 import { pBool } from "../../PTypes/PBool";
 import PInt, { pInt } from "../../PTypes/PInt";
-import Type from "../../Term/Type";
+import Type from "../../Term/Type/base";
 
 describe("pif", () => {
 

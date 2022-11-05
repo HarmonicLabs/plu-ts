@@ -1,9 +1,9 @@
-import pstruct, { pgenericStruct } from ".."
+import pstruct, { pgenericStruct } from "../pstruct"
 import DataConstr from "../../../../../types/Data/DataConstr";
 import DataI from "../../../../../types/Data/DataI";
 import evalScript from "../../../../CEK";
 import UPLCConst from "../../../../UPLC/UPLCTerms/UPLCConst";
-import { int, str, struct } from "../../../Term/Type"
+import { int, str, struct } from "../../../Term/Type/base"
 import { pInt } from "../../PInt";
 
 

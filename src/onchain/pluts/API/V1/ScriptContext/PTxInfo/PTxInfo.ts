@@ -1,9 +1,9 @@
-import pstruct from "../../../../PTypes/PStruct";
-import { data, int, list, pair, unit } from "../../../../Term/Type";
+import pstruct from "../../../../PTypes/PStruct/pstruct";
+import { data, int, list, pair, unit } from "../../../../Term/Type/base";
 import PStakingCredential from "../../Address/PStakingCredential";
 import PDCert from "../../PDCert";
 import PPubKeyHash from "../../PubKey/PPubKeyHash";
-import PDatumHash from "../../Scripts/PDatumHash";
+import PDatumHash from "../../ScriptsHashes/PDatumHash";
 import PPOSIXTimeRange from "../../Time";
 import PTxId from "../../Tx/PTxId";
 import PTxInInfo from "../../Tx/PTxInInfo";

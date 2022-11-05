@@ -1,12 +1,13 @@
-import PTxInfo from ".";
-import { PMaybeT } from "../../../../stdlib/PMaybe";
+import PTxInfo from "./PTxInfo";
+import { PMaybeT } from "../../../../stdlib/PMaybe/PMaybe";
 import pmatch from "../../../../PTypes/PStruct/pmatch";
-import { perror, pfn, phoist } from "../../../../Syntax";
+import { perror, pfn, phoist } from "../../../../Syntax/syntax";
 import Term from "../../../../Term";
-import PValidatorHash from "../../Scripts/PValidatorHash";
+import PValidatorHash from "../../ScriptsHashes/PValidatorHash";
 import PTxInInfo from "../../Tx/PTxInInfo";
 import PScriptPurpose from "../PScriptPurpose";
 import pfindOwnInput from "./pfindOwnInput";
+import punsafeConvertType from "../../../../Syntax/punsafeConvertType";
 
 
 const pownHash = phoist( pfn([
@@ -18,7 +19,7 @@ const pownHash = phoist( pfn([
     return pmatch( pfindOwnInput.$( txInfos ).$( purpose ) )
     .onJust( rawJust => rawJust.extract("val").in( ({ val }) =>
 
-        pmatch( val as Term<typeof PTxInInfo> )
+        pmatch( punsafeConvertType( val, PTxInInfo.type ) )
         .onPTxInInfo( rawTxInInfo => rawTxInInfo.extract("resolved").in( ({ resolved }) => 
 
             pmatch( resolved )

@@ -4,8 +4,8 @@ import { pIntToData, punIData } from "../stdlib/Builtins";
 import TermInt, { addPIntMethods } from "../stdlib/UtilityTerms/TermInt";
 import { PDataRepresentable } from "../PType";
 import Term from "../Term";
-import Type, { TermType } from "../Term/Type";
-import PData from "./PData";
+import Type, { TermType } from "../Term/Type/base";
+import PData from "./PData/PData";
 import PDataInt from "./PData/PDataInt";
 import PLam from "./PFn/PLam";
 

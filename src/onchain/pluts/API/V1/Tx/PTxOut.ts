@@ -1,8 +1,8 @@
-import PMaybe from "../../../stdlib/PMaybe";
-import pstruct from "../../../PTypes/PStruct";
-import PAddress from "../Address";
-import PDatumHash from "../Scripts/PDatumHash";
+import PMaybe from "../../../stdlib/PMaybe/PMaybe";
+import pstruct from "../../../PTypes/PStruct/pstruct";
+import PDatumHash from "../ScriptsHashes/PDatumHash";
 import PValue from "../Value/PValue";
+import PAddress from "../Address/PAddress";
 
 const PTxOut = pstruct({
     PTxOut: {

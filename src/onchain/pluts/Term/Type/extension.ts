@@ -1,5 +1,5 @@
-import { Alias, anyStruct, ConstantableTermType, DataConstructor, DataType, StructType, TermType } from ".";
-import { StructCtorDef } from "../../PTypes/PStruct";
+import { Alias, anyStruct, ConstantableTermType, DataConstructor, DataType, StructType, TermType } from "./base";
+import { StructCtorDef } from "../../PTypes/PStruct/pstruct";
 import { isAliasType, isDataType, isStructType, isTypeNameOfData, isTypeParam, isWellFormedType } from "./kinds";
 
 // avoid circular deps

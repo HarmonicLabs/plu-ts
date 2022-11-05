@@ -10,14 +10,14 @@ import ConstValue, { isConstValue } from "../../../UPLC/UPLCTerms/UPLCConst/Cons
 import PType from "../../PType";
 import PBool from "../../PTypes/PBool";
 import PByteString from "../../PTypes/PByteString";
-import PData from "../../PTypes/PData";
+import PData from "../../PTypes/PData/PData";
 import PInt from "../../PTypes/PInt";
 import PList from "../../PTypes/PList";
 import PPair from "../../PTypes/PPair";
 import PString from "../../PTypes/PString";
 import PUnit from "../../PTypes/PUnit";
 import Term, { UnTerm } from "../../Term";
-import { Type } from "../../Term/Type";
+import { Type } from "../../Term/Type/base";
 
 /**
  * **EXPERIMENTAL**

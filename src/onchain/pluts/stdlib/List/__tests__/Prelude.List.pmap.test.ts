@@ -1,10 +1,10 @@
-import { pmap } from ".."
+import { pmap } from "../methods"
 import evalScript from "../../../../CEK"
 import { showUPLC } from "../../../../UPLC/UPLCTerm"
 import { pInt } from "../../../PTypes/PInt"
 import { pList } from "../../../PTypes/PList"
-import { plam } from "../../../Syntax"
-import { int } from "../../../Term/Type"
+import { plam } from "../../../Syntax/syntax"
+import { int } from "../../../Term/Type/base"
 import { padd } from "../../Builtins"
 
 

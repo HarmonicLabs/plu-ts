@@ -1,6 +1,6 @@
-import pstruct from "../../../PTypes/PStruct";
+import pstruct from "../../../PTypes/PStruct/pstruct";
 import PScriptPurpose from "./PScriptPurpose";
-import PTxInfo from "./PTxInfo";
+import PTxInfo from "./PTxInfo/PTxInfo";
 
 const PScriptContext = pstruct({
     PScriptContext: {

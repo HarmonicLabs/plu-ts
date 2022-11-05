@@ -1,4 +1,4 @@
-import pstruct from "../../../PTypes/PStruct";
+import pstruct from "../../../PTypes/PStruct/pstruct";
 import PStakingCredential from "../Address/PStakingCredential";
 import PDCert from "../PDCert";
 import PTxOutRef from "../Tx/PTxOutRef";

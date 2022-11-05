@@ -1,4 +1,4 @@
-import PFn from ".";
+import PFn from "./PFn";
 import Cloneable, { isCloneable } from "../../../../types/interfaces/Cloneable";
 import { Tail } from "../../../../utils/ts";
 import PType from "../../PType"

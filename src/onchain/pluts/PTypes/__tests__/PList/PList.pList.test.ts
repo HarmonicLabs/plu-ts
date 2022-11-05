@@ -6,7 +6,7 @@ import { constT } from "../../../../UPLC/UPLCTerms/UPLCConst/ConstType"
 import UPLCVar from "../../../../UPLC/UPLCTerms/UPLCVar"
 import { pprepend } from "../../../stdlib/Builtins"
 import Term from "../../../Term"
-import Type from "../../../Term/Type"
+import Type from "../../../Term/Type/base"
 import PInt, { pInt } from "../../PInt"
 import { pList, pnil } from "../../PList"
 

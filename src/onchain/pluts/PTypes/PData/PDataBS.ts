@@ -1,10 +1,10 @@
-import PData from ".";
+import PData from "./PData";
 import DataB from "../../../../types/Data/DataB";
 import ByteString from "../../../../types/HexString/ByteString";
 import UPLCConst from "../../../UPLC/UPLCTerms/UPLCConst";
 import { pBSToData, punBData } from "../../stdlib/Builtins";
 import Term from "../../Term";
-import Type from "../../Term/Type";
+import Type from "../../Term/Type/base";
 import PByteString from "../PByteString";
 
 export default class PDataBS extends PData // (PData extends PType => PDataBS extends PType too)

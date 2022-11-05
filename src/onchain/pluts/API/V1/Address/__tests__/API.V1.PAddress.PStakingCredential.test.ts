@@ -1,8 +1,8 @@
-import pstruct from "../../../../PTypes/PStruct";
-import { int } from "../../../../Term/Type";
+import pstruct from "../../../../PTypes/PStruct/pstruct";
+import { int } from "../../../../Term/Type/base";
 import { isConstantableStructDefinition } from "../../../../Term/Type/kinds";
 import PPubKeyHash from "../../PubKey/PPubKeyHash";
-import PValidatorHash from "../../Scripts/PValidatorHash";
+import PValidatorHash from "../../ScriptsHashes/PValidatorHash";
 import PCredential from "../PCredential";
 
 

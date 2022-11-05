@@ -1,9 +1,8 @@
-import palias from "../../../PTypes/PAlias";
-import { int, list, pair } from "../../../Term/Type";
+import palias from "../../../PTypes/PAlias/palias";
+import { int, list, pair } from "../../../Term/Type/base";
 import PCurrencySymbol from "./PCurrencySymbol";
 import PTokenName from "./PTokenName";
 
-// const PValue = palias( ... );
 const PValue = palias(
     list(
         pair(

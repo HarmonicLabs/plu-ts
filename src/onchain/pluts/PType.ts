@@ -1,10 +1,10 @@
 import Cloneable from "../../types/interfaces/Cloneable";
 import JsRuntime from "../../utils/JsRuntime";
 import UPLCTerm from "../UPLC/UPLCTerm";
-import PData from "./PTypes/PData";
+import PData from "./PTypes/PData/PData";
 import { TermFn } from "./PTypes/PFn/PLam";
 import Term from "./Term";
-import Type, { TermType } from "./Term/Type";
+import Type, { TermType } from "./Term/Type/base";
 
 
 export type PTypeCtor< PInstance extends PType > = new (...args: any[]) => PInstance;
