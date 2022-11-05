@@ -5,14 +5,13 @@
 
   <p align="center">
     <img src="https://img.shields.io/github/commit-activity/m/harmonicpool/plu-ts?style=for-the-badge" />
-    <a href="https://twitter.com/MicheleHarmonic">
-      <img src="https://img.shields.io/twitter/follow/MicheleHarmonic?style=for-the-badge&logo=twitter" />
-    </a>
     <a href="https://twitter.com/hlabs_tech">
       <img src="https://img.shields.io/twitter/follow/hlabs_tech?style=for-the-badge&logo=twitter" />
     </a>
+    <a href="https://twitter.com/MicheleHarmonic">
+      <img src="https://img.shields.io/twitter/follow/MicheleHarmonic?style=for-the-badge&logo=twitter" />
+    </a>
   </p>
-
 </p>
 
 ## why plu-ts?
@@ -33,6 +32,10 @@ the off-chain one will allow for transaction creation (so will take care of smar
 Documentation is currently being written feel free to contribute to the [`plu-ts-docs` repository](https://github.com/HarmonicLabs/plut-ts-docs)
 
 Or you can start playing with `plu-ts` by running the following command in your project root directory
+```
+npm install @harmoniclabs/plu-ts
+```
+or, equivalently, you can install directly form this repository
 ```
 npm install https://github.com/Harmonic-Laboratories/plu-ts
 ```
