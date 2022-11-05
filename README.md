@@ -13,13 +13,10 @@
 </p>
 
 ## why plu-ts?
----
 
-there is the need for decentralized applications, however the tools to build a [**truly** decentralized](https://en.wikipedia.org/wiki/Decentralization) application are missing or limited to static compilation.
-
+there is the need for decentralized applications, however the tools to build a [**truly** decentralized](https://en.wikipedia.org/wiki/Decentralization) application are missing or limited to server side compilation.
 
 ## what is plu-ts?
----
 
 ```plu-ts``` wants to be a library to allow Cardano-related software to be written entirely in [typescript](https://www.typescriptlang.org/), in support for a wider developer ecosystem adoption and easier integration.
 
@@ -28,25 +25,15 @@ the project will be composed mainly of two parts: on-chain and off-chain;
 the on-chain part will take care of smart contracts creation
 the off-chain one will allow for transaction creation (so will take care of smart contracts interaction, among all the off-chain stuff)
 
-to know more about the high-level ideas see the ```docs/specification-notes``` folder:
-  - [off-chain](./docs/specification-notes/off-chain)
-  - [on-chain](./docs/specification-notes/on-chain)
-
 ## Get Started
----
 
-the project is at its early stages; follow [@MicheleHarmonic on twitter](https://twitter.com/MicheleHarmonic) to stay updated on major milestones.
+Documentation is currently being written feel free to contribute to the [`plu-ts-docs` repository](https://github.com/Harmonic-Laboratories/plut-ts-docs)
 
-## Contribute
----
-
-If you wan't to take part in the history of Cardano then checkout the [contributing guidelines](./CONTRIBUTING.md) and check out the [developer documentation](./dev-docs)
+Or you can start playing with `plu-ts` by running the following command in your project root directory
+```
+npm install https://github.com/Harmonic-Laboratories/plu-ts
+```
 
 ## Project Catalyst
----
 
-there are a few proposals related to the development of this repository in the current found:
-- [Typescript smart-contracts](https://cardano.ideascale.com/c/idea/414103)
-- [100% Typescript offchain code](https://cardano.ideascale.com/c/idea/414144)
-
-a collection of all proposals made can be found in the [```catalyst-proposals.md```](./catalyst-proposals.md) file
+a collection of all proposals made in the past is in the [```catalyst-proposals.md```](./catalyst-proposals.md) file
