@@ -37,7 +37,7 @@ npm install @harmoniclabs/plu-ts
 ```
 or, equivalently, you can install directly form this repository
 ```
-npm install https://github.com/Harmonic-Laboratories/plu-ts
+npm install https://github.com/HarmonicLabs/plu-ts
 ```
 
 ## Project Catalyst
