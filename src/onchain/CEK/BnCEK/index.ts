@@ -1,5 +1,5 @@
 import UPLCTerm from "../../UPLC/UPLCTerm";
-import UPLCBuiltinTag, { builtinTagToString } from "../../UPLC/UPLCTerms/Builtin/UPLCBuiltinTag";
+import UPLCBuiltinTag from "../../UPLC/UPLCTerms/Builtin/UPLCBuiltinTag";
 import ErrorUPLC from "../../UPLC/UPLCTerms/ErrorUPLC";
 import UPLCConst from "../../UPLC/UPLCTerms/UPLCConst";
 import ConstType, { constListTypeUtils, constPairTypeUtils, constT, constTypeEq, constTypeToStirng, ConstTyTag } from "../../UPLC/UPLCTerms/UPLCConst/ConstType" 

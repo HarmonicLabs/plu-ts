@@ -47,8 +47,6 @@ export type PappResult<Output extends PType> =
         } :
     UtilityTermOf<Output>
 
-type test = PappResult<PLam<PInt,PLam<PUnit, PInt>>>
-
 /**
  * 
  * @param {Term<PLam<Input, Output>>} a Term that evalueates to an UPLC function ( type: ```Type.Lambda( inputT, outputT )``` ) 
@@ -57,7 +55,7 @@ type test = PappResult<PLam<PInt,PLam<PUnit, PInt>>>
  * 
  * if the type of the output extends the type ```Type.Lambda( Type.Any, Type.Any )```
  */
-export function papp<Input extends PType, Output extends PType >( a: Term<PLam<Input,Output>>, b: Term<Input> )
+export function papp<Input extends PType, Output extends PType>( a: Term<PLam<Input,Output>>, b: Term<Input> )
     : PappResult<Output>
 {
     let lambdaType: TermType = a.type;

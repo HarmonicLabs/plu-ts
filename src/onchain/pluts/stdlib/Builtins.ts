@@ -31,6 +31,7 @@ import Type, { TermType, ToPType, DataType, ToPDataType, bool, lam } from "../Te
 import Lambda from "../../UPLC/UPLCTerms/Lambda";
 import UPLCVar from "../../UPLC/UPLCTerms/UPLCVar";
 import { PMap } from "../PTypes/PMap";
+import { pflip } from "./PCombinators";
 
 function pBool( bool: boolean ): TermBool
 {
@@ -238,16 +239,12 @@ export const plessEqInt = intBinOpToBool( Builtin.lessThanEqualInteger );
 
 export const pgreaterInt: IntBinOPToBool =
     phoist(
-        pfn([ Type.Int, Type.Int ], Type.Bool )(
-            ( a: Term<PInt>, b: Term<PInt> ): TermBool => plessInt.$( b ).$( a )
-        )
+        pflip.$( plessInt )
     ) as any;
 
 export const pgreaterEqInt: IntBinOPToBool =
     phoist(
-        pfn([ Type.Int, Type.Int ], Type.Bool )(
-            ( a: Term<PInt>, b: Term<PInt> ): TermBool => plessEqInt.$( b ).$( a )
-        )
+        pflip.$( plessEqInt )
     ) as any;
 
 export const pappendBs = byteStrBinOpToBS( Builtin.appendByteString );
