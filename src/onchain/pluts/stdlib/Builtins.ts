@@ -31,7 +31,7 @@ import Type, { TermType, ToPType, DataType, ToPDataType, bool, lam } from "../Te
 import Lambda from "../../UPLC/UPLCTerms/Lambda";
 import UPLCVar from "../../UPLC/UPLCTerms/UPLCVar";
 import { PMap } from "../PTypes/PMap";
-import { pflip } from "./PCombinators";
+import HoistedUPLC from "../../UPLC/UPLCTerms/HoistedUPLC";
 
 function pBool( bool: boolean ): TermBool
 {
@@ -237,16 +237,52 @@ export const peqInt     = intBinOpToBool( Builtin.equalsInteger );
 export const plessInt   = intBinOpToBool( Builtin.lessThanInteger );
 export const plessEqInt = intBinOpToBool( Builtin.lessThanEqualInteger );
 
-export const pgreaterInt: IntBinOPToBool =
-    phoist(
-        pflip.$( plessInt )
-    ) as any;
 
-export const pgreaterEqInt: IntBinOPToBool =
-    phoist(
-        pflip.$( plessEqInt )
-    ) as any;
+// identicall to `pflip` jst at UPLC level to avoid using `papp`
+// which causes circular dependecy
+const _pflipUPLC = new HoistedUPLC(
+    new Lambda( // toFlip
+        new Lambda( // secondArg
+            new Lambda( // firstArg
+                new Application(
+                    new Application(
+                        new UPLCVar( 2 ),   // toFlip,
+                        new UPLCVar( 0 )    // firstArg
+                    ),
+                    new UPLCVar( 1 )        // secondArg
+                )
+            )
+        )
+    )
+);
 
+export const pgreaterInt = addApplications<[ PInt, PInt ], PBool>( 
+        new Term<PLam<PInt, PLam<PInt, PBool>>>(
+        Type.Fn([ Type.Int, Type.Int ], Type.Bool ),
+        _dbn => new HoistedUPLC(
+            new Application(
+                _pflipUPLC.clone(),
+
+                plessInt.toUPLC( 0 )
+            
+            )
+        )
+    )
+);
+
+export const pgreaterEqInt = addApplications<[ PInt, PInt ], PBool>( 
+    new Term<PLam<PInt, PLam<PInt, PBool>>>(
+    Type.Fn([ Type.Int, Type.Int ], Type.Bool ),
+    _dbn => new HoistedUPLC(
+        new Application(
+            _pflipUPLC.clone(),
+
+            plessEqInt.toUPLC( 0 )
+        
+        )
+    )
+)
+);
 export const pappendBs = byteStrBinOpToBS( Builtin.appendByteString );
 export const pconsBs: Term<PLam<PInt, PLam< PByteString, PByteString>>>
 & {

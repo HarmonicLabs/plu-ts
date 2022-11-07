@@ -12,7 +12,6 @@ import { phead, pprepend, ptail } from "../Builtins";
 import { pevery, pfilter, pindexList, pmap, psome } from "../List/methods";
 import { pflip } from "../PCombinators";
 import { PMaybeT } from "../PMaybe/PMaybe";
-import TermBool from "./TermBool";
 import TermInt from "./TermInt";
 import { TryUtitlityFromPType } from "./types";
 
