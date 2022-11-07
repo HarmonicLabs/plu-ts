@@ -1,9 +1,9 @@
-import { Alias, anyStruct, ConstantableTermType, DataConstructor, DataType, StructType, TermType } from "./base";
+import { AliasTermType, anyStruct, ConstantableTermType, DataConstructor, DataType, StructType, TermType } from "./base";
 import { StructCtorDef } from "../../PTypes/PStruct/pstruct";
 import { isAliasType, isDataType, isStructType, isTypeNameOfData, isTypeParam, isWellFormedType } from "./kinds";
 
 // avoid circular deps
-function unwrapAlias<T extends ConstantableTermType>( aliasedType: Alias<symbol, T> ): T
+function unwrapAlias<T extends ConstantableTermType>( aliasedType: AliasTermType<symbol, T> ): T
 {
     return aliasedType[1].type;
 }

@@ -1,8 +1,6 @@
 import palias from "../palias"
 import evalScript from "../../../../CEK";
 import UPLCConst from "../../../../UPLC/UPLCTerms/UPLCConst";
-import { padd } from "../../../stdlib/Builtins";
-import { pfn } from "../../../Syntax/syntax";
 import { int } from "../../../Term/Type/base"
 import { pInt } from "../../PInt";
 

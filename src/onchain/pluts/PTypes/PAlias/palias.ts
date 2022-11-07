@@ -1,8 +1,7 @@
 import JsRuntime from "../../../../utils/JsRuntime";
 import ObjectUtils from "../../../../utils/ObjectUtils";
-import PType, { PDataRepresentable } from "../../PType";
+import { PDataRepresentable } from "../../PType";
 import punsafeConvertType from "../../Syntax/punsafeConvertType";
-// import { punsafeConvertType } from "../../Syntax";
 import Term from "../../Term";
 import Type, { AliasTermType, aliasType, ConstantableTermType, TermType, ToPType } from "../../Term/Type/base";
 import { typeExtends } from "../../Term/Type/extension";

@@ -18,6 +18,7 @@ import { UtilityTermOf } from "../../stdlib/UtilityTerms/addUtilityForType";
 import Application from "../../../UPLC/UPLCTerms/Application";
 import Builtin from "../../../UPLC/UPLCTerms/Builtin";
 import punsafeConvertType from "../../Syntax/punsafeConvertType";
+import cloneStructDef from "./cloneStructDef";
 
 /**
  * intermediate class useful to reconize structs form primitives
@@ -65,34 +66,6 @@ export type GenericStructDefinition = {
 
 export type StructDefinition = GenericStructDefinition;
 
-function cloneStructCtorDef<CtorDef extends StructCtorDef>( ctorDef: Readonly<CtorDef> ): CtorDef
-{
-    const clone: CtorDef = {} as any;
-
-    for( const fieldName in ctorDef )
-    {
-        clone[ fieldName ] = ctorDef[ fieldName ];
-    }
-
-    return clone;
-}
-
-export function cloneStructDef<SDef extends StructDefinition>( def: Readonly<SDef> ): SDef
-{
-    const clone: SDef = {} as SDef;
-    const ctors = Object.keys( def );
-
-    for(let i = 0; i < ctors.length; i++ )
-    {
-        ObjectUtils.defineReadOnlyProperty(
-            clone,
-            ctors[ i ],
-            cloneStructCtorDef( def[ ctors[i] ] )
-        );
-    }
-
-    return clone;
-}
 
 function structCtorEq( a: StructCtorDef, b: StructCtorDef ): boolean
 {
