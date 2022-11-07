@@ -1,17 +1,12 @@
 import PTxInfo from "../PTxInfo";
-import ByteString from "../../../../../../../types/HexString/ByteString";
 import evalScript from "../../../../../../CEK";
 import PMaybe from "../../../../../stdlib/PMaybe/PMaybe";
 import { pBool } from "../../../../../PTypes/PBool";
 import { pByteString } from "../../../../../PTypes/PByteString";
 import { pInt } from "../../../../../PTypes/PInt";
 import { pList } from "../../../../../PTypes/PList";
-import pmatch from "../../../../../PTypes/PStruct/pmatch";
-import { makeValidator } from "../../../../../Script";
-import compile, { PlutusScriptVersion, scriptToJsonFormat } from "../../../../../Script/compile";
-import { pfn } from "../../../../../Syntax/syntax";
-import { pair, data, int, bool, bs } from "../../../../../Term/Type/base";
-import PAddress from "../../../Address";
+import { pair, data, int } from "../../../../../Term/Type/base";
+import PAddress from "../../../Address/PAddress";
 import PCredential from "../../../Address/PCredential";
 import PStakingCredential from "../../../Address/PStakingCredential";
 import PExtended from "../../../Interval/PExtended";
@@ -26,8 +21,7 @@ import PTxId from "../../../Tx/PTxId";
 import PTxInInfo from "../../../Tx/PTxInInfo";
 import PTxOut from "../../../Tx/PTxOut";
 import PTxOutRef from "../../../Tx/PTxOutRef";
-import PValue from "../../../Value";
-import PScriptContext from "../../PScriptContext";
+import PValue from "../../../Value/PValue";
 import PScriptPurpose from "../../PScriptPurpose";
 import pfindOwnInput from "../pfindOwnInput";
 
@@ -42,7 +36,7 @@ const validatorSpendingUtxo = PTxOutRef.PTxOutRef({
 });
 
 const validatorInput = PTxInInfo.PTxInInfo({
-    outRef: validatorSpendingUtxo,
+    utxoRef: validatorSpendingUtxo,
     resolved: PTxOut.PTxOut({
         address: PAddress.PAddress({
             credential: PCredential.PScriptCredential({

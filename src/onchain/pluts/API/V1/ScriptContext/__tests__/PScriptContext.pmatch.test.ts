@@ -6,7 +6,7 @@ import { pInt } from "../../../../PTypes/PInt";
 import { pList } from "../../../../PTypes/PList";
 import pmatch from "../../../../PTypes/PStruct/pmatch";
 import { pair, data, int } from "../../../../Term/Type/base";
-import PAddress from "../../Address";
+import PAddress from "../../Address/PAddress";
 import PCredential from "../../Address/PCredential";
 import PStakingCredential from "../../Address/PStakingCredential";
 import PExtended from "../../Interval/PExtended";
@@ -21,7 +21,7 @@ import PTxId from "../../Tx/PTxId";
 import PTxInInfo from "../../Tx/PTxInInfo";
 import PTxOut from "../../Tx/PTxOut";
 import PTxOutRef from "../../Tx/PTxOutRef";
-import PValue from "../../Value";
+import PValue from "../../Value/PValue";
 import PScriptContext from "../PScriptContext";
 import PScriptPurpose from "../PScriptPurpose";
 import PTxInfo from "../PTxInfo/PTxInfo";
@@ -61,7 +61,7 @@ const _txInfo = PTxInfo.PTxInfo({
     withdrawals: pList( pair( PStakingCredential.type, int ) )([]),
     inputs: pList( PTxInInfo.type )([
         PTxInInfo.PTxInInfo({
-            outRef: validatorSpendingUtxo,
+            utxoRef: validatorSpendingUtxo,
             resolved: PTxOut.PTxOut({
                 address: PAddress.PAddress({
                     credential: PCredential.PScriptCredential({

@@ -1285,22 +1285,6 @@ export const peqData: TermFn<[ PData, PData ], PBool >
         )
     );
 
-export function peq<PT extends PInt | PByteString | PString | PData >( pt: new () => PT )
-    : TermFn<[ PT, PT ], PBool >
-{
-    if( pt.prototype === PInt.prototype )           return peqInt as any;
-    if( pt.prototype === PByteString.prototype )    return peqBs as any;
-    if( pt.prototype === PData.prototype )          return peqData as any;
-    if( pt.prototype === PString.prototype )        return peqStr as any
-
-    /**
-     * @fixme add proper error
-    */
-    throw new BasePlutsError(
-        "unsupported low level equality using 'peq'"
-    );
-}
-
 export function ppairData<DataFst extends DataType, DataSnd extends DataType>( dataFst: DataFst, dataSnd: DataSnd):
     TermFn<[ ToPDataType<DataFst>, ToPDataType<DataSnd> ], PPair<ToPDataType<DataFst>,ToPDataType<DataSnd>>>
 {

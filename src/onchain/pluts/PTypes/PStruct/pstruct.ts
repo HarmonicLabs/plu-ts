@@ -6,7 +6,7 @@ import HoistedUPLC from "../../../UPLC/UPLCTerms/HoistedUPLC";
 import UPLCConst from "../../../UPLC/UPLCTerms/UPLCConst";
 import { PDataRepresentable } from "../../PType";
 import Term from "../../Term";
-import Type, { Alias, aliasType, ConstantableStructType, ConstantableTermType, GenericStructType, int, PrimType, struct, structType, StructType, ToPType, tyVar } from "../../Term/Type/base";
+import Type, { AliasTermType, aliasType, ConstantableStructType, ConstantableTermType, GenericStructType, int, PrimType, struct, structType, StructType, ToPType, tyVar } from "../../Term/Type/base";
 import { typeExtends } from "../../Term/Type/extension";
 import { isAliasType, isConstantableStructDefinition, isStructType } from "../../Term/Type/kinds";
 import { structDefToString, termTypeToString } from "../../Term/Type/utils";
@@ -347,7 +347,7 @@ export default function pstruct<StructDef extends ConstantableStructDefinition>(
 }
 
 function replaceAliasesWith(
-    aliases: Alias<symbol,[PrimType.Int]>[],
+    aliases: AliasTermType<symbol,[PrimType.Int]>[],
     replacements: (ConstantableTermType | StructType | [symbol])[],
     sDef: GenericStructDefinition
 ): void
@@ -390,7 +390,7 @@ function typeofGenericStruct(
 ): GenericStructType
 {
     const nArgs = genStruct.length;
-    const aliases: Alias<symbol,[PrimType.Int]>[] = Array( nArgs );
+    const aliases: AliasTermType<symbol,[PrimType.Int]>[] = Array( nArgs );
     const replacements: [ symbol ][] = Array( nArgs );
 
     for( let i = 0; i < nArgs; i++ )

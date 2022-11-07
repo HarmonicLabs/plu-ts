@@ -7,13 +7,13 @@ import { pmakeUnit } from "../../PTypes/PUnit"
 import { papp, perror, pfn, plam, plet } from "../../Syntax/syntax"
 import Term from "../../Term"
 import Type, { bool, bs, data, fn, int, pair, unit } from "../../Term/Type/base"
-import PScriptContext from "../../API/V1/ScriptContext"
+import PScriptContext from "../../API/V1/ScriptContext/PScriptContext"
 import pmatch from "../../PTypes/PStruct/pmatch"
 import { pBool } from "../../PTypes/PBool"
 import PTxInInfo from "../../API/V1/Tx/PTxInInfo"
 import pownHash from "../../API/V1/ScriptContext/PTxInfo/pownHash"
 import { pevery, pfilter } from "../../stdlib/List/methods"
-import { makeValidator } from "../makeValidator"
+import makeValidator from "../makeValidator"
 import evalScript from "../../../CEK"
 import UPLCConst from "../../../UPLC/UPLCTerms/UPLCConst"
 import DataConstr from "../../../../types/Data/DataConstr"
@@ -25,7 +25,7 @@ import { pInt } from "../../PTypes/PInt"
 import { pList } from "../../PTypes/PList"
 import PDatumHash from "../../API/V1/ScriptsHashes/PDatumHash"
 import PDCert from "../../API/V1/PDCert"
-import PValue from "../../API/V1/Value"
+import PValue from "../../API/V1/Value/PValue"
 import PPOSIXTimeRange, { PPOSIXTime } from "../../API/V1/Time"
 import PLowerBound from "../../API/V1/Interval/PLowerBound"
 import PExtended from "../../API/V1/Interval/PExtended"
@@ -34,7 +34,7 @@ import PPubKeyHash from "../../API/V1/PubKey/PPubKeyHash"
 import PStakingCredential from "../../API/V1/Address/PStakingCredential"
 import PTxOut from "../../API/V1/Tx/PTxOut"
 import PMaybe from "../../stdlib/PMaybe/PMaybe"
-import PAddress from "../../API/V1/Address"
+import PAddress from "../../API/V1/Address/PAddress"
 import PCredential from "../../API/V1/Address/PCredential"
 import PValidatorHash from "../../API/V1/ScriptsHashes/PValidatorHash"
 
@@ -243,7 +243,7 @@ describe("scriptToJsonFormat", () => {
                     withdrawals: pList( pair( PStakingCredential.type, int ) )([]),
                     inputs: pList( PTxInInfo.type )([
                         PTxInInfo.PTxInInfo({
-                            outRef: validatorSpendingUtxo,
+                            utxoRef: validatorSpendingUtxo,
                             resolved: reslovedValidatorOutput
                         })
                     ]),

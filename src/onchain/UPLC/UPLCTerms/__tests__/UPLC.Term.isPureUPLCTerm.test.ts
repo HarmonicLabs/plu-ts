@@ -1,4 +1,3 @@
-import { HoistedTerm } from "../../../pluts/Term/HoistedTerm"
 import { isPureUPLCTerm } from "../../UPLCTerm"
 import Application from "../Application"
 import HoistedUPLC from "../HoistedUPLC"

@@ -80,11 +80,11 @@ describe("ConstValue :: inferConstTypeFromConstValue", () => {
     it("throws if a list with incongruent values is provvided", () => {
         
         expect( () =>
-            inferConstTypeFromConstValue([ new Integer( 2 ), undefined ])
+            inferConstTypeFromConstValue([ new Integer( 2 ), undefined ] as any )
         ).toThrow()
 
         expect( () =>
-            inferConstTypeFromConstValue([ new Integer( 2 ), "str" ])
+            inferConstTypeFromConstValue([ new Integer( 2 ), "str" ] as any )
         ).toThrow()
 
     })

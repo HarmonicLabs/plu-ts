@@ -34,7 +34,7 @@ describe("pList", () => {
         expect(
             pList( Type.Int )([ pInt( 2 ), pInt( 3 ), pInt( 4 ) ]).toUPLC( 0 )
         ).toEqual(
-            UPLCConst.listOf( constT.int )([ 2, 3, 4 ])
+            UPLCConst.listOf( constT.int )([ 2, 3, 4 ] as any )
         );
 
     })

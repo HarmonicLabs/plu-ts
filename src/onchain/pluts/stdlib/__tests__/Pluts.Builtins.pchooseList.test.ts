@@ -5,8 +5,9 @@ import Delay from "../../../UPLC/UPLCTerms/Delay";
 import Force from "../../../UPLC/UPLCTerms/Force";
 import UPLCConst from "../../../UPLC/UPLCTerms/UPLCConst";
 import { constT } from "../../../UPLC/UPLCTerms/UPLCConst/ConstType";
-import PBool, { pBool } from "../../PTypes/PBool";
-import PInt from "../../PTypes/PInt";
+import { pBool } from "../../PTypes/PBool";
+import { pList } from "../../PTypes/PList";
+import { bool, int } from "../../Term/Type/base";
 
 describe.skip("pchooseList", () => {
 
@@ -23,7 +24,7 @@ describe.skip("pchooseList", () => {
         );
 
         expect(
-            pchooseList( PInt, PBool ).$( pList( PInt )([]) )
+            pchooseList( int, bool ).$( pList( int )([]) )
             .caseNil ( pBool( true  ) )
             .caseCons( pBool( false ) )
     
@@ -31,7 +32,7 @@ describe.skip("pchooseList", () => {
         ).toEqual( targetChooseListIsNil )
     
         expect(
-            pchooseList( PInt, PBool ).$( pList( PInt )([]) )
+            pchooseList( int, bool ).$( pList( int )([]) )
             .$       ( pBool( true  ) )
             .caseCons( pBool( false ) )
     
@@ -39,7 +40,7 @@ describe.skip("pchooseList", () => {
         ).toEqual( targetChooseListIsNil )
     
         expect(
-            pchooseList( PInt, PBool ).$( pList( PInt )([]) )
+            pchooseList( int, bool ).$( pList( int )([]) )
             .caseNil ( pBool( true  ) )
             .$       ( pBool( false ) )
     
@@ -47,7 +48,7 @@ describe.skip("pchooseList", () => {
         ).toEqual( targetChooseListIsNil )
     
         expect(
-            pchooseList( PInt, PBool ).$( pList( PInt )([]) )
+            pchooseList( int, bool ).$( pList( int )([]) )
             .$( pBool( true  ) )
             .$( pBool( false ) )
     
