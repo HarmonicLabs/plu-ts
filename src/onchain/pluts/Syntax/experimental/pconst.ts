@@ -1,12 +1,11 @@
 import CborString from "../../../../cbor/CborString";
-import Data, { isData } from "../../../../types/Data";
+import Data from "../../../../types/Data";
 import ByteString from "../../../../types/HexString/ByteString";
 import Integer from "../../../../types/ints/Integer";
 import Pair from "../../../../types/structs/Pair";
 import { DefaultNever, DefaultUndefined } from "../../../../utils/ts";
-import UPLCConst from "../../../UPLC/UPLCTerms/UPLCConst";
-import ConstType, { constT, isWellFormedConstType } from "../../../UPLC/UPLCTerms/UPLCConst/ConstType";
-import ConstValue, { isConstValue } from "../../../UPLC/UPLCTerms/UPLCConst/ConstValue";
+import ConstType, { constT } from "../../../UPLC/UPLCTerms/UPLCConst/ConstType";
+import ConstValue from "../../../UPLC/UPLCTerms/UPLCConst/ConstValue";
 import PType from "../../PType";
 import PBool from "../../PTypes/PBool";
 import PByteString from "../../PTypes/PByteString";
@@ -17,7 +16,6 @@ import PPair from "../../PTypes/PPair";
 import PString from "../../PTypes/PString";
 import PUnit from "../../PTypes/PUnit";
 import Term, { UnTerm } from "../../Term";
-import { Type } from "../../Term/Type/base";
 
 /**
  * **EXPERIMENTAL**

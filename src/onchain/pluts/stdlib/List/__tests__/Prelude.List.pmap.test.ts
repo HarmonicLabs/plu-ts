@@ -29,7 +29,7 @@ describe("pmap", () => {
 
     test("addTwo lam", () => {
 
-        const addTwo = pmap( int, int ).$( plam( int, int )( x => pInt(2).add.$( x ) ) );
+        const addTwo = pmap( int, int ).$( plam( int, int )( x => pInt(2).add( x ) ) );
 
         expect(
             evalScript(

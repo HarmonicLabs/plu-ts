@@ -1,7 +1,7 @@
 import { TermType, AnyAlias, PrimType, DataConstructor } from "./base";
 import JsRuntime from "../../../../utils/JsRuntime";
-import { cloneStructDef } from "../../PTypes/PStruct/pstruct";
 import { isAliasType, isStructType } from "./kinds";
+import cloneStructDef from "../../PTypes/PStruct/cloneStructDef";
 
 
 export default function cloneTermType( t: TermType ): TermType

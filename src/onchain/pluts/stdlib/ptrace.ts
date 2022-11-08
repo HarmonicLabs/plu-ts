@@ -1,18 +1,9 @@
-import ObjectUtils from "../../../utils/ObjectUtils";
-import Application from "../../UPLC/UPLCTerms/Application";
-import Builtin from "../../UPLC/UPLCTerms/Builtin";
-import ErrorUPLC from "../../UPLC/UPLCTerms/ErrorUPLC";
-import HoistedUPLC from "../../UPLC/UPLCTerms/HoistedUPLC";
-import Lambda from "../../UPLC/UPLCTerms/Lambda";
-import UPLCConst from "../../UPLC/UPLCTerms/UPLCConst";
-import UPLCVar from "../../UPLC/UPLCTerms/UPLCVar";
 import { pif, ptrace } from "./Builtins";
 import { pBool } from "../PTypes/PBool";
-import PLam, { TermFn } from "../PTypes/PFn/PLam";
+import { TermFn } from "../PTypes/PFn/PLam";
 import PString from "../PTypes/PString";
-import { papp, pdelay, perror, pfn, pforce, phoist, plam } from "../Syntax/syntax";
-import Term from "../Term";
-import { bool, ConstantableTermType, delayed, fn, lam, str, TermType, ToPType } from "../Term/Type/base";
+import { pdelay, perror, pfn, pforce, phoist, plam } from "../Syntax/syntax";
+import { bool, ConstantableTermType, delayed, str, ToPType } from "../Term/Type/base";
 
 export const ptraceIfTrue = phoist(
     pfn([

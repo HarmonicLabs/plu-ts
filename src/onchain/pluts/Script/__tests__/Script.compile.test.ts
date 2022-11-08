@@ -56,7 +56,7 @@ describe("scriptToJsonFormat", () => {
                 return pif( unit ).$(
                     pByteString(
                         correctBS
-                    ).eq.$( punBData.$( redeemerBS ) )
+                    ).eq( punBData.$( redeemerBS ) )
                 )
                 .then( pmakeUnit() )
                 .else( perror( unit, "wrong BS" ) )
@@ -102,8 +102,8 @@ describe("scriptToJsonFormat", () => {
         )(
             ( _datum, redeemerBS, ctx ) => {
 
-                return pByteString( correctBS ).eq.$( redeemerBS )
-                    .and.$(
+                return pByteString( correctBS ).eq( redeemerBS )
+                    .and(
                         ctx.extract("purpose","txInfo").in( ({purpose,txInfo}) =>
 
                             plet( pownHash.$( txInfo ).$( purpose ) ).in( ownHash =>

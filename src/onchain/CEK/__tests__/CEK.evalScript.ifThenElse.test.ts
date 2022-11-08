@@ -58,7 +58,7 @@ describe("CEK :: evalScript", () => {
 
             expect(
                 evalScript(
-                    pstrictIf( Type.Any ).$( pInt( 0 ).eq.$( pInt( 0 ) ) )
+                    pstrictIf( Type.Any ).$( pInt( 0 ).eq( pInt( 0 ) ) )
                     .$( pInt( 1 ) )
                     .$( pInt( 2 ) )
                     .toUPLC( 0 )

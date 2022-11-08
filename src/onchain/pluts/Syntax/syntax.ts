@@ -229,7 +229,7 @@ export function pfn<InputsTypes extends [ TermType, ...TermType[] ], OutputType 
  * self => value => result
  * ```
  */
- export default function precursive<A extends PType, B extends PType>
+ export function precursive<A extends PType, B extends PType>
  ( fnBody:
      Term<PLam<
          PLam<A,B>,  // self

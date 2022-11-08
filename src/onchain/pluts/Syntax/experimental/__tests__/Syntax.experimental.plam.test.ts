@@ -9,7 +9,7 @@ describe("unspecified type plam", () => {
 
     test.skip("throws on improper types", () => {
 
-        const addTwo = plam( (x: Term<PInt>) => pInt(2).add.$( x ) );
+        const addTwo = plam( (x: Term<PInt>) => pInt(2).add( x ) );
 
         expect(
             evalScript(
