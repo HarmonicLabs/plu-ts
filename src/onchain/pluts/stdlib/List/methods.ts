@@ -3,17 +3,16 @@ import PBool, { pBool } from "../../PTypes/PBool";
 import PLam, { TermFn } from "../../PTypes/PFn/PLam";
 import PInt, { pInt } from "../../PTypes/PInt";
 import PList, { pnil } from "../../PTypes/PList";
-import precursive, { papp, perror, pfn, phoist, plam, plet } from "../../Syntax/syntax";
+import { papp, perror, pfn, phoist, plam, plet, precursive } from "../../Syntax/syntax";
 import Term from "../../Term";
-import Type, { bool, ConstantableTermType, fn, lam, list, PrimType, TermType, ToPType } from "../../Term/Type/base";
+import Type, { bool, ConstantableTermType, fn, lam, list, PrimType, TermType, ToPType, tyVar } from "../../Term/Type/base";
 import { pand, pchooseList, phead, pif, pisEmpty, plessInt, por, pprepend, pstrictIf, ptail } from "../Builtins";
 import PMaybe, { PMaybeT } from "../PMaybe/PMaybe";
 
 
-export function pmatchList<ReturnT  extends TermType, PElemsT extends PType = PType>( returnT: ReturnT )
+export function pmatchList<ReturnT  extends TermType, PElemsT extends PType = PType>( returnT: ReturnT, elemsT: TermType = tyVar("elemsT_pmatchList") )
     : TermFn<[ PElemsT, PLam<PElemsT,PLam<PList<PElemsT>, ToPType<ReturnT>>>, PList<PElemsT> ], ToPType<ReturnT>>
 {
-    const elemsT = Type.Var("elemsT");
     return phoist(
         pfn([
                 returnT,
@@ -37,7 +36,7 @@ export function pmatchList<ReturnT  extends TermType, PElemsT extends PType = PT
     );
 }
 
-export function precursiveList<ReturnT  extends TermType, PElemsT extends PType = PType>( returnT: ReturnT )
+export function precursiveList<ReturnT  extends TermType, PElemsT extends PType = PType>( returnT: ReturnT, elemsT: TermType = tyVar("elemsT_precursiveList") )
     : TermFn<
         [
             PLam< // caseNil
@@ -53,7 +52,6 @@ export function precursiveList<ReturnT  extends TermType, PElemsT extends PType 
         ToPType<ReturnT> // result
     >
 {
-    const elemsT = Type.Var("elemsT");
     const finalType = lam( list( elemsT ), returnT );
     
     return phoist(
@@ -80,7 +78,7 @@ export function precursiveList<ReturnT  extends TermType, PElemsT extends PType 
                         matchCons
                     )
                 ).in( finalSelf =>
-                    pmatchList( returnT )
+                    pmatchList( returnT, elemsT )
                     .$(
                         papp(
                             matchNil,
@@ -192,7 +190,7 @@ export function pfilter<ElemsT extends ConstantableTermType>( elemsT: ElemsT )
             )
         )(( predicate ) => {
 
-            return precursiveList<[ PrimType.List, ElemsT], ToPType<ElemsT>>( list( elemsT ) )
+            return precursiveList<[ PrimType.List, ElemsT], ToPType<ElemsT>>( list( elemsT ), elemsT )
             .$(
                 plam( lam( list( elemsT ) ,list( elemsT ) ), list( elemsT ) )
                 ( ( _self ) => pnil( elemsT ) )
@@ -234,7 +232,7 @@ export function pevery<ElemsT extends ConstantableTermType>( elemsT: ElemsT )
             )
         )(( predicate ) => {
 
-            return precursiveList<[ PrimType.Bool ], ToPType<ElemsT>>( bool )
+            return precursiveList<[ PrimType.Bool ], ToPType<ElemsT>>( bool, elemsT )
             .$(
                 plam( lam( list( elemsT ), bool ), bool )
                 ( ( _self ) => pBool( true ) )
@@ -279,7 +277,7 @@ export function psome<ElemsT extends ConstantableTermType>( elemsT: ElemsT )
             )
         )(( predicate ) => {
 
-            return precursiveList<[ PrimType.Bool ], ToPType<ElemsT>>( bool )
+            return precursiveList<[ PrimType.Bool ], ToPType<ElemsT>>( bool , elemsT )
             .$(
                 plam( lam( list( elemsT ), bool ), bool )
                 ( ( _self ) => pBool( true ) )
@@ -323,7 +321,7 @@ export function pmap<FromT extends ConstantableTermType, ToT extends Constantabl
             )
         )(( f ) => {
 
-            return precursiveList( list( toT ) )
+            return precursiveList( list( toT ), fromT )
             .$(
                 plam( lam( list( fromT ), list( toT ) ), list( toT ) )
                 ( ( _self ) => pnil( toT ) )

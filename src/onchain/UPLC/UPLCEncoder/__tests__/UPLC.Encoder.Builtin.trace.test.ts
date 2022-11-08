@@ -80,7 +80,7 @@ describe("serializeBuiltin", () => {
 
             const correctBS = ByteString.fromAscii( "Cardano <3 plu-ts" )
             const traceBS = ptraceIfFalse.$( pStr("wrong bytestring") )
-            .$( pByteString( correctBS ).eq.$( pByteString( ByteString.fromAscii("") ) ) );
+            .$( pByteString( correctBS ).eq( pByteString( ByteString.fromAscii("") ) ) );
 
             const compiled = compile( traceBS );
 

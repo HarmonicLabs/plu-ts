@@ -18,9 +18,11 @@ describe("pmap", () => {
 
         const addTwo = pmap( int, int ).$( padd.$( pInt(2) ) );
 
+        const myList = pList( int )([1,2,3].map( pInt ) );
+        
         expect(
             evalScript(
-                addTwo.$( pList( int )([1,2,3].map( pInt ) ) )
+                addTwo.$( myList )
             )
         ).toEqual(
             expected

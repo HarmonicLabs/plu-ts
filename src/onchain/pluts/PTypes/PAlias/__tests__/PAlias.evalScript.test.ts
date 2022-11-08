@@ -24,7 +24,7 @@ describe("palias", () => {
 
         expect(
             evalScript(
-                pInt(1).add.$( fancy69 as any )
+                pInt(1).add( fancy69 as any )
             )
         ).toEqual( UPLCConst.int( 69 + 1 ) )
 

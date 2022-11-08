@@ -29,7 +29,7 @@ export type UtilityTermOf<PElem extends PType> =
         PElem extends PString ? TermStr :
         PElem extends PStruct<infer SDef extends ConstantableStructDefinition> ? TermStruct<SDef> :
         Term<PElem>
-    ) & Term<PElem> // needed because sometime typescript doesn' recognize that the term is the same just extended
+    ) & Term<PElem> // needed because sometime typescript doesn't recognize that the term is the same just extended
 
 export default function addUtilityForType<T extends TermType>( t: T )
     : ( term: Term<ToPType<T>> ) => UtilityTermOf<ToPType<T>>

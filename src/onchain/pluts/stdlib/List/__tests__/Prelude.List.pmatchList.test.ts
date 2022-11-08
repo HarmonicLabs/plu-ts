@@ -4,21 +4,19 @@ import { pInt } from "../../../PTypes/PInt"
 import { pList } from "../../../PTypes/PList"
 import { pmakeUnit } from "../../../PTypes/PUnit"
 import { pfn } from "../../../Syntax/syntax"
-import Type from "../../../Term/Type/base"
+import Type, { unit } from "../../../Term/Type/base"
 
 
 describe("pmatchList", () => {
     
-    const elemsT =  Type.Var("elemsT");
-
     test("different result on nil and cons lists", () => {
 
-        const empty0otherwise42 = pmatchList( Type.Int )
+        const empty0otherwise42 = pmatchList( Type.Int, unit )
             .$( pInt( 0 ) )
             .$(
                 pfn([
-                    elemsT,
-                    Type.List( elemsT ),
+                    unit,
+                    Type.List( unit ),
                 ],
                     Type.Int
                 )(
@@ -29,7 +27,7 @@ describe("pmatchList", () => {
         expect(
             evalScript(
                 empty0otherwise42.$(
-                    pList( Type.Unit )([])
+                    pList( unit )([])
                 )
             )
         ).toEqual( evalScript( pInt( 0 ) ) )
@@ -37,7 +35,7 @@ describe("pmatchList", () => {
         expect(
             evalScript(
                 empty0otherwise42.$(
-                    pList( Type.Unit )([ pmakeUnit() ])
+                    pList( unit )([ pmakeUnit() ])
                 )
             )
         ).toEqual( evalScript( pInt( 42 ) ) )

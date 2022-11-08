@@ -4,38 +4,17 @@ import { pInt } from "../../../PTypes/PInt"
 import { pList, pnil } from "../../../PTypes/PList"
 import { pStr } from "../../../PTypes/PString"
 import { papp, pfn, plam } from "../../../Syntax/syntax"
-import Type, { int, str } from "../../../Term/Type/base"
+import Type, { ConstantableTermType, int, str } from "../../../Term/Type/base"
+import { plength } from "../plength"
 
 
 describe("precursiveList", () => {
     
-    const elemsT =  Type.Var("elemsT");
-
     test("different result on nil and cons lists", () => {
-
-        const plength = precursiveList( Type.Int )
-            .$(
-                plam(
-                    Type.Lambda( Type.List( elemsT ), Type.Int ),
-                    Type.Int
-                )(
-                    ( _self ) => pInt( 0 )
-                )
-            )
-            .$(
-                pfn([
-                    Type.Lambda( Type.List( elemsT ), Type.Int ),
-                    elemsT,
-                    Type.List( elemsT )
-                ],  Type.Int)
-                (
-                    ( self, _x, xs ) => pInt(1).add.$( papp( self, xs ) )
-                )
-            )
 
         expect(
             evalScript(
-                plength.$( pnil(int) )
+                plength( int ).$( pnil(int) )
             )
         ).toEqual(
             evalScript(
@@ -50,7 +29,7 @@ describe("precursiveList", () => {
             arr.push(i);
             expect(
                 evalScript(
-                    plength.$( pList( int )( arr.map( pInt ) ) )
+                    plength( int ).$( pList( int )( arr.map( pInt ) ) )
                 )
             ).toEqual(
                 evalScript(
@@ -60,7 +39,7 @@ describe("precursiveList", () => {
 
             expect(
                 evalScript(
-                    plength.$( pList( str )( arr.map( x => pStr( x.toString() ) ) ) )
+                    plength( str ).$( pList( str )( arr.map( x => pStr( x.toString() ) ) ) )
                 )
             ).toEqual(
                 evalScript(

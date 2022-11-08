@@ -189,7 +189,7 @@ export default function pstruct<StructDef extends ConstantableStructDefinition>(
 {
     JsRuntime.assert(
         isConstantableStructDefinition( def ),
-        "cannot construct 'PStruct' type; invalid struct definition: " + structDefToString( def ) 
+        "cannot construct 'PStruct' type; struct definition is not constant: " + structDefToString( def ) 
     );
 
     class PStructExt extends _PStruct

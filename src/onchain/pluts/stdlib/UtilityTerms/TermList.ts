@@ -107,6 +107,12 @@ export function addPListMethods<PElemsT extends PType>( list: Term<PList<PElemsT
     : TermList<PElemsT>
 {
     const elemsT = list.type[1] as ConstantableTermType;
+    if(!isConstantableTermType( elemsT as any ))
+    {
+        throw new BasePlutsError(
+            "`addPListMethods` can only be used on lists with concrete types; the type of the list was: " + termTypeToString( list.type )
+        );
+    }
 
     ObjectUtils.definePropertyIfNotPresent(
         list,

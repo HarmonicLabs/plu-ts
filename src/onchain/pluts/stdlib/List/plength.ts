@@ -5,7 +5,7 @@ import { precursiveList } from "./methods";
 
 export const plength = ( elemsT: TermType = tyVar("plength_elemsT") ) => {
 
-    return precursiveList( Type.Int )
+    return precursiveList( Type.Int, elemsT )
     .$(
         plam(
             Type.Lambda( Type.List( elemsT ), Type.Int ),
