@@ -1,11 +1,9 @@
-import { precursiveList } from "./methods";
 import { pInt } from "../../PTypes/PInt";
 import { plam, pfn, papp } from "../../Syntax/syntax";
-import Type, { tyVar } from "../../Term/Type/base";
+import Type, { TermType, tyVar } from "../../Term/Type/base";
+import { precursiveList } from "./methods";
 
-export const plength = (() => {
-
-    const elemsT = tyVar("plength_elemsT");
+export const plength = ( elemsT: TermType = tyVar("plength_elemsT") ) => {
 
     return precursiveList( Type.Int )
     .$(
@@ -26,4 +24,4 @@ export const plength = (() => {
             ( self, _x, xs ) => pInt(1).add( papp( self, xs ) )
         )
     )
-})();
+};

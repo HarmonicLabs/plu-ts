@@ -3,7 +3,7 @@ import PBool, { pBool } from "../../PTypes/PBool";
 import PLam, { TermFn } from "../../PTypes/PFn/PLam";
 import PInt, { pInt } from "../../PTypes/PInt";
 import PList, { pnil } from "../../PTypes/PList";
-import { papp, perror, pfn, phoist, plam, plet, precursive } from "../../Syntax/syntax";
+import precursive, { papp, perror, pfn, phoist, plam, plet } from "../../Syntax/syntax";
 import Term from "../../Term";
 import Type, { bool, ConstantableTermType, fn, lam, list, PrimType, TermType, ToPType } from "../../Term/Type/base";
 import { pand, pchooseList, phead, pif, pisEmpty, plessInt, por, pprepend, pstrictIf, ptail } from "../Builtins";

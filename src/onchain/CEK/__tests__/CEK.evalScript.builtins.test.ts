@@ -14,7 +14,7 @@ describe("CEK :: evalScript ; builtins", () => {
             test.concurrent(`${a} + ${b} = ${ a + b }`, () => {
                 expect(
                     evalScript(
-                        pInt( a ).add.$( pInt( b ) )
+                        pInt( a ).add( pInt( b ) )
                         .toUPLC(0)
                     )
                 ).toEqual( UPLCConst.int( a + b ) );
@@ -38,7 +38,7 @@ describe("CEK :: evalScript ; builtins", () => {
             test.concurrent(`${a} - ${b} = ${ a - b }`, () => {
                 expect(
                     evalScript(
-                        pInt( a ).sub.$( pInt( b ) )
+                        pInt( a ).sub( pInt( b ) )
                         .toUPLC(0)
                     )
                 ).toEqual( UPLCConst.int( a - b ) );
@@ -63,7 +63,7 @@ describe("CEK :: evalScript ; builtins", () => {
             test.concurrent(`${a} * ${b} = ${ a * b }`, () => {
                 expect(
                     evalScript(
-                        pInt( a ).mult.$( pInt( b ) )
+                        pInt( a ).mult( pInt( b ) )
                         .toUPLC(0)
                     )
                 ).toEqual( UPLCConst.int( a * b ) );
@@ -91,7 +91,7 @@ describe("CEK :: evalScript ; builtins", () => {
 
             test.concurrent(`${a} \`div\` ${b} = ${ result ?? "UPLC error" }`, () => {
                 const plutsRes = evalScript(
-                    pInt( a ).div.$( pInt( b ) )
+                    pInt( a ).div( pInt( b ) )
                     .toUPLC(0)
                 )
 
@@ -131,7 +131,7 @@ describe("CEK :: evalScript ; builtins", () => {
             test.concurrent(`${a} \`quot\` ${b} = ${ result ?? "UPLC error" }`, () => {
 
                 const plutsRes = evalScript(
-                    pInt( a ).quot.$( pInt( b ) )
+                    pInt( a ).quot( pInt( b ) )
                     .toUPLC(0)
                 );
 
@@ -171,7 +171,7 @@ describe("CEK :: evalScript ; builtins", () => {
             test.concurrent(`${a} \`rem\` ${b} = ${ result ?? "UPLC error" }`, () => {
 
                 const plutsRes = evalScript(
-                    pInt( a ).remainder.$( pInt( b ) )
+                    pInt( a ).remainder( pInt( b ) )
                     .toUPLC(0)
                 );
 

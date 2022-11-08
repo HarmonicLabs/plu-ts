@@ -13,8 +13,6 @@ import PLam, { TermFn } from "../PTypes/PFn/PLam";
 import Type, { ToPType, ToTermArrNonEmpty, TermType } from "../Term/Type/base";
 import Term from "../Term";
 import JsRuntime from "../../../utils/JsRuntime";
-import PInt from "../PTypes/PInt";
-import PUnit from "../PTypes/PUnit";
 import HoistedUPLC from "../../UPLC/UPLCTerms/HoistedUPLC";
 import { typeExtends } from "../Term/Type/extension";
 import { isLambdaType, isDelayedType } from "../Term/Type/kinds";
@@ -150,7 +148,7 @@ type PFnFromTypes<Ins extends [ TermType, ...TermType[] ], Out extends TermType>
         PLam<ToPType<T>, PFnFromTypes<RestTs, Out>>:
     never
 
-type TermFnFromTypes<Ins extends [ TermType, ...TermType[] ], Out extends TermType> =
+export type TermFnFromTypes<Ins extends [ TermType, ...TermType[] ], Out extends TermType> =
     Ins extends [ infer T extends TermType ] ? Term<PLam<ToPType<T>, ToPType<Out>>> & { $: ( input: Term<ToPType<T>> ) => UtilityTermOf<ToPType<Out>> } :
     Ins extends [ infer T extends TermType, ...infer RestIns extends [ TermType, ...TermType[] ] ] ?
         Term<PLam<ToPType<T>,PFnFromTypes<RestIns, Out>>>
@@ -163,7 +161,7 @@ type TsTermFunctionArgs<InputsTypes extends [ TermType, ...TermType[] ]> =
     InputsTypes extends [ infer T extends TermType, ...infer RestTs extends [ TermType, ...TermType[] ] ] ? [ a: UtilityTermOf<ToPType<T>>, ...bs: TsTermFunctionArgs<RestTs> ] :
     never;
 
-type TsTermFunction<InputsTypes extends [ TermType, ...TermType[] ], OutputType extends TermType> = 
+export type TsTermFunction<InputsTypes extends [ TermType, ...TermType[] ], OutputType extends TermType> = 
     (...args: TsTermFunctionArgs<InputsTypes> )
         // important that returns `Term` and NOT `UtilityTermOf`
         // because it allows ANY term to be the result and the plu-ts handles the rest
@@ -211,27 +209,6 @@ export function pfn<InputsTypes extends [ TermType, ...TermType[] ], OutputType 
     }) as any;
 }
 
-export function phoist<PInstance extends PType, SomeExtension extends {} >( closedTerm: Term<PInstance> & SomeExtension ): Term<PInstance> & SomeExtension
-{
-    /*
-    the implementation has been moved to a method of the term
-    since all 'phoist' is doing is wrapping whatever UPLC the 'Term' represent
-    into an 'HoistedUPLC'
-
-    however proevious implementaiton achieved this by creating a new term and then **copying** eventual extension
-
-    this was a problem since the extension methods are defined using the **raw** UPLC rather than the hoisted
-    causing the hoisted result not to be actually hoisted if accessed using the methods
-
-    moving the "wrapping" of the 'toUPLC' method inside the term, preserves the same 'Term' object
-    but the same 'Term' object is now properly hoisted
-
-    this also removes the `O(n)` operation of copying the methods; since the methods are already there
-    */
-    (closedTerm as any).hoist();
-    return closedTerm;
-}
-
 
 /**
  * for reference the "Z combinator in js": https://medium.com/swlh/y-and-z-combinators-in-javascript-lambda-calculus-with-real-code-31f25be934ec
@@ -252,13 +229,13 @@ export function phoist<PInstance extends PType, SomeExtension extends {} >( clos
  * self => value => result
  * ```
  */
-export function precursive<A extends PType, B extends PType>
-    ( fnBody:
-        Term<PLam<
-            PLam<A,B>,  // self
-            PLam<A,B>>  // the actual function 
-        >
-    ): TermFn<[ A ], B >
+ export default function precursive<A extends PType, B extends PType>
+ ( fnBody:
+     Term<PLam<
+         PLam<A,B>,  // self
+         PLam<A,B>>  // the actual function 
+     >
+ ): TermFn<[ A ], B >
 {
     const a = Type.Var("recursive_fn_a");
     const b = Type.Var("recursive_fn_b");
@@ -292,7 +269,16 @@ export function precursive<A extends PType, B extends PType>
 
     /** 
      * @hoisted
-    **/
+     **/
+    const ZUPLC = new HoistedUPLC(
+        new Lambda( // Z
+            new Application(
+                innerZ,
+                innerZ
+            )
+        )
+    );
+
     const Z = new Term<
             PLam<
                 PLam<
@@ -306,43 +292,56 @@ export function precursive<A extends PType, B extends PType>
                 Type.Lambda( Type.Lambda( a, b ), Type.Lambda( a, b ) ),
                 Type.Lambda( a, b ),
             ),
-            _dbn => new HoistedUPLC(
-                new Lambda( // Z
-                    new Application(
-                        innerZ,
-                        innerZ
-                    )
-                )
-            )
+            _dbn => ZUPLC
         );
 
     return punsafeConvertType( papp( Z, fnBody ), fnBody.type[2] as TermType ) as any;
 }
 
 type TsTermRecursiveFunctionArgs<InputsTypes extends [ TermType, ...TermType[] ], OutputType extends TermType> =
-    InputsTypes extends [] ? never :
-    InputsTypes extends [ infer T extends TermType ] ? [ self: TsTermFunction<InputsTypes, OutputType>, arg: Term<ToPType<T>> ] :
-    InputsTypes extends [ infer T extends TermType, ...infer RestTs extends [ TermType, ...TermType[] ] ] ?
-        [ arg: Term<ToPType<T>>, ...args: TsTermRecursiveFunctionArgs<RestTs, OutputType> ] :
-    never;
+ InputsTypes extends [] ? never :
+ InputsTypes extends [ infer T extends TermType ] ? [ self: TsTermFunction<InputsTypes, OutputType>, arg: Term<ToPType<T>> ] :
+ InputsTypes extends [ infer T extends TermType, ...infer RestTs extends [ TermType, ...TermType[] ] ] ?
+     [ arg: Term<ToPType<T>>, ...args: TsTermRecursiveFunctionArgs<RestTs, OutputType> ] :
+ never;
 
 type TsTermRecursiveFunction<InputsTypes extends [ TermType, ...TermType[] ], OutputType extends TermType> =
-    (...args: TsTermRecursiveFunctionArgs<InputsTypes, OutputType> ) => Term<ToPType<OutputType>>
+ (...args: TsTermRecursiveFunctionArgs<InputsTypes, OutputType> ) => Term<ToPType<OutputType>>
 
 export function precursiveFn<InputsTypes extends [ TermType, ...TermType[] ], OutputType extends TermType>( inputsTypes: InputsTypes, outputType: OutputType )
-    : ( termFunction: TsTermRecursiveFunction<InputsTypes,OutputType> ) => 
-        TermFnFromTypes< InputsTypes, OutputType>
+ : ( termFunction: TsTermRecursiveFunction<InputsTypes,OutputType> ) => 
+    TermFnFromTypes< InputsTypes, OutputType>
 {
-    return ( termFn ) => precursive(
-        pfn([
-            Type.Fn( inputsTypes, outputType ),
-            ...inputsTypes
-        ],
-        outputType
-        )( termFn as any ) as  any
-    ) as any
+ return ( termFn ) => precursive(
+     pfn([
+         Type.Fn( inputsTypes, outputType ),
+         ...inputsTypes
+     ],
+     outputType
+     )( termFn as any ) as  any
+ ) as any
 }
 
+export function phoist<PInstance extends PType, SomeExtension extends {} >( closedTerm: Term<PInstance> & SomeExtension ): Term<PInstance> & SomeExtension
+{
+    /*
+    the implementation has been moved to a method of the term
+    since all 'phoist' is doing is wrapping whatever UPLC the 'Term' represent
+    into an 'HoistedUPLC'
+
+    however proevious implementaiton achieved this by creating a new term and then **copying** eventual extension
+
+    this was a problem since the extension methods are defined using the **raw** UPLC rather than the hoisted
+    causing the hoisted result not to be actually hoisted if accessed using the methods
+
+    moving the "wrapping" of the 'toUPLC' method inside the term, preserves the same 'Term' object
+    but the same 'Term' object is now properly hoisted
+
+    this also removes the `O(n)` operation of copying the methods; since the methods are already there
+    */
+    (closedTerm as any).hoist();
+    return closedTerm;
+}
 
 export function pdelay<PInstance extends PType>(toDelay: Term<PInstance>): Term<PDelayed<PInstance>>
 {

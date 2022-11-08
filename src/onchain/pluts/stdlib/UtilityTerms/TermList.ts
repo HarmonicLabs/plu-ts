@@ -132,7 +132,7 @@ export function addPListMethods<PElemsT extends PType>( list: Term<PList<PElemsT
         list,
         "length",
         {
-            get: () => plength.$( list ),
+            get: () => plength( elemsT ).$( list ),
             set: () => {},
             configurable: false,
             enumerable: true

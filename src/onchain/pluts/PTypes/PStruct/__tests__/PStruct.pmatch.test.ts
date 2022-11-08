@@ -5,7 +5,7 @@ import UPLCConst from "../../../../UPLC/UPLCTerms/UPLCConst";
 import { padd, pconsBs, pindexBs } from "../../../stdlib/Builtins";
 import { perror } from "../../../Syntax/syntax";
 import Term from "../../../Term";
-import { bs, int, unit } from "../../../Term/Type/base";
+import { bs, ConstantableTermType, int, unit } from "../../../Term/Type/base";
 import { pByteString } from "../../PByteString";
 import { pInt } from "../../PInt";
 import { pmakeUnit } from "../../PUnit";
@@ -69,7 +69,8 @@ describe("pmatch", () => {
             matchNothing
         ).toEqual({
             onJust: matchNothing.onJust,
-            onNothing: matchNothing.onNothing
+            onNothing: matchNothing.onNothing,
+            _: matchNothing._
         })
     
         const matchNothingOnJust = matchNothing.onJust( rawFields => pInt( 0 ) );
@@ -77,14 +78,16 @@ describe("pmatch", () => {
         expect(
             matchNothingOnJust
         ).toEqual({
-            onNothing: matchNothingOnJust.onNothing
+            onNothing: matchNothingOnJust.onNothing,
+            _: matchNothingOnJust._
         })
         
         const matchNothingOnNothing = matchNothing.onNothing( rawFields => pInt( 0 ) );
         expect(
             matchNothingOnNothing
         ).toEqual({
-            onJust: matchNothingOnNothing.onJust
+            onJust: matchNothingOnNothing.onJust,
+            _: matchNothingOnNothing._
         })
         //*/
         
@@ -197,17 +200,17 @@ describe("pmatch", () => {
                 b: pByteString( ByteString.fromAscii("b") )
             });
 
-            const makeMatch = ( continuation: ( fields: { nums: Term<typeof Nums>, bss: Term<typeof BSs> } ) => Term<any> ) => pmatch( NumOrBs.Both({
+            const makeMatch = ( continuation: ( fields: { nums: Term<typeof Nums>, bss: Term<typeof BSs> } ) => Term<any>, outTy: ConstantableTermType ) => pmatch( NumOrBs.Both({
                 nums,
                 bss
             }))
             .onBoth( rawFields => rawFields.extract("nums", "bss").in( continuation ))
-            .onBSsOnly( _ => perror( bs ) )
-            .onNumsOnly( _ => perror( bs ) )
+            .onBSsOnly( _ =>  perror( outTy ) )
+            .onNumsOnly( _ => perror( outTy ) )
 
             expect(
                 evalScript(
-                    makeMatch( both => both.bss )
+                    makeMatch( both => both.bss, BSs.type )
                 )
             )
             .toEqual(
@@ -218,7 +221,7 @@ describe("pmatch", () => {
 
             expect(
                 evalScript(
-                    makeMatch( both => both.nums )
+                    makeMatch( both => both.nums, Nums.type )
                 )
             )
             .toEqual(
@@ -229,12 +232,16 @@ describe("pmatch", () => {
 
             expect(
                 evalScript(
-                    makeMatch( both =>
+                    makeMatch(
+                        
+                        both =>
                         pmatch( both.bss )
                         .onTwoBS( rawFields => rawFields.extract("a","b").in(  bss =>
                             bss.a
                         ))
-                        .onThreeNums( _ => perror( bs ) )
+                        .onThreeNums( _ => perror( bs ) ),
+
+                        bs
                     )
                 )
             )
@@ -246,12 +253,16 @@ describe("pmatch", () => {
             
             expect(
                 evalScript(
-                    makeMatch( both =>
+                    makeMatch(
+                        
+                        both =>
                         pmatch( both.bss )
                         .onTwoBS( rawFields => rawFields.extract("a","b").in(  bss =>
                             bss.b
                         ))
-                        .onThreeNums( _ => perror( bs ) )
+                        .onThreeNums( _ => perror( bs ) ),
+
+                        bs
                     )
                 )
             )
@@ -264,7 +275,9 @@ describe("pmatch", () => {
 
             expect(
                 evalScript(
-                    makeMatch( both => 
+                    makeMatch(
+                        
+                        both => 
                         pmatch( both.bss )
                         .onTwoBS( rawFields => rawFields.extract("a","b").in(  bss =>
                             
@@ -275,7 +288,9 @@ describe("pmatch", () => {
                             .onThreeNums( _ => perror( int ) )
 
                         ))
-                        .onThreeNums( _ => perror( int ) )
+                        .onThreeNums( _ => perror( int ) ),
+
+                        int
                     )
                 )
             ).toEqual(
@@ -286,6 +301,7 @@ describe("pmatch", () => {
 
             expect(
                 evalScript(
+
                     makeMatch( both => 
                         pmatch( both.bss )
                         .onTwoBS( rawFields => rawFields.extract("a","b").in(  bss =>
@@ -297,7 +313,9 @@ describe("pmatch", () => {
                             .onThreeNums( _ => perror( int ) )
 
                         ))
-                        .onThreeNums( _ => perror( int ) )
+                        .onThreeNums( _ => perror( int ) ),
+
+                        int
                     )
                 )
             ).toEqual(
@@ -308,6 +326,7 @@ describe("pmatch", () => {
 
             expect(
                 evalScript(
+
                     makeMatch( both => 
                         pmatch( both.bss )
                         .onTwoBS( rawFields => rawFields.extract("a","b").in(  bss =>
@@ -319,7 +338,9 @@ describe("pmatch", () => {
                             .onThreeNums( _ => perror( bs ) )
 
                         ))
-                        .onThreeNums( _ => perror( bs ) )
+                        .onThreeNums( _ => perror( bs ) ),
+
+                        bs
                     )
                 )
             ).toEqual(
@@ -330,7 +351,9 @@ describe("pmatch", () => {
 
             expect(
                 evalScript(
-                    makeMatch( both => 
+                    makeMatch(
+                        
+                        both => 
                         pmatch( both.bss )
                         .onTwoBS( rawFields => rawFields.extract("a","b").in(  bss =>
                             
@@ -356,7 +379,9 @@ describe("pmatch", () => {
                             .onThreeNums( _ => perror( bs ) )
 
                         ))
-                        .onThreeNums( _ => perror( bs ) )
+                        .onThreeNums( _ => perror( bs ) ),
+
+                        bs
                     )
                 )
             ).toEqual(
@@ -384,7 +409,7 @@ describe("pmatch", () => {
             A: {}, B: {}, C: {}, D: {}
         })
 
-        test.only("pmatch( stuff )._( _ => result) === result", () => {
+        test("pmatch( stuff )._( _ => result) === result", () => {
 
             expect(
                 evalScript(
