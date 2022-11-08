@@ -8,19 +8,43 @@ import PBool from "../../PTypes/PBool"
 
 type TermInt = Term<PInt>
 & {
-    readonly add:       TermFn<[PInt], PInt>
-    readonly sub:       TermFn<[PInt], PInt>
-    readonly mult:      TermFn<[PInt], PInt>
-    readonly div:       TermFn<[PInt], PInt>
-    readonly quot:      TermFn<[PInt], PInt>
-    readonly remainder: TermFn<[PInt], PInt>
-    readonly mod:       TermFn<[PInt], PInt>
+    readonly addTerm:       TermFn<[PInt], PInt>
+    readonly add:           ( other: Term<PInt> ) => TermInt
 
-    readonly eq:    TermFn<[PInt], PBool>
-    readonly lt:    TermFn<[PInt], PBool>
-    readonly ltEq:  TermFn<[PInt], PBool>
-    readonly gt:    TermFn<[PInt], PBool>
-    readonly gtEq:  TermFn<[PInt], PBool>
+    readonly subTerm:       TermFn<[PInt], PInt>
+    readonly sub:           ( other: Term<PInt> ) => TermInt
+
+    readonly multTerm:      TermFn<[PInt], PInt>
+    readonly mult:          ( other: Term<PInt> ) => TermInt
+
+    readonly divTerm:       TermFn<[PInt], PInt>
+    readonly div:           ( other: Term<PInt> ) => TermInt
+
+    readonly quotTerm:      TermFn<[PInt], PInt>
+    readonly quot:          ( other: Term<PInt> ) => TermInt
+
+    readonly remainderTerm: TermFn<[PInt], PInt>
+    readonly remainder:     ( other: Term<PInt> ) => TermInt
+
+    readonly modTerm:       TermFn<[PInt], PInt>
+    readonly mod:           ( other: Term<PInt> ) => TermInt
+
+    
+    readonly eqTerm:    TermFn<[PInt], PBool>
+    readonly eq:        ( other: Term<PInt> ) => TermBool
+        
+    readonly ltTerm:    TermFn<[PInt], PBool>
+    readonly lt:        ( other: Term<PInt> ) => TermBool
+        
+    readonly ltEqTerm:  TermFn<[PInt], PBool>
+    readonly ltEq:      ( other: Term<PInt> ) => TermBool
+        
+    readonly gtTerm:    TermFn<[PInt], PBool>
+    readonly gt:        ( other: Term<PInt> ) => TermBool
+        
+    readonly gtEqTerm:  TermFn<[PInt], PBool>
+    readonly gtEq:      ( other: Term<PInt> ) => TermBool
+        
 };
 
 export default TermInt;
@@ -30,65 +54,137 @@ export function addPIntMethods( term: Term<PInt> )
 {
     ObjectUtils.defineReadOnlyProperty(
         term,
-        "add",
+        "addTerm",
         padd.$( term )
     );
     ObjectUtils.defineReadOnlyProperty(
         term,
-        "sub",
-        psub.$( term )
-    );
-    ObjectUtils.defineReadOnlyProperty(
-        term,
-        "mult",
-        pmult.$( term )
-    );
-    ObjectUtils.defineReadOnlyProperty(
-        term,
-        "div",
-        pdiv.$( term )
-    );
-    ObjectUtils.defineReadOnlyProperty(
-        term,
-        "quot",
-        pquot.$( term )
-    );
-    ObjectUtils.defineReadOnlyProperty(
-        term,
-        "remainder",
-        prem.$( term )
-    );
-    ObjectUtils.defineReadOnlyProperty(
-        term,
-        "mod",
-        pmod.$( term )
+        "add",
+        ( other: Term<PInt> ): TermInt => padd.$( term ).$( other )
     );
 
     ObjectUtils.defineReadOnlyProperty(
         term,
-        "eq",
+        "subTerm",
+        psub.$( term )
+    );
+    ObjectUtils.defineReadOnlyProperty(
+        term,
+        "sub",
+        ( other: Term<PInt> ): TermInt => psub.$( term ).$( other )
+    );
+
+    ObjectUtils.defineReadOnlyProperty(
+        term,
+        "multTerm",
+        pmult.$( term )
+    );
+    ObjectUtils.defineReadOnlyProperty(
+        term,
+        "mult",
+        ( other: Term<PInt> ): TermInt => pmult.$( term ).$( other )
+    );
+
+    ObjectUtils.defineReadOnlyProperty(
+        term,
+        "divTerm",
+        pdiv.$( term )
+    );
+    ObjectUtils.defineReadOnlyProperty(
+        term,
+        "div",
+        ( other: Term<PInt> ): TermInt => pdiv.$( term ).$( other )
+    );
+
+    ObjectUtils.defineReadOnlyProperty(
+        term,
+        "quotTerm",
+        pquot.$( term )
+    );
+    ObjectUtils.defineReadOnlyProperty(
+        term,
+        "quot",
+        ( other: Term<PInt> ): TermInt => pquot.$( term ).$( other )
+    );
+
+    ObjectUtils.defineReadOnlyProperty(
+        term,
+        "remainderTerm",
+        prem.$( term )
+    );
+    ObjectUtils.defineReadOnlyProperty(
+        term,
+        "remainder",
+        ( other: Term<PInt> ): TermInt => prem.$( term ).$( other )
+    );
+
+    ObjectUtils.defineReadOnlyProperty(
+        term,
+        "modTerm",
+        pmod.$( term )
+    );
+    ObjectUtils.defineReadOnlyProperty(
+        term,
+        "mod",
+        ( other: Term<PInt> ): TermInt => pmod.$( term ).$( other )
+    );
+
+
+    ObjectUtils.defineReadOnlyProperty(
+        term,
+        "eqTerm",
         peqInt.$( term )
     );
     ObjectUtils.defineReadOnlyProperty(
         term,
-        "lt",
+        "eq",
+        ( other: Term<PInt> ): TermBool => peqInt.$( term ).$( other )
+    );
+
+    ObjectUtils.defineReadOnlyProperty(
+        term,
+        "ltTerm",
         plessInt.$( term )
     );
     ObjectUtils.defineReadOnlyProperty(
         term,
-        "ltEq",
+        "lt",
+        ( other: Term<PInt> ): TermBool => plessInt.$( term ).$( other )
+    );
+
+    ObjectUtils.defineReadOnlyProperty(
+        term,
+        "ltEqTerm",
         plessEqInt.$( term )
     );
     ObjectUtils.defineReadOnlyProperty(
         term,
-        "gt",
+        "ltEq",
+        ( other: Term<PInt> ): TermBool => plessEqInt.$( term ).$( other )
+    );
+
+    ObjectUtils.defineReadOnlyProperty(
+        term,
+        "gtTerm",
         pgreaterInt.$( term )
     );
     ObjectUtils.defineReadOnlyProperty(
         term,
-        "gtEq",
+        "gt",
+        ( other: Term<PInt> ): TermBool => pgreaterInt.$( term ).$( other )
+    );
+
+    ObjectUtils.defineReadOnlyProperty(
+        term,
+        "gtEqTerm",
         pgreaterEqInt.$( term )
     );
+    ObjectUtils.defineReadOnlyProperty(
+        term,
+        "gtEq",
+        ( other: Term<PInt> ): TermBool => pgreaterEqInt.$( term ).$( other )
+    );
+
 
     return term as any;
 }

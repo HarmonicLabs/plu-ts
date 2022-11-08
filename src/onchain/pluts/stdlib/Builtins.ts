@@ -27,7 +27,7 @@ import TermInt, { addPIntMethods } from "./UtilityTerms/TermInt";
 import TermStr, { addPStringMethods } from "./UtilityTerms/TermStr";
 import Term from "../Term";
 import { getNRequiredLambdaArgs } from "../Term/Type/utils";
-import Type, { TermType, ToPType, DataType, ToPDataType, bool, lam } from "../Term/Type/base";
+import Type, { TermType, ToPType, DataType, ToPDataType, bool, lam, int, bs, fn } from "../Term/Type/base";
 import Lambda from "../../UPLC/UPLCTerms/Lambda";
 import UPLCVar from "../../UPLC/UPLCTerms/UPLCVar";
 import { PMap } from "../PTypes/PMap";
@@ -313,7 +313,19 @@ export const pconsBs: Term<PLam<PInt, PLam< PByteString, PByteString>>>
             ) as any;
         }
     ) as any;
-})()
+})();
+
+export const flippedCons = addApplications<[ PByteString, PInt ], PByteString>( 
+    new Term(
+        fn([ bs, int ], bs),
+        _dbn => new HoistedUPLC(
+            new Application(
+                _pflipUPLC.clone(),
+                Builtin.consByteString
+            )
+        )
+    )
+);
 
 export const psliceBs: Term<PLam<PInt, PLam< PInt, PLam< PByteString, PByteString>>>>
 & {

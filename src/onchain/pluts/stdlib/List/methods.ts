@@ -126,7 +126,7 @@ export function pindexList<ElemsT extends ConstantableTermType>( elemsT: ElemsT 
                     .then( perror( elemsT, "pindexList" ) )
                     .else(
 
-                        pif( elemsT ).$( pInt( 0 ).eq.$( idx ) )
+                        pif( elemsT ).$( pInt( 0 ).eq( idx ) )
                         .then( phead( elemsT ).$( list ) as any )
                         .else(
                             papp(
@@ -134,7 +134,7 @@ export function pindexList<ElemsT extends ConstantableTermType>( elemsT: ElemsT 
                                     self,
                                     ptail( elemsT ).$( list )
                                 ),
-                                pInt( -1 ).add.$( idx )
+                                pInt( -1 ).add( idx )
                             ) as Term<ToPType<ElemsT>>
                         )
 

@@ -66,7 +66,7 @@ export type GenericStructDefinition = {
 export type StructDefinition = GenericStructDefinition;
 
 // this needs to be here;
-// not sure why it causes circluar dependecies when imporde from "./cloneSDtructDef"
+// not sure why it causes circluar dependecies when imported from "./cloneStructDef"
 // since the only dependecy needed is `ObjectUtils` and the rest are just types...
 function cloneStructCtorDef<CtorDef extends StructCtorDef>( ctorDef: Readonly<CtorDef> ): CtorDef
 {
@@ -81,7 +81,7 @@ function cloneStructCtorDef<CtorDef extends StructCtorDef>( ctorDef: Readonly<Ct
 }
 
 // this needs to be here;
-// not sure why it causes circluar dependecies when imporde from "./cloneSDtructDef"
+// not sure why it causes circluar dependecies when imported from "./cloneStructDef"
 // since the only dependecy needed is `ObjectUtils` and the rest are just types...
 function cloneStructDef<SDef extends StructDefinition>( def: Readonly<SDef> ): SDef
 {
