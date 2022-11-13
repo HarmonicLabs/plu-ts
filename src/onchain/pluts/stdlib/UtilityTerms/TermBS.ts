@@ -8,17 +8,12 @@ import TermStr from "./TermStr";
 import { TermFn } from "../../PTypes/PFn/PLam";
 import PBool from "../../PTypes/PBool";
 import { pfn, phoist } from "../../Syntax/syntax";
-import { bs, fn, int } from "../../Term/Type/base";
+import { bs, int } from "../../Term/Type/base";
 import TermBool from "./TermBool";
-import { pflip } from "../PCombinators";
-import HoistedUPLC from "../../../UPLC/UPLCTerms/HoistedUPLC";
-import Application from "../../../UPLC/UPLCTerms/Application";
-import Lambda from "../../../UPLC/UPLCTerms/Lambda";
-import UPLCVar from "../../../UPLC/UPLCTerms/UPLCVar";
-import Builtin from "../../../UPLC/UPLCTerms/Builtin";
 
-type TermBS = Term<PByteString> 
-& {
+
+type TermBS = Term<PByteString> & {
+
     readonly length: TermInt
     
     readonly utf8Decoded: TermStr

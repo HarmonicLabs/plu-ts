@@ -7,8 +7,7 @@ import { TermFn } from "../../PTypes/PFn/PLam";
 import PBool from "../../PTypes/PBool";
 import TermBool from "./TermBool";
 
-type TermStr = Term<PString> 
-& {
+type TermStr = Term<PString> & {
     readonly utf8Encoded: TermBS
     
     // pappendStr

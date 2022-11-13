@@ -6,8 +6,8 @@ import TermBool from "./TermBool"
 import { TermFn } from "../../PTypes/PFn/PLam"
 import PBool from "../../PTypes/PBool"
 
-type TermInt = Term<PInt>
-& {
+type TermInt = Term<PInt> & {
+    
     readonly addTerm:       TermFn<[PInt], PInt>
     readonly add:           ( other: Term<PInt> ) => TermInt
 

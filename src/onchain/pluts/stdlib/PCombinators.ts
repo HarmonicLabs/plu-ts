@@ -44,4 +44,4 @@ export const pflip
     (( toFlip, _b, _a ) =>
         papp( papp( toFlip, _a ), _b )
     )
-))( tyVar("pcompose_a"), tyVar("pcompose_b"), tyVar("pcompose_c")) as any
+))( tyVar("pflip_a"), tyVar("pflip_b"), tyVar("pflip_c")) as any

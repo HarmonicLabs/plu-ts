@@ -21,8 +21,8 @@ import TermBool from "./TermBool";
 import TermInt from "./TermInt";
 import { TryUtitlityFromPType } from "./types";
 
-type TermList<PElemsT extends PDataRepresentable> = Term<PList<PElemsT>>
-& {
+type TermList<PElemsT extends PDataRepresentable> = Term<PList<PElemsT>> & {
+
     /**
      * **O(1)**
      * 
@@ -68,7 +68,7 @@ type TermList<PElemsT extends PDataRepresentable> = Term<PList<PElemsT>>
     // readonly includes: TermFn<[PElemsT], PBool>
     // readonly findIndex: TermFn<[PLam<PElemsT,PBool>], PInt>
     readonly filterTerm:    TermFn<[PLam<PElemsT,PBool>], PList<PElemsT>>
-    readonly filter:        ( predicate: Term<PLam<PElemsT,PBool>> ) => Term<PList<PElemsT>>
+    readonly filter:        ( predicate: Term<PLam<PElemsT,PBool>> ) => TermList<PElemsT>
 
     // list creation
     readonly preprendTerm:  TermFn<[PElemsT], PList<PElemsT>>
@@ -76,8 +76,8 @@ type TermList<PElemsT extends PDataRepresentable> = Term<PList<PElemsT>>
     // readonly concat: TermFn<[PList<PElemsT>], PList<PElemsT>>
     
     // transform
-    readonly mapTerm: <ResultT extends ConstantableTermType>( resultT: ResultT ) => TermFn<[PLam<PElemsT, ToPType<ResultT>>], ToPType<ResultT>>
-    readonly map:     <PResultElemT extends PType>( f: Term<PLam<PElemsT,PResultElemT>> ) => UtilityTermOf<PResultElemT>
+    readonly mapTerm: <ResultT extends ConstantableTermType>( resultT: ResultT ) => TermFn<[PLam<PElemsT, ToPType<ResultT>>], PList<ToPType<ResultT>>>
+    readonly map:     <PResultElemT extends PType>( f: Term<PLam<PElemsT,PResultElemT>> ) => TermList<PResultElemT>
     // readonly reduce: <ResultT extends ConstantableTermType>( resultT: ResultT ) => TermFn<[PLam<ToPType<ResultT>, PLam<PList<PElemsT>, ToPType<ResultT>>>], ToPType<ResultT>> 
 
     // predicates

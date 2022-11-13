@@ -114,33 +114,14 @@ export default class HoistedUPLC
     constructor( UPLC_: UPLCTerm )
     {
         const UPLC = UPLC_.clone();
-        /*
-        if( !isClosedTerm( UPLC ) )
-        {
-            const deps = getSortedHoistedSet( getHoistedTerms( UPLC ) )
-            let withDeps = UPLC;
 
-            for( let i = deps.length - 1; i >= 0; i--)
-            {
-                withDeps = new Application(
-                    withDeps,
-                    deps
-                )
-            }
-
-            console.log( showUPLC( UPLC ) );
-            console.log( showUPLC(
-                UPLC
-            ) );
-        }
-        //*/
         JsRuntime.assert(
             isClosedTerm( UPLC ),
             /**
              * @fixme add proper error
              */
             new BasePlutsError(
-                "trying to hoist an UPLCTerm with free variables in it; "
+                "trying to hoist an UPLCTerm with free variables in it;"
             )
         );
 

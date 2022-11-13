@@ -4,8 +4,8 @@ import PBool from "../../PTypes/PBool";
 import Term from "../../Term";
 import { TermFn } from "../../PTypes/PFn/PLam";
 
-type TermBool = Term<PBool> 
-& {
+type TermBool = Term<PBool> & {
+    
     readonly orTerm:    TermFn<[PBool], PBool>
     readonly or:        ( other: Term<PBool> ) => TermBool
 
