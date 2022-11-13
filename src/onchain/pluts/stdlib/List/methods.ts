@@ -1,5 +1,6 @@
 import PType from "../../PType";
 import PBool, { pBool } from "../../PTypes/PBool";
+import PFn from "../../PTypes/PFn/PFn";
 import PLam, { TermFn } from "../../PTypes/PFn/PLam";
 import PInt, { pInt } from "../../PTypes/PInt";
 import PList, { pnil } from "../../PTypes/PList";
@@ -7,6 +8,7 @@ import { papp, perror, pfn, phoist, plam, plet, precursive } from "../../Syntax/
 import Term from "../../Term";
 import Type, { bool, ConstantableTermType, fn, lam, list, PrimType, TermType, ToPType, tyVar } from "../../Term/Type/base";
 import { pand, pchooseList, phead, pif, pisEmpty, plessInt, por, pprepend, pstrictIf, ptail } from "../Builtins";
+import { pflip } from "../PCombinators";
 import PMaybe, { PMaybeT } from "../PMaybe/PMaybe";
 
 
@@ -36,18 +38,18 @@ export function pmatchList<ReturnT  extends TermType, PElemsT extends PType = PT
     );
 }
 
-export function precursiveList<ReturnT  extends TermType, PElemsT extends PType = PType>( returnT: ReturnT, elemsT: TermType = tyVar("elemsT_precursiveList") )
+export function precursiveList<ReturnT  extends TermType, ElemtsT extends TermType>( returnT: ReturnT, elemsT: ElemtsT = tyVar("elemsT_precursiveList") as any )
     : TermFn<
         [
             PLam< // caseNil
-                PLam<PList<PElemsT>, ToPType<ReturnT>>, // self
+                PLam<PList<ToPType<ElemtsT>>, ToPType<ReturnT>>, // self
                 ToPType<ReturnT> // result for nil
             >,
             PLam< // caseCons
-                PLam<PList<PElemsT>, ToPType<ReturnT>>, // self
-                PLam< PElemsT, PLam<PList<PElemsT>,ToPType<ReturnT>>> // x xs -> result for cons
+                PLam<PList<ToPType<ElemtsT>>, ToPType<ReturnT>>, // self
+                PLam< ToPType<ElemtsT>, PLam<PList<ToPType<ElemtsT>>,ToPType<ReturnT>>> // x xs -> result for cons
             >,
-            PList<PElemsT> // list
+            PList<ToPType<ElemtsT>> // list
         ],
         ToPType<ReturnT> // result
     >
@@ -177,6 +179,125 @@ export function pfind<ElemsT extends ConstantableTermType, PElemsT extends ToPTy
 
 export const pfindList = pfind;
 
+export function pfoldr<ElemsT extends ConstantableTermType, ResultT extends ConstantableTermType>( elemsT: ElemsT, resultT: ResultT )
+    : TermFn<[
+        PFn<[ ToPType<ElemsT>, ToPType<ResultT> ], ToPType<ResultT>>,
+        ToPType<ResultT>,
+        PList<ToPType<ElemsT>>
+    ],  ToPType<ResultT>>
+{
+    const a = elemsT;
+    const b = resultT;
+    
+    const selfType = lam( list( elemsT ), resultT );
+
+    return phoist(
+        pfn([
+            fn([ a, b ], b ),
+            b
+        ],  lam( list( a ), b ))
+        (( reduceFunc, accumulator ) =>
+
+            precursiveList( resultT, elemsT )
+            .$(
+                plam( selfType , resultT )
+                ( _foldr => accumulator )
+            )
+            .$(
+                pfn([
+                    selfType,
+                    elemsT,
+                    list( elemsT )
+                ],  resultT )
+                (( self, head, tail ) =>
+
+                    // compute new result using the result got
+                    // AFTER the recursive call on the rest of the list
+                    // and the first element of the list
+                    papp(    
+                        reduceFunc,
+                        head
+                    ).$(
+                        papp(
+                            self,
+                            tail
+                        ) as any
+                    ) as any
+                )
+            ) as any
+        )
+    ) as any;
+}
+
+export function pfoldl<ElemsT extends ConstantableTermType, ResultT extends ConstantableTermType>( elemsT: ElemsT, resultT: ResultT )
+    : TermFn<[
+        PFn<[ ToPType<ResultT>, ToPType<ElemsT> ], ToPType<ResultT>>,
+        ToPType<ResultT>,
+        PList<ToPType<ElemsT>>
+    ],  ToPType<ResultT>>
+{
+    const a = elemsT;
+    const b = resultT;
+    
+    const selfType = lam( list( elemsT ), resultT );
+    const recursivePartType = fn([
+        b,
+        list( a )
+    ],  b);
+
+    return phoist(
+        plam(
+            fn([ b, a ], b ),
+            recursivePartType
+        )
+        (( reduceFunc ) =>
+
+            precursive(
+                pfn([
+                    recursivePartType,
+                    b,
+                    list( a )
+                ],  b)
+                ((self, accum, lst) => 
+
+                    pmatchList( b, a )
+                    .$( accum )
+                    .$(
+                        pfn([ a, list( a ) ], b )
+                        (( head, tail ) =>
+                            papp(
+                                papp(
+                                    self,
+                                    // compute new accumulator
+                                    // BEFORE the rest of the list
+                                    papp(
+                                        reduceFunc,
+                                        accum
+                                    ).$(
+                                        head
+                                    )
+                                ),
+                                tail
+                            ) as any
+                        )
+                    )
+                    .$( lst ) as any
+                )
+            ) as any
+
+        )
+    ) as any;
+}
+
+export function preverse<ElemsT extends ConstantableTermType>( elemsT: ElemsT )
+    : TermFn<[ PList<ToPType<ElemsT>> ], PList<ToPType<ElemsT>>>
+{
+    return phoist(
+        pfoldl( elemsT, list( elemsT ) )
+        .$( pflip.$( pprepend( elemsT ) ) )
+        .$( pnil( elemsT ) )
+    )
+}
 
 export function pfilter<ElemsT extends ConstantableTermType>( elemsT: ElemsT )
     : TermFn<[ PLam<ToPType<ElemsT>,PBool>, PList<ToPType<ElemsT>> ], PList<ToPType<ElemsT>>>
@@ -190,7 +311,7 @@ export function pfilter<ElemsT extends ConstantableTermType>( elemsT: ElemsT )
             )
         )(( predicate ) => {
 
-            return precursiveList<[ PrimType.List, ElemsT], ToPType<ElemsT>>( list( elemsT ), elemsT )
+            return precursiveList( list( elemsT ), elemsT )
             .$(
                 plam( lam( list( elemsT ) ,list( elemsT ) ), list( elemsT ) )
                 ( ( _self ) => pnil( elemsT ) )
@@ -232,7 +353,7 @@ export function pevery<ElemsT extends ConstantableTermType>( elemsT: ElemsT )
             )
         )(( predicate ) => {
 
-            return precursiveList<[ PrimType.Bool ], ToPType<ElemsT>>( bool, elemsT )
+            return precursiveList( bool, elemsT )
             .$(
                 plam( lam( list( elemsT ), bool ), bool )
                 ( ( _self ) => pBool( true ) )
@@ -277,7 +398,7 @@ export function psome<ElemsT extends ConstantableTermType>( elemsT: ElemsT )
             )
         )(( predicate ) => {
 
-            return precursiveList<[ PrimType.Bool ], ToPType<ElemsT>>( bool , elemsT )
+            return precursiveList( bool , elemsT )
             .$(
                 plam( lam( list( elemsT ), bool ), bool )
                 ( ( _self ) => pBool( true ) )
