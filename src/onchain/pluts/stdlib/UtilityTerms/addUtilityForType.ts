@@ -23,10 +23,10 @@ import TermStr, { addPStringMethods } from "./TermStr";
 import TermStruct, { addPStructMethods } from "./TermStruct";
 
 // given the index returns the previous number ( PrevNum[2] -> 1; etc... )
-type PrevNum = [ never, 0, 1, 2, 3, 4 ];
+type PrevNum = [ never, 0, 1, 2, 3, 4, 5, 6 ];
 
 // without the "finite" version typescript gets angry and says the type is too complex to be evaluated
-type FiniteTermAlias<T extends ConstantableTermType, AliasId extends symbol, MaxDepth extends PrevNum[number] = 4> =
+type FiniteTermAlias<T extends ConstantableTermType, AliasId extends symbol, MaxDepth extends PrevNum[number] = 6> =
     [MaxDepth] extends [never] ? never :
     T extends AliasTermType<symbol, infer ActualT extends ConstantableTermType> ?
         FiniteTermAlias<ActualT, AliasId, PrevNum[MaxDepth]> :
@@ -42,7 +42,7 @@ export type UtilityTermOf<PElem extends PType> =
         PElem extends PStruct<infer SDef extends ConstantableStructDefinition> ? TermStruct<SDef> :
         PElem extends PLam<infer PInput extends PType, infer POutput extends PType> ?
             Term<PElem> & {
-                $: ( input: UtilityTermOf<PInput> ) => Term<POutput>
+                $: ( input: Term<PInput> ) => UtilityTermOf<POutput>
             } :
         PElem extends PAlias<infer T extends ConstantableTermType, infer AliasId extends symbol, any> ? FiniteTermAlias<T, AliasId> :
         Term<PElem>

@@ -126,7 +126,7 @@ export function plam<A extends TermType, B extends TermType >( inputType: A, out
                     dbnAccessLevel => new UPLCVar( dbnAccessLevel - thisLambdaPtr )
                 );
                 
-                const body = termFunc( addUtilityForType( inputType )( boundVar ) as any );
+                const body = termFunc( addUtilityForType( inputType )( boundVar ) );
 
                 if( !(body instanceof Term) ) console.log( body );
                 // here the debruijn level is incremented
@@ -160,10 +160,17 @@ export type TermFnFromTypes<Ins extends [ TermType, ...TermType[] ], Out extends
         & { $: ( input: Term<ToPType<T>> ) => TermFnFromTypes< RestIns, Out > } :
     never
 
+type TsTermFuncArg<PTy extends PType> =
+    ( PTy extends PLam<infer PIn extends PType, infer POut extends PTy> ?
+        Term<PLam<PIn,POut>> & {
+            $: ( input: Term<PIn> ) => UtilityTermOf<POut>
+        }:
+    UtilityTermOf<PTy> ) extends infer PRes ? PRes & Term<PTy> : never
+
 type TsTermFunctionArgs<InputsTypes extends [ TermType, ...TermType[] ]> =
     InputsTypes extends [] ? never :
-    InputsTypes extends [ infer T extends TermType ] ? [ a: UtilityTermOf<ToPType<T>> ] :
-    InputsTypes extends [ infer T extends TermType, ...infer RestTs extends [ TermType, ...TermType[] ] ] ? [ a: UtilityTermOf<ToPType<T>>, ...bs: TsTermFunctionArgs<RestTs> ] :
+    InputsTypes extends [ infer T extends TermType ] ? [ TsTermFuncArg<ToPType<T>> ] :
+    InputsTypes extends [ infer T extends TermType, ...infer RestTs extends [ TermType, ...TermType[] ] ] ? [ TsTermFuncArg<ToPType<T>>, ...TsTermFunctionArgs<RestTs> ] :
     never;
 
 export type TsTermFunction<InputsTypes extends [ TermType, ...TermType[] ], OutputType extends TermType> = 

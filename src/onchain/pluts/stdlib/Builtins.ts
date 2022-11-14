@@ -806,8 +806,10 @@ export const pand
         pfn([ Type.Bool, Type.Bool ], Type.Bool )
         (( a: Term<PBool>, b: Term<PBool> ) => {
 
+            // it makes no sense to use `pif` as
+            // what is delayed are variables (already evaluated)
             return addPBoolMethods(
-                    pif( bool ).$( a )
+                    pstrictIf( bool ).$( a )
                     .$( b )
                     .$( pBool( false ) )
             );
@@ -827,8 +829,10 @@ export const por
         pfn([ Type.Bool, Type.Bool ], Type.Bool )
         (( a: Term<PBool>, b: Term<PBool> ) => {
 
+            // it makes no sense to use `pif` as
+            // what is delayed are variables (already evaluated)
             return addPBoolMethods(
-                    pif( bool ).$( a )
+                    pstrictIf( bool ).$( a )
                     .$( pBool( true ) )
                     .$( b )
             );

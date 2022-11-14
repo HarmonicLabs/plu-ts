@@ -17,9 +17,10 @@
 
 ## Unreleased v0.1.2
 
-- [ ] `pfoldr` and `pfoldl` (`preduce`) for `TermList`
+- [ ] `pand` and `por` take a `delayed( bool )` as second argument (before was just `bool`)
+- [x] `pfoldr` and `pfoldl` (`preduce`) for `TermList`
     - [x] `pfoldr` and `pfoldl`
-    - [ ] re-implementation of exsisting functions (`pfilter`,`pmap`,`pevery`,`psome`, etc...) in terms of `pfold[rl]` (should result in smaller scripts)
+    - [x] re-implementation of exsisting functions (`pfilter`,`pmap`, etc...) in terms of `pfold[rl]` (should result in smaller scripts)
 - [x] `UtilityTermOf<PLam<...>>` returns `TermFn<...>`
 - [x] `UtilityTermOf<PAlias<SomePType>>` returns `Term<PAlias<...>> & UtilityTermOf<SomePType>`
 - [x] `ToPType<AliasTermType<...>>` now returns `PAlias<...>`

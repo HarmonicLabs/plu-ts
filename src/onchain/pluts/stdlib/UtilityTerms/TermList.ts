@@ -71,8 +71,8 @@ type TermList<PElemsT extends PDataRepresentable> = Term<PList<PElemsT>> & {
     readonly filter:        ( predicate: Term<PLam<PElemsT,PBool>> ) => TermList<PElemsT>
 
     // list creation
-    readonly preprendTerm:  TermFn<[PElemsT], PList<PElemsT>>
-    readonly preprend:      ( elem: Term<PElemsT> ) => TermList<PElemsT>
+    readonly prependTerm:  TermFn<[PElemsT], PList<PElemsT>>
+    readonly prepend:      ( elem: Term<PElemsT> ) => TermList<PElemsT>
     // readonly concat: TermFn<[PList<PElemsT>], PList<PElemsT>>
     
     // transform

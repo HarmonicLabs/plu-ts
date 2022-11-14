@@ -177,6 +177,9 @@ export function pfind<ElemsT extends ConstantableTermType, PElemsT extends ToPTy
     ) as any;
 }
 
+/**
+ * @deprecated use `pfind` instead
+**/
 export const pfindList = pfind;
 
 export function pfoldr<ElemsT extends ConstantableTermType, ResultT extends ConstantableTermType>( elemsT: ElemsT, resultT: ResultT )
@@ -198,8 +201,6 @@ export function pfoldr<ElemsT extends ConstantableTermType, ResultT extends Cons
         ],  lam( list( a ), b ))
         (( reduceFunc, accumulator ) => {
 
-            type hello = typeof reduceFunc
-
             return precursiveList( resultT, elemsT )
             .$(
                 plam( selfType , resultT )
@@ -216,7 +217,7 @@ export function pfoldr<ElemsT extends ConstantableTermType, ResultT extends Cons
                     // compute new result using the result got
                     // AFTER the recursive call on the rest of the list
                     // and the first element of the list
-                    papp(    
+                    papp(
                         reduceFunc,
                         head
                     ).$(
@@ -241,7 +242,6 @@ export function pfoldl<ElemsT extends ConstantableTermType, ResultT extends Cons
     const a = elemsT;
     const b = resultT;
     
-    const selfType = lam( list( elemsT ), resultT );
     const recursivePartType = fn([
         b,
         list( a )
@@ -257,10 +257,9 @@ export function pfoldl<ElemsT extends ConstantableTermType, ResultT extends Cons
             precursive(
                 pfn([
                     recursivePartType,
-                    b,
-                    list( a )
-                ],  b)
-                ((self, accum, lst) => 
+                    b
+                ],  lam( list( a ), b ))
+                (( self, accum ) => 
 
                     pmatchList( b, a )
                     .$( accum )
@@ -282,8 +281,8 @@ export function pfoldl<ElemsT extends ConstantableTermType, ResultT extends Cons
                                 tail
                             ) as any
                         )
-                    )
-                    .$( lst ) as any
+                    ) as any
+                    // .$( lst )
                 )
             ) as any
 
@@ -311,35 +310,23 @@ export function pfilter<ElemsT extends ConstantableTermType>( elemsT: ElemsT )
                 list( elemsT ),
                 list( elemsT )
             )
-        )(( predicate ) => {
-
-            return precursiveList( list( elemsT ), elemsT )
-            .$(
-                plam( lam( list( elemsT ) ,list( elemsT ) ), list( elemsT ) )
-                ( ( _self ) => pnil( elemsT ) )
-            )
+        )(( predicate ) => 
+            
+            pfoldr( elemsT, list( elemsT ) )
             .$(
                 pfn([
-                    lam( list( elemsT ),list( elemsT ) ),
                     elemsT,
                     list( elemsT )
                 ],  list( elemsT ))
-                (( self, head, rest ) =>
+                (( elem, accum ) =>
+                    pif( list(elemsT) ).$( papp( predicate, elem ) )
+                    .then( accum.prepend( elem ) )
+                    .else( accum )
+                )
+            ).$( pnil( elemsT ) )
+            // .$( lst )
 
-                    plet( papp( self, rest ) ).in( filteredRest => 
-                        pstrictIf( list( elemsT ) ).$(
-                            papp(
-                                predicate,
-                                head
-                            )
-                        )
-                        .$( pprepend( elemsT ).$( head ).$( filteredRest ) )
-                        .$( filteredRest )
-
-                ))
-            )
-            // .$( _list )
-        })
+        )
     ) as any;
 }
 
@@ -354,6 +341,29 @@ export function pevery<ElemsT extends ConstantableTermType>( elemsT: ElemsT )
                 bool
             )
         )(( predicate ) => {
+
+            /*
+
+            it is possible to define `pevery` in terms of `pfoldl`
+            however `pfoldl` traverses the entire list no matter what
+            
+            instead it should be possible to immidiatelly return if `pBool(true)` is found
+
+            the current implementation traverses the list too;
+            because the arguments are evaluated before being passed to  `pand`
+
+
+            return pfoldl( elemsT, bool )
+            .$(
+                pflip.$(
+                    plam( elemsT, lam( bool, bool ) )
+                    ( elem => 
+                        pand.$( papp( predicate, elem ) )
+                    )
+                )
+            )
+            .$( pBool( true ) )
+            */
 
             return precursiveList( bool, elemsT )
             .$(
@@ -444,25 +454,17 @@ export function pmap<FromT extends ConstantableTermType, ToT extends Constantabl
             )
         )(( f ) => {
 
-            return precursiveList( list( toT ), fromT )
-            .$(
-                plam( lam( list( fromT ), list( toT ) ), list( toT ) )
-                ( ( _self ) => pnil( toT ) )
-            )
+            return pfoldr( fromT, list( toT ) )
             .$(
                 pfn([
-                    lam( list( fromT ), list( toT ) ),
                     fromT,
-                    list( fromT )
-                ],  list( toT ) )
-                (( self, head, rest ) =>
-
-                    pprepend( toT )
-                    .$( papp( f, head ) as Term<ToPType<ToT>> )
-                    .$( papp( self, rest ) )
-
-                )
-            ) as any;
+                    list( toT )
+                ],  list( toT ))
+                ( (elem, accum) =>
+                    accum.prepend( papp( f, elem ) )
+                ) 
+            )
+            .$( pnil( toT ) )
             // .$( _list )
         })
     ) as any;
