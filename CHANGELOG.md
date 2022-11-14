@@ -1,5 +1,14 @@
 # Changelog
 
+## Unreleased v0.1.4
+
+- [ ] `papp` (and `$` method) tries to accept ts values and convert it automatically when possible
+    > _example_
+    > 
+    > if `Term<PInt>` is expected it should be possible to pass `1` without having to do `pInt(1)`
+    - [ ] simple constants (`int`, `bs`, `bool`, etc... )
+    - [ ] functions (`lam`, `fn`)
+
 ## Unreleased v0.1.3
 
 - [ ] `evalScript` optimizations
@@ -8,10 +17,10 @@
 
 ## Unreleased v0.1.2
 
-- [ ] `pfoldr` and `pfoldl` (`preduce`) for `TermList`, and re-implementation of exsisting functions (`pfilter`,`pmap`,`pevery`,`psome`, etc...) in terms of the two new funcions (should result in smaller scripts)
+- [ ] `pfoldr` and `pfoldl` (`preduce`) for `TermList`
     - [x] `pfoldr` and `pfoldl`
-    - [ ] re-implementations
-- [ ] `UtilityTermOf<PLam<...>>` should return `TermFn<...>`
+    - [ ] re-implementation of exsisting functions (`pfilter`,`pmap`,`pevery`,`psome`, etc...) in terms of `pfold[rl]` (should result in smaller scripts)
+- [x] `UtilityTermOf<PLam<...>>` should return `TermFn<...>`
 - [x] `UtilityTermOf<PAlias<SomePType>>` should return `Term<PAlias<...>> & UtilityTermOf<SomePType>`
 - [x] `ToPType<AliasTermType<...>>` now returns `PAlias<...>`
 - [x] fixed some `TermList` typescript types

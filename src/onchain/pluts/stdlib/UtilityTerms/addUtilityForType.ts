@@ -1,3 +1,5 @@
+import { PFn, PLam, TermFn } from "../..";
+import ObjectUtils from "../../../../utils/ObjectUtils";
 import PType, { PDataRepresentable } from "../../PType";
 import { PAlias } from "../../PTypes/PAlias/palias";
 import unwrapAlias from "../../PTypes/PAlias/unwrapAlias";
@@ -7,10 +9,11 @@ import PInt from "../../PTypes/PInt";
 import PList from "../../PTypes/PList";
 import PString from "../../PTypes/PString";
 import { ConstantableStructDefinition, PStruct } from "../../PTypes/PStruct/pstruct";
+import { papp } from "../../Syntax";
 import Term from "../../Term";
-import Type, { bool, bs, ConstantableTermType, int, list, str, TermType, ToPType } from "../../Term/Type/base";
+import Type, { AliasTermType, bool, bs, ConstantableTermType, int, list, PrimType, str, structType, TermType, ToPType } from "../../Term/Type/base";
 import { typeExtends } from "../../Term/Type/extension";
-import { isAliasType, isConstantableStructType, isStructType } from "../../Term/Type/kinds";
+import { isAliasType, isConstantableStructType, isLambdaType, isStructType } from "../../Term/Type/kinds";
 import TermAlias from "./TermAlias";
 import TermBool, { addPBoolMethods } from "./TermBool";
 import TermBS, { addPByteStringMethods } from "./TermBS";
@@ -28,7 +31,8 @@ export type UtilityTermOf<PElem extends PType> =
         PElem extends PList<infer PListElem extends PType> ? TermList<PListElem> :
         PElem extends PString ? TermStr :
         PElem extends PStruct<infer SDef extends ConstantableStructDefinition> ? TermStruct<SDef> :
-        PElem extends PAlias<infer T extends ConstantableTermType, infer Sym extends symbol, any> ? TermAlias<T, Sym> :
+        PElem extends PFn<infer PInputs extends [ PType, ...PType[] ], infer POutput extends PType> ? TermFn<PInputs, POutput> :
+        PElem extends PAlias<infer T extends ConstantableTermType, infer AliasId extends symbol, any> ? TermAlias<T, AliasId> :
         Term<PElem>
     ) & Term<PElem> // needed because sometime typescript doesn't recognize that the term is the same just extended
 
@@ -42,6 +46,15 @@ export default function addUtilityForType<T extends TermType>( t: T )
     if( typeExtends( t , int  ) ) return addPIntMethods as any;
     if( typeExtends( t , list( Type.Any ) ) ) return addPListMethods as any;
     if( typeExtends( t , str  ) ) return addPStringMethods as any;
+
+    if( isLambdaType( t ) )
+    {
+        return (( term: any ) => ObjectUtils.defineNonDeletableNormalProperty(
+            term,
+            "$",
+            ( input: any ) => papp( term, input )
+        )) as any;
+    }
 
     const id = ((x: any) => x);
 

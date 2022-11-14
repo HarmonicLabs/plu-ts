@@ -10,7 +10,7 @@ import UPLCVar from "../../UPLC/UPLCTerms/UPLCVar";
 import PType from "../PType";
 import PDelayed from "../PTypes/PDelayed";
 import PLam, { TermFn } from "../PTypes/PFn/PLam";
-import Type, { ToPType, ToTermArrNonEmpty, TermType } from "../Term/Type/base";
+import Type, { ToPType, ToTermArrNonEmpty, TermType, ConstantableTermType, AliasTermType } from "../Term/Type/base";
 import Term from "../Term";
 import JsRuntime from "../../../utils/JsRuntime";
 import HoistedUPLC from "../../UPLC/UPLCTerms/HoistedUPLC";
@@ -23,6 +23,8 @@ import Builtin from "../../UPLC/UPLCTerms/Builtin";
 import { getNRequiredForces } from "../../UPLC/UPLCTerms/Builtin/UPLCBuiltinTag";
 import addUtilityForType, { UtilityTermOf } from "../stdlib/UtilityTerms/addUtilityForType";
 import punsafeConvertType from "./punsafeConvertType";
+import TermAlias from "../stdlib/UtilityTerms/TermAlias";
+import { PValue } from "../API";
 
 
 function isIdentityUPLC( uplc: UPLCTerm ): uplc is Lambda
@@ -69,7 +71,7 @@ export function papp<Input extends PType, Output extends PType>( a: Term<PLam<In
     );
 
     const outputType = applyLambdaType( lambdaType, b.type );
-    const outputTerm = addUtilityForType( outputType )(
+    const outputTerm: any = addUtilityForType( outputType )(
         new Term(
             outputType,
             dbn => {
@@ -88,7 +90,7 @@ export function papp<Input extends PType, Output extends PType>( a: Term<PLam<In
 
                 return app; 
             }
-        )
+        ) as any
     );
 
     if( isLambdaType( outputTerm.type ) && ( !ObjectUtils.hasOwn( outputTerm, "$" ) ))
@@ -107,7 +109,10 @@ export function papp<Input extends PType, Output extends PType>( a: Term<PLam<In
 }
 
 export function plam<A extends TermType, B extends TermType >( inputType: A, outputType: B )
-    : ( termFunc : ( input: UtilityTermOf<ToPType<A>> ) => Term<ToPType<B>> ) => PappResult<PLam<ToPType<A>,ToPType<B>>>
+    : ( termFunc : 
+        ( input:  UtilityTermOf<ToPType<A>>
+        ) => Term<ToPType<B>> 
+    ) => PappResult<PLam<ToPType<A>,ToPType<B>>>
 {
     return ( termFunc: ( input: UtilityTermOf<ToPType<A>> ) => Term<ToPType<B>> ): PappResult<PLam<ToPType<A>,ToPType<B>>> =>
     {
@@ -121,7 +126,7 @@ export function plam<A extends TermType, B extends TermType >( inputType: A, out
                     dbnAccessLevel => new UPLCVar( dbnAccessLevel - thisLambdaPtr )
                 );
                 
-                const body = termFunc( addUtilityForType( inputType )( boundVar ) );
+                const body = termFunc( addUtilityForType( inputType )( boundVar ) as any );
 
                 if( !(body instanceof Term) ) console.log( body );
                 // here the debruijn level is incremented

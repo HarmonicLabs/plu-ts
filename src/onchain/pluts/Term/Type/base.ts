@@ -305,7 +305,7 @@ export type ToPType<T extends TermType> =
         PLam< ToPType<InputTyArg>, ToPType<OutputTyArg> > :
     T extends LambdaType<infer InputTyArg extends TermType, infer OutputTyArg extends TermType> ?
         PLam< ToPType<InputTyArg>, ToPType<OutputTyArg> > :
-    T extends [ typeof aliasType, AliasDefinition<infer ActualT extends ConstantableTermType, infer AliasId extends symbol> ] ?
+    T extends AliasTermType<infer AliasId extends symbol, infer ActualT extends ConstantableTermType> ?
         PAlias<ActualT, AliasId> :
     T extends [ typeof structType, infer SDef extends ( StructDefinition | typeof anyStruct ) ] ?
         ( SDef extends ConstantableStructDefinition ? PStruct<SDef> : PData ):
@@ -315,7 +315,7 @@ export type ToPType<T extends TermType> =
     // T extends FromPType<infer PT extends PType> ? PT : // !!! IMPORTANT !!! can only be present in one of the two types; breaks TypeScript LSP otherwise
     never;
 
-export type FromPType<PT extends PType | ToPType<TermType> | PStruct<any>> =
+export type FromPType<PT extends PType | ToPType<TermType> | PStruct<any> | PAlias<any>> =
     PT extends ToPType<infer T extends TermType> ? T : // !!! IMPORTANT !!! can only be present in one of the two types; breaks TypeScript LSP otherwise
     PT extends PInt         ? [ PrimType.Int ] :
     PT extends PByteString  ? [ PrimType.BS  ] :
@@ -328,6 +328,7 @@ export type FromPType<PT extends PType | ToPType<TermType> | PStruct<any>> =
     PT extends PLam<infer FstTyArg extends PType, infer SndTyArg extends PType>     ? [ PrimType.Lambda, FromPType< FstTyArg >, FromPType< SndTyArg > ] :
     PT extends PData    ? [ DataConstructor, ...DataType[] ] :
     PT extends PStruct<infer SDef extends ConstantableStructDefinition> ? [ typeof structType, SDef ] :
+    PT extends PAlias<infer T extends ConstantableTermType, infer AliasId extends symbol> ? AliasTermType<AliasId, T> :
     PT extends PType    ? TermType :
     // PT extends ToPType<infer T extends TermType> ? T :
     never;
