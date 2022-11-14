@@ -1,6 +1,7 @@
 import Term from "..";
 import JsRuntime from "../../../../utils/JsRuntime";
 import PType, { PDataRepresentable } from "../../PType";
+import { PAlias } from "../../PTypes";
 import { AliasDefinition } from "../../PTypes/PAlias/palias";
 import PBool from "../../PTypes/PBool";
 import PByteString from "../../PTypes/PByteString";
@@ -304,6 +305,8 @@ export type ToPType<T extends TermType> =
         PLam< ToPType<InputTyArg>, ToPType<OutputTyArg> > :
     T extends LambdaType<infer InputTyArg extends TermType, infer OutputTyArg extends TermType> ?
         PLam< ToPType<InputTyArg>, ToPType<OutputTyArg> > :
+    T extends [ typeof aliasType, AliasDefinition<infer ActualT extends ConstantableTermType, infer AliasId extends symbol> ] ?
+        PAlias<ActualT, AliasId> :
     T extends [ typeof structType, infer SDef extends ( StructDefinition | typeof anyStruct ) ] ?
         ( SDef extends ConstantableStructDefinition ? PStruct<SDef> : PData ):
     T extends [ DataConstructor, ...DataType[] ] ? PData :

@@ -1,13 +1,19 @@
 # Changelog
 
-## Unreleased 0.1.2
+## Unreleased v0.1.3
+
+- [ ] `evalScript` optimizations
+    - [ ] definition of `CEKHeap` to store `CEKValues` in no particular order
+    - [ ] modify `CEKEnv` to point at values in the `CEKHeap` rather than having a local copy (and copying them when cloning too)
+
+## Unreleased v0.1.2
 
 - [ ] `pfoldr` and `pfoldl` (`preduce`) for `TermList`, and re-implementation of exsisting functions (`pfilter`,`pmap`,`pevery`,`psome`, etc...) in terms of the two new funcions (should result in smaller scripts)
     - [x] `pfoldr` and `pfoldl`
     - [ ] re-implementations
-- [ ] `UtilityTermOf<PAlias<SomePType>>` should return `Term<PAlias<...>> & UtilityTermOf<SomePType>`
 - [ ] `UtilityTermOf<PLam<...>>` should return `TermFn<...>`
-- [ ] `ToPType<AliasTermType<...>>` not working properly as `extract(...).in((...) => ...)` for PValue (alias of `list( pair( ... ) )`) returns `Term<PType>` expected is `TermList<PPair<...>>`
+- [x] `UtilityTermOf<PAlias<SomePType>>` should return `Term<PAlias<...>> & UtilityTermOf<SomePType>`
+- [x] `ToPType<AliasTermType<...>>` now returns `PAlias<...>`
 - [x] fixed some `TermList` typescript types
 
 ## v0.1.1
