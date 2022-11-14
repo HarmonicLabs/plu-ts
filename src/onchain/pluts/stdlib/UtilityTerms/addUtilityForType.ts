@@ -40,8 +40,10 @@ export type UtilityTermOf<PElem extends PType> =
         PElem extends PList<infer PListElem extends PType> ? TermList<PListElem> :
         PElem extends PString ? TermStr :
         PElem extends PStruct<infer SDef extends ConstantableStructDefinition> ? TermStruct<SDef> :
-        PElem extends PLam<infer PInput extends PType, infer POutput extends PType> ? TermFn<[ PInput ], POutput> :
-        PElem extends PFn<infer PInputs extends [ PType, ...PType[] ], infer POutput extends PType> ? TermFn<PInputs, POutput> :
+        PElem extends PLam<infer PInput extends PType, infer POutput extends PType> ?
+            Term<PElem> & {
+                $: ( input: UtilityTermOf<PInput> ) => Term<POutput>
+            } :
         PElem extends PAlias<infer T extends ConstantableTermType, infer AliasId extends symbol, any> ? FiniteTermAlias<T, AliasId> :
         Term<PElem>
     ) & Term<PElem> // needed because sometime typescript doesn't understands that the term is the same just extended

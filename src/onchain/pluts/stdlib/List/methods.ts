@@ -70,7 +70,7 @@ export function precursiveList<ReturnT  extends TermType, ElemtsT extends TermTy
                 ], 
                 returnT
             )
-            ( ( self, matchNil, matchCons, list ) => 
+            ( ( self, matchNil, matchCons, lst ) => 
                 plet( 
                     papp(
                         papp(
@@ -93,7 +93,7 @@ export function precursiveList<ReturnT  extends TermType, ElemtsT extends TermTy
                             finalSelf
                         )
                     )
-                    .$( list )
+                    .$( lst )
                 ) as any
             )
         )
@@ -196,9 +196,11 @@ export function pfoldr<ElemsT extends ConstantableTermType, ResultT extends Cons
             fn([ a, b ], b ),
             b
         ],  lam( list( a ), b ))
-        (( reduceFunc, accumulator ) =>
+        (( reduceFunc, accumulator ) => {
 
-            precursiveList( resultT, elemsT )
+            type hello = typeof reduceFunc
+
+            return precursiveList( resultT, elemsT )
             .$(
                 plam( selfType , resultT )
                 ( _foldr => accumulator )
@@ -221,11 +223,11 @@ export function pfoldr<ElemsT extends ConstantableTermType, ResultT extends Cons
                         papp(
                             self,
                             tail
-                        ) as any
-                    ) as any
+                        )
+                    )
                 )
             ) as any
-        )
+        })
     ) as any;
 }
 
