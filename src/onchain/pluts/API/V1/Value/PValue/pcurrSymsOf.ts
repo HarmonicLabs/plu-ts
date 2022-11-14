@@ -9,10 +9,9 @@ import { int, list, pair } from "../../../../Term/Type";
 import PCurrencySymbol from "../PCurrencySymbol";
 import PTokenName from "../PTokenName";
 
-//@ts-ignore Type instantiation is excessively deep and possibly infinite
 const pcurrSymsOf: TermFn<[ typeof PValue ], PList<typeof PCurrencySymbol>> =
     plam( PValue.type, list( PCurrencySymbol.type ) )
-    (( ( value: TermAlias<typeof PValue.type > ) => {
+    (( value => {
 
         const valueEntry = pair(
             PCurrencySymbol.type,
@@ -33,4 +32,4 @@ const pcurrSymsOf: TermFn<[ typeof PValue ], PList<typeof PCurrencySymbol>> =
                 pfstPair( valueEntry[1], valueEntry[2] ).$( entry ) 
             )
         );
-    }) as any );
+    }));

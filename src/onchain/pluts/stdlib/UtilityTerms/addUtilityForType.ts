@@ -22,6 +22,15 @@ import TermList, { addPListMethods } from "./TermList";
 import TermStr, { addPStringMethods } from "./TermStr";
 import TermStruct, { addPStructMethods } from "./TermStruct";
 
+// given the index returns the previous number ( PrevNum[2] -> 1; etc... )
+type PrevNum = [ never, 0, 1, 2, 3, 4 ];
+
+// without the "finite" version typescript gets angry and says the type is too complex to be evaluated
+type FiniteTermAlias<T extends ConstantableTermType, AliasId extends symbol, MaxDepth extends PrevNum[number] = 4> =
+    [MaxDepth] extends [never] ? never :
+    T extends AliasTermType<symbol, infer ActualT extends ConstantableTermType> ?
+        FiniteTermAlias<ActualT, AliasId, PrevNum[MaxDepth]> :
+        TermAlias<T,AliasId>
 
 export type UtilityTermOf<PElem extends PType> = 
     (
@@ -31,10 +40,11 @@ export type UtilityTermOf<PElem extends PType> =
         PElem extends PList<infer PListElem extends PType> ? TermList<PListElem> :
         PElem extends PString ? TermStr :
         PElem extends PStruct<infer SDef extends ConstantableStructDefinition> ? TermStruct<SDef> :
+        PElem extends PLam<infer PInput extends PType, infer POutput extends PType> ? TermFn<[ PInput ], POutput> :
         PElem extends PFn<infer PInputs extends [ PType, ...PType[] ], infer POutput extends PType> ? TermFn<PInputs, POutput> :
-        PElem extends PAlias<infer T extends ConstantableTermType, infer AliasId extends symbol, any> ? TermAlias<T, AliasId> :
+        PElem extends PAlias<infer T extends ConstantableTermType, infer AliasId extends symbol, any> ? FiniteTermAlias<T, AliasId> :
         Term<PElem>
-    ) & Term<PElem> // needed because sometime typescript doesn't recognize that the term is the same just extended
+    ) & Term<PElem> // needed because sometime typescript doesn't understands that the term is the same just extended
 
 export default function addUtilityForType<T extends TermType>( t: T )
     : ( term: Term<ToPType<T>> ) => UtilityTermOf<ToPType<T>>

@@ -56,7 +56,7 @@ export type PappResult<Output extends PType> =
  * if the type of the output extends the type ```Type.Lambda( Type.Any, Type.Any )```
  */
 export function papp<Input extends PType, Output extends PType>( a: Term<PLam<Input,Output>>, b: Term<Input> )
-    : PappResult<Output>
+    : UtilityTermOf<Output>
 {
     let lambdaType: TermType = a.type;
 
@@ -71,7 +71,7 @@ export function papp<Input extends PType, Output extends PType>( a: Term<PLam<In
     );
 
     const outputType = applyLambdaType( lambdaType, b.type );
-    const outputTerm: any = addUtilityForType( outputType )(
+    const outputTerm = addUtilityForType( outputType )(
         new Term(
             outputType,
             dbn => {

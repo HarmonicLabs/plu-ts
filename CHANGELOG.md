@@ -20,8 +20,8 @@
 - [ ] `pfoldr` and `pfoldl` (`preduce`) for `TermList`
     - [x] `pfoldr` and `pfoldl`
     - [ ] re-implementation of exsisting functions (`pfilter`,`pmap`,`pevery`,`psome`, etc...) in terms of `pfold[rl]` (should result in smaller scripts)
-- [x] `UtilityTermOf<PLam<...>>` should return `TermFn<...>`
-- [x] `UtilityTermOf<PAlias<SomePType>>` should return `Term<PAlias<...>> & UtilityTermOf<SomePType>`
+- [x] `UtilityTermOf<PLam<...>>` returns `TermFn<...>`
+- [x] `UtilityTermOf<PAlias<SomePType>>` returns `Term<PAlias<...>> & UtilityTermOf<SomePType>`
 - [x] `ToPType<AliasTermType<...>>` now returns `PAlias<...>`
 - [x] fixed some `TermList` typescript types
 
