@@ -1,6 +1,7 @@
 import Cloneable from "../../types/interfaces/Cloneable";
 import Integer from "../../types/ints/Integer";
 import { PureUPLCTerm } from "../UPLC/UPLCTerm";
+import { eqCEKValue } from "./CEKValue";
 
 export default class CEKEnv
     implements Cloneable<CEKEnv>
@@ -35,5 +36,20 @@ export default class CEKEnv
             dbn;
         if( (this._env.length - _dbn) < 1 ) return undefined;
         return this._env[ this._env.length - 1 - _dbn ].clone();
+    }
+
+    static eq( a: CEKEnv, b: CEKEnv ): boolean
+    {
+        if(!(
+            a instanceof CEKEnv ||
+            b instanceof CEKEnv
+        )) return false;
+    
+        if( a === b ) return true; // shallow eq
+
+        return (
+            a._env.length === b._env.length &&
+            a._env.every(( v,i ) => eqCEKValue( v, b._env[i] ) )
+        );
     }
 }

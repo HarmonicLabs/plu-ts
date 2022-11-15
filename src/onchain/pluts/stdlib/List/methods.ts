@@ -119,7 +119,7 @@ export function pindexList<ElemsT extends ConstantableTermType>( elemsT: ElemsT 
                     pif( elemsT ).$(
 
                         pisEmpty.$( list )
-                        .or(
+                        .strictOr(
                             plessInt.$( idx ).$( pInt( 0 ) ) 
                         )
                         

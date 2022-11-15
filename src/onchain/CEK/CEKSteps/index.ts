@@ -5,6 +5,7 @@ import CEKEnv from "../CEKEnv";
 import PartialBuiltin from "../BnCEK/PartialBuiltin";
 import LambdaCEK from "../LambdaCEK";
 import DelayCEK from "../DelayCEK";
+import { CEKValue } from "../CEKValue";
 
 export class ComputeStep
     implements Cloneable<ComputeStep>
@@ -28,9 +29,6 @@ export class ComputeStep
         return new ComputeStep( this.term.clone(), this.env.clone() )
     }
 }
-
-export type CEKValue = PureUPLCTerm | PartialBuiltin | LambdaCEK | DelayCEK
-
 export class ReturnStep
     implements Cloneable<ReturnStep>
 {

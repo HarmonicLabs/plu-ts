@@ -2,8 +2,9 @@ import ByteString from "../../../../../types/HexString/ByteString";
 import Integer from "../../../../../types/ints/Integer";
 import Pair from "../../../../../types/structs/Pair";
 import JsRuntime from "../../../../../utils/JsRuntime";
-import Data, { isData } from "../../../../../types/Data";
+import Data, { eqData, isData } from "../../../../../types/Data";
 import ConstType, { constTypeEq, constT, constTypeToStirng, ConstTyTag, isWellFormedConstType, constListTypeUtils, constPairTypeUtils } from "../ConstType";
+import BufferUtils from "../../../../../utils/BufferUtils";
 
 
 export type ConstValueList
@@ -40,6 +41,48 @@ export function isConstValue( value: any ): value is ConstValue
             isConstValue( value.fst ) && isConstValue( value.snd ))             ||
         ( !Pair.isStrictInstance(value) && isData( value ) )
     )
+}
+
+export function eqConstValue( a: ConstValue, b: ConstValue ): boolean
+{
+    if( a === undefined ) return b === undefined;
+
+    if(!(
+        isConstValue( a ) ||
+        isConstValue( b )
+    )) return false;
+
+    if( a instanceof Integer ) return (
+        b instanceof Integer &&
+        a.asBigInt === b.asBigInt
+    );
+    if( a instanceof ByteString ) return (
+        b instanceof ByteString &&
+        BufferUtils.eq( a.asBytes, b.asBytes )
+    );
+    if( typeof a === "string" ) return (
+        typeof b === "string" &&
+        a === b
+    );
+    if( typeof a === "boolean" ) return (
+        typeof b === "boolean" &&
+        (a === b)
+    );
+    if( isData(a) ) return (
+        isData( b ) && eqData( a, b )
+    );
+    if( a instanceof Pair ) return (
+        b instanceof Pair &&
+        eqConstValue( a.fst, b.fst ) &&
+        eqConstValue( a.snd, b.snd )
+    );
+    if( Array.isArray( a ) ) return (
+        Array.isArray( b ) &&
+        a.length === b.length &&
+        (a as any[]).every(( v: any, i ) => eqConstValue( v, b[i] ))
+    );
+    
+    return false;
 }
 
 // mutually recursive on arrays (list values)

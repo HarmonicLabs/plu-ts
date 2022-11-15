@@ -11,6 +11,14 @@ export default class BufferUtils
         return Buffer.from( buffer )
     }
 
+    static eq( a: Readonly<Buffer>, b: Readonly<Buffer> ): boolean
+    {
+        return (
+            a.length === b.length &&
+            a.every( (byte, i) => byte === b.at( i ) )
+        ); 
+    }
+
     static fromHex( hex:  string | HexString )
     {
         if( typeof hex === "string" )

@@ -15,7 +15,7 @@ import UPLCVar from "../UPLC/UPLCTerms/UPLCVar";
 import BnCEK from "./BnCEK";
 import PartialBuiltin from "./BnCEK/PartialBuiltin";
 import CEKEnv from "./CEKEnv";
-import CEKFrames, { showFrames } from "./CEKFrames";
+import CEKFrames from "./CEKFrames";
 import ForceFrame from "./CEKFrames/ForceFrame";
 import LApp from "./CEKFrames/LApp";
 import RApp from "./CEKFrames/RApp";
@@ -23,8 +23,12 @@ import CEKSteps, { ComputeStep, ReturnStep } from "./CEKSteps";
 import DelayCEK from "./DelayCEK";
 import LambdaCEK from "./LambdaCEK";
 
+const timeTag = 'evalScript';
+
 export default function evalScript( _term: UPLCTerm | Term<any> ): PureUPLCTerm
 {
+    console.time( timeTag );
+
     const frames = new CEKFrames();
     const steps = new CEKSteps();
 
@@ -252,5 +256,6 @@ export default function evalScript( _term: UPLCTerm | Term<any> ): PureUPLCTerm
         return;
     }
 
+    console.timeEnd(timeTag)
     return (steps.pop() as ReturnStep).value ?? new ErrorUPLC("steps.pop() was not a ReturnStep");
 }

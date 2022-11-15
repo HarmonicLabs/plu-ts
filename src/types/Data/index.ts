@@ -43,6 +43,7 @@ export function eqData( a: Data, b: Data ): boolean
     {
         return (
             (a as DataConstr).constr.asBigInt === (b as DataConstr).constr.asBigInt &&
+            (a as DataConstr).fields.length === (b as DataConstr).fields.length &&
             (a as DataConstr).fields.every(
                 (aField, idx) => eqData( aField, (b as DataConstr).fields[ idx ] ) 
             )
