@@ -211,6 +211,24 @@ export function replaceHoistedTermsInplace( uplc: UPLCTerm ): PureUPLCTerm
         );
     }
 
+    /*
+     * TODO:
+     */
+    /*
+    const shouldBeReplaced: boolean[] = new Array( sortedHoistedSet.length ).fill( true );
+
+    function inlineSingleRefs( term: UPLCTerm ): void
+    {
+
+    }
+    //*/
+
+    /*
+    IMPORTANT
+
+    THIS NEEDS TO BE MODIFIED ONCE THE ABOVE IS IMPLEMENTED
+    SINCE INLINING MAY IMPLY CHANGING THE DEBRUJN LEVEL OF OTHER HOISTED TERMS
+    */
     function getUPLCVarForHoistedAtLevel( _hoisted: HoistedUPLC, level: number ): UPLCVar
     {
         const levelOfTerm = sortedHoistedSet.findIndex( sortedH => BitStream.eq( sortedH.compiled, _hoisted.compiled ) );

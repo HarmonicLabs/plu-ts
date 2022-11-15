@@ -777,6 +777,7 @@ export function pif<ReturnT extends TermType>( returnType: ReturnT | undefined =
     ) as any;
 }
 
+
 export const pnot
     : Term<PLam<PBool, PBool>>
     & {
@@ -794,6 +795,29 @@ export const pnot
         )
     ) as any;
 
+export const pstrictAnd
+    : Term<PLam<PBool, PLam<PBool, PBool>>>
+    & {
+        $: ( bool: Term<PBool> ) =>
+            Term<PLam<PBool, PBool>>
+            & {
+                $: ( bool: Term<PBool> ) => TermBool
+            }
+    }
+    = phoist(
+        pfn([ bool, bool ], bool )
+        (( a: Term<PBool>, b: Term<PBool> ) => {
+
+            // it makes no sense to use `pif` as
+            // what is delayed are variables (already evaluated)
+            return addPBoolMethods(
+                pstrictIf( bool ).$( a )
+                .$( b )
+                .$( pBool( false ) )
+            );
+        })
+    ) as any;
+
 export const pand
     : Term<PLam<PBool, PLam<PDelayed<PBool>, PBool>>>
     & {
@@ -807,14 +831,35 @@ export const pand
         pfn([ bool, delayed( bool ) ], bool )
         (( a: Term<PBool>, b: Term<PDelayed<PBool>> ) => {
 
-            // it makes no sense to use `pif` as
-            // what is delayed are variables (already evaluated)
             return addPBoolMethods(
                 pforce(
                     pstrictIf( delayed( bool ) ).$( a )
                     .$( b )
                     .$( pdelay( pBool( false ) ) )
                 )
+            );
+        })
+    ) as any;
+
+export const pstrictOr
+    : Term<PLam<PBool, PLam<PBool, PBool>>>
+    & {
+        $: ( bool: Term<PBool> ) =>
+            Term<PLam<PBool, PBool>>
+            & {
+                $: ( bool: Term<PBool> ) => TermBool
+            }
+    }
+    = phoist(
+        pfn([ bool, bool ], bool )
+        (( a: Term<PBool>, b: Term<PBool> ) => {
+
+            // it makes no sense to use `pif` as
+            // what is delayed are variables (already evaluated)
+            return addPBoolMethods(
+                pstrictIf( bool  ).$( a )
+                .$( pBool( true ) )
+                .$( b )
             );
         })
     ) as any;
@@ -832,8 +877,6 @@ export const por
         pfn([ bool, delayed( bool ) ], bool )
         (( a: Term<PBool>, b: Term<PDelayed<PBool>> ) => {
 
-            // it makes no sense to use `pif` as
-            // what is delayed are variables (already evaluated)
             return addPBoolMethods(
                 pforce(
                     pstrictIf( delayed( bool ) ).$( a )
@@ -843,6 +886,7 @@ export const por
             );
         })
     ) as any;
+
 
 export function pchooseUnit<ReturnT extends TermType>( returnType: ReturnT | undefined = undefined )
     : TermFn<[ PUnit, ToPType<ReturnT> ], ToPType<ReturnT>>

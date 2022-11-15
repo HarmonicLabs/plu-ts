@@ -1,4 +1,4 @@
-import { por, pand } from "../Builtins";
+import { por, pand, pstrictOr, pstrictAnd } from "../Builtins";
 import ObjectUtils from "../../../../utils/ObjectUtils";
 import PBool from "../../PTypes/PBool";
 import Term from "../../Term";
@@ -9,12 +9,18 @@ import PDelayed from "../../PTypes/PDelayed";
 import { delayed } from "../../Term/Type/base";
 
 type TermBool = Term<PBool> & {
-    
-    readonly orTerm:    TermFn<[ PDelayed<PBool> ], PBool>
-    readonly or:        ( other: Term<PBool> ) => TermBool
 
-    readonly andTerm:   TermFn<[ PDelayed<PBool> ], PBool>
-    readonly and:       ( other: Term<PBool> ) => TermBool
+    readonly orTerm:            TermFn<[ PDelayed<PBool> ], PBool>
+    readonly or:                ( other: Term<PBool> ) => TermBool
+
+    readonly strictOrTerm:      TermFn<[ PBool ], PBool>
+    readonly strictOr:          ( other: Term<PBool> ) => TermBool
+
+    readonly andTerm:           TermFn<[ PDelayed<PBool> ], PBool>
+    readonly and:               ( other: Term<PBool> ) => TermBool
+
+    readonly strictAndTerm:     TermFn<[ PBool ], PBool>
+    readonly strictAnd:         ( other: Term<PBool> ) => TermBool
 
 }
 
@@ -49,6 +55,18 @@ export function addPBoolMethods( term: Term<PBool> ): TermBool
 
     ObjectUtils.defineReadOnlyProperty(
         term,
+        "strictOrTerm",
+        pstrictOr.$( term )
+    );
+    ObjectUtils.defineReadOnlyProperty(
+        term,
+        "strictOr",
+        ( other: Term<PBool> ): TermBool => pstrictOr.$( term ).$( other )
+    );
+
+
+    ObjectUtils.defineReadOnlyProperty(
+        term,
         "andTerm",
         pand.$( term )
     );
@@ -58,6 +76,16 @@ export function addPBoolMethods( term: Term<PBool> ): TermBool
         ( other: Term<PBool> ): TermBool => pand.$( term ).$( pdelay( other ) )
     );
 
+    ObjectUtils.defineReadOnlyProperty(
+        term,
+        "strictAndTerm",
+        pstrictAnd.$( term )
+    );
+    ObjectUtils.defineReadOnlyProperty(
+        term,
+        "strictAnd",
+        ( other: Term<PBool> ): TermBool => pstrictAnd.$( term ).$( other )
+    );
 
     return term as any;
 }
