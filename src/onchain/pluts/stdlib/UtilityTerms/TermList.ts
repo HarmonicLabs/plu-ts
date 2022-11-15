@@ -12,7 +12,7 @@ import { ConstantableTermType, TermType, ToPType } from "../../Term/Type/base";
 import { isConstantableTermType, isLambdaType } from "../../Term/Type/kinds";
 import { termTypeToString } from "../../Term/Type/utils";
 import { phead, pprepend, ptail } from "../Builtins";
-import { plength } from "../List";
+import { plength, preverse } from "../List";
 import { pevery, pfilter, pfind, pfindList, pindexList, pmap, psome } from "../List/methods";
 import { pflip } from "../PCombinators";
 import { PMaybeT } from "../PMaybe/PMaybe";
@@ -57,6 +57,19 @@ type TermList<PElemsT extends PDataRepresentable> = Term<PList<PElemsT>> & {
      * > ```
      */
     readonly length: TermInt
+    /**
+     * **O(n)**
+     * 
+     * @returns a new list with the same elements in the opposite order
+     * 
+     * > **suggestion**: use `plet` bindings if you need to access the list length more than once
+     * >
+     * > example:
+     * > ```ts
+     * > plet( list.reversed ).in( reversed => ... )
+     * > ```
+    **/
+    readonly reversed: TermList<PElemsT>
 
     // indexing / query
     readonly atTerm:    TermFn<[PInt], PElemsT>
@@ -144,6 +157,17 @@ export function addPListMethods<PElemsT extends PType>( list: Term<PList<PElemsT
             enumerable: true
         }
     );
+    ObjectUtils.definePropertyIfNotPresent(
+        list,
+        "reversed",
+        {
+            get: () => preverse( elemsT ).$( list ),
+            set: () => {},
+            configurable: false,
+            enumerable: true
+        }
+    );
+
 
     ObjectUtils.defineReadOnlyProperty(
         list,
