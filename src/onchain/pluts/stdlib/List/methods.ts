@@ -117,11 +117,12 @@ export function pindexList<ElemsT extends ConstantableTermType>( elemsT: ElemsT 
                 ( self, list, idx ) => 
 
                     pif( elemsT ).$(
-                        por
-                        .$( pisEmpty.$( list ) )
-                        .$( 
+
+                        pisEmpty.$( list )
+                        .or(
                             plessInt.$( idx ).$( pInt( 0 ) ) 
-                        ) 
+                        )
+                        
                     )
                     .then( perror( elemsT, "pindexList" ) )
                     .else(
@@ -378,12 +379,10 @@ export function pevery<ElemsT extends ConstantableTermType>( elemsT: ElemsT )
                 ],  bool )
                 (( self, head, rest ) =>
 
-                    pand.$(
-                        papp(
-                            predicate,
-                            head
-                        )
-                    ).$(
+                    papp(
+                        predicate,
+                        head
+                    ).and(
                         papp(
                             self,
                             rest
@@ -423,12 +422,10 @@ export function psome<ElemsT extends ConstantableTermType>( elemsT: ElemsT )
                 ],  bool )
                 (( self, head, rest ) =>
 
-                    por.$(
-                        papp(
-                            predicate,
-                            head
-                        )
-                    ).$(
+                    papp(
+                        predicate,
+                        head
+                    ).or(
                         papp(
                             self,
                             rest

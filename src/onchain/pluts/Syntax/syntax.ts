@@ -10,7 +10,7 @@ import UPLCVar from "../../UPLC/UPLCTerms/UPLCVar";
 import PType from "../PType";
 import PDelayed from "../PTypes/PDelayed";
 import PLam, { TermFn } from "../PTypes/PFn/PLam";
-import Type, { ToPType, ToTermArrNonEmpty, TermType, ConstantableTermType, AliasTermType } from "../Term/Type/base";
+import Type, { ToPType, ToTermArrNonEmpty, TermType } from "../Term/Type/base";
 import Term from "../Term";
 import JsRuntime from "../../../utils/JsRuntime";
 import HoistedUPLC from "../../UPLC/UPLCTerms/HoistedUPLC";
@@ -23,8 +23,6 @@ import Builtin from "../../UPLC/UPLCTerms/Builtin";
 import { getNRequiredForces } from "../../UPLC/UPLCTerms/Builtin/UPLCBuiltinTag";
 import addUtilityForType, { UtilityTermOf } from "../stdlib/UtilityTerms/addUtilityForType";
 import punsafeConvertType from "./punsafeConvertType";
-import TermAlias from "../stdlib/UtilityTerms/TermAlias";
-import { PValue } from "../API";
 
 
 function isIdentityUPLC( uplc: UPLCTerm ): uplc is Lambda

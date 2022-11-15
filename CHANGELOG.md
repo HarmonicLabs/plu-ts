@@ -17,7 +17,9 @@
 
 ## Unreleased v0.1.2
 
-- [ ] `pand` and `por` take a `delayed( bool )` as second argument (before was just `bool`)
+- [ ] `pand` and `por` take a `delayed( bool )` as second argument (before was just strict `bool`)
+    - [x] change definitons
+    - [ ] add `strictAnd` and `strictOr` versions
 - [x] `pfoldr` and `pfoldl` (`preduce`) for `TermList`
     - [x] `pfoldr` and `pfoldl`
     - [x] re-implementation of exsisting functions (`pfilter`,`pmap`, etc...) in terms of `pfold[rl]` (should result in smaller scripts)

@@ -27,11 +27,12 @@ import TermInt, { addPIntMethods } from "./UtilityTerms/TermInt";
 import TermStr, { addPStringMethods } from "./UtilityTerms/TermStr";
 import Term from "../Term";
 import { getNRequiredLambdaArgs } from "../Term/Type/utils";
-import Type, { TermType, ToPType, DataType, ToPDataType, bool, lam, int, bs, fn } from "../Term/Type/base";
+import Type, { TermType, ToPType, DataType, ToPDataType, bool, lam, int, bs, fn, delayed } from "../Term/Type/base";
 import Lambda from "../../UPLC/UPLCTerms/Lambda";
 import UPLCVar from "../../UPLC/UPLCTerms/UPLCVar";
 import { PMap } from "../PTypes/PMap";
 import HoistedUPLC from "../../UPLC/UPLCTerms/HoistedUPLC";
+import PDelayed from "../PTypes/PDelayed";
 
 function pBool( bool: boolean ): TermBool
 {
@@ -794,47 +795,51 @@ export const pnot
     ) as any;
 
 export const pand
-    : Term<PLam<PBool, PLam<PBool, PBool>>>
+    : Term<PLam<PBool, PLam<PDelayed<PBool>, PBool>>>
     & {
         $: ( bool: Term<PBool> ) =>
-            Term<PLam<PBool, PBool>>
+            Term<PLam<PDelayed<PBool>, PBool>>
             & {
-                $: ( bool: Term<PBool> ) => TermBool
+                $: ( bool: Term<PDelayed<PBool>> ) => TermBool
             }
     }
     = phoist(
-        pfn([ Type.Bool, Type.Bool ], Type.Bool )
-        (( a: Term<PBool>, b: Term<PBool> ) => {
+        pfn([ bool, delayed( bool ) ], bool )
+        (( a: Term<PBool>, b: Term<PDelayed<PBool>> ) => {
 
             // it makes no sense to use `pif` as
             // what is delayed are variables (already evaluated)
             return addPBoolMethods(
-                    pstrictIf( bool ).$( a )
+                pforce(
+                    pstrictIf( delayed( bool ) ).$( a )
                     .$( b )
-                    .$( pBool( false ) )
+                    .$( pdelay( pBool( false ) ) )
+                )
             );
         })
     ) as any;
 
 export const por
-    : Term<PLam<PBool, PLam<PBool, PBool>>>
+    : Term<PLam<PBool, PLam<PDelayed<PBool>, PBool>>>
     & {
         $: ( bool: Term<PBool> ) =>
-            Term<PLam<PBool, PBool>>
+            Term<PLam<PDelayed<PBool>, PBool>>
             & {
-                $: ( bool: Term<PBool> ) => TermBool
+                $: ( bool: Term<PDelayed<PBool>> ) => TermBool
             }
     }
     = phoist(
-        pfn([ Type.Bool, Type.Bool ], Type.Bool )
-        (( a: Term<PBool>, b: Term<PBool> ) => {
+        pfn([ bool, delayed( bool ) ], bool )
+        (( a: Term<PBool>, b: Term<PDelayed<PBool>> ) => {
 
             // it makes no sense to use `pif` as
             // what is delayed are variables (already evaluated)
             return addPBoolMethods(
-                    pstrictIf( bool ).$( a )
-                    .$( pBool( true ) )
+                pforce(
+                    pstrictIf( delayed( bool ) ).$( a )
+                    .$( pdelay( pBool( true ) ) )
                     .$( b )
+                )
             );
         })
     ) as any;
