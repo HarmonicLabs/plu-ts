@@ -28,7 +28,7 @@ const timeTag = 'evalScript';
 
 export default function evalScript( _term: UPLCTerm | Term<any> ): PureUPLCTerm
 {
-    Debug.time( timeTag );
+    // Debug.time( timeTag );
     
     const frames = new CEKFrames();
     const steps = new CEKSteps();
@@ -263,7 +263,7 @@ export default function evalScript( _term: UPLCTerm | Term<any> ): PureUPLCTerm
         return;
     }
 
-    Debug.timeEnd(timeTag);
+    // Debug.timeEnd(timeTag);
 
     // console.log( n_compute, n_returns );
     return (steps.pop() as ReturnStep).value ?? new ErrorUPLC("steps.pop() was not a ReturnStep");
