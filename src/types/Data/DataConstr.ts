@@ -12,7 +12,7 @@ export default class DataConstr
     get constr(): UInteger { return this._constr.clone() };
 
     private _fields: Data[]
-    get fields(): Data[] { return this._fields.map( dataElem => dataElem ) };
+    get fields(): Data[] { return this._fields.map( dataElem => Object.freeze( dataElem ) as any ) };
 
     constructor( constr: CanBeUInteger, fields: Data[] )
     {
@@ -27,7 +27,8 @@ export default class DataConstr
 
     clone(): DataConstr
     {
-        // console.log( this._constr.asBigInt, this._fields );
+        console.log(Error().stack);
+
         return new DataConstr(
             this._constr.clone(),
             this._fields.map( dataElem => dataElem.clone() ) as Data[]

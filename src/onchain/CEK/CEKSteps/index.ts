@@ -8,7 +8,6 @@ import DelayCEK from "../DelayCEK";
 import { CEKValue } from "../CEKValue";
 
 export class ComputeStep
-    implements Cloneable<ComputeStep>
 {
     private _term: UPLCTerm;
     get term(): UPLCTerm
@@ -23,14 +22,8 @@ export class ComputeStep
         this._term = term;
         this._env = env;
     }
-
-    clone(): ComputeStep
-    {
-        return new ComputeStep( this.term.clone(), this.env.clone() )
-    }
 }
 export class ReturnStep
-    implements Cloneable<ReturnStep>
 {
     private _value: CEKValue;
     get value(): CEKValue { return this._value; }
@@ -38,11 +31,6 @@ export class ReturnStep
     constructor( value: CEKValue )
     {
         this._value = value;
-    }
-
-    clone(): ReturnStep
-    {
-        return new ReturnStep( this._value.clone() );
     }
 }
 

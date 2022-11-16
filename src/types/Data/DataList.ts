@@ -7,7 +7,7 @@ export default class DataList
     implements Cloneable<DataList>
 {
     private _list: Data[]
-    get list(): Data[] { return this._list.map( dataElem => dataElem.clone() ) };
+    get list(): Data[] { return this._list.map( dataElem => Object.freeze( dataElem ) as any ) };
     
     constructor( list: Data[] )
     {

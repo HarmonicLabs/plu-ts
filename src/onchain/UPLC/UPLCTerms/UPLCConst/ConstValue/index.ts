@@ -186,7 +186,7 @@ export function inferConstTypeFromConstValueOrDefault( value: ConstValue, defaul
     return defaultTy;
 }
 
-export function canConstValueBeOfConstType( val: ConstValue, ty: ConstType ): boolean
+export function canConstValueBeOfConstType( val: Readonly<ConstValue>, ty: Readonly<ConstType> ): boolean
 {
     if( !isWellFormedConstType( ty ) ) return false;
 

@@ -8,7 +8,7 @@ export default class DataMap<DataKey extends Data, DataValue extends Data>
     implements Cloneable<DataMap<DataKey,DataValue>>
 {
     private _map: DataPair<DataKey, DataValue>[];
-    get map(): DataPair<DataKey, DataValue>[] { return this._map.map( pair => pair.clone() ) };
+    get map(): DataPair<DataKey, DataValue>[] { return this._map.map( pair => pair ) };
 
     constructor( map: DataPair<DataKey, DataValue>[] )
     {

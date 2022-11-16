@@ -17,6 +17,7 @@ export default Data;
 
 export function isData( something: any ): something is Data
 {
+    if( something === null || something === undefined ) return false;
     const proto = Object.getPrototypeOf( something );
 
     return (
@@ -30,9 +31,8 @@ export function isData( something: any ): something is Data
 
 export function eqData( a: Data, b: Data ): boolean
 {
-    // not necessary since prototypes will be checked anyways
-    // if( !isData( a ) ) return false;
-    // if( !isData( b ) ) return false;
+    if( !isData( a ) ) return false;
+    if( !isData( b ) ) return false;
 
     const aProto = Object.getPrototypeOf( a );
     const bProto = Object.getPrototypeOf( b );

@@ -39,9 +39,9 @@ export default class CEKFrames
     }
 }
 
-export function showFrames( frames_: Readonly<CEKFrames> ): string
+export function showFrames( frames: Readonly<CEKFrames> ): string
 {
-    const frames = frames_.clone();
+    // const frames = frames_.clone();
 
     let res = "_";
     let topFrame: Frame;

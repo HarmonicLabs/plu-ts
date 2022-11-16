@@ -18,7 +18,7 @@ export default class LApp
     clone(): LApp
     {
         return new LApp(
-            this.func.clone()
+            this.func
         );
     }
 }

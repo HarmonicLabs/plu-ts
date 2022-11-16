@@ -80,7 +80,15 @@ export function eqCEKValue( a: Readonly<CEKValue>, b: Readonly<CEKValue> ): bool
             constTypeEq( a.type, b.type ) &&
             canConstValueBeOfConstType( a.value, a.type ) &&
             canConstValueBeOfConstType( b.value, b.type ) &&
-            eqConstValue( a.value, b.value )
+            (() => {
+                try {
+                    return eqConstValue( a.value, b.value );
+                } catch (e) {
+                    if( e instanceof RangeError ) return false;
+
+                    throw e;
+                }
+            })()
         );
     }
 

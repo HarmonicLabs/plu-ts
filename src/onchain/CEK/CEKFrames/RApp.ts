@@ -23,7 +23,7 @@ export default class RApp
     clone(): RApp
     {
         return new RApp(
-            this.arg.clone(),
+            this.arg,
             this.env.clone()
         );
     }

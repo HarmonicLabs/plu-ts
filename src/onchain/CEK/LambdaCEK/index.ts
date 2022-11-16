@@ -16,6 +16,6 @@ export default class LambdaCEK
 
     clone(): LambdaCEK
     {
-        return new LambdaCEK( this.body.clone(), this.env.clone() );
+        return new LambdaCEK( Object.freeze( this.body ), this.env.clone() );
     }
 }

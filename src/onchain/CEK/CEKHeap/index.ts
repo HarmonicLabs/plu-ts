@@ -19,6 +19,7 @@ export default class CEKHeap
 
     clone(): CEKHeap
     {
+        console.log( "cloning heap" );
         return new CEKHeap( this._heap.map( uplc => uplc.clone() ) )
     }
 
@@ -29,7 +30,7 @@ export default class CEKHeap
         );
         if( alreadyPresent < 0 )
         {
-            this._heap.push( varValue );
+            this._heap.push( Object.freeze( varValue ) );
             return this._heap.length - 1;
         }
         return alreadyPresent;

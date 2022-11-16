@@ -16,6 +16,6 @@ export default class DelayCEK
 
     clone(): DelayCEK
     {
-        return new DelayCEK( this.delayedTerm.clone(), this.env.clone() );
+        return new DelayCEK( Object.freeze( this.delayedTerm ), this.env.clone() );
     }
 }
