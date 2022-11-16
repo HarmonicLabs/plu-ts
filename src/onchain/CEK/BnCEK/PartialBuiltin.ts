@@ -1,39 +1,38 @@
 import Cloneable from "../../../types/interfaces/Cloneable";
 import UPLCTerm from "../../UPLC/UPLCTerm";
 import UPLCBuiltinTag from "../../UPLC/UPLCTerms/Builtin/UPLCBuiltinTag";
-import UPLCConst from "../../UPLC/UPLCTerms/UPLCConst";
 
 
 export default class PartialBuiltin
     implements Cloneable<PartialBuiltin>
 {
     private _tag: UPLCBuiltinTag;
-    private _heapArgPtrs: number[];
+    private _args: UPLCTerm[];
     private _nRequiredArgs: number;
 
     get tag(): UPLCBuiltinTag { return this._tag; }
-    get heapArgsPtrs(): number[] { return this._heapArgPtrs; }
+    get args(): UPLCTerm[] { return this._args; }
 
-    constructor( tag: UPLCBuiltinTag, args: number[] = [] )
+    constructor( tag: UPLCBuiltinTag, args: UPLCTerm[] = [] )
     {
         this._tag = tag;
-        this._heapArgPtrs = args;
+        this._args = args;
         this._nRequiredArgs = PartialBuiltin.getNRequiredArgsFor( tag );
     }
 
     clone(): PartialBuiltin
     {
-        return new PartialBuiltin( this._tag, this._heapArgPtrs.map( ptr => ptr ) );
+        return new PartialBuiltin( this._tag, this._args.map( arg =>  arg.clone() ) );
     }
 
     get nMissingArgs(): number
     {
-        return this._nRequiredArgs - this._heapArgPtrs.length;
+        return this._nRequiredArgs - this._args.length;
     }
 
-    applyArgPtr( argPtr: number ): void
+    apply( arg: UPLCTerm ): void
     {
-        this._heapArgPtrs.push( argPtr );
+        this._args.push( arg );
     }
 
     /**

@@ -31,8 +31,14 @@ export function isData( something: any ): something is Data
 
 export function eqData( a: Data, b: Data ): boolean
 {
+<<<<<<< HEAD
     if( !isData( a ) ) return false;
     if( !isData( b ) ) return false;
+=======
+    // not necessary since prototypes need to be checked anyways
+    // if( !isData( a ) ) return false;
+    // if( !isData( b ) ) return false;
+>>>>>>> parent of 1067d89... can't clone ScriptContext Data; RangeError: Maximum call stack size exceeded
 
     const aProto = Object.getPrototypeOf( a );
     const bProto = Object.getPrototypeOf( b );

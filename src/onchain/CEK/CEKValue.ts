@@ -1,20 +1,20 @@
-import BitStream from "../../../types/bits/BitStream";
-import UPLCTerm, { PureUPLCTerm } from "../../UPLC/UPLCTerm";
-import Application from "../../UPLC/UPLCTerms/Application";
-import Builtin from "../../UPLC/UPLCTerms/Builtin";
-import Delay from "../../UPLC/UPLCTerms/Delay";
-import ErrorUPLC from "../../UPLC/UPLCTerms/ErrorUPLC";
-import Force from "../../UPLC/UPLCTerms/Force";
-import HoistedUPLC from "../../UPLC/UPLCTerms/HoistedUPLC";
-import Lambda from "../../UPLC/UPLCTerms/Lambda";
-import UPLCConst from "../../UPLC/UPLCTerms/UPLCConst";
-import { constTypeEq } from "../../UPLC/UPLCTerms/UPLCConst/ConstType";
-import { canConstValueBeOfConstType, eqConstValue } from "../../UPLC/UPLCTerms/UPLCConst/ConstValue";
-import UPLCVar from "../../UPLC/UPLCTerms/UPLCVar";
-import PartialBuiltin from "../BnCEK/PartialBuiltin";
-import CEKEnv from "../CEKEnv";
-import DelayCEK from "../DelayCEK";
-import LambdaCEK from "../LambdaCEK";
+import BitStream from "../../types/bits/BitStream";
+import UPLCTerm, { PureUPLCTerm } from "../UPLC/UPLCTerm";
+import Application from "../UPLC/UPLCTerms/Application";
+import Builtin from "../UPLC/UPLCTerms/Builtin";
+import Delay from "../UPLC/UPLCTerms/Delay";
+import ErrorUPLC from "../UPLC/UPLCTerms/ErrorUPLC";
+import Force from "../UPLC/UPLCTerms/Force";
+import HoistedUPLC from "../UPLC/UPLCTerms/HoistedUPLC";
+import Lambda from "../UPLC/UPLCTerms/Lambda";
+import UPLCConst from "../UPLC/UPLCTerms/UPLCConst";
+import { constTypeEq } from "../UPLC/UPLCTerms/UPLCConst/ConstType";
+import { canConstValueBeOfConstType, eqConstValue } from "../UPLC/UPLCTerms/UPLCConst/ConstValue";
+import UPLCVar from "../UPLC/UPLCTerms/UPLCVar";
+import PartialBuiltin from "./BnCEK/PartialBuiltin";
+import CEKEnv from "./CEKEnv";
+import DelayCEK from "./DelayCEK";
+import LambdaCEK from "./LambdaCEK";
 
 export type CEKValue = UPLCTerm | PartialBuiltin | LambdaCEK | DelayCEK
 
@@ -22,13 +22,9 @@ export default CEKValue;
 
 export function eqCEKValue( a: Readonly<CEKValue>, b: Readonly<CEKValue> ): boolean
 {
-    if( a === b ) return true; // shallow eq;
-    
     if(!(
-        Object.getPrototypeOf( a ).isPrototypeOf( b ) &&
-        Object.getPrototypeOf( b ).isPrototypeOf( a )
+        Object.getPrototypeOf( a ) === Object.getPrototypeOf( b )
     )) return false;
-
 
     if( a instanceof HoistedUPLC && b instanceof HoistedUPLC )
     {
@@ -50,7 +46,7 @@ export function eqCEKValue( a: Readonly<CEKValue>, b: Readonly<CEKValue> ): bool
         return (
             a.tag === b.tag &&
             a.nMissingArgs === b.nMissingArgs &&
-            a.heapArgsPtrs.every( (argPtr, i) => argPtr === b.heapArgsPtrs[ i ] )
+            a.args.every( (arg, i) => eqCEKValue( arg, b.args[ i ] ) )
         );
     }
 

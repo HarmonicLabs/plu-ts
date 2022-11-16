@@ -1,5 +1,4 @@
 import Data, { isData } from ".";
-import { map } from "../../onchain";
 import JsRuntime from "../../utils/JsRuntime";
 import Cloneable from "../interfaces/Cloneable";
 import { UInteger, CanBeUInteger, forceUInteger } from "../ints/Integer";
@@ -12,7 +11,11 @@ export default class DataConstr
     get constr(): UInteger { return this._constr.clone() };
 
     private _fields: Data[]
+<<<<<<< HEAD
     get fields(): Data[] { return this._fields.map( dataElem => Object.freeze( dataElem ) as any ) };
+=======
+    get fields(): Data[] { return this._fields.map( dataElem => dataElem.clone() ) };
+>>>>>>> parent of 1067d89... can't clone ScriptContext Data; RangeError: Maximum call stack size exceeded
 
     constructor( constr: CanBeUInteger, fields: Data[] )
     {
@@ -27,8 +30,11 @@ export default class DataConstr
 
     clone(): DataConstr
     {
+<<<<<<< HEAD
         console.log(Error().stack);
 
+=======
+>>>>>>> parent of 1067d89... can't clone ScriptContext Data; RangeError: Maximum call stack size exceeded
         return new DataConstr(
             this._constr.clone(),
             this._fields.map( dataElem => dataElem.clone() ) as Data[]

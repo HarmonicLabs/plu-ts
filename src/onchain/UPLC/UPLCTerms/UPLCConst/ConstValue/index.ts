@@ -47,6 +47,11 @@ export function eqConstValue( a: ConstValue, b: ConstValue ): boolean
 {
     if( a === undefined ) return b === undefined;
 
+    if(!(
+        isConstValue( a ) ||
+        isConstValue( b )
+    )) return false;
+
     if( a instanceof Integer ) return (
         b instanceof Integer &&
         a.asBigInt === b.asBigInt

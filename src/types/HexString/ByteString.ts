@@ -54,7 +54,7 @@ export default class ByteString
 
     clone(): ByteString
     {
-        return new ByteString( Buffer.from( this._bytes ) );
+        return new ByteString( BufferUtils.copy( this._bytes ) );
     }
 
     public static fromAscii( asciiStr: string ): ByteString
