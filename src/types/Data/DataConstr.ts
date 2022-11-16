@@ -1,4 +1,5 @@
 import Data, { isData } from ".";
+import { map } from "../../onchain";
 import JsRuntime from "../../utils/JsRuntime";
 import Cloneable from "../interfaces/Cloneable";
 import { UInteger, CanBeUInteger, forceUInteger } from "../ints/Integer";
@@ -11,7 +12,7 @@ export default class DataConstr
     get constr(): UInteger { return this._constr.clone() };
 
     private _fields: Data[]
-    get fields(): Data[] { return this._fields.map( dataElem => dataElem.clone() ) };
+    get fields(): Data[] { return this._fields.map( dataElem => dataElem ) };
 
     constructor( constr: CanBeUInteger, fields: Data[] )
     {
@@ -26,6 +27,7 @@ export default class DataConstr
 
     clone(): DataConstr
     {
+        // console.log( this._constr.asBigInt, this._fields );
         return new DataConstr(
             this._constr.clone(),
             this._fields.map( dataElem => dataElem.clone() ) as Data[]

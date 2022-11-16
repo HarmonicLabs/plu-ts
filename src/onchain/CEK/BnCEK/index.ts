@@ -18,6 +18,7 @@ import DataB from "../../../types/Data/DataB";
 import DataPair from "../../../types/Data/DataPair";
 import PlutsCEKError from "../../../errors/PlutsCEKError";
 import dataToCbor from "../../../types/Data/toCbor";
+import CEKHeap from "../CEKHeap";
 
 function isConstOfType( constant: Readonly<UPLCTerm>, ty: Readonly<ConstType> ): constant is UPLCConst
 {
@@ -218,64 +219,65 @@ export default class BnCEK
     //     return res;
     // }
 
-    static eval( bn: PartialBuiltin ): ConstOrErr
+    static eval( bn: PartialBuiltin, heapRef: CEKHeap ): ConstOrErr
     {
+        const bnArgs = bn.heapArgsPtrs.map( ptr => heapRef.get( ptr ) );
         switch( bn.tag )
         {
-            case UPLCBuiltinTag.addInteger :                        return (BnCEK.addInteger as any)( ...bn.args );
-            case UPLCBuiltinTag.subtractInteger :                   return (BnCEK.subtractInteger as any)( ...bn.args );
-            case UPLCBuiltinTag.multiplyInteger :                   return (BnCEK.multiplyInteger as any)( ...bn.args );
-            case UPLCBuiltinTag.divideInteger :                     return (BnCEK.divideInteger as any)( ...bn.args );
-            case UPLCBuiltinTag.quotientInteger :                   return (BnCEK.quotientInteger as any)( ...bn.args );
-            case UPLCBuiltinTag.remainderInteger :                  return (BnCEK.remainderInteger as any)( ...bn.args );
-            case UPLCBuiltinTag.modInteger :                        return (BnCEK.modInteger as any)( ...bn.args );
-            case UPLCBuiltinTag.equalsInteger :                     return (BnCEK.equalsInteger as any)( ...bn.args );
-            case UPLCBuiltinTag.lessThanInteger :                   return (BnCEK.lessThanInteger as any)( ...bn.args );
-            case UPLCBuiltinTag.lessThanEqualInteger :              return (BnCEK.lessThanEqualInteger as any)( ...bn.args );
-            case UPLCBuiltinTag.appendByteString :                  return (BnCEK.appendByteString as any)( ...bn.args );
-            case UPLCBuiltinTag.consByteString :                    return (BnCEK.consByteString as any)( ...bn.args );
-            case UPLCBuiltinTag.sliceByteString :                   return (BnCEK.sliceByteString as any)( ...bn.args );
-            case UPLCBuiltinTag.lengthOfByteString :                return (BnCEK.lengthOfByteString as any)( ...bn.args );
-            case UPLCBuiltinTag.indexByteString :                   return (BnCEK.indexByteString as any)( ...bn.args );
-            case UPLCBuiltinTag.equalsByteString :                  return (BnCEK.equalsByteString as any)( ...bn.args );
-            case UPLCBuiltinTag.lessThanByteString :                return (BnCEK.lessThanByteString as any)( ...bn.args );
-            case UPLCBuiltinTag.lessThanEqualsByteString :          return (BnCEK.lessThanEqualsByteString as any)( ...bn.args );
-            case UPLCBuiltinTag.sha2_256 :                          throw new PlutsCEKError("builtin implementation missing");// return (BnCEK.sha2_256 as any)( ...bn.args );
-            case UPLCBuiltinTag.sha3_256 :                          throw new PlutsCEKError("builtin implementation missing");// return (BnCEK.sha3_256 as any)( ...bn.args );
-            case UPLCBuiltinTag.blake2b_256 :                       throw new PlutsCEKError("builtin implementation missing");// return (BnCEK.blake2b_256 as any)( ...bn.args );
-            case UPLCBuiltinTag.verifyEd25519Signature:             throw new PlutsCEKError("builtin implementation missing");// return (BnCEK.verifyEd25519Signature as any)( ...bn.args );
-            case UPLCBuiltinTag.appendString :                      return (BnCEK.appendString as any)( ...bn.args );
-            case UPLCBuiltinTag.equalsString :                      return (BnCEK.equalsString as any)( ...bn.args );
-            case UPLCBuiltinTag.encodeUtf8 :                        return (BnCEK.encodeUtf8 as any)( ...bn.args );
-            case UPLCBuiltinTag.decodeUtf8 :                        return (BnCEK.decodeUtf8 as any)( ...bn.args );
-            case UPLCBuiltinTag.ifThenElse :                        return (BnCEK.ifThenElse as any)( ...bn.args );
-            case UPLCBuiltinTag.chooseUnit :                        return (BnCEK.chooseUnit as any)( ...bn.args );
-            case UPLCBuiltinTag.trace :                             return (BnCEK.trace as any)( ...bn.args );
-            case UPLCBuiltinTag.fstPair :                           return (BnCEK.fstPair as any)( ...bn.args );
-            case UPLCBuiltinTag.sndPair :                           return (BnCEK.sndPair as any)( ...bn.args );
-            case UPLCBuiltinTag.chooseList :                        return (BnCEK.chooseList as any)( ...bn.args );
-            case UPLCBuiltinTag.mkCons :                            return (BnCEK.mkCons as any)( ...bn.args );
-            case UPLCBuiltinTag.headList :                          return (BnCEK.headList as any)( ...bn.args );
-            case UPLCBuiltinTag.tailList :                          return (BnCEK.tailList as any)( ...bn.args );
-            case UPLCBuiltinTag.nullList :                          return (BnCEK.nullList as any)( ...bn.args );
-            case UPLCBuiltinTag.chooseData :                        return (BnCEK.chooseData as any)( ...bn.args );
-            case UPLCBuiltinTag.constrData :                        return (BnCEK.constrData as any)( ...bn.args );
-            case UPLCBuiltinTag.mapData :                           return (BnCEK.mapData as any)( ...bn.args );
-            case UPLCBuiltinTag.listData :                          return (BnCEK.listData as any)( ...bn.args );
-            case UPLCBuiltinTag.iData    :                          return (BnCEK.iData as any)( ...bn.args );
-            case UPLCBuiltinTag.bData    :                          return (BnCEK.bData as any)( ...bn.args );
-            case UPLCBuiltinTag.unConstrData :                      return (BnCEK.unConstrData as any)( ...bn.args );
-            case UPLCBuiltinTag.unMapData    :                      return (BnCEK.unMapData as any)( ...bn.args );
-            case UPLCBuiltinTag.unListData   :                      return (BnCEK.unListData as any)( ...bn.args );
-            case UPLCBuiltinTag.unIData      :                      return (BnCEK.unIData as any)( ...bn.args );
-            case UPLCBuiltinTag.unBData      :                      return (BnCEK.unBData as any)( ...bn.args );
-            case UPLCBuiltinTag.equalsData   :                      return (BnCEK.equalsData as any)( ...bn.args );
-            case UPLCBuiltinTag.mkPairData   :                      return (BnCEK.mkPairData as any)( ...bn.args );
-            case UPLCBuiltinTag.mkNilData    :                      return (BnCEK.mkNilData as any)( ...bn.args );
-            case UPLCBuiltinTag.mkNilPairData:                      return (BnCEK.mkNilPairData as any)( ...bn.args );
-            case UPLCBuiltinTag.serialiseData:                      return (BnCEK.serialiseData as any)( ...bn.args );
-            case UPLCBuiltinTag.verifyEcdsaSecp256k1Signature:      throw new PlutsCEKError("builtin implementation missing"); //return (BnCEK.verifyEcdsaSecp256k1Signature as any)( ...bn.args );
-            case UPLCBuiltinTag.verifySchnorrSecp256k1Signature:    throw new PlutsCEKError("builtin implementation missing"); //return (BnCEK.verifySchnorrSecp256k1Signature as any)( ...bn.args );
+            case UPLCBuiltinTag.addInteger :                        return (BnCEK.addInteger as any)( ...bnArgs );
+            case UPLCBuiltinTag.subtractInteger :                   return (BnCEK.subtractInteger as any)( ...bnArgs );
+            case UPLCBuiltinTag.multiplyInteger :                   return (BnCEK.multiplyInteger as any)( ...bnArgs );
+            case UPLCBuiltinTag.divideInteger :                     return (BnCEK.divideInteger as any)( ...bnArgs );
+            case UPLCBuiltinTag.quotientInteger :                   return (BnCEK.quotientInteger as any)( ...bnArgs );
+            case UPLCBuiltinTag.remainderInteger :                  return (BnCEK.remainderInteger as any)( ...bnArgs );
+            case UPLCBuiltinTag.modInteger :                        return (BnCEK.modInteger as any)( ...bnArgs );
+            case UPLCBuiltinTag.equalsInteger :                     return (BnCEK.equalsInteger as any)( ...bnArgs );
+            case UPLCBuiltinTag.lessThanInteger :                   return (BnCEK.lessThanInteger as any)( ...bnArgs );
+            case UPLCBuiltinTag.lessThanEqualInteger :              return (BnCEK.lessThanEqualInteger as any)( ...bnArgs );
+            case UPLCBuiltinTag.appendByteString :                  return (BnCEK.appendByteString as any)( ...bnArgs );
+            case UPLCBuiltinTag.consByteString :                    return (BnCEK.consByteString as any)( ...bnArgs );
+            case UPLCBuiltinTag.sliceByteString :                   return (BnCEK.sliceByteString as any)( ...bnArgs );
+            case UPLCBuiltinTag.lengthOfByteString :                return (BnCEK.lengthOfByteString as any)( ...bnArgs );
+            case UPLCBuiltinTag.indexByteString :                   return (BnCEK.indexByteString as any)( ...bnArgs );
+            case UPLCBuiltinTag.equalsByteString :                  return (BnCEK.equalsByteString as any)( ...bnArgs );
+            case UPLCBuiltinTag.lessThanByteString :                return (BnCEK.lessThanByteString as any)( ...bnArgs );
+            case UPLCBuiltinTag.lessThanEqualsByteString :          return (BnCEK.lessThanEqualsByteString as any)( ...bnArgs );
+            case UPLCBuiltinTag.sha2_256 :                          throw new PlutsCEKError("builtin implementation missing");// return (BnCEK.sha2_256 as any)( ...bnArgs );
+            case UPLCBuiltinTag.sha3_256 :                          throw new PlutsCEKError("builtin implementation missing");// return (BnCEK.sha3_256 as any)( ...bnArgs );
+            case UPLCBuiltinTag.blake2b_256 :                       throw new PlutsCEKError("builtin implementation missing");// return (BnCEK.blake2b_256 as any)( ...bnArgs );
+            case UPLCBuiltinTag.verifyEd25519Signature:             throw new PlutsCEKError("builtin implementation missing");// return (BnCEK.verifyEd25519Signature as any)( ...bnArgs );
+            case UPLCBuiltinTag.appendString :                      return (BnCEK.appendString as any)( ...bnArgs );
+            case UPLCBuiltinTag.equalsString :                      return (BnCEK.equalsString as any)( ...bnArgs );
+            case UPLCBuiltinTag.encodeUtf8 :                        return (BnCEK.encodeUtf8 as any)( ...bnArgs );
+            case UPLCBuiltinTag.decodeUtf8 :                        return (BnCEK.decodeUtf8 as any)( ...bnArgs );
+            case UPLCBuiltinTag.ifThenElse :                        return (BnCEK.ifThenElse as any)( ...bnArgs );
+            case UPLCBuiltinTag.chooseUnit :                        return (BnCEK.chooseUnit as any)( ...bnArgs );
+            case UPLCBuiltinTag.trace :                             return (BnCEK.trace as any)( ...bnArgs );
+            case UPLCBuiltinTag.fstPair :                           return (BnCEK.fstPair as any)( ...bnArgs );
+            case UPLCBuiltinTag.sndPair :                           return (BnCEK.sndPair as any)( ...bnArgs );
+            case UPLCBuiltinTag.chooseList :                        return (BnCEK.chooseList as any)( ...bnArgs );
+            case UPLCBuiltinTag.mkCons :                            return (BnCEK.mkCons as any)( ...bnArgs );
+            case UPLCBuiltinTag.headList :                          return (BnCEK.headList as any)( ...bnArgs );
+            case UPLCBuiltinTag.tailList :                          return (BnCEK.tailList as any)( ...bnArgs );
+            case UPLCBuiltinTag.nullList :                          return (BnCEK.nullList as any)( ...bnArgs );
+            case UPLCBuiltinTag.chooseData :                        return (BnCEK.chooseData as any)( ...bnArgs );
+            case UPLCBuiltinTag.constrData :                        return (BnCEK.constrData as any)( ...bnArgs );
+            case UPLCBuiltinTag.mapData :                           return (BnCEK.mapData as any)( ...bnArgs );
+            case UPLCBuiltinTag.listData :                          return (BnCEK.listData as any)( ...bnArgs );
+            case UPLCBuiltinTag.iData    :                          return (BnCEK.iData as any)( ...bnArgs );
+            case UPLCBuiltinTag.bData    :                          return (BnCEK.bData as any)( ...bnArgs );
+            case UPLCBuiltinTag.unConstrData :                      return (BnCEK.unConstrData as any)( ...bnArgs );
+            case UPLCBuiltinTag.unMapData    :                      return (BnCEK.unMapData as any)( ...bnArgs );
+            case UPLCBuiltinTag.unListData   :                      return (BnCEK.unListData as any)( ...bnArgs );
+            case UPLCBuiltinTag.unIData      :                      return (BnCEK.unIData as any)( ...bnArgs );
+            case UPLCBuiltinTag.unBData      :                      return (BnCEK.unBData as any)( ...bnArgs );
+            case UPLCBuiltinTag.equalsData   :                      return (BnCEK.equalsData as any)( ...bnArgs );
+            case UPLCBuiltinTag.mkPairData   :                      return (BnCEK.mkPairData as any)( ...bnArgs );
+            case UPLCBuiltinTag.mkNilData    :                      return (BnCEK.mkNilData as any)( ...bnArgs );
+            case UPLCBuiltinTag.mkNilPairData:                      return (BnCEK.mkNilPairData as any)( ...bnArgs );
+            case UPLCBuiltinTag.serialiseData:                      return (BnCEK.serialiseData as any)( ...bnArgs );
+            case UPLCBuiltinTag.verifyEcdsaSecp256k1Signature:      throw new PlutsCEKError("builtin implementation missing"); //return (BnCEK.verifyEcdsaSecp256k1Signature as any)( ...bnArgs );
+            case UPLCBuiltinTag.verifySchnorrSecp256k1Signature:    throw new PlutsCEKError("builtin implementation missing"); //return (BnCEK.verifySchnorrSecp256k1Signature as any)( ...bnArgs );
 
             
             default:

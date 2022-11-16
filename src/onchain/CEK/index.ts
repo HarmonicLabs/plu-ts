@@ -19,6 +19,7 @@ import CEKFrames from "./CEKFrames";
 import ForceFrame from "./CEKFrames/ForceFrame";
 import LApp from "./CEKFrames/LApp";
 import RApp from "./CEKFrames/RApp";
+import CEKHeap from "./CEKHeap";
 import CEKSteps, { ComputeStep, ReturnStep } from "./CEKSteps";
 import DelayCEK from "./DelayCEK";
 import LambdaCEK from "./LambdaCEK";
@@ -31,8 +32,9 @@ export default function evalScript( _term: UPLCTerm | Term<any> ): PureUPLCTerm
 
     const frames = new CEKFrames();
     const steps = new CEKSteps();
+    const heap = new CEKHeap();
 
-    compute( _term instanceof Term ? _term.toUPLC(0) : _term, new CEKEnv() );
+    compute( _term instanceof Term ? _term.toUPLC(0) : _term, new CEKEnv( heap ) );
 
     while( !frames.isEmpty || steps.topIsCompute )
     {
@@ -59,7 +61,7 @@ export default function evalScript( _term: UPLCTerm | Term<any> ): PureUPLCTerm
         if( term instanceof HoistedUPLC )
         {
             // HoistedUPLC are always closed; do not need external variables
-            steps.push( new ComputeStep( term.UPLC, new CEKEnv() ) );
+            steps.push( new ComputeStep( term.UPLC, new CEKEnv( heap ) ) );
             return;
         }
         if( term instanceof ErrorUPLC )
@@ -142,7 +144,7 @@ export default function evalScript( _term: UPLCTerm | Term<any> ): PureUPLCTerm
 
         if( v instanceof HoistedUPLC )
         {
-            steps.push( new ComputeStep( v.UPLC, new CEKEnv() ) );
+            steps.push( new ComputeStep( v.UPLC, new CEKEnv( heap ) ) );
             return;
         }
 
@@ -150,7 +152,7 @@ export default function evalScript( _term: UPLCTerm | Term<any> ): PureUPLCTerm
         {
             if( v.nMissingArgs === 0 )
             {
-                steps.push( new ReturnStep( BnCEK.eval( v ) ) );
+                steps.push( new ReturnStep( BnCEK.eval( v, heap ) ) );
                 return;
             }
             if( frames.isEmpty )
@@ -185,7 +187,7 @@ export default function evalScript( _term: UPLCTerm | Term<any> ): PureUPLCTerm
                 steps.push(
                     new ComputeStep(
                         v.delayedTerm,
-                        v instanceof DelayCEK ? v.env : new CEKEnv()
+                        v instanceof DelayCEK ? v.env : new CEKEnv( heap )
                     )
                 );
                 return;
@@ -195,13 +197,13 @@ export default function evalScript( _term: UPLCTerm | Term<any> ): PureUPLCTerm
             steps.push(
                 new ComputeStep(
                     v,
-                    new CEKEnv()
+                    new CEKEnv( heap )
                 )
             );
             return;
         }
         // builtin forces are added only at compile time
-        // ence not present in plu-ts UPLCTerm
+        // hence not present in plu-ts UPLCTerm
 
         if( topFrame instanceof RApp )
         {
@@ -219,7 +221,7 @@ export default function evalScript( _term: UPLCTerm | Term<any> ): PureUPLCTerm
             {
                 const _env = topFrame.func instanceof LambdaCEK ?
                     topFrame.func.env :
-                    new CEKEnv();
+                    new CEKEnv( heap );
 
                 _env.push( v );
 
@@ -243,9 +245,9 @@ export default function evalScript( _term: UPLCTerm | Term<any> ): PureUPLCTerm
                     bn = new PartialBuiltin( bn.tag );
                 }
 
-                if( bn.nMissingArgs === 0 ) return returnCEK( BnCEK.eval( bn ) );
+                if( bn.nMissingArgs === 0 ) return returnCEK( BnCEK.eval( bn, heap ) );
 
-                bn.apply( v )
+                bn.applyArgPtr( heap.add( v ) )
 
                 // choose what to do based on the frames
                 return returnCEK( bn );

@@ -30,7 +30,7 @@ export function isData( something: any ): something is Data
 
 export function eqData( a: Data, b: Data ): boolean
 {
-    // not necessary since prototypes need to be checked anyways
+    // not necessary since prototypes will be checked anyways
     // if( !isData( a ) ) return false;
     // if( !isData( b ) ) return false;
 
