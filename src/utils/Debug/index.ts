@@ -15,6 +15,8 @@ export default class Debug
         err( ...args: any[] ): void {},
         assert( ...args: any[] ): void {},
         throw( ...args: any[] ): void {},
+        time( ...args: any[] ): void {},
+        timeEnd( ...args: any[] ): void {},
         Proxies: {
             withNoisySet<T extends object>( obj: T ): T { return obj }
         }
@@ -66,6 +68,21 @@ export default class Debug
 
         console.error(...args);
     }
+
+    static time( tag: string )
+    {
+        if( !Debug.isDeugging() ) return;
+
+        console.time( tag );
+    }
+
+    static timeEnd( tag: string )
+    {
+        if( !Debug.isDeugging() ) return;
+
+        console.timeEnd( tag );
+    }
+
 
     /**
      * assertion made only in the debugging process

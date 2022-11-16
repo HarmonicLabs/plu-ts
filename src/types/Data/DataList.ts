@@ -16,13 +16,15 @@ export default class DataList
             "invalid list passed to constructor"
         );
         
-        this._list = list;
+        this._list = list.map( dataElem => dataElem.clone() );
     }
     
     clone(): DataList
     {
         return new DataList(
-            this._list.map( dataElem => dataElem.clone() )
+            this._list
+            //.map( dataElem => dataElem.clone() )
+            // the constructor clones the list
         );
     }
 }

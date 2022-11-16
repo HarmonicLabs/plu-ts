@@ -6,6 +6,7 @@
   "type": "module",
   "scripts": {
     "test": "jest",
+    "clear-jest": "jest --clearCache",
     "test-watch": "jest --watchman",
     "test-coverage": "jest --coverage"
   },

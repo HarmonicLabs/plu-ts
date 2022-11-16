@@ -19,6 +19,7 @@ import CEKFrames from "./CEKFrames";
 import ForceFrame from "./CEKFrames/ForceFrame";
 import LApp from "./CEKFrames/LApp";
 import RApp from "./CEKFrames/RApp";
+import CEKHeap from "./CEKHeap";
 import CEKSteps, { ComputeStep, ReturnStep } from "./CEKSteps";
 import DelayCEK from "./DelayCEK";
 import LambdaCEK from "./LambdaCEK";
@@ -27,12 +28,16 @@ const timeTag = 'evalScript';
 
 export default function evalScript( _term: UPLCTerm | Term<any> ): PureUPLCTerm
 {
-    console.time( timeTag );
-
+    Debug.time( timeTag );
+    
     const frames = new CEKFrames();
     const steps = new CEKSteps();
+    const heap = new CEKHeap();
 
-    compute( _term instanceof Term ? _term.toUPLC(0) : _term, new CEKEnv() );
+    // let n_compute = 0;
+    // let n_returns = 0;
+
+    compute( _term instanceof Term ? _term.toUPLC(0) : _term, new CEKEnv( heap ) );
 
     while( !frames.isEmpty || steps.topIsCompute )
     {
@@ -55,11 +60,12 @@ export default function evalScript( _term: UPLCTerm | Term<any> ): PureUPLCTerm
 
     function compute( term: UPLCTerm, env: CEKEnv ): void
     {
+        // n_compute++;
 
         if( term instanceof HoistedUPLC )
         {
             // HoistedUPLC are always closed; do not need external variables
-            steps.push( new ComputeStep( term.UPLC, new CEKEnv() ) );
+            steps.push( new ComputeStep( term.UPLC, new CEKEnv( heap ) ) );
             return;
         }
         if( term instanceof ErrorUPLC )
@@ -139,10 +145,11 @@ export default function evalScript( _term: UPLCTerm | Term<any> ): PureUPLCTerm
 
     function returnCEK( v: UPLCTerm ): void
     {
+        // n_returns++;
 
         if( v instanceof HoistedUPLC )
         {
-            steps.push( new ComputeStep( v.UPLC, new CEKEnv() ) );
+            steps.push( new ComputeStep( v.UPLC, new CEKEnv( heap ) ) );
             return;
         }
 
@@ -185,7 +192,7 @@ export default function evalScript( _term: UPLCTerm | Term<any> ): PureUPLCTerm
                 steps.push(
                     new ComputeStep(
                         v.delayedTerm,
-                        v instanceof DelayCEK ? v.env : new CEKEnv()
+                        v instanceof DelayCEK ? v.env : new CEKEnv( heap )
                     )
                 );
                 return;
@@ -195,7 +202,7 @@ export default function evalScript( _term: UPLCTerm | Term<any> ): PureUPLCTerm
             steps.push(
                 new ComputeStep(
                     v,
-                    new CEKEnv()
+                    new CEKEnv( heap )
                 )
             );
             return;
@@ -219,7 +226,7 @@ export default function evalScript( _term: UPLCTerm | Term<any> ): PureUPLCTerm
             {
                 const _env = topFrame.func instanceof LambdaCEK ?
                     topFrame.func.env :
-                    new CEKEnv();
+                    new CEKEnv( heap );
 
                 _env.push( v );
 
@@ -256,6 +263,8 @@ export default function evalScript( _term: UPLCTerm | Term<any> ): PureUPLCTerm
         return;
     }
 
-    console.timeEnd(timeTag)
+    Debug.timeEnd(timeTag);
+
+    // console.log( n_compute, n_returns );
     return (steps.pop() as ReturnStep).value ?? new ErrorUPLC("steps.pop() was not a ReturnStep");
 }

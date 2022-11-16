@@ -183,6 +183,8 @@ describe("scriptToJsonFormat", () => {
         );
         //*/
         
+        const dataCreationTimeTag = "creation of ScriptContext";
+        console.time(dataCreationTimeTag);
         //*
         const unitDatumHash = PDatumHash.from( pByteString("923918e403bf43c34b4ef6b48eb2ee04babed17320d8d1b9ff9ad086e86f44ec") );
         const justUnitDatumHash = PMaybe( PDatumHash.type ).Just({ val: unitDatumHash });
@@ -254,6 +256,8 @@ describe("scriptToJsonFormat", () => {
                 })
             })
         );
+
+        console.timeEnd(dataCreationTimeTag);
 
         expect(
             evalScript(

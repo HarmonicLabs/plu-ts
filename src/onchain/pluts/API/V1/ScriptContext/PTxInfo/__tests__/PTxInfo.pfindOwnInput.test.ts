@@ -83,15 +83,20 @@ describe("pfindOwnInput", () => {
 
     test("find validator Input", () => {
 
+        const res = evalScript(
+            pfindOwnInput.$( _txInfo ).$( _purp )
+        );
+
+        console.log( res );
+        //*
         expect(
-            evalScript(
-                pfindOwnInput.$( _txInfo ).$( _purp )
-            )
+            res
         ).toEqual(
             evalScript(
                 PMaybe( PTxInInfo.type ).Just({ val:  validatorInput })
             )
         )
+        //*/
 
     });
 

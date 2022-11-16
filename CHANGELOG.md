@@ -13,11 +13,13 @@
     - [ ] simple constants (`int`, `bs`, `bool`, etc... )
     - [ ] functions (`lam`, `fn`)
 
-## Unreleased v0.1.3
+## v0.1.3
 
-- [ ] `evalScript` optimizations
-    - [ ] definition of `CEKHeap` to store `CEKValues` in no particular order
-    - [ ] modify `CEKEnv` to point at values in the `CEKHeap` rather than having a local copy (and copying them when cloning too)
+- `evalScript` optimizations
+    - definition of `CEKHeap` to store `CEKValues` in no particular order
+    - modify `CEKEnv` to point at values in the `CEKHeap` rather than having a local copy (and copying them when cloning too)
+- `Data` classes are now cloning the fields in the constructor and the fields getters now will return freezed object (`Data` is meant to be immutable anyway)
+
 
 ## v0.1.2
 

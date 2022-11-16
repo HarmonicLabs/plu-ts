@@ -6,7 +6,7 @@ export default class DataI
     implements Cloneable<DataI>
 {
     private _int: Integer
-    get int(): Integer { return this._int.clone() }
+    get int(): Integer { return Object.freeze( this._int ) as any }
 
     constructor( I: Integer | number | bigint = 0 )
     {
@@ -15,11 +15,15 @@ export default class DataI
             I = new Integer( I );
         }
 
-        this._int = I;
+        this._int = I.clone();
     }
 
     clone(): DataI
     {
-        return new DataI( this._int.clone() );
+        return new DataI(
+            this._int
+            // .clone()
+            // the constructor clones the fields
+        );
     }
 }

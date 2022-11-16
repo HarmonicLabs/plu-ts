@@ -7,7 +7,10 @@ export default class DataB
     implements Cloneable<DataB>
 {
     private _bytes: ByteString
-    get bytes(): ByteString { return this._bytes.clone() };
+    get bytes(): ByteString
+    {
+        return Object.freeze( this._bytes ) as any
+    };
 
     constructor( B: ByteString | Buffer )
     {
@@ -18,11 +21,12 @@ export default class DataB
             "invalid ByteString provided while constructing 'DataB' instance"
         );
 
-        this._bytes = B;
+        this._bytes = B.clone();
     }
 
     clone(): DataB
     {
-        return new DataB( this._bytes.clone() );
+        // the constructor clones the bytes
+        return new DataB( this._bytes );
     }
 }

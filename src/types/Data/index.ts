@@ -3,7 +3,6 @@ import DataConstr from "./DataConstr";
 import DataI from "./DataI";
 import DataList from "./DataList";
 import DataMap from "./DataMap";
-import DataPair from "./DataPair";
 
 type Data 
     = DataConstr
@@ -15,9 +14,14 @@ type Data
 
 export default Data;
 
+function isSomething( something: any ): boolean
+{
+    return something !== null && something !== undefined;
+}
+
 export function isData( something: any ): something is Data
 {
-    if( something === null || something === undefined ) return false;
+    if( !isSomething( something ) ) return false;
     const proto = Object.getPrototypeOf( something );
 
     return (
@@ -31,15 +35,11 @@ export function isData( something: any ): something is Data
 
 export function eqData( a: Data, b: Data ): boolean
 {
-<<<<<<< HEAD
-    if( !isData( a ) ) return false;
-    if( !isData( b ) ) return false;
-=======
-    // not necessary since prototypes need to be checked anyways
-    // if( !isData( a ) ) return false;
-    // if( !isData( b ) ) return false;
->>>>>>> parent of 1067d89... can't clone ScriptContext Data; RangeError: Maximum call stack size exceeded
-
+    if(!(
+        isSomething( a ) &&
+        isSomething( b )
+    )) return false;
+    
     const aProto = Object.getPrototypeOf( a );
     const bProto = Object.getPrototypeOf( b );
 
@@ -47,13 +47,17 @@ export function eqData( a: Data, b: Data ): boolean
 
     if( aProto === DataConstr.prototype )
     {
-        return (
-            (a as DataConstr).constr.asBigInt === (b as DataConstr).constr.asBigInt &&
-            (a as DataConstr).fields.length === (b as DataConstr).fields.length &&
-            (a as DataConstr).fields.every(
-                (aField, idx) => eqData( aField, (b as DataConstr).fields[ idx ] ) 
-            )
-        );
+        try {
+            return (
+                (a as DataConstr).constr.asBigInt === (b as DataConstr).constr.asBigInt &&
+                (a as DataConstr).fields.length === (b as DataConstr).fields.length &&
+                (a as DataConstr).fields.every(
+                    (aField, idx) => eqData( aField, (b as DataConstr).fields[ idx ] ) 
+                )
+            );
+        } catch (e) {
+            return false;
+        }
     }
     if( aProto === DataMap.prototype )
     {

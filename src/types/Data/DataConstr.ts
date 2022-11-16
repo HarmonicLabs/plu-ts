@@ -11,11 +11,7 @@ export default class DataConstr
     get constr(): UInteger { return this._constr.clone() };
 
     private _fields: Data[]
-<<<<<<< HEAD
     get fields(): Data[] { return this._fields.map( dataElem => Object.freeze( dataElem ) as any ) };
-=======
-    get fields(): Data[] { return this._fields.map( dataElem => dataElem.clone() ) };
->>>>>>> parent of 1067d89... can't clone ScriptContext Data; RangeError: Maximum call stack size exceeded
 
     constructor( constr: CanBeUInteger, fields: Data[] )
     {
@@ -24,20 +20,17 @@ export default class DataConstr
             "invalid fields passed to constructor"
         );
 
-        this._constr = forceUInteger( constr );
-        this._fields = fields;
+        this._constr = forceUInteger( constr ).clone();
+        this._fields = fields.map( dataElem =>  dataElem.clone() );
     }
 
     clone(): DataConstr
     {
-<<<<<<< HEAD
-        console.log(Error().stack);
-
-=======
->>>>>>> parent of 1067d89... can't clone ScriptContext Data; RangeError: Maximum call stack size exceeded
         return new DataConstr(
             this._constr.clone(),
-            this._fields.map( dataElem => dataElem.clone() ) as Data[]
+            this._fields
+            //.map( dataElem => dataElem.clone() ) as Data[]
+            // the constructor clones the fields
         );
     }
 }

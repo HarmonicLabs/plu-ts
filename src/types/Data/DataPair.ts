@@ -7,7 +7,7 @@ export default class DataPair<DataFst extends Data, DataSnd extends Data>
     implements Cloneable<DataPair<DataFst,DataSnd>>
 {
     private _fst: DataFst;
-    get fst(): DataFst { return this._fst };
+    get fst(): DataFst { return Object.freeze( this._fst ) };
     set fst( v: DataFst )
     {
         JsRuntime.assert(
@@ -18,7 +18,7 @@ export default class DataPair<DataFst extends Data, DataSnd extends Data>
     };
 
     private _snd: DataSnd;
-    get snd(): DataSnd { return this._snd };
+    get snd(): DataSnd { return Object.freeze( this._snd ) };
     set snd( v: DataSnd )
     {
         JsRuntime.assert(
@@ -34,12 +34,13 @@ export default class DataPair<DataFst extends Data, DataSnd extends Data>
             isData( fst ) && isData( snd ),
             `invalid Data passed to 'DataPair' constructor; fst: ${fst}; snd: ${snd}`
         );
-        this._fst = fst;
-        this._snd = snd;
+        this._fst = fst.clone() as any;
+        this._snd = snd.clone() as any;
     }
 
     clone(): DataPair<DataFst,DataSnd>
     {
-        return new DataPair( this.fst.clone(), this.snd.clone() ) as any;
+        // the constructor clones both fst and snd
+        return new DataPair( this.fst, this.snd ) as any;
     }
 }

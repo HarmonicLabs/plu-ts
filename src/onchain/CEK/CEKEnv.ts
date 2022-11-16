@@ -1,31 +1,29 @@
 import Cloneable from "../../types/interfaces/Cloneable";
 import Integer from "../../types/ints/Integer";
 import { PureUPLCTerm } from "../UPLC/UPLCTerm";
+import CEKHeap from "./CEKHeap";
 import { eqCEKValue } from "./CEKValue";
 
 export default class CEKEnv
     implements Cloneable<CEKEnv>
 {
-    private _env: PureUPLCTerm[];
+    private _heapRef: CEKHeap;
+    private _heapPtrs: number[];
 
-    constructor( init: PureUPLCTerm[] = [] )
+    constructor( heapRef: CEKHeap, init: number[] = [] )
     {
-        this._env = init;
+        this._heapRef = heapRef;
+        this._heapPtrs = init;
     }
 
     clone(): CEKEnv
     {
-        return new CEKEnv( this._env.map( uplc => uplc.clone() ) )
+        return new CEKEnv( this._heapRef, this._heapPtrs.map( ptr => ptr ) )
     }
 
     push( varValue: PureUPLCTerm ): void
     {
-        this._env.push( varValue );
-    }
-
-    pop(): PureUPLCTerm | undefined
-    {
-        return this._env.pop();
+        this._heapPtrs.push( this._heapRef.add( varValue ) );
     }
 
     get( dbn: number | bigint | Integer ): PureUPLCTerm | undefined
@@ -34,8 +32,8 @@ export default class CEKEnv
             dbn instanceof Integer ? Number( dbn.asBigInt ) :
             typeof dbn === "bigint" ? Number( dbn ):
             dbn;
-        if( (this._env.length - _dbn) < 1 ) return undefined;
-        return this._env[ this._env.length - 1 - _dbn ].clone();
+        if( (this._heapPtrs.length - _dbn) < 1 ) return undefined;
+        return this._heapRef.get( this._heapPtrs[ this._heapPtrs.length - 1 - _dbn ] );
     }
 
     static eq( a: CEKEnv, b: CEKEnv ): boolean
@@ -48,8 +46,9 @@ export default class CEKEnv
         if( a === b ) return true; // shallow eq
 
         return (
-            a._env.length === b._env.length &&
-            a._env.every(( v,i ) => eqCEKValue( v, b._env[i] ) )
+            a._heapRef === b._heapRef &&
+            a._heapPtrs.length === b._heapPtrs.length &&
+            a._heapPtrs.every(( ptr,i ) => ptr === b._heapPtrs[i] )
         );
     }
 }
