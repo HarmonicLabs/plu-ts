@@ -10,6 +10,7 @@ import PBool from "../../PTypes/PBool";
 import { pfn, phoist } from "../../Syntax/syntax";
 import { bs, int } from "../../Term/Type/base";
 import TermBool from "./TermBool";
+import { PappArg } from "../../Syntax/pappArg";
 
 
 type TermBS = Term<PByteString> & {
@@ -20,37 +21,37 @@ type TermBS = Term<PByteString> & {
     
     // pappendBs
     readonly concatTerm: TermFn<[PByteString], PByteString>
-    readonly concat: ( other: Term<PByteString>) => TermBS
+    readonly concat: ( other: PappArg<PByteString>) => TermBS
 
     // pconsBs
     readonly prependTerm: TermFn<[PInt], PByteString>
-    readonly prepend: ( byte: Term<PInt> ) => TermBS
+    readonly prepend: ( byte: PappArg<PInt> ) => TermBS
 
     // psliceBs
     readonly subByteStringTerm: TermFn<[PInt, PInt], PByteString>
-    readonly subByteString: ( fromInclusive: Term<PInt>, ofLength: Term<PInt> ) => TermBS
+    readonly subByteString: ( fromInclusive: PappArg<PInt>, ofLength: PappArg<PInt> ) => TermBS
     
     readonly sliceTerm: TermFn<[PInt, PInt], PByteString>
-    readonly slice:     ( fromInclusive: Term<PInt>, toExclusive: Term<PInt> ) => TermBS
+    readonly slice:     ( fromInclusive: PappArg<PInt>, toExclusive: PappArg<PInt> ) => TermBS
     
     // pindexBs
     readonly atTerm:    TermFn<[PInt], PInt>
-    readonly at:        ( index: Term<PInt> ) => TermInt
+    readonly at:        ( index: PappArg<PInt> ) => TermInt
 
     readonly eqTerm:    TermFn<[PByteString], PBool>
-    readonly eq:        ( other: Term<PByteString> ) => TermBool
+    readonly eq:        ( other: PappArg<PByteString> ) => TermBool
 
     readonly ltTerm:    TermFn<[PByteString], PBool>
-    readonly lt:        ( other: Term<PByteString> ) => TermBool
+    readonly lt:        ( other: PappArg<PByteString> ) => TermBool
 
     readonly ltEqTerm:  TermFn<[PByteString], PBool>
-    readonly ltEq:      ( other: Term<PByteString> ) => TermBool
+    readonly ltEq:      ( other: PappArg<PByteString> ) => TermBool
 
     readonly gtTerm:    TermFn<[PByteString], PBool>
-    readonly gt:        ( other: Term<PByteString> ) => TermBool
+    readonly gt:        ( other: PappArg<PByteString> ) => TermBool
 
     readonly gtEqTerm:  TermFn<[PByteString], PBool>
-    readonly gtEq:      ( other: Term<PByteString> ) => TermBool
+    readonly gtEq:      ( other: PappArg<PByteString> ) => TermBool
 
 }
 
@@ -104,7 +105,7 @@ export function addPByteStringMethods( term: Term<PByteString> ): TermBS
     ObjectUtils.defineReadOnlyProperty(
         term,
         "concat",
-        ( other: Term<PByteString>): TermBS => pappendBs.$( term ).$( other )
+        ( other: PappArg<PByteString>): TermBS => pappendBs.$( term ).$( other )
     );
 
     ObjectUtils.defineReadOnlyProperty(
@@ -115,7 +116,7 @@ export function addPByteStringMethods( term: Term<PByteString> ): TermBS
     ObjectUtils.defineReadOnlyProperty(
         term,
         "prepend",
-        ( byte: Term<PInt>): TermBS => pconsBs.$( byte ).$( term )
+        ( byte: PappArg<PInt>): TermBS => pconsBs.$( byte ).$( term )
     );
 
     ObjectUtils.defineReadOnlyProperty(
@@ -126,7 +127,7 @@ export function addPByteStringMethods( term: Term<PByteString> ): TermBS
     ObjectUtils.defineReadOnlyProperty(
         term,
         "subByteString",
-        ( fromInclusive: Term<PInt>, ofLength: Term<PInt> ): TermBS => psliceBs.$( fromInclusive ).$( ofLength ).$( term )
+        ( fromInclusive: PappArg<PInt>, ofLength: PappArg<PInt> ): TermBS => psliceBs.$( fromInclusive ).$( ofLength ).$( term )
     );
 
     ObjectUtils.defineReadOnlyProperty(
@@ -137,7 +138,7 @@ export function addPByteStringMethods( term: Term<PByteString> ): TermBS
     ObjectUtils.defineReadOnlyProperty(
         term,
         "slice",
-        ( fromInclusive: Term<PInt>, toExclusive: Term<PInt> ): TermBS => jsLikeSlice.$( term ).$( fromInclusive ).$( toExclusive )
+        ( fromInclusive: PappArg<PInt>, toExclusive: PappArg<PInt> ): TermBS => jsLikeSlice.$( term ).$( fromInclusive ).$( toExclusive )
     );
 
     ObjectUtils.defineReadOnlyProperty(
@@ -148,7 +149,7 @@ export function addPByteStringMethods( term: Term<PByteString> ): TermBS
     ObjectUtils.defineReadOnlyProperty(
         term,
         "at",
-        ( index: Term<PInt> ): TermInt => pindexBs.$( term ).$( index )
+        ( index: PappArg<PInt> ): TermInt => pindexBs.$( term ).$( index )
     );
 
     ObjectUtils.defineReadOnlyProperty(
@@ -159,7 +160,7 @@ export function addPByteStringMethods( term: Term<PByteString> ): TermBS
     ObjectUtils.defineReadOnlyProperty(
         term,
         "eq",
-        ( other: Term<PByteString> ): TermBool => peqBs.$( term ).$( other )
+        ( other: PappArg<PByteString> ): TermBool => peqBs.$( term ).$( other )
     );
 
     ObjectUtils.defineReadOnlyProperty(
@@ -170,7 +171,7 @@ export function addPByteStringMethods( term: Term<PByteString> ): TermBS
     ObjectUtils.defineReadOnlyProperty(
         term,
         "lt",
-        ( other: Term<PByteString> ): TermBool => plessBs.$( term ).$( other )
+        ( other: PappArg<PByteString> ): TermBool => plessBs.$( term ).$( other )
     );
 
     ObjectUtils.defineReadOnlyProperty(
@@ -181,7 +182,7 @@ export function addPByteStringMethods( term: Term<PByteString> ): TermBS
     ObjectUtils.defineReadOnlyProperty(
         term,
         "ltEq",
-        ( other: Term<PByteString> ): TermBool => plessEqBs.$( term ).$( other )
+        ( other: PappArg<PByteString> ): TermBool => plessEqBs.$( term ).$( other )
     );
 
     ObjectUtils.defineReadOnlyProperty(
@@ -192,7 +193,7 @@ export function addPByteStringMethods( term: Term<PByteString> ): TermBS
     ObjectUtils.defineReadOnlyProperty(
         term,
         "gt",
-        ( other: Term<PByteString> ): TermBool => pgreaterBS.$( term ).$( other )
+        ( other: PappArg<PByteString> ): TermBool => pgreaterBS.$( term ).$( other )
     );
 
     ObjectUtils.defineReadOnlyProperty(
@@ -203,7 +204,7 @@ export function addPByteStringMethods( term: Term<PByteString> ): TermBS
     ObjectUtils.defineReadOnlyProperty(
         term,
         "gtEq",
-        ( other: Term<PByteString> ): TermBool => pgreaterEqBS.$( term ).$( other )
+        ( other: PappArg<PByteString> ): TermBool => pgreaterEqBS.$( term ).$( other )
     );
 
 

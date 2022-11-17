@@ -1,16 +1,12 @@
 import JsRuntime from "../../../utils/JsRuntime";
-import { pfstPair, pid, ppairData, psndPair, punMapData } from "../stdlib/Builtins";
 import PType, { PDataRepresentable } from "../PType";
 import { phoist, plam } from "../Syntax/syntax";
 import Term from "../Term";
 import Type, { ConstantableTermType, data, DataType, pair, TermType, ToPType } from "../Term/Type/base";
 import { typeExtends } from "../Term/Type/extension";
 import PData from "./PData/PData";
-import PDataMap from "./PData/PDataMap";
 import PLam from "./PFn/PLam";
-import PList from "./PList";
 import { punsafeConvertType } from "../Syntax";
-import pappArgToTerm, { PappArg } from "../Syntax/pappArg";
 import { isConstantableTermType } from "../Term/Type/kinds";
 import UPLCConst from "../../UPLC/UPLCTerms/UPLCConst";
 import { termTyToConstTy } from "../Term/Type/constTypeConversion";
@@ -74,7 +70,7 @@ export default class PPair<A extends PType, B extends PType > extends PDataRepre
 export function pPair<FstT extends ConstantableTermType, SndT extends ConstantableTermType>(
     fstT: FstT,
     sndT: SndT
-): ( _fst: PappArg<ToPType<FstT>>, _snd: PappArg<ToPType<SndT>> ) => TermPair<ToPType<FstT>,ToPType<SndT>>
+): ( fst: Term<ToPType<FstT>>, snd: Term<ToPType<SndT>> ) => TermPair<ToPType<FstT>,ToPType<SndT>>
 {
     JsRuntime.assert(
         isConstantableTermType( fstT ),
@@ -85,17 +81,14 @@ export function pPair<FstT extends ConstantableTermType, SndT extends Constantab
         "plutus only supports pairs of types that can be converted to constants"
     );
 
-    return ( fst: PappArg<ToPType<FstT>>, snd: PappArg<ToPType<SndT>> ): TermPair<ToPType<FstT>,ToPType<SndT>> => {
+    return ( _fst: Term<ToPType<FstT>>, _snd: Term<ToPType<SndT>> ): TermPair<ToPType<FstT>,ToPType<SndT>> => {
 
-        const _fst = pappArgToTerm( fst, fstT );
         JsRuntime.assert(
             _fst instanceof Term &&
             (_fst as any).isConstant &&
             typeExtends( _fst.type, fstT ),
             "first element of a constant pair was not a constant"
         );
-
-        const _snd = pappArgToTerm( snd, sndT );
         JsRuntime.assert(
             _snd instanceof Term &&
             (_snd as any).isConstant &&

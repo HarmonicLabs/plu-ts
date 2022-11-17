@@ -263,7 +263,7 @@ describe("pappArgToTerm", () => {
             ),
             pPair( bs, bs )(
                 pByteString( ByteString.fromAscii("hello") ),
-                ByteString.fromAscii("world")
+                pByteString( ByteString.fromAscii("world") )
             )
         );
 
@@ -273,7 +273,7 @@ describe("pappArgToTerm", () => {
                 pair( int, int )
             ),
             pPair( int, int )(
-                1,
+                pInt( 1 ),
                 pInt( 2 )
             )
         );
@@ -284,21 +284,20 @@ describe("pappArgToTerm", () => {
                 pair( int, bs )
             ),
             pPair( int, bs )(
-                1,
-                ByteString.fromAscii("hello")
+                pInt( 1 ),
+                pByteString( ByteString.fromAscii("hello") )
 
             )
         );
 
         expectScriptToEq(
             pappArgToTerm(
-                { fst: 1,snd: "hello" },
+                { fst: 1, snd: "hello" },
                 pair( int, bs )
             ),
             pPair( int, bs )(
-                1,
-                ByteString.fromAscii("hello")
-
+                pInt( 1 ),
+                pByteString( ByteString.fromAscii("hello") )
             )
         );
 
@@ -308,9 +307,8 @@ describe("pappArgToTerm", () => {
                 pair( int, bs )
             ),
             pPair( int, bs )(
-                1,
-                ByteString.fromAscii("hello")
-
+                pInt( 1 ),
+                pByteString(  ByteString.fromAscii("hello") )
             )
         );
 

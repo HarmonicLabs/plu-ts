@@ -1,5 +1,4 @@
 import { Buffer } from "buffer";
-import { pByteString, pfn, plam, PLam, pList, pmakeUnit, pPair, pStr } from "..";
 import CborString from "../../../cbor/CborString";
 import BasePlutsError from "../../../errors/BasePlutsError";
 import HexString from "../../../types/HexString";
@@ -12,18 +11,23 @@ import type PType from "../PType";
 import type PBool from "../PTypes/PBool";
 import { pBool } from "../PTypes/PBool";
 import type PByteString from "../PTypes/PByteString";
+import { pByteString } from "../PTypes/PByteString";
+import PLam from "../PTypes/PFn/PLam";
 import type PInt from "../PTypes/PInt";
 import { pInt } from "../PTypes/PInt";
-import PList from "../PTypes/PList";
-import PPair from "../PTypes/PPair";
+import PList, { pList } from "../PTypes/PList";
+import PPair, { pPair } from "../PTypes/PPair";
 import type PString from "../PTypes/PString";
+import { pStr } from "../PTypes/PString";
 import type PUnit from "../PTypes/PUnit";
+import { pmakeUnit } from "../PTypes/PUnit";
 import { UtilityTermOf } from "../stdlib/UtilityTerms/addUtilityForType";
 import Term from "../Term";
 import { bool, bs, ConstantableTermType, fn, int, list, str, TermType, ToPType, tyVar, unit } from "../Term/Type/base";
 import { typeExtends } from "../Term/Type/extension";
 import { isConstantableTermType, isLambdaType, isListType, isPairType, isTypeParam, isWellFormedType } from "../Term/Type/kinds";
 import { getNRequiredLambdaArgs, termTypeToString } from "../Term/Type/utils";
+import { pfn } from "./syntax";
 
 type _TsFunctionSatisfying<KnownArgs extends Term<PType>[], POut extends PType> =
     POut extends PLam<infer POutIn extends PType, infer POutOut extends PType> ?

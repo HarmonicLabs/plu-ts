@@ -14,8 +14,7 @@ import PDataList from "./PData/PDataList";
 import PLam from "./PFn/PLam";
 import punsafeConvertType from "../Syntax/punsafeConvertType";
 import { PappArg } from "../Syntax/pappArg";
-import { addPListMethods } from "../stdlib";
-import TermList from "../stdlib/UtilityTerms/TermList";
+import TermList, { addPListMethods } from "../stdlib/UtilityTerms/TermList";
 
 
 export default class PList<A extends PType> extends PDataRepresentable

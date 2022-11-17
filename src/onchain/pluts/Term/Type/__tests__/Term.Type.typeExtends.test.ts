@@ -2,7 +2,6 @@ import Type, { int, pair, TermType } from "../base";
 import PValue from "../../../API/V1/Value/PValue";
 import palias from "../../../PTypes/PAlias/palias";
 import { typeExtends } from "../extension";
-import { termTypeToString } from "../utils";
 
 const allTypesFixed = [
     Type.Unit,

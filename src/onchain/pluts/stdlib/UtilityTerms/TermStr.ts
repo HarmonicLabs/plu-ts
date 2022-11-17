@@ -6,16 +6,17 @@ import TermBS from "./TermBS";
 import { TermFn } from "../../PTypes/PFn/PLam";
 import PBool from "../../PTypes/PBool";
 import TermBool from "./TermBool";
+import { PappArg } from "../../Syntax/pappArg";
 
 type TermStr = Term<PString> & {
     readonly utf8Encoded: TermBS
     
     // pappendStr
     readonly concatTerm:    TermFn<[ PString ], PString>
-    readonly concat:        ( other: Term<PString> ) => TermStr
+    readonly concat:        ( other: PappArg<PString> ) => TermStr
 
     readonly eqTerm:    TermFn<[ PString ], PBool >
-    readonly eq:        ( other: Term<PString> ) => TermBool
+    readonly eq:        ( other: PappArg<PString> ) => TermBool
 }
 
 export default TermStr;
@@ -36,7 +37,7 @@ export function addPStringMethods( term: Term<PString> ): TermStr
     ObjectUtils.defineReadOnlyProperty(
         term,
         "concat",
-        ( other: Term<PString> ): TermStr => pappendStr.$( term ).$( other )
+        ( other: PappArg<PString> ): TermStr => pappendStr.$( term ).$( other )
     );
 
     ObjectUtils.defineReadOnlyProperty(
@@ -47,7 +48,7 @@ export function addPStringMethods( term: Term<PString> ): TermStr
     ObjectUtils.defineReadOnlyProperty(
         term,
         "eq",
-        ( other: Term<PString> ): TermBool => peqStr.$( term ).$( other )
+        ( other: PappArg<PString> ): TermBool => peqStr.$( term ).$( other )
     );
 
     return term as any;

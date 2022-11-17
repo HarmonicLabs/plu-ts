@@ -87,7 +87,6 @@ describe("pfindOwnInput", () => {
             pfindOwnInput.$( _txInfo ).$( _purp )
         );
 
-        console.log( res );
         //*
         expect(
             res

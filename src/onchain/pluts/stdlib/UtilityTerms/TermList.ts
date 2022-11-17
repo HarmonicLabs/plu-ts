@@ -6,6 +6,7 @@ import PBool from "../../PTypes/PBool";
 import PLam, { TermFn } from "../../PTypes/PFn/PLam";
 import PInt from "../../PTypes/PInt";
 import PList from "../../PTypes/PList"
+import { PappArg } from "../../Syntax/pappArg";
 import { phoist } from "../../Syntax/syntax";
 import Term from "../../Term";
 import { ConstantableTermType, TermType, ToPType } from "../../Term/Type/base";
@@ -13,7 +14,7 @@ import { isConstantableTermType, isLambdaType } from "../../Term/Type/kinds";
 import { termTypeToString } from "../../Term/Type/utils";
 import { phead, pprepend, ptail } from "../Builtins";
 import { plength, preverse } from "../List";
-import { pevery, pfilter, pfind, pfindList, pindexList, pmap, psome } from "../List/methods";
+import { pevery, pfilter, pfind, pindexList, pmap, psome } from "../List/methods";
 import { pflip } from "../PCombinators";
 import { PMaybeT } from "../PMaybe/PMaybe";
 import { UtilityTermOf } from "./addUtilityForType";
@@ -73,32 +74,32 @@ type TermList<PElemsT extends PDataRepresentable> = Term<PList<PElemsT>> & {
 
     // indexing / query
     readonly atTerm:    TermFn<[PInt], PElemsT>
-    readonly at:        ( index: Term<PInt> ) => UtilityTermOf<PElemsT> 
+    readonly at:        ( index: PappArg<PInt> ) => UtilityTermOf<PElemsT> 
     
     readonly findTerm:  TermFn<[PLam<PElemsT,PBool>], PMaybeT<PElemsT>>
-    readonly find:      ( predicate: Term<PLam<PElemsT,PBool>> ) => Term<PMaybeT<PElemsT>>
+    readonly find:      ( predicate: PappArg<PLam<PElemsT,PBool>> ) => Term<PMaybeT<PElemsT>>
 
     // readonly includes: TermFn<[PElemsT], PBool>
     // readonly findIndex: TermFn<[PLam<PElemsT,PBool>], PInt>
     readonly filterTerm:    TermFn<[PLam<PElemsT,PBool>], PList<PElemsT>>
-    readonly filter:        ( predicate: Term<PLam<PElemsT,PBool>> ) => TermList<PElemsT>
+    readonly filter:        ( predicate: PappArg<PLam<PElemsT,PBool>> ) => TermList<PElemsT>
 
     // list creation
     readonly prependTerm:  TermFn<[PElemsT], PList<PElemsT>>
-    readonly prepend:      ( elem: Term<PElemsT> ) => TermList<PElemsT>
+    readonly prepend:      ( elem: PappArg<PElemsT> ) => TermList<PElemsT>
     // readonly concat: TermFn<[PList<PElemsT>], PList<PElemsT>>
     
     // transform
     readonly mapTerm: <ResultT extends ConstantableTermType>( resultT: ResultT ) => TermFn<[PLam<PElemsT, ToPType<ResultT>>], PList<ToPType<ResultT>>>
-    readonly map:     <PResultElemT extends PType>( f: Term<PLam<PElemsT,PResultElemT>> ) => TermList<PResultElemT>
+    readonly map:     <PResultElemT extends PType>( f: PappArg<PLam<PElemsT,PResultElemT>> ) => TermList<PResultElemT>
     // readonly reduce: <ResultT extends ConstantableTermType>( resultT: ResultT ) => TermFn<[PLam<ToPType<ResultT>, PLam<PList<PElemsT>, ToPType<ResultT>>>], ToPType<ResultT>> 
 
     // predicates
     readonly everyTerm: TermFn<[PLam<PElemsT, PBool>], PBool>
-    readonly every:     ( predicate: Term<PLam<PElemsT, PBool>> ) => TermBool
+    readonly every:     ( predicate: PappArg<PLam<PElemsT, PBool>> ) => TermBool
     
     readonly someTerm:  TermFn<[PLam<PElemsT, PBool>], PBool>
-    readonly some:      ( predicate: Term<PLam<PElemsT, PBool>> ) => TermBool
+    readonly some:      ( predicate: PappArg<PLam<PElemsT, PBool>> ) => TermBool
 };
 
 export default TermList;
@@ -177,7 +178,7 @@ export function addPListMethods<PElemsT extends PType>( list: Term<PList<PElemsT
     ObjectUtils.defineReadOnlyProperty(
         list,
         "at",
-        ( index: Term<PInt> ): UtilityTermOf<PElemsT> => pindexList( elemsT ).$( list ).$( index ) as any
+        ( index: PappArg<PInt> ): UtilityTermOf<PElemsT> => pindexList( elemsT ).$( list ).$( index ) as any
     );
 
     ObjectUtils.defineReadOnlyProperty(
@@ -188,8 +189,8 @@ export function addPListMethods<PElemsT extends PType>( list: Term<PList<PElemsT
     ObjectUtils.defineReadOnlyProperty(
         list,
         "find",
-        ( predicate: Term<PLam<PElemsT,PBool>> ): Term<PMaybeT<PElemsT>> => 
-            pfind( elemsT ).$( predicate ).$( list ) as any
+        ( predicate: PappArg<PLam<PElemsT,PBool>> ): Term<PMaybeT<PElemsT>> => 
+            pfind( elemsT ).$( predicate as any ).$( list ) as any
     );
 
     ObjectUtils.defineReadOnlyProperty(
@@ -200,8 +201,8 @@ export function addPListMethods<PElemsT extends PType>( list: Term<PList<PElemsT
     ObjectUtils.defineReadOnlyProperty(
         list,
         "filter",
-        ( predicate: Term<PLam<PElemsT,PBool>> ): TermList<PElemsT> =>
-            pfilter( elemsT ).$( predicate ).$( list ) as any
+        ( predicate: PappArg<PLam<PElemsT,PBool>> ): TermList<PElemsT> =>
+            pfilter( elemsT ).$( predicate as any ).$( list ) as any
     );
 
     ObjectUtils.defineReadOnlyProperty(
@@ -212,7 +213,7 @@ export function addPListMethods<PElemsT extends PType>( list: Term<PList<PElemsT
     ObjectUtils.defineReadOnlyProperty(
         list,
         "prepend",
-        ( elem: Term<PElemsT> ): TermList<PElemsT> => pprepend( elemsT ).$( elem ).$( list ) as any
+        ( elem: PappArg<PElemsT> ): TermList<PElemsT> => pprepend( elemsT ).$( elem ).$( list ) as any
     );
 
     ObjectUtils.defineReadOnlyProperty(
@@ -248,7 +249,7 @@ export function addPListMethods<PElemsT extends PType>( list: Term<PList<PElemsT
     ObjectUtils.defineReadOnlyProperty(
         list,
         "every",
-        ( predicate: Term<PLam<PElemsT, PBool>> ): TermBool => pevery( elemsT ).$( predicate ).$( list )
+        ( predicate: PappArg<PLam<PElemsT, PBool>> ): TermBool => pevery( elemsT ).$( predicate as any ).$( list )
     );
 
     ObjectUtils.defineReadOnlyProperty(
@@ -260,7 +261,7 @@ export function addPListMethods<PElemsT extends PType>( list: Term<PList<PElemsT
     ObjectUtils.defineReadOnlyProperty(
         list,
         "some",
-        ( predicate: Term<PLam<PElemsT, PBool>> ): TermBool => psome( elemsT ).$( predicate ).$( list )
+        ( predicate: PappArg<PLam<PElemsT, PBool>> ): TermBool => psome( elemsT ).$( predicate as any ).$( list )
     );
     
     return list as any;
