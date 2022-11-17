@@ -2,14 +2,14 @@
 
 ## Unreleased v0.1.4
 
-- [x] `papp` (and `$` method) accepts ts values and converts it automatically when possible
+- `papp` (and `$` method) accepts ts values and converts it automatically when possible
     > _example_: if `Term<PInt>` is expected it should be possible to pass `1` without having to do `pInt(1)`
-    - [x] simple constants (`int`, `bs`, `bool`, etc... )
-    - [x] functions (`lam`, `fn`)
-    - [x] structured types (`list`, `pair`)
-    - [x] modified exsisting utility terms methods accordingly
-- [x] added `TermPair`
-- [x] added `pPair` for constants pairs
+    - simple constants (`int`, `bs`, `bool`, etc... )
+    - functions (`lam`, `fn`)
+    - structured types (`list`, `pair`)
+    - modified exsisting utility terms methods accordingly
+- added `TermPair`
+- added `pPair` for constants pairs
 
 ## v0.1.3
 
