@@ -1,10 +1,10 @@
 import PType from "../../PType";
-import { pBool, TermFn } from "../../PTypes";
-import PBool from "../../PTypes/PBool";
+import PBool, { pBool } from "../../PTypes/PBool";
+import { TermFn } from "../../PTypes/PFn/PLam";
 import pmatch from "../../PTypes/PStruct/pmatch";
 import { phoist, plam } from "../../Syntax/syntax";
-import Term from "../../Term";
-import { bool, tyVar } from "../../Term/Type/base";
+import type Term from "../../Term";
+import { bool } from "../../Term/Type/base";
 import PMaybe, { PMaybeT } from "./PMaybe";
 
 const pisJust: TermFn<[PMaybeT<PType>], PBool> = phoist(

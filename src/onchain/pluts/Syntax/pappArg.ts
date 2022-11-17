@@ -1,24 +1,28 @@
 import { Buffer } from "buffer";
-import { pByteString, pfn, plam, PLam, pmakeUnit, pStr } from "..";
+import { pByteString, pfn, plam, PLam, pList, pmakeUnit, pPair, pStr } from "..";
 import CborString from "../../../cbor/CborString";
 import BasePlutsError from "../../../errors/BasePlutsError";
 import HexString from "../../../types/HexString";
 import ByteString from "../../../types/HexString/ByteString";
 import Integer from "../../../types/ints/Integer";
+import Pair from "../../../types/structs/Pair";
 import JsRuntime from "../../../utils/JsRuntime";
+import ObjectUtils from "../../../utils/ObjectUtils";
 import type PType from "../PType";
 import type PBool from "../PTypes/PBool";
 import { pBool } from "../PTypes/PBool";
 import type PByteString from "../PTypes/PByteString";
 import type PInt from "../PTypes/PInt";
 import { pInt } from "../PTypes/PInt";
+import PList from "../PTypes/PList";
+import PPair from "../PTypes/PPair";
 import type PString from "../PTypes/PString";
 import type PUnit from "../PTypes/PUnit";
 import { UtilityTermOf } from "../stdlib/UtilityTerms/addUtilityForType";
 import Term from "../Term";
-import { bool, bs, int, str, TermType, ToPType, tyVar, unit } from "../Term/Type/base";
+import { bool, bs, ConstantableTermType, fn, int, list, str, TermType, ToPType, tyVar, unit } from "../Term/Type/base";
 import { typeExtends } from "../Term/Type/extension";
-import { isLambdaType, isTypeParam, isWellFormedType } from "../Term/Type/kinds";
+import { isConstantableTermType, isLambdaType, isListType, isPairType, isTypeParam, isWellFormedType } from "../Term/Type/kinds";
 import { getNRequiredLambdaArgs, termTypeToString } from "../Term/Type/utils";
 
 type _TsFunctionSatisfying<KnownArgs extends Term<PType>[], POut extends PType> =
@@ -39,8 +43,9 @@ export type PappArg<PIn extends PType> =
         PIn extends PByteString ? ByteString | Buffer | Uint8Array | ArrayBuffer | string :
         PIn extends PString ? string :
         PIn extends PUnit ? undefined | null :
-        // PIn extends PPair<infer PFst extends PType, infer PSnd extends PType> ? Pair<PappArg<PFst>, PappArg<PSnd>> | [ PappArg<PFst>, PappArg<PSnd> ] :
-        // PIn extends PList<infer PElemsT extends PType> ? PappArg<PElemsT>[] :
+        PIn extends PPair<infer PFst extends PType, infer PSnd extends PType> ?
+           Pair<PappArg<PFst>, PappArg<PSnd>> | { fst: PappArg<PFst>, snd: PappArg<PSnd> } | [ PappArg<PFst>, PappArg<PSnd> ] :
+        PIn extends PList<infer PElemsT extends PType> ? PappArg<PElemsT>[] :
         PIn extends PLam<infer PIn extends PType, infer POut extends PType> ? TsFunctionSatisfying<PIn,POut> :
         Term<PIn>
     ) | Term<PIn>
@@ -243,11 +248,217 @@ export default function pappArgToTerm<ArgT extends TermType>(
         return pfn( fnInputsTys as any , outTy )( arg as any ) as any;
     }
 
+    if( Array.isArray( arg ) )
+    {
+        if(!(
+            arg.every(
+                elem =>
+                    elem instanceof Term ? 
+                        (elem as any).isConstant === true :
+                        true
+            )
+        )) throw new BasePlutsError(
+            "pappArgToTerm :: `arg` was a possible `list` or `pair`; "+
+            "however not all the elments of the array where constants; " +
+            "plu-ts is only able to automatically trasform constant values"
+        );
+
+        // if must extend any
+        if( isTypeParam( mustExtend ) )
+        {
+            if( arg.length === 2 ) // might be pair
+            {
+                const [ fst, snd ] = arg as PappArg<PType>[];
+    
+                const fstT = tryGetConstantableType( fst );
+                const sndT = tryGetConstantableType( snd );
+    
+                return pPair( fstT, sndT )(
+                    pappArgToTerm( fst, fstT ),
+                    pappArgToTerm( snd, sndT )
+                ) as any;
+            }
+
+            // try list
+            const elemsT = tryInferElemsT( arg );
+
+            return pList( elemsT )( arg.map(elem => pappArgToTerm( elem,  elemsT ) ) ) as any;
+        }
+
+        if( isPairType( mustExtend ) )
+        {
+            if( arg.length !== 2 )
+            throw new BasePlutsError(
+                "an array that doesn't have exactly two elements can't be converted to pair"
+            );
+
+            const [ fst, snd ] = arg as PappArg<PType>[];
+    
+            const fstT = isConstantableTermType( mustExtend[1] ) ? mustExtend[1] : tryGetConstantableType( fst );
+            const sndT = isConstantableTermType( mustExtend[2] ) ? mustExtend[2] : tryGetConstantableType( snd );
+
+            return pPair( fstT, sndT )(
+                pappArgToTerm( fst, fstT ),
+                pappArgToTerm( snd, sndT )
+            ) as any;
+        }
+
+        if( isListType( mustExtend ) )
+        {
+            const elemsT = isConstantableTermType( mustExtend[1] ) ? mustExtend[1] : tryInferElemsT( arg );
+            return pList( elemsT )( arg.map(elem => pappArgToTerm( elem,  elemsT ) ) ) as any;
+        }
+    }
+
+    if(
+        arg instanceof Pair ||
+        ObjectUtils.has_n_determined_keys(
+            arg, 2, "fst", "snd"
+        )
+    )
+    {
+        const { fst, snd }: { fst: PappArg<PType>, snd: PappArg<PType> } =
+            (arg instanceof Pair ? { fst: arg.fst, snd: arg.snd } : arg) as any;
+
+        //if must extend any
+        if( isTypeParam( mustExtend ) )
+        {
+            const fstT = tryGetConstantableType( fst );
+            const sndT = tryGetConstantableType( snd );
+
+            return pPair( fstT, sndT )(
+                pappArgToTerm( fst, fstT ),
+                pappArgToTerm( snd, sndT )
+            ) as any;
+        }
+
+        if( isPairType( mustExtend ) )
+        {
+            const fstT = isConstantableTermType( mustExtend[1] ) ? mustExtend[1] : tryGetConstantableType( fst );
+            const sndT = isConstantableTermType( mustExtend[2] ) ? mustExtend[2] : tryGetConstantableType( snd );
+
+            return pPair( fstT, sndT )(
+                pappArgToTerm( fst, fstT ),
+                pappArgToTerm( snd, sndT )
+            ) as any;
+        }
+    }
+
     throw new BasePlutsError(
         "pappArgToTerm :: it was not possible to transform `arg` to a plu-ts value" +
         "; `arg` was " + arg +
         "; `mustExtend` plu-ts type was: " + termTypeToString( mustExtend )
     );
+}
+
+
+function getPossiblePlutsTypesOf( value: PappArg<PType> ): TermType[]
+{
+    if( Term.prototype.isPrototypeOf( value ) )
+    {
+        return [ value.type ];
+    }
+
+    if(
+        value === undefined ||
+        value === null
+    ) return[ unit ];
+
+    if(
+        typeof value === "number" ||
+        typeof value === "bigint" ||
+        value instanceof Integer
+    ) return [ int ];
+
+    if( typeof value === "boolean" ) return [ bool ];
+
+    if(
+        // hex string case covered below
+        Buffer.isBuffer( value ) ||
+        value instanceof Uint8Array ||
+        value instanceof ArrayBuffer
+    ) return [ bs ];
+
+    if( typeof value === "function" && (value as Function).length !== 0 )
+    {
+        return [
+            fn(
+                (new Array((value as Function).length))
+                .map( ( _ , i ) => tyVar("arg_" + i) ) as any,
+                tyVar("fn_output")
+            )
+        ];
+    }
+
+    const types: TermType[] = [];
+
+    if( typeof value === "string" )
+    {
+        types.push( str );
+
+        // normal strings also can be byetstrings (ascii) if specified
+        //
+        // if( HexString.isHex( value ) && (value as string).length % 2 === 0 )
+        types.push( bs )
+
+        return types;
+    }
+
+    return types;
+}
+
+function tryGetConstantableType( someValue: PappArg<PType> ): ConstantableTermType
+{
+    const tys = getPossiblePlutsTypesOf( someValue );
+    if( tys.length !== 1 )
+    throw new BasePlutsError(
+        "pappArgToTerm :: `arg` type was ambigous; try to specify a plu-ts type"
+    );
+
+    const t = tys[0];
+    if( !isConstantableTermType( t ) )
+    throw new BasePlutsError(
+        "inferred type was not constantable: type: " + termTypeToString( t )
+    );
+
+    return t;
+}
+
+function tryInferElemsT( arg: PappArg<PType>[] ): ConstantableTermType
+{
+    if( arg.length === 0 )
+    throw new BasePlutsError(
+        "it was not possible to infer the type of the element of a possible plu-ts `list`; try to specify a type"
+    );
+
+    let elemsT: TermType | undefined = undefined;
+    let inferrefOptions: TermType[];
+    for( let i = 0; i < arg.length; i++ )
+    {
+        inferrefOptions = getPossiblePlutsTypesOf( arg[i] );
+        if( inferrefOptions.length === 1 )
+        {
+            elemsT = inferrefOptions[0];
+            break;
+        }
+    };
+
+    if( elemsT === undefined )
+    throw new BasePlutsError(
+        "elements type of a possible plu-ts `list` was ambigous; try to specify a type"
+    );
+
+    if( !isConstantableTermType(elemsT) )
+    throw new BasePlutsError(
+        "inferred type was not constantable: type: " + termTypeToString( elemsT )
+    );
+
+    JsRuntime.assert(
+        arg.every( elem => isTsValueAssignableToPlutsType( elem, elemsT as any) ),
+        "types in the array where incongruent; expected type was: " + termTypeToString( list( elemsT ) )
+    );
+
+    return elemsT;
 }
 
 function isTsValueAssignableToPlutsType<PlutsType extends TermType>(

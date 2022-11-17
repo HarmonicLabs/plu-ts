@@ -38,7 +38,10 @@ export default class ObjectUtils
 
     static hasNkeys( obj: object, n: number): boolean
     {
-        return (Object.keys( obj ).length === n);
+        return (
+            ObjectUtils.isObject( obj ) && 
+            Object.keys( obj ).length === n
+        );
     }
 
     static containsKeys( obj: object, ...keys : string[] ): boolean
@@ -53,7 +56,7 @@ export default class ObjectUtils
         return true
     }
 
-    static has_n_determined_keys( obj: object, n : number, ...keys: string[] ): boolean
+    static has_n_determined_keys<Keys extends string[]>( obj: object, n : number, ...keys: Keys ): boolean
     {
         return (
             ObjectUtils.hasNkeys( obj , n )             &&
@@ -62,7 +65,11 @@ export default class ObjectUtils
         );
     }
 
-    static hasOwn: ( obj: object, propName: string | number | symbol ) => boolean = ((Object as any).hasOwn ?? Object.prototype.hasOwnProperty.call) ?? ObjectUtils.containsKeys;
+    static hasOwn: ( obj: object, propName: string | number | symbol ) => boolean = 
+        (
+            (Object as any).hasOwn ?? 
+            Object.prototype.hasOwnProperty.call
+        ) ?? ObjectUtils.containsKeys;
 
     static isSerializable( obj: object ): boolean
     {

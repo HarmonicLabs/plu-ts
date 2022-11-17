@@ -8,7 +8,6 @@ export * from "./PByteString";
 export * from "./PDelayed";
 export * from "./PInt";
 export * from "./PList";
-export * from "./PMap";
 export * from "./PPair";
 export * from "./PString";
 export * from "./PUnit";

@@ -10,7 +10,7 @@ import PDataMap from "./PData/PDataMap";
 import PLam from "./PFn/PLam";
 import PList from "./PList";
 import { punsafeConvertType } from "../Syntax";
-import { PappArg } from "../Syntax/pappArg";
+import pappArgToTerm, { PappArg } from "../Syntax/pappArg";
 import { isConstantableTermType } from "../Term/Type/kinds";
 import UPLCConst from "../../UPLC/UPLCTerms/UPLCConst";
 import { termTyToConstTy } from "../Term/Type/constTypeConversion";
@@ -74,7 +74,7 @@ export default class PPair<A extends PType, B extends PType > extends PDataRepre
 export function pPair<FstT extends ConstantableTermType, SndT extends ConstantableTermType>(
     fstT: FstT,
     sndT: SndT
-): ( fst: PappArg<ToPType<FstT>>, snd: PappArg<ToPType<SndT>> ) => TermPair<ToPType<FstT>,ToPType<SndT>>
+): ( _fst: PappArg<ToPType<FstT>>, _snd: PappArg<ToPType<SndT>> ) => TermPair<ToPType<FstT>,ToPType<SndT>>
 {
     JsRuntime.assert(
         isConstantableTermType( fstT ),
@@ -87,16 +87,19 @@ export function pPair<FstT extends ConstantableTermType, SndT extends Constantab
 
     return ( fst: PappArg<ToPType<FstT>>, snd: PappArg<ToPType<SndT>> ): TermPair<ToPType<FstT>,ToPType<SndT>> => {
 
+        const _fst = pappArgToTerm( fst, fstT );
         JsRuntime.assert(
-            fst instanceof Term &&
-            (fst as any).isConstant &&
-            typeExtends( fst.type, fstT ),
+            _fst instanceof Term &&
+            (_fst as any).isConstant &&
+            typeExtends( _fst.type, fstT ),
             "first element of a constant pair was not a constant"
         );
+
+        const _snd = pappArgToTerm( snd, sndT );
         JsRuntime.assert(
-            snd instanceof Term &&
-            (snd as any).isConstant &&
-            typeExtends( snd.type, sndT ),
+            _snd instanceof Term &&
+            (_snd as any).isConstant &&
+            typeExtends( _snd.type, sndT ),
             "second element of a constant pair was not a constant"
         );
         
@@ -107,8 +110,8 @@ export function pPair<FstT extends ConstantableTermType, SndT extends Constantab
                     termTyToConstTy( fstT ),
                     termTyToConstTy( sndT )
                 )(
-                    (fst.toUPLC( dbn ) as UPLCConst).value,
-                    (snd.toUPLC( dbn ) as UPLCConst).value
+                    (_fst.toUPLC( dbn ) as UPLCConst).value,
+                    (_snd.toUPLC( dbn ) as UPLCConst).value
                 ),
                 true // isConstant
             )

@@ -1,4 +1,6 @@
-import { bs, fn, int, lam, padd, papp, pBool, PBool, pByteString, PByteString, pfn, pInt, PInt, plam, PLam, pmakeUnit, PrimType, pStr, PType, PUnit, Term } from "../..";
+import { bs, fn, int, lam, list, padd, pair, papp, pBool, PBool, pByteString, PByteString, pfn, pInt, PInt, plam, PLam, pList, pmakeUnit, pnil, pPair, PrimType, pStr, PType, PUnit, str, Term, tyVar } from "../..";
+import ByteString from "../../../../types/HexString/ByteString";
+import Pair from "../../../../types/structs/Pair";
 import evalScript from "../../../CEK";
 import TermInt from "../../stdlib/UtilityTerms/TermInt";
 import pappArgToTerm, { PappArg } from "../pappArg";
@@ -190,6 +192,128 @@ describe("pappArgToTerm", () => {
             ))
         );
 
-    })
+    });
+
+    test("list", () => {
+
+        expectScriptToEq(
+            pappArgToTerm<[ PrimType.List, [ PrimType.Int ] ]>(
+                [1,2,3]
+            ),
+            pList( int )( [1,2,3].map( pInt ) )
+        );
+
+        expectScriptToEq(
+            pappArgToTerm(
+                [1,2,3],
+                list( int )
+            ),
+            pList( int )( [1,2,3].map( pInt ) )
+        );
+
+        expect(
+            () => pappArgToTerm<[ PrimType.List, [ PrimType.Int ] ]>( [1,2,"hello" as any] )
+        ).toThrow()
+
+        expect(
+            () => pappArgToTerm<[ PrimType.List, [ PrimType.Int ] ]>( [] )
+        ).toThrow()
+
+        expectScriptToEq(
+            pappArgToTerm( [], list( int ) ),
+            pnil( int )
+        );
+
+        expect(
+            () => pappArgToTerm<[ PrimType.List, any ]>( [], list( tyVar() ) )
+        ).toThrow()
+
+        expect(
+            () => pappArgToTerm<[ PrimType.List, [ PrimType.Str ] ]>( ["hello"] )
+        ).toThrow() // ambigous type
+
+        expect(
+            () => pappArgToTerm<[ PrimType.List, [ PrimType.Str ] ]>( ["hello","world"] )
+        ).toThrow() // ambigous type
+
+        expectScriptToEq(
+            pappArgToTerm(
+                ["hello","world"],
+                list( str )
+            ),
+            pList( str )( ["hello","world"].map( pStr ) )
+        );
+
+        expectScriptToEq(
+            pappArgToTerm(
+                ["hello","world"],
+                list( bs )
+            ),
+            pList( bs )( ["hello","world"].map( str =>  pByteString( Buffer.from( str, "ascii" ) ) ) )
+        );
+
+    });
+
+    test("pair", () => {
+
+        expectScriptToEq(
+            pappArgToTerm(
+                ["hello","world"],
+                pair( bs, bs )
+            ),
+            pPair( bs, bs )(
+                pByteString( ByteString.fromAscii("hello") ),
+                ByteString.fromAscii("world")
+            )
+        );
+
+        expectScriptToEq(
+            pappArgToTerm(
+                [1,2],
+                pair( int, int )
+            ),
+            pPair( int, int )(
+                1,
+                pInt( 2 )
+            )
+        );
+
+        expectScriptToEq(
+            pappArgToTerm(
+                [1,"hello"],
+                pair( int, bs )
+            ),
+            pPair( int, bs )(
+                1,
+                ByteString.fromAscii("hello")
+
+            )
+        );
+
+        expectScriptToEq(
+            pappArgToTerm(
+                { fst: 1,snd: "hello" },
+                pair( int, bs )
+            ),
+            pPair( int, bs )(
+                1,
+                ByteString.fromAscii("hello")
+
+            )
+        );
+
+        expectScriptToEq(
+            pappArgToTerm(
+                new Pair( 1, "hello" ),
+                pair( int, bs )
+            ),
+            pPair( int, bs )(
+                1,
+                ByteString.fromAscii("hello")
+
+            )
+        );
+
+    });
 
 });
