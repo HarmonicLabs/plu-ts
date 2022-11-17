@@ -128,7 +128,7 @@ describe("scriptToJsonFormat", () => {
                                                         pmatch( credential )
                                                         .onPScriptCredential( rawScriptCredFields => rawScriptCredFields.extract("valHash").in( ({ valHash }) => {
                                                             
-                                                            return peqBs.$( ownHash as Term<PByteString> ).$( valHash as Term<PByteString> )
+                                                            return peqBs.$( ownHash ).$( valHash )
                                                         }))
                                                         .onPPubKeyCredential( _ => pBool( false ) )
                                                     )

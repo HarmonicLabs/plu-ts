@@ -23,6 +23,7 @@ import Builtin from "../../UPLC/UPLCTerms/Builtin";
 import { getNRequiredForces } from "../../UPLC/UPLCTerms/Builtin/UPLCBuiltinTag";
 import addUtilityForType, { UtilityTermOf } from "../stdlib/UtilityTerms/addUtilityForType";
 import punsafeConvertType from "./punsafeConvertType";
+import pappArgToTerm, { PappArg } from "./pappArg";
 
 
 function isIdentityUPLC( uplc: UPLCTerm ): uplc is Lambda
@@ -41,7 +42,7 @@ export type PappResult<Output extends PType> =
     Output extends PLam<infer OutIn extends PType, infer OutOut extends PType> ?
         Term<PLam<OutIn,OutOut>>
         & {
-            $: ( someInput: Term<OutIn> ) => PappResult<OutOut>
+            $: ( someInput: PappArg<OutIn> ) => PappResult<OutOut>
         } :
     UtilityTermOf<Output>
 
@@ -53,7 +54,7 @@ export type PappResult<Output extends PType> =
  * 
  * if the type of the output extends the type ```Type.Lambda( Type.Any, Type.Any )```
  */
-export function papp<Input extends PType, Output extends PType>( a: Term<PLam<Input,Output>>, b: Term<Input> )
+export function papp<Input extends PType, Output extends PType>( a: Term<PLam<Input,Output>>, b: PappArg<Input> )
     : UtilityTermOf<Output>
 {
     let lambdaType: TermType = a.type;
@@ -62,11 +63,20 @@ export function papp<Input extends PType, Output extends PType>( a: Term<PLam<In
         "a term not representing a Lambda (aka. Type.Lambda) was passed to an application"
     );
 
-    JsRuntime.assert(
-        typeExtends( b.type, lambdaType[ 1 ] ),
-        "while applying 'Lambda'; unexpected type of input; it should be possible to assign the input to \"" + termTypeToString( lambdaType[1] ) +
-        "\"; received input was of type: \"" + termTypeToString( b.type ) + "\""
-    );
+    let _b: Term<Input>;
+    if( b instanceof Term )
+    {
+        JsRuntime.assert(
+            typeExtends( b.type, lambdaType[ 1 ] ),
+            "while applying 'Lambda'; unexpected type of input; it should be possible to assign the input to \"" + termTypeToString( lambdaType[1] ) +
+            "\"; received input was of type: \"" + termTypeToString( b.type ) + "\""
+        );
+        _b = b as any;
+    }
+    else
+    {
+        _b = pappArgToTerm( b, lambdaType[1] ) as any;
+    }
 
     const outputType = applyLambdaType( lambdaType, b.type );
     const outputTerm = addUtilityForType( outputType )(
@@ -152,10 +162,10 @@ type PFnFromTypes<Ins extends [ TermType, ...TermType[] ], Out extends TermType>
     never
 
 export type TermFnFromTypes<Ins extends [ TermType, ...TermType[] ], Out extends TermType> =
-    Ins extends [ infer T extends TermType ] ? Term<PLam<ToPType<T>, ToPType<Out>>> & { $: ( input: Term<ToPType<T>> ) => UtilityTermOf<ToPType<Out>> } :
+    Ins extends [ infer T extends TermType ] ? Term<PLam<ToPType<T>, ToPType<Out>>> & { $: ( input: PappArg<ToPType<T>> ) => UtilityTermOf<ToPType<Out>> } :
     Ins extends [ infer T extends TermType, ...infer RestIns extends [ TermType, ...TermType[] ] ] ?
         Term<PLam<ToPType<T>,PFnFromTypes<RestIns, Out>>>
-        & { $: ( input: Term<ToPType<T>> ) => TermFnFromTypes< RestIns, Out > } :
+        & { $: ( input: PappArg<ToPType<T>> ) => TermFnFromTypes< RestIns, Out > } :
     never
 
 type TsTermFuncArg<PTy extends PType> =

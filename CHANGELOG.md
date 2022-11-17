@@ -10,8 +10,12 @@
     > _example_
     > 
     > if `Term<PInt>` is expected it should be possible to pass `1` without having to do `pInt(1)`
-    - [ ] simple constants (`int`, `bs`, `bool`, etc... )
-    - [ ] functions (`lam`, `fn`)
+    - [x] simple constants (`int`, `bs`, `bool`, etc... )
+    - [x] functions (`lam`, `fn`)
+    - [ ] structured types (`list`, `pair`)
+    - [ ] modified exsisting utility terms accordingly
+- [ ] added `TermPair`
+- [ ] added `pPair` for constants pairs
 
 ## v0.1.3
 

@@ -10,6 +10,7 @@ import PList from "../../PTypes/PList";
 import PString from "../../PTypes/PString";
 import { ConstantableStructDefinition, PStruct } from "../../PTypes/PStruct/pstruct";
 import { papp } from "../../Syntax";
+import { PappArg } from "../../Syntax/pappArg";
 import Term from "../../Term";
 import Type, { AliasTermType, bool, bs, ConstantableTermType, int, list, PrimType, str, structType, TermType, ToPType } from "../../Term/Type/base";
 import { typeExtends } from "../../Term/Type/extension";
@@ -42,7 +43,7 @@ export type UtilityTermOf<PElem extends PType> =
         PElem extends PStruct<infer SDef extends ConstantableStructDefinition> ? TermStruct<SDef> :
         PElem extends PLam<infer PInput extends PType, infer POutput extends PType> ?
             Term<PElem> & {
-                $: ( input: Term<PInput> ) => UtilityTermOf<POutput>
+                $: ( input: PappArg<PInput> ) => UtilityTermOf<POutput>
             } :
         PElem extends PAlias<infer T extends ConstantableTermType, infer AliasId extends symbol, any> ? FiniteTermAlias<T, AliasId> :
         Term<PElem>

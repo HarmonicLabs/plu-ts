@@ -33,6 +33,8 @@ import UPLCVar from "../../UPLC/UPLCTerms/UPLCVar";
 import { PMap } from "../PTypes/PMap";
 import HoistedUPLC from "../../UPLC/UPLCTerms/HoistedUPLC";
 import PDelayed from "../PTypes/PDelayed";
+import { PappArg } from "../Syntax/pappArg";
+import { UtilityTermOf } from "./UtilityTerms/addUtilityForType";
 
 function pBool( bool: boolean ): TermBool
 {
@@ -45,12 +47,12 @@ function pBool( bool: boolean ): TermBool
     );
 }
 
-export function addApplications<Ins extends [ PType, ...PType[] ], Out extends PType, TermOutput extends TermFn< Ins, Out > = TermFn< Ins, Out >>
+export function addApplications<Ins extends [ PType, ...PType[] ], Out extends PType>
     (
         lambdaTerm: Term< PFn< Ins, Out > >,
-        addOutputMethods?: ( termOut: Term<Out> ) => TermOutput // useless since papp handles all that with addUtility...
+        addOutputMethods?: ( termOut: Term<Out> ) => any // TermOutput // useless since papp handles all that with addUtility...
     )
-    : TermOutput
+    : TermFn< Ins, Out >
 {
     const nMissingArgs = getNRequiredLambdaArgs( lambdaTerm.type );
 
@@ -59,7 +61,7 @@ export function addApplications<Ins extends [ PType, ...PType[] ], Out extends P
         return ObjectUtils.defineReadOnlyProperty(
             lambdaTerm,
             "$",
-            ( input: Term< Head<Ins> > ) => {
+            ( input: PappArg< Head<Ins> > ) => {
                 let output: any = papp( lambdaTerm, input );
 
                 return output;
@@ -70,7 +72,7 @@ export function addApplications<Ins extends [ PType, ...PType[] ], Out extends P
     return ObjectUtils.defineReadOnlyProperty(
         lambdaTerm,
         "$",
-        ( input: Term< Head<Ins> > ) =>
+        ( input: PappArg< Head<Ins> > ) =>
             // @ts-ignore
             // Type 'PType[]' is not assignable to type '[PType, ...PType[]]'.
             // Source provides no match for required element at position 0 in target
@@ -88,10 +90,10 @@ type MultiPLam<Args extends [ PType, PType, ...PType[] ]> =
 
 export type IntBinOPToInt = Term< PLam< PInt, PLam< PInt, PInt >>>
 & {
-    $: ( input: Term<PInt> ) => 
+    $: ( input: PappArg<PInt> ) => 
         Term<PLam<PInt,PInt>>
         & {
-            $: ( input: Term<PInt> ) => 
+            $: ( input: PappArg<PInt> ) => 
                 TermInt
         }
 }
@@ -107,13 +109,13 @@ function intBinOpToInt( builtin: Builtin )
     return  ObjectUtils.defineReadOnlyProperty(
         op,
         "$",
-        ( fstIn: Term<PInt> ): Term<PLam<PInt, PInt>> => {
+        ( fstIn: PappArg<PInt> ): Term<PLam<PInt, PInt>> => {
             const oneIn = papp( op, fstIn );
 
             return ObjectUtils.defineReadOnlyProperty(
                 oneIn,
                 "$",
-                ( sndIn: Term<PInt> ): TermInt => {
+                ( sndIn: PappArg<PInt> ): TermInt => {
                     return papp( oneIn, sndIn )
                 }
             );
@@ -123,10 +125,10 @@ function intBinOpToInt( builtin: Builtin )
 
 export type IntBinOPToBool = Term< PLam< PInt, PLam< PInt, PInt >>>
 & {
-    $: ( input: Term<PInt> ) => 
+    $: ( input: PappArg<PInt> ) => 
         Term<PLam<PInt,PBool>>
         & {
-            $: ( input: Term<PInt> ) => 
+            $: ( input: PappArg<PInt> ) => 
                 TermBool
         }
 }
@@ -158,10 +160,10 @@ function intBinOpToBool( builtin: Builtin )
 
 export type ByteStrBinOPToBS = Term< PLam< PByteString, PLam< PByteString, PByteString >>>
 & {
-    $: ( input: Term<PByteString> ) => 
+    $: ( input: PappArg<PByteString> ) => 
         Term<PLam<PByteString,PByteString>>
         & {
-            $: ( input: Term<PByteString> ) => 
+            $: ( input: PappArg<PByteString> ) => 
                 TermBS
         }
 }
@@ -193,10 +195,10 @@ function byteStrBinOpToBS( builtin: Builtin )
 
 export type ByteStrBinOPToBool = Term< PLam< PByteString, PLam< PByteString, PBool >>>
 & {
-    $: ( input: Term<PByteString> ) => 
+    $: ( input: PappArg<PByteString> ) => 
         Term<PLam<PByteString,PBool>>
         & {
-            $: ( input: Term<PByteString> ) => 
+            $: ( input: PappArg<PByteString> ) => 
                 TermBool
         }
 }
@@ -287,10 +289,10 @@ export const pgreaterEqInt = addApplications<[ PInt, PInt ], PBool>(
 export const pappendBs = byteStrBinOpToBS( Builtin.appendByteString );
 export const pconsBs: Term<PLam<PInt, PLam< PByteString, PByteString>>>
 & {
-    $: ( input: Term<PInt> ) => 
+    $: ( input: PappArg<PInt> ) => 
         Term<PLam<PByteString,PByteString>>
         & {
-            $: ( input: Term<PByteString> ) => 
+            $: ( input: PappArg<PByteString> ) => 
                 TermBS
         }
 } = (() => {
@@ -330,13 +332,13 @@ export const flippedCons = addApplications<[ PByteString, PInt ], PByteString>(
 
 export const psliceBs: Term<PLam<PInt, PLam< PInt, PLam< PByteString, PByteString>>>>
 & {
-    $: ( fromIndex: Term<PInt> ) => 
+    $: ( fromIndex: PappArg<PInt> ) => 
         Term<PLam< PInt, PLam<PByteString,PByteString>>>
         & {
-            $: ( ofLength: Term<PInt> ) => 
+            $: ( ofLength: PappArg<PInt> ) => 
                 Term<PLam<PByteString,PByteString>>
                 & {
-                    $: ( onByteString: Term<PByteString> ) => TermBS
+                    $: ( onByteString: PappArg<PByteString> ) => TermBS
                 }
         }
 } = (() => {
@@ -348,12 +350,12 @@ export const psliceBs: Term<PLam<PInt, PLam< PInt, PLam< PByteString, PByteStrin
     return ObjectUtils.defineReadOnlyProperty(
         sliceBs,
         "$",
-        ( fromIndex: Term<PInt> ): Term<PLam< PInt, PLam<PByteString,PByteString>>>
+        ( fromIndex: PappArg<PInt> ): Term<PLam< PInt, PLam<PByteString,PByteString>>>
         & {
-            $: ( ofLength: Term<PInt> ) => 
+            $: ( ofLength: PappArg<PInt> ) => 
                 Term<PLam<PByteString,PByteString>>
                 & {
-                    $: ( onByteString: Term<PByteString> ) => TermBS
+                    $: ( onByteString: PappArg<PByteString> ) => TermBS
                 }
         } =>{
             const sliceBsFromIdx = papp( sliceBs, fromIndex );
@@ -383,11 +385,7 @@ export const psliceBs: Term<PLam<PInt, PLam< PInt, PLam< PByteString, PByteStrin
     )
 })();
 
-export const plengthBs
-    :TermFn<[ PByteString ], PInt >
-    & {
-        $: ( ofByteString: Term<PByteString> ) => TermInt
-    }
+export const plengthBs :TermFn<[ PByteString ], PInt >
     = (() => {
         const lenBS = new Term<PLam< PByteString, PInt >>(
             Type.Lambda( Type.BS, Type.Int ),
@@ -397,7 +395,7 @@ export const plengthBs
         return ObjectUtils.defineReadOnlyProperty(
             lenBS,
             "$",
-            ( ofByteString: Term<PByteString> ): TermInt =>
+            ( ofByteString: PappArg<PByteString> ): TermInt =>
                 addPIntMethods( papp( lenBS, ofByteString ) )
         );
     })();
@@ -405,10 +403,10 @@ export const plengthBs
 export const pindexBs
     : Term<PLam<PByteString, PLam<PInt , PInt>>>
     & {
-        $: ( ofByteString: Term<PByteString> ) =>
+        $: ( ofByteString: PappArg<PByteString> ) =>
             Term<PLam<PInt, PInt>>
             & {
-                $: ( index: Term<PInt> ) => TermInt
+                $: ( index: PappArg<PInt> ) => TermInt
             }
     }
     = (() => {
@@ -420,10 +418,10 @@ export const pindexBs
         return ObjectUtils.defineReadOnlyProperty(
             idxBS,
             "$",
-            ( ofByteString: Term<PByteString> ):
+            ( ofByteString: PappArg<PByteString> ):
                 Term<PLam<PInt, PInt>>
                 & {
-                    $: ( index: Term<PInt> ) => TermInt
+                    $: ( index: PappArg<PInt> ) => TermInt
                 } =>
             {
                 const idxOfBS = papp( idxBS, ofByteString );
@@ -431,7 +429,7 @@ export const pindexBs
                 return ObjectUtils.defineReadOnlyProperty(
                     idxOfBS,
                     "$",
-                    ( index: Term<PInt> ): TermInt =>
+                    ( index: PappArg<PInt> ): TermInt =>
                         addPIntMethods( papp( idxOfBS, index ) )
                 ) as any;
             }
@@ -501,10 +499,10 @@ export const pverifyEd25519: TermFn<[ PByteString, PByteString, PByteString ], P
 
 export type StrBinOPToStr = Term<PLam<PString, PLam<PString,PString>>>
 & {
-    $: ( input: Term<PString> ) => 
+    $: ( input: PappArg<PString> ) => 
         Term<PLam<PString,PString>>
         & {
-            $: ( input: Term<PString> ) => 
+            $: ( input: PappArg<PString> ) => 
                 TermStr
         }
 }
@@ -534,10 +532,10 @@ export const pappendStr: StrBinOPToStr = (() => {
 
 export type StrBinOPToBool = Term<PLam<PString,PLam<PString, PBool>>>
 & {
-    $: ( input: Term<PString> ) => 
+    $: ( input: PappArg<PString> ) => 
         Term<PLam<PString,PBool>>
         & {
-            $: ( input: Term<PString> ) => 
+            $: ( input: PappArg<PString> ) => 
                 TermBool
         }
 }
@@ -566,7 +564,7 @@ export const peqStr: StrBinOPToBool = (() => {
 
 export const pencodeUtf8: Term<PLam<PString, PByteString>>
 & {
-    $: ( str: Term<PString> ) => TermBS
+    $: ( str: PappArg<PString> ) => TermBS
 } = (() => {
     const encodeUtf8  =new Term<PLam<PString, PByteString>>(
             Type.Lambda( Type.Str, Type.BS ),
@@ -576,13 +574,13 @@ export const pencodeUtf8: Term<PLam<PString, PByteString>>
     return ObjectUtils.defineReadOnlyProperty(
         encodeUtf8,
         "$",
-        ( str: Term<PString> ): TermBS => addPByteStringMethods( papp( encodeUtf8, str ) )
+        ( str: PappArg<PString> ): TermBS => addPByteStringMethods( papp( encodeUtf8, str ) )
     )
 })()
 
 export const pdecodeUtf8: Term<PLam<PByteString, PString>>
 & {
-    $: ( str: Term<PByteString> ) => TermStr
+    $: ( str: PappArg<PByteString> ) => TermStr
 } = (() => {
     const decodeUtf8  =new Term<PLam<PByteString, PString>>(
         Type.Lambda( Type.BS, Type.Str ),
@@ -592,7 +590,7 @@ export const pdecodeUtf8: Term<PLam<PByteString, PString>>
     return ObjectUtils.defineReadOnlyProperty(
         decodeUtf8,
         "$",
-        ( byteStr: Term<PByteString> ): TermStr => addPStringMethods( papp( decodeUtf8, byteStr ) )
+        ( byteStr: PappArg<PByteString> ): TermStr => addPStringMethods( papp( decodeUtf8, byteStr ) )
     )
 })()
 
@@ -681,18 +679,18 @@ export function pstrictIf<ReturnT extends TermType>( returnType: ReturnT | undef
 export function pif<ReturnT extends TermType>( returnType: ReturnT | undefined = undefined )
     : Term<PLam<PBool, PLam<ToPType<ReturnT>, PLam<ToPType<ReturnT>, ToPType<ReturnT>>>>> 
     & {
-        $: (condition: Term<PBool>) =>
+        $: (condition: PappArg<PBool>) =>
             Term<PLam< ToPType<ReturnT>, PLam< ToPType<ReturnT>, ToPType<ReturnT>>>> 
             & {
-                then: ( caseTrue: Term<ToPType<ReturnT>> ) =>
+                then: ( caseTrue: PappArg<ToPType<ReturnT>> ) =>
                     TermFn<[ ToPType<ReturnT> ], ToPType<ReturnT> >
                     & {
-                        else: ( caseFalse: Term<ToPType<ReturnT>> ) =>
+                        else: ( caseFalse: PappArg<ToPType<ReturnT>> ) =>
                         Term<ToPType<ReturnT>> 
                     },
-                $: ( caseTrue: Term<ToPType<ReturnT>> ) =>
+                $: ( caseTrue: PappArg<ToPType<ReturnT>> ) =>
                     TermFn<[ ToPType<ReturnT> ], ToPType<ReturnT> > & {
-                        else: ( caseFalse: Term<ToPType<ReturnT>> ) =>
+                        else: ( caseFalse: PappArg<ToPType<ReturnT>> ) =>
                         Term<ToPType<ReturnT>> 
                     }
             }
@@ -781,7 +779,7 @@ export function pif<ReturnT extends TermType>( returnType: ReturnT | undefined =
 export const pnot
     : Term<PLam<PBool, PBool>>
     & {
-        $: ( bool: Term<PBool> ) => TermBool
+        $: ( bool: PappArg<PBool> ) => TermBool
     }
     =
     phoist(
@@ -798,10 +796,10 @@ export const pnot
 export const pstrictAnd
     : Term<PLam<PBool, PLam<PBool, PBool>>>
     & {
-        $: ( bool: Term<PBool> ) =>
+        $: ( bool: PappArg<PBool> ) =>
             Term<PLam<PBool, PBool>>
             & {
-                $: ( bool: Term<PBool> ) => TermBool
+                $: ( bool: PappArg<PBool> ) => TermBool
             }
     }
     = phoist(
@@ -821,10 +819,10 @@ export const pstrictAnd
 export const pand
     : Term<PLam<PBool, PLam<PDelayed<PBool>, PBool>>>
     & {
-        $: ( bool: Term<PBool> ) =>
+        $: ( bool: PappArg<PBool> ) =>
             Term<PLam<PDelayed<PBool>, PBool>>
             & {
-                $: ( bool: Term<PDelayed<PBool>> ) => TermBool
+                $: ( bool: PappArg<PDelayed<PBool>> ) => TermBool
             }
     }
     = phoist(
@@ -844,10 +842,10 @@ export const pand
 export const pstrictOr
     : Term<PLam<PBool, PLam<PBool, PBool>>>
     & {
-        $: ( bool: Term<PBool> ) =>
+        $: ( bool: PappArg<PBool> ) =>
             Term<PLam<PBool, PBool>>
             & {
-                $: ( bool: Term<PBool> ) => TermBool
+                $: ( bool: PappArg<PBool> ) => TermBool
             }
     }
     = phoist(
@@ -867,10 +865,10 @@ export const pstrictOr
 export const por
     : Term<PLam<PBool, PLam<PDelayed<PBool>, PBool>>>
     & {
-        $: ( bool: Term<PBool> ) =>
+        $: ( bool: PappArg<PBool> ) =>
             Term<PLam<PDelayed<PBool>, PBool>>
             & {
-                $: ( bool: Term<PDelayed<PBool>> ) => TermBool
+                $: ( bool: PappArg<PDelayed<PBool>> ) => TermBool
             }
     }
     = phoist(
@@ -963,18 +961,18 @@ export function pchooseList<ListElemT extends TermType, ReturnT extends TermType
     )
     : Term<PLam< PList< ToPType<ListElemT> > , PLam<ToPType<ReturnT>, PLam<ToPType<ReturnT>, ToPType<ReturnT>>>>>
     & {
-        $: ( list: Term<PList< ToPType<ListElemT> >>) =>
+        $: ( list: PappArg<PList< ToPType<ListElemT> >>) =>
             Term<PLam<ToPType<ReturnT>, PLam<ToPType<ReturnT>, ToPType<ReturnT>>>>
             & {
-                caseNil: ( nilCase: Term<ToPType<ReturnT>> ) =>
+                caseNil: ( nilCase: PappArg<ToPType<ReturnT>> ) =>
                     TermFn<[ ToPType<ReturnT> ], ToPType<ReturnT> >
                     & {
-                        caseCons: ( consCase: Term<ToPType<ReturnT>> ) =>
+                        caseCons: ( consCase: PappArg<ToPType<ReturnT>> ) =>
                         Term<ToPType<ReturnT>> 
                     },
-                $: ( nilCase: Term<ToPType<ReturnT>> ) =>
+                $: ( nilCase: PappArg<ToPType<ReturnT>> ) =>
                     TermFn<[ ToPType<ReturnT> ], ToPType<ReturnT> > & {
-                        caseCons: ( consCase: Term<ToPType<ReturnT>> ) =>
+                        caseCons: ( consCase: PappArg<ToPType<ReturnT>> ) =>
                         Term<ToPType<ReturnT>> 
                     }
             }
@@ -1110,26 +1108,26 @@ export function pstrictChooseData<ReturnT extends TermType>( returnT: ReturnT )
 
 // only for pchooseData Type definition
 // without this it would be impossoble to read
-type CaseBFn<RetT extends PType> = ( bCase: Term< RetT > ) => Term<RetT>
-export type CaseIFn<RetT extends PType> = ( iCase: Term< RetT > ) =>
+type CaseBFn<RetT extends PType> = ( bCase: PappArg< RetT > ) => UtilityTermOf<RetT>
+export type CaseIFn<RetT extends PType> = ( iCase: PappArg< RetT > ) =>
     Term<PLam<RetT , RetT >>
     & {
         caseB: CaseBFn<RetT>
         $: CaseBFn<RetT>
     };
-export type CaseListFn<RetT extends PType> = ( listCase: Term<RetT> ) =>
+export type CaseListFn<RetT extends PType> = ( listCase: PappArg<RetT> ) =>
     Term<PLam<RetT, PLam<RetT , RetT >>>
     & {
         caseI: CaseIFn<RetT>,
         $: CaseIFn<RetT>
     }
-export type CaseMapFn<RetT extends PType> = ( mapCase: Term< RetT > ) => 
+export type CaseMapFn<RetT extends PType> = ( mapCase: PappArg< RetT > ) => 
     Term<PLam<RetT, PLam<RetT, PLam<RetT , RetT >>>>
     & {
         caseList: CaseListFn<RetT>,
         $: CaseListFn<RetT>
     }
-export type CaseConstrFn<RetT extends PType> = ( constrCase: Term< RetT > ) =>
+export type CaseConstrFn<RetT extends PType> = ( constrCase: PappArg< RetT > ) =>
     Term<PLam<RetT, PLam<RetT, PLam<RetT, PLam<RetT , RetT >>>>>
     & {
         caseMap: CaseMapFn<RetT>,
@@ -1146,7 +1144,7 @@ force the last application (once provided argument and delayed)
 export function pchooseData<ReturnT extends TermType>( returnT: ReturnT )
     : Term< PLam< PData, PLam< ToPType<ReturnT>, PLam<ToPType<ReturnT>, PLam<ToPType<ReturnT>, PLam<ToPType<ReturnT>, PLam<ToPType<ReturnT> , ToPType<ReturnT> >>>>>>>
     & {
-        $: ( pdata: Term<PData> ) =>
+        $: ( pdata: PappArg<PData> ) =>
             Term<PLam< ToPType<ReturnT>, PLam<ToPType<ReturnT>, PLam<ToPType<ReturnT>, PLam<ToPType<ReturnT>, PLam<ToPType<ReturnT> , ToPType<ReturnT> >>>>>>
             & {
                 caseConstr: CaseConstrFn<ToPType<ReturnT>>,
@@ -1363,7 +1361,7 @@ export const punIData: TermFn<[ PDataInt ], PInt>
 
 export const punBData: Term<PLam<PDataBS, PByteString>>
 & {
-    $: ( dataBS: Term<PDataBS> ) => TermBS
+    $: ( dataBS: PappArg<PDataBS> ) => TermBS
 } = (() => {
     const unBData = new Term<PLam<PDataBS, PByteString>>(
         Type.Lambda( Type.Data.Any, Type.BS ),

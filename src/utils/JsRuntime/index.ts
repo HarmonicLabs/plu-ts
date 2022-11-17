@@ -66,7 +66,7 @@ export default class JsRuntime
     {
         return (new BasePlutsError( prefix + "\n\n\
         this is not supposed to happen, please open an issue explaining how you got here: \
-        https://github.com/HarmonicPool/plu-ts/issues") as E);
+        https://github.com/HarmonicLabs/plu-ts/issues") as E);
     }
 
     static objWithUnderscoreAsPrivate<T extends object>( tInstance: T ) {
