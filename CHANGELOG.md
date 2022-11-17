@@ -14,8 +14,8 @@
     - [x] functions (`lam`, `fn`)
     - [ ] structured types (`list`, `pair`)
     - [ ] modified exsisting utility terms accordingly
-- [ ] added `TermPair`
-- [ ] added `pPair` for constants pairs
+- [x] added `TermPair`
+- [x] added `pPair` for constants pairs
 
 ## v0.1.3
 

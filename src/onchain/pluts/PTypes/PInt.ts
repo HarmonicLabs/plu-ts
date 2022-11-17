@@ -8,6 +8,7 @@ import Type, { TermType } from "../Term/Type/base";
 import PData from "./PData/PData";
 import PDataInt from "./PData/PDataInt";
 import PLam from "./PFn/PLam";
+import { PappArg } from "../Syntax/pappArg";
 
 export default class PInt extends PDataRepresentable
 //    implements Cloneable<PInt>
@@ -27,7 +28,7 @@ export default class PInt extends PDataRepresentable
 
     static override get termType(): TermType { return Type.Int }
 
-    static override get fromDataTerm(): Term<PLam<PData, PInt>> & { $: (input: Term<PData>) => Term<PInt>; }
+    static override get fromDataTerm(): Term<PLam<PData, PInt>> & { $: (input: PappArg<PData>) => Term<PInt>; }
     {
         return punIData;
     }
@@ -39,9 +40,9 @@ export default class PInt extends PDataRepresentable
         return addPIntMethods( punIData.$( data ) )
     }
     
-    static override get toDataTerm(): Term<PLam<any, PData>> & { $: (input: Term<any>) => Term<PData>; }
+    static override get toDataTerm(): Term<PLam<any, PData>> & { $: (input: PappArg<any>) => Term<PData>; }
     {
-        return pIntToData;
+        return pIntToData as any;
     }
     /**
      * @deprecated try to use 'toDataTerm.$'

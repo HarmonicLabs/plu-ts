@@ -13,6 +13,9 @@ import PData from "./PData/PData";
 import PDataList from "./PData/PDataList";
 import PLam from "./PFn/PLam";
 import punsafeConvertType from "../Syntax/punsafeConvertType";
+import { PappArg } from "../Syntax/pappArg";
+import { addPListMethods } from "../stdlib";
+import TermList from "../stdlib/UtilityTerms/TermList";
 
 
 export default class PList<A extends PType> extends PDataRepresentable
@@ -28,7 +31,7 @@ export default class PList<A extends PType> extends PDataRepresentable
 
     static override get termType(): TermType { return Type.List( Type.Any )}
     
-    static override get fromDataTerm(): Term<PLam<PData, PList<PData>>> & { $: (input: Term<PData>) => Term<PList<PData>>; }
+    static override get fromDataTerm(): Term<PLam<PData, PList<PData>>> & { $: (input: PappArg<PData>) => Term<PList<PData>>; }
     {
         return punListData( Type.Data.Any );
     }
@@ -40,9 +43,9 @@ export default class PList<A extends PType> extends PDataRepresentable
         return (data: Term<PData>) => punListData( Type.Data.Any ).$( data );
     }
 
-    static override get toDataTerm(): Term<PLam<PList<PData>, PData>> & { $: (input: Term<PList<PData>>) => Term<PData>; }
+    static override get toDataTerm():Term<PLam<any, PData>> & { $: (input: PappArg<any>) => Term<PData>; }
     {
-        return pListToData( Type.Data.Any );
+        return pListToData( Type.Data.Any ) as any;
     }
     /**
      * @deprecated try to use 'toDataTerm.$'
@@ -61,7 +64,7 @@ function assertValidListType( elemsT: ConstantableTermType ): void
     );
 }
 
-export function pnil<ElemsT extends ConstantableTermType>( elemsT: ElemsT ): Term<PList<ToPType<ElemsT>>>
+export function pnil<ElemsT extends ConstantableTermType>( elemsT: ElemsT ): TermList<ToPType<ElemsT>>
 {
     assertValidListType( elemsT );
 
@@ -72,18 +75,20 @@ export function pnil<ElemsT extends ConstantableTermType>( elemsT: ElemsT ): Ter
         return punsafeConvertType( pnilData, list( elemsT ) ) as any;
     }
 
-    return new Term<PList<ToPType<ElemsT>>>(
-        Type.List( elemsT ),
-        _dbn => UPLCConst.listOf( termTyToConstTy( elemsT ) )([]),
-        true
+    return addPListMethods(
+        new Term<PList<ToPType<ElemsT>>>(
+            Type.List( elemsT ),
+            _dbn => UPLCConst.listOf( termTyToConstTy( elemsT ) )([]),
+            true
+        )
     );
 }
 
-export function pconstList<ElemsT extends ConstantableTermType>( elemsT: ElemsT ): ( elems: Term<ToPType<ElemsT>>[] ) => Term<PList<ToPType<ElemsT>>>
+export function pconstList<ElemsT extends ConstantableTermType>( elemsT: ElemsT ): ( elems: Term<ToPType<ElemsT>>[] ) => TermList<ToPType<ElemsT>>
 {
     assertValidListType( elemsT );
 
-    return ( elems: Term<ToPType<ElemsT>>[] ) => {
+    return ( elems: Term<ToPType<ElemsT>>[] ): TermList<ToPType<ElemsT>> => {
         JsRuntime.assert(
             Array.isArray( elems ) && elems.every(
                 el => 
@@ -96,22 +101,24 @@ export function pconstList<ElemsT extends ConstantableTermType>( elemsT: ElemsT 
 
         if( elems.length === 0 ) return pnil( elemsT );
 
-        return new Term<PList<ToPType<ElemsT>>>(
-            Type.List( elemsT ),
-            dbn => UPLCConst.listOf( termTyToConstTy( elemsT ) )
-                ( 
-                    elems.map(
-                        el => ( el.toUPLC( dbn ) as UPLCConst ).value
-                    ) as any
-                ),
-            true
+        return addPListMethods(
+            new Term<PList<ToPType<ElemsT>>>(
+                Type.List( elemsT ),
+                dbn => UPLCConst.listOf( termTyToConstTy( elemsT ) )
+                    ( 
+                        elems.map(
+                            el => ( el.toUPLC( dbn ) as UPLCConst ).value
+                        ) as any
+                    ),
+                true
+            )
         );
     }
 }
 
-export function pList<ElemsT extends ConstantableTermType>( elemsT: ElemsT ): ( elems: Term<ToPType<ElemsT>>[] ) => Term<PList<ToPType<ElemsT>>>
+export function pList<ElemsT extends ConstantableTermType>( elemsT: ElemsT ): ( elems: Term<ToPType<ElemsT>>[] ) => TermList<ToPType<ElemsT>>
 {
-    return ( elems: Term<ToPType<ElemsT>>[] ) => {
+    return ( elems: Term<ToPType<ElemsT>>[] ): TermList<ToPType<ElemsT>> => {
         JsRuntime.assert(
             Array.isArray( elems ) && elems.every(
                 el => 

@@ -3,13 +3,18 @@ import { pfstPair, pid, ppairData, psndPair, punMapData } from "../stdlib/Builti
 import PType, { PDataRepresentable } from "../PType";
 import { phoist, plam } from "../Syntax/syntax";
 import Term from "../Term";
-import Type, { data, DataType, pair, TermType } from "../Term/Type/base";
+import Type, { ConstantableTermType, data, DataType, pair, TermType, ToPType } from "../Term/Type/base";
 import { typeExtends } from "../Term/Type/extension";
 import PData from "./PData/PData";
 import PDataMap from "./PData/PDataMap";
 import PLam from "./PFn/PLam";
 import PList from "./PList";
 import { punsafeConvertType } from "../Syntax";
+import { PappArg } from "../Syntax/pappArg";
+import { isConstantableTermType } from "../Term/Type/kinds";
+import UPLCConst from "../../UPLC/UPLCTerms/UPLCConst";
+import { termTyToConstTy } from "../Term/Type/constTypeConversion";
+import TermPair, { addPPairMethods } from "../stdlib/TermPair";
 
 export default class PPair<A extends PType, B extends PType > extends PDataRepresentable
 {
@@ -63,5 +68,50 @@ export default class PPair<A extends PType, B extends PType > extends PDataRepre
             term
         );
         //*/
+    }
+}
+
+export function pPair<FstT extends ConstantableTermType, SndT extends ConstantableTermType>(
+    fstT: FstT,
+    sndT: SndT
+): ( fst: PappArg<ToPType<FstT>>, snd: PappArg<ToPType<SndT>> ) => TermPair<ToPType<FstT>,ToPType<SndT>>
+{
+    JsRuntime.assert(
+        isConstantableTermType( fstT ),
+        "plutus only supports pairs of types that can be converted to constants"
+    );
+    JsRuntime.assert(
+        isConstantableTermType( sndT ),
+        "plutus only supports pairs of types that can be converted to constants"
+    );
+
+    return ( fst: PappArg<ToPType<FstT>>, snd: PappArg<ToPType<SndT>> ): TermPair<ToPType<FstT>,ToPType<SndT>> => {
+
+        JsRuntime.assert(
+            fst instanceof Term &&
+            (fst as any).isConstant &&
+            typeExtends( fst.type, fstT ),
+            "first element of a constant pair was not a constant"
+        );
+        JsRuntime.assert(
+            snd instanceof Term &&
+            (snd as any).isConstant &&
+            typeExtends( snd.type, sndT ),
+            "second element of a constant pair was not a constant"
+        );
+        
+        return addPPairMethods(
+            new Term<PPair<ToPType<FstT>,ToPType<SndT>>>(
+                pair( fstT, sndT ),
+                dbn => UPLCConst.pairOf(
+                    termTyToConstTy( fstT ),
+                    termTyToConstTy( sndT )
+                )(
+                    (fst.toUPLC( dbn ) as UPLCConst).value,
+                    (snd.toUPLC( dbn ) as UPLCConst).value
+                ),
+                true // isConstant
+            )
+        );
     }
 }

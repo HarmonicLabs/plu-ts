@@ -1,4 +1,4 @@
-import { PFn, PLam, TermFn } from "../..";
+import { PFn, PLam, PPair, TermFn } from "../..";
 import ObjectUtils from "../../../../utils/ObjectUtils";
 import PType, { PDataRepresentable } from "../../PType";
 import { PAlias } from "../../PTypes/PAlias/palias";
@@ -12,9 +12,10 @@ import { ConstantableStructDefinition, PStruct } from "../../PTypes/PStruct/pstr
 import { papp } from "../../Syntax";
 import { PappArg } from "../../Syntax/pappArg";
 import Term from "../../Term";
-import Type, { AliasTermType, bool, bs, ConstantableTermType, int, list, PrimType, str, structType, TermType, ToPType } from "../../Term/Type/base";
+import Type, { AliasTermType, bool, bs, ConstantableTermType, int, list, pair, PrimType, str, structType, TermType, ToPType } from "../../Term/Type/base";
 import { typeExtends } from "../../Term/Type/extension";
 import { isAliasType, isConstantableStructType, isLambdaType, isStructType } from "../../Term/Type/kinds";
+import TermPair, { addPPairMethods } from "../TermPair";
 import TermAlias from "./TermAlias";
 import TermBool, { addPBoolMethods } from "./TermBool";
 import TermBS, { addPByteStringMethods } from "./TermBS";
@@ -39,6 +40,7 @@ export type UtilityTermOf<PElem extends PType> =
         PElem extends PByteString ? TermBS : 
         PElem extends PInt ? TermInt :
         PElem extends PList<infer PListElem extends PType> ? TermList<PListElem> :
+        PElem extends PPair<infer PFst extends PType,infer PSnd extends PType> ? TermPair<PFst,PSnd> :
         PElem extends PString ? TermStr :
         PElem extends PStruct<infer SDef extends ConstantableStructDefinition> ? TermStruct<SDef> :
         PElem extends PLam<infer PInput extends PType, infer POutput extends PType> ?
@@ -58,6 +60,7 @@ export default function addUtilityForType<T extends TermType>( t: T )
     if( typeExtends( t , bs   ) ) return addPByteStringMethods as any;
     if( typeExtends( t , int  ) ) return addPIntMethods as any;
     if( typeExtends( t , list( Type.Any ) ) ) return addPListMethods as any;
+    if( typeExtends( t , pair( Type.Any, Type.Any ) ) ) return addPPairMethods as any;
     if( typeExtends( t , str  ) ) return addPStringMethods as any;
 
     if( isLambdaType( t ) )
