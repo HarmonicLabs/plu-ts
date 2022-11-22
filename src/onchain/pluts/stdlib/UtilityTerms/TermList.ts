@@ -20,7 +20,6 @@ import { PMaybeT } from "../PMaybe/PMaybe";
 import { UtilityTermOf } from "./addUtilityForType";
 import TermBool from "./TermBool";
 import TermInt from "./TermInt";
-import { TryUtitlityFromPType } from "./types";
 
 type TermList<PElemsT extends PDataRepresentable> = Term<PList<PElemsT>> & {
 
@@ -31,7 +30,7 @@ type TermList<PElemsT extends PDataRepresentable> = Term<PList<PElemsT>> & {
      * 
      * > **fails the smart contract with `perror`** if the list is empty
      */
-    readonly head: TryUtitlityFromPType<PElemsT>
+    readonly head: UtilityTermOf<PElemsT>
     /**
      * **O(1)**
      * 

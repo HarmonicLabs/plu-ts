@@ -34,6 +34,9 @@ export type UtitlityFromTerm<UtilityTerm extends Term<PTypeWithUtility>>
     = UtilityTerm extends Term<infer UtilityPType extends PTypeWithUtility> ?
         UtilityFromPType<UtilityPType> : never;
 
+/**
+ * @deprecated use `UtilityTermOf` instead
+ */
 export type TryUtitlityFromPType<PT extends PType>
     = PT extends infer UtilityPType extends PTypeWithUtility ?
         UtilityFromPType<UtilityPType> :
