@@ -9,3 +9,4 @@ coverage/
 
 # output of build
 dist
+lib

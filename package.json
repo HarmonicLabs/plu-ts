@@ -1,8 +1,9 @@
 {
   "name": "@harmoniclabs/plu-ts",
-  "version": "0.1.5",
+  "version": "0.1.6",
   "description": "An embedded DSL for Cardano smart contracts creation coupled with a library for Cardano transactions, all in Typescript",
-  "main": "./dist/index.js",
+  "main": "./lib/index.js",
+  "types": "./lib/index.d.ts",
   "scripts": {
     "test": "jest",
     "clear-jest": "jest --clearCache",
@@ -48,10 +49,10 @@
   },
   "homepage": "https://github.com/HarmonicLabs/plu-ts#readme",
   "dependencies": {
-    "buffer": "^6.0.3",
-    "typescript": "^4.6.3"
+    "buffer": "^6.0.3"
   },
   "devDependencies": {
+    "typescript": "^4.6.3",
     "@babel/preset-env": "^7.18.6",
     "@babel/preset-typescript": "^7.18.6",
     "@types/jest": "^28.1.4",
