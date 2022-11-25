@@ -6,3 +6,6 @@ coverage/
 .vscode*
 
 .npmrc*
+
+# output of build
+dist

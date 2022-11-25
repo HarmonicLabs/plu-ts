@@ -37,7 +37,7 @@ export default class PInt extends PDataRepresentable
      */
     static override fromData(data: Term<PData>): TermInt
     {
-        return addPIntMethods( punIData.$( data ) )
+        return punIData.$( data );
     }
     
     static override get toDataTerm(): Term<PLam<any, PData>> & { $: (input: PappArg<any>) => Term<PData>; }

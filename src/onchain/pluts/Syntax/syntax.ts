@@ -78,14 +78,14 @@ export function papp<Input extends PType, Output extends PType>( a: Term<PLam<In
         _b = pappArgToTerm( b, lambdaType[1] ) as any;
     }
 
-    const outputType = applyLambdaType( lambdaType, b.type );
+    const outputType = applyLambdaType( lambdaType, _b.type );
     const outputTerm = addUtilityForType( outputType )(
         new Term(
             outputType,
             dbn => {
                 const funcUPLC = a.toUPLC( dbn );
                 if( funcUPLC instanceof ErrorUPLC ) return funcUPLC;
-                const argUPLC  = b.toUPLC( dbn );
+                const argUPLC  = _b.toUPLC( dbn );
                 if( argUPLC instanceof ErrorUPLC ) return argUPLC;
 
                 // omit id function
@@ -97,7 +97,8 @@ export function papp<Input extends PType, Output extends PType>( a: Term<PLam<In
                 );
 
                 return app; 
-            }
+            },
+            false // isConstant
         ) as any
     );
 
@@ -409,9 +410,10 @@ export function plet<PVarT extends PType, SomeExtension extends object>( varValu
     
     const continuation = <PExprResult extends PType>( expr: (value: TermPVar) => Term<PExprResult> ): Term<PExprResult> => {
 
+        const withUtility = addUtilityForType( varValue.type );
         // only to extracts the type; never compiled
         const outType = expr(
-            addUtilityForType( varValue.type )(
+            withUtility(
                 new Term(
                     varValue.type,
                     _dbn => new UPLCVar( 0 ) // mock variable
@@ -437,15 +439,16 @@ export function plet<PVarT extends PType, SomeExtension extends object>( varValu
                 )
                 {
                     console.log("inlining")
-                    return expr( varValue ).toUPLC( dbn );
+                    return expr( withUtility( varValue as any ) as any ).toUPLC( dbn );
                 }
 
                 return new Application(
                     new Lambda(
-                        expr( new Term(
+                        expr(
+                            withUtility( new Term(
                             varValue.type,
                             varAccessDbn => new UPLCVar( varAccessDbn - ( dbn + BigInt(1) ) ) // point to the lambda generated here
-                        ) as TermPVar ).toUPLC( ( dbn + BigInt(1) ) )
+                        ) as any ) as any ).toUPLC( ( dbn + BigInt(1) ) )
                     ),
                     arg
                 )

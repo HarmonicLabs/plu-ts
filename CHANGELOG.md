@@ -1,6 +1,14 @@
 # Changelog
 
-## Unreleased v0.1.4
+## v0.1.5
+
+- introduced `pdynPair` for dynamic `Term<PPair<...>>` creation, to overcome the lack of a `mkPair` builtin;
+    - adjusted `pfstPair` and `psndPair` accordingly
+    - adjusted `getFromDataForType` macro and `getFromDataTermForType` accordingly
+- fixed bug in `papp` (previously using `b` instead of `_b`)
+- fixed some ts types
+
+## v0.1.4
 
 - `papp` (and `$` method) accepts ts values and converts it automatically when possible
     > _example_: if `Term<PInt>` is expected it should be possible to pass `1` without having to do `pInt(1)`

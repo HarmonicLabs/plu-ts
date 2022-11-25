@@ -23,7 +23,7 @@ export function addPPairMethods<PFst extends PType, PSnd extends PType>( pair: T
     if( !isPairType( pairT ) )
     {
         throw new BasePlutsError(
-            "can't add pair methods to a term wich is not a pair"
+            "can't add pair methods to a term that is not a pair"
         );
     };
 

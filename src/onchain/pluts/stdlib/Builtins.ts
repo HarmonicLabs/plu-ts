@@ -27,14 +27,17 @@ import TermInt, { addPIntMethods } from "./UtilityTerms/TermInt";
 import TermStr, { addPStringMethods } from "./UtilityTerms/TermStr";
 import Term from "../Term";
 import { getNRequiredLambdaArgs } from "../Term/Type/utils";
-import Type, { TermType, ToPType, DataType, ToPDataType, bool, lam, int, bs, fn, delayed } from "../Term/Type/base";
+import Type, { TermType, ToPType, DataType, ToPDataType, bool, lam, int, bs, fn, delayed, data } from "../Term/Type/base";
 import Lambda from "../../UPLC/UPLCTerms/Lambda";
 import UPLCVar from "../../UPLC/UPLCTerms/UPLCVar";
 import { PMap } from "../PTypes/PMap";
 import HoistedUPLC from "../../UPLC/UPLCTerms/HoistedUPLC";
 import PDelayed from "../PTypes/PDelayed";
 import { PappArg } from "../Syntax/pappArg";
-import { UtilityTermOf } from "./UtilityTerms/addUtilityForType";
+import addUtilityForType, { UtilityTermOf } from "./UtilityTerms/addUtilityForType";
+import { isConstantableTermType } from "../Term/Type/kinds";
+import punsafeConvertType from "../Syntax/punsafeConvertType";
+import { getFromDataForType } from "../PTypes/PData/conversion/getFromDataTermForType";
 
 function pBool( bool: boolean ): TermBool
 {
@@ -912,32 +915,86 @@ export function ptrace<ReturnT extends TermType>( returnType: ReturnT | undefine
     );
 }
 
-export function pfstPair<A extends TermType, B extends TermType>( fstType: A | undefined, sndType: B | undefined )
+export function pfstPair<A extends TermType, B extends TermType>( fstType: A, sndType: B )
     : TermFn<[ PPair<ToPType<A>,ToPType<B>> ], ToPType<A> >
 {
     const a = fstType ?? Type.Var("pfstPair_fstType");
     const b = sndType ?? Type.Var("pfstPair_sndType");
 
-    return addApplications<[ PPair<ToPType<A>,ToPType<B>> ], ToPType<A> >(
-        new Term(
-            Type.Lambda( Type.Pair( a, b ), a ),
-            _dbn => Builtin.fstPair
-        )
+    const bnTerm = new Term<PLam<PPair<ToPType<A>, ToPType<B>>, ToPType<A>>>(
+        Type.Lambda( Type.Pair( a, b ), a ),
+        _dbn => Builtin.fstPair
     );
+    
+    ObjectUtils.defineReadOnlyProperty(
+        bnTerm,
+        "$",
+        ( pair: Term<PPair<ToPType<A>,ToPType<B>>> ): UtilityTermOf<ToPType<A>> => {
+
+            if( (pair as any).__isDynamicPair )
+            {
+                if( !isConstantableTermType( a ) )
+                throw new BasePlutsError(
+                    "is not possible to extract the first element of a (dynamic) pair with non constant type"
+                );
+
+                return addUtilityForType( a )(
+                    getFromDataForType( a )(
+                        papp(
+                            punsafeConvertType( bnTerm, lam( Type.Pair( data, data ), data ) ),
+                            punsafeConvertType( pair, Type.Pair( data, data ) )
+                        ) as any
+                    ) as any
+                );
+
+            }
+
+            return papp( bnTerm, pair );
+        }
+    );
+
+    return bnTerm as any;
 }
 
-export function psndPair<A extends TermType, B extends TermType>( fstType: A | undefined, sndType: B | undefined )
+export function psndPair<A extends TermType, B extends TermType>( fstType: A, sndType: B )
     : TermFn<[ PPair<ToPType<A>,ToPType<B>> ], ToPType<B>>
 {
     const a = fstType ?? Type.Var("psndPair_fstType");
     const b = sndType ?? Type.Var("psndPair_sndType");
-    
-    return addApplications<[ PPair<ToPType<A>,ToPType<B>> ], ToPType<B>>(
-        new Term(
-            Type.Lambda( Type.Pair( a, b ), b ),
-            _dbn => Builtin.sndPair
-        )
+   
+    const bnTerm = new Term<PLam<PPair<ToPType<A>, ToPType<B>>, ToPType<B>>>(
+        Type.Lambda( Type.Pair( a, b ), b ),
+        _dbn => Builtin.sndPair
     );
+    
+    ObjectUtils.defineReadOnlyProperty(
+        bnTerm,
+        "$",
+        ( pair: Term<PPair<ToPType<A>,ToPType<B>>> ): UtilityTermOf<ToPType<B>> => {
+
+            if( (pair as any).__isDynamicPair )
+            {
+                if( !isConstantableTermType( b ) )
+                throw new BasePlutsError(
+                    "is not possible to extract the first element of a (dynamic) pair with non constant type"
+                );
+
+                return addUtilityForType( b )(
+                    getFromDataForType( b )(
+                        papp(
+                            punsafeConvertType( bnTerm, lam( Type.Pair( data, data ), data ) ),
+                            punsafeConvertType( pair, Type.Pair( data, data ) )
+                        ) as any
+                    ) as any
+                );
+
+            }
+
+            return papp( bnTerm, pair );
+        }
+    );
+
+    return bnTerm as any;
 }
 
 export function pstrictChooseList<ListElemT extends TermType, ReturnT extends TermType>( listElemType: ListElemT, returnType: ReturnT )

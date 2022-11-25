@@ -21,7 +21,6 @@ import { data, fn, lam, list, TermType, tyVar } from "../../Term/Type/base";
 import { isConstantableStructDefinition, isLambdaType } from "../../Term/Type/kinds";
 import { termTypeToString } from "../../Term/Type/utils";
 import PData from "../PData/PData";
-import { getFromDataForType } from "../PData/conversion";
 import PLam from "../PFn/PLam";
 import PInt, { pInt } from "../PInt";
 import PList from "../PList";
@@ -31,6 +30,7 @@ import DataI from "../../../../types/Data/DataI";
 import { constT } from "../../../UPLC/UPLCTerms/UPLCConst/ConstType";
 import addUtilityForType from "../../stdlib/UtilityTerms/addUtilityForType";
 import punsafeConvertType from "../../Syntax/punsafeConvertType";
+import { getFromDataForType } from "../PData/conversion/getFromDataTermForType";
 
 
 export type RawFields<CtorDef extends ConstantableStructCtorDef> = 
@@ -61,9 +61,10 @@ function getExtractedFieldsExpr<CtorDef extends ConstantableStructCtorDef, Field
 
     const idx = allFIndexes[0];
     const fieldType = ctorDef[ allFieldsNames[ idx ] ];
+
     return plet( getFromDataForType( fieldType )(
-        papp( elemAt, pInt( idx ) ) )
-    ).in( value => {
+        papp( elemAt, pInt( idx ) )
+    )).in( value => {
 
         ObjectUtils.defineNormalProperty(
             partialExtracted,
@@ -377,7 +378,7 @@ export default function pmatch<SDef extends ConstantableStructDefinition>( struc
          * @todo add proper error
          */
         throw new BasePlutsError("unexpected struct type while running 'pmatch'; " +
-            "\ntype expected to be 'ConstantableStructDefiniton' was: " + termTypeToString( sDef )
+            "\ntype expected to be a 'ConstantableStructDefiniton' was: " + termTypeToString( struct.type )
         );
     }
 

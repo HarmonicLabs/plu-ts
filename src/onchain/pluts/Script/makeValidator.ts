@@ -3,7 +3,6 @@ import { pif, pstrictIf } from "../stdlib/Builtins";
 import { PDataRepresentable } from "../PType";
 import PBool from "../PTypes/PBool";
 import PData from "../PTypes/PData/PData";
-import { getFromDataForType } from "../PTypes/PData/conversion";
 import PLam, { TermFn } from "../PTypes/PFn/PLam";
 import PUnit, { pmakeUnit } from "../PTypes/PUnit";
 import { papp, perror, pfn } from "../Syntax/syntax";
@@ -13,6 +12,7 @@ import { typeExtends } from "../Term/Type/extension";
 import { isConstantableTermType, isLambdaType } from "../Term/Type/kinds";
 import { termTypeToString } from "../Term/Type/utils";
 import { V1 , V2 } from "../API";
+import { getFromDataForType } from "../PTypes/PData/conversion/getFromDataTermForType";
 
 
 export default function makeValidator(
