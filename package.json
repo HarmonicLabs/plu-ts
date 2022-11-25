@@ -14,6 +14,9 @@
     "run:watch": "nodemon dist/my-app.js --watch dist",
     "start": "npm-run-all --parallel build:watch run:watch"
   },
+  "files": [
+    "dist"
+  ],
   "publishConfig": {
     "registry": "https://registry.npmjs.org"
   },
