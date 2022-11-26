@@ -1,7 +1,6 @@
-import PType from "../../PType"
-import PLam from "./PLam"
+import PLam from "./PLam";
+import PType from "../../../../src/onchain/pluts/PType";
 
-// @ts-check
 export type PFn<Inputs extends [ PType, ...PType[] ], Output extends PType > = 
     Inputs extends [ infer PInstance extends PType ] ?
         PLam< PInstance, Output > :
