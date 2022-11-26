@@ -7,10 +7,7 @@ import Term from "../../Term";
 import { PappArg } from "../../Syntax/pappArg";
 
 
-// @ts-check
-/**
- * @type {PLam<A extends PType, B extends PType >}
- */
+/// <reference path="./PLam.d.ts"/>
 export default class PLam<A extends PType, B extends PType > extends PType
     implements Cloneable<PLam<A,B>>
 {
