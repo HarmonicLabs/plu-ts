@@ -1,8 +1,7 @@
-import Cloneable from "../../types/interfaces/Cloneable";
 import JsRuntime from "../../utils/JsRuntime";
 import UPLCTerm from "../UPLC/UPLCTerm";
 import PData from "./PTypes/PData/PData";
-import { TermFn } from "./PTypes/PFn/PLam";
+import { TermFn } from "./PTypes/PFn";
 import Term from "./Term";
 import Type, { TermType } from "./Term/Type/base";
 

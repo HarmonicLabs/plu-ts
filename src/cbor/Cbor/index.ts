@@ -1,11 +1,9 @@
-/*
+import type CborObj from "../CborObj";
 
- 
-*/
+import JsRuntime from "../../utils/JsRuntime";
 import { Buffer } from "buffer";
 import CborString from "../CborString";
-import CborObj, { isCborObj } from "../CborObj";
-import JsRuntime from "../../utils/JsRuntime";
+import { isCborObj } from "../CborObj";
 import { isMajorTypeTag, MajorType } from "./Constants";
 import CborNegativeInt from "../CborObj/CborNegInt";
 import CborBytes from "../CborObj/CborBytes";
@@ -14,10 +12,10 @@ import CborArray from "../CborObj/CborArray";
 import CborMap, { CborMapEntry } from "../CborObj/CborMap";
 import CborTag from "../CborObj/CborTag";
 import CborSimple from "../CborObj/CborSimple";
-import BufferUtils from "../../utils/BufferUtils";
 import CborUInt from "../CborObj/CborUInt";
-import PlutsCborParseError from "../../errors/PlutsSerialError/PlutsCborError/PlutsCborParseError";
 import CborNegInt from "../CborObj/CborNegInt";
+import BufferUtils from "../../utils/BufferUtils";
+import PlutsCborParseError from "../../errors/PlutsSerialError/PlutsCborError/PlutsCborParseError";
 
 /**
  * @private to the module; not needed elsewhere

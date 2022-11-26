@@ -1,4 +1,4 @@
-import CborString from "../CborString";
+import type CborString from "../CborString";
 
 export default interface CBORSerializable 
 {

@@ -1,5 +1,6 @@
-import { ConstantableTermType } from "../../Term/Type";
-import _palias, { PAlias as _PAlias } from "./palias";
+import type { ConstantableTermType } from "../../Term/Type";
+import _palias from "./palias";
+import type { PAlias as _PAlias } from "./palias";
 import _unwrapAlias from "./unwrapAlias";
 
 export * from "./palias";

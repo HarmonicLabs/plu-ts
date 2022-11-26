@@ -2,8 +2,11 @@
   "name": "@harmoniclabs/plu-ts",
   "version": "0.0.3",
   "description": "An embedded DSL for Cardano smart contracts creation coupled with a library for Cardano transactions, all in Typescript",
-  "main": "./src/index.js",
-  "types": "./src/index.d.ts",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
   "scripts": {
     "test": "jest",
     "clear-jest": "jest --clearCache",
@@ -12,9 +15,6 @@
     "build": "tsc #config in tsconfig.json",
     "start": "npm-run-all --parallel build:watch run:watch"
   },
-  "files": [
-    "src"
-  ],
   "publishConfig": {
     "registry": "https://registry.npmjs.org"
   },
