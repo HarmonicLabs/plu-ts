@@ -69,14 +69,6 @@ const subByteString = phoist(
     )
 )
 
-const hello = pfn([
-    bs,
-    int,
-    int
-],  bs)
-
-type helloT = typeof hello;
-
 const jsLikeSlice = phoist(
     pfn([
         bs,
