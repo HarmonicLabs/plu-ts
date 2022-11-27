@@ -1,8 +1,8 @@
 import Cloneable from "../../../types/interfaces/Cloneable";
 import UPLCConst from "../../UPLC/UPLCTerms/UPLCConst";
+import PDataRepresentable from "../PType/PDataRepresentable";
 import { pBSToData, pdecodeUtf8, pencodeUtf8, punBData } from "../stdlib/Builtins";
 import TermStr, { addPStringMethods } from "../stdlib/UtilityTerms/TermStr";
-import { PDataRepresentable } from "../PType";
 import Term from "../Term";
 import Type, { TermType } from "../Term/Type/base";
 import PDataBS from "./PData/PDataBS";

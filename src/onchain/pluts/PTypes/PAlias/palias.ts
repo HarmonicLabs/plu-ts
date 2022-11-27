@@ -1,10 +1,10 @@
 import type Term from "../../Term";
-import type { AliasTermType, ConstantableTermType, ToPType } from "../../Term/Type/base";
+import type { AliasTermType, ConstantableTermType } from "../../Term/Type/base";
 import type PData from "../PData/PData";
+import type { ToPType } from "../../Term/Type/ts-pluts-conversion";
 
 import JsRuntime from "../../../../utils/JsRuntime";
 import ObjectUtils from "../../../../utils/ObjectUtils";
-import  { PDataRepresentable } from "../../PType";
 import punsafeConvertType from "../../Syntax/punsafeConvertType";
 import Type, { aliasType } from "../../Term/Type/base";
 import { typeExtends } from "../../Term/Type/extension";
@@ -13,6 +13,7 @@ import { cloneTermType } from "../../Term/Type/utils";
 import { getToDataForType } from "../PData/conversion/getToDataTermForType";
 import unwrapAlias from "./unwrapAlias";
 import { getFromDataForType } from "../PData/conversion/getFromDataTermForType";
+import PDataRepresentable from "../../PType/PDataRepresentable";
 
 
 /**

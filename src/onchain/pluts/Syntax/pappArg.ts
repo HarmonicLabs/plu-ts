@@ -23,9 +23,10 @@ import type PUnit from "../PTypes/PUnit";
 import { pmakeUnit } from "../PTypes/PUnit";
 import { UtilityTermOf } from "../stdlib/UtilityTerms/addUtilityForType";
 import Term from "../Term";
-import { bool, bs, ConstantableTermType, fn, int, list, str, TermType, ToPType, tyVar, unit } from "../Term/Type/base";
+import { bool, bs, ConstantableTermType, fn, int, list, str, TermType, tyVar, unit } from "../Term/Type/base";
 import { typeExtends } from "../Term/Type/extension";
 import { isConstantableTermType, isLambdaType, isListType, isPairType, isTypeParam, isWellFormedType } from "../Term/Type/kinds";
+import { ToPType } from "../Term/Type/ts-pluts-conversion";
 import { getNRequiredLambdaArgs, termTypeToString } from "../Term/Type/utils";
 import { pfn } from "./syntax";
 
@@ -33,6 +34,7 @@ type _TsFunctionSatisfying<KnownArgs extends Term<PType>[], POut extends PType> 
     POut extends PLam<infer POutIn extends PType, infer POutOut extends PType> ?
         (
             ( ...args: KnownArgs ) => Term<POut> | // functions that do return `PLam` are fine too
+            // @ts-ignore Type instantiation is excessively deep and possibly infinite.
             _TsFunctionSatisfying<[ ...KnownArgs, UtilityTermOf<POutIn> ], POutOut>
         ) :
         ( ...args: KnownArgs ) => Term<POut>
@@ -68,7 +70,7 @@ export default function pappArgToTerm<ArgT extends TermType>(
 
     // same of `arg instanceof Term` but typescript doesn't knows it
     // ( after `arg instanceof Term` typescript marked arg as `never` )
-    if( Term.prototype.isPrototypeOf( arg ) )
+    if( arg instanceof Term )
     {
         if( !typeExtends( arg.type, mustExtend ) )
         {
@@ -458,7 +460,10 @@ function tryInferElemsT( arg: PappArg<PType>[] ): ConstantableTermType
     );
 
     JsRuntime.assert(
-        arg.every( elem => isTsValueAssignableToPlutsType( elem, elemsT as any) ),
+        arg.every( elem =>
+            // @ts-ignore Type instantiation is excessively deep and possibly infinite.
+            isTsValueAssignableToPlutsType( elem, elemsT as any)
+        ),
         "types in the array where incongruent; expected type was: " + termTypeToString( list( elemsT ) )
     );
 
@@ -474,7 +479,7 @@ function isTsValueAssignableToPlutsType<PlutsType extends TermType>(
 
     // same of `value instanceof Term` but typescript doesn't knows it
     // ( after `value instanceof Term` typescript marked arg as `never` )
-    if( Term.prototype.isPrototypeOf( value ) )
+    if( value instanceof Term )
     {
         return typeExtends( value.type, plutsType );
     }

@@ -9,9 +9,9 @@ import Lambda from "../../UPLC/UPLCTerms/Lambda";
 import UPLCVar from "../../UPLC/UPLCTerms/UPLCVar";
 import PType from "../PType";
 import PDelayed from "../PTypes/PDelayed";
-import PLam, { TermFn } from "../PTypes/PFn/PLam";
-import Type, { ToPType, ToTermArrNonEmpty, TermType } from "../Term/Type/base";
-import Term from "../Term";
+import PLam from "../PTypes/PFn/PLam";
+import Type, { PrimType, TermType } from "../Term/Type/base";
+import Term, { ToTermArrNonEmpty } from "../Term";
 import JsRuntime from "../../../utils/JsRuntime";
 import HoistedUPLC from "../../UPLC/UPLCTerms/HoistedUPLC";
 import { typeExtends } from "../Term/Type/extension";
@@ -24,6 +24,9 @@ import { getNRequiredForces } from "../../UPLC/UPLCTerms/Builtin/UPLCBuiltinTag"
 import addUtilityForType, { UtilityTermOf } from "../stdlib/UtilityTerms/addUtilityForType";
 import punsafeConvertType from "./punsafeConvertType";
 import pappArgToTerm, { PappArg } from "./pappArg";
+import { ToPType, ToPTypeArrNonEmpty } from "../Term/Type/ts-pluts-conversion";
+import { TermFn } from "../PTypes/PFn/PFn";
+import { PByteString, PInt } from "..";
 
 
 function isIdentityUPLC( uplc: UPLCTerm ): uplc is Lambda
@@ -75,6 +78,7 @@ export function papp<Input extends PType, Output extends PType>( a: Term<PLam<In
     }
     else
     {
+        // @ts-ignore Type instantiation is excessively deep and possibly infinite
         _b = pappArgToTerm( b, lambdaType[1] ) as any;
     }
 
@@ -114,6 +118,7 @@ export function papp<Input extends PType, Output extends PType>( a: Term<PLam<In
             ( someInput: any ) => papp( outputTerm as any, someInput )
         ) as any;
     
+    // @ts-ignore Type instantiation is excessively deep and possibly infinite.
     return outputTerm as any;
 }
 
@@ -162,7 +167,7 @@ type PFnFromTypes<Ins extends [ TermType, ...TermType[] ], Out extends TermType>
         PLam<ToPType<T>, PFnFromTypes<RestTs, Out>>:
     never
 
-export type TermFnFromTypes<Ins extends [ TermType, ...TermType[] ], Out extends TermType> =
+type TermFnFromTypes<Ins extends [ TermType, ...TermType[] ], Out extends TermType> =
     Ins extends [ infer T extends TermType ] ? Term<PLam<ToPType<T>, ToPType<Out>>> & { $: ( input: PappArg<ToPType<T>> ) => UtilityTermOf<ToPType<Out>> } :
     Ins extends [ infer T extends TermType, ...infer RestIns extends [ TermType, ...TermType[] ] ] ?
         Term<PLam<ToPType<T>,PFnFromTypes<RestIns, Out>>>
@@ -201,7 +206,10 @@ export function pfn<InputsTypes extends [ TermType, ...TermType[] ], OutputType 
         nMissingArgs: number
     ): TermFnFromTypes<InputsTypes, OutputType>
     {
-        if( nMissingArgs === 1 ) return plam( inputsTypes[ inputsTypes.length - 1 ], outputType )( curriedFn as any ) as any;
+        if( nMissingArgs === 1 ) 
+        return plam( inputsTypes[ inputsTypes.length - 1 ], outputType )
+            // @ts-ignore Type instantiation is excessively deep and possibly infinite.
+            ( curriedFn as any ) as any;
 
         const currentInputIndex = inputsTypes.length - nMissingArgs;
 

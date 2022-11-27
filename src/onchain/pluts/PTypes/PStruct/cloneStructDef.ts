@@ -1,5 +1,7 @@
+import type { StructCtorDef, StructDefinition } from "../../Term/Type/base";
+
 import ObjectUtils from "../../../../utils/ObjectUtils";
-import type { StructCtorDef, StructDefinition } from "./pstruct";
+
 
 export function cloneStructCtorDef<CtorDef extends StructCtorDef>( ctorDef: Readonly<CtorDef> ): CtorDef
 {

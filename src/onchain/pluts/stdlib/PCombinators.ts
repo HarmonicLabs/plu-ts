@@ -1,6 +1,6 @@
 import PType from "../PType";
-import PFn from "../PTypes/PFn/PFn";
-import PLam, { TermFn } from "../PTypes/PFn/PLam";
+import PFn, { TermFn } from "../PTypes/PFn/PFn";
+import PLam from "../PTypes/PFn/PLam";
 import { papp, pfn, phoist } from "../Syntax/syntax";
 import Term from "../Term";
 import { fn, lam, tyVar } from "../Term/Type/base";
@@ -25,6 +25,7 @@ export const pcompose
         lam( a, b ),
         a
     ],  c)
+    // @ts-ignore Type instantiation is excessively deep and possibly infinite
     (( bToC, aToB, _a ) => {
         return papp( bToC, papp( aToB, _a ) ) as any;
     })

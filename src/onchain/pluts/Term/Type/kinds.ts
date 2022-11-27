@@ -15,10 +15,12 @@ import {
     anyStruct,
     ConstantableStructType,
     AnyAlias,
-    aliasType
+    aliasType,
+    ConstantableStructDefinition,
+    StructCtorDef,
+    StructDefinition
 } from "./base";
 import ObjectUtils from "../../../../utils/ObjectUtils";
-import { StructDefinition, StructCtorDef, ConstantableStructDefinition } from "../../PTypes/PStruct/pstruct";
 
 function getIsStructDefWithTermTypeCheck<SDef extends StructDefinition>( termTypeCheck: ( t: TermType ) => boolean )
     : ( def: object ) => def is SDef

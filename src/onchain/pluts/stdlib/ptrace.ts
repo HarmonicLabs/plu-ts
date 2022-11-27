@@ -1,19 +1,21 @@
 import { pif, ptrace } from "./Builtins";
 import { pBool } from "../PTypes/PBool";
-import { TermFn } from "../PTypes/PFn/PLam";
 import PString from "../PTypes/PString";
 import { pdelay, perror, pfn, pforce, phoist, plam } from "../Syntax/syntax";
-import { bool, ConstantableTermType, delayed, str, ToPType } from "../Term/Type/base";
+import { bool, ConstantableTermType, delayed, str } from "../Term/Type/base";
+import { TermFn } from "../PTypes/PFn/PFn";
+import { ToPType } from "../Term/Type/ts-pluts-conversion";
 
+// @ts-ignore Type instantiation is excessively deep and possibly infinite.
 export const ptraceIfTrue = phoist(
     pfn([
         str,
         bool,
     ],  bool)
     (( msg, boolean ) => 
-            pif( bool ).$( boolean )
-            .then( ptrace( bool ).$( msg ).$( pBool( true ) ) )
-            .else( pBool( false ) )
+        pif( bool ).$( boolean )
+        .then( ptrace( bool ).$( msg ).$( pBool( true ) ) )
+        .else( pBool( false ) )
     )
 );
 

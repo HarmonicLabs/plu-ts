@@ -10,6 +10,6 @@ export default class PDataPair<PDataFst extends PData, PDataSnd extends PData> e
 {
     constructor( dataPair: DataPair<DataFromPData<PDataFst>,DataFromPData<PDataSnd>> = new DataPair( new DataI, new DataI ) as any )
     {
-        super( dataPair );
+        super( dataPair as any );
     }
 }

@@ -3,7 +3,7 @@ import ObjectUtils from "../../../../utils/ObjectUtils"
 import PInt from "../../PTypes/PInt"
 import Term from "../../Term"
 import TermBool from "./TermBool"
-import { TermFn } from "../../PTypes/PFn/PLam"
+import { TermFn } from "../../PTypes/PFn/PFn"
 import PBool from "../../PTypes/PBool"
 import { PappArg } from "../../Syntax/pappArg"
 

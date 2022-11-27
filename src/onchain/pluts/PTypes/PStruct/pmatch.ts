@@ -1,4 +1,4 @@
-import { ConstantableStructCtorDef, RestrictedStructInstance, ConstantableStructDefinition, PStruct, StructCtorDef } from "./pstruct";
+import { RestrictedStructInstance, PStruct } from "./pstruct";
 import BasePlutsError from "../../../../errors/BasePlutsError";
 import JsRuntime from "../../../../utils/JsRuntime";
 import ObjectUtils from "../../../../utils/ObjectUtils";
@@ -17,7 +17,7 @@ import TermList from "../../stdlib/UtilityTerms/TermList";
 import PType from "../../PType";
 import { plet, papp, plam } from "../../Syntax/syntax";
 import Term from "../../Term";
-import { data, fn, lam, list, TermType, tyVar } from "../../Term/Type/base";
+import { ConstantableStructCtorDef, ConstantableStructDefinition, data, fn, lam, list, StructCtorDef, TermType, tyVar } from "../../Term/Type/base";
 import { isConstantableStructDefinition, isLambdaType } from "../../Term/Type/kinds";
 import { termTypeToString } from "../../Term/Type/utils";
 import PData from "../PData/PData";
@@ -63,6 +63,7 @@ function getExtractedFieldsExpr<CtorDef extends ConstantableStructCtorDef, Field
     const fieldType = ctorDef[ allFieldsNames[ idx ] ];
 
     return plet( getFromDataForType( fieldType )(
+        // @ts-ignore Type instantiation is excessively deep and possibly infinite.
         papp( elemAt, pInt( idx ) )
     )).in( value => {
 

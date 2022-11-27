@@ -2,12 +2,12 @@ import { por, pand, pstrictOr, pstrictAnd } from "../Builtins";
 import ObjectUtils from "../../../../utils/ObjectUtils";
 import PBool, { pBool } from "../../PTypes/PBool";
 import Term from "../../Term";
-import { TermFn } from "../../PTypes/PFn/PLam";
 import Delay from "../../../UPLC/UPLCTerms/Delay";
 import PType from "../../PType";
 import PDelayed from "../../PTypes/PDelayed";
-import { bool, delayed } from "../../Term/Type/base";
+import { delayed } from "../../Term/Type/base";
 import type { PappArg } from "../../Syntax/pappArg";
+import { TermFn } from "../../PTypes/PFn/PFn";
 
 type TermBool = Term<PBool> & {
 

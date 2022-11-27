@@ -1,6 +1,5 @@
 import UPLCConst from "../../UPLC/UPLCTerms/UPLCConst";
 import { pfstPair, psndPair, pisEmpty, pif, punConstrData, pConstrToData } from "../stdlib/Builtins";
-import { PDataRepresentable } from "../PType";
 import { perror, phoist, plam, plet } from "../Syntax/syntax";
 import Term from "../Term";
 import Type, { data, TermType, unit } from "../Term/Type/base";
@@ -10,6 +9,7 @@ import PLam from "./PFn/PLam";
 import { pDataList } from "./PList";
 import HoistedUPLC from "../../UPLC/UPLCTerms/HoistedUPLC";
 import DataConstr from "../../../types/Data/DataConstr";
+import PDataRepresentable from "../PType/PDataRepresentable";
 
 export const pmakeUnit = () => new Term<PUnit>(
     Type.Unit,
@@ -25,6 +25,7 @@ export const pmakeUnitData = () => new Term<PData>(
     )
 );
 
+//@ts-ignore
 export default class PUnit extends PDataRepresentable
 {
     private _unit: undefined
@@ -51,10 +52,10 @@ export default class PUnit extends PDataRepresentable
                             return pif( Type.Unit )
                                 .$(
                                     pInt( 0 )
-                                    .eq.$(
+                                    .eq(
                                         pfst.$( idxListPair )
                                     )
-                                    .and.$(
+                                    .and(
                                         pisEmpty.$(
                                             psnd.$( idxListPair )
                                         )
@@ -65,7 +66,7 @@ export default class PUnit extends PDataRepresentable
                         }
                     )
             )
-        )
+        ) as any;
     }
     /**
      * @deprecated try to use 'toDataTerm.$'
@@ -81,7 +82,7 @@ export default class PUnit extends PDataRepresentable
             plam( unit, data )(
                 _unit => pConstrToData.$( pInt( 0 ) ).$( pDataList([]) ) 
             )
-        );
+        ) as any;
     }
 
     static override toData(term: Term<PUnit>): Term<PData>

@@ -3,10 +3,11 @@ import { PData } from "../..";
 import JsRuntime from "../../../../utils/JsRuntime";
 import ObjectUtils from "../../../../utils/ObjectUtils";
 import { ppairData } from "../../stdlib/Builtins";
-import TermPair, { addPPairMethods } from "../../stdlib/TermPair";
+import TermPair, { addPPairMethods } from "../../stdlib/UtilityTerms/TermPair";
 import Term from "../../Term";
-import { ConstantableTermType, ToPType, typeExtends, pair, data } from "../../Term/Type";
+import { ConstantableTermType, typeExtends, pair, data } from "../../Term/Type";
 import { isConstantableTermType } from "../../Term/Type/kinds";
+import { ToPType } from "../../Term/Type/ts-pluts-conversion";
 import { getToDataForType } from "../PData/conversion/getToDataTermForType";
 
 export function pdynPair<FstT extends ConstantableTermType, SndT extends ConstantableTermType>(
@@ -70,7 +71,9 @@ export function pdynPair<FstT extends ConstantableTermType, SndT extends Constan
                     pair( fstT, sndT ),
                     
                     dbn => ppairData( data, data )
+                        // @ts-ignore Type instantiation is excessively deep and possibly infinite.
                         .$( fstIsData ? _fst as Term<PData> : getToDataForType( fstT )( _fst as Term<ToPType<FstT>> ) )
+                        // @ts-ignore Type instantiation is excessively deep and possibly infinite.
                         .$( sndIsData ? _snd as Term<PData> : getToDataForType( sndT )( _snd as Term<ToPType<SndT>> ) )
                         .toUPLC( dbn )
 

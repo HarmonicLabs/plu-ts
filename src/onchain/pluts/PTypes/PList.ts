@@ -3,9 +3,8 @@ import JsRuntime from "../../../utils/JsRuntime";
 import UPLCConst from "../../UPLC/UPLCTerms/UPLCConst";
 import { constT } from "../../UPLC/UPLCTerms/UPLCConst/ConstType";
 import { pListToData, pnilData, pnilPairData, pprepend, punListData } from "../stdlib/Builtins";
-import PType, { PDataRepresentable } from "../PType";
 import Term from "../Term";
-import Type, { ToPType, TermType, ConstantableTermType, int, list } from "../Term/Type/base";
+import Type, { TermType, ConstantableTermType, list } from "../Term/Type/base";
 import { termTyToConstTy } from "../Term/Type/constTypeConversion";
 import { typeExtends } from "../Term/Type/extension";
 import { isConstantableTermType } from "../Term/Type/kinds";
@@ -15,6 +14,9 @@ import PLam from "./PFn/PLam";
 import punsafeConvertType from "../Syntax/punsafeConvertType";
 import { PappArg } from "../Syntax/pappArg";
 import TermList, { addPListMethods } from "../stdlib/UtilityTerms/TermList";
+import { PType } from "..";
+import PDataRepresentable from "../PType/PDataRepresentable";
+import { ToPType } from "../Term/Type/ts-pluts-conversion";
 
 
 export default class PList<A extends PType> extends PDataRepresentable

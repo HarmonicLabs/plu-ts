@@ -1,13 +1,14 @@
 import PType from "../../PType";
 import PBool, { pBool } from "../../PTypes/PBool";
-import PFn from "../../PTypes/PFn/PFn";
-import PLam, { TermFn } from "../../PTypes/PFn/PLam";
+import PFn, { TermFn } from "../../PTypes/PFn/PFn";
+import PLam from "../../PTypes/PFn/PLam";
 import PInt, { pInt } from "../../PTypes/PInt";
 import PList, { pnil } from "../../PTypes/PList";
 import { papp, perror, pfn, phoist, plam, plet, precursive } from "../../Syntax/syntax";
 import Term from "../../Term";
-import Type, { bool, ConstantableTermType, fn, lam, list, PrimType, TermType, ToPType, tyVar } from "../../Term/Type/base";
-import { pand, pchooseList, phead, pif, pisEmpty, plessInt, por, pprepend, pstrictIf, ptail } from "../Builtins";
+import Type, { bool, ConstantableTermType, fn, lam, list, TermType, tyVar } from "../../Term/Type/base";
+import { ToPType } from "../../Term/Type/ts-pluts-conversion";
+import { pchooseList, phead, pif, pisEmpty, plessInt, pprepend, ptail } from "../Builtins";
 import { pflip } from "../PCombinators";
 import PMaybe, { PMaybeT } from "../PMaybe/PMaybe";
 
@@ -23,6 +24,7 @@ export function pmatchList<ReturnT  extends TermType, PElemsT extends PType = PT
             ], 
             returnT 
         )
+        // @ts-ignore
         ( ( matchNil, matchCons, list ) => pchooseList( elemsT, returnT ).$( list )
             .caseNil( matchNil )
             .caseCons(
@@ -71,7 +73,8 @@ export function precursiveList<ReturnT  extends TermType, ElemtsT extends TermTy
                 returnT
             )
             ( ( self, matchNil, matchCons, lst ) => 
-                plet( 
+                plet(
+                    // @ts-ignore Type instantiation is excessively deep and possibly infinite.
                     papp(
                         papp(
                             self,
@@ -149,6 +152,7 @@ export function pindexList<ElemsT extends ConstantableTermType>( elemsT: ElemsT 
 export function pfind<ElemsT extends ConstantableTermType, PElemsT extends ToPType<ElemsT> = ToPType<ElemsT>>( elemsT: ElemsT )
     : TermFn<[ PLam<PElemsT,PBool>, PList<PElemsT> ], PMaybeT<PElemsT>>
 {
+    // @ts-ignore Type instantiation is excessively deep and possibly infinite.
     const PMaybeElem = PMaybe( elemsT ) as PMaybeT<PElemsT>;
 
     return phoist(
@@ -201,7 +205,8 @@ export function pfoldr<ElemsT extends ConstantableTermType, ResultT extends Cons
             b
         ],  lam( list( a ), b ))
         (( reduceFunc, accumulator ) => {
-
+            
+            // @ts-ignore Type instantiation is excessively deep and possibly infinite.
             return precursiveList( resultT, elemsT )
             .$(
                 plam( selfType , resultT )
@@ -262,12 +267,14 @@ export function pfoldl<ElemsT extends ConstantableTermType, ResultT extends Cons
                 ],  lam( list( a ), b ))
                 (( self, accum ) => 
 
+                    // @ts-ignore Type instantiation is excessively deep and possibly infinite.
                     pmatchList( b, a )
                     .$( accum )
                     .$(
                         pfn([ a, list( a ) ], b )
                         (( head, tail ) =>
                             papp(
+                                // @ts-ignore Type instantiation is excessively deep and possibly infinite.
                                 papp(
                                     self,
                                     // compute new accumulator
@@ -298,7 +305,7 @@ export function preverse<ElemsT extends ConstantableTermType>( elemsT: ElemsT )
         pfoldl( elemsT, list( elemsT ) )
         .$( pflip.$( pprepend( elemsT ) ) )
         .$( pnil( elemsT ) )
-    )
+    ) as any;
 }
 
 export function pfilter<ElemsT extends ConstantableTermType>( elemsT: ElemsT )
@@ -320,11 +327,14 @@ export function pfilter<ElemsT extends ConstantableTermType>( elemsT: ElemsT )
                     list( elemsT )
                 ],  list( elemsT ))
                 (( elem, accum ) =>
-                    pif( list(elemsT) ).$( papp( predicate, elem ) )
+                    pif( list(elemsT) ).$(
+                        // @ts-ignore Type instantiation is excessively deep and possibly infinite.
+                        papp( predicate, elem )
+                    )
                     .then( accum.prepend( elem ) )
                     .else( accum )
                 )
-            ).$( pnil( elemsT ) )
+            ).$( pnil( elemsT ) ) as any
             // .$( lst )
 
         )
@@ -341,7 +351,9 @@ export function pevery<ElemsT extends ConstantableTermType>( elemsT: ElemsT )
                 list( elemsT ),
                 bool
             )
-        )(( predicate ) => {
+        )
+        // @ts-ignore Type instantiation is excessively deep and possibly infinite.
+        (( predicate ) => {
 
             /*
 
@@ -366,6 +378,7 @@ export function pevery<ElemsT extends ConstantableTermType>( elemsT: ElemsT )
             .$( pBool( true ) )
             */
 
+            // @ts-ignore Type instantiation is excessively deep and possibly infinite.
             return precursiveList( bool, elemsT )
             .$(
                 plam( lam( list( elemsT ), bool ), bool )
@@ -407,8 +420,11 @@ export function psome<ElemsT extends ConstantableTermType>( elemsT: ElemsT )
                 list( elemsT ),
                 bool
             )
-        )(( predicate ) => {
+        )
+        // @ts-ignore Type instantiation is excessively deep and possibly infinite.
+        (( predicate ) => {
 
+            // @ts-ignore Type instantiation is excessively deep and possibly infinite.
             return precursiveList( bool , elemsT )
             .$(
                 plam( lam( list( elemsT ), bool ), bool )
@@ -449,7 +465,9 @@ export function pmap<FromT extends ConstantableTermType, ToT extends Constantabl
                 list( fromT ),
                 list( toT )
             )
-        )(( f ) => {
+        )
+        // @ts-ignore Type instantiation is excessively deep and possibly infinite.
+        (( f ) => {
 
             return pfoldr( fromT, list( toT ) )
             .$(

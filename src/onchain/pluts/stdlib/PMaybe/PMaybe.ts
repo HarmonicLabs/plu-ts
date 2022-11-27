@@ -1,7 +1,10 @@
+import type { PStruct } from "../../PTypes/PStruct/pstruct";
+import type { ConstantableStructType, ConstantableTermType } from "../../Term/Type/base";
+import type { FromPTypeConstantable, ToPType } from "../../Term/Type/ts-pluts-conversion";
+import type PDataRepresentable from "../../PType/PDataRepresentable";
+
 import ObjectUtils from "../../../../utils/ObjectUtils";
-import { PDataRepresentable } from "../../PType";
-import { pgenericStruct, PStruct } from "../../PTypes/PStruct/pstruct";
-import { ConstantableStructType, ConstantableTermType, FromPType, FromPTypeConstantable, ToPType } from "../../Term/Type/base";
+import { pgenericStruct } from "../../PTypes/PStruct/pstruct";
 
 export type PMaybeT<PTy extends PDataRepresentable> = PStruct<{
     Just: { val: FromPTypeConstantable<PTy> },

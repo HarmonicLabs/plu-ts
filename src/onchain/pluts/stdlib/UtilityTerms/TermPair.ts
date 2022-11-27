@@ -1,9 +1,10 @@
-import { PPair, PType, Term } from "..";
-import { pfstPair, psndPair } from "../stdlib/Builtins";
-import ObjectUtils from "../../../utils/ObjectUtils";
-import { isPairType } from "../Term/Type/kinds";
-import { UtilityTermOf } from "./UtilityTerms/addUtilityForType";
-import BasePlutsError from "../../../errors/BasePlutsError";
+import { PType, Term, PPair } from "../..";
+import BasePlutsError from "../../../../errors/BasePlutsError";
+import ObjectUtils from "../../../../utils/ObjectUtils";
+import { isPairType } from "../../Term/Type/kinds";
+import { pfstPair, psndPair } from "../Builtins";
+import { UtilityTermOf } from "./addUtilityForType";
+
 
 
 type TermPair<PFst extends PType, PSnd extends PType> = Term<PPair<PFst,PSnd>> & {

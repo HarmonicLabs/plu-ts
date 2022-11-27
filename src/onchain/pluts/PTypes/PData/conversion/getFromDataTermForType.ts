@@ -1,10 +1,10 @@
 import type PData from "../PData";
 import type Term from "../../../Term";
-import type { ConstantableTermType, StructType, ToPType } from "../../../Term/Type/base";
+import type { ConstantableTermType, StructType } from "../../../Term/Type/base";
 import type { TermFn } from "../../PFn";
 import type PPair from "../../PPair";
 import type PType from "../../../PType";
-import type TermPair from "../../../stdlib/TermPair";
+import type TermPair from "../../../stdlib/UtilityTerms/TermPair";
 
 import BasePlutsError from "../../../../../errors/BasePlutsError";
 import { pfstPair, psndPair, punListData } from "../../../stdlib/Builtins";
@@ -23,6 +23,7 @@ import PList from "../../PList";
 import PString from "../../PString";
 import PUnit from "../../PUnit";
 import { pdynPair } from "../../PPair/pdynPair";
+import { ToPType } from "../../../Term/Type/ts-pluts-conversion";
 
 export function getFromDataTermForType<T extends ConstantableTermType | StructType>( t: T )
 : TermFn<[ PData ], ToPType<T>>
@@ -30,6 +31,7 @@ export function getFromDataTermForType<T extends ConstantableTermType | StructTy
     if( isAliasType( t ) ) return getFromDataTermForType( unwrapAlias( t ) ) as any;
     if( isStructType( t ) ) return phoist(
         plam( data , t )
+        // @ts-ignore Type instantiation is excessively deep and possibly infinite
         ( ( term: Term<PData> ) => punsafeConvertType( term, t ) )
     ) as any;
 

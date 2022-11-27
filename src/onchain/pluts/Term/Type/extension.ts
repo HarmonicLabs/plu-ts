@@ -1,5 +1,4 @@
-import { AliasTermType, anyStruct, ConstantableTermType, DataConstructor, DataType, StructType, TermType } from "./base";
-import { StructCtorDef } from "../../PTypes/PStruct/pstruct";
+import { anyStruct, DataConstructor, DataType, StructCtorDef, StructType, TermType } from "./base";
 import { isAliasType, isDataType, isStructType, isTypeNameOfData, isTypeParam, isWellFormedType } from "./kinds";
 import unwrapAlias from "../../PTypes/PAlias/unwrapAlias";
 
