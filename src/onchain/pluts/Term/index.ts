@@ -1,14 +1,16 @@
+import type UPLCTerm from "../../UPLC/UPLCTerm";
+import type PType from "../PType";
+import type { StructCtorDef, StructDefinition } from "../PTypes/PStruct/pstruct";
+import type { FromPType, TermType } from "./Type/base";
+
 import { isCloneable } from "../../../types/interfaces/Cloneable";
 import JsRuntime from "../../../utils/JsRuntime";
 import ObjectUtils from "../../../utils/ObjectUtils";
-import UPLCTerm from "../../UPLC/UPLCTerm";
 import HoistedUPLC from "../../UPLC/UPLCTerms/HoistedUPLC";
 import UPLCConst from "../../UPLC/UPLCTerms/UPLCConst";
-import PType from "../PType";
 import unwrapAlias from "../PTypes/PAlias/unwrapAlias";
-import { StructCtorDef, StructDefinition } from "../PTypes/PStruct/pstruct";
-import { anyStruct, FromPType, TermType } from "./Type/base";
 import { isAliasType, isStructType, isWellFormedType } from "./Type/kinds";
+import { anyStruct } from "./Type/base";
 
 // avoid circular ref
 function ctorDefToString( ctorDef: StructCtorDef ): string

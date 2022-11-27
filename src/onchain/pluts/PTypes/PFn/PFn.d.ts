@@ -1,7 +1,6 @@
-import PType from "../../PType"
-import PLam from "./PLam"
+import type PType from "../../PType"
+import type PLam from "./PLam"
 
-///@ts-check
 export type PFn<Inputs extends [ PType, ...PType[] ], Output extends PType > = 
     Inputs extends [ infer PInstance extends PType ] ?
         PLam< PInstance, Output > :

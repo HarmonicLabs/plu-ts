@@ -1,24 +1,25 @@
-import PData from "../PData";
+import type { TermFn } from "../../PFn";
+import type PData from "../PData";
+import type Term from "../../../Term";
+import type { ConstantableTermType, StructType, ToPType} from "../../../Term/Type/base";
+import type PType from "../../../PType";
+
 import BasePlutsError from "../../../../../errors/BasePlutsError";
 import { ppairData, pfstPair, psndPair, pid } from "../../../stdlib/Builtins";
 import { pmap } from "../../../stdlib/List/methods";
 import { phoist, plam } from "../../../Syntax/syntax";
 import punsafeConvertType from "../../../Syntax/punsafeConvertType";
-import Term from "../../../Term";
-import Type, { ConstantableTermType, StructType, ToPType, int, bs, str, unit, bool, list, data, pair } from "../../../Term/Type/base";
+import Type, { int, bs, str, unit, bool, list, data, pair } from "../../../Term/Type/base";
 import { typeExtends } from "../../../Term/Type/extension";
 import { isAliasType, isStructType, isDataType, isListType } from "../../../Term/Type/kinds";
 import { termTypeToString } from "../../../Term/Type/utils";
 import unwrapAlias from "../../PAlias/unwrapAlias";
 import PBool from "../../PBool";
 import PByteString from "../../PByteString";
-import { TermFn } from "../../PFn/PLam";
 import PInt from "../../PInt";
 import PList from "../../PList";
 import PString from "../../PString";
 import PUnit from "../../PUnit";
-import { PType } from "../../..";
-
 
 export function getToDataTermForType<T extends ConstantableTermType | StructType>( t: T )
 : TermFn<[ ToPType<T> ], PData>

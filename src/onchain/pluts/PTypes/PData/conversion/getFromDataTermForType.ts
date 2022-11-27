@@ -24,7 +24,6 @@ import PString from "../../PString";
 import PUnit from "../../PUnit";
 import { pdynPair } from "../../PPair/pdynPair";
 
-
 export function getFromDataTermForType<T extends ConstantableTermType | StructType>( t: T )
 : TermFn<[ PData ], ToPType<T>>
 {

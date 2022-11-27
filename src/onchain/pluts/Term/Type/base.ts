@@ -1,26 +1,28 @@
-import Term from "..";
+import type Term from "..";
+import type PType from "../../PType";
+import type PDataRepresentable from "../../PType/PDataRepresentable";
+import type { PAlias } from "../../PTypes";
+import type { AliasDefinition } from "../../PTypes/PAlias/palias";
+import type PBool from "../../PTypes/PBool";
+import type PByteString from "../../PTypes/PByteString";
+import type PData from "../../PTypes/PData/PData";
+import type PDataBS from "../../PTypes/PData/PDataBS";
+import type PDataConstr from "../../PTypes/PData/PDataConstr";
+import type PDataInt from "../../PTypes/PData/PDataInt";
+import type PDataList from "../../PTypes/PData/PDataList";
+import type PDataMap from "../../PTypes/PData/PDataMap";
+import type PDataPair from "../../PTypes/PData/PDataPair";
+import type PDelayed from "../../PTypes/PDelayed";
+import type PLam from "../../PTypes/PFn/PLam";
+import type PInt from "../../PTypes/PInt";
+import type PList from "../../PTypes/PList";
+import type PPair from "../../PTypes/PPair";
+import type PString from "../../PTypes/PString";
+import type { ConstantableStructDefinition, PStruct, StructCtorDef, StructDefinition } from "../../PTypes/PStruct/pstruct";
+import type PUnit from "../../PTypes/PUnit";
+
 import JsRuntime from "../../../../utils/JsRuntime";
-import PType, { PDataRepresentable } from "../../PType";
-import { PAlias } from "../../PTypes";
-import { AliasDefinition } from "../../PTypes/PAlias/palias";
-import PBool from "../../PTypes/PBool";
-import PByteString from "../../PTypes/PByteString";
-import PData from "../../PTypes/PData/PData";
-import PDataBS from "../../PTypes/PData/PDataBS";
-import PDataConstr from "../../PTypes/PData/PDataConstr";
-import PDataInt from "../../PTypes/PData/PDataInt";
-import PDataList from "../../PTypes/PData/PDataList";
-import PDataMap from "../../PTypes/PData/PDataMap";
-import PDataPair from "../../PTypes/PData/PDataPair";
-import PDelayed from "../../PTypes/PDelayed";
-import PLam from "../../PTypes/PFn/PLam";
-import PInt from "../../PTypes/PInt";
-import PList from "../../PTypes/PList";
-import PPair from "../../PTypes/PPair";
-import PString from "../../PTypes/PString";
-import { ConstantableStructDefinition, PStruct, StructCtorDef, StructDefinition } from "../../PTypes/PStruct/pstruct";
-import PUnit from "../../PTypes/PUnit";
-import { isConstantableTermType } from "./kinds";
+
 
 export const enum PrimType {
     Int  = "Int",
