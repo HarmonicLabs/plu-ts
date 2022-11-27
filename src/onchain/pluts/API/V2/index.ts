@@ -8,7 +8,7 @@ import PTxInInfo from "./Tx/PTxInInfo";
 import PTxOut from "./Tx/PTxOut";
 
 
-export default Object.freeze({
+const V2 = Object.freeze({
     ...V1,
 
     PScriptContext,
@@ -18,3 +18,5 @@ export default Object.freeze({
     PTxInInfo,
     PTxOut
 });
+
+export default V2;

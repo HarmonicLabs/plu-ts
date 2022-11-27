@@ -21,7 +21,9 @@ import PDataRepresentable from "../../PType/PDataRepresentable";
 **/
 class _PAlias extends PDataRepresentable
 {
-    protected constructor()
+    public _isPType: true = true;
+    public _PTypeUPLCTerm: any;
+    constructor()
     {
         super();
     }
@@ -32,19 +34,18 @@ export type AliasDefinition<T extends ConstantableTermType, AliasId extends symb
     type: T
 }
 
-export type PAlias<T extends ConstantableTermType, AliasId extends symbol = symbol, PClass extends _PAlias = _PAlias> = T extends ConstantableTermType ?
+export type PAlias<T extends ConstantableTermType, AliasId extends symbol = symbol, PClass extends _PAlias = _PAlias> =
 {
     new(): PClass
 
-    readonly termType: AliasTermType<AliasId,T>;
-    readonly type: AliasTermType<AliasId,T>;
-    readonly fromData: ( data: Term<PData> ) => Term<PClass>;
-    readonly toData: ( data: Term<PClass> ) => Term<PData>;
+    termType: AliasTermType<AliasId,T>;
+    type: AliasTermType<AliasId,T>;
+    fromData: ( data: Term<PData> ) => Term<PClass>;
+    toData: ( data: Term<PClass> ) => Term<PData>;
 
-    readonly from: ( toAlias: Term<ToPType<T>> ) => Term<PAlias<T, AliasId, PClass>>
+    from: ( toAlias: Term<ToPType<T>> ) => Term<PAlias<T, AliasId, PClass>>
 
 } & PDataRepresentable
-: never;
 
 
 export default function palias<T extends ConstantableTermType, SymId extends symbol >(

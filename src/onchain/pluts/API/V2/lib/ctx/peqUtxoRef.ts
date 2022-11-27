@@ -1,6 +1,6 @@
-import { PTxOutRef } from "../../..";
 import { pfn, phoist } from "../../../../Syntax/syntax";
 import { bool } from "../../../../Term/Type/base";
+import PTxOutRef from "../../../V1/Tx/PTxOutRef";
 
 const peqUtxoRef = phoist(
     pfn([

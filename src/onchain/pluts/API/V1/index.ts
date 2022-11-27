@@ -26,7 +26,7 @@ import PTokenName from "./Value/PTokenName";
 import PValue from "./Value/PValue";
 
 
-export default Object.freeze({
+const V1 = Object.freeze({
     PScriptContext,
     PTxInfo, pfindOwnInput, pownHash,
     PScriptPurpose,
@@ -69,3 +69,5 @@ export default Object.freeze({
     PTokenName,
     PValue
 });
+
+export default V1
