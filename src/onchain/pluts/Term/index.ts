@@ -21,7 +21,7 @@ export default class Term<A extends PType>
      * it's solely purpose is to allow typescript to rise errors (at type level)
      * when the type arguments don't match
      */
-    protected _pInstance?: A;
+    readonly _pInstance?: A;
     get pInstance(): A | undefined
     {
         if( this._pInstance === undefined ) return undefined;
@@ -30,7 +30,7 @@ export default class Term<A extends PType>
             this._pInstance;
     }
 
-    protected _type!: FromPType<A>;
+    readonly _type!: FromPType<A>;
     get type(): FromPType<A> {
         return this._type
     };
