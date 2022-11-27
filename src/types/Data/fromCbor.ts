@@ -14,6 +14,7 @@ import DataConstr, { cborTagToConstrNumber } from "./DataConstr";
 import DataI from "./DataI";
 import DataList from "./DataList";
 import DataMap from "./DataMap";
+import DataPair from "./DataPair";
 
 
 export function dataFromCborObj( cborObj: CborObj ): Data
@@ -47,10 +48,10 @@ export function dataFromCborObj( cborObj: CborObj ): Data
     {
         return new DataMap(
             cborObj.map.map( entry => {
-                return [
+                return new DataPair(
                     dataFromCborObj( entry.k ),
                     dataFromCborObj( entry.v )
-                ]
+                );
             })
         );
     }

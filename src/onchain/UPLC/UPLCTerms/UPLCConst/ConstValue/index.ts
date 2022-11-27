@@ -239,17 +239,19 @@ export function isConstValueList( val: any ): val is ConstValueList
             val[i]
         );
     }
+    
+    function isArrayOfEmptyArray( arr: any[] ): boolean
+    {
+        if( !Array.isArray( arr ) ) return false;
+
+        return arr.every(
+            elem => Array.isArray( elem ) && elem.length === 0 || isArrayOfEmptyArray( elem )
+        );
+    }
 
     if( firstElemTy === undefined )
     {
-        function isArrayOfEmptyArray( arr: any[] ): boolean
-        {
-            if( !Array.isArray( arr ) ) return false;
-
-            return arr.every(
-                elem => Array.isArray( elem ) && elem.length === 0 || isArrayOfEmptyArray( elem )
-            );
-        }
+        
         
         return isArrayOfEmptyArray( val );
     }

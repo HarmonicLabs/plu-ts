@@ -16,12 +16,12 @@ import Type, { AliasTermType, bool, bs, ConstantableStructDefinition, Constantab
 import { typeExtends } from "../../Term/Type/extension";
 import { isAliasType, isConstantableStructType, isLambdaType, isStructType } from "../../Term/Type/kinds";
 import { ToPType } from "../../Term/Type/ts-pluts-conversion";
-import TermPair, { addPPairMethods } from "../TermPair";
 import TermAlias from "./TermAlias";
 import TermBool, { addPBoolMethods } from "./TermBool";
 import TermBS, { addPByteStringMethods } from "./TermBS";
 import TermInt, { addPIntMethods } from "./TermInt";
 import TermList, { addPListMethods } from "./TermList";
+import TermPair, { addPPairMethods } from "./TermPair";
 import TermStr, { addPStringMethods } from "./TermStr";
 import TermStruct, { addPStructMethods } from "./TermStruct";
 

@@ -5,7 +5,7 @@ import ObjectUtils from "../../../../utils/ObjectUtils";
 import HoistedUPLC from "../../../UPLC/UPLCTerms/HoistedUPLC";
 import UPLCConst from "../../../UPLC/UPLCTerms/UPLCConst";
 import Term from "../../Term";
-import Type, { AliasTermType, aliasType, ConstantableStructDefinition, ConstantableStructType, ConstantableTermType, GenericStructDefinition, GenericStructType, int, PrimType, struct, StructCtorDef, StructDefinition, structType, StructType, ToPType, tyVar } from "../../Term/Type/base";
+import Type, { AliasTermType, aliasType, ConstantableStructDefinition, ConstantableTermType, GenericStructDefinition, GenericStructType, int, PrimType, struct, StructCtorDef, StructDefinition, structType, StructType, tyVar } from "../../Term/Type/base";
 import { typeExtends } from "../../Term/Type/extension";
 import { isAliasType, isConstantableStructDefinition, isStructType } from "../../Term/Type/kinds";
 import { structDefToString, termTypeToString } from "../../Term/Type/utils";
@@ -18,6 +18,7 @@ import Builtin from "../../../UPLC/UPLCTerms/Builtin";
 import punsafeConvertType from "../../Syntax/punsafeConvertType";
 import PDataRepresentable from "../../PType/PDataRepresentable";
 import { TermFn } from "../PFn";
+import { ToPType } from "../../Term/Type/ts-pluts-conversion";
 
 /**
  * intermediate class useful to reconize structs form primitives

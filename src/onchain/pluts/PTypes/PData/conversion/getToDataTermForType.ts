@@ -1,7 +1,7 @@
 import type { TermFn } from "../../PFn";
 import type PData from "../PData";
 import type Term from "../../../Term";
-import type { ConstantableTermType, StructType, ToPType} from "../../../Term/Type/base";
+import type { ConstantableTermType, StructType } from "../../../Term/Type/base";
 import type PType from "../../../PType";
 
 import BasePlutsError from "../../../../../errors/BasePlutsError";
@@ -20,16 +20,17 @@ import PInt from "../../PInt";
 import PList from "../../PList";
 import PString from "../../PString";
 import PUnit from "../../PUnit";
+import { ToPType } from "../../../Term/Type/ts-pluts-conversion";
 
 export function getToDataTermForType<T extends ConstantableTermType | StructType>( t: T )
 : TermFn<[ ToPType<T> ], PData>
 {
-    if( isDataType( t ) ) return pid( t );
+    if( isDataType( t ) ) return pid( t ) as any;
     if( isAliasType( t ) ) return getToDataTermForType( unwrapAlias( t ) ) as any;
     if( isStructType( t ) ) return phoist(
         plam( t, Type.Data.Constr )
         ( ( term: Term<ToPType<T>> ) => punsafeConvertType( term, Type.Data.Constr ) )
-    );
+    ) as any;
 
     if( typeExtends( t, int ) )     return PInt.toDataTerm;
     if( typeExtends( t, bs  ) )     return PByteString.toDataTerm as any;
@@ -63,7 +64,7 @@ export function getToDataTermForType<T extends ConstantableTermType | StructType
         ) return phoist(
             plam( t, Type.Data.Pair( fstT, sndT ) )
             ( ( term: Term<ToPType<T>> ) => punsafeConvertType( term, Type.Data.Constr ) )
-        );
+        )  as any;
 
         return plam( t, Type.Data.Pair( data, data ) )
         (
@@ -76,7 +77,7 @@ export function getToDataTermForType<T extends ConstantableTermType | StructType
                 getToDataTermForType( sndT as any )
                 .$( psndPair( fstT as any, sndT as any ).$( term as any ) )
             ) as any
-        )
+        ) as any
     }
 
     throw new BasePlutsError(

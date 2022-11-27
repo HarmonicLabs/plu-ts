@@ -1,3 +1,10 @@
+import type PUnit from "../PTypes/PUnit";
+import type PString from "../PTypes/PString";
+import type PInt from "../PTypes/PInt";
+import type PByteString from "../PTypes/PByteString";
+import type PBool from "../PTypes/PBool";
+import type PType from "../PType";
+
 import { Buffer } from "buffer";
 import CborString from "../../../cbor/CborString";
 import BasePlutsError from "../../../errors/BasePlutsError";
@@ -7,19 +14,13 @@ import Integer from "../../../types/ints/Integer";
 import Pair from "../../../types/structs/Pair";
 import JsRuntime from "../../../utils/JsRuntime";
 import ObjectUtils from "../../../utils/ObjectUtils";
-import type PType from "../PType";
-import type PBool from "../PTypes/PBool";
 import { pBool } from "../PTypes/PBool";
-import type PByteString from "../PTypes/PByteString";
 import { pByteString } from "../PTypes/PByteString";
 import PLam from "../PTypes/PFn/PLam";
-import type PInt from "../PTypes/PInt";
 import { pInt } from "../PTypes/PInt";
 import PList, { pList } from "../PTypes/PList";
 import PPair, { pPair } from "../PTypes/PPair";
-import type PString from "../PTypes/PString";
 import { pStr } from "../PTypes/PString";
-import type PUnit from "../PTypes/PUnit";
 import { pmakeUnit } from "../PTypes/PUnit";
 import { UtilityTermOf } from "../stdlib/UtilityTerms/addUtilityForType";
 import Term from "../Term";
@@ -70,9 +71,9 @@ export default function pappArgToTerm<ArgT extends TermType>(
 
     // same of `arg instanceof Term` but typescript doesn't knows it
     // ( after `arg instanceof Term` typescript marked arg as `never` )
-    if( arg instanceof Term )
+    if( Term.prototype.isPrototypeOf( arg ) )
     {
-        if( !typeExtends( arg.type, mustExtend ) )
+        if( !typeExtends( (arg as Term<PType>).type, mustExtend ) )
         {
             // TODO: add proper error
             throw new BasePlutsError(
@@ -479,9 +480,9 @@ function isTsValueAssignableToPlutsType<PlutsType extends TermType>(
 
     // same of `value instanceof Term` but typescript doesn't knows it
     // ( after `value instanceof Term` typescript marked arg as `never` )
-    if( value instanceof Term )
+    if( Term.prototype.isPrototypeOf( value ) )
     {
-        return typeExtends( value.type, plutsType );
+        return typeExtends( (value as Term<PType>).type, plutsType );
     }
 
     if( typeExtends( plutsType, int ) )

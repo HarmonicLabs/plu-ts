@@ -7,6 +7,7 @@ const pownCurrSym = phoist(
     plam( PScriptPurpose.type, PCurrencySymbol.type )
     ( purpose => pmatch( purpose )
         .onMinting( raw => raw.extract("currencySym").in(({ currencySym }) => currencySym ))
+        // @ts-ignore
         ._( _ => perror( PCurrencySymbol.type ) )
     )
 );
