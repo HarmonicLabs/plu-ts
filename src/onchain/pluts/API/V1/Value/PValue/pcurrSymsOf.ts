@@ -1,9 +1,7 @@
 import PValue from ".";
 import { PList } from "../../../..";
-import { ReturnT } from "../../../../../../utils/ts";
-import { TermFn } from "../../../../PTypes/PFn/PLam";
+import { TermFn } from "../../../../PTypes/PFn/PFn";
 import { pfstPair } from "../../../../stdlib";
-import TermAlias from "../../../../stdlib/UtilityTerms/TermAlias";
 import { plam } from "../../../../Syntax/syntax";
 import { int, list, pair } from "../../../../Term/Type";
 import PCurrencySymbol from "../PCurrencySymbol";

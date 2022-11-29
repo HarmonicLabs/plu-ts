@@ -13,8 +13,8 @@ import PDataConstr from "../PTypes/PData/PDataConstr";
 import PDataInt from "../PTypes/PData/PDataInt";
 import PDataList from "../PTypes/PData/PDataList";
 import PDataMap from "../PTypes/PData/PDataMap";
-import PFn from "../PTypes/PFn/PFn";
-import PLam, { TermFn } from "../PTypes/PFn/PLam";
+import PFn, { TermFn } from "../PTypes/PFn/PFn";
+import PLam from "../PTypes/PFn/PLam";
 import PInt from "../PTypes/PInt";
 import PList from "../PTypes/PList";
 import PPair from "../PTypes/PPair";
@@ -27,10 +27,9 @@ import TermInt, { addPIntMethods } from "./UtilityTerms/TermInt";
 import TermStr, { addPStringMethods } from "./UtilityTerms/TermStr";
 import Term from "../Term";
 import { getNRequiredLambdaArgs } from "../Term/Type/utils";
-import Type, { TermType, ToPType, DataType, ToPDataType, bool, lam, int, bs, fn, delayed, data } from "../Term/Type/base";
+import Type, { TermType, DataType, bool, lam, int, bs, fn, delayed, data } from "../Term/Type/base";
 import Lambda from "../../UPLC/UPLCTerms/Lambda";
 import UPLCVar from "../../UPLC/UPLCTerms/UPLCVar";
-import { PMap } from "../PTypes/PMap";
 import HoistedUPLC from "../../UPLC/UPLCTerms/HoistedUPLC";
 import PDelayed from "../PTypes/PDelayed";
 import { PappArg } from "../Syntax/pappArg";
@@ -38,6 +37,7 @@ import addUtilityForType, { UtilityTermOf } from "./UtilityTerms/addUtilityForTy
 import { isConstantableTermType } from "../Term/Type/kinds";
 import punsafeConvertType from "../Syntax/punsafeConvertType";
 import { getFromDataForType } from "../PTypes/PData/conversion/getFromDataTermForType";
+import { ToPDataType, ToPType } from "../Term/Type/ts-pluts-conversion";
 
 function pBool( bool: boolean ): TermBool
 {
@@ -262,6 +262,7 @@ const _pflipUPLC = new HoistedUPLC(
     )
 );
 
+// @ts-ignore Type instantiation is excessively deep and possibly infinite.
 export const pgreaterInt = addApplications<[ PInt, PInt ], PBool>( 
         new Term<PLam<PInt, PLam<PInt, PBool>>>(
         Type.Fn([ Type.Int, Type.Int ], Type.Bool ),
@@ -1245,6 +1246,7 @@ export function pchooseData<ReturnT extends TermType>( returnT: ReturnT )
                 caseConstr: CaseConstrFn<ToPType<ReturnT>>,
                 $: CaseConstrFn<ToPType<ReturnT>>
             } => {
+            // @ts-ignore Type instantiation is excessively deep and possibly infinite.
             const _cDWithData = papp( _chooseData, data );
 
             const _cDWithDataApp = ObjectUtils.defineReadOnlyProperty(
@@ -1331,6 +1333,8 @@ export const pConstrToData:
             _dbn => Builtin.constrData
         )
     );
+
+type PMap<K extends PType, V extends PType> = PList<PPair<K,V>>
 
 export function pMapToData<DataKey extends DataType, DataVal extends DataType>
     ( keyDataT: DataKey, valDataT: DataVal )

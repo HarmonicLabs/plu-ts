@@ -1,34 +1,36 @@
-import PData from "../PData";
+import type { TermFn } from "../../PFn";
+import type PData from "../PData";
+import type Term from "../../../Term";
+import type { ConstantableTermType, StructType } from "../../../Term/Type/base";
+import type PType from "../../../PType";
+
 import BasePlutsError from "../../../../../errors/BasePlutsError";
 import { ppairData, pfstPair, psndPair, pid } from "../../../stdlib/Builtins";
 import { pmap } from "../../../stdlib/List/methods";
 import { phoist, plam } from "../../../Syntax/syntax";
 import punsafeConvertType from "../../../Syntax/punsafeConvertType";
-import Term from "../../../Term";
-import Type, { ConstantableTermType, StructType, ToPType, int, bs, str, unit, bool, list, data, pair } from "../../../Term/Type/base";
+import Type, { int, bs, str, unit, bool, list, data, pair } from "../../../Term/Type/base";
 import { typeExtends } from "../../../Term/Type/extension";
 import { isAliasType, isStructType, isDataType, isListType } from "../../../Term/Type/kinds";
 import { termTypeToString } from "../../../Term/Type/utils";
 import unwrapAlias from "../../PAlias/unwrapAlias";
 import PBool from "../../PBool";
 import PByteString from "../../PByteString";
-import { TermFn } from "../../PFn/PLam";
 import PInt from "../../PInt";
 import PList from "../../PList";
 import PString from "../../PString";
 import PUnit from "../../PUnit";
-import { PType } from "../../..";
-
+import { ToPType } from "../../../Term/Type/ts-pluts-conversion";
 
 export function getToDataTermForType<T extends ConstantableTermType | StructType>( t: T )
 : TermFn<[ ToPType<T> ], PData>
 {
-    if( isDataType( t ) ) return pid( t );
+    if( isDataType( t ) ) return pid( t ) as any;
     if( isAliasType( t ) ) return getToDataTermForType( unwrapAlias( t ) ) as any;
     if( isStructType( t ) ) return phoist(
         plam( t, Type.Data.Constr )
         ( ( term: Term<ToPType<T>> ) => punsafeConvertType( term, Type.Data.Constr ) )
-    );
+    ) as any;
 
     if( typeExtends( t, int ) )     return PInt.toDataTerm;
     if( typeExtends( t, bs  ) )     return PByteString.toDataTerm as any;
@@ -62,7 +64,7 @@ export function getToDataTermForType<T extends ConstantableTermType | StructType
         ) return phoist(
             plam( t, Type.Data.Pair( fstT, sndT ) )
             ( ( term: Term<ToPType<T>> ) => punsafeConvertType( term, Type.Data.Constr ) )
-        );
+        )  as any;
 
         return plam( t, Type.Data.Pair( data, data ) )
         (
@@ -75,7 +77,7 @@ export function getToDataTermForType<T extends ConstantableTermType | StructType
                 getToDataTermForType( sndT as any )
                 .$( psndPair( fstT as any, sndT as any ).$( term as any ) )
             ) as any
-        )
+        ) as any
     }
 
     throw new BasePlutsError(

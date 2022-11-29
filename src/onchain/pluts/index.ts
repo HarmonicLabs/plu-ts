@@ -20,10 +20,8 @@ import type _PPair from "./PTypes/PPair";
 import type _PLam from "./PTypes/PFn/PLam";
 import type _PFn from "./PTypes/PFn/PFn";
 import type _PData from "./PTypes/PData/PData";
-import type { 
-    ConstantableStructDefinition as _ConstantableStructDefinition, 
-    GenericStructDefinition as _GenericStructDefinition, 
-    PStruct as _PStruct } from "./PTypes/PStruct";
+import type { ConstantableStructDefinition } from "./Term/Type/base";
+import type { PStruct  as _PStruct} from "./PTypes/PStruct/pstruct";
 
 export type PType = _PType;
 export type Term<PTy extends PType> = TermAsClass<PTy>;
@@ -40,8 +38,6 @@ export type PPair<PFst extends PType, PSnd extends PType> = _PPair<PFst,PSnd>;
 export type PLam<PFrom extends PType, PTo extends PType> = _PLam<PFrom,PTo>;
 export type PFn<PArgsT extends [ PType, ...PType[] ], PResultT extends PType> = _PFn<PArgsT,PResultT>;
 
-export type ConstantableStructDefinition = _ConstantableStructDefinition;
-export type GenericStructDefinition = _GenericStructDefinition;
 export type PStruct<SDef extends ConstantableStructDefinition> = _PStruct<SDef>;
 
 export const compile = _compile;

@@ -1,6 +1,7 @@
 import { PAlias } from "../../PTypes";
 import Term from "../../Term";
-import { AliasTermType, ConstantableTermType, ToPType } from "../../Term/Type";
+import { AliasTermType, ConstantableTermType } from "../../Term/Type";
+import { ToPType } from "../../Term/Type/ts-pluts-conversion";
 import { UtilityTermOf } from "./addUtilityForType";
 
 /**

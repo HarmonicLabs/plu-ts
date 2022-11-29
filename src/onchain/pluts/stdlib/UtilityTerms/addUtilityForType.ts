@@ -1,6 +1,6 @@
-import { PFn, PLam, PPair, TermFn } from "../..";
+import { PLam, PPair } from "../..";
 import ObjectUtils from "../../../../utils/ObjectUtils";
-import PType, { PDataRepresentable } from "../../PType";
+import PType  from "../../PType";
 import { PAlias } from "../../PTypes/PAlias/palias";
 import unwrapAlias from "../../PTypes/PAlias/unwrapAlias";
 import PBool from "../../PTypes/PBool";
@@ -8,19 +8,20 @@ import PByteString from "../../PTypes/PByteString";
 import PInt from "../../PTypes/PInt";
 import PList from "../../PTypes/PList";
 import PString from "../../PTypes/PString";
-import { ConstantableStructDefinition, PStruct } from "../../PTypes/PStruct/pstruct";
+import { PStruct } from "../../PTypes/PStruct/pstruct";
 import { papp } from "../../Syntax";
 import { PappArg } from "../../Syntax/pappArg";
 import Term from "../../Term";
-import Type, { AliasTermType, bool, bs, ConstantableTermType, int, list, pair, PrimType, str, structType, TermType, ToPType } from "../../Term/Type/base";
+import Type, { AliasTermType, bool, bs, ConstantableStructDefinition, ConstantableTermType, int, list, pair, str, TermType } from "../../Term/Type/base";
 import { typeExtends } from "../../Term/Type/extension";
 import { isAliasType, isConstantableStructType, isLambdaType, isStructType } from "../../Term/Type/kinds";
-import TermPair, { addPPairMethods } from "../TermPair";
+import { ToPType } from "../../Term/Type/ts-pluts-conversion";
 import TermAlias from "./TermAlias";
 import TermBool, { addPBoolMethods } from "./TermBool";
 import TermBS, { addPByteStringMethods } from "./TermBS";
 import TermInt, { addPIntMethods } from "./TermInt";
 import TermList, { addPListMethods } from "./TermList";
+import TermPair, { addPPairMethods } from "./TermPair";
 import TermStr, { addPStringMethods } from "./TermStr";
 import TermStruct, { addPStructMethods } from "./TermStruct";
 
@@ -29,8 +30,9 @@ type PrevNum = [ never, 0, 1, 2, 3, 4, 5, 6 ];
 
 // without the "finite" version typescript gets angry and says the type is too complex to be evaluated
 type FiniteTermAlias<T extends ConstantableTermType, AliasId extends symbol, MaxDepth extends PrevNum[number] = 6> =
-    [MaxDepth] extends [never] ? never :
+    MaxDepth extends never ? never :
     T extends AliasTermType<symbol, infer ActualT extends ConstantableTermType> ?
+        // @ts-ignore
         FiniteTermAlias<ActualT, AliasId, PrevNum[MaxDepth]> :
         TermAlias<T,AliasId>
 
@@ -68,7 +70,9 @@ export default function addUtilityForType<T extends TermType>( t: T )
         return (( term: any ) => ObjectUtils.defineNonDeletableNormalProperty(
             term,
             "$",
-            ( input: any ) => papp( term, input )
+            ( input: any ) =>
+                // @ts-ignore type instantiation is to deep and possibly infinite
+                papp( term, input )
         )) as any;
     }
 

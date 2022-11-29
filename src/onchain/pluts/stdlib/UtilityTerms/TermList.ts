@@ -1,16 +1,19 @@
 
 import BasePlutsError from "../../../../errors/BasePlutsError";
 import ObjectUtils from "../../../../utils/ObjectUtils";
-import PType, { PDataRepresentable } from "../../PType"
+import PType from "../../PType"
+import type PDataRepresentable from "../../PType/PDataRepresentable";
 import PBool from "../../PTypes/PBool";
-import PLam, { TermFn } from "../../PTypes/PFn/PLam";
+import { TermFn } from "../../PTypes/PFn/PFn";
+import PLam from "../../PTypes/PFn/PLam";
 import PInt from "../../PTypes/PInt";
 import PList from "../../PTypes/PList"
 import { PappArg } from "../../Syntax/pappArg";
 import { phoist } from "../../Syntax/syntax";
 import Term from "../../Term";
-import { ConstantableTermType, TermType, ToPType } from "../../Term/Type/base";
+import { ConstantableTermType, TermType } from "../../Term/Type/base";
 import { isConstantableTermType, isLambdaType } from "../../Term/Type/kinds";
+import { ToPType } from "../../Term/Type/ts-pluts-conversion";
 import { termTypeToString } from "../../Term/Type/utils";
 import { phead, pprepend, ptail } from "../Builtins";
 import { plength, preverse } from "../List";
@@ -110,7 +113,10 @@ function getHoistedFlipped<T extends TermType | ConstantableTermType, PSomething
     return ( elemsT ) => phoist( pflip.$( pfunc( elemsT ) ) ) as any;
 }
 
-const flippedPrepend = getHoistedFlipped( pprepend );
+const flippedPrepend = getHoistedFlipped(
+    // @ts-ignore Type instantiation is excessively deep and possibly infinite.
+    pprepend
+);
 const flippedFind = ( t: ConstantableTermType ) => phoist( pflip.$( pfind( t ) ) )
 const flippedFilter = getHoistedFlipped( pfilter );
 const flippedEvery = getHoistedFlipped( pevery )

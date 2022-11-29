@@ -2,10 +2,11 @@ import ObjectUtils from "../../../../utils/ObjectUtils";
 import capitalize from "../../../../utils/ts/capitalize";
 import { IsSingleKey } from "../../../../utils/ts/SingleKeyObj";
 import PType from "../../PType";
-import { ConstantableStructDefinition, PStruct, RestrictedStructInstance, StructCtorDef } from "../../PTypes/PStruct/pstruct";
+import { PStruct, RestrictedStructInstance } from "../../PTypes/PStruct/pstruct";
 import pmatch from "../../PTypes/PStruct/pmatch";
 import Term from "../../Term";
 import { isStructDefinition, isStructType } from "../../Term/Type/kinds";
+import { ConstantableStructDefinition, StructCtorDef } from "../../Term/Type/base";
 
 type TermStruct<SDef extends ConstantableStructDefinition> = Term<PStruct<SDef>> // & {} // if other methods are needed
 & 
@@ -44,7 +45,10 @@ export function addPStructMethods<SDef extends ConstantableStructDefinition>( st
                 in: <PExprResult extends PType>( expr: ( extracted: RestrictedStructInstance<SDef[keyof SDef],Fields> ) => Term<PExprResult> ) => Term<PExprResult>
             } => {
                 return {
-                    in: ( expr ) => pmatch( struct )[( "on" + capitalize( ctor ) ) as any]( rawFields => rawFields.extract( ...fields ).in( expr ) ) as any
+                    in: ( expr ) =>
+                        // @ts-ignore Type instantiation is excessively deep and possibly infinite.
+                        pmatch( struct )
+                        [( "on" + capitalize( ctor ) ) as any]( rawFields => rawFields.extract( ...fields ).in( expr ) ) as any
                 }
             }
         )

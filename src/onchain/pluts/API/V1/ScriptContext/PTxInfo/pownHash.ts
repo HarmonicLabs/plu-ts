@@ -30,11 +30,13 @@ const pownHash = phoist( pfn([
                 
                     pmatch( credential )
                     .onPScriptCredential( rawScriptCred => rawScriptCred.extract("valHash").in( ({ valHash }) => valHash ) )
+                    // @ts-ignore
                     .onPPubKeyCredential( _ => perror( PValidatorHash.type, "own input is not a validator hash" ) as Term<typeof PValidatorHash> )
                 ))
             ))
         ))
     ))
+    // @ts-ignore
     .onNothing( _ => perror( PValidatorHash.type, "can't find input" ) as Term<typeof PValidatorHash> );
 
 }));

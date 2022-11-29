@@ -1,5 +1,7 @@
-import { PTxOutRef, PScriptContext, PTxId } from "../../API";
+import PTxId from "../../API/V1/Tx/PTxId";
+import PTxOutRef from "../../API/V1/Tx/PTxOutRef";
 import pisUtxoSpent from "../../API/V2/lib/ctx/pisUtxoSpent";
+import PScriptContext from "../../API/V2/ScriptContext/PScriptContext";
 import { pByteString, pInt, pmakeUnit } from "../../PTypes";
 import { pif, pisEmpty } from "../../stdlib";
 import { pfn, plet, perror } from "../../Syntax";
@@ -60,7 +62,7 @@ describe("onwShotPolicy", () => {
             }
         ).not.toThrow();
 
-        /*
+        //*
         console.log(
             scriptToJsonFormat( compiled as any, PlutusScriptVersion.V2, "oneShotPolicy @ deadbeef#1" )    
         );

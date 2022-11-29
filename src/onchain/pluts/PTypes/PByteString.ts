@@ -1,14 +1,15 @@
 import ByteString from "../../../types/HexString/ByteString";
 import UPLCConst from "../../UPLC/UPLCTerms/UPLCConst";
+import PDataRepresentable from "../PType/PDataRepresentable";
 import { pBSToData, punBData } from "../stdlib/Builtins";
 import TermBS, { addPByteStringMethods } from "../stdlib/UtilityTerms/TermBS";
-import { PDataRepresentable } from "../PType";
 import Term from "../Term";
 import Type, { TermType } from "../Term/Type/base";
 import PData from "./PData/PData";
 import PDataBS from "./PData/PDataBS";
 import PLam from "./PFn/PLam";
 
+//@ts-ignore
 export default class PByteString extends PDataRepresentable
 {
     private _pbytestring: ByteString

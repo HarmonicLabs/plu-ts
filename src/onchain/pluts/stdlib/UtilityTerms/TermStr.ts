@@ -3,7 +3,7 @@ import ObjectUtils from "../../../../utils/ObjectUtils";
 import PString from "../../PTypes/PString";
 import Term from "../../Term";
 import TermBS from "./TermBS";
-import { TermFn } from "../../PTypes/PFn/PLam";
+import { TermFn } from "../../PTypes/PFn/PFn";
 import PBool from "../../PTypes/PBool";
 import TermBool from "./TermBool";
 import { PappArg } from "../../Syntax/pappArg";

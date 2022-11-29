@@ -2,8 +2,9 @@ import BasePlutsError from "../../../errors/BasePlutsError";
 import ObjectUtils from "../../../utils/ObjectUtils";
 import PType from "../PType";
 import Term from "../Term";
-import { TermType, ToPType } from "../Term/Type/base";
+import { TermType } from "../Term/Type/base";
 import { isWellFormedType } from "../Term/Type/kinds";
+import { ToPType } from "../Term/Type/ts-pluts-conversion";
 
 
 export default function punsafeConvertType<FromPInstance extends PType, SomeExtension extends {}, ToTermType extends TermType>

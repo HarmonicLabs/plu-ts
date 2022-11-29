@@ -4,20 +4,21 @@ import JsRuntime from "../../../../utils/JsRuntime";
 import ObjectUtils from "../../../../utils/ObjectUtils";
 import HoistedUPLC from "../../../UPLC/UPLCTerms/HoistedUPLC";
 import UPLCConst from "../../../UPLC/UPLCTerms/UPLCConst";
-import { PDataRepresentable } from "../../PType";
 import Term from "../../Term";
-import Type, { AliasTermType, aliasType, ConstantableStructType, ConstantableTermType, GenericStructType, int, PrimType, struct, structType, StructType, ToPType, tyVar } from "../../Term/Type/base";
+import Type, { AliasTermType, aliasType, ConstantableStructDefinition, ConstantableTermType, GenericStructDefinition, GenericStructType, int, PrimType, struct, StructCtorDef, StructDefinition, structType, StructType, tyVar } from "../../Term/Type/base";
 import { typeExtends } from "../../Term/Type/extension";
 import { isAliasType, isConstantableStructDefinition, isStructType } from "../../Term/Type/kinds";
 import { structDefToString, termTypeToString } from "../../Term/Type/utils";
 import PData from "../PData/PData";
 import { getToDataForType } from "../PData/conversion/getToDataTermForType";
-import { TermFn } from "../PFn/PLam";
 import { pList } from "../PList";
 import { UtilityTermOf } from "../../stdlib/UtilityTerms/addUtilityForType";
 import Application from "../../../UPLC/UPLCTerms/Application";
 import Builtin from "../../../UPLC/UPLCTerms/Builtin";
 import punsafeConvertType from "../../Syntax/punsafeConvertType";
+import PDataRepresentable from "../../PType/PDataRepresentable";
+import { TermFn } from "../PFn";
+import { ToPType } from "../../Term/Type/ts-pluts-conversion";
 
 /**
  * intermediate class useful to reconize structs form primitives
@@ -30,18 +31,26 @@ class _PStruct extends PDataRepresentable
     }
 }
 
-export type ConstantableStructCtorDef = {
-    [field: string | number]: ConstantableTermType | ConstantableStructType
-}
-
-export type GenericStructCtorDef = {
-    [field: string | number]: ConstantableTermType | StructType | [ symbol ]
-}
-
-export type StructCtorDef = ConstantableStructCtorDef | GenericStructCtorDef;
-
 export type StructInstance<SCtorDef extends StructCtorDef> = {
     [Field in keyof SCtorDef]: Term<ToPType<SCtorDef[Field]>>
+}
+
+export type PStruct<SDef extends ConstantableStructDefinition> = {
+    new(): _PStruct
+
+    readonly termType: [ typeof structType, SDef ];
+    readonly type: [ typeof structType, SDef ];
+
+    readonly fromDataTerm: TermFn<[PData],PStruct<SDef>>
+    fromData: ( data: Term<PData> ) => Term<PStruct<SDef>>;
+
+    readonly toDataTerm: TermFn<[PStruct<SDef>],PData>
+    toData: ( data: Term<PStruct<SDef>> ) => Term<PData>;
+
+} & PDataRepresentable & {
+    [Ctor in keyof SDef]:
+        //@ts-ignore Type 'StructDefinition[Ctor]' does not satisfy the constraint 'StructCtorDef'.
+        ( ctorFields: StructInstance<SDef[Ctor]> ) => Term<PStruct<SDef>>
 }
 
 type Includes<As extends any[], Elem extends any> =
@@ -55,15 +64,6 @@ export type RestrictedStructInstance<SCtorDef extends StructCtorDef, Fields exte
     [Field in keyof SCtorDef]: Includes<Fields, Field> extends true ? UtilityTermOf<ToPType<SCtorDef[Field]>> : never
 }
 
-export type ConstantableStructDefinition = {
-    [constructor: string]: ConstantableStructCtorDef
-}
-
-export type GenericStructDefinition = {
-    [constructor: string]: GenericStructCtorDef
-}
-
-export type StructDefinition = GenericStructDefinition;
 
 // this needs to be here;
 // not sure why it causes circluar dependecies when imported from "./cloneStructDef"
@@ -144,26 +144,9 @@ export function structDefEq( a: StructDefinition, b: StructDefinition ): boolean
     return true;
 }
 
-export type PStruct<SDef extends ConstantableStructDefinition> = {
-    new(): _PStruct
-
-    readonly termType: [ typeof structType, SDef ];
-    readonly type: [ typeof structType, SDef ];
-
-    readonly fromDataTerm: TermFn<[PData],PStruct<SDef>>
-    fromData: ( data: Term<PData> ) => Term<PStruct<SDef>>;
-
-    readonly toDataTerm: TermFn<[PStruct<SDef>],PData>
-    toData: ( data: Term<PStruct<SDef>> ) => Term<PData>;
-
-} & PDataRepresentable & {
-    [Ctor in keyof SDef]:
-        //@ts-ignore Type 'StructDefinition[Ctor]' does not satisfy the constraint 'StructCtorDef'.
-        ( ctorFields: StructInstance<SDef[Ctor]> ) => Term<PStruct<SDef>>
-}
-
 function isStructInstanceOfDefinition<SCtorDef extends StructCtorDef>
     ( structInstance: StructInstance<any>, definition: SCtorDef )
+    //@ts-ignore
     : structInstance is StructInstance<SCtorDef>
 {
     const jsStructFieldsNames = Object.keys( structInstance );

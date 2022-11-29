@@ -1,68 +1,15 @@
+import type UPLCTerm from "../../UPLC/UPLCTerm";
+import type PType from "../PType";
+import type { TermType } from "./Type/base";
+import type { FromPType, ToPType } from "./Type/ts-pluts-conversion";
+
 import { isCloneable } from "../../../types/interfaces/Cloneable";
 import JsRuntime from "../../../utils/JsRuntime";
 import ObjectUtils from "../../../utils/ObjectUtils";
-import UPLCTerm from "../../UPLC/UPLCTerm";
 import HoistedUPLC from "../../UPLC/UPLCTerms/HoistedUPLC";
 import UPLCConst from "../../UPLC/UPLCTerms/UPLCConst";
-import PType from "../PType";
-import unwrapAlias from "../PTypes/PAlias/unwrapAlias";
-import { StructCtorDef, StructDefinition } from "../PTypes/PStruct/pstruct";
-import { anyStruct, FromPType, TermType } from "./Type/base";
-import { isAliasType, isStructType, isWellFormedType } from "./Type/kinds";
+import { isWellFormedType } from "./Type/kinds";
 
-// avoid circular ref
-function ctorDefToString( ctorDef: StructCtorDef ): string
-{
-    const fields = Object.keys( ctorDef );
-
-    let str = "{";
-
-    for( const fieldName of fields )
-    {
-        str += ' ' + fieldName + ": " + termTypeToString( ctorDef[ fieldName ] );
-    }
-
-    str += " }";
-
-    return str;
-}
-
-// avoid circular ref
-function structDefToString( def: StructDefinition ): string
-{
-    const ctors = Object.keys( def );
-
-    let str = "{";
-
-    for( const ctor of ctors )
-    {
-        str += ' ' + ctor + ": " + ctorDefToString( def[ctor] ) + " },"
-    }
-
-    str = str.slice( 0, str.length - 1 ) + " }";
-
-    return  str
-}
-
-// avoid circular ref
-function termTypeToString( t: TermType ): string
-{
-    if( isStructType( t ) )
-    {
-        return "struct(" + (
-            t[1] === anyStruct ? "anyStruct" : structDefToString( t[1] as StructDefinition )
-        ) + ")";
-    }
-    if( isAliasType( t ) )
-    {
-        return "alias(" + (
-            termTypeToString( unwrapAlias( t ) )
-        ) + ")";
-    }
-    if( typeof t[0] === "symbol" ) return "tyParam("+ t[0].description +")";
-    const tyArgs = t.slice(1) as TermType[];
-    return ( t[0] + (tyArgs.length > 0 ? ',': "") + tyArgs.map( termTypeToString ).toString() );
-}
 
 export type UnTerm<T extends Term<PType>> = T extends Term<infer PT extends PType > ? PT : never;
 
@@ -74,7 +21,7 @@ export default class Term<A extends PType>
      * it's solely purpose is to allow typescript to rise errors (at type level)
      * when the type arguments don't match
      */
-    protected _pInstance?: A;
+    _pInstance?: A;
     get pInstance(): A | undefined
     {
         if( this._pInstance === undefined ) return undefined;
@@ -83,7 +30,7 @@ export default class Term<A extends PType>
             this._pInstance;
     }
 
-    protected _type!: FromPType<A>;
+    _type!: FromPType<A>;
     get type(): FromPType<A> {
         return this._type
     };
@@ -102,7 +49,7 @@ export default class Term<A extends PType>
     {
         JsRuntime.assert(
             isWellFormedType( type ),
-            "invalid type while constructing Term: " + termTypeToString( type )
+            "invalid type while constructing Term"
         );
 
         ObjectUtils.defineReadOnlyProperty(
@@ -186,3 +133,15 @@ export default class Term<A extends PType>
     }
     
 }
+
+export type ToTermArr<Ts extends TermType[]> =
+    Ts extends [] ? [] & Term<PType>[] :
+    Ts extends [infer T extends TermType] ? [ Term<ToPType<T>>] & [ Term<PType> ] :
+    Ts extends [infer T extends TermType, ...infer RestTs extends [ TermType, ...TermType[] ] ] ? [ Term<ToPType<T>>, ...ToTermArr<RestTs> ] & [ Term<PType>, ...Term<PType>[] ] :
+    never;
+
+export type ToTermArrNonEmpty<Ts extends [ TermType, ...TermType[] ]> =
+    Ts extends [] ? never & Term<PType>[] :
+    Ts extends [infer T extends TermType] ? [ Term<ToPType<T>>] & [ Term<PType> ] :
+    Ts extends [infer T extends TermType, ...infer RestTs extends [ TermType, ...TermType[] ] ] ? [ Term<ToPType<T>>, ...ToTermArr<RestTs> ] & [ Term<PType>, ...Term<PType>[] ] :
+    never;

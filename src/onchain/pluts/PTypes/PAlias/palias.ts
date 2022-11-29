@@ -1,16 +1,19 @@
+import type Term from "../../Term";
+import type { AliasTermType, ConstantableTermType } from "../../Term/Type/base";
+import type PData from "../PData/PData";
+import type { ToPType } from "../../Term/Type/ts-pluts-conversion";
+
 import JsRuntime from "../../../../utils/JsRuntime";
 import ObjectUtils from "../../../../utils/ObjectUtils";
-import { PDataRepresentable } from "../../PType";
 import punsafeConvertType from "../../Syntax/punsafeConvertType";
-import Term from "../../Term";
-import Type, { AliasTermType, aliasType, ConstantableTermType, TermType, ToPType } from "../../Term/Type/base";
+import Type, { aliasType } from "../../Term/Type/base";
 import { typeExtends } from "../../Term/Type/extension";
 import { isAliasType, isConstantableTermType } from "../../Term/Type/kinds";
 import { cloneTermType } from "../../Term/Type/utils";
-import PData from "../PData/PData";
-import { getFromDataForType } from "../PData/conversion";
 import { getToDataForType } from "../PData/conversion/getToDataTermForType";
 import unwrapAlias from "./unwrapAlias";
+import { getFromDataForType } from "../PData/conversion/getFromDataTermForType";
+import PDataRepresentable from "../../PType/PDataRepresentable";
 
 
 /**
@@ -18,7 +21,9 @@ import unwrapAlias from "./unwrapAlias";
 **/
 class _PAlias extends PDataRepresentable
 {
-    protected constructor()
+    public _isPType: true = true;
+    public _PTypeUPLCTerm: any;
+    constructor()
     {
         super();
     }
@@ -29,7 +34,7 @@ export type AliasDefinition<T extends ConstantableTermType, AliasId extends symb
     type: T
 }
 
-export type PAlias<T extends ConstantableTermType, AliasId extends symbol = symbol, PClass extends _PAlias = _PAlias> = T extends ConstantableTermType ?
+export type PAlias<T extends ConstantableTermType, AliasId extends symbol = symbol, PClass extends _PAlias = _PAlias> =
 {
     new(): PClass
 
@@ -41,20 +46,20 @@ export type PAlias<T extends ConstantableTermType, AliasId extends symbol = symb
     from: ( toAlias: Term<ToPType<T>> ) => Term<PAlias<T, AliasId, PClass>>
 
 } & PDataRepresentable
-: never;
 
 
-export default function palias<T extends ConstantableTermType>(
+export default function palias<T extends ConstantableTermType, SymId extends symbol >(
     type: T,
-    fromDataConstraint: (( term: Term<ToPType<T>> ) => Term<ToPType<T>>) | undefined = undefined
-)
+    fromDataConstraint: (( term: Term<ToPType<T>> ) => Term<ToPType<T>>) | undefined = undefined,
+    symId: SymId = Symbol() as SymId
+): PAlias<T, SymId>
 {
     JsRuntime.assert(
         isConstantableTermType( type ),
         "cannot construct 'PAlias' type; the type cannot be converted to an UPLC constant"
     );
 
-    const thisAliasId = Symbol("alias_id");
+    const thisAliasId = symId;
     type ThisAliasT = AliasTermType<typeof thisAliasId, T>;
     type ThisAliasTerm = Term<PAlias<T, typeof thisAliasId, PAliasExtension>>;
 

@@ -1,27 +1,29 @@
-import PData from "../PData";
+import type PData from "../PData";
+import type Term from "../../../Term";
+import type { ConstantableTermType, StructType } from "../../../Term/Type/base";
+import type { TermFn } from "../../PFn";
+import type PPair from "../../PPair";
+import type PType from "../../../PType";
+import type TermPair from "../../../stdlib/UtilityTerms/TermPair";
+
 import BasePlutsError from "../../../../../errors/BasePlutsError";
-import { ppairData, pfstPair, psndPair, punListData } from "../../../stdlib/Builtins";
+import { pfstPair, psndPair, punListData } from "../../../stdlib/Builtins";
 import { pmap } from "../../../stdlib/List/methods";
 import { phoist, plam } from "../../../Syntax/syntax";
 import punsafeConvertType from "../../../Syntax/punsafeConvertType";
-import Term from "../../../Term";
-import Type, { ConstantableTermType, StructType, ToPType, int, bs, str, unit, bool, list, data, pair } from "../../../Term/Type/base";
+import Type, { int, bs, str, unit, bool, list, data, pair } from "../../../Term/Type/base";
 import { typeExtends } from "../../../Term/Type/extension";
 import { isAliasType, isStructType, isDataType, isListType, isPairType, isConstantableTermType } from "../../../Term/Type/kinds";
 import { termTypeToString } from "../../../Term/Type/utils";
 import unwrapAlias from "../../PAlias/unwrapAlias";
 import PBool from "../../PBool";
 import PByteString from "../../PByteString";
-import { TermFn } from "../../PFn/PLam";
 import PInt from "../../PInt";
 import PList from "../../PList";
 import PString from "../../PString";
 import PUnit from "../../PUnit";
 import { pdynPair } from "../../PPair/pdynPair";
-import PPair from "../../PPair";
-import { PType } from "../../..";
-import TermPair from "../../../stdlib/TermPair";
-
+import { ToPType } from "../../../Term/Type/ts-pluts-conversion";
 
 export function getFromDataTermForType<T extends ConstantableTermType | StructType>( t: T )
 : TermFn<[ PData ], ToPType<T>>
@@ -29,6 +31,7 @@ export function getFromDataTermForType<T extends ConstantableTermType | StructTy
     if( isAliasType( t ) ) return getFromDataTermForType( unwrapAlias( t ) ) as any;
     if( isStructType( t ) ) return phoist(
         plam( data , t )
+        // @ts-ignore Type instantiation is excessively deep and possibly infinite
         ( ( term: Term<PData> ) => punsafeConvertType( term, t ) )
     ) as any;
 

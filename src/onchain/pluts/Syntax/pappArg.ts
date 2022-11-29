@@ -1,3 +1,10 @@
+import type PUnit from "../PTypes/PUnit";
+import type PString from "../PTypes/PString";
+import type PInt from "../PTypes/PInt";
+import type PByteString from "../PTypes/PByteString";
+import type PBool from "../PTypes/PBool";
+import type PType from "../PType";
+
 import { Buffer } from "buffer";
 import CborString from "../../../cbor/CborString";
 import BasePlutsError from "../../../errors/BasePlutsError";
@@ -7,25 +14,20 @@ import Integer from "../../../types/ints/Integer";
 import Pair from "../../../types/structs/Pair";
 import JsRuntime from "../../../utils/JsRuntime";
 import ObjectUtils from "../../../utils/ObjectUtils";
-import type PType from "../PType";
-import type PBool from "../PTypes/PBool";
 import { pBool } from "../PTypes/PBool";
-import type PByteString from "../PTypes/PByteString";
 import { pByteString } from "../PTypes/PByteString";
 import PLam from "../PTypes/PFn/PLam";
-import type PInt from "../PTypes/PInt";
 import { pInt } from "../PTypes/PInt";
 import PList, { pList } from "../PTypes/PList";
 import PPair, { pPair } from "../PTypes/PPair";
-import type PString from "../PTypes/PString";
 import { pStr } from "../PTypes/PString";
-import type PUnit from "../PTypes/PUnit";
 import { pmakeUnit } from "../PTypes/PUnit";
 import { UtilityTermOf } from "../stdlib/UtilityTerms/addUtilityForType";
 import Term from "../Term";
-import { bool, bs, ConstantableTermType, fn, int, list, str, TermType, ToPType, tyVar, unit } from "../Term/Type/base";
+import { bool, bs, ConstantableTermType, fn, int, list, str, TermType, tyVar, unit } from "../Term/Type/base";
 import { typeExtends } from "../Term/Type/extension";
 import { isConstantableTermType, isLambdaType, isListType, isPairType, isTypeParam, isWellFormedType } from "../Term/Type/kinds";
+import { ToPType } from "../Term/Type/ts-pluts-conversion";
 import { getNRequiredLambdaArgs, termTypeToString } from "../Term/Type/utils";
 import { pfn } from "./syntax";
 
@@ -33,6 +35,7 @@ type _TsFunctionSatisfying<KnownArgs extends Term<PType>[], POut extends PType> 
     POut extends PLam<infer POutIn extends PType, infer POutOut extends PType> ?
         (
             ( ...args: KnownArgs ) => Term<POut> | // functions that do return `PLam` are fine too
+            // @ts-ignore Type instantiation is excessively deep and possibly infinite.
             _TsFunctionSatisfying<[ ...KnownArgs, UtilityTermOf<POutIn> ], POutOut>
         ) :
         ( ...args: KnownArgs ) => Term<POut>
@@ -70,7 +73,7 @@ export default function pappArgToTerm<ArgT extends TermType>(
     // ( after `arg instanceof Term` typescript marked arg as `never` )
     if( Term.prototype.isPrototypeOf( arg ) )
     {
-        if( !typeExtends( arg.type, mustExtend ) )
+        if( !typeExtends( (arg as Term<PType>).type, mustExtend ) )
         {
             // TODO: add proper error
             throw new BasePlutsError(
@@ -458,7 +461,10 @@ function tryInferElemsT( arg: PappArg<PType>[] ): ConstantableTermType
     );
 
     JsRuntime.assert(
-        arg.every( elem => isTsValueAssignableToPlutsType( elem, elemsT as any) ),
+        arg.every( elem =>
+            // @ts-ignore Type instantiation is excessively deep and possibly infinite.
+            isTsValueAssignableToPlutsType( elem, elemsT as any)
+        ),
         "types in the array where incongruent; expected type was: " + termTypeToString( list( elemsT ) )
     );
 
@@ -476,7 +482,7 @@ function isTsValueAssignableToPlutsType<PlutsType extends TermType>(
     // ( after `value instanceof Term` typescript marked arg as `never` )
     if( Term.prototype.isPrototypeOf( value ) )
     {
-        return typeExtends( value.type, plutsType );
+        return typeExtends( (value as Term<PType>).type, plutsType );
     }
 
     if( typeExtends( plutsType, int ) )

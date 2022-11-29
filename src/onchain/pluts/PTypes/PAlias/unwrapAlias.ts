@@ -1,4 +1,4 @@
-import { ConstantableTermType, AliasTermType } from "../../Term/Type/base";
+import type { ConstantableTermType, AliasTermType } from "../../Term/Type/base";
 
 export default function unwrapAlias<T extends ConstantableTermType>( aliasedType: AliasTermType<symbol, T> ): T
 {

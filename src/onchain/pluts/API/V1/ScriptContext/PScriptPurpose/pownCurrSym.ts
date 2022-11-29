@@ -1,13 +1,13 @@
 import PScriptPurpose from ".";
-import { PCurrencySymbol } from "../../..";
 import pmatch from "../../../../PTypes/PStruct/pmatch";
 import { perror, phoist, plam } from "../../../../Syntax";
+import PCurrencySymbol from "../../Value/PCurrencySymbol";
 
 const pownCurrSym = phoist(
     plam( PScriptPurpose.type, PCurrencySymbol.type )
     ( purpose => pmatch( purpose )
         .onMinting( raw => raw.extract("currencySym").in(({ currencySym }) => currencySym ))
-        ._( _ => perror( PCurrencySymbol.type ) )
+        ._( _ => perror( PCurrencySymbol.type ) as any  )
     )
 );
 
