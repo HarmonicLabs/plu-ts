@@ -1,7 +1,7 @@
 import { PType, Term, PPair } from "../..";
 import BasePlutsError from "../../../../errors/BasePlutsError";
 import ObjectUtils from "../../../../utils/ObjectUtils";
-import { isPairType } from "../../Term/Type/kinds";
+import { isConstantableTermType, isPairType } from "../../Term/Type/kinds";
 import { pfstPair, psndPair } from "../Builtins";
 import { UtilityTermOf } from "./addUtilityForType";
 
@@ -31,16 +31,18 @@ export function addPPairMethods<PFst extends PType, PSnd extends PType>( pair: T
     const fstT =  pairT[1];
     const sndT = pairT[2];
 
-    ObjectUtils.defineReadOnlyProperty(
-        pair,
-        "fst",
-        pfstPair( fstT, sndT ).$( pair )
-    );
-    ObjectUtils.defineReadOnlyProperty(
-        pair,
-        "snd",
-        psndPair( fstT, sndT ).$( pair )
-    );
+    if( isConstantableTermType( fstT ) )
+        ObjectUtils.defineReadOnlyProperty(
+            pair,
+            "fst",
+            pfstPair( fstT, sndT ).$( pair )
+        );
+    if( isConstantableTermType( sndT ) )
+        ObjectUtils.defineReadOnlyProperty(
+            pair,
+            "snd",
+            psndPair( fstT, sndT ).$( pair )
+        );
 
     return pair as any;
 }

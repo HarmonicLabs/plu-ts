@@ -318,7 +318,7 @@ export function isConstantableTermType( t: TermType ): t is ConstantableTermType
     if( t.length === 3 )
     {
         return (
-            t[0] === PrimType.Pair &&
+            (t[0] === PrimType.Pair || t[0] === PrimType.PairAsData) &&
             isConstantableTermType( t[ 1 ] ) && isConstantableTermType( t[ 2 ] )
         );
     }
@@ -362,7 +362,8 @@ export function isWellFormedType( t: TermType ): t is TermType
     {
         return (
             (
-                t[0] === PrimType.Pair   ||
+                t[0] === PrimType.Pair          ||
+                t[0] === PrimType.PairAsData    ||
                 t[0] === PrimType.Lambda
             ) &&
             isWellFormedType( t[ 1 ] ) && isWellFormedType( t[ 2 ] )
@@ -402,12 +403,32 @@ export function isLambdaType( t: TermType ): t is [ PrimType.Lambda, TermType, T
     );
 }
 
-export function isPairType( t: TermType ): t is [ PrimType.Pair, TermType, TermType ]
+export function isPairType( t: TermType ): t is ([ PrimType.Pair, TermType, TermType ] | [ PrimType.PairAsData, TermType, TermType ])
 {
     return (
         Array.isArray( t ) &&
         t.length === 3 &&
-        t[0] === PrimType.Pair &&
+        (t[0] === PrimType.Pair || t[0] === PrimType.PairAsData)&&
+        isWellFormedType( t[ 1 ] ) && isWellFormedType( t[ 2 ] )
+    );
+}
+
+export function isStrictPairType( t: TermType ): t is [ PrimType.Pair, TermType, TermType ]
+{
+    return (
+        Array.isArray( t ) &&
+        t.length === 3 &&
+        (t[0] === PrimType.Pair) &&
+        isWellFormedType( t[ 1 ] ) && isWellFormedType( t[ 2 ] )
+    );
+}
+
+export function isDynPairType( t: TermType ): t is [ PrimType.PairAsData, TermType, TermType ]
+{
+    return (
+        Array.isArray( t ) &&
+        t.length === 3 &&
+        (t[0] === PrimType.PairAsData)&&
         isWellFormedType( t[ 1 ] ) && isWellFormedType( t[ 2 ] )
     );
 }

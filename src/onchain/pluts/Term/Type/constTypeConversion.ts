@@ -24,6 +24,7 @@ export function termTyToConstTy( termT: ConstantableTermType ): ConstType
         if( typeExtends( t, Type.Bool ) ) return constT.bool;
         if( typeExtends( t, Type.Data.Any ) ) return constT.data;
         if( typeExtends( t, Type.List( Type.Any ) ) ) return constT.listOf( unchecked( t[1] as any ) );
+        // covers pairAsData too (intended to be so)
         if( typeExtends( t, Type.Pair( Type.Any, Type.Any ) ) ) return constT.pairOf( unchecked( t[1] as any ), unchecked( t[2] as any ) );
 
         throw JsRuntime.makeNotSupposedToHappenError(

@@ -133,6 +133,8 @@ export function addPListMethods<PElemsT extends PType>( list: Term<PList<PElemsT
         );
     }
 
+    // console.log( "addPMethods; __isListOfDynPairs", (list as any).__isListOfDynPairs )
+
     ObjectUtils.definePropertyIfNotPresent(
         list,
         "head",

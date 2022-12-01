@@ -15,7 +15,7 @@ import Term, { ToTermArrNonEmpty } from "../Term";
 import JsRuntime from "../../../utils/JsRuntime";
 import HoistedUPLC from "../../UPLC/UPLCTerms/HoistedUPLC";
 import { typeExtends } from "../Term/Type/extension";
-import { isLambdaType, isDelayedType } from "../Term/Type/kinds";
+import { isLambdaType, isDelayedType, isPairType } from "../Term/Type/kinds";
 import { termTypeToString } from "../Term/Type/utils";
 import applyLambdaType from "../Term/Type/applyLambdaType";
 import UPLCTerm from "../../UPLC/UPLCTerm";
@@ -24,9 +24,8 @@ import { getNRequiredForces } from "../../UPLC/UPLCTerms/Builtin/UPLCBuiltinTag"
 import addUtilityForType, { UtilityTermOf } from "../stdlib/UtilityTerms/addUtilityForType";
 import punsafeConvertType from "./punsafeConvertType";
 import pappArgToTerm, { PappArg } from "./pappArg";
-import { ToPType, ToPTypeArrNonEmpty } from "../Term/Type/ts-pluts-conversion";
+import { ToPType } from "../Term/Type/ts-pluts-conversion";
 import { TermFn } from "../PTypes/PFn/PFn";
-import { PByteString, PInt } from "..";
 
 
 function isIdentityUPLC( uplc: UPLCTerm ): uplc is Lambda
@@ -87,7 +86,10 @@ export function papp<Input extends PType, Output extends PType>( a: Term<PLam<In
         new Term(
             outputType,
             dbn => {
-                const funcUPLC = a.toUPLC( dbn );
+                const funcUPLC = 
+                    (_b as any).__isDynamicPair ?
+                        (a as any).withDynamicPairAsInput.toUPLC( dbn )
+                        : a.toUPLC( dbn );
                 if( funcUPLC instanceof ErrorUPLC ) return funcUPLC;
                 const argUPLC  = _b.toUPLC( dbn );
                 if( argUPLC instanceof ErrorUPLC ) return argUPLC;
@@ -117,7 +119,8 @@ export function papp<Input extends PType, Output extends PType>( a: Term<PLam<In
             "$",
             ( someInput: any ) => papp( outputTerm as any, someInput )
         ) as any;
-    
+
+   
     // @ts-ignore Type instantiation is excessively deep and possibly infinite.
     return outputTerm as any;
 }
@@ -142,11 +145,43 @@ export function plam<A extends TermType, B extends TermType >( inputType: A, out
                 
                 const body = termFunc( addUtilityForType( inputType )( boundVar ) );
 
-                if( !(body instanceof Term) ) console.log( body );
                 // here the debruijn level is incremented
                 return new Lambda( body.toUPLC( thisLambdaPtr ) );
             }
         );
+
+        // define equivalent version but for pairs that are dynamic
+        if( isPairType( inputType ) )
+        {
+            ObjectUtils.defineReadOnlyHiddenProperty(
+                lambdaTerm,
+                "withDynamicPairAsInput",
+                new Term<PLam<ToPType<A>,ToPType<B>>>(
+                    Type.Lambda( inputType, outputType ),
+                    dbn => {
+                        const thisLambdaPtr = dbn + BigInt( 1 );
+        
+                        const boundVar = new Term<ToPType<A>>(
+                            inputType as any,
+                            dbnAccessLevel => new UPLCVar( dbnAccessLevel - thisLambdaPtr )
+                        );
+                        
+                        const body = termFunc(
+                            addUtilityForType( inputType )(
+                                ObjectUtils.defineReadOnlyHiddenProperty(
+                                    boundVar,
+                                    "__isDynamicPair",
+                                    true
+                                )
+                            )
+                        );
+        
+                        // here the debruijn level is incremented
+                        return new Lambda( body.toUPLC( thisLambdaPtr ) );
+                    }
+                )
+            );
+        }
     
         // allows ```lambdaTerm.$( input )``` syntax
         // rather than ```papp( lambdaTerm, input )```

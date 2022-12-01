@@ -521,7 +521,12 @@ export default class BnCEK
             list instanceof UPLCConst &&
             list.type[0] === ConstTyTag.list &&
             constTypeEq( elem.type, constListTypeUtils.getTypeArgument( list.type as any ) )
-        )) return new ErrorUPLC("incongruent list types");
+        )) return new ErrorUPLC(
+            "mkCons :: incongruent list types; listT: " +
+            (list instanceof UPLCConst ? constTypeToStirng( list.type ) : "" ) +
+            "; elemsT: " +
+            (elem instanceof UPLCConst ? constTypeToStirng( elem.type ) : "" )
+        );
 
         const l = getList( list );
         if( l === undefined ) return new ErrorUPLC("not a list");

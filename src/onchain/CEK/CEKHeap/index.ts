@@ -1,4 +1,5 @@
 import Cloneable from "../../../types/interfaces/Cloneable";
+import { isConstTypeTag, isWellFormedConstType } from "../../UPLC/UPLCTerms/UPLCConst/ConstType";
 import { CEKValue, eqCEKValue } from "../CEKValue";
 
 

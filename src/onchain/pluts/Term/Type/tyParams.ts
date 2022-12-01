@@ -82,6 +82,11 @@ export function replaceTypeParam( tyParam: Readonly<TermTypeParameter> | [ Reado
                     unchecked( param, replacement, toBeReplaced[ 1 ] ),
                     unchecked( param, replacement, toBeReplaced[ 2 ] )
                 );
+            if( toBeReplaced[ 0 ] === PrimType.PairAsData )
+                return Type.PairAsData(
+                    unchecked( param, replacement, toBeReplaced[ 1 ] ),
+                    unchecked( param, replacement, toBeReplaced[ 2 ] )
+                );
 
             throw JsRuntime.makeNotSupposedToHappenError(
                 "unexpected type while replacing parameter, " +

@@ -1,13 +1,13 @@
 import type PData from "../PData";
 import type Term from "../../../Term";
-import type { ConstantableTermType, StructType } from "../../../Term/Type/base";
+import { ConstantableTermType, lam, StructType, TermType, tyVar } from "../../../Term/Type/base";
 import type { TermFn } from "../../PFn";
 import type PPair from "../../PPair";
 import type PType from "../../../PType";
 import type TermPair from "../../../stdlib/UtilityTerms/TermPair";
 
 import BasePlutsError from "../../../../../errors/BasePlutsError";
-import { pfstPair, psndPair, punListData } from "../../../stdlib/Builtins";
+import { pfstPair, psndPair, punListData, punMapData } from "../../../stdlib/Builtins";
 import { pmap } from "../../../stdlib/List/methods";
 import { phoist, plam } from "../../../Syntax/syntax";
 import punsafeConvertType from "../../../Syntax/punsafeConvertType";
@@ -22,8 +22,9 @@ import PInt from "../../PInt";
 import PList from "../../PList";
 import PString from "../../PString";
 import PUnit from "../../PUnit";
-import { pdynPair } from "../../PPair/pdynPair";
+import { pdataPairToDynamic, pdynPair } from "../../PPair/pdynPair";
 import { ToPType } from "../../../Term/Type/ts-pluts-conversion";
+import ObjectUtils from "../../../../../utils/ObjectUtils";
 
 export function getFromDataTermForType<T extends ConstantableTermType | StructType>( t: T )
 : TermFn<[ PData ], ToPType<T>>
@@ -40,6 +41,46 @@ export function getFromDataTermForType<T extends ConstantableTermType | StructTy
     if( typeExtends( t, str ) )     return PString.fromDataTerm as any;
     if( typeExtends( t, unit ) )    return PUnit.fromDataTerm as any;
     if( typeExtends( t, bool ) )    return PBool.fromDataTerm as any;
+
+    // map
+    if( 
+        typeExtends(
+            t,
+            list(
+                pair(
+                    tyVar(),tyVar()
+                )
+            )
+        )
+    )
+    {
+        const keyT = t[1][1] as TermType;
+        const valT = t[1][2] as TermType;
+
+        if(
+            isDataType( keyT ) &&
+            isDataType( valT )
+        ) return punMapData( keyT, valT ) as any;
+
+        if( !isConstantableTermType( keyT ) || !isConstantableTermType( valT ) )
+        throw new BasePlutsError(
+            "can't get 'fromData' for non constant type"
+        );
+
+        const dataPairT = pair(data,data);
+
+        return plam( data, t )
+        ( dataTerm => {
+            
+            //TODO: this is a list of DATA
+            // in some way we need to remember that the pairs are dynamic
+            return punsafeConvertType(
+                punMapData( data, data ).$( dataTerm ),
+                list( pair( keyT, valT ) )
+            ) as any;
+
+        }) as any;
+    }
 
     if( isListType( t ) )
     {
@@ -77,14 +118,7 @@ export function getFromDataTermForType<T extends ConstantableTermType | StructTy
                 "`fromData` for `pair` type: passed argument didn't extend `data`"
             );
 
-            const term = punsafeConvertType(
-                dataTerm, pair( data, data )
-            );
-
-            const pdataFst = pfstPair( data, data );
-            const pdataSnd = psndPair( data, data );
-
-            return pdynPair( fstT, sndT )( pdataFst.$( term ), pdataSnd.$( term ) )
+            return pdataPairToDynamic( fstT, sndT )( dataTerm );
         }) as any ) as any;
     }
 
@@ -105,6 +139,25 @@ export function getFromDataForType<T extends ConstantableTermType | StructType>(
     if( typeExtends( t, str ) )     return PString.fromData as any;
     if( typeExtends( t, unit ) )    return PUnit.fromData as any;
     if( typeExtends( t, bool ) )    return PBool.fromData as any;
+
+    // map
+    if( 
+        typeExtends(
+            t,
+            list(
+                pair(
+                    tyVar(),tyVar()
+                )
+            )
+        )
+    )
+    {
+        return (dataTerm: any) => ObjectUtils.defineReadOnlyHiddenProperty(
+            getFromDataTermForType( t ).$( dataTerm ) as any,
+            "__isListOfDynPairs",
+            true
+        );
+    }
     
     if( isListType( t ) )
     {

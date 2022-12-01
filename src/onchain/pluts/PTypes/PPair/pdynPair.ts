@@ -85,3 +85,30 @@ export function pdynPair<FstT extends ConstantableTermType, SndT extends Constan
         );
     }
 }
+
+export function pdataPairToDynamic<FstT extends ConstantableTermType, SndT extends ConstantableTermType>(
+    fstT: FstT,
+    sndT: SndT
+): ( dataPair: Term<PData> ) => TermPair<ToPType<FstT>,ToPType<SndT>>
+{
+    return ( dataPair: Term<PData> ) => addPPairMethods(
+        // IMPORTANT
+        //
+        // `__isDynamicPair` NEEDS to be added
+        // BEFORE `addPPairMethods` so that
+        // `fst` and `snd` can handle data conversion
+        ObjectUtils.defineReadOnlyHiddenProperty(
+            new Term<PPair<ToPType<FstT>,ToPType<SndT>>>(
+                
+                // overrides the type
+                pair( fstT, sndT ),
+                // keeps the term
+                dataPair.toUPLC
+
+            ),
+            // necessary to unwrap the data when using `pfstPair` and `psndPair`
+            "__isDynamicPair",
+            true
+        )
+    );
+}

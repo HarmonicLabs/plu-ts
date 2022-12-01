@@ -1,7 +1,9 @@
 import ByteString from "../../../../../types/HexString/ByteString";
 import evalScript from "../../../../CEK";
+import { showUPLC } from "../../../../UPLC/UPLCTerm";
 import UPLCConst from "../../../../UPLC/UPLCTerms/UPLCConst";
-import { bs, int, pair } from "../../../Term/Type/base";
+import { plam } from "../../../Syntax";
+import { bool, bs, int, pair, tyVar } from "../../../Term/Type/base";
 import { pByteString } from "../../PByteString";
 import { pInt } from "../../PInt";
 import { pdynPair } from "../pdynPair";
@@ -45,6 +47,30 @@ describe("pdynPair",() => {
                 helloBS
             )
         )
+
+    });
+
+    test("fancy fst", () => {
+
+        const fancyFstIntEq = plam( pair( int, tyVar() ), bool )
+        ( p => p.fst.eq( p.fst ) )
+
+
+        const result = fancyFstIntEq.$(
+            pdynPair( int, int )( pInt(1).add( pInt(3) ), pInt(2) )
+        );
+
+        console.log(
+            showUPLC(
+                result.toUPLC(0)
+            )
+        )
+
+        console.log(
+            evalScript(
+                result
+            )
+        );
 
     })
 

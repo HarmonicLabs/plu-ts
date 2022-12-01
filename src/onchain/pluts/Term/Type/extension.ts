@@ -1,4 +1,4 @@
-import { anyStruct, DataConstructor, DataType, StructCtorDef, StructType, TermType } from "./base";
+import { anyStruct, DataConstructor, DataType, PrimType, StructCtorDef, StructType, TermType } from "./base";
 import { isAliasType, isDataType, isStructType, isTypeNameOfData, isTypeParam, isWellFormedType } from "./kinds";
 import unwrapAlias from "../../PTypes/PAlias/unwrapAlias";
 
@@ -244,7 +244,13 @@ export function typeExtends<ExtendedTy extends TermType>( extending: TermType, e
 
         const bTyArgs = b.slice(1) as TermType[];
         return (
-            a[ 0 ] === b[ 0 ] &&
+            (
+                a[ 0 ] === b[ 0 ] ||
+                (
+                    (a[ 0 ] === PrimType.PairAsData && b[ 0 ] === PrimType.Pair) || 
+                    (b[ 0 ] === PrimType.PairAsData && a[ 0 ] === PrimType.Pair) 
+                )
+            ) &&
             // a.length === b.length && // not a check because of possible ```Type.Var()``` as type arguments
             ( a.slice( 1 ) as TermType[] ).every( (aTyArg, idx) => {
                 return unchecked( aTyArg, bTyArgs[ idx ] )

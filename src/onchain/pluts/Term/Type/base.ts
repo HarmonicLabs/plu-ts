@@ -29,6 +29,7 @@ export const enum PrimType {
     Bool = "Bool",
     List = "List",
     Pair = "Pair",
+    PairAsData = "PairAsData",
     Delayed = "Delayed",
     Lambda = "Lambda"
 }
@@ -132,7 +133,8 @@ const Type: {
     readonly Bool:  [ PrimType.Bool ];
     readonly List:  <T extends TermType>(ofElem: T) => [ PrimType.List, T ];
     readonly Pair:  <FstT extends TermType, SndT extends TermType>(fst: FstT, snd: SndT) => [ PrimType.Pair, FstT, SndT ] ;
-    readonly Map:   <KeyT extends TermType, ValT extends TermType>(k: KeyT, v: ValT) => [PrimType.List, [PrimType.Pair, KeyT, ValT]]
+    readonly PairAsData:  <FstT extends TermType, SndT extends TermType>(fst: FstT, snd: SndT) => [ PrimType.PairAsData, FstT, SndT ] ;
+    readonly Map:   <KeyT extends TermType, ValT extends TermType>(k: KeyT, v: ValT) => [PrimType.List, [PrimType.PairAsData, KeyT, ValT]]
     readonly Delayed: <T extends TermType>(toDelay: T) => [ PrimType.Delayed, T ];
     readonly Lambda: <InT extends TermType, OutT extends TermType>(input: InT, output: OutT) => [ PrimType.Lambda, InT, OutT ];
     readonly Fn: <InsTs extends [ TermType, ...TermType[] ], OutT extends TermType>( inputs: InsTs, output: OutT ) => FnType<InsTs, OutT>
@@ -157,7 +159,8 @@ const Type: {
     Bool:       Object.freeze([ PrimType.Bool ]),
     List:       <T extends TermType>( ofElem: T ): readonly [ PrimType.List, T ] => Object.freeze([ PrimType.List, ofElem ]) ,
     Pair:       <FstT extends TermType, SndT extends TermType>( fst: FstT, snd: SndT ): readonly [ PrimType.Pair, FstT, SndT ] => Object.freeze([ PrimType.Pair, fst, snd ]),
-    Map:        <KeyT extends TermType, ValT extends TermType>( k: KeyT, v: ValT ) => Type.List( Type.Pair( k, v ) ),
+    PairAsData: <FstT extends TermType, SndT extends TermType>( fst: FstT, snd: SndT ): readonly [ PrimType.PairAsData, FstT, SndT ] => Object.freeze([ PrimType.PairAsData, fst, snd ]),
+    Map:        <KeyT extends TermType, ValT extends TermType>( k: KeyT, v: ValT ) => Type.List( Type.PairAsData( k, v ) ),
     Delayed:    <T extends TermType>( toDelay: T ): readonly [ PrimType.Delayed, T ] => Object.freeze([ PrimType.Delayed, toDelay ]),
     Lambda:     <InT extends TermType, OutT extends TermType>( input: InT, output: OutT ): LambdaType< InT, OutT > => Object.freeze([ PrimType.Lambda, input, output ]),
     Fn:         <InsTs extends [ TermType, ...TermType[] ], OutT extends TermType>( inputs: InsTs , output: TermType ): FnType<InsTs, OutT> => {
@@ -211,6 +214,7 @@ export const TypeShortcut = Object.freeze({
     bool: Type.Bool,
     list: Type.List,
     pair: Type.Pair,
+    dynPair: Type.PairAsData,
     map: Type.Map,
     struct: Type.Struct,
     delayed: Type.Delayed,
@@ -226,6 +230,7 @@ export const unit       = Type.Unit;
 export const bool       = Type.Bool;
 export const list       = Type.List;
 export const pair       = Type.Pair;
+export const dynPair    = Type.PairAsData;
 export const map        = Type.Map;
 export const lam        = Type.Lambda;
 export const fn         = Type.Fn;
@@ -255,6 +260,7 @@ export type FixedTypeName
     | PrimType.Lambda
     | PrimType.List
     | PrimType.Pair
+    | PrimType.PairAsData
     | PrimType.Str
     | PrimType.Unit;
 
@@ -269,6 +275,7 @@ export type ConstantableTypeName
     | PrimType.Bool
     | PrimType.List
     | PrimType.Pair
+    | PrimType.PairAsData
     | PrimType.Str
     | PrimType.Unit
     | DataConstructor;

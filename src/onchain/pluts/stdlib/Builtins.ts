@@ -26,7 +26,7 @@ import TermBS, { addPByteStringMethods } from "./UtilityTerms/TermBS";
 import TermInt, { addPIntMethods } from "./UtilityTerms/TermInt";
 import TermStr, { addPStringMethods } from "./UtilityTerms/TermStr";
 import Term from "../Term";
-import { getNRequiredLambdaArgs } from "../Term/Type/utils";
+import { getNRequiredLambdaArgs, termTypeToString } from "../Term/Type/utils";
 import Type, { TermType, DataType, bool, lam, int, bs, fn, delayed, data } from "../Term/Type/base";
 import Lambda from "../../UPLC/UPLCTerms/Lambda";
 import UPLCVar from "../../UPLC/UPLCTerms/UPLCVar";
@@ -976,9 +976,11 @@ export function psndPair<A extends TermType, B extends TermType>( fstType: A, sn
             if( (pair as any).__isDynamicPair )
             {
                 if( !isConstantableTermType( b ) )
-                throw new BasePlutsError(
-                    "is not possible to extract the first element of a (dynamic) pair with non constant type"
-                );
+                {
+                    throw new BasePlutsError(
+                        "is not possible to extract the first element of a (dynamic) pair with non constant type"
+                    );
+                }
 
                 return addUtilityForType( b )(
                     getFromDataForType( b )(

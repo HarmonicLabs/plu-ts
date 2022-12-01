@@ -52,6 +52,7 @@ T extends [ PrimType.Unit ]  ? PUnit :
 T extends [ PrimType.Bool ]  ? PBool :
 T extends [ PrimType.List, infer ListTyArg extends TermType ]  ? PList< ToPType<ListTyArg> > :
 T extends [ PrimType.Pair, infer FstTyArg extends TermType, infer SndTyArg extends TermType ]  ? PPair< ToPType<FstTyArg>, ToPType<SndTyArg> > :
+T extends [ PrimType.PairAsData, infer FstTyArg extends TermType, infer SndTyArg extends TermType ]  ? PPair< ToPType<FstTyArg>, ToPType<SndTyArg> > :
 T extends [ PrimType.Delayed, infer TyArg extends TermType ]  ? PDelayed< ToPType<TyArg> > :
 T extends [ PrimType.Lambda, infer InputTyArg extends TermType, infer OutputTyArg extends TermType ] ?
     PLam< ToPType<InputTyArg>, ToPType<OutputTyArg> > :
@@ -75,7 +76,8 @@ PT extends PString      ? [ PrimType.Str ] :
 PT extends PUnit        ? [ PrimType.Unit ] :
 PT extends PBool        ? [ PrimType.Bool ] :
 PT extends PList<infer TyArg extends PType>     ? [ PrimType.List, FromPType< TyArg > ] :
-PT extends PPair<infer FstTyArg extends PType, infer SndTyArg extends PType>     ? [ PrimType.Pair, FromPType< FstTyArg >, FromPType< SndTyArg > ] :
+PT extends PPair<infer FstTyArg extends PType, infer SndTyArg extends PType>     ?
+    [ PrimType.Pair, FromPType< FstTyArg >, FromPType< SndTyArg > ] :
 PT extends PDelayed<infer TyArg extends PType>  ? [ PrimType.Delayed, FromPType< TyArg > ] :
 PT extends PLam<infer FstTyArg extends PType, infer SndTyArg extends PType>     ? [ PrimType.Lambda, FromPType< FstTyArg >, FromPType< SndTyArg > ] :
 PT extends PData    ? [ DataConstructor, ...DataType[] ] :
