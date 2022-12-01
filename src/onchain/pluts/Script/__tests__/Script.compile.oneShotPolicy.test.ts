@@ -62,7 +62,7 @@ describe("onwShotPolicy", () => {
             }
         ).not.toThrow();
 
-        //*
+        /*
         console.log(
             scriptToJsonFormat( compiled as any, PlutusScriptVersion.V2, "oneShotPolicy @ deadbeef#1" )    
         );
