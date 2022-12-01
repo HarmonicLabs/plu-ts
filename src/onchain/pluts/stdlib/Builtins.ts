@@ -973,7 +973,7 @@ export function psndPair<A extends TermType, B extends TermType>( fstType: A, sn
         "$",
         ( pair: Term<PPair<ToPType<A>,ToPType<B>>> ): UtilityTermOf<ToPType<B>> => {
 
-            if( (pair as any).__isDynamicPair )
+            if( (pair as any).__isDynamicPair || pair.type[0] === PrimType.PairAsData )
             {
                 if( !isConstantableTermType( b ) )
                 {

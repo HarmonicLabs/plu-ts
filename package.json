@@ -1,6 +1,6 @@
 {
   "name": "@harmoniclabs/plu-ts",
-  "version": "0.1.8",
+  "version": "0.1.9-dev1",
   "description": "An embedded DSL for Cardano smart contracts creation coupled with a library for Cardano transactions, all in Typescript",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",

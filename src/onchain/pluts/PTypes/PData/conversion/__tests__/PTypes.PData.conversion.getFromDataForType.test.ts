@@ -71,6 +71,23 @@ describe("getFromDataForType", () => {
             UPLCConst.byteString(ByteString.fromAscii(""))
         );
 
+        //*
+        console.log(
+            evalScript(
+                result.tail.head.fst
+            )
+        );
+        //*/
+
+        console.log(
+            result.tail.head.snd.type
+        )
+
+        console.log(
+            evalScript(
+                result.tail.head.snd.head.snd
+            )
+        );
     })
 
 })
