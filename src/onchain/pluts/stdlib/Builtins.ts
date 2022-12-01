@@ -27,7 +27,7 @@ import TermInt, { addPIntMethods } from "./UtilityTerms/TermInt";
 import TermStr, { addPStringMethods } from "./UtilityTerms/TermStr";
 import Term from "../Term";
 import { getNRequiredLambdaArgs, termTypeToString } from "../Term/Type/utils";
-import Type, { TermType, DataType, bool, lam, int, bs, fn, delayed, data } from "../Term/Type/base";
+import Type, { TermType, DataType, bool, lam, int, bs, fn, delayed, data, PrimType } from "../Term/Type/base";
 import Lambda from "../../UPLC/UPLCTerms/Lambda";
 import UPLCVar from "../../UPLC/UPLCTerms/UPLCVar";
 import HoistedUPLC from "../../UPLC/UPLCTerms/HoistedUPLC";
@@ -932,7 +932,7 @@ export function pfstPair<A extends TermType, B extends TermType>( fstType: A, sn
         "$",
         ( pair: Term<PPair<ToPType<A>,ToPType<B>>> ): UtilityTermOf<ToPType<A>> => {
 
-            if( (pair as any).__isDynamicPair )
+            if( (pair as any).__isDynamicPair || pair.type[0] === PrimType.PairAsData )
             {
                 if( !isConstantableTermType( a ) )
                 throw new BasePlutsError(
@@ -1396,7 +1396,7 @@ export function punMapData<DataK extends DataType, DataV extends DataType>
 {
     return addApplications<[ PDataMap<ToPDataType<DataK>, ToPDataType<DataV>> ], PList<PPair<ToPDataType<DataK>, ToPDataType<DataV>>>>(
         new Term(
-            Type.Lambda( Type.Data.Any, Type.Map( keyDataT, valDataT ) ),
+            Type.Lambda( Type.Data.Any, Type.List( Type.PairAsData( keyDataT, valDataT ) ) ),
             _dbn => Builtin.unMapData
         )
     );

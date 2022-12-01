@@ -2,13 +2,13 @@ import { getFromDataForType } from "../getFromDataTermForType"
 import PValue from "../../../../API/V1/Value/PValue"
 import Term from "../../../../Term";
 import PData from "../../PData";
-import { bs, data, int, list, pair } from "../../../../Term/Type/base";
+import { bs, data, dynPair, int, list, pair } from "../../../../Term/Type/base";
 import UPLCConst from "../../../../../UPLC/UPLCTerms/UPLCConst";
 import dataFromCbor from "../../../../../../types/Data/fromCbor";
 import CborString from "../../../../../../cbor/CborString";
 import evalScript from "../../../../../CEK";
 import { addPListMethods } from "../../../../stdlib";
-import { showUPLC } from "../../../../../UPLC/UPLCTerm";
+import ByteString from "../../../../../../types/HexString/ByteString";
 
 describe("getFromDataForType", () => {
 
@@ -47,15 +47,30 @@ describe("getFromDataForType", () => {
             )
         );
 
-        console.log(
-            (result as any).__isListOfDynPairs
+        expect(
+            result.type
+        ).toEqual(
+            list(
+                dynPair(
+                    bs,
+                    list(
+                        dynPair(
+                            bs,
+                            int
+                        )
+                    )
+                )
+            )
         );
 
-        console.log(
+        expect(
             evalScript(
                 result.head.fst
             )
-        )
+        ).toEqual(
+            UPLCConst.byteString(ByteString.fromAscii(""))
+        );
+
     })
 
 })

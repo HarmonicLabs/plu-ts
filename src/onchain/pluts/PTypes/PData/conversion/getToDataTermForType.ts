@@ -11,7 +11,7 @@ import { phoist, plam } from "../../../Syntax/syntax";
 import punsafeConvertType from "../../../Syntax/punsafeConvertType";
 import Type, { int, bs, str, unit, bool, list, data, pair } from "../../../Term/Type/base";
 import { typeExtends } from "../../../Term/Type/extension";
-import { isAliasType, isStructType, isDataType, isListType } from "../../../Term/Type/kinds";
+import { isAliasType, isStructType, isDataType, isListType, isPairType } from "../../../Term/Type/kinds";
 import { termTypeToString } from "../../../Term/Type/utils";
 import unwrapAlias from "../../PAlias/unwrapAlias";
 import PBool from "../../PBool";
@@ -53,7 +53,8 @@ export function getToDataTermForType<T extends ConstantableTermType | StructType
         ) as any;
     }
 
-    if( typeExtends( t, pair( Type.Any, Type.Any ) ) )
+    // both pair and dynamic pair
+    if( isPairType( t ) )
     {
         const fstT = t[1];
         const sndT = t[2];
@@ -147,7 +148,8 @@ export function getToDataForType<T extends ConstantableTermType | StructType>( t
         )
     }
 
-    if( typeExtends( t, pair( Type.Any , Type.Any ) ) )
+    // both pair and dynamic pair
+    if( isPairType( t ) )
     {
         if(
             isDataType( t[1] ) &&

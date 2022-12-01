@@ -1,4 +1,4 @@
-import Type, { int, pair, TermType } from "../base";
+import Type, { dynPair, int, list, pair, TermType, tyVar } from "../base";
 import PValue from "../../../API/V1/Value/PValue";
 import palias from "../../../PTypes/PAlias/palias";
 import { typeExtends } from "../extension";
@@ -118,32 +118,32 @@ describe("typeExtends", () => {
 
         });
 
-        test("original can't be assigned to alias", () => {
+        test("original CAN be assigned to alias", () => {
 
             expect(
                 typeExtends(
                     int,
                     FancyInt.type
                 )
-            ).toBe( false );
+            ).toBe( true );
 
         });
 
-        test("different aliases of same original are different things", () => {
+        test("different aliases of same original type are NOT different things", () => {
 
             expect(
                 typeExtends(
                     FancyierInt.type,
                     FancyInt.type
                 )
-            ).toBe( false );
+            ).toBe( true );
 
             expect(
                 typeExtends(
                     FancyInt.type,
                     FancyierInt.type
                 )
-            ).toBe( false );
+            ).toBe( true );
 
         });
 
@@ -167,7 +167,7 @@ describe("typeExtends", () => {
 
     })
 
-    test.only("pair( any, any )", () => {
+    test("pair( any, any )", () => {
 
         expect(
             typeExtends(
@@ -175,6 +175,33 @@ describe("typeExtends", () => {
                 pair( Type.Any, Type.Any )
             )
         ).toBe( true );
+
+    });
+
+    test("dynPair interchangeable to pair", () => {
+
+        function testSameArgs( fstT: TermType, sndT: TermType )
+        {
+            expect(
+                typeExtends(
+                    dynPair( fstT, sndT ),
+                    pair( fstT, sndT )
+                ) &&
+                typeExtends(
+                    pair( fstT, sndT ),
+                    dynPair( fstT, sndT )
+                )
+            ).toBe( true )
+        };
+
+        testSameArgs( int, int );
+        testSameArgs( tyVar(), int );
+        testSameArgs( int, tyVar() );
+        testSameArgs( int, list( int ) );
+        testSameArgs( list( int ), int );
+        testSameArgs( pair( int, int ), int );
+        testSameArgs( dynPair( int, int ), int );
+        testSameArgs( pair( int, int ), dynPair( int, int ) );
 
     })
 

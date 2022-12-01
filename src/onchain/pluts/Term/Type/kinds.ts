@@ -90,6 +90,7 @@ export function isFixedTypeNameOfPrim( tyName: TypeName ): tyName is FixedTypeNa
         tyName === PrimType.Bool    ||
         tyName === PrimType.List    ||
         tyName === PrimType.Pair    ||
+        tyName === PrimType.PairAsData    ||
         tyName === PrimType.Delayed ||
         tyName === PrimType.Lambda
     );

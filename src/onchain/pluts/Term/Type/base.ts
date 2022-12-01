@@ -239,7 +239,6 @@ export const tyVar      = Type.Var;
 export const struct     = Type.Struct;
 export const data       = Type.Data.Any;
 
-
 // Type = TypeName followed by optional (nested) Types
 export type TermType = readonly [ TypeName, ...TermType[] ] | StructType | AnyAlias ;
 

@@ -87,7 +87,7 @@ export function papp<Input extends PType, Output extends PType>( a: Term<PLam<In
             outputType,
             dbn => {
                 const funcUPLC = 
-                    (_b as any).__isDynamicPair ?
+                    ( (_b as any).__isDynamicPair || _b.type[0] === PrimType.PairAsData) ?
                         (a as any).withDynamicPairAsInput.toUPLC( dbn )
                         : a.toUPLC( dbn );
                 if( funcUPLC instanceof ErrorUPLC ) return funcUPLC;

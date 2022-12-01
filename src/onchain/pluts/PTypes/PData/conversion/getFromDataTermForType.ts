@@ -1,6 +1,6 @@
 import type PData from "../PData";
 import type Term from "../../../Term";
-import { ConstantableTermType, lam, StructType, TermType, tyVar } from "../../../Term/Type/base";
+import { ConstantableTermType, dynPair, lam, StructType, TermType, tyVar } from "../../../Term/Type/base";
 import type { TermFn } from "../../PFn";
 import type PPair from "../../PPair";
 import type PType from "../../../PType";
@@ -14,7 +14,7 @@ import punsafeConvertType from "../../../Syntax/punsafeConvertType";
 import Type, { int, bs, str, unit, bool, list, data, pair } from "../../../Term/Type/base";
 import { typeExtends } from "../../../Term/Type/extension";
 import { isAliasType, isStructType, isDataType, isListType, isPairType, isConstantableTermType } from "../../../Term/Type/kinds";
-import { termTypeToString } from "../../../Term/Type/utils";
+import { cloneWithAllPairsAsDynamic, termTypeToString } from "../../../Term/Type/utils";
 import unwrapAlias from "../../PAlias/unwrapAlias";
 import PBool from "../../PBool";
 import PByteString from "../../PByteString";
@@ -54,8 +54,9 @@ export function getFromDataTermForType<T extends ConstantableTermType | StructTy
         )
     )
     {
-        const keyT = t[1][1] as TermType;
-        const valT = t[1][2] as TermType;
+        const _t = cloneWithAllPairsAsDynamic( t );
+        const keyT = _t[1][1] as TermType;
+        const valT = _t[1][2] as TermType;
 
         if(
             isDataType( keyT ) &&
@@ -67,16 +68,13 @@ export function getFromDataTermForType<T extends ConstantableTermType | StructTy
             "can't get 'fromData' for non constant type"
         );
 
-        const dataPairT = pair(data,data);
 
-        return plam( data, t )
+        return plam( data, _t )
         ( dataTerm => {
             
-            //TODO: this is a list of DATA
-            // in some way we need to remember that the pairs are dynamic
             return punsafeConvertType(
                 punMapData( data, data ).$( dataTerm ),
-                list( pair( keyT, valT ) )
+                _t
             ) as any;
 
         }) as any;

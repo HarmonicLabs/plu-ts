@@ -5,7 +5,7 @@ import ObjectUtils from "../../../../utils/ObjectUtils";
 import { ppairData } from "../../stdlib/Builtins";
 import TermPair, { addPPairMethods } from "../../stdlib/UtilityTerms/TermPair";
 import Term from "../../Term";
-import { ConstantableTermType, typeExtends, pair, data } from "../../Term/Type";
+import { ConstantableTermType, typeExtends, pair, data, dynPair } from "../../Term/Type";
 import { isConstantableTermType } from "../../Term/Type/kinds";
 import { ToPType } from "../../Term/Type/ts-pluts-conversion";
 import { getToDataForType } from "../PData/conversion/getToDataTermForType";
@@ -68,7 +68,7 @@ export function pdynPair<FstT extends ConstantableTermType, SndT extends Constan
                 new Term<PPair<ToPType<FstT>,ToPType<SndT>>>(
                     
                     // overrides the type
-                    pair( fstT, sndT ),
+                    dynPair( fstT, sndT ),
                     
                     dbn => ppairData( data, data )
                         // @ts-ignore Type instantiation is excessively deep and possibly infinite.
@@ -101,7 +101,7 @@ export function pdataPairToDynamic<FstT extends ConstantableTermType, SndT exten
             new Term<PPair<ToPType<FstT>,ToPType<SndT>>>(
                 
                 // overrides the type
-                pair( fstT, sndT ),
+                dynPair( fstT, sndT ),
                 // keeps the term
                 dataPair.toUPLC
 

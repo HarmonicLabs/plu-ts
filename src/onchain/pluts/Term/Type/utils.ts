@@ -66,7 +66,7 @@ export function termTypeToString( t: TermType ): string
     return ( t[0] + (tyArgs.length > 0 ? ',': "") + tyArgs.map( termTypeToString ).toString() );
 }
 
-export function cloneTermType( t: TermType ): TermType
+export function cloneTermType<T extends TermType>( t: T ): T
 {
     // covers
     // - simple types
@@ -76,22 +76,53 @@ export function cloneTermType( t: TermType ): TermType
 
     if( isAliasType( t ) )
     {
-        return Object.freeze([ t[0], { id: t[1].id, type: cloneTermType( t[1].type ) } ]) as AnyAlias;
+        return Object.freeze([ t[0], { id: t[1].id, type: cloneTermType( t[1].type ) } ]) as any;
     }
     if( isStructType( t ) )
     {
-        return [ t[0], typeof t[1] === "symbol" ? t[1] : cloneStructDef( t[1] ) ]
+        return [ t[0], typeof t[1] === "symbol" ? t[1] : cloneStructDef( t[1] ) ] as any;
     }
 
-    if( t[0] === PrimType.List ) return [ PrimType.List, cloneTermType( t[1] ) ];
-    if( t[0] === PrimType.Delayed ) return [ PrimType.Delayed, cloneTermType( t[1] ) ];
-    if( t[0] === PrimType.Pair ) return [ PrimType.Pair, cloneTermType( t[1] ), cloneTermType( t[2] ) ];
-    if( t[0] === PrimType.PairAsData ) return [ PrimType.PairAsData, cloneTermType( t[1] ), cloneTermType( t[2] ) ];
-    if( t[0] === PrimType.Lambda ) return [ PrimType.Lambda, cloneTermType( t[1] ), cloneTermType( t[2] ) ];
-    if( t[0] === DataConstructor.List ) return [ DataConstructor.List, cloneTermType( t[1] ) ];
-    if( t[0] === DataConstructor.Pair ) return [ DataConstructor.Pair, cloneTermType( t[1] ), cloneTermType( t[2] ) ];
+    if( t[0] === PrimType.List ) return [ PrimType.List, cloneTermType( t[1] ) ] as any;
+    if( t[0] === PrimType.Delayed ) return [ PrimType.Delayed, cloneTermType( t[1] ) ] as any;
+    if( t[0] === PrimType.Pair ) return [ PrimType.Pair, cloneTermType( t[1] ), cloneTermType( t[2] ) ] as any;
+    if( t[0] === PrimType.PairAsData ) return [ PrimType.PairAsData, cloneTermType( t[1] ), cloneTermType( t[2] ) ] as any;
+    if( t[0] === PrimType.Lambda ) return [ PrimType.Lambda, cloneTermType( t[1] ), cloneTermType( t[2] ) ] as any;
+    if( t[0] === DataConstructor.List ) return [ DataConstructor.List, cloneTermType( t[1] ) ] as any;
+    if( t[0] === DataConstructor.Pair ) return [ DataConstructor.Pair, cloneTermType( t[1] ), cloneTermType( t[2] ) ] as any;
     
     throw JsRuntime.makeNotSupposedToHappenError(
         "'cloneTermType' did not match any 'TermType'"
+    );
+}
+
+export function cloneWithAllPairsAsDynamic<T extends TermType>( t: T ): T
+{
+    // covers
+    // - simple types
+    // - simple data types
+    // - parameters
+    if( t.length === 1 ) return [ ...t ];
+
+    if( isAliasType( t ) )
+    {
+        return Object.freeze([ t[0], { id: t[1].id, type: cloneWithAllPairsAsDynamic( t[1].type ) } ]) as any;
+    }
+    if( isStructType( t ) )
+    {
+        return [ t[0], typeof t[1] === "symbol" ? t[1] : cloneStructDef( t[1] ) ] as any;
+    }
+
+    if( t[0] === PrimType.List ) return [ PrimType.List, cloneWithAllPairsAsDynamic( t[1] ) ] as any;
+    if( t[0] === PrimType.Delayed ) return [ PrimType.Delayed, cloneWithAllPairsAsDynamic( t[1] ) ] as any;
+    // only difference from `cloneTermType`;
+    if( t[0] === PrimType.Pair ) return [ PrimType.PairAsData, cloneWithAllPairsAsDynamic( t[1] ), cloneWithAllPairsAsDynamic( t[2] ) ] as any;
+    if( t[0] === PrimType.PairAsData ) return [ PrimType.PairAsData, cloneWithAllPairsAsDynamic( t[1] ), cloneWithAllPairsAsDynamic( t[2] ) ] as any;
+    if( t[0] === PrimType.Lambda ) return [ PrimType.Lambda, cloneWithAllPairsAsDynamic( t[1] ), cloneWithAllPairsAsDynamic( t[2] ) ] as any;
+    if( t[0] === DataConstructor.List ) return [ DataConstructor.List, cloneWithAllPairsAsDynamic( t[1] ) ] as any;
+    if( t[0] === DataConstructor.Pair ) return [ DataConstructor.Pair, cloneWithAllPairsAsDynamic( t[1] ), cloneWithAllPairsAsDynamic( t[2] ) ] as any;
+    
+    throw JsRuntime.makeNotSupposedToHappenError(
+        "'cloneWithAllPairsAsDynamic' did not match any 'TermType'"
     );
 }
