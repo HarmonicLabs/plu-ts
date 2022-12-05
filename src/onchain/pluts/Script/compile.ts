@@ -32,8 +32,8 @@ export const enum PlutusScriptVersion {
     V2 = "PlutusScriptV2"
 };
 
-export interface ScriptJsonFormat {
-    type: PlutusScriptVersion,
+export interface ScriptJsonFormat<V extends PlutusScriptVersion = PlutusScriptVersion> {
+    type: V,
     description: string,
     cborHex: string
 }

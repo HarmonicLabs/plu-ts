@@ -16,7 +16,7 @@ export default class ByteString
         return Object.getPrototypeOf( bs ) === ByteString.prototype
     }
 
-    private _bytes: Buffer;
+    protected _bytes: Buffer;
 
     constructor( bs: string | Buffer )
     {
@@ -67,4 +67,11 @@ export default class ByteString
         return bStr.asBytes.toString("ascii")
     }
 
+    public static isValidHexValue( str: string ): boolean
+    {
+        return (
+            HexString.isHex( str ) &&
+            str.length % 2 === 0
+        );
+    }
 }

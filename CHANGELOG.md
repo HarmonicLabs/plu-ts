@@ -1,5 +1,10 @@
 # Changelog
 
+## v0.1.9
+
+- fixes some bugs in UPLC code generation
+    - `getFromDataForType` returns `punMapData` for `list( pair( any, any ) )` terms
+- introduces `dynPair` type (interchangeable to `pair` type for what matters about typings)
 ## v0.1.5
 
 - introduced `pdynPair` for dynamic `Term<PPair<...>>` creation, to overcome the lack of a `mkPair` builtin;
