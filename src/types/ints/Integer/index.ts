@@ -149,6 +149,15 @@ export type CanBeUInteger
     | bigint
     | number;
 
+export function canBeUInteger( something: any ): something is CanBeUInteger
+{
+    return (
+        ((something instanceof UInteger || something instanceof Integer) && something.asBigInt >= BigInt( 0 ) ) ||
+        (typeof something === "bigint" && something >= BigInt( 0 ) ) ||
+        (typeof something === "number" && something === Math.round( Math.abs( something ) ) )
+    );
+}
+
 export function forceUInteger( toForce: CanBeUInteger ): UInteger
 {
     if( toForce instanceof UInteger && UInteger.isStrictInstance( toForce ) )

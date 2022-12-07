@@ -1,7 +1,7 @@
 import JsRuntime from "../../../utils/JsRuntime";
 import ObjectUtils from "../../../utils/ObjectUtils";
 import StakeCredentials from "../../credentials/StakeCredentials";
-import Value from "../../Value";
+import Value from "../Value";
 
 export const enum InstantRewardsSource {
     Reserves = 0,

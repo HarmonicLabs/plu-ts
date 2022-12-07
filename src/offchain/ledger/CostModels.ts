@@ -1,4 +1,5 @@
-import { CanBeUInteger } from "../../types/ints/Integer";
+import { canBeUInteger, CanBeUInteger } from "../../types/ints/Integer";
+import ObjectUtils from "../../utils/ObjectUtils";
 
 export interface CostModels {
     PlutusV1?: CostModelPlutusV1 | CostModelPlutusV1Array
@@ -6,6 +7,45 @@ export interface CostModels {
 }
 
 export default CostModels;
+
+export function isCostModels( something: any ): something is CostModels
+{
+    if(!ObjectUtils.isObject( something )) return false;
+
+    if( ObjectUtils.hasOwn<object,"PlutusV1">( something, "PlutusV1" ) )
+    {
+        const pv1 = something.PlutusV1;
+
+        let length = Array.isArray( pv1 ) ? pv1.length : 0;
+        if(!(
+            Array.isArray( pv1 ) ?
+                pv1.every( canBeUInteger ):
+                Object.keys( pv1 ).every( k => {
+                    length++;
+                    return canBeUInteger( pv1[k] ) 
+                }) &&
+            length >= 166
+        )) return false;
+    }
+
+    if( ObjectUtils.hasOwn<object,"PlutusV2">( something, "PlutusV2" ) )
+    {
+        const pv2 = something.PlutusV2;
+
+        let length = Array.isArray( pv2 ) ? pv2.length : 0;
+        if(!(
+            Array.isArray( pv2 ) ?
+                pv2.every( canBeUInteger ):
+                Object.keys( pv2 ).every( k => {
+                    length++;
+                    return canBeUInteger( pv2[k] ) 
+                }) &&
+            length >= 175
+        )) return false;
+    }
+
+    return true
+}
 
 export interface CostModelPlutusV1 {
     "mapData-memory-arguments": CanBeUInteger,
@@ -524,7 +564,7 @@ export interface CostModelPlutusV2 {
     "verifySchnorrSecp256k1Signature-memory-arguments": CanBeUInteger
 }
 
-// 177 CanBeUInteger
+// 175 CanBeUInteger
 export type CostModelPlutusV2Array = [
     CanBeUInteger,
     CanBeUInteger,

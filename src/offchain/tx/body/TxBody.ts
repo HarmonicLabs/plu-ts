@@ -1,13 +1,13 @@
-import { NetworkT } from "../../Network";
-import { CanBeUInteger, forceUInteger } from "../../../types/ints/Integer";
-import Coin from "../../Coin";
+import { NetworkT } from "../../ledger/Network";
+import { canBeUInteger, CanBeUInteger, forceUInteger } from "../../../types/ints/Integer";
+import Coin from "../../ledger/Coin";
 import Certificate, { AnyCertificate } from "../../ledger/certs/Certificate";
 import TxWithdrawals from "../../ledger/TxWithdrawals";
-import { Value } from "../../Value";
+import { Value } from "../../ledger/Value";
 import TxOut from "./output/TxOut";
 import TxIn from "./TxIn";
 import PubKeyHash from "../../credentials/PubKeyHash";
-import ProtocolUpdateProposal from "../../ledger/protocol/ProtocolUpdateProposal";
+import ProtocolUpdateProposal, { isProtocolParametersUpdate } from "../../ledger/protocol/ProtocolUpdateProposal";
 import AuxiliaryDataHash from "../../hashes/Hash32/AuxiliaryDataHash";
 import ScriptDataHash from "../../hashes/Hash32/ScriptDataHash";
 import JsRuntime from "../../../utils/JsRuntime";
@@ -44,17 +44,17 @@ export default class TxBody
     readonly fee!: bigint;
     readonly ttl?: bigint;
     readonly certs?: AnyCertificate[];
-    readonly withdrawals: TxWithdrawals;
-    readonly protocolUpdate: ProtocolUpdateProposal;
-    readonly auxDataHash: AuxiliaryDataHash; // hash 32
-    readonly mint: Value;
-    readonly scriptDataHash: ScriptDataHash; // hash 32
-    readonly collateralInputs: TxIn[];
-    readonly requiredSigners: PubKeyHash[];
-    readonly network: NetworkT;
-    readonly collateralReturn: TxOut;
-    readonly totCollateral: bigint;
-    readonly refInputs: TxIn[];
+    readonly withdrawals?: TxWithdrawals;
+    readonly protocolUpdate?: ProtocolUpdateProposal;
+    readonly auxDataHash?: AuxiliaryDataHash; // hash 32
+    readonly mint?: Value;
+    readonly scriptDataHash?: ScriptDataHash; // hash 32
+    readonly collateralInputs?: TxIn[];
+    readonly requiredSigners?: PubKeyHash[];
+    readonly network?: NetworkT;
+    readonly collateralReturn?: TxOut;
+    readonly totCollateral?: bigint;
+    readonly refInputs?: TxIn[];
 
     constructor( body: ITxBody )
     {
@@ -163,34 +163,175 @@ export default class TxBody
 
         // -------------------------------------- withdrawals -------------------------------------- //
         
+        if( withdrawals !== undefined )
+        JsRuntime.assert(
+            withdrawals instanceof TxWithdrawals,
+            "withdrawals was not udnefined nor an instance of 'TxWithdrawals'"
+        )
+
+        ObjectUtils.defineReadOnlyProperty(
+            this,
+            "withdrawals",
+            withdrawals
+        );
         
         // -------------------------------------- protocolUpdate -------------------------------------- //
         
+        if( protocolUpdate !== undefined )
+        {
+            JsRuntime.assert(
+                isProtocolParametersUpdate( protocolUpdate ),
+                "invalid 'protocolUpdate' while constructing a 'Tx'"
+            )
+        }
+
+        ObjectUtils.defineReadOnlyProperty(
+            this,
+            "protocolUpdate",
+            protocolUpdate
+        );
         
         // -------------------------------------- auxDataHash -------------------------------------- //
         
+        if( auxDataHash !== undefined )
+        {
+            JsRuntime.assert(
+                auxDataHash instanceof AuxiliaryDataHash,
+                "invalid 'auxDataHash' while constructing a 'Tx'"
+            )
+        }
+
+        ObjectUtils.defineReadOnlyProperty(
+            this,
+            "auxDataHash",
+            auxDataHash
+        );
         
+
         // -------------------------------------- mint -------------------------------------- //
         
+        if( mint !== undefined )
+        {
+            JsRuntime.assert(
+                mint instanceof Value,
+                "invalid 'mint' while constructing a 'Tx'"
+            )
+        }
+
+        ObjectUtils.defineReadOnlyProperty(
+            this,
+            "mint",
+            mint
+        );
         
         // -------------------------------------- scriptDataHash -------------------------------------- //
         
-        
+        if( scriptDataHash !== undefined )
+        {
+            JsRuntime.assert(
+                scriptDataHash instanceof ScriptDataHash,
+                "invalid 'scriptDataHash' while constructing a 'Tx'"
+            )
+        }
+
+        ObjectUtils.defineReadOnlyProperty(
+            this,
+            "scriptDataHash",
+            scriptDataHash
+        );
+
         // -------------------------------------- collateral inputs -------------------------------------- //
-        
+
+        if( collateralInputs !== undefined )
+        {
+            JsRuntime.assert(
+                Array.isArray( collateralInputs ) &&
+                collateralInputs.every( input => input instanceof TxOutRef ),
+                "invalid 'collateralInputs' while constructing a 'Tx'"
+            );
+        }
+
+        ObjectUtils.defineReadOnlyProperty(
+            this,
+            "collateralInputs",
+            collateralInputs?.length === 0 ? undefined : Object.freeze( collateralInputs )
+        );
         
         // -------------------------------------- requiredSigners -------------------------------------- //
-        
-        
+        requiredSigners
+        if( requiredSigners !== undefined )
+        {
+            JsRuntime.assert(
+                Array.isArray( requiredSigners ) &&
+                requiredSigners.every( sig => sig instanceof PubKeyHash ),
+                "invalid 'requiredSigners' while constructing a 'Tx'"
+            );
+        }
+
+        ObjectUtils.defineReadOnlyProperty(
+            this,
+            "requiredSigners",
+            requiredSigners?.length === 0 ? undefined : Object.freeze( requiredSigners )
+        );
+
         // -------------------------------------- network -------------------------------------- //
         
+        if( network !== undefined )
+        JsRuntime.assert(
+            network === "mainnet" ||
+            network === "testnet",
+            "invalid 'network' while constructing 'Tx'"
+        )
         
+        ObjectUtils.defineReadOnlyProperty(
+            this,
+            "network",
+            network
+        );
+
         // -------------------------------------- collateralReturn -------------------------------------- //
         
+        if( collateralReturn !== undefined )
+        JsRuntime.assert(
+            collateralReturn instanceof TxOut,
+            "invalid 'collateralReturn' while constructing 'Tx'"
+        )
         
+        ObjectUtils.defineReadOnlyProperty(
+            this,
+            "collateralReturn",
+            collateralReturn
+        );
         // -------------------------------------- totCollateral -------------------------------------- //
+        totCollateral
+        if( totCollateral !== undefined )
+        JsRuntime.assert(
+            canBeUInteger( totCollateral ),
+            "invalid 'collateralReturn' while constructing 'Tx'"
+        )
         
-        
+        ObjectUtils.defineReadOnlyProperty(
+            this,
+            "collateralReturn",
+            totCollateral === undefined ? undefined : forceUInteger( totCollateral ).asBigInt
+        );
+
         // -------------------------------------- reference inputs -------------------------------------- //
+
+        if( refInputs !== undefined )
+        {
+            JsRuntime.assert(
+                Array.isArray( refInputs ) &&
+                refInputs.every( input => input instanceof TxOutRef ),
+                "invalid 'refInputs' while constructing a 'Tx'"
+            );
+        }
+
+        ObjectUtils.defineReadOnlyProperty(
+            this,
+            "refInputs",
+            refInputs?.length === 0 ? undefined : Object.freeze( refInputs )
+        );
+
     }
 };

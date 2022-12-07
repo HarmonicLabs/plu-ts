@@ -12,19 +12,22 @@ export interface ITx {
 }
 
 export default class Tx
+    implements ITx
 {
     readonly body!: TxBody
     readonly witnesses!: TxWitnessSet
     readonly isScriptValid!: boolean
-    readonly auxiliaryData!: AuxiliaryData
+    readonly auxiliaryData?: AuxiliaryData | null
 
-    constructor(
-        body: TxBody,
-        witnesses: TxWitnessSet,
-        isScriptValid: boolean,
-        auxiliaryData: AuxiliaryData | null
-    )
+    constructor(tx: ITx)
     {
+        const {
+            body,
+            witnesses,
+            isScriptValid,
+            auxiliaryData
+        } = tx;
+
         JsRuntime.assert(
             body instanceof TxBody,
             "invalid transaction body; must be instance of 'TxBody'"
@@ -38,6 +41,8 @@ export default class Tx
             "'isScriptValid' ('Tx' third paramter) must be a boolean"
         );
         JsRuntime.assert(
+            auxiliaryData === undefined ||
+            auxiliaryData === null ||
             auxiliaryData instanceof AuxiliaryData,
             "invalid transaction auxiliray data; must be instance of 'AuxiliaryData'"
         );

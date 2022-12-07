@@ -65,7 +65,7 @@ export default class ObjectUtils
         );
     }
 
-    static hasOwn: ( obj: object, propName: string | number | symbol ) => boolean = 
+    static hasOwn: <obj, K extends (string | number | symbol)>( obj: obj, propName: K ) => obj is (obj & Record<K, any>) = 
         (
             (Object as any).hasOwn ?? 
             Object.prototype.hasOwnProperty.call
