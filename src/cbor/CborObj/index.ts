@@ -34,7 +34,7 @@ type CborObj
 
 export default CborObj;
 
-export function isCborObj( cborObj: CborObj ): boolean
+export function isCborObj<T extends object>( cborObj: T ): cborObj is (T & CborObj)
 {
     const proto = Object.getPrototypeOf( cborObj );
     

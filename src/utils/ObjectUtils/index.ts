@@ -248,6 +248,20 @@ export default class ObjectUtils
         return obj;
     }
 
+    static freezeAll<T>( something: T ): Readonly<T>
+    {
+        if( typeof something === "object" && something !== null )
+        {
+            const ks = Object.keys( something );
+            for( let i = 0; i < ks.length; i++ )
+            {
+                ObjectUtils.freezeAll( (something as any)[ ks[i] ] );
+            }
+        }
+
+        return Object.freeze( something );
+    }
+
     static writableProperty     = 0b001;
     static enumerableProperty   = 0b010;
     static configurableProperty = 0b100;

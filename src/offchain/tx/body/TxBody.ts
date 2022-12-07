@@ -1,4 +1,4 @@
-import { NetworkT } from "../../ledger/Network";
+import { NetworkT } from "../../Network";
 import { canBeUInteger, CanBeUInteger, forceUInteger } from "../../../types/ints/Integer";
 import Coin from "../../ledger/Coin";
 import Certificate, { AnyCertificate } from "../../ledger/certs/Certificate";
