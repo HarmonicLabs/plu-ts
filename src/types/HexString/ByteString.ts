@@ -1,10 +1,15 @@
 import HexString from ".";
+import Cbor from "../../cbor/Cbor";
+import CborObj from "../../cbor/CborObj";
+import CborBytes from "../../cbor/CborObj/CborBytes";
+import CborString from "../../cbor/CborString";
+import { ToCbor } from "../../cbor/interfaces/CBORSerializable";
 import BufferUtils from "../../utils/BufferUtils";
 import JsRuntime from "../../utils/JsRuntime";
 import Cloneable from "../interfaces/Cloneable";
 
 export default class ByteString
-    implements Cloneable<ByteString>
+    implements Cloneable<ByteString>, ToCbor
 {
     get [Symbol.toStringTag](): string
     {
@@ -55,6 +60,16 @@ export default class ByteString
     clone(): ByteString
     {
         return new ByteString( BufferUtils.copy( this._bytes ) );
+    }
+
+    toCbor(): CborString
+    {
+        return Cbor.encode( this.toCborObj() );
+    }
+    
+    toCborObj(): CborObj
+    {
+        return new CborBytes( this.asBytes )
     }
 
     public static fromAscii( asciiStr: string ): ByteString

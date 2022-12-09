@@ -1,3 +1,12 @@
+import Cbor from "../../../cbor/Cbor";
+import CborObj from "../../../cbor/CborObj";
+import CborArray from "../../../cbor/CborObj/CborArray";
+import CborBytes from "../../../cbor/CborObj/CborBytes";
+import CborMap, { CborMapEntry } from "../../../cbor/CborObj/CborMap";
+import CborTag from "../../../cbor/CborObj/CborTag";
+import CborUInt from "../../../cbor/CborObj/CborUInt";
+import CborString from "../../../cbor/CborString";
+import { ToCbor } from "../../../cbor/interfaces/CBORSerializable";
 import { PlutusScriptVersion, ScriptJsonFormat } from "../../../onchain/pluts/Script";
 import JsRuntime from "../../../utils/JsRuntime";
 import ObjectUtils from "../../../utils/ObjectUtils";
@@ -6,19 +15,26 @@ import Script, { ScriptType } from "../../script/Script";
 import { TxMetadata } from "../metadata/TxMetadata";
 
 export interface IAuxiliaryData {
-    metadata: TxMetadata;
+    metadata?: TxMetadata;
     nativeScripts?: (NativeScript | Script<ScriptType.NativeScript>)[];
     plutusV1Scripts?: (ScriptJsonFormat<PlutusScriptVersion.V1> | Script<ScriptType.PlutusV1>)[];
     plutusV2Scripts?: (ScriptJsonFormat<PlutusScriptVersion.V2> | Script<ScriptType.PlutusV2>)[];
 }
 
-export default class AuxiliaryData
-    implements IAuxiliaryData
+function scriptArrToCbor( scripts: Script[] ): CborArray
 {
-    readonly metadata!: TxMetadata;
-    readonly nativeScripts?: (NativeScript | Script<ScriptType.NativeScript>)[];
-    readonly plutusV1Scripts?: (ScriptJsonFormat<PlutusScriptVersion.V1> | Script<ScriptType.PlutusV1>)[];
-    readonly plutusV2Scripts?: (ScriptJsonFormat<PlutusScriptVersion.V2> | Script<ScriptType.PlutusV2>)[];
+    return new CborArray(
+        scripts.map( script => new CborBytes( script.cbor ) )
+    );
+}
+
+export default class AuxiliaryData
+    implements IAuxiliaryData, ToCbor
+{
+    readonly metadata?: TxMetadata;
+    readonly nativeScripts?: Script<ScriptType.NativeScript>[];
+    readonly plutusV1Scripts?: Script<ScriptType.PlutusV1>[];
+    readonly plutusV2Scripts?: Script<ScriptType.PlutusV2>[];
 
     constructor( auxData: IAuxiliaryData )
     {
@@ -34,8 +50,9 @@ export default class AuxiliaryData
             plutusV2Scripts
         } = auxData;
 
+        // -------------------------------- native scripts -------------------------------- //
         JsRuntime.assert(
-            metadata instanceof TxMetadata,
+            metadata === undefined || metadata instanceof TxMetadata,
             "'AuxiliaryData' :: 'metadata' field was not instance of 'TxMetadata'"
         );
         ObjectUtils.defineReadOnlyProperty(
@@ -126,5 +143,38 @@ export default class AuxiliaryData
         }
 
 
+    }
+    
+    toCbor(): CborString
+    {
+        return Cbor.encode( this.toCborObj() );
+    }
+    toCborObj(): CborTag
+    {
+        return new CborTag(
+            259,
+            new CborMap([
+                this.metadata === undefined ?  undefined :
+                {
+                    k: new CborUInt( 0 ),
+                    v: this.metadata.toCborObj()
+                },
+                this.nativeScripts === undefined || this.nativeScripts.length === 0 ? undefined :
+                {
+                    k: new CborUInt( 1 ),
+                    v: scriptArrToCbor( this.nativeScripts )
+                },
+                this.plutusV1Scripts === undefined || this.plutusV1Scripts.length === 0 ? undefined :
+                {
+                    k: new CborUInt( 2 ),
+                    v: scriptArrToCbor( this.plutusV1Scripts )
+                },
+                this.plutusV2Scripts === undefined || this.plutusV2Scripts.length === 0 ? undefined :
+                {
+                    k: new CborUInt( 2 ),
+                    v: scriptArrToCbor( this.plutusV2Scripts )
+                }
+            ].filter( elem => elem !== undefined ) as CborMapEntry[])
+        )
     }
 }

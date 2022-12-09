@@ -2,23 +2,32 @@ import Data, { isData } from "../../../../types/Data";
 import Hash32 from "../../../hashes/Hash32/Hash32";
 import Script from "../../../script/Script";
 import { Value } from "../../../ledger/Value";
-import TxOutRef, { ITxOutRef } from "./TxOutRef";
+import TxOutRef from "./TxOutRef";
 import JsRuntime from "../../../../utils/JsRuntime";
 import ObjectUtils from "../../../../utils/ObjectUtils";
+import { ToCbor } from "../../../../cbor/interfaces/CBORSerializable";
+import CborObj from "../../../../cbor/CborObj";
+import CborString from "../../../../cbor/CborString";
+import Cbor from "../../../../cbor/Cbor";
+import Address from "../../../ledger/Address";
+import CborMap, { CborMapEntry } from "../../../../cbor/CborObj/CborMap";
+import CborUInt from "../../../../cbor/CborObj/CborUInt";
+import CborArray from "../../../../cbor/CborObj/CborArray";
+import { dataToCborObj } from "../../../../types/Data/toCbor";
+import CborTag from "../../../../cbor/CborObj/CborTag";
+import CborBytes from "../../../../cbor/CborObj/CborBytes";
 
 export interface ITxOut {
-    // TODO: needs to be something more specific
-    address: string,
+    address: Address,
     amount: Value,
     datum?: Hash32 | Data,
     refScript?: Script,
     ref?: TxOutRef
 }
 export default class TxOut
-    implements ITxOut
+    implements ITxOut, ToCbor
 {
-    // TODO: needs to be something more specific
-    readonly address!: string
+    readonly address!: Address
     readonly amount!: Value
     readonly datum?: Hash32 | Data
     readonly refScript?: Script
@@ -42,12 +51,10 @@ export default class TxOut
         } = txOutput;
 
         JsRuntime.assert(
-            // TODO: needs to be something more specific
-            typeof address === "string",
+            address instanceof Address,
             "invlaid 'address' while constructing 'TxOut'" 
         );
         JsRuntime.assert(
-            // TODO: needs to be something more specific
             amount instanceof Value,
             "invlaid 'amount' while constructing 'TxOut'" 
         );
@@ -95,5 +102,44 @@ export default class TxOut
             "ref",
             ref
         );
+    }
+
+    toCbor(): CborString
+    {
+        return Cbor.encode( this.toCborObj() );
+    }
+    toCborObj(): CborMap
+    {
+        const datum = this.datum;
+
+        return new CborMap([
+            {
+                k: new CborUInt( 0 ),
+                v: this.address.toCborObj()
+            },
+            {
+                k: new CborUInt( 1 ),
+                v: this.amount.toCborObj()
+            },
+            datum === undefined ? undefined :
+            {
+                k: new CborUInt( 2 ),
+                v: datum instanceof Hash32 ? 
+                    new CborArray([
+                        new CborUInt( 0 ),
+                        datum.toCborObj()
+                    ]) :
+                    new CborArray([
+                        new CborUInt( 0 ),
+                        new CborUInt( 1 ),
+                        dataToCborObj( datum )
+                    ])
+            },
+            this.refScript === undefined ? undefined :
+            {
+                k: new CborUInt( 3 ),
+                v: new CborTag( 24, new CborBytes( this.refScript.cbor ) )
+            }
+        ].filter( elem => elem !== undefined ) as CborMapEntry[])
     }
 }

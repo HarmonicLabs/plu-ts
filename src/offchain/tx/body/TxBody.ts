@@ -7,13 +7,20 @@ import { Value } from "../../ledger/Value";
 import TxOut from "./output/TxOut";
 import TxIn from "./TxIn";
 import PubKeyHash from "../../credentials/PubKeyHash";
-import ProtocolUpdateProposal, { isProtocolParametersUpdate } from "../../ledger/protocol/ProtocolUpdateProposal";
+import ProtocolUpdateProposal, { isProtocolUpdateProposal, protocolUpdateProposalToCborObj } from "../../ledger/protocol/ProtocolUpdateProposal";
 import AuxiliaryDataHash from "../../hashes/Hash32/AuxiliaryDataHash";
 import ScriptDataHash from "../../hashes/Hash32/ScriptDataHash";
 import JsRuntime from "../../../utils/JsRuntime";
 import ObjectUtils from "../../../utils/ObjectUtils";
 import TxOutRef from "./output/TxOutRef";
 import { UInteger } from "../../..";
+import { ToCbor } from "../../../cbor/interfaces/CBORSerializable";
+import CborObj from "../../../cbor/CborObj";
+import CborString from "../../../cbor/CborString";
+import Cbor from "../../../cbor/Cbor";
+import CborMap, { CborMapEntry } from "../../../cbor/CborObj/CborMap";
+import CborUInt from "../../../cbor/CborObj/CborUInt";
+import CborArray from "../../../cbor/CborObj/CborArray";
 
 type Utxo = TxIn | TxOutRef;
 
@@ -26,6 +33,7 @@ export interface ITxBody {
     withdrawals?: TxWithdrawals,
     protocolUpdate?: ProtocolUpdateProposal,
     auxDataHash?: AuxiliaryDataHash, // hash 32
+    validityIntervalStart?: CanBeUInteger,
     mint?: Value,
     scriptDataHash?: ScriptDataHash, // hash 32
     collateralInputs?: TxIn[], 
@@ -37,7 +45,7 @@ export interface ITxBody {
 }
 
 export default class TxBody
-    implements ITxBody
+    implements ITxBody, ToCbor
 {
     readonly inputs!: [ TxIn, ...TxIn[] ];
     readonly outputs!: TxOut[];
@@ -47,6 +55,7 @@ export default class TxBody
     readonly withdrawals?: TxWithdrawals;
     readonly protocolUpdate?: ProtocolUpdateProposal;
     readonly auxDataHash?: AuxiliaryDataHash; // hash 32
+    readonly validityIntervalStart?: bigint;
     readonly mint?: Value;
     readonly scriptDataHash?: ScriptDataHash; // hash 32
     readonly collateralInputs?: TxIn[];
@@ -74,6 +83,7 @@ export default class TxBody
             withdrawals,
             protocolUpdate,
             auxDataHash,
+            validityIntervalStart,
             mint,
             scriptDataHash,
             collateralInputs,
@@ -180,7 +190,7 @@ export default class TxBody
         if( protocolUpdate !== undefined )
         {
             JsRuntime.assert(
-                isProtocolParametersUpdate( protocolUpdate ),
+                isProtocolUpdateProposal( protocolUpdate ),
                 "invalid 'protocolUpdate' while constructing a 'Tx'"
             )
         }
@@ -207,7 +217,22 @@ export default class TxBody
             auxDataHash
         );
         
+        // -------------------------------------- validityIntervalStart -------------------------------------- //
+                
+        if( validityIntervalStart !== undefined )
+        {
+            JsRuntime.assert(
+                canBeUInteger( validityIntervalStart ),
+                "invalid 'validityIntervalStart' while constructing a 'Tx'"
+            )
+        }
 
+        ObjectUtils.defineReadOnlyProperty(
+            this,
+            "validityIntervalStart",
+            validityIntervalStart === undefined ? undefined : forceUInteger( validityIntervalStart ).asBigInt
+        );
+        
         // -------------------------------------- mint -------------------------------------- //
         
         if( mint !== undefined )
@@ -333,5 +358,98 @@ export default class TxBody
             refInputs?.length === 0 ? undefined : Object.freeze( refInputs )
         );
 
+    }
+
+    toCbor(): CborString
+    {
+        return Cbor.encode( this.toCborObj() );
+    }
+
+    toCborObj(): CborObj
+    {
+        return new CborMap(([
+            {
+                k: new CborUInt( 0 ),
+                v: new CborArray( this.inputs.map( input => input.toCborObj() ) )
+            },
+            {
+                k: new CborUInt( 1 ),
+                v: new CborArray( this.outputs.map( out => out.toCborObj() ) )
+            },
+            {
+                k: new CborUInt( 2 ),
+                v: new CborUInt( this.fee )
+            },
+            this.ttl === undefined ? undefined :
+            {
+                k: new CborUInt( 3 ),
+                v: new CborUInt( this.ttl )
+            },
+            this.certs === undefined || this.certs.length === 0 ? undefined :
+            {
+                k: new CborUInt( 4 ),
+                v: new CborArray( this.certs.map( cert => cert.toCborObj() ) )
+            },
+            this.withdrawals === undefined ? undefined :
+            {
+                k: new CborUInt( 5 ),
+                v: this.withdrawals.toCborObj()
+            },
+            this.protocolUpdate === undefined ? undefined :
+            {
+                k: new CborUInt( 6 ),
+                v: protocolUpdateProposalToCborObj( this.protocolUpdate )
+            },
+            this.auxDataHash === undefined ? undefined :
+            {
+                k: new CborUInt( 7 ),
+                v: this.auxDataHash.toCborObj()
+            },
+            this.validityIntervalStart === undefined ? undefined :
+            {
+                k: new CborUInt( 8 ),
+                v: new CborUInt( this.validityIntervalStart )
+            },
+            this.mint === undefined ? undefined :
+            {
+                k: new CborUInt( 9 ),
+                v: this.mint.toCborObj()
+            },
+            this.scriptDataHash === undefined ? undefined :
+            {
+                k: new CborUInt( 11 ),
+                v: this.scriptDataHash.toCborObj()
+            },
+            this.collateralInputs === undefined || this.collateralInputs.length === 0 ? undefined :
+            {
+                k: new CborUInt( 13 ),
+                v: new CborArray( this.collateralInputs.map( collateral => collateral.toCborObj() ) )
+            },
+            this.requiredSigners === undefined || this.requiredSigners.length === 0 ? undefined :
+            {
+                k: new CborUInt( 14 ),
+                v: new CborArray( this.requiredSigners.map( signer => signer.toCborObj() ) )
+            },
+            this.network === undefined ? undefined :
+            {
+                k: new CborUInt( 15 ),
+                v: new CborUInt(this.network === "testnet" ? 0 : 1)
+            },
+            this.collateralReturn === undefined ? undefined :
+            {
+                k: new CborUInt( 16 ),
+                v: this.collateralReturn.toCborObj()
+            },
+            this.totCollateral === undefined ? undefined :
+            {
+                k: new CborUInt( 17 ),
+                v: new CborUInt( this.totCollateral )
+            },
+            this.refInputs === undefined || this.refInputs.length === 0 ? undefined :
+            {
+                k: new CborUInt( 18 ),
+                v: new CborArray( this.refInputs.map( refIn => refIn.toCborObj() ) )
+            }
+        ].filter( entry => entry !== undefined ) as CborMapEntry[]))
     }
 };

@@ -1,7 +1,7 @@
 import type { CanBeUInteger } from "../../../../types/ints/Integer";
 import type PubKeyHash from "../../../credentials/PubKeyHash";
 import type Era from "../../../ledger/Era";
-import { ProtocolParametersUpdate } from "../../../ledger/protocol/ProtocolUpdateProposal";
+import ProtocolUpdateProposal from "../../../ledger/protocol/ProtocolUpdateProposal";
 import type TxOutRef from "../../body/output/TxOutRef";
 import { TxMetadata } from "../../metadata/TxMetadata";
 import type ITxBuildCert from "./ITxBuildCert";
@@ -14,7 +14,7 @@ export interface ITxBuildArgs {
     inputs: [ ITxBuildInput, ...ITxBuildInput[] ],
     changeAddress: string,
     outputs?: ITxBuildOutput[],
-    era?: Era
+    // era?: Era // latest
     readonlyRefInputs?: TxOutRef[],
     requiredSigners?: PubKeyHash[],
     collaterals?: TxOutRef[],
@@ -25,7 +25,7 @@ export interface ITxBuildArgs {
     certificates?: ITxBuildCert[],
     withdrawals?: ITxBuildWithdrawal[],
     metadata?: TxMetadata,
-    protocolUpdateProposal?: ProtocolParametersUpdate
+    protocolUpdateProposal?: ProtocolUpdateProposal
 }
 
 export default ITxBuildArgs;

@@ -1,3 +1,9 @@
+import Cbor from "../../../cbor/Cbor";
+import CborObj from "../../../cbor/CborObj";
+import CborArray from "../../../cbor/CborObj/CborArray";
+import CborUInt from "../../../cbor/CborObj/CborUInt";
+import CborString from "../../../cbor/CborString";
+import { ToCbor, ToCborObj } from "../../../cbor/interfaces/CBORSerializable";
 import { forceUInteger, UInteger } from "../../../types/ints/Integer";
 import JsRuntime from "../../../utils/JsRuntime";
 import ObjectUtils from "../../../utils/ObjectUtils";
@@ -40,6 +46,7 @@ export type ParamsOfCert<CertTy extends CertificateType> =
     never
 
 export default class Certificate<CertTy extends CertificateType>
+    implements ToCbor
 {
     readonly certType!: CertTy
     readonly params!: ParamsOfCert<CertTy>
@@ -141,6 +148,35 @@ export default class Certificate<CertTy extends CertificateType>
             "params",
             Object.freeze( params )
         );
+    }
+
+    toCbor(): CborString
+    {
+        return Cbor.encode( this.toCborObj() );
+    }
+    toCborObj(): CborObj
+    {
+        if( this.certType === CertificateType.PoolRetirement )
+        {
+            return new CborArray([
+                new CborUInt( this.certType ),
+                (this.params[0] as ParamsOfCert<4>[0]).toCborObj(),
+                new CborUInt( forceUInteger( this.params[1] as any ).asBigInt )
+            ]);
+        }
+
+        if( this.certType === CertificateType.PoolRegistration )
+        {
+            return new CborArray([
+                new CborUInt( this.certType ),
+                ...(this.params as [PoolParams])[0].toCborObjArray()
+            ]);
+        }
+
+        return new CborArray([
+            new CborUInt( this.certType ),
+            ...this.params.map( p => (p as any).toCborObj() )
+        ])
     }
 }
 

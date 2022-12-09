@@ -1,8 +1,12 @@
+import CborObj from "../../../cbor/CborObj";
+import CborArray from "../../../cbor/CborObj/CborArray";
+import CborMap, { CborMapEntry } from "../../../cbor/CborObj/CborMap";
+import CborUInt from "../../../cbor/CborObj/CborUInt";
 import CborPositiveRational from "../../../cbor/extra/CborRational";
-import { canBeUInteger, CanBeUInteger } from "../../../types/ints/Integer";
+import { canBeUInteger, CanBeUInteger, forceUInteger } from "../../../types/ints/Integer";
 import ObjectUtils from "../../../utils/ObjectUtils";
 import type Coin from "../Coin";
-import CostModels, { isCostModels } from "../CostModels";
+import CostModels, { costModelsToCborObj, isCostModels } from "../CostModels";
 import type Epoch from "../Epoch";
 import ExecUnits from "../ExecUnits";
 
@@ -30,6 +34,7 @@ export interface ProtocolParamters {
     maxTxExecUnits: ExecUnits,
     maxBlockExecUnits: ExecUnits,
     maxValuesSize: CanBeUInteger,
+    collateralPercentage: CanBeUInteger,
     maxCollateralIns: CanBeUInteger
 }
 
@@ -58,6 +63,7 @@ export function isProtocolParameters( something: any ): something is ProtocolPar
         "maxTxExecUnits",
         "maxBlockExecUnits",
         "maxValuesSize",
+        "collateralPercentage",
         "maxCollateralIns"
     ] as const;
 
@@ -85,6 +91,7 @@ export function isProtocolParameters( something: any ): something is ProtocolPar
             "poolMinFee",
             "adaPerUtxoByte",
             "maxValuesSize",
+            "collateralPercentage",
             "maxCollateralIns"
         ] as const).every( uintKey => canBeUInteger( pp[uintKey] ) )
     ) return false;
@@ -144,6 +151,7 @@ export function isPartialProtocolParameters( something: object ): something is P
             "poolMinFee",
             "adaPerUtxoByte",
             "maxValuesSize",
+            "collateralPercentage",
             "maxCollateralIns"
         ] as const).every( uintKey => pp[uintKey] === undefined || canBeUInteger( pp[uintKey] ) )
     ) return false;
@@ -187,4 +195,75 @@ export function isPartialProtocolParameters( something: object ): something is P
     )) return false;
 
     return true;
+}
+
+function mapUIntEntryOrUndefined( tag: number, a: CanBeUInteger | undefined ): { k: CborUInt, v: CborUInt } | undefined
+{
+    return a === undefined ? undefined : {
+        k: new CborUInt( tag ),
+        v: new CborUInt( forceUInteger( a ).asBigInt )
+    };
+}
+
+function kv( k: number, v: CborObj | undefined ): CborMapEntry | undefined
+{
+    
+    return v === undefined ? undefined : {
+        k: new CborUInt( k ),
+        v
+    };
+}
+
+export function partialProtocolParametersToCborObj( pps: Partial<ProtocolParamters> ): CborMap
+{
+    const {
+        protocolVerstion,
+        execCosts,
+        maxTxExecUnits,
+        maxBlockExecUnits,
+        costModels
+    } = pps;
+
+    const costModelsKeys = Object.keys( costModels ?? {} );
+
+    return new CborMap([
+        mapUIntEntryOrUndefined( 0, pps.minfeeA ),
+        mapUIntEntryOrUndefined( 1, pps.minfeeB ),
+        mapUIntEntryOrUndefined( 2, pps.maxBlockBodySize ),
+        mapUIntEntryOrUndefined( 3, pps.maxTxSize ),
+        mapUIntEntryOrUndefined( 4, pps.maxBlockHeaderSize ),
+        mapUIntEntryOrUndefined( 5, pps.keyDeposit ),
+        mapUIntEntryOrUndefined( 6, pps.poolDeposit ),
+        mapUIntEntryOrUndefined( 7, pps.epoch ),
+        mapUIntEntryOrUndefined( 8, pps.kParam ),
+        kv( 9 , pps.pledgeInfluence ),
+        kv( 10, pps.expansionRate ),
+        kv( 11, pps.treasureryGrowthRate ),
+        protocolVerstion === undefined ? undefined:
+        {
+            k: new CborUInt( 14 ),
+            v: new CborArray([
+                new CborUInt( forceUInteger( protocolVerstion[0] ).asBigInt ),
+                new CborUInt( forceUInteger( protocolVerstion[1] ).asBigInt )
+            ])
+        },
+        mapUIntEntryOrUndefined( 16, pps.poolMinFee ),
+        mapUIntEntryOrUndefined( 17, pps.adaPerUtxoByte ),
+        kv( 18, 
+            (costModels === undefined || 
+            (!costModelsKeys.includes("PlutusV1") && !costModelsKeys.includes("PlutusV2"))) ?
+                undefined :
+                costModelsToCborObj( costModels )
+        ),
+        execCosts === undefined ? undefined:
+        {
+            k: new CborUInt( 19 ),
+            v: new CborArray(execCosts)
+        },
+        kv( 20, maxTxExecUnits == undefined ? undefined : maxTxExecUnits.toCborObj() ),
+        kv( 21, maxBlockExecUnits == undefined ? undefined : maxBlockExecUnits.toCborObj() ),
+        mapUIntEntryOrUndefined( 22, pps.maxValuesSize ),
+        mapUIntEntryOrUndefined( 23, pps.collateralPercentage ),
+        mapUIntEntryOrUndefined( 24, pps.maxCollateralIns ),
+    ].filter( elem => elem !== undefined ) as CborMapEntry[])
 }

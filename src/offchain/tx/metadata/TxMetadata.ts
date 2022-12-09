@@ -1,3 +1,9 @@
+import Cbor from "../../../cbor/Cbor";
+import CborObj from "../../../cbor/CborObj";
+import CborMap from "../../../cbor/CborObj/CborMap";
+import CborUInt from "../../../cbor/CborObj/CborUInt";
+import CborString from "../../../cbor/CborString";
+import { ToCbor } from "../../../cbor/interfaces/CBORSerializable";
 import JsRuntime from "../../../utils/JsRuntime";
 import ObjectUtils from "../../../utils/ObjectUtils";
 import TxMetadatum, { isTxMetadatum } from "./TxMetadatum";
@@ -9,6 +15,7 @@ export type ITxMetadata = {
 type ITxMetadataStr = { [metadatum_label: string]: TxMetadatum };
 
 export class TxMetadata
+    implements ToCbor
 {
     readonly metadata!: ITxMetadataStr;
 
@@ -40,5 +47,21 @@ export class TxMetadata
             "metadata",
             _metadata
         );
+    }
+    
+    toCbor(): CborString
+    {
+        return Cbor.encode( this.toCborObj() );
+    }
+    toCborObj(): CborObj
+    {
+        return new CborMap(
+            Object.keys( this.metadata ).map( labelStr => {
+                return {
+                    k: new CborUInt( BigInt( labelStr ) ),
+                    v: this.metadata[labelStr].toCborObj()
+                }
+            })
+        )
     }
 }

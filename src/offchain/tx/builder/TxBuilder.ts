@@ -33,10 +33,10 @@ export class TxBuilder
             "protocolParamters",
             ObjectUtils.freezeAll( protocolParamters )
         );
-        
+
     }
 
-    build( args: ITxBuildArgs ): Tx
+    async build( args: ITxBuildArgs ): Promise<Tx>
     {
 
     }

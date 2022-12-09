@@ -1,3 +1,11 @@
+import Cbor from "../../cbor/Cbor";
+import CborObj from "../../cbor/CborObj";
+import CborBytes from "../../cbor/CborObj/CborBytes";
+import CborMap from "../../cbor/CborObj/CborMap";
+import CborNegInt from "../../cbor/CborObj/CborNegInt";
+import CborUInt from "../../cbor/CborObj/CborUInt";
+import CborString from "../../cbor/CborString";
+import { ToCbor } from "../../cbor/interfaces/CBORSerializable";
 import JsRuntime from "../../utils/JsRuntime";
 import ObjectUtils from "../../utils/ObjectUtils";
 import Hash32 from "../hashes/Hash32/Hash32";
@@ -23,6 +31,7 @@ function isAscii( str: string ): boolean
 }
 
 export class Value
+    implements ToCbor
 {
     readonly map!: IValue
 
@@ -49,7 +58,7 @@ export class Value
         );
 
         map.forEach( entry => {
-            Object.freeze( entry.assets );
+            ObjectUtils.freezeAll( entry.assets );
             Object.freeze( entry.policy );
         });
 
@@ -57,6 +66,31 @@ export class Value
             this,
             "map",
             Object.freeze( map )
+        );
+    }
+
+    toCbor(): CborString
+    {
+        return Cbor.encode( this.toCborObj() );
+    }
+    toCborObj(): CborMap
+    {
+        return new CborMap(
+            this.map.map( entry => {
+                const assets = entry.assets;
+                return {
+                    k: entry.policy.toCborObj(),
+                    v: new CborMap(
+                        Object.keys( assets ).map( assetNameAscii => {
+                            const amt = assets[ assetNameAscii ];
+                            return {
+                                k: new CborBytes( Buffer.from( assetNameAscii, "ascii" ) ),
+                                v: amt < 0 ? new CborNegInt( amt ) : new CborUInt( amt )
+                            };
+                        })
+                    )
+                };
+            })
         );
     }
 }

@@ -1,3 +1,9 @@
+import Cbor from "../../../../cbor/Cbor";
+import CborObj from "../../../../cbor/CborObj";
+import CborArray from "../../../../cbor/CborObj/CborArray";
+import CborUInt from "../../../../cbor/CborObj/CborUInt";
+import CborString from "../../../../cbor/CborString";
+import { ToCbor } from "../../../../cbor/interfaces/CBORSerializable";
 import ByteString from "../../../../types/HexString/ByteString";
 import { CanBeUInteger, forceUInteger } from "../../../../types/ints/Integer";
 import JsRuntime from "../../../../utils/JsRuntime";
@@ -9,7 +15,7 @@ export interface ITxOutRef {
     index: number
 }
 export default class TxOutRef
-    implements ITxOutRef
+    implements ITxOutRef, ToCbor
 {
     readonly id!: Hash32
     readonly index!: number
@@ -44,5 +50,17 @@ export default class TxOutRef
     {
         const [id, index] = str.split('#');
         return new TxOutRef( id, BigInt( index ) );
+    }
+
+    toCbor(): CborString
+    {
+        return Cbor.encode( this.toCborObj() );
+    }
+    toCborObj(): CborObj
+    {
+        return new CborArray([
+            this.id.toCborObj(),
+            new CborUInt( this.index )
+        ])
     }
 }

@@ -1,3 +1,13 @@
+import Cbor from "../../../cbor/Cbor";
+import CborObj from "../../../cbor/CborObj";
+import CborArray from "../../../cbor/CborObj/CborArray";
+import CborBytes from "../../../cbor/CborObj/CborBytes";
+import CborMap from "../../../cbor/CborObj/CborMap";
+import CborNegInt from "../../../cbor/CborObj/CborNegInt";
+import CborText from "../../../cbor/CborObj/CborText";
+import CborUInt from "../../../cbor/CborObj/CborUInt";
+import CborString from "../../../cbor/CborString";
+import { ToCbor } from "../../../cbor/interfaces/CBORSerializable";
 import ByteString from "../../../types/HexString/ByteString";
 import JsRuntime from "../../../utils/JsRuntime";
 import ObjectUtils from "../../../utils/ObjectUtils";
@@ -40,6 +50,7 @@ function isTxMetadatumMapEntry( something: any ): something is TxMetadatumMapEnt
 }
 
 export class TxMetadatumMap
+    implements ToCbor
 {
     readonly map!: TxMetadatumMapEntry[];
 
@@ -56,9 +67,26 @@ export class TxMetadatumMap
             Object.freeze( map )
         );
     }
+
+    toCbor(): CborString
+    {
+        return Cbor.encode( this.toCborObj() );
+    }
+    toCborObj(): CborObj
+    {
+        return new CborMap(
+            this.map.map( entry => {
+                return {
+                    k: entry.k.toCborObj(),
+                    v: entry.v.toCborObj(),
+                }
+            })
+        )
+    }
 }
 
 export class TxMetadatumList
+    implements ToCbor
 {
     readonly list!: TxMetadatum[];
 
@@ -75,9 +103,19 @@ export class TxMetadatumList
             Object.freeze( map )
         );
     }
+
+    toCbor(): CborString
+    {
+        return Cbor.encode( this.toCborObj() );
+    }
+    toCborObj(): CborObj
+    {
+        return new CborArray( this.list.map( _ => _.toCborObj() ) );
+    }
 }
 
 export class TxMetadatumInt
+    implements ToCbor
 {
     readonly n!: bigint;
 
@@ -89,9 +127,19 @@ export class TxMetadatumInt
             BigInt( n )
         );
     }
+
+    toCbor(): CborString
+    {
+        return Cbor.encode( this.toCborObj() );
+    }
+    toCborObj(): CborObj
+    {
+        return this.n < BigInt( 0 ) ? new CborNegInt( this.n ) : new CborUInt( this.n )
+    }
 }
 
 export class TxMetadatumBytes
+    implements ToCbor
 {
     readonly bytes!: Buffer
 
@@ -103,9 +151,35 @@ export class TxMetadatumBytes
             Buffer.isBuffer( bytes ) ? bytes : bytes.asBytes
         );
     }
+
+    toCbor(): CborString
+    {
+        return Cbor.encode( this.toCborObj() );
+    }
+    toCborObj(): CborObj
+    {
+        if( this.bytes.length > 64 )
+        {
+            const chunks: CborBytes[] = [];
+
+            for( let ptr: number = 0; ptr < this.bytes.length; ptr += 64 )
+            {
+                chunks.push(
+                    new CborBytes(
+                        this.bytes.subarray( ptr, ptr + 64 )
+                    )
+                );
+            }
+
+            return new CborArray( chunks );
+        }
+
+        return new CborBytes( this.bytes );
+    }
 }
 
 export class TxMetadatumText
+    implements ToCbor
 {
     readonly text!: string
 
@@ -121,5 +195,30 @@ export class TxMetadatumText
             "text",
             text
         );
+    }
+
+    toCbor(): CborString
+    {
+        return Cbor.encode( this.toCborObj() );
+    }
+    toCborObj(): CborObj
+    {
+        if( this.text.length > 64 )
+        {
+            const chunks: CborText[] = [];
+
+            for( let ptr: number = 0; ptr < this.text.length; ptr += 64 )
+            {
+                chunks.push(
+                    new CborText(
+                        this.text.slice( ptr, ptr + 64 )
+                    )
+                );
+            }
+
+            return new CborArray( chunks );
+        }
+
+        return new CborText( this.text );
     }
 }

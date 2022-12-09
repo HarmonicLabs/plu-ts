@@ -3,6 +3,12 @@ import JsRuntime from "../../utils/JsRuntime";
 import ObjectUtils from "../../utils/ObjectUtils";
 import Coin from "./Coin";
 import Hash28 from "../hashes/Hash28/Hash28";
+import { ToCbor } from "../../cbor/interfaces/CBORSerializable";
+import CborObj from "../../cbor/CborObj";
+import CborString from "../../cbor/CborString";
+import Cbor from "../../cbor/Cbor";
+import CborMap from "../../cbor/CborObj/CborMap";
+import CborUInt from "../../cbor/CborObj/CborUInt";
 
 export type TxWithdrawalsMapBigInt = {
     rewardAccount: Hash28,
@@ -19,6 +25,7 @@ export type ITxWithdrawals
     | TxWithdrawalsMap;
 
 export default class TxWithdrawals
+    implements ToCbor
 {
     readonly map!: TxWithdrawalsMapBigInt
 
@@ -75,5 +82,21 @@ export default class TxWithdrawals
                 )
             );
         }
+    }
+
+    toCbor(): CborString
+    {
+        return Cbor.encode( this.toCborObj() );
+    }
+    toCborObj(): CborObj
+    {
+        return new CborMap(
+            this.map.map( entry => {
+                return {
+                    k: entry.rewardAccount.toCborObj(),
+                    v: new CborUInt( entry.amount )
+                }
+            })
+        )
     }
 }

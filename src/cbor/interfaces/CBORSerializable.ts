@@ -6,15 +6,18 @@ export default interface CBORSerializable
     toCBOR: () => CborString
 }
 
-export interface ToCbor
-{
+export interface ToCborObj {
     toCborObj: () => CborObj
+}
+
+export interface ToCborString {
     toCbor: () => CborString
 }
 
+export interface ToCbor extends ToCborObj, ToCborString {}
+
 export interface FromCbor<T>
 {
-    new (...args: any[]): T
     fromCbor( cbor: CborString ): T,
     fromCborObj( cbor: CborObj ): T
 }
