@@ -10,7 +10,7 @@ export interface ITxBuildInput {
         datum: Data | Term<PData> | Term<PStruct<any>> | "inline",
         redeemer: Data | Term<PData> | Term<PStruct<any>>
     }
-    referenceNativeScript?: TxOutRef
+    simpleReferenceScript?: TxOutRef
     inputScript?: {
         script: Script,
         datum: Data | Term<PData> | Term<PStruct<any>> | "inline",

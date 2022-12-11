@@ -34,12 +34,42 @@ export class TxBuilder
             ObjectUtils.freezeAll( protocolParamters )
         );
 
+        ObjectUtils.defineReadOnlyProperty( this, "run", new RunTxBuilder( this ) );
     }
 
-    async build( args: ITxBuildArgs ): Promise<Tx>
+    build({
+        inputs,
+        changeAddress,
+        outputs,
+        readonlyRefInputs,
+        requiredSigners,
+        collaterals,
+        returnCollaterals,
+        mints,
+        invalidBefore,
+        invalidAfter,
+        certificates,
+        withdrawals,
+        metadata,
+        protocolUpdateProposal
+    }: ITxBuildArgs): Tx
     {
-
+        
     }
+
+    readonly run!: RunTxBuilder
 }
 
 export default TxBuilder;
+
+export class RunTxBuilder
+{
+    constructor( txBuilder: TxBuilder )
+    {
+        JsRuntime.assert(
+            txBuilder instanceof TxBuilder,
+            "invalid 'txBuilder' passed to construct a 'RunTxBuilder'"
+        )
+        ObjectUtils.defineReadOnlyHiddenProperty( this, "txBuilder", txBuilder )
+    }
+}

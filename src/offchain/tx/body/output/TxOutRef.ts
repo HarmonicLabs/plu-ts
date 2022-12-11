@@ -9,6 +9,7 @@ import { CanBeUInteger, forceUInteger } from "../../../../types/ints/Integer";
 import JsRuntime from "../../../../utils/JsRuntime";
 import ObjectUtils from "../../../../utils/ObjectUtils";
 import Hash32 from "../../../hashes/Hash32/Hash32";
+import TxOut, { ITxOut } from "./TxOut";
 
 export interface ITxOutRef {
     id: string | Hash32
@@ -19,8 +20,9 @@ export default class TxOutRef
 {
     readonly id!: Hash32
     readonly index!: number
+    readonly resolved!: TxOut
 
-    constructor( id: string | Hash32, index: CanBeUInteger )
+    constructor( id: string | Hash32, index: CanBeUInteger, resolved: ITxOut )
     {
         JsRuntime.assert(
             (typeof id === "string" && ByteString.isValidHexValue( id ) && (id.length === 64)) ||
@@ -39,17 +41,16 @@ export default class TxOutRef
             Number( forceUInteger( index ).asBigInt )
         );
 
+        ObjectUtils.defineReadOnlyProperty(
+            this,
+            "resolved",
+            resolved instanceof TxOut ? resolved : new TxOut( resolved )
+        );
     }
 
     toString(): string
     {
         return `${this.id}#${this.index.toString()}`;
-    }
-
-    static fromString( str: string ): TxOutRef
-    {
-        const [id, index] = str.split('#');
-        return new TxOutRef( id, BigInt( index ) );
     }
 
     toCbor(): CborString

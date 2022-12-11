@@ -1,12 +1,10 @@
 import Data, { isData } from "../../../../types/Data";
 import Hash32 from "../../../hashes/Hash32/Hash32";
 import Script from "../../../script/Script";
-import { Value } from "../../../ledger/Value";
-import TxOutRef from "./TxOutRef";
+import { Value } from "../../../ledger/Value/Value";
 import JsRuntime from "../../../../utils/JsRuntime";
 import ObjectUtils from "../../../../utils/ObjectUtils";
 import { ToCbor } from "../../../../cbor/interfaces/CBORSerializable";
-import CborObj from "../../../../cbor/CborObj";
 import CborString from "../../../../cbor/CborString";
 import Cbor from "../../../../cbor/Cbor";
 import Address from "../../../ledger/Address";
@@ -21,8 +19,7 @@ export interface ITxOut {
     address: Address,
     amount: Value,
     datum?: Hash32 | Data,
-    refScript?: Script,
-    ref?: TxOutRef
+    refScript?: Script
 }
 export default class TxOut
     implements ITxOut, ToCbor
@@ -31,7 +28,6 @@ export default class TxOut
     readonly amount!: Value
     readonly datum?: Hash32 | Data
     readonly refScript?: Script
-    readonly ref?: TxOutRef
 
     constructor( txOutput: ITxOut )
     {
@@ -46,8 +42,7 @@ export default class TxOut
             address,
             amount,
             datum,
-            refScript,
-            ref
+            refScript
         } = txOutput;
 
         JsRuntime.assert(
@@ -90,17 +85,6 @@ export default class TxOut
             this,
             "refScript",
             refScript
-        );
-
-        if( ref !== undefined )
-            JsRuntime.assert(
-                ref instanceof TxOutRef,
-                "invalid 'ref' field"
-            );
-        ObjectUtils.defineReadOnlyProperty(
-            this,
-            "ref",
-            ref
         );
     }
 

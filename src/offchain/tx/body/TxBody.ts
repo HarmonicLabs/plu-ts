@@ -1,9 +1,9 @@
 import { NetworkT } from "../../Network";
 import { canBeUInteger, CanBeUInteger, forceUInteger } from "../../../types/ints/Integer";
 import Coin from "../../ledger/Coin";
-import Certificate, { AnyCertificate } from "../../ledger/certs/Certificate";
+import Certificate, { AnyCertificate, certificatesToDepositLovelaces } from "../../ledger/certs/Certificate";
 import TxWithdrawals from "../../ledger/TxWithdrawals";
-import { Value } from "../../ledger/Value";
+import { Value } from "../../ledger/Value/Value";
 import TxOut from "./output/TxOut";
 import TxIn from "./TxIn";
 import PubKeyHash from "../../credentials/PubKeyHash";
@@ -65,6 +65,12 @@ export default class TxBody
     readonly totCollateral?: bigint;
     readonly refInputs?: TxIn[];
 
+    /**
+     * 
+     * @param body object describing the transaction
+     * @throws only if the the `body` parameter does not respect the `ITxBody` interface
+     *      **DOES NOT THROW** if the transaction is unbalanced; that needs to be checked using `TxBody.isValueConserved` static method
+     */
     constructor( body: ITxBody )
     {
         JsRuntime.assert(
@@ -105,7 +111,7 @@ export default class TxBody
             this,
             "inptus",
             Object.freeze(
-                inputs.map( i => i instanceof TxIn ? i : new TxIn( i.id, i.index ) )
+                inputs.map( i => i instanceof TxIn ? i : new TxIn( i.id, i.index, i.resolved ) )
             )
         );
 
@@ -341,9 +347,8 @@ export default class TxBody
             totCollateral === undefined ? undefined : forceUInteger( totCollateral ).asBigInt
         );
 
-        // -------------------------------------- reference inputs -------------------------------------- //
+        // -------------------------------------- reference inputs --------------------------------     * @param body 
 
-        if( refInputs !== undefined )
         {
             JsRuntime.assert(
                 Array.isArray( refInputs ) &&
@@ -452,4 +457,42 @@ export default class TxBody
             }
         ].filter( entry => entry !== undefined ) as CborMapEntry[]))
     }
+
+    /**
+     * tests that
+     * inputs + withdrawals - outputs + refund - deposit - fee
+     */
+    static isValueConserved( tx: TxBody ): boolean
+    {
+        const {
+            inputs,
+            withdrawals,
+            outputs,
+            certs,
+            fee
+        } = tx;
+
+        // withdrawals
+        let tot = withdrawals === undefined ? Value.zero : withdrawals.toTotalWitdrawn();
+
+        // + inputs
+        tot = inputs.reduce( (a,b) => Value.add( a, b.resolved.amount ) , tot );
+        
+        // - (outputs + fee)
+        // - outputs - fee
+        tot = Value.sub(
+            tot,
+            outputs.reduce( (a,b) => Value.add( a, b.amount ), Value.lovelaces( fee ) )
+        );
+
+        return Value.isZero(
+            certs === undefined ?
+            tot :
+            Value.add(
+                tot,
+                Value.lovelaces( certificatesToDepositLovelaces( certs ) )
+            )
+        );
+    }
+
 };

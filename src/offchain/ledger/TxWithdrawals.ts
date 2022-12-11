@@ -9,6 +9,7 @@ import CborString from "../../cbor/CborString";
 import Cbor from "../../cbor/Cbor";
 import CborMap from "../../cbor/CborObj/CborMap";
 import CborUInt from "../../cbor/CborObj/CborUInt";
+import Value from "./Value/Value";
 
 export type TxWithdrawalsMapBigInt = {
     rewardAccount: Hash28,
@@ -82,6 +83,14 @@ export default class TxWithdrawals
                 )
             );
         }
+    }
+
+    toTotalWitdrawn(): Value
+    {
+        return Value.lovelaces(
+            this.map
+            .reduce( (a,b) => a + b.amount , BigInt(0) )
+        )
     }
 
     toCbor(): CborString

@@ -3,7 +3,7 @@ import CborObj from "../../../cbor/CborObj";
 import CborArray from "../../../cbor/CborObj/CborArray";
 import CborUInt from "../../../cbor/CborObj/CborUInt";
 import CborString from "../../../cbor/CborString";
-import { ToCbor, ToCborObj } from "../../../cbor/interfaces/CBORSerializable";
+import { ToCbor } from "../../../cbor/interfaces/CBORSerializable";
 import { forceUInteger, UInteger } from "../../../types/ints/Integer";
 import JsRuntime from "../../../utils/JsRuntime";
 import ObjectUtils from "../../../utils/ObjectUtils";
@@ -181,3 +181,23 @@ export default class Certificate<CertTy extends CertificateType>
 }
 
 export type AnyCertificate = Certificate<CertificateType>;
+
+const ada = BigInt( 1_000_000 );
+
+export function certToDepositLovelaces( cert: AnyCertificate ): bigint
+{
+    const t = cert.certType;
+
+    if( t === CertificateType.StakeRegistration )       return BigInt(  2 ) * ada;
+    if( t === CertificateType.StakeDeRegistration )     return BigInt( -2 ) * ada;
+
+    if( t === CertificateType.PoolRegistration )        return BigInt(  500 ) * ada;
+    if( t === CertificateType.PoolRetirement   )        return BigInt( -500 ) * ada;
+
+    return BigInt(0);
+}
+
+export function certificatesToDepositLovelaces( certs: AnyCertificate[] ): bigint
+{
+    return certs.reduce( (a,b) => a + certToDepositLovelaces( b ), BigInt(0) );
+}

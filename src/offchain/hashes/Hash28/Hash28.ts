@@ -1,7 +1,7 @@
-import ByteString from "../../../types/HexString/ByteString";
 import JsRuntime from "../../../utils/JsRuntime";
+import Hash from "../Hash";
 
-export default class Hash28 extends ByteString
+export default class Hash28 extends Hash
 {
     constructor( bs: string | Buffer | Hash28 , className: string = "Hash28" )
     {
