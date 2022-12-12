@@ -18,7 +18,7 @@ import { typeExtends } from "../Term/Type/extension";
 import { isLambdaType, isDelayedType, isPairType } from "../Term/Type/kinds";
 import { termTypeToString } from "../Term/Type/utils";
 import applyLambdaType from "../Term/Type/applyLambdaType";
-import UPLCTerm, { replaceMockTerm } from "../../UPLC/UPLCTerm";
+import UPLCTerm from "../../UPLC/UPLCTerm";
 import Builtin from "../../UPLC/UPLCTerms/Builtin";
 import { getNRequiredForces } from "../../UPLC/UPLCTerms/Builtin/UPLCBuiltinTag";
 import addUtilityForType, { UtilityTermOf } from "../stdlib/UtilityTerms/addUtilityForType";
@@ -26,7 +26,6 @@ import punsafeConvertType from "./punsafeConvertType";
 import pappArgToTerm, { PappArg } from "./pappArg";
 import { ToPType } from "../Term/Type/ts-pluts-conversion";
 import { TermFn } from "../PTypes/PFn/PFn";
-import MockTerm from "../../UPLC/UPLCTerms/MockTerm";
 
 
 function isIdentityUPLC( uplc: UPLCTerm ): uplc is Lambda
@@ -456,16 +455,6 @@ export function pforce<PInstance extends PType >
     ) as any;
 }
 
-function tcont<A>( continuable: { in : <PExprResult extends PType>( expr: (value: A) => Term<PExprResult> ) => Term<PExprResult> } )
-: { then: <PExprResult extends PType>( expr: (value: A) => Term<PExprResult> ) => Term<PExprResult> }
-{
-    return {
-        then: <PExprResult extends PType>( expr: (value: A) => Term<PExprResult> ): Term<PExprResult> => {
-            return continuable.in( expr );
-        }
-    };
-}
-
 export function plet<PVarT extends PType, SomeExtension extends object>( varValue: Term<PVarT> & SomeExtension )
 {
     type TermPVar = Term<PVarT> & SomeExtension;
@@ -473,22 +462,16 @@ export function plet<PVarT extends PType, SomeExtension extends object>( varValu
     const continuation = <PExprResult extends PType>( expr: (value: TermPVar) => Term<PExprResult> ): Term<PExprResult> => {
 
         const withUtility = addUtilityForType( varValue.type );
-
-        const mockId = Symbol("plet_mockId");
-
         // only to extracts the type; never compiled
-        const outTerm = expr(
+        const outType = expr(
             withUtility(
                 new Term(
                     varValue.type,
-                    dbn => new MockTerm( mockId, dbn ) // mock variable
+                    _dbn => new UPLCVar( 0 ) // mock variable
                 ) as any
             ) as any
-        );
+        ).type;
 
-        const outType = outTerm.type;
-
-        // ideally same as
         // return papp( plam( varValue.type, outType )( expr as any ), varValue as any ) as any;
         return new Term(
             outType,
@@ -506,31 +489,26 @@ export function plet<PVarT extends PType, SomeExtension extends object>( varValu
                     )
                 )
                 {
-                    // inlining
-                    return replaceMockTerm( outTerm.toUPLC( dbn ), mockId, varValue.toUPLC );
+                    console.log("inlining")
+                    return expr( withUtility( varValue as any ) as any ).toUPLC( dbn );
                 }
 
                 return new Application(
                     new Lambda(
-                        replaceMockTerm(
-                            outTerm.toUPLC( ( dbn + BigInt(1) ) ),
-                            mockId,
+                        expr(
+                            withUtility( new Term(
+                            varValue.type,
                             varAccessDbn => new UPLCVar( varAccessDbn - ( dbn + BigInt(1) ) ) // point to the lambda generated here
-                        )
+                        ) as any ) as any ).toUPLC( ( dbn + BigInt(1) ) )
                     ),
                     arg
-                );
+                )
             }
         );
     }
-
-    const result = {};
-    
-    ObjectUtils.defineReadOnlyProperty(
-        result, "in", continuation
-    );
-
-    return result;
+    return {
+        in: continuation
+    };
 }
 
 export function perror<T extends TermType>( type: T , msg: string | undefined = undefined, addInfos: object | undefined = undefined): Term<ToPType<T>>
