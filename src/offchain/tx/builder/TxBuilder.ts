@@ -11,7 +11,7 @@ export class TxBuilder
     readonly network!: NetworkT
     readonly protocolParamters!: ProtocolParamters
     
-    constructor( network: NetworkT, provider: BlockchainProvider, protocolParamters: Readonly<ProtocolParamters> )
+    constructor( network: NetworkT, protocolParamters: Readonly<ProtocolParamters> )
     {
         JsRuntime.assert(
             network === "testnet" ||

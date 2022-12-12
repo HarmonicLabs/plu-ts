@@ -17,6 +17,7 @@ import { isData } from "../../../types/Data";
 import dataToCbor from "../../../types/Data/toCbor";
 import Pair from "../../../types/structs/Pair";
 import { replaceHoistedTermsInplace } from "../UPLCEncoder";
+import MockTerm from "../UPLCTerms/MockTerm";
 
 export type PureUPLCTerm 
     = UPLCVar
@@ -30,7 +31,9 @@ export type PureUPLCTerm
     
 type UPLCTerm
     = PureUPLCTerm
-    | HoistedUPLC; // not part of specification, replaced by a UPLCVar pointing to the term hoisted
+    // not part of specification
+    | HoistedUPLC // replaced by a UPLCVar pointing to the term hoisted
+    | MockTerm;   // used in `plet` to first get the output type and then substitute with the variable
 
 export default UPLCTerm;
 
@@ -53,7 +56,8 @@ export function isUPLCTerm( t: UPLCTerm ): t is UPLCTerm
         proto === Force.prototype          ||
         proto === ErrorUPLC.prototype      ||
         proto === Builtin.prototype        ||
-        proto === HoistedUPLC.prototype
+        proto === HoistedUPLC.prototype    ||
+        proto === MockTerm.prototype
     );
 }
 
@@ -75,6 +79,7 @@ export function isPureUPLCTerm( t: UPLCTerm ): t is PureUPLCTerm
     if( t instanceof ErrorUPLC )    return true;
     if( t instanceof Builtin )      return true;
     if( t instanceof HoistedUPLC )  return false;
+    if( t instanceof MockTerm )     return false;
 
     return false;
 }
@@ -206,6 +211,39 @@ export function showUPLC( term: UPLCTerm ): string
             0
         );
 
+}
+
+export function replaceMockTerm( uplc: UPLCTerm, termSym: symbol, replaceWith: ( dbn: bigint ) => UPLCTerm ): UPLCTerm
+{
+    function replaceMockTermwithFixedParams( t: UPLCTerm ): UPLCTerm
+    {
+        if( t instanceof UPLCVar )      return t.clone();
+        if( t instanceof Delay )        return new Delay( replaceMockTermwithFixedParams( t.delayedTerm ) );
+        if( t instanceof Lambda )       return new Lambda( replaceMockTermwithFixedParams( t.body ) );
+        if( t instanceof Application )  return new Application(
+            replaceMockTermwithFixedParams( t.funcTerm ),
+            replaceMockTermwithFixedParams( t.argTerm )
+        );
+        if( t instanceof UPLCConst )    return t.clone();
+        if( t instanceof Force )        return new Force( replaceMockTermwithFixedParams( t.termToForce ) );
+        if( t instanceof ErrorUPLC )    return t.clone();
+        if( t instanceof Builtin )      return t.clone()
+        // hoisted terms are closed, ence do not have references to external variables for sure
+        if( t instanceof HoistedUPLC )  return t.clone();
+
+        if( t instanceof MockTerm )
+        {
+            if( t.sym !== termSym ) return t.clone();
+
+            return replaceWith( t.dbn );
+        }
+
+        throw JsRuntime.makeNotSupposedToHappenError(
+            "unknown term while replacing 'MockTerm'"
+        );
+    }
+
+    return replaceMockTermwithFixedParams( uplc );
 }
 
 

@@ -1,7 +1,7 @@
-import ByteString from "../../../types/HexString/ByteString";
 import JsRuntime from "../../../utils/JsRuntime";
+import Hash from "../Hash";
 
-export default class Signature extends ByteString
+export default class Signature extends Hash
 {
     constructor( bs: string | Buffer | Signature , className: string = "Signature" )
     {
