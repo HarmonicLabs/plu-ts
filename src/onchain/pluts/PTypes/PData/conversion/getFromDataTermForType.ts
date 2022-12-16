@@ -22,7 +22,7 @@ import PInt from "../../PInt";
 import PList from "../../PList";
 import PString from "../../PString";
 import PUnit from "../../PUnit";
-import { pdataPairToDynamic, pdynPair } from "../../PPair/pdynPair";
+import { pdataPairToDynamic } from "../../PPair/pdynPair";
 import { ToPType } from "../../../Term/Type/ts-pluts-conversion";
 import ObjectUtils from "../../../../../utils/ObjectUtils";
 
@@ -180,12 +180,10 @@ export function getFromDataForType<T extends ConstantableTermType | StructType>(
 
         if(!( isConstantableTermType( fstT ) && isConstantableTermType( sndT ) ))
         throw new BasePlutsError(
-            "can't get 'fromData' for non constant type"
+            "can't get 'fromData' for a pair that has non constant types as arguments"
         );
 
-        return (( term: Term<PPair<PType, PType>> ) => {
-            return punsafeConvertType( term, dynPair( fstT, sndT ) );
-        }) as any;
+        return pdataPairToDynamic( fstT, sndT ) as any;
     }
 
     /**
