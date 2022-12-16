@@ -1,7 +1,7 @@
 import type { TermFn } from "../../PFn";
 import type PData from "../PData";
 import type Term from "../../../Term";
-import type { ConstantableTermType, StructType } from "../../../Term/Type/base";
+import { ConstantableTermType, PrimType, StructType } from "../../../Term/Type/base";
 import type PType from "../../../PType";
 
 import BasePlutsError from "../../../../../errors/BasePlutsError";
@@ -154,16 +154,20 @@ export function getToDataForType<T extends ConstantableTermType | StructType>( t
         if(
             isDataType( t[1] ) &&
             isDataType( t[2] )
-        ) return ( term: Term<ToPType<T>> ) => punsafeConvertType( term, Type.Data.Pair( t[1] as any, t[2] as any ))  as any;
+        ) return ( term: Term<ToPType<T>> ) => punsafeConvertType( term, Type.Data.Pair( t[1] as any, t[2] as any )) as any;
 
+        if(
+            t[0] === PrimType.PairAsData
+        ) return ( term: Term<ToPType<T>> ) => punsafeConvertType( term, Type.Data.Pair( data, data ) ) as any;
+        
         return ( term: Term<ToPType<T>> ) => 
             ppairData( data, data )
             .$(
                 getToDataTermForType( t[1] as any )
                 .$( pfstPair( t[1] as any, Type.Any ).$( term as any ) ) 
             ).$(
-                getToDataTermForType( t[1] as any )
-                .$( pfstPair( Type.Any, t[2] as any ).$( term as any ) )
+                getToDataTermForType( t[2] as any )
+                .$( psndPair( Type.Any, t[2] as any ).$( term as any ) )
             ) as any
     }
 

@@ -467,13 +467,13 @@ export function plet<PVarT extends PType, SomeExtension extends object>( varValu
             withUtility(
                 new Term(
                     varValue.type,
-                    _dbn => new UPLCVar( 0 ) // mock variable
+                    _varAccessDbn => new UPLCVar( 0 ) // mock variable
                 ) as any
             ) as any
         ).type;
 
         // return papp( plam( varValue.type, outType )( expr as any ), varValue as any ) as any;
-        return new Term(
+        const term = new Term(
             outType,
             dbn => {
                 const arg = varValue.toUPLC( dbn );
@@ -489,7 +489,6 @@ export function plet<PVarT extends PType, SomeExtension extends object>( varValu
                     )
                 )
                 {
-                    console.log("inlining")
                     return expr( withUtility( varValue as any ) as any ).toUPLC( dbn );
                 }
 
@@ -505,6 +504,9 @@ export function plet<PVarT extends PType, SomeExtension extends object>( varValu
                 )
             }
         );
+
+
+        return term;
     }
     return {
         in: continuation

@@ -1,11 +1,40 @@
 import { PType, Term } from "..";
 
 
+/*
+https://dev.to/cleancodestudio/this-is-how-to-implement-javascript-promises-from-scratch-357k
+
+```js
+class Task 
+{
+  constructor(fork) 
+  {
+    this.fork = fork
+  }
+
+  map(mapper) 
+  {
+    return new Task((resolve, reject) => this.fork(
+      x => resolve(mapper(x)),
+      reject
+    ))
+  }
+
+  chain(mapper) 
+  {
+    return new Task((resolve, reject) => this.fork(
+      x => mapper(x).fork(resolve, reject),
+      reject
+    ))
+  }
+}
+```
+*/
 class TermCont<A> implements PromiseLike<A>
 {
     // takes a callback as input and calls that callback with the current partial value;
     // example:
-    // TermCont.pure( 2 ).then
+    // TermCont.pure( 2 )
     private _f: <ResultT>( cb: ( partialValue: A ) => TermCont<ResultT> ) => TermCont<ResultT>;
     constructor( f: <ResultT>( cb: ( partialValue: A ) => TermCont<ResultT> ) => TermCont<ResultT> )
     {

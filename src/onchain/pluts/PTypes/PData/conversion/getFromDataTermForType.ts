@@ -184,16 +184,7 @@ export function getFromDataForType<T extends ConstantableTermType | StructType>(
         );
 
         return (( term: Term<PPair<PType, PType>> ) => {
-            const pairTy = term.type;
-            if( !isPairType( pairTy ) )
-            throw new BasePlutsError(
-                "passed term is not a pair; can't convert from data"
-            );
-
-            const pthisFst = pfstPair( pairTy[1], pairTy[2] );
-            const pthisSnd = psndPair( pairTy[1], pairTy[2] );
-
-            return pdynPair( fstT, sndT )( pthisFst.$( term ), pthisSnd.$( term ) )
+            return punsafeConvertType( term, dynPair( fstT, sndT ) );
         }) as any;
     }
 

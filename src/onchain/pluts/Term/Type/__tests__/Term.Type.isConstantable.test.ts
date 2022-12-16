@@ -1,4 +1,6 @@
-import Type, { TermType } from "../base";
+import PCurrencySymbol from "../../../API/V1/Value/PCurrencySymbol";
+import PTokenName from "../../../API/V1/Value/PTokenName";
+import Type, { dynPair, int, list, TermType } from "../base";
 import { isConstantableTermType } from "../kinds";
 
 function truthyTest( equalsBool: boolean, f: ( termT: TermType ) => boolean )
@@ -66,6 +68,20 @@ describe("isConstantable", () => {
             testFalse(Type.Delayed( whatever ));
         });
         
+    });
+
+    test("dynPair( alias( bs ), list( dynPair( alias( bs ), int )))", () => {
+
+        testTrue(
+            dynPair(
+                PCurrencySymbol.type,
+                list(dynPair(
+                    PTokenName.type,
+                    int
+                ))
+            )
+        );
+
     })
 
 })

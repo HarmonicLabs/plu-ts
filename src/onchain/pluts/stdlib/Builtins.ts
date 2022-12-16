@@ -935,9 +935,11 @@ export function pfstPair<A extends TermType, B extends TermType>( fstType: A, sn
             if( (pair as any).__isDynamicPair || pair.type[0] === PrimType.PairAsData )
             {
                 if( !isConstantableTermType( a ) )
-                throw new BasePlutsError(
-                    "is not possible to extract the first element of a (dynamic) pair with non constant type"
-                );
+                {
+                    throw new BasePlutsError(
+                        "is not possible to extract the first element of a (dynamic) pair with non constant type"
+                    );
+                }
 
                 return addUtilityForType( a )(
                     getFromDataForType( a )(
