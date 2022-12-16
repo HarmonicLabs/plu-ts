@@ -1,5 +1,9 @@
 # Changelog
 
+## v0.1.10
+
+- fixed some `plu-ts` level types bugs
+
 ## v0.1.9
 
 - fixes some bugs in UPLC code generation
