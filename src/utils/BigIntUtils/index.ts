@@ -30,6 +30,16 @@ export default class BigIntUtils
          );
      }
 
+    static max( ...nums: bigint[] ): bigint
+    {
+        return nums.reduce( (a,b) => a > b ? a : b );
+    }
+
+    static min( ...nums: bigint[] ): bigint
+    {
+        return nums.reduce( (a,b) => a < b ? a : b );
+    }
+
     /**
      * uses the bytes of the buffer to construct a BigInteger
      * > **IMPORTANT** the bytes are considered in Little Endian order; use ```BigIntUtils.fromBuffer``` for Big Endian
