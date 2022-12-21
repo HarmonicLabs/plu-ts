@@ -18,6 +18,77 @@ import DataB from "../../../types/Data/DataB";
 import DataPair from "../../../types/Data/DataPair";
 import PlutsCEKError from "../../../errors/PlutsCEKError";
 import dataToCbor from "../../../types/Data/toCbor";
+import { BuiltinCostsOf } from "../Machine/BuiltinCosts";
+import ExBudget from "../Machine/ExBudget";
+import { Buffer } from "buffer";
+
+
+function intToSize( n: bigint ): bigint
+{
+    if ( n === BigInt( 0 ) ) return BigInt( 1 );
+
+    // same as `intToSize( -n - BigInt( 1 ) )` but inlined
+    if( n  < BigInt( 0 ) ) return ( BigIntUtils.log2( ( -n - BigInt( 1 ) ) << BigInt( 1 ) ) / BigInt( 8 )) + BigInt( 1 ) ;
+
+    return ( BigIntUtils.log2( n << BigInt( 1 ) ) / BigInt( 8 )) + BigInt( 1 );
+}
+
+function bsToSize( bs: ByteString | Buffer ): bigint
+{
+    const len = (Buffer.isBuffer( bs ) ? bs : bs.asBytes).length;
+    return len === 0 ?
+        // TODO: Bug in cardano-node; to fix next hard fork
+        BigInt(1) :
+        BigInt( len );
+}
+
+function strToSize( str: string ): bigint
+{
+    return bsToSize( Buffer.from( str, "utf8" ) );
+}
+
+function dataToSize( data: Data ): bigint
+{
+    const stack: Data[] = [ data ];
+    let tot: bigint = BigInt( 0 );
+
+    while( stack.length > 0 )
+    {
+        const top = stack.pop();
+        tot += BigInt( 4 );
+
+        if( top instanceof DataConstr )
+        {
+            stack.unshift( ...top.fields );
+        }
+        else if( top instanceof DataMap )
+        {
+            stack.unshift(
+                ...top.map.reduce<Data[]>(
+                    ( accum, elem ) => [ elem.fst, elem.snd, ...accum ] , []
+                )
+            );
+        }
+        else if( top instanceof DataList )
+        {
+            stack.unshift(
+                ...top.list
+            );
+        }
+        else if( top instanceof DataI )
+        {
+            tot += intToSize( top.int.asBigInt );
+        }
+        else if( top instanceof DataB )
+        {
+            tot += bsToSize( top.bytes )
+        }
+        else break; // top === undefined; stack empty (unreachable)
+    }
+
+    return tot;
+}
+
 
 function isConstOfType( constant: Readonly<UPLCTerm>, ty: Readonly<ConstType> ): constant is UPLCConst
 {
@@ -209,73 +280,76 @@ type ConstOrErr = UPLCConst | ErrorUPLC;
 
 export default class BnCEK
 {
-    private constructor() {};
+    /**
+     * **reference** to the budget of the actual machine
+    **/
+    readonly machineBudget: ExBudget;
+    constructor(
+        readonly getBuiltinCostFunc: <Tag extends UPLCBuiltinTag>( tag: Tag ) => BuiltinCostsOf<Tag>,
+        machineBudget: ExBudget,
+        readonly logs: string[]  
+    ){
+        this.machineBudget = machineBudget;
+    };
 
-    // static eval( bn: PartialBuiltin ): ConstOrErr
-    // {
-    //     const res = BnCEK._eval( bn );
-    //     console.log( `${bn.tag} evaluation result:`, res );
-    //     return res;
-    // }
-
-    static eval( bn: PartialBuiltin ): ConstOrErr
+    eval( bn: PartialBuiltin ): ConstOrErr
     {
         switch( bn.tag )
         {
-            case UPLCBuiltinTag.addInteger :                        return (BnCEK.addInteger as any)( ...bn.args );
-            case UPLCBuiltinTag.subtractInteger :                   return (BnCEK.subtractInteger as any)( ...bn.args );
-            case UPLCBuiltinTag.multiplyInteger :                   return (BnCEK.multiplyInteger as any)( ...bn.args );
-            case UPLCBuiltinTag.divideInteger :                     return (BnCEK.divideInteger as any)( ...bn.args );
-            case UPLCBuiltinTag.quotientInteger :                   return (BnCEK.quotientInteger as any)( ...bn.args );
-            case UPLCBuiltinTag.remainderInteger :                  return (BnCEK.remainderInteger as any)( ...bn.args );
-            case UPLCBuiltinTag.modInteger :                        return (BnCEK.modInteger as any)( ...bn.args );
-            case UPLCBuiltinTag.equalsInteger :                     return (BnCEK.equalsInteger as any)( ...bn.args );
-            case UPLCBuiltinTag.lessThanInteger :                   return (BnCEK.lessThanInteger as any)( ...bn.args );
-            case UPLCBuiltinTag.lessThanEqualInteger :              return (BnCEK.lessThanEqualInteger as any)( ...bn.args );
-            case UPLCBuiltinTag.appendByteString :                  return (BnCEK.appendByteString as any)( ...bn.args );
-            case UPLCBuiltinTag.consByteString :                    return (BnCEK.consByteString as any)( ...bn.args );
-            case UPLCBuiltinTag.sliceByteString :                   return (BnCEK.sliceByteString as any)( ...bn.args );
-            case UPLCBuiltinTag.lengthOfByteString :                return (BnCEK.lengthOfByteString as any)( ...bn.args );
-            case UPLCBuiltinTag.indexByteString :                   return (BnCEK.indexByteString as any)( ...bn.args );
-            case UPLCBuiltinTag.equalsByteString :                  return (BnCEK.equalsByteString as any)( ...bn.args );
-            case UPLCBuiltinTag.lessThanByteString :                return (BnCEK.lessThanByteString as any)( ...bn.args );
-            case UPLCBuiltinTag.lessThanEqualsByteString :          return (BnCEK.lessThanEqualsByteString as any)( ...bn.args );
-            case UPLCBuiltinTag.sha2_256 :                          throw new PlutsCEKError("builtin implementation missing");// return (BnCEK.sha2_256 as any)( ...bn.args );
-            case UPLCBuiltinTag.sha3_256 :                          throw new PlutsCEKError("builtin implementation missing");// return (BnCEK.sha3_256 as any)( ...bn.args );
-            case UPLCBuiltinTag.blake2b_256 :                       throw new PlutsCEKError("builtin implementation missing");// return (BnCEK.blake2b_256 as any)( ...bn.args );
-            case UPLCBuiltinTag.verifyEd25519Signature:             throw new PlutsCEKError("builtin implementation missing");// return (BnCEK.verifyEd25519Signature as any)( ...bn.args );
-            case UPLCBuiltinTag.appendString :                      return (BnCEK.appendString as any)( ...bn.args );
-            case UPLCBuiltinTag.equalsString :                      return (BnCEK.equalsString as any)( ...bn.args );
-            case UPLCBuiltinTag.encodeUtf8 :                        return (BnCEK.encodeUtf8 as any)( ...bn.args );
-            case UPLCBuiltinTag.decodeUtf8 :                        return (BnCEK.decodeUtf8 as any)( ...bn.args );
-            case UPLCBuiltinTag.ifThenElse :                        return (BnCEK.ifThenElse as any)( ...bn.args );
-            case UPLCBuiltinTag.chooseUnit :                        return (BnCEK.chooseUnit as any)( ...bn.args );
-            case UPLCBuiltinTag.trace :                             return (BnCEK.trace as any)( ...bn.args );
-            case UPLCBuiltinTag.fstPair :                           return (BnCEK.fstPair as any)( ...bn.args );
-            case UPLCBuiltinTag.sndPair :                           return (BnCEK.sndPair as any)( ...bn.args );
-            case UPLCBuiltinTag.chooseList :                        return (BnCEK.chooseList as any)( ...bn.args );
-            case UPLCBuiltinTag.mkCons :                            return (BnCEK.mkCons as any)( ...bn.args );
-            case UPLCBuiltinTag.headList :                          return (BnCEK.headList as any)( ...bn.args );
-            case UPLCBuiltinTag.tailList :                          return (BnCEK.tailList as any)( ...bn.args );
-            case UPLCBuiltinTag.nullList :                          return (BnCEK.nullList as any)( ...bn.args );
-            case UPLCBuiltinTag.chooseData :                        return (BnCEK.chooseData as any)( ...bn.args );
-            case UPLCBuiltinTag.constrData :                        return (BnCEK.constrData as any)( ...bn.args );
-            case UPLCBuiltinTag.mapData :                           return (BnCEK.mapData as any)( ...bn.args );
-            case UPLCBuiltinTag.listData :                          return (BnCEK.listData as any)( ...bn.args );
-            case UPLCBuiltinTag.iData    :                          return (BnCEK.iData as any)( ...bn.args );
-            case UPLCBuiltinTag.bData    :                          return (BnCEK.bData as any)( ...bn.args );
-            case UPLCBuiltinTag.unConstrData :                      return (BnCEK.unConstrData as any)( ...bn.args );
-            case UPLCBuiltinTag.unMapData    :                      return (BnCEK.unMapData as any)( ...bn.args );
-            case UPLCBuiltinTag.unListData   :                      return (BnCEK.unListData as any)( ...bn.args );
-            case UPLCBuiltinTag.unIData      :                      return (BnCEK.unIData as any)( ...bn.args );
-            case UPLCBuiltinTag.unBData      :                      return (BnCEK.unBData as any)( ...bn.args );
-            case UPLCBuiltinTag.equalsData   :                      return (BnCEK.equalsData as any)( ...bn.args );
-            case UPLCBuiltinTag.mkPairData   :                      return (BnCEK.mkPairData as any)( ...bn.args );
-            case UPLCBuiltinTag.mkNilData    :                      return (BnCEK.mkNilData as any)( ...bn.args );
-            case UPLCBuiltinTag.mkNilPairData:                      return (BnCEK.mkNilPairData as any)( ...bn.args );
-            case UPLCBuiltinTag.serialiseData:                      return (BnCEK.serialiseData as any)( ...bn.args );
-            case UPLCBuiltinTag.verifyEcdsaSecp256k1Signature:      throw new PlutsCEKError("builtin implementation missing"); //return (BnCEK.verifyEcdsaSecp256k1Signature as any)( ...bn.args );
-            case UPLCBuiltinTag.verifySchnorrSecp256k1Signature:    throw new PlutsCEKError("builtin implementation missing"); //return (BnCEK.verifySchnorrSecp256k1Signature as any)( ...bn.args );
+            case UPLCBuiltinTag.addInteger :                        return (this.addInteger as any)( ...bn.args );
+            case UPLCBuiltinTag.subtractInteger :                   return (this.subtractInteger as any)( ...bn.args );
+            case UPLCBuiltinTag.multiplyInteger :                   return (this.multiplyInteger as any)( ...bn.args );
+            case UPLCBuiltinTag.divideInteger :                     return (this.divideInteger as any)( ...bn.args );
+            case UPLCBuiltinTag.quotientInteger :                   return (this.quotientInteger as any)( ...bn.args );
+            case UPLCBuiltinTag.remainderInteger :                  return (this.remainderInteger as any)( ...bn.args );
+            case UPLCBuiltinTag.modInteger :                        return (this.modInteger as any)( ...bn.args );
+            case UPLCBuiltinTag.equalsInteger :                     return (this.equalsInteger as any)( ...bn.args );
+            case UPLCBuiltinTag.lessThanInteger :                   return (this.lessThanInteger as any)( ...bn.args );
+            case UPLCBuiltinTag.lessThanEqualInteger :              return (this.lessThanEqualInteger as any)( ...bn.args );
+            case UPLCBuiltinTag.appendByteString :                  return (this.appendByteString as any)( ...bn.args );
+            case UPLCBuiltinTag.consByteString :                    return (this.consByteString as any)( ...bn.args );
+            case UPLCBuiltinTag.sliceByteString :                   return (this.sliceByteString as any)( ...bn.args );
+            case UPLCBuiltinTag.lengthOfByteString :                return (this.lengthOfByteString as any)( ...bn.args );
+            case UPLCBuiltinTag.indexByteString :                   return (this.indexByteString as any)( ...bn.args );
+            case UPLCBuiltinTag.equalsByteString :                  return (this.equalsByteString as any)( ...bn.args );
+            case UPLCBuiltinTag.lessThanByteString :                return (this.lessThanByteString as any)( ...bn.args );
+            case UPLCBuiltinTag.lessThanEqualsByteString :          return (this.lessThanEqualsByteString as any)( ...bn.args );
+            case UPLCBuiltinTag.sha2_256 :                          throw new PlutsCEKError("builtin implementation missing");// return (this.sha2_256 as any)( ...bn.args );
+            case UPLCBuiltinTag.sha3_256 :                          throw new PlutsCEKError("builtin implementation missing");// return (this.sha3_256 as any)( ...bn.args );
+            case UPLCBuiltinTag.blake2b_256 :                       throw new PlutsCEKError("builtin implementation missing");// return (this.blake2b_256 as any)( ...bn.args );
+            case UPLCBuiltinTag.verifyEd25519Signature:             throw new PlutsCEKError("builtin implementation missing");// return (this.verifyEd25519Signature as any)( ...bn.args );
+            case UPLCBuiltinTag.appendString :                      return (this.appendString as any)( ...bn.args );
+            case UPLCBuiltinTag.equalsString :                      return (this.equalsString as any)( ...bn.args );
+            case UPLCBuiltinTag.encodeUtf8 :                        return (this.encodeUtf8 as any)( ...bn.args );
+            case UPLCBuiltinTag.decodeUtf8 :                        return (this.decodeUtf8 as any)( ...bn.args );
+            case UPLCBuiltinTag.ifThenElse :                        return (this.ifThenElse as any)( ...bn.args );
+            case UPLCBuiltinTag.chooseUnit :                        return (this.chooseUnit as any)( ...bn.args );
+            case UPLCBuiltinTag.trace :                             return (this.trace as any)( ...bn.args );
+            case UPLCBuiltinTag.fstPair :                           return (this.fstPair as any)( ...bn.args );
+            case UPLCBuiltinTag.sndPair :                           return (this.sndPair as any)( ...bn.args );
+            case UPLCBuiltinTag.chooseList :                        return (this.chooseList as any)( ...bn.args );
+            case UPLCBuiltinTag.mkCons :                            return (this.mkCons as any)( ...bn.args );
+            case UPLCBuiltinTag.headList :                          return (this.headList as any)( ...bn.args );
+            case UPLCBuiltinTag.tailList :                          return (this.tailList as any)( ...bn.args );
+            case UPLCBuiltinTag.nullList :                          return (this.nullList as any)( ...bn.args );
+            case UPLCBuiltinTag.chooseData :                        return (this.chooseData as any)( ...bn.args );
+            case UPLCBuiltinTag.constrData :                        return (this.constrData as any)( ...bn.args );
+            case UPLCBuiltinTag.mapData :                           return (this.mapData as any)( ...bn.args );
+            case UPLCBuiltinTag.listData :                          return (this.listData as any)( ...bn.args );
+            case UPLCBuiltinTag.iData    :                          return (this.iData as any)( ...bn.args );
+            case UPLCBuiltinTag.bData    :                          return (this.bData as any)( ...bn.args );
+            case UPLCBuiltinTag.unConstrData :                      return (this.unConstrData as any)( ...bn.args );
+            case UPLCBuiltinTag.unMapData    :                      return (this.unMapData as any)( ...bn.args );
+            case UPLCBuiltinTag.unListData   :                      return (this.unListData as any)( ...bn.args );
+            case UPLCBuiltinTag.unIData      :                      return (this.unIData as any)( ...bn.args );
+            case UPLCBuiltinTag.unBData      :                      return (this.unBData as any)( ...bn.args );
+            case UPLCBuiltinTag.equalsData   :                      return (this.equalsData as any)( ...bn.args );
+            case UPLCBuiltinTag.mkPairData   :                      return (this.mkPairData as any)( ...bn.args );
+            case UPLCBuiltinTag.mkNilData    :                      return (this.mkNilData as any)( ...bn.args );
+            case UPLCBuiltinTag.mkNilPairData:                      return (this.mkNilPairData as any)( ...bn.args );
+            case UPLCBuiltinTag.serialiseData:                      return (this.serialiseData as any)( ...bn.args );
+            case UPLCBuiltinTag.verifyEcdsaSecp256k1Signature:      throw new PlutsCEKError("builtin implementation missing"); //return (this.verifyEcdsaSecp256k1Signature as any)( ...bn.args );
+            case UPLCBuiltinTag.verifySchnorrSecp256k1Signature:    throw new PlutsCEKError("builtin implementation missing"); //return (this.verifySchnorrSecp256k1Signature as any)( ...bn.args );
 
             
             default:
@@ -284,44 +358,217 @@ export default class BnCEK
         }
     }
 
-    static addInteger( a: UPLCTerm, b: UPLCTerm ): ConstOrErr         { return intBinOp( a , b, (a, b) => a + b ); }
-    static subtractInteger( a: UPLCTerm, b: UPLCTerm ): ConstOrErr    { return intBinOp( a , b, (a, b) => a - b ); }
-    static multiplyInteger( a: UPLCTerm, b: UPLCTerm ): ConstOrErr    { return intBinOp( a , b, (a, b) => a * b ); }
-    static divideInteger( a: UPLCTerm, b: UPLCTerm ): ConstOrErr      { return intBinOp( a , b, haskellDiv      ); }
-    static quotientInteger( a: UPLCTerm, b: UPLCTerm ): ConstOrErr    { return intBinOp( a , b, haskellQuot     ); }
-    static remainderInteger( a: UPLCTerm, b: UPLCTerm ): ConstOrErr   { return intBinOp( a , b, haskellRem      ); }
-    static modInteger( a: UPLCTerm, b: UPLCTerm ): ConstOrErr         { return intBinOp( a , b, haskellMod      ); }
-    static equalsInteger( a: UPLCTerm, b: UPLCTerm ): ConstOrErr
+    addInteger( _a: UPLCTerm, _b: UPLCTerm ): ConstOrErr
+    {
+        return intBinOp( _a , _b,
+            ((a: bigint, b: bigint) => {
+
+                const f = this.getBuiltinCostFunc( UPLCBuiltinTag.addInteger );
+                
+                const sa = intToSize( a );
+                const sb = intToSize( b );
+                
+                this.machineBudget.add({
+                    mem: f.mem.at( sa, sb ),
+                    cpu: f.cpu.at( sa, sb )
+                });
+                
+                return a + b;
+
+            }).bind(this)
+        );
+    }
+    subtractInteger( _a: UPLCTerm, _b: UPLCTerm ): ConstOrErr
+    {
+        return intBinOp( _a , _b,
+            ((a: bigint, b: bigint) => {
+
+                const f = this.getBuiltinCostFunc( UPLCBuiltinTag.subtractInteger );
+                
+                const sa = intToSize( a );
+                const sb = intToSize( b );
+                
+                this.machineBudget.add({
+                    mem: f.mem.at( sa, sb ),
+                    cpu: f.cpu.at( sa, sb )
+                });
+                
+                return a - b;
+
+            }).bind(this)
+        );
+    }
+    multiplyInteger( _a: UPLCTerm, _b: UPLCTerm ): ConstOrErr
+    {
+        return intBinOp( _a , _b,
+            ((a: bigint, b: bigint) => {
+
+                const f = this.getBuiltinCostFunc( UPLCBuiltinTag.multiplyInteger );
+                
+                const sa = intToSize( a );
+                const sb = intToSize( b );
+                
+                this.machineBudget.add({
+                    mem: f.mem.at( sa, sb ),
+                    cpu: f.cpu.at( sa, sb )
+                });
+                
+                return a * b;
+
+            }).bind(this)
+        );
+    }
+    divideInteger( _a: UPLCTerm, _b: UPLCTerm ): ConstOrErr
+    {
+        return intBinOp( _a , _b,
+            ((a: bigint, b: bigint) => {
+
+                const f = this.getBuiltinCostFunc( UPLCBuiltinTag.divideInteger );
+                
+                const sa = intToSize( a );
+                const sb = intToSize( b );
+                
+                this.machineBudget.add({
+                    mem: f.mem.at( sa, sb ),
+                    cpu: f.cpu.at( sa, sb )
+                });
+                
+                return haskellDiv( a, b );
+
+            }).bind(this)
+        );
+    }
+    quotientInteger( _a: UPLCTerm, _b: UPLCTerm ): ConstOrErr
+    {
+        return intBinOp( _a , _b,
+            ((a: bigint, b: bigint) => {
+
+                const f = this.getBuiltinCostFunc( UPLCBuiltinTag.quotientInteger );
+                
+                const sa = intToSize( a );
+                const sb = intToSize( b );
+                
+                this.machineBudget.add({
+                    mem: f.mem.at( sa, sb ),
+                    cpu: f.cpu.at( sa, sb )
+                });
+                
+                return haskellQuot( a, b );
+
+            }).bind(this)
+        );
+    }
+    remainderInteger( _a: UPLCTerm, _b: UPLCTerm ): ConstOrErr
+    {
+        return intBinOp( _a , _b,
+            ((a: bigint, b: bigint) => {
+
+                const f = this.getBuiltinCostFunc( UPLCBuiltinTag.remainderInteger );
+                
+                const sa = intToSize( a );
+                const sb = intToSize( b );
+                
+                this.machineBudget.add({
+                    mem: f.mem.at( sa, sb ),
+                    cpu: f.cpu.at( sa, sb )
+                });
+                
+                return haskellRem( a, b );
+
+            }).bind(this)
+        );
+    }
+    modInteger( _a: UPLCTerm, _b: UPLCTerm ): ConstOrErr
+    {
+        return intBinOp( _a , _b,
+            ((a: bigint, b: bigint) => {
+
+                const f = this.getBuiltinCostFunc( UPLCBuiltinTag.modInteger );
+                
+                const sa = intToSize( a );
+                const sb = intToSize( b );
+                
+                this.machineBudget.add({
+                    mem: f.mem.at( sa, sb ),
+                    cpu: f.cpu.at( sa, sb )
+                });
+                
+                return haskellMod( a, b );
+
+            }).bind(this)
+        );
+    }
+    equalsInteger( a: UPLCTerm, b: UPLCTerm ): ConstOrErr
     {
         const ints = getInts( a, b );
         if( ints === undefined ) return new ErrorUPLC("not integers");
+
+        const f = this.getBuiltinCostFunc( UPLCBuiltinTag.equalsInteger );
+                
+        const sa = intToSize( ints.a );
+        const sb = intToSize( ints.b );
+        
+        this.machineBudget.add({
+            mem: f.mem.at( sa, sb ),
+            cpu: f.cpu.at( sa, sb )
+        });
 
         return UPLCConst.bool( ints.a === ints.b );
     }
-    static lessThanInteger( a: UPLCTerm, b: UPLCTerm ): ConstOrErr
+    lessThanInteger( a: UPLCTerm, b: UPLCTerm ): ConstOrErr
     {
         const ints = getInts( a, b );
         if( ints === undefined ) return new ErrorUPLC("not integers");
+
+        const f = this.getBuiltinCostFunc( UPLCBuiltinTag.lessThanInteger );
+                
+        const sa = intToSize( ints.a );
+        const sb = intToSize( ints.b );
+        
+        this.machineBudget.add({
+            mem: f.mem.at( sa, sb ),
+            cpu: f.cpu.at( sa, sb )
+        });
 
         return UPLCConst.bool( ints.a < ints.b );
     }
-    static lessThanEqualInteger( a: UPLCTerm, b: UPLCTerm ): ConstOrErr
+    lessThanEqualInteger( a: UPLCTerm, b: UPLCTerm ): ConstOrErr
     {
         const ints = getInts( a, b );
         if( ints === undefined ) return new ErrorUPLC("not integers");
 
+        const f = this.getBuiltinCostFunc( UPLCBuiltinTag.lessThanEqualInteger );
+                
+        const sa = intToSize( ints.a );
+        const sb = intToSize( ints.b );
+        
+        this.machineBudget.add({
+            mem: f.mem.at( sa, sb ),
+            cpu: f.cpu.at( sa, sb )
+        });
+
         return UPLCConst.bool( ints.a <= ints.b );
     }
-    static appendByteString( a: UPLCTerm, b: UPLCTerm ): ConstOrErr
+    appendByteString( a: UPLCTerm, b: UPLCTerm ): ConstOrErr
     {
         const _a = getBS( a );
         if( _a === undefined ) return new ErrorUPLC("not BS");
         const _b = getBS( b );
         if(_b === undefined ) return new ErrorUPLC("not BS");
 
+        const f = this.getBuiltinCostFunc( UPLCBuiltinTag.appendByteString );
+                
+        const sa = bsToSize( _a );
+        const sb = bsToSize( _b );
+        
+        this.machineBudget.add({
+            mem: f.mem.at( sa, sb ),
+            cpu: f.cpu.at( sa, sb )
+        });
+
         return UPLCConst.byteString(  new ByteString( _a.asString + _b.asString ) );
     }
-    static consByteString( a: UPLCTerm, b: UPLCTerm ): ConstOrErr
+    consByteString( a: UPLCTerm, b: UPLCTerm ): ConstOrErr
     {
         let _a = getInt( a );
         if( _a === undefined ) return new ErrorUPLC("not Int");
@@ -330,9 +577,19 @@ export default class BnCEK
         const _b = getBS( b );
         if(_b === undefined ) return new ErrorUPLC("not BS");
 
+        const f = this.getBuiltinCostFunc( UPLCBuiltinTag.consByteString );
+                
+        const sa = intToSize( _a );
+        const sb = bsToSize( _b );
+        
+        this.machineBudget.add({
+            mem: f.mem.at( sa, sb ),
+            cpu: f.cpu.at( sa, sb )
+        });
+
         return UPLCConst.byteString(  new ByteString( _a.toString(16).padStart( 2, '0' ) + _b.asString ) );
     }
-    static sliceByteString( fromIdx: UPLCTerm, ofLength: UPLCTerm, bs: UPLCTerm ): ConstOrErr
+    sliceByteString( fromIdx: UPLCTerm, ofLength: UPLCTerm, bs: UPLCTerm ): ConstOrErr
     {
         const idx = getInt( fromIdx );
         if( idx === undefined ) return new ErrorUPLC("not int");
@@ -352,6 +609,18 @@ export default class BnCEK
 
         if( j < i ) return UPLCConst.byteString( new ByteString( Buffer.from([]) ) );
 
+
+        const f = this.getBuiltinCostFunc( UPLCBuiltinTag.sliceByteString );
+                
+        const sidx = intToSize( idx );
+        const slength = intToSize( length );
+        const sbs = bsToSize( _bs );
+        
+        this.machineBudget.add({
+            mem: f.mem.at( sidx, slength, sbs ),
+            cpu: f.cpu.at( sidx, slength, sbs )
+        });
+
         return UPLCConst.byteString(
             new ByteString(
                 Buffer.from(
@@ -362,14 +631,23 @@ export default class BnCEK
             )
         );
     }
-    static lengthOfByteString( bs: UPLCTerm ): ConstOrErr
+    lengthOfByteString( bs: UPLCTerm ): ConstOrErr
     {
         const _bs = getBS( bs );
         if( _bs === undefined ) return new ErrorUPLC("not BS");
 
+        const f = this.getBuiltinCostFunc( UPLCBuiltinTag.lengthOfByteString );
+                
+        const sbs = bsToSize( _bs );
+        
+        this.machineBudget.add({
+            mem: f.mem.at( sbs ),
+            cpu: f.cpu.at( sbs )
+        });
+
         return UPLCConst.int( _bs.asBytes.length );
     }
-    static indexByteString( bs: UPLCTerm, idx: UPLCTerm ): ConstOrErr
+    indexByteString( bs: UPLCTerm, idx: UPLCTerm ): ConstOrErr
     {
         const _bs = getBS( bs );
         if( _bs === undefined ) return new ErrorUPLC("not BS");
@@ -380,9 +658,20 @@ export default class BnCEK
         const result = _bs.asBytes.at( Number( i ) );
         if( result === undefined ) return new ErrorUPLC("out of bytestring length");
 
+
+        const f = this.getBuiltinCostFunc( UPLCBuiltinTag.indexByteString );
+                
+        const sbs = bsToSize( _bs );
+        const sidx = intToSize( i );
+        
+        this.machineBudget.add({
+            mem: f.mem.at( sbs, sidx ),
+            cpu: f.cpu.at( sbs, sidx )
+        });
+
         return UPLCConst.int( result );
     }
-    static equalsByteString( a: UPLCTerm, b: UPLCTerm ): ConstOrErr
+    equalsByteString( a: UPLCTerm, b: UPLCTerm ): ConstOrErr
     {
         const _a = getBS( a );
         if( _a === undefined ) return new ErrorUPLC("not BS");
@@ -390,9 +679,19 @@ export default class BnCEK
         const _b = getBS( b );
         if( _b === undefined ) return new ErrorUPLC("not BS");
 
+        const f = this.getBuiltinCostFunc( UPLCBuiltinTag.equalsByteString );
+                
+        const sa = bsToSize( _a );
+        const sb = bsToSize( _b );
+        
+        this.machineBudget.add({
+            mem: f.mem.at( sa, sb ),
+            cpu: f.cpu.at( sa, sb )
+        });
+
         return UPLCConst.bool( _a.asString === _b.asString );
     }
-    static lessThanByteString( a: UPLCTerm, b: UPLCTerm ): ConstOrErr
+    lessThanByteString( a: UPLCTerm, b: UPLCTerm ): ConstOrErr
     {
         const _a = getBS( a );
         if( _a === undefined ) return new ErrorUPLC("not BS");
@@ -402,6 +701,16 @@ export default class BnCEK
 
         const aBytes = _a.asBytes;
         const bBytes = _b.asBytes;
+
+        const f = this.getBuiltinCostFunc( UPLCBuiltinTag.lessThanByteString );
+                
+        const sa = bsToSize( _a );
+        const sb = bsToSize( _b );
+        
+        this.machineBudget.add({
+            mem: f.mem.at( sa, sb ),
+            cpu: f.cpu.at( sa, sb )
+        });
 
         if( aBytes.length < bBytes.length ) return UPLCConst.bool( true );
 
@@ -417,7 +726,7 @@ export default class BnCEK
         }
         return UPLCConst.bool( false );
     }
-    static lessThanEqualsByteString( a: UPLCTerm, b: UPLCTerm ): ConstOrErr
+    lessThanEqualsByteString( a: UPLCTerm, b: UPLCTerm ): ConstOrErr
     {
         const _a = getBS( a );
         if( _a === undefined ) return new ErrorUPLC("not BS");
@@ -425,18 +734,30 @@ export default class BnCEK
         const _b = getBS( b );
         if( _b === undefined ) return new ErrorUPLC("not BS");
 
+        const f = this.getBuiltinCostFunc( UPLCBuiltinTag.lessThanEqualsByteString );
+                
+        const sa = bsToSize( _a );
+        const sb = bsToSize( _b );
+        
+        this.machineBudget.add({
+            mem: f.mem.at( sa, sb ),
+            cpu: f.cpu.at( sa, sb )
+        });
+
         if( _a.asString === _b.asString ) return UPLCConst.bool( true );
-        return BnCEK.lessThanByteString( a, b );
+
+        // lessThanBytestring but with new environment for costs;
+        return (new BnCEK(this.getBuiltinCostFunc,new ExBudget(0,0), [])).lessThanByteString( a, b );
     }
 
     // @todo
     //
-    // static sha2_256
-    // static sha3_256
-    // static blake2b_256
-    // static verifyEd25519Signature
+    // sha2_256
+    // sha3_256
+    // blake2b_256
+    // verifyEd25519Signature
 
-    static appendString( a: UPLCTerm, b: UPLCTerm ): ConstOrErr
+    appendString( a: UPLCTerm, b: UPLCTerm ): ConstOrErr
     {
         const _a = getStr( a );
         if( _a === undefined ) return new ErrorUPLC("not Str");
@@ -446,7 +767,7 @@ export default class BnCEK
 
         return UPLCConst.str( _a + _b )
     }
-    static equalsString( a: UPLCTerm, b: UPLCTerm ): ConstOrErr
+    equalsString( a: UPLCTerm, b: UPLCTerm ): ConstOrErr
     {
         const _a = getStr( a );
         if( _a === undefined ) return new ErrorUPLC("not Str");
@@ -456,38 +777,38 @@ export default class BnCEK
 
         return UPLCConst.bool( _a === _b )
     }
-    static encodeUtf8( a: UPLCTerm ): ConstOrErr
+    encodeUtf8( a: UPLCTerm ): ConstOrErr
     {
         const _a = getStr( a );
         if( _a === undefined ) return new ErrorUPLC("not Str");
 
         return UPLCConst.byteString( new ByteString( Buffer.from( _a , "utf8" ) ) );
     }
-    static decodeUtf8( a: UPLCTerm ): ConstOrErr
+    decodeUtf8( a: UPLCTerm ): ConstOrErr
     {
         const _a = getBS( a );
         if( _a === undefined ) return new ErrorUPLC("not BS");
 
         return UPLCConst.str( _a.asBytes.toString("utf8") );
     }
-    static ifThenElse( condition: UPLCTerm, caseTrue: ConstOrErr, caseFalse: ConstOrErr ): ConstOrErr
+    ifThenElse( condition: UPLCTerm, caseTrue: ConstOrErr, caseFalse: ConstOrErr ): ConstOrErr
     {
         if(! isConstOfType( condition, constT.bool ) ) return new ErrorUPLC("not a boolean");
         
         return condition.value ? caseTrue : caseFalse;
     }
-    static chooseUnit( unit: UPLCTerm, b: UPLCTerm ): UPLCTerm
+    chooseUnit( unit: UPLCTerm, b: UPLCTerm ): UPLCTerm
     {
         if( !isConstOfType( unit, constT.unit ) ) return new ErrorUPLC("nota a unit");
         return b;
     }
-    static trace( msg: UPLCConst, result: UPLCTerm ): UPLCTerm
+    trace( msg: UPLCConst, result: UPLCTerm ): UPLCTerm
     {
         const _msg = getStr( msg );
-        console.log("trace: " + _msg ?? "_msg_not_a_str_");
+        this.logs.push(_msg ?? "_msg_not_a_string_");
         return result;
     }
-    static fstPair( pair: UPLCTerm ): ConstOrErr
+    fstPair( pair: UPLCTerm ): ConstOrErr
     {
         const p = getPair( pair );
         if( p === undefined ) return new ErrorUPLC("not a pair");
@@ -497,7 +818,7 @@ export default class BnCEK
             p.fst as any
         );
     }
-    static sndPair( pair: UPLCTerm ): ConstOrErr
+    sndPair( pair: UPLCTerm ): ConstOrErr
     {
         const p = getPair( pair );
         if( p === undefined ) return new ErrorUPLC("not a pair");
@@ -507,14 +828,14 @@ export default class BnCEK
             p.snd as any
         );
     }
-    static chooseList( list: UPLCTerm, whateverA: UPLCTerm, whateverB: UPLCTerm ): UPLCTerm 
+    chooseList( list: UPLCTerm, whateverA: UPLCTerm, whateverB: UPLCTerm ): UPLCTerm 
     {
         const l = getList( list );
         if( l === undefined ) return new ErrorUPLC("not a list");
 
         return l.length === 0 ? whateverA : whateverB;
     }
-    static mkCons( elem: UPLCTerm, list: UPLCTerm )
+    mkCons( elem: UPLCTerm, list: UPLCTerm )
     {
         if(!(
             elem instanceof UPLCConst &&
@@ -538,7 +859,7 @@ export default class BnCEK
             l as any
         );
     }
-    static headList( list: UPLCTerm ): ConstOrErr 
+    headList( list: UPLCTerm ): ConstOrErr 
     {
         const l = getList( list );
         if( l === undefined || l.length === 0 ) return new ErrorUPLC(l === undefined ? "not a list" : "empty list passed to 'head'");
@@ -548,7 +869,7 @@ export default class BnCEK
             l[0] as any
         );
     }
-    static tailList( list: UPLCTerm ): ConstOrErr 
+    tailList( list: UPLCTerm ): ConstOrErr 
     {
         const l = getList( list );
         if( l === undefined || l.length === 0 ) return new ErrorUPLC(l === undefined ? "not a list" : "empty list passed to 'tail'");
@@ -558,14 +879,14 @@ export default class BnCEK
             l.slice(1) as any
         );
     }
-    static nullList( list: UPLCTerm ): ConstOrErr 
+    nullList( list: UPLCTerm ): ConstOrErr 
     {
         const l = getList( list );
         if( l === undefined ) return new ErrorUPLC("not a list");
 
         return UPLCConst.bool( l.length === 0 )
     }
-    static chooseData( data: UPLCTerm, constr: UPLCTerm, map: UPLCTerm, list: UPLCTerm, int: UPLCTerm, bs: UPLCTerm ): ConstOrErr
+    chooseData( data: UPLCTerm, constr: UPLCTerm, map: UPLCTerm, list: UPLCTerm, int: UPLCTerm, bs: UPLCTerm ): ConstOrErr
     {
         const d = getData( data );
         if( d === undefined ) return new ErrorUPLC("not data");
@@ -578,7 +899,7 @@ export default class BnCEK
 
         return new ErrorUPLC("unrecognized data, possibly DataPair");
     }
-    static constrData( idx: UPLCTerm, fields: UPLCTerm ): ConstOrErr
+    constrData( idx: UPLCTerm, fields: UPLCTerm ): ConstOrErr
     {
         const i = getInt( idx );
         if( i === undefined ) return new ErrorUPLC("not int");
@@ -596,7 +917,7 @@ export default class BnCEK
             new DataConstr( i, f )
         );
     }
-    static mapData( listOfPair: UPLCTerm ): ConstOrErr
+    mapData( listOfPair: UPLCTerm ): ConstOrErr
     {
         if(!(
             listOfPair instanceof UPLCConst &&
@@ -630,7 +951,7 @@ export default class BnCEK
             )
         );
     }
-    static listData( listOfData: UPLCTerm ): ConstOrErr
+    listData( listOfData: UPLCTerm ): ConstOrErr
     {
         if(!(
             listOfData instanceof UPLCConst &&
@@ -653,21 +974,21 @@ export default class BnCEK
             new DataList( list )
         );
     }
-    static iData( int: UPLCTerm ): ConstOrErr
+    iData( int: UPLCTerm ): ConstOrErr
     {
         const i = getInt( int );
         if( i === undefined ) return new ErrorUPLC("not an int");
 
         return UPLCConst.data( new DataI( i ) );
     }
-    static bData( bs: UPLCTerm ): ConstOrErr
+    bData( bs: UPLCTerm ): ConstOrErr
     {
         const b = getBS( bs );
         if( b === undefined ) return new ErrorUPLC("not BS");
 
         return UPLCConst.data( new DataB( b ) );
     }
-    static unConstrData( data: UPLCTerm ): ConstOrErr
+    unConstrData( data: UPLCTerm ): ConstOrErr
     {
         const d = getData( data );
         if( d === undefined ) return new ErrorUPLC(`not data; unConstrData${ data instanceof UPLCConst ? "; " + constTypeToStirng(data.type) :""}`);
@@ -679,7 +1000,7 @@ export default class BnCEK
             d.fields
         );
     }
-    static unMapData( data: UPLCTerm ): ConstOrErr
+    unMapData( data: UPLCTerm ): ConstOrErr
     {
         const d = getData( data );
         if( d === undefined ) return new ErrorUPLC("not data; unMapData");
@@ -690,7 +1011,7 @@ export default class BnCEK
             d.map.map( dataPair => new Pair<Data,Data>( dataPair.fst, dataPair.snd ) )
         );
     }
-    static unListData( data: UPLCTerm ): ConstOrErr
+    unListData( data: UPLCTerm ): ConstOrErr
     {
         const d = getData( data );
         if( d === undefined ) return new ErrorUPLC("not data; unListData");
@@ -701,7 +1022,7 @@ export default class BnCEK
             d.list
         );
     }
-    static unIData( data: UPLCTerm ): ConstOrErr
+    unIData( data: UPLCTerm ): ConstOrErr
     {
         const d = getData( data );
         if( d === undefined ) return new ErrorUPLC("not data; unIData");
@@ -710,7 +1031,7 @@ export default class BnCEK
 
         return UPLCConst.int( d.int );
     }
-    static unBData( data: UPLCTerm ): ConstOrErr
+    unBData( data: UPLCTerm ): ConstOrErr
     {
         const d = getData( data );
         if( d === undefined ) return new ErrorUPLC("not data; unBData");
@@ -719,7 +1040,7 @@ export default class BnCEK
 
         return UPLCConst.byteString( d.bytes );
     }
-    static equalsData( a: UPLCTerm, b: UPLCTerm ): ConstOrErr
+    equalsData( a: UPLCTerm, b: UPLCTerm ): ConstOrErr
     {
         const _a = getData( a );
         if( _a === undefined ) return new ErrorUPLC("not data; equalsData <first argument>");
@@ -728,7 +1049,7 @@ export default class BnCEK
         
         return UPLCConst.bool( eqData( _a, _b ) );
     }
-    static mkPairData( a: UPLCTerm, b: UPLCTerm ): ConstOrErr
+    mkPairData( a: UPLCTerm, b: UPLCTerm ): ConstOrErr
     {
         const _a = getData( a );
         if( _a === undefined ) return new ErrorUPLC("not data; mkPairData <frist argument>");
@@ -737,18 +1058,18 @@ export default class BnCEK
         
         return UPLCConst.pairOf( constT.data, constT.data )( _a, _b );
     }
-    static mkNilData( unit: UPLCTerm ): ConstOrErr
+    mkNilData( unit: UPLCTerm ): ConstOrErr
     {
         if( !isConstOfType( unit, constT.unit ) ) return new ErrorUPLC("not unit");
         return UPLCConst.listOf( constT.data )([]);
     }
-    static mkNilPairData( unit: UPLCTerm ): ConstOrErr
+    mkNilPairData( unit: UPLCTerm ): ConstOrErr
     {
         if( !isConstOfType( unit, constT.unit ) ) return new ErrorUPLC("not unit");
         return UPLCConst.listOf( constT.pairOf( constT.data, constT.data ) )([]);
     }
 
-    static serialiseData( data: UPLCTerm ): ConstOrErr
+    serialiseData( data: UPLCTerm ): ConstOrErr
     {
         const d = getData( data );
         if( d === undefined ) return new ErrorUPLC("serialiseData: not data input");
@@ -757,6 +1078,6 @@ export default class BnCEK
     } 
     // @todo
     //                   
-    // static verifyEcdsaSecp256k1Signature  
-    // static verifySchnorrSecp256k1Signature
+    // verifyEcdsaSecp256k1Signature  
+    // verifySchnorrSecp256k1Signature
 }

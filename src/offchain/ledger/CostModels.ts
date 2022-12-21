@@ -363,41 +363,77 @@ export const costModelV1Keys: (keyof CostModelPlutusV1)[] = Object.freeze( Objec
 
 export const costModelV2Keys: (keyof CostModelPlutusV2)[] = Object.freeze( Object.keys( defaultV2Costs ) ) as any;
 
+
+export function costModelV1ToFakeV2( costmdlsV1: AnyV1CostModel ): CostModelPlutusV2
+{    
+    const costs = toCostModelV1( costmdlsV1 );
+
+    const a_lot = BigInt( Number.MAX_SAFE_INTEGER );
+
+    function makeItALot( key: keyof CostModelPlutusV2 )
+    {
+        ObjectUtils.defineReadOnlyProperty( costs, key, a_lot );
+    }
+
+    makeItALot( "serialiseData-cpu-arguments-intercept" );
+    makeItALot( "serialiseData-cpu-arguments-slope" );
+    makeItALot( "serialiseData-memory-arguments-intercept" );
+    makeItALot( "serialiseData-memory-arguments-slope" );
+    makeItALot( "verifyEcdsaSecp256k1Signature-cpu-arguments" );
+    makeItALot( "verifyEcdsaSecp256k1Signature-memory-arguments" );
+    makeItALot( "verifySchnorrSecp256k1Signature-cpu-arguments-intercept" );
+    makeItALot( "verifySchnorrSecp256k1Signature-cpu-arguments-slope" );
+    makeItALot( "verifySchnorrSecp256k1Signature-memory-arguments" );
+
+    return costs as any;
+}
+
+export function isCostModelsV1( something: any ): something is AnyV1CostModel
+{
+    if(!( typeof something === "object" && something !== null )) return false;
+
+    return (
+        Array.isArray( something ) ?
+
+        something.length >= 166 && something.every( canBeUInteger ) :
+
+        costModelV1Keys.every( k => {
+            const val = something[k];
+            return val !== undefined && canBeUInteger( val ) 
+        })
+    )
+}
+
+export function isCostModelsV2( something: any ): something is AnyV2CostModel
+{
+    if(!( typeof something === "object" && something !== null )) return false;
+
+    return (
+        Array.isArray( something ) ?
+
+        something.length >= 175 && something.every( canBeUInteger ) :
+
+        costModelV2Keys.every( k => {
+            const val = something[k];
+            return val !== undefined && canBeUInteger( val ) 
+        })
+    )
+}
+
 export function isCostModels( something: any ): something is CostModels
 {
     if(!ObjectUtils.isObject( something )) return false;
 
     if( ObjectUtils.hasOwn<object,"PlutusV1">( something, "PlutusV1" ) )
     {
-        const pv1 = something.PlutusV1;
-
-        let length = Array.isArray( pv1 ) ? pv1.length : 0;
-        if(!(
-            Array.isArray( pv1 ) ?
-                pv1.every( canBeUInteger ):
-                Object.keys( pv1 ).every( k => {
-                    length++;
-                    return canBeUInteger( pv1[k] ) 
-                }) &&
-            length >= 166
-        )) return false;
+        if( !isCostModelsV1( something.PlutusV1 ) ) return false;
     }
-
-    if( ObjectUtils.hasOwn<object,"PlutusV2">( something, "PlutusV2" ) )
+    else if( ObjectUtils.hasOwn<object,"PlutusV2">( something, "PlutusV2" ) )
     {
-        const pv2 = something.PlutusV2;
-
-        let length = Array.isArray( pv2 ) ? pv2.length : 0;
-        if(!(
-            Array.isArray( pv2 ) ?
-                pv2.every( canBeUInteger ):
-                Object.keys( pv2 ).every( k => {
-                    length++;
-                    return canBeUInteger( pv2[k] ) 
-                }) &&
-            length >= 175
-        )) return false;
+        if( !isCostModelsV1( something.PlutusV2 ) ) return false;
     }
+    // no PlutusV2, nor PlutusV1 found
+    else return false;
 
     return true
 };

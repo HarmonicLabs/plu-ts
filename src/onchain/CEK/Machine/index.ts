@@ -1,11 +1,12 @@
 import BasePlutsError from "../../../errors/BasePlutsError";
 import PlutsCEKError from "../../../errors/PlutsCEKError";
 import PlutsCEKUnboundVarError from "../../../errors/PlutsCEKError/PlutsCEKComputeError/PlutsCEKUnboundVarError";
-import { AnyV1CostModel, AnyV2CostModel } from "../../../offchain/ledger/CostModels";
+import { AnyV1CostModel, AnyV2CostModel, costModelV1ToFakeV2, defaultV2Costs, isCostModelsV1, isCostModelsV2, toCostModelV2 } from "../../../offchain/ledger/CostModels";
 import ObjectUtils from "../../../utils/ObjectUtils";
 import UPLCTerm, { PureUPLCTerm } from "../../UPLC/UPLCTerm";
 import Application from "../../UPLC/UPLCTerms/Application";
 import Builtin from "../../UPLC/UPLCTerms/Builtin";
+import UPLCBuiltinTag from "../../UPLC/UPLCTerms/Builtin/UPLCBuiltinTag";
 import Delay from "../../UPLC/UPLCTerms/Delay";
 import ErrorUPLC from "../../UPLC/UPLCTerms/ErrorUPLC";
 import Force from "../../UPLC/UPLCTerms/Force";
@@ -26,7 +27,10 @@ import CEKHeap from "../CEKHeap";
 import CEKSteps, { ComputeStep, ReturnStep } from "../CEKSteps";
 import DelayCEK from "../DelayCEK";
 import LambdaCEK from "../LambdaCEK";
+import { BuiltinCostsOf, costModelV2ToBuiltinCosts } from "./BuiltinCosts";
 import ExBudget from "./ExBudget";
+import type { MachineCosts } from "./MachineCosts";
+import costModelV2ToMachineCosts from "./MachineCosts";
 
 /**
  * @todo
@@ -47,51 +51,50 @@ type CostModelOf<V extends MachineVersion> =
 export default class Machine<V extends MachineVersion>
 {
     readonly version!: V;
-    readonly execBudget!: ExBudget;
 
     constructor(
         version: V,
-        costs: CostModelOf<V>,
-        initialBudgetSpent: ExBudget = new ExBudget({ mem: 0, cpu: 0 })
+        costmodel: CostModelOf<V>
     )
     {
         if( !isMachineVersion( version ) ) throw new BasePlutsError("invalid MachineVersion");
         ObjectUtils.defineReadOnlyProperty( this, "version", version );
 
-        if( !(initialBudgetSpent instanceof ExBudget) ) throw new BasePlutsError("invalid initialBudgtetSpent");
-        let _execBudget = initialBudgetSpent
-        ObjectUtils.definePropertyIfNotPresent(
-            this,
-            "execBudget",
-            {
-                get: () => _execBudget.clone(),
-                set: () => {},
-                enumerable: true,
-                configurable: false
-            }
-        );
-
-        ObjectUtils.defineReadOnlyHiddenProperty(
-            this,
-            "spend",
-            ( budget: ExBudget ): void => {
-                _execBudget.add( budget );
-            } 
-        )
-
+        const isV1 = isCostModelsV1( costmodel );
+        if( !isV1 && !isCostModelsV2( costmodel ) ) throw new BasePlutsError("invalid machine costs");
+        
+        const costs = isV1 ? costModelV1ToFakeV2( costmodel ) : toCostModelV2( costmodel );
+        ObjectUtils.defineReadOnlyHiddenProperty( this, "getBuiltinCostFuction", costModelV2ToBuiltinCosts( costs ) );
+        ObjectUtils.defineReadOnlyHiddenProperty( this, "machineCosts", costModelV2ToMachineCosts( costs ) );
     }
 
-    eval( _term: UPLCTerm | Term<any> ): PureUPLCTerm
+    static evalSimple( _term: UPLCTerm | Term<any> ): PureUPLCTerm
     {
-        // Debug.time( timeTag );
+        return (
+            new Machine(
+                PlutusScriptVersion.V2,
+                defaultV2Costs
+            )
+        ).eval( _term ).result;
+    }
+
+    eval( _term: UPLCTerm | Term<any> ): { result: PureUPLCTerm, budgetSpent: ExBudget, logs: string[] }
+    {
+        const budget = new ExBudget({ mem: 0, cpu: 0 });
+        const spend = budget.add;
+
+        const logs: string[] = [];
+
+        const machineCosts: MachineCosts = (this as any).machineCosts;
+        const getBuiltinCostFuction: <Tag extends UPLCBuiltinTag>( tag: Tag ) => BuiltinCostsOf<Tag> = (this as any).getBuiltinCostFuction;
+
+        const bnCEK = new BnCEK( getBuiltinCostFuction, budget, logs );
         
         const frames = new CEKFrames();
         const steps = new CEKSteps();
         const heap = new CEKHeap();
     
-        // let n_compute = 0;
-        // let n_returns = 0;
-    
+        spend( machineCosts.startup );
         compute( _term instanceof Term ? _term.toUPLC(0) : _term, new CEKEnv( heap ) );
     
         while( !frames.isEmpty || steps.topIsCompute )
@@ -212,7 +215,7 @@ export default class Machine<V extends MachineVersion>
             {
                 if( v.nMissingArgs === 0 )
                 {
-                    steps.push( new ReturnStep( BnCEK.eval( v ) ) );
+                    steps.push( new ReturnStep( bnCEK.eval( v ) ) );
                     return;
                 }
                 if( frames.isEmpty )
@@ -305,7 +308,7 @@ export default class Machine<V extends MachineVersion>
                         bn = new PartialBuiltin( bn.tag );
                     }
     
-                    if( bn.nMissingArgs === 0 ) return returnCEK( BnCEK.eval( bn ) );
+                    if( bn.nMissingArgs === 0 ) return returnCEK( bnCEK.eval( bn ) );
     
                     bn.apply( v )
     
@@ -321,6 +324,11 @@ export default class Machine<V extends MachineVersion>
         // Debug.timeEnd(timeTag);
     
         // console.log( n_compute, n_returns );
-        return (steps.pop() as ReturnStep).value ?? new ErrorUPLC("steps.pop() was not a ReturnStep");
+        return {
+            result: (steps.pop() as ReturnStep).value ?? new ErrorUPLC("steps.pop() was not a ReturnStep"),
+            budgetSpent: budget,
+            logs: logs
+        };
     }
+
 }

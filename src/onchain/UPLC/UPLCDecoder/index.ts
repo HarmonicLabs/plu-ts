@@ -156,11 +156,6 @@ export default class UPLCDecoder
             const currB = currByte();
             const inBytePtr = currPtr % 8;
 
-            if( currB >= 192 && currB <= 194 )
-            {
-                logState();
-            }
-
             if( n === 1 ){
                 incrementPtrBy( 1 );
                 return logResult( 

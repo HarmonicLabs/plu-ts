@@ -40,6 +40,17 @@ export default class BigIntUtils
         return nums.reduce( (a,b) => a < b ? a : b );
     }
 
+    static log2( num: bigint ): bigint
+    {
+        if( num === BigInt(0) ) return BigInt(0);
+        if( num < BigInt(0) ) return -BigIntUtils.log2( BigIntUtils.abs( num ) );
+        
+        let n = BigInt( num );
+        let result = BigInt( 0 );
+        while( n >>= BigInt( 1 ) ) result++;
+        return result;
+    }
+
     /**
      * uses the bytes of the buffer to construct a BigInteger
      * > **IMPORTANT** the bytes are considered in Little Endian order; use ```BigIntUtils.fromBuffer``` for Big Endian

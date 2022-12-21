@@ -1,5 +1,5 @@
 import BasePlutsError from "../../../../errors/BasePlutsError";
-import { AnyV2CostModel, isCostModels, toCostModelV2 } from "../../../../offchain/ledger/CostModels";
+import { AnyV2CostModel, AnyV1CostModel, isCostModels, toCostModelV1, toCostModelV2, CostModelPlutusV2, costModelV1ToFakeV2 } from "../../../../offchain/ledger/CostModels";
 import { forceBigUInt } from "../../../../types/ints/Integer";
 import JsRuntime from "../../../../utils/JsRuntime";
 import ObjectUtils from "../../../../utils/ObjectUtils";
@@ -24,8 +24,8 @@ export type BuiltinCostsOf<Tag extends UPLCBuiltinTag> =
     Tag extends UPLCBuiltinTag.lessThanEqualInteger ?        ExecCostFuncs<TwoArgs> :
     Tag extends UPLCBuiltinTag.appendByteString ?            ExecCostFuncs<TwoArgs> :
     Tag extends UPLCBuiltinTag.consByteString ?              ExecCostFuncs<TwoArgs> :
-    Tag extends UPLCBuiltinTag.sliceByteString ?             ExecCostFuncs<TwoArgs> :
-    Tag extends UPLCBuiltinTag.lengthOfByteString ?          ExecCostFuncs<TwoArgs> :
+    Tag extends UPLCBuiltinTag.sliceByteString ?             ExecCostFuncs<ThreeArgs> :
+    Tag extends UPLCBuiltinTag.lengthOfByteString ?          ExecCostFuncs<OneArg> :
     Tag extends UPLCBuiltinTag.indexByteString ?             ExecCostFuncs<TwoArgs> :
     Tag extends UPLCBuiltinTag.equalsByteString ?            ExecCostFuncs<TwoArgs> :
     Tag extends UPLCBuiltinTag.lessThanByteString ?          ExecCostFuncs<TwoArgs> :
@@ -72,7 +72,12 @@ type ToBuiltinCache = {
     [x in UPLCBuiltinTag]: BuiltinCostsOf<x>;
 };
 
-export function CostModelV2ToBuiltinCosts( costmdls: AnyV2CostModel ): <Tag extends UPLCBuiltinTag>( tag: Tag ) => BuiltinCostsOf<Tag>
+export function costModelV1ToBuiltinCosts( costmdls: AnyV1CostModel ): <Tag extends UPLCBuiltinTag>( tag: Tag ) => BuiltinCostsOf<Tag>
+{
+    return costModelV2ToBuiltinCosts( costModelV1ToFakeV2( costmdls ) )
+}
+
+export function costModelV2ToBuiltinCosts( costmdls: AnyV2CostModel ): <Tag extends UPLCBuiltinTag>( tag: Tag ) => BuiltinCostsOf<Tag>
 {
     const costs = toCostModelV2( costmdls );
     JsRuntime.assert(
