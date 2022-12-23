@@ -1,4 +1,4 @@
-import { byte } from "./types";
+import { buffToByteArr, byte } from "./types";
 import rotr32 from "./utils/rotr32";
 
 /**
@@ -75,9 +75,12 @@ function sigma1(x: number ): number
  * @param {uint5[]} bytes - list of uint8 numbers
  * @returns {number[]} - list of uint8 numbers
  */
-export default function sha2_256(bytes: byte[]):  byte[]
+export default function sha2_256(bytes: byte[] | Buffer ):  byte[]
 {
-
+    if( Buffer.isBuffer( bytes ) )
+    {
+        bytes = buffToByteArr( bytes );
+    }
     /**
      * Initial hash (updated during compression phase)
      */

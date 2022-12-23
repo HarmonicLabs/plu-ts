@@ -1,5 +1,6 @@
+import BasePlutsError from "../errors/BasePlutsError";
 import ObjectUtils from "../utils/ObjectUtils";
-import type { byte, uint64 as uint64_t } from "./types";
+import { buffToByteArr, byte, uint64 as uint64_t } from "./types";
 import { byteArrToHex, forceUint64, uint64, uint64Rotr, uint64ToBytesLE } from "./types";
 
 /**
@@ -11,8 +12,16 @@ import { byteArrToHex, forceUint64, uint64, uint64Rotr, uint64ToBytesLE } from "
  * @example
  * bytesToHex(blake2b(textToBytes("abc"), 64)) => "ba80a53f981c4d0d6a2797b69f12f6e94c212f14685ac4b74b12bb6fdbffa2d17d87c5392aab792dc252d5de4533cc9518d38aa8dbf1925ab92386edd4009923"
  */
-export function blake2b(bytes: byte[], digestSize : 32 | 64 = 32 ): byte[]
+export function blake2b(bytes: byte[] | Buffer, digestSize : 32 | 64 = 32 ): byte[]
 {
+    if(!(
+        digestSize === 32 ||
+        digestSize === 64
+    )) throw new BasePlutsError("invalid blake2b digest size");
+    if( Buffer.isBuffer( bytes ) )
+    {
+        bytes = buffToByteArr( bytes );
+    }
     /**
      * 128 bytes (16*8 byte words)
      */

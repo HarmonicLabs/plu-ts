@@ -21,6 +21,7 @@ import dataToCbor from "../../../types/Data/toCbor";
 import { BuiltinCostsOf } from "../Machine/BuiltinCosts";
 import ExBudget from "../Machine/ExBudget";
 import { Buffer } from "buffer";
+import { blake2b, byteArrToHex, sha2_256, sha3, verifyEd25519Signature } from "../../../crypto";
 
 
 function intToSize( n: bigint ): bigint
@@ -45,6 +46,36 @@ function bsToSize( bs: ByteString | Buffer ): bigint
 function strToSize( str: string ): bigint
 {
     return bsToSize( Buffer.from( str, "utf8" ) );
+};
+
+const BOOL_SIZE: bigint = BigInt( 1 );
+const ANY_SIZE: bigint = BigInt( 1 );
+
+function constValueToSize( v: ConstValue ): bigint
+{
+    if( v instanceof Integer ) return intToSize( v.asBigInt );
+    if( v instanceof ByteString ) return bsToSize( v.asBytes );
+    if( typeof v === "string" ) return strToSize( v );
+    if( typeof v === "undefined" ) return ANY_SIZE;
+    if( typeof v === "boolean" ) return BOOL_SIZE;
+    if( isData( v ) ) return dataToSize( v );
+
+    if( Array.isArray( v ) ) return listToSize( v );
+
+    if( v instanceof Pair ) return pairToSize( v );
+
+    console.warn("unexpected 'constValueToSize'; exec costs evaluation might be inaccurate");
+    return ANY_SIZE;
+}
+
+function listToSize( l: ConstValue[] ): bigint
+{
+    return l.reduce( (acc, elem) => acc + constValueToSize( elem ), BigInt(0) );
+}
+
+function pairToSize( pairValue: Pair<ConstValue,ConstValue> ): bigint
+{
+    return constValueToSize( pairValue.fst ) + constValueToSize( pairValue.snd )
 }
 
 function dataToSize( data: Data ): bigint
@@ -175,7 +206,7 @@ function getList( list: UPLCTerm ): ConstValue[] | undefined
         Array.isArray( list.value )
     )) return undefined;
 
-    return list.value;
+    return list.value.slice();
 }
 
 function getPair( pair: UPLCTerm ): Pair<ConstValue,ConstValue> | undefined
@@ -314,10 +345,10 @@ export default class BnCEK
             case UPLCBuiltinTag.equalsByteString :                  return (this.equalsByteString as any)( ...bn.args );
             case UPLCBuiltinTag.lessThanByteString :                return (this.lessThanByteString as any)( ...bn.args );
             case UPLCBuiltinTag.lessThanEqualsByteString :          return (this.lessThanEqualsByteString as any)( ...bn.args );
-            case UPLCBuiltinTag.sha2_256 :                          throw new PlutsCEKError("builtin implementation missing");// return (this.sha2_256 as any)( ...bn.args );
-            case UPLCBuiltinTag.sha3_256 :                          throw new PlutsCEKError("builtin implementation missing");// return (this.sha3_256 as any)( ...bn.args );
-            case UPLCBuiltinTag.blake2b_256 :                       throw new PlutsCEKError("builtin implementation missing");// return (this.blake2b_256 as any)( ...bn.args );
-            case UPLCBuiltinTag.verifyEd25519Signature:             throw new PlutsCEKError("builtin implementation missing");// return (this.verifyEd25519Signature as any)( ...bn.args );
+            case UPLCBuiltinTag.sha2_256 :                          return (this.sha2_256 as any)( ...bn.args );
+            case UPLCBuiltinTag.sha3_256 :                          return (this.sha3_256 as any)( ...bn.args );
+            case UPLCBuiltinTag.blake2b_256 :                       return (this.blake2b_256 as any)( ...bn.args );
+            case UPLCBuiltinTag.verifyEd25519Signature:             return (this.verifyEd25519Signature as any)( ...bn.args );
             case UPLCBuiltinTag.appendString :                      return (this.appendString as any)( ...bn.args );
             case UPLCBuiltinTag.equalsString :                      return (this.equalsString as any)( ...bn.args );
             case UPLCBuiltinTag.encodeUtf8 :                        return (this.encodeUtf8 as any)( ...bn.args );
@@ -750,12 +781,105 @@ export default class BnCEK
         return (new BnCEK(this.getBuiltinCostFunc,new ExBudget(0,0), [])).lessThanByteString( a, b );
     }
 
-    // @todo
-    //
-    // sha2_256
-    // sha3_256
-    // blake2b_256
-    // verifyEd25519Signature
+    sha2_256( stuff: UPLCTerm ): ConstOrErr
+    {
+        const b = getBS( stuff );
+        if( b === undefined ) return new ErrorUPLC("sha2_256 :: not BS");
+
+        const f = this.getBuiltinCostFunc( UPLCBuiltinTag.sha2_256 );
+
+        const sb = bsToSize( b );
+
+        this.machineBudget.add({
+            mem: f.mem.at( sb ),
+            cpu: f.cpu.at( sb )
+        });
+
+        return UPLCConst.byteString(
+            new ByteString(
+                byteArrToHex(
+                    sha2_256( b.asBytes )
+                )
+            )
+        );
+    }
+
+    sha3_256( stuff: UPLCTerm ): ConstOrErr
+    {
+        const b = getBS( stuff );
+        if( b === undefined ) return new ErrorUPLC("sha3_256 :: not BS");
+
+        const f = this.getBuiltinCostFunc( UPLCBuiltinTag.sha3_256 );
+
+        const sb = bsToSize( b );
+
+        this.machineBudget.add({
+            mem: f.mem.at( sb ),
+            cpu: f.cpu.at( sb )
+        });
+
+        return UPLCConst.byteString(
+            new ByteString(
+                byteArrToHex(
+                    sha3( b.asBytes )
+                )
+            )
+        );
+    }
+
+    blake2b_256( stuff: UPLCTerm ): ConstOrErr
+    {
+        const b = getBS( stuff );
+        if( b === undefined ) return new ErrorUPLC("blake2b_256 :: not BS");
+
+        const f = this.getBuiltinCostFunc( UPLCBuiltinTag.blake2b_256 );
+
+        const sb = bsToSize( b );
+
+        this.machineBudget.add({
+            mem: f.mem.at( sb ),
+            cpu: f.cpu.at( sb )
+        });
+
+        return UPLCConst.byteString(
+            new ByteString(
+                byteArrToHex(
+                    blake2b( b.asBytes, 32 )
+                )
+            )
+        );
+    }
+
+    verifyEd25519Signature( key: UPLCTerm, message: UPLCTerm, signature: UPLCTerm ): ConstOrErr
+    {
+        const k = getBS( key );
+        if( k === undefined ) return new ErrorUPLC("verifyEd25519Signature :: key not BS");
+        
+        const kBytes = k.asBytes;
+        if( kBytes.length !== 32 ) return new ErrorUPLC("sha2_verifyEd25519Signature256 :: wrong message length");
+
+        const m = getBS( message );
+        if( m === undefined ) return new ErrorUPLC("verifyEd25519Signature :: message not BS");
+
+        const s = getBS( signature );
+        if( s === undefined ) return new ErrorUPLC("verifyEd25519Signature :: singature not BS");
+        const sBytes = s.asBytes;
+        if( sBytes.length !== 64 ) return new ErrorUPLC("sha2_verifyEd25519Signature256 :: wrong signature length");
+
+
+        const f = this.getBuiltinCostFunc( UPLCBuiltinTag.verifyEd25519Signature );
+
+        const sk = bsToSize( kBytes );
+        const sm = bsToSize( m );
+        const ss = bsToSize( sBytes );
+
+        this.machineBudget.add({
+            mem: f.mem.at( sk, sm, ss ),
+            cpu: f.cpu.at( sk, sm, ss )
+        });
+
+        return UPLCConst.bool( verifyEd25519Signature( sBytes, m.asBytes, kBytes ) );
+    }
 
     appendString( a: UPLCTerm, b: UPLCTerm ): ConstOrErr
     {
@@ -764,6 +888,16 @@ export default class BnCEK
         
         const _b = getStr( b );
         if( _b === undefined ) return new ErrorUPLC("not Str");
+
+        const f = this.getBuiltinCostFunc( UPLCBuiltinTag.appendString );
+
+        const sa = strToSize( _a );
+        const sb = strToSize( _b );
+
+        this.machineBudget.add({
+            mem: f.mem.at( sa, sb ),
+            cpu: f.cpu.at( sa, sb )
+        });
 
         return UPLCConst.str( _a + _b )
     }
@@ -775,12 +909,31 @@ export default class BnCEK
         const _b = getStr( b );
         if( _b === undefined ) return new ErrorUPLC("not Str");
 
+        const f = this.getBuiltinCostFunc( UPLCBuiltinTag.equalsString );
+
+        const sa = strToSize( _a );
+        const sb = strToSize( _b );
+
+        this.machineBudget.add({
+            mem: f.mem.at( sa, sb ),
+            cpu: f.cpu.at( sa, sb )
+        });
+
         return UPLCConst.bool( _a === _b )
     }
     encodeUtf8( a: UPLCTerm ): ConstOrErr
     {
         const _a = getStr( a );
         if( _a === undefined ) return new ErrorUPLC("not Str");
+
+        const f = this.getBuiltinCostFunc( UPLCBuiltinTag.encodeUtf8 );
+
+        const sa = strToSize( _a );
+
+        this.machineBudget.add({
+            mem: f.mem.at( sa ),
+            cpu: f.cpu.at( sa )
+        });
 
         return UPLCConst.byteString( new ByteString( Buffer.from( _a , "utf8" ) ) );
     }
@@ -789,29 +942,75 @@ export default class BnCEK
         const _a = getBS( a );
         if( _a === undefined ) return new ErrorUPLC("not BS");
 
+        const f = this.getBuiltinCostFunc( UPLCBuiltinTag.decodeUtf8 );
+
+        const sa = bsToSize( _a );
+
+        this.machineBudget.add({
+            mem: f.mem.at( sa ),
+            cpu: f.cpu.at( sa )
+        });
+
         return UPLCConst.str( _a.asBytes.toString("utf8") );
     }
     ifThenElse( condition: UPLCTerm, caseTrue: ConstOrErr, caseFalse: ConstOrErr ): ConstOrErr
     {
         if(! isConstOfType( condition, constT.bool ) ) return new ErrorUPLC("not a boolean");
         
+        const f = this.getBuiltinCostFunc( UPLCBuiltinTag.ifThenElse );
+
+        this.machineBudget.add({
+            mem: f.mem.at( BOOL_SIZE, ANY_SIZE, ANY_SIZE ),
+            cpu: f.cpu.at( BOOL_SIZE, ANY_SIZE, ANY_SIZE ),
+        });
+
         return condition.value ? caseTrue : caseFalse;
     }
+
     chooseUnit( unit: UPLCTerm, b: UPLCTerm ): UPLCTerm
     {
         if( !isConstOfType( unit, constT.unit ) ) return new ErrorUPLC("nota a unit");
+
+        const f = this.getBuiltinCostFunc( UPLCBuiltinTag.chooseUnit );
+
+        this.machineBudget.add({
+            mem: f.mem.at( ANY_SIZE, ANY_SIZE ),
+            cpu: f.cpu.at( ANY_SIZE, ANY_SIZE )
+        });
+
         return b;
     }
+
     trace( msg: UPLCConst, result: UPLCTerm ): UPLCTerm
     {
         const _msg = getStr( msg );
+        
         this.logs.push(_msg ?? "_msg_not_a_string_");
+        
+        const f = this.getBuiltinCostFunc( UPLCBuiltinTag.trace );
+
+        const smsg = _msg ? strToSize( _msg ) : BigInt(0) ;
+
+        this.machineBudget.add({
+            mem: f.mem.at( smsg, ANY_SIZE ),
+            cpu: f.cpu.at( smsg, ANY_SIZE )
+        });
+
         return result;
     }
     fstPair( pair: UPLCTerm ): ConstOrErr
     {
         const p = getPair( pair );
         if( p === undefined ) return new ErrorUPLC("not a pair");
+
+        const f = this.getBuiltinCostFunc( UPLCBuiltinTag.fstPair );
+
+        const sp = pairToSize( p );
+
+        this.machineBudget.add({
+            mem: f.mem.at( sp ),
+            cpu: f.cpu.at( sp )
+        });
 
         return new UPLCConst(
             constPairTypeUtils.getFirstTypeArgument( (pair as UPLCConst).type ),
@@ -823,6 +1022,15 @@ export default class BnCEK
         const p = getPair( pair );
         if( p === undefined ) return new ErrorUPLC("not a pair");
 
+        const f = this.getBuiltinCostFunc( UPLCBuiltinTag.sndPair );
+
+        const sp = pairToSize( p );
+
+        this.machineBudget.add({
+            mem: f.mem.at( sp ),
+            cpu: f.cpu.at( sp )
+        });
+
         return new UPLCConst(
             constPairTypeUtils.getSecondTypeArgument( (pair as UPLCConst).type ),
             p.snd as any
@@ -832,6 +1040,15 @@ export default class BnCEK
     {
         const l = getList( list );
         if( l === undefined ) return new ErrorUPLC("not a list");
+
+        const f = this.getBuiltinCostFunc( UPLCBuiltinTag.chooseList );
+
+        const sl = listToSize( l );
+
+        this.machineBudget.add({
+            mem: f.mem.at( sl, ANY_SIZE, ANY_SIZE ),
+            cpu: f.cpu.at( sl, ANY_SIZE, ANY_SIZE )
+        })
 
         return l.length === 0 ? whateverA : whateverB;
     }
@@ -852,17 +1069,36 @@ export default class BnCEK
         const l = getList( list );
         if( l === undefined ) return new ErrorUPLC("not a list");
 
-        l.unshift( elem.value );
+        const value = elem.value;
+
+        const f = this.getBuiltinCostFunc( UPLCBuiltinTag.mkCons );
+
+        const sl = listToSize( l );
+        const sv = constValueToSize( value );
+
+        this.machineBudget.add({
+            mem: f.mem.at( sv, sl ),
+            cpu: f.cpu.at( sv, sl )
+        });
 
         return new UPLCConst(
             list.type,
-            l as any
+            [ value, ...l ] as any
         );
     }
     headList( list: UPLCTerm ): ConstOrErr 
     {
         const l = getList( list );
         if( l === undefined || l.length === 0 ) return new ErrorUPLC(l === undefined ? "not a list" : "empty list passed to 'head'");
+
+        const f = this.getBuiltinCostFunc( UPLCBuiltinTag.headList );
+
+        const sl = listToSize( l );
+
+        this.machineBudget.add({
+            mem: f.mem.at( sl ),
+            cpu: f.cpu.at( sl )
+        });
 
         return new UPLCConst(
             constListTypeUtils.getTypeArgument( (list as UPLCConst).type as any ),
@@ -874,6 +1110,15 @@ export default class BnCEK
         const l = getList( list );
         if( l === undefined || l.length === 0 ) return new ErrorUPLC(l === undefined ? "not a list" : "empty list passed to 'tail'");
 
+        const f = this.getBuiltinCostFunc( UPLCBuiltinTag.tailList );
+
+        const sl = listToSize( l );
+
+        this.machineBudget.add({
+            mem: f.mem.at( sl ),
+            cpu: f.cpu.at( sl )
+        });
+
         return new UPLCConst(
             (list as UPLCConst).type,
             l.slice(1) as any
@@ -884,12 +1129,30 @@ export default class BnCEK
         const l = getList( list );
         if( l === undefined ) return new ErrorUPLC("not a list");
 
+        const f = this.getBuiltinCostFunc( UPLCBuiltinTag.nullList );
+
+        const sl = listToSize( l );
+
+        this.machineBudget.add({
+            mem: f.mem.at( sl ),
+            cpu: f.cpu.at( sl )
+        });
+
         return UPLCConst.bool( l.length === 0 )
     }
     chooseData( data: UPLCTerm, constr: UPLCTerm, map: UPLCTerm, list: UPLCTerm, int: UPLCTerm, bs: UPLCTerm ): ConstOrErr
     {
         const d = getData( data );
         if( d === undefined ) return new ErrorUPLC("not data");
+
+        const f = this.getBuiltinCostFunc( UPLCBuiltinTag.chooseData );
+
+        const sd = dataToSize( d );
+
+        this.machineBudget.add({
+            mem: f.mem.at( sd ),
+            cpu: f.cpu.at( sd )
+        });
 
         if( d instanceof DataConstr ) return constr;
         if( d instanceof DataMap ) return map;
@@ -906,15 +1169,25 @@ export default class BnCEK
 
         if( !constTypeEq( (fields as any).type, constT.listOf( constT.data ) ) ) return new ErrorUPLC("passed fields are not a list of Data");
         
-        const f: Data[] | undefined = getList( fields ) as any;
-        if( f === undefined ) return new ErrorUPLC("not a list");
+        const _fields: Data[] | undefined = getList( fields ) as any;
+        if( _fields === undefined ) return new ErrorUPLC("not a list");
+
+        const f = this.getBuiltinCostFunc( UPLCBuiltinTag.constrData );
+
+        const si = intToSize( i );
+        const sfields = _fields.reduce( (acc, elem) => acc + dataToSize( elem ), BigInt( 0 ) );
+
+        this.machineBudget.add({
+            mem: f.mem.at( si, sfields ),
+            cpu: f.cpu.at( si, sfields ),
+        });
 
         // assert we got a list of data
         // ( the type has been forced but not the value )
-        if( !f.every( field => isData( field ) ) ) return new ErrorUPLC("some of the fields are not Data, mismatching type btw");
+        if( !_fields.every( field => isData( field ) ) ) return new ErrorUPLC("some of the fields are not Data, mismatching type btw");
 
         return UPLCConst.data(
-            new DataConstr( i, f )
+            new DataConstr( i, _fields )
         );
     }
     mapData( listOfPair: UPLCTerm ): ConstOrErr
@@ -943,7 +1216,16 @@ export default class BnCEK
                 isData( pair.fst ) &&
                 isData( pair.snd ) 
             )
-        ) return new ErrorUPLC("some elements are not a pair, mismatching type btw");
+        ) return new ErrorUPLC("some elements are not a pair, mismatching const type btw");
+
+        const f = this.getBuiltinCostFunc( UPLCBuiltinTag.mapData );
+
+        const size = listToSize( list );
+
+        this.machineBudget.add({
+            mem: f.mem.at( size ),
+            cpu: f.cpu.at( size )
+        });
 
         return UPLCConst.data(
             new DataMap(
@@ -970,6 +1252,15 @@ export default class BnCEK
         // ( the type has been forced but not the value )
         if( !list.every( data => isData( data ) ) ) return new ErrorUPLC("some of the elements are not data, mismatching type btw");
 
+        const f = this.getBuiltinCostFunc( UPLCBuiltinTag.listData );
+
+        const size = listToSize( list );
+
+        this.machineBudget.add({
+            mem: f.mem.at( size ),
+            cpu: f.cpu.at( size )
+        });
+
         return UPLCConst.data(
             new DataList( list )
         );
@@ -979,12 +1270,30 @@ export default class BnCEK
         const i = getInt( int );
         if( i === undefined ) return new ErrorUPLC("not an int");
 
+        const f = this.getBuiltinCostFunc( UPLCBuiltinTag.iData );
+
+        const size = intToSize( i );
+
+        this.machineBudget.add({
+            mem: f.mem.at( size ),
+            cpu: f.cpu.at( size )
+        });
+
         return UPLCConst.data( new DataI( i ) );
     }
     bData( bs: UPLCTerm ): ConstOrErr
     {
         const b = getBS( bs );
         if( b === undefined ) return new ErrorUPLC("not BS");
+
+        const f = this.getBuiltinCostFunc( UPLCBuiltinTag.bData );
+
+        const size = bsToSize( b );
+
+        this.machineBudget.add({
+            mem: f.mem.at( size ),
+            cpu: f.cpu.at( size )
+        });
 
         return UPLCConst.data( new DataB( b ) );
     }
@@ -994,6 +1303,15 @@ export default class BnCEK
         if( d === undefined ) return new ErrorUPLC(`not data; unConstrData${ data instanceof UPLCConst ? "; " + constTypeToStirng(data.type) :""}`);
 
         if( !( d instanceof DataConstr ) ) return new ErrorUPLC("not a data constructor");
+
+        const f = this.getBuiltinCostFunc( UPLCBuiltinTag.unConstrData );
+
+        const size = dataToSize( d );
+
+        this.machineBudget.add({
+            mem: f.mem.at( size ),
+            cpu: f.cpu.at( size )
+        });
 
         return UPLCConst.pairOf( constT.int, constT.listOf( constT.data ) )(
             d.constr,
@@ -1007,6 +1325,15 @@ export default class BnCEK
 
         if( !( d instanceof DataMap ) ) return new ErrorUPLC("not a data map");
 
+        const f = this.getBuiltinCostFunc( UPLCBuiltinTag.unMapData );
+
+        const size = dataToSize( d );
+
+        this.machineBudget.add({
+            mem: f.mem.at( size ),
+            cpu: f.cpu.at( size )
+        });
+
         return UPLCConst.listOf( constT.pairOf( constT.data, constT.data ) )(
             d.map.map( dataPair => new Pair<Data,Data>( dataPair.fst, dataPair.snd ) )
         );
@@ -1017,6 +1344,15 @@ export default class BnCEK
         if( d === undefined ) return new ErrorUPLC("not data; unListData");
 
         if( !( d instanceof DataList ) ) return new ErrorUPLC("not a data list");
+
+        const f = this.getBuiltinCostFunc( UPLCBuiltinTag.unListData );
+
+        const size = dataToSize( d );
+
+        this.machineBudget.add({
+            mem: f.mem.at( size ),
+            cpu: f.cpu.at( size )
+        });
 
         return UPLCConst.listOf( constT.data )(
             d.list
@@ -1029,6 +1365,15 @@ export default class BnCEK
 
         if( !( d instanceof DataI ) ) return new ErrorUPLC("not a data integer");
 
+        const f = this.getBuiltinCostFunc( UPLCBuiltinTag.unIData );
+
+        const size = dataToSize( d );
+
+        this.machineBudget.add({
+            mem: f.mem.at( size ),
+            cpu: f.cpu.at( size )
+        });
+
         return UPLCConst.int( d.int );
     }
     unBData( data: UPLCTerm ): ConstOrErr
@@ -1037,6 +1382,15 @@ export default class BnCEK
         if( d === undefined ) return new ErrorUPLC("not data; unBData");
 
         if( !( d instanceof DataB ) ) return new ErrorUPLC("not a data BS", {UPLCTerm: ((data as UPLCConst).value as DataConstr).constr.asBigInt });
+
+        const f = this.getBuiltinCostFunc( UPLCBuiltinTag.unBData );
+
+        const size = dataToSize( d );
+
+        this.machineBudget.add({
+            mem: f.mem.at( size ),
+            cpu: f.cpu.at( size )
+        });
 
         return UPLCConst.byteString( d.bytes );
     }
@@ -1047,6 +1401,16 @@ export default class BnCEK
         const _b = getData( b );
         if( _b === undefined ) return new ErrorUPLC("not data; equalsData <second argument>");
         
+        const f = this.getBuiltinCostFunc( UPLCBuiltinTag.equalsData );
+
+        const sa = dataToSize( _a );
+        const sb = dataToSize( _b );
+
+        this.machineBudget.add({
+            mem: f.mem.at( sa, sb ),
+            cpu: f.cpu.at( sa, sb )
+        });
+
         return UPLCConst.bool( eqData( _a, _b ) );
     }
     mkPairData( a: UPLCTerm, b: UPLCTerm ): ConstOrErr
@@ -1055,17 +1419,43 @@ export default class BnCEK
         if( _a === undefined ) return new ErrorUPLC("not data; mkPairData <frist argument>");
         const _b = getData( b );
         if( _b === undefined ) return new ErrorUPLC("not data; mkPairData <second argument>");
+
+        const f = this.getBuiltinCostFunc( UPLCBuiltinTag.mkPairData );
+
+        const sa = dataToSize( _a );
+        const sb = dataToSize( _b );
+
+        this.machineBudget.add({
+            mem: f.mem.at( sa, sb ),
+            cpu: f.cpu.at( sa, sb )
+        });
         
         return UPLCConst.pairOf( constT.data, constT.data )( _a, _b );
     }
     mkNilData( unit: UPLCTerm ): ConstOrErr
     {
         if( !isConstOfType( unit, constT.unit ) ) return new ErrorUPLC("not unit");
+
+        const f = this.getBuiltinCostFunc( UPLCBuiltinTag.mkNilData );
+
+        this.machineBudget.add({
+            mem: f.mem.at( ANY_SIZE ),
+            cpu: f.cpu.at( ANY_SIZE )
+        });
+
         return UPLCConst.listOf( constT.data )([]);
     }
     mkNilPairData( unit: UPLCTerm ): ConstOrErr
     {
         if( !isConstOfType( unit, constT.unit ) ) return new ErrorUPLC("not unit");
+
+        const f = this.getBuiltinCostFunc( UPLCBuiltinTag.mkNilPairData );
+
+        this.machineBudget.add({
+            mem: f.mem.at( ANY_SIZE ),
+            cpu: f.cpu.at( ANY_SIZE )
+        });
+
         return UPLCConst.listOf( constT.pairOf( constT.data, constT.data ) )([]);
     }
 
@@ -1073,6 +1463,15 @@ export default class BnCEK
     {
         const d = getData( data );
         if( d === undefined ) return new ErrorUPLC("serialiseData: not data input");
+
+        const f = this.getBuiltinCostFunc( UPLCBuiltinTag.serialiseData );
+
+        const sData = dataToSize( d );
+
+        this.machineBudget.add({
+            mem: f.mem.at( sData ),
+            cpu: f.cpu.at( sData )
+        });
 
         return UPLCConst.byteString( new ByteString( dataToCbor( d ).asBytes ) );
     } 

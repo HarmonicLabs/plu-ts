@@ -2,7 +2,7 @@ import BasePlutsError from "../errors/BasePlutsError";
 import BigIntUtils from "../utils/BigIntUtils";
 import JsRuntime from "../utils/JsRuntime";
 import { sha2_512 } from "./sha2_512";
-import { byte, byteArrToHex } from "./types";
+import { buffToByteArr, byte, byteArrToHex } from "./types";
 import positiveMod from "./utils/positiveMod";
 
 
@@ -206,7 +206,7 @@ function ihash( m: byte[] ): bigint
 }
 
 
-export function derivePublicKey(privateKey: byte[]): byte[]
+export function deriveEd25519PublicKey(privateKey: byte[]): byte[]
 {
     const privateKeyHash = sha2_512(privateKey);
     const a = getA(privateKeyHash);
@@ -215,7 +215,7 @@ export function derivePublicKey(privateKey: byte[]): byte[]
     return encodePoint(A);
 }
 
-export function sign(message: byte[], privateKey: byte[]): byte[]
+export function signEd25519(message: byte[], privateKey: byte[]): byte[]
 {
     const privateKeyHash = sha2_512(privateKey);
     const a = getA(privateKeyHash);
@@ -230,11 +230,26 @@ export function sign(message: byte[], privateKey: byte[]): byte[]
     return encodePoint(R).concat(encodeInt(S));
 }
 
-export function verify(signature: byte[], message: byte[], publicKey: byte[]): boolean
+export function verifyEd25519Signature(signature: byte[] | Buffer, message: byte[] | Buffer, publicKey: byte[] | Buffer): boolean
 {
     if (signature.length !== 64 || publicKey.length != 32)
     {
         throw new BasePlutsError(`unexpected signature length ${signature.length}`);
+    }
+    
+    if( Buffer.isBuffer( signature ) )
+    {
+        signature = buffToByteArr( signature );
+    }
+
+    if( Buffer.isBuffer( message ) )
+    {
+        message = buffToByteArr( message );
+    }
+
+    if( Buffer.isBuffer( publicKey ) )
+    {
+        publicKey = buffToByteArr( publicKey );
     }
 
     const R = decodePoint(signature.slice(0, 32));
