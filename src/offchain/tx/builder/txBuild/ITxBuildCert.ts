@@ -1,10 +1,11 @@
 import CanBeData from "../../../CanBeData/CanBeData";
 import Script from "../../../script/Script";
 import TxOutRef from "../../body/output/TxOutRef";
+import type { AnyCertificate } from "../../../ledger/certs/Certificate";
 
 export interface ITxBuildCert {
-    cert: any
-    script: {
+    cert: AnyCertificate
+    script?: {
         inline: Script
         redeemer: CanBeData
     } | {

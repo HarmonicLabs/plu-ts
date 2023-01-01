@@ -8,10 +8,8 @@ export interface ITxBuildMint {
     value: Value
     script: {
         inline: Script
-        redeemer: CanBeData
-    } | {
-        simpleRef: TxOutRef
         policyId: Hash32
+        redeemer: CanBeData
     } | {
         ref: TxOutRef
         policyId: Hash32

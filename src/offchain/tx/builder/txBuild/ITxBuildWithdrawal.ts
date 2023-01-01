@@ -1,10 +1,11 @@
 import CanBeData from "../../../CanBeData/CanBeData";
+import { TxWithdrawalsEntry } from "../../../ledger/TxWithdrawals";
 import Script from "../../../script/Script";
 import TxOutRef from "../../body/output/TxOutRef";
 
 export interface ITxBuildWithdrawal {
-    withdrawal: any
-    script: {
+    withdrawal: TxWithdrawalsEntry
+    script?: {
         inline: Script
         redeemer: CanBeData
     } | {

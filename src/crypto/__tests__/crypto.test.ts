@@ -146,6 +146,12 @@ describe("src/crypto", () => {
 
     describe("blake2b", () => {
 
+        test('bytesToHex( blake2b([], 28) ) => 836cc68931c2e4e3e838602eca1902591d216837bafddfe6f0c8cb07', () => {
+            expect(
+                bytesToHex( blake2b([], 28) )
+            ).toEqual("836cc68931c2e4e3e838602eca1902591d216837bafddfe6f0c8cb07")
+        });
+
         test('bytesToHex(blake2b([0, 1])) => "01cf79da4945c370c68b265ef70641aaa65eaa8f5953e3900d97724c2c5aa095"', () => {
 
             expect(

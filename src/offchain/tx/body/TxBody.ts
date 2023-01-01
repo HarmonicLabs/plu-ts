@@ -1,8 +1,8 @@
 import { NetworkT } from "../../Network";
-import { canBeUInteger, CanBeUInteger, forceUInteger } from "../../../types/ints/Integer";
+import { canBeUInteger, CanBeUInteger, forceBigUInt, forceUInteger } from "../../../types/ints/Integer";
 import Coin from "../../ledger/Coin";
 import Certificate, { AnyCertificate, certificatesToDepositLovelaces } from "../../ledger/certs/Certificate";
-import TxWithdrawals from "../../ledger/TxWithdrawals";
+import TxWithdrawals, { ITxWithdrawals, canBeTxWithdrawals, forceTxWithdrawals } from "../../ledger/TxWithdrawals";
 import { Value } from "../../ledger/Value/Value";
 import TxOut from "./output/TxOut";
 import TxIn from "./TxIn";
@@ -21,6 +21,8 @@ import Cbor from "../../../cbor/Cbor";
 import CborMap, { CborMapEntry } from "../../../cbor/CborObj/CborMap";
 import CborUInt from "../../../cbor/CborObj/CborUInt";
 import CborArray from "../../../cbor/CborObj/CborArray";
+import Hash32 from "../../hashes/Hash32/Hash32";
+import { blake2b_256 } from "../../../crypto";
 
 type Utxo = TxIn | TxOutRef;
 
@@ -30,7 +32,7 @@ export interface ITxBody {
     fee: Coin,
     ttl?: CanBeUInteger,
     certs?: AnyCertificate[],
-    withdrawals?: TxWithdrawals,
+    withdrawals?: TxWithdrawals | ITxWithdrawals,
     protocolUpdate?: ProtocolUpdateProposal,
     auxDataHash?: AuxiliaryDataHash, // hash 32
     validityIntervalStart?: CanBeUInteger,
@@ -42,6 +44,55 @@ export interface ITxBody {
     collateralReturn?: TxOut,
     totCollateral?: Coin,
     refInputs?: Utxo[]
+}
+
+export function isITxBody( body: Readonly<object> ): body is ITxBody
+{
+    if( !ObjectUtils.isObject( body ) ) return false;
+
+    const fields = Object.keys( body );
+    const b = body as ITxBody;
+
+    return (
+        fields.length >= 3 &&
+        
+        ObjectUtils.hasOwn( b, "inputs" ) &&
+        Array.isArray( b.inputs ) && b.inputs.length > 0 &&
+        b.inputs.every( _in => _in instanceof TxOutRef ) &&
+        
+        ObjectUtils.hasOwn( b, "outputs" ) &&
+        Array.isArray( b.outputs ) && b.outputs.length > 0 &&
+        b.outputs.every( _in => _in instanceof TxOut ) &&
+
+        ObjectUtils.hasOwn( b, "fee" ) && canBeUInteger( b.fee ) &&
+
+        ( b.ttl === undefined || canBeUInteger( b.ttl ) ) &&
+        ( b.certs === undefined || b.certs.every( c => c instanceof Certificate ) ) &&
+        ( b.withdrawals === undefined || canBeTxWithdrawals( b.withdrawals ) ) &&
+        ( b.protocolUpdate === undefined || isProtocolUpdateProposal( b.protocolUpdate ) ) &&
+        ( b.auxDataHash === undefined || b.auxDataHash instanceof Hash32 ) &&
+        ( b.validityIntervalStart === undefined || canBeUInteger( b.validityIntervalStart ) ) &&
+        ( b.mint === undefined || b.mint instanceof Value ) &&
+        ( b.scriptDataHash === undefined || b.scriptDataHash instanceof Hash32 ) &&
+        ( b.collateralInputs === undefined || (
+            Array.isArray( b.collateralInputs ) && 
+            b.collateralInputs.every( collateral => collateral instanceof TxIn )
+        )) &&
+        ( b.requiredSigners === undefined || (
+            Array.isArray( b.requiredSigners ) &&
+            b.requiredSigners.every( sig => sig instanceof PubKeyHash )
+        )) &&
+        ( b.network === undefined || b.network === "mainnet" || b.network === "testnet" ) &&
+        ( b.collateralReturn === undefined || (
+            Array.isArray( b.collateralReturn ) &&
+            b.collateralReturn.every( ret => ret instanceof TxOut )
+        )) &&
+        ( b.totCollateral === undefined || canBeUInteger( b.totCollateral ) ) &&
+        ( b.refInputs === undefined || (
+            Array.isArray( b.refInputs ) &&
+            b.refInputs.every( ref => ref instanceof TxOutRef )
+        ))
+    )
 }
 
 export default class TxBody
@@ -64,6 +115,11 @@ export default class TxBody
     readonly collateralReturn?: TxOut;
     readonly totCollateral?: bigint;
     readonly refInputs?: TxIn[];
+
+    /**
+     * getter
+     */
+    readonly hash: Hash32;
 
     /**
      * 
@@ -100,6 +156,9 @@ export default class TxBody
             refInputs
         } = body;
 
+        let _isHashValid: boolean = false;
+        let _hash: Hash32;
+
         // -------------------------------------- inputs -------------------------------------- //
         JsRuntime.assert(
             Array.isArray( inputs )  &&
@@ -111,7 +170,7 @@ export default class TxBody
             this,
             "inptus",
             Object.freeze(
-                inputs.map( i => i instanceof TxIn ? i : new TxIn( i.id, i.index, i.resolved ) )
+                inputs.map( i => i instanceof TxIn ? i : new TxIn( i ) )
             )
         );
 
@@ -135,10 +194,16 @@ export default class TxBody
             (fee instanceof UInteger),
             "invald 'fee' field"
         );
-        ObjectUtils.defineReadOnlyProperty(
+        let _fee = forceBigUInt( fee );
+        ObjectUtils.definePropertyIfNotPresent(
             this,
             "fee",
-            forceUInteger( fee ).asBigInt
+            {
+                get: () => _fee,
+                set: ( ...whatever: any[] ) => {},
+                enumerable: true,
+                configurable: false
+            }
         );
 
         ObjectUtils.defineReadOnlyProperty(
@@ -181,14 +246,14 @@ export default class TxBody
         
         if( withdrawals !== undefined )
         JsRuntime.assert(
-            withdrawals instanceof TxWithdrawals,
-            "withdrawals was not udnefined nor an instance of 'TxWithdrawals'"
+            canBeTxWithdrawals( withdrawals ),
+            "withdrawals was not undefined nor an instance of 'TxWithdrawals'"
         )
 
         ObjectUtils.defineReadOnlyProperty(
             this,
             "withdrawals",
-            withdrawals
+            withdrawals === undefined ? undefined : forceTxWithdrawals( withdrawals )
         );
         
         // -------------------------------------- protocolUpdate -------------------------------------- //
@@ -347,7 +412,7 @@ export default class TxBody
             totCollateral === undefined ? undefined : forceUInteger( totCollateral ).asBigInt
         );
 
-        // -------------------------------------- reference inputs --------------------------------     * @param body 
+        // -------------------------------------- reference inputs -------------------------------------- //  
 
         {
             JsRuntime.assert(
@@ -363,6 +428,29 @@ export default class TxBody
             refInputs?.length === 0 ? undefined : Object.freeze( refInputs )
         );
 
+        // -------------------------------------- hash -------------------------------------- //  
+
+        ObjectUtils.definePropertyIfNotPresent(
+            this, "hash",
+            {
+                get: (): Hash32 => {
+                    if( _isHashValid === true && _hash instanceof Hash32 ) return _hash.clone();
+
+                    _hash = new Hash32(
+                        Buffer.from(
+                            blake2b_256( this.toCbor().asBytes )
+                        )
+                    );
+                    _isHashValid = true;
+
+                    return _hash.clone()
+                },
+                set: () => {},
+                enumerable: true,
+                configurable: false
+            }
+        );
+        
     }
 
     toCbor(): CborString

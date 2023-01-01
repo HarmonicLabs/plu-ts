@@ -17,6 +17,27 @@ export type IValueAdaEntry = {
     assets: { "": number | bigint }
 }
 
+function cloneIValueAssets( iValAssets: IValueAssets ): IValueAssets
+{
+    const ks = Object.keys( iValAssets );
+    const res = {};
+    for(let i = 0; i < ks.length; i++)
+    {
+        const _k = ks[i];
+        ObjectUtils.defineNormalProperty(
+            res, _k, iValAssets[_k]
+        );
+    }
+    return res;
+}
+
+export function cloneIValueEntry<Entry extends (IValueAdaEntry | IValuePolicyEntry)>( { policy, assets }: Entry ): Entry
+{
+    return {
+        policy: policy,
+        assets: cloneIValueAssets( assets )
+    } as any;
+}
 
 /**
  * extended ascii

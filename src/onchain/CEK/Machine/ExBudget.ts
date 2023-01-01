@@ -1,6 +1,11 @@
+import Cbor from "../../../cbor/Cbor";
+import CborArray from "../../../cbor/CborObj/CborArray";
+import CborUInt from "../../../cbor/CborObj/CborUInt";
+import CborString from "../../../cbor/CborString";
+import { ToCbor } from "../../../cbor/interfaces/CBORSerializable";
 import BasePlutsError from "../../../errors/BasePlutsError";
 import Cloneable from "../../../types/interfaces/Cloneable";
-import Integer, { CanBeUInteger, forceUInteger } from "../../../types/ints/Integer";
+import Integer, { CanBeUInteger, forceBigUInt, forceUInteger } from "../../../types/ints/Integer";
 import ObjectUtils from "../../../utils/ObjectUtils";
 
 export interface IExBudget {
@@ -9,7 +14,7 @@ export interface IExBudget {
 }
 
 class ExBudget
-    implements IExBudget, Cloneable<ExBudget>
+    implements IExBudget, Cloneable<ExBudget>, ToCbor
 {
     readonly cpu!: bigint;
     readonly mem!: bigint;
@@ -23,19 +28,19 @@ class ExBudget
 
         if( typeof args_or_cpu === "object" && !( args_or_cpu instanceof Integer ) )
         {
-            _cpu = forceUInteger( args_or_cpu.cpu ).asBigInt;
-            _mem = forceUInteger( args_or_cpu.mem ).asBigInt;
+            _cpu = forceBigUInt( args_or_cpu.cpu );
+            _mem = forceBigUInt( args_or_cpu.mem );
         }
         else
         {
-            _cpu = forceUInteger( args_or_cpu ).asBigInt;
+            _cpu = forceBigUInt( args_or_cpu );
             if( mem === undefined )
             {
                 throw new BasePlutsError(
                     'missing "mem" paramter while cosntructing "ExBudget" instance'
                 );
             }
-            _mem = forceUInteger( mem ).asBigInt;
+            _mem = forceBigUInt( mem );
         }
 
         ObjectUtils.definePropertyIfNotPresent(
@@ -92,6 +97,19 @@ class ExBudget
     clone(): ExBudget
     {
         return new ExBudget( this.cpu, this.mem );
+    }
+
+    toCborObj(): CborArray
+    {
+        return new CborArray([
+            new CborUInt( this.mem ),
+            new CborUInt( this.cpu )
+        ]);
+    }
+
+    toCbor(): CborString
+    {
+        return Cbor.encode( this.toCborObj() );
     }
 }
 

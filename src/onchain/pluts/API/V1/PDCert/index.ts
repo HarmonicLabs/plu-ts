@@ -7,19 +7,19 @@ const PDCert = pstruct({
     KeyRegistration: { _0: PStakingCredential.type },
     KeyDeRegistration: { _0: PStakingCredential.type },
     KeyDelegation: {
-        _0: PStakingCredential.type, // delegator
-        _1: PPubKeyHash.type              // delegatee
+        delegator: PStakingCredential.type,
+        poolKeyHash: PPubKeyHash.type
     },
     PoolRegistration: {
-        _0: PPubKeyHash.type,             // poolId
-        _1: PPubKeyHash.type,             // pool VFR
+        poolId: PPubKeyHash.type,
+        poolVFR: PPubKeyHash.type,
     },
     PoolRetire: {
-        _0: PPubKeyHash.type,
-        _1: int,                     // epoch
+        poolId: PPubKeyHash.type,
+        epoch: int,                     // epoch
     },
     Genesis: {},
-    Mir: {}
+    MoveInstantRewards: {}
 })
 
 export default PDCert;

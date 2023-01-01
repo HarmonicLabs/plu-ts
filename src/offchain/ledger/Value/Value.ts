@@ -1,3 +1,4 @@
+import { ByteString } from "../../..";
 import Cbor from "../../../cbor/Cbor";
 import CborBytes from "../../../cbor/CborObj/CborBytes";
 import CborMap from "../../../cbor/CborObj/CborMap";
@@ -5,12 +6,24 @@ import CborNegInt from "../../../cbor/CborObj/CborNegInt";
 import CborUInt from "../../../cbor/CborObj/CborUInt";
 import CborString from "../../../cbor/CborString";
 import { ToCbor } from "../../../cbor/interfaces/CBORSerializable";
+import DataB from "../../../types/Data/DataB";
+import DataI from "../../../types/Data/DataI";
+import DataMap from "../../../types/Data/DataMap";
+import DataPair from "../../../types/Data/DataPair";
+import { ToData } from "../../../types/Data/toData/interface";
+import Cloneable from "../../../types/interfaces/Cloneable";
+import BufferUtils, { Ord } from "../../../utils/BufferUtils";
 import JsRuntime from "../../../utils/JsRuntime";
 import ObjectUtils from "../../../utils/ObjectUtils";
 import Hash32 from "../../hashes/Hash32/Hash32";
-import { IValuePolicyEntry, IValueAdaEntry, isIValue, addIValues, subIValues } from "./IValue";
+import { IValuePolicyEntry, IValueAdaEntry, isIValue, addIValues, subIValues, cloneIValueEntry } from "./IValue";
 
 export type IValue = (IValuePolicyEntry | IValueAdaEntry)[]
+
+function cloneIValue( ival: IValue ): IValue
+{
+    return ival.map( cloneIValueEntry );
+}
 
 function policyToString( policy: "" | Hash32 ): string
 {
@@ -18,7 +31,7 @@ function policyToString( policy: "" | Hash32 ): string
 }
 
 export class Value
-    implements ToCbor
+    implements ToCbor, Cloneable<Value>, ToData
 {
     readonly map!: IValue
 
@@ -39,7 +52,27 @@ export class Value
             Object.freeze( entry.policy );
         });
 
-        map.sort((a,b) => policyToString( a.policy ).localeCompare( policyToString( b.policy ) ) );
+        // value MUST have an ada entry
+        if( !map.some( entry => entry.policy === "" ) )
+        {
+            map.unshift({
+                policy: "",
+                assets: { "": 0 }
+            });
+        }
+
+        map.sort((a,b) => {
+            if( a.policy === "" )
+            {
+                if( b.policy === "" ) return Ord.EQ;
+                return Ord.LT;
+            };
+            if( b.policy === "" )
+            {
+                return Ord.GT;
+            }
+            return BufferUtils.lexCompare( a.policy.asBytes, b.policy.asBytes );
+        });
 
         ObjectUtils.defineReadOnlyProperty(
             this,
@@ -48,9 +81,35 @@ export class Value
         );
     }
 
+    clone(): Value
+    {
+        return new Value( cloneIValue(this.map ) )
+    }
+
+    toData(): DataMap<DataB,DataMap<DataB,DataI>>
+    {
+        return new DataMap<DataB,DataMap<DataB,DataI>>(
+            this.map.map( ({ policy, assets }) =>
+                new DataPair(
+                    new DataB( new ByteString( policy === "" ? "" : policy.asBytes ) ),
+                    new DataMap(
+                        Object.keys( assets ).map( assetName =>
+                            new DataPair(
+                                new DataB(
+                                    ByteString.fromAscii( assetName )
+                                ),
+                                new DataI( assets[ assetName ] )
+                            )
+                        )
+                    )
+                )
+            )
+        )
+    }
+
     static get zero(): Value
     {
-        return new Value([]);
+        return Value.lovelaces( 0 )
     }
 
     static isZero( v: Value ): boolean

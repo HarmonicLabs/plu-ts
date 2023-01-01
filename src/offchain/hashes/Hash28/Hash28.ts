@@ -17,4 +17,9 @@ export default class Hash28 extends Hash
     {
         return this.asString;
     }
+
+    clone(): Hash28
+    {
+        return new Hash28( this.asBytes );
+    }
 }

@@ -7,12 +7,15 @@ import { ToCbor } from "../../cbor/interfaces/CBORSerializable";
 import JsRuntime from "../../utils/JsRuntime";
 import ObjectUtils from "../../utils/ObjectUtils";
 import AuxiliaryData from "./AuxiliaryData/AuxiliaryData";
-import TxBody from "./body/TxBody";
-import TxWitnessSet from "./TxWitnessSet/TxWitnessSet";
+import VKey from "./TxWitnessSet/VKeyWitness/VKey";
+import TxBody, { ITxBody, isITxBody } from "./body/TxBody";
+import TxWitnessSet, { ITxWitnessSet, isITxWitnessSet } from "./TxWitnessSet/TxWitnessSet";
+import Hash32 from "../hashes/Hash32/Hash32";
+import { blake2b_256 } from "../../crypto";
 
 export interface ITx {
-    body: TxBody
-    witnesses: TxWitnessSet
+    body: ITxBody
+    witnesses: ITxWitnessSet
     isScriptValid?: boolean
     auxiliaryData?: AuxiliaryData | null
 }
@@ -25,6 +28,30 @@ export default class Tx
     readonly isScriptValid!: boolean
     readonly auxiliaryData?: AuxiliaryData | null
 
+    /**
+     * checks that the signer is needed
+     * if true signs the transaction with the public key
+     * otherwise nothing happens (the signature is not added)
+    **/
+    readonly sign: ( signer: VKey ) => void
+    /**
+     * @returns {boolean}
+     *  `true` if all the signers needed
+     *  have signed the transaction; `false` otherwise
+     * 
+     * signers needed are:
+     *  - required to spend an utxo
+     *  - required by certificate
+     *  - required by withdrawals
+     *  - additional spefified in the `requiredSigners` field
+     */
+    readonly isComplete: () => boolean
+
+    /**
+     * getter
+     */
+    readonly hash: Hash32;
+
     constructor(tx: ITx)
     {
         const {
@@ -35,11 +62,11 @@ export default class Tx
         } = tx;
 
         JsRuntime.assert(
-            body instanceof TxBody,
+            body instanceof TxBody || isITxBody( body ),
             "invalid transaction body; must be instance of 'TxBody'"
         );
         JsRuntime.assert(
-            witnesses instanceof TxWitnessSet,
+            isITxWitnessSet( witnesses ),
             "invalid wintesses; must be instance of 'TxWitnessSet'"
         );
         JsRuntime.assert(
@@ -56,12 +83,12 @@ export default class Tx
         ObjectUtils.defineReadOnlyProperty(
             this,
             "body",
-            body
+            new TxBody( body )
         );
         ObjectUtils.defineReadOnlyProperty(
             this,
             "witnesses",
-            witnesses
+            witnesses instanceof TxWitnessSet ? witnesses : new TxWitnessSet( witnesses )
         );
         ObjectUtils.defineReadOnlyProperty(
             this,
@@ -73,6 +100,18 @@ export default class Tx
             "auxiliaryData",
             auxiliaryData
         );
+
+        ObjectUtils.definePropertyIfNotPresent(
+            this, "hash",
+            {
+                get: (): Hash32 => this.body.hash,
+                set: () => {},
+                enumerable: true,
+                configurable: false
+            }
+        );
+
+        missing sign and isComplete implementation
     }
 
     toCbor(): CborString

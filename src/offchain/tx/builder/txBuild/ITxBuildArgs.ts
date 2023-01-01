@@ -18,7 +18,7 @@ export interface ITxBuildArgs {
     readonlyRefInputs?: TxOutRef[],
     requiredSigners?: PubKeyHash[],
     collaterals?: TxOutRef[],
-    returnCollaterals?: ITxBuildOutput[],
+    collateralReturn?: ITxBuildOutput,
     mints?: ITxBuildMint[],
     invalidBefore?: CanBeUInteger,
     invalidAfter?: CanBeUInteger,

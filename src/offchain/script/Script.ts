@@ -3,6 +3,10 @@ import { ScriptJsonFormat } from "../../onchain/pluts/Script";
 import JsRuntime from "../../utils/JsRuntime";
 import ObjectUtils from "../../utils/ObjectUtils";
 import NativeScript, { nativeScriptToCbor } from "./NativeScript";
+import Cloneable from "../../types/interfaces/Cloneable";
+import BufferUtils from "../../utils/BufferUtils";
+import Hash28 from "../hashes/Hash28/Hash28";
+import { blake2b_224 } from "../../crypto";
 
 export const enum ScriptType {
     NativeScript = "NativeScript",
@@ -11,9 +15,11 @@ export const enum ScriptType {
 }
 
 export default class Script<T extends ScriptType = ScriptType>
+    implements Cloneable<Script<T>>
 {
     readonly type!: T;
     readonly cbor!: Buffer;
+    readonly hash: Hash28;
 
     constructor( scriptType: T, cbor: Buffer | (T extends ScriptType.NativeScript ? NativeScript : ScriptJsonFormat) )
     {
@@ -48,6 +54,38 @@ export default class Script<T extends ScriptType = ScriptType>
             this,
             "cbor",
             cbor
+        );
+
+        let _hash: Hash28 = undefined as any;
+
+        ObjectUtils.definePropertyIfNotPresent(
+            this, "hash",
+            {
+                get: () => {
+                    if( _hash instanceof Hash28 ) return _hash.clone();
+
+                    _hash = new Hash28(
+                        Buffer.from(
+                            blake2b_224(
+                                this.cbor
+                            )
+                        )
+                    );
+
+                    return _hash.clone();
+                },
+                set: () => {},
+                enumerable: true,
+                configurable: false
+            }
+        )
+    }
+
+    clone(): Script<T>
+    {
+        return new Script(
+            this.type,
+            BufferUtils.copy( this.cbor )
         );
     }
 }

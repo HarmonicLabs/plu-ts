@@ -4,12 +4,12 @@ import CborArray from "../../../cbor/CborObj/CborArray"
 import CborUInt from "../../../cbor/CborObj/CborUInt"
 import CborString from "../../../cbor/CborString"
 import { ToCbor } from "../../../cbor/interfaces/CBORSerializable"
+import ExBudget from "../../../onchain/CEK/Machine/ExBudget"
 import Data, { isData } from "../../../types/Data"
 import { dataToCborObj } from "../../../types/Data/toCbor"
 import { canBeUInteger, CanBeUInteger, forceUInteger } from "../../../types/ints/Integer"
 import JsRuntime from "../../../utils/JsRuntime"
 import ObjectUtils from "../../../utils/ObjectUtils"
-import ExecUnits from "../../ledger/ExecUnits"
 
 export const enum TxRedeemerTag {
     Spend    = 0,
@@ -22,7 +22,7 @@ export interface ITxRedeemer {
     tag: TxRedeemerTag
     index: CanBeUInteger
     data: Data
-    execUnits: ExecUnits
+    execUnits: ExBudget
 }
 
 export default class TxRedeemer
@@ -38,7 +38,7 @@ export default class TxRedeemer
      * the actual value of the redeemer
     **/
     readonly data!: Data
-    readonly execUnits!: ExecUnits
+    execUnits!: ExBudget
 
     constructor( redeemer: ITxRedeemer )
     {
@@ -89,13 +89,27 @@ export default class TxRedeemer
         );
 
         JsRuntime.assert(
-            execUnits instanceof ExecUnits,
+            execUnits instanceof ExBudget,
             "invalid 'execUnits' constructing 'TxRedeemer'"
         );
-        ObjectUtils.defineReadOnlyProperty(
+
+        let _exUnits = execUnits.clone();
+
+        ObjectUtils.definePropertyIfNotPresent(
             this,
             "execUnits",
-            execUnits
+            {
+                get: () => _exUnits,
+                set: ( newExUnits: ExBudget ) => {
+                    JsRuntime.assert(
+                        newExUnits instanceof ExBudget,
+                        "invalid 'execUnits' constructing 'TxRedeemer'"
+                    );
+                    _exUnits = newExUnits.clone();
+                },
+                enumerable: true,
+                configurable: false
+            }
         );
     }
 

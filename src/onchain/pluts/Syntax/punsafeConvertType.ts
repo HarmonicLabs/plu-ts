@@ -5,10 +5,11 @@ import Term from "../Term";
 import { TermType } from "../Term/Type/base";
 import { isWellFormedType } from "../Term/Type/kinds";
 import { ToPType } from "../Term/Type/ts-pluts-conversion";
+import addUtilityForType, { UtilityTermOf } from "../stdlib/UtilityTerms/addUtilityForType";
 
 
 export default function punsafeConvertType<FromPInstance extends PType, SomeExtension extends {}, ToTermType extends TermType>
-( someTerm: Term<FromPInstance> & SomeExtension, toType: ToTermType ): Term<ToPType<ToTermType>> & SomeExtension
+( someTerm: Term<FromPInstance> & SomeExtension, toType: ToTermType ): Term<ToPType<ToTermType>> & SomeExtension & UtilityTermOf<ToPType<ToTermType>>
 {
     if( !isWellFormedType( toType ) )
     throw new BasePlutsError("");
@@ -31,5 +32,5 @@ export default function punsafeConvertType<FromPInstance extends PType, SomeExte
 
     });
 
-    return converted;
+    return addUtilityForType( toType )( converted ) as any;
 }

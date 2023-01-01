@@ -1,5 +1,4 @@
 import Cbor from "../../../cbor/Cbor";
-import CborObj from "../../../cbor/CborObj";
 import CborArray from "../../../cbor/CborObj/CborArray";
 import CborBytes from "../../../cbor/CborObj/CborBytes";
 import CborMap, { CborMapEntry } from "../../../cbor/CborObj/CborMap";

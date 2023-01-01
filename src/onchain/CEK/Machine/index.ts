@@ -6,7 +6,7 @@ import ObjectUtils from "../../../utils/ObjectUtils";
 import UPLCTerm, { PureUPLCTerm } from "../../UPLC/UPLCTerm";
 import Application from "../../UPLC/UPLCTerms/Application";
 import Builtin from "../../UPLC/UPLCTerms/Builtin";
-import UPLCBuiltinTag from "../../UPLC/UPLCTerms/Builtin/UPLCBuiltinTag";
+import UPLCBuiltinTag, { getNRequiredForces } from "../../UPLC/UPLCTerms/Builtin/UPLCBuiltinTag";
 import Delay from "../../UPLC/UPLCTerms/Delay";
 import ErrorUPLC from "../../UPLC/UPLCTerms/ErrorUPLC";
 import Force from "../../UPLC/UPLCTerms/Force";
@@ -32,11 +32,18 @@ import ExBudget from "./ExBudget";
 import type { MachineCosts } from "./MachineCosts";
 import costModelV2ToMachineCosts from "./MachineCosts";
 
+
+export type MachineVersionV1 = PlutusScriptVersion.V1;
+export type MachineVersionV2 = PlutusScriptVersion.V2;
+
+export const machineVersionV1 = PlutusScriptVersion.V1 as const;
+export const machineVersionV2 = PlutusScriptVersion.V2 as const;
+
 /**
  * @todo
  * TODO: to substitute when modifying offchain
 **/
-type MachineVersion = PlutusScriptVersion.V1 | PlutusScriptVersion.V2
+export type MachineVersion = MachineVersionV1 | MachineVersionV2
 
 function isMachineVersion( something: any ): something is MachineVersion
 {
@@ -48,7 +55,7 @@ type CostModelOf<V extends MachineVersion> =
     V extends PlutusScriptVersion.V2 ? AnyV2CostModel :
     never    
 
-export default class Machine<V extends MachineVersion>
+export default class Machine<V extends MachineVersion = MachineVersion>
 {
     readonly version!: V;
 
@@ -80,6 +87,7 @@ export default class Machine<V extends MachineVersion>
 
     eval( _term: UPLCTerm | Term<any> ): { result: PureUPLCTerm, budgetSpent: ExBudget, logs: string[] }
     {
+        // new budget for each call
         const budget = new ExBudget({ mem: 0, cpu: 0 });
         const spend = budget.add;
 
@@ -87,6 +95,22 @@ export default class Machine<V extends MachineVersion>
 
         const machineCosts: MachineCosts = (this as any).machineCosts;
         const getBuiltinCostFuction: <Tag extends UPLCBuiltinTag>( tag: Tag ) => BuiltinCostsOf<Tag> = (this as any).getBuiltinCostFuction;
+
+        function spendBuiltin( bn: Builtin ): void
+        {
+            const nForces = BigInt( getNRequiredForces( bn.tag ) );
+
+            if( nForces === BigInt(0) )
+            {
+                budget.add( machineCosts.builtinNode );
+                return;
+            }
+
+            budget.add({
+                mem: machineCosts.builtinNode.mem + ( machineCosts.force.mem * nForces ),
+                cpu: machineCosts.builtinNode.cpu + ( machineCosts.force.cpu * nForces )
+            });
+        }
 
         const bnCEK = new BnCEK( getBuiltinCostFuction, budget, logs );
         
@@ -136,18 +160,22 @@ export default class Machine<V extends MachineVersion>
             {
                 const varValue = env.get( term.deBruijn );
                 if( varValue === undefined ) throw new PlutsCEKUnboundVarError();
+                
+                budget.add( machineCosts.var );
                 steps.push( new ReturnStep( varValue ) );
                 return;
             }
     
             if( term instanceof UPLCConst )
             {
+                budget.add( machineCosts.constant );
                 steps.push( new ReturnStep( term ) );
                 return;
             }
     
             if( term instanceof Lambda )
             {
+                budget.add( machineCosts.lam );
                 steps.push(
                     new ReturnStep(
                         new LambdaCEK( term.body, env.clone() )
@@ -159,6 +187,7 @@ export default class Machine<V extends MachineVersion>
     
             if( term instanceof Delay )
             {
+                budget.add( machineCosts.delay );
                 steps.push(
                     new ReturnStep(
                         new DelayCEK(
@@ -172,6 +201,7 @@ export default class Machine<V extends MachineVersion>
     
             if( term instanceof Force )
             {
+                budget.add( machineCosts.force );
                 frames.push( new ForceFrame );
                 steps.push( new ComputeStep( term.termToForce, env ) );
                 return;
@@ -179,6 +209,7 @@ export default class Machine<V extends MachineVersion>
     
             if( term instanceof Application )
             {
+                budget.add( machineCosts.apply );
                 frames.push( new RApp( term.argTerm, env ) );
                 steps.push( new ComputeStep( term.funcTerm, env ) );
                 return;
@@ -189,6 +220,10 @@ export default class Machine<V extends MachineVersion>
                 (term as any) instanceof PartialBuiltin
             )
             {
+                if( term instanceof Builtin )
+                {
+                    spendBuiltin( term );
+                }
                 steps.push(
                     new ReturnStep(
                         term instanceof PartialBuiltin? term : new PartialBuiltin( term.tag )
@@ -305,6 +340,7 @@ export default class Machine<V extends MachineVersion>
                     let bn = topFrame.func.clone();
                     if( bn instanceof Builtin )
                     {
+                        spendBuiltin( bn );
                         bn = new PartialBuiltin( bn.tag );
                     }
     

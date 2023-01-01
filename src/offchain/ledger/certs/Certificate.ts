@@ -4,12 +4,17 @@ import CborArray from "../../../cbor/CborObj/CborArray";
 import CborUInt from "../../../cbor/CborObj/CborUInt";
 import CborString from "../../../cbor/CborString";
 import { ToCbor } from "../../../cbor/interfaces/CBORSerializable";
-import { forceUInteger, UInteger } from "../../../types/ints/Integer";
+import BasePlutsError from "../../../errors/BasePlutsError";
+import DataConstr from "../../../types/Data/DataConstr";
+import DataI from "../../../types/Data/DataI";
+import ToData from "../../../types/Data/toData/interface";
+import { canBeUInteger, forceUInteger, UInteger } from "../../../types/ints/Integer";
 import JsRuntime from "../../../utils/JsRuntime";
 import ObjectUtils from "../../../utils/ObjectUtils";
 import StakeCredentials from "../../credentials/StakeCredentials";
 import GenesisDelegateHash from "../../hashes/Hash28/GenesisDelegateHash";
 import GenesisHash from "../../hashes/Hash28/GenesisHash";
+import Hash28 from "../../hashes/Hash28/Hash28";
 import PoolKeyHash from "../../hashes/Hash28/PoolKeyHash";
 import VRFKeyHash from "../../hashes/Hash32/VRFKeyHash";
 import Epoch from "../Epoch";
@@ -46,7 +51,7 @@ export type ParamsOfCert<CertTy extends CertificateType> =
     never
 
 export default class Certificate<CertTy extends CertificateType>
-    implements ToCbor
+    implements ToCbor, ToData
 {
     readonly certType!: CertTy
     readonly params!: ParamsOfCert<CertTy>
@@ -148,6 +153,96 @@ export default class Certificate<CertTy extends CertificateType>
             "params",
             Object.freeze( params )
         );
+    }
+
+    toData(): DataConstr
+    {
+        // every certificate has at most two parameters
+        const [ fst, snd ] = this.params;
+
+        switch( this.certType )
+        {
+            case CertificateType.StakeRegistration:
+            case CertificateType.StakeDeRegistration:
+
+                if(!( fst instanceof StakeCredentials ))
+                throw new BasePlutsError(
+                    "stake (de)registration parameter was not 'StakeCredentials'"
+                );
+
+                return new DataConstr(
+                    this.certType === CertificateType.StakeRegistration ? 0 : 1 , // KeyRegistration | KeyDeRegistration
+                    [ fst.toData() ]
+                )
+            break;
+            case CertificateType.StakeDelegation:
+                
+                if(!( fst instanceof StakeCredentials ))
+                throw new BasePlutsError(
+                    "stake delegation frist parameter was not 'StakeCredentials'"
+                );
+
+                if(!( snd instanceof Hash28 ))
+                throw new BasePlutsError(
+                    "stake delegation second parameter was not 'PoolKeyHash'"
+                );
+
+                return new DataConstr(
+                    2, // KeyDelegation
+                    [ fst.toData(), snd.toData() ]
+                )
+            break;
+            case CertificateType.PoolRegistration:
+                
+                if(!( fst instanceof PoolParams ))
+                throw new BasePlutsError(
+                    "PoolRegistration frist parameter was not 'PoolRegistration'"
+                );
+
+                const {
+                    operator: poolId,
+                    vrfKeyHash: poolVRF,
+                } = fst;
+
+                if(!( poolId instanceof Hash28 && poolVRF instanceof Hash28 ))
+                throw new BasePlutsError(
+                    "invalid pool registration parameters"
+                );
+
+                return new DataConstr(
+                    3, // PoolRegistration
+                    [ poolId.toData(), poolVRF.toData() ]
+                )
+            break;
+            case CertificateType.PoolRetirement:
+
+                if(!( fst instanceof Hash28 ))
+                throw new BasePlutsError(
+                    "invalid poolId for pool retirement certificate"
+                );
+
+                if( !canBeUInteger( snd ) )
+                throw new BasePlutsError(
+                    "invalid epoch as second pool retirement cetificate"
+                );
+
+                return new DataConstr(
+                    4, // PoolRetire
+                    [ fst.toData(), new DataI( snd ) ]
+                );
+            break;
+            case CertificateType.GenesisKeyDelegation:
+            case CertificateType.MoveInstantRewards:
+                return new DataConstr(
+                    this.certType === CertificateType.GenesisKeyDelegation ? 5 : 6,
+                    []
+                );
+            break;
+            default:
+                throw new BasePlutsError(
+                    "unmatched certificate type"
+                );
+        }
     }
 
     toCbor(): CborString

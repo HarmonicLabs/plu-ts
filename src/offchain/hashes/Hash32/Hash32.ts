@@ -13,9 +13,4 @@ export default class Hash32 extends Hash
         );
     }
     
-    valueOf(): string
-    {
-        return this.asString;
-    }
-    
 }

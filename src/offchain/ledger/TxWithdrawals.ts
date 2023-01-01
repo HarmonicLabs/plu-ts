@@ -1,4 +1,4 @@
-import { forceUInteger, UInteger } from "../../types/ints/Integer";
+import { canBeUInteger, forceBigUInt, forceUInteger, UInteger } from "../../types/ints/Integer";
 import JsRuntime from "../../utils/JsRuntime";
 import ObjectUtils from "../../utils/ObjectUtils";
 import Coin from "./Coin";
@@ -10,23 +10,53 @@ import Cbor from "../../cbor/Cbor";
 import CborMap from "../../cbor/CborObj/CborMap";
 import CborUInt from "../../cbor/CborObj/CborUInt";
 import Value from "./Value/Value";
+import { isHex } from "../../types/HexString";
+import ToData from "../../types/Data/toData/interface";
+import Data from "../../types/Data";
+import DataMap from "../../types/Data/DataMap";
+import DataPair from "../../types/Data/DataPair";
+import StakeCredentials, { StakeKey } from "../credentials/StakeCredentials";
+import DataI from "../../types/Data/DataI";
+import DataConstr from "../../types/Data/DataConstr";
 
-export type TxWithdrawalsMapBigInt = {
+export type TxWithdrawalsEntryBigInt = {
     rewardAccount: Hash28,
     amount: bigint
-}[];
+}
 
-export type TxWithdrawalsMap = {
+export type TxWithdrawalsMapBigInt = TxWithdrawalsEntryBigInt[];
+
+export type TxWithdrawalsEntry = {
     rewardAccount: Hash28,
     amount: Coin
-}[];
+}
+
+export type TxWithdrawalsMap = TxWithdrawalsEntry[];
 
 export type ITxWithdrawals
     = { [rewardAccount: string]: Coin }
     | TxWithdrawalsMap;
 
+export function isTxWithdrawalsMap( stuff: any ): stuff is TxWithdrawalsMap
+{
+    if( !Array.isArray( stuff ) ) return false;
+
+    return stuff.every( ({ rewardAccount, amount }) => rewardAccount instanceof Hash28 && canBeUInteger( amount ) );
+}
+
+export function isITxWithdrawals( stuff: any ): stuff is ITxWithdrawals
+{
+    if( !(typeof stuff === "object") ) return false;
+
+    if( Array.isArray( stuff ) ) return isTxWithdrawalsMap( stuff );
+
+    const ks = Object.keys( stuff );
+
+    return ks.every( k => k.length === (28*2) && isHex( k ) && canBeUInteger( stuff[k] ) )
+}
+
 export default class TxWithdrawals
-    implements ToCbor
+    implements ToCbor, ToData
 {
     readonly map!: TxWithdrawalsMapBigInt
 
@@ -93,6 +123,22 @@ export default class TxWithdrawals
         )
     }
 
+    toData(version?: "v1" | "v2" | undefined): DataMap<DataConstr,DataI>
+    {
+        return new DataMap(
+            this.map
+            .map( ({ rewardAccount, amount }) =>
+                new DataPair(
+                    new StakeCredentials(
+                        "stakeKey",
+                        new StakeKey( rewardAccount )
+                    ).toData(),
+                    new DataI( amount )
+                )
+            )
+        );
+    }
+
     toCbor(): CborString
     {
         return Cbor.encode( this.toCborObj() );
@@ -108,4 +154,16 @@ export default class TxWithdrawals
             })
         )
     }
+}
+
+export function canBeTxWithdrawals( stuff: any ): stuff is (ITxWithdrawals | TxWithdrawals)
+{
+    return (stuff instanceof TxWithdrawals) || isITxWithdrawals( stuff );
+}
+
+export function forceTxWithdrawals( stuff: TxWithdrawals | ITxWithdrawals ): TxWithdrawals
+{
+    if( stuff instanceof TxWithdrawals ) return stuff;
+
+    return new TxWithdrawals( stuff );
 }

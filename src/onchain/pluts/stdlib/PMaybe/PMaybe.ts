@@ -11,7 +11,7 @@ export type PMaybeT<PTy extends PDataRepresentable> = PStruct<{
     Nothing: {}
 }> & ConstantableStructType
 
-const _PMaybe = pgenericStruct( tyArg => {
+const _PMaybe = pgenericStruct( <T extends ConstantableTermType>(tyArg: T) => {
     return {
         Just: { val: tyArg },
         Nothing: {}
@@ -20,7 +20,7 @@ const _PMaybe = pgenericStruct( tyArg => {
 
 function PMaybe<T extends ConstantableTermType>( tyArg: T ): PMaybeT<ToPType<T>>
 {
-    return _PMaybe ( tyArg ) as unknown as PMaybeT<ToPType<T>>;
+    return _PMaybe( tyArg ) as unknown as PMaybeT<ToPType<T>>;
 }
 
 export default ObjectUtils.defineReadOnlyProperty(

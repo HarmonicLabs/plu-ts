@@ -5,51 +5,109 @@ import CborMap, { CborMapEntry } from "../../../cbor/CborObj/CborMap";
 import CborUInt from "../../../cbor/CborObj/CborUInt";
 import CborString from "../../../cbor/CborString";
 import { ToCbor } from "../../../cbor/interfaces/CBORSerializable";
+import ExBudget from "../../../onchain/CEK/Machine/ExBudget";
 import { PlutusScriptVersion, ScriptJsonFormat } from "../../../onchain/pluts/Script";
-import Data from "../../../types/Data";
+import Data, { isData } from "../../../types/Data";
 import { dataToCborObj } from "../../../types/Data/toCbor";
+import { canBeUInteger } from "../../../types/ints/Integer";
+import ObjectUtils from "../../../utils/ObjectUtils";
 import NativeScript, { nativeScriptToCborObj } from "../../script/NativeScript";
 import Script, { ScriptType } from "../../script/Script";
 import BootstrapWitness from "./BootstrapWitness";
-import TxRedeemer from "./TxRedeemer";
+import TxRedeemer, { TxRedeemerTag } from "./TxRedeemer";
+import VKey from "./VKeyWitness/VKey";
 import VKeyWitness from "./VKeyWitness/VKeyWitness";
 
 export interface ITxWitnessSet {
     vkeyWitnesses?: VKeyWitness[],
-    nativeScripts?: (NativeScript | Script<ScriptType.NativeScript>)[],
+    nativeScripts?: Script<ScriptType.NativeScript>[],
     bootstrapWitnesses?: BootstrapWitness[],
-    plutusV1Scripts?: (
-        ScriptJsonFormat<PlutusScriptVersion.V1> | 
-        Script<ScriptType.PlutusV1>
-    )[],
+    plutusV1Scripts?: Script<ScriptType.PlutusV1>[],
     datums?: Data[],
     redeemers?: TxRedeemer[],
-    plutusV2Scripts?: (
-        ScriptJsonFormat<PlutusScriptVersion.V2> | 
-        Script<ScriptType.PlutusV2>
-    )[],
+    plutusV2Scripts?: Script<ScriptType.PlutusV2>[],
 };
+
+function isUndefOrCheckedArr<ArrElemT>( stuff: undefined | ArrElemT[], arrayElemCheck: (elem: ArrElemT) => boolean )
+{
+    return (
+        stuff === undefined || (
+            Array.isArray( stuff ) &&
+            stuff.every( arrayElemCheck )
+        )
+    );
+}
+
+export function isITxWitnessSet( set: object ): set is ITxWitnessSet
+{
+    if( !ObjectUtils.isObject( set ) ) return false;
+
+    const {
+        vkeyWitnesses,
+        nativeScripts,
+        bootstrapWitnesses,
+        plutusV1Scripts,
+        datums,
+        redeemers,
+        plutusV2Scripts
+    } = set as ITxWitnessSet;
+
+    return (
+        isUndefOrCheckedArr(
+            vkeyWitnesses,
+            vkeyWit => vkeyWit instanceof VKeyWitness
+        ) &&
+        isUndefOrCheckedArr(
+            nativeScripts,
+            ns => ns instanceof Script && ns.type === ScriptType.NativeScript
+        ) &&
+        isUndefOrCheckedArr(
+            bootstrapWitnesses,
+            bootWit => bootWit instanceof BootstrapWitness
+        ) &&
+        isUndefOrCheckedArr(
+            plutusV1Scripts,
+            pv1 => pv1 instanceof Script && pv1.type === ScriptType.PlutusV1
+        ) &&
+        isUndefOrCheckedArr( datums, isData ) &&
+        isUndefOrCheckedArr(
+            redeemers,
+            rdmr => rdmr instanceof TxRedeemer
+        ) &&
+        isUndefOrCheckedArr(
+            plutusV2Scripts,
+            pv2 => pv2 instanceof Script && pv2.type === ScriptType.PlutusV2
+        )
+    );
+}
 
 export default class TxWitnessSet
     implements ITxWitnessSet, ToCbor
 {
     readonly vkeyWitnesses?: VKeyWitness[];
-    readonly nativeScripts?: (NativeScript | Script<ScriptType.NativeScript>)[];
+    readonly nativeScripts?: Script<ScriptType.NativeScript>[];
     readonly bootstrapWitnesses?: BootstrapWitness[];
-    readonly plutusV1Scripts?: (
-        ScriptJsonFormat<PlutusScriptVersion.V1> | 
-        Script<ScriptType.PlutusV1>
-    )[];
+    readonly plutusV1Scripts?: Script<ScriptType.PlutusV1>[];
     readonly datums?: Data[];
     readonly redeemers?: TxRedeemer[];
-    readonly plutusV2Scripts?: (
-        ScriptJsonFormat<PlutusScriptVersion.V2> | 
-        Script<ScriptType.PlutusV2>
-    )[];
+    readonly plutusV2Scripts?: Script<ScriptType.PlutusV2>[];
 
-    constructor( witnesses: ITxWitnessSet )
+    /**
+     * checks that the signer is needed
+     * if true signs the transaction with the public key
+     * otherwise nothing happens (the signature is not added)
+    **/
+    readonly sign: ( signer: VKey ) => void
+    /**
+     * @returns {boolean}
+     *  `true` if all the signers needed (both by input utxos and by the `requiredSigners` field)
+     *  have signed the transaction; `false` otherwise
+     */
+    readonly isComplete: () => boolean
+
+    constructor( witnesses: ITxWitnessSet, allRequiredSigners: VKey[] = [] )
     {
-        
+        lzvxkjblkj
     }
 
     toCbor(): CborString
@@ -92,13 +150,8 @@ export default class TxWitnessSet
                 {
                     k: new CborUInt( 3 ),
                     v: new CborArray(
-                        this.plutusV1Scripts.map( script =>     
-                            Cbor.parse(
-                                script instanceof Script ? 
-                                script.cbor : 
-                                Buffer.from( script.cborHex, "hex" ) 
-                            )
-                        )
+                        this.plutusV1Scripts
+                        .map( script => Cbor.parse( script.cbor ) )
                     )
                 },
 
@@ -122,13 +175,8 @@ export default class TxWitnessSet
                 {
                     k: new CborUInt( 6 ),
                     v: new CborArray(
-                        this.plutusV2Scripts.map( script =>     
-                            Cbor.parse(
-                                script instanceof Script ? 
-                                script.cbor : 
-                                Buffer.from( script.cborHex, "hex" ) 
-                            )
-                        )
+                        this.plutusV2Scripts
+                        .map( script => Cbor.parse( script.cbor ) )
                     )
                 },
             ]

@@ -2,13 +2,19 @@ import { Buffer } from "buffer";
 import HexString from "../../types/HexString";
 import JsRuntime from "../JsRuntime";
 
+export const enum Ord {
+    LT = -1,
+    EQ = 0,
+    GT = 1
+}
+
 export default class BufferUtils
 {
     private constructor() {};
 
     static copy( buffer: Buffer ): Buffer
     {
-        return Buffer.from( buffer )
+        return Buffer.from( Array.from( buffer ) )
     }
 
     static eq( a: Readonly<Buffer>, b: Readonly<Buffer> ): boolean
@@ -46,5 +52,29 @@ export default class BufferUtils
         }
 
         return Buffer.from( byteNums );
+    }
+
+    static lexCompare( a: Buffer, b: Buffer ): Ord
+    {
+        const len = Object.freeze({
+            isEq: a.length === b.length,
+            isLess: a.length < b.length
+        });
+
+        const minLen = len.isLess ? a.length : b.length;
+
+        for( let i = 0; i < minLen; i++ )
+        {
+            const _a = a.at(i);
+            const _b = b.at(i);
+            if( _a === undefined ) return Ord.LT;
+            if( _b === undefined ) return Ord.GT;
+
+            if( _a < _b ) return Ord.LT;
+            if( _a > _b) return Ord.GT;
+            // if( _a === _b ) continue;
+        }
+
+        return Ord.EQ;
     }
 }

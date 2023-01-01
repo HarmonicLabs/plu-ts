@@ -14,6 +14,11 @@ import CborArray from "../../../../cbor/CborObj/CborArray";
 import { dataToCborObj } from "../../../../types/Data/toCbor";
 import CborTag from "../../../../cbor/CborObj/CborTag";
 import CborBytes from "../../../../cbor/CborObj/CborBytes";
+import Cloneable from "../../../../types/interfaces/Cloneable";
+import ToData from "../../../../types/Data/toData/interface";
+import DataConstr from "../../../../types/Data/DataConstr";
+import { maybeData } from "../../../../types/Data/toData/maybeData";
+import BasePlutsError from "../../../../errors/BasePlutsError";
 
 export interface ITxOut {
     address: Address,
@@ -22,12 +27,22 @@ export interface ITxOut {
     refScript?: Script
 }
 export default class TxOut
-    implements ITxOut, ToCbor
+    implements ITxOut, ToCbor, Cloneable<TxOut>, ToData
 {
     readonly address!: Address
     readonly amount!: Value
     readonly datum?: Hash32 | Data
     readonly refScript?: Script
+
+    clone(): TxOut
+    {
+        return new TxOut({
+            address: this.address.clone(),
+            amount: this.amount.clone(),
+            datum: this.datum?.clone(),
+            refScript: this.refScript?.clone() 
+        })
+    }
 
     constructor( txOutput: ITxOut )
     {
@@ -86,6 +101,43 @@ export default class TxOut
             "refScript",
             refScript
         );
+    }
+
+    toData( version: "v1" | "v2" = "v2" ): Data
+    {
+        if( version === "v1" )
+        {
+            if( isData( this.datum ) )
+            throw new BasePlutsError(
+                "trying to convert v2 utxo to v1"
+            );
+
+            return new DataConstr(
+                0,
+                [
+                    this.address.toData(),
+                    this.amount.toData(),
+                    maybeData( this.datum?.toData() )
+                ]
+            )
+        }
+
+        const datumData =
+            this.datum === undefined ?
+                new DataConstr( 0, [] ) : 
+            this.datum instanceof Hash32 ?
+                new DataConstr( 1, [ this.datum.toData() ]) :
+            this.datum; // inline
+
+        return new DataConstr(
+            0,
+            [
+                this.address.toData(),
+                this.amount.toData(),
+                datumData,
+                maybeData( this.refScript?.hash.toData() )
+            ]
+        )
     }
 
     toCbor(): CborString

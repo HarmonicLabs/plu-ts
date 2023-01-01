@@ -1,5 +1,4 @@
-import { PData, PStruct, Term } from "../../../../onchain";
-import Data from "../../../../types/Data";
+import CanBeData from "../../../CanBeData/CanBeData";
 import Script from "../../../script/Script";
 import TxOutRef from "../../body/output/TxOutRef";
 
@@ -7,14 +6,13 @@ export interface ITxBuildInput {
     utxo: TxOutRef,
     referenceScriptV2?: {
         refUtxo: TxOutRef,
-        datum: Data | Term<PData> | Term<PStruct<any>> | "inline",
-        redeemer: Data | Term<PData> | Term<PStruct<any>>
+        datum: CanBeData | "inline",
+        redeemer: CanBeData,
     }
-    simpleReferenceScript?: TxOutRef
     inputScript?: {
         script: Script,
-        datum: Data | Term<PData> | Term<PStruct<any>> | "inline",
-        redeemer: Data | Term<PData> | Term<PStruct<any>>
+        datum: CanBeData | "inline",
+        redeemer: CanBeData
     }
 }
 

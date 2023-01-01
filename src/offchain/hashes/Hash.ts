@@ -3,6 +3,9 @@ import CborObj from "../../cbor/CborObj";
 import CborBytes from "../../cbor/CborObj/CborBytes";
 import CborString from "../../cbor/CborString";
 import { ToCbor } from "../../cbor/interfaces/CBORSerializable";
+import Data from "../../types/Data";
+import DataB from "../../types/Data/DataB";
+import ToData from "../../types/Data/toData/interface";
 import HexString from "../../types/HexString";
 import Cloneable from "../../types/interfaces/Cloneable";
 import BufferUtils from "../../utils/BufferUtils";
@@ -11,7 +14,7 @@ import ObjectUtils from "../../utils/ObjectUtils";
 
 
 export default class Hash
-    implements Cloneable<Hash>, ToCbor
+    implements Cloneable<Hash>, ToCbor, ToData
 {
     static isStrictInstance( bs: any ): bs is Hash
     {
@@ -100,6 +103,11 @@ export default class Hash
         return this._str;
     }
 
+    toString(): string
+    {
+        return this._str;
+    }
+
     get asBytes(): Buffer
     {
         return this._bytes;
@@ -118,6 +126,11 @@ export default class Hash
     toCborObj(): CborObj
     {
         return new CborBytes( this.asBytes )
+    }
+
+    toData(): Data
+    {
+        return new DataB( this.asBytes );
     }
 
     public static fromAscii( asciiStr: string ): Hash
