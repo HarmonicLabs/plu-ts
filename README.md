@@ -27,6 +27,12 @@ the project will be composed mainly of two parts: on-chain and off-chain;
 the on-chain part will take care of smart contracts creation
 the off-chain one will allow for transaction creation (so will take care of smart contracts interaction, among all the off-chain stuff)
 
+## Sponsors ❤️
+
+the [sponsors.md](./sponsors.md) file contains a list of supportes of this project.
+
+Everyone of them is special and is contribuitng in making this software aviable for everyone.
+
 ## Get Started
 
 You can start playing with `plu-ts` by running the following command in your project root directory
