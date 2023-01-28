@@ -5,14 +5,13 @@ import Certificate, { AnyCertificate, certificatesToDepositLovelaces } from "../
 import TxWithdrawals, { ITxWithdrawals, canBeTxWithdrawals, forceTxWithdrawals } from "../../ledger/TxWithdrawals";
 import { Value } from "../../ledger/Value/Value";
 import TxOut from "./output/TxOut";
-import TxIn from "./TxIn";
 import PubKeyHash from "../../credentials/PubKeyHash";
-import ProtocolUpdateProposal, { isProtocolUpdateProposal, protocolUpdateProposalToCborObj } from "../../ledger/protocol/ProtocolUpdateProposal";
+import ProtocolUpdateProposal, { isProtocolUpdateProposal, protocolUpdateProposalToCborObj, protocolUpdateToJson } from "../../ledger/protocol/ProtocolUpdateProposal";
 import AuxiliaryDataHash from "../../hashes/Hash32/AuxiliaryDataHash";
 import ScriptDataHash from "../../hashes/Hash32/ScriptDataHash";
 import JsRuntime from "../../../utils/JsRuntime";
 import ObjectUtils from "../../../utils/ObjectUtils";
-import TxOutRef from "./output/TxOutRef";
+import TxOutRef from "./output/UTxO";
 import { UInteger } from "../../..";
 import { ToCbor } from "../../../cbor/interfaces/CBORSerializable";
 import CborObj from "../../../cbor/CborObj";
@@ -23,8 +22,10 @@ import CborUInt from "../../../cbor/CborObj/CborUInt";
 import CborArray from "../../../cbor/CborObj/CborArray";
 import Hash32 from "../../hashes/Hash32/Hash32";
 import { blake2b_256 } from "../../../crypto";
+import ToJson from "../../../utils/ts/ToJson";
+import UTxO from "./output/UTxO";
 
-type Utxo = TxIn | TxOutRef;
+type Utxo = UTxO | TxOutRef;
 
 export interface ITxBody {
     inputs: [ Utxo, ...Utxo[] ],
@@ -38,7 +39,7 @@ export interface ITxBody {
     validityIntervalStart?: CanBeUInteger,
     mint?: Value,
     scriptDataHash?: ScriptDataHash, // hash 32
-    collateralInputs?: TxIn[], 
+    collateralInputs?: UTxO[], 
     requiredSigners?: PubKeyHash[],
     network?: NetworkT,
     collateralReturn?: TxOut,
@@ -76,7 +77,7 @@ export function isITxBody( body: Readonly<object> ): body is ITxBody
         ( b.scriptDataHash === undefined || b.scriptDataHash instanceof Hash32 ) &&
         ( b.collateralInputs === undefined || (
             Array.isArray( b.collateralInputs ) && 
-            b.collateralInputs.every( collateral => collateral instanceof TxIn )
+            b.collateralInputs.every( collateral => collateral instanceof UTxO )
         )) &&
         ( b.requiredSigners === undefined || (
             Array.isArray( b.requiredSigners ) &&
@@ -96,9 +97,9 @@ export function isITxBody( body: Readonly<object> ): body is ITxBody
 }
 
 export default class TxBody
-    implements ITxBody, ToCbor
+    implements ITxBody, ToCbor, ToJson
 {
-    readonly inputs!: [ TxIn, ...TxIn[] ];
+    readonly inputs!: [ UTxO, ...UTxO[] ];
     readonly outputs!: TxOut[];
     readonly fee!: bigint;
     readonly ttl?: bigint;
@@ -109,12 +110,12 @@ export default class TxBody
     readonly validityIntervalStart?: bigint;
     readonly mint?: Value;
     readonly scriptDataHash?: ScriptDataHash; // hash 32
-    readonly collateralInputs?: TxIn[];
+    readonly collateralInputs?: UTxO[];
     readonly requiredSigners?: PubKeyHash[];
     readonly network?: NetworkT;
     readonly collateralReturn?: TxOut;
     readonly totCollateral?: bigint;
-    readonly refInputs?: TxIn[];
+    readonly refInputs?: UTxO[];
 
     /**
      * getter
@@ -170,7 +171,7 @@ export default class TxBody
             this,
             "inptus",
             Object.freeze(
-                inputs.map( i => i instanceof TxIn ? i : new TxIn( i ) )
+                inputs.map( i => i instanceof UTxO ? i : new UTxO( i ) )
             )
         );
 
@@ -463,7 +464,7 @@ export default class TxBody
         return new CborMap(([
             {
                 k: new CborUInt( 0 ),
-                v: new CborArray( this.inputs.map( input => input.toCborObj() ) )
+                v: new CborArray( this.inputs.map( input => input.utxoRef.toCborObj() ) )
             },
             {
                 k: new CborUInt( 1 ),
@@ -516,7 +517,7 @@ export default class TxBody
             this.collateralInputs === undefined || this.collateralInputs.length === 0 ? undefined :
             {
                 k: new CborUInt( 13 ),
-                v: new CborArray( this.collateralInputs.map( collateral => collateral.toCborObj() ) )
+                v: new CborArray( this.collateralInputs.map( collateral => collateral.utxoRef.toCborObj() ) )
             },
             this.requiredSigners === undefined || this.requiredSigners.length === 0 ? undefined :
             {
@@ -541,9 +542,34 @@ export default class TxBody
             this.refInputs === undefined || this.refInputs.length === 0 ? undefined :
             {
                 k: new CborUInt( 18 ),
-                v: new CborArray( this.refInputs.map( refIn => refIn.toCborObj() ) )
+                v: new CborArray( this.refInputs.map( refIn => refIn.utxoRef.toCborObj() ) )
             }
         ].filter( entry => entry !== undefined ) as CborMapEntry[]))
+    }
+
+    toJson()
+    {
+        return {
+            inputs: this.inputs.map( i => i.toJson() ),
+            outputs: this.outputs.map( o => o.toJson() ),
+            fee: this.fee.toString(),
+            ttl: this.ttl?.toString(),
+            certs: this.certs?.map( c => c.toJson() ),
+            withdrawals: this.withdrawals.toJson() ,
+            protocolUpdate: 
+                this.protocolUpdate === undefined ? undefined :
+                protocolUpdateToJson( this.protocolUpdate ),
+            auxDataHash: this.auxDataHash?.asString , // hash 32
+            validityIntervalStart: this.validityIntervalStart?.toString(),
+            mint: this.mint?.toJson(),
+            scriptDataHash: this.scriptDataHash?.asString, // hash 32
+            collateralInputs: this.collateralInputs?.map( i => i.toJson() ), 
+            requiredSigners: this.requiredSigners?.map( sig => sig.asString ),
+            network: this.network,
+            collateralReturn: this.collateralReturn?.toJson(),
+            totCollateral: this.totCollateral?.toString(),
+            refInputs: this.refInputs?.map( i => i.toJson() )
+        }
     }
 
     /**

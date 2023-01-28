@@ -3,12 +3,12 @@ import CborArray from "../../../cbor/CborObj/CborArray";
 import CborMap, { CborMapEntry } from "../../../cbor/CborObj/CborMap";
 import CborUInt from "../../../cbor/CborObj/CborUInt";
 import CborPositiveRational from "../../../cbor/extra/CborRational";
+import ExBudget from "../../../onchain/CEK/Machine/ExBudget";
 import { canBeUInteger, CanBeUInteger, forceUInteger } from "../../../types/ints/Integer";
 import ObjectUtils from "../../../utils/ObjectUtils";
 import type Coin from "../Coin";
 import CostModels, { costModelsToCborObj, isCostModels } from "../CostModels";
 import type Epoch from "../Epoch";
-import ExecUnits from "../ExecUnits";
 
 export interface ProtocolParamters {
     minfeeA: CanBeUInteger,
@@ -31,8 +31,8 @@ export interface ProtocolParamters {
         mem_price: CborPositiveRational,
         step_price: CborPositiveRational,
     ]
-    maxTxExecUnits: ExecUnits,
-    maxBlockExecUnits: ExecUnits,
+    maxTxExecUnits: ExBudget,
+    maxBlockExecUnits: ExBudget,
     maxValuesSize: CanBeUInteger,
     collateralPercentage: CanBeUInteger,
     maxCollateralIns: CanBeUInteger
@@ -120,8 +120,8 @@ export function isProtocolParameters( something: any ): something is ProtocolPar
     )) return false;
 
     if(!(
-        pp.maxTxExecUnits instanceof ExecUnits &&
-        pp.maxBlockExecUnits instanceof ExecUnits
+        pp.maxTxExecUnits instanceof ExBudget &&
+        pp.maxBlockExecUnits instanceof ExBudget
     )) return false
 
     if(!(
@@ -186,8 +186,8 @@ export function isPartialProtocolParameters( something: object ): something is P
     )) return false;
 
     if(!(
-        (pp.maxTxExecUnits === undefined        || pp.maxTxExecUnits instanceof ExecUnits) &&
-        (pp.maxBlockExecUnits === undefined     || pp.maxBlockExecUnits instanceof ExecUnits)
+        (pp.maxTxExecUnits === undefined        || pp.maxTxExecUnits instanceof ExBudget) &&
+        (pp.maxBlockExecUnits === undefined     || pp.maxBlockExecUnits instanceof ExBudget)
     )) return false
 
     if(!(

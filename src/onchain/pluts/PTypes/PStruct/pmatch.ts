@@ -103,7 +103,7 @@ function defineExtract<CtorDef extends ConstantableStructCtorDef>
                 fields
                 .map( f => fieldsNames.findIndex( fName => fName === f ) )
                 // ignore fields not present in the definion or duplicates
-                .filter( (idx, i, thisArr ) => idx >= 0 && thisArr.indexOf( idx ) === i )
+                .filter( ( idx, i, thisArr ) => idx >= 0 && thisArr.indexOf( idx ) === i )
                 .sort( ( a,b ) => a < b ? -1 : ( a === b ? 0 : 1 ) )
             );
 

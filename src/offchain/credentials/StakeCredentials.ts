@@ -16,14 +16,14 @@ import ObjectUtils from "../../utils/ObjectUtils";
 import Hash28 from "../hashes/Hash28/Hash28";
 import PaymentCredentials from "./PaymentCredentials";
 
-export class StakeKey extends Hash28 {}
+export class StakeKeyHash extends Hash28 {}
 
 export class StakeValidatorHash extends Hash28 {}
 
 export type StakeCredentialsType = "stakeKey" | "script" | "pointer" ;
 
 export type StakeHash<T extends StakeCredentialsType> =
-    T extends "stakeKey" ? StakeKey :
+    T extends "stakeKey" ? StakeKeyHash :
     T extends "script" ? StakeValidatorHash :
     T extends "pointer" ? [ CanBeUInteger, CanBeUInteger, CanBeUInteger ] :
     never;
@@ -75,7 +75,7 @@ export default class StakeCredentials<T extends StakeCredentialsType = StakeCred
                 this,
                 "hash",
                 type === "stakeKey" ? 
-                    ( hash instanceof StakeKey ? hash : new StakeKey( hash.asBytes ) ) :
+                    ( hash instanceof StakeKeyHash ? hash : new StakeKeyHash( hash.asBytes ) ) :
                     ( hash instanceof StakeValidatorHash ? hash : new StakeValidatorHash( hash.asBytes ) )
             );
         }

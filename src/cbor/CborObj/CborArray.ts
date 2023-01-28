@@ -1,9 +1,15 @@
 import CborObj, { cborObjFromRaw, isCborObj, isRawCborObj, RawCborObj } from ".";
 import JsRuntime from "../../utils/JsRuntime";
+import ObjectUtils from "../../utils/ObjectUtils";
 import ToRawObj from "./interfaces/ToRawObj";
+
+export interface CborArrayOptions {
+    indefinite?: boolean
+}
 
 export type RawCborArray = {
     array: RawCborObj[]
+    options?: CborArrayOptions
 }
 
 export function isRawCborArray( arr: RawCborArray ): boolean
@@ -20,6 +26,10 @@ export function isRawCborArray( arr: RawCborArray ): boolean
     );
 }
 
+const defaultOpts: Required<CborArrayOptions> = {
+    indefinite: false
+}
+
 export default class CborArray
     implements ToRawObj
 {
@@ -33,8 +43,10 @@ export default class CborArray
                 )
             );
     }
+
+    readonly indefinite!: boolean;
     
-    constructor( array: CborObj[] )
+    constructor( array: CborObj[], options?: CborArrayOptions )
     {
         JsRuntime.assert(
             Array.isArray( array ) &&
@@ -42,13 +54,27 @@ export default class CborArray
             "in 'CborArray' constructor: invalid input; got: " + array
         );
 
+        const {
+            indefinite
+        } = {
+            ...defaultOpts,
+            ...options
+        };
+
         this._array = array;
+
+        ObjectUtils.defineReadOnlyProperty(
+            this, "indefinite", Boolean( indefinite )
+        );
     }
 
     toRawObj(): RawCborArray
     {
         return {
-            array: this.array.map( cborObj => cborObj.toRawObj() )
+            array: this.array.map( cborObj => cborObj.toRawObj() ),
+            options: {
+                indefinite: this.indefinite
+            }
         };
     }
 }

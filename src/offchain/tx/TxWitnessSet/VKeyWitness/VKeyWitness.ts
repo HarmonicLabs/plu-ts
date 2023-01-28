@@ -3,6 +3,7 @@ import CborObj from "../../../../cbor/CborObj";
 import CborArray from "../../../../cbor/CborObj/CborArray";
 import CborString from "../../../../cbor/CborString";
 import { ToCbor } from "../../../../cbor/interfaces/CBORSerializable";
+import Cloneable from "../../../../types/interfaces/Cloneable";
 import JsRuntime from "../../../../utils/JsRuntime";
 import ObjectUtils from "../../../../utils/ObjectUtils";
 import Hash32 from "../../../hashes/Hash32/Hash32";
@@ -10,7 +11,7 @@ import Signature from "../../../hashes/Signature/Signature";
 import VKey from "./VKey";
 
 export default class VKeyWitness
-    implements ToCbor
+    implements ToCbor, Cloneable<VKeyWitness>
 {
     readonly vkey!: VKey
     readonly signature!: Signature
@@ -36,6 +37,14 @@ export default class VKeyWitness
             "signature",
             signature
         );
+    }
+
+    clone(): VKeyWitness
+    {
+        return new VKeyWitness(
+            new VKey( this.vkey ),
+            new Signature( this.signature )
+        )
     }
     
     toCbor(): CborString

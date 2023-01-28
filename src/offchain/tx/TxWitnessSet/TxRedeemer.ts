@@ -4,12 +4,20 @@ import CborArray from "../../../cbor/CborObj/CborArray"
 import CborUInt from "../../../cbor/CborObj/CborUInt"
 import CborString from "../../../cbor/CborString"
 import { ToCbor } from "../../../cbor/interfaces/CBORSerializable"
+import BasePlutsError from "../../../errors/BasePlutsError"
 import ExBudget from "../../../onchain/CEK/Machine/ExBudget"
 import Data, { isData } from "../../../types/Data"
+import DataB from "../../../types/Data/DataB"
+import DataConstr from "../../../types/Data/DataConstr"
+import DataI from "../../../types/Data/DataI"
 import { dataToCborObj } from "../../../types/Data/toCbor"
+import Cloneable from "../../../types/interfaces/Cloneable"
 import { canBeUInteger, CanBeUInteger, forceUInteger } from "../../../types/ints/Integer"
 import JsRuntime from "../../../utils/JsRuntime"
 import ObjectUtils from "../../../utils/ObjectUtils"
+import StakeCredentials, { StakeValidatorHash } from "../../credentials/StakeCredentials"
+import Hash32 from "../../hashes/Hash32/Hash32"
+import TxBody from "../body/TxBody"
 
 export const enum TxRedeemerTag {
     Spend    = 0,
@@ -26,7 +34,7 @@ export interface ITxRedeemer {
 }
 
 export default class TxRedeemer
-    implements ITxRedeemer, ToCbor
+    implements ITxRedeemer, ToCbor, Cloneable<TxRedeemer>
 {
     
     readonly tag!: TxRedeemerTag
@@ -113,6 +121,15 @@ export default class TxRedeemer
         );
     }
 
+    clone(): TxRedeemer
+    {
+        return new TxRedeemer({
+            ...this,
+            data: this.data.clone(),
+            execUnits: this.execUnits.clone()
+        });
+    }
+
     toCbor(): CborString
     {
         return Cbor.encode( this.toCborObj() );
@@ -125,5 +142,65 @@ export default class TxRedeemer
             dataToCborObj( this.data ),
             this.execUnits.toCborObj()
         ])
+    }
+
+    toSpendingPurposeData( tx: TxBody ): DataConstr
+    {
+        const tag = this.tag;
+
+        let ctorIdx: 0 | 1 | 2 | 3;
+        let purposeArgData: Data;
+
+        if( tag === TxRedeemerTag.Mint )
+        {
+            ctorIdx = 0;
+            const policy = tx.mint?.map[ this.index ].policy;
+            if(!( policy instanceof Hash32 ))
+            throw new BasePlutsError(
+                "invalid minting policy for minting redeemer " + this.index.toString()
+            );
+            purposeArgData = new DataB( policy.asBytes );
+        }
+        else if( tag === TxRedeemerTag.Spend )
+        {
+            ctorIdx = 1;
+            const utxoRef = tx.inputs[ this.index ].utxoRef;
+            if( utxoRef === undefined )
+            throw new BasePlutsError(
+                "invalid utxo for spending redeemer " + this.index.toString()
+            );
+            purposeArgData = utxoRef.toData();
+        }
+        else if( tag === TxRedeemerTag.Withdraw )
+        {
+            ctorIdx = 2;
+            const stakeCreds = tx.withdrawals?.map[ this.index ]?.rewardAccount
+            if( stakeCreds === undefined )
+            throw new BasePlutsError(
+                "invalid stake credentials for rewarding redeemer " + this.index.toString()
+            );
+            purposeArgData = new StakeCredentials(
+                "script",
+                new StakeValidatorHash( stakeCreds )
+            ).toData();
+        }
+        else if( tag === TxRedeemerTag.Cert )
+        {
+            ctorIdx = 3;
+            const cert = tx.certs?.at( this.index )
+            if( cert === undefined )
+            throw new BasePlutsError(
+                "invalid certificate for certifyng redeemer " + this.index.toString()
+            );
+            purposeArgData = cert.toData();
+        }
+        else throw new BasePlutsError(
+            "invalid redeemer tag"
+        );
+
+        return new DataConstr(
+            ctorIdx,
+            [ purposeArgData ]
+        );
     }
 }

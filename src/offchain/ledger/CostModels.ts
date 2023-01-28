@@ -1,6 +1,9 @@
+import Cbor from "../../cbor/Cbor";
 import CborArray from "../../cbor/CborObj/CborArray";
+import CborBytes from "../../cbor/CborObj/CborBytes";
 import CborMap, { CborMapEntry } from "../../cbor/CborObj/CborMap";
 import CborUInt from "../../cbor/CborObj/CborUInt";
+import CborString from "../../cbor/CborString";
 import BasePlutsError from "../../errors/BasePlutsError";
 import { canBeUInteger, CanBeUInteger, forceUInteger } from "../../types/ints/Integer";
 import ObjectUtils from "../../utils/ObjectUtils";
@@ -457,6 +460,41 @@ export function costModelsToCborObj( costmdls: CostModels ): CborMap
             v: new CborArray( toCostModelArrV2( PlutusV2 ).map( n => new CborUInt( forceUInteger( n ).asBigInt ) ) )
         }
     ].filter( elem => elem !== undefined ) as CborMapEntry[])
+}
+
+export function costModelsToLanguageViewCbor( costmdls: CostModels ): CborString
+{
+    const {
+        PlutusV1,
+        PlutusV2
+    } = costmdls;
+
+    return Cbor.encode(
+        new CborMap([
+            PlutusV1 === undefined ? undefined :
+            {
+                k: new CborUInt( 0 ),
+
+                // plutus v1 language view is messed up, not my fault
+                v: new CborBytes(
+                    Cbor.encode(
+                        new CborArray(
+                            toCostModelArrV1( PlutusV1 )
+                            .map( n => new CborUInt( forceUInteger( n ).asBigInt ) ),
+                            {
+                                indefinite: true
+                            }
+                        )
+                    ).asBytes
+                )
+            },
+            PlutusV2 === undefined ? undefined :
+            {
+                k: new CborUInt( 1 ),
+                v: new CborArray( toCostModelArrV2( PlutusV2 ).map( n => new CborUInt( forceUInteger( n ).asBigInt ) ) )
+            }
+        ].filter( elem => elem !== undefined ) as CborMapEntry[])
+    )
 }
 
 export function toCostModelArrV1( v1: AnyV1CostModel ): CostModelPlutusV1Array

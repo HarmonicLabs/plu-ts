@@ -1,3 +1,4 @@
+import BasePlutsError from "../../errors/BasePlutsError";
 import DataB from "./DataB";
 import DataConstr from "./DataConstr";
 import DataI from "./DataI";
@@ -96,4 +97,11 @@ export function eqData( a: Data, b: Data ): boolean
     }
 
     return false;
+}
+
+export function cloneData<D extends Data>( data: D ): D
+{
+    if( !isData( data ) ) throw new BasePlutsError("invalid data while cloning");
+
+    return data.clone() as any;
 }

@@ -5,16 +5,17 @@ import CborMap, { CborMapEntry } from "../../../cbor/CborObj/CborMap";
 import CborUInt from "../../../cbor/CborObj/CborUInt";
 import CborString from "../../../cbor/CborString";
 import { ToCbor } from "../../../cbor/interfaces/CBORSerializable";
-import ExBudget from "../../../onchain/CEK/Machine/ExBudget";
-import { PlutusScriptVersion, ScriptJsonFormat } from "../../../onchain/pluts/Script";
 import Data, { isData } from "../../../types/Data";
 import { dataToCborObj } from "../../../types/Data/toCbor";
-import { canBeUInteger } from "../../../types/ints/Integer";
+import Cloneable from "../../../types/interfaces/Cloneable";
+import JsRuntime from "../../../utils/JsRuntime";
 import ObjectUtils from "../../../utils/ObjectUtils";
-import NativeScript, { nativeScriptToCborObj } from "../../script/NativeScript";
+import PrivateKey from "../../credentials/PrivateKey";
+import Hash28 from "../../hashes/Hash28/Hash28";
+import { nativeScriptToCborObj } from "../../script/NativeScript";
 import Script, { ScriptType } from "../../script/Script";
 import BootstrapWitness from "./BootstrapWitness";
-import TxRedeemer, { TxRedeemerTag } from "./TxRedeemer";
+import TxRedeemer from "./TxRedeemer";
 import VKey from "./VKeyWitness/VKey";
 import VKeyWitness from "./VKeyWitness/VKeyWitness";
 
@@ -91,23 +92,79 @@ export default class TxWitnessSet
     readonly datums?: Data[];
     readonly redeemers?: TxRedeemer[];
     readonly plutusV2Scripts?: Script<ScriptType.PlutusV2>[];
-
+    
     /**
      * checks that the signer is needed
-     * if true signs the transaction with the public key
+     * if true adds the witness
      * otherwise nothing happens (the signature is not added)
     **/
-    readonly sign: ( signer: VKey ) => void
+    readonly addVKeyWitnessIfNeeded: ( vkeyWit: VKeyWitness ) => void
     /**
      * @returns {boolean}
-     *  `true` if all the signers needed (both by input utxos and by the `requiredSigners` field)
+     *  `true` if all the signers needed
      *  have signed the transaction; `false` otherwise
+     * 
+     * signers needed are:
+     *  - required to spend an utxo
+     *  - required by certificate
+     *  - required by withdrawals
+     *  - additional specified in the `requiredSigners` field
      */
     readonly isComplete: () => boolean
 
-    constructor( witnesses: ITxWitnessSet, allRequiredSigners: VKey[] = [] )
+    constructor( witnesses: ITxWitnessSet, allRequiredSigners: Hash28[] = [] )
     {
-        lzvxkjblkj
+        JsRuntime.assert(
+            isITxWitnessSet( witnesses ),
+            "invalid witnesses passed"
+        );
+
+        let _required = allRequiredSigners.map( sig => sig.asString );
+
+        function defGetter( name: keyof ITxWitnessSet, get: () => any )
+        {
+            ObjectUtils.definePropertyIfNotPresent(
+                this, name,
+                {
+                    get,
+                    set: () => {},
+                    enumerable: true,
+                    configurable: false
+                }
+            )
+        };
+
+        function cloneArr<Stuff extends Cloneable<any>>( arr?: Stuff[] ): Stuff[]
+        {
+            return arr?.map( element => element.clone() ) ?? [];
+        }
+
+        function defGetterArr( name: keyof ITxWitnessSet, elems?: Cloneable<any>[] )
+        {
+            let _elems = cloneArr( elems );
+            defGetter(
+                name,
+                () => cloneArr( _elems )
+            );
+        }
+
+        const {
+            vkeyWitnesses,
+            bootstrapWitnesses,
+            datums,
+            nativeScripts,
+            plutusV1Scripts,
+            plutusV2Scripts,
+            redeemers
+        } = witnesses;
+
+        defGetterArr( "vkeyWitnesses", vkeyWitnesses );
+        defGetterArr( "bootstrapWitnesses", bootstrapWitnesses );
+        defGetterArr( "datums", datums );
+        defGetterArr( "nativeScripts", nativeScripts );
+        defGetterArr( "plutusV1Scripts", plutusV1Scripts );
+        defGetterArr( "plutusV2Scripts", plutusV2Scripts );
+        defGetterArr( "redeemers", redeemers );
     }
 
     toCbor(): CborString

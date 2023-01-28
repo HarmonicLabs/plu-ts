@@ -1,6 +1,6 @@
 import CanBeData from "../../../CanBeData/CanBeData";
 import Script from "../../../script/Script";
-import TxOutRef from "../../body/output/TxOutRef";
+import TxOutRef from "../../body/output/UTxO";
 
 export interface ITxBuildInput {
     utxo: TxOutRef,

@@ -1,3 +1,3 @@
-import TxOutRef from "./output/TxOutRef";
+import UTxO from "./output/UTxO";
 
-export default class TxIn extends TxOutRef {}
+export default class TxIn extends UTxO {}

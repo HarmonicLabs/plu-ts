@@ -2,11 +2,15 @@ import { Buffer } from "buffer";
 import { ScriptJsonFormat } from "../../onchain/pluts/Script";
 import JsRuntime from "../../utils/JsRuntime";
 import ObjectUtils from "../../utils/ObjectUtils";
-import NativeScript, { nativeScriptToCbor } from "./NativeScript";
+import NativeScript, { nativeScriptFromCbor, nativeScriptToCbor } from "./NativeScript";
 import Cloneable from "../../types/interfaces/Cloneable";
 import BufferUtils from "../../utils/BufferUtils";
 import Hash28 from "../hashes/Hash28/Hash28";
-import { blake2b_224 } from "../../crypto";
+import { blake2b_224, byte } from "../../crypto";
+import Cbor from "../../cbor/Cbor";
+import CborBytes from "../../cbor/CborObj/CborBytes";
+import ToJson from "../../utils/ts/ToJson";
+import CborString from "../../cbor/CborString";
 
 export const enum ScriptType {
     NativeScript = "NativeScript",
@@ -15,7 +19,7 @@ export const enum ScriptType {
 }
 
 export default class Script<T extends ScriptType = ScriptType>
-    implements Cloneable<Script<T>>
+    implements Cloneable<Script<T>>, ToJson
 {
     readonly type!: T;
     readonly cbor!: Buffer;
@@ -64,11 +68,24 @@ export default class Script<T extends ScriptType = ScriptType>
                 get: () => {
                     if( _hash instanceof Hash28 ) return _hash.clone();
 
+                    let scriptDataToHash = [] as number[];
+
+                    if( this.type === ScriptType.NativeScript )
+                        scriptDataToHash = [ 0x00 ].concat( Array.from( this.cbor ) );
+                    else
+                    {
+                        const uplcBytes = Array.from(
+                            ( Cbor.parse( this.cbor ) as CborBytes ).buffer
+                        );
+
+                        scriptDataToHash = [
+                            this.type === ScriptType.PlutusV1 ? 0x01 : 0x02
+                        ].concat( uplcBytes );
+                    }
+
                     _hash = new Hash28(
                         Buffer.from(
-                            blake2b_224(
-                                this.cbor
-                            )
+                            blake2b_224( scriptDataToHash as byte[] )
                         )
                     );
 
@@ -87,5 +104,21 @@ export default class Script<T extends ScriptType = ScriptType>
             this.type,
             BufferUtils.copy( this.cbor )
         );
+    }
+
+    toJson()
+    {
+        if( this.type === ScriptType.NativeScript )
+        {
+            return nativeScriptFromCbor( new CborString( this.cbor ) )
+        }
+        else
+        {
+            return {
+                type: this.type,
+                description: "",
+                cborHex: this.cbor.toString("hex")
+            }
+        }
     }
 }

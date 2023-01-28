@@ -7,6 +7,6 @@ const PTxOutRef = pstruct({
         id: PTxId.type,
         index: int
     }
-})
+});
 
 export default PTxOutRef;

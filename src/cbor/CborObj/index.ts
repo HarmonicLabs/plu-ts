@@ -115,7 +115,8 @@ export function cborObjFromRaw( _rawCborObj: RawCborObj ): CborObj
         if( isRawCborArray( rawCborObj as RawCborArray ) )
             return new CborArray(
                 (rawCborObj as RawCborArray).array
-                .map( _cborObjFromRaw )
+                .map( _cborObjFromRaw ),
+                (rawCborObj as any).options
             );
 
         if( isRawCborMap( rawCborObj as RawCborMap ) )

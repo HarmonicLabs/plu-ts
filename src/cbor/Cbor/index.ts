@@ -257,13 +257,21 @@ class CborEncoding
         if( cObj instanceof CborArray )
         {
             const arr = cObj.array;
+            const arrLen = arr.length;
 
-            this.appendTypeAndLength( MajorType.array, arr.length );
-            for( let i = 0; i < arr.length; i++ )
+            if( cObj.indefinite )
+                this.appendUInt8( 0x9f );
+            else
+                this.appendTypeAndLength( MajorType.array, arrLen );
+
+            for( let i = 0; i < arrLen; i++ )
             {
                 this.appendCborObjEncoding( arr[i] );
             }
 
+            if( cObj.indefinite )
+                this.appendUInt8( 0xff );
+                
             return;
         }
 

@@ -6,9 +6,12 @@ import CborTag from "../../../cbor/CborObj/CborTag";
 import CborUInt from "../../../cbor/CborObj/CborUInt";
 import CborString from "../../../cbor/CborString";
 import { ToCbor } from "../../../cbor/interfaces/CBORSerializable";
+import { blake2b_256 } from "../../../crypto";
 import { PlutusScriptVersion, ScriptJsonFormat } from "../../../onchain/pluts/Script";
 import JsRuntime from "../../../utils/JsRuntime";
 import ObjectUtils from "../../../utils/ObjectUtils";
+import AuxiliaryDataHash from "../../hashes/Hash32/AuxiliaryDataHash";
+import Hash32 from "../../hashes/Hash32/Hash32";
 import NativeScript from "../../script/NativeScript";
 import Script, { ScriptType } from "../../script/Script";
 import { TxMetadata } from "../metadata/TxMetadata";
@@ -34,6 +37,8 @@ export default class AuxiliaryData
     readonly nativeScripts?: Script<ScriptType.NativeScript>[];
     readonly plutusV1Scripts?: Script<ScriptType.PlutusV1>[];
     readonly plutusV2Scripts?: Script<ScriptType.PlutusV2>[];
+
+    readonly hash!: AuxiliaryDataHash
 
     constructor( auxData: IAuxiliaryData )
     {
@@ -140,6 +145,28 @@ export default class AuxiliaryData
                 undefined
             );
         }
+
+        // --------- hash ---- //
+        let _hash: AuxiliaryDataHash = undefined as any;
+        ObjectUtils.definePropertyIfNotPresent(
+            this, "hash",
+            {
+                get: (): AuxiliaryDataHash => {
+                    if( _hash instanceof AuxiliaryDataHash ) return _hash.clone();
+
+                    _hash = new AuxiliaryDataHash(
+                        Buffer.from(
+                            blake2b_256( this.toCbor().asBytes )
+                        )
+                    );
+
+                    return _hash.clone()
+                },
+                set: () => {},
+                enumerable: true,
+                configurable: false
+            }
+        );
 
 
     }

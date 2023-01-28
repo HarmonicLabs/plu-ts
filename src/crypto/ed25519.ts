@@ -215,8 +215,11 @@ export function deriveEd25519PublicKey(privateKey: byte[]): byte[]
     return encodePoint(A);
 }
 
-export function signEd25519(message: byte[], privateKey: byte[]): byte[]
+export function signEd25519( message: byte[] | Buffer, privateKey: byte[] | Buffer ): [ pubKey: byte[], signature: byte[] ]
 {
+    message = Buffer.isBuffer( message ) ? buffToByteArr( message ) : message;
+    privateKey = Buffer.isBuffer( privateKey ) ? buffToByteArr( privateKey ) : privateKey;
+
     const privateKeyHash = sha2_512(privateKey);
     const a = getA(privateKeyHash);
 
@@ -227,7 +230,12 @@ export function signEd25519(message: byte[], privateKey: byte[]): byte[]
     const R = scalarMul(BASE, r);
     const S = positiveMod(r + ihash(encodePoint(R).concat(publicKey).concat(message))*a, CURVE_ORDER);
 
-    return encodePoint(R).concat(encodeInt(S));
+    return [ publicKey, encodePoint(R).concat(encodeInt(S)) ];
+}
+
+export function getEd25519Signature( message: byte[] | Buffer, privateKey: byte[] | Buffer ): byte[]
+{
+    return signEd25519( message, privateKey )[1];
 }
 
 export function verifyEd25519Signature(signature: byte[] | Buffer, message: byte[] | Buffer, publicKey: byte[] | Buffer): boolean

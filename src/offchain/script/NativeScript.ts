@@ -4,6 +4,7 @@ import CborArray from "../../cbor/CborObj/CborArray";
 import CborBytes from "../../cbor/CborObj/CborBytes";
 import CborUInt from "../../cbor/CborObj/CborUInt";
 import CborString from "../../cbor/CborString";
+import BasePlutsError from "../../errors/BasePlutsError";
 import { CanBeUInteger, forceUInteger } from "../../types/ints/Integer";
 import JsRuntime from "../../utils/JsRuntime";
 import Hash28 from "../hashes/Hash28/Hash28";
@@ -64,7 +65,7 @@ const hello: NativeScript = {
     ]
 };
 
-export function nativeScriptToCborObj( nativeScript: NativeScript ): CborObj
+export function nativeScriptToCborObj( nativeScript: NativeScript ): CborArray
 {
     const type = nativeScript.type;
 
@@ -112,3 +113,82 @@ export function nativeScriptToCbor( nativeScript: NativeScript ): CborString
 {
     return Cbor.encode( nativeScriptToCborObj( nativeScript ) );
 }
+
+const notNativeScriptError = new BasePlutsError(
+    "ill formed native script to deserialize"
+);
+
+export function nativeScriptFromCborObj( cbor: CborArray ): NativeScript
+{
+    if(!(cbor instanceof CborArray))
+    throw notNativeScriptError;
+
+    const [ _type, f1, f2 ] = cbor.array;
+
+    if( !( _type instanceof CborUInt ) )
+    throw notNativeScriptError
+
+    const type = Number( _type.num );
+
+    let scripts: NativeScript[];
+
+    switch( type )
+    {
+        case 0:
+            if( !(f1 instanceof CborBytes) )
+            throw notNativeScriptError;
+
+            const pkh = f1.buffer.toString("hex");
+
+            return {
+                type: "sig",
+                keyHash: pkh
+            }
+        case 1:
+        case 2:
+            if( !(f1 instanceof CborArray) )
+            throw notNativeScriptError;
+
+            scripts = f1.array.map( nativeScriptFromCborObj as any );
+
+            return {
+                type: type === 1 ? "all" : "any",
+                scripts: scripts
+            }
+        case 3:
+
+            if( !(f1 instanceof CborUInt) )
+            throw notNativeScriptError;
+
+            if( !(f2 instanceof CborArray) )
+            throw notNativeScriptError;
+
+            const n = Number( f1.num )
+
+            scripts = f2.array.map( nativeScriptFromCborObj as any );
+
+            return {
+                type: "atLeast",
+                required: n,
+                scripts: scripts
+            }
+        case 4:
+        case 5:
+
+            if( !(f1 instanceof CborUInt) )
+            throw notNativeScriptError;
+
+            return {
+                type: type === 4 ? "after" : "before",
+                slot: Number( f1.num )
+            }
+        
+        default:
+            throw notNativeScriptError;
+    }
+}
+export function nativeScriptFromCbor( cbor: CborString ): NativeScript
+{
+    return nativeScriptFromCborObj( Cbor.parse( cbor ) as any );
+}
+

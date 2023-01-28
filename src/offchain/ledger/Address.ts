@@ -20,6 +20,7 @@ import CborBytes from "../../cbor/CborObj/CborBytes";
 import CborString from "../../cbor/CborString";
 import Cbor from "../../cbor/Cbor";
 import { nothingData, justData } from "../../types/Data/toData/maybeData";
+import ToJson from "../../utils/ts/ToJson";
 
 export type AddressType
     = "base"
@@ -32,7 +33,7 @@ export type AddressType
  * shelley specification in cardano-ledger; page 113
  */
 export default class Address
-    implements ToData, Cloneable<Address>, ToCbor
+    implements ToData, Cloneable<Address>, ToCbor, ToJson
 {
     readonly network: NetworkT
     readonly paymentCreds: PaymentCredentials
@@ -171,9 +172,14 @@ export default class Address
         )
     }
 
+    toJson()
+    {
+        return this.toString();
+    }
+
     static fromString( addr: string ): Address
     {
-        const [ hrp, payload ] = decodeBech32( addr );
+        const [ hrp, [ header, ...payload ] ] = decodeBech32( addr );
 
         let network: NetworkT;
         switch( hrp )
@@ -190,7 +196,6 @@ export default class Address
                 );
         }
 
-        const header = payload[0];
         const addrType = (header & 0b1111_0000) >> 4;
         const headerNetwork: NetworkT = ((header & 0b0000_1111) >> 4) === 0 ? "testnet" : "mainnet" ;
 
@@ -216,6 +221,7 @@ export default class Address
         switch( type )
         {
             case "base":
+                console.log( payload.length );
                 if( payload.length !== (28 * 2) )
                 throw new BasePlutsError(
                     "address' header specifies a base adress but the payload is incorrect"

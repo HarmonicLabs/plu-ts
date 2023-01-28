@@ -41,6 +41,11 @@ export function isProtocolUpdateProposal( something: object ): something is Prot
     );
 }
 
+export function protocolUpdateToJson( pUp: ProtocolUpdateProposal ): object
+{
+    
+}
+
 export function protocolParametersUpdateMapToCborObj( ppUpdate: ProtocolParametersUpdateMap ): CborMap
 {
     return new CborMap(

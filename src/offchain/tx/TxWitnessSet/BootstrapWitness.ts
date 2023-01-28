@@ -4,6 +4,8 @@ import CborArray from "../../../cbor/CborObj/CborArray";
 import CborBytes from "../../../cbor/CborObj/CborBytes";
 import CborString from "../../../cbor/CborString";
 import { ToCbor } from "../../../cbor/interfaces/CBORSerializable";
+import Cloneable from "../../../types/interfaces/Cloneable";
+import BufferUtils from "../../../utils/BufferUtils";
 import JsRuntime from "../../../utils/JsRuntime";
 import ObjectUtils from "../../../utils/ObjectUtils";
 import Hash32 from "../../hashes/Hash32/Hash32";
@@ -11,7 +13,7 @@ import Signature from "../../hashes/Signature/Signature";
 import VKey from "./VKeyWitness/VKey";
 
 export default class BootstrapWitness
-    implements ToCbor
+    implements ToCbor, Cloneable<BootstrapWitness>
 {
     readonly pubKey!: VKey;
     readonly signature!: Signature;
@@ -59,6 +61,16 @@ export default class BootstrapWitness
             "attributes",
             Buffer.from( attributes )
         );
+    }
+
+    clone(): BootstrapWitness
+    {
+        return new BootstrapWitness(
+            this.pubKey.clone(),
+            this.signature.clone(),
+            this.chainCode.clone(),
+            BufferUtils.copy( this.attributes )
+        )
     }
 
     toCbor(): CborString

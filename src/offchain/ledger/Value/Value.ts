@@ -15,23 +15,11 @@ import Cloneable from "../../../types/interfaces/Cloneable";
 import BufferUtils, { Ord } from "../../../utils/BufferUtils";
 import JsRuntime from "../../../utils/JsRuntime";
 import ObjectUtils from "../../../utils/ObjectUtils";
-import Hash32 from "../../hashes/Hash32/Hash32";
-import { IValuePolicyEntry, IValueAdaEntry, isIValue, addIValues, subIValues, cloneIValueEntry } from "./IValue";
-
-export type IValue = (IValuePolicyEntry | IValueAdaEntry)[]
-
-function cloneIValue( ival: IValue ): IValue
-{
-    return ival.map( cloneIValueEntry );
-}
-
-function policyToString( policy: "" | Hash32 ): string
-{
-    return policy === "" ? policy : policy.asString;
-}
+import ToJson from "../../../utils/ts/ToJson";
+import { isIValue, addIValues, subIValues, IValue, cloneIValue, IValueToJson } from "./IValue";
 
 export class Value
-    implements ToCbor, Cloneable<Value>, ToData
+    implements ToCbor, Cloneable<Value>, ToData, ToJson
 {
     readonly map!: IValue
 
@@ -166,6 +154,11 @@ export class Value
                 };
             })
         );
+    }
+
+    toJson()
+    {
+        return IValueToJson( this.map );
     }
 }
 

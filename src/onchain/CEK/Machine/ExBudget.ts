@@ -66,14 +66,14 @@ class ExBudget
 
         ObjectUtils.defineReadOnlyProperty(
             this, "add", (other: Readonly<IExBudget>): void => {
-                _cpu = _cpu + forceUInteger( other.cpu ).asBigInt;
-                _mem = _mem + forceUInteger( other.mem ).asBigInt;
+                _cpu = _cpu + forceBigUInt( other.cpu );
+                _mem = _mem + forceBigUInt( other.mem );
             }
         );
         ObjectUtils.defineReadOnlyProperty(
             this, "sub", (other: Readonly<IExBudget>): void => {
-                _cpu = _cpu - forceUInteger( other.cpu ).asBigInt;
-                _mem = _mem - forceUInteger( other.mem ).asBigInt;
+                _cpu = _cpu - forceBigUInt( other.cpu );
+                _mem = _mem - forceBigUInt( other.mem );
             }
         );
 
@@ -89,10 +89,27 @@ class ExBudget
 
     static sub( a: ExBudget, b: ExBudget ): ExBudget
     {
-        return new ExBudget( a.cpu - b.cpu, a.mem - b.mem );
+        const cpu = a.cpu - b.cpu;
+        const mem = a.mem - b.mem;
+        return new ExBudget( cpu, mem );
     }
 
-    static readonly default: ExBudget;
+    static get default(): ExBudget
+    {
+        return new ExBudget(
+            10_000_000_000, // cpu
+            14_000_000 // mem
+        );
+    }
+
+    static get maxCborSize(): ExBudget
+    {
+        const max_uint64 = ( BigInt(1) << BigInt(64) ) - BigInt(1);
+        return new ExBudget(
+            max_uint64, // cpu
+            max_uint64  // mem
+        );
+    }
 
     clone(): ExBudget
     {
@@ -112,14 +129,5 @@ class ExBudget
         return Cbor.encode( this.toCborObj() );
     }
 }
-
-ObjectUtils.defineReadOnlyProperty(
-    ExBudget,
-    "default",
-    new ExBudget(
-        10_000_000_000, // cpu
-        14_000_000 // mem
-    )
-);
 
 export default ExBudget

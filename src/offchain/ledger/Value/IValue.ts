@@ -1,7 +1,8 @@
 import JsRuntime from "../../../utils/JsRuntime";
 import ObjectUtils from "../../../utils/ObjectUtils";
 import Hash32 from "../../hashes/Hash32/Hash32";
-import { IValue } from "./Value";
+
+export type IValue = (IValuePolicyEntry | IValueAdaEntry)[]
 
 export type IValueAssets = {
     [assetNameAscii: string]: number | bigint
@@ -15,6 +16,43 @@ export type IValuePolicyEntry = {
 export type IValueAdaEntry = {
     policy: "",
     assets: { "": number | bigint }
+}
+
+export function cloneIValue( ival: IValue ): IValue
+{
+    return ival.map( cloneIValueEntry );
+}
+
+function policyToString( policy: "" | Hash32 ): string
+{
+    return policy === "" ? policy : policy.asString;
+}
+
+export function IValueToJson( iVal: IValue ): object
+{
+    const result = {};
+
+    for( const { policy, assets } of iVal )
+    {
+        const _assets = {};
+
+        for( const k in assets )
+        {
+            ObjectUtils.defineReadOnlyProperty(
+                _assets,
+                Buffer.from( k, "ascii" ).toString("hex"),
+                assets[k].toString()
+            )
+        }
+        
+        ObjectUtils.defineReadOnlyProperty(
+            result,
+            policyToString( policy ),
+            _assets
+        );     
+    }
+
+    return result;
 }
 
 function cloneIValueAssets( iValAssets: IValueAssets ): IValueAssets

@@ -15,9 +15,10 @@ describe("onwShotPolicy", () => {
         data,
         PScriptContext.type
     ],  unit)
-    (( mustSpendUtxo, _rdmr, _ctx ) => 
-        _ctx.extract("txInfo").in( ctx =>
-        ctx.txInfo.extract("inputs","mint").in( tx =>
+    (( mustSpendUtxo, _rdmr, ctx ) =>
+
+        ctx.extract("txInfo").in( ({ txInfo }) =>
+        txInfo.extract("inputs","mint").in( tx =>
     
             pif( unit ).$(
     

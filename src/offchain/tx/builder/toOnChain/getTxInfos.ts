@@ -23,74 +23,8 @@ export function getTxInfos( transaction: Tx ): { v1: Data | undefined, v2: Data 
 
     function redeemerToDataPair( rdmr: TxRedeemer ): DataPair<DataConstr, Data>
     {
-        const tag = rdmr.tag;
-
-        let ctorIdx: 0 | 1 | 2 | 3;
-        let purposeArgData: Data;
-
-        if( tag === TxRedeemerTag.Mint )
-        {
-            ctorIdx = 0;
-            const policy = tx.mint?.map[ rdmr.index ].policy;
-            if(!( policy instanceof Hash32 ))
-            throw new BasePlutsError(
-                "invalid minting policy for minting redeemer " + rdmr.index.toString()
-            );
-            purposeArgData = new DataB( policy.asBytes );
-        }
-        else if( tag === TxRedeemerTag.Spend )
-        {
-            ctorIdx = 1;
-            const utxo = tx.inputs[ rdmr.index ];
-            if( utxo === undefined )
-            throw new BasePlutsError(
-                "invalid utxo for spending redeemer " + rdmr.index.toString()
-            );
-            purposeArgData = new DataConstr(
-                0, // PTXOutRef
-                [
-                    // id
-                    new DataConstr(
-                        0, // PTxId
-                        [ new DataB( utxo.id.asBytes ) ]
-                    ),
-                    // index
-                    new DataI( utxo.index )
-                ]
-            )
-        }
-        else if( tag === TxRedeemerTag.Withdraw )
-        {
-            ctorIdx = 2;
-            const stakeCreds = tx.withdrawals?.map[ rdmr.index ]?.rewardAccount
-            if( stakeCreds === undefined )
-            throw new BasePlutsError(
-                "invalid stake credentials for rewarding redeemer " + rdmr.index.toString()
-            );
-            purposeArgData = new StakeCredentials(
-                "script",
-                new StakeValidatorHash( stakeCreds )
-            ).toData();
-        }
-        else if( tag === TxRedeemerTag.Cert )
-        {
-            ctorIdx = 3;
-            const cert = tx.certs?.at( rdmr.index )
-            if( cert === undefined )
-            throw new BasePlutsError(
-                "invalid certificate for certifyng redeemer " + rdmr.index.toString()
-            );
-            purposeArgData = cert.toData();
-        }
-        else throw new BasePlutsError(
-            "invalid redeemer tag"
-        );
-
         return new DataPair(
-            new DataConstr(
-                ctorIdx,
-                [ purposeArgData ]
-            ),
+            rdmr.toSpendingPurposeData( tx ),
             rdmr.data.clone()
         )
     }
@@ -117,7 +51,9 @@ export function getTxInfos( transaction: Tx ): { v1: Data | undefined, v2: Data 
     const txIdData = new DataB( tx.hash.asBytes );
 
     let v1: Data | undefined = undefined;
-    try {
+
+    try { // input and output to data might fail if only v2
+
         v1 = new DataConstr(
             0, // PTxInfo; only costructor
             [
@@ -143,6 +79,7 @@ export function getTxInfos( transaction: Tx ): { v1: Data | undefined, v2: Data 
                 txIdData.clone()
             ]
         );
+        
     }
     catch { // input or output can't be v1 (inline datums etc...)
         v1 = undefined;

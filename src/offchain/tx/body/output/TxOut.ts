@@ -11,7 +11,7 @@ import Address from "../../../ledger/Address";
 import CborMap, { CborMapEntry } from "../../../../cbor/CborObj/CborMap";
 import CborUInt from "../../../../cbor/CborObj/CborUInt";
 import CborArray from "../../../../cbor/CborObj/CborArray";
-import { dataToCborObj } from "../../../../types/Data/toCbor";
+import dataToCbor, { dataToCborObj } from "../../../../types/Data/toCbor";
 import CborTag from "../../../../cbor/CborObj/CborTag";
 import CborBytes from "../../../../cbor/CborObj/CborBytes";
 import Cloneable from "../../../../types/interfaces/Cloneable";
@@ -19,6 +19,7 @@ import ToData from "../../../../types/Data/toData/interface";
 import DataConstr from "../../../../types/Data/DataConstr";
 import { maybeData } from "../../../../types/Data/toData/maybeData";
 import BasePlutsError from "../../../../errors/BasePlutsError";
+import ToJson from "../../../../utils/ts/ToJson";
 
 export interface ITxOut {
     address: Address,
@@ -27,7 +28,7 @@ export interface ITxOut {
     refScript?: Script
 }
 export default class TxOut
-    implements ITxOut, ToCbor, Cloneable<TxOut>, ToData
+    implements ITxOut, ToCbor, Cloneable<TxOut>, ToData, ToJson
 {
     readonly address!: Address
     readonly amount!: Value
@@ -178,4 +179,24 @@ export default class TxOut
             }
         ].filter( elem => elem !== undefined ) as CborMapEntry[])
     }
+
+    toJson()
+    {
+        return {
+            address: this.address.toString(),
+            amount: this.amount.toJson(),
+            datum: this.datum === undefined ? undefined :
+            this.datum instanceof Hash32 ?
+            {
+                type: "hash",
+                hash: this.datum.toString()
+            } :
+            {
+                type: "inline",
+                cborHex: dataToCbor( this.datum ).asString
+            },
+            refScript: this.refScript?.toJson()
+        }
+    }
+
 }

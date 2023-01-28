@@ -2,7 +2,7 @@ import type { CanBeUInteger } from "../../../../types/ints/Integer";
 import type PubKeyHash from "../../../credentials/PubKeyHash";
 import Address from "../../../ledger/Address";
 import ProtocolUpdateProposal from "../../../ledger/protocol/ProtocolUpdateProposal";
-import type TxOutRef from "../../body/output/TxOutRef";
+import type TxOutRef from "../../body/output/UTxO";
 import { TxMetadata } from "../../metadata/TxMetadata";
 import type ITxBuildCert from "./ITxBuildCert";
 import type ITxBuildInput from "./ITxBuildInput";

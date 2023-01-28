@@ -51,7 +51,7 @@ export const anyStruct  = Symbol("anyStruct");
 
 
 export type ConstantableStructCtorDef = {
-    [field: string | number]: ConstantableTermType | ConstantableStructType
+    [field: string | number]: ConstantableTermType | (ConstantableTermType[])[number] | ConstantableStructType
 }
 
 export type GenericStructCtorDef = {
