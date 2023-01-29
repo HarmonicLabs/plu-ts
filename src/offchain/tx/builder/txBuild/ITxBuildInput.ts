@@ -1,11 +1,11 @@
 import CanBeData from "../../../CanBeData/CanBeData";
 import Script from "../../../script/Script";
-import TxOutRef from "../../body/output/UTxO";
+import UTxO, { IUTxO }from "../../body/output/UTxO";
 
 export interface ITxBuildInput {
-    utxo: TxOutRef,
+    utxo: UTxO,
     referenceScriptV2?: {
-        refUtxo: TxOutRef,
+        refUtxo: UTxO,
         datum: CanBeData | "inline",
         redeemer: CanBeData,
     }

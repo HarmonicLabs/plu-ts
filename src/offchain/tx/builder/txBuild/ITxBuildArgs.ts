@@ -2,6 +2,7 @@ import type { CanBeUInteger } from "../../../../types/ints/Integer";
 import type PubKeyHash from "../../../credentials/PubKeyHash";
 import Address from "../../../ledger/Address";
 import ProtocolUpdateProposal from "../../../ledger/protocol/ProtocolUpdateProposal";
+import { AddressStr } from "../../body/output/TxOut";
 import type TxOutRef from "../../body/output/UTxO";
 import { TxMetadata } from "../../metadata/TxMetadata";
 import type ITxBuildCert from "./ITxBuildCert";
@@ -12,7 +13,7 @@ import type ITxBuildWithdrawal from "./ITxBuildWithdrawal";
 
 export interface ITxBuildArgs {
     inputs: [ ITxBuildInput, ...ITxBuildInput[] ],
-    changeAddress: Address,
+    changeAddress: Address | AddressStr,
     outputs?: ITxBuildOutput[],
     // era?: Era // latest
     readonlyRefInputs?: TxOutRef[],

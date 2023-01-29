@@ -6,6 +6,9 @@ import CborUInt from "../CborObj/CborUInt";
 
 export default class CborPositiveRational extends CborTag
 {
+    readonly num!: bigint;
+    readonly den!: bigint;
+
     constructor( num: CanBeUInteger, den: CanBeUInteger )
     {
         const _num = forceBigUInt( num )
@@ -19,10 +22,8 @@ export default class CborPositiveRational extends CborTag
             ])
         );
 
-        const jsNum = Number( _num ) / Number( _den );
-        ObjectUtils.defineReadOnlyProperty( this, "toNumber", () => jsNum )
+        ObjectUtils.defineReadOnlyProperty( this, "num", _num )
+        ObjectUtils.defineReadOnlyProperty( this, "den", _den )
     }
-
-    toNumber!: () => number;
 
 }

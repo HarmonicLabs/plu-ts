@@ -20,10 +20,13 @@ import DataConstr from "../../../../types/Data/DataConstr";
 import { maybeData } from "../../../../types/Data/toData/maybeData";
 import BasePlutsError from "../../../../errors/BasePlutsError";
 import ToJson from "../../../../utils/ts/ToJson";
+import { IValue } from "../../../ledger/Value/IValue";
+
+export type AddressStr = `${"addr1"|"addr_test1"}${string}`;
 
 export interface ITxOut {
-    address: Address,
-    amount: Value,
+    address: Address | AddressStr,
+    amount: Value | IValue,
     datum?: Hash32 | Data,
     refScript?: Script
 }
@@ -187,14 +190,8 @@ export default class TxOut
             amount: this.amount.toJson(),
             datum: this.datum === undefined ? undefined :
             this.datum instanceof Hash32 ?
-            {
-                type: "hash",
-                hash: this.datum.toString()
-            } :
-            {
-                type: "inline",
-                cborHex: dataToCbor( this.datum ).asString
-            },
+                this.datum.toString() :
+                this.datum.toJson(),
             refScript: this.refScript?.toJson()
         }
     }

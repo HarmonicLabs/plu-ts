@@ -176,7 +176,7 @@ export default class Tx
             body: this.body.toJson(),
             witnesses: this.witnesses.toJson(),
             isScriptValid: this.isScriptValid,
-            auxiliaryData: this.auxiliaryData.toJson()
+            auxiliaryData: this.auxiliaryData?.toJson()
         }
     }
 }
@@ -188,7 +188,7 @@ export default class Tx
  *  - required by withdrawals
  *  - additional specified in the `requiredSigners` field
  */
-function getAllRequiredSigners( body: Readonly<TxBody> ): Hash28[]
+export function getAllRequiredSigners( body: Readonly<TxBody> ): Hash28[]
 {
     return (
         body.inputs
@@ -212,5 +212,6 @@ function getAllRequiredSigners( body: Readonly<TxBody> ): Hash28[]
 
 export function getNSignersNeeded( body: Readonly<TxBody> ): number
 {
-    return getAllRequiredSigners( body ).length;
+    const n = getAllRequiredSigners( body ).length
+    return n === 0 ? 1 : n;
 }

@@ -19,7 +19,7 @@ import Data, { isData } from "../../../types/Data";
 import BootstrapWitness from "../TxWitnessSet/BootstrapWitness";
 import CanBeData, { canBeData, forceData } from "../../CanBeData/CanBeData";
 import Machine, { machineVersionV1, machineVersionV2 } from "../../../onchain/CEK/Machine";
-import { costModelsToLanguageViewCbor, isCostModelsV1, isCostModelsV2 } from "../../ledger/CostModels";
+import { costModelsToLanguageViewCbor, defaultV1Costs, defaultV2Costs, isCostModelsV1, isCostModelsV2 } from "../../ledger/CostModels";
 import ExBudget from "../../../onchain/CEK/Machine/ExBudget";
 import AuxiliaryData from "../AuxiliaryData/AuxiliaryData";
 import Hash32 from "../../hashes/Hash32/Hash32";
@@ -35,6 +35,7 @@ import Application from "../../../onchain/UPLC/UPLCTerms/Application";
 import UPLCConst from "../../../onchain/UPLC/UPLCTerms/UPLCConst";
 import DataConstr from "../../../types/Data/DataConstr";
 import ErrorUPLC from "../../../onchain/UPLC/UPLCTerms/ErrorUPLC";
+import UTxO from "../body/output/UTxO";
 
 export class TxBuilder
 {
@@ -56,7 +57,7 @@ export class TxBuilder
 
         JsRuntime.assert(
             isProtocolParameters( protocolParamters ),
-            "invlaid 'network' argument while constructing a 'TxBuilder' instance"
+            "invlaid 'protocolParamters' argument while constructing a 'TxBuilder' instance"
         );
         ObjectUtils.defineReadOnlyProperty(
             this,
@@ -81,7 +82,9 @@ export class TxBuilder
         const cekVersion =
             isCostModelsV2( costmdls.PlutusV2 ) ? machineVersionV2 :
             isCostModelsV1( costmdls.PlutusV1 ) ? machineVersionV1 : "none";
-        const costs = cekVersion === machineVersionV2 ? costmdls.PlutusV2 : costmdls.PlutusV1;
+        const costs = cekVersion === machineVersionV2 ?
+            costmdls.PlutusV2 ?? defaultV2Costs :
+            costmdls.PlutusV1 ?? defaultV1Costs;
 
         if( cekVersion !== "none" )
         ObjectUtils.definePropertyIfNotPresent(
@@ -89,9 +92,9 @@ export class TxBuilder
             "cek",
             {
                 // define as getter so that it can be reused without messing around things
-                get: () =>  new Machine(
+                get: () => new Machine(
                     cekVersion,
-                    costs!
+                    costs
                 ),
                 // set does nothing ( aka. readonly )
                 set: ( ...whatever: any[] ) => {},
@@ -104,9 +107,9 @@ export class TxBuilder
     calcLinearFee( tx: Tx | CborString ): bigint
     {
         return (
-            forceBigUInt( this.protocolParamters.minfeeA ) *
+            forceBigUInt( this.protocolParamters.minFeeCoefficient ) *
             BigInt( (tx instanceof Tx ? tx.toCbor() : tx ).asBytes.length ) +
-            forceBigUInt( this.protocolParamters.minfeeB )
+            forceBigUInt( this.protocolParamters.minFeeFixed )
         );
     }
 
@@ -129,7 +132,7 @@ export class TxBuilder
     {
         onScriptInvalid,
         onScriptResult
-    }: ITxBuildOptions
+    }: ITxBuildOptions = {}
     ): Tx
     {
         const cek: Machine = (this as any).cek;
@@ -145,7 +148,7 @@ export class TxBuilder
         }
 
         let totInputValue = Value.zero;
-        const refIns: TxOutRef[] = readonlyRefInputs?.slice() ?? [];
+        const refIns: UTxO[] = readonlyRefInputs?.slice() ?? [];
 
         const outs = outputs?.map( txBuildOutToTxOut ) ?? [];
         const requiredOutputValue = outs.reduce( (acc, out) => Value.add( acc, out.amount ), Value.zero );
@@ -280,17 +283,30 @@ export class TxBuilder
 
         let isScriptValid: boolean = true;
 
+        const requiredSpendScripts = [];
+
         const _inputs = inputs.map( ({
             utxo,
             referenceScriptV2,
             inputScript
         }, i) => {
             
+            const addr = utxo.resolved.address;
+
             totInputValue =  Value.add( totInputValue, utxo.resolved.amount );
 
-            if( referenceScriptV2 !== undefined )
+            if(
+                addr.paymentCreds.type === "script" &&
+                referenceScriptV2 === undef &&
+                inputScript === undef
+            )
+            throw new BasePlutsError(
+                "spending script utxo \"" + utxo.utxoRef.toString() + "\" without script source"
+            );
+
+            if( referenceScriptV2 !== undef )
             {
-                if( inputScript !== undefined )
+                if( inputScript !== undef )
                 throw new BasePlutsError(
                     "invalid input; multiple scripts specified"
                 );
@@ -372,7 +388,7 @@ export class TxBuilder
                         requiredOutputValue,
                         Value.lovelaces(
                             forceBigUInt(
-                                this.protocolParamters.minfeeA 
+                                this.protocolParamters.minFeeCoefficient 
                             )
                         )
                     )
@@ -580,7 +596,7 @@ export class TxBuilder
             isScriptValid
         });
 
-        const minFeeMultiplier = forceBigUInt( this.protocolParamters.minfeeA );
+        const minFeeMultiplier = forceBigUInt( this.protocolParamters.minFeeCoefficient );
 
         const nVkeyWits = BigInt( getNSignersNeeded( dummyTx.body ) );
 
@@ -658,7 +674,7 @@ export class TxBuilder
             );
         }
 
-        const [ mem_price, cpu_price ] = this.protocolParamters.execCosts.map( cost => cost.toNumber() );
+        const [ memRational, cpuRational ] = this.protocolParamters.execCosts;
 
         const spendScriptsToExec = scriptsToExec.filter( elem => elem.rdmrTag === TxRedeemerTag.Spend );
         const mintScriptsToExec = scriptsToExec.filter( elem => elem.rdmrTag === TxRedeemerTag.Mint );
@@ -682,8 +698,8 @@ export class TxBuilder
             for( let i = 0 ; i < nRdmrs; i++)
             {
                 const rdmr = rdmrs[i];
-                const { tag, data: rdmrData, index, toSpendingPurposeData: getPurpose } = rdmr;
-                const spendingPurpose = getPurpose( tx.body );
+                const { tag, data: rdmrData, index } = rdmr;
+                const spendingPurpose = rdmr.toSpendingPurposeData( tx.body );
 
                 function onlyRedeemerArg( purposeScriptsToExec: ScriptToExecEntry[] )
                 {
@@ -797,10 +813,12 @@ export class TxBuilder
                 )
             }
 
-
             fee = minFee +
-                ceilBigInt( Number( totExBudget.mem ) * mem_price ) + 
-                ceilBigInt( Number( totExBudget.cpu ) * cpu_price );
+                ((totExBudget.mem * memRational.num) / memRational.den) +
+                ((totExBudget.cpu * cpuRational.num) / cpuRational.den) +
+                // bigint division truncates always towards 0;
+                // we don't like that so we add 1n for both divisions ( + 2n )
+                BigInt(2);
 
             if( fee === prevFee ) break; // return last transaciton
 

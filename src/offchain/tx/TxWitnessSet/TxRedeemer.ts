@@ -10,11 +10,12 @@ import Data, { isData } from "../../../types/Data"
 import DataB from "../../../types/Data/DataB"
 import DataConstr from "../../../types/Data/DataConstr"
 import DataI from "../../../types/Data/DataI"
-import { dataToCborObj } from "../../../types/Data/toCbor"
+import dataToCbor, { dataToCborObj } from "../../../types/Data/toCbor"
 import Cloneable from "../../../types/interfaces/Cloneable"
 import { canBeUInteger, CanBeUInteger, forceUInteger } from "../../../types/ints/Integer"
 import JsRuntime from "../../../utils/JsRuntime"
 import ObjectUtils from "../../../utils/ObjectUtils"
+import ToJson from "../../../utils/ts/ToJson"
 import StakeCredentials, { StakeValidatorHash } from "../../credentials/StakeCredentials"
 import Hash32 from "../../hashes/Hash32/Hash32"
 import TxBody from "../body/TxBody"
@@ -26,6 +27,26 @@ export const enum TxRedeemerTag {
     Withdraw = 3
 };
 
+export type TxRedeemerTagStr<Tag extends TxRedeemerTag> =
+    Tag extends TxRedeemerTag.Spend     ? "Spend"       :
+    Tag extends TxRedeemerTag.Mint      ? "Mint"        :
+    Tag extends TxRedeemerTag.Cert      ? "Cert"        :
+    Tag extends TxRedeemerTag.Withdraw  ? "Withdraw"    :
+    never;
+
+export function txRedeemerTagToString<Tag extends TxRedeemerTag>( tag: Tag ): TxRedeemerTagStr<Tag>
+{
+    switch( tag )
+    {
+        case TxRedeemerTag.Spend:       return "Spend" as any;
+        case TxRedeemerTag.Mint:        return "Mint" as any;
+        case TxRedeemerTag.Cert:        return "Cert" as any;
+        case TxRedeemerTag.Withdraw:    return "Withdraw" as any;
+        default:
+            throw new BasePlutsError("invalid TxRedeemerTag")
+    }
+}
+
 export interface ITxRedeemer {
     tag: TxRedeemerTag
     index: CanBeUInteger
@@ -34,7 +55,7 @@ export interface ITxRedeemer {
 }
 
 export default class TxRedeemer
-    implements ITxRedeemer, ToCbor, Cloneable<TxRedeemer>
+    implements ITxRedeemer, ToCbor, Cloneable<TxRedeemer>, ToJson
 {
     
     readonly tag!: TxRedeemerTag
@@ -142,6 +163,16 @@ export default class TxRedeemer
             dataToCborObj( this.data ),
             this.execUnits.toCborObj()
         ])
+    }
+
+    toJson()
+    {
+        return {
+            tag: txRedeemerTagToString( this.tag ),
+            index: this.index,
+            execUnits: this.execUnits.toJson(),
+            data: this.data.toJson(),
+        }
     }
 
     toSpendingPurposeData( tx: TxBody ): DataConstr

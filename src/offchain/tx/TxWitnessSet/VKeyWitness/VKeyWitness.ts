@@ -6,12 +6,13 @@ import { ToCbor } from "../../../../cbor/interfaces/CBORSerializable";
 import Cloneable from "../../../../types/interfaces/Cloneable";
 import JsRuntime from "../../../../utils/JsRuntime";
 import ObjectUtils from "../../../../utils/ObjectUtils";
+import ToJson from "../../../../utils/ts/ToJson";
 import Hash32 from "../../../hashes/Hash32/Hash32";
 import Signature from "../../../hashes/Signature/Signature";
 import VKey from "./VKey";
 
 export default class VKeyWitness
-    implements ToCbor, Cloneable<VKeyWitness>
+    implements ToCbor, Cloneable<VKeyWitness>, ToJson
 {
     readonly vkey!: VKey
     readonly signature!: Signature
@@ -58,5 +59,13 @@ export default class VKeyWitness
             this.vkey.toCborObj(),
             this.signature.toCborObj()
         ])
+    }
+
+    toJson()
+    {
+        return {
+            vkey: this.vkey.asString,
+            signature: this.signature.asString
+        }
     }
 }

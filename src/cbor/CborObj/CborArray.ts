@@ -19,8 +19,8 @@ export function isRawCborArray( arr: RawCborArray ): boolean
     const keys = Object.keys( arr );
 
     return (
-        keys.length === 1 &&
-        keys[0] === "array" &&
+        keys.length >= 1 &&
+        keys.includes("array") &&
         Array.isArray( arr.array ) &&
         arr.array.every( isRawCborObj )
     );

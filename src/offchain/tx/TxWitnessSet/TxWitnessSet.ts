@@ -6,10 +6,11 @@ import CborUInt from "../../../cbor/CborObj/CborUInt";
 import CborString from "../../../cbor/CborString";
 import { ToCbor } from "../../../cbor/interfaces/CBORSerializable";
 import Data, { isData } from "../../../types/Data";
-import { dataToCborObj } from "../../../types/Data/toCbor";
+import dataToCbor, { dataToCborObj } from "../../../types/Data/toCbor";
 import Cloneable from "../../../types/interfaces/Cloneable";
 import JsRuntime from "../../../utils/JsRuntime";
 import ObjectUtils from "../../../utils/ObjectUtils";
+import ToJson from "../../../utils/ts/ToJson";
 import PrivateKey from "../../credentials/PrivateKey";
 import Hash28 from "../../hashes/Hash28/Hash28";
 import { nativeScriptToCborObj } from "../../script/NativeScript";
@@ -83,7 +84,7 @@ export function isITxWitnessSet( set: object ): set is ITxWitnessSet
 }
 
 export default class TxWitnessSet
-    implements ITxWitnessSet, ToCbor
+    implements ITxWitnessSet, ToCbor, ToJson
 {
     readonly vkeyWitnesses?: VKeyWitness[];
     readonly nativeScripts?: Script<ScriptType.NativeScript>[];
@@ -119,9 +120,9 @@ export default class TxWitnessSet
             "invalid witnesses passed"
         );
 
-        let _required = allRequiredSigners.map( sig => sig.asString );
+        // let _required = allRequiredSigners.map( sig => sig.asString );
 
-        function defGetter( name: keyof ITxWitnessSet, get: () => any )
+        const defGetter = ( name: keyof ITxWitnessSet, get: () => any ) =>
         {
             ObjectUtils.definePropertyIfNotPresent(
                 this, name,
@@ -144,7 +145,7 @@ export default class TxWitnessSet
             let _elems = cloneArr( elems );
             defGetter(
                 name,
-                () => cloneArr( _elems )
+                () => _elems.length === 0 ? undefined : cloneArr( _elems )
             );
         }
 
@@ -165,6 +166,19 @@ export default class TxWitnessSet
         defGetterArr( "plutusV1Scripts", plutusV1Scripts );
         defGetterArr( "plutusV2Scripts", plutusV2Scripts );
         defGetterArr( "redeemers", redeemers );
+    }
+
+    toJson()
+    {
+        return {
+            vkeyWitnesses: this.vkeyWitnesses?.map( vkWit => vkWit.toJson() ),
+            nativeScripts: this.nativeScripts?.map( ns => ns.toJson() ),
+            bootstrapWitnesses: this.bootstrapWitnesses?.map( bWit => bWit.toJson() ),
+            plutusV1Scripts: this.plutusV1Scripts?.map( s => s.toJson() ),
+            datums: this.datums?.map( dat => dat.toJson() ),
+            redeemers: this.redeemers?.map( rdmr => rdmr.toJson() ),
+            plutusV2Scripts: this.plutusV2Scripts?.map( s => s.toJson() )
+        }
     }
 
     toCbor(): CborString

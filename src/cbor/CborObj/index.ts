@@ -60,8 +60,19 @@ export function isRawCborObj( rawCborObj: RawCborObj ): boolean
     if( keys.length <= 0 || keys.length > 2 ) return false;
 
     if( keys.length === 2 )
-        return keys.includes( "tag" ) && keys.includes( "data" ) &&
-            isRawCborObj( (rawCborObj as RawCborTag).data );
+    {
+        if( keys.includes( "tag" ) && keys.includes( "data" ) )
+            return isRawCborObj( (rawCborObj as RawCborTag).data );
+        
+        if( keys.includes("options") )
+            return ( 
+                keys.includes("array") && 
+                Array.isArray( (rawCborObj as RawCborArray).array ) &&
+                (rawCborObj as RawCborArray).array.every( isRawCborObj )
+            );
+
+        return false;
+    }
     
     const k = keys[0];
 
@@ -95,7 +106,7 @@ export function cborObjFromRaw( _rawCborObj: RawCborObj ): CborObj
 {
     JsRuntime.assert(
         isRawCborObj( _rawCborObj ),
-        "expected a vaild 'RawCborObj' as input; got: " + _rawCborObj
+        "expected a vaild 'RawCborObj' as input; got: " + Object.keys( _rawCborObj )
     );
 
     function _cborObjFromRaw( rawCborObj: RawCborObj ): CborObj

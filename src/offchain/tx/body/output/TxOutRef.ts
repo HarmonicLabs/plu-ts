@@ -38,7 +38,7 @@ export default class TxOutRef
         ObjectUtils.defineReadOnlyProperty(
             this,
             "id",
-            id
+            id instanceof Hash32 ? Hash32 : new Hash32( id )
         );
         ObjectUtils.defineReadOnlyProperty(
             this,
@@ -82,7 +82,7 @@ export default class TxOutRef
     {
         return {
             id: this.id.asString,
-            index: this.index.toString()
+            index: this.index
         };
     }
     

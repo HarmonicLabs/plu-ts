@@ -1,4 +1,5 @@
 import CborObj, { cborObjFromRaw, isCborObj, isRawCborObj, RawCborObj } from "."
+import { canBeUInteger } from "../../types/ints/Integer"
 import JsRuntime from "../../utils/JsRuntime"
 import ObjectUtils from "../../utils/ObjectUtils"
 import ToRawObj from "./interfaces/ToRawObj"
@@ -18,7 +19,7 @@ export function isRawCborTag( t: RawCborTag ): boolean
         keys.length === 2 &&
         keys.includes( "tag" ) &&
         keys.includes( "data" ) &&
-        typeof t.tag === "number" &&
+        canBeUInteger( t.tag ) &&
         isRawCborObj( t.data )
     );
 }

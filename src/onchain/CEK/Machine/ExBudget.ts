@@ -7,6 +7,7 @@ import BasePlutsError from "../../../errors/BasePlutsError";
 import Cloneable from "../../../types/interfaces/Cloneable";
 import Integer, { CanBeUInteger, forceBigUInt, forceUInteger } from "../../../types/ints/Integer";
 import ObjectUtils from "../../../utils/ObjectUtils";
+import ToJson from "../../../utils/ts/ToJson";
 
 export interface IExBudget {
     mem: CanBeUInteger,
@@ -14,7 +15,7 @@ export interface IExBudget {
 }
 
 class ExBudget
-    implements IExBudget, Cloneable<ExBudget>, ToCbor
+    implements IExBudget, Cloneable<ExBudget>, ToCbor, ToJson
 {
     readonly cpu!: bigint;
     readonly mem!: bigint;
@@ -127,6 +128,14 @@ class ExBudget
     toCbor(): CborString
     {
         return Cbor.encode( this.toCborObj() );
+    }
+
+    toJson()
+    {
+        return {
+            cpu: this.cpu.toString(),
+            mem: this.mem.toString()
+        }
     }
 }
 

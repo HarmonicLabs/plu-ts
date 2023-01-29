@@ -8,12 +8,13 @@ import Cloneable from "../../../types/interfaces/Cloneable";
 import BufferUtils from "../../../utils/BufferUtils";
 import JsRuntime from "../../../utils/JsRuntime";
 import ObjectUtils from "../../../utils/ObjectUtils";
+import ToJson from "../../../utils/ts/ToJson";
 import Hash32 from "../../hashes/Hash32/Hash32";
 import Signature from "../../hashes/Signature/Signature";
 import VKey from "./VKeyWitness/VKey";
 
 export default class BootstrapWitness
-    implements ToCbor, Cloneable<BootstrapWitness>
+    implements ToCbor, Cloneable<BootstrapWitness>, ToJson
 {
     readonly pubKey!: VKey;
     readonly signature!: Signature;
@@ -85,5 +86,17 @@ export default class BootstrapWitness
             this.chainCode.toCborObj(),
             new CborBytes( this.attributes )
         ])
+    }
+
+    toJson()
+    {
+        this.chainCode;
+
+        return {
+            pubKey: this.pubKey.asString,
+            signature: this.signature.asString,
+            chainCode: this.chainCode.asString,
+            attributes: this.attributes.toString("hex")
+        }
     }
 }

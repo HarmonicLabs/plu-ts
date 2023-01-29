@@ -7,12 +7,12 @@ import ExBudget from "../../../onchain/CEK/Machine/ExBudget";
 import { canBeUInteger, CanBeUInteger, forceUInteger } from "../../../types/ints/Integer";
 import ObjectUtils from "../../../utils/ObjectUtils";
 import type Coin from "../Coin";
-import CostModels, { costModelsToCborObj, isCostModels } from "../CostModels";
+import CostModels, { costModelsToCborObj, defaultV1Costs, defaultV2Costs, isCostModels } from "../CostModels";
 import type Epoch from "../Epoch";
 
 export interface ProtocolParamters {
-    minfeeA: CanBeUInteger,
-    minfeeB: CanBeUInteger,
+    minFeeCoefficient: CanBeUInteger,
+    minFeeFixed: CanBeUInteger,
     maxBlockBodySize: CanBeUInteger,
     maxTxSize: CanBeUInteger,
     maxBlockHeaderSize: CanBeUInteger,
@@ -43,8 +43,8 @@ export default ProtocolParamters;
 export function isProtocolParameters( something: any ): something is ProtocolParamters
 {
     const expectedKeys = [
-        "minfeeA",
-        "minfeeB",
+        "minFeeCoefficient",
+        "minFeeFixed",
         "maxBlockBodySize",
         "maxTxSize",
         "maxBlockHeaderSize",
@@ -79,8 +79,8 @@ export function isProtocolParameters( something: any ): something is ProtocolPar
 
     if(!
         ([
-            "minfeeA",
-            "minfeeB",
+            "minFeeCoefficient",
+            "minFeeFixed",
             "maxBlockBodySize",
             "maxTxSize",
             "maxBlockHeaderSize",
@@ -95,6 +95,7 @@ export function isProtocolParameters( something: any ): something is ProtocolPar
             "maxCollateralIns"
         ] as const).every( uintKey => canBeUInteger( pp[uintKey] ) )
     ) return false;
+
 
     if(!(
         pp.pledgeInfluence instanceof CborPositiveRational &&
@@ -139,8 +140,8 @@ export function isPartialProtocolParameters( something: object ): something is P
 
     if(!
         ([
-            "minfeeA",
-            "minfeeB",
+            "minFeeCoefficient",
+            "minFeeFixed",
             "maxBlockBodySize",
             "maxTxSize",
             "maxBlockHeaderSize",
@@ -227,8 +228,8 @@ export function partialProtocolParametersToCborObj( pps: Partial<ProtocolParamte
     const costModelsKeys = Object.keys( costModels ?? {} );
 
     return new CborMap([
-        mapUIntEntryOrUndefined( 0, pps.minfeeA ),
-        mapUIntEntryOrUndefined( 1, pps.minfeeB ),
+        mapUIntEntryOrUndefined( 0, pps.minFeeCoefficient ),
+        mapUIntEntryOrUndefined( 1, pps.minFeeFixed ),
         mapUIntEntryOrUndefined( 2, pps.maxBlockBodySize ),
         mapUIntEntryOrUndefined( 3, pps.maxTxSize ),
         mapUIntEntryOrUndefined( 4, pps.maxBlockHeaderSize ),
@@ -267,3 +268,34 @@ export function partialProtocolParametersToCborObj( pps: Partial<ProtocolParamte
         mapUIntEntryOrUndefined( 24, pps.maxCollateralIns ),
     ].filter( elem => elem !== undefined ) as CborMapEntry[])
 }
+
+export const defaultProtocolParameters: ProtocolParamters = ObjectUtils.freezeAll({
+    minFeeCoefficient: 44,
+    minFeeFixed: 155381,
+    maxBlockBodySize: 73728,
+    maxTxSize: 16384,
+    maxBlockHeaderSize: 1100,
+    keyDeposit:  2_000_000,
+    poolDeposit: 500_000_000,
+    epoch: 18,
+    kParam: 500,
+    pledgeInfluence: new CborPositiveRational( 3, 10 ),
+    expansionRate: new CborPositiveRational( 3, 1000 ),
+    treasureryGrowthRate: new CborPositiveRational( 2, 10 ),
+    protocolVerstion: [ 8, 0 ],
+    poolMinFee: 340_000_000,
+    adaPerUtxoByte: 34482,
+    costModels: {
+        PlutusV1: defaultV1Costs,
+        PlutusV2: defaultV2Costs
+    },
+    execCosts: [
+        new CborPositiveRational( 577, 1e2 ), // mem
+        new CborPositiveRational( 721, 1e5 )  // cpu
+    ],
+    maxTxExecUnits: new ExBudget({ mem: 12_500_000, cpu: 10_000_000_000 }),
+    maxBlockExecUnits: new ExBudget({ mem: 50_000_000, cpu: 40_000_000_000 }),
+    maxValuesSize: 5000,
+    collateralPercentage: 150,
+    maxCollateralIns: 3
+})

@@ -11,7 +11,6 @@ import AuxiliaryDataHash from "../../hashes/Hash32/AuxiliaryDataHash";
 import ScriptDataHash from "../../hashes/Hash32/ScriptDataHash";
 import JsRuntime from "../../../utils/JsRuntime";
 import ObjectUtils from "../../../utils/ObjectUtils";
-import TxOutRef from "./output/UTxO";
 import { UInteger } from "../../..";
 import { ToCbor } from "../../../cbor/interfaces/CBORSerializable";
 import CborObj from "../../../cbor/CborObj";
@@ -25,10 +24,8 @@ import { blake2b_256 } from "../../../crypto";
 import ToJson from "../../../utils/ts/ToJson";
 import UTxO from "./output/UTxO";
 
-type Utxo = UTxO | TxOutRef;
-
 export interface ITxBody {
-    inputs: [ Utxo, ...Utxo[] ],
+    inputs: [ UTxO, ...UTxO[] ],
     outputs: TxOut[],
     fee: Coin,
     ttl?: CanBeUInteger,
@@ -44,7 +41,7 @@ export interface ITxBody {
     network?: NetworkT,
     collateralReturn?: TxOut,
     totCollateral?: Coin,
-    refInputs?: Utxo[]
+    refInputs?: UTxO[]
 }
 
 export function isITxBody( body: Readonly<object> ): body is ITxBody
@@ -59,7 +56,7 @@ export function isITxBody( body: Readonly<object> ): body is ITxBody
         
         ObjectUtils.hasOwn( b, "inputs" ) &&
         Array.isArray( b.inputs ) && b.inputs.length > 0 &&
-        b.inputs.every( _in => _in instanceof TxOutRef ) &&
+        b.inputs.every( _in => _in instanceof UTxO ) &&
         
         ObjectUtils.hasOwn( b, "outputs" ) &&
         Array.isArray( b.outputs ) && b.outputs.length > 0 &&
@@ -91,7 +88,7 @@ export function isITxBody( body: Readonly<object> ): body is ITxBody
         ( b.totCollateral === undefined || canBeUInteger( b.totCollateral ) ) &&
         ( b.refInputs === undefined || (
             Array.isArray( b.refInputs ) &&
-            b.refInputs.every( ref => ref instanceof TxOutRef )
+            b.refInputs.every( ref => ref instanceof UTxO )
         ))
     )
 }
@@ -164,12 +161,12 @@ export default class TxBody
         JsRuntime.assert(
             Array.isArray( inputs )  &&
             inputs.length > 0 &&
-            inputs.every( input => input instanceof TxOutRef ),
+            inputs.every( input => input instanceof UTxO ),
             "invald 'inputs' field"
         );
         ObjectUtils.defineReadOnlyProperty(
             this,
-            "inptus",
+            "inputs",
             Object.freeze(
                 inputs.map( i => i instanceof UTxO ? i : new UTxO( i ) )
             )
@@ -343,7 +340,7 @@ export default class TxBody
         {
             JsRuntime.assert(
                 Array.isArray( collateralInputs ) &&
-                collateralInputs.every( input => input instanceof TxOutRef ),
+                collateralInputs.every( input => input instanceof UTxO ),
                 "invalid 'collateralInputs' while constructing a 'Tx'"
             );
         }
@@ -400,7 +397,7 @@ export default class TxBody
             collateralReturn
         );
         // -------------------------------------- totCollateral -------------------------------------- //
-        totCollateral
+
         if( totCollateral !== undefined )
         JsRuntime.assert(
             canBeUInteger( totCollateral ),
@@ -415,13 +412,12 @@ export default class TxBody
 
         // -------------------------------------- reference inputs -------------------------------------- //  
 
-        {
-            JsRuntime.assert(
-                Array.isArray( refInputs ) &&
-                refInputs.every( input => input instanceof TxOutRef ),
-                "invalid 'refInputs' while constructing a 'Tx'"
-            );
-        }
+        if( refInputs !== undefined )
+        JsRuntime.assert(
+            Array.isArray( refInputs ) &&
+            refInputs.every( input => input instanceof UTxO ),
+            "invalid 'refInputs' while constructing a 'Tx'"
+        );
 
         ObjectUtils.defineReadOnlyProperty(
             this,
@@ -555,7 +551,7 @@ export default class TxBody
             fee: this.fee.toString(),
             ttl: this.ttl?.toString(),
             certs: this.certs?.map( c => c.toJson() ),
-            withdrawals: this.withdrawals.toJson() ,
+            withdrawals: this.withdrawals?.toJson() ,
             protocolUpdate: 
                 this.protocolUpdate === undefined ? undefined :
                 protocolUpdateToJson( this.protocolUpdate ),

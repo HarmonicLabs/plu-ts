@@ -6,6 +6,7 @@ import CborString from "../../../cbor/CborString";
 import { ToCbor } from "../../../cbor/interfaces/CBORSerializable";
 import JsRuntime from "../../../utils/JsRuntime";
 import ObjectUtils from "../../../utils/ObjectUtils";
+import ToJson from "../../../utils/ts/ToJson";
 import TxMetadatum, { isTxMetadatum } from "./TxMetadatum";
 
 export type ITxMetadata = {
@@ -15,7 +16,7 @@ export type ITxMetadata = {
 type ITxMetadataStr = { [metadatum_label: string]: TxMetadatum };
 
 export class TxMetadata
-    implements ToCbor
+    implements ToCbor, ToJson
 {
     readonly metadata!: ITxMetadataStr;
 
@@ -63,5 +64,21 @@ export class TxMetadata
                 }
             })
         )
+    }
+
+    toJson()
+    {
+        const json = {}
+
+        const ks = Object.keys( this.metadata );
+
+        for(const k of ks)
+        {
+            ObjectUtils.defineReadOnlyProperty(
+                json, k, this.metadata[k].toJson()
+            )
+        }
+
+        return json as any;
     }
 }

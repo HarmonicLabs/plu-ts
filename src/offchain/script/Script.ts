@@ -18,6 +18,11 @@ export const enum ScriptType {
     PlutusV2 = "PlutusScriptV2"
 }
 
+function parseCborBytes( cbor: Buffer ): Buffer
+{
+    return ( Cbor.parse( cbor ) as CborBytes ).buffer
+}
+
 export default class Script<T extends ScriptType = ScriptType>
     implements Cloneable<Script<T>>, ToJson
 {
@@ -75,7 +80,11 @@ export default class Script<T extends ScriptType = ScriptType>
                     else
                     {
                         const uplcBytes = Array.from(
-                            ( Cbor.parse( this.cbor ) as CborBytes ).buffer
+                            parseCborBytes(
+                                parseCborBytes(
+                                    this.cbor
+                                )
+                            )
                         );
 
                         scriptDataToHash = [

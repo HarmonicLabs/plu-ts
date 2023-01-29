@@ -11,6 +11,7 @@ import { ToCbor } from "../../../cbor/interfaces/CBORSerializable";
 import ByteString from "../../../types/HexString/ByteString";
 import JsRuntime from "../../../utils/JsRuntime";
 import ObjectUtils from "../../../utils/ObjectUtils";
+import ToJson from "../../../utils/ts/ToJson";
 
 
 export type TxMetadatum
@@ -50,7 +51,7 @@ function isTxMetadatumMapEntry( something: any ): something is TxMetadatumMapEnt
 }
 
 export class TxMetadatumMap
-    implements ToCbor
+    implements ToCbor, ToJson
 {
     readonly map!: TxMetadatumMapEntry[];
 
@@ -83,10 +84,20 @@ export class TxMetadatumMap
             })
         )
     }
+
+    toJson()
+    {
+        return this.map.map( entry => {
+            return {
+                k: entry.k.toJson(),
+                v: entry.v.toJson(),
+            }
+        })
+    }
 }
 
 export class TxMetadatumList
-    implements ToCbor
+    implements ToCbor, ToJson
 {
     readonly list!: TxMetadatum[];
 
@@ -112,10 +123,15 @@ export class TxMetadatumList
     {
         return new CborArray( this.list.map( _ => _.toCborObj() ) );
     }
+
+    toJson()
+    {
+        return this.list.map( _ => _.toJson() );
+    }
 }
 
 export class TxMetadatumInt
-    implements ToCbor
+    implements ToCbor, ToJson
 {
     readonly n!: bigint;
 
@@ -136,10 +152,15 @@ export class TxMetadatumInt
     {
         return this.n < BigInt( 0 ) ? new CborNegInt( this.n ) : new CborUInt( this.n )
     }
+
+    toJson()
+    {
+        return { int: this.n.toString() }
+    }
 }
 
 export class TxMetadatumBytes
-    implements ToCbor
+    implements ToCbor, ToJson
 {
     readonly bytes!: Buffer
 
@@ -176,10 +197,15 @@ export class TxMetadatumBytes
 
         return new CborBytes( this.bytes );
     }
+
+    toJson()
+    {
+        return { bytes: this.bytes.toString("hex") }
+    }
 }
 
 export class TxMetadatumText
-    implements ToCbor
+    implements ToCbor, ToJson
 {
     readonly text!: string
 
@@ -220,5 +246,10 @@ export class TxMetadatumText
         }
 
         return new CborText( this.text );
+    }
+
+    toJson()
+    {
+        return { text: this.text }
     }
 }

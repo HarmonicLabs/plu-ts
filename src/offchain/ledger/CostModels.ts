@@ -328,6 +328,10 @@ export const defaultV2Costs: CostModelPlutusV2 = Object.freeze({
     "serialiseData-memory-arguments-slope": 2,
     "sha2_256-cpu-arguments-intercept": 806990,
     "sha2_256-cpu-arguments-slope": 30482,
+    "sha2_256-memory-arguments": 4,
+    "sha3_256-cpu-arguments-intercept": 1927926,
+    "sha3_256-cpu-arguments-slope": 82523,
+    "sha3_256-memory-arguments": 4,
     "sliceByteString-cpu-arguments-intercept": 265318,
     "sliceByteString-cpu-arguments-slope": 0,
     "sliceByteString-memory-arguments-intercept": 4,
@@ -433,7 +437,7 @@ export function isCostModels( something: any ): something is CostModels
     }
     else if( ObjectUtils.hasOwn<object,"PlutusV2">( something, "PlutusV2" ) )
     {
-        if( !isCostModelsV1( something.PlutusV2 ) ) return false;
+        if( !isCostModelsV2( something.PlutusV2 ) ) return false;
     }
     // no PlutusV2, nor PlutusV1 found
     else return false;

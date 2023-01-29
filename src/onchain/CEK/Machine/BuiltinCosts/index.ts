@@ -1,5 +1,5 @@
 import BasePlutsError from "../../../../errors/BasePlutsError";
-import { AnyV2CostModel, AnyV1CostModel, isCostModels, toCostModelV1, toCostModelV2, CostModelPlutusV2, costModelV1ToFakeV2 } from "../../../../offchain/ledger/CostModels";
+import { AnyV2CostModel, AnyV1CostModel, isCostModels, toCostModelV1, toCostModelV2, CostModelPlutusV2, costModelV1ToFakeV2, isCostModelsV2 } from "../../../../offchain/ledger/CostModels";
 import { forceBigUInt } from "../../../../types/ints/Integer";
 import JsRuntime from "../../../../utils/JsRuntime";
 import ObjectUtils from "../../../../utils/ObjectUtils";
@@ -81,7 +81,7 @@ export function costModelV2ToBuiltinCosts( costmdls: AnyV2CostModel ): <Tag exte
 {
     const costs = toCostModelV2( costmdls );
     JsRuntime.assert(
-        isCostModels( costs ),
+        isCostModelsV2( costs ),
         "invalid cost models passed"
     );
     

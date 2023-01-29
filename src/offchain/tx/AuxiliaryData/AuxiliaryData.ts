@@ -10,6 +10,7 @@ import { blake2b_256 } from "../../../crypto";
 import { PlutusScriptVersion, ScriptJsonFormat } from "../../../onchain/pluts/Script";
 import JsRuntime from "../../../utils/JsRuntime";
 import ObjectUtils from "../../../utils/ObjectUtils";
+import ToJson from "../../../utils/ts/ToJson";
 import AuxiliaryDataHash from "../../hashes/Hash32/AuxiliaryDataHash";
 import Hash32 from "../../hashes/Hash32/Hash32";
 import NativeScript from "../../script/NativeScript";
@@ -31,7 +32,7 @@ function scriptArrToCbor( scripts: Script[] ): CborArray
 }
 
 export default class AuxiliaryData
-    implements IAuxiliaryData, ToCbor
+    implements IAuxiliaryData, ToCbor, ToJson
 {
     readonly metadata?: TxMetadata;
     readonly nativeScripts?: Script<ScriptType.NativeScript>[];
@@ -202,5 +203,15 @@ export default class AuxiliaryData
                 }
             ].filter( elem => elem !== undefined ) as CborMapEntry[])
         )
+    }
+
+    toJson()
+    {
+        return {
+            metadata: this.metadata?.toJson(),
+            nativeScripts: this.nativeScripts?.map( s => s.toJson() ),
+            plutusV1Scripts: this.plutusV1Scripts?.map( s => s.toJson() ),
+            plutusV2Scripts: this.plutusV2Scripts?.map( s => s.toJson() ),
+        }
     }
 }

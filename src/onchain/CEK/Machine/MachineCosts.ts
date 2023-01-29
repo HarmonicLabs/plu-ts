@@ -55,7 +55,7 @@ export default function costModelV2ToMachineCosts( costsV2: AnyV2CostModel ): Ma
         ObjectUtils.definePropertyIfNotPresent(
             result, k,
             {
-                get: val.clone,
+                get: () => val.clone(),
                 set: (...whatever: any[]) => {},
                 enumerable: true,
                 configurable: false
