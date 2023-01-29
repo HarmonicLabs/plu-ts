@@ -35,7 +35,7 @@ Everyone of them is special and is contribuitng in making this software aviable 
 
 ### Special thanks for their support goes to:
 
-[VledicFranco](https://github.com/VledicFranco) by [Drunken Dragon Entertainment](https://twitter.com/DrunkenDragnEnt) ([drunkendragon.games](https://www.drunkendragon.games/))
+[VledicFranco](https://github.com/VledicFranco) by [Drunken Dragon Entertainment](https://twitter.com/DrunkenDragnEnt)
 
 ## Get Started
 
