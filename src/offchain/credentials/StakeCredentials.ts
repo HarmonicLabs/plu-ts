@@ -13,6 +13,7 @@ import Cloneable from "../../types/interfaces/Cloneable";
 import { CanBeUInteger, canBeUInteger, forceBigUInt } from "../../types/ints/Integer";
 import JsRuntime from "../../utils/JsRuntime";
 import ObjectUtils from "../../utils/ObjectUtils";
+import ToJson from "../../utils/ts/ToJson";
 import Hash28 from "../hashes/Hash28/Hash28";
 import PaymentCredentials from "./PaymentCredentials";
 
@@ -29,7 +30,7 @@ export type StakeHash<T extends StakeCredentialsType> =
     never;
 
 export default class StakeCredentials<T extends StakeCredentialsType = StakeCredentialsType>
-    implements ToCbor, ToData, Cloneable<StakeCredentials<T>>
+    implements ToCbor, ToData, Cloneable<StakeCredentials<T>>, ToJson
 {
     readonly type!: T;
     readonly hash!: StakeHash<T>
@@ -126,5 +127,30 @@ export default class StakeCredentials<T extends StakeCredentialsType = StakeCred
                 ) :
                 this.hash.toCborObj()
         ])
+    }
+
+    toJson()
+    {
+        switch( this.type )
+        {
+            case "script":
+                return {
+                    type: "script",
+                    hash: this.hash.toString()
+                }
+            case "stakeKey":
+                return {
+                    type: "stakeKey",
+                    hash: this.hash.toString()
+                }
+            case "pointer":
+                return {
+                    type: "pointer",
+                    pointer: (this.hash as [CanBeUInteger, CanBeUInteger, CanBeUInteger])
+                        .map( n => forceBigUInt( n ).toString() )
+                }
+            default:
+                throw new BasePlutsError("unknown stake credentials type")
+        }
     }
 }

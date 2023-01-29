@@ -1,13 +1,14 @@
-import Cbor from "../../cbor/Cbor";
 import CborObj from "../../cbor/CborObj";
 import CborArray from "../../cbor/CborObj/CborArray";
 import CborBytes from "../../cbor/CborObj/CborBytes";
 import CborSimple from "../../cbor/CborObj/CborSimple";
 import CborText from "../../cbor/CborObj/CborText";
 import CborUInt from "../../cbor/CborObj/CborUInt";
-import { canBeUInteger, CanBeUInteger, forceUInteger } from "../../types/ints/Integer";
+import BasePlutsError from "../../errors/BasePlutsError";
+import { canBeUInteger, CanBeUInteger, forceBigUInt, forceUInteger } from "../../types/ints/Integer";
 import JsRuntime from "../../utils/JsRuntime";
 import ObjectUtils from "../../utils/ObjectUtils";
+import { Buffer } from "buffer";
 
 export type IpPoolRelay = ({
     ipv4: Buffer
@@ -35,6 +36,45 @@ export interface MultiHostPoolRelay {
 export type PoolRelay = IpPoolRelay | DnsPoolRelay | MultiHostPoolRelay;
 
 export default PoolRelay;
+
+export function poolRelayToJson( relay: PoolRelay )
+{
+    const type = relay.type;
+
+    switch( type )
+    {
+        case "ip":
+            const ipv4: Buffer | undefined = (relay as any).ipv4 === undefined ? undefined : (relay as any).ipv4;
+            const ipv6: Buffer | undefined = (relay as any).ipv6 === undefined ? undefined : (relay as any).ipv6;
+            return {
+                type: "ip",
+                port: relay.port === undefined ? undefined : Number( forceBigUInt( relay.port ) ),
+                ipv4: ipv4 === undefined ? undefined : `${ipv4.readUInt8(0)}.${ipv4.readUInt8(1)}.${ipv4.readUInt8(2)}.${ipv4.readUInt8(3)}`,
+                ipv6: ipv6 === undefined ? undefined :
+                    [
+                        ipv6.readUInt16BE(0).toString(16),
+                        ipv6.readUInt16BE(2).toString(16),
+                        ipv6.readUInt16BE(4).toString(16),
+                        ipv6.readUInt16BE(6).toString(16),
+                        ipv6.readUInt16BE(8).toString(16),
+                        ipv6.readUInt16BE(10).toString(16)
+                    ].join(':')
+            }
+        case "dns":
+            return {
+                type: "dns",
+                port: relay.port === undefined ? undefined : Number( forceBigUInt( relay.port ) ),
+                dnsName: relay.dnsName
+            }
+        case "multi-host":
+            return {
+                type: "multi-host",
+                dnsName: relay.dnsName
+            }
+        default: 
+            throw new BasePlutsError("unknown pool realy type")    
+    }
+}
 
 function minimumPoolRelayCheck( something: any ): boolean
 {

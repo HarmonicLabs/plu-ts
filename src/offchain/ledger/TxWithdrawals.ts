@@ -15,9 +15,10 @@ import ToData from "../../types/Data/toData/interface";
 import Data from "../../types/Data";
 import DataMap from "../../types/Data/DataMap";
 import DataPair from "../../types/Data/DataPair";
-import StakeCredentials, { StakeKey } from "../credentials/StakeCredentials";
+import StakeCredentials, { StakeKeyHash } from "../credentials/StakeCredentials";
 import DataI from "../../types/Data/DataI";
 import DataConstr from "../../types/Data/DataConstr";
+import ToJson from "../../utils/ts/ToJson";
 
 export type TxWithdrawalsEntryBigInt = {
     rewardAccount: Hash28,
@@ -56,7 +57,7 @@ export function isITxWithdrawals( stuff: any ): stuff is ITxWithdrawals
 }
 
 export default class TxWithdrawals
-    implements ToCbor, ToData
+    implements ToCbor, ToData, ToJson
 {
     readonly map!: TxWithdrawalsMapBigInt
 
@@ -131,7 +132,7 @@ export default class TxWithdrawals
                 new DataPair(
                     new StakeCredentials(
                         "stakeKey",
-                        new StakeKey( rewardAccount )
+                        new StakeKeyHash( rewardAccount )
                     ).toData(),
                     new DataI( amount )
                 )
@@ -153,6 +154,20 @@ export default class TxWithdrawals
                 }
             })
         )
+    }
+
+    toJson(): { [rewardAccount: string]: string }
+    {
+        const json = {};
+
+        for( const { rewardAccount, amount } of this.map )
+        {
+            ObjectUtils.defineReadOnlyProperty(
+                json, rewardAccount.asString, amount.toString()
+            );
+        }
+
+        return json as any;
     }
 }
 

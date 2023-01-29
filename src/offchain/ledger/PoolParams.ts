@@ -5,7 +5,7 @@ import PubKeyHash from "../credentials/PubKeyHash";
 import Hash32 from "../hashes/Hash32/Hash32";
 import PoolKeyHash from "../hashes/Hash28/PoolKeyHash";
 import VRFKeyHash from "../hashes/Hash32/VRFKeyHash";
-import PoolRelay, { isPoolRelay, poolRelayToCborObj } from "./PoolRelay";
+import PoolRelay, { isPoolRelay, poolRelayToCborObj, poolRelayToJson } from "./PoolRelay";
 import { ToCbor } from "../../cbor/interfaces/CBORSerializable";
 import JsRuntime from "../../utils/JsRuntime";
 import ObjectUtils from "../../utils/ObjectUtils";
@@ -16,6 +16,8 @@ import CborSimple from "../../cbor/CborObj/CborSimple";
 import CborArray from "../../cbor/CborObj/CborArray";
 import CborString from "../../cbor/CborString";
 import CborText from "../../cbor/CborObj/CborText";
+import ToJson from "../../utils/ts/ToJson";
+import Hash28 from "../hashes/Hash28/Hash28";
 
 export interface IPoolParams {
     operator: PoolKeyHash,
@@ -23,21 +25,21 @@ export interface IPoolParams {
     pledge: Coin,
     cost: Coin,
     margin: CborPositiveRational,
-    rewardAccount: ByteString,
+    rewardAccount: Hash28,
     owners: PubKeyHash[],
     relays: PoolRelay[],
     metadata?: [poolMetadataUrl: string, hash: Hash32]
 }
 
 export default class PoolParams
-    implements IPoolParams
+    implements IPoolParams, ToJson
 {
     readonly operator!: PoolKeyHash;
     readonly vrfKeyHash!: VRFKeyHash;
     readonly pledge!: bigint;
     readonly cost!: bigint;
     readonly margin!: CborPositiveRational;
-    readonly rewardAccount!: ByteString;
+    readonly rewardAccount!: Hash28;
     readonly owners!: PubKeyHash[];
     readonly relays!: PoolRelay[];
     readonly metadata?: [poolMetadataUrl: string, hash: Hash32];
@@ -157,5 +159,23 @@ export default class PoolParams
                     this.metadata[1].toCborObj()
                 ])
         ]) as any;
+    }
+
+    toJson()
+    {
+        return {
+            operator: this.operator.asString,
+            vrfKeyHash: this.vrfKeyHash.asString,
+            pledge: this.pledge.toString(),
+            cost: this.cost.toString(),
+            margin: Number( this.margin.num ) / Number( this.margin.den ),
+            rewardAccount: this.rewardAccount.asString,
+            owners: this.owners.map( owner => owner.asString ),
+            relays: this.relays.map( poolRelayToJson ),
+            metadata: this.metadata === undefined ? undefined : {
+                poolMetadataUrl: this.metadata[0],
+                hash: this.metadata[1].asString
+            }
+        }
     }
 };

@@ -8,9 +8,10 @@ import BasePlutsError from "../../../errors/BasePlutsError";
 import DataConstr from "../../../types/Data/DataConstr";
 import DataI from "../../../types/Data/DataI";
 import ToData from "../../../types/Data/toData/interface";
-import { canBeUInteger, forceUInteger, UInteger } from "../../../types/ints/Integer";
+import { canBeUInteger, forceBigUInt, forceUInteger, UInteger } from "../../../types/ints/Integer";
 import JsRuntime from "../../../utils/JsRuntime";
 import ObjectUtils from "../../../utils/ObjectUtils";
+import ToJson from "../../../utils/ts/ToJson";
 import StakeCredentials from "../../credentials/StakeCredentials";
 import GenesisDelegateHash from "../../hashes/Hash28/GenesisDelegateHash";
 import GenesisHash from "../../hashes/Hash28/GenesisHash";
@@ -32,6 +33,32 @@ export const enum CertificateType {
     MoveInstantRewards      = 6
 };
 
+export type CertTypeToStr<CertT extends CertificateType> =
+    CertT extends CertificateType.StakeRegistration     ? "StakeRegistration" :
+    CertT extends CertificateType.StakeDeRegistration   ? "StakeDeRegistration" :
+    CertT extends CertificateType.StakeDelegation       ? "StakeDelegation" :
+    CertT extends CertificateType.PoolRegistration      ? "PoolRegistration" :
+    CertT extends CertificateType.PoolRetirement        ? "PoolRetirement" :
+    CertT extends CertificateType.GenesisKeyDelegation  ? "GenesisKeyDelegation" :
+    CertT extends CertificateType.MoveInstantRewards    ? "MoveInstantRewards" :
+    never;
+
+export function certTypeToString<CertT extends CertificateType>( certT: CertT ): CertTypeToStr<CertT>
+{
+    switch( certT )
+    {
+        case CertificateType.StakeRegistration      :  return "StakeRegistration"       as any;
+        case CertificateType.StakeDeRegistration    :  return "StakeDeRegistration"     as any;
+        case CertificateType.StakeDelegation        :  return "StakeDelegation"         as any;
+        case CertificateType.PoolRegistration       :  return "PoolRegistration"        as any;
+        case CertificateType.PoolRetirement         :  return "PoolRetirement"          as any;
+        case CertificateType.GenesisKeyDelegation   :  return "GenesisKeyDelegation"    as any;
+        case CertificateType.MoveInstantRewards     :  return "MoveInstantRewards"      as any;
+        default:
+            throw new BasePlutsError("unknown certificate type")
+    }
+} 
+
 export type StakeRegistration    = CertificateType.StakeRegistration;
 export type StakeDeRegistration  = CertificateType.StakeDeRegistration;
 export type StakeDelegation      = CertificateType.StakeDelegation;
@@ -51,7 +78,7 @@ export type ParamsOfCert<CertTy extends CertificateType> =
     never
 
 export default class Certificate<CertTy extends CertificateType>
-    implements ToCbor, ToData
+    implements ToCbor, ToData, ToJson
 {
     readonly certType!: CertTy
     readonly params!: ParamsOfCert<CertTy>
@@ -272,6 +299,65 @@ export default class Certificate<CertTy extends CertificateType>
             new CborUInt( this.certType ),
             ...this.params.map( p => (p as any).toCborObj() )
         ])
+    }
+
+    toJson()
+    {
+        const certTypeStr = certTypeToString( this.certType );
+
+        type _ParamsOfCert<CertTy extends CertificateType> =
+            CertTy extends CertificateType.MoveInstantRewards ? [ MoveInstantRewardsCert ] :
+            never
+
+        switch( this.certType )
+        {
+            case CertificateType.StakeRegistration:                
+            case CertificateType.StakeDeRegistration:
+                return {
+                    certType: certTypeStr,
+                    StakeCredentials: ( this.params[0] as StakeCredentials ).toJson()
+                }
+            break;
+            case CertificateType.StakeDelegation:
+                return {
+                    certType: certTypeStr,
+                    StakeCredentials: ( this.params[0] as StakeCredentials ).toJson(),
+                    poolKeyHash: ( this.params[1] as PoolKeyHash ).asString
+                }
+            break;
+            case CertificateType.PoolRegistration:
+                return {
+                    certType: certTypeStr,
+                    poolParams: ( this.params[0] as PoolParams ).toJson(),
+                }                
+            break;
+            case CertificateType.PoolRetirement:
+                return {
+                    certType: certTypeStr,
+                    poolKeyHash: ( this.params[0] as PoolKeyHash ).asString,
+                    epoch: Number( forceBigUInt( this.params[1] as Epoch ) ),
+                }  
+            break;
+            case CertificateType.GenesisKeyDelegation:
+                return {
+                    certType: certTypeStr,
+                    genesisHash: (this.params[0] as GenesisHash).asString,
+                    genesisDelegateHash: (this.params[1] as GenesisDelegateHash).asString,
+                    vrfKeyHash: (this.params[2] as VRFKeyHash).asString  
+                }
+            break;
+            case CertificateType.MoveInstantRewards:
+                return {
+                    certType: certTypeStr,
+                    mirCert: {
+                        certType: certTypeStr,
+                        genesisHash: (this.params[0] as MoveInstantRewardsCert).toJson()
+                    }
+                }
+            break;
+            default:
+                throw new BasePlutsError("unknown certificate type")
+        }
     }
 }
 
