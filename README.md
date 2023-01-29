@@ -33,6 +33,10 @@ the [sponsors.md](./sponsors.md) file contains a list of supportes of this proje
 
 Everyone of them is special and is contribuitng in making this software aviable for everyone.
 
+### Special thanks for their support goes to:
+
+[VledicFranco](https://github.com/VledicFranco) by [Drunken Dragon Entertainment](https://twitter.com/DrunkenDragnEnt) ([drunkendragon.games](https://www.drunkendragon.games/))
+
 ## Get Started
 
 You can start playing with `plu-ts` by running the following command in your project root directory
