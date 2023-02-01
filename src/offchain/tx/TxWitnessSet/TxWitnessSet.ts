@@ -99,7 +99,7 @@ export default class TxWitnessSet
      * if true adds the witness
      * otherwise nothing happens (the signature is not added)
     **/
-    readonly addVKeyWitnessIfNeeded: ( vkeyWit: VKeyWitness ) => void
+    // readonly addVKeyWitnessIfNeeded: ( vkeyWit: VKeyWitness ) => void
     /**
      * @returns {boolean}
      *  `true` if all the signers needed
@@ -111,7 +111,7 @@ export default class TxWitnessSet
      *  - required by withdrawals
      *  - additional specified in the `requiredSigners` field
      */
-    readonly isComplete: () => boolean
+    // readonly isComplete: () => boolean
 
     constructor( witnesses: ITxWitnessSet, allRequiredSigners: Hash28[] = [] )
     {

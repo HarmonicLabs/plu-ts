@@ -1,4 +1,4 @@
-import CanBeData from "../../../CanBeData/CanBeData";
+import { CanBeData } from "../../../../types/Data/CanBeData";
 import { TxWithdrawalsEntry } from "../../../ledger/TxWithdrawals";
 import Script from "../../../script/Script";
 import TxOutRef from "../../body/output/UTxO";

@@ -42,13 +42,13 @@ export default class Tx
      * one might prefer to use this method instead of `signWith`
      * when signature is provided by a third party (example CIP30 wallet)
     **/
-    readonly addVKeyWitnessIfNeeded!: ( vkeyWit: VKeyWitness ) => void
+    // readonly addVKeyWitnessIfNeeded!: ( vkeyWit: VKeyWitness ) => void
     /**
      * checks that the signer is needed
      * if true signs the transaction with the specified key
      * otherwise nothing happens (the signature is not added)
     **/
-    readonly signWith!: ( signer: PrivateKey ) => void
+    // readonly signWith!: ( signer: PrivateKey ) => void
     /**
      * @returns {boolean}
      *  `true` if all the signers needed
@@ -60,7 +60,7 @@ export default class Tx
      *  - required by withdrawals
      *  - additional spefified in the `requiredSigners` field
      */
-    readonly isComplete!: () => boolean
+    // readonly isComplete!: () => boolean
     /**
      * getter
      */
@@ -126,6 +126,7 @@ export default class Tx
             }
         );
 
+        /*
         ObjectUtils.defineReadOnlyProperty(
             this, "addVKeyWitnessIfNeeded",
             this.witnesses.addVKeyWitnessIfNeeded
@@ -149,7 +150,7 @@ export default class Tx
             this, "isComplete",
             this.witnesses.isComplete
         );
-
+        //*/
     }
 
     toCbor(): CborString

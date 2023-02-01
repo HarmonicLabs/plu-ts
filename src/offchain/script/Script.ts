@@ -28,7 +28,7 @@ export default class Script<T extends ScriptType = ScriptType>
 {
     readonly type!: T;
     readonly cbor!: Buffer;
-    readonly hash: Hash28;
+    readonly hash!: Hash28;
 
     constructor( scriptType: T, cbor: Buffer | (T extends ScriptType.NativeScript ? NativeScript : ScriptJsonFormat) )
     {

@@ -41,7 +41,7 @@ export function IValueToJson( iVal: IValue ): object
             ObjectUtils.defineReadOnlyProperty(
                 _assets,
                 Buffer.from( k, "ascii" ).toString("hex"),
-                assets[k].toString()
+                (assets as any)[k].toString()
             )
         }
         

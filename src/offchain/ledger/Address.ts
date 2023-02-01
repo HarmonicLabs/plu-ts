@@ -1,6 +1,6 @@
 import { byte, decodeBech32, encodeBech32 } from "../../crypto";
 import BasePlutsError from "../../errors/BasePlutsError";
-import { NetworkT } from "../Network";
+import { NetworkT } from "../ledger/Network";
 import PaymentCredentials, { PaymentCredentialsType } from "../credentials/PaymentCredentials";
 import StakeCredentials, { StakeCredentialsType } from "../credentials/StakeCredentials";
 import Hash28 from "../hashes/Hash28/Hash28";
@@ -35,10 +35,10 @@ export type AddressType
 export default class Address
     implements ToData, Cloneable<Address>, ToCbor, ToJson
 {
-    readonly network: NetworkT
-    readonly paymentCreds: PaymentCredentials
+    readonly network!: NetworkT
+    readonly paymentCreds!: PaymentCredentials
     readonly stakeCreds?: StakeCredentials
-    readonly type: AddressType;
+    readonly type!: AddressType;
 
     constructor(
         network: NetworkT,

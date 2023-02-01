@@ -85,7 +85,7 @@ export class TxMetadatumMap
         )
     }
 
-    toJson()
+    toJson(): { k: any, v: any }[]
     {
         return this.map.map( entry => {
             return {
@@ -124,7 +124,7 @@ export class TxMetadatumList
         return new CborArray( this.list.map( _ => _.toCborObj() ) );
     }
 
-    toJson()
+    toJson(): any[]
     {
         return this.list.map( _ => _.toJson() );
     }
@@ -153,7 +153,7 @@ export class TxMetadatumInt
         return this.n < BigInt( 0 ) ? new CborNegInt( this.n ) : new CborUInt( this.n )
     }
 
-    toJson()
+    toJson(): { int: string; }
     {
         return { int: this.n.toString() }
     }
@@ -198,7 +198,7 @@ export class TxMetadatumBytes
         return new CborBytes( this.bytes );
     }
 
-    toJson()
+    toJson(): { bytes: string }
     {
         return { bytes: this.bytes.toString("hex") }
     }
@@ -248,7 +248,7 @@ export class TxMetadatumText
         return new CborText( this.text );
     }
 
-    toJson()
+    toJson(): { text: string }
     {
         return { text: this.text }
     }

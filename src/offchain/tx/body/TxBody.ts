@@ -117,7 +117,7 @@ export default class TxBody
     /**
      * getter
      */
-    readonly hash: Hash32;
+    readonly hash!: Hash32;
 
     /**
      * 

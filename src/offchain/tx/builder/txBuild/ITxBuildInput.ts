@@ -1,4 +1,4 @@
-import CanBeData from "../../../CanBeData/CanBeData";
+import { CanBeData } from "../../../../types/Data/CanBeData";
 import Script from "../../../script/Script";
 import UTxO, { IUTxO }from "../../body/output/UTxO";
 

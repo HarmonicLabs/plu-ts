@@ -7,10 +7,10 @@ import PValue from "../../../../onchain/pluts/API/V1/Value/PValue";
 import Term from "../../../../onchain/pluts/Term";
 import { isData } from "../../../../types/Data";
 import { maybeData } from "../../../../types/Data/toData/maybeData";
-import TxOutRef from "../../body/output/TxOutRef";
+import UTxO from "../../body/output/UTxO";
 import toPAddress from "./toPAddress";
 
-export function toPTxInInfoV1( utxo: TxOutRef ): Term<typeof PTxInInfo>
+export function toPTxInInfoV1( utxo: UTxO ): Term<typeof PTxInInfo>
 {
     const valueData = utxo.resolved.amount.toData();
     const datumHash = utxo.resolved.datum;
@@ -23,9 +23,9 @@ export function toPTxInInfoV1( utxo: TxOutRef ): Term<typeof PTxInInfo>
     return V1.PTxInInfo.PTxInInfo({
         utxoRef: V1.PTxOutRef.PTxOutRef({
             id: V1.PTxId.PTxId({
-                txId: pByteString( utxo.id.asBytes )
+                txId: pByteString( utxo.utxoRef.id.asBytes )
             }),
-            index: pInt( utxo.index )
+            index: pInt( utxo.utxoRef.index )
         }),
         resolved: V1.PTxOut.PTxOut({
             address: toPAddress( utxo.resolved.address ),

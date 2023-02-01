@@ -86,7 +86,7 @@ export class Value
                                 new DataB(
                                     ByteString.fromAscii( assetName )
                                 ),
-                                new DataI( assets[ assetName ] )
+                                new DataI( (assets as any)[ assetName ] )
                             )
                         )
                     )
