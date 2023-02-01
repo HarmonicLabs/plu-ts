@@ -22,7 +22,7 @@ export  type RawCborObj
     | RawCborTag
     | RawCborSimple;
 
-type CborObj
+export type CborObj
     = CborNegInt
     | CborUInt
     | CborBytes
