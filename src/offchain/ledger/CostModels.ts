@@ -5,7 +5,7 @@ import CborMap, { CborMapEntry } from "../../cbor/CborObj/CborMap";
 import CborUInt from "../../cbor/CborObj/CborUInt";
 import CborString from "../../cbor/CborString";
 import BasePlutsError from "../../errors/BasePlutsError";
-import { canBeUInteger, CanBeUInteger, forceUInteger } from "../../types/ints/Integer";
+import { canBeUInteger, CanBeUInteger, forceBigUInt, forceUInteger } from "../../types/ints/Integer";
 import ObjectUtils from "../../utils/ObjectUtils";
 
 export type AnyV1CostModel = CostModelPlutusV1 | CostModelPlutusV1Array;
@@ -499,6 +499,44 @@ export function costModelsToLanguageViewCbor( costmdls: CostModels ): CborString
             }
         ].filter( elem => elem !== undefined ) as CborMapEntry[])
     )
+}
+
+export function costModelsToJson( costmdls: CostModels )
+{
+    const _pv1 = costmdls.PlutusV1 === undefined ? undefined : toCostModelV1( costmdls.PlutusV1 );
+    const _pv2 = costmdls.PlutusV2 === undefined ? undefined : toCostModelV2( costmdls.PlutusV2 );
+
+    const pv1 = {};
+    if( _pv1 !== undefined )
+    {
+        const ks = Object.keys( _pv1 ) as (keyof CostModelPlutusV1)[];
+        const n = ks.length;
+        for(let i = 0; i < n; i++)
+        {
+            ObjectUtils.defineReadOnlyProperty(
+                pv1, ks[i], forceBigUInt( _pv1[ks[i]] ).toString()
+            )
+        }
+    }
+
+    const pv2 = {};
+    if( _pv2 !== undefined )
+    {
+        const ks = Object.keys( _pv2 ) as (keyof CostModelPlutusV2)[];
+        const n = ks.length;
+        for(let i = 0; i < n; i++)
+        {
+            ObjectUtils.defineReadOnlyProperty(
+                pv2, ks[i], forceBigUInt( _pv2[ks[i]] ).toString()
+            )
+        }
+    }
+
+    return {
+        PlutusV1: pv1,
+        PlutusV2: pv2
+    }
+
 }
 
 export function toCostModelArrV1( v1: AnyV1CostModel ): CostModelPlutusV1Array

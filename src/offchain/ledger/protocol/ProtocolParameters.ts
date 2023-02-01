@@ -4,10 +4,11 @@ import CborMap, { CborMapEntry } from "../../../cbor/CborObj/CborMap";
 import CborUInt from "../../../cbor/CborObj/CborUInt";
 import CborPositiveRational from "../../../cbor/extra/CborRational";
 import ExBudget from "../../../onchain/CEK/Machine/ExBudget";
+import { ppairData } from "../../../onchain/pluts";
 import { canBeUInteger, CanBeUInteger, forceUInteger } from "../../../types/ints/Integer";
 import ObjectUtils from "../../../utils/ObjectUtils";
 import type Coin from "../Coin";
-import CostModels, { costModelsToCborObj, defaultV1Costs, defaultV2Costs, isCostModels } from "../CostModels";
+import CostModels, { costModelsToCborObj, costModelsToJson, costModelsToLanguageViewCbor, defaultV1Costs, defaultV2Costs, isCostModels } from "../CostModels";
 import type Epoch from "../Epoch";
 
 export interface ProtocolParamters {
@@ -299,3 +300,22 @@ export const defaultProtocolParameters: ProtocolParamters = ObjectUtils.freezeAl
     collateralPercentage: 150,
     maxCollateralIns: 3
 })
+
+function cborRationalToNum( rat: CborPositiveRational | undefined ): number | undefined
+{
+    return rat === undefined ? undefined : Number( rat.num ) / Number( rat.den )
+}
+
+export function partialProtocolParamsToJson( pp: Partial<ProtocolParamters> )
+{
+    return {
+        ...pp,
+        pledgeInfluence: cborRationalToNum( pp.pledgeInfluence ),
+        expansionRate: cborRationalToNum( pp.expansionRate ),
+        treasureryGrowthRate: cborRationalToNum( pp.treasureryGrowthRate ),
+        costModels: pp.costModels === undefined ? undefined : costModelsToJson( pp.costModels ),
+        execCosts: pp.execCosts?.map( cborRationalToNum ),
+        maxTxExecUnits: pp.maxTxExecUnits?.toJson(),
+        maxBlockExecUnits: pp.maxBlockExecUnits?.toJson(),
+    }
+}

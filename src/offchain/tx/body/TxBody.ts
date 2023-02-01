@@ -1,5 +1,5 @@
-import { NetworkT } from "../../Network";
-import { canBeUInteger, CanBeUInteger, forceBigUInt, forceUInteger } from "../../../types/ints/Integer";
+import { NetworkT } from "../../ledger/Network";
+import { canBeUInteger, CanBeUInteger, forceBigUInt } from "../../../types/ints/Integer";
 import Coin from "../../ledger/Coin";
 import Certificate, { AnyCertificate, certificatesToDepositLovelaces } from "../../ledger/certs/Certificate";
 import TxWithdrawals, { ITxWithdrawals, canBeTxWithdrawals, forceTxWithdrawals } from "../../ledger/TxWithdrawals";
@@ -207,7 +207,7 @@ export default class TxBody
         ObjectUtils.defineReadOnlyProperty(
             this,
             "ttl",
-            ttl === undefined ? undefined : forceUInteger( ttl ).asBigInt
+            ttl === undefined ? undefined : forceBigUInt( ttl )
         );
 
         // -------------------------------------- certs -------------------------------------- //
@@ -299,7 +299,7 @@ export default class TxBody
         ObjectUtils.defineReadOnlyProperty(
             this,
             "validityIntervalStart",
-            validityIntervalStart === undefined ? undefined : forceUInteger( validityIntervalStart ).asBigInt
+            validityIntervalStart === undefined ? undefined : forceBigUInt( validityIntervalStart )
         );
         
         // -------------------------------------- mint -------------------------------------- //
@@ -407,7 +407,7 @@ export default class TxBody
         ObjectUtils.defineReadOnlyProperty(
             this,
             "collateralReturn",
-            totCollateral === undefined ? undefined : forceUInteger( totCollateral ).asBigInt
+            totCollateral === undefined ? undefined : forceBigUInt( totCollateral )
         );
 
         // -------------------------------------- reference inputs -------------------------------------- //  
@@ -570,7 +570,7 @@ export default class TxBody
 
     /**
      * tests that
-     * inputs + withdrawals - outputs + refund - deposit - fee
+     * inputs + withdrawals + refund  === outputs + deposit + fee
      */
     static isValueConserved( tx: TxBody ): boolean
     {

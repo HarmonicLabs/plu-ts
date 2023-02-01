@@ -2,11 +2,11 @@ import CborObj from "../../../cbor/CborObj";
 import CborArray from "../../../cbor/CborObj/CborArray";
 import CborMap from "../../../cbor/CborObj/CborMap";
 import CborUInt from "../../../cbor/CborObj/CborUInt";
-import { canBeUInteger, forceUInteger } from "../../../types/ints/Integer";
+import { canBeUInteger, forceBigUInt, forceUInteger } from "../../../types/ints/Integer";
 import ObjectUtils from "../../../utils/ObjectUtils";
 import GenesisHash from "../../hashes/Hash28/GenesisHash";
 import Epoch from "../Epoch";
-import ProtocolParamters, { isPartialProtocolParameters, partialProtocolParametersToCborObj } from "./ProtocolParameters";
+import ProtocolParamters, { isPartialProtocolParameters, partialProtocolParametersToCborObj, partialProtocolParamsToJson } from "./ProtocolParameters";
 
 export type ProtocolUpdateProposal = [ ProtocolParametersUpdateMap, Epoch ];
 
@@ -43,7 +43,13 @@ export function isProtocolUpdateProposal( something: object ): something is Prot
 
 export function protocolUpdateToJson( pUp: ProtocolUpdateProposal ): object
 {
-    
+    return {
+        epoch: forceBigUInt( pUp[1] ).toString(),
+        parametersUpdate: pUp[0].map( ({ genesisHash, changes }) => ({
+            genesisHash: genesisHash.asString,
+            changes: partialProtocolParamsToJson( changes )
+        }))
+    }
 }
 
 export function protocolParametersUpdateMapToCborObj( ppUpdate: ProtocolParametersUpdateMap ): CborMap

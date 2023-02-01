@@ -13,7 +13,7 @@ import { pflip } from "../PCombinators";
 import PMaybe, { PMaybeT } from "../PMaybe/PMaybe";
 
 
-export function pmatchList<ReturnT  extends TermType, PElemsT extends PType = PType>( returnT: ReturnT, elemsT: TermType = tyVar("elemsT_pmatchList") )
+export function pmatchList<ReturnT  extends TermType, PElemsT extends PType>( returnT: ReturnT, elemsT: TermType = tyVar("elemsT_pmatchList") )
     : TermFn<[ PElemsT, PLam<PElemsT,PLam<PList<PElemsT>, ToPType<ReturnT>>>, PList<PElemsT> ], ToPType<ReturnT>>
 {
     return phoist(

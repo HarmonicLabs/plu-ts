@@ -1,4 +1,4 @@
-import type { NetworkT } from "../../Network";
+import type { NetworkT } from "../../ledger/Network";
 import ProtocolParamters, { isProtocolParameters } from "../../ledger/protocol/ProtocolParameters";
 import Tx, { getNSignersNeeded } from "../Tx";
 import ITxBuildArgs from "./txBuild/ITxBuildArgs";
@@ -15,9 +15,9 @@ import TxRedeemer, { TxRedeemerTag } from "../TxWitnessSet/TxRedeemer";
 import BasePlutsError from "../../../errors/BasePlutsError";
 import TxOutRef from "../body/output/UTxO";
 import VKeyWitness from "../TxWitnessSet/VKeyWitness/VKeyWitness";
-import Data, { isData } from "../../../types/Data";
+import Data from "../../../types/Data";
+import CanBeData, { canBeData, forceData } from "../../../types/Data/CanBeData";
 import BootstrapWitness from "../TxWitnessSet/BootstrapWitness";
-import CanBeData, { canBeData, forceData } from "../../CanBeData/CanBeData";
 import Machine, { machineVersionV1, machineVersionV2 } from "../../../onchain/CEK/Machine";
 import { costModelsToLanguageViewCbor, defaultV1Costs, defaultV2Costs, isCostModelsV1, isCostModelsV2 } from "../../ledger/CostModels";
 import ExBudget from "../../../onchain/CEK/Machine/ExBudget";

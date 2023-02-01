@@ -1,4 +1,5 @@
 export * from "./onchain";
+export * from "./offchain";
 
 import _ByteString from "./types/HexString/ByteString";
 import _Integer, { UInteger as _UInteger } from "./types/ints/Integer";

@@ -305,23 +305,19 @@ export default class Certificate<CertTy extends CertificateType>
     {
         const certTypeStr = certTypeToString( this.certType );
 
-        type _ParamsOfCert<CertTy extends CertificateType> =
-            CertTy extends CertificateType.MoveInstantRewards ? [ MoveInstantRewardsCert ] :
-            never
-
         switch( this.certType )
         {
             case CertificateType.StakeRegistration:                
             case CertificateType.StakeDeRegistration:
                 return {
                     certType: certTypeStr,
-                    StakeCredentials: ( this.params[0] as StakeCredentials ).toJson()
+                    stakeCredentials: ( this.params[0] as StakeCredentials ).toJson()
                 }
             break;
             case CertificateType.StakeDelegation:
                 return {
                     certType: certTypeStr,
-                    StakeCredentials: ( this.params[0] as StakeCredentials ).toJson(),
+                    stakeCredentials: ( this.params[0] as StakeCredentials ).toJson(),
                     poolKeyHash: ( this.params[1] as PoolKeyHash ).asString
                 }
             break;
@@ -349,10 +345,7 @@ export default class Certificate<CertTy extends CertificateType>
             case CertificateType.MoveInstantRewards:
                 return {
                     certType: certTypeStr,
-                    mirCert: {
-                        certType: certTypeStr,
-                        genesisHash: (this.params[0] as MoveInstantRewardsCert).toJson()
-                    }
+                    mirCert: (this.params[0] as MoveInstantRewardsCert).toJson()
                 }
             break;
             default:
