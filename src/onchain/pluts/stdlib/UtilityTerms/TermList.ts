@@ -3,6 +3,7 @@ import BasePlutsError from "../../../../errors/BasePlutsError";
 import ObjectUtils from "../../../../utils/ObjectUtils";
 import PType from "../../PType"
 import type PDataRepresentable from "../../PType/PDataRepresentable";
+import unwrapAlias from "../../PTypes/PAlias/unwrapAlias";
 import PBool from "../../PTypes/PBool";
 import { TermFn } from "../../PTypes/PFn/PFn";
 import PLam from "../../PTypes/PFn/PLam";
@@ -12,7 +13,7 @@ import { PappArg } from "../../Syntax/pappArg";
 import { phoist } from "../../Syntax/syntax";
 import Term from "../../Term";
 import { ConstantableTermType, TermType } from "../../Term/Type/base";
-import { isConstantableTermType, isLambdaType } from "../../Term/Type/kinds";
+import { isAliasType, isConstantableTermType, isLambdaType } from "../../Term/Type/kinds";
 import { ToPType } from "../../Term/Type/ts-pluts-conversion";
 import { termTypeToString } from "../../Term/Type/utils";
 import { phead, pprepend, ptail } from "../Builtins";
@@ -125,7 +126,7 @@ const flippedSome = getHoistedFlipped( psome )
 export function addPListMethods<PElemsT extends PType>( list: Term<PList<PElemsT>> )
     : TermList<PElemsT>
 {
-    const elemsT = list.type[1] as ConstantableTermType;
+    const elemsT = (isAliasType( list.type ) ? unwrapAlias( list.type )[1] : list.type[1]) as ConstantableTermType;
     if(!isConstantableTermType( elemsT as any ))
     {
         throw new BasePlutsError(

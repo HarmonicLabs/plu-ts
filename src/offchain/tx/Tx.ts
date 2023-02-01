@@ -11,14 +11,13 @@ import VKey from "./TxWitnessSet/VKeyWitness/VKey";
 import TxBody, { ITxBody, isITxBody } from "./body/TxBody";
 import TxWitnessSet, { ITxWitnessSet, isITxWitnessSet } from "./TxWitnessSet/TxWitnessSet";
 import Hash32 from "../hashes/Hash32/Hash32";
-import { blake2b_256, signEd25519 } from "../../crypto";
+import { signEd25519 } from "../../crypto";
 import Hash28 from "../hashes/Hash28/Hash28";
 import PubKeyHash from "../credentials/PubKeyHash";
-import TxWithdrawals from "../ledger/TxWithdrawals";
 import PrivateKey from "../credentials/PrivateKey";
 import VKeyWitness from "./TxWitnessSet/VKeyWitness/VKeyWitness";
-import Signature from "../hashes/Signature/Signature";
 import ToJson from "../../utils/ts/ToJson";
+import Signature from "../hashes/Signature";
 
 export interface ITx {
     body: ITxBody
@@ -43,13 +42,13 @@ export default class Tx
      * one might prefer to use this method instead of `signWith`
      * when signature is provided by a third party (example CIP30 wallet)
     **/
-    readonly addVKeyWitnessIfNeeded: ( vkeyWit: VKeyWitness ) => void
+    readonly addVKeyWitnessIfNeeded!: ( vkeyWit: VKeyWitness ) => void
     /**
      * checks that the signer is needed
      * if true signs the transaction with the specified key
      * otherwise nothing happens (the signature is not added)
     **/
-    readonly signWith: ( signer: PrivateKey ) => void
+    readonly signWith!: ( signer: PrivateKey ) => void
     /**
      * @returns {boolean}
      *  `true` if all the signers needed
@@ -61,11 +60,11 @@ export default class Tx
      *  - required by withdrawals
      *  - additional spefified in the `requiredSigners` field
      */
-    readonly isComplete: () => boolean
+    readonly isComplete!: () => boolean
     /**
      * getter
      */
-    readonly hash: Hash32;
+    readonly hash!: Hash32;
 
     constructor(tx: ITx)
     {

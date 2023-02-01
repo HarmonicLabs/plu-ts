@@ -10,7 +10,7 @@ import JsRuntime from "../../../utils/JsRuntime";
 import ObjectUtils from "../../../utils/ObjectUtils";
 import ToJson from "../../../utils/ts/ToJson";
 import Hash32 from "../../hashes/Hash32/Hash32";
-import Signature from "../../hashes/Signature/Signature";
+import Signature from "../../hashes/Signature";
 import VKey from "./VKeyWitness/VKey";
 
 export default class BootstrapWitness

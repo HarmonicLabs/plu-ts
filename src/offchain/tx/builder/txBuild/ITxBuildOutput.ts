@@ -1,4 +1,4 @@
-import CanBeData, { canBeData, forceData } from "../../../CanBeData/CanBeData";
+import { CanBeData, canBeData, forceData } from "../../../../types/Data/CanBeData";
 import Hash32 from "../../../hashes/Hash32/Hash32";
 import Address from "../../../ledger/Address";
 import Value from "../../../ledger/Value/Value";
