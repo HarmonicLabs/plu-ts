@@ -118,7 +118,7 @@ const notNativeScriptError = new BasePlutsError(
     "ill formed native script to deserialize"
 );
 
-export function nativeScriptFromCborObj( cbor: CborArray ): NativeScript
+export function nativeScriptFromCborObj( cbor: CborObj ): NativeScript
 {
     if(!(cbor instanceof CborArray))
     throw notNativeScriptError;

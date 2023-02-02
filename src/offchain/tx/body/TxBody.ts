@@ -6,7 +6,7 @@ import TxWithdrawals, { ITxWithdrawals, canBeTxWithdrawals, forceTxWithdrawals }
 import { Value } from "../../ledger/Value/Value";
 import TxOut from "./output/TxOut";
 import PubKeyHash from "../../credentials/PubKeyHash";
-import ProtocolUpdateProposal, { isProtocolUpdateProposal, protocolUpdateProposalToCborObj, protocolUpdateToJson } from "../../ledger/protocol/ProtocolUpdateProposal";
+import ProtocolUpdateProposal, { isProtocolUpdateProposal, protocolUpdateProposalFromCborObj, protocolUpdateProposalToCborObj, protocolUpdateToJson } from "../../ledger/protocol/ProtocolUpdateProposal";
 import AuxiliaryDataHash from "../../hashes/Hash32/AuxiliaryDataHash";
 import ScriptDataHash from "../../hashes/Hash32/ScriptDataHash";
 import JsRuntime from "../../../utils/JsRuntime";
@@ -14,7 +14,7 @@ import ObjectUtils from "../../../utils/ObjectUtils";
 import { UInteger } from "../../..";
 import { ToCbor } from "../../../cbor/interfaces/CBORSerializable";
 import CborObj from "../../../cbor/CborObj";
-import CborString from "../../../cbor/CborString";
+import CborString, { CanBeCborString, forceCborString } from "../../../cbor/CborString";
 import Cbor from "../../../cbor/Cbor";
 import CborMap, { CborMapEntry } from "../../../cbor/CborObj/CborMap";
 import CborUInt from "../../../cbor/CborObj/CborUInt";
@@ -23,6 +23,7 @@ import Hash32 from "../../hashes/Hash32/Hash32";
 import { blake2b_256 } from "../../../crypto";
 import ToJson from "../../../utils/ts/ToJson";
 import UTxO from "./output/UTxO";
+import InvalidCborFormatError from "../../../errors/InvalidCborFormatError";
 
 export interface ITxBody {
     inputs: [ UTxO, ...UTxO[] ],
@@ -454,7 +455,6 @@ export default class TxBody
     {
         return Cbor.encode( this.toCborObj() );
     }
-
     toCborObj(): CborObj
     {
         return new CborMap(([
@@ -541,6 +541,88 @@ export default class TxBody
                 v: new CborArray( this.refInputs.map( refIn => refIn.utxoRef.toCborObj() ) )
             }
         ].filter( entry => entry !== undefined ) as CborMapEntry[]))
+    }
+
+    static fromCbor( cStr: CanBeCborString ): TxBody
+    {
+        return TxBody.fromCborObj( Cbor.parse( forceCborString( cStr ) ) );
+    }
+    static fromCborObj( cObj: CborObj ): TxBody
+    {
+        if(!(cObj instanceof CborMap))
+        throw new InvalidCborFormatError("TxBody")
+
+        let fields: (CborObj | undefined)[] = new Array( 19 ).fill( undefined );
+
+        for( let i = 0; i < 19; i++)
+        {
+            const { v } = cObj.map.find(
+                ({ k }) => k instanceof CborUInt && Number( k.num ) === i
+            ) ?? { v: undefined };
+
+            if( v === undefined ) continue;
+
+            fields[i] = v;
+        }
+
+        const [
+            _ins,
+            _outs,
+            _fee,
+            _ttl,
+            _certs,
+            _withdrawals,
+            _pUp,
+            _auxDataHash,
+            _validityStart,
+            _mint,
+            _scriptDataHash,
+            _collIns,
+            _reqSigs,
+            _net,
+            _collRet,
+            _totColl,
+            _refIns
+        ] = fields;
+
+        if( _ins === undefined || _outs === undefined || _fee === undefined )
+        throw new InvalidCborFormatError("TxBody");
+
+        if(!(
+            _ins  instanceof CborArray &&
+            _outs instanceof CborArray &&
+            _fee  instanceof CborUInt
+        ))
+        throw new InvalidCborFormatError("TxBody");
+
+        let ttl: bigint | undefined = undefined;
+        if( _ttl !== undefined )
+        {
+            if(!( _ttl instanceof CborUInt ))
+            throw new InvalidCborFormatError("TxBody");
+
+            ttl = _ttl.num;
+        }
+
+        return new TxBody({
+            inputs: _ins.array.map( UTxO.fromCborObj ) as any,
+            outputs: _outs.array.map( TxOut.fromCborObj ),
+            fee: _fee.num,
+            ttl,
+            certs:                      _certs instanceof CborArray ? _certs.array.map( Certificate.fromCborObj ) : undefined,
+            withdrawals:                _withdrawals === undefined ? undefined : TxWithdrawals.fromCborObj( _withdrawals ),
+            protocolUpdate:             _pUp === undefined ? undefined : protocolUpdateProposalFromCborObj( _pUp ),
+            auxDataHash:                _auxDataHash === undefined ? undefined : AuxiliaryDataHash.fromCborObj( _auxDataHash ),
+            validityIntervalStart:      _validityStart instanceof CborUInt ? _validityStart.num : undefined,
+            mint:                       _mint === undefined ? undefined : Value.fromCborObj( _mint ),
+            scriptDataHash:             _scriptDataHash === undefined ? undefined : ScriptDataHash.fromCborObj( _scriptDataHash ),
+            collateralInputs:           _collIns instanceof CborArray ? _collIns.array.map( UTxO.fromCborObj ) : undefined ,
+            requiredSigners:            _reqSigs instanceof CborArray  ? _reqSigs.array.map( PubKeyHash.fromCborObj ) : undefined,
+            network:                    _net instanceof CborUInt ? (Number( _net.num ) === 0 ? "testnet": "mainnet") : undefined,
+            collateralReturn:           _collRet === undefined ? undefined : TxOut.fromCborObj( _collRet ),
+            totCollateral:              _totColl instanceof CborUInt ? _totColl.num : undefined,
+            refInputs:                  _refIns instanceof CborArray ? _refIns.array.map( UTxO.fromCborObj ) : undefined
+        });
     }
 
     toJson()

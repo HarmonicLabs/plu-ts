@@ -1,10 +1,12 @@
 import Cbor from "../../cbor/Cbor";
 import CborObj from "../../cbor/CborObj";
 import CborArray from "../../cbor/CborObj/CborArray";
+import CborBytes from "../../cbor/CborObj/CborBytes";
 import CborUInt from "../../cbor/CborObj/CborUInt";
-import CborString from "../../cbor/CborString";
+import CborString, { CanBeCborString, forceCborString } from "../../cbor/CborString";
 import { ToCbor } from "../../cbor/interfaces/CBORSerializable";
 import BasePlutsError from "../../errors/BasePlutsError";
+import InvalidCborFormatError from "../../errors/InvalidCborFormatError";
 import Data from "../../types/Data";
 import DataConstr from "../../types/Data/DataConstr";
 import DataI from "../../types/Data/DataI";
@@ -127,6 +129,40 @@ export default class StakeCredentials<T extends StakeCredentialsType = StakeCred
                 ) :
                 this.hash.toCborObj()
         ])
+    }
+
+    static fromCbor( cObj: CanBeCborString ): StakeCredentials
+    {
+        return StakeCredentials.fromCborObj( Cbor.parse( forceCborString( cObj ) ) )
+    }
+    static fromCborObj( cObj: CborObj ): StakeCredentials
+    {
+        if(!( cObj instanceof CborArray ))
+        throw new InvalidCborFormatError("Certificate");
+
+        const [ _type, _creds ] = cObj.array;
+
+        if(!( _type instanceof CborUInt ))
+        throw new InvalidCborFormatError("Certificate");
+
+        if(!( _creds instanceof CborArray || _creds instanceof CborBytes ))
+        throw new InvalidCborFormatError("Certificate");
+
+        if( _creds instanceof CborArray )
+        {
+            if(!_creds.array.every( n => n instanceof CborUInt ))
+            throw new InvalidCborFormatError("Certificate");
+
+            return new StakeCredentials(
+                "pointer",
+                _creds.array.map( n => (n as CborUInt).num ) as any
+            );
+        }
+
+        return new StakeCredentials(
+            _type.num === BigInt(0) ? "stakeKey" : "script",
+            Hash28.fromCborObj( _creds ) 
+        );
     }
 
     toJson()

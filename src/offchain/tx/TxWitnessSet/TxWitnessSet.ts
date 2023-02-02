@@ -3,9 +3,11 @@ import CborObj from "../../../cbor/CborObj";
 import CborArray from "../../../cbor/CborObj/CborArray";
 import CborMap, { CborMapEntry } from "../../../cbor/CborObj/CborMap";
 import CborUInt from "../../../cbor/CborObj/CborUInt";
-import CborString from "../../../cbor/CborString";
+import CborString, { CanBeCborString, forceCborString } from "../../../cbor/CborString";
 import { ToCbor } from "../../../cbor/interfaces/CBORSerializable";
+import InvalidCborFormatError from "../../../errors/InvalidCborFormatError";
 import Data, { isData } from "../../../types/Data";
+import { dataFromCborObj } from "../../../types/Data/fromCbor";
 import dataToCbor, { dataToCborObj } from "../../../types/Data/toCbor";
 import Cloneable from "../../../types/interfaces/Cloneable";
 import JsRuntime from "../../../utils/JsRuntime";
@@ -13,7 +15,7 @@ import ObjectUtils from "../../../utils/ObjectUtils";
 import ToJson from "../../../utils/ts/ToJson";
 import PrivateKey from "../../credentials/PrivateKey";
 import Hash28 from "../../hashes/Hash28/Hash28";
-import { nativeScriptToCborObj } from "../../script/NativeScript";
+import { nativeScriptFromCborObj, nativeScriptToCborObj } from "../../script/NativeScript";
 import Script, { ScriptType } from "../../script/Script";
 import BootstrapWitness from "./BootstrapWitness";
 import TxRedeemer from "./TxRedeemer";
@@ -94,13 +96,13 @@ export default class TxWitnessSet
     readonly redeemers?: TxRedeemer[];
     readonly plutusV2Scripts?: Script<ScriptType.PlutusV2>[];
     
-    /**
+    /*
      * checks that the signer is needed
      * if true adds the witness
      * otherwise nothing happens (the signature is not added)
     **/
     // readonly addVKeyWitnessIfNeeded: ( vkeyWit: VKeyWitness ) => void
-    /**
+    /*
      * @returns {boolean}
      *  `true` if all the signers needed
      *  have signed the transaction; `false` otherwise
@@ -185,7 +187,6 @@ export default class TxWitnessSet
     {
         return Cbor.encode( this.toCborObj() );
     }
-
     toCborObj(): CborObj
     {
         return new CborMap(
@@ -255,5 +256,69 @@ export default class TxWitnessSet
         )
     }
 
+    static fromCbor( cStr: CanBeCborString ): TxWitnessSet
+    {
+        return TxWitnessSet.fromCborObj( Cbor.parse( forceCborString( cStr ) ) );
+    }
+    static fromCborObj( cObj: CborObj ): TxWitnessSet
+    {
+        if(!( cObj instanceof CborMap ))
+        throw new InvalidCborFormatError("TxWitnessSet");
+
+        let fields: (CborArray | undefined)[] = new Array( 7 ).fill( undefined );
+
+        for( let i = 0; i < 7; i++)
+        {
+            const { v } = cObj.map.find(
+                ({ k }) => k instanceof CborUInt && Number( k.num ) === i
+            ) ?? { v: undefined };
+
+            if( v === undefined || !(v instanceof CborArray) ) continue;
+
+            fields[i] = v;
+        }
+
+        const [
+            _vkey,
+            _native,
+            _bootstrap,
+            _plutusV1,
+            _dats,
+            _reds,
+            _plutusV2
+        ] = fields;
+
+        return new TxWitnessSet({
+            vkeyWitnesses: _vkey === undefined ? undefined : _vkey.array.map( VKeyWitness.fromCborObj ),
+            nativeScripts: _native === undefined ? undefined : 
+                _native.array.map( nativeCborObj => 
+                    new Script(
+                        ScriptType.NativeScript, 
+                        Cbor.encode( nativeCborObj ).asBytes
+                    )
+                ),
+            bootstrapWitnesses: _bootstrap === undefined ? undefined :
+                _bootstrap.array.map( BootstrapWitness.fromCborObj ),
+            plutusV1Scripts: _plutusV1 === undefined ? undefined :
+                _plutusV1.array.map( cbor =>
+                    new Script(
+                        ScriptType.PlutusV1,
+                        Cbor.encode( cbor ).asBytes
+                    )
+                ),
+            datums: _dats === undefined ? undefined :
+                _dats.array.map( dataFromCborObj ),
+            redeemers: _reds === undefined ? undefined :
+                _reds.array.map( TxRedeemer.fromCborObj ),
+            plutusV2Scripts: _plutusV2 === undefined ? undefined :
+                _plutusV2.array.map( cbor =>
+                    new Script(
+                        ScriptType.PlutusV2,
+                        Cbor.encode( cbor ).asBytes
+                    )
+                ),
+            
+        })
+    }
 
 }

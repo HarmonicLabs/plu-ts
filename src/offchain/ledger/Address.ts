@@ -17,10 +17,11 @@ import ObjectUtils from "../../utils/ObjectUtils";
 import { ToCbor } from "../../cbor/interfaces/CBORSerializable";
 import CborObj from "../../cbor/CborObj";
 import CborBytes from "../../cbor/CborObj/CborBytes";
-import CborString from "../../cbor/CborString";
+import CborString, { CanBeCborString, forceCborString } from "../../cbor/CborString";
 import Cbor from "../../cbor/Cbor";
 import { nothingData, justData } from "../../types/Data/toData/maybeData";
 import ToJson from "../../utils/ts/ToJson";
+import InvalidCborFormatError from "../../errors/InvalidCborFormatError";
 
 export type AddressType
     = "base"
@@ -98,6 +99,14 @@ export default class Address
         );
     }
 
+    static get fake(): Address
+    {
+        return new Address(
+            "mainnet",
+            PaymentCredentials.fake
+        );
+    }
+
     toData(): Data
     {
         PAddress
@@ -149,60 +158,12 @@ export default class Address
         );
     }
 
-    toBuffer(): Buffer
+    static fromBytes( bs: byte[] ): Address
     {
-        return Buffer.from( this.toBytes() )
-    }
-
-    toCborObj(): CborObj
-    {
-        return new CborBytes( this.toBuffer() );
-    }
-
-    toCbor(): CborString
-    {
-        return Cbor.encode( this.toCborObj() );
-    }
-
-    toString(): string
-    {
-        return encodeBech32(
-            this.network === "mainnet" ? "addr" : "addr_test",
-            this.toBytes()
-        )
-    }
-
-    toJson()
-    {
-        return this.toString();
-    }
-
-    static fromString( addr: string ): Address
-    {
-        const [ hrp, [ header, ...payload ] ] = decodeBech32( addr );
-
-        let network: NetworkT;
-        switch( hrp )
-        {
-            case "addr_test": 
-                network = "testnet";
-            break;
-            case "addr":
-                network = "mainnet";
-            break;
-            default:
-                throw new BasePlutsError(
-                    "string passed is not a Cardano address"
-                );
-        }
+        const [ header, ...payload ] = bs;
 
         const addrType = (header & 0b1111_0000) >> 4;
-        const headerNetwork: NetworkT = ((header & 0b0000_1111) >> 4) === 0 ? "testnet" : "mainnet" ;
-
-        if( headerNetwork !== network )
-        throw new BasePlutsError(
-            "ill formed address; human readable part netwok missmatches header byte network"
-        );
+        const network: NetworkT = ((header & 0b0000_1111) >> 4) === 0 ? "testnet" : "mainnet" ;
 
         const type: AddressType =
             addrType <= 0b0011  ? "base" :
@@ -267,5 +228,80 @@ export default class Address
                 undefined,
             type
         );
+    };
+
+    toBuffer(): Buffer
+    {
+        return Buffer.from( this.toBytes() )
+    }
+
+    static fromBuffer( buff: Buffer ): Address
+    {
+        return Address.fromBytes( Array.from( buff ) as any )
+    }
+
+    toCborObj(): CborObj
+    {
+        return new CborBytes( this.toBuffer() );
+    }
+
+    static fromCborObj( buff: CborObj ): Address
+    {
+        if(!( buff instanceof CborBytes))
+        throw new InvalidCborFormatError("Address");
+
+        return Address.fromBuffer( buff.buffer )
+    }
+
+    toCbor(): CborString
+    {
+        return Cbor.encode( this.toCborObj() );
+    }
+
+    static fromCbor( cbor: CanBeCborString ): Address
+    {
+        return Address.fromCborObj( Cbor.parse( forceCborString( cbor ) ) );
+    }
+
+    toString(): string
+    {
+        return encodeBech32(
+            this.network === "mainnet" ? "addr" : "addr_test",
+            this.toBytes()
+        )
+    }
+
+    static fromString( addr: string ): Address
+    {
+        const [ hrp, bytes ] = decodeBech32( addr );
+
+        let hrpNetwork: NetworkT;
+        switch( hrp )
+        {
+            case "addr_test": 
+                hrpNetwork = "testnet";
+            break;
+            case "addr":
+                hrpNetwork = "mainnet";
+            break;
+            default:
+                throw new BasePlutsError(
+                    "string passed is not a Cardano address"
+                );
+        }
+
+        const _addr = Address.fromBytes( bytes );
+
+        if( hrpNetwork !== _addr.network )
+        throw new BasePlutsError(
+            "ill formed address; human readable part netwok missmatches header byte network"
+        );
+
+        return _addr;
+    }
+
+    toJson()
+    {
+        return this.toString();
     }
 }

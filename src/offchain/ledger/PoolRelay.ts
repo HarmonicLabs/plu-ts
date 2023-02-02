@@ -5,6 +5,7 @@ import CborSimple from "../../cbor/CborObj/CborSimple";
 import CborText from "../../cbor/CborObj/CborText";
 import CborUInt from "../../cbor/CborObj/CborUInt";
 import BasePlutsError from "../../errors/BasePlutsError";
+import InvalidCborFormatError from "../../errors/InvalidCborFormatError";
 import { canBeUInteger, CanBeUInteger, forceBigUInt, forceUInteger } from "../../types/ints/Integer";
 import JsRuntime from "../../utils/JsRuntime";
 import ObjectUtils from "../../utils/ObjectUtils";
@@ -191,6 +192,57 @@ export function poolRelayToCborObj( poolRelay: PoolRelay ): CborObj
         ]);
     }
 
+    throw JsRuntime.makeNotSupposedToHappenError(
+        "can't match 'PoolRelay' type"
+    )
+}
+
+
+export function poolRelayFromCborObj( cObj: CborObj ): PoolRelay
+{
+    if(!( cObj instanceof CborArray ))
+    throw new InvalidCborFormatError("PoolRelay");
+
+    const [
+        _type,
+        _1,
+        _2,
+        _3
+    ] = cObj.array;
+
+    if(!( _type instanceof CborUInt ))
+    throw new InvalidCborFormatError("PoolRelay");
+
+    const n = Number( _type.num );
+
+    if( n === 0 )
+    {
+        return {
+            type: "ip",
+            port: _1 instanceof CborUInt ? _1.num : undefined,
+            ipv4: _2 instanceof CborBytes ? _2.buffer : undefined as any,
+            ipv6: _3 instanceof CborBytes ? _3.buffer : undefined as any,
+        }
+    }
+    if( n === 1 )
+    {
+        return {
+            type: "dns",
+            port: _1 instanceof CborUInt ? _1.num : undefined,
+            dnsName: _2 instanceof CborText ? _2.text : undefined as any,
+        }
+    }
+    if( n === 2 )
+    {
+        if(!( _1 instanceof CborText ))
+        throw new InvalidCborFormatError("PoolRelay");
+
+        return {
+            type: "multi-host",
+            dnsName: _1.text,
+        }
+    }
+    
     throw JsRuntime.makeNotSupposedToHappenError(
         "can't match 'PoolRelay' type"
     )

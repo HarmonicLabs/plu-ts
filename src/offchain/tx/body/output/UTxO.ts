@@ -1,20 +1,12 @@
 import Cbor from "../../../../cbor/Cbor";
 import CborObj from "../../../../cbor/CborObj";
-import CborArray from "../../../../cbor/CborObj/CborArray";
-import CborUInt from "../../../../cbor/CborObj/CborUInt";
-import CborString from "../../../../cbor/CborString";
+import CborString, { CanBeCborString, forceCborString } from "../../../../cbor/CborString";
 import { ToCbor } from "../../../../cbor/interfaces/CBORSerializable";
 import Data from "../../../../types/Data";
-import DataB from "../../../../types/Data/DataB";
 import DataConstr from "../../../../types/Data/DataConstr";
-import DataI from "../../../../types/Data/DataI";
 import ToData from "../../../../types/Data/toData/interface";
-import ByteString from "../../../../types/HexString/ByteString";
-import { forceUInteger } from "../../../../types/ints/Integer";
-import JsRuntime from "../../../../utils/JsRuntime";
 import ObjectUtils from "../../../../utils/ObjectUtils";
 import ToJson from "../../../../utils/ts/ToJson";
-import Hash32 from "../../../hashes/Hash32/Hash32";
 import TxOut, { ITxOut } from "./TxOut";
 import TxOutRef, { ITxOutRef } from "./TxOutRef";
 
@@ -24,7 +16,7 @@ export interface IUTxO {
 }
 
 export default class UTxO
-    implements IUTxO, ToData, ToJson
+    implements IUTxO, ToData, ToJson, ToCbor
 {
     readonly utxoRef!: TxOutRef
     readonly resolved!: TxOut
@@ -55,6 +47,27 @@ export default class UTxO
         );
     }
 
+    toCbor(): CborString
+    {
+        return Cbor.encode( this.toCborObj() )
+    }
+    toCborObj()
+    {
+        return this.utxoRef.toCborObj()
+    }
+
+    static fromCbor( cStr: CanBeCborString ): UTxO
+    {
+        return UTxO.fromCborObj( Cbor.parse( forceCborString( cStr ) ) );
+    }
+    static fromCborObj( cObj: CborObj ): UTxO
+    {
+        return new UTxO({
+            utxoRef: TxOutRef.fromCborObj( cObj ),
+            resolved: TxOut.fake
+        })
+    }
+
     toJson()
     {
         return {
@@ -62,4 +75,5 @@ export default class UTxO
             resolved: this.resolved.toJson()
         }
     }
+
 }

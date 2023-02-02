@@ -1,8 +1,9 @@
 import Cbor from "../../../../cbor/Cbor";
 import CborObj from "../../../../cbor/CborObj";
 import CborArray from "../../../../cbor/CborObj/CborArray";
-import CborString from "../../../../cbor/CborString";
+import CborString, { CanBeCborString, forceCborString } from "../../../../cbor/CborString";
 import { ToCbor } from "../../../../cbor/interfaces/CBORSerializable";
+import InvalidCborFormatError from "../../../../errors/InvalidCborFormatError";
 import Cloneable from "../../../../types/interfaces/Cloneable";
 import JsRuntime from "../../../../utils/JsRuntime";
 import ObjectUtils from "../../../../utils/ObjectUtils";
@@ -52,13 +53,27 @@ export default class VKeyWitness
     {
         return Cbor.encode( this.toCborObj() );
     }
-    
     toCborObj(): CborObj
     {
         return new CborArray([
             this.vkey.toCborObj(),
             this.signature.toCborObj()
         ])
+    }
+
+    static fromCbor( cStr: CanBeCborString ): VKeyWitness
+    {
+        return VKeyWitness.fromCborObj( Cbor.parse( forceCborString( cStr ) ) );
+    }
+    static fromCborObj( cObj: CborObj ): VKeyWitness
+    {
+        if(!(cObj instanceof CborArray))
+        throw new InvalidCborFormatError("VKeyWitness");
+
+        return new VKeyWitness(
+            Hash32.fromCborObj( cObj.array[0] ),
+            Signature.fromCborObj( cObj.array[1] )
+        );
     }
 
     toJson()

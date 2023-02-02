@@ -1,11 +1,13 @@
 import { ByteString } from "../../..";
 import Cbor from "../../../cbor/Cbor";
+import CborObj from "../../../cbor/CborObj";
 import CborBytes from "../../../cbor/CborObj/CborBytes";
 import CborMap from "../../../cbor/CborObj/CborMap";
 import CborNegInt from "../../../cbor/CborObj/CborNegInt";
 import CborUInt from "../../../cbor/CborObj/CborUInt";
-import CborString from "../../../cbor/CborString";
+import CborString, { CanBeCborString, forceCborString } from "../../../cbor/CborString";
 import { ToCbor } from "../../../cbor/interfaces/CBORSerializable";
+import InvalidCborFormatError from "../../../errors/InvalidCborFormatError";
 import DataB from "../../../types/Data/DataB";
 import DataI from "../../../types/Data/DataI";
 import DataMap from "../../../types/Data/DataMap";
@@ -16,6 +18,7 @@ import BufferUtils, { Ord } from "../../../utils/BufferUtils";
 import JsRuntime from "../../../utils/JsRuntime";
 import ObjectUtils from "../../../utils/ObjectUtils";
 import ToJson from "../../../utils/ts/ToJson";
+import Hash32 from "../../hashes/Hash32/Hash32";
 import { isIValue, addIValues, subIValues, IValue, cloneIValue, IValueToJson } from "./IValue";
 
 export class Value
@@ -154,6 +157,62 @@ export class Value
                 };
             })
         );
+    }
+
+    static fromCbor( cStr: CanBeCborString ): Value
+    {
+        return Value.fromCborObj( Cbor.parse( forceCborString( cStr ) ) )
+    }
+    static fromCborObj( cObj: CborObj ): Value
+    {
+        if(!( cObj instanceof CborMap ))
+        throw new InvalidCborFormatError("Value");
+
+        const cborMap = cObj.map;
+        const n = cborMap.length;
+        
+        const valueMap: IValue = new Array( n ).fill( undefined );
+
+        for( let i = 0; i < n; i++ )
+        {
+            const { k , v } = cborMap[i];
+
+            if(!( k instanceof CborBytes ))
+            throw new InvalidCborFormatError("Value");
+
+            const policy = k.buffer.length === 0 ? "" : new Hash32( k.buffer )
+
+            if(!( v instanceof CborMap ))
+            throw new InvalidCborFormatError("Value");
+
+            const assetsMap = v.map;
+            const assetsMapLen = v.map.length;
+
+            const assets = {};
+
+            for( let j = 0 ; j < assetsMapLen; j++ )
+            {
+                const { k, v } = assetsMap[j];
+                if(!( k instanceof CborBytes ))
+                throw new InvalidCborFormatError("Value");
+
+                if(!( v instanceof CborNegInt || v instanceof CborUInt ))
+                throw new InvalidCborFormatError("Value");
+
+                ObjectUtils.defineReadOnlyProperty(
+                    assets,
+                    k.buffer.toString("ascii"),
+                    v.num
+                );
+            }
+
+            valueMap[i] = {
+                policy: policy as any,
+                assets
+            };
+        }
+
+        return new Value(valueMap);
     }
 
     toJson()

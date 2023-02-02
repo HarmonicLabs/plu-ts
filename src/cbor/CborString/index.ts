@@ -2,6 +2,7 @@ import CborObj from "../CborObj";
 import Cbor from "../Cbor";
 import ByteString from "../../types/HexString/ByteString";
 
+
 export default
 class CborString extends ByteString
 {
@@ -32,4 +33,13 @@ class CborString extends ByteString
     {
         return Cbor.parse( this );
     }
+}
+
+export type CanBeCborString = string | Buffer | ByteString;
+
+export function forceCborString( cStr: CanBeCborString ): CborString
+{
+    return new CborString(
+        cStr instanceof ByteString ? cStr.asBytes : cStr
+    )
 }

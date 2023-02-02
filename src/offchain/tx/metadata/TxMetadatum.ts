@@ -8,6 +8,7 @@ import CborText from "../../../cbor/CborObj/CborText";
 import CborUInt from "../../../cbor/CborObj/CborUInt";
 import CborString from "../../../cbor/CborString";
 import { ToCbor } from "../../../cbor/interfaces/CBORSerializable";
+import InvalidCborFormatError from "../../../errors/InvalidCborFormatError";
 import ByteString from "../../../types/HexString/ByteString";
 import JsRuntime from "../../../utils/JsRuntime";
 import ObjectUtils from "../../../utils/ObjectUtils";
@@ -22,6 +23,39 @@ export type TxMetadatum
     | TxMetadatumText;
 
 export default TxMetadatum;
+
+export function txMetadatumFromCborObj( cObj: CborObj ): TxMetadatum
+{
+    if( cObj instanceof CborMap )
+    {
+        return new TxMetadatumMap( 
+            cObj.map.map( entry => ({ 
+                k: txMetadatumFromCborObj( entry.k ), 
+                v: txMetadatumFromCborObj( entry.v )})
+            )
+        );
+    }
+    if( cObj instanceof CborArray )
+    {
+        return new TxMetadatumList( 
+            cObj.array.map( txMetadatumFromCborObj )
+        );
+    }
+    if( cObj instanceof CborUInt || cObj instanceof CborNegInt )
+    {
+        return new TxMetadatumInt( cObj.num );
+    }
+    if( cObj instanceof CborBytes )
+    {
+        return new TxMetadatumBytes( cObj.buffer );
+    }
+    if( cObj instanceof CborText )
+    {
+        return new TxMetadatumText( cObj.text );
+    }
+
+    throw new InvalidCborFormatError("TxMetadatum")
+}
 
 export function isTxMetadatum( something: any ): something is TxMetadatum
 {

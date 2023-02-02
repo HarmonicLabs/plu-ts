@@ -1,8 +1,9 @@
 import Cbor from "../../cbor/Cbor";
 import CborObj from "../../cbor/CborObj";
 import CborBytes from "../../cbor/CborObj/CborBytes";
-import CborString from "../../cbor/CborString";
+import CborString, { CanBeCborString, forceCborString } from "../../cbor/CborString";
 import { ToCbor } from "../../cbor/interfaces/CBORSerializable";
+import InvalidCborFormatError from "../../errors/InvalidCborFormatError";
 import Data from "../../types/Data";
 import DataB from "../../types/Data/DataB";
 import ToData from "../../types/Data/toData/interface";
@@ -122,10 +123,21 @@ export default class Hash
     {
         return Cbor.encode( this.toCborObj() );
     }
-    
     toCborObj(): CborObj
     {
         return new CborBytes( this.asBytes )
+    }
+
+    static fromCbor( cStr: CanBeCborString ): Hash
+    {
+        return Hash.fromCborObj( Cbor.parse( forceCborString( cStr ) ) );
+    }
+    static fromCborObj( cObj: CborObj ): Hash
+    {
+        if(!(cObj instanceof CborBytes ))
+        throw new InvalidCborFormatError("Hash");
+
+        return new Hash( cObj.buffer )
     }
 
     toData(): Data

@@ -7,6 +7,7 @@ import CborUInt from "../../../cbor/CborObj/CborUInt";
 import CborString from "../../../cbor/CborString";
 import { ToCbor } from "../../../cbor/interfaces/CBORSerializable";
 import BasePlutsError from "../../../errors/BasePlutsError";
+import InvalidCborFormatError from "../../../errors/InvalidCborFormatError";
 import { canBeUInteger, forceBigUInt, forceUInteger } from "../../../types/ints/Integer";
 import JsRuntime from "../../../utils/JsRuntime";
 import ObjectUtils from "../../../utils/ObjectUtils";
@@ -51,6 +52,35 @@ function rewardsMapToCborObj( map: RewardsMap ): CborMap
             }
         })
     )
+}
+
+function rewardsMapFromCborObj( cObj: CborObj ): RewardsMap
+{
+    if(!( cObj instanceof CborMap ))
+    throw new InvalidCborFormatError("MoveInstantRewardsCert");
+
+    const map = cObj.map;
+    const len = map.length;
+
+    const rewMap: RewardsMap = new Array( len );
+
+    for( let i = 0; i < len; i++ )
+    {
+        const { k, v } = map[i];
+
+        if(!(
+            v instanceof CborUInt ||
+            v instanceof CborNegInt
+        ))
+        throw new InvalidCborFormatError("MoveInstantRewardsCert");
+
+        rewMap[i] = {
+            stakeCredentials: StakeCredentials.fromCborObj( k ),
+            amount: v.num
+        }
+    }
+
+    return rewMap;
 }
 
 export default class MoveInstantRewardsCert
@@ -113,6 +143,27 @@ export default class MoveInstantRewardsCert
                 new CborUInt( forceUInteger( this.destintaion ).asBigInt ) :
                 rewardsMapToCborObj( this.destintaion )
         ]);
+    }
+
+    static fromCborObj( cObj: CborObj ): MoveInstantRewardsCert
+    {
+        if(!( cObj instanceof CborArray ))
+        throw new InvalidCborFormatError("MoveInstantRewardsCert");
+
+        const [
+            _src,
+            _dst
+        ] = cObj.array;
+
+        if(!( _src instanceof CborUInt ))
+        throw new InvalidCborFormatError("MoveInstantRewardsCert");
+
+        return new MoveInstantRewardsCert(
+            Number( _src.num ),
+            _dst instanceof CborUInt ?
+            _dst.num :
+            rewardsMapFromCborObj( _dst )
+        )
     }
 
     toJson()

@@ -5,7 +5,7 @@ import Coin from "./Coin";
 import Hash28 from "../hashes/Hash28/Hash28";
 import { ToCbor } from "../../cbor/interfaces/CBORSerializable";
 import CborObj from "../../cbor/CborObj";
-import CborString from "../../cbor/CborString";
+import CborString, { CanBeCborString, forceCborString } from "../../cbor/CborString";
 import Cbor from "../../cbor/Cbor";
 import CborMap from "../../cbor/CborObj/CborMap";
 import CborUInt from "../../cbor/CborObj/CborUInt";
@@ -19,6 +19,7 @@ import StakeCredentials, { StakeKeyHash } from "../credentials/StakeCredentials"
 import DataI from "../../types/Data/DataI";
 import DataConstr from "../../types/Data/DataConstr";
 import ToJson from "../../utils/ts/ToJson";
+import InvalidCborFormatError from "../../errors/InvalidCborFormatError";
 
 export type TxWithdrawalsEntryBigInt = {
     rewardAccount: Hash28,
@@ -151,6 +152,29 @@ export default class TxWithdrawals
                 return {
                     k: entry.rewardAccount.toCborObj(),
                     v: new CborUInt( entry.amount )
+                }
+            })
+        )
+    }
+
+    static fromCbor( cStr: CanBeCborString ): TxWithdrawals
+    {
+        return TxWithdrawals.fromCborObj( Cbor.parse( forceCborString( cStr ) ) );
+    }
+    static fromCborObj( cObj: CborObj ): TxWithdrawals
+    {
+        if(!( cObj instanceof CborMap ))
+        throw new InvalidCborFormatError("TxWithdrawals");
+
+        return new TxWithdrawals(
+            cObj.map.map( ({ k, v }) => {
+
+                if(!( v instanceof CborUInt ))
+                throw new InvalidCborFormatError("TxWithdrawals")
+
+                return {
+                    rewardAccount: Hash28.fromCborObj( k ) ,
+                    amount: v.num
                 }
             })
         )

@@ -1,12 +1,14 @@
 import Cbor from "../../../cbor/Cbor";
+import CborObj from "../../../cbor/CborObj";
 import CborArray from "../../../cbor/CborObj/CborArray";
 import CborBytes from "../../../cbor/CborObj/CborBytes";
 import CborMap, { CborMapEntry } from "../../../cbor/CborObj/CborMap";
 import CborTag from "../../../cbor/CborObj/CborTag";
 import CborUInt from "../../../cbor/CborObj/CborUInt";
-import CborString from "../../../cbor/CborString";
+import CborString, { CanBeCborString, forceCborString } from "../../../cbor/CborString";
 import { ToCbor } from "../../../cbor/interfaces/CBORSerializable";
 import { blake2b_256 } from "../../../crypto";
+import InvalidCborFormatError from "../../../errors/InvalidCborFormatError";
 import { PlutusScriptVersion, ScriptJsonFormat } from "../../../onchain/pluts/Script";
 import JsRuntime from "../../../utils/JsRuntime";
 import ObjectUtils from "../../../utils/ObjectUtils";
@@ -198,11 +200,76 @@ export default class AuxiliaryData
                 },
                 this.plutusV2Scripts === undefined || this.plutusV2Scripts.length === 0 ? undefined :
                 {
-                    k: new CborUInt( 2 ),
+                    k: new CborUInt( 3 ),
                     v: scriptArrToCbor( this.plutusV2Scripts )
                 }
             ].filter( elem => elem !== undefined ) as CborMapEntry[])
         )
+    }
+
+    static fromCbor( cStr: CanBeCborString ): AuxiliaryData
+    {
+        return AuxiliaryData.fromCborObj( Cbor.parse( forceCborString( cStr ) ) );
+    }
+    static fromCborObj( cObj: CborObj ): AuxiliaryData
+    {
+        if(!(
+            cObj instanceof CborTag &&
+            cObj.data instanceof CborMap
+        ))
+        throw new InvalidCborFormatError("AuxiliaryData")
+
+        let fields: (CborObj | undefined)[] = new Array( 4 ).fill( undefined );
+
+        for( let i = 0; i < 4; i++)
+        {
+            const { v } = cObj.data.map.find(
+                ({ k }) => k instanceof CborUInt && Number( k.num ) === i
+            ) ?? { v: undefined };
+
+            if( v === undefined ) continue;
+
+            fields[i] = v;
+        }
+
+        const [
+            _metadata,
+            _native,
+            _pV1,
+            _pV2
+        ] = fields;
+
+        if(!(
+            _native instanceof CborArray &&
+            _pV1 instanceof CborArray &&
+            _pV2 instanceof CborArray
+        ))
+        throw new InvalidCborFormatError("AuxiliaryData")
+
+        return new AuxiliaryData({
+            metadata: _metadata === undefined ? undefined : TxMetadata.fromCborObj( _metadata ),
+            nativeScripts:_native === undefined ? undefined : 
+                _native.array.map( nativeCborObj => 
+                    new Script(
+                        ScriptType.NativeScript, 
+                        Cbor.encode( nativeCborObj ).asBytes
+                    )
+                ),
+            plutusV1Scripts: _pV1 === undefined ? undefined :
+                _pV1.array.map( cbor =>
+                    new Script(
+                        ScriptType.PlutusV1,
+                        Cbor.encode( cbor ).asBytes
+                    )
+                ),
+            plutusV2Scripts: _pV2 === undefined ? undefined :
+                _pV2.array.map( cbor =>
+                    new Script(
+                        ScriptType.PlutusV2,
+                        Cbor.encode( cbor ).asBytes
+                    )
+                )
+        })
     }
 
     toJson()

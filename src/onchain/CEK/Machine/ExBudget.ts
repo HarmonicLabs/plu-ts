@@ -1,9 +1,11 @@
 import Cbor from "../../../cbor/Cbor";
+import CborObj from "../../../cbor/CborObj";
 import CborArray from "../../../cbor/CborObj/CborArray";
 import CborUInt from "../../../cbor/CborObj/CborUInt";
-import CborString from "../../../cbor/CborString";
+import CborString, { CanBeCborString, forceCborString } from "../../../cbor/CborString";
 import { ToCbor } from "../../../cbor/interfaces/CBORSerializable";
 import BasePlutsError from "../../../errors/BasePlutsError";
+import InvalidCborFormatError from "../../../errors/InvalidCborFormatError";
 import Cloneable from "../../../types/interfaces/Cloneable";
 import Integer, { CanBeUInteger, forceBigUInt, forceUInteger } from "../../../types/ints/Integer";
 import ObjectUtils from "../../../utils/ObjectUtils";
@@ -117,6 +119,10 @@ class ExBudget
         return new ExBudget( this.cpu, this.mem );
     }
 
+    toCbor(): CborString
+    {
+        return Cbor.encode( this.toCborObj() );
+    }
     toCborObj(): CborArray
     {
         return new CborArray([
@@ -124,10 +130,24 @@ class ExBudget
             new CborUInt( this.cpu )
         ]);
     }
-
-    toCbor(): CborString
+    
+    static fromCbor( cStr: CanBeCborString ): ExBudget
     {
-        return Cbor.encode( this.toCborObj() );
+        return ExBudget.fromCborObj( Cbor.parse( forceCborString( cStr ) ) );
+    }
+    static fromCborObj( cObj: CborObj ): ExBudget
+    {
+        if(!(
+            cObj instanceof CborArray &&
+            cObj.array[0] instanceof CborUInt &&
+            cObj.array[1] instanceof CborUInt
+        ))
+        throw new InvalidCborFormatError("ExBudget");
+
+        return new ExBudget({
+            mem: cObj.array[0].num,
+            cpu: cObj.array[1].num,
+        });
     }
 
     toJson()

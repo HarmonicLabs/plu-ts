@@ -1,11 +1,11 @@
 import Data, { isData } from "../../../../types/Data";
 import Hash32 from "../../../hashes/Hash32/Hash32";
-import Script from "../../../script/Script";
+import Script, { ScriptType } from "../../../script/Script";
 import { Value } from "../../../ledger/Value/Value";
 import JsRuntime from "../../../../utils/JsRuntime";
 import ObjectUtils from "../../../../utils/ObjectUtils";
 import { ToCbor } from "../../../../cbor/interfaces/CBORSerializable";
-import CborString from "../../../../cbor/CborString";
+import CborString, { CanBeCborString, forceCborString } from "../../../../cbor/CborString";
 import Cbor from "../../../../cbor/Cbor";
 import Address from "../../../ledger/Address";
 import CborMap, { CborMapEntry } from "../../../../cbor/CborObj/CborMap";
@@ -21,6 +21,9 @@ import { maybeData } from "../../../../types/Data/toData/maybeData";
 import BasePlutsError from "../../../../errors/BasePlutsError";
 import ToJson from "../../../../utils/ts/ToJson";
 import { IValue } from "../../../ledger/Value/IValue";
+import CborObj from "../../../../cbor/CborObj";
+import InvalidCborFormatError from "../../../../errors/InvalidCborFormatError";
+import { dataFromCborObj } from "../../../../types/Data/fromCbor";
 
 export type AddressStr = `${"addr1"|"addr_test1"}${string}`;
 
@@ -37,16 +40,6 @@ export default class TxOut
     readonly amount!: Value
     readonly datum?: Hash32 | Data
     readonly refScript?: Script
-
-    clone(): TxOut
-    {
-        return new TxOut({
-            address: this.address.clone(),
-            amount: this.amount.clone(),
-            datum: this.datum?.clone(),
-            refScript: this.refScript?.clone() 
-        })
-    }
 
     constructor( txOutput: ITxOut )
     {
@@ -105,6 +98,26 @@ export default class TxOut
             "refScript",
             refScript
         );
+    }
+
+    clone(): TxOut
+    {
+        return new TxOut({
+            address: this.address.clone(),
+            amount: this.amount.clone(),
+            datum: this.datum?.clone(),
+            refScript: this.refScript?.clone() 
+        })
+    }
+
+    static get fake(): TxOut
+    {
+        return new TxOut({
+            address: Address.fake,
+            amount: Value.lovelaces( 0 ),
+            datum: undefined,
+            refScript: undefined
+        })
     }
 
     toData( version: "v1" | "v2" = "v2" ): Data
@@ -181,6 +194,86 @@ export default class TxOut
                 v: new CborTag( 24, new CborBytes( this.refScript.cbor ) )
             }
         ].filter( elem => elem !== undefined ) as CborMapEntry[])
+    }
+
+    static fromCbor( cStr: CanBeCborString ): TxOut
+    {
+        return TxOut.fromCborObj( Cbor.parse( forceCborString( cStr ) ) );
+    }
+    static fromCborObj( cObj: CborObj ): TxOut
+    {
+        if(!( cObj instanceof CborMap ))
+        throw new InvalidCborFormatError("TxOut");
+
+        let fields: (CborObj | undefined )[] = new Array( 4 ).fill( undefined );
+
+        for( let i = 0; i < 4; i++)
+        {
+            const { v } = (cObj as CborMap).map.find(
+                ({ k }) => {
+                    if(!( k instanceof CborUInt ))
+                    throw new InvalidCborFormatError("TxBody");
+
+                    return Number( k.num ) === i
+                }
+            ) ?? { v: undefined };
+
+            if( v === undefined ) continue;
+
+            fields[i] = v;
+        }
+
+        const [
+            _addr,
+            _amt,
+            _dat,
+            _refScript
+        ] = fields;
+
+        let datum: Hash32 | Data | undefined = undefined;
+
+        if( _dat !== undefined )
+        {
+            if(!(_dat instanceof CborArray))
+            throw new InvalidCborFormatError("TxOut");
+
+            const [ _0, _1, _2 ] = _dat.array;
+
+            if(!(_0 instanceof CborUInt))
+            throw new InvalidCborFormatError("TxOut");
+
+            if(_1 instanceof CborBytes)
+            datum = Hash32.fromCborObj( _1 )
+            else
+            {
+                if(!(_1 instanceof CborUInt))
+                throw new InvalidCborFormatError("TxOut");
+
+                datum = dataFromCborObj( _2 )
+            }
+        }
+
+        let refScript: Script | undefined = undefined;
+        if( _refScript !== undefined )
+        {
+            if(!(
+                _refScript instanceof CborTag &&
+                _refScript.data instanceof CborBytes
+            ))
+            throw new InvalidCborFormatError("TxOut");
+
+            refScript = new Script( ScriptType.PlutusV2, _refScript.data.buffer );
+        }
+
+        if( _addr === undefined || _amt === undefined )
+        throw new InvalidCborFormatError("TxOut");
+
+        return new TxOut({
+            address: Address.fromCborObj( _addr ),
+            amount:  Value.fromCborObj( _amt ),
+            datum,
+            refScript
+        })
     }
 
     toJson()

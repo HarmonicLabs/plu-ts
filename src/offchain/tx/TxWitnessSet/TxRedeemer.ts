@@ -2,14 +2,16 @@ import Cbor from "../../../cbor/Cbor"
 import CborObj from "../../../cbor/CborObj"
 import CborArray from "../../../cbor/CborObj/CborArray"
 import CborUInt from "../../../cbor/CborObj/CborUInt"
-import CborString from "../../../cbor/CborString"
+import CborString, { CanBeCborString, forceCborString } from "../../../cbor/CborString"
 import { ToCbor } from "../../../cbor/interfaces/CBORSerializable"
 import BasePlutsError from "../../../errors/BasePlutsError"
+import InvalidCborFormatError from "../../../errors/InvalidCborFormatError"
 import ExBudget from "../../../onchain/CEK/Machine/ExBudget"
 import Data, { isData } from "../../../types/Data"
 import DataB from "../../../types/Data/DataB"
 import DataConstr from "../../../types/Data/DataConstr"
 import DataI from "../../../types/Data/DataI"
+import { dataFromCborObj } from "../../../types/Data/fromCbor"
 import dataToCbor, { dataToCborObj } from "../../../types/Data/toCbor"
 import Cloneable from "../../../types/interfaces/Cloneable"
 import { canBeUInteger, CanBeUInteger, forceUInteger } from "../../../types/ints/Integer"
@@ -163,6 +165,27 @@ export default class TxRedeemer
             dataToCborObj( this.data ),
             this.execUnits.toCborObj()
         ])
+    }
+
+    static fromCbor( cStr: CanBeCborString ): TxRedeemer
+    {
+        return TxRedeemer.fromCborObj( Cbor.parse( forceCborString( cStr ) ) );
+    }
+    static fromCborObj( cObj: CborObj ): TxRedeemer
+    {
+        if(!(
+            cObj instanceof CborArray &&
+            cObj.array[0] instanceof CborUInt &&
+            cObj.array[1] instanceof CborUInt
+        ))
+        throw new InvalidCborFormatError("TxRedeemer");
+
+        return new TxRedeemer({
+            tag: Number( cObj.array[0].num ) as any,
+            index: cObj.array[1].num,
+            data: dataFromCborObj( cObj.array[3] ),
+            execUnits: ExBudget.fromCborObj( cObj.array[4] )
+        });
     }
 
     toJson()

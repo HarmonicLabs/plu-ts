@@ -3,12 +3,13 @@ import CborArray from "../../../cbor/CborObj/CborArray";
 import CborMap, { CborMapEntry } from "../../../cbor/CborObj/CborMap";
 import CborUInt from "../../../cbor/CborObj/CborUInt";
 import CborPositiveRational from "../../../cbor/extra/CborRational";
+import InvalidCborFormatError from "../../../errors/InvalidCborFormatError";
 import ExBudget from "../../../onchain/CEK/Machine/ExBudget";
 import { ppairData } from "../../../onchain/pluts";
 import { canBeUInteger, CanBeUInteger, forceUInteger } from "../../../types/ints/Integer";
 import ObjectUtils from "../../../utils/ObjectUtils";
 import type Coin from "../Coin";
-import CostModels, { costModelsToCborObj, costModelsToJson, costModelsToLanguageViewCbor, defaultV1Costs, defaultV2Costs, isCostModels } from "../CostModels";
+import CostModels, { costModelsFromCborObj, costModelsToCborObj, costModelsToJson, costModelsToLanguageViewCbor, defaultV1Costs, defaultV2Costs, isCostModels } from "../CostModels";
 import type Epoch from "../Epoch";
 
 export interface ProtocolParamters {
@@ -24,7 +25,7 @@ export interface ProtocolParamters {
     pledgeInfluence: CborPositiveRational,
     expansionRate: CborPositiveRational,
     treasureryGrowthRate: CborPositiveRational,
-    protocolVerstion: [ CanBeUInteger, CanBeUInteger ],
+    protocolVersion: [ CanBeUInteger, CanBeUInteger ],
     poolMinFee: Coin,
     adaPerUtxoByte: Coin,
     costModels: CostModels,
@@ -56,7 +57,7 @@ export function isProtocolParameters( something: any ): something is ProtocolPar
         "pledgeInfluence",
         "expansionRate",
         "treasureryGrowthRate",
-        "protocolVerstion",
+        "protocolVersion",
         "poolMinFee",
         "adaPerUtxoByte",
         "costModels",
@@ -104,7 +105,7 @@ export function isProtocolParameters( something: any ): something is ProtocolPar
         pp.treasureryGrowthRate instanceof CborPositiveRational
     )) return false
 
-    const ppv = pp.protocolVerstion;
+    const ppv = pp.protocolVersion;
 
     if(!(
         Array.isArray( ppv ) &&
@@ -164,7 +165,7 @@ export function isPartialProtocolParameters( something: object ): something is P
         (pp.treasureryGrowthRate === undefined  || pp.treasureryGrowthRate instanceof CborPositiveRational)
     )) return false;
 
-    const ppv = pp.protocolVerstion;
+    const ppv = pp.protocolVersion;
 
     if(!(
         ppv === undefined ||
@@ -207,6 +208,11 @@ function mapUIntEntryOrUndefined( tag: number, a: CanBeUInteger | undefined ): {
     };
 }
 
+function fromUIntOrUndef( n: CborObj | undefined ): bigint | undefined
+{
+    return n instanceof CborUInt ? n.num : undefined;
+}
+
 function kv( k: number, v: CborObj | undefined ): CborMapEntry | undefined
 {
     
@@ -219,7 +225,7 @@ function kv( k: number, v: CborObj | undefined ): CborMapEntry | undefined
 export function partialProtocolParametersToCborObj( pps: Partial<ProtocolParamters> ): CborMap
 {
     const {
-        protocolVerstion,
+        protocolVersion,
         execCosts,
         maxTxExecUnits,
         maxBlockExecUnits,
@@ -241,12 +247,12 @@ export function partialProtocolParametersToCborObj( pps: Partial<ProtocolParamte
         kv( 9 , pps.pledgeInfluence ),
         kv( 10, pps.expansionRate ),
         kv( 11, pps.treasureryGrowthRate ),
-        protocolVerstion === undefined ? undefined:
+        protocolVersion === undefined ? undefined:
         {
             k: new CborUInt( 14 ),
             v: new CborArray([
-                new CborUInt( forceUInteger( protocolVerstion[0] ).asBigInt ),
-                new CborUInt( forceUInteger( protocolVerstion[1] ).asBigInt )
+                new CborUInt( forceUInteger( protocolVersion[0] ).asBigInt ),
+                new CborUInt( forceUInteger( protocolVersion[1] ).asBigInt )
             ])
         },
         mapUIntEntryOrUndefined( 16, pps.poolMinFee ),
@@ -270,6 +276,96 @@ export function partialProtocolParametersToCborObj( pps: Partial<ProtocolParamte
     ].filter( elem => elem !== undefined ) as CborMapEntry[])
 }
 
+export function partialProtocolParametersFromCborObj( cObj: CborObj ): Partial<ProtocolParamters>
+{
+    if(!( cObj instanceof CborMap ))
+    throw new InvalidCborFormatError("Partial<ProtocolParamters>")
+
+    let fields: (CborObj | undefined)[] = new Array( 25 ).fill( undefined );
+
+    for( let i = 0; i < 25; i++)
+    {
+        const { v } = (cObj as CborMap).map.find(
+            ({ k }) => k instanceof CborUInt && Number( k.num ) === i
+        ) ?? { v: undefined };
+
+        if( v === undefined ) continue;
+
+        fields[i] = v;
+    }
+
+    const [
+        _minFeeCoeff,
+        _minFeeFix,
+        _maxBlockBodySize,
+        _maxTxSize,
+        _maxBlockHeaderSize,
+        _keyDep,
+        _poolDep,
+        _epoch,
+        _kParam,
+        _pledgeInfluence,
+        _expansionRate,
+        _treasureryGrowthRate,
+        _12,
+        _13,
+        _protocolVersion,
+        _15,
+        _poolMinFee,
+        _adaPerUtxoByte,
+        _costmdls,
+        _execCosts,
+        _maxTxExecUnits,
+        _maxBlockExecUnits,
+        _maxValueSize,
+        _collatearalPerc,
+        _maxCollIns
+    ] = fields;
+
+    const protocolVersion: [bigint, bigint] | undefined = (
+        _protocolVersion instanceof CborArray &&
+        _protocolVersion.array[0] instanceof CborUInt &&
+        _protocolVersion.array[1] instanceof CborUInt
+    ) ? 
+    [ _protocolVersion.array[0].num, _protocolVersion.array[1].num ]
+    : undefined;
+
+    let execCosts: [CborPositiveRational, CborPositiveRational] | undefined = undefined;
+    if( _execCosts instanceof CborArray )
+    {
+        const mem_price = CborPositiveRational.fromCborObjOrUndef( _execCosts.array[0] )
+        const cpu_price = CborPositiveRational.fromCborObjOrUndef( _execCosts.array[1] )
+        execCosts = mem_price !== undefined && cpu_price !== undefined ? [ mem_price, cpu_price ] : undefined;
+    }
+
+    const _costModels = costModelsFromCborObj( _costmdls );
+
+    return {
+        minFeeCoefficient:      fromUIntOrUndef( _minFeeCoeff ),
+        minFeeFixed:            fromUIntOrUndef( _minFeeFix ),
+        maxBlockBodySize:       fromUIntOrUndef( _maxBlockBodySize ),
+        maxTxSize:              fromUIntOrUndef( _maxTxSize ),
+        maxBlockHeaderSize:     fromUIntOrUndef( _maxBlockHeaderSize ),
+        keyDeposit:             fromUIntOrUndef( _keyDep ),
+        poolDeposit:            fromUIntOrUndef( _poolDep ),
+        epoch:                  fromUIntOrUndef( _epoch ),
+        kParam:                 fromUIntOrUndef( _kParam ),
+        pledgeInfluence:        CborPositiveRational.fromCborObjOrUndef( _pledgeInfluence ),
+        expansionRate:          CborPositiveRational.fromCborObjOrUndef( _expansionRate ),
+        treasureryGrowthRate:   CborPositiveRational.fromCborObjOrUndef( _treasureryGrowthRate ),
+        protocolVersion,
+        poolMinFee:             fromUIntOrUndef( _poolMinFee ),
+        adaPerUtxoByte:         fromUIntOrUndef( _adaPerUtxoByte ),
+        costModels:             Object.keys( _costModels ).length === 0 ? undefined : _costModels,
+        execCosts,
+        maxTxExecUnits:     _maxTxExecUnits === undefined ? undefined : ExBudget.fromCborObj( _maxTxExecUnits ),
+        maxBlockExecUnits:  _maxBlockExecUnits === undefined ? undefined : ExBudget.fromCborObj( _maxBlockExecUnits ),
+        maxValuesSize:          fromUIntOrUndef( _maxValueSize ),
+        collateralPercentage:   fromUIntOrUndef( _collatearalPerc ),
+        maxCollateralIns:       fromUIntOrUndef( _maxCollIns ),
+    }
+}
+
 export const defaultProtocolParameters: ProtocolParamters = ObjectUtils.freezeAll({
     minFeeCoefficient: 44,
     minFeeFixed: 155381,
@@ -283,7 +379,7 @@ export const defaultProtocolParameters: ProtocolParamters = ObjectUtils.freezeAl
     pledgeInfluence: new CborPositiveRational( 3, 10 ),
     expansionRate: new CborPositiveRational( 3, 1000 ),
     treasureryGrowthRate: new CborPositiveRational( 2, 10 ),
-    protocolVerstion: [ 8, 0 ],
+    protocolVersion: [ 8, 0 ],
     poolMinFee: 340_000_000,
     adaPerUtxoByte: 34482,
     costModels: {

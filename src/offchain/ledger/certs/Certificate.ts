@@ -2,9 +2,10 @@ import Cbor from "../../../cbor/Cbor";
 import CborObj from "../../../cbor/CborObj";
 import CborArray from "../../../cbor/CborObj/CborArray";
 import CborUInt from "../../../cbor/CborObj/CborUInt";
-import CborString from "../../../cbor/CborString";
+import CborString, { CanBeCborString, forceCborString } from "../../../cbor/CborString";
 import { ToCbor } from "../../../cbor/interfaces/CBORSerializable";
 import BasePlutsError from "../../../errors/BasePlutsError";
+import InvalidCborFormatError from "../../../errors/InvalidCborFormatError";
 import DataConstr from "../../../types/Data/DataConstr";
 import DataI from "../../../types/Data/DataI";
 import ToData from "../../../types/Data/toData/interface";
@@ -299,6 +300,70 @@ export default class Certificate<CertTy extends CertificateType>
             new CborUInt( this.certType ),
             ...this.params.map( p => (p as any).toCborObj() )
         ])
+    }
+
+    static fromCbor( cStr: CanBeCborString ): AnyCertificate
+    {
+        return Certificate.fromCborObj( Cbor.parse( forceCborString( cStr ) ) )
+    }
+    static fromCborObj( cObj: CborObj ): AnyCertificate
+    {
+        if(!( cObj instanceof CborArray ))
+        throw new InvalidCborFormatError("Certificate");
+
+        const [
+            _type,
+            ..._params
+        ] = cObj.array;
+
+        if(!( _type instanceof CborUInt ))
+        throw new InvalidCborFormatError("Certificate");
+
+        const type = Number( _type.num ) as CertificateType;
+
+        switch( type )
+        {
+            case CertificateType.StakeRegistration:
+            case CertificateType.StakeDeRegistration:
+                return new Certificate(
+                    type,
+                    StakeCredentials.fromCborObj( _params[0] )
+                );
+            case CertificateType.StakeDelegation:
+                return new Certificate(
+                    type,
+                    StakeCredentials.fromCborObj( _params[0] ),
+                    PoolKeyHash.fromCborObj( _params[1] )
+                );
+            case CertificateType.PoolRegistration:
+                return new Certificate(
+                    type,
+                    PoolParams.fromCborObjArray( _params )
+                );
+            case CertificateType.PoolRetirement:
+                if(!( _params[1] instanceof CborUInt ))
+                throw new InvalidCborFormatError("Certificate");
+
+                return new Certificate(
+                    type,
+                    PoolKeyHash.fromCborObj( _params[0] ),
+                    _params[1].num
+                );
+            case CertificateType.GenesisKeyDelegation:
+                return new Certificate(
+                    type,
+                    GenesisHash.fromCborObj( _params[0] ),
+                    GenesisDelegateHash.fromCborObj( _params[1] ),
+                    VRFKeyHash.fromCborObj( _params[2] ),
+                );
+            case CertificateType.MoveInstantRewards:
+                return new Certificate(
+                    type,
+                    MoveInstantRewardsCert.fromCborObj( _params[0] )
+                );
+            default:
+                throw new InvalidCborFormatError("Certificate");
+        }
     }
 
     toJson()

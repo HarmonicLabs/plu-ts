@@ -2,8 +2,9 @@ import Cbor from "../../cbor/Cbor";
 import CborObj from "../../cbor/CborObj";
 import CborArray from "../../cbor/CborObj/CborArray";
 import CborUInt from "../../cbor/CborObj/CborUInt";
-import CborString from "../../cbor/CborString";
+import CborString, { CanBeCborString, forceCborString } from "../../cbor/CborString";
 import { ToCbor } from "../../cbor/interfaces/CBORSerializable";
+import InvalidCborFormatError from "../../errors/InvalidCborFormatError";
 import Data from "../../types/Data";
 import DataB from "../../types/Data/DataB";
 import DataConstr from "../../types/Data/DataConstr";
@@ -59,6 +60,14 @@ export default class PaymentCredentials<T extends PaymentCredentialsType = Payme
         );
     }
 
+    static get fake(): PaymentCredentials
+    {
+        return new PaymentCredentials(
+            "pubKey",
+            new Hash28("ff".repeat(28))
+        );
+    }
+
     toData(): Data
     {
         return new DataConstr( // PCredential
@@ -96,12 +105,29 @@ export default class PaymentCredentials<T extends PaymentCredentialsType = Payme
     {
         return Cbor.encode( this.toCborObj() );
     }
-
     toCborObj(): CborObj
     {
         return new CborArray([
             new CborUInt( this.type === "pubKey" ? 0 : 1 ),
             this.hash.toCborObj()
         ])
+    }
+
+    static fromCbor( cStr: CanBeCborString ): PaymentCredentials
+    {
+        return PaymentCredentials.fromCborObj( Cbor.parse( forceCborString( cStr ) ) );
+    }
+    static fromCborObj( cObj: CborObj ): PaymentCredentials
+    {
+        if(!(
+            cObj instanceof CborArray &&
+            cObj.array[0] instanceof CborUInt
+        ))
+        throw new InvalidCborFormatError("PaymentCredentials");
+
+        return new PaymentCredentials(
+            Number( cObj.array[0].num ) === 0 ? "pubKey" : "script",
+            Hash28.fromCborObj( cObj.array[1] )
+        );
     }
 }

@@ -3,8 +3,9 @@ import Cbor from "../../../../cbor/Cbor"
 import CborObj from "../../../../cbor/CborObj"
 import CborArray from "../../../../cbor/CborObj/CborArray"
 import CborUInt from "../../../../cbor/CborObj/CborUInt"
-import CborString from "../../../../cbor/CborString"
+import CborString, { CanBeCborString, forceCborString } from "../../../../cbor/CborString"
 import { ToCbor } from "../../../../cbor/interfaces/CBORSerializable"
+import InvalidCborFormatError from "../../../../errors/InvalidCborFormatError"
 import Data from "../../../../types/Data"
 import DataB from "../../../../types/Data/DataB"
 import DataConstr from "../../../../types/Data/DataConstr"
@@ -15,11 +16,17 @@ import JsRuntime from "../../../../utils/JsRuntime"
 import ObjectUtils from "../../../../utils/ObjectUtils"
 import ToJson from "../../../../utils/ts/ToJson"
 import Hash32 from "../../../hashes/Hash32/Hash32"
+import TxOut from "./TxOut"
 
 export interface ITxOutRef {
     id: string | Hash32
     index: number
 }
+
+export type UTxORefJson = {
+    id: string;
+    index: number;
+};
 
 export default class TxOutRef
     implements ITxOutRef, ToData, ToCbor, ToJson
@@ -78,7 +85,27 @@ export default class TxOutRef
         ])
     }
 
-    toJson()
+    static fromCbor( cStr: CanBeCborString ): TxOutRef
+    {
+        return TxOutRef.fromCborObj( Cbor.parse( forceCborString( cStr ) ) );
+    }
+    static fromCborObj( cObj: CborObj ): TxOutRef
+    {
+        if(!(cObj instanceof CborArray ))
+        throw new InvalidCborFormatError("TxOutRef");
+
+        const [ _id, _index ] = cObj.array;
+
+        if(!(_index instanceof CborUInt))
+        throw new InvalidCborFormatError("TxOutRef");
+
+        return new TxOutRef({
+            id: Hash32.fromCborObj( _id ),
+            index: Number( _index.num )
+        })
+    }
+
+    toJson(): UTxORefJson
     {
         return {
             id: this.id.asString,

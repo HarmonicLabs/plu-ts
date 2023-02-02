@@ -1,3 +1,5 @@
+import CborObj from "../../../cbor/CborObj";
+import { CanBeCborString } from "../../../cbor/CborString";
 import JsRuntime from "../../../utils/JsRuntime";
 import Hash from "../Hash";
 
@@ -21,5 +23,14 @@ export default class Signature extends Hash
     valueOf(): string
     {
         return this.asString;
+    }
+
+    static fromCbor(cStr: CanBeCborString): Signature
+    {
+        return new Signature( Hash.fromCbor( cStr ).asBytes )
+    }
+    static fromCborObj( cObj: CborObj ): Signature
+    {
+        return new Signature( Hash.fromCborObj( cObj ).asBytes )
     }
 }

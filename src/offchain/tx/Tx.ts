@@ -2,7 +2,7 @@ import Cbor from "../../cbor/Cbor";
 import CborObj from "../../cbor/CborObj";
 import CborArray from "../../cbor/CborObj/CborArray";
 import CborSimple from "../../cbor/CborObj/CborSimple";
-import CborString from "../../cbor/CborString";
+import CborString, { CanBeCborString, forceCborString } from "../../cbor/CborString";
 import { ToCbor } from "../../cbor/interfaces/CBORSerializable";
 import JsRuntime from "../../utils/JsRuntime";
 import ObjectUtils from "../../utils/ObjectUtils";
@@ -18,6 +18,8 @@ import PrivateKey from "../credentials/PrivateKey";
 import VKeyWitness from "./TxWitnessSet/VKeyWitness/VKeyWitness";
 import ToJson from "../../utils/ts/ToJson";
 import Signature from "../hashes/Signature";
+import BasePlutsError from "../../errors/BasePlutsError";
+import InvalidCborFormatError from "../../errors/InvalidCborFormatError";
 
 export interface ITx {
     body: ITxBody
@@ -157,7 +159,6 @@ export default class Tx
     {
         return Cbor.encode( this.toCborObj() );
     }
-
     toCborObj(): CborObj
     {
         return new CborArray([
@@ -170,6 +171,31 @@ export default class Tx
         ])
     }
 
+    static fromCbor( cStr: CanBeCborString ): Tx
+    {
+        return Tx.fromCborObj( Cbor.parse( forceCborString( cStr ) ) );
+    }
+    static fromCborObj( cObj: CborObj ): Tx
+    {
+        if( !(cObj instanceof CborArray) )
+        throw new InvalidCborFormatError("Tx");
+        
+        const [ _body, _wits, _isValid, _aux ] = cObj.array;
+
+        if(!(
+            _isValid instanceof CborSimple &&
+            typeof (_isValid.simple) === "boolean"
+        ))
+        throw new InvalidCborFormatError("Tx","isScriptValid is not a boolean")
+
+        return new Tx({
+            body: TxBody.fromCborObj( _body ),
+            witnesses: TxWitnessSet.fromCborObj( _wits ),
+            isScriptValid: _isValid.simple,
+            auxiliaryData: AuxiliaryData.fromCborObj( _aux )
+        })
+    }
+
     toJson()
     {
         return {
@@ -179,6 +205,7 @@ export default class Tx
             auxiliaryData: this.auxiliaryData?.toJson()
         }
     }
+
 }
 
 /**

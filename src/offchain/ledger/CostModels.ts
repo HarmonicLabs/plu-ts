@@ -1,4 +1,5 @@
 import Cbor from "../../cbor/Cbor";
+import CborObj from "../../cbor/CborObj";
 import CborArray from "../../cbor/CborObj/CborArray";
 import CborBytes from "../../cbor/CborObj/CborBytes";
 import CborMap, { CborMapEntry } from "../../cbor/CborObj/CborMap";
@@ -464,6 +465,52 @@ export function costModelsToCborObj( costmdls: CostModels ): CborMap
             v: new CborArray( toCostModelArrV2( PlutusV2 ).map( n => new CborUInt( forceUInteger( n ).asBigInt ) ) )
         }
     ].filter( elem => elem !== undefined ) as CborMapEntry[])
+}
+
+export function costModelsFromCborObj( cObj: CborObj | undefined ): CostModels
+{
+    if( cObj === undefined || !( cObj instanceof CborMap )) return {};
+
+    const [
+        { k: k0, v: v0 },
+        { k: k1, v: v1 }
+    ] = cObj.map;
+
+    const costs = {}
+
+    if( k0 instanceof CborUInt && v0 instanceof CborArray && v0.array.every( n => n instanceof CborUInt ))
+    {
+        if( Number( k0.num ) === 0 )
+        {
+            ObjectUtils.defineReadOnlyProperty(
+                costs, "PlutusV1", toCostModelV1( (v0.array.map( n => (n as CborUInt).num ) ) as any )
+            )
+        }
+        if( Number( k0.num ) === 1 )
+        {
+            ObjectUtils.defineReadOnlyProperty(
+                costs, "PlutusV2", toCostModelV2( (v0.array.map( n => (n as CborUInt).num ) ) as any )
+            )
+        }
+    }
+
+    if( k1 instanceof CborUInt && v1 instanceof CborArray && v1.array.every( n => n instanceof CborUInt ))
+    {
+        if( Number( k1.num ) === 0 )
+        {
+            ObjectUtils.defineReadOnlyProperty(
+                costs, "PlutusV1", toCostModelV1( (v1.array.map( n => (n as CborUInt).num ) ) as any )
+            )
+        }
+        if( Number( k1.num ) === 1 )
+        {
+            ObjectUtils.defineReadOnlyProperty(
+                costs, "PlutusV2", toCostModelV2( (v1.array.map( n => (n as CborUInt).num ) ) as any )
+            )
+        }
+    }
+
+    return costs;
 }
 
 export function costModelsToLanguageViewCbor( costmdls: CostModels ): CborString

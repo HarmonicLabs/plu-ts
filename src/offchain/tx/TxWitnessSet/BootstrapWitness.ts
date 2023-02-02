@@ -2,8 +2,9 @@ import Cbor from "../../../cbor/Cbor";
 import CborObj from "../../../cbor/CborObj";
 import CborArray from "../../../cbor/CborObj/CborArray";
 import CborBytes from "../../../cbor/CborObj/CborBytes";
-import CborString from "../../../cbor/CborString";
+import CborString, { CanBeCborString, forceCborString } from "../../../cbor/CborString";
 import { ToCbor } from "../../../cbor/interfaces/CBORSerializable";
+import InvalidCborFormatError from "../../../errors/InvalidCborFormatError";
 import Cloneable from "../../../types/interfaces/Cloneable";
 import BufferUtils from "../../../utils/BufferUtils";
 import JsRuntime from "../../../utils/JsRuntime";
@@ -86,6 +87,26 @@ export default class BootstrapWitness
             this.chainCode.toCborObj(),
             new CborBytes( this.attributes )
         ])
+    }
+
+    static fromCbor( cStr: CanBeCborString ): BootstrapWitness
+    {
+        return BootstrapWitness.fromCborObj( Cbor.parse( forceCborString( cStr ) ) );
+    }
+    static fromCborObj( cObj: CborObj ): BootstrapWitness
+    {
+        if(!(
+            cObj instanceof CborArray &&
+            cObj.array[3] instanceof CborBytes
+        ))
+        throw new InvalidCborFormatError("BootstrapWitness");
+
+        return new BootstrapWitness(
+            Hash32.fromCborObj( cObj.array[0] ),
+            Signature.fromCborObj( cObj.array[1] ),
+            Hash32.fromCborObj( cObj.array[2] ),
+            cObj.array[3].buffer
+        )
     }
 
     toJson()
