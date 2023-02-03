@@ -1,3 +1,3 @@
-import PlutsCEKError from "..";
+import { PlutsCEKError } from "..";
 
-export default class PlutsCEKComputeError extends PlutsCEKError {}
+export class PlutsCEKComputeError extends PlutsCEKError {}

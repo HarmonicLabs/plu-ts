@@ -1,14 +1,14 @@
-import Term from "../Term";
+import { Term } from "../Term";
 
-import Cloneable from "../../../types/interfaces/Cloneable";
-import UPLCConst from "../../UPLC/UPLCTerms/UPLCConst";
-import PDataRepresentable from "../PType/PDataRepresentable";
+import { Cloneable } from "../../../types/interfaces/Cloneable";
+import { UPLCConst } from "../../UPLC/UPLCTerms/UPLCConst";
+import { PDataRepresentable } from "../PType/PDataRepresentable";
 import { pConstrToData, peqInt, pfstPair, pif, pnilData, punConstrData } from "../stdlib/Builtins";
-import TermBool, { addPBoolMethods } from "../stdlib/UtilityTerms/TermBool";
+import { TermBool, addPBoolMethods } from "../stdlib/UtilityTerms/TermBool";
 import { phoist, plam } from "../Syntax/syntax";
-import Type, { bool, data, TermType } from "../Term/Type/base";
-import PData from "./PData/PData";
-import PLam from "./PFn/PLam";
+import { Type, bool, data, TermType } from "../Term/Type/base";
+import { PData } from "./PData/PData";
+import { PLam } from "./PFn/PLam";
 import { pInt } from "./PInt";
 
 // circular ref
@@ -20,7 +20,7 @@ import { pInt } from "./PInt";
 // })
 
 //@ts-ignore
-export default class PBool extends PDataRepresentable
+export class PBool extends PDataRepresentable
     implements Cloneable< PBool >
 {
     private _pbool: boolean

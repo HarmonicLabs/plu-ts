@@ -1,6 +1,6 @@
 import { CanBeData } from "../../../../types/Data/CanBeData";
-import Script from "../../../script/Script";
-import UTxO, { IUTxO }from "../../body/output/UTxO";
+import { Script } from "../../../script/Script";
+import { UTxO } from "../../body/output/UTxO";
 
 export interface ITxBuildInput {
     utxo: UTxO,
@@ -15,5 +15,3 @@ export interface ITxBuildInput {
         redeemer: CanBeData
     }
 }
-
-export default ITxBuildInput

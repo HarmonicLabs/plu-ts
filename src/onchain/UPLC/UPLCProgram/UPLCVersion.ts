@@ -1,6 +1,6 @@
 import { CanBeUInteger, forceUInteger, UInteger } from "../../../types/ints/Integer";
 
-export default class UPLCVersion
+export class UPLCVersion
 {
     private _major: UInteger
     private _minor: UInteger

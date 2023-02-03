@@ -1,15 +1,16 @@
-import { por, pand, pstrictOr, pstrictAnd } from "../Builtins";
 import ObjectUtils from "../../../../utils/ObjectUtils";
-import PBool, { pBool } from "../../PTypes/PBool";
-import Term from "../../Term";
-import Delay from "../../../UPLC/UPLCTerms/Delay";
-import PType from "../../PType";
-import PDelayed from "../../PTypes/PDelayed";
+
+import { por, pand, pstrictOr, pstrictAnd } from "../Builtins";
+import { PBool, pBool } from "../../PTypes/PBool";
+import { Term } from "../../Term";
+import { Delay } from "../../../UPLC/UPLCTerms/Delay";
+import { PType } from "../../PType";
+import { PDelayed } from "../../PTypes/PDelayed";
 import { delayed } from "../../Term/Type/base";
 import type { PappArg } from "../../Syntax/pappArg";
 import { TermFn } from "../../PTypes/PFn/PFn";
 
-type TermBool = Term<PBool> & {
+export type TermBool = Term<PBool> & {
 
     readonly orTerm:            TermFn<[ PDelayed<PBool> ], PBool>
     readonly or:                ( other: PappArg<PBool> ) => TermBool
@@ -24,8 +25,6 @@ type TermBool = Term<PBool> & {
     readonly strictAnd:         ( other: PappArg<PBool> ) => TermBool
 
 }
-
-export default TermBool;
 
 // avoid circular dependency
 // is nothing fancy anyway

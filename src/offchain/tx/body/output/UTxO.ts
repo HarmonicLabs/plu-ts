@@ -1,21 +1,22 @@
-import Cbor from "../../../../cbor/Cbor";
-import CborObj from "../../../../cbor/CborObj";
-import CborString, { CanBeCborString, forceCborString } from "../../../../cbor/CborString";
-import { ToCbor } from "../../../../cbor/interfaces/CBORSerializable";
-import Data from "../../../../types/Data";
-import DataConstr from "../../../../types/Data/DataConstr";
-import ToData from "../../../../types/Data/toData/interface";
 import ObjectUtils from "../../../../utils/ObjectUtils";
-import ToJson from "../../../../utils/ts/ToJson";
-import TxOut, { ITxOut } from "./TxOut";
-import TxOutRef, { ITxOutRef } from "./TxOutRef";
+
+import { Cbor } from "../../../../cbor/Cbor";
+import { CborObj } from "../../../../cbor/CborObj";
+import { CborString, CanBeCborString, forceCborString } from "../../../../cbor/CborString";
+import { ToCbor } from "../../../../cbor/interfaces/CBORSerializable";
+import { Data } from "../../../../types/Data";
+import { DataConstr } from "../../../../types/Data/DataConstr";
+import { ToData } from "../../../../types/Data/toData/interface";
+import { ToJson } from "../../../../utils/ts/ToJson";
+import { TxOut, ITxOut } from "./TxOut";
+import { TxOutRef, ITxOutRef } from "./TxOutRef";
 
 export interface IUTxO {
     utxoRef: ITxOutRef,
     resolved: ITxOut
 }
 
-export default class UTxO
+export class UTxO
     implements IUTxO, ToData, ToJson, ToCbor
 {
     readonly utxoRef!: TxOutRef

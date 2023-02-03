@@ -1,9 +1,9 @@
 import { CanBeUInteger } from "../../../types/ints/Integer";
-import UPLCTerm from "../UPLCTerm";
-import UPLCVersion from "./UPLCVersion";
+import { UPLCTerm } from "../UPLCTerm";
+import { UPLCVersion } from "./UPLCVersion";
 
 
-export default class UPLCProgram
+export class UPLCProgram
 {
     private _version: UPLCVersion
     get version(): UPLCVersion { return this._version };

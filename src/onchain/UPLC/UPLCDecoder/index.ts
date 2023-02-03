@@ -37,7 +37,7 @@ function isSerializedScriptFormat( str: string ): str is SerializedScriptFormat
     );
 }
 
-export default class UPLCDecoder
+export class UPLCDecoder
 {
     private constructor() {}
 

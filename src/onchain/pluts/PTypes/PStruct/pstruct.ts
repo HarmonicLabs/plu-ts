@@ -1,24 +1,25 @@
-import DataConstr from "../../../../types/Data/DataConstr";
-import Pair from "../../../../types/structs/Pair";
 import JsRuntime from "../../../../utils/JsRuntime";
 import ObjectUtils from "../../../../utils/ObjectUtils";
-import HoistedUPLC from "../../../UPLC/UPLCTerms/HoistedUPLC";
-import UPLCConst from "../../../UPLC/UPLCTerms/UPLCConst";
-import Term from "../../Term";
-import Type, { AliasTermType, aliasType, ConstantableStructDefinition, ConstantableTermType, GenericStructDefinition, GenericStructType, int, PrimType, struct, StructCtorDef, StructDefinition, structType, StructType, tyVar } from "../../Term/Type/base";
+
+import { DataConstr } from "../../../../types/Data/DataConstr";
+import { Type, AliasTermType, aliasType, ConstantableStructDefinition, ConstantableTermType, GenericStructDefinition, GenericStructType, int, PrimType, struct, StructCtorDef, StructDefinition, structType, StructType, tyVar } from "../../Term/Type/base";
 import { typeExtends } from "../../Term/Type/extension";
 import { isAliasType, isConstantableStructDefinition, isStructType } from "../../Term/Type/kinds";
+import { TermFn } from "../PFn";
+import { ToPType } from "../../Term/Type/ts-pluts-conversion";
 import { structDefToString, termTypeToString } from "../../Term/Type/utils";
-import PData from "../PData/PData";
 import { getToDataForType } from "../PData/conversion/getToDataTermForType";
 import { pList } from "../PList";
 import { UtilityTermOf } from "../../stdlib/UtilityTerms/addUtilityForType";
-import Application from "../../../UPLC/UPLCTerms/Application";
-import Builtin from "../../../UPLC/UPLCTerms/Builtin";
-import punsafeConvertType from "../../Syntax/punsafeConvertType";
-import PDataRepresentable from "../../PType/PDataRepresentable";
-import { TermFn } from "../PFn";
-import { ToPType } from "../../Term/Type/ts-pluts-conversion";
+import { Pair } from "../../../../types/structs/Pair";
+import { HoistedUPLC } from "../../../UPLC/UPLCTerms/HoistedUPLC";
+import { UPLCConst } from "../../../UPLC/UPLCTerms/UPLCConst";
+import { Term } from "../../Term";
+import { Application } from "../../../UPLC/UPLCTerms/Application";
+import { PData } from "../PData/PData";
+import { Builtin } from "../../../UPLC/UPLCTerms/Builtin";
+import { punsafeConvertType } from "../../Syntax/punsafeConvertType";
+import { PDataRepresentable } from "../../PType/PDataRepresentable";
 
 /**
  * intermediate class useful to reconize structs form primitives
@@ -38,6 +39,9 @@ export type StructInstance<SCtorDef extends StructCtorDef> = {
 export type PStruct<SDef extends ConstantableStructDefinition> = {
     new(): _PStruct
 
+    /**
+     * @deprecated
+     */
     readonly termType: [ typeof structType, SDef ];
     readonly type: [ typeof structType, SDef ];
 
@@ -168,7 +172,7 @@ function isStructInstanceOfDefinition<SCtorDef extends StructCtorDef>
 }
 
 
-export default function pstruct<StructDef extends ConstantableStructDefinition>( def: StructDef ): PStruct<StructDef>
+export function pstruct<StructDef extends ConstantableStructDefinition>( def: StructDef ): PStruct<StructDef>
 {
     JsRuntime.assert(
         isConstantableStructDefinition( def ),
@@ -373,9 +377,9 @@ function replaceAliasesWith(
     }
 }
 
-function typeofGenericStruct(
-    genStruct: ( ...tyArgs: [ ConstantableTermType, ...ConstantableTermType[] ] )
-        => ConstantableStructDefinition
+export function typeofGenericStruct(
+    genStruct: ( ...tyArgs: ConstantableTermType[] )
+        => PStruct<ConstantableStructDefinition>
 ): GenericStructType
 {
     const nArgs = genStruct.length;
@@ -399,7 +403,7 @@ function typeofGenericStruct(
         genStruct(
             //@ts-ignore
             ...aliases
-        )
+        ).type[1]
     );
 
     replaceAliasesWith(
@@ -413,7 +417,11 @@ function typeofGenericStruct(
 
 /**
  * @param getDescriptor 
- * @returns 
+ * @returns
+ * 
+ * @deprecated
+ * 
+ * use a function that reutrns a struct based on the specfied types instead
  */
 export function pgenericStruct<ConstStructDef extends ConstantableStructDefinition, TypeArgs extends [ ConstantableTermType, ...ConstantableTermType[] ]>
     (

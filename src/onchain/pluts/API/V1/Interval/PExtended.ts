@@ -1,29 +1,18 @@
 import ObjectUtils from "../../../../../utils/ObjectUtils";
-import { pgenericStruct, PStruct } from "../../../PTypes/PStruct/pstruct";
-import { ConstantableStructType, ConstantableTermType } from "../../../Term/Type/base";
-import { termTypeToString } from "../../../Term/Type/utils";
+import { pstruct, typeofGenericStruct } from "../../../PTypes/PStruct/pstruct";
+import { ConstantableTermType } from "../../../Term/Type/base";
 
-export type PExtendedT<T extends ConstantableTermType> = PStruct<{
-    PNegInf: {},
-    PFinite: { _0: T },
-    PPosInf: {}
-}> & ConstantableStructType
-
-const _PExtended = pgenericStruct( a => {
-    return {
+function _PExtended<T extends ConstantableTermType>( a: T )
+{
+    return pstruct({
         PNegInf: {},
         PFinite: { _0: a },
         PPosInf: {}
-    }
-});
+    });
+};
 
-function PExtended<T extends ConstantableTermType>( tyArg: T ): PExtendedT<T>
-{
-    return _PExtended( tyArg ) as any;
-}
-
-export default ObjectUtils.defineReadOnlyProperty(
-    PExtended,
+export const PExtended =  ObjectUtils.defineReadOnlyProperty(
+    _PExtended,
     "type",
-    _PExtended.type
+    typeofGenericStruct( _PExtended as any )
 );

@@ -1,23 +1,23 @@
-import Cbor from "../../cbor/Cbor";
-import CborObj from "../../cbor/CborObj";
-import CborArray from "../../cbor/CborObj/CborArray";
-import CborBytes from "../../cbor/CborObj/CborBytes";
-import CborUInt from "../../cbor/CborObj/CborUInt";
-import CborString, { CanBeCborString, forceCborString } from "../../cbor/CborString";
-import { ToCbor } from "../../cbor/interfaces/CBORSerializable";
-import BasePlutsError from "../../errors/BasePlutsError";
-import InvalidCborFormatError from "../../errors/InvalidCborFormatError";
-import Data from "../../types/Data";
-import DataConstr from "../../types/Data/DataConstr";
-import DataI from "../../types/Data/DataI";
-import { ToData } from "../../types/Data/toData/interface";
-import Cloneable from "../../types/interfaces/Cloneable";
-import { CanBeUInteger, canBeUInteger, forceBigUInt } from "../../types/ints/Integer";
-import JsRuntime from "../../utils/JsRuntime";
 import ObjectUtils from "../../utils/ObjectUtils";
-import ToJson from "../../utils/ts/ToJson";
-import Hash28 from "../hashes/Hash28/Hash28";
-import PaymentCredentials from "./PaymentCredentials";
+import JsRuntime from "../../utils/JsRuntime";
+
+import { ToData } from "../../types/Data/toData/interface";
+import { ToJson } from "../../utils/ts/ToJson";
+import { ToCbor } from "../../cbor/interfaces/CBORSerializable";
+import { CanBeUInteger, canBeUInteger, forceBigUInt } from "../../types/ints/Integer";
+import { Cbor } from "../../cbor/Cbor";
+import { CborObj } from "../../cbor/CborObj";
+import { CborArray } from "../../cbor/CborObj/CborArray";
+import { CborBytes } from "../../cbor/CborObj/CborBytes";
+import { CborUInt } from "../../cbor/CborObj/CborUInt";
+import { CborString, CanBeCborString, forceCborString } from "../../cbor/CborString";
+import { BasePlutsError } from "../../errors/BasePlutsError";
+import { InvalidCborFormatError } from "../../errors/InvalidCborFormatError";
+import { DataConstr } from "../../types/Data/DataConstr";
+import { DataI } from "../../types/Data/DataI";
+import { Cloneable } from "../../types/interfaces/Cloneable";
+import { Hash28 } from "../hashes/Hash28/Hash28";
+import { PaymentCredentials } from "./PaymentCredentials";
 
 export class StakeKeyHash extends Hash28 {}
 
@@ -31,7 +31,7 @@ export type StakeHash<T extends StakeCredentialsType> =
     T extends "pointer" ? [ CanBeUInteger, CanBeUInteger, CanBeUInteger ] :
     never;
 
-export default class StakeCredentials<T extends StakeCredentialsType = StakeCredentialsType>
+export class StakeCredentials<T extends StakeCredentialsType = StakeCredentialsType>
     implements ToCbor, ToData, Cloneable<StakeCredentials<T>>, ToJson
 {
     readonly type!: T;

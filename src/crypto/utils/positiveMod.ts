@@ -1,5 +1,5 @@
 
-export default function positiveMod(x: bigint, n: bigint): bigint
+export function positiveMod(x: bigint, n: bigint): bigint
 {
     const _n = BigInt( n );
 	const res = BigInt( x ) % _n;

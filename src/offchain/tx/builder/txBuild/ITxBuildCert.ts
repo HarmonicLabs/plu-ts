@@ -1,7 +1,7 @@
-import Script from "../../../script/Script";
-import TxOutRef from "../../body/output/UTxO";
+import type { Script } from "../../../script/Script";
+import type { UTxO } from "../../body/output/UTxO";
 import type { AnyCertificate } from "../../../ledger/certs/Certificate";
-import { CanBeData } from "../../../../types/Data/CanBeData";
+import type { CanBeData } from "../../../../types/Data/CanBeData";
 
 export interface ITxBuildCert {
     cert: AnyCertificate
@@ -9,9 +9,7 @@ export interface ITxBuildCert {
         inline: Script
         redeemer: CanBeData
     } | {
-        ref: TxOutRef
+        ref: UTxO
         redeemer: CanBeData
     }
 };
-
-export default ITxBuildCert;

@@ -1,16 +1,16 @@
-import CborObj from "../../../cbor/CborObj";
-import CborArray from "../../../cbor/CborObj/CborArray";
-import CborMap, { CborMapEntry } from "../../../cbor/CborObj/CborMap";
-import CborUInt from "../../../cbor/CborObj/CborUInt";
-import CborPositiveRational from "../../../cbor/extra/CborRational";
-import InvalidCborFormatError from "../../../errors/InvalidCborFormatError";
-import ExBudget from "../../../onchain/CEK/Machine/ExBudget";
-import { ppairData } from "../../../onchain/pluts";
-import { canBeUInteger, CanBeUInteger, forceUInteger } from "../../../types/ints/Integer";
 import ObjectUtils from "../../../utils/ObjectUtils";
-import type Coin from "../Coin";
-import CostModels, { costModelsFromCborObj, costModelsToCborObj, costModelsToJson, costModelsToLanguageViewCbor, defaultV1Costs, defaultV2Costs, isCostModels } from "../CostModels";
-import type Epoch from "../Epoch";
+
+import { CborObj } from "../../../cbor/CborObj";
+import { CborArray } from "../../../cbor/CborObj/CborArray";
+import { CborMap, CborMapEntry } from "../../../cbor/CborObj/CborMap";
+import { CborUInt } from "../../../cbor/CborObj/CborUInt";
+import { CborPositiveRational } from "../../../cbor/extra/CborRational";
+import { InvalidCborFormatError } from "../../../errors/InvalidCborFormatError";
+import { ExBudget } from "../../../onchain/CEK/Machine/ExBudget";
+import { canBeUInteger, CanBeUInteger, forceUInteger } from "../../../types/ints/Integer";
+import { CostModels, costModelsFromCborObj, costModelsToCborObj, costModelsToJson, defaultV1Costs, defaultV2Costs, isCostModels } from "../CostModels";
+import type { Epoch } from "../Epoch";
+import type { Coin } from "../Coin";
 
 export interface ProtocolParamters {
     minFeeCoefficient: CanBeUInteger,
@@ -39,8 +39,6 @@ export interface ProtocolParamters {
     collateralPercentage: CanBeUInteger,
     maxCollateralIns: CanBeUInteger
 }
-
-export default ProtocolParamters;
 
 export function isProtocolParameters( something: any ): something is ProtocolParamters
 {

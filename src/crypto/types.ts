@@ -1,5 +1,4 @@
-import BasePlutsError from "../errors/BasePlutsError";
-import BitStream from "../types/bits/BitStream";
+import { BasePlutsError } from "../errors/BasePlutsError";
 import { Buffer } from "buffer";
 import JsRuntime from "../utils/JsRuntime";
 
@@ -117,7 +116,7 @@ export function buffToUint5Arr(bytes: Buffer | byte[]): uint5[]
 
     let bits: string | ('0'|'1')[] =
         Buffer.isBuffer( bytes ) ?
-            new BitStream( bytes ).toBinStr().asString :
+            Array.from( bytes ).reduce( (acc, n) => acc + n.toString(2).padStart( 8 , '0' ), "" ) :
             (isByteArr( bytes ) ?
                 byteArrToBin( bytes ) :
                 undefined as any

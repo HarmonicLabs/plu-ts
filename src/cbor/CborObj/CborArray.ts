@@ -1,7 +1,7 @@
-import CborObj, { cborObjFromRaw, isCborObj, isRawCborObj, RawCborObj } from ".";
+import { CborObj, cborObjFromRaw, isCborObj, isRawCborObj, RawCborObj } from ".";
 import JsRuntime from "../../utils/JsRuntime";
 import ObjectUtils from "../../utils/ObjectUtils";
-import ToRawObj from "./interfaces/ToRawObj";
+import { ToRawObj } from "./interfaces/ToRawObj";
 
 export interface CborArrayOptions {
     indefinite?: boolean
@@ -30,7 +30,7 @@ const defaultOpts: Required<CborArrayOptions> = {
     indefinite: false
 }
 
-export default class CborArray
+export class CborArray
     implements ToRawObj
 {
     private _array : CborObj[];

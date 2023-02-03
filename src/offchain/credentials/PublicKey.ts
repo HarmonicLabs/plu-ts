@@ -1,8 +1,8 @@
-import CborObj from "../../cbor/CborObj";
+import { CborObj } from "../../cbor/CborObj";
 import { CanBeCborString } from "../../cbor/CborString";
-import Hash32 from "../hashes/Hash32/Hash32";
+import { Hash32 } from "../hashes/Hash32/Hash32";
 
-export default class PublicKey extends Hash32
+export class PublicKey extends Hash32
 {
     static fromCbor(cStr: CanBeCborString)
     {

@@ -1,10 +1,10 @@
 import JsRuntime from "../../utils/JsRuntime";
-import ToJson from "../../utils/ts/ToJson";
-import ByteString from "../HexString/ByteString";
-import Cloneable from "../interfaces/Cloneable";
+import { ToJson } from "../../utils/ts/ToJson";
+import { ByteString } from "../HexString/ByteString";
+import { Cloneable } from "../interfaces/Cloneable";
 
 
-export default class DataB
+export class DataB
     implements Cloneable<DataB>, ToJson
 {
     private _bytes: ByteString

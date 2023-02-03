@@ -1,7 +1,6 @@
-import Cloneable from "../../../types/interfaces/Cloneable";
-import CEKEnv from "../CEKEnv";
+import { Cloneable } from "../../../types/interfaces/Cloneable";
 
-export default class ForceFrame
+export class ForceFrame
     implements Cloneable<ForceFrame>
 {
     clone(): ForceFrame

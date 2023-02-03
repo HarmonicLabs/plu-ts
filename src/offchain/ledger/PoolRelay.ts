@@ -1,14 +1,15 @@
-import CborObj from "../../cbor/CborObj";
-import CborArray from "../../cbor/CborObj/CborArray";
-import CborBytes from "../../cbor/CborObj/CborBytes";
-import CborSimple from "../../cbor/CborObj/CborSimple";
-import CborText from "../../cbor/CborObj/CborText";
-import CborUInt from "../../cbor/CborObj/CborUInt";
-import BasePlutsError from "../../errors/BasePlutsError";
-import InvalidCborFormatError from "../../errors/InvalidCborFormatError";
-import { canBeUInteger, CanBeUInteger, forceBigUInt, forceUInteger } from "../../types/ints/Integer";
 import JsRuntime from "../../utils/JsRuntime";
 import ObjectUtils from "../../utils/ObjectUtils";
+
+import { CborObj } from "../../cbor/CborObj";
+import { CborArray } from "../../cbor/CborObj/CborArray";
+import { CborBytes } from "../../cbor/CborObj/CborBytes";
+import { CborSimple } from "../../cbor/CborObj/CborSimple";
+import { CborText } from "../../cbor/CborObj/CborText";
+import { CborUInt } from "../../cbor/CborObj/CborUInt";
+import { BasePlutsError } from "../../errors/BasePlutsError";
+import { InvalidCborFormatError } from "../../errors/InvalidCborFormatError";
+import { canBeUInteger, CanBeUInteger, forceBigUInt, forceUInteger } from "../../types/ints/Integer";
 import { Buffer } from "buffer";
 
 export type IpPoolRelay = ({
@@ -35,8 +36,6 @@ export interface MultiHostPoolRelay {
 }
 
 export type PoolRelay = IpPoolRelay | DnsPoolRelay | MultiHostPoolRelay;
-
-export default PoolRelay;
 
 export function poolRelayToJson( relay: PoolRelay )
 {

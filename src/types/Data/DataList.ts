@@ -1,10 +1,11 @@
-import Data, { isData } from ".";
 import JsRuntime from "../../utils/JsRuntime";
-import ToJson from "../../utils/ts/ToJson";
-import Cloneable from "../interfaces/Cloneable";
+
+import { Data, isData } from ".";
+import { ToJson } from "../../utils/ts/ToJson";
+import { Cloneable } from "../interfaces/Cloneable";
 
 
-export default class DataList
+export class DataList
     implements Cloneable<DataList>, ToJson
 {
     private _list: Data[]

@@ -1,9 +1,9 @@
-import Cloneable from "../../../types/interfaces/Cloneable";
 import ObjectUtils from "../../../utils/ObjectUtils";
-import UPLCTerm from "../../UPLC/UPLCTerm";
-import PartialBuiltin from "../BnCEK/PartialBuiltin";
+import { Cloneable } from "../../../types/interfaces/Cloneable";
+import { UPLCTerm } from "../../UPLC/UPLCTerm";
+import { PartialBuiltin } from "../BnCEK/PartialBuiltin";
 
-export default class LApp
+export class LApp
     implements Cloneable<LApp>
 {
     readonly func!: UPLCTerm;

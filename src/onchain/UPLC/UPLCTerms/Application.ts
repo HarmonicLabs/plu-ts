@@ -23,7 +23,7 @@ export function isUPLCApplicationBody( uplc: UPLCTerm ): uplc is UPLCApplication
     );
 }
 
-export default class Application
+export class Application
     implements Cloneable<Application>
 {
     static get UPLCTag(): BitStream

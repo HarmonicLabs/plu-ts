@@ -1,16 +1,17 @@
-import { Buffer } from "buffer";
-import { ScriptJsonFormat } from "../../onchain/pluts/Script";
 import JsRuntime from "../../utils/JsRuntime";
 import ObjectUtils from "../../utils/ObjectUtils";
-import NativeScript, { nativeScriptFromCbor, nativeScriptToCbor } from "./NativeScript";
-import Cloneable from "../../types/interfaces/Cloneable";
 import BufferUtils from "../../utils/BufferUtils";
-import Hash28 from "../hashes/Hash28/Hash28";
+
+import { Buffer } from "buffer";
 import { blake2b_224, byte } from "../../crypto";
-import Cbor from "../../cbor/Cbor";
-import CborBytes from "../../cbor/CborObj/CborBytes";
-import ToJson from "../../utils/ts/ToJson";
-import CborString from "../../cbor/CborString";
+import { ScriptJsonFormat } from "../../onchain/pluts/Script";
+import { NativeScript, nativeScriptFromCbor, nativeScriptToCbor } from "./NativeScript";
+import { Cloneable } from "../../types/interfaces/Cloneable";
+import { Hash28 } from "../hashes/Hash28/Hash28";
+import { Cbor } from "../../cbor/Cbor";
+import { CborBytes } from "../../cbor/CborObj/CborBytes";
+import { ToJson } from "../../utils/ts/ToJson";
+import { CborString } from "../../cbor/CborString";
 
 export const enum ScriptType {
     NativeScript = "NativeScript",
@@ -23,7 +24,7 @@ function parseCborBytes( cbor: Buffer ): Buffer
     return ( Cbor.parse( cbor ) as CborBytes ).buffer
 }
 
-export default class Script<T extends ScriptType = ScriptType>
+export class Script<T extends ScriptType = ScriptType>
     implements Cloneable<Script<T>>, ToJson
 {
     readonly type!: T;

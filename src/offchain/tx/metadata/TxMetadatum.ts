@@ -22,8 +22,6 @@ export type TxMetadatum
     | TxMetadatumBytes
     | TxMetadatumText;
 
-export default TxMetadatum;
-
 export function txMetadatumFromCborObj( cObj: CborObj ): TxMetadatum
 {
     if( cObj instanceof CborMap )

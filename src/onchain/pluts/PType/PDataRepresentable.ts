@@ -1,4 +1,4 @@
-import PType from ".";
+import { PType } from ".";
 import type { PData, Term } from "..";
 import type { TermFn } from "../PTypes";
 
@@ -8,7 +8,7 @@ import JsRuntime from "../../../utils/JsRuntime";
 /**
  * @abstract
  */
-export default class PDataRepresentable extends PType
+export class PDataRepresentable extends PType
 {
     constructor() { super(); }
 

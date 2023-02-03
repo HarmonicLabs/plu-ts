@@ -1,19 +1,17 @@
-import BasePlutsError from "../../errors/BasePlutsError";
-import DataB from "./DataB";
-import DataConstr from "./DataConstr";
-import DataI from "./DataI";
-import DataList from "./DataList";
-import DataMap from "./DataMap";
+import { BasePlutsError } from "../../errors/BasePlutsError";
+import { DataB } from "./DataB";
+import { DataConstr } from "./DataConstr";
+import { DataI } from "./DataI";
+import { DataList } from "./DataList";
+import { DataMap } from "./DataMap";
 
-type Data 
+export type Data 
     = DataConstr
 //    | DataPair<Data,Data>
-    | DataMap<Data,Data>
+    | DataMap<any, any> // <Data, Data> but without circular def
     | DataList
     | DataI
     | DataB;
-
-export default Data;
 
 function isSomething( something: any ): boolean
 {

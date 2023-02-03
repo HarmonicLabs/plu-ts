@@ -1,36 +1,37 @@
-import { RestrictedStructInstance, PStruct } from "./pstruct";
-import BasePlutsError from "../../../../errors/BasePlutsError";
 import JsRuntime from "../../../../utils/JsRuntime";
 import ObjectUtils from "../../../../utils/ObjectUtils";
-import UPLCTerm from "../../../UPLC/UPLCTerm";
-import Application from "../../../UPLC/UPLCTerms/Application";
-import Builtin from "../../../UPLC/UPLCTerms/Builtin";
-import Delay from "../../../UPLC/UPLCTerms/Delay";
-import ErrorUPLC from "../../../UPLC/UPLCTerms/ErrorUPLC";
-import Force from "../../../UPLC/UPLCTerms/Force";
-import HoistedUPLC from "../../../UPLC/UPLCTerms/HoistedUPLC";
-import Lambda from "../../../UPLC/UPLCTerms/Lambda";
-import UPLCConst from "../../../UPLC/UPLCTerms/UPLCConst";
-import UPLCVar from "../../../UPLC/UPLCTerms/UPLCVar";
+
+import { RestrictedStructInstance, PStruct } from "./pstruct";
 import { pindexList } from "../../stdlib/List/methods";
-import TermList from "../../stdlib/UtilityTerms/TermList";
-import PType from "../../PType";
-import { plet, papp, plam } from "../../Syntax/syntax";
-import Term from "../../Term";
 import { ConstantableStructCtorDef, ConstantableStructDefinition, data, fn, lam, list, StructCtorDef, TermType, tyVar } from "../../Term/Type/base";
-import { isConstantableStructDefinition, isLambdaType } from "../../Term/Type/kinds";
-import { termTypeToString } from "../../Term/Type/utils";
-import PData from "../PData/PData";
-import PLam from "../PFn/PLam";
-import PInt, { pInt } from "../PInt";
-import PList from "../PList";
-import matchSingleCtorStruct from "./matchSingleCtorStruct";
-import capitalize from "../../../../utils/ts/capitalize";
-import DataI from "../../../../types/Data/DataI";
-import { constT } from "../../../UPLC/UPLCTerms/UPLCConst/ConstType";
-import addUtilityForType from "../../stdlib/UtilityTerms/addUtilityForType";
-import punsafeConvertType from "../../Syntax/punsafeConvertType";
 import { getFromDataForType } from "../PData/conversion/getFromDataTermForType";
+import { constT } from "../../../UPLC/UPLCTerms/UPLCConst/ConstType";
+import { isConstantableStructDefinition, isLambdaType } from "../../Term/Type/kinds";
+import { PInt, pInt } from "../PInt";
+import { plet, papp, plam } from "../../Syntax/syntax";
+import { termTypeToString } from "../../Term/Type/utils";
+import { BasePlutsError } from "../../../../errors/BasePlutsError";
+import { UPLCTerm } from "../../../UPLC/UPLCTerm";
+import { Application } from "../../../UPLC/UPLCTerms/Application";
+import { Builtin } from "../../../UPLC/UPLCTerms/Builtin";
+import { Delay } from "../../../UPLC/UPLCTerms/Delay";
+import { ErrorUPLC } from "../../../UPLC/UPLCTerms/ErrorUPLC";
+import { Force } from "../../../UPLC/UPLCTerms/Force";
+import { HoistedUPLC } from "../../../UPLC/UPLCTerms/HoistedUPLC";
+import { Lambda } from "../../../UPLC/UPLCTerms/Lambda";
+import { UPLCConst } from "../../../UPLC/UPLCTerms/UPLCConst";
+import { UPLCVar } from "../../../UPLC/UPLCTerms/UPLCVar";
+import { TermList } from "../../stdlib/UtilityTerms/TermList";
+import { PType } from "../../PType";
+import { Term } from "../../Term";
+import { PData } from "../PData/PData";
+import { PLam } from "../PFn/PLam";
+import { PList } from "../PList";
+import { matchSingleCtorStruct } from "./matchSingleCtorStruct";
+import { capitalize } from "../../../../utils/ts/capitalize";
+import { DataI } from "../../../../types/Data/DataI";
+import { addUtilityForType } from "../../stdlib/UtilityTerms/addUtilityForType";
+import { punsafeConvertType } from "../../Syntax/punsafeConvertType";
 
 
 export type RawFields<CtorDef extends ConstantableStructCtorDef> = 
@@ -114,7 +115,10 @@ function defineExtract<CtorDef extends ConstantableStructCtorDef>
 
                     if( fieldsIdxs.length === 0 ) return expr({} as any);
 
-                    return plet( pindexList( data ).$( _fieldsList ) ).in( elemAt =>
+                    return plet(
+                        // @ts-ignore Type instantiation is excessively deep and possibly infinite.
+                        pindexList( data )
+                        .$( _fieldsList ) ).in( elemAt =>
                         getExtractedFieldsExpr(
                             elemAt,
                             ctorDef,
@@ -370,7 +374,7 @@ function hoistedMatchCtors<SDef extends ConstantableStructDefinition>(
     return result;
 }
 
-export default function pmatch<SDef extends ConstantableStructDefinition>( struct: Term<PStruct<SDef>> ): PMatchOptions<SDef>
+export function pmatch<SDef extends ConstantableStructDefinition>( struct: Term<PStruct<SDef>> ): PMatchOptions<SDef>
 {
     const sDef = struct.type[1] as ConstantableStructDefinition;
     if( !isConstantableStructDefinition( sDef ) )

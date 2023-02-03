@@ -1,5 +1,5 @@
-import BasePlutsError from "../../errors/BasePlutsError";
-import BitStream from "../../types/bits/BitStream";
+import { BasePlutsError } from "../../errors/BasePlutsError";
+import { BitStream } from "../../types/bits/BitStream";
 import { buffToUint5Arr } from "../types";
 
 export const rfc4648_ALPHABET = Object.freeze([

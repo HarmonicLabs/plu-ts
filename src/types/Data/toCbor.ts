@@ -1,21 +1,21 @@
-import Cbor from "../../cbor/Cbor";
-import CborObj from "../../cbor/CborObj";
-import CborString from "../../cbor/CborString";
 import JsRuntime from "../../utils/JsRuntime";
 
-import Data, { isData } from ".";
-import DataConstr, { constrNumberToCborTag } from "./DataConstr";
-import CborTag from "../../cbor/CborObj/CborTag";
-import CborArray from "../../cbor/CborObj/CborArray";
-import DataMap from "./DataMap";
-import CborMap from "../../cbor/CborObj/CborMap";
-import DataList from "./DataList";
-import DataI from "./DataI";
-import CborUInt from "../../cbor/CborObj/CborUInt";
-import CborNegInt from "../../cbor/CborObj/CborNegInt";
-import CborBytes from "../../cbor/CborObj/CborBytes";
-import DataB from "./DataB";
-import BasePlutsError from "../../errors/BasePlutsError";
+import { Cbor } from "../../cbor/Cbor";
+import { CborObj } from "../../cbor/CborObj";
+import { CborString } from "../../cbor/CborString";
+import { Data, isData } from ".";
+import { DataConstr, constrNumberToCborTag } from "./DataConstr";
+import { CborTag } from "../../cbor/CborObj/CborTag";
+import { CborArray } from "../../cbor/CborObj/CborArray";
+import { DataMap } from "./DataMap";
+import { CborMap } from "../../cbor/CborObj/CborMap";
+import { DataList } from "./DataList";
+import { DataI } from "./DataI";
+import { CborUInt } from "../../cbor/CborObj/CborUInt";
+import { CborNegInt } from "../../cbor/CborObj/CborNegInt";
+import { CborBytes } from "../../cbor/CborObj/CborBytes";
+import { DataB } from "./DataB";
+import { BasePlutsError } from "../../errors/BasePlutsError";
 
 
 export function dataToCborObj( data: Data ): CborObj 
@@ -97,7 +97,7 @@ export function dataToCborObj( data: Data ): CborObj
     );
 }
 
-export default function dataToCbor( data: Data ): CborString
+export function dataToCbor( data: Data ): CborString
 {
     return Cbor.encode( dataToCborObj( data ) );
 }

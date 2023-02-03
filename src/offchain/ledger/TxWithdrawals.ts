@@ -1,25 +1,25 @@
-import { canBeUInteger, forceBigUInt, forceUInteger, UInteger } from "../../types/ints/Integer";
-import JsRuntime from "../../utils/JsRuntime";
 import ObjectUtils from "../../utils/ObjectUtils";
-import Coin from "./Coin";
-import Hash28 from "../hashes/Hash28/Hash28";
-import { ToCbor } from "../../cbor/interfaces/CBORSerializable";
-import CborObj from "../../cbor/CborObj";
-import CborString, { CanBeCborString, forceCborString } from "../../cbor/CborString";
-import Cbor from "../../cbor/Cbor";
-import CborMap from "../../cbor/CborObj/CborMap";
-import CborUInt from "../../cbor/CborObj/CborUInt";
-import Value from "./Value/Value";
+import JsRuntime from "../../utils/JsRuntime";
+
 import { isHex } from "../../types/HexString";
-import ToData from "../../types/Data/toData/interface";
-import Data from "../../types/Data";
-import DataMap from "../../types/Data/DataMap";
-import DataPair from "../../types/Data/DataPair";
-import StakeCredentials, { StakeKeyHash } from "../credentials/StakeCredentials";
-import DataI from "../../types/Data/DataI";
-import DataConstr from "../../types/Data/DataConstr";
-import ToJson from "../../utils/ts/ToJson";
-import InvalidCborFormatError from "../../errors/InvalidCborFormatError";
+import { canBeUInteger, forceUInteger, UInteger } from "../../types/ints/Integer";
+import { ToCbor } from "../../cbor/interfaces/CBORSerializable";
+import { Coin } from "./Coin";
+import { Hash28 } from "../hashes/Hash28/Hash28";
+import { CborObj } from "../../cbor/CborObj";
+import { CborString, CanBeCborString, forceCborString } from "../../cbor/CborString";
+import { Cbor } from "../../cbor/Cbor";
+import { CborMap } from "../../cbor/CborObj/CborMap";
+import { CborUInt } from "../../cbor/CborObj/CborUInt";
+import { Value } from "./Value/Value";
+import { ToData } from "../../types/Data/toData/interface";
+import { DataMap } from "../../types/Data/DataMap";
+import { DataPair } from "../../types/Data/DataPair";
+import { StakeCredentials, StakeKeyHash } from "../credentials/StakeCredentials";
+import { DataI } from "../../types/Data/DataI";
+import { DataConstr } from "../../types/Data/DataConstr";
+import { ToJson } from "../../utils/ts/ToJson";
+import { InvalidCborFormatError } from "../../errors/InvalidCborFormatError";
 
 export type TxWithdrawalsEntryBigInt = {
     rewardAccount: Hash28,
@@ -57,7 +57,7 @@ export function isITxWithdrawals( stuff: any ): stuff is ITxWithdrawals
     return ks.every( k => k.length === (28*2) && isHex( k ) && canBeUInteger( stuff[k] ) )
 }
 
-export default class TxWithdrawals
+export class TxWithdrawals
     implements ToCbor, ToData, ToJson
 {
     readonly map!: TxWithdrawalsMapBigInt

@@ -1,5 +1,5 @@
 import { buffToByteArr, byte } from "./types";
-import rotr32 from "./utils/rotr32";
+import { rotr32 } from "./utils/rotr32";
 
 /**
      * Pad a bytearray so its size is a multiple of 64 (512 bits).
@@ -75,7 +75,7 @@ function sigma1(x: number ): number
  * @param {uint5[]} bytes - list of uint8 numbers
  * @returns {number[]} - list of uint8 numbers
  */
-export default function sha2_256(bytes: byte[] | Buffer ):  byte[]
+export function sha2_256(bytes: byte[] | Buffer ):  byte[]
 {
     if( Buffer.isBuffer( bytes ) )
     {

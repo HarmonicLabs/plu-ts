@@ -1,19 +1,20 @@
-import type Term from "../../Term";
-import type { AliasTermType, ConstantableTermType } from "../../Term/Type/base";
-import type PData from "../PData/PData";
-import type { ToPType } from "../../Term/Type/ts-pluts-conversion";
-
 import JsRuntime from "../../../../utils/JsRuntime";
 import ObjectUtils from "../../../../utils/ObjectUtils";
-import punsafeConvertType from "../../Syntax/punsafeConvertType";
-import Type, { aliasType } from "../../Term/Type/base";
+
+import type { Term } from "../../Term";
+import type { AliasTermType, ConstantableTermType } from "../../Term/Type/base";
+import type { PData } from "../PData/PData";
+import type { ToPType } from "../../Term/Type/ts-pluts-conversion";
+
+import { punsafeConvertType } from "../../Syntax/punsafeConvertType";
+import { Type, aliasType } from "../../Term/Type/base";
 import { typeExtends } from "../../Term/Type/extension";
 import { isAliasType, isConstantableTermType } from "../../Term/Type/kinds";
 import { cloneTermType } from "../../Term/Type/utils";
 import { getToDataForType } from "../PData/conversion/getToDataTermForType";
-import unwrapAlias from "./unwrapAlias";
+import { unwrapAlias } from "./unwrapAlias";
 import { getFromDataForType } from "../PData/conversion/getFromDataTermForType";
-import PDataRepresentable from "../../PType/PDataRepresentable";
+import { PDataRepresentable } from "../../PType/PDataRepresentable";
 
 
 /**
@@ -38,17 +39,20 @@ export type PAlias<T extends ConstantableTermType, AliasId extends symbol = symb
 {
     new(): PClass
 
-    termType: AliasTermType<AliasId,T>;
-    type: AliasTermType<AliasId,T>;
-    fromData: ( data: Term<PData> ) => Term<PClass>;
-    toData: ( data: Term<PClass> ) => Term<PData>;
+    /**
+     * @deprecated
+     */
+    readonly termType: AliasTermType<AliasId,T>;
+    readonly type: AliasTermType<AliasId,T>;
+    readonly fromData: ( data: Term<PData> ) => Term<PClass>;
+    readonly toData: ( data: Term<PClass> ) => Term<PData>;
 
-    from: ( toAlias: Term<ToPType<T>> ) => Term<PAlias<T, AliasId, PClass>>
+    readonly from: ( toAlias: Term<ToPType<T>> ) => Term<PAlias<T, AliasId, PClass>>
 
 } & PDataRepresentable
 
 
-export default function palias<T extends ConstantableTermType, SymId extends symbol >(
+export function palias<T extends ConstantableTermType, SymId extends symbol >(
     type: T,
     fromDataConstraint: (( term: Term<ToPType<T>> ) => Term<ToPType<T>>) | undefined = undefined,
     symId: SymId = Symbol() as SymId

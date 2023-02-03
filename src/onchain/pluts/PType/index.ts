@@ -1,13 +1,13 @@
 import type { TermType } from "../Term/Type/base";
-import type UPLCTerm from "../../UPLC/UPLCTerm";
+import type { UPLCTerm } from "../../UPLC/UPLCTerm";
 
-import Type from "../Term/Type/base";
+import { Type } from "../Term/Type/base";
 
 
 /**
  * @abstract
  */
-export default class PType
+export class PType
 {
     /**
      * probably never used;

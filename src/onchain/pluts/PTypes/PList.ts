@@ -1,25 +1,25 @@
-import Data, { isData } from "../../../types/Data";
 import JsRuntime from "../../../utils/JsRuntime";
-import UPLCConst from "../../UPLC/UPLCTerms/UPLCConst";
+import { Data, isData } from "../../../types/Data";
 import { constT } from "../../UPLC/UPLCTerms/UPLCConst/ConstType";
+import { Type, TermType, ConstantableTermType, list } from "../Term/Type/base";
 import { pListToData, pnilData, pnilPairData, pprepend, punListData } from "../stdlib/Builtins";
-import Term from "../Term";
-import Type, { TermType, ConstantableTermType, list } from "../Term/Type/base";
+import { TermList, addPListMethods } from "../stdlib/UtilityTerms/TermList";
+import { PType } from "..";
 import { termTyToConstTy } from "../Term/Type/constTypeConversion";
 import { typeExtends } from "../Term/Type/extension";
-import { isConstantableTermType } from "../Term/Type/kinds";
-import PData from "./PData/PData";
-import PDataList from "./PData/PDataList";
-import PLam from "./PFn/PLam";
-import punsafeConvertType from "../Syntax/punsafeConvertType";
-import { PappArg } from "../Syntax/pappArg";
-import TermList, { addPListMethods } from "../stdlib/UtilityTerms/TermList";
-import { PType } from "..";
-import PDataRepresentable from "../PType/PDataRepresentable";
 import { ToPType } from "../Term/Type/ts-pluts-conversion";
+import { isConstantableTermType } from "../Term/Type/kinds";
+import { PappArg } from "../Syntax/pappArg";
+import { UPLCConst } from "../../UPLC/UPLCTerms/UPLCConst";
+import { Term } from "../Term";
+import { PData } from "./PData/PData";
+import { PDataList } from "./PData/PDataList";
+import { PLam } from "./PFn/PLam";
+import { punsafeConvertType } from "../Syntax/punsafeConvertType";
+import { PDataRepresentable } from "../PType/PDataRepresentable";
 
-
-export default class PList<A extends PType> extends PDataRepresentable
+//@ts-ignoreType instantiation is excessively deep and possibly infinite
+export class PList<A extends PType> extends PDataRepresentable
 {
     private _elems: A[];
 
@@ -34,6 +34,7 @@ export default class PList<A extends PType> extends PDataRepresentable
     
     static override get fromDataTerm(): Term<PLam<PData, PList<PData>>> & { $: (input: PappArg<PData>) => Term<PList<PData>>; }
     {
+        //@ts-ignoreType instantiation is excessively deep and possibly infinite
         return punListData( Type.Data.Any );
     }
     /**
@@ -46,6 +47,7 @@ export default class PList<A extends PType> extends PDataRepresentable
 
     static override get toDataTerm():Term<PLam<any, PData>> & { $: (input: PappArg<any>) => Term<PData>; }
     {
+        //@ts-ignoreType instantiation is excessively deep and possibly infinite
         return pListToData( Type.Data.Any ) as any;
     }
     /**
@@ -165,7 +167,11 @@ export function pList<ElemsT extends ConstantableTermType>( elemsT: ElemsT ): ( 
 
         for( let i = elems.length - nConstantFromEnd - 1; i >= 0; i-- )
         {
-            plist = pprepend( elemsT ).$( elems[i] ).$( plist );
+
+            plist =
+                //@ts-ignoreType instantiation is excessively deep and possibly infinite
+                pprepend( elemsT )
+                .$( elems[i] ).$( plist );
         }
 
         return plist;

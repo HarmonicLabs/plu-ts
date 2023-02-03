@@ -1,6 +1,7 @@
-import { Buffer } from "buffer";
-import HexString from "../../types/HexString";
 import JsRuntime from "../JsRuntime";
+
+import { Buffer } from "buffer";
+import { HexString } from "../../types/HexString";
 
 export const enum Ord {
     LT = -1,

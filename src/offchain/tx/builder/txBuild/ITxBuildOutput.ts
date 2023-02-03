@@ -1,9 +1,9 @@
 import { CanBeData, canBeData, forceData } from "../../../../types/Data/CanBeData";
-import Hash32 from "../../../hashes/Hash32/Hash32";
-import Address from "../../../ledger/Address";
-import Value from "../../../ledger/Value/Value";
-import Script from "../../../script/Script";
-import TxOut from "../../body/output/TxOut";
+import { Hash32 } from "../../../hashes/Hash32/Hash32";
+import { Address } from "../../../ledger/Address";
+import { Value } from "../../../ledger/Value/Value";
+import { Script } from "../../../script/Script";
+import { TxOut } from "../../body/output/TxOut";
 
 export interface ITxBuildOutput {
     address: Address,
@@ -26,6 +26,3 @@ export function txBuildOutToTxOut( {
         refScript 
     })
 }
-
-
-export default ITxBuildOutput;

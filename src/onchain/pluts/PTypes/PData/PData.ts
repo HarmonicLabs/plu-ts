@@ -1,13 +1,12 @@
-import Data from "../../../../types/Data";
-import DataConstr from "../../../../types/Data/DataConstr";
-import UPLCConst from "../../../UPLC/UPLCTerms/UPLCConst";
-import PType from "../../PType";
-import Term from "../../Term";
-import Type from "../../Term/Type/base";
+import { Data } from "../../../../types/Data";
+import { DataConstr } from "../../../../types/Data/DataConstr";
+import { UPLCConst } from "../../../UPLC/UPLCTerms/UPLCConst";
+import { PType } from "../../PType";
+import { Term } from "../../Term";
+import { Type } from "../../Term/Type/base";
 import { PDataFromData } from "./conversion";
 
-
-export default class PData extends PType
+export class PData extends PType
 {
     protected _data: Data
     get data(): Data { return this._data; }

@@ -1,16 +1,14 @@
-import BitStream from "../../../types/bits/BitStream";
-import UPLCTerm, { isUPLCTerm } from "../UPLCTerm";
-import BinaryString from "../../../types/bits/BinaryString";
-import JsRuntime from "../../../utils/JsRuntime";
-import Delay from "./Delay";
-import UPLCVar from "./UPLCVar";
-import Lambda from "./Lambda";
-import Application from "./Application";
-import UPLCConst from "./UPLCConst";
-import ErrorUPLC from "./ErrorUPLC";
-import Builtin from "./Builtin";
-import { getNRequiredForces } from "./Builtin/UPLCBuiltinTag";
-import Cloneable from "../../../types/interfaces/Cloneable";
+import { UPLCTerm, isUPLCTerm } from "../UPLCTerm";
+import { BitStream } from "../../../types/bits/BitStream";
+import { BinaryString } from "../../../types/bits/BinaryString";
+import { Delay } from "./Delay";
+import { UPLCVar } from "./UPLCVar";
+import { Lambda } from "./Lambda";
+import { Application } from "./Application";
+import { UPLCConst } from "./UPLCConst";
+import { ErrorUPLC } from "./ErrorUPLC";
+import { Builtin } from "./Builtin";
+import { Cloneable } from "../../../types/interfaces/Cloneable";
 
 export type ForceableTerm
     = UPLCVar
@@ -41,7 +39,7 @@ export function isForceableTerm( term: UPLCTerm ): boolean
     return false;
 }
 
-export default class Force
+export class Force
     implements Cloneable<Force>
 {
     static get UPLCTag(): BitStream

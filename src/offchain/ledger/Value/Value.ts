@@ -1,24 +1,25 @@
-import { ByteString } from "../../..";
-import Cbor from "../../../cbor/Cbor";
-import CborObj from "../../../cbor/CborObj";
-import CborBytes from "../../../cbor/CborObj/CborBytes";
-import CborMap from "../../../cbor/CborObj/CborMap";
-import CborNegInt from "../../../cbor/CborObj/CborNegInt";
-import CborUInt from "../../../cbor/CborObj/CborUInt";
-import CborString, { CanBeCborString, forceCborString } from "../../../cbor/CborString";
-import { ToCbor } from "../../../cbor/interfaces/CBORSerializable";
-import InvalidCborFormatError from "../../../errors/InvalidCborFormatError";
-import DataB from "../../../types/Data/DataB";
-import DataI from "../../../types/Data/DataI";
-import DataMap from "../../../types/Data/DataMap";
-import DataPair from "../../../types/Data/DataPair";
-import { ToData } from "../../../types/Data/toData/interface";
-import Cloneable from "../../../types/interfaces/Cloneable";
 import BufferUtils, { Ord } from "../../../utils/BufferUtils";
 import JsRuntime from "../../../utils/JsRuntime";
 import ObjectUtils from "../../../utils/ObjectUtils";
-import ToJson from "../../../utils/ts/ToJson";
-import Hash32 from "../../hashes/Hash32/Hash32";
+
+import { ByteString } from "../../..";
+import { Cbor } from "../../../cbor/Cbor";
+import { CborObj } from "../../../cbor/CborObj";
+import { CborBytes } from "../../../cbor/CborObj/CborBytes";
+import { CborMap } from "../../../cbor/CborObj/CborMap";
+import { CborNegInt } from "../../../cbor/CborObj/CborNegInt";
+import { CborUInt } from "../../../cbor/CborObj/CborUInt";
+import { CborString, CanBeCborString, forceCborString } from "../../../cbor/CborString";
+import { ToCbor } from "../../../cbor/interfaces/CBORSerializable";
+import { InvalidCborFormatError } from "../../../errors/InvalidCborFormatError";
+import { DataB } from "../../../types/Data/DataB";
+import { DataI } from "../../../types/Data/DataI";
+import { DataMap } from "../../../types/Data/DataMap";
+import { DataPair } from "../../../types/Data/DataPair";
+import { ToData } from "../../../types/Data/toData/interface";
+import { Cloneable } from "../../../types/interfaces/Cloneable";
+import { ToJson } from "../../../utils/ts/ToJson";
+import { Hash32 } from "../../hashes/Hash32/Hash32";
 import { isIValue, addIValues, subIValues, IValue, cloneIValue, IValueToJson } from "./IValue";
 
 export class Value
@@ -220,5 +221,3 @@ export class Value
         return IValueToJson( this.map );
     }
 }
-
-export default Value;

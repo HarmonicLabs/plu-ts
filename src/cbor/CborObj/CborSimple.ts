@@ -1,5 +1,5 @@
 import JsRuntime from "../../utils/JsRuntime";
-import ToRawObj from "./interfaces/ToRawObj";
+import { ToRawObj } from "./interfaces/ToRawObj";
 
 type SimpleValue = boolean | undefined | null | number
 
@@ -34,7 +34,7 @@ export function isRawCborSimple( s: RawCborSimple ): boolean
     );
 }
 
-export default class CborSimple
+export class CborSimple
     implements ToRawObj
 {
     private _simple: SimpleValue;

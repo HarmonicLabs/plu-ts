@@ -1,3 +1,3 @@
-import Hash32 from "./Hash32";
+import { Hash32 } from "./Hash32";
 
-export default class ScriptDataHash extends Hash32 {};
+export class ScriptDataHash extends Hash32 {};

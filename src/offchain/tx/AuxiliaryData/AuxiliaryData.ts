@@ -1,23 +1,23 @@
-import Cbor from "../../../cbor/Cbor";
-import CborObj from "../../../cbor/CborObj";
-import CborArray from "../../../cbor/CborObj/CborArray";
-import CborBytes from "../../../cbor/CborObj/CborBytes";
-import CborMap, { CborMapEntry } from "../../../cbor/CborObj/CborMap";
-import CborTag from "../../../cbor/CborObj/CborTag";
-import CborUInt from "../../../cbor/CborObj/CborUInt";
-import CborString, { CanBeCborString, forceCborString } from "../../../cbor/CborString";
-import { ToCbor } from "../../../cbor/interfaces/CBORSerializable";
-import { blake2b_256 } from "../../../crypto";
-import InvalidCborFormatError from "../../../errors/InvalidCborFormatError";
-import { PlutusScriptVersion, ScriptJsonFormat } from "../../../onchain/pluts/Script";
 import JsRuntime from "../../../utils/JsRuntime";
 import ObjectUtils from "../../../utils/ObjectUtils";
-import ToJson from "../../../utils/ts/ToJson";
-import AuxiliaryDataHash from "../../hashes/Hash32/AuxiliaryDataHash";
-import Hash32 from "../../hashes/Hash32/Hash32";
-import NativeScript from "../../script/NativeScript";
-import Script, { ScriptType } from "../../script/Script";
+
 import { TxMetadata } from "../metadata/TxMetadata";
+import { CborString, CanBeCborString, forceCborString } from "../../../cbor/CborString";
+import { ToCbor } from "../../../cbor/interfaces/CBORSerializable";
+import { blake2b_256 } from "../../../crypto";
+import { PlutusScriptVersion, ScriptJsonFormat } from "../../../onchain/pluts/Script";
+import { Cbor } from "../../../cbor/Cbor";
+import { CborObj } from "../../../cbor/CborObj";
+import { CborArray } from "../../../cbor/CborObj/CborArray";
+import { CborBytes } from "../../../cbor/CborObj/CborBytes";
+import { CborMap, CborMapEntry } from "../../../cbor/CborObj/CborMap";
+import { CborTag } from "../../../cbor/CborObj/CborTag";
+import { CborUInt } from "../../../cbor/CborObj/CborUInt";
+import { InvalidCborFormatError } from "../../../errors/InvalidCborFormatError";
+import { ToJson } from "../../../utils/ts/ToJson";
+import { AuxiliaryDataHash } from "../../hashes/Hash32/AuxiliaryDataHash";
+import { NativeScript } from "../../script/NativeScript";
+import { Script, ScriptType } from "../../script/Script";
 
 export interface IAuxiliaryData {
     metadata?: TxMetadata;
@@ -33,7 +33,7 @@ function scriptArrToCbor( scripts: Script[] ): CborArray
     );
 }
 
-export default class AuxiliaryData
+export class AuxiliaryData
     implements IAuxiliaryData, ToCbor, ToJson
 {
     readonly metadata?: TxMetadata;

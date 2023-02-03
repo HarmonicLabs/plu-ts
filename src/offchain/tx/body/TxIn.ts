@@ -1,3 +1,3 @@
-import UTxO from "./output/UTxO";
+import { UTxO } from "./output/UTxO";
 
-export default class TxIn extends UTxO {}
+export class TxIn extends UTxO {}

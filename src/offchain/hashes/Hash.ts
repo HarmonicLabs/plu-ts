@@ -1,20 +1,21 @@
-import Cbor from "../../cbor/Cbor";
-import CborObj from "../../cbor/CborObj";
-import CborBytes from "../../cbor/CborObj/CborBytes";
-import CborString, { CanBeCborString, forceCborString } from "../../cbor/CborString";
-import { ToCbor } from "../../cbor/interfaces/CBORSerializable";
-import InvalidCborFormatError from "../../errors/InvalidCborFormatError";
-import Data from "../../types/Data";
-import DataB from "../../types/Data/DataB";
-import ToData from "../../types/Data/toData/interface";
-import HexString from "../../types/HexString";
-import Cloneable from "../../types/interfaces/Cloneable";
-import BufferUtils from "../../utils/BufferUtils";
-import JsRuntime from "../../utils/JsRuntime";
 import ObjectUtils from "../../utils/ObjectUtils";
+import JsRuntime from "../../utils/JsRuntime";
+import BufferUtils from "../../utils/BufferUtils";
+
+import { Cbor } from "../../cbor/Cbor";
+import { CborObj } from "../../cbor/CborObj";
+import { CborBytes } from "../../cbor/CborObj/CborBytes";
+import { CborString, CanBeCborString, forceCborString } from "../../cbor/CborString";
+import { ToCbor } from "../../cbor/interfaces/CBORSerializable";
+import { InvalidCborFormatError } from "../../errors/InvalidCborFormatError";
+import { Data } from "../../types/Data";
+import { DataB } from "../../types/Data/DataB";
+import { ToData } from "../../types/Data/toData/interface";
+import { HexString } from "../../types/HexString";
+import { Cloneable } from "../../types/interfaces/Cloneable";
 
 
-export default class Hash
+export class Hash
     implements Cloneable<Hash>, ToCbor, ToData
 {
     static isStrictInstance( bs: any ): bs is Hash

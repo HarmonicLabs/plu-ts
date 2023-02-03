@@ -1,18 +1,17 @@
-import CborObj, { isCborObj } from "../../../cbor/CborObj";
-import CborString from "../../../cbor/CborString";
-import BasePlutsError from "../../../errors/BasePlutsError";
-import { anyStruct, PData, PStruct, struct, typeExtends } from "../../../onchain";
-import Machine from "../../../onchain/CEK/Machine";
-import UPLCConst from "../../../onchain/UPLC/UPLCTerms/UPLCConst";
-import Term from "../../../onchain/pluts/Term";
-import Type from "../../../onchain/pluts/Term/Type/base";
-import Data, { isData } from "..";
-import dataFromCbor, { dataFromCborObj } from "../fromCbor";
 import JsRuntime from "../../../utils/JsRuntime";
 
-export type CanBeData = Data | Term<PData> | Term<PStruct<any>> | CborObj | CborString
+import { CborObj, isCborObj } from "../../../cbor/CborObj";
+import { CborString } from "../../../cbor/CborString";
+import { BasePlutsError } from "../../../errors/BasePlutsError";
+import { Data, isData } from "..";
+import { anyStruct, PData, PStruct, struct, typeExtends } from "../../../onchain";
+import { Machine } from "../../../onchain/CEK/Machine";
+import { UPLCConst } from "../../../onchain/UPLC/UPLCTerms/UPLCConst";
+import { Term } from "../../../onchain/pluts/Term";
+import { Type } from "../../../onchain/pluts/Term/Type/base";
+import { dataFromCbor, dataFromCborObj } from "../fromCbor";
 
-export default CanBeData;
+export type CanBeData = Data | Term<PData> | Term<PStruct<any>> | CborObj | CborString
 
 export function canBeData( something: any ): something is CanBeData
 {

@@ -1,13 +1,14 @@
-import Cbor from "../../cbor/Cbor";
-import CborObj from "../../cbor/CborObj";
-import CborArray from "../../cbor/CborObj/CborArray";
-import CborBytes from "../../cbor/CborObj/CborBytes";
-import CborUInt from "../../cbor/CborObj/CborUInt";
-import CborString from "../../cbor/CborString";
-import BasePlutsError from "../../errors/BasePlutsError";
-import { CanBeUInteger, forceUInteger } from "../../types/ints/Integer";
 import JsRuntime from "../../utils/JsRuntime";
-import Hash28 from "../hashes/Hash28/Hash28";
+
+import { CanBeUInteger, forceUInteger } from "../../types/ints/Integer";
+import { Cbor } from "../../cbor/Cbor";
+import { CborObj } from "../../cbor/CborObj";
+import { CborArray } from "../../cbor/CborObj/CborArray";
+import { CborBytes } from "../../cbor/CborObj/CborBytes";
+import { CborUInt } from "../../cbor/CborObj/CborUInt";
+import { CborString } from "../../cbor/CborString";
+import { BasePlutsError } from "../../errors/BasePlutsError";
+import { Hash28 } from "../hashes/Hash28/Hash28";
 
 export type NativeScript
     = ScriptSignature
@@ -16,8 +17,6 @@ export type NativeScript
     | ScriptAtLeast
     | ScriptAfter
     | ScriptBefore
-
-export default NativeScript;
 
 export interface ScriptSignature {
     type: "sig",

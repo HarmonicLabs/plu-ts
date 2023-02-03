@@ -1,8 +1,8 @@
-import Cloneable from "../../../types/interfaces/Cloneable";
-import UPLCTerm from "../../UPLC/UPLCTerm";
-import CEKEnv from "../CEKEnv";
+import { Cloneable } from "../../../types/interfaces/Cloneable";
+import { UPLCTerm } from "../../UPLC/UPLCTerm";
+import { CEKEnv } from "../CEKEnv";
 
-export default class DelayCEK
+export class DelayCEK
     implements Cloneable<DelayCEK>
 {
     public delayedTerm: UPLCTerm;

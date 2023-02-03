@@ -1,5 +1,5 @@
 import { Buffer } from "buffer";
-import HexStringError from "../../errors/PlutsTypeError/HexStringError";
+import {HexStringError} from "../../errors/PlutsTypeError/HexStringError";
 
 export type hex = string & { __hex_string__ : never };
 
@@ -20,7 +20,7 @@ export function isHex( anyString: string ): anyString is hex
     return true;
 }
 
-export default class HexString
+export class HexString
 {
     get [Symbol.toStringTag](): string
     {

@@ -1,9 +1,3 @@
-
-
-/*
-ONE ARG
-*/
-
 import BigIntUtils from "../../../../utils/BigIntUtils";
 import ObjectUtils from "../../../../utils/ObjectUtils"
 

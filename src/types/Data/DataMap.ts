@@ -1,11 +1,12 @@
-import Data, { isData } from ".";
 import JsRuntime from "../../utils/JsRuntime";
-import ToJson from "../../utils/ts/ToJson";
-import Cloneable from "../interfaces/Cloneable";
-import DataPair from "./DataPair";
+
+import { Data, isData } from ".";
+import { ToJson } from "../../utils/ts/ToJson";
+import { Cloneable } from "../interfaces/Cloneable";
+import { DataPair } from "./DataPair";
 
 
-export default class DataMap<DataKey extends Data, DataValue extends Data>
+export class DataMap<DataKey extends Data, DataValue extends Data>
     implements Cloneable<DataMap<DataKey,DataValue>>, ToJson
 {
     private _map: DataPair<DataKey, DataValue>[];

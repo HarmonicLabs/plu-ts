@@ -1,26 +1,26 @@
-import UPLCTerm from "../../UPLC/UPLCTerm";
-import UPLCBuiltinTag from "../../UPLC/UPLCTerms/Builtin/UPLCBuiltinTag";
-import ErrorUPLC from "../../UPLC/UPLCTerms/ErrorUPLC";
-import UPLCConst from "../../UPLC/UPLCTerms/UPLCConst";
-import ConstType, { constListTypeUtils, constPairTypeUtils, constT, constTypeEq, constTypeToStirng, ConstTyTag } from "../../UPLC/UPLCTerms/UPLCConst/ConstType" 
-import PartialBuiltin from "./PartialBuiltin";
-import Integer, { UInteger } from "../../../types/ints/Integer";
-import ConstValue from "../../UPLC/UPLCTerms/UPLCConst/ConstValue";
-import ByteString from "../../../types/HexString/ByteString";
-import Data, { eqData, isData } from "../../../types/Data";
-import BigIntUtils from "../../../utils/BigIntUtils";
-import Pair from "../../../types/structs/Pair";
-import DataConstr from "../../../types/Data/DataConstr";
-import DataMap from "../../../types/Data/DataMap";
-import DataList from "../../../types/Data/DataList";
-import DataI from "../../../types/Data/DataI";
-import DataB from "../../../types/Data/DataB";
-import DataPair from "../../../types/Data/DataPair";
-import PlutsCEKError from "../../../errors/PlutsCEKError";
-import dataToCbor from "../../../types/Data/toCbor";
+import { UPLCTerm } from "../../UPLC/UPLCTerm";
+import { UPLCBuiltinTag } from "../../UPLC/UPLCTerms/Builtin/UPLCBuiltinTag";
+import { ErrorUPLC } from "../../UPLC/UPLCTerms/ErrorUPLC";
+import { UPLCConst } from "../../UPLC/UPLCTerms/UPLCConst";
+import { PartialBuiltin } from "./PartialBuiltin";
+import { ConstValue } from "../../UPLC/UPLCTerms/UPLCConst/ConstValue";
+import { ByteString } from "../../../types/HexString/ByteString";
+import { BigIntUtils } from "../../../utils/BigIntUtils";
+import { Pair } from "../../../types/structs/Pair";
+import { DataConstr } from "../../../types/Data/DataConstr";
+import { DataMap } from "../../../types/Data/DataMap";
+import { DataList } from "../../../types/Data/DataList";
+import { DataI } from "../../../types/Data/DataI";
+import { DataB } from "../../../types/Data/DataB";
+import { DataPair } from "../../../types/Data/DataPair";
+import { PlutsCEKError } from "../../../errors/PlutsCEKError";
+import { dataToCbor } from "../../../types/Data/toCbor";
+import { ExBudget } from "../Machine/ExBudget";
 import { BuiltinCostsOf } from "../Machine/BuiltinCosts";
-import ExBudget from "../Machine/ExBudget";
 import { Buffer } from "buffer";
+import { ConstType, constListTypeUtils, constPairTypeUtils, constT, constTypeEq, constTypeToStirng, ConstTyTag } from "../../UPLC/UPLCTerms/UPLCConst/ConstType" 
+import { Integer, UInteger } from "../../../types/ints/Integer";
+import { Data, eqData, isData } from "../../../types/Data";
 import { blake2b, byteArrToHex, sha2_256, sha3, verifyEd25519Signature } from "../../../crypto";
 
 
@@ -309,7 +309,7 @@ export function haskellMod( a: bigint, b: bigint ): bigint | undefined
 
 type ConstOrErr = UPLCConst | ErrorUPLC;
 
-export default class BnCEK
+export class BnCEK
 {
     /**
      * **reference** to the budget of the actual machine

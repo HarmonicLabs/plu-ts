@@ -10,7 +10,7 @@ import ConstValue, { canConstValueBeOfConstType, ConstValueList, inferConstTypeF
 import Cloneable from "../../../../types/interfaces/Cloneable";
 
 
-export default class UPLCConst
+export class UPLCConst
     implements Cloneable<UPLCConst>
 {
     static get UPLCTag(): BitStream

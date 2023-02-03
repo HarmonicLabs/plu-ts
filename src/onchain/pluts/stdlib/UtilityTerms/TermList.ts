@@ -25,7 +25,7 @@ import { UtilityTermOf } from "./addUtilityForType";
 import TermBool from "./TermBool";
 import TermInt from "./TermInt";
 
-type TermList<PElemsT extends PDataRepresentable> = Term<PList<PElemsT>> & {
+export type TermList<PElemsT extends PDataRepresentable> = Term<PList<PElemsT>> & {
 
     /**
      * **O(1)**
@@ -104,8 +104,6 @@ type TermList<PElemsT extends PDataRepresentable> = Term<PList<PElemsT>> & {
     readonly someTerm:  TermFn<[PLam<PElemsT, PBool>], PBool>
     readonly some:      ( predicate: PappArg<PLam<PElemsT, PBool>> ) => TermBool
 };
-
-export default TermList;
 
 function getHoistedFlipped<T extends TermType | ConstantableTermType, PSomething extends PType, PReturnT extends PType >( 
     pfunc: (elemsT: T) => TermFn<[ PSomething, PList<ToPType<T>> ], PReturnT>

@@ -1,9 +1,9 @@
 import { blake2b_224 } from "../../../../crypto";
 import ObjectUtils from "../../../../utils/ObjectUtils";
-import PubKeyHash from "../../../credentials/PubKeyHash";
-import Hash32 from "../../../hashes/Hash32/Hash32";
+import { PubKeyHash } from "../../../credentials/PubKeyHash";
+import { Hash32 } from "../../../hashes/Hash32/Hash32";
 
-export default class VKey extends Hash32
+export class VKey extends Hash32
 {
     /**
      * getter

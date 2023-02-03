@@ -1,19 +1,20 @@
-import Cbor from "../../../cbor/Cbor";
-import CborObj from "../../../cbor/CborObj";
-import CborArray from "../../../cbor/CborObj/CborArray";
-import CborMap from "../../../cbor/CborObj/CborMap";
-import CborNegInt from "../../../cbor/CborObj/CborNegInt";
-import CborUInt from "../../../cbor/CborObj/CborUInt";
-import CborString from "../../../cbor/CborString";
-import { ToCbor } from "../../../cbor/interfaces/CBORSerializable";
-import BasePlutsError from "../../../errors/BasePlutsError";
-import InvalidCborFormatError from "../../../errors/InvalidCborFormatError";
-import { canBeUInteger, forceBigUInt, forceUInteger } from "../../../types/ints/Integer";
 import JsRuntime from "../../../utils/JsRuntime";
 import ObjectUtils from "../../../utils/ObjectUtils";
-import ToJson from "../../../utils/ts/ToJson";
-import StakeCredentials from "../../credentials/StakeCredentials";
-import Coin from "../Coin";
+
+import { Cbor } from "../../../cbor/Cbor";
+import { CborObj } from "../../../cbor/CborObj";
+import { CborArray } from "../../../cbor/CborObj/CborArray";
+import { CborMap } from "../../../cbor/CborObj/CborMap";
+import { CborNegInt } from "../../../cbor/CborObj/CborNegInt";
+import { CborUInt } from "../../../cbor/CborObj/CborUInt";
+import { CborString } from "../../../cbor/CborString";
+import { BasePlutsError } from "../../../errors/BasePlutsError";
+import { InvalidCborFormatError } from "../../../errors/InvalidCborFormatError";
+import { ToJson } from "../../../utils/ts/ToJson";
+import { ToCbor } from "../../../cbor/interfaces/CBORSerializable";
+import { StakeCredentials } from "../../credentials/StakeCredentials";
+import { canBeUInteger, forceBigUInt, forceUInteger } from "../../../types/ints/Integer";
+import { Coin } from "../Coin";
 
 export const enum InstantRewardsSource {
     Reserves = 0,
@@ -83,7 +84,7 @@ function rewardsMapFromCborObj( cObj: CborObj ): RewardsMap
     return rewMap;
 }
 
-export default class MoveInstantRewardsCert
+export class MoveInstantRewardsCert
     implements ToCbor, ToJson
 {
     readonly source!: InstantRewardsSource;

@@ -1,7 +1,7 @@
+import ObjectUtils from "../../../utils/ObjectUtils";
 import { AnyV2CostModel, CostModelPlutusV2, toCostModelV2 } from "../../../offchain/ledger/CostModels";
 import { forceBigUInt } from "../../../types/ints/Integer";
-import ObjectUtils from "../../../utils/ObjectUtils";
-import ExBudget from "./ExBudget";
+import { ExBudget } from "./ExBudget";
 
 export interface MachineCosts {
     startup: ExBudget,
@@ -36,7 +36,7 @@ export const defaultV2MachineCosts: MachineCosts = Object.freeze({
     builtinNode:    new ExBudget({ mem: 100, cpu: 23000 }),
 });
 
-export default function costModelV2ToMachineCosts( costsV2: AnyV2CostModel ): MachineCosts
+export function costModelV2ToMachineCosts( costsV2: AnyV2CostModel ): MachineCosts
 {
     const costs = toCostModelV2( costsV2 );
     const result = {};

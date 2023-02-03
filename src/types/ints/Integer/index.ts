@@ -1,6 +1,6 @@
-import BasePlutsError from "../../../errors/BasePlutsError";
 import BigIntUtils from "../../../utils/BigIntUtils";
-import Cloneable from "../../interfaces/Cloneable";
+import { BasePlutsError } from "../../../errors/BasePlutsError";
+import { Cloneable } from "../../interfaces/Cloneable";
 
 /**
  * javascript already has a builtin support for arbitrary length integers,
@@ -24,7 +24,7 @@ import Cloneable from "../../interfaces/Cloneable";
  * - javascript for the impatient programmer: https://exploringjs.com/impatient-js/ch_bigints.html
  * 
  */
-export default class Integer
+export class Integer
     implements Cloneable<Integer>
 {
     get [Symbol.toStringTag](): string

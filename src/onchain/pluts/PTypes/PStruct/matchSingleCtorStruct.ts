@@ -2,7 +2,7 @@ import { psndPair, punConstrData } from "../../stdlib/Builtins";
 import { phoist, pfn, papp } from "../../Syntax/syntax";
 import { data, lam, list, int, tyVar } from "../../Term/Type/base";
 
-const matchSingleCtorStruct = (( returnT ) =>  phoist(
+export const matchSingleCtorStruct = (( returnT ) =>  phoist(
     pfn([
         data,
         lam( list(data), returnT )
@@ -14,5 +14,3 @@ const matchSingleCtorStruct = (( returnT ) =>  phoist(
         papp( continuation, psndPair( int, list(data) ).$( punConstrData.$( structData ) ) )
     )
 ))( tyVar("matchSingleCtorStruct_returnT") );
-
-export default matchSingleCtorStruct;

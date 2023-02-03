@@ -1,6 +1,7 @@
 import JsRuntime from "../../../utils/JsRuntime";
 import ObjectUtils from "../../../utils/ObjectUtils";
-import Hash32 from "../../hashes/Hash32/Hash32";
+
+import { Hash32 } from "../../hashes/Hash32/Hash32";
 
 export type IValue = (IValuePolicyEntry | IValueAdaEntry)[]
 

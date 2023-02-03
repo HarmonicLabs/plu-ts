@@ -1,9 +1,9 @@
-import ToJson from "../../utils/ts/ToJson";
-import Cloneable from "../interfaces/Cloneable";
-import Integer from "../ints/Integer";
+import { ToJson } from "../../utils/ts/ToJson";
+import { Cloneable } from "../interfaces/Cloneable";
+import { Integer } from "../ints/Integer";
 
 
-export default class DataI
+export class DataI
     implements Cloneable<DataI>, ToJson
 {
     private _int: Integer

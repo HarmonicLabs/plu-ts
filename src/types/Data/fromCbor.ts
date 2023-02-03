@@ -106,7 +106,7 @@ export function dataFromCborObj( cborObj: CborObj ): Data
     throw new BasePlutsError( "invalid CBOR major type for Data" );
 }
 
-export default function dataFromCbor( cbor: CborString ): Data
+export function dataFromCbor( cbor: CborString ): Data
 {
     return dataFromCborObj( cbor.toCborObj() );
 }

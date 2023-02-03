@@ -3,14 +3,14 @@ Intermediate data type that allows an easier conversion from (and to) CBOR to (a
 */
 
 import JsRuntime from "../../utils/JsRuntime";
-import CborArray, { isRawCborArray, RawCborArray } from "./CborArray";
-import CborBytes, { isRawCborBytes, RawCborBytes } from "./CborBytes";
-import CborMap, { isRawCborMap, RawCborMap } from "./CborMap";
-import CborNegInt, { RawCborNegInt, isRawCborNegative } from "./CborNegInt";
-import CborSimple, { isRawCborSimple, isSimpleCborValue, RawCborSimple } from "./CborSimple";
-import CborTag, { isRawCborTag, RawCborTag } from "./CborTag";
-import CborText, { isRawCborText, RawCborText } from "./CborText";
-import CborUInt, { RawCborUInt, isRawCborUnsigned } from "./CborUInt";
+import { CborArray, isRawCborArray, RawCborArray } from "./CborArray";
+import { CborBytes, isRawCborBytes, RawCborBytes } from "./CborBytes";
+import { CborMap, isRawCborMap, RawCborMap } from "./CborMap";
+import { CborNegInt, RawCborNegInt, isRawCborNegative } from "./CborNegInt";
+import { CborSimple, isRawCborSimple, isSimpleCborValue, RawCborSimple } from "./CborSimple";
+import { CborTag, isRawCborTag, RawCborTag } from "./CborTag";
+import { CborText, isRawCborText, RawCborText } from "./CborText";
+import { CborUInt, RawCborUInt, isRawCborUnsigned } from "./CborUInt";
 
 export  type RawCborObj
     = RawCborUInt
@@ -31,8 +31,6 @@ export type CborObj
     | CborMap
     | CborTag
     | CborSimple;
-
-export default CborObj;
 
 export function isCborObj<T extends object>( cborObj: T ): cborObj is (T & CborObj)
 {

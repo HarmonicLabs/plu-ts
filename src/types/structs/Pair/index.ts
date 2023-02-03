@@ -1,6 +1,6 @@
 
 
-export default class Pair< A, B >
+export class Pair< A, B >
 {
     get [Symbol.toStringTag](): string
     {

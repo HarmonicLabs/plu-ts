@@ -1,18 +1,14 @@
-import Data from "../../../../types/Data";
-import DataConstr from "../../../../types/Data/DataConstr";
-import DataList from "../../../../types/Data/DataList";
-import DataMap from "../../../../types/Data/DataMap";
-import DataPair from "../../../../types/Data/DataPair";
-import Value from "../../../ledger/Value/Value";
-import Tx from "../../Tx";
-import hashData from "../../../../types/Data/hashData";
-import DataB from "../../../../types/Data/DataB";
-import DataI from "../../../../types/Data/DataI";
 import { getTxIntervalData } from "./getTxIntervalData";
-import TxRedeemer, { TxRedeemerTag } from "../../TxWitnessSet/TxRedeemer";
-import BasePlutsError from "../../../../errors/BasePlutsError";
-import Hash32 from "../../../hashes/Hash32/Hash32";
-import StakeCredentials, { StakeValidatorHash } from "../../../credentials/StakeCredentials";
+import { Data } from "../../../../types/Data";
+import { DataConstr } from "../../../../types/Data/DataConstr";
+import { DataList } from "../../../../types/Data/DataList";
+import { DataMap } from "../../../../types/Data/DataMap";
+import { DataPair } from "../../../../types/Data/DataPair";
+import { Value } from "../../../ledger/Value/Value";
+import { Tx } from "../../Tx";
+import { hashData } from "../../../../types/Data/hashData";
+import { DataB } from "../../../../types/Data/DataB";
+import { TxRedeemer } from "../../TxWitnessSet/TxRedeemer";
 
 export function getTxInfos( transaction: Tx ): { v1: Data | undefined, v2: Data }
 {

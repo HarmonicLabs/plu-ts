@@ -1,10 +1,11 @@
-import ByteString from "../../../../../types/HexString/ByteString";
-import Integer from "../../../../../types/ints/Integer";
-import Pair from "../../../../../types/structs/Pair";
-import JsRuntime from "../../../../../utils/JsRuntime";
-import Data, { eqData, isData } from "../../../../../types/Data";
-import ConstType, { constTypeEq, constT, constTypeToStirng, ConstTyTag, isWellFormedConstType, constListTypeUtils, constPairTypeUtils } from "../ConstType";
 import BufferUtils from "../../../../../utils/BufferUtils";
+import JsRuntime from "../../../../../utils/JsRuntime";
+
+import { ByteString } from "../../../../../types/HexString/ByteString";
+import { Integer } from "../../../../../types/ints/Integer";
+import { Pair } from "../../../../../types/structs/Pair";
+import { Data, eqData, isData } from "../../../../../types/Data";
+import { ConstType, constTypeEq, constT, constTypeToStirng, ConstTyTag, isWellFormedConstType, constListTypeUtils, constPairTypeUtils } from "../ConstType";
 
 
 export type ConstValueList
@@ -16,7 +17,7 @@ export type ConstValueList
     | Pair<ConstValue,ConstValue>[]
     | Data[];
 
-type ConstValue
+export type ConstValue
     = Integer 
     | ByteString 
     | string
@@ -25,8 +26,6 @@ type ConstValue
     | ConstValueList
     | Pair<ConstValue,ConstValue>
     | Data;
-
-export default ConstValue;
 
 export function isConstValue( value: any ): value is ConstValue
 {

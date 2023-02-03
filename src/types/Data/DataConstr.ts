@@ -1,11 +1,11 @@
-import Data, { isData } from ".";
 import JsRuntime from "../../utils/JsRuntime";
-import ToJson from "../../utils/ts/ToJson";
-import Cloneable from "../interfaces/Cloneable";
+import { Data, isData } from ".";
+import { ToJson } from "../../utils/ts/ToJson";
+import { Cloneable } from "../interfaces/Cloneable";
 import { UInteger, CanBeUInteger, forceUInteger } from "../ints/Integer";
 
 
-export default class DataConstr
+export class DataConstr
     implements Cloneable<DataConstr>, ToJson
 {
     private _constr: UInteger;

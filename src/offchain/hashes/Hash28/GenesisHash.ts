@@ -1,3 +1,3 @@
-import Hash28 from "./Hash28";
+import { Hash28 } from "./Hash28";
 
-export default class GenesisHash extends Hash28 {}
+export class GenesisHash extends Hash28 {}

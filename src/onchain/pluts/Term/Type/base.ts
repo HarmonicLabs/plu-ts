@@ -1,25 +1,5 @@
-import type PType from "../../PType";
-import type PDataRepresentable from "../../PType/PDataRepresentable";
-import type { PAlias } from "../../PTypes";
-import type { AliasDefinition } from "../../PTypes/PAlias/palias";
-import type PBool from "../../PTypes/PBool";
-import type PByteString from "../../PTypes/PByteString";
-import type PData from "../../PTypes/PData/PData";
-import type PDataBS from "../../PTypes/PData/PDataBS";
-import type PDataConstr from "../../PTypes/PData/PDataConstr";
-import type PDataInt from "../../PTypes/PData/PDataInt";
-import type PDataList from "../../PTypes/PData/PDataList";
-import type PDataMap from "../../PTypes/PData/PDataMap";
-import type PDataPair from "../../PTypes/PData/PDataPair";
-import type PDelayed from "../../PTypes/PDelayed";
-import type PLam from "../../PTypes/PFn/PLam";
-import type PInt from "../../PTypes/PInt";
-import type PList from "../../PTypes/PList";
-import type PPair from "../../PTypes/PPair";
-import type PString from "../../PTypes/PString";
-import type PUnit from "../../PTypes/PUnit";
-
 import JsRuntime from "../../../../utils/JsRuntime";
+import type { AliasDefinition } from "../../PTypes/PAlias/palias";
 
 export const enum PrimType {
     Int  = "Int",
@@ -123,7 +103,7 @@ function cloneStructDef<SDef extends StructDefinition>( def: Readonly<SDef> ): S
 
 
 //@ts-ignore
-const Type: {
+export const Type: {
     readonly Var:   ( description?: any ) => [ TermTypeParameter ]
     readonly Any:   [ TermTypeParameter ];
     readonly Int:   [ PrimType.Int ];
@@ -190,8 +170,6 @@ const Type: {
         BS:     Object.freeze([ DataConstructor.BS as FixedDataTypeName ])
     })
 }, "Any", {configurable: false, enumerable: true, get: () => Type.Var("Type.Any"), set: ( _v?: any ) => {} }));
-
-export default Type;
 
 /**
  * Utility object to get fixed type

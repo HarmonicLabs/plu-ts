@@ -1,9 +1,10 @@
-import HexString from ".";
 import BufferUtils from "../../utils/BufferUtils";
 import JsRuntime from "../../utils/JsRuntime";
-import Cloneable from "../interfaces/Cloneable";
 
-export default class ByteString
+import {Cloneable} from "../interfaces/Cloneable";
+import {HexString} from ".";
+
+export class ByteString
     implements Cloneable<ByteString>
 {
     static isStrictInstance( bs: any ): bs is ByteString

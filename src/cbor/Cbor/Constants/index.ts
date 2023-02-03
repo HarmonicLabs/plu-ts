@@ -120,8 +120,7 @@ class AddInfos
 /**
  * @static
  */
-export default
-class CborConstants
+export class CborConstants
 {
     private constructor() {};
 

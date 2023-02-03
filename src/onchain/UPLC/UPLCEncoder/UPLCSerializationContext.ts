@@ -1,5 +1,5 @@
-import BitStream from "../../../types/bits/BitStream";
-import UPLCVersion from "../UPLCProgram/UPLCVersion";
+import { BitStream } from "../../../types/bits/BitStream";
+import { UPLCVersion } from "../UPLCProgram/UPLCVersion";
 
 export interface RawUPLCSerializationContex
 {
@@ -11,7 +11,7 @@ export interface RawUPLCSerializationContex
     }
 }
 
-export default class UPLCSerializationContex
+export class UPLCSerializationContex
 {
     private _rawCtx: RawUPLCSerializationContex;
     

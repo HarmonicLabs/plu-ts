@@ -28,12 +28,10 @@ export type PureUPLCTerm
     | ErrorUPLC
     | Builtin;
     
-type UPLCTerm
+export type UPLCTerm
     = PureUPLCTerm
     // not part of specification
     | HoistedUPLC; // replaced by a UPLCVar pointing to the term hoisted
-
-export default UPLCTerm;
 
 /**
  * **_O(1)_**

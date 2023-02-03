@@ -1,7 +1,7 @@
-import CborObj from "../CborObj";
-import type CborString from "../CborString";
+import type { CborString } from "../CborString";
+import { CborObj } from "../CborObj";
 
-export default interface CBORSerializable 
+export interface CBORSerializable 
 {
     toCBOR: () => CborString
 }

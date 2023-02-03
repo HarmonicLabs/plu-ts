@@ -1,27 +1,28 @@
-import Cbor from "../../../cbor/Cbor";
-import CborObj from "../../../cbor/CborObj";
-import CborArray from "../../../cbor/CborObj/CborArray";
-import CborUInt from "../../../cbor/CborObj/CborUInt";
-import CborString, { CanBeCborString, forceCborString } from "../../../cbor/CborString";
-import { ToCbor } from "../../../cbor/interfaces/CBORSerializable";
-import BasePlutsError from "../../../errors/BasePlutsError";
-import InvalidCborFormatError from "../../../errors/InvalidCborFormatError";
-import DataConstr from "../../../types/Data/DataConstr";
-import DataI from "../../../types/Data/DataI";
-import ToData from "../../../types/Data/toData/interface";
-import { canBeUInteger, forceBigUInt, forceUInteger, UInteger } from "../../../types/ints/Integer";
 import JsRuntime from "../../../utils/JsRuntime";
 import ObjectUtils from "../../../utils/ObjectUtils";
-import ToJson from "../../../utils/ts/ToJson";
-import StakeCredentials from "../../credentials/StakeCredentials";
-import GenesisDelegateHash from "../../hashes/Hash28/GenesisDelegateHash";
-import GenesisHash from "../../hashes/Hash28/GenesisHash";
-import Hash28 from "../../hashes/Hash28/Hash28";
-import PoolKeyHash from "../../hashes/Hash28/PoolKeyHash";
-import VRFKeyHash from "../../hashes/Hash32/VRFKeyHash";
-import Epoch from "../Epoch";
-import PoolParams from "../PoolParams";
-import MoveInstantRewardsCert from "./MoveInstantRewardsCert";
+
+import { Cbor } from "../../../cbor/Cbor";
+import { CborObj } from "../../../cbor/CborObj";
+import { CborArray } from "../../../cbor/CborObj/CborArray";
+import { CborUInt } from "../../../cbor/CborObj/CborUInt";
+import { CborString, CanBeCborString, forceCborString } from "../../../cbor/CborString";
+import { ToCbor } from "../../../cbor/interfaces/CBORSerializable";
+import { BasePlutsError } from "../../../errors/BasePlutsError";
+import { InvalidCborFormatError } from "../../../errors/InvalidCborFormatError";
+import { DataConstr } from "../../../types/Data/DataConstr";
+import { DataI } from "../../../types/Data/DataI";
+import { ToData } from "../../../types/Data/toData/interface";
+import { canBeUInteger, forceBigUInt, forceUInteger, UInteger } from "../../../types/ints/Integer";
+import { ToJson } from "../../../utils/ts/ToJson";
+import { StakeCredentials } from "../../credentials/StakeCredentials";
+import { GenesisDelegateHash } from "../../hashes/Hash28/GenesisDelegateHash";
+import { GenesisHash } from "../../hashes/Hash28/GenesisHash";
+import { Hash28 } from "../../hashes/Hash28/Hash28";
+import { PoolKeyHash } from "../../hashes/Hash28/PoolKeyHash";
+import { VRFKeyHash } from "../../hashes/Hash32/VRFKeyHash";
+import { Epoch } from "../Epoch";
+import { PoolParams } from "../PoolParams";
+import { MoveInstantRewardsCert } from "./MoveInstantRewardsCert";
 
 // number is important as it is included in serialization
 export const enum CertificateType {
@@ -78,7 +79,7 @@ export type ParamsOfCert<CertTy extends CertificateType> =
     CertTy extends CertificateType.MoveInstantRewards ? [ MoveInstantRewardsCert ] :
     never
 
-export default class Certificate<CertTy extends CertificateType>
+export class Certificate<CertTy extends CertificateType>
     implements ToCbor, ToData, ToJson
 {
     readonly certType!: CertTy

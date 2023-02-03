@@ -13,7 +13,7 @@ import { isWellFormedType } from "./Type/kinds";
 
 export type UnTerm<T extends Term<PType>> = T extends Term<infer PT extends PType > ? PT : never;
 
-export default class Term<A extends PType>
+export class Term<A extends PType>
 {
     /**
      * in most cases it will never be used

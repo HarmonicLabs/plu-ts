@@ -1,21 +1,20 @@
-import type CborObj from "../CborObj";
-
+import BufferUtils from "../../utils/BufferUtils";
 import JsRuntime from "../../utils/JsRuntime";
+
+import type { CborObj } from "../CborObj";
 import { Buffer } from "buffer";
-import CborString from "../CborString";
+import { CborString } from "../CborString";
 import { isCborObj } from "../CborObj";
 import { isMajorTypeTag, MajorType } from "./Constants";
-import CborNegativeInt from "../CborObj/CborNegInt";
-import CborBytes from "../CborObj/CborBytes";
-import CborText from "../CborObj/CborText";
-import CborArray from "../CborObj/CborArray";
-import CborMap, { CborMapEntry } from "../CborObj/CborMap";
-import CborTag from "../CborObj/CborTag";
-import CborSimple from "../CborObj/CborSimple";
-import CborUInt from "../CborObj/CborUInt";
-import CborNegInt from "../CborObj/CborNegInt";
-import BufferUtils from "../../utils/BufferUtils";
-import PlutsCborParseError from "../../errors/PlutsSerialError/PlutsCborError/PlutsCborParseError";
+import { CborBytes } from "../CborObj/CborBytes";
+import { CborText } from "../CborObj/CborText";
+import { CborArray } from "../CborObj/CborArray";
+import { CborMap, CborMapEntry } from "../CborObj/CborMap";
+import { CborTag } from "../CborObj/CborTag";
+import { CborSimple } from "../CborObj/CborSimple";
+import { CborUInt } from "../CborObj/CborUInt";
+import { CborNegInt } from "../CborObj/CborNegInt";
+import { PlutsCborParseError } from "../../errors/PlutsSerialError/PlutsCborError/PlutsCborParseError";
 
 /**
  * @private to the module; not needed elsewhere
@@ -228,7 +227,7 @@ class CborEncoding
             return;
         }
 
-        if( cObj instanceof CborNegativeInt )
+        if( cObj instanceof CborNegInt )
         {
             JsRuntime.assert(
                 cObj.num < BigInt( 0 ),
@@ -336,7 +335,7 @@ class CborEncoding
  * 
  * >**_NOTE:_** some tags that are not defined in the proper CBOR specification are automaticaly treated as PlutusData
  */
-export default class Cbor
+export class Cbor
 {
     private constructor() {}; // static class, working as namespace
 

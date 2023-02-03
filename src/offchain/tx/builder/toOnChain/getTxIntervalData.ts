@@ -1,5 +1,5 @@
-import DataConstr from "../../../../types/Data/DataConstr";
-import DataI from "../../../../types/Data/DataI";
+import { DataConstr } from "../../../../types/Data/DataConstr";
+import { DataI } from "../../../../types/Data/DataI";
 import { forceBigUInt } from "../../../../types/ints/Integer";
 
 export function getTxIntervalData(

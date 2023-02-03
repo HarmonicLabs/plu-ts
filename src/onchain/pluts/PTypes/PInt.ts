@@ -1,16 +1,16 @@
-import Integer from "../../../types/ints/Integer";
-import UPLCConst from "../../UPLC/UPLCTerms/UPLCConst";
+import { Type, TermType } from "../Term/Type/base";
 import { pIntToData, punIData } from "../stdlib/Builtins";
-import TermInt, { addPIntMethods } from "../stdlib/UtilityTerms/TermInt";
-import Term from "../Term";
-import Type, { TermType } from "../Term/Type/base";
-import PData from "./PData/PData";
-import PDataInt from "./PData/PDataInt";
-import PLam from "./PFn/PLam";
+import { TermInt, addPIntMethods } from "../stdlib/UtilityTerms/TermInt";
 import { PappArg } from "../Syntax/pappArg";
-import PDataRepresentable from "../PType/PDataRepresentable";
+import { Integer } from "../../../types/ints/Integer";
+import { UPLCConst } from "../../UPLC/UPLCTerms/UPLCConst";
+import { Term } from "../Term";
+import { PData } from "./PData/PData";
+import { PDataInt } from "./PData/PDataInt";
+import { PLam } from "./PFn/PLam";
+import { PDataRepresentable } from "../PType/PDataRepresentable";
 
-export default class PInt extends PDataRepresentable
+export class PInt extends PDataRepresentable
 //    implements Cloneable<PInt>
 {
     private _pint: bigint

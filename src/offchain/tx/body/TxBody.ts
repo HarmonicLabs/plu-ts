@@ -1,29 +1,30 @@
-import { NetworkT } from "../../ledger/Network";
-import { canBeUInteger, CanBeUInteger, forceBigUInt } from "../../../types/ints/Integer";
-import Coin from "../../ledger/Coin";
-import Certificate, { AnyCertificate, certificatesToDepositLovelaces } from "../../ledger/certs/Certificate";
-import TxWithdrawals, { ITxWithdrawals, canBeTxWithdrawals, forceTxWithdrawals } from "../../ledger/TxWithdrawals";
-import { Value } from "../../ledger/Value/Value";
-import TxOut from "./output/TxOut";
-import PubKeyHash from "../../credentials/PubKeyHash";
-import ProtocolUpdateProposal, { isProtocolUpdateProposal, protocolUpdateProposalFromCborObj, protocolUpdateProposalToCborObj, protocolUpdateToJson } from "../../ledger/protocol/ProtocolUpdateProposal";
-import AuxiliaryDataHash from "../../hashes/Hash32/AuxiliaryDataHash";
-import ScriptDataHash from "../../hashes/Hash32/ScriptDataHash";
 import JsRuntime from "../../../utils/JsRuntime";
 import ObjectUtils from "../../../utils/ObjectUtils";
+
 import { UInteger } from "../../..";
 import { ToCbor } from "../../../cbor/interfaces/CBORSerializable";
-import CborObj from "../../../cbor/CborObj";
-import CborString, { CanBeCborString, forceCborString } from "../../../cbor/CborString";
-import Cbor from "../../../cbor/Cbor";
-import CborMap, { CborMapEntry } from "../../../cbor/CborObj/CborMap";
-import CborUInt from "../../../cbor/CborObj/CborUInt";
-import CborArray from "../../../cbor/CborObj/CborArray";
-import Hash32 from "../../hashes/Hash32/Hash32";
+import { CborMap, CborMapEntry } from "../../../cbor/CborObj/CborMap";
+import { Certificate, AnyCertificate, certificatesToDepositLovelaces } from "../../ledger/certs/Certificate";
+import { CborString, CanBeCborString, forceCborString } from "../../../cbor/CborString";
+import { ProtocolUpdateProposal, isProtocolUpdateProposal, protocolUpdateProposalFromCborObj, protocolUpdateProposalToCborObj, protocolUpdateToJson } from "../../ledger/protocol/ProtocolUpdateProposal";
 import { blake2b_256 } from "../../../crypto";
-import ToJson from "../../../utils/ts/ToJson";
-import UTxO from "./output/UTxO";
-import InvalidCborFormatError from "../../../errors/InvalidCborFormatError";
+import { NetworkT } from "../../ledger/Network";
+import { canBeUInteger, CanBeUInteger, forceBigUInt } from "../../../types/ints/Integer";
+import { TxWithdrawals, ITxWithdrawals, canBeTxWithdrawals, forceTxWithdrawals } from "../../ledger/TxWithdrawals";
+import { Value } from "../../ledger/Value/Value";
+import { Coin } from "../../ledger/Coin";
+import { TxOut } from "./output/TxOut";
+import { PubKeyHash } from "../../credentials/PubKeyHash";
+import { AuxiliaryDataHash } from "../../hashes/Hash32/AuxiliaryDataHash";
+import { ScriptDataHash } from "../../hashes/Hash32/ScriptDataHash";
+import { CborObj } from "../../../cbor/CborObj";
+import { Cbor } from "../../../cbor/Cbor";
+import { CborUInt } from "../../../cbor/CborObj/CborUInt";
+import { CborArray } from "../../../cbor/CborObj/CborArray";
+import { Hash32 } from "../../hashes/Hash32/Hash32";
+import { ToJson } from "../../../utils/ts/ToJson";
+import { UTxO } from "./output/UTxO";
+import { InvalidCborFormatError } from "../../../errors/InvalidCborFormatError";
 
 export interface ITxBody {
     inputs: [ UTxO, ...UTxO[] ],
@@ -94,7 +95,7 @@ export function isITxBody( body: Readonly<object> ): body is ITxBody
     )
 }
 
-export default class TxBody
+export class TxBody
     implements ITxBody, ToCbor, ToJson
 {
     readonly inputs!: [ UTxO, ...UTxO[] ];

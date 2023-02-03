@@ -1,11 +1,12 @@
-import { CanBeUInteger, forceBigUInt, forceUInteger } from "../../types/ints/Integer";
 import ObjectUtils from "../../utils/ObjectUtils";
-import CborObj from "../CborObj";
-import CborArray from "../CborObj/CborArray";
-import CborTag from "../CborObj/CborTag";
-import CborUInt from "../CborObj/CborUInt";
 
-export default class CborPositiveRational extends CborTag
+import { CanBeUInteger, forceBigUInt } from "../../types/ints/Integer";
+import { CborObj } from "../CborObj";
+import { CborArray } from "../CborObj/CborArray";
+import { CborTag } from "../CborObj/CborTag";
+import { CborUInt } from "../CborObj/CborUInt";
+
+export class CborPositiveRational extends CborTag
 {
     readonly num!: bigint;
     readonly den!: bigint;

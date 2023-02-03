@@ -1,26 +1,25 @@
-import Cbor from "../../../cbor/Cbor";
-import CborObj from "../../../cbor/CborObj";
-import CborArray from "../../../cbor/CborObj/CborArray";
-import CborMap, { CborMapEntry } from "../../../cbor/CborObj/CborMap";
-import CborUInt from "../../../cbor/CborObj/CborUInt";
-import CborString, { CanBeCborString, forceCborString } from "../../../cbor/CborString";
-import { ToCbor } from "../../../cbor/interfaces/CBORSerializable";
-import InvalidCborFormatError from "../../../errors/InvalidCborFormatError";
-import Data, { isData } from "../../../types/Data";
-import { dataFromCborObj } from "../../../types/Data/fromCbor";
-import dataToCbor, { dataToCborObj } from "../../../types/Data/toCbor";
-import Cloneable from "../../../types/interfaces/Cloneable";
 import JsRuntime from "../../../utils/JsRuntime";
 import ObjectUtils from "../../../utils/ObjectUtils";
-import ToJson from "../../../utils/ts/ToJson";
-import PrivateKey from "../../credentials/PrivateKey";
-import Hash28 from "../../hashes/Hash28/Hash28";
-import { nativeScriptFromCborObj, nativeScriptToCborObj } from "../../script/NativeScript";
-import Script, { ScriptType } from "../../script/Script";
-import BootstrapWitness from "./BootstrapWitness";
-import TxRedeemer from "./TxRedeemer";
-import VKey from "./VKeyWitness/VKey";
-import VKeyWitness from "./VKeyWitness/VKeyWitness";
+
+import { Cbor } from "../../../cbor/Cbor";
+import { CborObj } from "../../../cbor/CborObj";
+import { CborArray } from "../../../cbor/CborObj/CborArray";
+import { Data, isData } from "../../../types/Data";
+import { dataToCborObj } from "../../../types/Data/toCbor";
+import { CborMap, CborMapEntry } from "../../../cbor/CborObj/CborMap";
+import { CborUInt } from "../../../cbor/CborObj/CborUInt";
+import { CborString, CanBeCborString, forceCborString } from "../../../cbor/CborString";
+import { ToCbor } from "../../../cbor/interfaces/CBORSerializable";
+import {  nativeScriptToCborObj } from "../../script/NativeScript";
+import { Script, ScriptType } from "../../script/Script";
+import { dataFromCborObj } from "../../../types/Data/fromCbor";
+import { InvalidCborFormatError } from "../../../errors/InvalidCborFormatError";
+import { Cloneable } from "../../../types/interfaces/Cloneable";
+import { ToJson } from "../../../utils/ts/ToJson";
+import { Hash28 } from "../../hashes/Hash28/Hash28";
+import { BootstrapWitness } from "./BootstrapWitness";
+import { TxRedeemer } from "./TxRedeemer";
+import { VKeyWitness } from "./VKeyWitness/VKeyWitness";
 
 export interface ITxWitnessSet {
     vkeyWitnesses?: VKeyWitness[],
@@ -85,7 +84,7 @@ export function isITxWitnessSet( set: object ): set is ITxWitnessSet
     );
 }
 
-export default class TxWitnessSet
+export class TxWitnessSet
     implements ITxWitnessSet, ToCbor, ToJson
 {
     readonly vkeyWitnesses?: VKeyWitness[];

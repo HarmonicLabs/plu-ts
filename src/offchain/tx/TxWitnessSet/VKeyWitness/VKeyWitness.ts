@@ -12,7 +12,7 @@ import Hash32 from "../../../hashes/Hash32/Hash32";
 import Signature from "../../../hashes/Signature";
 import VKey from "./VKey";
 
-export default class VKeyWitness
+export class VKeyWitness
     implements ToCbor, Cloneable<VKeyWitness>, ToJson
 {
     readonly vkey!: VKey

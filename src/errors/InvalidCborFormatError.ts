@@ -1,6 +1,6 @@
-import BasePlutsError from "./BasePlutsError";
+import { BasePlutsError } from "./BasePlutsError";
 
-export default class InvalidCborFormatError extends BasePlutsError
+export class InvalidCborFormatError extends BasePlutsError
 {
     constructor( expectedClass: string, restMsg?: string )
     {

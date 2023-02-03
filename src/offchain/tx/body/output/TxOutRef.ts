@@ -1,22 +1,21 @@
-import { ByteString } from "../../../.."
-import Cbor from "../../../../cbor/Cbor"
-import CborObj from "../../../../cbor/CborObj"
-import CborArray from "../../../../cbor/CborObj/CborArray"
-import CborUInt from "../../../../cbor/CborObj/CborUInt"
-import CborString, { CanBeCborString, forceCborString } from "../../../../cbor/CborString"
-import { ToCbor } from "../../../../cbor/interfaces/CBORSerializable"
-import InvalidCborFormatError from "../../../../errors/InvalidCborFormatError"
-import Data from "../../../../types/Data"
-import DataB from "../../../../types/Data/DataB"
-import DataConstr from "../../../../types/Data/DataConstr"
-import DataI from "../../../../types/Data/DataI"
-import ToData from "../../../../types/Data/toData/interface"
-import { forceUInteger } from "../../../../types/ints/Integer"
 import JsRuntime from "../../../../utils/JsRuntime"
 import ObjectUtils from "../../../../utils/ObjectUtils"
-import ToJson from "../../../../utils/ts/ToJson"
-import Hash32 from "../../../hashes/Hash32/Hash32"
-import TxOut from "./TxOut"
+
+import { ToCbor } from "../../../../cbor/interfaces/CBORSerializable"
+import { CborString, CanBeCborString, forceCborString } from "../../../../cbor/CborString"
+import { forceUInteger } from "../../../../types/ints/Integer"
+import { ByteString } from "../../../.."
+import { Cbor } from "../../../../cbor/Cbor"
+import { CborObj } from "../../../../cbor/CborObj"
+import { CborArray } from "../../../../cbor/CborObj/CborArray"
+import { CborUInt } from "../../../../cbor/CborObj/CborUInt"
+import { InvalidCborFormatError } from "../../../../errors/InvalidCborFormatError"
+import { DataB } from "../../../../types/Data/DataB"
+import { DataConstr } from "../../../../types/Data/DataConstr"
+import { DataI } from "../../../../types/Data/DataI"
+import { ToData } from "../../../../types/Data/toData/interface"
+import { ToJson } from "../../../../utils/ts/ToJson"
+import { Hash32 } from "../../../hashes/Hash32/Hash32"
 
 export interface ITxOutRef {
     id: string | Hash32
@@ -28,7 +27,7 @@ export type UTxORefJson = {
     index: number;
 };
 
-export default class TxOutRef
+export class TxOutRef
     implements ITxOutRef, ToData, ToCbor, ToJson
 {
     readonly id!: Hash32

@@ -4,6 +4,4 @@ export const enum Network {
     testnet = "testnet"
 }
 
-export default Network;
-
 export type NetworkT = Network | "mainnet" | "testnet";

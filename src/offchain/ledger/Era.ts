@@ -7,5 +7,3 @@ export const enum Era {
     Alonzo = "alonzo",
     Babbage = "babbage"
 }
-
-export default Era;

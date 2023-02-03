@@ -1,6 +1,6 @@
 import Debug from "../../../utils/Debug";
 import JsRuntime from "../../../utils/JsRuntime";
-import Word32 from "../Word32";
+import { Word32 } from "../Word32";
 
 
 /**
@@ -10,7 +10,7 @@ import Word32 from "../Word32";
  * 
  * https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Bitwise_OR#description
  */
-export default class Int32
+export class Int32
 {
     private _int : number;
     static toInt32Num( n: number ): number

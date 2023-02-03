@@ -1,27 +1,26 @@
-import { byte, decodeBech32, encodeBech32 } from "../../crypto";
-import BasePlutsError from "../../errors/BasePlutsError";
-import { NetworkT } from "../ledger/Network";
-import PaymentCredentials, { PaymentCredentialsType } from "../credentials/PaymentCredentials";
-import StakeCredentials, { StakeCredentialsType } from "../credentials/StakeCredentials";
-import Hash28 from "../hashes/Hash28/Hash28";
-import type { ToData } from "../../types/Data/toData/interface"
-import Data from "../../types/Data";
-import PAddress from "../../onchain/pluts/API/V1/Address/PAddress";
-import DataConstr from "../../types/Data/DataConstr";
-import BigIntUtils from "../../utils/BigIntUtils";
-import UPLCFlatUtils from "../../utils/UPLCFlatUtils";
-import { forceBigUInt } from "../../types/ints/Integer";
-import Cloneable from "../../types/interfaces/Cloneable";
 import JsRuntime from "../../utils/JsRuntime";
 import ObjectUtils from "../../utils/ObjectUtils";
-import { ToCbor } from "../../cbor/interfaces/CBORSerializable";
-import CborObj from "../../cbor/CborObj";
-import CborBytes from "../../cbor/CborObj/CborBytes";
-import CborString, { CanBeCborString, forceCborString } from "../../cbor/CborString";
-import Cbor from "../../cbor/Cbor";
+import UPLCFlatUtils from "../../utils/UPLCFlatUtils";
+
+import { byte, decodeBech32, encodeBech32 } from "../../crypto";
 import { nothingData, justData } from "../../types/Data/toData/maybeData";
-import ToJson from "../../utils/ts/ToJson";
-import InvalidCborFormatError from "../../errors/InvalidCborFormatError";
+import { BasePlutsError } from "../../errors/BasePlutsError";
+import { NetworkT } from "../ledger/Network";
+import { PaymentCredentials, PaymentCredentialsType } from "../credentials/PaymentCredentials";
+import { StakeCredentials, StakeCredentialsType } from "../credentials/StakeCredentials";
+import { Hash28 } from "../hashes/Hash28/Hash28";
+import { forceBigUInt } from "../../types/ints/Integer";
+import { ToCbor } from "../../cbor/interfaces/CBORSerializable";
+import { CborString, CanBeCborString, forceCborString } from "../../cbor/CborString";
+import type { ToData } from "../../types/Data/toData/interface"
+import { Data } from "../../types/Data";
+import { DataConstr } from "../../types/Data/DataConstr";
+import { Cloneable } from "../../types/interfaces/Cloneable";
+import { CborObj } from "../../cbor/CborObj";
+import { CborBytes } from "../../cbor/CborObj/CborBytes";
+import { Cbor } from "../../cbor/Cbor";
+import { ToJson } from "../../utils/ts/ToJson";
+import { InvalidCborFormatError } from "../../errors/InvalidCborFormatError";
 
 export type AddressType
     = "base"
@@ -33,7 +32,7 @@ export type AddressType
 /**
  * shelley specification in cardano-ledger; page 113
  */
-export default class Address
+export class Address
     implements ToData, Cloneable<Address>, ToCbor, ToJson
 {
     readonly network!: NetworkT
@@ -109,9 +108,8 @@ export default class Address
 
     toData(): Data
     {
-        PAddress
         return new DataConstr(
-            0, // PAddress has only 1 constructor,
+            0, // export has only 1 constructor,
             [
                 this.paymentCreds.toData(),
                 this.stakeCreds === undefined ?

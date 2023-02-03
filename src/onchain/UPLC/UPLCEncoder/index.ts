@@ -1,30 +1,31 @@
-import BinaryString from "../../../types/bits/BinaryString";
-import BitStream from "../../../types/bits/BitStream";
-import ByteString from "../../../types/HexString/ByteString";
-import Integer, { UInteger } from "../../../types/ints/Integer";
-import Pair from "../../../types/structs/Pair";
 import JsRuntime from "../../../utils/JsRuntime";
 import UPLCFlatUtils from "../../../utils/UPLCFlatUtils";
-import Data, { isData } from "../../../types/Data";
-import UPLCProgram from "../UPLCProgram";
-import UPLCVersion from "../UPLCProgram/UPLCVersion";
-import  UPLCTerm, { getHoistedTerms, isPureUPLCTerm, PureUPLCTerm, showUPLC } from "../UPLCTerm";
-import Application from "../UPLCTerms/Application";
-import Builtin from "../UPLCTerms/Builtin";
+
+import { ConstType, ConstTyTag, isWellFormedConstType } from "../UPLCTerms/UPLCConst/ConstType";
+import { ConstValue, isConstValue, isConstValueList } from "../UPLCTerms/UPLCConst/ConstValue";
 import { getNRequiredForces, isUPLCBuiltinTag } from "../UPLCTerms/Builtin/UPLCBuiltinTag";
-import UPLCConst from "../UPLCTerms/UPLCConst";
-import ConstType, { ConstTyTag, isWellFormedConstType } from "../UPLCTerms/UPLCConst/ConstType";
-import ConstValue, { isConstValue, isConstValueList } from "../UPLCTerms/UPLCConst/ConstValue";
-import Delay from "../UPLCTerms/Delay";
-import ErrorUPLC from "../UPLCTerms/ErrorUPLC";
-import Force from "../UPLCTerms/Force";
-import Lambda from "../UPLCTerms/Lambda";
-import UPLCVar from "../UPLCTerms/UPLCVar";
-import UPLCSerializationContex from "./UPLCSerializationContext";
-import CborString from "../../../cbor/CborString";
-import dataFromCbor from "../../../types/Data/fromCbor";
-import HoistedUPLC, { getSortedHoistedSet } from "../UPLCTerms/HoistedUPLC";
-import dataToCbor from "../../../types/Data/toCbor";
+import { Integer, UInteger } from "../../../types/ints/Integer";
+import { UPLCTerm, getHoistedTerms, isPureUPLCTerm, PureUPLCTerm, showUPLC } from "../UPLCTerm";
+import { HoistedUPLC, getSortedHoistedSet } from "../UPLCTerms/HoistedUPLC";
+import { BinaryString } from "../../../types/bits/BinaryString";
+import { BitStream } from "../../../types/bits/BitStream";
+import { ByteString } from "../../../types/HexString/ByteString";
+import { Pair } from "../../../types/structs/Pair";
+import { Data, isData } from "../../../types/Data";
+import { UPLCProgram } from "../UPLCProgram";
+import { UPLCVersion } from "../UPLCProgram/UPLCVersion";
+import { Application } from "../UPLCTerms/Application";
+import { Builtin } from "../UPLCTerms/Builtin";
+import { UPLCConst } from "../UPLCTerms/UPLCConst";
+import { Delay } from "../UPLCTerms/Delay";
+import { ErrorUPLC } from "../UPLCTerms/ErrorUPLC";
+import { Force } from "../UPLCTerms/Force";
+import { Lambda } from "../UPLCTerms/Lambda";
+import { UPLCVar } from "../UPLCTerms/UPLCVar";
+import { UPLCSerializationContex } from "./UPLCSerializationContext";
+import { CborString } from "../../../cbor/CborString";
+import { dataFromCbor } from "../../../types/Data/fromCbor";
+import { dataToCbor } from "../../../types/Data/toCbor";
 
 /*
  * --------------------------- [encode vs serialize methods] ---------------------------
@@ -297,7 +298,7 @@ export function replaceHoistedTermsInplace( uplc: UPLCTerm ): PureUPLCTerm
     return program;
 }
 
-export default class UPLCEncoder
+export class UPLCEncoder
 {
     private _ctx: UPLCSerializationContex
 

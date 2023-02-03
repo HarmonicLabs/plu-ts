@@ -1,25 +1,20 @@
-import Cbor from "../../cbor/Cbor";
-import CborObj from "../../cbor/CborObj";
-import CborArray from "../../cbor/CborObj/CborArray";
-import CborSimple from "../../cbor/CborObj/CborSimple";
-import CborString, { CanBeCborString, forceCborString } from "../../cbor/CborString";
-import { ToCbor } from "../../cbor/interfaces/CBORSerializable";
 import JsRuntime from "../../utils/JsRuntime";
 import ObjectUtils from "../../utils/ObjectUtils";
-import AuxiliaryData from "./AuxiliaryData/AuxiliaryData";
-import VKey from "./TxWitnessSet/VKeyWitness/VKey";
-import TxBody, { ITxBody, isITxBody } from "./body/TxBody";
-import TxWitnessSet, { ITxWitnessSet, isITxWitnessSet } from "./TxWitnessSet/TxWitnessSet";
-import Hash32 from "../hashes/Hash32/Hash32";
-import { signEd25519 } from "../../crypto";
-import Hash28 from "../hashes/Hash28/Hash28";
-import PubKeyHash from "../credentials/PubKeyHash";
-import PrivateKey from "../credentials/PrivateKey";
-import VKeyWitness from "./TxWitnessSet/VKeyWitness/VKeyWitness";
-import ToJson from "../../utils/ts/ToJson";
-import Signature from "../hashes/Signature";
-import BasePlutsError from "../../errors/BasePlutsError";
-import InvalidCborFormatError from "../../errors/InvalidCborFormatError";
+import { CborString, CanBeCborString, forceCborString } from "../../cbor/CborString";
+import { ToCbor } from "../../cbor/interfaces/CBORSerializable";
+import { TxWitnessSet, ITxWitnessSet, isITxWitnessSet } from "./TxWitnessSet/TxWitnessSet";
+
+import { Cbor } from "../../cbor/Cbor";
+import { CborObj } from "../../cbor/CborObj";
+import { CborArray } from "../../cbor/CborObj/CborArray";
+import { CborSimple } from "../../cbor/CborObj/CborSimple";
+import { AuxiliaryData } from "./AuxiliaryData/AuxiliaryData";
+import { TxBody, ITxBody, isITxBody } from "./body/TxBody";
+import { Hash32 } from "../hashes/Hash32/Hash32";
+import { Hash28 } from "../hashes/Hash28/Hash28";
+import { PubKeyHash } from "../credentials/PubKeyHash";
+import { ToJson } from "../../utils/ts/ToJson";
+import { InvalidCborFormatError } from "../../errors/InvalidCborFormatError";
 
 export interface ITx {
     body: ITxBody
@@ -28,7 +23,7 @@ export interface ITx {
     auxiliaryData?: AuxiliaryData | null
 }
 
-export default class Tx
+export class Tx
     implements ITx, ToCbor, ToJson
 {
     readonly body!: TxBody

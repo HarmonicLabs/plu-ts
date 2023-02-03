@@ -1,20 +1,21 @@
-import Cbor from "../../../cbor/Cbor";
-import CborObj from "../../../cbor/CborObj";
-import CborArray from "../../../cbor/CborObj/CborArray";
-import CborBytes from "../../../cbor/CborObj/CborBytes";
-import CborString, { CanBeCborString, forceCborString } from "../../../cbor/CborString";
-import { ToCbor } from "../../../cbor/interfaces/CBORSerializable";
-import InvalidCborFormatError from "../../../errors/InvalidCborFormatError";
-import Cloneable from "../../../types/interfaces/Cloneable";
 import BufferUtils from "../../../utils/BufferUtils";
 import JsRuntime from "../../../utils/JsRuntime";
 import ObjectUtils from "../../../utils/ObjectUtils";
-import ToJson from "../../../utils/ts/ToJson";
-import Hash32 from "../../hashes/Hash32/Hash32";
-import Signature from "../../hashes/Signature";
-import VKey from "./VKeyWitness/VKey";
 
-export default class BootstrapWitness
+import { Cbor } from "../../../cbor/Cbor";
+import { CborObj } from "../../../cbor/CborObj";
+import { CborArray } from "../../../cbor/CborObj/CborArray";
+import { CborBytes } from "../../../cbor/CborObj/CborBytes";
+import { CborString, CanBeCborString, forceCborString } from "../../../cbor/CborString";
+import { ToCbor } from "../../../cbor/interfaces/CBORSerializable";
+import { InvalidCborFormatError } from "../../../errors/InvalidCborFormatError";
+import { Cloneable } from "../../../types/interfaces/Cloneable";
+import { ToJson } from "../../../utils/ts/ToJson";
+import { Hash32 } from "../../hashes/Hash32/Hash32";
+import { Signature } from "../../hashes/Signature";
+import { VKey } from "./VKeyWitness/VKey";
+
+export class BootstrapWitness
     implements ToCbor, Cloneable<BootstrapWitness>, ToJson
 {
     readonly pubKey!: VKey;

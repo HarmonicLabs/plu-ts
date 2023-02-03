@@ -1,6 +1,6 @@
 import BufferUtils from "../../utils/BufferUtils";
 import JsRuntime from "../../utils/JsRuntime";
-import ToRawObj from "./interfaces/ToRawObj";
+import { ToRawObj } from "./interfaces/ToRawObj";
 
 export type RawCborBytes = {
     bytes: Buffer
@@ -19,7 +19,7 @@ export function isRawCborBytes( b: RawCborBytes ): boolean
     );
 }
 
-export default class CborBytes
+export class CborBytes
     implements ToRawObj
 {
     private _buff : Buffer;

@@ -1,17 +1,16 @@
-import CborObj from "../../../cbor/CborObj";
-import CborArray from "../../../cbor/CborObj/CborArray";
-import CborMap from "../../../cbor/CborObj/CborMap";
-import CborUInt from "../../../cbor/CborObj/CborUInt";
-import InvalidCborFormatError from "../../../errors/InvalidCborFormatError";
-import { canBeUInteger, forceBigUInt, forceUInteger } from "../../../types/ints/Integer";
 import ObjectUtils from "../../../utils/ObjectUtils";
-import GenesisHash from "../../hashes/Hash28/GenesisHash";
-import Epoch from "../Epoch";
-import ProtocolParamters, { isPartialProtocolParameters, partialProtocolParametersFromCborObj, partialProtocolParametersToCborObj, partialProtocolParamsToJson } from "./ProtocolParameters";
+
+import { canBeUInteger, forceBigUInt, forceUInteger } from "../../../types/ints/Integer";
+import { CborObj } from "../../../cbor/CborObj";
+import { CborArray } from "../../../cbor/CborObj/CborArray";
+import { CborMap } from "../../../cbor/CborObj/CborMap";
+import { CborUInt } from "../../../cbor/CborObj/CborUInt";
+import { InvalidCborFormatError } from "../../../errors/InvalidCborFormatError";
+import { GenesisHash } from "../../hashes/Hash28/GenesisHash";
+import { Epoch } from "../Epoch";
+import { ProtocolParamters, isPartialProtocolParameters, partialProtocolParametersFromCborObj, partialProtocolParametersToCborObj, partialProtocolParamsToJson } from "./ProtocolParameters";
 
 export type ProtocolUpdateProposal = [ ProtocolParametersUpdateMap, Epoch ];
-
-export default ProtocolUpdateProposal;
 
 export type ProtocolParametersUpdateMap = {
     genesisHash: GenesisHash

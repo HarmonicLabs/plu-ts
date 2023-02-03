@@ -1,5 +1,5 @@
 import JsRuntime from "../../utils/JsRuntime";
-import ToRawObj from "./interfaces/ToRawObj";
+import { ToRawObj } from "./interfaces/ToRawObj";
 
 export type RawCborNegInt = {
     neg: bigint
@@ -19,7 +19,7 @@ export function isRawCborNegative( neg: RawCborNegInt ): boolean
     );
 }
 
-export default class CborNegInt
+export class CborNegInt
     implements ToRawObj
 {
     private _neg : bigint;

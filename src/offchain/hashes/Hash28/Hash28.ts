@@ -1,12 +1,13 @@
-import Cbor from "../../../cbor/Cbor";
-import CborObj from "../../../cbor/CborObj";
-import CborBytes from "../../../cbor/CborObj/CborBytes";
-import { CanBeCborString, forceCborString } from "../../../cbor/CborString";
-import InvalidCborFormatError from "../../../errors/InvalidCborFormatError";
 import JsRuntime from "../../../utils/JsRuntime";
-import Hash from "../Hash";
 
-export default class Hash28 extends Hash
+import { Cbor } from "../../../cbor/Cbor";
+import { CborObj } from "../../../cbor/CborObj";
+import { CborBytes } from "../../../cbor/CborObj/CborBytes";
+import { CanBeCborString, forceCborString } from "../../../cbor/CborString";
+import { InvalidCborFormatError } from "../../../errors/InvalidCborFormatError";
+import { Hash } from "../Hash";
+
+export class Hash28 extends Hash
 {
     constructor( bs: string | Buffer | Hash28 , className: string = "Hash28" )
     {

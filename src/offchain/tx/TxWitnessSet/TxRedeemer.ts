@@ -1,26 +1,26 @@
-import Cbor from "../../../cbor/Cbor"
-import CborObj from "../../../cbor/CborObj"
-import CborArray from "../../../cbor/CborObj/CborArray"
-import CborUInt from "../../../cbor/CborObj/CborUInt"
-import CborString, { CanBeCborString, forceCborString } from "../../../cbor/CborString"
-import { ToCbor } from "../../../cbor/interfaces/CBORSerializable"
-import BasePlutsError from "../../../errors/BasePlutsError"
-import InvalidCborFormatError from "../../../errors/InvalidCborFormatError"
-import ExBudget from "../../../onchain/CEK/Machine/ExBudget"
-import Data, { isData } from "../../../types/Data"
-import DataB from "../../../types/Data/DataB"
-import DataConstr from "../../../types/Data/DataConstr"
-import DataI from "../../../types/Data/DataI"
-import { dataFromCborObj } from "../../../types/Data/fromCbor"
-import dataToCbor, { dataToCborObj } from "../../../types/Data/toCbor"
-import Cloneable from "../../../types/interfaces/Cloneable"
-import { canBeUInteger, CanBeUInteger, forceUInteger } from "../../../types/ints/Integer"
 import JsRuntime from "../../../utils/JsRuntime"
 import ObjectUtils from "../../../utils/ObjectUtils"
-import ToJson from "../../../utils/ts/ToJson"
-import StakeCredentials, { StakeValidatorHash } from "../../credentials/StakeCredentials"
-import Hash32 from "../../hashes/Hash32/Hash32"
-import TxBody from "../body/TxBody"
+
+import { StakeCredentials, StakeValidatorHash } from "../../credentials/StakeCredentials"
+import { canBeUInteger, CanBeUInteger, forceUInteger } from "../../../types/ints/Integer"
+import { dataFromCborObj } from "../../../types/Data/fromCbor"
+import { dataToCborObj } from "../../../types/Data/toCbor"
+import { CborString, CanBeCborString, forceCborString } from "../../../cbor/CborString"
+import { ToCbor } from "../../../cbor/interfaces/CBORSerializable"
+import { Cbor } from "../../../cbor/Cbor"
+import { CborObj } from "../../../cbor/CborObj"
+import { CborArray } from "../../../cbor/CborObj/CborArray"
+import { CborUInt } from "../../../cbor/CborObj/CborUInt"
+import { BasePlutsError } from "../../../errors/BasePlutsError"
+import { InvalidCborFormatError } from "../../../errors/InvalidCborFormatError"
+import { ExBudget } from "../../../onchain/CEK/Machine/ExBudget"
+import { Data, isData } from "../../../types/Data"
+import { DataB } from "../../../types/Data/DataB"
+import { DataConstr } from "../../../types/Data/DataConstr"
+import { Cloneable } from "../../../types/interfaces/Cloneable"
+import { ToJson } from "../../../utils/ts/ToJson"
+import { Hash32 } from "../../hashes/Hash32/Hash32"
+import { TxBody } from "../body/TxBody"
 
 export const enum TxRedeemerTag {
     Spend    = 0,
@@ -56,7 +56,7 @@ export interface ITxRedeemer {
     execUnits: ExBudget
 }
 
-export default class TxRedeemer
+export class TxRedeemer
     implements ITxRedeemer, ToCbor, Cloneable<TxRedeemer>, ToJson
 {
     

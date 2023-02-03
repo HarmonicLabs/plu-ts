@@ -1,36 +1,37 @@
-import BasePlutsError from "../../../errors/BasePlutsError";
-import PlutsCEKError from "../../../errors/PlutsCEKError";
-import PlutsCEKUnboundVarError from "../../../errors/PlutsCEKError/PlutsCEKComputeError/PlutsCEKUnboundVarError";
-import { AnyV1CostModel, AnyV2CostModel, costModelV1ToFakeV2, defaultV2Costs, isCostModelsV1, isCostModelsV2, toCostModelV2 } from "../../../offchain/ledger/CostModels";
 import ObjectUtils from "../../../utils/ObjectUtils";
-import UPLCTerm, { PureUPLCTerm } from "../../UPLC/UPLCTerm";
-import Application from "../../UPLC/UPLCTerms/Application";
-import Builtin from "../../UPLC/UPLCTerms/Builtin";
-import UPLCBuiltinTag, { getNRequiredForces } from "../../UPLC/UPLCTerms/Builtin/UPLCBuiltinTag";
-import Delay from "../../UPLC/UPLCTerms/Delay";
-import ErrorUPLC from "../../UPLC/UPLCTerms/ErrorUPLC";
-import Force from "../../UPLC/UPLCTerms/Force";
-import HoistedUPLC from "../../UPLC/UPLCTerms/HoistedUPLC";
-import Lambda from "../../UPLC/UPLCTerms/Lambda";
-import UPLCConst from "../../UPLC/UPLCTerms/UPLCConst";
-import UPLCVar from "../../UPLC/UPLCTerms/UPLCVar";
-import { PlutusScriptVersion } from "../../pluts/Script";
-import Term from "../../pluts/Term";
-import BnCEK from "../BnCEK";
-import PartialBuiltin from "../BnCEK/PartialBuiltin";
-import CEKEnv from "../CEKEnv";
-import CEKFrames from "../CEKFrames";
-import ForceFrame from "../CEKFrames/ForceFrame";
-import LApp from "../CEKFrames/LApp";
-import RApp from "../CEKFrames/RApp";
-import CEKHeap from "../CEKHeap";
-import CEKSteps, { ComputeStep, ReturnStep } from "../CEKSteps";
-import DelayCEK from "../DelayCEK";
-import LambdaCEK from "../LambdaCEK";
+
+import { BasePlutsError } from "../../../errors/BasePlutsError";
+import { PlutsCEKError } from "../../../errors/PlutsCEKError";
 import { BuiltinCostsOf, costModelV2ToBuiltinCosts } from "./BuiltinCosts";
-import ExBudget from "./ExBudget";
+import { PlutsCEKUnboundVarError } from "../../../errors/PlutsCEKError/PlutsCEKComputeError/PlutsCEKUnboundVarError";
 import type { MachineCosts } from "./MachineCosts";
-import costModelV2ToMachineCosts from "./MachineCosts";
+import { PlutusScriptVersion } from "../../pluts/Script";
+import { AnyV1CostModel, AnyV2CostModel, costModelV1ToFakeV2, defaultV2Costs, isCostModelsV1, isCostModelsV2, toCostModelV2 } from "../../../offchain/ledger/CostModels";
+import { CEKSteps, ComputeStep, ReturnStep } from "../CEKSteps";
+import { UPLCTerm, PureUPLCTerm } from "../../UPLC/UPLCTerm";
+import { UPLCBuiltinTag, getNRequiredForces } from "../../UPLC/UPLCTerms/Builtin/UPLCBuiltinTag";
+import { Application } from "../../UPLC/UPLCTerms/Application";
+import { Builtin } from "../../UPLC/UPLCTerms/Builtin";
+import { Delay } from "../../UPLC/UPLCTerms/Delay";
+import { ErrorUPLC } from "../../UPLC/UPLCTerms/ErrorUPLC";
+import { Force } from "../../UPLC/UPLCTerms/Force";
+import { HoistedUPLC } from "../../UPLC/UPLCTerms/HoistedUPLC";
+import { Lambda } from "../../UPLC/UPLCTerms/Lambda";
+import { UPLCConst } from "../../UPLC/UPLCTerms/UPLCConst";
+import { UPLCVar } from "../../UPLC/UPLCTerms/UPLCVar";
+import { Term } from "../../pluts/Term";
+import { BnCEK } from "../BnCEK";
+import { PartialBuiltin } from "../BnCEK/PartialBuiltin";
+import { CEKEnv } from "../CEKEnv";
+import { CEKFrames } from "../CEKFrames";
+import { ForceFrame } from "../CEKFrames/ForceFrame";
+import { LApp } from "../CEKFrames/LApp";
+import { RApp } from "../CEKFrames/RApp";
+import { CEKHeap } from "../CEKHeap";
+import { DelayCEK } from "../DelayCEK";
+import { LambdaCEK } from "../LambdaCEK";
+import { ExBudget } from "./ExBudget";
+import { costModelV2ToMachineCosts } from "./MachineCosts";
 
 
 export type MachineVersionV1 = PlutusScriptVersion.V1;
@@ -55,7 +56,7 @@ type CostModelOf<V extends MachineVersion> =
     V extends PlutusScriptVersion.V2 ? AnyV2CostModel :
     never    
 
-export default class Machine<V extends MachineVersion = MachineVersion>
+export class Machine<V extends MachineVersion = MachineVersion>
 {
     readonly version!: V;
 

@@ -1,9 +1,9 @@
-import BasePlutsError from "../errors/BasePlutsError";
+import { BasePlutsError } from "../errors/BasePlutsError";
 import BigIntUtils from "../utils/BigIntUtils";
 import JsRuntime from "../utils/JsRuntime";
 import { sha2_512 } from "./sha2_512";
 import { buffToByteArr, byte, byteArrToHex } from "./types";
-import positiveMod from "./utils/positiveMod";
+import { positiveMod } from "./utils/positiveMod";
 
 
 type bigpoint = [bigint,bigint];

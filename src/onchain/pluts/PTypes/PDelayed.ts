@@ -1,8 +1,8 @@
-import Cloneable, { isCloneable } from "../../../types/interfaces/Cloneable";
-import PType from "../PType";
-import Type, { TermType } from "../Term/Type/base";
+import { Cloneable, isCloneable } from "../../../types/interfaces/Cloneable";
+import { Type, TermType } from "../Term/Type/base";
+import { PType } from "../PType";
 
-export default class PDelayed< DelayedPType extends PType > extends PType
+export class PDelayed< DelayedPType extends PType > extends PType
     implements Cloneable<PDelayed<DelayedPType>>
 {
     private _delayedPType: DelayedPType;

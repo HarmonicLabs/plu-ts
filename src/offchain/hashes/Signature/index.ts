@@ -1,9 +1,10 @@
-import CborObj from "../../../cbor/CborObj";
-import { CanBeCborString } from "../../../cbor/CborString";
 import JsRuntime from "../../../utils/JsRuntime";
-import Hash from "../Hash";
 
-export default class Signature extends Hash
+import { CborObj } from "../../../cbor/CborObj";
+import { CanBeCborString } from "../../../cbor/CborString";
+import { Hash } from "../Hash";
+
+export class Signature extends Hash
 {
     constructor( bs: string | Buffer | Signature  )
     {

@@ -1,4 +1,4 @@
-import BasePlutsError from "../errors/BasePlutsError";
+import { BasePlutsError } from "../errors/BasePlutsError";
 import ObjectUtils from "../utils/ObjectUtils";
 import { buffToByteArr, byte, uint64 as uint64_t } from "./types";
 import { byteArrToHex, forceUint64, uint64, uint64Rotr, uint64ToBytesLE } from "./types";

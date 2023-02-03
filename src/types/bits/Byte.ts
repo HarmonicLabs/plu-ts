@@ -1,11 +1,6 @@
-import Cloneable from "../interfaces/Cloneable";
+import { Cloneable } from "../interfaces/Cloneable";
 
-export interface ByteContructionOption
-{
-
-}
-
-export default class Byte
+export class Byte
     implements Cloneable<Byte>
 {
     private _byte: number;

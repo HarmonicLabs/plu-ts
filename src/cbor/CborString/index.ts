@@ -1,10 +1,9 @@
-import CborObj from "../CborObj";
-import Cbor from "../Cbor";
-import ByteString from "../../types/HexString/ByteString";
+import { CborObj } from "../CborObj";
+import { Cbor } from "../Cbor";
+import { ByteString } from "../../types/HexString/ByteString";
 
 
-export default
-class CborString extends ByteString
+export class CborString extends ByteString
 {
     static isStrictInstance( cborStr: any ): cborStr is CborString
     {

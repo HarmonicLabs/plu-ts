@@ -1,3 +1,3 @@
-import PlutsSerialError from "..";
+import { PlutsSerialError } from "..";
 
-export default class PlutsCborError extends PlutsSerialError {}
+export class PlutsCborError extends PlutsSerialError {}

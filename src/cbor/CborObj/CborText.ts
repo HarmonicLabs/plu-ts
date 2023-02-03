@@ -1,5 +1,5 @@
 import JsRuntime from "../../utils/JsRuntime";
-import ToRawObj from "./interfaces/ToRawObj";
+import { ToRawObj } from "./interfaces/ToRawObj";
 
 export type RawCborText = {
     text: string
@@ -18,7 +18,7 @@ export function isRawCborText( t: RawCborText ): boolean
     );
 }
 
-export default class CborText
+export class CborText
     implements ToRawObj
 {
     private _text : string;

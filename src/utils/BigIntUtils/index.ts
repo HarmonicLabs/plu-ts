@@ -1,7 +1,6 @@
-import { Buffer } from "buffer"; 
-import Debug from "../Debug";
 import JsRuntime from "../JsRuntime";
 
+import { Buffer } from "buffer"; 
 
 /**
  * @static

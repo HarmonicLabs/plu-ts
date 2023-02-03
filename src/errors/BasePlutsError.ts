@@ -1,6 +1,5 @@
 
-
-export default class BasePlutsError extends Error
+export class BasePlutsError extends Error
 {
     constructor( msg: string )
     {

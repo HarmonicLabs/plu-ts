@@ -1,13 +1,14 @@
-import Cbor from "../../cbor/Cbor";
-import CborObj from "../../cbor/CborObj";
-import CborArray from "../../cbor/CborObj/CborArray";
-import CborBytes from "../../cbor/CborObj/CborBytes";
-import CborMap, { CborMapEntry } from "../../cbor/CborObj/CborMap";
-import CborUInt from "../../cbor/CborObj/CborUInt";
-import CborString from "../../cbor/CborString";
-import BasePlutsError from "../../errors/BasePlutsError";
-import { canBeUInteger, CanBeUInteger, forceBigUInt, forceUInteger } from "../../types/ints/Integer";
 import ObjectUtils from "../../utils/ObjectUtils";
+
+import { Cbor } from "../../cbor/Cbor";
+import { CborObj } from "../../cbor/CborObj";
+import { CborArray } from "../../cbor/CborObj/CborArray";
+import { CborBytes } from "../../cbor/CborObj/CborBytes";
+import { CborMap, CborMapEntry } from "../../cbor/CborObj/CborMap";
+import { CborUInt } from "../../cbor/CborObj/CborUInt";
+import { CborString } from "../../cbor/CborString";
+import { BasePlutsError } from "../../errors/BasePlutsError";
+import { canBeUInteger, CanBeUInteger, forceBigUInt, forceUInteger } from "../../types/ints/Integer";
 
 export type AnyV1CostModel = CostModelPlutusV1 | CostModelPlutusV1Array;
 
@@ -17,8 +18,6 @@ export interface CostModels {
     PlutusV1?: AnyV1CostModel
     PlutusV2?: AnyV2CostModel
 }
-
-export default CostModels;
 
 export const defaultV1Costs: CostModelPlutusV1 = Object.freeze({
     "addInteger-cpu-arguments-intercept": 205665,

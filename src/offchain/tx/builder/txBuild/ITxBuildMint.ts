@@ -1,8 +1,8 @@
-import { CanBeData } from "../../../../types/Data/CanBeData";
-import Hash32 from "../../../hashes/Hash32/Hash32";
-import Value from "../../../ledger/Value/Value";
-import Script from "../../../script/Script";
-import TxOutRef from "../../body/output/UTxO";
+import type { CanBeData } from "../../../../types/Data/CanBeData";
+import type { Hash32 } from "../../../hashes/Hash32/Hash32";
+import type { Value } from "../../../ledger/Value/Value";
+import type { Script } from "../../../script/Script";
+import type { UTxO } from "../../body/output/UTxO";
 
 export interface ITxBuildMint {
     value: Value
@@ -11,10 +11,8 @@ export interface ITxBuildMint {
         policyId: Hash32
         redeemer: CanBeData
     } | {
-        ref: TxOutRef
+        ref: UTxO
         policyId: Hash32
         redeemer: CanBeData
     }
 };
-
-export default ITxBuildMint;

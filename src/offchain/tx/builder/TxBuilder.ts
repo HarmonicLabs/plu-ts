@@ -1,41 +1,42 @@
-import type { NetworkT } from "../../ledger/Network";
-import ProtocolParamters, { isProtocolParameters } from "../../ledger/protocol/ProtocolParameters";
-import Tx, { getNSignersNeeded } from "../Tx";
-import ITxBuildArgs from "./txBuild/ITxBuildArgs";
-import ITxBuildOptions from "./txBuild/ITxBuildOptions";
 import JsRuntime from "../../../utils/JsRuntime";
 import ObjectUtils from "../../../utils/ObjectUtils";
-import TxIn from "../body/TxIn";
-import { txBuildOutToTxOut } from "./txBuild/ITxBuildOutput";
-import TxOut from "../body/output/TxOut";
-import Value from "../../ledger/Value/Value";
-import { forceBigUInt } from "../../../types/ints/Integer";
-import Script, { ScriptType } from "../../script/Script";
-import TxRedeemer, { TxRedeemerTag } from "../TxWitnessSet/TxRedeemer";
-import BasePlutsError from "../../../errors/BasePlutsError";
-import TxOutRef from "../body/output/UTxO";
-import VKeyWitness from "../TxWitnessSet/VKeyWitness/VKeyWitness";
-import Data from "../../../types/Data";
-import CanBeData, { canBeData, forceData } from "../../../types/Data/CanBeData";
-import BootstrapWitness from "../TxWitnessSet/BootstrapWitness";
-import Machine, { machineVersionV1, machineVersionV2 } from "../../../onchain/CEK/Machine";
-import { costModelsToLanguageViewCbor, defaultV1Costs, defaultV2Costs, isCostModelsV1, isCostModelsV2 } from "../../ledger/CostModels";
-import ExBudget from "../../../onchain/CEK/Machine/ExBudget";
-import AuxiliaryData from "../AuxiliaryData/AuxiliaryData";
-import Hash32 from "../../hashes/Hash32/Hash32";
 import BufferUtils from "../../../utils/BufferUtils";
-import CborString from "../../../cbor/CborString";
+
+import type { NetworkT } from "../../ledger/Network";
+import { costModelsToLanguageViewCbor, defaultV1Costs, defaultV2Costs, isCostModelsV1, isCostModelsV2 } from "../../ledger/CostModels";
+import { txBuildOutToTxOut } from "./txBuild/ITxBuildOutput";
+import { forceBigUInt } from "../../../types/ints/Integer";
+import { Script, ScriptType } from "../../script/Script";
+import { ProtocolParamters, isProtocolParameters } from "../../ledger/protocol/ProtocolParameters";
 import { getTxInfos } from "./toOnChain/getTxInfos";
 import { blake2b_256, byte } from "../../../crypto";
-import dataToCbor from "../../../types/Data/toCbor";
-import ScriptDataHash from "../../hashes/Hash32/ScriptDataHash";
-import UPLCTerm from "../../../onchain/UPLC/UPLCTerm";
-import UPLCDecoder from "../../../onchain/UPLC/UPLCDecoder";
-import Application from "../../../onchain/UPLC/UPLCTerms/Application";
-import UPLCConst from "../../../onchain/UPLC/UPLCTerms/UPLCConst";
-import DataConstr from "../../../types/Data/DataConstr";
-import ErrorUPLC from "../../../onchain/UPLC/UPLCTerms/ErrorUPLC";
-import UTxO from "../body/output/UTxO";
+import { Tx, getNSignersNeeded } from "../Tx";
+import { Machine, machineVersionV1, machineVersionV2 } from "../../../onchain/CEK/Machine";
+import { CanBeData, canBeData, forceData } from "../../../types/Data/CanBeData";
+import { ITxBuildArgs } from "./txBuild/ITxBuildArgs";
+import { ITxBuildOptions } from "./txBuild/ITxBuildOptions";
+import { TxIn } from "../body/TxIn";
+import { TxOut } from "../body/output/TxOut";
+import { Value } from "../../ledger/Value/Value";
+import { TxRedeemer, TxRedeemerTag } from "../TxWitnessSet/TxRedeemer";
+import { BasePlutsError } from "../../../errors/BasePlutsError";
+import { TxOutRef } from "../body/output/UTxO";
+import { VKeyWitness } from "../TxWitnessSet/VKeyWitness/VKeyWitness";
+import { Data } from "../../../types/Data";
+import { BootstrapWitness } from "../TxWitnessSet/BootstrapWitness";
+import { ExBudget } from "../../../onchain/CEK/Machine/ExBudget";
+import { AuxiliaryData } from "../AuxiliaryData/AuxiliaryData";
+import { Hash32 } from "../../hashes/Hash32/Hash32";
+import { CborString } from "../../../cbor/CborString";
+import { dataToCbor } from "../../../types/Data/toCbor";
+import { ScriptDataHash } from "../../hashes/Hash32/ScriptDataHash";
+import { UPLCTerm } from "../../../onchain/UPLC/UPLCTerm";
+import { UPLCDecoder } from "../../../onchain/UPLC/UPLCDecoder";
+import { Application } from "../../../onchain/UPLC/UPLCTerms/Application";
+import { UPLCConst } from "../../../onchain/UPLC/UPLCTerms/UPLCConst";
+import { DataConstr } from "../../../types/Data/DataConstr";
+import { ErrorUPLC } from "../../../onchain/UPLC/UPLCTerms/ErrorUPLC";
+import { UTxO } from "../body/output/UTxO";
 
 export class TxBuilder
 {
@@ -212,7 +213,7 @@ export class TxBuilder
         /**
          * @returns `Script` to execute
          */
-        function checkScriptAndPushIfInline( script: { inline: Script } | { ref: TxOutRef } ): Script
+        function checkScriptAndPushIfInline( script: { inline: Script } | { ref: UTxO } ): Script
         {
             if( ObjectUtils.hasOwn( script, "inline" ) )
             {
@@ -864,8 +865,6 @@ export class TxBuilder
 
     readonly run!: TxBuilderRunner
 }
-
-export default TxBuilder;
 
 export class TxBuilderRunner
 {

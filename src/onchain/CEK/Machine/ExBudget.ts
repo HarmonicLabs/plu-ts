@@ -1,22 +1,23 @@
-import Cbor from "../../../cbor/Cbor";
-import CborObj from "../../../cbor/CborObj";
-import CborArray from "../../../cbor/CborObj/CborArray";
-import CborUInt from "../../../cbor/CborObj/CborUInt";
-import CborString, { CanBeCborString, forceCborString } from "../../../cbor/CborString";
-import { ToCbor } from "../../../cbor/interfaces/CBORSerializable";
-import BasePlutsError from "../../../errors/BasePlutsError";
-import InvalidCborFormatError from "../../../errors/InvalidCborFormatError";
-import Cloneable from "../../../types/interfaces/Cloneable";
-import Integer, { CanBeUInteger, forceBigUInt, forceUInteger } from "../../../types/ints/Integer";
 import ObjectUtils from "../../../utils/ObjectUtils";
-import ToJson from "../../../utils/ts/ToJson";
+
+import { Cbor } from "../../../cbor/Cbor";
+import { CborObj } from "../../../cbor/CborObj";
+import { CborArray } from "../../../cbor/CborObj/CborArray";
+import { CborUInt } from "../../../cbor/CborObj/CborUInt";
+import { CborString, CanBeCborString, forceCborString } from "../../../cbor/CborString";
+import { ToCbor } from "../../../cbor/interfaces/CBORSerializable";
+import { BasePlutsError } from "../../../errors/BasePlutsError";
+import { InvalidCborFormatError } from "../../../errors/InvalidCborFormatError";
+import { Cloneable } from "../../../types/interfaces/Cloneable";
+import { Integer, CanBeUInteger, forceBigUInt } from "../../../types/ints/Integer";
+import { ToJson } from "../../../utils/ts/ToJson";
 
 export interface IExBudget {
     mem: CanBeUInteger,
     cpu: CanBeUInteger
 }
 
-class ExBudget
+export class ExBudget
     implements IExBudget, Cloneable<ExBudget>, ToCbor, ToJson
 {
     readonly cpu!: bigint;
@@ -158,5 +159,3 @@ class ExBudget
         }
     }
 }
-
-export default ExBudget

@@ -1,29 +1,30 @@
-import { PLam, PPair } from "../..";
 import ObjectUtils from "../../../../utils/ObjectUtils";
-import PType  from "../../PType";
-import { PAlias } from "../../PTypes/PAlias/palias";
-import unwrapAlias from "../../PTypes/PAlias/unwrapAlias";
-import PBool from "../../PTypes/PBool";
-import PByteString from "../../PTypes/PByteString";
-import PInt from "../../PTypes/PInt";
-import PList from "../../PTypes/PList";
-import PString from "../../PTypes/PString";
+
+import type { PLam, PPair } from "../..";
+import { PType }  from "../../PType";
 import { PStruct } from "../../PTypes/PStruct/pstruct";
 import { papp } from "../../Syntax";
 import { PappArg } from "../../Syntax/pappArg";
-import Term from "../../Term";
-import Type, { AliasTermType, bool, bs, ConstantableStructDefinition, ConstantableTermType, int, list, pair, str, TermType } from "../../Term/Type/base";
+import { Type, AliasTermType, bool, bs, ConstantableStructDefinition, ConstantableTermType, int, list, pair, str, TermType } from "../../Term/Type/base";
 import { typeExtends } from "../../Term/Type/extension";
 import { isAliasType, isConstantableStructType, isLambdaType, isStructType } from "../../Term/Type/kinds";
 import { ToPType } from "../../Term/Type/ts-pluts-conversion";
-import TermAlias from "./TermAlias";
-import TermBool, { addPBoolMethods } from "./TermBool";
-import TermBS, { addPByteStringMethods } from "./TermBS";
-import TermInt, { addPIntMethods } from "./TermInt";
-import TermList, { addPListMethods } from "./TermList";
-import TermPair, { addPPairMethods } from "./TermPair";
-import TermStr, { addPStringMethods } from "./TermStr";
-import TermStruct, { addPStructMethods } from "./TermStruct";
+import { PAlias } from "../../PTypes/PAlias/palias";
+import { unwrapAlias } from "../../PTypes/PAlias/unwrapAlias";
+import { PBool } from "../../PTypes/PBool";
+import { PByteString } from "../../PTypes/PByteString";
+import { PInt } from "../../PTypes/PInt";
+import { PList } from "../../PTypes/PList";
+import { PString } from "../../PTypes/PString";
+import { Term } from "../../Term";
+import { TermAlias } from "./TermAlias";
+import { TermBool, addPBoolMethods } from "./TermBool";
+import { TermBS, addPByteStringMethods } from "./TermBS";
+import { TermInt, addPIntMethods } from "./TermInt";
+import { TermList, addPListMethods } from "./TermList";
+import { TermPair, addPPairMethods } from "./TermPair";
+import { TermStr, addPStringMethods } from "./TermStr";
+import { TermStruct, addPStructMethods } from "./TermStruct";
 
 // given the index returns the previous number ( PrevNum[2] -> 1; etc... )
 type PrevNum = [ never, 0, 1, 2, 3, 4, 5, 6 ];
@@ -53,7 +54,7 @@ export type UtilityTermOf<PElem extends PType> =
         Term<PElem>
     ) & Term<PElem> // needed because sometime typescript doesn't understands that the term is the same just extended
 
-export default function addUtilityForType<T extends TermType>( t: T )
+export function addUtilityForType<T extends TermType>( t: T )
     : ( term: Term<ToPType<T>> ) => UtilityTermOf<ToPType<T>>
 {
     if( isAliasType( t ) ) return addUtilityForType( unwrapAlias( t ) ) as any;

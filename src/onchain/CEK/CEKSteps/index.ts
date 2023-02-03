@@ -1,10 +1,7 @@
-import Cloneable from "../../../types/interfaces/Cloneable";
 import JsRuntime from "../../../utils/JsRuntime";
-import UPLCTerm, { PureUPLCTerm } from "../../UPLC/UPLCTerm";
-import CEKEnv from "../CEKEnv";
-import PartialBuiltin from "../BnCEK/PartialBuiltin";
-import LambdaCEK from "../LambdaCEK";
-import DelayCEK from "../DelayCEK";
+
+import { UPLCTerm } from "../../UPLC/UPLCTerm";
+import { CEKEnv } from "../CEKEnv";
 import { CEKValue } from "../CEKValue";
 
 export class ComputeStep
@@ -36,7 +33,7 @@ export class ReturnStep
 
 export type CEKStep = ComputeStep | ReturnStep;
 
-export default class CEKSteps
+export class CEKSteps
 {
     private _steps: CEKStep[]
 

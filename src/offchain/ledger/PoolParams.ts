@@ -1,26 +1,25 @@
-import CborPositiveRational from "../../cbor/extra/CborRational";
-import ByteString from "../../types/HexString/ByteString";
-import Coin from "./Coin";
-import PubKeyHash from "../credentials/PubKeyHash";
-import Hash32 from "../hashes/Hash32/Hash32";
-import PoolKeyHash from "../hashes/Hash28/PoolKeyHash";
-import VRFKeyHash from "../hashes/Hash32/VRFKeyHash";
-import PoolRelay, { isPoolRelay, poolRelayFromCborObj, poolRelayToCborObj, poolRelayToJson } from "./PoolRelay";
-import { ToCbor } from "../../cbor/interfaces/CBORSerializable";
 import JsRuntime from "../../utils/JsRuntime";
 import ObjectUtils from "../../utils/ObjectUtils";
+
 import { canBeUInteger, forceUInteger } from "../../types/ints/Integer";
-import CborObj from "../../cbor/CborObj";
-import CborUInt from "../../cbor/CborObj/CborUInt";
-import CborSimple from "../../cbor/CborObj/CborSimple";
-import CborArray from "../../cbor/CborObj/CborArray";
-import CborString from "../../cbor/CborString";
-import CborText from "../../cbor/CborObj/CborText";
-import ToJson from "../../utils/ts/ToJson";
-import Hash28 from "../hashes/Hash28/Hash28";
-import InvalidCborFormatError from "../../errors/InvalidCborFormatError";
-import CborTag from "../../cbor/CborObj/CborTag";
-import CborBytes from "../../cbor/CborObj/CborBytes";
+import { PoolRelay, isPoolRelay, poolRelayFromCborObj, poolRelayToCborObj, poolRelayToJson } from "./PoolRelay";
+import { CborPositiveRational } from "../../cbor/extra/CborRational";
+import { ByteString } from "../../types/HexString/ByteString";
+import { Coin } from "./Coin";
+import { PubKeyHash } from "../credentials/PubKeyHash";
+import { Hash32 } from "../hashes/Hash32/Hash32";
+import { PoolKeyHash } from "../hashes/Hash28/PoolKeyHash";
+import { VRFKeyHash } from "../hashes/Hash32/VRFKeyHash";
+import { CborObj } from "../../cbor/CborObj";
+import { CborUInt } from "../../cbor/CborObj/CborUInt";
+import { CborSimple } from "../../cbor/CborObj/CborSimple";
+import { CborArray } from "../../cbor/CborObj/CborArray";
+import { CborText } from "../../cbor/CborObj/CborText";
+import { ToJson } from "../../utils/ts/ToJson";
+import { Hash28 } from "../hashes/Hash28/Hash28";
+import { InvalidCborFormatError } from "../../errors/InvalidCborFormatError";
+import { CborTag } from "../../cbor/CborObj/CborTag";
+import { CborBytes } from "../../cbor/CborObj/CborBytes";
 
 export interface IPoolParams {
     operator: PoolKeyHash,
@@ -34,7 +33,7 @@ export interface IPoolParams {
     metadata?: [poolMetadataUrl: string, hash: Hash32]
 }
 
-export default class PoolParams
+export class PoolParams
     implements IPoolParams, ToJson
 {
     readonly operator!: PoolKeyHash;

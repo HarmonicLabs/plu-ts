@@ -1,13 +1,12 @@
-import BasePlutsError from "../../../errors/BasePlutsError";
-import BitStream from "../../../types/bits/BitStream";
-import Cloneable from "../../../types/interfaces/Cloneable";
-import Debug from "../../../utils/Debug";
 import JsRuntime from "../../../utils/JsRuntime";
-import UPLCEncoder from "../UPLCEncoder";
-import UPLCProgram from "../UPLCProgram";
-import UPLCVersion from "../UPLCProgram/UPLCVersion";
-import UPLCTerm, { getHoistedTerms, isClosedTerm, showUPLC } from "../UPLCTerm";
-import Application from "./Application";
+
+import { BasePlutsError } from "../../../errors/BasePlutsError";
+import { BitStream } from "../../../types/bits/BitStream";
+import { Cloneable } from "../../../types/interfaces/Cloneable";
+import { UPLCEncoder } from "../UPLCEncoder";
+import { UPLCProgram } from "../UPLCProgram";
+import { UPLCVersion } from "../UPLCProgram/UPLCVersion";
+import { UPLCTerm, getHoistedTerms, isClosedTerm } from "../UPLCTerm";
 
 /**
  * basically an insertion sort;
@@ -91,7 +90,7 @@ export function isSortedHoistedSet( hoistedTerms: HoistedUPLC[] ): boolean
     return true;
 }
 
-export default class HoistedUPLC
+export class HoistedUPLC
     implements Cloneable<HoistedUPLC>
 {
     private readonly _compiled: BitStream;

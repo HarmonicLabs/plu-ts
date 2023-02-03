@@ -1,12 +1,12 @@
-import BinaryString from "../../../../types/bits/BinaryString";
-import BitStream from "../../../../types/bits/BitStream";
-import Cloneable from "../../../../types/interfaces/Cloneable";
-import { CanBeUInteger, forceUInteger, UInteger } from "../../../../types/ints/Integer";
 import JsRuntime from "../../../../utils/JsRuntime";
-import UPLCTerm from "../../UPLCTerm";
+
+import { BinaryString } from "../../../../types/bits/BinaryString";
+import { BitStream } from "../../../../types/bits/BitStream";
+import { Cloneable } from "../../../../types/interfaces/Cloneable";
+import { CanBeUInteger, forceUInteger, UInteger } from "../../../../types/ints/Integer";
 
 
-export default class UPLCVar
+export class UPLCVar
     implements Cloneable<UPLCVar>
 {
     static get UPLCTag(): BitStream

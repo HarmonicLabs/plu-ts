@@ -1,3 +1,3 @@
 import PlutsCborError from ".";
 
-export default class PlutsCborParseError extends PlutsCborError {};
+export class PlutsCborParseError extends PlutsCborError {};

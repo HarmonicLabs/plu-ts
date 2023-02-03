@@ -1,9 +1,9 @@
-import Data, { isData } from ".";
+import { Data, isData } from ".";
 import { blake2b_256, byte } from "../../crypto";
-import BasePlutsError from "../../errors/BasePlutsError";
-import dataToCbor from "./toCbor";
+import { BasePlutsError } from "../../errors/BasePlutsError";
+import { dataToCbor } from "./toCbor";
 
-export default function hashData( data: Data ): byte[]
+export function hashData( data: Data ): byte[]
 {
     if( !isData( data ) )
     throw new BasePlutsError(

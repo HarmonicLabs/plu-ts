@@ -1,29 +1,30 @@
-import Data, { isData } from "../../../../types/Data";
-import Hash32 from "../../../hashes/Hash32/Hash32";
-import Script, { ScriptType } from "../../../script/Script";
-import { Value } from "../../../ledger/Value/Value";
 import JsRuntime from "../../../../utils/JsRuntime";
 import ObjectUtils from "../../../../utils/ObjectUtils";
-import { ToCbor } from "../../../../cbor/interfaces/CBORSerializable";
-import CborString, { CanBeCborString, forceCborString } from "../../../../cbor/CborString";
-import Cbor from "../../../../cbor/Cbor";
-import Address from "../../../ledger/Address";
-import CborMap, { CborMapEntry } from "../../../../cbor/CborObj/CborMap";
-import CborUInt from "../../../../cbor/CborObj/CborUInt";
-import CborArray from "../../../../cbor/CborObj/CborArray";
-import dataToCbor, { dataToCborObj } from "../../../../types/Data/toCbor";
-import CborTag from "../../../../cbor/CborObj/CborTag";
-import CborBytes from "../../../../cbor/CborObj/CborBytes";
-import Cloneable from "../../../../types/interfaces/Cloneable";
-import ToData from "../../../../types/Data/toData/interface";
-import DataConstr from "../../../../types/Data/DataConstr";
+
 import { maybeData } from "../../../../types/Data/toData/maybeData";
-import BasePlutsError from "../../../../errors/BasePlutsError";
-import ToJson from "../../../../utils/ts/ToJson";
-import { IValue } from "../../../ledger/Value/IValue";
-import CborObj from "../../../../cbor/CborObj";
-import InvalidCborFormatError from "../../../../errors/InvalidCborFormatError";
 import { dataFromCborObj } from "../../../../types/Data/fromCbor";
+import { Data, isData } from "../../../../types/Data";
+import { ToCbor } from "../../../../cbor/interfaces/CBORSerializable";
+import { Script, ScriptType } from "../../../script/Script";
+import { CborString, CanBeCborString, forceCborString } from "../../../../cbor/CborString";
+import { Value } from "../../../ledger/Value/Value";
+import { CborMap, CborMapEntry } from "../../../../cbor/CborObj/CborMap";
+import { dataToCborObj } from "../../../../types/Data/toCbor";
+import { IValue } from "../../../ledger/Value/IValue";
+import { Hash32 } from "../../../hashes/Hash32/Hash32";
+import { Cbor } from "../../../../cbor/Cbor";
+import { Address } from "../../../ledger/Address";
+import { CborUInt } from "../../../../cbor/CborObj/CborUInt";
+import { CborArray } from "../../../../cbor/CborObj/CborArray";
+import { CborTag } from "../../../../cbor/CborObj/CborTag";
+import { CborBytes } from "../../../../cbor/CborObj/CborBytes";
+import { Cloneable } from "../../../../types/interfaces/Cloneable";
+import { ToData } from "../../../../types/Data/toData/interface";
+import { DataConstr } from "../../../../types/Data/DataConstr";
+import { BasePlutsError } from "../../../../errors/BasePlutsError";
+import { ToJson } from "../../../../utils/ts/ToJson";
+import { CborObj } from "../../../../cbor/CborObj";
+import { InvalidCborFormatError } from "../../../../errors/InvalidCborFormatError";
 
 export type AddressStr = `${"addr1"|"addr_test1"}${string}`;
 
@@ -33,7 +34,7 @@ export interface ITxOut {
     datum?: Hash32 | Data,
     refScript?: Script
 }
-export default class TxOut
+export class TxOut
     implements ITxOut, ToCbor, Cloneable<TxOut>, ToData, ToJson
 {
     readonly address!: Address

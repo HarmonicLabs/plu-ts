@@ -1,5 +1,5 @@
 
-export default interface Cloneable<T>
+export interface Cloneable<T>
 {
     clone: () => T
 }

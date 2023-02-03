@@ -1,9 +1,9 @@
-import pstruct from "../../../PTypes/PStruct/pstruct";
+import { pstruct } from "../../../PTypes/PStruct/pstruct";
 import { int } from "../../../Term/Type/base";
-import PStakingCredential from "../Address/PStakingCredential";
-import PPubKeyHash from "../PubKey/PPubKeyHash";
+import { PStakingCredential } from "../Address/PStakingCredential";
+import { PPubKeyHash } from "../PubKey/PPubKeyHash";
 
-const PDCert = pstruct({
+export const PDCert = pstruct({
     KeyRegistration: { _0: PStakingCredential.type },
     KeyDeRegistration: { _0: PStakingCredential.type },
     KeyDelegation: {
@@ -21,5 +21,3 @@ const PDCert = pstruct({
     Genesis: {},
     MoveInstantRewards: {}
 })
-
-export default PDCert;
