@@ -1,6 +1,6 @@
 import { pif, ptrace } from "./Builtins";
 import { pBool } from "../PTypes/PBool";
-import PString from "../PTypes/PString";
+import { PString } from "../PTypes/PString";
 import { pdelay, perror, pfn, pforce, phoist, plam } from "../Syntax/syntax";
 import { bool, ConstantableTermType, delayed, str } from "../Term/Type/base";
 import { TermFn } from "../PTypes/PFn/PFn";

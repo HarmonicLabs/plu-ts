@@ -1,2 +1,2 @@
 export * from "./compile"
-export * from "./makeValidator"
+export * from "./makeScript"

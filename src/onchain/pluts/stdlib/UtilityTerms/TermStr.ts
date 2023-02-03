@@ -1,14 +1,14 @@
-import { pappendStr, pencodeUtf8, peqStr } from "../Builtins";
 import ObjectUtils from "../../../../utils/ObjectUtils";
-import PString from "../../PTypes/PString";
-import Term from "../../Term";
-import TermBS from "./TermBS";
+import { pappendStr, pencodeUtf8, peqStr } from "../Builtins";
+import { PString } from "../../PTypes/PString";
+import { Term } from "../../Term";
+import { TermBS } from "./TermBS";
 import { TermFn } from "../../PTypes/PFn/PFn";
-import PBool from "../../PTypes/PBool";
-import TermBool from "./TermBool";
+import { PBool } from "../../PTypes/PBool";
+import { TermBool } from "./TermBool";
 import { PappArg } from "../../Syntax/pappArg";
 
-type TermStr = Term<PString> & {
+export type TermStr = Term<PString> & {
     readonly utf8Encoded: TermBS
     
     // pappendStr
@@ -18,8 +18,6 @@ type TermStr = Term<PString> & {
     readonly eqTerm:    TermFn<[ PString ], PBool >
     readonly eq:        ( other: PappArg<PString> ) => TermBool
 }
-
-export default TermStr;
 
 export function addPStringMethods( term: Term<PString> ): TermStr
 {

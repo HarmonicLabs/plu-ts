@@ -1,6 +1,5 @@
 import { PType, Term } from "..";
 
-
 /*
 https://dev.to/cleancodestudio/this-is-how-to-implement-javascript-promises-from-scratch-357k
 

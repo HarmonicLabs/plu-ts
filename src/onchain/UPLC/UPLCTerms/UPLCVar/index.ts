@@ -5,7 +5,6 @@ import { BitStream } from "../../../../types/bits/BitStream";
 import { Cloneable } from "../../../../types/interfaces/Cloneable";
 import { CanBeUInteger, forceUInteger, UInteger } from "../../../../types/ints/Integer";
 
-
 export class UPLCVar
     implements Cloneable<UPLCVar>
 {

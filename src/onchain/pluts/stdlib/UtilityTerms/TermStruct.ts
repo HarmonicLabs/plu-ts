@@ -1,15 +1,23 @@
 import ObjectUtils from "../../../../utils/ObjectUtils";
-import capitalize from "../../../../utils/ts/capitalize";
-import { IsSingleKey } from "../../../../utils/ts/SingleKeyObj";
-import PType from "../../PType";
-import { PStruct, RestrictedStructInstance } from "../../PTypes/PStruct/pstruct";
-import pmatch from "../../PTypes/PStruct/pmatch";
-import Term from "../../Term";
+
 import { isStructDefinition, isStructType } from "../../Term/Type/kinds";
 import { ConstantableStructDefinition, StructCtorDef } from "../../Term/Type/base";
+import { IsSingleKey } from "../../../../utils/ts/SingleKeyObj";
+import { PStruct, RestrictedStructInstance } from "../../PTypes/PStruct/pstruct";
+import { capitalize } from "../../../../utils/ts/capitalize";
+import { PType } from "../../PType";
+import { pmatch } from "../../PTypes/PStruct/pmatch";
+import { Term } from "../../Term";
+import type { TermBool } from "./TermBool";
+import type { TermFn } from "../../PTypes/PFn/PFn";
+import { PBool, peqData } from "../..";
 
-type TermStruct<SDef extends ConstantableStructDefinition> = Term<PStruct<SDef>> // & {} // if other methods are needed
-& 
+export type TermStruct<SDef extends ConstantableStructDefinition> = Term<PStruct<SDef>> & {
+
+    eqTerm: TermFn<[PStruct<SDef>], PBool>
+    eq: ( other: Term<PStruct<SDef>> ) => TermBool
+
+} & 
 (
     IsSingleKey<SDef> extends true ?
     (
@@ -21,8 +29,6 @@ type TermStruct<SDef extends ConstantableStructDefinition> = Term<PStruct<SDef>>
     )
     : {}
 );
-
-export default TermStruct;
 
 export function addPStructMethods<SDef extends ConstantableStructDefinition>( struct: Term<PStruct<SDef>> ): TermStruct<SDef>
 {
@@ -53,6 +59,15 @@ export function addPStructMethods<SDef extends ConstantableStructDefinition>( st
             }
         )
     }
+
+    ObjectUtils.defineReadOnlyProperty(
+        struct, "eqTerm", peqData.$( struct as any )
+    )
+
+    ObjectUtils.defineReadOnlyProperty(
+        struct, "eq", ( other: Term<PStruct<SDef>> ) => peqData.$( struct as any ).$( other as any )
+    )
+
 
     return struct as any;
 }

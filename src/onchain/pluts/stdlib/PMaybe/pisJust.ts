@@ -1,13 +1,13 @@
-import PType from "../../PType";
-import PBool, { pBool } from "../../PTypes/PBool";
+import { PType } from "../../PType";
+import { PBool, pBool } from "../../PTypes/PBool";
 import { TermFn } from "../../PTypes/PFn/PFn";
-import pmatch from "../../PTypes/PStruct/pmatch";
-import punsafeConvertType from "../../Syntax/punsafeConvertType";
+import { pmatch } from "../../PTypes/PStruct/pmatch";
+import { punsafeConvertType } from "../../Syntax/punsafeConvertType";
 import { phoist, plam } from "../../Syntax/syntax";
 import { bool, int } from "../../Term/Type/base";
-import PMaybe, { PMaybeT } from "./PMaybe";
+import { PMaybe, PMaybeT } from "./PMaybe";
 
-const pisJust: TermFn<[PMaybeT<PType>], PBool> = phoist(
+export const pisJust: TermFn<[PMaybeT<PType>], PBool> = phoist(
     plam( PMaybe.type, bool )
     // @ts-ignore Type instantiation is excessively deep and possibly infinite
     ( maybeTerm =>
@@ -23,5 +23,3 @@ const pisJust: TermFn<[PMaybeT<PType>], PBool> = phoist(
         .onNothing( (_: any) => pBool( false ) )
     )
 ) as any;
-
-export default pisJust;

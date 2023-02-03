@@ -1,6 +1,6 @@
 import { anyStruct, DataConstructor, DataType, PrimType, StructCtorDef, StructType, TermType } from "./base";
 import { isAliasType, isDataType, isStructType, isTypeNameOfData, isTypeParam, isWellFormedType } from "./kinds";
-import unwrapAlias from "../../PTypes/PAlias/unwrapAlias";
+import { unwrapAlias } from "../../PTypes/PAlias/unwrapAlias";
 
 export function dataTypeExtends<ExtendedDataTy extends DataType>( extending: DataType, extended: ExtendedDataTy ): extending is ExtendedDataTy
 {

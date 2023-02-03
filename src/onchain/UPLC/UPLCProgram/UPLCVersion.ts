@@ -16,14 +16,4 @@ export class UPLCVersion
         this._minor = forceUInteger( minor );
         this._patch = forceUInteger( patch );
     }
-
-    // deprecated
-    //
-    // toUPLCBitStream(): BitStream
-    // {
-    //     const result = this.major.toUPLCBitStream();
-    //     result.append( this.minor.toUPLCBitStream() );
-    //     result.append( this.patch.toUPLCBitStream() );
-    //     return result;
-    // }
 }

@@ -1,7 +1,5 @@
 import Debug from "../../../utils/Debug";
 import JsRuntime from "../../../utils/JsRuntime";
-import { Word32 } from "../Word32";
-
 
 /**
  * javascript, memory efficient **signed** int32 representation
@@ -52,10 +50,4 @@ export class Int32
     {
         return this._int;
     }
-
-    toWord32(): Word32
-    {
-        return new Word32( this._int );
-    }
-
 }

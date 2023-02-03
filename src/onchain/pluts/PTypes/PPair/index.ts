@@ -1,17 +1,18 @@
 import JsRuntime from "../../../../utils/JsRuntime";
-import PType from "../../PType";
+
+import { PType } from "../../PType";
 import { phoist, plam } from "../../Syntax/syntax";
-import Term from "../../Term";
-import Type, { ConstantableTermType, data, DataType, pair, TermType } from "../../Term/Type/base";
+import { Term } from "../../Term";
+import { Type, ConstantableTermType, data, DataType, pair, TermType } from "../../Term/Type/base";
 import { typeExtends } from "../../Term/Type/extension";
-import PData from "../PData/PData";
-import PLam from "../PFn/PLam";
+import { PData } from "../PData/PData";
+import { PLam } from "../PFn/PLam";
 import { punsafeConvertType } from "../../Syntax";
 import { isConstantableTermType } from "../../Term/Type/kinds";
-import UPLCConst from "../../../UPLC/UPLCTerms/UPLCConst";
+import { UPLCConst } from "../../../UPLC/UPLCTerms/UPLCConst";
 import { termTyToConstTy } from "../../Term/Type/constTypeConversion";
-import TermPair, { addPPairMethods } from "../../stdlib/UtilityTerms/TermPair";
-import PDataRepresentable from "../../PType/PDataRepresentable";
+import { TermPair, addPPairMethods } from "../../stdlib/UtilityTerms/TermPair";
+import { PDataRepresentable } from "../../PType/PDataRepresentable";
 import { ToPType } from "../../Term/Type/ts-pluts-conversion";
 
 /*
@@ -22,7 +23,7 @@ Class static side 'typeof PPair' incorrectly extends base class static side 'typ
 Type instantiation is excessively deep and possibly infinite.
 */
 // @ts-ignore
-export default class PPair<A extends PType, B extends PType > extends PDataRepresentable
+export class PPair<A extends PType, B extends PType > extends PDataRepresentable
 {
     private _a: A
     private _b: B

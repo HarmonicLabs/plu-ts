@@ -1,30 +1,30 @@
-import type PData from "../PData";
-import type Term from "../../../Term";
-import { ConstantableTermType, dynPair, lam, StructType, TermType, tyVar } from "../../../Term/Type/base";
-import type { TermFn } from "../../PFn";
-import type PPair from "../../PPair";
-import type PType from "../../../PType";
-import type TermPair from "../../../stdlib/UtilityTerms/TermPair";
+import ObjectUtils from "../../../../../utils/ObjectUtils";
 
-import BasePlutsError from "../../../../../errors/BasePlutsError";
-import { pfstPair, psndPair, punListData, punMapData } from "../../../stdlib/Builtins";
+import type { PData }  from "../PData";
+import type { Term }  from "../../../Term";
+import type { TermFn } from "../../PFn";
+import type { TermPair } from "../../../stdlib/UtilityTerms/TermPair";
+
+import { BasePlutsError } from "../../../../../errors/BasePlutsError";
+import { ConstantableTermType, StructType, TermType, tyVar } from "../../../Term/Type/base";
+import { punListData, punMapData } from "../../../stdlib/Builtins";
 import { pmap } from "../../../stdlib/List/methods";
 import { phoist, plam } from "../../../Syntax/syntax";
-import punsafeConvertType from "../../../Syntax/punsafeConvertType";
-import Type, { int, bs, str, unit, bool, list, data, pair } from "../../../Term/Type/base";
+import { punsafeConvertType } from "../../../Syntax/punsafeConvertType";
+import { Type, int, bs, str, unit, bool, list, data, pair } from "../../../Term/Type/base";
 import { typeExtends } from "../../../Term/Type/extension";
 import { isAliasType, isStructType, isDataType, isListType, isPairType, isConstantableTermType } from "../../../Term/Type/kinds";
 import { cloneWithAllPairsAsDynamic, termTypeToString } from "../../../Term/Type/utils";
-import unwrapAlias from "../../PAlias/unwrapAlias";
-import PBool from "../../PBool";
-import PByteString from "../../PByteString";
-import PInt from "../../PInt";
-import PList from "../../PList";
-import PString from "../../PString";
-import PUnit from "../../PUnit";
+import { unwrapAlias } from "../../PAlias/unwrapAlias";
+import { PBool } from "../../PBool";
+import { PByteString } from "../../PByteString";
+import { PInt } from "../../PInt";
+import { PList } from "../../PList";
+import { PString } from "../../PString";
+import { PUnit } from "../../PUnit";
 import { pdataPairToDynamic } from "../../PPair/pdynPair";
 import { ToPType } from "../../../Term/Type/ts-pluts-conversion";
-import ObjectUtils from "../../../../../utils/ObjectUtils";
+import { PType } from "../../../PType";
 
 export function getFromDataTermForType<T extends ConstantableTermType | StructType>( t: T )
 : TermFn<[ PData ], ToPType<T>>

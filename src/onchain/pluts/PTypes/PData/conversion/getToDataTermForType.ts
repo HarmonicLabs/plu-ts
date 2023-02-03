@@ -1,25 +1,25 @@
 import type { TermFn } from "../../PFn";
-import type PData from "../PData";
-import type Term from "../../../Term";
+import type { PData } from "../PData";
+import type { Term } from "../../../Term";
 import { ConstantableTermType, PrimType, StructType } from "../../../Term/Type/base";
-import type PType from "../../../PType";
+import type { PType } from "../../../PType";
 
-import BasePlutsError from "../../../../../errors/BasePlutsError";
+import { BasePlutsError } from "../../../../../errors/BasePlutsError";
 import { ppairData, pfstPair, psndPair, pid } from "../../../stdlib/Builtins";
 import { pmap } from "../../../stdlib/List/methods";
 import { phoist, plam } from "../../../Syntax/syntax";
-import punsafeConvertType from "../../../Syntax/punsafeConvertType";
-import Type, { int, bs, str, unit, bool, list, data, pair } from "../../../Term/Type/base";
+import { punsafeConvertType } from "../../../Syntax/punsafeConvertType";
+import {  Type, int, bs, str, unit, bool, list, data, pair } from "../../../Term/Type/base";
 import { typeExtends } from "../../../Term/Type/extension";
 import { isAliasType, isStructType, isDataType, isListType, isPairType } from "../../../Term/Type/kinds";
 import { termTypeToString } from "../../../Term/Type/utils";
-import unwrapAlias from "../../PAlias/unwrapAlias";
-import PBool from "../../PBool";
-import PByteString from "../../PByteString";
-import PInt from "../../PInt";
-import PList from "../../PList";
-import PString from "../../PString";
-import PUnit from "../../PUnit";
+import { unwrapAlias } from "../../PAlias/unwrapAlias";
+import { PBool } from "../../PBool";
+import { PByteString } from "../../PByteString";
+import { PInt } from "../../PInt";
+import { PList } from "../../PList";
+import { PString } from "../../PString";
+import { PUnit } from "../../PUnit";
 import { ToPType } from "../../../Term/Type/ts-pluts-conversion";
 
 export function getToDataTermForType<T extends ConstantableTermType | StructType>( t: T )

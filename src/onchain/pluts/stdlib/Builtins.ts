@@ -1,41 +1,42 @@
-import BasePlutsError from "../../../errors/BasePlutsError";
 import ObjectUtils from "../../../utils/ObjectUtils";
+
 import { Head } from "../../../utils/ts";
-import Application from "../../UPLC/UPLCTerms/Application";
-import Builtin from "../../UPLC/UPLCTerms/Builtin";
-import UPLCConst from "../../UPLC/UPLCTerms/UPLCConst";
-import PType from "../PType";
-import PBool from "../PTypes/PBool";
-import PByteString from "../PTypes/PByteString";
-import PData from "../PTypes/PData/PData";
-import PDataBS from "../PTypes/PData/PDataBS";
-import PDataConstr from "../PTypes/PData/PDataConstr";
-import PDataInt from "../PTypes/PData/PDataInt";
-import PDataList from "../PTypes/PData/PDataList";
-import PDataMap from "../PTypes/PData/PDataMap";
-import PFn, { TermFn } from "../PTypes/PFn/PFn";
-import PLam from "../PTypes/PFn/PLam";
-import PInt from "../PTypes/PInt";
-import PList from "../PTypes/PList";
-import PPair from "../PTypes/PPair";
-import PString from "../PTypes/PString";
-import PUnit from "../PTypes/PUnit";
 import { papp, phoist, pdelay, pfn, pforce, plam } from "../Syntax/syntax";
-import TermBool, { addPBoolMethods } from "./UtilityTerms/TermBool";
-import TermBS, { addPByteStringMethods } from "./UtilityTerms/TermBS";
-import TermInt, { addPIntMethods } from "./UtilityTerms/TermInt";
-import TermStr, { addPStringMethods } from "./UtilityTerms/TermStr";
-import Term from "../Term";
-import { getNRequiredLambdaArgs, termTypeToString } from "../Term/Type/utils";
-import Type, { TermType, DataType, bool, lam, int, bs, fn, delayed, data, PrimType } from "../Term/Type/base";
-import Lambda from "../../UPLC/UPLCTerms/Lambda";
-import UPLCVar from "../../UPLC/UPLCTerms/UPLCVar";
-import HoistedUPLC from "../../UPLC/UPLCTerms/HoistedUPLC";
-import PDelayed from "../PTypes/PDelayed";
+import { getNRequiredLambdaArgs } from "../Term/Type/utils";
+import { Type, TermType, DataType, bool, lam, int, bs, fn, delayed, data, PrimType } from "../Term/Type/base";
 import { PappArg } from "../Syntax/pappArg";
-import addUtilityForType, { UtilityTermOf } from "./UtilityTerms/addUtilityForType";
+import { addUtilityForType, UtilityTermOf } from "./UtilityTerms/addUtilityForType";
 import { isConstantableTermType } from "../Term/Type/kinds";
-import punsafeConvertType from "../Syntax/punsafeConvertType";
+import { BasePlutsError } from "../../../errors/BasePlutsError";
+import { Application } from "../../UPLC/UPLCTerms/Application";
+import { Builtin } from "../../UPLC/UPLCTerms/Builtin";
+import { UPLCConst } from "../../UPLC/UPLCTerms/UPLCConst";
+import { PType } from "../PType";
+import { PBool } from "../PTypes/PBool";
+import { PByteString } from "../PTypes/PByteString";
+import { PData } from "../PTypes/PData/PData";
+import { PDataBS } from "../PTypes/PData/PDataBS";
+import { PDataConstr } from "../PTypes/PData/PDataConstr";
+import { PDataInt } from "../PTypes/PData/PDataInt";
+import { PDataList } from "../PTypes/PData/PDataList";
+import { PDataMap } from "../PTypes/PData/PDataMap";
+import { PFn, TermFn } from "../PTypes/PFn/PFn";
+import { PLam } from "../PTypes/PFn/PLam";
+import { PInt } from "../PTypes/PInt";
+import { PList } from "../PTypes/PList";
+import { PPair } from "../PTypes/PPair";
+import { PString } from "../PTypes/PString";
+import { PUnit } from "../PTypes/PUnit";
+import { TermBool, addPBoolMethods } from "./UtilityTerms/TermBool";
+import { TermBS, addPByteStringMethods } from "./UtilityTerms/TermBS";
+import { TermInt, addPIntMethods } from "./UtilityTerms/TermInt";
+import { TermStr, addPStringMethods } from "./UtilityTerms/TermStr";
+import { Term } from "../Term";
+import { Lambda } from "../../UPLC/UPLCTerms/Lambda";
+import { UPLCVar } from "../../UPLC/UPLCTerms/UPLCVar";
+import { HoistedUPLC } from "../../UPLC/UPLCTerms/HoistedUPLC";
+import { PDelayed } from "../PTypes/PDelayed";
+import { punsafeConvertType } from "../Syntax/punsafeConvertType";
 import { getFromDataForType } from "../PTypes/PData/conversion/getFromDataTermForType";
 import { ToPDataType, ToPType } from "../Term/Type/ts-pluts-conversion";
 
@@ -65,7 +66,7 @@ export function addApplications<Ins extends [ PType, ...PType[] ], Out extends P
             lambdaTerm,
             "$",
             ( input: PappArg< Head<Ins> > ) => {
-                let output: any = papp( lambdaTerm, input );
+                let output: any = papp( lambdaTerm as any, input );
 
                 return output;
             }
@@ -80,7 +81,7 @@ export function addApplications<Ins extends [ PType, ...PType[] ], Out extends P
             // Type 'PType[]' is not assignable to type '[PType, ...PType[]]'.
             // Source provides no match for required element at position 0 in target
             addApplications< Tail<Ins>, Out >(
-                papp( lambdaTerm , input ) as any
+                papp( lambdaTerm as any , input ) as any
             )
     ) as any;
 }
@@ -948,7 +949,7 @@ export function pfstPair<A extends TermType, B extends TermType>( fstType: A, sn
                             punsafeConvertType( pair, Type.Pair( data, data ) )
                         ) as any
                     ) as any
-                );
+                ) as any;
 
             }
 
@@ -991,7 +992,7 @@ export function psndPair<A extends TermType, B extends TermType>( fstType: A, sn
                             punsafeConvertType( pair, Type.Pair( data, data ) )
                         ) as any
                     ) as any
-                );
+                ) as any;
 
             }
 

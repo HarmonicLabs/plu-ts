@@ -1,11 +1,11 @@
 import { PrimType, TermType } from "./base";
-import BasePlutsError from "../../../../errors/BasePlutsError";
+import { BasePlutsError } from "../../../../errors/BasePlutsError";
 import { typeExtends } from "./extension";
 import { isAliasType } from "./kinds";
 import { findSubsToRestrict, replaceTypeParam } from "./tyParams";
 import { cloneTermType } from "./utils";
 
-export default function applyLambdaType( lambdaType: Readonly<[ PrimType.Lambda, TermType, TermType ]>, arg: Readonly<TermType> ): TermType
+export function applyLambdaType( lambdaType: Readonly<[ PrimType.Lambda, TermType, TermType ]>, arg: Readonly<TermType> ): TermType
 {
     if( !typeExtends( arg, lambdaType[1] ) )
     {

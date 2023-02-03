@@ -28,8 +28,6 @@ export type TermTypeParameter = symbol;
 export const structType = Symbol("structType");
 export const anyStruct  = Symbol("anyStruct");
 
-
-
 export type ConstantableStructCtorDef = {
     [field: string | number]: ConstantableTermType | (ConstantableTermType[])[number] | ConstantableStructType
 }

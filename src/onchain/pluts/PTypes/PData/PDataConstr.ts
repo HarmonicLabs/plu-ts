@@ -1,8 +1,7 @@
-import PData from "./PData";
-import DataConstr from "../../../../types/Data/DataConstr";
-import { PDataToDataArr } from "./conversion";
+import { PData } from "./PData";
+import { DataConstr } from "../../../../types/Data/DataConstr";
 
-export default class PDataConstr extends PData
+export class PDataConstr extends PData
 {
     constructor(
         dConstr: DataConstr

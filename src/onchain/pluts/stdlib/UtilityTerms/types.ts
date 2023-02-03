@@ -1,26 +1,23 @@
-import PType from "../../PType";
-import PBool from "../../PTypes/PBool";
-import PByteString from "../../PTypes/PByteString";
-import PInt from "../../PTypes/PInt";
-import PList from "../../PTypes/PList";
-import PString from "../../PTypes/PString";
-import Term from "../../Term";
-import TermBool from "./TermBool";
-import TermBS from "./TermBS";
-import TermInt from "./TermInt";
-import TermList from "./TermList";
-import TermStr from "./TermStr";
+import { PType } from "../../PType";
+import { PBool } from "../../PTypes/PBool";
+import { PByteString } from "../../PTypes/PByteString";
+import { PInt } from "../../PTypes/PInt";
+import { PList } from "../../PTypes/PList";
+import { PString } from "../../PTypes/PString";
+import { Term } from "../../Term";
+import { TermBool } from "./TermBool";
+import { TermBS } from "./TermBS";
+import { TermInt } from "./TermInt";
+import { TermList } from "./TermList";
+import { TermStr } from "./TermStr";
 
 
-type PTypeWithUtility
+export type PTypeWithUtility
     = PInt
     | PBool
     | PByteString
     | PString
     | PList<PType>;
-
-
-export default PTypeWithUtility;
 
 export type UtilityFromPType<PT extends PTypeWithUtility> =
     PT extends PInt ? TermInt :

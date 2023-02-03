@@ -1,9 +1,9 @@
-import pstruct from "../../../PTypes/PStruct/pstruct";
-import PMaybe from "../../../stdlib/PMaybe/PMaybe";
-import V1 from "../../V1";
-import POutputDatum from "./POutputDatum";
+import { pstruct } from "../../../PTypes/PStruct/pstruct";
+import { PMaybe } from "../../../stdlib/PMaybe/PMaybe";
+import { V1 } from "../../V1";
+import { POutputDatum } from "./POutputDatum";
 
-const PTxOut = pstruct({
+export const PTxOut = pstruct({
     PTxOut: {
         address: V1.PAddress.type,
         value: V1.PValue.type,
@@ -11,5 +11,3 @@ const PTxOut = pstruct({
         refScrpt: PMaybe( V1.PScriptHash.type ).type
     }
 });
-
-export default PTxOut;

@@ -1,15 +1,17 @@
-import type UPLCTerm from "../../UPLC/UPLCTerm";
-import type PType from "../PType";
+import JsRuntime from "../../../utils/JsRuntime";
+import ObjectUtils from "../../../utils/ObjectUtils";
+
+import type { UPLCTerm } from "../../UPLC/UPLCTerm";
+import type { PType } from "../PType";
 import type { TermType } from "./Type/base";
 import type { FromPType, ToPType } from "./Type/ts-pluts-conversion";
 
 import { isCloneable } from "../../../types/interfaces/Cloneable";
-import JsRuntime from "../../../utils/JsRuntime";
-import ObjectUtils from "../../../utils/ObjectUtils";
-import HoistedUPLC from "../../UPLC/UPLCTerms/HoistedUPLC";
-import UPLCConst from "../../UPLC/UPLCTerms/UPLCConst";
+import { HoistedUPLC } from "../../UPLC/UPLCTerms/HoistedUPLC";
+import { UPLCConst } from "../../UPLC/UPLCTerms/UPLCConst";
 import { isWellFormedType } from "./Type/kinds";
 
+export * from "./Type";
 
 export type UnTerm<T extends Term<PType>> = T extends Term<infer PT extends PType > ? PT : never;
 

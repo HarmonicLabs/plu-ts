@@ -1,29 +1,29 @@
-import BasePlutsError from "../../../errors/BasePlutsError";
-import ObjectUtils from "../../../utils/ObjectUtils";
-import { CurriedFn, curry } from "../../../utils/ts/combinators";
-import Application from "../../UPLC/UPLCTerms/Application";
-import Delay from "../../UPLC/UPLCTerms/Delay";
-import ErrorUPLC from "../../UPLC/UPLCTerms/ErrorUPLC";
-import Force from "../../UPLC/UPLCTerms/Force";
-import Lambda from "../../UPLC/UPLCTerms/Lambda";
-import UPLCVar from "../../UPLC/UPLCTerms/UPLCVar";
-import PType from "../PType";
-import PDelayed from "../PTypes/PDelayed";
-import PLam from "../PTypes/PFn/PLam";
-import Type, { PrimType, TermType } from "../Term/Type/base";
-import Term, { ToTermArrNonEmpty } from "../Term";
 import JsRuntime from "../../../utils/JsRuntime";
-import HoistedUPLC from "../../UPLC/UPLCTerms/HoistedUPLC";
+import ObjectUtils from "../../../utils/ObjectUtils";
+import { BasePlutsError } from "../../../errors/BasePlutsError";
+import { CurriedFn, curry } from "../../../utils/ts/combinators";
+import { Application } from "../../UPLC/UPLCTerms/Application";
+import { Delay } from "../../UPLC/UPLCTerms/Delay";
+import { ErrorUPLC } from "../../UPLC/UPLCTerms/ErrorUPLC";
+import { Force } from "../../UPLC/UPLCTerms/Force";
+import { Lambda } from "../../UPLC/UPLCTerms/Lambda";
+import { UPLCVar } from "../../UPLC/UPLCTerms/UPLCVar";
+import { PType } from "../PType";
+import { PDelayed } from "../PTypes/PDelayed";
+import { PLam } from "../PTypes/PFn/PLam";
+import { Type, PrimType, TermType } from "../Term/Type/base";
+import { Term, ToTermArrNonEmpty } from "../Term";
+import { HoistedUPLC } from "../../UPLC/UPLCTerms/HoistedUPLC";
 import { typeExtends } from "../Term/Type/extension";
 import { isLambdaType, isDelayedType, isPairType } from "../Term/Type/kinds";
 import { termTypeToString } from "../Term/Type/utils";
-import applyLambdaType from "../Term/Type/applyLambdaType";
-import UPLCTerm from "../../UPLC/UPLCTerm";
-import Builtin from "../../UPLC/UPLCTerms/Builtin";
+import { applyLambdaType } from "../Term/Type/applyLambdaType";
+import { UPLCTerm } from "../../UPLC/UPLCTerm";
+import { Builtin } from "../../UPLC/UPLCTerms/Builtin";
 import { getNRequiredForces } from "../../UPLC/UPLCTerms/Builtin/UPLCBuiltinTag";
-import addUtilityForType, { UtilityTermOf } from "../stdlib/UtilityTerms/addUtilityForType";
-import punsafeConvertType from "./punsafeConvertType";
-import pappArgToTerm, { PappArg } from "./pappArg";
+import { addUtilityForType, UtilityTermOf } from "../stdlib/UtilityTerms/addUtilityForType";
+import { punsafeConvertType } from "./punsafeConvertType";
+import { pappArgToTerm, PappArg } from "./pappArg";
 import { ToPType } from "../Term/Type/ts-pluts-conversion";
 import { TermFn } from "../PTypes/PFn/PFn";
 
@@ -151,7 +151,7 @@ export function plam<A extends TermType, B extends TermType >( inputType: A, out
                     dbnAccessLevel => new UPLCVar( dbnAccessLevel - thisLambdaPtr )
                 );
                 
-                const body = termFunc( addUtilityForType( inputType )( boundVar ) );
+                const body = termFunc( addUtilityForType( inputType )( boundVar ) as any);
 
                 // here the debruijn level is incremented
                 return new Lambda( body.toUPLC( thisLambdaPtr ) );
@@ -181,7 +181,7 @@ export function plam<A extends TermType, B extends TermType >( inputType: A, out
                                     "__isDynamicPair",
                                     true
                                 )
-                            )
+                            ) as any
                         );
         
                         // here the debruijn level is incremented
@@ -367,7 +367,7 @@ export function pfn<InputsTypes extends [ TermType, ...TermType[] ], OutputType 
             _dbn => ZUPLC
         );
 
-    return punsafeConvertType( papp( Z, fnBody ), fnBody.type[2] as TermType ) as any;
+    return punsafeConvertType( papp( Z, fnBody as any ), fnBody.type[2] as TermType ) as any;
 }
 
 type TsTermRecursiveFunctionArgs<InputsTypes extends [ TermType, ...TermType[] ], OutputType extends TermType> =

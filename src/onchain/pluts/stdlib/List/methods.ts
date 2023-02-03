@@ -1,16 +1,16 @@
-import PType from "../../PType";
-import PBool, { pBool } from "../../PTypes/PBool";
-import PFn, { TermFn } from "../../PTypes/PFn/PFn";
-import PLam from "../../PTypes/PFn/PLam";
-import PInt, { pInt } from "../../PTypes/PInt";
-import PList, { pnil } from "../../PTypes/PList";
+import { PBool, pBool } from "../../PTypes/PBool";
+import { PInt, pInt } from "../../PTypes/PInt";
+import { PList, pnil } from "../../PTypes/PList";
 import { papp, perror, pfn, phoist, plam, plet, precursive } from "../../Syntax/syntax";
-import Term from "../../Term";
-import Type, { bool, ConstantableTermType, fn, lam, list, TermType, tyVar } from "../../Term/Type/base";
+import { Type, bool, ConstantableTermType, fn, lam, list, TermType, tyVar } from "../../Term/Type/base";
 import { ToPType } from "../../Term/Type/ts-pluts-conversion";
 import { pchooseList, phead, pif, pisEmpty, plessInt, pprepend, ptail } from "../Builtins";
 import { pflip } from "../PCombinators";
-import PMaybe, { PMaybeT } from "../PMaybe/PMaybe";
+import { PFn, TermFn } from "../../PTypes/PFn/PFn";
+import { PType } from "../../PType";
+import { PLam } from "../../PTypes/PFn/PLam";
+import { Term } from "../../Term";
+import { PMaybe, PMaybeT } from "../PMaybe/PMaybe";
 
 
 export function pmatchList<ReturnT  extends TermType, PElemsT extends PType>( returnT: ReturnT, elemsT: TermType = tyVar("elemsT_pmatchList") )
@@ -225,7 +225,7 @@ export function pfoldr<ElemsT extends ConstantableTermType, ResultT extends Cons
                     // and the first element of the list
                     papp(
                         reduceFunc,
-                        head
+                        head as any
                     ).$(
                         papp(
                             self,
@@ -281,7 +281,7 @@ export function pfoldl<ElemsT extends ConstantableTermType, ResultT extends Cons
                                     // BEFORE the rest of the list
                                     papp(
                                         reduceFunc,
-                                        accum
+                                        accum as any
                                     ).$(
                                         head
                                     )
@@ -394,7 +394,7 @@ export function pevery<ElemsT extends ConstantableTermType>( elemsT: ElemsT )
 
                     papp(
                         predicate,
-                        head
+                        head as any
                     ).and(
                         papp(
                             self,
@@ -440,7 +440,7 @@ export function psome<ElemsT extends ConstantableTermType>( elemsT: ElemsT )
 
                     papp(
                         predicate,
-                        head
+                        head as any
                     ).or(
                         papp(
                             self,
@@ -476,7 +476,7 @@ export function pmap<FromT extends ConstantableTermType, ToT extends Constantabl
                     list( toT )
                 ],  list( toT ))
                 ( (elem, accum) =>
-                    accum.prepend( papp( f, elem ) )
+                    accum.prepend( papp( f, elem as any ) )
                 ) 
             )
             .$( pnil( toT ) )

@@ -1,7 +1,7 @@
-import { TermType, PrimType, DataConstructor, structType, anyStruct, aliasType, AnyAlias, StructCtorDef, StructDefinition } from "./base";
 import JsRuntime from "../../../../utils/JsRuntime";
+import { TermType, PrimType, DataConstructor, structType, anyStruct, aliasType, AnyAlias, StructCtorDef, StructDefinition } from "./base";
 import { isAliasType, isStructType } from "./kinds";
-import cloneStructDef from "../../PTypes/PStruct/cloneStructDef";
+import { cloneStructDef } from "../../PTypes/PStruct/cloneStructDef";
 
 export function getNRequiredLambdaArgs( type: TermType ): number
 {

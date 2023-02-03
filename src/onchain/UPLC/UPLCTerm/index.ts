@@ -1,21 +1,21 @@
-import UPLCVar from "../UPLCTerms/UPLCVar";
-import Delay from "../UPLCTerms/Delay";
-import Lambda from "../UPLCTerms/Lambda";
-import Application from "../UPLCTerms/Application";
-import UPLCConst from "../UPLCTerms/UPLCConst";
-import Force from "../UPLCTerms/Force";
-import ErrorUPLC from "../UPLCTerms/ErrorUPLC";
-import Builtin from "../UPLCTerms/Builtin";
 import JsRuntime from "../../../utils/JsRuntime";
-import HoistedUPLC from "../UPLCTerms/HoistedUPLC";
-import ConstType, { constListTypeUtils, constPairTypeUtils, constTypeEq, constTypeToStirng, ConstTyTag } from "../UPLCTerms/UPLCConst/ConstType";
+import { UPLCVar } from "../UPLCTerms/UPLCVar";
+import { Delay } from "../UPLCTerms/Delay";
+import { Lambda } from "../UPLCTerms/Lambda";
+import { Application } from "../UPLCTerms/Application";
+import { UPLCConst } from "../UPLCTerms/UPLCConst";
+import { Force } from "../UPLCTerms/Force";
+import { ErrorUPLC } from "../UPLCTerms/ErrorUPLC";
+import { Builtin } from "../UPLCTerms/Builtin";
+import { HoistedUPLC } from "../UPLCTerms/HoistedUPLC";
+import { ConstType, constListTypeUtils, constPairTypeUtils, constTypeEq, constTypeToStirng, ConstTyTag } from "../UPLCTerms/UPLCConst/ConstType";
 import { builtinTagToString, getNRequiredForces } from "../UPLCTerms/Builtin/UPLCBuiltinTag";
-import ConstValue from "../UPLCTerms/UPLCConst/ConstValue";
-import Integer from "../../../types/ints/Integer";
-import ByteString from "../../../types/HexString/ByteString";
+import { ConstValue } from "../UPLCTerms/UPLCConst/ConstValue";
+import { Integer } from "../../../types/ints/Integer";
+import { ByteString } from "../../../types/HexString/ByteString";
 import { isData } from "../../../types/Data";
-import dataToCbor from "../../../types/Data/toCbor";
-import Pair from "../../../types/structs/Pair";
+import { dataToCbor } from "../../../types/Data/toCbor";
+import { Pair } from "../../../types/structs/Pair";
 import { replaceHoistedTermsInplace } from "../UPLCEncoder";
 
 export type PureUPLCTerm 

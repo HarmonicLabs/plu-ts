@@ -1,3 +1,5 @@
+import BigIntUtils from "../../../utils/BigIntUtils";
+
 import { UPLCTerm } from "../../UPLC/UPLCTerm";
 import { UPLCBuiltinTag } from "../../UPLC/UPLCTerms/Builtin/UPLCBuiltinTag";
 import { ErrorUPLC } from "../../UPLC/UPLCTerms/ErrorUPLC";
@@ -5,7 +7,6 @@ import { UPLCConst } from "../../UPLC/UPLCTerms/UPLCConst";
 import { PartialBuiltin } from "./PartialBuiltin";
 import { ConstValue } from "../../UPLC/UPLCTerms/UPLCConst/ConstValue";
 import { ByteString } from "../../../types/HexString/ByteString";
-import { BigIntUtils } from "../../../utils/BigIntUtils";
 import { Pair } from "../../../types/structs/Pair";
 import { DataConstr } from "../../../types/Data/DataConstr";
 import { DataMap } from "../../../types/Data/DataMap";

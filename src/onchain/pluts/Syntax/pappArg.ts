@@ -1,29 +1,29 @@
-import type PUnit from "../PTypes/PUnit";
-import type PString from "../PTypes/PString";
-import type PInt from "../PTypes/PInt";
-import type PByteString from "../PTypes/PByteString";
-import type PBool from "../PTypes/PBool";
-import type PType from "../PType";
+import type { PUnit } from "../PTypes/PUnit";
+import type { PString } from "../PTypes/PString";
+import type { PInt } from "../PTypes/PInt";
+import type { PByteString } from "../PTypes/PByteString";
+import type { PBool } from "../PTypes/PBool";
+import type { PType } from "../PType";
 
-import { Buffer } from "buffer";
-import CborString from "../../../cbor/CborString";
-import BasePlutsError from "../../../errors/BasePlutsError";
-import HexString from "../../../types/HexString";
-import ByteString from "../../../types/HexString/ByteString";
-import Integer from "../../../types/ints/Integer";
-import Pair from "../../../types/structs/Pair";
 import JsRuntime from "../../../utils/JsRuntime";
 import ObjectUtils from "../../../utils/ObjectUtils";
+import { Buffer } from "buffer";
+import { CborString } from "../../../cbor/CborString";
+import { BasePlutsError } from "../../../errors/BasePlutsError";
+import { HexString } from "../../../types/HexString";
+import { ByteString } from "../../../types/HexString/ByteString";
+import { Integer } from "../../../types/ints/Integer";
+import { Pair } from "../../../types/structs/Pair";
 import { pBool } from "../PTypes/PBool";
 import { pByteString } from "../PTypes/PByteString";
-import PLam from "../PTypes/PFn/PLam";
+import { PLam } from "../PTypes/PFn/PLam";
 import { pInt } from "../PTypes/PInt";
-import PList, { pList } from "../PTypes/PList";
-import PPair, { pPair } from "../PTypes/PPair";
+import { PList, pList } from "../PTypes/PList";
+import { PPair, pPair } from "../PTypes/PPair";
 import { pStr } from "../PTypes/PString";
 import { pmakeUnit } from "../PTypes/PUnit";
 import { UtilityTermOf } from "../stdlib/UtilityTerms/addUtilityForType";
-import Term from "../Term";
+import { Term } from "../Term";
 import { bool, bs, ConstantableTermType, fn, int, list, str, TermType, tyVar, unit } from "../Term/Type/base";
 import { typeExtends } from "../Term/Type/extension";
 import { isConstantableTermType, isLambdaType, isListType, isPairType, isTypeParam, isWellFormedType } from "../Term/Type/kinds";
@@ -57,7 +57,7 @@ export type PappArg<PIn extends PType> =
         Term<PIn>
     ) | Term<PIn>
 
-export default function pappArgToTerm<ArgT extends TermType>(
+export function pappArgToTerm<ArgT extends TermType>(
     arg: PappArg<ToPType<ArgT>>,
     mustExtend: ArgT = tyVar("pappArgToTerm_mustExtend_any") as any
 ): UtilityTermOf<ToPType<ArgT>>
@@ -71,14 +71,14 @@ export default function pappArgToTerm<ArgT extends TermType>(
 
     // same of `arg instanceof Term` but typescript doesn't knows it
     // ( after `arg instanceof Term` typescript marked arg as `never` )
-    if( Term.prototype.isPrototypeOf( arg ) )
+    if( Term.prototype.isPrototypeOf( arg as any ) )
     {
         if( !typeExtends( (arg as Term<PType>).type, mustExtend ) )
         {
             // TODO: add proper error
             throw new BasePlutsError(
                 "pappArgToTerm :: `arg` was a term of type " +
-                termTypeToString( arg.type ) +
+                termTypeToString( (arg as Term<any>).type ) +
                 "; which doesn't extends expected " +
                 termTypeToString( mustExtend )
             );
@@ -480,7 +480,7 @@ function isTsValueAssignableToPlutsType<PlutsType extends TermType>(
 
     // same of `value instanceof Term` but typescript doesn't knows it
     // ( after `value instanceof Term` typescript marked arg as `never` )
-    if( Term.prototype.isPrototypeOf( value ) )
+    if( Term.prototype.isPrototypeOf( value as any ) )
     {
         return typeExtends( (value as Term<PType>).type, plutsType );
     }

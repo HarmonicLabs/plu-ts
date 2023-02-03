@@ -1,13 +1,13 @@
-import PData from "./PData";
-import DataB from "../../../../types/Data/DataB";
-import ByteString from "../../../../types/HexString/ByteString";
-import UPLCConst from "../../../UPLC/UPLCTerms/UPLCConst";
 import { pBSToData, punBData } from "../../stdlib/Builtins";
-import Term from "../../Term";
-import Type from "../../Term/Type/base";
-import PByteString from "../PByteString";
+import { PData } from "./PData";
+import { DataB } from "../../../../types/Data/DataB";
+import { ByteString } from "../../../../types/HexString/ByteString";
+import { UPLCConst } from "../../../UPLC/UPLCTerms/UPLCConst";
+import { Term } from "../../Term";
+import { Type } from "../../Term/Type/base";
+import { PByteString } from "../PByteString";
 
-export default class PDataBS extends PData // (PData extends PType => PDataBS extends PType too)
+export class PDataBS extends PData // (PData extends PType => PDataBS extends PType too)
 {
     constructor( bs: ByteString | Buffer = Buffer.from([]) )
     {

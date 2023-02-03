@@ -1,5 +1,5 @@
 import { Buffer } from "buffer";
-import UInt64Error from "../../../errors/PlutsTypeError/UInt64Error"; 
+import { UInt64Error } from "../../../errors/PlutsTypeError/UInt64Error"; 
 
 const wouldOverflowError = new UInt64Error("can't construct an Uint64 with less than 8 bytes")
 

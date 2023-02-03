@@ -1,13 +1,13 @@
 import { DataType, DataConstructor, TermType, PrimType, LambdaType, AliasTermType, ConstantableTermType, structType, StructDefinition, anyStruct, ConstantableStructDefinition } from ".";
 import { PData, PInt, PByteString, PString, PUnit, PBool, PList, PPair, PDelayed, PLam, PStruct, PType } from "../..";
-import PDataRepresentable from "../../PType/PDataRepresentable";
 import { PAlias } from "../../PTypes";
-import PDataBS from "../../PTypes/PData/PDataBS";
-import PDataConstr from "../../PTypes/PData/PDataConstr";
-import PDataInt from "../../PTypes/PData/PDataInt";
-import PDataList from "../../PTypes/PData/PDataList";
-import PDataMap from "../../PTypes/PData/PDataMap";
-import PDataPair from "../../PTypes/PData/PDataPair";
+import { PDataRepresentable } from "../../PType/PDataRepresentable";
+import { PDataBS } from "../../PTypes/PData/PDataBS";
+import { PDataConstr } from "../../PTypes/PData/PDataConstr";
+import { PDataInt } from "../../PTypes/PData/PDataInt";
+import { PDataList } from "../../PTypes/PData/PDataList";
+import { PDataMap } from "../../PTypes/PData/PDataMap";
+import { PDataPair } from "../../PTypes/PData/PDataPair";
 
 
 export type ToPDataType<DT extends DataType> =

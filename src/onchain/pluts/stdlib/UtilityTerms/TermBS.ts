@@ -1,20 +1,21 @@
-import { flippedCons, pappendBs, pconsBs, pdecodeUtf8, peqBs, pgreaterBS, pgreaterEqBS, pindexBs, plengthBs, plessBs, plessEqBs, psliceBs, psub } from "../Builtins";
 import ObjectUtils from "../../../../utils/ObjectUtils";
-import PByteString from "../../PTypes/PByteString";
-import PInt from "../../PTypes/PInt";
-import Term from "../../Term";
-import TermInt from "./TermInt";
-import TermStr from "./TermStr";
+
+import { flippedCons, pappendBs, pconsBs, pdecodeUtf8, peqBs, pgreaterBS, pgreaterEqBS, pindexBs, plengthBs, plessBs, plessEqBs, psliceBs, psub } from "../Builtins";
+import { PByteString } from "../../PTypes/PByteString";
+import { PInt } from "../../PTypes/PInt";
+import { Term } from "../../Term";
+import { TermInt } from "./TermInt";
+import { TermStr } from "./TermStr";
 import { TermFn } from "../../PTypes/PFn/PFn";
-import PBool from "../../PTypes/PBool";
+import { PBool } from "../../PTypes/PBool";
 import { pfn, phoist } from "../../Syntax/syntax";
 import { bs, int } from "../../Term/Type/base";
-import TermBool from "./TermBool";
+import { TermBool } from "./TermBool";
 import { PappArg } from "../../Syntax/pappArg";
 import { Params, ReturnT } from "../../../../utils/ts";
 
 
-type TermBS = Term<PByteString> & {
+export type TermBS = Term<PByteString> & {
 
     readonly length: TermInt
     
@@ -55,8 +56,6 @@ type TermBS = Term<PByteString> & {
     readonly gtEq:      ( other: PappArg<PByteString> ) => TermBool
 
 }
-
-export default TermBS;
 
 const subByteString = phoist(
     pfn([

@@ -1,21 +1,18 @@
-import { PType, Term, PPair } from "../..";
-import BasePlutsError from "../../../../errors/BasePlutsError";
 import ObjectUtils from "../../../../utils/ObjectUtils";
+import { PType, Term, PPair } from "../..";
+import { BasePlutsError } from "../../../../errors/BasePlutsError";
 import { isConstantableTermType, isPairType } from "../../Term/Type/kinds";
 import { pfstPair, psndPair } from "../Builtins";
 import { UtilityTermOf } from "./addUtilityForType";
 
 
-
-type TermPair<PFst extends PType, PSnd extends PType> = Term<PPair<PFst,PSnd>> & {
+export type TermPair<PFst extends PType, PSnd extends PType> = Term<PPair<PFst,PSnd>> & {
 
     readonly fst: UtilityTermOf<PFst>
 
     readonly snd: UtilityTermOf<PSnd>
     
 }
-
-export default TermPair;
 
 export function addPPairMethods<PFst extends PType, PSnd extends PType>( pair: Term<PPair<PFst,PSnd>>)
 {

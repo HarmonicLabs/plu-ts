@@ -1,17 +1,18 @@
 
-import BasePlutsError from "../../../../errors/BasePlutsError";
 import ObjectUtils from "../../../../utils/ObjectUtils";
-import PType from "../../PType"
-import type PDataRepresentable from "../../PType/PDataRepresentable";
-import unwrapAlias from "../../PTypes/PAlias/unwrapAlias";
-import PBool from "../../PTypes/PBool";
-import { TermFn } from "../../PTypes/PFn/PFn";
-import PLam from "../../PTypes/PFn/PLam";
-import PInt from "../../PTypes/PInt";
-import PList from "../../PTypes/PList"
+
+import { BasePlutsError } from "../../../../errors/BasePlutsError";
+import { PType } from "../../PType"
+import type { PDataRepresentable } from "../../PType/PDataRepresentable";
+import type { TermFn } from "../../PTypes/PFn/PFn";
 import { PappArg } from "../../Syntax/pappArg";
 import { phoist } from "../../Syntax/syntax";
-import Term from "../../Term";
+import { unwrapAlias } from "../../PTypes/PAlias/unwrapAlias";
+import { PBool } from "../../PTypes/PBool";
+import { PLam } from "../../PTypes/PFn/PLam";
+import { PInt } from "../../PTypes/PInt";
+import { PList } from "../../PTypes/PList"
+import { Term } from "../../Term";
 import { ConstantableTermType, TermType } from "../../Term/Type/base";
 import { isAliasType, isConstantableTermType, isLambdaType } from "../../Term/Type/kinds";
 import { ToPType } from "../../Term/Type/ts-pluts-conversion";
@@ -22,8 +23,8 @@ import { pevery, pfilter, pfind, pindexList, pmap, psome } from "../List/methods
 import { pflip } from "../PCombinators";
 import { PMaybeT } from "../PMaybe/PMaybe";
 import { UtilityTermOf } from "./addUtilityForType";
-import TermBool from "./TermBool";
-import TermInt from "./TermInt";
+import { TermBool } from "./TermBool";
+import { TermInt } from "./TermInt";
 
 export type TermList<PElemsT extends PDataRepresentable> = Term<PList<PElemsT>> & {
 

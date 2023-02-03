@@ -1,7 +1,14 @@
-import { pstruct, typeofGenericStruct } from "../../PTypes/PStruct/pstruct";
-import type { ConstantableTermType } from "../../Term/Type/base";
+import { PStruct, pstruct, typeofGenericStruct } from "../../PTypes/PStruct/pstruct";
+import type { ConstantableStructType, ConstantableTermType } from "../../Term/Type/base";
 
 import ObjectUtils from "../../../../utils/ObjectUtils";
+import { FromPTypeConstantable } from "../../Term/Type/ts-pluts-conversion";
+import { PDataRepresentable } from "../../PType/PDataRepresentable";
+
+export type PMaybeT<PTy extends PDataRepresentable> = PStruct<{
+    Just: { val: FromPTypeConstantable<PTy> },
+    Nothing: {}
+}> & ConstantableStructType
 
 function _PMaybe<T extends ConstantableTermType>(tyArg: T)
 {

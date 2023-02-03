@@ -1,11 +1,12 @@
-import PPair, { pPair } from ".";
-import { PData } from "../..";
 import JsRuntime from "../../../../utils/JsRuntime";
 import ObjectUtils from "../../../../utils/ObjectUtils";
+
+import { PPair, pPair } from ".";
+import { PData } from "../..";
 import { ppairData } from "../../stdlib/Builtins";
-import TermPair, { addPPairMethods } from "../../stdlib/UtilityTerms/TermPair";
-import Term from "../../Term";
-import { ConstantableTermType, typeExtends, pair, data, dynPair } from "../../Term/Type";
+import { TermPair, addPPairMethods } from "../../stdlib/UtilityTerms/TermPair";
+import { Term } from "../../Term";
+import { ConstantableTermType, typeExtends, data, dynPair } from "../../Term/Type";
 import { isConstantableTermType } from "../../Term/Type/kinds";
 import { ToPType } from "../../Term/Type/ts-pluts-conversion";
 import { getToDataForType } from "../PData/conversion/getToDataTermForType";

@@ -15,7 +15,7 @@ export function cloneStructCtorDef<CtorDef extends StructCtorDef>( ctorDef: Read
     return clone;
 }
 
-export default function cloneStructDef<SDef extends StructDefinition>( def: Readonly<SDef> ): SDef
+export function cloneStructDef<SDef extends StructDefinition>( def: Readonly<SDef> ): SDef
 {
     const clone: SDef = {} as SDef;
     const ctors = Object.keys( def );

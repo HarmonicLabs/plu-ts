@@ -1,15 +1,15 @@
-import UPLCConst from "../../UPLC/UPLCTerms/UPLCConst";
+import { UPLCConst } from "../../UPLC/UPLCTerms/UPLCConst";
 import { pfstPair, psndPair, pisEmpty, pif, punConstrData, pConstrToData } from "../stdlib/Builtins";
-import { perror, phoist, plam, plet } from "../Syntax/syntax";
-import Term from "../Term";
-import Type, { data, TermType, unit } from "../Term/Type/base";
-import { pInt } from "./PInt";
-import PData from "./PData/PData";
-import PLam from "./PFn/PLam";
 import { pDataList } from "./PList";
-import HoistedUPLC from "../../UPLC/UPLCTerms/HoistedUPLC";
-import DataConstr from "../../../types/Data/DataConstr";
-import PDataRepresentable from "../PType/PDataRepresentable";
+import { Type, data, TermType, unit } from "../Term/Type/base";
+import { pInt } from "./PInt";
+import { perror, phoist, plam, plet } from "../Syntax/syntax";
+import { Term } from "../Term";
+import { PData } from "./PData/PData";
+import { PLam } from "./PFn/PLam";
+import { HoistedUPLC } from "../../UPLC/UPLCTerms/HoistedUPLC";
+import { DataConstr } from "../../../types/Data/DataConstr";
+import { PDataRepresentable } from "../PType/PDataRepresentable";
 
 export const pmakeUnit = () => new Term<PUnit>(
     Type.Unit,
@@ -26,7 +26,7 @@ export const pmakeUnitData = () => new Term<PData>(
 );
 
 //@ts-ignore
-export default class PUnit extends PDataRepresentable
+export class PUnit extends PDataRepresentable
 {
     private _unit: undefined
 

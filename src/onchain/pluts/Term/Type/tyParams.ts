@@ -1,9 +1,9 @@
-import Type, { TermTypeParameter, FixedTermType, TermType, PrimType, anyStruct, struct, GenericStructDefinition } from "./base";
 import JsRuntime from "../../../../utils/JsRuntime";
+import { Type, TermTypeParameter, FixedTermType, TermType, PrimType, anyStruct, struct, GenericStructDefinition } from "./base";
 import { typeExtends } from "./extension";
 import { isAliasType, isConstantableStructDefinition, isConstantableTermType, isStructType, isTypeParam } from "./kinds";
 import { termTypeToString } from "./utils";
-import cloneStructDef from "../../PTypes/PStruct/cloneStructDef";
+import { cloneStructDef } from "../../PTypes/PStruct/cloneStructDef";
 
 
 /**

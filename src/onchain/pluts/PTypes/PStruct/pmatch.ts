@@ -74,6 +74,7 @@ function getExtractedFieldsExpr<CtorDef extends ConstantableStructCtorDef, Field
             addUtilityForType( fieldType )( value )
         );
 
+        // @ts-ignore Type instantiation is excessively deep and possibly infinite.
         return getExtractedFieldsExpr(
             elemAt,
             ctorDef,

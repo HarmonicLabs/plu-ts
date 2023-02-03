@@ -1,13 +1,13 @@
-import BinaryString from "../../../../types/bits/BinaryString";
-import BitStream from "../../../../types/bits/BitStream";
-import ByteString from "../../../../types/HexString/ByteString";
-import Integer, { UInteger } from "../../../../types/ints/Integer";
-import Pair from "../../../../types/structs/Pair";
 import JsRuntime from "../../../../utils/JsRuntime";
-import Data from "../../../../types/Data";
-import ConstType, { constT, constTypeToStirng, isWellFormedConstType } from "./ConstType";
-import ConstValue, { canConstValueBeOfConstType, ConstValueList, inferConstTypeFromConstValue } from "./ConstValue";
-import Cloneable from "../../../../types/interfaces/Cloneable";
+import { BinaryString } from "../../../../types/bits/BinaryString";
+import { BitStream } from "../../../../types/bits/BitStream";
+import { ByteString } from "../../../../types/HexString/ByteString";
+import { Integer, UInteger } from "../../../../types/ints/Integer";
+import { Pair } from "../../../../types/structs/Pair";
+import { Data } from "../../../../types/Data";
+import { ConstType, constT, constTypeToStirng, isWellFormedConstType } from "./ConstType";
+import { ConstValue, canConstValueBeOfConstType, ConstValueList, inferConstTypeFromConstValue } from "./ConstValue";
+import { Cloneable } from "../../../../types/interfaces/Cloneable";
 
 
 export class UPLCConst

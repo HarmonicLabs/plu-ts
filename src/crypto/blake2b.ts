@@ -176,8 +176,6 @@ export function blake2b( bytes: byte[] | Buffer, digestSize : 28 | 32 | 64 = 32 
     return hash.slice(0, digestSize);
 }
 
-export default blake2b;
-
 export function blake2b_224( data: byte[] | Buffer ): byte[]
 {
     return blake2b( data, 28 );

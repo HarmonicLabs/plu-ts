@@ -13,22 +13,13 @@ export class Pair< A, B >
         return Object.getPrototypeOf( any ) === Pair.prototype;
     }
 
-    private _fst: A;
-    private _snd: B;
-
-    get fst(): A
-    {
-        return this._fst;
-    }
-
-    get snd(): B{
-        return this._snd;
-    }
+    fst: A;
+    snd: B;
 
     constructor( a: A, b: B )
     {
-        this._fst = a;
-        this._snd = b;
+        this.fst = a;
+        this.snd = b;
     }
 
     asObj(): { fst: A, snd: B }

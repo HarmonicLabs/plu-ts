@@ -78,3 +78,5 @@ export class UTxO
     }
 
 }
+
+export { TxOutRef };

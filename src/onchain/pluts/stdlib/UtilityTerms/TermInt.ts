@@ -1,13 +1,14 @@
-import { padd, psub, pmult, pdiv, pquot, prem, pmod, peqInt, plessInt, plessEqInt, pgreaterInt, pgreaterEqInt } from "../Builtins"
 import ObjectUtils from "../../../../utils/ObjectUtils"
-import PInt from "../../PTypes/PInt"
-import Term from "../../Term"
-import TermBool from "./TermBool"
+
+import { padd, psub, pmult, pdiv, pquot, prem, pmod, peqInt, plessInt, plessEqInt, pgreaterInt, pgreaterEqInt } from "../Builtins"
+import { PInt } from "../../PTypes/PInt"
+import { Term } from "../../Term"
+import { TermBool } from "./TermBool"
 import { TermFn } from "../../PTypes/PFn/PFn"
-import PBool from "../../PTypes/PBool"
+import { PBool } from "../../PTypes/PBool"
 import { PappArg } from "../../Syntax/pappArg"
 
-type TermInt = Term<PInt> & {
+export type TermInt = Term<PInt> & {
     
     readonly addTerm:       TermFn<[PInt], PInt>
     readonly add:           ( other: PappArg<PInt> ) => TermInt
@@ -47,8 +48,6 @@ type TermInt = Term<PInt> & {
     readonly gtEq:      ( other: PappArg<PInt> ) => TermBool
         
 };
-
-export default TermInt;
 
 export function addPIntMethods( term: Term<PInt> )
     : TermInt
