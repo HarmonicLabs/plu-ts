@@ -8,18 +8,18 @@ import { isAliasType, isConstantableStructDefinition, isStructType } from "../..
 import { TermFn } from "../PFn";
 import { ToPType } from "../../Term/Type/ts-pluts-conversion";
 import { structDefToString, termTypeToString } from "../../Term/Type/utils";
-import { getToDataForType } from "../PData/conversion/getToDataTermForType";
-import { pList } from "../PList";
-import { UtilityTermOf } from "../../stdlib/UtilityTerms/addUtilityForType";
+import { getToDataForType } from "../../lib/std/data/conversion/getToDataTermForType";
 import { Pair } from "../../../../types/structs/Pair";
 import { HoistedUPLC } from "../../../UPLC/UPLCTerms/HoistedUPLC";
 import { UPLCConst } from "../../../UPLC/UPLCTerms/UPLCConst";
-import { Term } from "../../Term";
+import { Term, data } from "../../Term";
 import { Application } from "../../../UPLC/UPLCTerms/Application";
 import { PData } from "../PData/PData";
 import { Builtin } from "../../../UPLC/UPLCTerms/Builtin";
-import { punsafeConvertType } from "../../Syntax/punsafeConvertType";
 import { PDataRepresentable } from "../../PType/PDataRepresentable";
+import { UtilityTermOf } from "../../lib/addUtilityForType";
+import { pList } from "../../lib/std/list";
+import { punsafeConvertType } from "../../lib/punsafeConvertType";
 
 /**
  * intermediate class useful to reconize structs form primitives
@@ -301,7 +301,7 @@ export function pstruct<StructDef extends ConstantableStructDefinition>( def: St
                             Builtin.constrData,
                             UPLCConst.int( i )
                         ),
-                        pList( Type.Data.Any )(
+                        pList( data )(
                             
                         ctorDefFieldsNames.map<Term<any>>(
                             fieldKey => {

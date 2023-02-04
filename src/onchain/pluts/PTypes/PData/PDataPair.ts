@@ -1,7 +1,7 @@
 import { PData } from "./PData";
 import { DataI } from "../../../../types/Data/DataI";
 import { DataPair } from "../../../../types/Data/DataPair";
-import { DataFromPData } from "./conversion";
+import { DataFromPData } from "../../lib/std/data/conversion";
 
 /**
  * @deprecated there's no such thing as data pair; pairs in ```Data``` elements are plain pairs

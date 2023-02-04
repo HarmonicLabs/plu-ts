@@ -1,9 +1,6 @@
 import { showUPLC } from "../../../UPLC/UPLCTerm"
-import { pBSToData, peqBs, peqData, pif, punBData } from "../../stdlib/Builtins"
 import { pByteString } from "../../PTypes/PByteString"
 import { pmakeUnit } from "../../PTypes/PUnit"
-import { pevery, pfilter } from "../../stdlib/List/methods"
-import { papp, perror, pfn, plam, plet } from "../../Syntax/syntax"
 import { pInt } from "../../PTypes/PInt"
 import { pList } from "../../PTypes/PList"
 import { pBool } from "../../PTypes/PBool"
@@ -32,10 +29,10 @@ import { PUpperBound } from "../../API/V1/Interval/PUpperBound"
 import { PPubKeyHash } from "../../API/V1/PubKey/PPubKeyHash"
 import { PStakingCredential } from "../../API/V1/Address/PStakingCredential"
 import { PTxOut } from "../../API/V1/Tx/PTxOut"
-import { PMaybe } from "../../stdlib/PMaybe/PMaybe"
 import { PAddress } from "../../API/V1/Address/PAddress"
 import { PCredential } from "../../API/V1/Address/PCredential"
 import { PValidatorHash } from "../../API/V1/ScriptsHashes/PValidatorHash"
+import { pfn, pif, punBData, perror, plet, pevery, plam, pfilter, peqBs, PMaybe, papp, pBSToData } from "../../lib"
 
 
 describe.skip("scriptToJsonFormat", () => {

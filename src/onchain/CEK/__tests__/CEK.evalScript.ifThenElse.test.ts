@@ -1,6 +1,6 @@
 import { evalScript } from ".."
-import { pstrictIf } from "../../pluts/stdlib/Builtins"
-import { pInt } from "../../pluts/PTypes/PInt"
+import { pstrictIf } from "../../pluts/lib/builtins"
+import { pInt } from "../../pluts/lib/std/int/pInt"
 import { Type } from "../../pluts/Term/Type/base"
 import { Application } from "../../UPLC/UPLCTerms/Application"
 import { Builtin } from "../../UPLC/UPLCTerms/Builtin"

@@ -1,5 +1,5 @@
 import { evalScript } from "../../../../../CEK";
-import { pList } from "../../../../PTypes/PList";
+import { pList } from "../../../../lib/std/list/const";
 import { PValue } from "../PValue";
 
 describe("evalScript( PValue )", () => {

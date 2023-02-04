@@ -2,15 +2,15 @@ import { pstruct, pgenericStruct } from "../pstruct"
 import { ByteString } from "../../../../../types/HexString/ByteString";
 import { evalScript } from "../../../../CEK";
 import { UPLCConst } from "../../../../UPLC/UPLCTerms/UPLCConst";
-import { padd, pconsBs, pindexBs } from "../../../stdlib/Builtins";
-import { perror } from "../../../Syntax/syntax";
 import { Term } from "../../../Term";
 import { bs, ConstantableTermType, int, unit } from "../../../Term/Type/base";
-import { pByteString } from "../../PByteString";
-import { pInt } from "../../PInt";
-import { pmakeUnit } from "../../PUnit";
 import { pmatch } from "../pmatch";
-import { PMaybe } from "../../../stdlib/PMaybe/PMaybe";
+import { PMaybe } from "../../../lib/std/PMaybe/PMaybe";
+import { pInt } from "../../../lib/std/int/pInt";
+import { pmakeUnit } from "../../../lib/std/unit/pmakeUnit";
+import { pByteString } from "../../../lib/std/bs/pByteString";
+import { padd, pconsBs, pindexBs } from "../../../lib/builtins";
+import { perror } from "../../../lib/perror";
 
 const SingleCtor = pstruct({
     Ctor : {

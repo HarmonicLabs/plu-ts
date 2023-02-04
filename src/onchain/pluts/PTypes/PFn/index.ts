@@ -4,9 +4,8 @@ export * from "./PLam";
 import type { Term } from "../../Term";
 import type { Tail } from "../../../../utils/ts";
 import type { PType } from "../../PType"
-import type { UtilityTermOf } from "../../stdlib/UtilityTerms/addUtilityForType";
-import type { PappArg } from "../../Syntax/pappArg";
 import type { PLam } from "./PLam"
+import { PappArg, UtilityTermOf } from "../../lib";
 
 
 export type PFn<Inputs extends [ PType, ...PType[] ], Output extends PType > = 

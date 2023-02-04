@@ -2,7 +2,7 @@ import { palias } from "../palias"
 import { evalScript } from "../../../../CEK";
 import { UPLCConst } from "../../../../UPLC/UPLCTerms/UPLCConst";
 import { int } from "../../../Term/Type/base"
-import { pInt } from "../../PInt";
+import { pInt } from "../../../lib/std/int/pInt";
 
 
 describe("palias", () => {

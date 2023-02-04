@@ -702,7 +702,7 @@ export class TxBuilder
                 const { tag, data: rdmrData, index } = rdmr;
                 const spendingPurpose = rdmr.toSpendingPurposeData( tx.body );
 
-                function onlyRedeemerArg( purposeScriptsToExec: ScriptToExecEntry[] )
+                const onlyRedeemerArg = ( purposeScriptsToExec: ScriptToExecEntry[] ) =>
                 {
                     const script = purposeScriptsToExec.find( ({ index: idx }) => idx === index )?.script;
 

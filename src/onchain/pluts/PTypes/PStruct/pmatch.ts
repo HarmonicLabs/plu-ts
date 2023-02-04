@@ -2,13 +2,11 @@ import JsRuntime from "../../../../utils/JsRuntime";
 import ObjectUtils from "../../../../utils/ObjectUtils";
 
 import { RestrictedStructInstance, PStruct } from "./pstruct";
-import { pindexList } from "../../stdlib/List/methods";
 import { ConstantableStructCtorDef, ConstantableStructDefinition, data, fn, lam, list, StructCtorDef, TermType, tyVar } from "../../Term/Type/base";
-import { getFromDataForType } from "../PData/conversion/getFromDataTermForType";
+import { getFromDataForType } from "../../lib/std/data/conversion/getFromDataTermForType";
 import { constT } from "../../../UPLC/UPLCTerms/UPLCConst/ConstType";
 import { isConstantableStructDefinition, isLambdaType } from "../../Term/Type/kinds";
-import { PInt, pInt } from "../PInt";
-import { plet, papp, plam } from "../../Syntax/syntax";
+import type { PInt } from "../PInt";
 import { termTypeToString } from "../../Term/Type/utils";
 import { BasePlutsError } from "../../../../errors/BasePlutsError";
 import { UPLCTerm } from "../../../UPLC/UPLCTerm";
@@ -21,7 +19,6 @@ import { HoistedUPLC } from "../../../UPLC/UPLCTerms/HoistedUPLC";
 import { Lambda } from "../../../UPLC/UPLCTerms/Lambda";
 import { UPLCConst } from "../../../UPLC/UPLCTerms/UPLCConst";
 import { UPLCVar } from "../../../UPLC/UPLCTerms/UPLCVar";
-import { TermList } from "../../stdlib/UtilityTerms/TermList";
 import { PType } from "../../PType";
 import { Term } from "../../Term";
 import { PData } from "../PData/PData";
@@ -30,8 +27,14 @@ import { PList } from "../PList";
 import { matchSingleCtorStruct } from "./matchSingleCtorStruct";
 import { capitalize } from "../../../../utils/ts/capitalize";
 import { DataI } from "../../../../types/Data/DataI";
-import { addUtilityForType } from "../../stdlib/UtilityTerms/addUtilityForType";
-import { punsafeConvertType } from "../../Syntax/punsafeConvertType";
+import { plet } from "../../lib/plet";
+import { papp } from "../../lib/papp";
+import { pInt } from "../../lib/std/int/pInt";
+import { addUtilityForType } from "../../lib/addUtilityForType";
+import { punsafeConvertType } from "../../lib/punsafeConvertType";
+import { pindexList } from "../../lib/std/list/pindexList";
+import { TermList } from "../../lib/std/UtilityTerms/TermList";
+import { plam } from "../../lib/plam";
 
 
 export type RawFields<CtorDef extends ConstantableStructCtorDef> = 
@@ -64,7 +67,6 @@ function getExtractedFieldsExpr<CtorDef extends ConstantableStructCtorDef, Field
     const fieldType = ctorDef[ allFieldsNames[ idx ] ];
 
     return plet( getFromDataForType( fieldType )(
-        // @ts-ignore Type instantiation is excessively deep and possibly infinite.
         papp( elemAt, pInt( idx ) )
     )).in( value => {
 
@@ -117,7 +119,6 @@ function defineExtract<CtorDef extends ConstantableStructCtorDef>
                     if( fieldsIdxs.length === 0 ) return expr({} as any);
 
                     return plet(
-                        // @ts-ignore Type instantiation is excessively deep and possibly infinite.
                         pindexList( data )
                         .$( _fieldsList ) ).in( elemAt =>
                         getExtractedFieldsExpr(

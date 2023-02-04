@@ -4,7 +4,7 @@ import { UPLCConst } from "../../../UPLC/UPLCTerms/UPLCConst";
 import { PType } from "../../PType";
 import { Term } from "../../Term";
 import { Type } from "../../Term/Type/base";
-import { PDataFromData } from "./conversion";
+import { PDataFromData } from "../../lib/std/data/conversion";
 
 export class PData extends PType
 {
@@ -17,15 +17,4 @@ export class PData extends PType
 
         this._data = data;
     }
-}
-
-export function pData<DataInstance extends Data>
-    ( data: DataInstance )
-    //@ts-ignore Type instantiation is excessively deep and possibly infinite
-    : Term<PDataFromData<DataInstance>>
-{
-    return new Term(
-        Type.Data.Any as any, //@fixme; get type based on Data constructor
-        _dbn => UPLCConst.data( data )
-    );
 }

@@ -1,8 +1,7 @@
-import { pgenericStruct, typeofGenericStruct } from "../pstruct"
-import { Type, ConstantableTermType, struct } from "../../../Term/Type/base"
+import { typeofGenericStruct } from "../pstruct"
+import { Type, struct } from "../../../Term/Type/base"
 import { structExtends } from "../../../Term/Type/extension"
-import { PMaybe } from "../../../stdlib";
-import { termTypeToString } from "../../../Term/Type/utils";
+import { PMaybe } from "../../../lib/std/PMaybe/PMaybe";
 
 
 describe("typeofGenericStruct", () => {

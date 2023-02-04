@@ -2,8 +2,7 @@ import type { PType } from "../../PType";
 import type { PLam } from "./PLam";
 import type { Term } from "../..";
 import type { Tail } from "../../../../utils/ts";
-import type { UtilityTermOf } from "../../stdlib/UtilityTerms/addUtilityForType";
-import type { PappArg } from "../../Syntax/pappArg";
+import { PappArg, UtilityTermOf } from "../../lib";
 
 
 export type  PLamIn< PLamInstance extends PLam< PType, PType > > = PLamInstance extends PLam< infer PIn, any >  ? PIn  : never;

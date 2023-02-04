@@ -1,5 +1,5 @@
 import { pstruct } from "../../../PTypes/PStruct/pstruct";
-import { PMaybe } from "../../../stdlib/PMaybe/PMaybe";
+import { PMaybe } from "../../../lib/std/PMaybe/PMaybe";
 import { V1 } from "../../V1";
 import { POutputDatum } from "./POutputDatum";
 

@@ -1,19 +1,22 @@
 import { BasePlutsError } from "../../../errors/BasePlutsError";
-import { pif } from "../stdlib/Builtins";
-import { PBool } from "../PTypes/PBool";
-import { PData } from "../PTypes/PData/PData";
-import { PLam } from "../PTypes/PFn/PLam";
-import { PUnit, pmakeUnit } from "../PTypes/PUnit";
-import { papp, perror, pfn } from "../Syntax/syntax";
-import { Term } from "../Term";
+import type { PBool } from "../PTypes/PBool";
+import type { PData } from "../PTypes/PData/PData";
+import type { PLam } from "../PTypes/PFn/PLam";
+import type { PUnit } from "../PTypes/PUnit";
+import type { Term } from "../Term";
 import { bool, data, unit } from "../Term/Type/base";
 import { typeExtends } from "../Term/Type/extension";
 import { isConstantableTermType, isLambdaType } from "../Term/Type/kinds";
 import { termTypeToString } from "../Term/Type/utils";
 import { V1 , V2 } from "../API";
-import { getFromDataForType } from "../PTypes/PData/conversion/getFromDataTermForType";
+import { getFromDataForType } from "../lib/std/data/conversion/getFromDataTermForType";
 import type { PDataRepresentable } from "../PType/PDataRepresentable";
 import { TermFn } from "../PTypes/PFn/PFn";
+import { perror } from "../lib/perror";
+import { pmakeUnit } from "../lib/std/unit/pmakeUnit";
+import { pif } from "../lib/builtins";
+import { papp } from "../lib/papp";
+import { pfn } from "../lib/pfn";
 
 
 export function makeValidator(

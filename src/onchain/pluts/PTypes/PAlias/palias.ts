@@ -6,15 +6,15 @@ import type { AliasTermType, ConstantableTermType } from "../../Term/Type/base";
 import type { PData } from "../PData/PData";
 import type { ToPType } from "../../Term/Type/ts-pluts-conversion";
 
-import { punsafeConvertType } from "../../Syntax/punsafeConvertType";
 import { Type, aliasType } from "../../Term/Type/base";
 import { typeExtends } from "../../Term/Type/extension";
 import { isAliasType, isConstantableTermType } from "../../Term/Type/kinds";
 import { cloneTermType } from "../../Term/Type/utils";
-import { getToDataForType } from "../PData/conversion/getToDataTermForType";
+import { getToDataForType } from "../../lib/std/data/conversion/getToDataTermForType";
 import { unwrapAlias } from "./unwrapAlias";
-import { getFromDataForType } from "../PData/conversion/getFromDataTermForType";
+import { getFromDataForType } from "../../lib/std/data/conversion/getFromDataTermForType";
 import { PDataRepresentable } from "../../PType/PDataRepresentable";
+import { punsafeConvertType } from "../../lib/punsafeConvertType";
 
 
 /**

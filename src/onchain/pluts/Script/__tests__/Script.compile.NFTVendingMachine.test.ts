@@ -1,16 +1,11 @@
-import { pmatch, pByteString } from "../../PTypes";
 import { RestrictedStructInstance } from "../../PTypes/PStruct/pstruct";
-import { punBData, pisEmpty, punIData, pand, pBSToData } from "../../stdlib";
-import { PByteString, PList, PPair, PInt, Term, PBool } from "../..";
+import { PByteString, PList, PPair, PInt, Term, PBool, TermPair, pBSToData, pByteString, pand, pdelay, perror, pfn, pintToBS, pisEmpty, plet, pmatch, punBData, punIData } from "../..";
 import { ByteString } from "../../../../types/HexString/ByteString";
 import { PPubKeyHash } from "../../API/V1/PubKey/PPubKeyHash";
 import { PScriptContext } from "../../API/V2/ScriptContext/PScriptContext";
 import { PCurrencySymbol } from "../../API/V1/Value/PCurrencySymbol";
-import { TermPair } from "../../stdlib/UtilityTerms/TermPair";
 import { Type } from "../../Term/Type/base";
-import { pintToBS } from "../../stdlib/Int/pintToBS";
 import { compile } from "../compile";
-import { pdelay, perror, pfn, plet } from "../../Syntax/syntax";
 import { data, bool, ConstantableTermType } from "../../Term/Type";
 
 describe("NFTVendingMachine", () => {

@@ -1,5 +1,5 @@
 import JsRuntime from "../../../../utils/JsRuntime";
-import { TermType, PrimType, DataConstructor, structType, anyStruct, aliasType, AnyAlias, StructCtorDef, StructDefinition } from "./base";
+import { TermType, PrimType, DataConstructor, structType, anyStruct, StructCtorDef, StructDefinition } from "./base";
 import { isAliasType, isStructType } from "./kinds";
 import { cloneStructDef } from "../../PTypes/PStruct/cloneStructDef";
 

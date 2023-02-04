@@ -1,9 +1,4 @@
 import { evalScript } from "../../../../../CEK";
-import { PMaybe } from "../../../../stdlib/PMaybe/PMaybe";
-import { pBool } from "../../../../PTypes/PBool";
-import { pByteString } from "../../../../PTypes/PByteString";
-import { pInt } from "../../../../PTypes/PInt";
-import { pList } from "../../../../PTypes/PList";
 import { pmatch } from "../../../../PTypes/PStruct/pmatch";
 import { pair, data, int } from "../../../../Term/Type/base";
 import { PAddress } from "../../Address/PAddress";
@@ -21,15 +16,20 @@ import { PTxId } from "../../Tx/PTxId";
 import { PTxInInfo } from "../../Tx/PTxInInfo";
 import { PTxOut } from "../../Tx/PTxOut";
 import { PTxOutRef } from "../../Tx/PTxOutRef";
-import { PValue } from "../../Value/PValue";
+import { PValue, PValueEntryT } from "../../Value/PValue";
 import { PScriptContext } from "../PScriptContext";
 import { PScriptPurpose } from "../PScriptPurpose";
 import { PTxInfo } from "../PTxInfo/PTxInfo";
 import { UPLCConst } from "../../../../../UPLC/UPLCTerms/UPLCConst";
+import { pInt } from "../../../../lib/std/int/pInt";
+import { pByteString } from "../../../../lib/std/bs/pByteString";
+import { pList } from "../../../../lib/std/list/const";
+import { PMaybe } from "../../../../lib/std/PMaybe/PMaybe";
+import { pBool } from "../../../../lib/std/bool/pBool";
 
 
 const unitDatumHash = PDatumHash.from( pByteString("923918e403bf43c34b4ef6b48eb2ee04babed17320d8d1b9ff9ad086e86f44ec") );
-const emptyValue = PValue.from( pList( PValue.type[1].type[1] )([]) as any );
+const emptyValue = PValue.from( pList( PValueEntryT )([]) as any );
 
 const validatorSpendingUtxo = PTxOutRef.PTxOutRef({
     id: PTxId.PTxId({
@@ -88,7 +88,7 @@ const ctx = PScriptContext.PScriptContext({
 
 describe("pmatch( <PScriptContext> )", () => {
 
-    test("extract txInfo", () => {
+    test.only("extract txInfo", () => {
 
         expect(
             evalScript(

@@ -1,9 +1,7 @@
 import { Term } from ".."
 import { UPLCVar } from "../../../UPLC/UPLCTerms/UPLCVar"
-import { pgreaterInt } from "../../stdlib/Builtins"
-import { pInt } from "../../PTypes/PInt"
-import { phoist } from "../../Syntax/syntax"
-import {Type} from "../Type/base"
+import { phoist, pgreaterInt, pInt } from "../../lib"
+import { Type } from "../Type/base"
 
 
 describe("phoist", () => {

@@ -4,7 +4,7 @@ import { DataI } from "../../../../../types/Data/DataI";
 import { evalScript } from "../../../../CEK";
 import { UPLCConst } from "../../../../UPLC/UPLCTerms/UPLCConst";
 import { ConstantableTermType, int, str } from "../../../Term/Type/base"
-import { pInt } from "../../PInt";
+import { pInt } from "../../../lib/std/int/pInt";
 
 
 const PMaybe = <T extends ConstantableTermType>( tyArg: T ) => {
