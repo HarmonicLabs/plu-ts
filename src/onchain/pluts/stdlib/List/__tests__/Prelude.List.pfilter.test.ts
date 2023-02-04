@@ -1,5 +1,5 @@
 import { pfilter } from ".."
-import evalScript from "../../../../CEK"
+import { evalScript } from "../../../../CEK"
 import { pInt, pList } from "../../../PTypes"
 import { plam } from "../../../Syntax"
 import { bool, int } from "../../../Term/Type"

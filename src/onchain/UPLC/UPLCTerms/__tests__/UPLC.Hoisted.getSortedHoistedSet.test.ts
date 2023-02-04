@@ -1,8 +1,8 @@
-import Application from "../Application";
-import HoistedUPLC, { getSortedHoistedSet } from "../HoistedUPLC"
-import Lambda from "../Lambda";
-import UPLCConst from "../UPLCConst";
-import UPLCVar from "../UPLCVar";
+import { Application } from "../Application";
+import { HoistedUPLC, getSortedHoistedSet } from "../HoistedUPLC"
+import { Lambda } from "../Lambda";
+import { UPLCConst } from "../UPLCConst";
+import { UPLCVar } from "../UPLCVar";
 
 
 describe("getSortedHoistedSet",() => {

@@ -1,5 +1,5 @@
-import Type, { TypeShortcut } from "../base"
-import applyLambdaType from "../applyLambdaType"
+import { Type, TypeShortcut } from "../base"
+import { applyLambdaType } from "../applyLambdaType"
 
 const { pair, lam, int, str } = TypeShortcut;
 

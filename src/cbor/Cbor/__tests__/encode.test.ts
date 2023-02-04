@@ -1,6 +1,6 @@
-import Cbor from ".."
+import { Cbor } from ".."
 import { cborObjFromRaw } from "../../CborObj"
-import CborString from "../../CborString"
+import { CborString } from "../../CborString"
 
 
 describe( "Cbor.encode", () => {

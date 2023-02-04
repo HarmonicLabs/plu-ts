@@ -8,15 +8,12 @@ import { capitalize } from "../../../../utils/ts/capitalize";
 import { PType } from "../../PType";
 import { pmatch } from "../../PTypes/PStruct/pmatch";
 import { Term } from "../../Term";
-import type { TermBool } from "./TermBool";
-import type { TermFn } from "../../PTypes/PFn/PFn";
-import { PBool, peqData } from "../..";
 
 export type TermStruct<SDef extends ConstantableStructDefinition> = Term<PStruct<SDef>> & {
-
+    /*
     eqTerm: TermFn<[PStruct<SDef>], PBool>
     eq: ( other: Term<PStruct<SDef>> ) => TermBool
-
+    //*/
 } & 
 (
     IsSingleKey<SDef> extends true ?
@@ -60,6 +57,7 @@ export function addPStructMethods<SDef extends ConstantableStructDefinition>( st
         )
     }
 
+    /*
     ObjectUtils.defineReadOnlyProperty(
         struct, "eqTerm", peqData.$( struct as any )
     )
@@ -67,7 +65,7 @@ export function addPStructMethods<SDef extends ConstantableStructDefinition>( st
     ObjectUtils.defineReadOnlyProperty(
         struct, "eq", ( other: Term<PStruct<SDef>> ) => peqData.$( struct as any ).$( other as any )
     )
-
+    //*/
 
     return struct as any;
 }

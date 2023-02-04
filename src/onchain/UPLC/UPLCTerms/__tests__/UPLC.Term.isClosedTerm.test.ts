@@ -1,7 +1,7 @@
-import UPLCTerm, { isClosedTerm } from "../../UPLCTerm"
-import Delay from "../Delay";
-import Lambda from "../Lambda";
-import UPLCVar from "../UPLCVar"
+import { UPLCTerm, isClosedTerm } from "../../UPLCTerm"
+import { Delay } from "../Delay";
+import { Lambda } from "../Lambda";
+import { UPLCVar } from "../UPLCVar"
 
 
 describe("isClosedTerm", () => {

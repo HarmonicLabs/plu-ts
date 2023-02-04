@@ -1,4 +1,4 @@
-import ExBudget from "../ExBudget";
+import {ExBudget} from "../ExBudget";
 
 describe("CEK :: Machine :: ExBudget :: op", () => {
 

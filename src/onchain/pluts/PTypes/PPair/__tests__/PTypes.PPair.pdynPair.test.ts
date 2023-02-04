@@ -1,7 +1,7 @@
-import ByteString from "../../../../../types/HexString/ByteString";
-import evalScript from "../../../../CEK";
+import { ByteString } from "../../../../../types/HexString/ByteString";
+import { evalScript } from "../../../../CEK";
 import { showUPLC } from "../../../../UPLC/UPLCTerm";
-import UPLCConst from "../../../../UPLC/UPLCTerms/UPLCConst";
+import { UPLCConst } from "../../../../UPLC/UPLCTerms/UPLCConst";
 import { plam } from "../../../Syntax";
 import { bool, bs, int, pair, tyVar } from "../../../Term/Type/base";
 import { pByteString } from "../../PByteString";

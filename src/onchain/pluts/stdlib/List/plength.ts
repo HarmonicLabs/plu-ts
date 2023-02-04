@@ -1,6 +1,6 @@
 import { pInt } from "../../PTypes/PInt";
 import { plam, pfn, papp } from "../../Syntax/syntax";
-import Type, { TermType, tyVar } from "../../Term/Type/base";
+import { Type, TermType, tyVar } from "../../Term/Type/base";
 import { precursiveList } from "./methods";
 
 export const plength = ( elemsT: TermType = tyVar("plength_elemsT") ) => {

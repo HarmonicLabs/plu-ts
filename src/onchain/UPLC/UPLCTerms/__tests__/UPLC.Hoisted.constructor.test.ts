@@ -1,6 +1,6 @@
-import HoistedUPLC from "../HoistedUPLC"
-import Lambda from "../Lambda";
-import UPLCVar from "../UPLCVar"
+import { HoistedUPLC } from "../HoistedUPLC"
+import { Lambda } from "../Lambda";
+import { UPLCVar } from "../UPLCVar"
 
 
 describe("HoistedUPLC", () => {

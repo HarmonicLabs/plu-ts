@@ -1,11 +1,11 @@
-import Data from "..";
-import DataB from "../DataB";
-import DataConstr from "../DataConstr";
-import DataI from "../DataI";
-import DataList from "../DataList";
-import DataMap from "../DataMap";
-import dataFromCbor, { dataFromCborObj } from "../fromCbor";
-import dataToCbor, { dataToCborObj } from "../toCbor";
+import { Data } from "..";
+import { DataB } from "../DataB";
+import { DataConstr } from "../DataConstr";
+import { DataI } from "../DataI";
+import { DataList } from "../DataList";
+import { DataMap } from "../DataMap";
+import { dataFromCbor, dataFromCborObj } from "../fromCbor";
+import { dataToCbor, dataToCborObj } from "../toCbor";
 
 function identityTestFor( data: Data ): void
 {

@@ -1,6 +1,6 @@
-import evalScript from "../../../../../CEK";
+import { evalScript } from "../../../../../CEK";
 import { pList } from "../../../../PTypes/PList";
-import PValue from "../PValue";
+import { PValue } from "../PValue";
 
 describe("evalScript( PValue )", () => {
 

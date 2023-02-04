@@ -1,9 +1,9 @@
-import evalScript from "../../../../CEK"
-import UPLCConst from "../../../../UPLC/UPLCTerms/UPLCConst"
+import { evalScript } from "../../../../CEK"
+import { UPLCConst } from "../../../../UPLC/UPLCTerms/UPLCConst"
 import { pList, pnil } from "../../../PTypes"
 import { pInt } from "../../../PTypes/PInt"
 import { papp, pfn, plam } from "../../../Syntax/syntax"
-import { bool, ConstantableTermType, int, lam, list, TermType } from "../../../Term/Type"
+import { bool, ConstantableTermType, int, lam, list } from "../../../Term/Type"
 import { pif, pmod, pprepend, psub } from "../../Builtins"
 import { pfoldr } from "../methods"
 

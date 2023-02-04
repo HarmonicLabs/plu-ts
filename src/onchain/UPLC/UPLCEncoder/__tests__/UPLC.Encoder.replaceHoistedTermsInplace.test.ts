@@ -1,9 +1,9 @@
-import UPLCEncoder, { replaceHoistedTermsInplace } from "..";
-import Application from "../../UPLCTerms/Application";
-import HoistedUPLC, { getSortedHoistedSet } from "../../UPLCTerms/HoistedUPLC"
-import Lambda from "../../UPLCTerms/Lambda";
-import UPLCConst from "../../UPLCTerms/UPLCConst";
-import UPLCVar from "../../UPLCTerms/UPLCVar";
+import { UPLCEncoder, replaceHoistedTermsInplace } from "..";
+import { Application } from "../../UPLCTerms/Application";
+import { HoistedUPLC } from "../../UPLCTerms/HoistedUPLC"
+import { Lambda } from "../../UPLCTerms/Lambda";
+import { UPLCConst } from "../../UPLCTerms/UPLCConst";
+import { UPLCVar } from "../../UPLCTerms/UPLCVar";
 
 
 const hId = new HoistedUPLC( new Lambda( new UPLCVar( 0 ) ) );

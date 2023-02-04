@@ -1,6 +1,6 @@
-import PCurrencySymbol from "../../../API/V1/Value/PCurrencySymbol";
-import PTokenName from "../../../API/V1/Value/PTokenName";
-import Type, { dynPair, int, list, TermType } from "../base";
+import { PCurrencySymbol } from "../../../API/V1/Value/PCurrencySymbol";
+import { PTokenName } from "../../../API/V1/Value/PTokenName";
+import { Type, dynPair, int, list, TermType } from "../base";
 import { isConstantableTermType } from "../kinds";
 
 function truthyTest( equalsBool: boolean, f: ( termT: TermType ) => boolean )

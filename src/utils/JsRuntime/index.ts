@@ -1,4 +1,4 @@
-import BasePlutsError from "../../errors/BasePlutsError";
+import { BasePlutsError } from "../../errors/BasePlutsError";
 import AdditionalInfo from "../Debug/AdditionalInfo";
 
 type Constructable<ReturnT, ConstructorParams extends any[] = any[]> = { new(...args: ConstructorParams): ReturnT }

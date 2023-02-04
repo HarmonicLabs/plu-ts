@@ -1,6 +1,5 @@
 import { pmap } from "../methods"
-import evalScript from "../../../../CEK"
-import { showUPLC } from "../../../../UPLC/UPLCTerm"
+import { evalScript } from "../../../../CEK"
 import { pInt } from "../../../PTypes/PInt"
 import { pList } from "../../../PTypes/PList"
 import { plam } from "../../../Syntax/syntax"

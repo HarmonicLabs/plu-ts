@@ -1,10 +1,8 @@
-import { precursiveList } from "../methods"
-import evalScript from "../../../../CEK"
+import { evalScript } from "../../../../CEK"
 import { pInt } from "../../../PTypes/PInt"
 import { pList, pnil } from "../../../PTypes/PList"
 import { pStr } from "../../../PTypes/PString"
-import { papp, pfn, plam } from "../../../Syntax/syntax"
-import Type, { ConstantableTermType, int, str } from "../../../Term/Type/base"
+import { int, str } from "../../../Term/Type/base"
 import { plength } from "../plength"
 
 
@@ -23,7 +21,7 @@ describe("precursiveList", () => {
         )
 
         //*
-        let arr = [];
+        let arr: number[] = [];
         for( let i = 1; i < 6; i++ )
         {
             arr.push(i);

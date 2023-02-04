@@ -1,9 +1,9 @@
 import { bs, fn, int, lam, list, padd, pair, papp, pBool, PBool, pByteString, PByteString, pfn, pInt, PInt, plam, PLam, pList, pmakeUnit, pnil, pPair, PrimType, pStr, PType, PUnit, str, Term, tyVar } from "../..";
-import ByteString from "../../../../types/HexString/ByteString";
-import Pair from "../../../../types/structs/Pair";
-import evalScript from "../../../CEK";
-import TermInt from "../../stdlib/UtilityTerms/TermInt";
-import pappArgToTerm, { PappArg } from "../pappArg";
+import { ByteString } from "../../../../types/HexString/ByteString";
+import { Pair } from "../../../../types/structs/Pair";
+import { evalScript } from "../../../CEK";
+import { TermInt } from "../../stdlib/UtilityTerms/TermInt";
+import { pappArgToTerm } from "../pappArg";
 
 function expectScriptToEq( received: Term<PType>, expected: Term<PType> ): void
 {

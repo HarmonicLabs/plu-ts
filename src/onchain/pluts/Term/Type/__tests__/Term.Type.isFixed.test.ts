@@ -1,4 +1,4 @@
-import Type, { TermType } from "../base";
+import { Type, TermType } from "../base";
 import { isFixedDataType, isFixedType } from "../kinds";
 
 describe("isFixedDataType", () => {

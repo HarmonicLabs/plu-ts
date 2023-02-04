@@ -1,23 +1,23 @@
-import { pfindList, pmap } from "../methods"
 import BigIntUtils from "../../../../../utils/BigIntUtils"
-import evalScript from "../../../../CEK"
+import { pfind, pmap } from "../methods"
+import { evalScript } from "../../../../CEK"
 import { showUPLC } from "../../../../UPLC/UPLCTerm"
-import PScriptContext from "../../../API/V1/ScriptContext/PScriptContext"
-import PBool, { pBool } from "../../../PTypes/PBool"
+import { PBool, pBool } from "../../../PTypes/PBool"
+import { PScriptContext } from "../../../API/V1/ScriptContext/PScriptContext"
 import { pInt } from "../../../PTypes/PInt"
 import { pList } from "../../../PTypes/PList"
-import pmatch from "../../../PTypes/PStruct/pmatch"
-import PUnit, { pmakeUnit } from "../../../PTypes/PUnit"
-import compile, { PlutusScriptVersion, scriptToJsonFormat } from "../../../Script/compile"
+import { PUnit, pmakeUnit } from "../../../PTypes/PUnit"
+import { compile, PlutusScriptVersion, scriptToJsonFormat } from "../../../Script/compile"
+import { pmatch } from "../../../PTypes/PStruct/pmatch"
 import { perror, pfn } from "../../../Syntax/syntax"
-import Term from "../../../Term"
-import Type, { bool, data, int, list, unit } from "../../../Term/Type/base"
+import { Term } from "../../../Term"
+import { Type, bool, data, int, list, unit } from "../../../Term/Type/base"
 import { peqInt, pif, punIData, punListData } from "../../Builtins"
-import PMaybe from "../../PMaybe/PMaybe"
-import punsafeConvertType from "../../../Syntax/punsafeConvertType"
+import { PMaybe } from "../../PMaybe/PMaybe"
+import { punsafeConvertType } from "../../../Syntax/punsafeConvertType"
 import Debug from "../../../../../utils/Debug"
 
-describe("pfindList", () => {
+describe("pfind", () => {
 
     test("finds '1' in [1,2,3,4,5]", () => {
 
@@ -27,7 +27,7 @@ describe("pfindList", () => {
 
         expect(
             evalScript(
-                pfindList( int )
+                pfind( int )
                 .$(
                     peqInt.$( pInt( 1 ) )
                 )
@@ -47,7 +47,7 @@ describe("pfindList", () => {
 
         expect(
             evalScript(
-                pfindList( int )
+                pfind( int )
                 .$(
                     peqInt.$( pInt( 2 ) )
                 )
@@ -67,7 +67,7 @@ describe("pfindList", () => {
 
         expect(
             evalScript(
-                pfindList( int )
+                pfind( int )
                 .$(
                     peqInt.$( pInt( 5 ) )
                 )
@@ -88,7 +88,7 @@ describe("pfindList", () => {
         ],  bool)
         (( _datum, nums, _ctx ) => 
             pmatch( 
-                pfindList( int )
+                pfind( int )
                 .$( peqInt.$( pInt( 42 ) ) )
                 .$( nums )
             )

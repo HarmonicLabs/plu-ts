@@ -1,13 +1,12 @@
-import Type, { TypeShortcut } from "../base"
-import DataConstr from "../../../../../types/Data/DataConstr";
-import ByteString from "../../../../../types/HexString/ByteString";
-import UPLCTerm from "../../../../UPLC/UPLCTerm";
-import Application from "../../../../UPLC/UPLCTerms/Application";
-import Builtin from "../../../../UPLC/UPLCTerms/Builtin";
-import Lambda from "../../../../UPLC/UPLCTerms/Lambda";
-import UPLCConst from "../../../../UPLC/UPLCTerms/UPLCConst";
+import { Type, TypeShortcut } from "../base"
+import { DataConstr } from "../../../../../types/Data/DataConstr";
+import { ByteString } from "../../../../../types/HexString/ByteString";
+import { Application } from "../../../../UPLC/UPLCTerms/Application";
+import { Builtin } from "../../../../UPLC/UPLCTerms/Builtin";
+import { Lambda } from "../../../../UPLC/UPLCTerms/Lambda";
+import { UPLCConst } from "../../../../UPLC/UPLCTerms/UPLCConst";
 import { constT } from "../../../../UPLC/UPLCTerms/UPLCConst/ConstType";
-import UPLCVar from "../../../../UPLC/UPLCTerms/UPLCVar";
+import { UPLCVar } from "../../../../UPLC/UPLCTerms/UPLCVar";
 import { inferTypeFromUPLC } from "../infer";
 import { termTypeToString } from "../utils";
 

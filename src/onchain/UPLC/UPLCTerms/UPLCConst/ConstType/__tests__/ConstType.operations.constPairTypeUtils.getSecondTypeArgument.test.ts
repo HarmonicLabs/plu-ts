@@ -1,4 +1,4 @@
-import ConstType, { constPairTypeUtils, constT, constTypeToStirng, ConstTyTag } from "..";
+import { ConstType, constPairTypeUtils, constT, constTypeToStirng, ConstTyTag } from "..";
 import { makeRandomWellFormed } from "../test_utils";
 
 describe("constPairTypeUtils.getFirstTypeArgument", () => {

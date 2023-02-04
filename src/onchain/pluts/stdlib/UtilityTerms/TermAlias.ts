@@ -1,5 +1,5 @@
 import { PAlias } from "../../PTypes";
-import Term from "../../Term";
+import { Term } from "../../Term";
 import { AliasTermType, ConstantableTermType } from "../../Term/Type";
 import { ToPType } from "../../Term/Type/ts-pluts-conversion";
 import { UtilityTermOf } from "./addUtilityForType";
@@ -12,9 +12,7 @@ type NotUtilityOfAlias<T extends ConstantableTermType> =
         NotUtilityOfAlias<ActualT> :
         UtilityTermOf<ToPType<T>>
 
-type TermAlias<T extends ConstantableTermType, Sym extends symbol = symbol> =
+export type TermAlias<T extends ConstantableTermType, Sym extends symbol = symbol> =
     T extends AliasTermType<any,infer ActualT extends ConstantableTermType> ?
         Term<PAlias<ActualT,Sym>> & NotUtilityOfAlias<ActualT>:
         Term<PAlias<T,Sym>> & NotUtilityOfAlias<T>
-
-export default TermAlias;

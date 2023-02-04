@@ -1,6 +1,5 @@
-import Debug from "../../../utils/Debug";
-import BinaryString from "../BinaryString";
-import BitStream from "../BitStream"
+import { BinaryString } from "../BinaryString";
+import { BitStream } from "../BitStream"
 
 describe("BitStream.fromBinStr ", () => {
     

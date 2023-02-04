@@ -1,12 +1,12 @@
-import evalScript from ".."
+import { evalScript } from ".."
 import { pstrictIf } from "../../pluts/stdlib/Builtins"
 import { pInt } from "../../pluts/PTypes/PInt"
-import Type from "../../pluts/Term/Type/base"
-import Application from "../../UPLC/UPLCTerms/Application"
-import Builtin from "../../UPLC/UPLCTerms/Builtin"
-import Delay from "../../UPLC/UPLCTerms/Delay"
-import Force from "../../UPLC/UPLCTerms/Force"
-import UPLCConst from "../../UPLC/UPLCTerms/UPLCConst"
+import { Type } from "../../pluts/Term/Type/base"
+import { Application } from "../../UPLC/UPLCTerms/Application"
+import { Builtin } from "../../UPLC/UPLCTerms/Builtin"
+import { Delay } from "../../UPLC/UPLCTerms/Delay"
+import { Force } from "../../UPLC/UPLCTerms/Force"
+import { UPLCConst } from "../../UPLC/UPLCTerms/UPLCConst"
 
 describe("CEK :: evalScript", () => {
 

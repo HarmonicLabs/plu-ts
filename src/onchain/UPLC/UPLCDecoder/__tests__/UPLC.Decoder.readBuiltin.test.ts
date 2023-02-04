@@ -1,11 +1,10 @@
-import UPLCDecoder from ".."
-import UPLCEncoder from "../../UPLCEncoder"
-import UPLCProgram from "../../UPLCProgram"
-import UPLCVersion from "../../UPLCProgram/UPLCVersion"
-import Application from "../../UPLCTerms/Application"
-import Builtin from "../../UPLCTerms/Builtin"
-import Force from "../../UPLCTerms/Force"
-import UPLCConst from "../../UPLCTerms/UPLCConst"
+import { UPLCDecoder } from ".."
+import { UPLCEncoder } from "../../UPLCEncoder"
+import { UPLCProgram } from "../../UPLCProgram"
+import { UPLCVersion } from "../../UPLCProgram/UPLCVersion"
+import { Application } from "../../UPLCTerms/Application"
+import { Builtin } from "../../UPLCTerms/Builtin"
+import { UPLCConst } from "../../UPLCTerms/UPLCConst"
 
 
 describe("readTerm( Builtin )", () => {

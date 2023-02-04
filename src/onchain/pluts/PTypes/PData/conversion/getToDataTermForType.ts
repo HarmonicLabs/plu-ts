@@ -9,7 +9,7 @@ import { ppairData, pfstPair, psndPair, pid } from "../../../stdlib/Builtins";
 import { pmap } from "../../../stdlib/List/methods";
 import { phoist, plam } from "../../../Syntax/syntax";
 import { punsafeConvertType } from "../../../Syntax/punsafeConvertType";
-import {  Type, int, bs, str, unit, bool, list, data, pair } from "../../../Term/Type/base";
+import { Type, int, bs, str, unit, bool, list, data } from "../../../Term/Type/base";
 import { typeExtends } from "../../../Term/Type/extension";
 import { isAliasType, isStructType, isDataType, isListType, isPairType } from "../../../Term/Type/kinds";
 import { termTypeToString } from "../../../Term/Type/utils";

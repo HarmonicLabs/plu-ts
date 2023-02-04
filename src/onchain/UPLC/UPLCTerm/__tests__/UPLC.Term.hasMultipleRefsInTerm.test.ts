@@ -1,9 +1,9 @@
 import { hasMultipleRefsInTerm } from "..";
-import Application from "../../UPLCTerms/Application";
-import Builtin from "../../UPLCTerms/Builtin";
-import Lambda from "../../UPLCTerms/Lambda";
-import UPLCConst from "../../UPLCTerms/UPLCConst";
-import UPLCVar from "../../UPLCTerms/UPLCVar";
+import { Application } from "../../UPLCTerms/Application";
+import { Builtin } from "../../UPLCTerms/Builtin";
+import { Lambda } from "../../UPLCTerms/Lambda";
+import { UPLCConst } from "../../UPLCTerms/UPLCConst";
+import { UPLCVar } from "../../UPLCTerms/UPLCVar";
 
 describe("hasMultipleRefsInTerm", () => {
 

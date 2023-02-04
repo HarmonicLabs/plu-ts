@@ -398,12 +398,13 @@ export function typeofGenericStruct(
         replacements[i] = tyVar();
     };
 
-    
+    const PStruct_ = genStruct(
+        //@ts-ignore
+        ...aliases
+    );
+
     const sDef = cloneStructDef(
-        genStruct(
-            //@ts-ignore
-            ...aliases
-        ).type[1]
+        PStruct_ instanceof PDataRepresentable ? PStruct_.type[1] : PStruct_
     );
 
     replaceAliasesWith(

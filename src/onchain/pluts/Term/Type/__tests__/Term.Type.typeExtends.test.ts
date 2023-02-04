@@ -1,6 +1,6 @@
-import Type, { dynPair, int, list, pair, TermType, tyVar } from "../base";
-import PValue from "../../../API/V1/Value/PValue";
-import palias from "../../../PTypes/PAlias/palias";
+import { Type, dynPair, int, list, pair, TermType, tyVar } from "../base";
+import { PValue } from "../../../API/V1/Value/PValue";
+import { palias } from "../../../PTypes/PAlias/palias";
 import { typeExtends } from "../extension";
 
 const allTypesFixed = [

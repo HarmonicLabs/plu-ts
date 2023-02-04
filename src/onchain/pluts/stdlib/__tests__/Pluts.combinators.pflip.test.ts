@@ -1,5 +1,5 @@
-import ByteString from "../../../../types/HexString/ByteString";
-import evalScript from "../../../CEK";
+import { ByteString } from "../../../../types/HexString/ByteString";
+import { evalScript } from "../../../CEK";
 import { pByteString } from "../../PTypes/PByteString";
 import { pInt } from "../../PTypes/PInt";
 import { pconsBs } from "../Builtins";

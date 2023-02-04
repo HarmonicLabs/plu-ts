@@ -1,21 +1,21 @@
-import BitStream from "../../../../types/bits/BitStream";
-import ByteString from "../../../../types/HexString/ByteString";
 import BigIntUtils from "../../../../utils/BigIntUtils";
+import { ptraceIfFalse } from "../../../pluts/stdlib/ptrace";
+import { pfn, pforce, pdelay, perror } from "../../../pluts/Syntax/syntax";
+import { data, delayed, unit } from "../../../pluts/Term/Type/base";
 import { ptrace } from "../../../pluts/stdlib/Builtins";
 import { pByteString } from "../../../pluts/PTypes/PByteString";
 import { pStr } from "../../../pluts/PTypes/PString";
 import { pmakeUnit } from "../../../pluts/PTypes/PUnit";
-import compile from "../../../pluts/Script/compile";
-import { ptraceIfFalse } from "../../../pluts/stdlib/ptrace";
-import { pfn, pforce, pdelay, perror } from "../../../pluts/Syntax/syntax";
-import { data, delayed, unit } from "../../../pluts/Term/Type/base";
-import UPLCDecoder from "../../UPLCDecoder";
-import UPLCProgram from "../../UPLCProgram";
-import UPLCVersion from "../../UPLCProgram/UPLCVersion";
-import Application from "../../UPLCTerms/Application";
-import Builtin from "../../UPLCTerms/Builtin";
-import Force from "../../UPLCTerms/Force";
-import UPLCConst from "../../UPLCTerms/UPLCConst";
+import { BitStream } from "../../../../types/bits/BitStream";
+import { ByteString } from "../../../../types/HexString/ByteString";
+import { compile } from "../../../pluts/Script/compile";
+import { UPLCDecoder } from "../../UPLCDecoder";
+import { UPLCProgram } from "../../UPLCProgram";
+import { UPLCVersion } from "../../UPLCProgram/UPLCVersion";
+import { Application } from "../../UPLCTerms/Application";
+import { Builtin } from "../../UPLCTerms/Builtin";
+import { Force } from "../../UPLCTerms/Force";
+import { UPLCConst } from "../../UPLCTerms/UPLCConst";
 
 
 describe("serializeBuiltin", () => {

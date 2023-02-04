@@ -240,5 +240,3 @@ export type CostFunction
     | TwoArgs
     | ThreeArgs
     | SixArgs;
-
-export default CostFunction;

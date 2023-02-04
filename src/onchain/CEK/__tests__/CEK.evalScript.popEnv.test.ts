@@ -1,9 +1,9 @@
-import evalScript from "..";
-import Application from "../../UPLC/UPLCTerms/Application";
-import Builtin from "../../UPLC/UPLCTerms/Builtin";
-import Lambda from "../../UPLC/UPLCTerms/Lambda";
-import UPLCConst from "../../UPLC/UPLCTerms/UPLCConst";
-import UPLCVar from "../../UPLC/UPLCTerms/UPLCVar";
+import { evalScript } from "..";
+import { Application } from "../../UPLC/UPLCTerms/Application";
+import { Builtin } from "../../UPLC/UPLCTerms/Builtin";
+import { Lambda } from "../../UPLC/UPLCTerms/Lambda";
+import { UPLCConst } from "../../UPLC/UPLCTerms/UPLCConst";
+import { UPLCVar } from "../../UPLC/UPLCTerms/UPLCVar";
 
 describe(" CEK :: evalScript ", () => {
     

@@ -1,7 +1,6 @@
 import BigIntUtils from "../../../utils/BigIntUtils";
-import Debug from "../../../utils/Debug";
-import Bit from "../Bit";
-import BitStream from "../BitStream";
+import { Bit } from "../Bit";
+import { BitStream } from "../BitStream";
 
 
 function bitsArrFromString( bitsStr: string ): Bit[]

@@ -1,4 +1,4 @@
-import UPLCDecoder from ".."
+import { UPLCDecoder } from ".."
 
 
 describe("decode program", () => {

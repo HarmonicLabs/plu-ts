@@ -1,15 +1,15 @@
-import pstruct, { pgenericStruct } from "../pstruct"
-import ByteString from "../../../../../types/HexString/ByteString";
-import evalScript from "../../../../CEK";
-import UPLCConst from "../../../../UPLC/UPLCTerms/UPLCConst";
+import { pstruct, pgenericStruct } from "../pstruct"
+import { ByteString } from "../../../../../types/HexString/ByteString";
+import { evalScript } from "../../../../CEK";
+import { UPLCConst } from "../../../../UPLC/UPLCTerms/UPLCConst";
 import { padd, pconsBs, pindexBs } from "../../../stdlib/Builtins";
 import { perror } from "../../../Syntax/syntax";
-import Term from "../../../Term";
+import { Term } from "../../../Term";
 import { bs, ConstantableTermType, int, unit } from "../../../Term/Type/base";
 import { pByteString } from "../../PByteString";
 import { pInt } from "../../PInt";
 import { pmakeUnit } from "../../PUnit";
-import pmatch from "../pmatch";
+import { pmatch } from "../pmatch";
 
 const PMaybe = pgenericStruct( tyArg => {
     return {

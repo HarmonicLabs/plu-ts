@@ -1,5 +1,5 @@
-import Cbor from "..";
-import CborObj, { cborObjFromRaw } from "../../CborObj";
+import { Cbor } from "..";
+import { CborObj, cborObjFromRaw } from "../../CborObj";
 
 
 function identityTestFor( cObj: CborObj ): void

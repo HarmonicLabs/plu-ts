@@ -1,14 +1,14 @@
 import { getFromDataForType } from "../getFromDataTermForType"
-import PValue from "../../../../API/V1/Value/PValue"
-import Term from "../../../../Term";
-import PData from "../../PData";
 import { bs, data, dynPair, int, list, pair } from "../../../../Term/Type/base";
-import UPLCConst from "../../../../../UPLC/UPLCTerms/UPLCConst";
-import dataFromCbor from "../../../../../../types/Data/fromCbor";
-import CborString from "../../../../../../cbor/CborString";
-import evalScript from "../../../../../CEK";
+import { PValue } from "../../../../API/V1/Value/PValue"
+import { Term } from "../../../../Term";
+import { PData } from "../../PData";
+import { UPLCConst } from "../../../../../UPLC/UPLCTerms/UPLCConst";
+import { dataFromCbor } from "../../../../../../types/Data/fromCbor";
+import { CborString } from "../../../../../../cbor/CborString";
+import { ByteString } from "../../../../../../types/HexString/ByteString";
+import { evalScript } from "../../../../../CEK";
 import { addPListMethods } from "../../../../stdlib";
-import ByteString from "../../../../../../types/HexString/ByteString";
 
 describe("getFromDataForType", () => {
 
