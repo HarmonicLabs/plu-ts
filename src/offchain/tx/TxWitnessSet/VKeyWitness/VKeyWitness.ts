@@ -1,16 +1,17 @@
-import Cbor from "../../../../cbor/Cbor";
-import CborObj from "../../../../cbor/CborObj";
-import CborArray from "../../../../cbor/CborObj/CborArray";
-import CborString, { CanBeCborString, forceCborString } from "../../../../cbor/CborString";
-import { ToCbor } from "../../../../cbor/interfaces/CBORSerializable";
-import InvalidCborFormatError from "../../../../errors/InvalidCborFormatError";
-import Cloneable from "../../../../types/interfaces/Cloneable";
 import JsRuntime from "../../../../utils/JsRuntime";
 import ObjectUtils from "../../../../utils/ObjectUtils";
-import ToJson from "../../../../utils/ts/ToJson";
-import Hash32 from "../../../hashes/Hash32/Hash32";
-import Signature from "../../../hashes/Signature";
-import VKey from "./VKey";
+
+import { CborString, CanBeCborString, forceCborString } from "../../../../cbor/CborString";
+import { ToCbor } from "../../../../cbor/interfaces/CBORSerializable";
+import { Cbor } from "../../../../cbor/Cbor";
+import { CborObj } from "../../../../cbor/CborObj";
+import { CborArray } from "../../../../cbor/CborObj/CborArray";
+import { InvalidCborFormatError } from "../../../../errors/InvalidCborFormatError";
+import { Cloneable } from "../../../../types/interfaces/Cloneable";
+import { ToJson } from "../../../../utils/ts/ToJson";
+import { Hash32 } from "../../../hashes/Hash32/Hash32";
+import { Signature } from "../../../hashes/Signature";
+import { VKey } from "./VKey";
 
 export class VKeyWitness
     implements ToCbor, Cloneable<VKeyWitness>, ToJson
