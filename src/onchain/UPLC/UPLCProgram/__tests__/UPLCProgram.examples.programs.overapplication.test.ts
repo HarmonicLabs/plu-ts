@@ -27,14 +27,14 @@ cabal run uplc -- example -s overapplication
 )
 */
 
-import UPLCProgram from "..";
-import BinaryString from "../../../../types/bits/BinaryString";
-import BitStream from "../../../../types/bits/BitStream";
 import Debug from "../../../../utils/Debug";
-import UPLCEncoder from "../../UPLCEncoder";
-import Application from "../../UPLCTerms/Application";
-import Builtin from "../../UPLCTerms/Builtin";
-import UPLCConst from "../../UPLCTerms/UPLCConst";
+import { UPLCProgram } from "..";
+import { BinaryString } from "../../../../types/bits/BinaryString";
+import { BitStream } from "../../../../types/bits/BitStream";
+import { UPLCEncoder } from "../../UPLCEncoder";
+import { Application } from "../../UPLCTerms/Application";
+import { Builtin } from "../../UPLCTerms/Builtin";
+import { UPLCConst } from "../../UPLCTerms/UPLCConst";
 
 
 describe("overapplication", () => {

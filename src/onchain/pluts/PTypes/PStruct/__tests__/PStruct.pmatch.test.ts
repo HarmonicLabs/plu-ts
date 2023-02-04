@@ -10,13 +10,8 @@ import { pByteString } from "../../PByteString";
 import { pInt } from "../../PInt";
 import { pmakeUnit } from "../../PUnit";
 import { pmatch } from "../pmatch";
+import { PMaybe } from "../../../stdlib/PMaybe/PMaybe";
 
-const PMaybe = pgenericStruct( tyArg => {
-    return {
-        Just: { value: tyArg },
-        Nothing: {}
-    }
-});
 const SingleCtor = pstruct({
     Ctor : {
         num: int,
@@ -50,8 +45,8 @@ describe("pmatch", () => {
 
         expect(
             evalScript(
-                pmatch( PMaybe( int ).Just({ value: pInt(2) }) )
-                .onJust( f => f.extract("value").in( v => v.value ) )
+                pmatch( PMaybe( int ).Just({ val: pInt(2) }) )
+                .onJust( f => f.extract("val").in( v => v.val ) )
                 .onNothing( _ => pInt( 0 ) )
             )
         ).toEqual(
@@ -108,11 +103,11 @@ describe("pmatch", () => {
     
             expect(
                 evalScript(
-                    pmatch( PMaybe(int).Just({ value: pInt(42) }) )
+                    pmatch( PMaybe(int).Just({ val: pInt(42) }) )
                     .onJust( rawFields =>
-                        rawFields.extract("value")
+                        rawFields.extract("val")
                         .in( fields => 
-                            fields.value
+                            fields.val
                         )
                     )
                     .onNothing( _ => pInt( 0 ) )
@@ -125,9 +120,9 @@ describe("pmatch", () => {
                 evalScript(
                     pmatch( PMaybe(int).Nothing({}) )
                     .onJust( rawFields =>
-                        rawFields.extract("value")
+                        rawFields.extract("val")
                         .in( fields => 
-                            fields.value
+                            fields.val
                         )
                     )
                     .onNothing( _ => pInt( 0 ) )

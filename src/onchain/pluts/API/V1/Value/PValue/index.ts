@@ -3,20 +3,16 @@ import { int, list, pair } from "../../../../Term/Type/base";
 import { PCurrencySymbol } from "../PCurrencySymbol";
 import { PTokenName } from "../PTokenName";
 
-export const PAssetsEntry = palias(
-    pair(
+export const PAssetsEntryT = pair(
         PTokenName.type,
         int
-    )
-);
+    );
 
-export const PValueEntry = palias(
-    pair(
+export const PValueEntryT = pair(
         PCurrencySymbol.type,
-        list( PAssetsEntry.type )
-    )
-);
+        list( PAssetsEntryT )
+    );
 
 export const PValue = palias(
-    list( PValueEntry.type )
+    list( PValueEntryT )
 );

@@ -1,6 +1,5 @@
 import BigIntUtils from ".."
 
-
 describe("BigIntUtils.toBuffer", () => {
 
     it("converts entirely on only bigint as input", () => {

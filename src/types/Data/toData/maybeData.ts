@@ -1,5 +1,5 @@
-import Data from "..";
-import DataConstr from "../DataConstr";
+import { Data } from "..";
+import { DataConstr } from "../DataConstr";
 
 export function nothingData(): DataConstr
 {

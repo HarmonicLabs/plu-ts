@@ -21,6 +21,7 @@ import {
     StructDefinition
 } from "./base";
 import ObjectUtils from "../../../../utils/ObjectUtils";
+import { unwrapAlias } from "../../PTypes/PAlias/unwrapAlias";
 
 function getIsStructDefWithTermTypeCheck<SDef extends StructDefinition>( termTypeCheck: ( t: TermType ) => boolean )
     : ( def: object ) => def is SDef
@@ -406,6 +407,7 @@ export function isLambdaType( t: TermType ): t is [ PrimType.Lambda, TermType, T
 
 export function isPairType( t: TermType ): t is ([ PrimType.Pair, TermType, TermType ] | [ PrimType.PairAsData, TermType, TermType ])
 {
+    if( isAliasType( t ) ) return isPairType( unwrapAlias( t ) )
     return (
         Array.isArray( t ) &&
         t.length === 3 &&

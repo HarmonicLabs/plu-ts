@@ -205,9 +205,9 @@ export function findSubsToRestrict( restriction: Readonly<TermType>, toBeRestric
         else
         {
             (b.slice(1) as TermType[])
-            .forEach( (bTyArg, i) =>
+            .forEach( (bTyArg, i) => {
                 findSubs( a[ i + 1 ] as TermType, bTyArg )
-            );
+            });
         }
     }
 

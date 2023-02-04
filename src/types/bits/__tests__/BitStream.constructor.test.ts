@@ -1,4 +1,4 @@
-import BitStream from "../BitStream"
+import {BitStream} from "../BitStream"
 
 
 describe("new BitStream() is empty", () => {

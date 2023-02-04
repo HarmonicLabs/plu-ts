@@ -1,7 +1,6 @@
-import Debug from "../../../utils/Debug";
-import Pair from "../../structs/Pair";
-import BinaryString from "../BinaryString"
-import BitStream from "../BitStream"
+import { Pair } from "../../structs/Pair";
+import { BinaryString } from "../BinaryString"
+import { BitStream } from "../BitStream"
 
 
 describe("BitStream.eq; equality properties", () => {

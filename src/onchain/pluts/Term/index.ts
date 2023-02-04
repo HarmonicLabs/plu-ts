@@ -50,7 +50,7 @@ export class Term<A extends PType>
     constructor( type: FromPType<A> , toUPLC: ( dbn: bigint ) => UPLCTerm, isConstant: boolean = false )
     {
         JsRuntime.assert(
-            isWellFormedType( type ),
+            isWellFormedType( type ) || Boolean(void console.log( type )),
             "invalid type while constructing Term"
         );
 

@@ -1,9 +1,9 @@
 import { pchooseList } from "../Builtins";
-import Application from "../../../UPLC/UPLCTerms/Application";
-import Builtin from "../../../UPLC/UPLCTerms/Builtin";
-import Delay from "../../../UPLC/UPLCTerms/Delay";
-import Force from "../../../UPLC/UPLCTerms/Force";
-import UPLCConst from "../../../UPLC/UPLCTerms/UPLCConst";
+import { Application } from "../../../UPLC/UPLCTerms/Application";
+import { Builtin } from "../../../UPLC/UPLCTerms/Builtin";
+import { Delay } from "../../../UPLC/UPLCTerms/Delay";
+import { Force } from "../../../UPLC/UPLCTerms/Force";
+import { UPLCConst } from "../../../UPLC/UPLCTerms/UPLCConst";
 import { constT } from "../../../UPLC/UPLCTerms/UPLCConst/ConstType";
 import { pBool } from "../../PTypes/PBool";
 import { pList } from "../../PTypes/PList";

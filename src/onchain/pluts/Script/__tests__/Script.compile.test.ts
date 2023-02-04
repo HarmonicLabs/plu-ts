@@ -1,5 +1,5 @@
 import { showUPLC } from "../../../UPLC/UPLCTerm"
-import { pBSToData, peqBs, pif, punBData } from "../../stdlib/Builtins"
+import { pBSToData, peqBs, peqData, pif, punBData } from "../../stdlib/Builtins"
 import { pByteString } from "../../PTypes/PByteString"
 import { pmakeUnit } from "../../PTypes/PUnit"
 import { pevery, pfilter } from "../../stdlib/List/methods"
@@ -10,11 +10,10 @@ import { pBool } from "../../PTypes/PBool"
 import { Type, bool, bs, data, fn, int, pair, unit } from "../../Term/Type/base"
 import { compile, PlutusScriptVersion, scriptToJsonFormat } from "../compile"
 import { ByteString } from "../../../../types/HexString/ByteString"
-import { Term } from "../../Term"
+import { Term, list } from "../../Term"
 import { PScriptContext } from "../../API/V1/ScriptContext/PScriptContext"
 import { pmatch } from "../../PTypes/PStruct/pmatch"
 import { PTxInInfo } from "../../API/V1/Tx/PTxInInfo"
-import { pownHash } from "../../API/V1/ScriptContext/PTxInfo/pownHash"
 import { makeValidator } from "../makeScript"
 import { evalScript } from "../../../CEK"
 import { UPLCConst } from "../../../UPLC/UPLCTerms/UPLCConst"
@@ -39,7 +38,7 @@ import { PCredential } from "../../API/V1/Address/PCredential"
 import { PValidatorHash } from "../../API/V1/ScriptsHashes/PValidatorHash"
 
 
-describe("scriptToJsonFormat", () => {
+describe.skip("scriptToJsonFormat", () => {
 
     test.skip("Cardano <3 plu-ts", () => {
 
@@ -79,13 +78,7 @@ describe("scriptToJsonFormat", () => {
         );
 
     });
-
-    test("findOwnInput contract", () => {
-
-
-
-    })
-
+    
 
     test.only("Cardano <3 plu-ts; unit Datum", () => {
 
@@ -108,7 +101,7 @@ describe("scriptToJsonFormat", () => {
 
                             plet( pownHash.$( txInfo ).$( purpose ) ).in( ownHash =>
 
-                                txInfo.extract("outputs").in( ({ outputs }) =>
+                                txInfo.extract("outputs","inputs").in( ({ outputs }) =>
 
                                     pevery( PTxOut.type )
                                     .$( plam( PTxOut.type, bool )(

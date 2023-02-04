@@ -1,5 +1,5 @@
 import UPLCFlatUtils from ".."
-import BitStream from "../../../types/bits/BitStream"
+import {BitStream} from "../../../types/bits/BitStream"
 import Debug from "../../Debug";
 
 

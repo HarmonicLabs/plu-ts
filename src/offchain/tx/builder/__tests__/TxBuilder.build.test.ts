@@ -3,6 +3,7 @@ import { CborBytes } from "../../../../cbor/CborObj/CborBytes"
 import { V2, data, pfn, pmakeUnit, unit } from "../../../../onchain"
 import { compile } from "../../../../onchain/pluts/Script/compile"
 import { DataConstr } from "../../../../types/Data/DataConstr"
+import Debug from "../../../../utils/Debug"
 import { PaymentCredentials } from "../../../credentials/PaymentCredentials"
 import { PubKeyHash } from "../../../credentials/PubKeyHash"
 import { Address } from "../../../ledger/Address"
@@ -172,7 +173,7 @@ describe("TxBuilder.build", () => {
                 changeAddress: pkAddr
             });
 
-            console.log(
+            Debug.log(
                 JSON.stringify(
                     tx.toJson(),
                     undefined,

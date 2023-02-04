@@ -1,4 +1,5 @@
 import { PType } from "../../PType";
+import { typeofGenericStruct } from "../../PTypes";
 import { PBool, pBool } from "../../PTypes/PBool";
 import { TermFn } from "../../PTypes/PFn/PFn";
 import { pmatch } from "../../PTypes/PStruct/pmatch";
@@ -8,7 +9,7 @@ import { bool, int } from "../../Term/Type/base";
 import { PMaybe, PMaybeT } from "./PMaybe";
 
 export const pisJust: TermFn<[PMaybeT<PType>], PBool> = phoist(
-    plam( PMaybe.type, bool )
+    plam( typeofGenericStruct( PMaybe as any ), bool )
     // @ts-ignore Type instantiation is excessively deep and possibly infinite
     ( maybeTerm =>
         pmatch(

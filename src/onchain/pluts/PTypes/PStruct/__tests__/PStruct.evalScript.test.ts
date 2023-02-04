@@ -3,23 +3,22 @@ import { DataConstr } from "../../../../../types/Data/DataConstr";
 import { DataI } from "../../../../../types/Data/DataI";
 import { evalScript } from "../../../../CEK";
 import { UPLCConst } from "../../../../UPLC/UPLCTerms/UPLCConst";
-import { int, str } from "../../../Term/Type/base"
+import { ConstantableTermType, int, str } from "../../../Term/Type/base"
 import { pInt } from "../../PInt";
 
 
-const PMaybe = pgenericStruct( tyArg => {
-    return {
+const PMaybe = <T extends ConstantableTermType>( tyArg: T ) => {
+    return pstruct({
         Just: { value: tyArg },
         Nothing: {}
-    }
-});
+    })
+};
 
-const PEither = pgenericStruct( ( a, b ) => {
-    return {
-        Left: { value: a },
-        Rigth: { value: b },
-    }
-})
+const PEither = <A extends ConstantableTermType, B extends ConstantableTermType>( a: A, b: B ) =>
+    pstruct({
+        Left: { left: a },
+        Right: { right: b },
+    })
 
 describe("evaluated struct", () => {
 

@@ -105,7 +105,7 @@ function ctorDefExtends( a: StructCtorDef, b: StructCtorDef, subs: TyParam[] = [
 
 export function structExtends( t: TermType, struct: StructType, subs: TyParam[] = [] ): t is StructType
 {
-    if( isAliasType( t ) ) return structExtends( t[1].type, struct, subs );
+    if( isAliasType( t ) ) return structExtends( unwrapAlias( t ), struct, subs );
 
     // should this throw?
     if( !isStructType( struct ) ) return false;

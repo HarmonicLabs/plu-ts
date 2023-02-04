@@ -1,9 +1,9 @@
 import { isPureUPLCTerm } from "../../UPLCTerm"
-import Application from "../Application"
-import HoistedUPLC from "../HoistedUPLC"
-import Lambda from "../Lambda"
-import UPLCConst from "../UPLCConst"
-import UPLCVar from "../UPLCVar"
+import { Application } from "../Application"
+import { HoistedUPLC } from "../HoistedUPLC"
+import { Lambda } from "../Lambda"
+import { UPLCConst } from "../UPLCConst"
+import { UPLCVar } from "../UPLCVar"
 
 describe("isPureUPLCTerm", () => {
     

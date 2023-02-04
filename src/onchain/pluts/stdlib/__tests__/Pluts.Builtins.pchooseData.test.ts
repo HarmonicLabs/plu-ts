@@ -1,14 +1,13 @@
 import { pchooseData } from "../Builtins";
-import DataConstr from "../../../../types/Data/DataConstr";
-import Application from "../../../UPLC/UPLCTerms/Application";
-import Builtin from "../../../UPLC/UPLCTerms/Builtin";
-import Delay from "../../../UPLC/UPLCTerms/Delay";
-import Force from "../../../UPLC/UPLCTerms/Force";
-import UPLCConst from "../../../UPLC/UPLCTerms/UPLCConst";
-import { pBool } from "../../PTypes/PBool";
+import { DataConstr } from "../../../../types/Data/DataConstr";
+import { Application } from "../../../UPLC/UPLCTerms/Application";
+import { Builtin } from "../../../UPLC/UPLCTerms/Builtin";
+import { Delay } from "../../../UPLC/UPLCTerms/Delay";
+import { Force } from "../../../UPLC/UPLCTerms/Force";
+import { UPLCConst } from "../../../UPLC/UPLCTerms/UPLCConst";
 import { pData } from "../../PTypes/PData/PData";
-import PInt, { pInt } from "../../PTypes/PInt";
-import Type from "../../Term/Type/base";
+import { pInt } from "../../PTypes/PInt";
+import { Type } from "../../Term/Type/base";
 
 describe("pchooseData", () => {
 

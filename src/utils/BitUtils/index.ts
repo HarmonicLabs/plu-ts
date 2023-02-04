@@ -1,5 +1,5 @@
-import BasePlutsError from "../../errors/BasePlutsError";
-import Int32 from "../../types/ints/Int32";
+import { BasePlutsError } from "../../errors/BasePlutsError";
+import { Int32 } from "../../types/ints/Int32";
 import JsRuntime from "../JsRuntime";
 
 /**

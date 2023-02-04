@@ -2,7 +2,7 @@ import BigIntUtils from "../../../utils/BigIntUtils";
 import BitUtils from "../../../utils/BitUtils";
 import BufferUtils from "../../../utils/BufferUtils";
 import Debug from "../../../utils/Debug";
-import BitStream from "../BitStream";
+import {BitStream} from "../BitStream";
 
 
 function makeSpecificBufferCase( hexBuff1: string | number[] , hexBuff2: string | number[] )

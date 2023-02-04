@@ -1,24 +1,18 @@
-import { pgenericStruct } from "../pstruct"
+import { pgenericStruct, typeofGenericStruct } from "../pstruct"
 import { Type, ConstantableTermType, struct } from "../../../Term/Type/base"
 import { structExtends } from "../../../Term/Type/extension"
+import { PMaybe } from "../../../stdlib";
+import { termTypeToString } from "../../../Term/Type/utils";
 
 
 describe("typeofGenericStruct", () => {
 
     test("single arguent", () => {
 
-        const PMaybeDef = (tyArg: ConstantableTermType) => {
-            return {
-                Just: { value: tyArg },
-                Nothing: {}
-            }
-        };
 
-        const PMaybe = pgenericStruct( PMaybeDef )
-
-        const PMaybeTermType = PMaybe.type;
+        const PMaybeTermType = typeofGenericStruct( PMaybe as any );
         const manualType = struct({
-            Just: { value: Type.Var() },
+            Just: { val: Type.Var() },
             Nothing: {}
         });
 

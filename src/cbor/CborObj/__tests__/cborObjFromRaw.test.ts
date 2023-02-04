@@ -1,11 +1,11 @@
 import { cborObjFromRaw } from ".."
-import CborArray from "../CborArray";
-import CborBytes from "../CborBytes";
-import CborMap from "../CborMap";
-import CborNegInt from "../CborNegInt";
-import CborSimple from "../CborSimple";
-import CborText from "../CborText";
-import CborUInt from "../CborUInt";
+import { CborArray } from "../CborArray";
+import { CborBytes } from "../CborBytes";
+import { CborMap } from "../CborMap";
+import { CborNegInt } from "../CborNegInt";
+import { CborSimple } from "../CborSimple";
+import { CborText } from "../CborText";
+import { CborUInt } from "../CborUInt";
 
 
 describe( "cborObjFromRaw", () => {

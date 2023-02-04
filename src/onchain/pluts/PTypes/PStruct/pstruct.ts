@@ -404,7 +404,7 @@ export function typeofGenericStruct(
     );
 
     const sDef = cloneStructDef(
-        PStruct_ instanceof PDataRepresentable ? PStruct_.type[1] : PStruct_
+        PStruct_.type[1]
     );
 
     replaceAliasesWith(
@@ -426,12 +426,17 @@ export function typeofGenericStruct(
  */
 export function pgenericStruct<ConstStructDef extends ConstantableStructDefinition, TypeArgs extends [ ConstantableTermType, ...ConstantableTermType[] ]>
     (
-        getDescriptor: ( ...tyArgs: TypeArgs ) => ConstStructDef
+        getDescriptor: ( ...tyArgs: TypeArgs ) => PStruct<ConstStructDef>
     ): (
         (<TyArgs extends TypeArgs>( ...tyArgs: TyArgs ) => PStruct<ConstStructDef>) &
         { type: [ typeof structType, GenericStructDefinition ] }
     )
 {
+    console.warn([
+        "you are using 'pgenericStruct' to create a paramterized sctruct;",
+        "this method is deprecated since v0.2.0 and might behave incorrectly",
+        "consider updating your code by defining your parametrized struct as a function that reutrns a determined struct"
+    ].join(" "))
     /*
     lambda called immediately
 
@@ -454,8 +459,7 @@ export function pgenericStruct<ConstStructDef extends ConstantableStructDefiniti
                     if( cachedResult !== undefined ) return cachedResult.snd;
                 }
                 
-                const result = pstruct<ConstStructDef>(
-                    getDescriptor(
+                let result = getDescriptor(
                         /*
                         Argument of type '[ConstantableTermType, ...ConstantableTermType[]]' is not assignable to parameter of type 'TypeArgs'.
                             '[ConstantableTermType, ...ConstantableTermType[]]' is assignable to the constraint of type 'TypeArgs',
@@ -464,8 +468,10 @@ export function pgenericStruct<ConstStructDef extends ConstantableStructDefiniti
                         */
                         //@ts-ignore
                         tyArgs[0], ...tyArgs.slice(1)
-                    )
-                );
+                    );
+
+                if( !( result instanceof PDataRepresentable ) ) result = pstruct(result);
+
                 tyArgsCache.push( new Pair<string, PStruct<ConstStructDef>>( thisTyArgsKey, result ) );
 
                 return result;

@@ -9,12 +9,12 @@ cabal run uplc -- example -s unitval
 (program 1.0.0 (con unit ()))
 */
 
-import UPLCProgram from "..";
-import BinaryString from "../../../../types/bits/BinaryString";
-import BitStream from "../../../../types/bits/BitStream";
+import { UPLCProgram } from "..";
+import { BinaryString } from "../../../../types/bits/BinaryString";
+import { BitStream } from "../../../../types/bits/BitStream";
 import Debug from "../../../../utils/Debug";
-import UPLCEncoder from "../../UPLCEncoder";
-import UPLCConst from "../../UPLCTerms/UPLCConst";
+import { UPLCEncoder } from "../../UPLCEncoder";
+import { UPLCConst } from "../../UPLCTerms/UPLCConst";
 
 
 describe("unitval", () => {

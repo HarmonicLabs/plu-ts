@@ -1,4 +1,4 @@
-import { ByteString } from "../../../..";
+import { ByteString } from "../../../../types/HexString/ByteString";
 import { pByteString } from "../../PTypes";
 import { phoist, plam } from "../../Syntax";
 import { int, bs } from "../../Term/Type";
