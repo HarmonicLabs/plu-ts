@@ -138,6 +138,7 @@ export class ExBudget
     }
     static fromCborObj( cObj: CborObj ): ExBudget
     {
+        console.log( cObj );
         if(!(
             cObj instanceof CborArray &&
             cObj.array[0] instanceof CborUInt &&

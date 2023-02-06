@@ -175,6 +175,7 @@ export class TxRedeemer
     {
         if(!(
             cObj instanceof CborArray &&
+            cObj.array.length >= 4 &&
             cObj.array[0] instanceof CborUInt &&
             cObj.array[1] instanceof CborUInt
         ))
@@ -183,8 +184,8 @@ export class TxRedeemer
         return new TxRedeemer({
             tag: Number( cObj.array[0].num ) as any,
             index: cObj.array[1].num,
-            data: dataFromCborObj( cObj.array[3] ),
-            execUnits: ExBudget.fromCborObj( cObj.array[4] )
+            data: dataFromCborObj( cObj.array[2] ),
+            execUnits: ExBudget.fromCborObj( cObj.array[3] )
         });
     }
 

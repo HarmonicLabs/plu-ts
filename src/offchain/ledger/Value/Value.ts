@@ -203,7 +203,6 @@ export class Value
     }
     static fromCborObj( cObj: CborObj ): Value
     {
-        console.log( cObj );
         if(!(
             cObj instanceof CborArray   ||  // ada and assets
             cObj instanceof CborMap     ||  // only assets
