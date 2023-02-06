@@ -13,7 +13,7 @@ import { forceBigUInt } from "../../types/ints/Integer";
 import { ToCbor } from "../../cbor/interfaces/CBORSerializable";
 import { CborString, CanBeCborString, forceCborString } from "../../cbor/CborString";
 import type { ToData } from "../../types/Data/toData/interface"
-import { Data } from "../../types/Data";
+import { Data } from "../../types/Data/Data";
 import { DataConstr } from "../../types/Data/DataConstr";
 import { Cloneable } from "../../types/interfaces/Cloneable";
 import { CborObj } from "../../cbor/CborObj";
@@ -180,7 +180,6 @@ export class Address
         switch( type )
         {
             case "base":
-                console.log( payload.length );
                 if( payload.length !== (28 * 2) )
                 throw new BasePlutsError(
                     "address' header specifies a base adress but the payload is incorrect"

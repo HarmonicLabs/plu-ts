@@ -4,7 +4,7 @@ import ObjectUtils from "../../../utils/ObjectUtils";
 import { Cbor } from "../../../cbor/Cbor";
 import { CborObj } from "../../../cbor/CborObj";
 import { CborArray } from "../../../cbor/CborObj/CborArray";
-import { Data, isData } from "../../../types/Data";
+import { Data, isData } from "../../../types/Data/Data";
 import { dataToCborObj } from "../../../types/Data/toCbor";
 import { CborMap, CborMapEntry } from "../../../cbor/CborObj/CborMap";
 import { CborUInt } from "../../../cbor/CborObj/CborUInt";

@@ -44,7 +44,7 @@ export class TxOutRef
         ObjectUtils.defineReadOnlyProperty(
             this,
             "id",
-            id instanceof Hash32 ? Hash32 : new Hash32( id )
+            id instanceof Hash32 ? id : new Hash32( id )
         );
         ObjectUtils.defineReadOnlyProperty(
             this,
@@ -95,13 +95,15 @@ export class TxOutRef
 
         const [ _id, _index ] = cObj.array;
 
+        const idRes = Hash32.fromCborObj( _id );
+
         if(!(_index instanceof CborUInt))
         throw new InvalidCborFormatError("TxOutRef");
 
         return new TxOutRef({
-            id: Hash32.fromCborObj( _id ),
+            id: idRes,
             index: Number( _index.num )
-        })
+        });
     }
 
     toJson(): UTxORefJson

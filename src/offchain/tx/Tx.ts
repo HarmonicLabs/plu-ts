@@ -183,11 +183,13 @@ export class Tx
         ))
         throw new InvalidCborFormatError("Tx","isScriptValid is not a boolean")
 
+        const noAuxiliaryData = _aux instanceof CborSimple && (_aux.simple === null || _aux.simple === undefined);
+
         return new Tx({
             body: TxBody.fromCborObj( _body ),
             witnesses: TxWitnessSet.fromCborObj( _wits ),
             isScriptValid: _isValid.simple,
-            auxiliaryData: AuxiliaryData.fromCborObj( _aux )
+            auxiliaryData: noAuxiliaryData ? undefined : AuxiliaryData.fromCborObj( _aux )
         })
     }
 

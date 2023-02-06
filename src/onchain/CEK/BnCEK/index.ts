@@ -21,7 +21,7 @@ import { BuiltinCostsOf } from "../Machine/BuiltinCosts";
 import { Buffer } from "buffer";
 import { ConstType, constListTypeUtils, constPairTypeUtils, constT, constTypeEq, constTypeToStirng, ConstTyTag } from "../../UPLC/UPLCTerms/UPLCConst/ConstType" 
 import { Integer, UInteger } from "../../../types/ints/Integer";
-import { Data, eqData, isData } from "../../../types/Data";
+import { Data, eqData, isData } from "../../../types/Data/Data";
 import { blake2b, byteArrToHex, sha2_256, sha3, verifyEd25519Signature } from "../../../crypto";
 
 

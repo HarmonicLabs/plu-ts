@@ -1,4 +1,4 @@
-import { Data, isData } from "../../../../../types/Data";
+import { Data, isData } from "../../../../../types/Data/Data";
 import JsRuntime from "../../../../../utils/JsRuntime";
 import { UPLCConst } from "../../../../UPLC/UPLCTerms/UPLCConst";
 import { constT } from "../../../../UPLC/UPLCTerms/UPLCConst/ConstType";

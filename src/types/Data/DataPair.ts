@@ -1,6 +1,6 @@
 import JsRuntime from "../../utils/JsRuntime";
 
-import { Data, isData } from ".";
+import { Data, isData } from "./Data";
 import { Cloneable } from "../interfaces/Cloneable";
 
 

@@ -1,4 +1,4 @@
-import { Data } from "../../../../types/Data";
+import { Data } from "../../../../types/Data/Data";
 import { DataConstr } from "../../../../types/Data/DataConstr";
 import { UPLCConst } from "../../../UPLC/UPLCTerms/UPLCConst";
 import { PType } from "../../PType";

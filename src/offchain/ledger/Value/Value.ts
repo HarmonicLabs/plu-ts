@@ -166,8 +166,11 @@ export class Value
     }
     static fromCborObj( cObj: CborObj ): Value
     {
-        if(!( cObj instanceof CborMap ))
+        if(!( cObj instanceof CborMap || cObj instanceof CborUInt ))
         throw new InvalidCborFormatError("Value");
+
+        if( cObj instanceof CborUInt )
+        return Value.lovelaces( cObj.num );
 
         const cborMap = cObj.map;
         const n = cborMap.length;

@@ -1,5 +1,5 @@
 import { getTxIntervalData } from "./getTxIntervalData";
-import { Data } from "../../../../types/Data";
+import { Data } from "../../../../types/Data/Data";
 import { DataConstr } from "../../../../types/Data/DataConstr";
 import { DataList } from "../../../../types/Data/DataList";
 import { DataMap } from "../../../../types/Data/DataMap";

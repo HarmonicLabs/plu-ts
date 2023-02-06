@@ -3,7 +3,7 @@ import JsRuntime from "../../../utils/JsRuntime";
 import { CborObj, isCborObj } from "../../../cbor/CborObj";
 import { CborString } from "../../../cbor/CborString";
 import { BasePlutsError } from "../../../errors/BasePlutsError";
-import { Data, isData } from "..";
+import { Data, isData } from "../Data";
 import { anyStruct, PData, PStruct, struct, typeExtends } from "../../../onchain";
 import { Machine } from "../../../onchain/CEK/Machine";
 import { UPLCConst } from "../../../onchain/UPLC/UPLCTerms/UPLCConst";

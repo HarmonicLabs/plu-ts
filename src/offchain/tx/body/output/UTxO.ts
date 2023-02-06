@@ -4,7 +4,7 @@ import { Cbor } from "../../../../cbor/Cbor";
 import { CborObj } from "../../../../cbor/CborObj";
 import { CborString, CanBeCborString, forceCborString } from "../../../../cbor/CborString";
 import { ToCbor } from "../../../../cbor/interfaces/CBORSerializable";
-import { Data } from "../../../../types/Data";
+import { Data } from "../../../../types/Data/Data";
 import { DataConstr } from "../../../../types/Data/DataConstr";
 import { ToData } from "../../../../types/Data/toData/interface";
 import { ToJson } from "../../../../utils/ts/ToJson";

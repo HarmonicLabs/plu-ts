@@ -3,7 +3,7 @@ import JsRuntime from "../../utils/JsRuntime";
 import { Cbor } from "../../cbor/Cbor";
 import { CborObj } from "../../cbor/CborObj";
 import { CborString } from "../../cbor/CborString";
-import { Data, isData } from ".";
+import { Data, isData } from "./Data";
 import { DataConstr, constrNumberToCborTag } from "./DataConstr";
 import { CborTag } from "../../cbor/CborObj/CborTag";
 import { CborArray } from "../../cbor/CborObj/CborArray";

@@ -1,4 +1,4 @@
-import { Data } from "../../../../../types/Data";
+import { Data } from "../../../../../types/Data/Data";
 import { UPLCConst } from "../../../../UPLC/UPLCTerms/UPLCConst";
 import { Term, data } from "../../../Term";
 import { PData } from "../../../PTypes";

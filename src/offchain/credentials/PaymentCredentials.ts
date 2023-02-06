@@ -8,7 +8,7 @@ import { CborUInt } from "../../cbor/CborObj/CborUInt";
 import { CborString, CanBeCborString, forceCborString } from "../../cbor/CborString";
 import { ToCbor } from "../../cbor/interfaces/CBORSerializable";
 import { InvalidCborFormatError } from "../../errors/InvalidCborFormatError";
-import { Data } from "../../types/Data";
+import { Data } from "../../types/Data/Data";
 import { DataB } from "../../types/Data/DataB";
 import { DataConstr } from "../../types/Data/DataConstr";
 import { ToData } from "../../types/Data/toData/interface";

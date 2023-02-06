@@ -130,7 +130,7 @@ export class TxBody
     constructor( body: ITxBody )
     {
         JsRuntime.assert(
-            ObjectUtils.hasOwn( body, "inputs" ) &&
+            (ObjectUtils.hasOwn( body, "inputs" ) as any) &&
             ObjectUtils.hasOwn( body, "outputs" ) &&
             ObjectUtils.hasOwn( body, "fee" ),
             "can't construct a 'TxBody' if 'inputs', 'outputs' and 'fee' fields aren't present"

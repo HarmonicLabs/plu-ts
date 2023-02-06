@@ -1,5 +1,5 @@
 import type { PData } from "../../../../PTypes/PData/PData"
-import type { Data } from "../../../../../../types/Data"
+import type { Data } from "../../../../../../types/Data/Data"
 import type { DataB } from "../../../../../../types/Data/DataB"
 import type { DataConstr } from "../../../../../../types/Data/DataConstr"
 import type { DataI } from "../../../../../../types/Data/DataI"

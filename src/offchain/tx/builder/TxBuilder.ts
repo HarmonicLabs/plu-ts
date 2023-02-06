@@ -22,7 +22,7 @@ import { TxRedeemer, TxRedeemerTag } from "../TxWitnessSet/TxRedeemer";
 import { BasePlutsError } from "../../../errors/BasePlutsError";
 import { TxOutRef } from "../body/output/UTxO";
 import { VKeyWitness } from "../TxWitnessSet/VKeyWitness/VKeyWitness";
-import { Data } from "../../../types/Data";
+import { Data } from "../../../types/Data/Data";
 import { BootstrapWitness } from "../TxWitnessSet/BootstrapWitness";
 import { ExBudget } from "../../../onchain/CEK/Machine/ExBudget";
 import { AuxiliaryData } from "../AuxiliaryData/AuxiliaryData";

@@ -11,7 +11,7 @@ import { BinaryString } from "../../../types/bits/BinaryString";
 import { BitStream } from "../../../types/bits/BitStream";
 import { ByteString } from "../../../types/HexString/ByteString";
 import { Pair } from "../../../types/structs/Pair";
-import { Data, isData } from "../../../types/Data";
+import { Data, isData } from "../../../types/Data/Data";
 import { UPLCProgram } from "../UPLCProgram";
 import { UPLCVersion } from "../UPLCProgram/UPLCVersion";
 import { Application } from "../UPLCTerms/Application";

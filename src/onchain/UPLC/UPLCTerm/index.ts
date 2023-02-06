@@ -13,7 +13,7 @@ import { builtinTagToString, getNRequiredForces } from "../UPLCTerms/Builtin/UPL
 import { ConstValue } from "../UPLCTerms/UPLCConst/ConstValue";
 import { Integer } from "../../../types/ints/Integer";
 import { ByteString } from "../../../types/HexString/ByteString";
-import { isData } from "../../../types/Data";
+import { isData } from "../../../types/Data/Data";
 import { dataToCbor } from "../../../types/Data/toCbor";
 import { Pair } from "../../../types/structs/Pair";
 import { replaceHoistedTermsInplace } from "../UPLCEncoder";

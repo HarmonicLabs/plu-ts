@@ -3,7 +3,7 @@ import ObjectUtils from "../../../../utils/ObjectUtils";
 
 import { maybeData } from "../../../../types/Data/toData/maybeData";
 import { dataFromCborObj } from "../../../../types/Data/fromCbor";
-import { Data, isData } from "../../../../types/Data";
+import { Data, isData } from "../../../../types/Data/Data";
 import { ToCbor } from "../../../../cbor/interfaces/CBORSerializable";
 import { Script, ScriptType } from "../../../script/Script";
 import { CborString, CanBeCborString, forceCborString } from "../../../../cbor/CborString";
@@ -203,8 +203,22 @@ export class TxOut
     }
     static fromCborObj( cObj: CborObj ): TxOut
     {
-        if(!( cObj instanceof CborMap ))
+        if(!(
+            cObj instanceof CborMap ||
+            cObj instanceof CborArray
+        ))
         throw new InvalidCborFormatError("TxOut");
+
+        // legacy
+        if( cObj instanceof CborArray )
+        {
+            const [ _addr, _val, _dat ] = cObj.array;
+            return new TxOut({
+                address: Address.fromCborObj( _addr ),
+                amount: Value.fromCborObj( _val ),
+                datum: _dat === undefined ? undefined : Hash32.fromCborObj( _dat ),
+            });
+        }
 
         let fields: (CborObj | undefined )[] = new Array( 4 ).fill( undefined );
 
