@@ -6,7 +6,7 @@ import { ByteString } from "../../..";
 import { Cbor } from "../../../cbor/Cbor";
 import { CborObj } from "../../../cbor/CborObj";
 import { CborBytes } from "../../../cbor/CborObj/CborBytes";
-import { CborMap } from "../../../cbor/CborObj/CborMap";
+import { CborMap, CborMapEntry } from "../../../cbor/CborObj/CborMap";
 import { CborNegInt } from "../../../cbor/CborObj/CborNegInt";
 import { CborUInt } from "../../../cbor/CborObj/CborUInt";
 import { CborString, CanBeCborString, forceCborString } from "../../../cbor/CborString";
@@ -19,8 +19,10 @@ import { DataPair } from "../../../types/Data/DataPair";
 import { ToData } from "../../../types/Data/toData/interface";
 import { Cloneable } from "../../../types/interfaces/Cloneable";
 import { ToJson } from "../../../utils/ts/ToJson";
-import { Hash32 } from "../../hashes/Hash32/Hash32";
+import { Hash28 } from "../../hashes/Hash28/Hash28";
 import { isIValue, addIValues, subIValues, IValue, cloneIValue, IValueToJson } from "./IValue";
+import { Buffer } from "buffer";
+import { CborArray } from "../../../cbor/CborObj/CborArray";
 
 export class Value
     implements ToCbor, Cloneable<Value>, ToData, ToJson
@@ -29,8 +31,6 @@ export class Value
 
     constructor( map: IValue )
     {
-        if(!isIValue( map )) console.log( map );
-        
         JsRuntime.assert(
             isIValue( map ),
             "invalid value interface passed to contruct a 'value' instance"
@@ -73,6 +73,78 @@ export class Value
         );
     }
 
+    get lovelaces(): bigint
+    {
+        return BigInt(
+            this.map
+            .find( ({ policy }) => policy === "" )
+            ?.assets[""] 
+            ?? 0 
+        );
+    }
+
+    get( policy: Hash28 | Buffer | string , assetName: Buffer | string ): bigint
+    {
+        if( typeof policy === "string" )
+        {
+            if( policy === "" ) return this.lovelaces;
+            policy = new Hash28( policy );
+        }
+
+        const policyStr = policy.toString("hex");
+
+        if( Buffer.isBuffer( assetName ) )
+        assetName = assetName.toString("ascii");
+
+        return BigInt(
+            (
+                this.map
+                .find( ({ policy }) => policy.toString() === policyStr ) as any
+            )?.assets[assetName] 
+            ?? 0 
+        );
+    }
+
+    static get zero(): Value
+    {
+        return Value.lovelaces( 0 )
+    }
+
+    static isZero( v: Value ): boolean
+    {
+        return (
+            v.map.length === 0 ||
+            v.map.every(({ assets }) =>
+                Object.keys( assets ).every( name =>
+                    BigInt((assets as any)[name]) === BigInt(0) 
+                ) 
+            )
+        )
+    }
+
+    static isAdaOnly( v: Value ): boolean
+    {
+        return v.map.length === 1;
+    }
+
+    static lovelaces( n: number | bigint ): Value
+    {
+        return new Value([{
+            policy: "",
+            assets: { "": typeof n === "number" ? Math.round( n ) : BigInt( n ) }
+        }]);
+    }
+
+    static add( a: Value, b: Value ): Value
+    {
+        return new Value( addIValues( a.map, b.map ) );
+    }
+
+    static sub( a: Value, b: Value ): Value
+    {
+        return new Value( subIValues( a.map, b.map ) );
+    }
+
     clone(): Value
     {
         return new Value( cloneIValue(this.map ) )
@@ -97,41 +169,6 @@ export class Value
                 )
             )
         )
-    }
-
-    static get zero(): Value
-    {
-        return Value.lovelaces( 0 )
-    }
-
-    static isZero( v: Value ): boolean
-    {
-        return (
-            v.map.length === 0 ||
-            v.map.every(({ assets }) =>
-                Object.keys( assets ).every( name =>
-                    BigInt((assets as any)[name]) === BigInt(0) 
-                ) 
-            )
-        )
-    }
-
-    static lovelaces( n: number | bigint ): Value
-    {
-        return new Value([{
-            policy: "",
-            assets: { "": typeof n === "number" ? Math.round( n ) : BigInt( n ) }
-        }]);
-    }
-
-    static add( a: Value, b: Value ): Value
-    {
-        return new Value( addIValues( a.map, b.map ) );
-    }
-
-    static sub( a: Value, b: Value ): Value
-    {
-        return new Value( subIValues( a.map, b.map ) );
     }
     
     toCbor(): CborString
@@ -166,16 +203,48 @@ export class Value
     }
     static fromCborObj( cObj: CborObj ): Value
     {
-        if(!( cObj instanceof CborMap || cObj instanceof CborUInt ))
+        console.log( cObj );
+        if(!(
+            cObj instanceof CborArray   ||  // ada and assets
+            cObj instanceof CborMap     ||  // only assets
+            cObj instanceof CborUInt        // only ada
+        ))
         throw new InvalidCborFormatError("Value");
 
         if( cObj instanceof CborUInt )
         return Value.lovelaces( cObj.num );
 
-        const cborMap = cObj.map;
-        const n = cborMap.length;
+        let cborMap: CborMapEntry[];
+        let valueMap: IValue;
+
+        if( cObj instanceof CborArray )
+        {
+            if(!(
+                cObj.array[0] instanceof CborUInt &&
+                cObj.array[1] instanceof CborMap
+            ))
+            throw new InvalidCborFormatError("Value");
+
+            cborMap = cObj.array[1].map;
+            valueMap = new Array( cborMap.length + 1 );
+
+            valueMap[0] = {
+                policy: "",
+                assets: { "": cObj.array[0].num }
+            };
+        }
+        else
+        {
+            cborMap = cObj.map;
+            valueMap = new Array( cborMap.length + 1 );
+
+            valueMap[0] = {
+                policy: "",
+                assets: { "": 0 }
+            };
+        }
         
-        const valueMap: IValue = new Array( n ).fill( undefined );
+        const n = cborMap.length;
 
         for( let i = 0; i < n; i++ )
         {
@@ -184,7 +253,7 @@ export class Value
             if(!( k instanceof CborBytes ))
             throw new InvalidCborFormatError("Value");
 
-            const policy = k.buffer.length === 0 ? "" : new Hash32( k.buffer )
+            const policy = k.buffer.length === 0 ? "" : new Hash28( k.buffer )
 
             if(!( v instanceof CborMap ))
             throw new InvalidCborFormatError("Value");
@@ -210,7 +279,7 @@ export class Value
                 );
             }
 
-            valueMap[i] = {
+            valueMap[i + 1] = {
                 policy: policy as any,
                 assets
             };

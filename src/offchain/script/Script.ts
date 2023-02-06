@@ -4,7 +4,7 @@ import BufferUtils from "../../utils/BufferUtils";
 
 import { Buffer } from "buffer";
 import { blake2b_224, byte } from "../../crypto";
-import { ScriptJsonFormat } from "../../onchain/pluts/Script";
+import { PlutusScriptVersion, ScriptJsonFormat } from "../../onchain/pluts/Script";
 import { NativeScript, nativeScriptFromCbor, nativeScriptToCbor } from "./NativeScript";
 import { Cloneable } from "../../types/interfaces/Cloneable";
 import { Hash28 } from "../hashes/Hash28/Hash28";
@@ -35,6 +35,10 @@ export class Script<T extends ScriptType = ScriptType>
     readonly cbor!: Buffer;
     readonly hash!: Hash28;
 
+    constructor( scriptType: ScriptType.NativeScript, nativeScript: NativeScript )
+    constructor( scriptType: ScriptType.NativeScript, cbor: Buffer )
+    constructor( scriptType: ScriptType.PlutusV1, cbor: Buffer | ScriptJsonFormat<PlutusScriptVersion.V1> )
+    constructor( scriptType: ScriptType.PlutusV2, cbor: Buffer | ScriptJsonFormat<PlutusScriptVersion.V2> )
     constructor( scriptType: T, cbor: Buffer | (T extends ScriptType.NativeScript ? NativeScript : ScriptJsonFormat) )
     {
         JsRuntime.assert(
@@ -57,13 +61,46 @@ export class Script<T extends ScriptType = ScriptType>
                 (cbor.type as any) === ScriptType.PlutusV2
             )
             {
-                cbor = Buffer.from( (cbor as ScriptJsonFormat).cborHex, "hex" )
+                cbor = Buffer.from( (cbor as ScriptJsonFormat).cborHex, "hex" );
             }
             else
             {
                 cbor = nativeScriptToCbor( cbor as NativeScript ).asBytes
             }
         }
+
+        if(
+            scriptType === ScriptType.PlutusV1 ||
+            scriptType === ScriptType.PlutusV2
+        )
+        {
+            try {
+                if(!(Cbor.parse( cbor ) instanceof CborBytes))
+                {
+                    cbor = Cbor.encode(
+                        new CborBytes(
+                            Cbor.encode(
+                                new CborBytes(
+                                    cbor
+                                )
+                            ).asBytes
+                        )
+                    ).asBytes;
+                }
+            }
+            catch {
+                cbor = Cbor.encode(
+                    new CborBytes(
+                        Cbor.encode(
+                            new CborBytes(
+                                cbor
+                            )
+                        ).asBytes
+                    )
+                ).asBytes;
+            }
+        }
+
         ObjectUtils.defineReadOnlyProperty(
             this,
             "cbor",
@@ -76,30 +113,28 @@ export class Script<T extends ScriptType = ScriptType>
             this, "hash",
             {
                 get: () => {
-                    if( _hash instanceof Hash28 ) return _hash.clone();
+                    if( _hash !== undefined && _hash instanceof Hash28 ) return _hash.clone();
 
-                    let scriptDataToHash = [] as number[];
+                    let scriptDataToBeHashed = [] as number[];
 
                     if( this.type === ScriptType.NativeScript )
-                        scriptDataToHash = [ 0x00 ].concat( Array.from( this.cbor ) );
+                        scriptDataToBeHashed = [ 0x00 ].concat( Array.from( this.cbor ) );
                     else
                     {
-                        const uplcBytes = Array.from(
+                        const singleDecodeCbor = Array.from(
                             parseCborBytes(
-                                parseCborBytes(
-                                    this.cbor
-                                )
+                                this.cbor
                             )
                         );
 
-                        scriptDataToHash = [
+                        scriptDataToBeHashed = [
                             this.type === ScriptType.PlutusV1 ? 0x01 : 0x02
-                        ].concat( uplcBytes );
+                        ].concat( singleDecodeCbor );
                     }
 
                     _hash = new Hash28(
                         Buffer.from(
-                            blake2b_224( scriptDataToHash as byte[] )
+                            blake2b_224( scriptDataToBeHashed as byte[] )
                         )
                     );
 
@@ -115,7 +150,7 @@ export class Script<T extends ScriptType = ScriptType>
     clone(): Script<T>
     {
         return new Script(
-            this.type,
+            this.type as any,
             BufferUtils.copy( this.cbor )
         );
     }
@@ -134,6 +169,21 @@ export class Script<T extends ScriptType = ScriptType>
                 cborHex: this.cbor.toString("hex")
             }
         }
+    }
+
+    static fromJson( json: any & { type: string } ): Script
+    {
+        const t = json.type;
+
+        if( t === ScriptType.PlutusV1 || t === ScriptType.PlutusV2 )
+        {
+            return Script.fromCbor( json.cborHex, t );
+        }
+
+        return new Script(
+            ScriptType.NativeScript,
+            json as NativeScript
+        );
     }
 
     toCbor(): CborString
@@ -185,6 +235,6 @@ export class Script<T extends ScriptType = ScriptType>
             );
         }
 
-        return new Script( type, Cbor.encode( cObj ).asBytes );
+        return new Script( type as any, Cbor.encode( cObj ).asBytes );
     }
 }

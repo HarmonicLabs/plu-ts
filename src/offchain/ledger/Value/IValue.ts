@@ -1,7 +1,7 @@
 import JsRuntime from "../../../utils/JsRuntime";
 import ObjectUtils from "../../../utils/ObjectUtils";
 
-import { Hash32 } from "../../hashes/Hash32/Hash32";
+import { Hash28 } from "../../hashes/Hash28/Hash28";
 
 export type IValue = (IValuePolicyEntry | IValueAdaEntry)[]
 
@@ -10,7 +10,7 @@ export type IValueAssets = {
 }
 
 export type IValuePolicyEntry = {
-    policy: Hash32,
+    policy: Hash28,
     assets: IValueAssets
 };
 
@@ -24,7 +24,7 @@ export function cloneIValue( ival: IValue ): IValue
     return ival.map( cloneIValueEntry );
 }
 
-function policyToString( policy: "" | Hash32 ): string
+function policyToString( policy: "" | Hash28 ): string
 {
     return policy === "" ? policy : policy.asString;
 }
@@ -164,7 +164,7 @@ export function isIValue( entries: object[] ): entries is IValue
             continue;
         }
 
-        if( !(entry.policy instanceof Hash32) ) return false;
+        if( !(entry.policy instanceof Hash28) ) return false;
 
         const policyAsStr = entry.policy.asString;
 
