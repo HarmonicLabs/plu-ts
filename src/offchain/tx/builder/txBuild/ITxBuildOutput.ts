@@ -21,7 +21,7 @@ export function txBuildOutToTxOut( {
 {
     return new TxOut({
         address: address.clone(),
-        amount: value.clone(),
+        value: value.clone(),
         datum: canBeData( datum ) ? forceData( datum ) : datum,
         refScript 
     })

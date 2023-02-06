@@ -152,7 +152,7 @@ export class TxBuilder
         const refIns: UTxO[] = readonlyRefInputs?.slice() ?? [];
 
         const outs = outputs?.map( txBuildOutToTxOut ) ?? [];
-        const requiredOutputValue = outs.reduce( (acc, out) => Value.add( acc, out.amount ), Value.zero );
+        const requiredOutputValue = outs.reduce( (acc, out) => Value.add( acc, out.value ), Value.zero );
 
         const undef: undefined = void 0;
 
@@ -294,7 +294,7 @@ export class TxBuilder
             
             const addr = utxo.resolved.address;
 
-            totInputValue =  Value.add( totInputValue, utxo.resolved.amount );
+            totInputValue =  Value.add( totInputValue, utxo.resolved.value );
 
             if(
                 addr.paymentCreds.type === "script" &&
@@ -383,7 +383,7 @@ export class TxBuilder
         dummyOuts.push(
             new TxOut({
                 address: changeAddress,
-                amount: Value.sub(
+                value: Value.sub(
                     totInputValue,
                     Value.add(
                         requiredOutputValue,
@@ -614,7 +614,7 @@ export class TxBuilder
         txOuts.push(
             new TxOut({
                 address: changeAddress,
-                amount: Value.sub(
+                value: Value.sub(
                     totInputValue,
                     Value.add(
                         requiredOutputValue,
@@ -832,7 +832,7 @@ export class TxBuilder
             txOuts.push(
                 new TxOut({
                     address: changeAddress,
-                    amount: Value.sub(
+                    value: Value.sub(
                         totInputValue,
                         Value.add(
                             requiredOutputValue,

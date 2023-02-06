@@ -71,7 +71,7 @@ describe("TxBuilder.build", () => {
                         },
                         resolved: {
                             address: pkAddr,
-                            amount: Value.lovelaces( 10_000_000 )
+                            value: Value.lovelaces( 10_000_000 )
                         }
                     })
                 }
@@ -98,7 +98,7 @@ describe("TxBuilder.build", () => {
                                 },
                                 resolved: {
                                     address: succeedScriptAddr,
-                                    amount: Value.lovelaces( 10_000_000 )
+                                    value: Value.lovelaces( 10_000_000 )
                                 }
                             })
                         }
@@ -121,7 +121,7 @@ describe("TxBuilder.build", () => {
                             },
                             resolved: {
                                 address: succeedScriptAddr,
-                                amount: Value.lovelaces( 10_000_000 ),
+                                value: Value.lovelaces( 10_000_000 ),
                                 datum: new DataConstr( 0, [] )
                             }
                         }),
@@ -149,7 +149,7 @@ describe("TxBuilder.build", () => {
                             },
                             resolved: {
                                 address: succeedScriptAddr,
-                                amount: Value.lovelaces( 10_000_000 ),
+                                value: Value.lovelaces( 10_000_000 ),
                                 datum: new DataConstr( 0, [] )
                             }
                         }),
@@ -163,7 +163,7 @@ describe("TxBuilder.build", () => {
                                 },
                                 resolved: {
                                     address: succeedScriptAddr,
-                                    amount: Value.lovelaces( 10_000_000 ),
+                                    value: Value.lovelaces( 10_000_000 ),
                                     refScript: succeedScript
                                 }
                             })
@@ -197,7 +197,7 @@ describe("TxBuilder.build", () => {
                                 },
                                 resolved: {
                                     address: succeedScriptAddr,
-                                    amount: Value.lovelaces( 10_000_000 ),
+                                    value: Value.lovelaces( 10_000_000 ),
                                     // datum: new DataConstr( 0, [] )
                                 }
                             }),
@@ -224,7 +224,7 @@ describe("TxBuilder.build", () => {
                                 },
                                 resolved: {
                                     address: succeedScriptAddr,
-                                    amount: Value.lovelaces( 10_000_000 ),
+                                    value: Value.lovelaces( 10_000_000 ),
                                     // datum: new DataConstr( 0, [] )
                                 }
                             }),
@@ -238,7 +238,7 @@ describe("TxBuilder.build", () => {
                                     },
                                     resolved: {
                                         address: pkAddr,                // doesn't matter
-                                        amount: Value.lovelaces( 0 ),   // doesn't matter
+                                        value: Value.lovelaces( 0 ),   // doesn't matter
                                         refScript: succeedScript
                                     }
                                 })

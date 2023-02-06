@@ -30,7 +30,7 @@ export type AddressStr = `${"addr1"|"addr_test1"}${string}`;
 
 export interface ITxOut {
     address: Address | AddressStr,
-    amount: Value | IValue,
+    value: Value | IValue,
     datum?: Hash32 | Data,
     refScript?: Script
 }
@@ -38,7 +38,7 @@ export class TxOut
     implements ITxOut, ToCbor, Cloneable<TxOut>, ToData, ToJson
 {
     readonly address!: Address
-    readonly amount!: Value
+    readonly value!: Value
     readonly datum?: Hash32 | Data
     readonly refScript?: Script
 
@@ -47,13 +47,13 @@ export class TxOut
         JsRuntime.assert(
             ObjectUtils.isObject( txOutput ) &&
             ObjectUtils.hasOwn( txOutput, "address" ) &&
-            ObjectUtils.hasOwn( txOutput, "amount" ),
+            ObjectUtils.hasOwn( txOutput, "value" ),
             "txOutput is missing some necessary fields"
         );
 
         const {
             address,
-            amount,
+            value,
             datum,
             refScript
         } = txOutput;
@@ -63,8 +63,8 @@ export class TxOut
             "invlaid 'address' while constructing 'TxOut'" 
         );
         JsRuntime.assert(
-            amount instanceof Value,
-            "invlaid 'amount' while constructing 'TxOut'" 
+            value instanceof Value,
+            "invlaid 'value' while constructing 'TxOut'" 
         );
 
         ObjectUtils.defineReadOnlyProperty(
@@ -74,8 +74,8 @@ export class TxOut
         );
         ObjectUtils.defineReadOnlyProperty(
             this,
-            "amount",
-            amount
+            "value",
+            value
         );
 
         if( datum !== undefined )
@@ -105,7 +105,7 @@ export class TxOut
     {
         return new TxOut({
             address: this.address.clone(),
-            amount: this.amount.clone(),
+            value: this.value.clone(),
             datum: this.datum?.clone(),
             refScript: this.refScript?.clone() 
         })
@@ -115,7 +115,7 @@ export class TxOut
     {
         return new TxOut({
             address: Address.fake,
-            amount: Value.lovelaces( 0 ),
+            value: Value.lovelaces( 0 ),
             datum: undefined,
             refScript: undefined
         })
@@ -134,7 +134,7 @@ export class TxOut
                 0,
                 [
                     this.address.toData(),
-                    this.amount.toData(),
+                    this.value.toData(),
                     maybeData( this.datum?.toData() )
                 ]
             )
@@ -151,7 +151,7 @@ export class TxOut
             0,
             [
                 this.address.toData(),
-                this.amount.toData(),
+                this.value.toData(),
                 datumData,
                 maybeData( this.refScript?.hash.toData() )
             ]
@@ -173,7 +173,7 @@ export class TxOut
             },
             {
                 k: new CborUInt( 1 ),
-                v: this.amount.toCborObj()
+                v: this.value.toCborObj()
             },
             datum === undefined ? undefined :
             {
@@ -215,7 +215,7 @@ export class TxOut
             const [ _addr, _val, _dat ] = cObj.array;
             return new TxOut({
                 address: Address.fromCborObj( _addr ),
-                amount: Value.fromCborObj( _val ),
+                value: Value.fromCborObj( _val ),
                 datum: _dat === undefined ? undefined : Hash32.fromCborObj( _dat ),
             });
         }
@@ -285,7 +285,7 @@ export class TxOut
 
         return new TxOut({
             address: Address.fromCborObj( _addr ),
-            amount:  Value.fromCborObj( _amt ),
+            value:  Value.fromCborObj( _amt ),
             datum,
             refScript
         })
@@ -295,7 +295,7 @@ export class TxOut
     {
         return {
             address: this.address.toString(),
-            amount: this.amount.toJson(),
+            value: this.value.toJson(),
             datum: this.datum === undefined ? undefined :
             this.datum instanceof Hash32 ?
                 this.datum.toString() :

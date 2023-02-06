@@ -669,13 +669,13 @@ export class TxBody
         let tot = withdrawals === undefined ? Value.zero : withdrawals.toTotalWitdrawn();
 
         // + inputs
-        tot = inputs.reduce( (a,b) => Value.add( a, b.resolved.amount ) , tot );
+        tot = inputs.reduce( (a,b) => Value.add( a, b.resolved.value ) , tot );
         
         // - (outputs + fee)
         // - outputs - fee
         tot = Value.sub(
             tot,
-            outputs.reduce( (a,b) => Value.add( a, b.amount ), Value.lovelaces( fee ) )
+            outputs.reduce( (a,b) => Value.add( a, b.value ), Value.lovelaces( fee ) )
         );
 
         return Value.isZero(
