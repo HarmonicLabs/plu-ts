@@ -13,14 +13,9 @@ export class DataB
         return Object.freeze( this._bytes ) as any
     };
 
-    constructor( B: ByteString | Buffer )
+    constructor( B: ByteString | Buffer | string )
     {
-        if( Buffer.isBuffer( B ) ) B = new ByteString( B );
-        
-        JsRuntime.assert(
-            ByteString.isStrictInstance( B ),
-            "invalid ByteString provided while constructing 'DataB' instance"
-        );
+        if(!(B instanceof ByteString)) B = new ByteString( B );
 
         this._bytes = B.clone();
     }

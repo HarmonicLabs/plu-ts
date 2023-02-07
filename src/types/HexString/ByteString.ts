@@ -16,7 +16,7 @@ export class ByteString
 
     constructor( bs: string | Buffer )
     {
-        if( typeof bs == "string" )
+        if( typeof bs === "string" )
         {
             // remove spaces
             bs = bs.trim().split(" ").join("");
