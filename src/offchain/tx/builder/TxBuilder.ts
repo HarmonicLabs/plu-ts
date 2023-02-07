@@ -37,6 +37,7 @@ import { UPLCConst } from "../../../onchain/UPLC/UPLCTerms/UPLCConst";
 import { DataConstr } from "../../../types/Data/DataConstr";
 import { ErrorUPLC } from "../../../onchain/UPLC/UPLCTerms/ErrorUPLC";
 import { UTxO } from "../body/output/UTxO";
+import { Hash28 } from "../../hashes/Hash28/Hash28";
 
 export class TxBuilder
 {
@@ -469,10 +470,14 @@ export class TxBuilder
         })
 
         const _wits = withdrawals
-        ?.sort( (a, b) =>
+        ?.sort( ({ withdrawal: fst }, { withdrawal: snd }) =>
             BufferUtils.lexCompare(
-                a.withdrawal.rewardAccount.asBytes,
-                b.withdrawal.rewardAccount.asBytes
+                fst.rewardAccount instanceof Hash28 ?
+                    fst.rewardAccount.asBytes :
+                    fst.rewardAccount.credentials.asBytes,
+                snd.rewardAccount instanceof Hash28 ?
+                    snd.rewardAccount.asBytes :
+                    snd.rewardAccount.credentials.asBytes
             )
         )
         .map( ({

@@ -2,7 +2,7 @@ import ObjectUtils from "../../utils/ObjectUtils";
 import JsRuntime from "../../utils/JsRuntime";
 
 import { isHex } from "../../types/HexString";
-import { canBeUInteger, forceUInteger, UInteger } from "../../types/ints/Integer";
+import { canBeUInteger, forceBigUInt, UInteger } from "../../types/ints/Integer";
 import { ToCbor } from "../../cbor/interfaces/CBORSerializable";
 import { Coin } from "./Coin";
 import { Hash28 } from "../hashes/Hash28/Hash28";
@@ -15,46 +15,63 @@ import { Value } from "./Value/Value";
 import { ToData } from "../../types/Data/toData/interface";
 import { DataMap } from "../../types/Data/DataMap";
 import { DataPair } from "../../types/Data/DataPair";
-import { StakeCredentials, StakeKeyHash } from "../credentials/StakeCredentials";
 import { DataI } from "../../types/Data/DataI";
 import { DataConstr } from "../../types/Data/DataConstr";
 import { ToJson } from "../../utils/ts/ToJson";
 import { InvalidCborFormatError } from "../../errors/InvalidCborFormatError";
+import { StakeAddress, StakeAddressBech32 } from "./StakeAddress";
+import { NetworkT } from "./Network";
+import { Address } from "./Address";
 
 export type TxWithdrawalsEntryBigInt = {
-    rewardAccount: Hash28,
+    rewardAccount: StakeAddress,
     amount: bigint
 }
 
 export type TxWithdrawalsMapBigInt = TxWithdrawalsEntryBigInt[];
 
 export type TxWithdrawalsEntry = {
-    rewardAccount: Hash28,
+    rewardAccount: Hash28 | StakeAddress,
     amount: Coin
 }
 
 export type TxWithdrawalsMap = TxWithdrawalsEntry[];
 
 export type ITxWithdrawals
-    = { [rewardAccount: string]: Coin }
+    = { [rewardAccount: StakeAddressBech32]: Coin }
     | TxWithdrawalsMap;
 
 export function isTxWithdrawalsMap( stuff: any ): stuff is TxWithdrawalsMap
 {
     if( !Array.isArray( stuff ) ) return false;
 
-    return stuff.every( ({ rewardAccount, amount }) => rewardAccount instanceof Hash28 && canBeUInteger( amount ) );
+    return stuff.every( ({ rewardAccount, amount }) => 
+        (
+            rewardAccount instanceof Hash28 ||
+            rewardAccount instanceof StakeAddress
+        ) &&
+        canBeUInteger( amount )
+    );
 }
 
 export function isITxWithdrawals( stuff: any ): stuff is ITxWithdrawals
 {
-    if( !(typeof stuff === "object") ) return false;
+    if( typeof stuff !== "object" ) return false;
 
     if( Array.isArray( stuff ) ) return isTxWithdrawalsMap( stuff );
 
     const ks = Object.keys( stuff );
 
-    return ks.every( k => k.length === (28*2) && isHex( k ) && canBeUInteger( stuff[k] ) )
+    return ks.every( k => {
+        try {
+            Address.fromString( k );
+
+            return canBeUInteger( stuff[k] )
+        }
+        catch {
+            return false;
+        }
+    })
 }
 
 export class TxWithdrawals
@@ -62,42 +79,47 @@ export class TxWithdrawals
 {
     readonly map!: TxWithdrawalsMapBigInt
 
-    constructor( map: ITxWithdrawals )
+    constructor( map: ITxWithdrawals, network: NetworkT = "mainnet" )
     {
         if( Array.isArray( map ) )
         {
             JsRuntime.assert(
-                map.every( entry => (
-                    ObjectUtils.hasOwn( entry, "amount" ) &&
-                    ObjectUtils.hasOwn( entry, "rewardAccount" ) &&
-        
-                    entry.rewardAccount instanceof Hash28 &&
-                    
-                    ((amt) => (
-                        (typeof amt === "bigint" && amt >= BigInt( 0 )) ||
-                        (typeof amt === "number" && amt === Math.round( Math.abs( amt ) ) ) ||
-                        (amt instanceof UInteger)
-                    ))(entry.amount)
+                map.every( ({ rewardAccount, amount }) => (
+                    rewardAccount !== undefined &&
+                    amount !== undefined &&
+                    (
+                        rewardAccount instanceof Hash28 ||
+                        rewardAccount instanceof StakeAddress
+                    ) &&
+                    (
+                        (typeof amount === "bigint" && amount >= BigInt( 0 )) ||
+                        (typeof amount === "number" && amount === Math.round( Math.abs( amount ) ) ) ||
+                        (amount instanceof UInteger)
+                    )
                 
                 )),
                 "invalid 'TxWithdrawalsMap' passed to construct a 'TxWithdrawals'"
             );
 
-            map.forEach( entry => {
-                Object.freeze( entry.rewardAccount );
-                Object.freeze( entry.amount );
-            });
+            const _map = map.map ( entry => ({
+                rewardAccount:
+                    entry.rewardAccount instanceof StakeAddress ?
+                    entry.rewardAccount.clone() :
+                    new StakeAddress(
+                        network,
+                        entry.rewardAccount
+                    ),
+                amount: forceBigUInt( entry.amount )
+            }));
 
             ObjectUtils.defineReadOnlyProperty(
                 this,
                 "map",
-                Object.freeze( map )
+                Object.freeze( _map )
             );
         }
         else
         {
-            const _map: TxWithdrawalsMap = [];
-
             JsRuntime.assert(
                 typeof map === "object",
                 "invalid object passed as 'TxWithdrawalsMap' to construct a 'TxWithdrawals'"
@@ -109,8 +131,8 @@ export class TxWithdrawals
                 Object.freeze(
                     Object.keys( map )
                     .map( rewAccount => Object.freeze({
-                        rewardAccount: Object.freeze( new Hash28( rewAccount ) ) as any,
-                        amount: forceUInteger( map[rewAccount] ).asBigInt
+                        rewardAccount: StakeAddress.fromString( rewAccount ),
+                        amount: forceBigUInt( (map as any)[rewAccount] )
                     }))
                 )
             );
@@ -131,10 +153,7 @@ export class TxWithdrawals
             this.map
             .map( ({ rewardAccount, amount }) =>
                 new DataPair(
-                    new StakeCredentials(
-                        "stakeKey",
-                        new StakeKeyHash( rewardAccount )
-                    ).toData(),
+                    rewardAccount.toStakeCredentials().toData(),
                     new DataI( amount )
                 )
             )
@@ -150,7 +169,7 @@ export class TxWithdrawals
         return new CborMap(
             this.map.map( entry => {
                 return {
-                    k: entry.rewardAccount.toCborObj(),
+                    k: entry.rewardAccount.credentials.toCborObj(),
                     v: new CborUInt( entry.amount )
                 }
             })
@@ -187,11 +206,27 @@ export class TxWithdrawals
         for( const { rewardAccount, amount } of this.map )
         {
             ObjectUtils.defineReadOnlyProperty(
-                json, rewardAccount.asString, amount.toString()
+                json, rewardAccount.toString(), amount.toString()
             );
         }
 
         return json as any;
+    }
+
+    static fromJson( json: any ): TxWithdrawals
+    {
+        const keys = Object.keys( json );
+        
+        if( keys.length === 0 ) return new TxWithdrawals({});
+
+        const network = StakeAddress.fromString( keys[0] ).network;
+
+        return new TxWithdrawals(
+            keys.map( k => ({
+                rewardAccount: StakeAddress.fromString( k ),
+                amount: BigInt( json[k] )
+            }))
+        );
     }
 }
 

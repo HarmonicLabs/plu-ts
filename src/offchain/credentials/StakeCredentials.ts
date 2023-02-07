@@ -18,8 +18,8 @@ import { DataI } from "../../types/Data/DataI";
 import { Cloneable } from "../../types/interfaces/Cloneable";
 import { Hash28 } from "../hashes/Hash28/Hash28";
 import { PaymentCredentials } from "./PaymentCredentials";
+import { StakeKeyHash } from "./StakeKeyHash";
 
-export class StakeKeyHash extends Hash28 {}
 
 export class StakeValidatorHash extends Hash28 {}
 

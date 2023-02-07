@@ -229,14 +229,14 @@ export class TxRedeemer
         else if( tag === TxRedeemerTag.Withdraw )
         {
             ctorIdx = 2;
-            const stakeCreds = tx.withdrawals?.map[ this.index ]?.rewardAccount
-            if( stakeCreds === undefined )
+            const stakeAddr = tx.withdrawals?.map[ this.index ]?.rewardAccount
+            if( stakeAddr === undefined )
             throw new BasePlutsError(
                 "invalid stake credentials for rewarding redeemer " + this.index.toString()
             );
             purposeArgData = new StakeCredentials(
                 "script",
-                new StakeValidatorHash( stakeCreds )
+                new StakeValidatorHash( stakeAddr.credentials )
             ).toData();
         }
         else if( tag === TxRedeemerTag.Cert )

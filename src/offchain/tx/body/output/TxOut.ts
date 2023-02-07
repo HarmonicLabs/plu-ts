@@ -2,7 +2,7 @@ import JsRuntime from "../../../../utils/JsRuntime";
 import ObjectUtils from "../../../../utils/ObjectUtils";
 
 import { maybeData } from "../../../../types/Data/toData/maybeData";
-import { dataFromCborObj } from "../../../../types/Data/fromCbor";
+import { dataFromCbor, dataFromCborObj } from "../../../../types/Data/fromCbor";
 import { Data, isData } from "../../../../types/Data/Data";
 import { ToCbor } from "../../../../cbor/interfaces/CBORSerializable";
 import { Script, ScriptType } from "../../../script/Script";
@@ -251,21 +251,35 @@ export class TxOut
         {
             if(!(_dat instanceof CborArray))
             throw new InvalidCborFormatError("TxOut");
-
-            const [ _0, _1, _2 ] = _dat.array;
+            
+            const [ _0, _1 ] = _dat.array;
 
             if(!(_0 instanceof CborUInt))
             throw new InvalidCborFormatError("TxOut");
 
-            if(_1 instanceof CborBytes)
-            datum = Hash32.fromCborObj( _1 )
-            else
+            const opt = Number( _0.num );
+
+            if( opt === 0 )
             {
-                if(!(_1 instanceof CborUInt))
+                if(!(
+                    _1 instanceof CborBytes
+                ))
                 throw new InvalidCborFormatError("TxOut");
 
-                datum = dataFromCborObj( _2 )
+                datum = new Hash32( _1.buffer );
             }
+            else if( opt === 1 )
+            {
+                if(!(
+                    _1 instanceof CborTag &&
+                    _1.data instanceof CborBytes
+                ))
+                throw new InvalidCborFormatError("TxOut");
+
+                datum = dataFromCborObj( Cbor.parse( _1.data.buffer ) )
+            }
+            else throw new InvalidCborFormatError("TxOut");
+
         }
 
         let refScript: Script | undefined = undefined;

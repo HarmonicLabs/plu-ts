@@ -474,7 +474,7 @@ export class Cbor
 
         function incrementIfBreak(): boolean
         {
-            if( bytes.readUInt8() !== 0xff ) return false;
+            if( bytes.readUInt8(offset) !== 0xff ) return false;
             incrementOffsetBy( 1 );
             return true;
         }

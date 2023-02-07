@@ -85,7 +85,6 @@ export class Address
             this, "stakeCreds", stakeCreds?.clone()
         );
 
-
     }
 
     clone(): Address
