@@ -184,7 +184,6 @@ export class TxOut
                         datum.toCborObj()
                     ]) :
                     new CborArray([
-                        new CborUInt( 0 ),
                         new CborUInt( 1 ),
                         dataToCborObj( datum )
                     ])
