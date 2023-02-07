@@ -175,10 +175,14 @@ export class Value
     {
         return Cbor.encode( this.toCborObj() );
     }
-    toCborObj(): CborMap
+    toCborObj(): CborObj
     {
-        return new CborMap(
-            this.map.map( entry => {
+        if( Value.isAdaOnly( this ) ) return new CborUInt( this.lovelaces );
+
+        const multiasset = new CborMap(
+            this.map
+            .filter(({ policy }) => policy.toString().length === 56 )
+            .map( entry => {
                 const assets = entry.assets;
                 const policy = entry.policy;
                 return {
@@ -195,6 +199,13 @@ export class Value
                 };
             })
         );
+
+        if( this.lovelaces === BigInt(0) ) return multiasset;
+
+        return new CborArray([
+            new CborUInt( this.lovelaces ),
+            multiasset
+        ]);
     }
 
     static fromCbor( cStr: CanBeCborString ): Value
