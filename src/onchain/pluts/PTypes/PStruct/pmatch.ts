@@ -35,6 +35,48 @@ import { punsafeConvertType } from "../../lib/punsafeConvertType";
 import { pindexList } from "../../lib/std/list/pindexList";
 import { TermList } from "../../lib/std/UtilityTerms/TermList";
 import { plam } from "../../lib/plam";
+import { TermFn } from "../PFn";
+import { phead } from "../../lib";
+
+
+const elemAtCache: { [n: number]: TermFn<[ PList<PData> ], PData > } = {};
+
+export function getElemAtTerm( n: number ): TermFn<[ PList<PData> ], PData >
+{
+    if( n < 0 || n !== Math.round(n) )
+    throw new BasePlutsError(
+        "unexpected index in pmatch field extraction"
+    );
+
+    if( elemAtCache[n] !== undefined ) return elemAtCache[n];
+
+    if( n === 0 ) return phead( data );
+
+    let uplc: UPLCTerm = new UPLCVar(0);
+
+    const initialN = n;
+    while( n > 0 )
+    {
+        uplc = new Application( Builtin.tailList, uplc );
+        n--;
+    }
+
+    uplc = new HoistedUPLC( new Lambda( new Application( Builtin.headList, uplc ) ) );
+
+    const term = new Term( lam( list(data), data ), _dbn => uplc );
+
+    ObjectUtils.defineReadOnlyProperty(
+        term, "$",
+        ( lst: Term<PList<PData>>) => 
+            new Term(
+                data,
+                dbn => new Application( uplc.clone(), lst.toUPLC(dbn) )
+            )
+    );
+
+    elemAtCache[initialN] = term as any;
+    return term as any;
+}
 
 
 export type RawFields<CtorDef extends ConstantableStructCtorDef> = 
@@ -47,9 +89,7 @@ export type RawFields<CtorDef extends ConstantableStructCtorDef> =
 
 
 function getExtractedFieldsExpr<CtorDef extends ConstantableStructCtorDef, Fields extends (keyof CtorDef)[], PExprResult extends PType>(
-    elemAt: Term<PLam<PInt, PData>> & {
-        $: (input: Term<PInt>) => Term<PData>;
-    },
+    fieldsData: Term<PList<PData>>,
     ctorDef: CtorDef,
     allFIndexes: number[],
     expr: ( extracted: RestrictedStructInstance<CtorDef,Fields> ) => Term<PExprResult> ,
@@ -67,7 +107,7 @@ function getExtractedFieldsExpr<CtorDef extends ConstantableStructCtorDef, Field
     const fieldType = ctorDef[ allFieldsNames[ idx ] ];
 
     return plet( getFromDataForType( fieldType )(
-        papp( elemAt, pInt( idx ) )
+        getElemAtTerm( idx ).$( fieldsData )
     )).in( value => {
 
         ObjectUtils.defineNormalProperty(
@@ -78,7 +118,7 @@ function getExtractedFieldsExpr<CtorDef extends ConstantableStructCtorDef, Field
 
         // @ts-ignore Type instantiation is excessively deep and possibly infinite.
         return getExtractedFieldsExpr(
-            elemAt,
+            fieldsData,
             ctorDef,
             allFIndexes.slice(1),
             expr,
@@ -118,16 +158,12 @@ function defineExtract<CtorDef extends ConstantableStructCtorDef>
 
                     if( fieldsIdxs.length === 0 ) return expr({} as any);
 
-                    return plet(
-                        pindexList( data )
-                        .$( _fieldsList ) ).in( elemAt =>
-                        getExtractedFieldsExpr(
-                            elemAt,
-                            ctorDef,
-                            fieldsIdxs as any,
-                            expr,
-                            {}
-                        )
+                    return getExtractedFieldsExpr(
+                        _fieldsList,
+                        ctorDef,
+                        fieldsIdxs as any,
+                        expr,
+                        {}
                     );
                 }
             )

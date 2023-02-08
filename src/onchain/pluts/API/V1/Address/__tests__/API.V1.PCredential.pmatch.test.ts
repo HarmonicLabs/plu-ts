@@ -1,7 +1,5 @@
-import { Term } from "../../../.."
-import { PAlias, pmatch } from "../../../../PTypes"
-import { PrimType } from "../../../../Term"
-import { UtilityTermOf, pByteString, perror } from "../../../../lib"
+import { pmatch } from "../../../../PTypes"
+import { pByteString, perror } from "../../../../lib"
 import { PPubKeyHash } from "../../PubKey/PPubKeyHash"
 import { PCredential } from "../PCredential"
 
@@ -23,6 +21,8 @@ describe("pmatch( PCredentials )", () => {
                 )
             )
             .onPScriptCredential( _ => perror( PPubKeyHash.type ) )
-        )
-    })
+        );
+
+    });
+    
 })

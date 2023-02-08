@@ -1,6 +1,6 @@
 import { evalScript } from "../../../../../CEK";
 import { pmatch } from "../../../../PTypes/PStruct/pmatch";
-import { pair, data, int } from "../../../../Term/Type/base";
+import { pair, data, int, bs, map, dynPair } from "../../../../Term/Type/base";
 import { PAddress } from "../../Address/PAddress";
 import { PCredential } from "../../Address/PCredential";
 import { PStakingCredential } from "../../Address/PStakingCredential";
@@ -26,6 +26,10 @@ import { pByteString } from "../../../../lib/std/bs/pByteString";
 import { pList } from "../../../../lib/std/list/const";
 import { PMaybe } from "../../../../lib/std/PMaybe/PMaybe";
 import { pBool } from "../../../../lib/std/bool/pBool";
+import { pPair, perror, pisEmpty } from "../../../../lib";
+import { PCurrencySymbol } from "../../Value/PCurrencySymbol";
+import { PTokenName } from "../../Value/PTokenName";
+import { showUPLC } from "../../../../../UPLC/UPLCTerm";
 
 
 const unitDatumHash = PDatumHash.from( pByteString("923918e403bf43c34b4ef6b48eb2ee04babed17320d8d1b9ff9ad086e86f44ec") );
@@ -49,7 +53,7 @@ const _txInfo = PTxInfo.PTxInfo({
     }),
     interval: PPOSIXTimeRange.PInterval({
         from: PLowerBound( PPOSIXTime.type ).PLowerBound({
-            bound: PExtended( PPOSIXTime.type ).PNegInf({}),
+            bound: PExtended( PPOSIXTime.type ).PFinite({ _0: PPOSIXTime.from( pInt(1) ) }),
             inclusive: pBool( false )
         }),
         to: PUpperBound( PPOSIXTime.type ).PUpperBound({
@@ -88,7 +92,7 @@ const ctx = PScriptContext.PScriptContext({
 
 describe("pmatch( <PScriptContext> )", () => {
 
-    test.only("extract txInfo", () => {
+    test("extract txInfo", () => {
 
         expect(
             evalScript(
@@ -160,6 +164,84 @@ describe("pmatch( <PScriptContext> )", () => {
         );
 
     });
+
+    describe("extract fee", () => {
+
+        test.concurrent("inputs extracted", () => {
+            expect(
+                evalScript(
+                    pmatch( ctx )
+                    .onPScriptContext( _ => _.extract("txInfo").in( ({ txInfo }) =>
+                    txInfo.extract("inputs").in( ({ inputs }) => pisEmpty.$( inputs.tail ) )
+                    ))
+                )
+            ).toEqual(
+                evalScript(
+                    pBool( true )
+                )
+            )
+        });
+
+        test.concurrent("outputs extracted", () => {
+
+            const term = pmatch( ctx )
+            .onPScriptContext( _ => _.extract("txInfo").in( ({ txInfo }) =>
+            txInfo.extract("outputs").in( ({ outputs }) => pisEmpty.$( outputs ) )
+            ));
+
+            expect(
+                evalScript(
+                    term
+                )
+            ).toEqual(
+                evalScript(
+                    pBool( true )
+                )
+            )
+
+        })
+
+        test.concurrent("interval lower bound extracted", () => {
+
+            expect(
+                evalScript(
+                    pmatch( ctx )
+                    .onPScriptContext( _ => _.extract("txInfo").in( ({ txInfo }) =>
+                    txInfo.extract("interval").in( ({ interval }) =>
+                    interval.extract("from").in( ({ from }) =>
+                    from.extract("bound").in( ({ bound }) => 
+
+                    pmatch( bound )
+                    .onPFinite( _ => _.extract("_0").in( ({ _0 }) => _0 ))
+                    ._( _ => perror( PPOSIXTime.type ) )
+                    )))))
+                )
+            ).toEqual(
+                evalScript(
+                    pInt( 1 )
+                )
+            )
+
+        })
+
+        test.concurrent("txId (last field)", () => {
+
+            expect(
+                evalScript(
+                    pmatch( ctx )
+                    .onPScriptContext( _ => _.extract("txInfo").in( ({ txInfo }) =>
+                    txInfo.extract("id").in( ({ id }) =>
+                    id.extract("txId").in( ({ txId }) => txId.eq("deadbeef") )
+                    )))
+                )
+            ).toEqual(
+                evalScript(
+                    pBool( true )
+                )
+            )
+
+        })
+    })
 
     describe("match Purpose", () => {
 

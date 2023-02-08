@@ -58,7 +58,6 @@ export function plet<PVarT extends PType, SomeExtension extends object>( varValu
             }
         );
 
-
         return term;
     }
     return {
