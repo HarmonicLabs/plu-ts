@@ -1,5 +1,5 @@
-import { BasePlutsError } from "../../../errors/BasePlutsError";
 import ObjectUtils from "../../../utils/ObjectUtils";
+import { BasePlutsError } from "../../../errors/BasePlutsError";
 import { PType } from "../PType";
 import { TermType, Term } from "../Term";
 import { isWellFormedType } from "../Term/Type/kinds";
@@ -23,10 +23,13 @@ export function punsafeConvertType<FromPInstance extends PType, SomeExtension ex
 
         if( k === "_type" || k === "_toUPLC" ) return;
         
-        ObjectUtils.defineReadOnlyProperty(
+        Object.defineProperty(
             converted,
             k,
-            (someTerm as any)[ k ]
+            Object.getOwnPropertyDescriptor(
+                someTerm,
+                k
+            ) ?? {}
         )
 
     });

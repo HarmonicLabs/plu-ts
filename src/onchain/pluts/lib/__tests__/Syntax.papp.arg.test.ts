@@ -2,7 +2,7 @@ import { bs, fn, int, lam, list, padd, pair, papp, pBool, PBool, pByteString, PB
 import { ByteString } from "../../../../types/HexString/ByteString";
 import { Pair } from "../../../../types/structs/Pair";
 import { evalScript } from "../../../CEK";
-import { TermInt } from "../../stdlib/UtilityTerms/TermInt";
+import { TermInt } from "../../lib/std/UtilityTerms/TermInt";
 import { pappArgToTerm } from "../pappArg";
 
 function expectScriptToEq( received: Term<PType>, expected: Term<PType> ): void

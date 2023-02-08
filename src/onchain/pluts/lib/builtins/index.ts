@@ -22,7 +22,12 @@ import { pforce } from "../pforce";
 import { phoist } from "../phoist";
 import { plam } from "../plam";
 import { punsafeConvertType } from "../punsafeConvertType";
-import { TermBool, addPBoolMethods, TermInt, TermBS, addPByteStringMethods, addPIntMethods, TermStr, addPStringMethods } from "../std";
+// !!! IMPORTANT !!!
+// DO NOT change the odrder of imports
+import { TermBS, addPByteStringMethods } from "../std/UtilityTerms/TermBS";
+import { TermBool, addPBoolMethods } from "../std/UtilityTerms/TermBool";
+import { TermInt, addPIntMethods } from "../std/UtilityTerms/TermInt";
+import { TermStr, addPStringMethods } from "../std/UtilityTerms/TermStr";
 import { getFromDataForType } from "../std/data/conversion/getFromDataTermForType";
 
 

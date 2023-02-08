@@ -19,15 +19,22 @@ import { Lambda } from "../../../UPLC/UPLCTerms/Lambda";
 import { UPLCConst } from "../../../UPLC/UPLCTerms/UPLCConst";
 import { UPLCVar } from "../../../UPLC/UPLCTerms/UPLCVar";
 import { PType } from "../../PType";
-import { AliasTermType, PrimType, Term } from "../../Term";
+import { Term } from "../../Term";
 import { PData } from "../PData/PData";
 import { PLam } from "../PFn/PLam";
 import { PList } from "../PList";
 import { matchSingleCtorStruct } from "./matchSingleCtorStruct";
 import { capitalize } from "../../../../utils/ts/capitalize";
 import { DataI } from "../../../../types/Data/DataI";
-import { plet, papp, addUtilityForType, punsafeConvertType, pindexList, TermList, plam, pInt, UtilityTermOf } from "../../lib";
 import { getFromDataForType } from "../../lib/std/data/conversion/getFromDataTermForType";
+import { plet } from "../../lib/plet";
+import { papp } from "../../lib/papp";
+import { pInt } from "../../lib/std/int/pInt";
+import { UtilityTermOf, addUtilityForType } from "../../lib/addUtilityForType";
+import { punsafeConvertType } from "../../lib/punsafeConvertType";
+import { pindexList } from "../../lib/std/list/pindexList";
+import { TermList } from "../../lib/std/UtilityTerms/TermList";
+import { plam } from "../../lib/plam";
 
 
 export type RawFields<CtorDef extends ConstantableStructCtorDef> = 
@@ -154,15 +161,6 @@ export type PMatchOptions<SDef extends ConstantableStructDefinition> = {
 } & {
     _: <PReturnT extends PType>( continuation: ( rawFields: TermList<PData> ) => Term<PReturnT> ) => Term<PReturnT>
 }
-type t = PMatchOptions<{
-    PPubKeyCredential: {
-        pkh: AliasTermType<symbol, [PrimType.BS]>;
-    };
-    PScriptCredential: {
-        valHash: AliasTermType<symbol, [PrimType.BS]>;
-    };
-}>
-
 
 export function matchNCtorsIdxs( _n: number, returnT: TermType )
 {

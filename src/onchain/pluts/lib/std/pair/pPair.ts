@@ -1,10 +1,13 @@
-import { TermPair, addPPairMethods } from "../..";
 import JsRuntime from "../../../../../utils/JsRuntime";
+// !!! IMPORTANT !!!
+// `isConstantableTermType` is used both here and by `addPPairMethods`
+// DO NOT change the order of the two imports
+import { isConstantableTermType } from "../../../Term/Type/kinds";
+import { TermPair, addPPairMethods } from "../../std/UtilityTerms/TermPair";
 import { UPLCConst } from "../../../../UPLC/UPLCTerms/UPLCConst";
 import { PPair } from "../../../PTypes";
 import { ConstantableTermType, Term, typeExtends, pair } from "../../../Term";
 import { termTyToConstTy } from "../../../Term/Type/constTypeConversion";
-import { isConstantableTermType } from "../../../Term/Type/kinds";
 import { ToPType } from "../../../Term/Type/ts-pluts-conversion";
 
 

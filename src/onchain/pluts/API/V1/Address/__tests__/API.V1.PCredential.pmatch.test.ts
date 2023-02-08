@@ -5,8 +5,6 @@ import { UtilityTermOf, pByteString, perror } from "../../../../lib"
 import { PPubKeyHash } from "../../PubKey/PPubKeyHash"
 import { PCredential } from "../PCredential"
 
-type t = UtilityTermOf<PAlias<[PrimType.BS], symbol>>
-type _t = PAlias<[PrimType.BS], symbol>
 
 describe("pmatch( PCredentials )", () => {
 
