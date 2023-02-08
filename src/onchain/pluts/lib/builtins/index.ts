@@ -677,12 +677,12 @@ export function pif<ReturnT extends TermType>( returnType: ReturnT | undefined =
                     TermFn<[ ToPType<ReturnT> ], ToPType<ReturnT> >
                     & {
                         else: ( caseFalse: PappArg<ToPType<ReturnT>> ) =>
-                        Term<ToPType<ReturnT>> 
+                        UtilityTermOf<ToPType<ReturnT>> 
                     },
                 $: ( caseTrue: PappArg<ToPType<ReturnT>> ) =>
                     TermFn<[ ToPType<ReturnT> ], ToPType<ReturnT> > & {
                         else: ( caseFalse: PappArg<ToPType<ReturnT>> ) =>
-                        Term<ToPType<ReturnT>> 
+                        UtilityTermOf<ToPType<ReturnT>> 
                     }
             }
     }

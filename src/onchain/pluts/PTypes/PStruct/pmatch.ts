@@ -3,10 +3,9 @@ import ObjectUtils from "../../../../utils/ObjectUtils";
 
 import { RestrictedStructInstance, PStruct } from "./pstruct";
 import { ConstantableStructCtorDef, ConstantableStructDefinition, data, fn, lam, list, StructCtorDef, TermType, tyVar } from "../../Term/Type/base";
-import { getFromDataForType } from "../../lib/std/data/conversion/getFromDataTermForType";
 import { constT } from "../../../UPLC/UPLCTerms/UPLCConst/ConstType";
 import { isConstantableStructDefinition, isLambdaType } from "../../Term/Type/kinds";
-import type { PInt } from "../PInt";
+import { PInt } from "../PInt";
 import { termTypeToString } from "../../Term/Type/utils";
 import { BasePlutsError } from "../../../../errors/BasePlutsError";
 import { UPLCTerm } from "../../../UPLC/UPLCTerm";
@@ -20,21 +19,15 @@ import { Lambda } from "../../../UPLC/UPLCTerms/Lambda";
 import { UPLCConst } from "../../../UPLC/UPLCTerms/UPLCConst";
 import { UPLCVar } from "../../../UPLC/UPLCTerms/UPLCVar";
 import { PType } from "../../PType";
-import { Term } from "../../Term";
+import { AliasTermType, PrimType, Term } from "../../Term";
 import { PData } from "../PData/PData";
 import { PLam } from "../PFn/PLam";
 import { PList } from "../PList";
 import { matchSingleCtorStruct } from "./matchSingleCtorStruct";
 import { capitalize } from "../../../../utils/ts/capitalize";
 import { DataI } from "../../../../types/Data/DataI";
-import { plet } from "../../lib/plet";
-import { papp } from "../../lib/papp";
-import { pInt } from "../../lib/std/int/pInt";
-import { addUtilityForType } from "../../lib/addUtilityForType";
-import { punsafeConvertType } from "../../lib/punsafeConvertType";
-import { pindexList } from "../../lib/std/list/pindexList";
-import { TermList } from "../../lib/std/UtilityTerms/TermList";
-import { plam } from "../../lib/plam";
+import { plet, papp, addUtilityForType, punsafeConvertType, pindexList, TermList, plam, pInt, UtilityTermOf } from "../../lib";
+import { getFromDataForType } from "../../lib/std/data/conversion/getFromDataTermForType";
 
 
 export type RawFields<CtorDef extends ConstantableStructCtorDef> = 
@@ -147,7 +140,7 @@ type TypedPMatchOptions<SDef extends ConstantableStructDefinition, PReturnT exte
     [Ctor in keyof SDef as `on${Capitalize<string & Ctor>}`]
         : ( cb: ( rawFields: RawFields<SDef[Ctor]> ) => Term<PReturnT> )
             =>  Omit<SDef,Ctor> extends EmptyObject ?
-                Term<PReturnT> :
+                UtilityTermOf<PReturnT> :
                 TypedPMatchOptions<Omit<SDef,Ctor>, PReturnT>
 } & MatchRest<PReturnT>
 
@@ -156,11 +149,20 @@ export type PMatchOptions<SDef extends ConstantableStructDefinition> = {
     [Ctor in keyof SDef as `on${Capitalize<string & Ctor>}`]
         : <PReturnT extends PType>( cb: ( rawFields: RawFields<SDef[Ctor]> ) => Term<PReturnT> )
             =>  Omit<SDef,Ctor> extends EmptyObject ?
-                Term<PReturnT> :
+                UtilityTermOf<PReturnT> :
                 TypedPMatchOptions<Omit<SDef,Ctor>, PReturnT>
 } & {
     _: <PReturnT extends PType>( continuation: ( rawFields: TermList<PData> ) => Term<PReturnT> ) => Term<PReturnT>
 }
+type t = PMatchOptions<{
+    PPubKeyCredential: {
+        pkh: AliasTermType<symbol, [PrimType.BS]>;
+    };
+    PScriptCredential: {
+        valHash: AliasTermType<symbol, [PrimType.BS]>;
+    };
+}>
+
 
 export function matchNCtorsIdxs( _n: number, returnT: TermType )
 {
