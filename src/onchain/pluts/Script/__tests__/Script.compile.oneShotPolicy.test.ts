@@ -1,71 +1,104 @@
-import { PTxId } from "../../API/V1/Tx/PTxId";
-import { PTxOutRef } from "../../API/V1/Tx/PTxOutRef";
-// import { pisUtxoSpent } from "../../API/V2/lib/ctx/pisUtxoSpent";
-import { PScriptContext } from "../../API/V2/ScriptContext/PScriptContext";
-import { data, unit } from "../../Term/Type";
-import { pfn, pif, pisEmpty, plet, pmakeUnit, perror, pByteString, pInt } from "../../lib";
-import { compile } from "../compile";
+import { compile } from "../..";
+import { PTxOutRef, V2 } from "../../API";
+import { pstruct, pmatch } from "../../PTypes";
+import { bool, fn } from "../../Term";
+import { punsafeConvertType, peqData, perror, pfn, pisEmpty, plet } from "../../lib";
 
-describe.skip("onwShotPolicy", () => {
-
-    const oneShotPolicy = pfn([
+const peqTxOutRef = punsafeConvertType(
+    peqData,
+    fn([
         PTxOutRef.type,
-        data,
-        PScriptContext.type
-    ],  unit)
-    (( mustSpendUtxo, _rdmr, ctx ) =>
+        PTxOutRef.type
+    ],  bool)
+);
 
-        ctx.extract("txInfo").in( ({ txInfo }) =>
+const MintRdmr = pstruct({
+    Mint: {},
+    Burn: {}
+});
+
+describe("oneShotNFT", () => {
+
+    const oneShotNFT = pfn([
+        V2.PTxOutRef.type,
+    
+        MintRdmr.type,
+        V2.PScriptContext.type
+    
+    ],  bool)
+    (( utxo, rdmr, ctx ) =>
+        
+        ctx.extract("txInfo","purpose").in( ({ txInfo, purpose }) =>
         txInfo.extract("inputs","mint").in( tx =>
     
-            pif( unit ).$(
+            plet(
+                pmatch( purpose )
+                .onMinting( _ => _.extract("currencySym").in( ({ currencySym }) => currencySym ))
+                ._( _ => perror( V2.PCurrencySymbol.type ) as any )
+            ).in( ownCurrSym => 
     
-                pisUtxoSpent.$( mustSpendUtxo ).$( tx.inputs )
-                .and(
-                    // single policy
-                    pisEmpty.$( tx.mint.tail )
-                )
-                .and(
-                    plet( tx.mint.head.snd ).in( assetsOfPolicy => {
-
-                        // single asset name
-                        return pisEmpty.$( assetsOfPolicy.tail )
-                        .and(
-                            // single token minted
-                            assetsOfPolicy.head.snd.eq( 1 )
-                        );}
+            pmatch( rdmr )
+            .onMint( _ =>
+    
+                tx.inputs.some( input =>
+                    input.extract("utxoRef").in( ({ utxoRef }) =>
+                    
+                        peqTxOutRef
+                        .$( utxoRef )
+                        .$( utxo )
+        
                     )
                 )
-            
-            )
-            .then( pmakeUnit() )
-            .else( perror( unit ) )
+                .and(
+        
+                    tx.mint.some( entry =>
     
-        ))
-    );
+                        entry.fst.eq( ownCurrSym )
+    
+                        .and(
+                            plet( entry.snd ).in( assets =>
+    
+                                pisEmpty.$( assets.tail )
+                                .and(
+                                    assets.head.snd.eq( 1 )
+                                )
+    
+                            )
+                        )
+    
+                    )
+    
+                )
+    
+            )
+            .onBurn( _ =>
+                tx.mint.some( entry =>
+    
+                    entry.fst.eq( ownCurrSym )
+    
+                    .and(
+                        plet( entry.snd ).in( assets =>
+    
+                            pisEmpty.$( assets.tail )
+                            .and(
+                                assets.head.snd.lt( 0 )
+                            )
+    
+                        )
+                    )
+    
+                ) 
+            )
+        
+        )))
+    )
 
-    test("compiles", () => {
-
-        let compiled;
+    test("it compiles", () => {
 
         expect(
-            () => {
-                compiled = compile(
-                    oneShotPolicy.$(
-                        PTxOutRef.PTxOutRef({
-                            id: PTxId.PTxId({ txId: pByteString("deadbeef") }),
-                            index: pInt( 1 )
-                        })
-                    )
-                );
-            }
+            () => compile( oneShotNFT )
         ).not.toThrow();
-
-        /*
-        console.log(
-            scriptToJsonFormat( compiled as any, PlutusScriptVersion.V2, "oneShotPolicy @ deadbeef#1" )    
-        );
-        //*/
-    })
+        
+    });
 
 })
