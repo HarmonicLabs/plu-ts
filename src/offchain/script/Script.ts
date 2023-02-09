@@ -68,6 +68,7 @@ export class Script<T extends ScriptType = ScriptType>
                 cbor = nativeScriptToCbor( cbor as NativeScript ).asBytes
             }
         }
+        else cbor = BufferUtils.copy( cbor )
 
         if(
             scriptType === ScriptType.PlutusV1 ||

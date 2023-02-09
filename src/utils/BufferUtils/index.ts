@@ -15,7 +15,7 @@ export default class BufferUtils
 
     static copy( buffer: Buffer ): Buffer
     {
-        return Buffer.from( Array.from( buffer ) )
+        return Buffer.from( Uint8Array.prototype.slice.call( buffer ) )
     }
 
     static eq( a: Readonly<Buffer>, b: Readonly<Buffer> ): boolean
