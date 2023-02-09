@@ -145,7 +145,7 @@ describe("src/crypto", () => {
         
     });
 
-    describe.only("blake2b", () => {
+    describe("blake2b", () => {
 
         test('bytesToHex( blake2b([], 28) ) => 836cc68931c2e4e3e838602eca1902591d216837bafddfe6f0c8cb07', () => {
             expect(

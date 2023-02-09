@@ -12,8 +12,8 @@ describe("Script.hash", () => {
             )
         );
 
-        console.log(
+        expect(
             script.hash.asString
-        )
+        ).toEqual("6c6bbc4f1b017a2173ec3be9851ac30a05c751a1e83bfc8a059cf805")
     })
 })
