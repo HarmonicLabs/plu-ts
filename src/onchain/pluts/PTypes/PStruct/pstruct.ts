@@ -213,10 +213,10 @@ export function pstruct<StructDef extends ConstantableStructDefinition>( def: St
     ObjectUtils.defineReadOnlyProperty(
         PStructExt,
         "fromData",
-        ( data: Term<PData> ): Term<PStructExt> => {
+        ( dataTerm: Term<PData> ): Term<PStructExt> => {
 
             JsRuntime.assert(
-                typeExtends( data.type, Type.Data.Constr ),
+                typeExtends( dataTerm.type, data ),
                 "trying to construct a Struct using static method 'fromData'; but the `Data` argument is not a `Data.Constr`"
             );
 
@@ -224,7 +224,7 @@ export function pstruct<StructDef extends ConstantableStructDefinition>( def: St
                 // basically only mocking typescript here; still data
                 new Term(
                     thisStructType,
-                    data.toUPLC
+                    dataTerm.toUPLC
                 ),
                 "_pIsConstantStruct",
                 false

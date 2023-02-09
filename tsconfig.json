@@ -69,7 +69,6 @@
   },
   "include": ["./src"],
   "exclude": [
-    "./src/offchain",
     "**/__tests__/**/*",
     "**/*.test.ts",
     "jest_cache"
