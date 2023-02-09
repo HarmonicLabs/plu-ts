@@ -167,7 +167,7 @@ describe("pmatch( <PScriptContext> )", () => {
 
     describe("extract fee", () => {
 
-        test.concurrent("inputs extracted", () => {
+        test("inputs extracted", () => {
             expect(
                 evalScript(
                     pmatch( ctx )
@@ -182,7 +182,7 @@ describe("pmatch( <PScriptContext> )", () => {
             )
         });
 
-        test.concurrent("outputs extracted", () => {
+        test("outputs extracted", () => {
 
             const term = pmatch( ctx )
             .onPScriptContext( _ => _.extract("txInfo").in( ({ txInfo }) =>
@@ -201,7 +201,7 @@ describe("pmatch( <PScriptContext> )", () => {
 
         })
 
-        test.concurrent("interval lower bound extracted", () => {
+        test("interval lower bound extracted", () => {
 
             expect(
                 evalScript(
@@ -224,7 +224,7 @@ describe("pmatch( <PScriptContext> )", () => {
 
         })
 
-        test.concurrent("txId (last field)", () => {
+        test("txId (last field)", () => {
 
             expect(
                 evalScript(
