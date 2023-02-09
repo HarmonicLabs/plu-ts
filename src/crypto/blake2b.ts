@@ -3,177 +3,278 @@ import ObjectUtils from "../utils/ObjectUtils";
 import { buffToByteArr, byte, uint64 as uint64_t } from "./types";
 import { byteArrToHex, forceUint64, uint64, uint64Rotr, uint64ToBytesLE } from "./types";
 import { Buffer } from "buffer";
+
 /**
- * 128 bytes (16*8 byte words)
+ * 64-bit unsigned addition
+ * Sets v[a,a+1] += v[b,b+1]
+ * v should be a Uint32Array
  */
-const WIDTH: number = 128;
-
-const SIGMA = ObjectUtils.freezeAll([
-    [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15],
-    [14, 10, 4, 8, 9, 15, 13, 6, 1, 12, 0, 2, 11, 7, 5, 3],
-    [11, 8, 12, 0, 5, 2, 15, 13, 10, 14, 3, 6, 7, 1, 9, 4],
-    [7, 9, 3, 1, 13, 12, 11, 14, 2, 6, 5, 10, 4, 0, 15, 8],
-    [9, 0, 5, 7, 2, 4, 10, 15, 14, 1, 11, 12, 6, 8, 3, 13],
-    [2, 12, 6, 10, 0, 11, 8, 3, 4, 13, 7, 5, 15, 14, 1, 9],
-    [12, 5, 1, 15, 14, 13, 4, 10, 0, 7, 6, 3, 9, 2, 8, 11],
-    [13, 11, 7, 14, 12, 1, 3, 9, 5, 0, 15, 4, 8, 6, 2, 10],
-    [6, 15, 14, 9, 11, 3, 0, 8, 12, 2, 13, 7, 1, 4, 10, 5],
-    [10, 2, 8, 4, 7, 6, 1, 5, 15, 11, 9, 14, 3, 12, 13, 0],
-]);
-
-function pad(src: byte[]): byte[]
+function ADD64AA(
+    v: Uint32Array,
+    a: number,
+    b: number
+)
 {
-    let dst = src.slice();
-
-    let nZeroes = dst.length == 0 ? WIDTH : (WIDTH - dst.length%WIDTH)%WIDTH;
-
-    // just padding with zeroes, the actual message length is used during compression stage of final block in order to uniquely hash messages of different lengths
-    for (let i = 0; i < nZeroes; i++) {
-        dst.push(0);
-    }
-    
-    return dst;
-}
-
-/**
-     * Initialization vector
-     */
-const IV = Object.freeze([
-    uint64( "0x6a09e667f3bcc908" ), 
-    uint64( "0xbb67ae8584caa73b" ),
-    uint64( "0x3c6ef372fe94f82b" ), 
-    uint64( "0xa54ff53a5f1d36f1" ),
-    uint64( "0x510e527fade682d1" ),
-    uint64( "0x9b05688c2b3e6c1f" ),
-    uint64( "0x1f83d9abfb41bd6b" ), 
-    uint64( "0x5be0cd19137e2179" ), 
-]);
-
-/**
- * @param {uint64[]} v
- * @param {uint64[]} chunk
- * @param {number} a - index
- * @param {number} b - index
- * @param {number} c - index
- * @param {number} d - index
- * @param {number} i - index in chunk for low word 1
- * @param {number} j - index in chunk for low word 2
- */
-function mix(v: uint64_t[], chunk: uint64_t[], a: number, b: number, c: number, d: number, i: number, j: number) {
-    const x = chunk[i];
-    const y = chunk[j];
-
-    v[a] = forceUint64(v[a] + v[b] + x);
-    v[d] = uint64Rotr((v[d] ^ v[a]) as uint64, 32);
-    v[c] = forceUint64(v[c] + v[d]);
-    v[b] = uint64Rotr((v[b] ^ v[c]) as uint64, 24);
-    v[a] = forceUint64(v[a] + v[b] + y);
-    v[d] = uint64Rotr((v[d] ^ v[a]) as uint64, 16);
-    v[c] = forceUint64(v[c] + v[d]);
-    v[b] = uint64Rotr((v[b] ^ v[c]) as uint64, 63);
-}
-
-function compress(h: uint64_t[], chunk: uint64_t[], t: number, last: boolean) {
-    // work vectors
-    const v = h.slice().concat(IV.slice());
-
-    v[12] = (v[12] ^ uint64( t | 0 )) as uint64; // v[12].high unmodified
-    // v[13] unmodified
-
-    if(last)
+    const o0 = v[a] + v[b];
+    let o1 = v[a + 1] + v[b + 1];
+    if (o0 >= 0x100000000)
     {
-        v[14] = (v[14] ^ (BigInt("0xffffffffffffffff"))) as uint64;
+        o1++;
     }
-
-    for (let round = 0; round < 12; round++) {
-        const s = SIGMA[round%10];
-
-        for (let i = 0; i < 4; i++) {
-            mix(v, chunk, i, i+4, i+8, i+12, s[i*2], s[i*2+1]);
-        }
-        
-        for (let i = 0; i < 4; i++) {
-            mix(v, chunk, i, (i+1)%4 + 4, (i+2)%4 + 8, (i+3)%4 + 12, s[8+i*2], s[8 + i*2 + 1]);
-        }
-    }
-
-    for (let i = 0; i < 8; i++)
-    {
-        h[i] = ((h[i] ^ v[i]) ^ v[i+8]) as uint64;
-    }		
+    v[a] = o0;
+    v[a + 1] = o1;
 }
 
-/**
- * getulates blake2-256 (32 bytes) hash of a list of uint8 numbers.
- * Result is also a list of uint8 number.
- * @example                                        
- * bytesToHex(blake2b([0, 1])) => "01cf79da4945c370c68b265ef70641aaa65eaa8f5953e3900d97724c2c5aa095"
- * @example
- * bytesToHex(blake2b(textToBytes("abc"), 64)) => "ba80a53f981c4d0d6a2797b69f12f6e94c212f14685ac4b74b12bb6fdbffa2d17d87c5392aab792dc252d5de4533cc9518d38aa8dbf1925ab92386edd4009923"
- */
-export function blake2b( bytes: byte[] | Buffer, digestSize : 28 | 32 | 64 = 32 ): byte[]
+// 64-bit unsigned addition
+// Sets v[a,a+1] += b
+// b0 is the low 32 bits of b, b1 represents the high 32 bits
+function ADD64AC(
+    v: Uint32Array,
+    a: number,
+    b0: number,
+    b1: number
+)
 {
-    if(!(
-        digestSize === 28 ||
-        digestSize === 32 ||
-        digestSize === 64
-    )) throw new BasePlutsError("invalid blake2b digest size");
-    if( Buffer.isBuffer( bytes ) )
+    let o0 = v[a] + b0;
+    if (b0 < 0)
     {
-        bytes = buffToByteArr( bytes );
+        o0 += 0x100000000
+    }
+    let o1 = v[a + 1] + b1;
+    if (o0 >= 0x100000000)
+    {
+        o1++
+    }
+    v[a] = o0;
+    v[a + 1] = o1;
+}
+
+// Little-endian byte access
+function B2B_GET32(
+    arr: Uint8Array,
+    i: number
+): number
+{
+    return arr[i] ^ (arr[i + 1] << 8) ^ (arr[i + 2] << 16) ^ (arr[i + 3] << 24)
+}
+
+// G Mixing function
+// The ROTRs are inlined for speed
+function B2B_G(
+    a: number, 
+    b: number, 
+    c: number, 
+    d: number, 
+    ix: number, 
+    iy: number
+)
+{
+    const x0 = m[ix]
+    const x1 = m[ix + 1]
+    const y0 = m[iy]
+    const y1 = m[iy + 1]
+
+    ADD64AA(v, a, b) // v[a,a+1] += v[b,b+1] ... in JS we must store a uint64 as two uint32s
+    ADD64AC(v, a, x0, x1) // v[a, a+1] += x ... x0 is the low 32 bits of x, x1 is the high 32 bits
+
+    // v[d,d+1] = (v[d,d+1] xor v[a,a+1]) rotated to the right by 32 bits
+    let xor0 = v[d] ^ v[a]
+    let xor1 = v[d + 1] ^ v[a + 1]
+    v[d] = xor1
+    v[d + 1] = xor0
+
+    ADD64AA(v, c, d)
+
+    // v[b,b+1] = (v[b,b+1] xor v[c,c+1]) rotated right by 24 bits
+    xor0 = v[b] ^ v[c]
+    xor1 = v[b + 1] ^ v[c + 1]
+    v[b] = (xor0 >>> 24) ^ (xor1 << 8)
+    v[b + 1] = (xor1 >>> 24) ^ (xor0 << 8)
+
+    ADD64AA(v, a, b)
+    ADD64AC(v, a, y0, y1)
+
+    // v[d,d+1] = (v[d,d+1] xor v[a,a+1]) rotated right by 16 bits
+    xor0 = v[d] ^ v[a]
+    xor1 = v[d + 1] ^ v[a + 1]
+    v[d] = (xor0 >>> 16) ^ (xor1 << 16)
+    v[d + 1] = (xor1 >>> 16) ^ (xor0 << 16)
+
+    ADD64AA(v, c, d)
+
+    // v[b,b+1] = (v[b,b+1] xor v[c,c+1]) rotated right by 63 bits
+    xor0 = v[b] ^ v[c]
+    xor1 = v[b + 1] ^ v[c + 1]
+    v[b] = (xor1 >>> 31) ^ (xor0 << 1)
+    v[b + 1] = (xor0 >>> 31) ^ (xor1 << 1)
+}
+
+// Initialization Vector
+const BLAKE2B_IV32 = new Uint32Array([
+    0xf3bcc908, 0x6a09e667, 0x84caa73b, 0xbb67ae85, 0xfe94f82b, 0x3c6ef372,
+    0x5f1d36f1, 0xa54ff53a, 0xade682d1, 0x510e527f, 0x2b3e6c1f, 0x9b05688c,
+    0xfb41bd6b, 0x1f83d9ab, 0x137e2179, 0x5be0cd19
+])
+
+const SIGMA8 = [
+    0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 14, 10, 4, 8, 9, 15, 13,
+    6, 1, 12, 0, 2, 11, 7, 5, 3, 11, 8, 12, 0, 5, 2, 15, 13, 10, 14, 3, 6, 7, 1,
+    9, 4, 7, 9, 3, 1, 13, 12, 11, 14, 2, 6, 5, 10, 4, 0, 15, 8, 9, 0, 5, 7, 2, 4,
+    10, 15, 14, 1, 11, 12, 6, 8, 3, 13, 2, 12, 6, 10, 0, 11, 8, 3, 4, 13, 7, 5,
+    15, 14, 1, 9, 12, 5, 1, 15, 14, 13, 4, 10, 0, 7, 6, 3, 9, 2, 8, 11, 13, 11, 7,
+    14, 12, 1, 3, 9, 5, 0, 15, 4, 8, 6, 2, 10, 6, 15, 14, 9, 11, 3, 0, 8, 12, 2,
+    13, 7, 1, 4, 10, 5, 10, 2, 8, 4, 7, 6, 1, 5, 15, 11, 9, 14, 3, 12, 13, 0, 0,
+    1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 14, 10, 4, 8, 9, 15, 13, 6,
+    1, 12, 0, 2, 11, 7, 5, 3
+]
+
+// These are offsets into a uint64 buffer.
+// Multiply them all by 2 to make them offsets into a uint32 buffer,
+// because this is Javascript and we don't have uint64s
+const SIGMA82 = new Uint8Array(
+    SIGMA8.map(function (x) {
+    return x * 2
+    })
+)
+
+// Compression function. 'last' flag indicates last block.
+// Note we're representing 16 uint64s as 32 uint32s
+const v = new Uint32Array(32)
+const m = new Uint32Array(32)
+function blake2bCompress(
+    ctx: Blake2bCtx,
+    last: boolean
+)
+{
+    let i = 0
+
+    // init work variables
+    for (i = 0; i < 16; i++) {
+    v[i] = ctx.h[i]
+    v[i + 16] = BLAKE2B_IV32[i]
     }
 
-    const nBytes = bytes.length;
+    // low 64 bits of offset
+    v[24] = v[24] ^ ctx.t
+    v[25] = v[25] ^ (ctx.t / 0x100000000)
+    // high 64 bits not supported, offset may not be higher than 2**53-1
 
-    bytes = pad(bytes);
-
-    // init hash vector
-    const h = IV.slice();
-    
-    // setup the param block
-    const paramBlock = new Uint8Array(64);
-    paramBlock[0] = digestSize; // n output  bytes
-    paramBlock[1] = 0; // key-length (always zero in our case) 
-    paramBlock[2] = 1; // fanout
-    paramBlock[3] = 1; // depth
-
-    //mix in the parameter block
-    let paramBlockView = new DataView(paramBlock.buffer);
-    
-    for (let i = 0; i < 8; i++)
-    {
-        h[i] = (h[i] ^ paramBlockView.getBigUint64(i*8,true)) as uint64;
-    }
-    
-    // loop all chunks
-    for (let chunkStart = 0; chunkStart < bytes.length; chunkStart += WIDTH)
-    {
-        const chunkEnd = chunkStart + WIDTH; // exclusive
-        const chunk = bytes.slice(chunkStart, chunkStart + WIDTH);
-
-        const chunk64 = new Array(WIDTH/8);
-        for (let i = 0; i < WIDTH; i += 8) {
-            chunk64[i/8] = uint64( "0x" + byteArrToHex( chunk.slice(i, i+8).reverse() ) );
-        }
-        
-        compress(
-            h,
-            chunk64,
-            nBytes,
-            chunkStart == bytes.length - WIDTH // is last blocks
-        );
+    // last block flag set ?
+    if (last) {
+    v[28] = ~v[28]
+    v[29] = ~v[29]
     }
 
-    // extract lowest BLAKE2B_DIGEST_SIZE (28, 32 or 64) bytes from h
-
-    const hash: byte[] = [];
-    const n = Math.ceil(digestSize / 8)
-    for (let i = 0; i < n ; i++)
-    {
-        hash.push( ...uint64ToBytesLE(h[i]) );
+    // get little-endian words
+    for (i = 0; i < 32; i++) {
+    m[i] = B2B_GET32(ctx.b, 4 * i)
     }
 
-    return hash.slice(0, digestSize);
+    // twelve rounds of mixing
+    // uncomment the DebugPrint calls to log the computation
+    // and match the RFC sample documentation
+    // util.debugPrint('          m[16]', m, 64)
+    for (i = 0; i < 12; i++) {
+    // util.debugPrint('   (i=' + (i < 10 ? ' ' : '') + i + ') v[16]', v, 64)
+    B2B_G(0, 8, 16, 24, SIGMA82[i * 16 + 0], SIGMA82[i * 16 + 1])
+    B2B_G(2, 10, 18, 26, SIGMA82[i * 16 + 2], SIGMA82[i * 16 + 3])
+    B2B_G(4, 12, 20, 28, SIGMA82[i * 16 + 4], SIGMA82[i * 16 + 5])
+    B2B_G(6, 14, 22, 30, SIGMA82[i * 16 + 6], SIGMA82[i * 16 + 7])
+    B2B_G(0, 10, 20, 30, SIGMA82[i * 16 + 8], SIGMA82[i * 16 + 9])
+    B2B_G(2, 12, 22, 24, SIGMA82[i * 16 + 10], SIGMA82[i * 16 + 11])
+    B2B_G(4, 14, 16, 26, SIGMA82[i * 16 + 12], SIGMA82[i * 16 + 13])
+    B2B_G(6, 8, 18, 28, SIGMA82[i * 16 + 14], SIGMA82[i * 16 + 15])
+    }
+    // util.debugPrint('   (i=12) v[16]', v, 64)
+
+    for (i = 0; i < 16; i++) {
+    ctx.h[i] = ctx.h[i] ^ v[i] ^ v[i + 16]
+    }
+    // util.debugPrint('h[8]', ctx.h, 64)
+}
+
+/** reusable parameterBlock */
+const parameterBlock = new Uint8Array(64).fill(0);
+
+type Blake2bCtx = {
+    b: Uint8Array;
+    h: Uint32Array;
+    t: number;
+    c: number;
+    digestSize: 28 | 32 | 64;
+}
+
+
+function blake2bInit( digestSize: 28 | 32 | 64 ): Blake2bCtx
+{
+    // state, 'param block'
+    const ctx = {
+    b: new Uint8Array(128),
+    h: new Uint32Array(16),
+    t: 0, // input count
+    c: 0, // pointer within buffer
+    digestSize: digestSize // output length in bytes
+    }
+
+    // initialize parameterBlock before usage
+    parameterBlock.fill(0)
+    parameterBlock[0] = digestSize
+    parameterBlock[2] = 1 // fanout
+    parameterBlock[3] = 1 // depth
+
+    // initialize hash state
+    for (let i = 0; i < 16; i++) {
+    ctx.h[i] = BLAKE2B_IV32[i] ^ B2B_GET32(parameterBlock, i * 4)
+    }
+
+    return ctx
+}
+
+// Updates a BLAKE2b streaming hash
+// Requires hash context and Uint8Array (byte array)
+function blake2bUpdate(
+    ctx: Blake2bCtx,
+    input: Uint8Array
+)
+{
+    for (let i = 0; i < input.length; i++) {
+    if (ctx.c === 128) {
+        // buffer full ?
+        ctx.t += ctx.c // add counters
+        blake2bCompress(ctx, false) // compress (not last)
+        ctx.c = 0 // counter to zero
+    }
+    ctx.b[ctx.c++] = input[i]
+    }
+}
+
+// Completes a BLAKE2b streaming hash
+// Returns a Uint8Array containing the message digest
+function blake2bFinal( ctx: Blake2bCtx )
+{
+    ctx.t += ctx.c // mark last block offset
+
+    while (ctx.c < 128) {
+    // fill up with zeros
+    ctx.b[ctx.c++] = 0
+    }
+    blake2bCompress(ctx, true) // final block flag = 1
+
+    // little endian convert and store
+    const out = new Uint8Array(ctx.digestSize)
+    for (let i = 0; i < ctx.digestSize; i++) {
+    out[i] = ctx.h[i >> 2] >> (8 * (i & 3))
+    }
+    return out
+}
+
+
+export function blake2b( data: byte[] | Buffer | Uint8Array, digestSize: 28 | 32 | 64 = 32 ): byte[]
+{
+    data = new Uint8Array(data);
+    const ctx = blake2bInit(digestSize)
+    blake2bUpdate(ctx, data)
+    return Array.from(blake2bFinal(ctx)) as any;
 }
 
 export function blake2b_224( data: byte[] | Buffer ): byte[]

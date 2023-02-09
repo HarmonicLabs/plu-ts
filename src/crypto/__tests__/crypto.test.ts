@@ -1,4 +1,5 @@
-import  { encodeBech32, byte, decodeBech32, isBech32, sha2_512, sha3, blake2b, sha2_256 } from "..";
+import  { encodeBech32, byte, decodeBech32, isBech32, sha2_512, sha3, blake2b, sha2_256, blake2b_224 } from "..";
+import blake2 from "blake2";
 
 function textToBytes( text: string ): byte[]
 {
@@ -144,7 +145,7 @@ describe("src/crypto", () => {
         
     });
 
-    describe("blake2b", () => {
+    describe.only("blake2b", () => {
 
         test('bytesToHex( blake2b([], 28) ) => 836cc68931c2e4e3e838602eca1902591d216837bafddfe6f0c8cb07', () => {
             expect(
@@ -167,6 +168,37 @@ describe("src/crypto", () => {
             ).toEqual("ba80a53f981c4d0d6a2797b69f12f6e94c212f14685ac4b74b12bb6fdbffa2d17d87c5392aab792dc252d5de4533cc9518d38aa8dbf1925ab92386edd4009923");
 
         });
+
+        function test_eq( data: byte[] ): void
+        {
+            const expected = blake2.createHash('blake2b',{digestLength:28})
+                .update(Buffer.from(data))
+                .digest("hex");
+            const received = bytesToHex( blake2b_224( data ) );
+
+            if( received !== expected )
+            throw bytesToHex( data );
+
+            test( expected, () => {
+                expect(
+                    received
+                ).toEqual(
+                    expected
+                )
+            })
+        }
+
+        test_eq([]);
+        test_eq([0,0,0]);
+        test_eq([1,2,3]);
+
+        test_eq(
+            [0x02].concat(
+                hexToBytes(
+                    "5902010100003232323232323232323232323232323222330050012323233008002232323233300b00923300e2330113371e6eb8d55ce800801899198091aba335744002266e20dd69aab9e357420029000191bab00135573c0020064660206601c46601c00246466ebc004038d5d080080209980711980899b8f375c6aae7400400c4c8cc048d5d19aba200113370e6eb4d55cf1aba100148008c8dd58009aab9e0010033233333010005001001001232001375c6ae8400498c8dd580098078011980780a9bac3574200260280046ae8400530129d87982d87981582053df997f49216051d2e3e759a5497d8c933a923d9f97006b4a59102a9c30af5f000022232332533357346002900008018a999ab9a300148008401058dc39aab9d00135573c0026ea800c88c004d55cf1baa00223300824a24446600a60080042600600244a666ae68008528800912999ab9a00200114a04444464664a666ae68c005200010031533357346002900108020a999ab9a300148010401454ccd5cd1800a400c200c2c6e1cd55ce8009aab9e001375400a46ae84d5d11aba2357446ae880048cc00888cd5d0180180100080311198019001111198028011801800980091111919980398020009801800801198020018011191801119801001000918011198010010009112999aab9f0011003133002357420026ae88004dd8a4c400246ae84d5d10009"
+                )
+            ) as any
+        )
 
     })
 
