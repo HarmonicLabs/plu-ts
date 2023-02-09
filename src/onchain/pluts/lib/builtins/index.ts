@@ -1,6 +1,5 @@
 import { BasePlutsError } from "../../../../errors/BasePlutsError";
 import ObjectUtils from "../../../../utils/ObjectUtils";
-import { Head } from "../../../../utils/ts";
 import { Application } from "../../../UPLC/UPLCTerms/Application";
 import { Builtin } from "../../../UPLC/UPLCTerms/Builtin";
 import { HoistedUPLC } from "../../../UPLC/UPLCTerms/HoistedUPLC";
@@ -12,7 +11,6 @@ import { PBool, PFn, TermFn, PLam, PInt, PByteString, PString, PDelayed, PUnit, 
 import { Term, Type, fn, bs, int, TermType, bool, delayed, PrimType, lam, data, DataType } from "../../Term";
 import { isConstantableTermType } from "../../Term/Type/kinds";
 import { ToPType, ToPDataType } from "../../Term/Type/ts-pluts-conversion";
-import { getNRequiredLambdaArgs } from "../../Term/Type/utils";
 import { UtilityTermOf, addUtilityForType } from "../addUtilityForType";
 import { papp } from "../papp";
 import { PappArg } from "../pappArg";
@@ -29,7 +27,9 @@ import { TermBool, addPBoolMethods } from "../std/UtilityTerms/TermBool";
 import { TermInt, addPIntMethods } from "../std/UtilityTerms/TermInt";
 import { TermStr, addPStringMethods } from "../std/UtilityTerms/TermStr";
 import { getFromDataForType } from "../std/data/conversion/getFromDataTermForType";
+import { addApplications } from "./addApplications";
 
+export * from "./pprepend";
 
 function pBool( bool: boolean ): TermBool
 {
@@ -41,47 +41,6 @@ function pBool( bool: boolean ): TermBool
         )
     );
 }
-
-export function addApplications<Ins extends [ PType, ...PType[] ], Out extends PType>
-    (
-        lambdaTerm: Term< PFn< Ins, Out > >,
-        addOutputMethods?: ( termOut: Term<Out> ) => any // TermOutput // useless since papp handles all that with addUtility...
-    )
-    : TermFn< Ins, Out >
-{
-    const nMissingArgs = getNRequiredLambdaArgs( lambdaTerm.type );
-
-    if( nMissingArgs <= 1 )
-    {
-        return ObjectUtils.defineReadOnlyProperty(
-            lambdaTerm,
-            "$",
-            ( input: PappArg< Head<Ins> > ) => {
-                let output: any = papp( lambdaTerm as any, input );
-
-                return output;
-            }
-        ) as any;
-    }
-
-    return ObjectUtils.defineReadOnlyProperty(
-        lambdaTerm,
-        "$",
-        ( input: PappArg< Head<Ins> > ) =>
-            // @ts-ignore
-            // Type 'PType[]' is not assignable to type '[PType, ...PType[]]'.
-            // Source provides no match for required element at position 0 in target
-            addApplications< Tail<Ins>, Out >(
-                papp( lambdaTerm as any , input ) as any
-            )
-    ) as any;
-}
-
-type MultiPLam<Args extends [ PType, PType, ...PType[] ]> =
-    Args extends [ infer PA extends PType, infer PB extends PType ] ? PLam<PA,PB> :
-    Args extends [ infer PA extends PType, infer PB extends PType , infer PC extends PType ] ? PLam<PA,PLam<PB, PC> > :
-    Args extends [ infer PA extends PType, ...infer Ps extends [ PType, PType,...PType[] ] ] ? PLam<PA, MultiPLam<Ps> > :
-    never
 
 export type IntBinOPToInt = Term< PLam< PInt, PLam< PInt, PInt >>>
 & {
@@ -1095,19 +1054,6 @@ export function pchooseList<ListElemT extends TermType, ReturnT extends TermType
             );
         }
     ) as any;
-}
-
-export function pprepend<ListElemT extends TermType>( listElemType: ListElemT | undefined = undefined )
-    : TermFn<[ ToPType<ListElemT> , PList< ToPType<ListElemT> > ], PList< ToPType<ListElemT> > >
-{
-    const listElemT = listElemType ?? Type.Var("pprepend_listElemType");
-
-    return addApplications<[ ToPType<ListElemT> , PList< ToPType<ListElemT> > ], PList< ToPType<ListElemT> > >(
-        new Term(
-            Type.Fn([ listElemT, Type.List( listElemT ) ], Type.List( listElemT ) ),
-            _dbn => Builtin.mkCons
-        )
-    );
 }
 
 export function phead<ListElemT extends TermType>( listElemType: ListElemT | undefined = undefined )

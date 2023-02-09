@@ -9,7 +9,8 @@ import { isAliasType, isConstantableTermType, isLambdaType } from "../../../Term
 import { ToPType } from "../../../Term/Type/ts-pluts-conversion";
 import { termTypeToString } from "../../../Term/Type/utils";
 import { UtilityTermOf } from "../../addUtilityForType";
-import { phead, ptail, pprepend } from "../../builtins";
+import { phead, ptail } from "../../builtins";
+import { pprepend } from "../../builtins/pprepend";
 import { PappArg } from "../../pappArg";
 import { phoist } from "../../phoist";
 import { PMaybeT } from "../PMaybe";
@@ -113,10 +114,7 @@ function getHoistedFlipped<T extends TermType | ConstantableTermType, PSomething
     return ( elemsT ) => phoist( pflip.$( pfunc( elemsT ) ) ) as any;
 }
 
-const flippedPrepend = getHoistedFlipped(
-    // @ts-ignore Type instantiation is excessively deep and possibly infinite.
-    pprepend
-);
+const flippedPrepend = getHoistedFlipped( pprepend );
 const flippedFind = ( t: ConstantableTermType ) => phoist( pflip.$( pfind( t ) ) )
 const flippedFilter = getHoistedFlipped( pfilter );
 const flippedEvery = getHoistedFlipped( pevery )
