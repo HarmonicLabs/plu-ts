@@ -22,6 +22,20 @@ import { Cbor } from "../../cbor/Cbor";
 import { ToJson } from "../../utils/ts/ToJson";
 import { InvalidCborFormatError } from "../../errors/InvalidCborFormatError";
 
+export type AddressStr = `${"addr1"|"addr_test1"}${string}`;
+
+export function isAddressStr( stuff: any ): stuff is AddressStr
+{
+    if( typeof stuff !== "string" ) return false;
+    
+    try {
+        Address.fromString( stuff );
+        return true;
+    } catch {
+        return false;
+    }
+}
+
 export type AddressType
     = "base"
     | "pointer"
@@ -122,15 +136,17 @@ export class Address
     {
         return [(
             // header byte
-            ( this.network === "mainnet" ? 0b0001_0000 : 0b0000_0000 ) |  
+            // second nubble = network
+            ( this.network === "mainnet" ? 0b0000_0001 : 0b0000_0000 ) |
+            // first nibble infos  
             (
-                this.type === "base" ?       0b0000 :
-                this.type === "pointer" ?    0b0100 :
-                this.type === "enterprise" ? 0b0110 :
+                this.type === "base" ?       0b0000_0000 :
+                this.type === "pointer" ?    0b0100_0000 :
+                this.type === "enterprise" ? 0b0110_0000 :
                 0b1000 // bootstrap
             ) |
-            ( this.stakeCreds?.type === "script" ? 0b10 : 0b00 ) |
-            ( this.paymentCreds.type === "script" ? 0b1 : 0b0 )
+            ( this.stakeCreds?.type === "script"  ? 0b10_0000 : 0b00_0000 ) |
+            ( this.paymentCreds.type === "script" ? 0b01_0000 : 0b00_0000 )
         ) as byte]
         .concat(
             Array.from( this.paymentCreds.hash.asBytes ) as byte[]
@@ -160,7 +176,7 @@ export class Address
         const [ header, ...payload ] = bs;
 
         const addrType = (header & 0b1111_0000) >> 4;
-        const network: NetworkT = ((header & 0b0000_1111) >> 4) === 0 ? "testnet" : "mainnet" ;
+        const network: NetworkT = ( (header & 0b0000_1111) ) === 1 ? "mainnet" : "testnet" ;
 
         const type: AddressType =
             addrType <= 0b0011  ? "base" :

@@ -3,7 +3,7 @@ import ObjectUtils from "../../../../utils/ObjectUtils"
 
 import { ToCbor } from "../../../../cbor/interfaces/CBORSerializable"
 import { CborString, CanBeCborString, forceCborString } from "../../../../cbor/CborString"
-import { forceUInteger } from "../../../../types/ints/Integer"
+import { forceBigUInt } from "../../../../types/ints/Integer"
 import { ByteString } from "../../../../types/HexString/ByteString"
 import { Cbor } from "../../../../cbor/Cbor"
 import { CborObj } from "../../../../cbor/CborObj"
@@ -16,10 +16,38 @@ import { DataI } from "../../../../types/Data/DataI"
 import { ToData } from "../../../../types/Data/toData/interface"
 import { ToJson } from "../../../../utils/ts/ToJson"
 import { Hash32 } from "../../../hashes/Hash32/Hash32"
+import { BasePlutsError } from "../../../../errors/BasePlutsError"
+
+export type TxOutRefStr = `${string}#${number}`;
 
 export interface ITxOutRef {
     id: string | Hash32
     index: number
+}
+
+export function isITxOutRef( stuff: any ): stuff is ITxOutRef
+{
+    return (
+        ObjectUtils.isObject( stuff ) &&
+        ObjectUtils.hasOwn( stuff, "id" ) && (
+            (typeof stuff.id === "string" && ByteString.isValidHexValue( stuff.id ) && (stuff.id.length === 64)) ||
+            (stuff.id instanceof Hash32)
+        ) &&
+        ObjectUtils.hasOwn( stuff, "index" ) && (
+            typeof stuff.index === "number" &&
+            stuff.index === Math.round( Math.abs( stuff.index ) )
+        )
+    )
+}
+
+export function ITxOutRefToStr( iRef: ITxOutRef ): TxOutRefStr
+{
+    if( !isITxOutRef( iRef ) )
+    throw new BasePlutsError(
+        "'ITxOutRefToStr' works on 'ITxOutRef' like objects"
+    );
+
+    return `${iRef.id.toString()}#${iRef.index.toString()}` as any;
 }
 
 export type UTxORefJson = {
@@ -49,13 +77,13 @@ export class TxOutRef
         ObjectUtils.defineReadOnlyProperty(
             this,
             "index",
-            Number( forceUInteger( index ).asBigInt )
+            Number( forceBigUInt( index ) )
         );
     }
 
-    toString(): string
+    toString(): TxOutRefStr
     {
-        return `${this.id.asString}#${this.index.toString()}`;
+        return `${this.id.asString}#${this.index.toString()}` as any;
     }
 
     toData(): DataConstr

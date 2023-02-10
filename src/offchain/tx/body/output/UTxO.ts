@@ -8,12 +8,21 @@ import { Data } from "../../../../types/Data/Data";
 import { DataConstr } from "../../../../types/Data/DataConstr";
 import { ToData } from "../../../../types/Data/toData/interface";
 import { ToJson } from "../../../../utils/ts/ToJson";
-import { TxOut, ITxOut } from "./TxOut";
-import { TxOutRef, ITxOutRef } from "./TxOutRef";
+import { TxOut, ITxOut, isITxOut } from "./TxOut";
+import { TxOutRef, ITxOutRef, isITxOutRef } from "./TxOutRef";
 
 export interface IUTxO {
     utxoRef: ITxOutRef,
     resolved: ITxOut
+}
+
+export function isIUTxO( stuff: any ): stuff is IUTxO
+{
+    return (
+        ObjectUtils.isObject( stuff ) &&
+        ObjectUtils.hasOwn( stuff, "utxoRef" ) && isITxOutRef( stuff.utxoRef ) &&
+        ObjectUtils.hasOwn( stuff, "resolved" ) && isITxOut( stuff.resolved )
+    );
 }
 
 export class UTxO

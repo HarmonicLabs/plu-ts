@@ -10,10 +10,10 @@ import { CborString, CanBeCborString, forceCborString } from "../../../../cbor/C
 import { Value } from "../../../ledger/Value/Value";
 import { CborMap, CborMapEntry } from "../../../../cbor/CborObj/CborMap";
 import { dataToCborObj } from "../../../../types/Data/toCbor";
-import { IValue } from "../../../ledger/Value/IValue";
+import { IValue, isIValue } from "../../../ledger/Value/IValue";
 import { Hash32 } from "../../../hashes/Hash32/Hash32";
 import { Cbor } from "../../../../cbor/Cbor";
-import { Address } from "../../../ledger/Address";
+import { Address, AddressStr, isAddressStr } from "../../../ledger/Address";
 import { CborUInt } from "../../../../cbor/CborObj/CborUInt";
 import { CborArray } from "../../../../cbor/CborObj/CborArray";
 import { CborTag } from "../../../../cbor/CborObj/CborTag";
@@ -26,14 +26,28 @@ import { ToJson } from "../../../../utils/ts/ToJson";
 import { CborObj } from "../../../../cbor/CborObj";
 import { InvalidCborFormatError } from "../../../../errors/InvalidCborFormatError";
 
-export type AddressStr = `${"addr1"|"addr_test1"}${string}`;
-
 export interface ITxOut {
     address: Address | AddressStr,
     value: Value | IValue,
     datum?: Hash32 | Data,
     refScript?: Script
 }
+
+export function isITxOut( stuff: any ): stuff is ITxOut
+{
+    return (
+        ObjectUtils.isObject( stuff ) &&
+        ObjectUtils.hasOwn( stuff, "address" ) && (
+            stuff.address instanceof Address || isAddressStr( stuff.address )
+        ) &&
+        ObjectUtils.hasOwn( stuff, "value" ) && (
+            stuff.value instanceof Value || isIValue( stuff.value )
+        ) &&
+        ( stuff.datum === undefined || stuff.datum instanceof Hash32 || isData( stuff.datum ) ) &&
+        ( stuff.refScript === undefined || stuff.refScript instanceof Script )
+    );
+}
+
 export class TxOut
     implements ITxOut, ToCbor, Cloneable<TxOut>, ToData, ToJson
 {

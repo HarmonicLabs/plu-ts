@@ -433,7 +433,7 @@ export class TxBody
             this, "hash",
             {
                 get: (): Hash32 => {
-                    if( _isHashValid === true && _hash instanceof Hash32 ) return _hash.clone();
+                    if( _isHashValid === true && _hash !== undefined && _hash instanceof Hash32 ) return _hash.clone();
 
                     _hash = new Hash32(
                         Buffer.from(
