@@ -1,9 +1,8 @@
 import type { CanBeUInteger } from "../../../../types/ints/Integer";
 import type { PubKeyHash } from "../../../credentials/PubKeyHash";
 import type { UTxO } from "../../body/output/UTxO";
-import type { Address } from "../../../ledger/Address";
+import type { Address, AddressStr } from "../../../ledger/Address";
 import type { ProtocolUpdateProposal } from "../../../ledger/protocol/ProtocolUpdateProposal";
-import type { AddressStr } from "../../body/output/TxOut";
 import type { TxMetadata } from "../../metadata/TxMetadata";
 import type { ITxBuildCert } from "./ITxBuildCert";
 import type { ITxBuildInput } from "./ITxBuildInput";

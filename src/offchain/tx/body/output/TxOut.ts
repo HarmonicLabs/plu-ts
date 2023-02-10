@@ -2,7 +2,7 @@ import JsRuntime from "../../../../utils/JsRuntime";
 import ObjectUtils from "../../../../utils/ObjectUtils";
 
 import { maybeData } from "../../../../types/Data/toData/maybeData";
-import { dataFromCbor, dataFromCborObj } from "../../../../types/Data/fromCbor";
+import { dataFromCborObj } from "../../../../types/Data/fromCbor";
 import { Data, isData } from "../../../../types/Data/Data";
 import { ToCbor } from "../../../../cbor/interfaces/CBORSerializable";
 import { Script, ScriptType } from "../../../script/Script";
