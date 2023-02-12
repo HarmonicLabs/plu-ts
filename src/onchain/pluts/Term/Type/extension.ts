@@ -184,7 +184,7 @@ export function typeExtends<ExtendedTy extends TermType>( extending: TermType, e
             return unchecked( unwrapAlias( a ), b );
         }
 
-        // if both maps return true
+        // if both are maps return true
         // no matter the types
         // since it all comes down to data
         if(
