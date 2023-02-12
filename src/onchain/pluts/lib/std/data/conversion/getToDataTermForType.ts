@@ -28,6 +28,7 @@ export function getToDataTermForType<T extends ConstantableTermType | StructType
 {
     if( isDataType( t ) ) return pid( t ) as any;
     if( isAliasType( t ) ) return getToDataTermForType( unwrapAlias( t ) ) as any;
+
     if( isStructType( t ) ) return phoist(
         plam( t, Type.Data.Constr )
         ( ( term: Term<ToPType<T>> ) => punsafeConvertType( term, Type.Data.Constr ) )
@@ -46,6 +47,24 @@ export function getToDataTermForType<T extends ConstantableTermType | StructType
     if( isListType( t ) )
     {
         const elemsT = t[1];
+
+        if(
+            elemsT[0] === PrimType.Pair ||
+            elemsT[0] === PrimType.PairAsData
+        )
+        {
+            
+            return plam( list( elemsT ), data ) 
+            (( someList: Term<PList<PType>> ) =>
+                pMapToData( data, data )
+                .$(
+                    pmap( elemsT as any, dynPair( elemsT[1], elemsT[2] ) as any )
+                    .$( getToDataTermForType( elemsT as any ) )
+                    .$( someList ) as any
+                )
+            ) as any
+            
+        }
 
         if( isDataType( elemsT ) ) return pListToData( data ) as any;
 
@@ -90,45 +109,6 @@ export function getToDataTermForType<T extends ConstantableTermType | StructType
     );
 }
 
-/*
-
-export function inferDataValueType( dataValue: Data ): DataType
-{
-    JsRuntime.assert(
-        isData( dataValue ),
-        "cannot infer 'DataType' from a value that is not an instance of 'Data'"
-    );
-
-    if( dataValue instanceof DataConstr ) return Type.Data.Constr;
-    if( dataValue instanceof DataMap )
-    {
-        const listOfPairs = dataValue.map;
-        if( listOfPairs.length === 0 ) return Type.Data.Map( Type.Data.Any,Type.Data.Any );
-        return Type.Data.Map( inferDataValueType( listOfPairs[0].fst ), inferDataValueType( listOfPairs[0].snd ) )
-    }
-    if( dataValue instanceof DataList ) 
-    {
-        const list = dataValue.list;
-        if( list.length === 0 ) return Type.Data.List( Type.Data.Any );
-        return Type.Data.List( inferDataValueType( list[0] ) );
-    }
-    if( dataValue instanceof DataPair ) return Type.Data.Pair( inferDataValueType( dataValue.fst ), inferDataValueType( dataValue.snd ) );
-    if( dataValue instanceof DataI ) return Type.Data.Int;
-    if( dataValue instanceof DataB ) return Type.Data.BS;
-
-    throw JsRuntime.makeNotSupposedToHappenError(
-        "'inferDataValueType' did not match any possible 'Data' constructor"
-    );
-}
-
-if( isConstantableStructType( t[1] as any ) )
-{
-    return ( x: Term<PData> ) => punsafeConvertType( PList.fromData( x ), list( t[1] ) ) as any
-}
-
-
-//*/
-
 export function getToDataForType<T extends ConstantableTermType | StructType>( t: T )
     :( term: Term<ToPType<T>> ) => Term<PData>
 {
@@ -147,6 +127,7 @@ function _getToDataForType<T extends ConstantableTermType | StructType>( t: T )
     :( term: Term<ToPType<T>> ) => Term<PData>
 {
     if( isAliasType( t ) ) return _getToDataForType( unwrapAlias( t ) );
+
     if(
         typeExtends( t, list( Type.Any ) )
     ){
@@ -157,12 +138,10 @@ function _getToDataForType<T extends ConstantableTermType | StructType>( t: T )
         if( isPairType( elemsT ))
         {
             return ( term: Term<ToPType<T>> ) => pMapToData( data, data ).$(
-                typeExtends( term.type, map( tyVar(), tyVar() ) ) || typeExtends( term.type, Type.Data.Pair( data, data ) ) ?
-                term :
                 new Term(
                     list(dynPair( data, data )),
                     dbn => new Application(
-                        pmap( elemsT as any, Type.Data.Pair( data, data ) )
+                        pmap( elemsT as any, dynPair( data, data ) )
                         .$( elemToDataTerm as any )
                         .toUPLC( dbn ),
                         term.toUPLC(dbn)
@@ -171,8 +150,7 @@ function _getToDataForType<T extends ConstantableTermType | StructType>( t: T )
              ) as any;
         }
 
-        if( isDataType( t[1] ) ) return ( term: Term<ToPType<T>> ) => pListToData( data ).$( term as any ) as any;
-
+        if( typeExtends( elemsT, data ) ) return ( term: Term<ToPType<T>> ) => pListToData( data ).$( term as any ) as any;
 
         return ( term: Term<ToPType<T>> ) => pListToData( data ).$(
             pmap( elemsT as any, data ).$( elemToDataTerm ).$( term as any)

@@ -26,86 +26,98 @@ import { pByteString } from "../../../../lib/std/bs/pByteString";
 import { pList } from "../../../../lib/std/list/const";
 import { PMaybe } from "../../../../lib/std/PMaybe/PMaybe";
 import { pBool } from "../../../../lib/std/bool/pBool";
-import { pPair, perror, pisEmpty } from "../../../../lib";
+import { perror, pisEmpty } from "../../../../lib";
 import { PCurrencySymbol } from "../../Value/PCurrencySymbol";
 import { PTokenName } from "../../Value/PTokenName";
-import { showUPLC } from "../../../../../UPLC/UPLCTerm";
 import { pdynPair } from "../../../../lib/std/pair/pdynPair";
 import { ErrorUPLC } from "../../../../../UPLC/UPLCTerms/ErrorUPLC";
+import { Term } from "../../../../Term";
 
 
-const unitDatumHash = PDatumHash.from( pByteString("923918e403bf43c34b4ef6b48eb2ee04babed17320d8d1b9ff9ad086e86f44ec") );
-const emptyValue = PValue.from( pList( PValueEntryT )([]) as any );
+let unitDatumHash: Term<typeof PDatumHash>;
+let emptyValue: Term<typeof PValue>;
+let validatorSpendingUtxo: Term<typeof PTxOutRef>;
+let beef32: Term<typeof PValue>;
+let _txInfo: Term<typeof PTxInfo>;
+let _purp: Term<typeof PScriptPurpose>;
+let ctx: Term<typeof PScriptContext>
 
-const validatorSpendingUtxo = PTxOutRef.PTxOutRef({
-    id: PTxId.PTxId({
-        txId: pByteString("deadbeef")
-    }),
-    index: pInt( 0 )
-});
-
-const beef32 = PValue.from(
-    pList( PValueEntryT )([
-        pdynPair( PCurrencySymbol.type, list( PAssetsEntryT ) )
-        (
-            PCurrencySymbol.from( pByteString("deadbeef") ),
-            pList( PAssetsEntryT )([
-                pdynPair( PTokenName.type, int )
-                (
-                    PTokenName.from( pByteString("beef") ),
-                    pInt( 32 )
-                )
-            ])
-        )
-    ])
-);
-
-const _txInfo = PTxInfo.PTxInfo({
-    datums: pList( pair( PDatumHash.type, data ) )([]),
-    dCertificates: pList( PDCert.type )([]),
-    fee: emptyValue,
-    mint: emptyValue,
-    id: PTxId.PTxId({
-        txId: pByteString("deadbeef")
-    }),
-    interval: PPOSIXTimeRange.PInterval({
-        from: PLowerBound( PPOSIXTime.type ).PLowerBound({
-            bound: PExtended( PPOSIXTime.type ).PFinite({ _0: PPOSIXTime.from( pInt(1) ) }),
-            inclusive: pBool( false )
+beforeAll(() => {
+    unitDatumHash = PDatumHash.from( pByteString("923918e403bf43c34b4ef6b48eb2ee04babed17320d8d1b9ff9ad086e86f44ec") );
+    emptyValue = PValue.from( pList( PValueEntryT )([]) as any );
+    validatorSpendingUtxo = PTxOutRef.PTxOutRef({
+        id: PTxId.PTxId({
+            txId: pByteString("deadbeef")
         }),
-        to: PUpperBound( PPOSIXTime.type ).PUpperBound({
-            bound: PExtended( PPOSIXTime.type ).PPosInf({}),
-            inclusive: pBool( false )
-        })
-    }),
-    signatories: pList( PPubKeyHash.type )([]),
-    withdrawals: pList( pair( PStakingCredential.type, int ) )([]),
-    inputs: pList( PTxInInfo.type )([
-        PTxInInfo.PTxInInfo({
-            utxoRef: validatorSpendingUtxo,
-            resolved: PTxOut.PTxOut({
-                address: PAddress.PAddress({
-                    credential: PCredential.PScriptCredential({
-                        valHash: PValidatorHash.from( pByteString("caffee") )
-                    }),
-                    stakingCredential: PMaybe( PStakingCredential.type ).Nothing({})
-                }),
-                datumHash: PMaybe( PDatumHash.type ).Just({ val: unitDatumHash }),
-                value: beef32
+        index: pInt( 0 )
+    });
+    beef32 = PValue.from(
+        pList( PValueEntryT )([
+            pdynPair( PCurrencySymbol.type, list( PAssetsEntryT ) )
+            (
+                PCurrencySymbol.from( pByteString("deadbeef") ),
+                pList( PAssetsEntryT )([
+                    pdynPair( PTokenName.type, int )
+                    (
+                        PTokenName.from( pByteString("beef") ),
+                        pInt( 32 )
+                    )
+                ])
+            )
+        ])
+    );
+
+    _txInfo = PTxInfo.PTxInfo({
+        datums: pList( pair( PDatumHash.type, data ) )([]),
+        dCertificates: pList( PDCert.type )([]),
+        fee: emptyValue,
+        mint: emptyValue,
+        id: PTxId.PTxId({
+            txId: pByteString("deadbeef")
+        }),
+        interval: PPOSIXTimeRange.PInterval({
+            from: PLowerBound( PPOSIXTime.type ).PLowerBound({
+                bound: PExtended( PPOSIXTime.type ).PFinite({ _0: PPOSIXTime.from( pInt(1) ) }),
+                inclusive: pBool( false )
+            }),
+            to: PUpperBound( PPOSIXTime.type ).PUpperBound({
+                bound: PExtended( PPOSIXTime.type ).PPosInf({}),
+                inclusive: pBool( false )
             })
-        })
-    ]),
-    outputs: pList( PTxOut.type )([])
-});
+        }),
+        signatories: pList( PPubKeyHash.type )([]),
+        withdrawals: pList( pair( PStakingCredential.type, int ) )([]),
+        inputs: pList( PTxInInfo.type )([
+            PTxInInfo.PTxInInfo({
+                utxoRef: validatorSpendingUtxo,
+                resolved: PTxOut.PTxOut({
+                    address: PAddress.PAddress({
+                        credential: PCredential.PScriptCredential({
+                            valHash: PValidatorHash.from( pByteString("caffee") )
+                        }),
+                        stakingCredential: PMaybe( PStakingCredential.type ).Nothing({})
+                    }),
+                    datumHash: PMaybe( PDatumHash.type ).Just({ val: unitDatumHash }),
+                    value: beef32
+                })
+            })
+        ]),
+        outputs: pList( PTxOut.type )([])
+    });
 
-const _purp = PScriptPurpose.Spending({
-    utxoRef: validatorSpendingUtxo
-});
+    _purp = PScriptPurpose.Spending({
+        utxoRef: validatorSpendingUtxo
+    });
+    
+    ctx = PScriptContext.PScriptContext({
+        txInfo: _txInfo,
+        purpose: _purp
+    });
+    
+})
 
-const ctx = PScriptContext.PScriptContext({
-    txInfo: _txInfo,
-    purpose: _purp
-});
+
+
 
 describe("pmatch( <PScriptContext> )", () => {
 
@@ -201,7 +213,7 @@ describe("pmatch( <PScriptContext> )", () => {
 
         test("outputs extracted", () => {
 
-            const term = pmatch( ctx )
+            let term = pmatch( ctx )
             .onPScriptContext( _ => _.extract("txInfo").in( ({ txInfo }) =>
             txInfo.extract("outputs").in( ({ outputs }) => pisEmpty.$( outputs ) )
             ));
@@ -264,7 +276,7 @@ describe("pmatch( <PScriptContext> )", () => {
 
         test("txId (last field)", () => {
 
-            const result = Machine.evalSimple(
+            let result = Machine.evalSimple(
                 pmatch( ctx )
                 .onPScriptContext( _ => _.extract("txInfo").in( ({ txInfo }) => txInfo ))
             );

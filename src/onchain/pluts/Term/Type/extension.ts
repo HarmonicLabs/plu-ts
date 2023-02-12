@@ -1,4 +1,4 @@
-import { anyStruct, DataConstructor, DataType, PrimType, StructCtorDef, StructType, TermType } from "./base";
+import { anyStruct, data, DataConstructor, DataType, PrimType, StructCtorDef, StructType, TermType } from "./base";
 import { isAliasType, isDataType, isListType, isPairType, isStructType, isTypeNameOfData, isTypeParam, isWellFormedType } from "./kinds";
 import { unwrapAlias } from "../../PTypes/PAlias/unwrapAlias";
 
@@ -166,44 +166,11 @@ export function typeExtends<ExtendedTy extends TermType>( extending: TermType, e
 
     function unchecked( a: TermType, b: TermType ): boolean
     {
-        if( isAliasType( b ) )
-        {
-            return unchecked( a, unwrapAlias( b ) );
-            /*
-            return (
-                isAliasType( a )                        &&
-                // same alias id
-                a[1].id === b[1].id                     &&
-                unchecked( unwrapAlias( a ), unwrapAlias( b ) )
-            );
-            //*/
-        }
+        if( isAliasType( b ) ) return unchecked( a, unwrapAlias( b ) );
         
-        if( isAliasType( a ) )
-        {
-            return unchecked( unwrapAlias( a ), b );
-        }
+        if( isAliasType( a ) ) return unchecked( unwrapAlias( a ), b );
 
-        // if both are maps return true
-        // no matter the types
-        // since it all comes down to data
-        if(
-            isListType( a ) &&
-            (
-                a[1][0] === PrimType.PairAsData ||
-                a[1][0] === PrimType.Pair
-            ) &&
-            isListType( b ) &&
-            (
-                b[1][0] === PrimType.PairAsData ||
-                b[1][0] === PrimType.Pair
-            )
-        ) return true;
-
-        if( isStructType( b ) )
-        {
-            return structExtends( a, b, subs );
-        }
+        if( isStructType( b ) ) return structExtends( a, b, subs );
 
         if( isTypeParam( b[0] ) )
         {
@@ -245,8 +212,19 @@ export function typeExtends<ExtendedTy extends TermType>( extending: TermType, e
             // thisTyParam.tyArg is a fixed type
             return unchecked( a, thisTyParam.tyArg )
         }
-
         if( isTypeParam( a[0] ) ) return false;
+
+        if(
+            (
+                b[0] === PrimType.PairAsData  ||
+                b[0] === DataConstructor.Pair
+            ) &&
+            (
+                a[0] === PrimType.PairAsData  ||
+                a[0] === DataConstructor.Pair ||
+                unchecked( a, data )
+            )
+        ) return true;
 
         if( isTypeNameOfData( b[0] ) )
         {

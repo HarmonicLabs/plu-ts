@@ -313,10 +313,12 @@ export function pstruct<StructDef extends ConstantableStructDefinition>( def: St
 
                                             if(!(res instanceof UPLCConst))
                                             {
-                                                console.error("--------------------------------");
-                                                console.error( ctorDefFieldsNames );
-                                                console.error( res )
-                                                console.error( showUPLC( _term.toUPLC( _dbn ) ) )
+                                                console.log("--------------------------------");
+                                                console.log( ctorDefFieldsNames );
+                                                console.log( fieldKey, termTypeToString( thisCtorDef[ fieldKey ] ) );
+                                                console.log( res )
+                                                console.log( showUPLC( _term.toUPLC( _dbn ) ) )
+                                                throw res;
                                             }
                                             
                                             return res.value as Data

@@ -1066,9 +1066,8 @@ export class BnCEK
             "; elemsT: " +
             (elem instanceof UPLCConst ? constTypeToStirng( elem.type ) : "" ),
             {
-                list,
-                fst: (elem as any).value.fst.bytes,
-                snd: (elem as any).value.snd.int,
+                list: (list as any).value,
+                elem: (elem as any).value
             }
         );
 

@@ -8,19 +8,22 @@ import { pnil } from "../const"
 
 describe("pnil", () => {
 
-    test("just data", () => {
+    test.only("just data", () => {
+
+        const received  = showUPLC(
+            pnil( data ).toUPLC(0)
+        );
+        const expected  = showUPLC(
+            new HoistedUPLC(
+                new Application( Builtin.mkNilData, UPLCConst.unit )
+            )
+        );
 
         expect(
-            showUPLC(
-                pnil( data ).toUPLC(0)
-            )
+            received
         )
         .toEqual(
-            showUPLC(
-                new HoistedUPLC(
-                    new Application( Builtin.mkNilData, UPLCConst.unit )
-                )
-            )
+            expected
         );
 
     });

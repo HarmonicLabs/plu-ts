@@ -10,6 +10,7 @@ import { ConstantableTermType, typeExtends, Type, list, PrimType, pair, data } f
 import { termTyToConstTy } from "../../../Term/Type/constTypeConversion";
 import { isConstantableTermType } from "../../../Term/Type/kinds";
 import { ToPType } from "../../../Term/Type/ts-pluts-conversion";
+import { termTypeToString } from "../../../Term/Type/utils";
 import { pnilPairData, pnilData, pprepend } from "../../builtins";
 import { punsafeConvertType } from "../../punsafeConvertType";
 import { TermList, addPListMethods } from "../UtilityTerms";
@@ -37,8 +38,6 @@ export function pnil<ElemsT extends ConstantableTermType>( elemsT: ElemsT ): Ter
 
     if( typeExtends( elemsT, Type.Data.Any ) )
     {
-        if( typeExtends( elemsT, Type.Data.Pair( Type.Data.Any, Type.Data.Any ) ) )
-            return punsafeConvertType( pnilPairData, list( elemsT ) ) as any;
         return punsafeConvertType( pnilData, list( elemsT ) ) as any;
     }
 
@@ -81,9 +80,10 @@ export function pconstList<ElemsT extends ConstantableTermType>( elemsT: ElemsT 
 
                                 if(!(res instanceof UPLCConst))
                                 {
-                                    console.error("------------------- pconstList -------------------");
-                                    console.error( res )
-                                    console.error( showUPLC( el.toUPLC( dbn ) ) )
+                                    console.log("------------------- pconstList -------------------");
+                                    console.log( res )
+                                    console.log( showUPLC( el.toUPLC( dbn ) ) )
+                                    throw res
                                 }
                                 
                                 return res.value as Data

@@ -237,7 +237,7 @@ export function isStructType( t: TermType ): t is StructType
 {
     return (
         Array.isArray( t ) &&
-        t.length === 2 &&
+        t.length >= 2 &&
         t[0] === structType &&
         ( t[1] === anyStruct || isStructDefinition( t[1] ) )
     );
