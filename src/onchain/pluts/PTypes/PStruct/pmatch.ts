@@ -106,9 +106,11 @@ function getExtractedFieldsExpr<CtorDef extends ConstantableStructCtorDef, Field
     const idx = allFIndexes[0];
     const fieldType = ctorDef[ allFieldsNames[ idx ] ];
 
-    return plet( getFromDataForType( fieldType )(
-        getElemAtTerm( idx ).$( fieldsData )
-    )).in( value => {
+    return plet(
+        getFromDataForType( fieldType )(
+            getElemAtTerm( idx ).$( fieldsData )
+        )
+    ).in( value => {
 
         ObjectUtils.defineNormalProperty(
             partialExtracted,
@@ -141,15 +143,11 @@ function defineExtract<CtorDef extends ConstantableStructCtorDef>
             in: <PExprResult extends PType>( expr: ( extracted: RestrictedStructInstance<CtorDef,Fields> ) => Term<PExprResult> ) => Term<PExprResult>
         } => {
 
-            // console.log( `extracting [${fields}] from [${fieldsNames}]` );
-
-            const fieldsIdxs = Object.freeze(
-                fields
+            const fieldsIdxs = fields
                 .map( f => fieldsNames.findIndex( fName => fName === f ) )
                 // ignore fields not present in the definion or duplicates
                 .filter( ( idx, i, thisArr ) => idx >= 0 && thisArr.indexOf( idx ) === i )
-                .sort( ( a,b ) => a < b ? -1 : ( a === b ? 0 : 1 ) )
-            );
+                .sort( ( a,b ) => a < b ? -1 : ( a === b ? 0 : 1 ) );
 
             return ObjectUtils.defineReadOnlyProperty(
                 {},
@@ -161,7 +159,7 @@ function defineExtract<CtorDef extends ConstantableStructCtorDef>
                     return getExtractedFieldsExpr(
                         _fieldsList,
                         ctorDef,
-                        fieldsIdxs as any,
+                        fieldsIdxs,
                         expr,
                         {}
                     );

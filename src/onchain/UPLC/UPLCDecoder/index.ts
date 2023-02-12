@@ -146,7 +146,6 @@ export class UPLCDecoder
                 (debugLogs || shouldLogResult) ?
                 ( result: bigint ): bigint =>
                 {
-                    console.log( "red " + n + " bits: "  + result.toString(2).padStart(n,'0') );
                     return result;
                 }: 
                 (x: any) => x 

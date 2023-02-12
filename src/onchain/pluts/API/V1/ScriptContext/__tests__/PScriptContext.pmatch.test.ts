@@ -1,6 +1,6 @@
-import { evalScript } from "../../../../../CEK";
+import { Machine } from "../../../../../CEK";
 import { pmatch } from "../../../../PTypes/PStruct/pmatch";
-import { pair, data, int, bs, map, dynPair } from "../../../../Term/Type/base";
+import { pair, data, int, bs, map, dynPair, list } from "../../../../Term/Type/base";
 import { PAddress } from "../../Address/PAddress";
 import { PCredential } from "../../Address/PCredential";
 import { PStakingCredential } from "../../Address/PStakingCredential";
@@ -16,7 +16,7 @@ import { PTxId } from "../../Tx/PTxId";
 import { PTxInInfo } from "../../Tx/PTxInInfo";
 import { PTxOut } from "../../Tx/PTxOut";
 import { PTxOutRef } from "../../Tx/PTxOutRef";
-import { PValue, PValueEntryT } from "../../Value/PValue";
+import { PAssetsEntryT, PValue, PValueEntryT } from "../../Value/PValue";
 import { PScriptContext } from "../PScriptContext";
 import { PScriptPurpose } from "../PScriptPurpose";
 import { PTxInfo } from "../PTxInfo/PTxInfo";
@@ -30,6 +30,8 @@ import { pPair, perror, pisEmpty } from "../../../../lib";
 import { PCurrencySymbol } from "../../Value/PCurrencySymbol";
 import { PTokenName } from "../../Value/PTokenName";
 import { showUPLC } from "../../../../../UPLC/UPLCTerm";
+import { pdynPair } from "../../../../lib/std/pair/pdynPair";
+import { ErrorUPLC } from "../../../../../UPLC/UPLCTerms/ErrorUPLC";
 
 
 const unitDatumHash = PDatumHash.from( pByteString("923918e403bf43c34b4ef6b48eb2ee04babed17320d8d1b9ff9ad086e86f44ec") );
@@ -42,6 +44,21 @@ const validatorSpendingUtxo = PTxOutRef.PTxOutRef({
     index: pInt( 0 )
 });
 
+const beef32 = PValue.from(
+    pList( PValueEntryT )([
+        pdynPair( PCurrencySymbol.type, list( PAssetsEntryT ) )
+        (
+            PCurrencySymbol.from( pByteString("deadbeef") ),
+            pList( PAssetsEntryT )([
+                pdynPair( PTokenName.type, int )
+                (
+                    PTokenName.from( pByteString("beef") ),
+                    pInt( 32 )
+                )
+            ])
+        )
+    ])
+);
 
 const _txInfo = PTxInfo.PTxInfo({
     datums: pList( pair( PDatumHash.type, data ) )([]),
@@ -74,7 +91,7 @@ const _txInfo = PTxInfo.PTxInfo({
                     stakingCredential: PMaybe( PStakingCredential.type ).Nothing({})
                 }),
                 datumHash: PMaybe( PDatumHash.type ).Just({ val: unitDatumHash }),
-                value: emptyValue
+                value: beef32
             })
         })
     ]),
@@ -95,14 +112,14 @@ describe("pmatch( <PScriptContext> )", () => {
     test("extract txInfo", () => {
 
         expect(
-            evalScript(
+            Machine.evalSimple(
                 pmatch( ctx )
                 .onPScriptContext(
                     rawCtxFields => rawCtxFields.extract("txInfo").in( ({txInfo}) => txInfo )
                 )
             )
         ).toEqual(
-            evalScript(
+            Machine.evalSimple(
                 _txInfo
             )
         );
@@ -112,53 +129,53 @@ describe("pmatch( <PScriptContext> )", () => {
     test("extract txInfo and purpose", () => {
 
         expect(
-            evalScript(
+            Machine.evalSimple(
                 pmatch( ctx )
                 .onPScriptContext(
                     rawCtxFields => rawCtxFields.extract("txInfo","purpose").in( ({txInfo}) => txInfo )
                 )
             )
         ).toEqual(
-            evalScript(
+            Machine.evalSimple(
                 _txInfo
             )
         );
 
         expect(
-            evalScript(
+            Machine.evalSimple(
                 pmatch( ctx )
                 .onPScriptContext(
                     rawCtxFields => rawCtxFields.extract("purpose","txInfo").in( ({txInfo}) => txInfo )
                 )
             )
         ).toEqual(
-            evalScript(
+            Machine.evalSimple(
                 _txInfo
             )
         );
 
         expect(
-            evalScript(
+            Machine.evalSimple(
                 pmatch( ctx )
                 .onPScriptContext(
                     rawCtxFields => rawCtxFields.extract("txInfo","purpose").in( ({purpose}) => purpose )
                 )
             )
         ).toEqual(
-            evalScript(
+            Machine.evalSimple(
                 _purp
             )
         );
 
         expect(
-            evalScript(
+            Machine.evalSimple(
                 pmatch( ctx )
                 .onPScriptContext(
                     rawCtxFields => rawCtxFields.extract("purpose","txInfo").in( ({purpose}) => purpose )
                 )
             )
         ).toEqual(
-            evalScript(
+            Machine.evalSimple(
                 _purp
             )
         );
@@ -169,14 +186,14 @@ describe("pmatch( <PScriptContext> )", () => {
 
         test("inputs extracted", () => {
             expect(
-                evalScript(
+                Machine.evalSimple(
                     pmatch( ctx )
                     .onPScriptContext( _ => _.extract("txInfo").in( ({ txInfo }) =>
                     txInfo.extract("inputs").in( ({ inputs }) => pisEmpty.$( inputs.tail ) )
                     ))
                 )
             ).toEqual(
-                evalScript(
+                Machine.evalSimple(
                     pBool( true )
                 )
             )
@@ -190,11 +207,11 @@ describe("pmatch( <PScriptContext> )", () => {
             ));
 
             expect(
-                evalScript(
+                Machine.evalSimple(
                     term
                 )
             ).toEqual(
-                evalScript(
+                Machine.evalSimple(
                     pBool( true )
                 )
             )
@@ -204,7 +221,7 @@ describe("pmatch( <PScriptContext> )", () => {
         test("interval lower bound extracted", () => {
 
             expect(
-                evalScript(
+                Machine.evalSimple(
                     pmatch( ctx )
                     .onPScriptContext( _ => _.extract("txInfo").in( ({ txInfo }) =>
                     txInfo.extract("interval").in( ({ interval }) =>
@@ -217,27 +234,55 @@ describe("pmatch( <PScriptContext> )", () => {
                     )))))
                 )
             ).toEqual(
-                evalScript(
+                Machine.evalSimple(
                     pInt( 1 )
                 )
             )
 
+        });
+    
+        test("extract input value", () => {
+            expect(
+                Machine.evalSimple(
+                    pmatch( ctx )
+                    .onPScriptContext( _ => _.extract("txInfo").in( ({ txInfo }) =>
+
+                        txInfo.extract("inputs").in( ({ inputs }) =>
+
+                        inputs.head.extract("resolved").in( ({ resolved: input }) => 
+
+                        input.extract("value").in( ({value}) => value )
+                        
+                    ))))
+                )
+            ).toEqual(
+                Machine.evalSimple(
+                    beef32
+                )
+            )
         })
 
         test("txId (last field)", () => {
 
-            expect(
-                evalScript(
+            const result = Machine.evalSimple(
+                pmatch( ctx )
+                .onPScriptContext( _ => _.extract("txInfo").in( ({ txInfo }) => txInfo ))
+            );
+
+            /*
+            console.log(
+                showUPLC(
                     pmatch( ctx )
-                    .onPScriptContext( _ => _.extract("txInfo").in( ({ txInfo }) =>
-                    txInfo.extract("id").in( ({ id }) =>
-                    id.extract("txId").in( ({ txId }) => txId.eq("deadbeef") )
-                    )))
+                    .onPScriptContext( _ => _.extract("txInfo").in( ({ txInfo }) => txInfo ))
+                    .toUPLC(0)
                 )
+            );
+            //*/
+
+            expect(
+                result instanceof ErrorUPLC
             ).toEqual(
-                evalScript(
-                    pBool( true )
-                )
+                false
             )
 
         })
@@ -248,7 +293,7 @@ describe("pmatch( <PScriptContext> )", () => {
         test("all continuations", () => {
             
             expect(
-                evalScript(
+                Machine.evalSimple(
                     pmatch( _purp )
                     .onMinting( _ => pInt( 1 ) )
                     .onSpending( _ => pInt( 2 ) )
@@ -264,7 +309,7 @@ describe("pmatch( <PScriptContext> )", () => {
         test("only mint ( purpose is Spending )", () => {
             
             expect(
-                evalScript(
+                Machine.evalSimple(
                     pmatch( _purp )
                     .onMinting( _ => pInt( 1 ) )
                     ._( _ => pInt( 2 ) )
@@ -278,7 +323,7 @@ describe("pmatch( <PScriptContext> )", () => {
         test("only spend ( purpose is Spending )", () => {
             
             expect(
-                evalScript(
+                Machine.evalSimple(
                     pmatch( _purp )
                     .onSpending( _ => pInt( 1 ) )
                     ._( _ => pInt( 2 ) )

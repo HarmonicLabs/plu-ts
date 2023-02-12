@@ -15,7 +15,7 @@ import { DataI } from "../../../types/Data/DataI";
 import { DataB } from "../../../types/Data/DataB";
 import { DataPair } from "../../../types/Data/DataPair";
 import { PlutsCEKError } from "../../../errors/PlutsCEKError";
-import { dataToCbor } from "../../../types/Data/toCbor";
+import { dataToCbor, dataToCborObj } from "../../../types/Data/toCbor";
 import { ExBudget } from "../Machine/ExBudget";
 import { BuiltinCostsOf } from "../Machine/BuiltinCosts";
 import { Buffer } from "buffer";
@@ -1064,7 +1064,12 @@ export class BnCEK
             "mkCons :: incongruent list types; listT: " +
             (list instanceof UPLCConst ? constTypeToStirng( list.type ) : "" ) +
             "; elemsT: " +
-            (elem instanceof UPLCConst ? constTypeToStirng( elem.type ) : "" )
+            (elem instanceof UPLCConst ? constTypeToStirng( elem.type ) : "" ),
+            {
+                list,
+                fst: (elem as any).value.fst.bytes,
+                snd: (elem as any).value.snd.int,
+            }
         );
 
         const l = getList( list );

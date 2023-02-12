@@ -1,6 +1,6 @@
 import type { TermFn } from "../../../../PTypes/PFn";
 import { PData } from "../../../../PTypes/PData/PData";
-import type { Term } from "../../../../Term";
+import { Term, dynPair, map, tyVar } from "../../../../Term";
 import { ConstantableTermType, PrimType, StructType } from "../../../../Term/Type/base";
 import type { PType } from "../../../../PType";
 
@@ -12,7 +12,7 @@ import { termTypeToString } from "../../../../Term/Type/utils";
 import { unwrapAlias } from "../../../../PTypes/PAlias/unwrapAlias";
 import type { PList } from "../../../../PTypes/PList";
 import { ToPType } from "../../../../Term/Type/ts-pluts-conversion";
-import { pBSToData, pIntToData, pListToData, pencodeUtf8, pfstPair, pid, ppairData, psndPair } from "../../../builtins";
+import { pBSToData, pIntToData, pListToData, pMapToData, pencodeUtf8, pfstPair, pid, ppairData, psndPair } from "../../../builtins";
 import { punsafeConvertType } from "../../../punsafeConvertType";
 import { phoist } from "../../../phoist";
 import { plam } from "../../../plam";
@@ -21,6 +21,7 @@ import { pBoolToData } from "../../bool/pBoolToData";
 import { pcompose } from "../../combinators";
 import { DataConstr } from "../../../../../../types/Data/DataConstr";
 import { pData } from "../pData";
+import { Application } from "../../../../../UPLC/UPLCTerms/Application";
 
 export function getToDataTermForType<T extends ConstantableTermType | StructType>( t: T )
 : TermFn<[ ToPType<T> ], PData>
@@ -85,7 +86,7 @@ export function getToDataTermForType<T extends ConstantableTermType | StructType
     }
 
     throw new BasePlutsError(
-        "'getToDataForType'; type '" + termTypeToString( t ) + "' cannot be converted to data"
+        "'_getToDataForType'; type '" + termTypeToString( t ) + "' cannot be converted to data"
     );
 }
 
@@ -124,19 +125,54 @@ if( isConstantableStructType( t[1] as any ) )
 {
     return ( x: Term<PData> ) => punsafeConvertType( PList.fromData( x ), list( t[1] ) ) as any
 }
+
+
 //*/
 
 export function getToDataForType<T extends ConstantableTermType | StructType>( t: T )
     :( term: Term<ToPType<T>> ) => Term<PData>
 {
-    if( isAliasType( t ) ) return getToDataForType( unwrapAlias( t ) );
+    return ( term: Term<any> ) => {
+        const isConstant = Boolean((term as any).isConstant);
+
+        const res = _getToDataForType( t )( term );
+
+        (res as any).isConstant = isConstant;
+
+        return res;
+    }
+}
+
+function _getToDataForType<T extends ConstantableTermType | StructType>( t: T )
+    :( term: Term<ToPType<T>> ) => Term<PData>
+{
+    if( isAliasType( t ) ) return _getToDataForType( unwrapAlias( t ) );
     if(
         typeExtends( t, list( Type.Any ) )
     ){
         const elemsT = t[1];
-        if( isDataType( t[1] ) ) return ( term: Term<ToPType<T>> ) => pListToData( data ).$( term as any ) as any;
 
         const elemToDataTerm = getToDataTermForType( elemsT as any );
+
+        if( isPairType( elemsT ))
+        {
+            return ( term: Term<ToPType<T>> ) => pMapToData( data, data ).$(
+                typeExtends( term.type, map( tyVar(), tyVar() ) ) || typeExtends( term.type, Type.Data.Pair( data, data ) ) ?
+                term :
+                new Term(
+                    list(dynPair( data, data )),
+                    dbn => new Application(
+                        pmap( elemsT as any, Type.Data.Pair( data, data ) )
+                        .$( elemToDataTerm as any )
+                        .toUPLC( dbn ),
+                        term.toUPLC(dbn)
+                    )
+                ) as any
+             ) as any;
+        }
+
+        if( isDataType( t[1] ) ) return ( term: Term<ToPType<T>> ) => pListToData( data ).$( term as any ) as any;
+
 
         return ( term: Term<ToPType<T>> ) => pListToData( data ).$(
             pmap( elemsT as any, data ).$( elemToDataTerm ).$( term as any)

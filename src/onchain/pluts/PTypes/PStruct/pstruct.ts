@@ -20,6 +20,9 @@ import { PDataRepresentable } from "../../PType/PDataRepresentable";
 import { UtilityTermOf } from "../../lib/addUtilityForType";
 import { pList } from "../../lib/std/list";
 import { punsafeConvertType } from "../../lib/punsafeConvertType";
+import { Data } from "../../../../types/Data";
+import { Machine } from "../../../CEK";
+import { showUPLC } from "../../../UPLC/UPLCTerm";
 
 /**
  * intermediate class useful to reconize structs form primitives
@@ -220,14 +223,11 @@ export function pstruct<StructDef extends ConstantableStructDefinition>( def: St
                 "trying to construct a Struct using static method 'fromData'; but the `Data` argument is not a `Data.Constr`"
             );
 
-            return ObjectUtils.defineReadOnlyHiddenProperty(
-                // basically only mocking typescript here; still data
-                new Term(
-                    thisStructType,
-                    dataTerm.toUPLC
-                ),
-                "_pIsConstantStruct",
-                false
+            // basically only mocking typescript here; still data
+            return new Term(
+                thisStructType,
+                dataTerm.toUPLC,
+                (dataTerm as any).isConstant
             );
         }
     );
@@ -276,15 +276,12 @@ export function pstruct<StructDef extends ConstantableStructDefinition>( def: St
 
                 if( ctorDefFieldsNames.length === 0 )
                 {
-                    return ObjectUtils.defineReadOnlyHiddenProperty(
-                        new Term(
-                            thisStructType,
-                            _dbn => new HoistedUPLC(
-                                UPLCConst.data( new DataConstr( i, [] ) )
-                            )
+                    return new Term(
+                        thisStructType,
+                        _dbn => new HoistedUPLC(
+                            UPLCConst.data( new DataConstr( i, [] ) )
                         ),
-                        "_pIsConstantStruct",
-                        true
+                        true, // isConstant
                     );
                 }
 
@@ -294,32 +291,67 @@ export function pstruct<StructDef extends ConstantableStructDefinition>( def: St
                     "the fields passed do not match the struct definition for constructor: " + ctorName
                 );
 
-                const dataReprTerm = new Term(
-                    thisStructType,
-                    dbn => new Application(
-                        new Application(
-                            Builtin.constrData,
-                            UPLCConst.int( i )
-                        ),
-                        pList( data )(
-                            
-                        ctorDefFieldsNames.map<Term<any>>(
-                            fieldKey => {
-                                return getToDataForType( thisCtorDef[ fieldKey ] )( jsStruct[ fieldKey ] )
-                            })
-                        ).toUPLC( dbn )
-                    )
+                let dataReprTerm: Term<any>;
+
+                if(
+                    ctorDefFieldsNames.every( fieldKey => (jsStruct[ fieldKey ] as any).isConstant )
                 )
-                    
-                return ObjectUtils.defineReadOnlyHiddenProperty(
-                    new Term(
-                        // just mock ts return type
+                {
+                    dataReprTerm = new Term(
                         thisStructType,
-                        dataReprTerm.toUPLC
-                    ),
-                    "_pIsConstantStruct",
-                    true
-                );
+                        _dbn => {
+                            return UPLCConst.data(
+                                new DataConstr(
+                                    i,
+                                    ctorDefFieldsNames.map<Data>(
+                                        fieldKey => {
+                                            const _term = getToDataForType( thisCtorDef[ fieldKey ] )
+                                            ( jsStruct[ fieldKey ] );
+                                            const res = (Machine.evalSimple(
+                                                _term
+                                            ) as any);
+
+                                            if(!(res instanceof UPLCConst))
+                                            {
+                                                console.error("--------------------------------");
+                                                console.error( ctorDefFieldsNames );
+                                                console.error( res )
+                                                console.error( showUPLC( _term.toUPLC( _dbn ) ) )
+                                            }
+                                            
+                                            return res.value as Data
+                                        }
+                                    )
+                                )
+                            );
+                        },
+                        true // isConstant
+                    )
+                }
+                else
+                {
+                    dataReprTerm = new Term(
+                        thisStructType,
+                        dbn => {
+    
+                            return new Application(
+                                new Application(
+                                    Builtin.constrData,
+                                    UPLCConst.int( i )
+                                ),
+                                pList( data )(
+                                    
+                                ctorDefFieldsNames.map<Term<any>>(
+                                    fieldKey => {
+                                        return getToDataForType( thisCtorDef[ fieldKey ] )( jsStruct[ fieldKey ] )
+                                    })
+                                ).toUPLC( dbn )
+                            )
+                        }
+                    )
+                }
+
+                return dataReprTerm;
             }
         );
 

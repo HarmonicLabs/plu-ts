@@ -1,6 +1,7 @@
 import type { TermFn, PLam, PList } from "../../../PTypes";
-import { ConstantableTermType, lam, list } from "../../../Term";
+import { ConstantableTermType, fn, lam, list } from "../../../Term";
 import { ToPType } from "../../../Term/Type/ts-pluts-conversion";
+import { pprepend } from "../../builtins/pprepend";
 import { papp } from "../../papp";
 import { pfn } from "../../pfn";
 import { phoist } from "../../phoist";
@@ -21,21 +22,36 @@ return phoist(
             list( toT )
         )
     )
-    // @ts-ignore Type instantiation is excessively deep and possibly infinite.
     (( f ) => {
 
-        return pfoldr( fromT, list( toT ) )
-        .$(
-            pfn([
-                fromT,
-                list( toT )
-            ],  list( toT ))
-            ( (elem, accum) =>
-                accum.prepend( papp( f, elem as any ) )
-            ) 
+        return papp(
+            phoist(
+                plam(
+                    lam( fromT, toT ),
+                    fn([ list( toT ), list( fromT )], list( toT ))
+                )
+                ( mapFunc =>
+                    pfoldr( fromT, list( toT ) )
+                    .$(
+                        plam(
+                            fromT,
+                            lam( 
+                                list( toT ),
+                                list( toT )
+                            )
+                        )
+                        ( (elem) =>
+                            pprepend( toT ).$( papp( mapFunc, elem as any ) )
+                        ) 
+                    )
+                ) 
+            )
+            .$( f ),
+            pnil( toT )
         )
-        .$( pnil( toT ) )
         // .$( _list )
     })
 ) as any;
 }
+
+

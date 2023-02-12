@@ -14,7 +14,6 @@ export class CEKHeap
 
     clone(): CEKHeap
     {
-        console.log( "cloning heap" );
         return new CEKHeap( this._heap.map( uplc => uplc.clone() ) )
     }
 

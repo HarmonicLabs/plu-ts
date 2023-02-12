@@ -8,7 +8,7 @@ import type { MachineCosts } from "./MachineCosts";
 import { PlutusScriptVersion } from "../../pluts/Script";
 import { AnyV1CostModel, AnyV2CostModel, costModelV1ToFakeV2, defaultV2Costs, isCostModelsV1, isCostModelsV2, toCostModelV2 } from "../../../offchain/ledger/CostModels";
 import { CEKSteps, ComputeStep, ReturnStep } from "../CEKSteps";
-import { UPLCTerm, PureUPLCTerm } from "../../UPLC/UPLCTerm";
+import { UPLCTerm, PureUPLCTerm, showUPLC } from "../../UPLC/UPLCTerm";
 import { UPLCBuiltinTag, getNRequiredForces } from "../../UPLC/UPLCTerms/Builtin/UPLCBuiltinTag";
 import { Application } from "../../UPLC/UPLCTerms/Application";
 import { Builtin } from "../../UPLC/UPLCTerms/Builtin";
@@ -120,7 +120,10 @@ export class Machine<V extends MachineVersion = MachineVersion>
         const heap = new CEKHeap();
     
         spend( machineCosts.startup );
-        compute( _term instanceof Term ? _term.toUPLC(0) : _term, new CEKEnv( heap ) );
+        compute( 
+            _term instanceof Term ? _term.toUPLC(0) : _term,
+            new CEKEnv( heap )
+        );
     
         while( !frames.isEmpty || steps.topIsCompute )
         {

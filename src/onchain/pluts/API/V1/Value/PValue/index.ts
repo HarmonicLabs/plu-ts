@@ -1,14 +1,14 @@
 import { palias } from "../../../../PTypes/PAlias/palias";
-import { int, list, pair } from "../../../../Term/Type/base";
+import { int, list, dynPair } from "../../../../Term/Type/base";
 import { PCurrencySymbol } from "../PCurrencySymbol";
 import { PTokenName } from "../PTokenName";
 
-export const PAssetsEntryT = pair(
+export const PAssetsEntryT = dynPair(
         PTokenName.type,
         int
     );
 
-export const PValueEntryT = pair(
+export const PValueEntryT = dynPair(
         PCurrencySymbol.type,
         list( PAssetsEntryT )
     );

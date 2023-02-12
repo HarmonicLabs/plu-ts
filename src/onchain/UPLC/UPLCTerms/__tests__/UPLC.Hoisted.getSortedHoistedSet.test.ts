@@ -52,7 +52,7 @@ describe("getSortedHoistedSet",() => {
     test("dependecy before dependent; [ dependecy, dependent ]", () => {
 
         const dependecy = new HoistedUPLC( UPLCConst.int( 42 ) );
-        const dependent = new HoistedUPLC( dependecy );
+        const dependent = new HoistedUPLC( new Lambda( dependecy ) );
 
         expect(
             getSortedHoistedSet([ dependent ])

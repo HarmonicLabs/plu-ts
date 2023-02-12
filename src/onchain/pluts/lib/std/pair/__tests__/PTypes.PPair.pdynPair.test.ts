@@ -1,11 +1,11 @@
 import { ByteString } from "../../../../../../types/HexString/ByteString";
-import { evalScript } from "../../../../../CEK";
-import { showUPLC } from "../../../../../UPLC/UPLCTerm";
+import { Machine } from "../../../../../CEK";
 import { UPLCConst } from "../../../../../UPLC/UPLCTerms/UPLCConst";
 import { bool, bs, int, pair, tyVar } from "../../../../Term/Type/base";
 import { plam } from "../../../plam";
 import { pByteString } from "../../bs/pByteString";
 import { pInt } from "../../int/pInt";
+import { pPair } from "../pPair";
 import { pdynPair } from "../pdynPair";
 
 describe("pdynPair",() => {
@@ -14,7 +14,8 @@ describe("pdynPair",() => {
 
         const helloBS = pByteString(ByteString.fromAscii("hello"));
         const pairIntBS = pdynPair( int, bs )( pInt(2).add(2), helloBS );
-        const pairIntBSConst = pdynPair( int, bs )( pInt(2), helloBS );
+        const _pairIntBS = pdynPair( int, bs )( pInt(2), helloBS );
+        const pairIntBSConst = pPair( int, bs )( pInt(2), helloBS );
 
         expect(
             (pairIntBS as any).__isDynamicPair
@@ -24,14 +25,14 @@ describe("pdynPair",() => {
         ).toBe( undefined )
 
         expect(
-            evalScript(
+            Machine.evalSimple(
                 pairIntBS.fst
             )
         ).toEqual(
             UPLCConst.int( 4 )
         )
         expect(
-            evalScript(
+            Machine.evalSimple(
                 pairIntBSConst.fst
             )
         ).toEqual(
@@ -39,11 +40,11 @@ describe("pdynPair",() => {
         )
         
         expect(
-            evalScript(
+            Machine.evalSimple(
                 pairIntBS.snd
             )
         ).toEqual(
-            evalScript(
+            Machine.evalSimple(
                 helloBS
             )
         )
@@ -58,18 +59,6 @@ describe("pdynPair",() => {
 
         const result = fancyFstIntEq.$(
             pdynPair( int, int )( pInt(1).add( pInt(3) ), pInt(2) )
-        );
-
-        console.log(
-            showUPLC(
-                result.toUPLC(0)
-            )
-        )
-
-        console.log(
-            evalScript(
-                result
-            )
         );
 
     })

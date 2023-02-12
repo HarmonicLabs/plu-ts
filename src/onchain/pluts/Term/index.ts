@@ -10,6 +10,7 @@ import { isCloneable } from "../../../types/interfaces/Cloneable";
 import { HoistedUPLC } from "../../UPLC/UPLCTerms/HoistedUPLC";
 import { UPLCConst } from "../../UPLC/UPLCTerms/UPLCConst";
 import { isWellFormedType } from "./Type/kinds";
+import { ErrorUPLC } from "../../UPLC/UPLCTerms/ErrorUPLC";
 
 export * from "./Type";
 
@@ -114,10 +115,12 @@ export class Term<A extends PType>
                     if( typeof isConst !== "boolean" ) return;
                     if( isConst === true )
                     {
+                        // const compiled = this._toUPLC( BigInt( 0 ) )
                         // true if the compiled term is instance of ```UPLCConst``` (any type)
-                        _isConstant = Object.getPrototypeOf(
-                            this._toUPLC( BigInt( 0 ) )
-                        ) === UPLCConst.prototype
+                        // _isConstant = compiled instanceof UPLCConst ||
+                        //     compiled instanceof ErrorUPLC || 
+                        //     (compiled instanceof HoistedUPLC && compiled.UPLC instanceof UPLCConst)
+                        _isConstant = true
                     }
                     else
                     {

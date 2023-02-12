@@ -112,7 +112,14 @@ export class HoistedUPLC
 
     constructor( UPLC_: UPLCTerm )
     {
-        const UPLC = UPLC_.clone();
+        // don't modify the uinput
+        UPLC_ = UPLC_.clone();
+
+        // unwrap nested hoisted
+        while( UPLC_ instanceof HoistedUPLC ) UPLC_ = UPLC_.UPLC;
+
+        // lock
+        const UPLC = UPLC_;
 
         JsRuntime.assert(
             isClosedTerm( UPLC ),

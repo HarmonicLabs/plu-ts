@@ -43,7 +43,6 @@ export function precursiveList<ReturnT  extends TermType, ElemtsT extends TermTy
             )
             ( ( self, matchNil, matchCons, lst ) => 
                 plet(
-                    // @ts-ignore Type instantiation is excessively deep and possibly infinite.
                     papp(
                         papp(
                             self,

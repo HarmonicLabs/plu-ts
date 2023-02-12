@@ -1,10 +1,12 @@
 import { Data, isData } from "../../../../../types/Data/Data";
 import JsRuntime from "../../../../../utils/JsRuntime";
+import { Machine } from "../../../../CEK";
+import { showUPLC } from "../../../../UPLC/UPLCTerm";
 import { UPLCConst } from "../../../../UPLC/UPLCTerms/UPLCConst";
 import { constT } from "../../../../UPLC/UPLCTerms/UPLCConst/ConstType";
 import { PList, PData } from "../../../PTypes";
 import { Term } from "../../../Term";
-import { ConstantableTermType, typeExtends, Type, list } from "../../../Term/Type"
+import { ConstantableTermType, typeExtends, Type, list, PrimType, pair, data } from "../../../Term/Type"
 import { termTyToConstTy } from "../../../Term/Type/constTypeConversion";
 import { isConstantableTermType } from "../../../Term/Type/kinds";
 import { ToPType } from "../../../Term/Type/ts-pluts-conversion";
@@ -24,6 +26,14 @@ function assertValidListType( elemsT: ConstantableTermType ): void
 export function pnil<ElemsT extends ConstantableTermType>( elemsT: ElemsT ): TermList<ToPType<ElemsT>>
 {
     assertValidListType( elemsT );
+
+    if(
+        elemsT[0] === PrimType.PairAsData ||
+        typeExtends( elemsT, pair( data, data ) )
+    )
+    {
+        return punsafeConvertType( pnilPairData, list( elemsT ) ) as any;
+    }
 
     if( typeExtends( elemsT, Type.Data.Any ) )
     {
@@ -64,7 +74,20 @@ export function pconstList<ElemsT extends ConstantableTermType>( elemsT: ElemsT 
                 dbn => UPLCConst.listOf( termTyToConstTy( elemsT ) )
                     ( 
                         elems.map(
-                            el => ( el.toUPLC( dbn ) as UPLCConst ).value
+                            el => {
+                                const res = (Machine.evalSimple(
+                                    el.toUPLC(dbn)
+                                ) as any);
+
+                                if(!(res instanceof UPLCConst))
+                                {
+                                    console.error("------------------- pconstList -------------------");
+                                    console.error( res )
+                                    console.error( showUPLC( el.toUPLC( dbn ) ) )
+                                }
+                                
+                                return res.value as Data
+                            }
                         ) as any
                     ),
                 true

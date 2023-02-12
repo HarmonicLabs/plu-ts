@@ -25,7 +25,6 @@ export const pcompose
         lam( a, b ),
         a
     ],  c)
-    // @ts-ignore Type instantiation is excessively deep and possibly infinite
     (( bToC, aToB, _a ) => {
         return papp( bToC, papp( aToB, _a ) ) as any;
     })

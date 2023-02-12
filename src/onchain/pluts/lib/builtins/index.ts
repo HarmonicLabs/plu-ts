@@ -1399,16 +1399,22 @@ export function ppairData<DataFst extends DataType, DataSnd extends DataType>( d
 }
 
 export const pnilData: Term<PList< PData > >
-    = phoist( new Term(
+    = new Term(
         Type.List( Type.Data.Any ),
-        _dbn => new Application( Builtin.mkNilData, UPLCConst.unit )
-    ));
+        _dbn => new HoistedUPLC(
+            new Application( Builtin.mkNilData, UPLCConst.unit )
+        ),
+        true // isConstant
+    );
 
 export const pnilPairData: Term<PList< PPair<PData, PData>>>
-    = phoist( new Term(
+    = new Term(
         Type.List( Type.Pair( Type.Data.Any, Type.Data.Any ) ),
-        _dbn => new Application( Builtin.mkNilPairData, UPLCConst.unit )
-    ));
+        _dbn => new HoistedUPLC(
+            new Application( Builtin.mkNilPairData, UPLCConst.unit )
+        ),
+        true // isConstant
+    );
 
 
 // --------------------------------------------------------------------------------------------------------------------- //

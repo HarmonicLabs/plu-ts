@@ -43,6 +43,11 @@ export class ByteString
         return this._bytes.toString( "hex" );
     }
 
+    toString(): string
+    {
+        return this.asString;
+    }
+
     get asBytes(): Buffer
     {
         return BufferUtils.copy( this._bytes );

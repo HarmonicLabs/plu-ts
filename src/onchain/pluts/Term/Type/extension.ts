@@ -1,5 +1,5 @@
 import { anyStruct, DataConstructor, DataType, PrimType, StructCtorDef, StructType, TermType } from "./base";
-import { isAliasType, isDataType, isStructType, isTypeNameOfData, isTypeParam, isWellFormedType } from "./kinds";
+import { isAliasType, isDataType, isListType, isPairType, isStructType, isTypeNameOfData, isTypeParam, isWellFormedType } from "./kinds";
 import { unwrapAlias } from "../../PTypes/PAlias/unwrapAlias";
 
 export function dataTypeExtends<ExtendedDataTy extends DataType>( extending: DataType, extended: ExtendedDataTy ): extending is ExtendedDataTy
@@ -183,6 +183,22 @@ export function typeExtends<ExtendedTy extends TermType>( extending: TermType, e
         {
             return unchecked( unwrapAlias( a ), b );
         }
+
+        // if both maps return true
+        // no matter the types
+        // since it all comes down to data
+        if(
+            isListType( a ) &&
+            (
+                a[1][0] === PrimType.PairAsData ||
+                a[1][0] === PrimType.Pair
+            ) &&
+            isListType( b ) &&
+            (
+                b[1][0] === PrimType.PairAsData ||
+                b[1][0] === PrimType.Pair
+            )
+        ) return true;
 
         if( isStructType( b ) )
         {

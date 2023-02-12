@@ -1,5 +1,5 @@
 import JsRuntime from "../../../../utils/JsRuntime";
-import { Type, TermTypeParameter, FixedTermType, TermType, PrimType, anyStruct, struct, GenericStructDefinition } from "./base";
+import { Type, TermTypeParameter, FixedTermType, TermType, PrimType, anyStruct, struct, GenericStructDefinition, data } from "./base";
 import { typeExtends } from "./extension";
 import { isAliasType, isConstantableStructDefinition, isConstantableTermType, isStructType, isTypeParam } from "./kinds";
 import { termTypeToString } from "./utils";
@@ -20,6 +20,7 @@ export function replaceTypeParam( tyParam: Readonly<TermTypeParameter> | [ Reado
 
     function unchecked( param: Readonly<TermTypeParameter>, replacement: Readonly<FixedTermType>, toBeReplaced: Readonly<TermType> ): TermType
     {
+        if( typeExtends( toBeReplaced, data ) ) return toBeReplaced;
         if( isAliasType( toBeReplaced ) ) return unchecked( param, replacement, toBeReplaced[1].type );
         if( toBeReplaced[ 0 ] === param ) // 'symbol' equality
         {
@@ -145,7 +146,7 @@ export function findSubsToRestrict( restriction: Readonly<TermType>, toBeRestric
         // tyParams could not be present, causing findSym to return undefined
         if( thisTyParam !== undefined && !typeExtends( value, thisTyParam.tyArg ) )
         {
-            console.log(
+            console.error(
                 termTypeToString(value) + " extends "
                 + termTypeToString(thisTyParam.tyArg) + ": ",
                 typeExtends( value, thisTyParam.tyArg )

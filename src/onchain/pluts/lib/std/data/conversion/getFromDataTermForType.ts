@@ -1,7 +1,7 @@
 import ObjectUtils from "../../../../../../utils/ObjectUtils";
 
 import type { PData }  from "../../../../PTypes/PData/PData";
-import type { Term }  from "../../../../Term";
+import { Term, dynPair }  from "../../../../Term";
 import type { TermFn } from "../../../../PTypes/PFn";
 
 import { BasePlutsError } from "../../../../../../errors/BasePlutsError";
@@ -31,7 +31,6 @@ export function getFromDataTermForType<T extends ConstantableTermType | StructTy
     if( isAliasType( t ) ) return getFromDataTermForType( unwrapAlias( t ) ) as any;
     if( isStructType( t ) ) return phoist(
         plam( data , t )
-        // @ts-ignore Type instantiation is excessively deep and possibly infinite
         ( ( term: Term<PData> ) => punsafeConvertType( term, t ) )
     ) as any;
 
