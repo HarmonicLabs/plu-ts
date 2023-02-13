@@ -86,6 +86,16 @@ export class Machine<V extends MachineVersion = MachineVersion>
         ).eval( _term ).result;
     }
 
+    static eval( _term: UPLCTerm | Term<any> ): { result: PureUPLCTerm, budgetSpent: ExBudget, logs: string[] }
+    {
+        return (
+            new Machine(
+                PlutusScriptVersion.V2,
+                defaultV2Costs
+            )
+        ).eval( _term );
+    }
+
     eval( _term: UPLCTerm | Term<any> ): { result: PureUPLCTerm, budgetSpent: ExBudget, logs: string[] }
     {
         // new budget for each call

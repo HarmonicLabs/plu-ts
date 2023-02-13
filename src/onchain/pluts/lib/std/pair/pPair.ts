@@ -9,6 +9,7 @@ import { PPair } from "../../../PTypes";
 import { ConstantableTermType, Term, typeExtends, pair } from "../../../Term";
 import { termTyToConstTy } from "../../../Term/Type/constTypeConversion";
 import { ToPType } from "../../../Term/Type/ts-pluts-conversion";
+import { pdynPair } from "./pdynPair";
 
 
 export function pPair<FstT extends ConstantableTermType, SndT extends ConstantableTermType>(
@@ -29,16 +30,19 @@ export function pPair<FstT extends ConstantableTermType, SndT extends Constantab
 
         JsRuntime.assert(
             _fst instanceof Term &&
-            (_fst as any).isConstant &&
             typeExtends( _fst.type, fstT ),
             "first element of a constant pair was not a constant"
         );
         JsRuntime.assert(
             _snd instanceof Term &&
-            (_snd as any).isConstant &&
             typeExtends( _snd.type, sndT ),
             "second element of a constant pair was not a constant"
         );
+
+        if(
+            !(_fst as any).isConstant ||
+            !(_snd as any).isConstant
+        ) return pdynPair( fstT, sndT )( _fst, _snd ) as any;
         
         return addPPairMethods(
             new Term<PPair<ToPType<FstT>,ToPType<SndT>>>(

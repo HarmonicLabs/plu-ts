@@ -61,10 +61,13 @@ export function eqData( a: Data, b: Data ): boolean
     if( aProto === DataMap.prototype )
     {
         type D = DataMap<Data,Data>;
+        const aMap = (a as D).map; 
+        const bMap = (b as D).map; 
         return (
-            (a as D).map.every(
+            aMap.length === bMap.length &&
+            aMap.every(
                 (entry, idx) => {
-                    const bEntry = (b as D).map[ idx ];
+                    const bEntry = bMap[ idx ];
                     return (
                         eqData( entry.fst, bEntry.fst ) &&
                         eqData( entry.snd, bEntry.snd )

@@ -8,6 +8,7 @@ export function pData( dataElem: Data )
 {
     return new Term(
         data,
-        _dbn => UPLCConst.data( dataElem )
+        _dbn => UPLCConst.data( dataElem ),
+        true // isConstant
     );
 }

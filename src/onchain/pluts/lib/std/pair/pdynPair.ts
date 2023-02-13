@@ -10,6 +10,7 @@ import { getToDataForType } from "../data/conversion/getToDataTermForType";
 import { TermPair, addPPairMethods } from "../../std/UtilityTerms/TermPair";
 import { pPair } from "./pPair";
 import { ppairData } from "../../builtins";
+import { showUPLC } from "../../../../UPLC/UPLCTerm";
 
 export function pdynPair<FstT extends ConstantableTermType, SndT extends ConstantableTermType>(
     fstT: FstT,

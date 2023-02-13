@@ -1,5 +1,5 @@
 import JsRuntime from "../../../../utils/JsRuntime";
-import { Type, ConstantableTermType, TypeShortcut, data } from "./base";
+import { Type, ConstantableTermType, TypeShortcut, data, PrimType } from "./base";
 import { ConstType, constPairTypeUtils, constT, constTypeEq, ConstTyTag } from "../../../UPLC/UPLCTerms/UPLCConst/ConstType";
 import { unwrapAlias } from "../../PTypes/PAlias/unwrapAlias";
 import { typeExtends } from "./extension";
@@ -22,9 +22,9 @@ export function termTyToConstTy( termT: ConstantableTermType ): ConstType
         if( typeExtends( t, Type.Str ) ) return constT.str;
         if( typeExtends( t, Type.Unit ) ) return constT.unit;
         if( typeExtends( t, Type.Bool ) ) return constT.bool;
-        if( typeExtends( t, Type.Data.Any ) ) return constT.data;
+        if( t[0] === PrimType.PairAsData ) return constT.pairOf( constT.data, constT.data );
+        if( typeExtends( t, data ) ) return constT.data;
         if( typeExtends( t, Type.List( Type.Any ) ) ) return constT.listOf( unchecked( t[1] as any ) );
-        if( typeExtends( t, Type.PairAsData( Type.Any, Type.Any ) ) ) return constT.pairOf( constT.data, constT.data );
         if( typeExtends( t, Type.Pair( Type.Any, Type.Any ) ) ) return constT.pairOf( unchecked( t[1] as any ), unchecked( t[2] as any ) );
 
         throw JsRuntime.makeNotSupposedToHappenError(

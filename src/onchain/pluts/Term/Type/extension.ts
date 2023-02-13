@@ -229,6 +229,7 @@ export function typeExtends<ExtendedTy extends TermType>( extending: TermType, e
         if( isTypeNameOfData( b[0] ) )
         {
             if( isStructType( a ) ) return b[0] === DataConstructor.Any || b[0] === DataConstructor.Constr;
+            if( a[0] === PrimType.PairAsData ) return true;
             if( !isTypeNameOfData( a[0] ) ) return false;
 
             // checks for correct data type construction;

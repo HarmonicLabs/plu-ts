@@ -1,19 +1,21 @@
 import { Data, isData } from "../../../../../types/Data/Data";
 import JsRuntime from "../../../../../utils/JsRuntime";
 import { Machine } from "../../../../CEK";
-import { showUPLC } from "../../../../UPLC/UPLCTerm";
+import { UPLCTerm, showUPLC } from "../../../../UPLC/UPLCTerm";
+import { ErrorUPLC } from "../../../../UPLC/UPLCTerms/ErrorUPLC";
 import { UPLCConst } from "../../../../UPLC/UPLCTerms/UPLCConst";
-import { constT } from "../../../../UPLC/UPLCTerms/UPLCConst/ConstType";
+import { constT, constTypeEq } from "../../../../UPLC/UPLCTerms/UPLCConst/ConstType";
 import { PList, PData } from "../../../PTypes";
 import { Term } from "../../../Term";
 import { ConstantableTermType, typeExtends, Type, list, PrimType, pair, data } from "../../../Term/Type"
 import { termTyToConstTy } from "../../../Term/Type/constTypeConversion";
-import { isConstantableTermType } from "../../../Term/Type/kinds";
+import { isConstantableTermType, isStructType } from "../../../Term/Type/kinds";
 import { ToPType } from "../../../Term/Type/ts-pluts-conversion";
 import { termTypeToString } from "../../../Term/Type/utils";
-import { pnilPairData, pnilData, pprepend } from "../../builtins";
+import { pnilPairData, pnilData, pprepend, ppairData, pfstPair, psndPair } from "../../builtins";
 import { punsafeConvertType } from "../../punsafeConvertType";
 import { TermList, addPListMethods } from "../UtilityTerms";
+import { getToDataForType } from "../data/conversion/getToDataTermForType";
 
 
 function assertValidListType( elemsT: ConstantableTermType ): void
@@ -36,7 +38,7 @@ export function pnil<ElemsT extends ConstantableTermType>( elemsT: ElemsT ): Ter
         return punsafeConvertType( pnilPairData, list( elemsT ) ) as any;
     }
 
-    if( typeExtends( elemsT, Type.Data.Any ) )
+    if( typeExtends( elemsT, data ) )
     {
         return punsafeConvertType( pnilData, list( elemsT ) ) as any;
     }
@@ -70,14 +72,50 @@ export function pconstList<ElemsT extends ConstantableTermType>( elemsT: ElemsT 
         return addPListMethods(
             new Term<PList<ToPType<ElemsT>>>(
                 Type.List( elemsT ),
-                dbn => UPLCConst.listOf( termTyToConstTy( elemsT ) )
+                dbn => {
+
+                    const expectedConstTy = termTyToConstTy( elemsT );
+                    console.log( elemsT, expectedConstTy )
+
+                    return UPLCConst.listOf( expectedConstTy )
                     ( 
                         elems.map(
                             el => {
-                                const res = (Machine.evalSimple(
+                                let res: UPLCTerm = (Machine.evalSimple(
                                     el.toUPLC(dbn)
                                 ) as any);
 
+                                console.log( res );
+
+                                if( 
+                                    (
+                                        res instanceof ErrorUPLC &&
+                                        el.type[0] === PrimType.PairAsData
+                                    ) || (
+                                        res instanceof UPLCConst &&
+                                        !constTypeEq( res.type, expectedConstTy )
+                                    )
+                                )
+                                {
+                                    const [ _, fstT, sndT ] = el.type as any as ConstantableTermType[];
+                                    el = ppairData( data, data )
+                                        .$(
+                                            getToDataForType( fstT )(
+                                                pfstPair( fstT, sndT ).$( el as any )
+                                            )
+                                        )
+                                        .$(
+                                            getToDataForType( sndT )(
+                                                psndPair( fstT, sndT ).$( el as any )
+                                            )
+                                        ) as any
+                                    res = (Machine.evalSimple(
+                                        el.toUPLC(dbn)
+                                    ) as any);
+                                }
+
+                                console.log( res );
+                                
                                 if(!(res instanceof UPLCConst))
                                 {
                                     console.log("------------------- pconstList -------------------");
@@ -85,11 +123,12 @@ export function pconstList<ElemsT extends ConstantableTermType>( elemsT: ElemsT 
                                     console.log( showUPLC( el.toUPLC( dbn ) ) )
                                     throw res
                                 }
-                                
+
                                 return res.value as Data
                             }
                         ) as any
-                    ),
+                    )
+                },
                 true
             )
         );

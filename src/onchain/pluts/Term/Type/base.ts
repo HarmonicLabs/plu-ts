@@ -117,10 +117,12 @@ export const Type: {
     readonly Lambda: <InT extends TermType, OutT extends TermType>(input: InT, output: OutT) => [ PrimType.Lambda, InT, OutT ];
     readonly Fn: <InsTs extends [ TermType, ...TermType[] ], OutT extends TermType>( inputs: InsTs, output: OutT ) => FnType<InsTs, OutT>
     readonly Struct: ( def: StructDefinition | typeof anyStruct ) => StructType
+    /** @deprecated */
     readonly Data: {
         readonly Any: [ DataConstructor.Any ];
         readonly Constr: [ DataConstructor.Constr ];
         readonly Map: (keyType: DataType, valueType: DataType) => DataType;
+        /** @deprecated use `dynPair` (or `PairAsData`) instaed */
         readonly Pair: (fstType: DataType, sndType: DataType) => DataType;
         readonly List: (elements: DataType) => DataType;
         readonly Int: FixedTermDataType;

@@ -584,9 +584,9 @@ export class BnCEK
     appendByteString( a: UPLCTerm, b: UPLCTerm ): ConstOrErr
     {
         const _a = getBS( a );
-        if( _a === undefined ) return new ErrorUPLC("not BS");
+        if( _a === undefined ) return new ErrorUPLC("appendByteString :: not BS");
         const _b = getBS( b );
-        if(_b === undefined ) return new ErrorUPLC("not BS");
+        if(_b === undefined ) return new ErrorUPLC("appendByteString :: not BS");
 
         const f = this.getBuiltinCostFunc( UPLCBuiltinTag.appendByteString );
                 
@@ -603,11 +603,11 @@ export class BnCEK
     consByteString( a: UPLCTerm, b: UPLCTerm ): ConstOrErr
     {
         let _a = getInt( a );
-        if( _a === undefined ) return new ErrorUPLC("not Int");
+        if( _a === undefined ) return new ErrorUPLC("consByteString :: not Int");
         _a = BigIntUtils.abs( _a ) % BigInt( 256 );
 
         const _b = getBS( b );
-        if(_b === undefined ) return new ErrorUPLC("not BS");
+        if(_b === undefined ) return new ErrorUPLC("consByteString :: not BS");
 
         const f = this.getBuiltinCostFunc( UPLCBuiltinTag.consByteString );
                 
@@ -624,13 +624,13 @@ export class BnCEK
     sliceByteString( fromIdx: UPLCTerm, ofLength: UPLCTerm, bs: UPLCTerm ): ConstOrErr
     {
         const idx = getInt( fromIdx );
-        if( idx === undefined ) return new ErrorUPLC("not int");
+        if( idx === undefined ) return new ErrorUPLC("sliceByteString :: not int");
 
         const length = getInt( ofLength );
-        if( length === undefined ) return new ErrorUPLC("not int");
+        if( length === undefined ) return new ErrorUPLC("sliceByteString :: not int");
 
         const _bs = getBS( bs );
-        if( _bs === undefined ) return new ErrorUPLC("not BS");
+        if( _bs === undefined ) return new ErrorUPLC("sliceByteString :: not BS");
 
         const i = idx < BigInt( 0 ) ? BigInt( 0 ) : idx;
 
@@ -666,7 +666,7 @@ export class BnCEK
     lengthOfByteString( bs: UPLCTerm ): ConstOrErr
     {
         const _bs = getBS( bs );
-        if( _bs === undefined ) return new ErrorUPLC("not BS");
+        if( _bs === undefined ) return new ErrorUPLC("lengthOfByteString :: not BS");
 
         const f = this.getBuiltinCostFunc( UPLCBuiltinTag.lengthOfByteString );
                 
@@ -682,13 +682,13 @@ export class BnCEK
     indexByteString( bs: UPLCTerm, idx: UPLCTerm ): ConstOrErr
     {
         const _bs = getBS( bs );
-        if( _bs === undefined ) return new ErrorUPLC("not BS");
+        if( _bs === undefined ) return new ErrorUPLC("indexByteString :: not BS");
         
         const i = getInt( idx );
         if( i === undefined || i >= _bs.asBytes.length || i < BigInt( 0 ) ) return new ErrorUPLC("not int");
 
         const result = _bs.asBytes.at( Number( i ) );
-        if( result === undefined ) return new ErrorUPLC("out of bytestring length");
+        if( result === undefined ) return new ErrorUPLC("indexByteString :: out of bytestring length");
 
 
         const f = this.getBuiltinCostFunc( UPLCBuiltinTag.indexByteString );
@@ -706,10 +706,10 @@ export class BnCEK
     equalsByteString( a: UPLCTerm, b: UPLCTerm ): ConstOrErr
     {
         const _a = getBS( a );
-        if( _a === undefined ) return new ErrorUPLC("not BS");
+        if( _a === undefined ) return new ErrorUPLC("equalsByteString :: not BS");
         
         const _b = getBS( b );
-        if( _b === undefined ) return new ErrorUPLC("not BS");
+        if( _b === undefined ) return new ErrorUPLC("equalsByteString :: not BS");
 
         const f = this.getBuiltinCostFunc( UPLCBuiltinTag.equalsByteString );
                 
@@ -726,10 +726,10 @@ export class BnCEK
     lessThanByteString( a: UPLCTerm, b: UPLCTerm ): ConstOrErr
     {
         const _a = getBS( a );
-        if( _a === undefined ) return new ErrorUPLC("not BS");
+        if( _a === undefined ) return new ErrorUPLC("lessThanByteString :: not BS");
         
         const _b = getBS( b );
-        if( _b === undefined ) return new ErrorUPLC("not BS");
+        if( _b === undefined ) return new ErrorUPLC("lessThanByteString :: not BS");
 
         const aBytes = _a.asBytes;
         const bBytes = _b.asBytes;
@@ -761,10 +761,10 @@ export class BnCEK
     lessThanEqualsByteString( a: UPLCTerm, b: UPLCTerm ): ConstOrErr
     {
         const _a = getBS( a );
-        if( _a === undefined ) return new ErrorUPLC("not BS");
+        if( _a === undefined ) return new ErrorUPLC("lessThanEqualsByteString :: not BS");
         
         const _b = getBS( b );
-        if( _b === undefined ) return new ErrorUPLC("not BS");
+        if( _b === undefined ) return new ErrorUPLC("lessThanEqualsByteString :: not BS");
 
         const f = this.getBuiltinCostFunc( UPLCBuiltinTag.lessThanEqualsByteString );
                 
@@ -941,7 +941,7 @@ export class BnCEK
     decodeUtf8( a: UPLCTerm ): ConstOrErr
     {
         const _a = getBS( a );
-        if( _a === undefined ) return new ErrorUPLC("not BS");
+        if( _a === undefined ) return new ErrorUPLC("decodeUtf8 :: not BS");
 
         const f = this.getBuiltinCostFunc( UPLCBuiltinTag.decodeUtf8 );
 
@@ -1067,7 +1067,11 @@ export class BnCEK
             (elem instanceof UPLCConst ? constTypeToStirng( elem.type ) : "" ),
             {
                 list: (list as any).value,
-                elem: (elem as any).value
+                elem: (elem as any).value,
+                fst: (elem as any).value.fst.bytes,
+                sndFst: (elem as any).value.snd.map[0].fst.bytes,
+                sndSnd: (elem as any).value.snd.map[0].snd.int,
+
             }
         );
 
@@ -1273,7 +1277,14 @@ export class BnCEK
     iData( int: UPLCTerm ): ConstOrErr
     {
         const i = getInt( int );
-        if( i === undefined ) return new ErrorUPLC("not an int");
+        if( i === undefined )
+        return new ErrorUPLC(
+            "iData :: not an int",
+            {
+                arg: int,
+                type: (int as any).type,
+            }
+        );
 
         const f = this.getBuiltinCostFunc( UPLCBuiltinTag.iData );
 
@@ -1289,7 +1300,15 @@ export class BnCEK
     bData( bs: UPLCTerm ): ConstOrErr
     {
         const b = getBS( bs );
-        if( b === undefined ) return new ErrorUPLC("not BS");
+        if( b === undefined )
+        return new ErrorUPLC(
+            "bData :: not BS",
+            {
+                arg: bs,
+                type: (bs as any).type,
+                value: (bs as any).value
+            }
+        );
 
         const f = this.getBuiltinCostFunc( UPLCBuiltinTag.bData );
 

@@ -12,7 +12,7 @@ import { isAliasType, isStructType, isDataType, isListType, isPairType, isConsta
 import { cloneWithAllPairsAsDynamic, termTypeToString } from "../../../../Term/Type/utils";
 import { unwrapAlias } from "../../../../PTypes/PAlias/unwrapAlias";
 
-import { pdataPairToDynamic } from "../../pair/pdynPair";
+import { pdataPairToDynamic, pdynPair } from "../../pair/pdynPair";
 import type { ToPType } from "../../../../Term/Type/ts-pluts-conversion";
 import type { PType } from "../../../../PType";
 import { pcompose } from "../../combinators";
@@ -24,6 +24,9 @@ import { pdecodeUtf8, punBData, punIData, punListData, punMapData } from "../../
 import { punsafeConvertType } from "../../../punsafeConvertType";
 import { pmap } from "../../list/pmap";
 import type { TermPair } from "../../UtilityTerms/TermPair";
+import { plet } from "../../../plet";
+import { pPair } from "../../pair/pPair";
+import { showUPLC } from "../../../../../UPLC/UPLCTerm";
 
 export function getFromDataTermForType<T extends ConstantableTermType | StructType>( t: T )
 : TermFn<[ PData ], ToPType<T>>
@@ -104,17 +107,21 @@ export function getFromDataTermForType<T extends ConstantableTermType | StructTy
         ((( dataTerm: Term<PData> ): TermPair<PType, PType> => {
 
             const dataTermTy = dataTerm.type;
-            if(!(
+            if(
                 // either extends data pair
                 typeExtends( dataTermTy, Type.Data.Pair( data, data ) ) ||
-                // or is exactly the generic `data` type
-                ( typeExtends( dataTermTy, data ) && typeExtends( data, dataTermTy ) )
-            ))
-            throw new BasePlutsError(
-                "`fromData` for `pair` type: passed argument didn't extend `data`"
-            );
-
+                isPairType( dataTermTy )
+            )
             return pdataPairToDynamic( fstT, sndT )( dataTerm );
+
+            return plam( data, dynPair( fstT, sndT ) )
+            ( (pairData) => 
+                plet(
+                    punListData(data).$( pairData )
+                ).in( asList => pdynPair( fstT, sndT )( asList.head, asList.tail.head ) ) 
+            ) as any
+
+
         }) as any ) as any;
     }
 
@@ -176,8 +183,16 @@ export function getFromDataForType<T extends ConstantableTermType | StructType>(
         throw new BasePlutsError(
             "can't get 'fromData' for a pair that has non constant types as arguments"
         );
-
-        return pdataPairToDynamic( fstT, sndT ) as any;
+       
+        return (pairData) => 
+            plet(
+                punListData(data).$( pairData )
+            ).in( asList => {
+                return pPair( fstT, sndT )(
+                    getFromDataForType( fstT )( asList.head ),
+                    getFromDataForType( sndT )( asList.tail.head ) 
+                )
+            }) as any;
     }
 
     return ( d: Term<PData> ) =>  getFromDataTermForType( t ).$( d ) as any;

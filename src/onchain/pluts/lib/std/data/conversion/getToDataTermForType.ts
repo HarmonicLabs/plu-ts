@@ -1,6 +1,6 @@
 import type { TermFn } from "../../../../PTypes/PFn";
 import { PData } from "../../../../PTypes/PData/PData";
-import { Term, dynPair, map, tyVar } from "../../../../Term";
+import { Term, dynPair, map, pair, tyVar } from "../../../../Term";
 import { ConstantableTermType, PrimType, StructType } from "../../../../Term/Type/base";
 import type { PType } from "../../../../PType";
 
@@ -22,6 +22,9 @@ import { pcompose } from "../../combinators";
 import { DataConstr } from "../../../../../../types/Data/DataConstr";
 import { pData } from "../pData";
 import { Application } from "../../../../../UPLC/UPLCTerms/Application";
+import { pdynPair } from "../../pair/pdynPair";
+import { showUPLC } from "../../../../../UPLC/UPLCTerm";
+import { pList } from "../../list";
 
 export function getToDataTermForType<T extends ConstantableTermType | StructType>( t: T )
 : TermFn<[ ToPType<T> ], PData>
@@ -133,24 +136,38 @@ function _getToDataForType<T extends ConstantableTermType | StructType>( t: T )
     ){
         const elemsT = t[1];
 
-        const elemToDataTerm = getToDataTermForType( elemsT as any );
 
         if( isPairType( elemsT ))
         {
-            return ( term: Term<ToPType<T>> ) => pMapToData( data, data ).$(
+            const toPairData = plam( pair( elemsT[1], elemsT[2] ), pair( data, data ) )
+            ( _pair =>
+                ppairData( data, data )
+                .$(
+                    getToDataForType( elemsT[1] as any )( _pair.fst ),
+                )
+                .$(
+                    getToDataForType( elemsT[2] as any )( _pair.snd ),
+                )
+            );
+
+            return ( term: Term<ToPType<T>> ) => {
+                return pMapToData( data, data ).$(
                 new Term(
                     list(dynPair( data, data )),
                     dbn => new Application(
                         pmap( elemsT as any, dynPair( data, data ) )
-                        .$( elemToDataTerm as any )
+                        .$( toPairData as any )
                         .toUPLC( dbn ),
                         term.toUPLC(dbn)
                     )
                 ) as any
-             ) as any;
+            ) as any
+            };
         }
 
         if( typeExtends( elemsT, data ) ) return ( term: Term<ToPType<T>> ) => pListToData( data ).$( term as any ) as any;
+
+        const elemToDataTerm = getToDataTermForType( elemsT as any );
 
         return ( term: Term<ToPType<T>> ) => pListToData( data ).$(
             pmap( elemsT as any, data ).$( elemToDataTerm ).$( term as any)
@@ -163,21 +180,22 @@ function _getToDataForType<T extends ConstantableTermType | StructType>( t: T )
         if(
             isDataType( t[1] ) &&
             isDataType( t[2] )
-        ) return ( term: Term<ToPType<T>> ) => punsafeConvertType( term, Type.Data.Pair( t[1] as any, t[2] as any )) as any;
+        ) return ( term: Term<ToPType<T>> ) => punsafeConvertType( term, dynPair( t[1] as any, t[2] as any ) ) as any;
 
         if(
             t[0] === PrimType.PairAsData
-        ) return ( term: Term<ToPType<T>> ) => punsafeConvertType( term, Type.Data.Pair( data, data ) ) as any;
+        ) return ( term: Term<ToPType<T>> ) => punsafeConvertType( term, dynPair( data, data ) ) as any;
         
-        return ( term: Term<ToPType<T>> ) => 
-            ppairData( data, data )
+        return ( term: Term<ToPType<T>> ) =>
+            pListToData( data )
             .$(
-                getToDataTermForType( t[1] as any )
-                .$( pfstPair( t[1] as any, Type.Any ).$( term as any ) ) 
-            ).$(
-                getToDataTermForType( t[2] as any )
-                .$( psndPair( Type.Any, t[2] as any ).$( term as any ) )
-            ) as any
+                pList( data )([
+                    getToDataTermForType( t[1] as any )
+                    .$( pfstPair( t[1] as any, Type.Any ).$( term as any ) ),
+                    getToDataTermForType( t[2] as any )
+                    .$( psndPair( Type.Any, t[2] as any ).$( term as any ) )
+                ])
+            )
     }
 
     return ( term: Term<ToPType<T>> ) => getToDataTermForType( t ).$( term )

@@ -11,6 +11,7 @@ import { HoistedUPLC } from "../../UPLC/UPLCTerms/HoistedUPLC";
 import { UPLCConst } from "../../UPLC/UPLCTerms/UPLCConst";
 import { isWellFormedType } from "./Type/kinds";
 import { ErrorUPLC } from "../../UPLC/UPLCTerms/ErrorUPLC";
+import { Machine } from "../../CEK";
 
 export * from "./Type";
 
@@ -44,6 +45,8 @@ export class Term<A extends PType>
         return ( deBruijnLevel: bigint | number ) =>
         {
             if( typeof deBruijnLevel !== "bigint" ) deBruijnLevel = BigInt( deBruijnLevel );
+            if( (this as any).isConstant )
+                return Machine.evalSimple( this._toUPLC( deBruijnLevel ) )
             return this._toUPLC( deBruijnLevel );
         } 
     };
