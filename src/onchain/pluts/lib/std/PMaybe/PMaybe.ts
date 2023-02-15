@@ -1,14 +1,13 @@
 import { PDataRepresentable } from "../../../PType/PDataRepresentable";
 import { PStruct, pstruct } from "../../../PTypes/PStruct/pstruct";
-import { ConstantableStructType, ConstantableTermType } from "../../../Term";
-import { FromPTypeConstantable } from "../../../Term/Type/ts-pluts-conversion";
+import { FromPType, TermType } from "../../../type_system";
 
 export type PMaybeT<PTy extends PDataRepresentable> = PStruct<{
-    Just: { val: FromPTypeConstantable<PTy> },
+    Just: { val: FromPType<PTy> },
     Nothing: {}
-}> & ConstantableStructType
+}>
 
-export function PMaybe<T extends ConstantableTermType>(tyArg: T)
+export function PMaybe<T extends TermType>(tyArg: T)
 {
     return pstruct({
         Just: { val: tyArg },

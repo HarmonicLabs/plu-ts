@@ -5,12 +5,17 @@ import { Lambda } from "../../UPLC/UPLCTerms/Lambda";
 import { UPLCVar } from "../../UPLC/UPLCTerms/UPLCVar";
 import { PType } from "../PType";
 import { Term } from "../Term";
+import { PrimType } from "../type_system";
 import { addUtilityForType } from "./addUtilityForType";
+import { fromData } from "./std";
 
 
 export function plet<PVarT extends PType, SomeExtension extends object>( varValue: Term<PVarT> & SomeExtension )
 {
     type TermPVar = Term<PVarT> & SomeExtension;
+
+    // unwrap 'asData' if is the case
+    varValue = (varValue.type[0] === PrimType.AsData ? fromData( varValue.type[1] )( varValue as any ) : varValue) as any;
     
     const continuation = <PExprResult extends PType>( expr: (value: TermPVar) => Term<PExprResult> ): Term<PExprResult> => {
 
@@ -48,10 +53,13 @@ export function plet<PVarT extends PType, SomeExtension extends object>( varValu
                 return new Application(
                     new Lambda(
                         expr(
-                            withUtility( new Term(
-                            varValue.type,
-                            varAccessDbn => new UPLCVar( varAccessDbn - ( dbn + BigInt(1) ) ) // point to the lambda generated here
-                        ) as any ) as any ).toUPLC( ( dbn + BigInt(1) ) )
+                            withUtility(
+                                new Term(
+                                    varValue.type,
+                                    varAccessDbn => new UPLCVar( varAccessDbn - ( dbn + BigInt(1) ) ) // point to the lambda generated here
+                                ) as any
+                            ) as any
+                        ).toUPLC( ( dbn + BigInt(1) ) )
                     ),
                     arg
                 )

@@ -1,14 +1,14 @@
 import type { TermFn, PLam, PBool, PList } from "../../../PTypes";
-import { ConstantableTermType, lam, bool, list } from "../../../Term";
-import { ToPType } from "../../../Term/Type/ts-pluts-conversion";
+import { ToPType, lam, bool, list, TermType } from "../../../type_system";
 import { papp } from "../../papp";
 import { pfn } from "../../pfn";
 import { phoist } from "../../phoist";
 import { plam } from "../../plam";
 import { pBool } from "../bool/pBool";
+import { precursiveList } from "./precursiveList";
 
 
-export function pevery<ElemsT extends ConstantableTermType>( elemsT: ElemsT )
+export function pevery<ElemsT extends TermType>( elemsT: ElemsT )
 : TermFn<[ PLam<ToPType<ElemsT>,PBool>, PList<ToPType<ElemsT>> ], PBool>
 {
     return phoist(
@@ -19,10 +19,8 @@ export function pevery<ElemsT extends ConstantableTermType>( elemsT: ElemsT )
                 bool
             )
         )
-        // @ts-ignore Type instantiation is excessively deep and possibly infinite.
         (( predicate ) => {
 
-            // @ts-ignore Type instantiation is excessively deep and possibly infinite.
             return precursiveList( bool, elemsT )
             .$(
                 plam( lam( list( elemsT ), bool ), bool )

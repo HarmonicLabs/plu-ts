@@ -1,6 +1,5 @@
 import { TermFn, PLam, PBool, PList } from "../../../PTypes";
-import { ConstantableTermType, fn, lam, bool, list } from "../../../Term";
-import { ToPType } from "../../../Term/Type/ts-pluts-conversion";
+import { TermType, ToPType, fn, lam, bool, list } from "../../../type_system";
 import { pif, pisEmpty, phead, ptail } from "../../builtins";
 import { papp } from "../../papp";
 import { pfn } from "../../pfn";
@@ -9,7 +8,7 @@ import { plet } from "../../plet";
 import { precursive } from "../../precursive";
 import { PMaybeT, PMaybe } from "../PMaybe/PMaybe";
 
-export function pfind<ElemsT extends ConstantableTermType, PElemsT extends ToPType<ElemsT> = ToPType<ElemsT>>( elemsT: ElemsT )
+export function pfind<ElemsT extends TermType, PElemsT extends ToPType<ElemsT> = ToPType<ElemsT>>( elemsT: ElemsT )
 : TermFn<[ PLam<PElemsT,PBool>, PList<PElemsT> ], PMaybeT<PElemsT>>
 {
 

@@ -1,13 +1,12 @@
 import { TermFn, PFn, PList } from "../../../PTypes";
-import { ConstantableTermType, lam, list, fn } from "../../../Term";
-import { ToPType } from "../../../Term/Type/ts-pluts-conversion";
+import { TermType, ToPType, lam, list, fn } from "../../../type_system";
 import { papp } from "../../papp";
 import { pfn } from "../../pfn";
 import { phoist } from "../../phoist";
 import { plam } from "../../plam";
 import { precursiveList } from "./precursiveList";
 
-export function pfoldr<ElemsT extends ConstantableTermType, ResultT extends ConstantableTermType>( elemsT: ElemsT, resultT: ResultT )
+export function pfoldr<ElemsT extends TermType, ResultT extends TermType>( elemsT: ElemsT, resultT: ResultT )
 : TermFn<[
     PFn<[ ToPType<ElemsT>, ToPType<ResultT> ], ToPType<ResultT>>,
     ToPType<ResultT>,

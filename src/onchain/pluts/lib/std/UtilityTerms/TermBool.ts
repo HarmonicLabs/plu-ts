@@ -1,11 +1,12 @@
 import ObjectUtils from "../../../../../utils/ObjectUtils"
-import { Delay } from "../../../../UPLC/UPLCTerms/Delay"
-import { PType } from "../../../PType"
+import type { PType } from "../../../PType"
 import type { PBool, TermFn, PDelayed } from "../../../PTypes"
-import { Term, delayed } from "../../../Term"
-import { por, pstrictOr, pand, pstrictAnd } from "../../builtins"
-import { PappArg } from "../../pappArg"
+import { Delay } from "../../../../UPLC/UPLCTerms/Delay"
+import { Term } from "../../../Term"
 import { pBool } from "../bool/pBool"
+import { PappArg } from "../../pappArg"
+import { por, pstrictOr, pand, pstrictAnd } from "../../builtins/bool"
+import { delayed } from "../../../type_system/types"
 
 
 export type TermBool = Term<PBool> & {

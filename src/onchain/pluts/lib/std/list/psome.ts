@@ -1,6 +1,5 @@
 import { TermFn, PLam, PBool, PList } from "../../../PTypes";
-import { ConstantableTermType, lam, bool, list } from "../../../Term";
-import { ToPType } from "../../../Term/Type/ts-pluts-conversion";
+import { TermType, ToPType, lam, bool, list } from "../../../type_system";
 import { papp } from "../../papp";
 import { pfn } from "../../pfn";
 import { phoist } from "../../phoist";
@@ -10,7 +9,7 @@ import { precursiveList } from "./precursiveList";
 
 
 
-export function psome<ElemsT extends ConstantableTermType>( elemsT: ElemsT )
+export function psome<ElemsT extends TermType>( elemsT: ElemsT )
 : TermFn<[ PLam<ToPType<ElemsT>,PBool>, PList<ToPType<ElemsT>> ], PBool>
 {
 return phoist(

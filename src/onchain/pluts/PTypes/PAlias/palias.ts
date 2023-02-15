@@ -2,19 +2,15 @@ import JsRuntime from "../../../../utils/JsRuntime";
 import ObjectUtils from "../../../../utils/ObjectUtils";
 
 import type { Term } from "../../Term";
-import type { AliasTermType, ConstantableTermType } from "../../Term/Type/base";
-import type { PData } from "../PData/PData";
-import type { ToPType } from "../../Term/Type/ts-pluts-conversion";
 
-import { Type, aliasType } from "../../Term/Type/base";
-import { typeExtends } from "../../Term/Type/extension";
-import { isAliasType, isConstantableTermType } from "../../Term/Type/kinds";
-import { cloneTermType } from "../../Term/Type/utils";
-import { getToDataForType } from "../../lib/std/data/conversion/getToDataTermForType";
-import { unwrapAlias } from "./unwrapAlias";
-import { getFromDataForType } from "../../lib/std/data/conversion/getFromDataTermForType";
-import { PDataRepresentable } from "../../PType/PDataRepresentable";
 import { punsafeConvertType } from "../../lib/punsafeConvertType";
+import { AliasT, PrimType, TermType, alias, data } from "../../type_system/types";
+import { PDataRepresentable } from "../../PType/PDataRepresentable";
+import { PData } from "../PData/PData";
+import { ToPType } from "../../type_system/ts-pluts-conversion";
+import { isWellFormedType } from "../../type_system/kinds/isWellFormedType";
+import { typeExtends } from "../../type_system/typeExtends";
+import { PappArg, fromData, pappArgToTerm, toData } from "../../lib";
 
 
 /**
@@ -30,42 +26,35 @@ class _PAlias extends PDataRepresentable
     }
 }
 
-export type AliasDefinition<T extends ConstantableTermType, AliasId extends symbol = symbol> = {
-    id: AliasId,
-    type: T
-}
-
-export type PAlias<T extends ConstantableTermType, AliasId extends symbol = symbol, PClass extends _PAlias = _PAlias> =
+export type PAlias<T extends TermType, PClass extends _PAlias = _PAlias> =
 {
     new(): PClass
 
     /**
      * @deprecated
      */
-    readonly termType: AliasTermType<AliasId,T>;
-    readonly type: AliasTermType<AliasId,T>;
+    readonly termType: AliasT<T>;
+    readonly type: AliasT<T>;
     readonly fromData: ( data: Term<PData> ) => Term<PClass>;
     readonly toData: ( data: Term<PClass> ) => Term<PData>;
 
-    readonly from: ( toAlias: Term<ToPType<T>> ) => Term<PAlias<T, AliasId, PClass>>
+    readonly from: ( toAlias: Term<ToPType<T>> ) => Term<PAlias<T, PClass>>
 
 } & PDataRepresentable
 
 
-export function palias<T extends ConstantableTermType, SymId extends symbol >(
+export function palias<T extends TermType>(
     type: T,
-    fromDataConstraint: (( term: Term<ToPType<T>> ) => Term<ToPType<T>>) | undefined = undefined,
-    symId: SymId = Symbol() as SymId
-): PAlias<T, SymId>
+    fromDataConstraint: (( term: Term<ToPType<T>> ) => Term<ToPType<T>>) | undefined = undefined
+)
 {
     JsRuntime.assert(
-        isConstantableTermType( type ),
+        isWellFormedType( type ),
         "cannot construct 'PAlias' type; the type cannot be converted to an UPLC constant"
     );
 
-    const thisAliasId = symId;
-    type ThisAliasT = AliasTermType<typeof thisAliasId, T>;
-    type ThisAliasTerm = Term<PAlias<T, typeof thisAliasId, PAliasExtension>>;
+    type ThisAliasT = AliasT<T>;
+    type ThisAliasTerm = Term<PAlias<T>>;
 
     //@ts-ignore
     class PAliasExtension extends _PAlias
@@ -87,13 +76,7 @@ export function palias<T extends ConstantableTermType, SymId extends symbol >(
         static from: ( toAlias: Term<ToPType<T>> ) => ThisAliasTerm;
     };
 
-    const thisType: AliasTermType<typeof thisAliasId, T> = Object.freeze([
-        aliasType,
-        Object.freeze({
-            id: thisAliasId,
-            type: cloneTermType( isAliasType( type ) ? unwrapAlias( type ) : type )
-        })
-    ]) as any;
+    const thisType: ThisAliasT = alias( type ) as any;
 
     ObjectUtils.defineReadOnlyProperty(
         PAliasExtension,
@@ -110,14 +93,14 @@ export function palias<T extends ConstantableTermType, SymId extends symbol >(
     ObjectUtils.defineReadOnlyProperty(
         PAliasExtension,
         "fromData",
-        ( data: Term<PData> ): ThisAliasTerm => {
+        ( dataTerm: Term<PData> ): ThisAliasTerm => {
 
             JsRuntime.assert(
-                typeExtends( data.type, Type.Data.Any ),
+                typeExtends( dataTerm.type, data ),
                 "trying to construct an alias using static method 'fromData'; but the `Data` argument is not a `Data.Constr`"
             );
 
-            const res = getFromDataForType( type )( data );
+            const res = fromData( type )( dataTerm );
 
             if( typeof fromDataConstraint === "function" )
             {
@@ -138,25 +121,25 @@ export function palias<T extends ConstantableTermType, SymId extends symbol >(
     ObjectUtils.defineReadOnlyProperty(
         PAliasExtension,
         "toData",
-        ( alias: ThisAliasTerm ): Term<PData> => {
+        ( aliasTerm: ThisAliasTerm ): Term<PData> => {
 
-            const aliasT = alias.type;
+            const aliasT = aliasTerm.type;
 
             JsRuntime.assert(
-                aliasT[0] === aliasType && typeExtends( aliasT, thisType ),
-                "trying to conver an alias type using the wrong 'toData'"
+                aliasT[0] === PrimType.Alias && typeExtends( aliasT, thisType ),
+                "trying to convert an alias type using the wrong class 'toData'"
             );
 
-            return getToDataForType( type )( punsafeConvertType( alias, type ) );
+            return toData( type )( punsafeConvertType( aliasTerm, type ) );
         }
     );
     
     ObjectUtils.defineReadOnlyProperty(
         PAliasExtension,
         "from",
-        ( toAlias: Term<ToPType<T>> ): ThisAliasTerm =>
-            punsafeConvertType( toAlias, thisType ) as any
+        ( toAlias: PappArg<ToPType<T>> ): ThisAliasTerm =>
+            punsafeConvertType( pappArgToTerm( toAlias, type ), thisType ) as any
     );
 
-    return PAliasExtension as unknown as PAlias<T ,typeof thisAliasId, PAliasExtension>;
+    return PAliasExtension as unknown as PAlias<T, PAliasExtension>;
 }

@@ -1,7 +1,7 @@
 import { UtilityTermOf, addUtilityForType } from ".";
 import { ErrorUPLC } from "../../UPLC/UPLCTerms/ErrorUPLC";
-import { TermType, Term } from "../Term";
-import { ToPType } from "../Term/Type/ts-pluts-conversion";
+import { Term } from "../Term";
+import { TermType, ToPType } from "../type_system";
 
 export function perror<T extends TermType>( type: T , msg: string | undefined = undefined, addInfos: object | undefined = undefined): UtilityTermOf<ToPType<T>>
 {

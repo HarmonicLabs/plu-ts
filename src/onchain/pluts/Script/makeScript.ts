@@ -7,7 +7,7 @@ import type { Term } from "../Term";
 import { bool, data, unit } from "../Term/Type/base";
 import { typeExtends } from "../Term/Type/extension";
 import { isConstantableTermType, isLambdaType } from "../Term/Type/kinds";
-import { termTypeToString } from "../Term/Type/utils";
+import { termTypeToString } from "../type_system/utils";
 import { V1 , V2 } from "../API";
 import { getFromDataForType } from "../lib/std/data/conversion/getFromDataTermForType";
 import type { PDataRepresentable } from "../PType/PDataRepresentable";

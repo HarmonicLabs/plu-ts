@@ -1,7 +1,7 @@
 import type { TermFn, PLam, PBool, PList } from "../../../PTypes";
-import { ConstantableTermType, lam, bool, list } from "../../../Term";
-import { ToPType } from "../../../Term/Type/ts-pluts-conversion";
+import { TermType, ToPType, lam, bool, list } from "../../../type_system";
 import { pif } from "../../builtins";
+import { papp } from "../../papp";
 import { pfn } from "../../pfn";
 import { phoist } from "../../phoist";
 import { plam } from "../../plam";
@@ -9,8 +9,7 @@ import { pnil } from "./const";
 import { pfoldr } from "./pfoldr";
 
 
-
-export function pfilter<ElemsT extends ConstantableTermType>( elemsT: ElemsT )
+export function pfilter<ElemsT extends TermType>( elemsT: ElemsT )
 : TermFn<[ PLam<ToPType<ElemsT>,PBool>, PList<ToPType<ElemsT>> ], PList<ToPType<ElemsT>>>
 {
 return phoist(
@@ -30,7 +29,6 @@ return phoist(
             ],  list( elemsT ))
             (( elem, accum ) =>
                 pif( list(elemsT) ).$(
-                    // @ts-ignore Type instantiation is excessively deep and possibly infinite.
                     papp( predicate, elem )
                 )
                 .then( accum.prepend( elem ) )

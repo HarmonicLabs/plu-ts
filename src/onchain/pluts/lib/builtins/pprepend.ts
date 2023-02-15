@@ -1,19 +1,18 @@
 import { Builtin } from "../../../UPLC/UPLCTerms/Builtin";
 import { TermFn, PList } from "../../PTypes";
-import { Type, Term } from "../../Term";
-import { TermType } from "../../Term/Type"
-import { ToPType } from "../../Term/Type/ts-pluts-conversion";
+import { Term } from "../../Term";
+import { TermType, ToPType, fn, list } from "../../type_system";
 import { addApplications } from "./addApplications";
 
 
-export function pprepend<ListElemT extends TermType>( listElemType: ListElemT | undefined = undefined )
-    : TermFn<[ ToPType<ListElemT> , PList< ToPType<ListElemT> > ], PList< ToPType<ListElemT> > >
+export function pprepend<ListElemT extends TermType>( listElemType: ListElemT )
+    : TermFn<[ ToPType<ListElemT> , PList<ToPType<ListElemT>> ], PList<ToPType<ListElemT>>>
 {
-    const listElemT = listElemType ?? Type.Var("pprepend_listElemType");
+    const listElemT = listElemType ;
 
-    return addApplications<[ ToPType<ListElemT> , PList< ToPType<ListElemT> > ], PList< ToPType<ListElemT> > >(
+    return addApplications<[ ToPType<ListElemT> , PList<ToPType<ListElemT>> ], PList<ToPType<ListElemT>>>(
         new Term(
-            Type.Fn([ listElemT, Type.List( listElemT ) ], Type.List( listElemT ) ),
+            fn([ listElemT, list( listElemT ) ], list( listElemT ) ),
             _dbn => Builtin.mkCons
         )
     );

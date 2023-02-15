@@ -1,4 +1,4 @@
-import { TermType, tyVar, Type } from "../../../Term";
+import { TermType, int, lam, list } from "../../../type_system";
 import { papp } from "../../papp";
 import { pfn } from "../../pfn";
 import { plam } from "../../plam";
@@ -6,23 +6,23 @@ import { pInt } from "../int/pInt";
 import { precursiveList } from "./precursiveList";
 
 
-export const plength = ( elemsT: TermType = tyVar("plength_elemsT") ) => {
+export const plength = ( elemsT: TermType ) => {
 
-    return precursiveList( Type.Int, elemsT )
+    return precursiveList( int, elemsT )
     .$(
         plam(
-            Type.Lambda( Type.List( elemsT ), Type.Int ),
-            Type.Int
+            lam( list( elemsT ), int ),
+            int
         )(
             ( _self ) => pInt( 0 )
         )
     )
     .$(
         pfn([
-            Type.Lambda( Type.List( elemsT ), Type.Int ),
+            lam( list( elemsT ), int ),
             elemsT,
-            Type.List( elemsT )
-        ],  Type.Int)
+            list( elemsT )
+        ],  int)
         (
             ( self, _x, xs ) => pInt(1).add( papp( self, xs ) )
         )

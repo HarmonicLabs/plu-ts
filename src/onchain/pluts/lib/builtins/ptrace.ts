@@ -1,7 +1,7 @@
-import { pif, ptrace } from ".";
+import { Builtin } from "../../../UPLC/UPLCTerms/Builtin";
 import type { TermFn, PString } from "../../PTypes";
-import { str, bool, ConstantableTermType, delayed } from "../../Term";
-import { ToPType } from "../../Term/Type/ts-pluts-conversion";
+import { Term } from "../../Term";
+import { TermType, ToPType, tyVar, fn, str, bool, delayed } from "../../type_system";
 import { pdelay } from "../pdelay";
 import { perror } from "../perror";
 import { pfn } from "../pfn";
@@ -9,6 +9,21 @@ import { pforce } from "../pforce";
 import { phoist } from "../phoist";
 import { plam } from "../plam";
 import { pBool } from "../std/bool/pBool";
+import { addApplications } from "./addApplications";
+import { pif } from "./bool";
+
+
+export function ptrace<ReturnT extends TermType>( returnT: ReturnT )
+    : TermFn<[ PString, ToPType<ReturnT> ], ToPType<ReturnT>>
+{
+    return addApplications<[ PString, ToPType<ReturnT> ], ToPType<ReturnT>>(
+        // @ts-ignore Type instantiation is excessively deep and possibly infinite.
+        new Term(
+            fn([ str, returnT ], returnT ),
+            _dbn => Builtin.trace
+        )
+    );
+}
 
 
 // @ts-ignore Type instantiation is excessively deep and possibly infinite.
@@ -36,7 +51,7 @@ export const ptraceIfFalse = phoist(
     )
 );
 
-export function ptraceError<T extends ConstantableTermType>( t: T )
+export function ptraceError<T extends TermType>( t: T )
     : TermFn<[ PString ], ToPType<T>>
 {
     return phoist(

@@ -1,14 +1,15 @@
 import { UPLCConst } from "../../../../UPLC/UPLCTerms/UPLCConst";
 import type { PBool } from "../../../PTypes/PBool";
-import { Term, Type } from "../../../Term";
+import { Term } from "../../../Term";
+import { bool } from "../../../type_system";
 import { TermBool, addPBoolMethods } from "../UtilityTerms";
 
-export function pBool( bool: boolean ): TermBool
+export function pBool( b: boolean ): TermBool
 {
     return addPBoolMethods(
         new Term<PBool>(
-            Type.Bool,
-            _dbn => UPLCConst.bool( bool ),
+            bool,
+            _dbn => UPLCConst.bool( b ),
             true
         )
     );

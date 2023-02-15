@@ -1,12 +1,13 @@
 import { Delay } from "../../UPLC/UPLCTerms/Delay";
 import { PType } from "../PType";
 import { PDelayed } from "../PTypes";
-import { Term, Type } from "../Term";
+import { Term } from "../Term";
+import { delayed } from "../type_system/types";
 
 export function pdelay<PInstance extends PType>(toDelay: Term<PInstance>): Term<PDelayed<PInstance>>
 {
     return new Term(
-        Type.Delayed( toDelay.type ),
+        delayed( toDelay.type ),
         (dbn) => {
             return new Delay(
                 toDelay.toUPLC( dbn )

@@ -7,11 +7,8 @@ import { UPLCConst } from "../../../../UPLC/UPLCTerms/UPLCConst";
 import { constT, constTypeEq } from "../../../../UPLC/UPLCTerms/UPLCConst/ConstType";
 import { PList, PData } from "../../../PTypes";
 import { Term } from "../../../Term";
-import { ConstantableTermType, typeExtends, Type, list, PrimType, pair, data } from "../../../Term/Type"
 import { termTyToConstTy } from "../../../Term/Type/constTypeConversion";
-import { isConstantableTermType, isStructType } from "../../../Term/Type/kinds";
-import { ToPType } from "../../../Term/Type/ts-pluts-conversion";
-import { termTypeToString } from "../../../Term/Type/utils";
+import { termTypeToString } from "../../../type_system/utils";
 import { pnilPairData, pnilData, pprepend, ppairData, pfstPair, psndPair } from "../../builtins";
 import { punsafeConvertType } from "../../punsafeConvertType";
 import { TermList, addPListMethods } from "../UtilityTerms";

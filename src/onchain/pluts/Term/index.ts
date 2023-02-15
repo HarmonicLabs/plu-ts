@@ -3,17 +3,13 @@ import ObjectUtils from "../../../utils/ObjectUtils";
 
 import type { UPLCTerm } from "../../UPLC/UPLCTerm";
 import type { PType } from "../PType";
-import type { TermType } from "./Type/base";
-import type { FromPType, ToPType } from "./Type/ts-pluts-conversion";
 
 import { isCloneable } from "../../../types/interfaces/Cloneable";
 import { HoistedUPLC } from "../../UPLC/UPLCTerms/HoistedUPLC";
-import { UPLCConst } from "../../UPLC/UPLCTerms/UPLCConst";
-import { isWellFormedType } from "./Type/kinds";
-import { ErrorUPLC } from "../../UPLC/UPLCTerms/ErrorUPLC";
 import { Machine } from "../../CEK";
-
-export * from "./Type";
+import { FromPType, ToPType } from "../type_system/ts-pluts-conversion";
+import { isWellFormedGenericType, isWellFormedType } from "../type_system/kinds/isWellFormedType";
+import { TermType } from "../type_system/types";
 
 export type UnTerm<T extends Term<PType>> = T extends Term<infer PT extends PType > ? PT : never;
 
@@ -54,7 +50,7 @@ export class Term<A extends PType>
     constructor( type: FromPType<A> , toUPLC: ( dbn: bigint ) => UPLCTerm, isConstant: boolean = false )
     {
         JsRuntime.assert(
-            isWellFormedType( type ) || Boolean(void console.log( type )),
+            isWellFormedGenericType( type ) || Boolean(void console.log( type )),
             "invalid type while constructing Term"
         );
 

@@ -1,4 +1,4 @@
-import { bool, data } from "../../../Term/Type";
+import { bool, data } from "../../../type_system/types";
 import { punConstrData } from "../../builtins";
 import { phoist } from "../../phoist";
 import { plam } from "../../plam";

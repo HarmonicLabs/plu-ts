@@ -1,14 +1,14 @@
-import ObjectUtils from "../../../utils/ObjectUtils";
 import { BasePlutsError } from "../../../errors/BasePlutsError";
 import { PType } from "../PType";
-import { TermType, Term } from "../Term";
-import { isWellFormedType } from "../Term/Type/kinds";
-import { ToPType } from "../Term/Type/ts-pluts-conversion";
+import { Term } from "../Term";
 import { UtilityTermOf, addUtilityForType } from "./addUtilityForType";
+import { isWellFormedType } from "../type_system/kinds/isWellFormedType";
+import { ToPType } from "../type_system/ts-pluts-conversion";
+import { TermType } from "../type_system/types";
 
 
-export function punsafeConvertType<FromPInstance extends PType, SomeExtension extends {}, ToTermType extends TermType>
-( someTerm: Term<FromPInstance> & SomeExtension, toType: ToTermType ): Term<ToPType<ToTermType>> & SomeExtension & UtilityTermOf<ToPType<ToTermType>>
+export function punsafeConvertType<FromPInstance extends PType, ToTermType extends TermType>
+( someTerm: Term<FromPInstance>, toType: ToTermType ): UtilityTermOf<ToPType<ToTermType>>
 {
     if( !isWellFormedType( toType ) )
     throw new BasePlutsError("");

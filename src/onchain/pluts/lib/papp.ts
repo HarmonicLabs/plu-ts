@@ -8,15 +8,16 @@ import { Lambda } from "../../UPLC/UPLCTerms/Lambda";
 import { UPLCVar } from "../../UPLC/UPLCTerms/UPLCVar";
 import { PType } from "../PType";
 import { PLam } from "../PTypes";
-import { Term, TermType, typeExtends, PrimType } from "../Term";
-import { applyLambdaType } from "../Term/Type/applyLambdaType";
-import { isLambdaType } from "../Term/Type/kinds";
-import { termTypeToString } from "../Term/Type/utils";
+import { Term } from "../Term";
+import { typeExtends } from "../type_system/typeExtends";
+import { PrimType, TermType } from "../type_system/types";
+import { termTypeToString } from "../type_system/utils";
 import { UtilityTermOf, addUtilityForType } from "./addUtilityForType";
 import { PappArg, pappArgToTerm } from "./pappArg";
+import { fromData } from "./std";
 
 
-function isIdentityUPLC( uplc: UPLCTerm ): uplc is Lambda
+function isIdentityUPLC( uplc: UPLCTerm ): boolean
 {
     return (
         ( uplc instanceof HoistedUPLC && isIdentityUPLC( uplc.UPLC ) ) || 
@@ -49,13 +50,17 @@ export function papp<Input extends PType, Output extends PType>( a: Term<PLam<In
 {
     let lambdaType: TermType = a.type;
 
-    if(!( isLambdaType( lambdaType ) )) throw JsRuntime.makeNotSupposedToHappenError(
+    if(!( lambdaType[0] === PrimType.Lambda ) )
+    throw JsRuntime.makeNotSupposedToHappenError(
         "a term not representing a Lambda (aka. Type.Lambda) was passed to an application"
     );
 
     let _b: Term<Input>;
     if( b instanceof Term )
     {
+        // unwrap 'asData' if is the case
+        b = (b.type[0] === PrimType.AsData ? fromData( b.type[1] )( b as any ) : b) as any;
+
         JsRuntime.assert(
             typeExtends( b.type, lambdaType[ 1 ] ),
             "while applying 'Lambda'; unexpected type of input; it should be possible to assign the input to \"" + termTypeToString( lambdaType[1] ) +
@@ -68,24 +73,15 @@ export function papp<Input extends PType, Output extends PType>( a: Term<PLam<In
         _b = pappArgToTerm( b, lambdaType[1] ) as any;
     }
 
-    const outputType = applyLambdaType( lambdaType, _b.type );
+    const outputType = lambdaType[2]; // applyLambdaType( lambdaType, _b.type );
     const outputTerm = addUtilityForType( outputType )(
         new Term(
             outputType,
             dbn => {
 
-                const funcUPLC = 
-                    ( (_b as any).__isDynamicPair || _b.type[0] === PrimType.PairAsData) ?
-                        
-                        (dynPairVersion => 
-                            dynPairVersion instanceof Term ? 
-                                dynPairVersion.toUPLC( dbn ) : 
-                                a.toUPLC( dbn )
-                        )((a as any).withDynamicPairAsInput)
-
-                        : a.toUPLC( dbn );
-                        
+                const funcUPLC = a.toUPLC( dbn );
                 if( funcUPLC instanceof ErrorUPLC ) return funcUPLC;
+                
                 const argUPLC  = _b.toUPLC( dbn );
                 if( argUPLC instanceof ErrorUPLC ) return argUPLC;
 
@@ -103,7 +99,7 @@ export function papp<Input extends PType, Output extends PType>( a: Term<PLam<In
         ) as any
     );
 
-    if( isLambdaType( outputTerm.type ) && ( !ObjectUtils.hasOwn( outputTerm, "$" ) ))
+    if( ( outputTerm.type[0] === PrimType.Lambda ) && ( !ObjectUtils.hasOwn( outputTerm, "$" ) ))
         // defined "$" property can be overridden but not deleted
         // override is necessary to allow a more specific implementation
         // 

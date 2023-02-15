@@ -1,5 +1,5 @@
 import ObjectUtils from "../../../../../utils/ObjectUtils";
-import type { ConstantableStructDefinition, Term, StructCtorDef } from "../../../Term";
+import type { Term } from "../../../Term";
 import type { PStruct, RestrictedStructInstance } from "../../../PTypes/PStruct/pstruct";
 import type { PType } from "../../../PType";
 import type { IsSingleKey } from "../../../../../utils/ts/SingleKeyObj";
@@ -8,11 +8,11 @@ import { capitalize } from "../../../../../utils/ts/capitalize";
 // !!! IMPORTANT !!!
 // DO NOT change the order of imports
 // `../../../Term/Type/kinds` is also a dependecy of `pmatch`
-import { isStructType, isStructDefinition } from "../../../Term/Type/kinds";
 import { pmatch } from "../../../PTypes/PStruct/pmatch";
+import { StructDefinition, StructCtorDef, isStructType, isStructDefinition } from "../../../type_system";
 
 
-export type TermStruct<SDef extends ConstantableStructDefinition> = Term<PStruct<SDef>> & {
+export type TermStruct<SDef extends StructDefinition> = Term<PStruct<SDef>> & {
     /*
     eqTerm: TermFn<[PStruct<SDef>], PBool>
     eq: ( other: Term<PStruct<SDef>> ) => TermBool
@@ -30,7 +30,7 @@ export type TermStruct<SDef extends ConstantableStructDefinition> = Term<PStruct
     : {}
 );
 
-export function addPStructMethods<SDef extends ConstantableStructDefinition>( struct: Term<PStruct<SDef>> ): TermStruct<SDef>
+export function addPStructMethods<SDef extends StructDefinition>( struct: Term<PStruct<SDef>> ): TermStruct<SDef>
 {
     const t = struct.type;
     if( !isStructType(t) ) return struct as any;

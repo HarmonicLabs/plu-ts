@@ -1,6 +1,7 @@
 import ObjectUtils from "../../../../../utils/ObjectUtils"
 import { PByteString, TermFn, PInt, PBool } from "../../../PTypes"
-import { Term, bs, int } from "../../../Term"
+import { Term } from "../../../Term"
+import { bs, int } from "../../../type_system/types"
 import { psliceBs, psub, plengthBs, pdecodeUtf8, pappendBs, flippedCons, pconsBs, pindexBs, peqBs, plessBs, plessEqBs, pgreaterBS, pgreaterEqBS } from "../../builtins"
 import { PappArg } from "../../pappArg"
 import { pfn } from "../../pfn"

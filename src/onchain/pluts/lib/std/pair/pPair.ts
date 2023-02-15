@@ -1,28 +1,25 @@
 import JsRuntime from "../../../../../utils/JsRuntime";
 // !!! IMPORTANT !!!
-// `isConstantableTermType` is used both here and by `addPPairMethods`
+// `isWellFormedType` is used both here and by `addPPairMethods`
 // DO NOT change the order of the two imports
-import { isConstantableTermType } from "../../../Term/Type/kinds";
+import { TermType, ToPType, typeExtends, pair, isWellFormedType } from "../../../type_system";
 import { TermPair, addPPairMethods } from "../../std/UtilityTerms/TermPair";
 import { UPLCConst } from "../../../../UPLC/UPLCTerms/UPLCConst";
 import { PPair } from "../../../PTypes";
-import { ConstantableTermType, Term, typeExtends, pair } from "../../../Term";
-import { termTyToConstTy } from "../../../Term/Type/constTypeConversion";
-import { ToPType } from "../../../Term/Type/ts-pluts-conversion";
-import { pdynPair } from "./pdynPair";
+import { Term } from "../../../Term";
 
 
-export function pPair<FstT extends ConstantableTermType, SndT extends ConstantableTermType>(
+export function pPair<FstT extends TermType, SndT extends TermType>(
     fstT: FstT,
     sndT: SndT
 ): ( fst: Term<ToPType<FstT>>, snd: Term<ToPType<SndT>> ) => TermPair<ToPType<FstT>,ToPType<SndT>>
 {
     JsRuntime.assert(
-        isConstantableTermType( fstT ),
+        isWellFormedType( fstT ),
         "plutus only supports pairs of types that can be converted to constants"
     );
     JsRuntime.assert(
-        isConstantableTermType( sndT ),
+        isWellFormedType( sndT ),
         "plutus only supports pairs of types that can be converted to constants"
     );
 

@@ -5,9 +5,9 @@ import { Lambda } from "../../UPLC/UPLCTerms/Lambda";
 import { UPLCVar } from "../../UPLC/UPLCTerms/UPLCVar";
 import { PType } from "../PType";
 import { PLam, TermFn } from "../PTypes";
-import { Term, Type, typeExtends, TermType } from "../Term";
-import { papp } from "./papp";
-import { punsafeConvertType } from "./punsafeConvertType";
+import { Term } from "../Term";
+import { TermType, lam, tyVar, typeExtends } from "../type_system";
+import { addUtilityForType } from "./addUtilityForType";
 
 
 /**
@@ -37,15 +37,15 @@ export function precursive<A extends PType, B extends PType>
     >
 ): TermFn<[ A ], B >
 {
-   const a = Type.Var("recursive_fn_a");
-   const b = Type.Var("recursive_fn_b");
+   const a = tyVar("recursive_fn_a");
+   const b = tyVar("recursive_fn_b");
 
    JsRuntime.assert(
        typeExtends(
            fnBody.type,
-           Type.Lambda(
-               Type.Lambda( a, b ),
-               Type.Lambda( a, b )
+           lam(
+               lam( a, b ),
+               lam( a, b )
            )
        ),
        "passed function body cannot be recursive; "+
@@ -79,21 +79,13 @@ export function precursive<A extends PType, B extends PType>
        )
    );
 
-   const Z = new Term<
-           PLam<
-               PLam<
-                   PLam<PType,PType>,
-                   PLam<PType,PType>
-               >,
-           PLam<PType,PType>
-           >
-       >(
-           Type.Lambda(
-               Type.Lambda( Type.Lambda( a, b ), Type.Lambda( a, b ) ),
-               Type.Lambda( a, b ),
-           ),
-           _dbn => ZUPLC
-       );
+   const recursiveFn = new Term(
+        fnBody.type[2] as TermType,
+        dbn => new Application(
+            ZUPLC,
+            fnBody.toUPLC(dbn)
+        )
+   )
 
-   return punsafeConvertType( papp( Z, fnBody as any ), fnBody.type[2] as TermType ) as any;
+   return addUtilityForType( fnBody.type[2] as TermType )( recursiveFn ) as any;
 }

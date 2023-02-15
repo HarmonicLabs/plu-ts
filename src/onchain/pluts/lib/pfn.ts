@@ -3,8 +3,9 @@ import JsRuntime from "../../../utils/JsRuntime";
 import { CurriedFn, curry } from "../../../utils/ts/combinators";
 import { PType } from "../PType";
 import { PLam } from "../PTypes";
-import { TermType, Term, ToTermArrNonEmpty, Type } from "../Term";
-import { ToPType } from "../Term/Type/ts-pluts-conversion";
+import { Term, ToTermArrNonEmpty } from "../Term";
+import { ToPType } from "../type_system/ts-pluts-conversion";
+import { TermType, fn } from "../type_system/types";
 import { UtilityTermOf } from "./addUtilityForType";
 import { PappArg } from "./pappArg";
 import { plam } from "./plam";
@@ -65,7 +66,7 @@ export function pfn<InputsTypes extends [ TermType, ...TermType[] ], OutputType 
 
         return plam(
             inputsTypes[ currentInputIndex ],
-            Type.Fn( inputsTypes.slice( currentInputIndex + 1 ) as any, outputType )
+            fn( inputsTypes.slice( currentInputIndex + 1 ) as [ TermType, ...TermType[] ], outputType ) as any
         )(
             ( someInput: Term<PType> ) => plamNCurried( curriedFn( someInput ) as any , nMissingArgs - 1 )
         ) as any;

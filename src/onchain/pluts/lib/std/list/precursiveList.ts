@@ -1,6 +1,5 @@
 import { TermFn, PLam, PList } from "../../../PTypes";
-import { TermType, tyVar, lam, list, fn } from "../../../Term";
-import { ToPType } from "../../../Term/Type/ts-pluts-conversion";
+import { TermType, tyVar, ToPType, lam, list, fn } from "../../../type_system";
 import { papp } from "../../papp";
 import { pfn } from "../../pfn";
 import { phoist } from "../../phoist";
@@ -55,14 +54,14 @@ export function precursiveList<ReturnT  extends TermType, ElemtsT extends TermTy
                     .$(
                         papp(
                             matchNil,
-                            finalSelf
+                            finalSelf as any
                         )
                     )
                     .$(
                         papp(
                             matchCons,
-                            finalSelf
-                        )
+                            finalSelf as any
+                        ) as any
                     )
                     .$( lst )
                 ) as any

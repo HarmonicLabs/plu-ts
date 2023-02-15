@@ -1,18 +1,12 @@
 import JsRuntime from "../../../../utils/JsRuntime";
 import ObjectUtils from "../../../../utils/ObjectUtils";
 
-import { DataConstr } from "../../../../types/Data/DataConstr";
-import { Type, AliasTermType, aliasType, ConstantableStructDefinition, ConstantableTermType, GenericStructDefinition, GenericStructType, int, PrimType, struct, StructCtorDef, StructDefinition, structType, StructType, tyVar } from "../../Term/Type/base";
-import { typeExtends } from "../../Term/Type/extension";
-import { isAliasType, isConstantableStructDefinition, isStructType } from "../../Term/Type/kinds";
 import { TermFn } from "../PFn";
-import { ToPType } from "../../Term/Type/ts-pluts-conversion";
-import { structDefToString, termTypeToString } from "../../Term/Type/utils";
-import { getToDataForType } from "../../lib/std/data/conversion/getToDataTermForType";
+import { structDefToString, termTypeToString } from "../../type_system/utils";
 import { Pair } from "../../../../types/structs/Pair";
 import { HoistedUPLC } from "../../../UPLC/UPLCTerms/HoistedUPLC";
 import { UPLCConst } from "../../../UPLC/UPLCTerms/UPLCConst";
-import { Term, data } from "../../Term";
+import { Term } from "../../Term";
 import { Application } from "../../../UPLC/UPLCTerms/Application";
 import { PData } from "../PData/PData";
 import { Builtin } from "../../../UPLC/UPLCTerms/Builtin";
@@ -23,6 +17,8 @@ import { punsafeConvertType } from "../../lib/punsafeConvertType";
 import { Data } from "../../../../types/Data";
 import { Machine } from "../../../CEK";
 import { showUPLC } from "../../../UPLC/UPLCTerm";
+import { StructCtorDef, StructDefinition, StructT } from "../../type_system/types";
+import { ToPType } from "../../type_system/ts-pluts-conversion";
 
 /**
  * intermediate class useful to reconize structs form primitives
@@ -39,14 +35,14 @@ export type StructInstance<SCtorDef extends StructCtorDef> = {
     [Field in keyof SCtorDef]: Term<ToPType<SCtorDef[Field]>>
 }
 
-export type PStruct<SDef extends ConstantableStructDefinition> = {
+export type PStruct<SDef extends StructDefinition> = {
     new(): _PStruct
 
     /**
      * @deprecated
      */
-    readonly termType: [ typeof structType, SDef ];
-    readonly type: [ typeof structType, SDef ];
+    readonly termType: StructT<SDef>;
+    readonly type: StructT<SDef>;
 
     readonly fromDataTerm: TermFn<[PData],PStruct<SDef>>
     fromData: ( data: Term<PData> ) => Term<PStruct<SDef>>;

@@ -1,7 +1,7 @@
 import { ByteString } from "../../../../../types/HexString/ByteString";
 import { UPLCConst } from "../../../../UPLC/UPLCTerms/UPLCConst";
 import { Term } from "../../../Term";
-import { bs } from "../../../Term/Type";
+import { bs } from "../../../type_system/types";
 import { TermBS, addPByteStringMethods } from "../UtilityTerms/TermBS";
 import { Buffer } from "buffer";
 

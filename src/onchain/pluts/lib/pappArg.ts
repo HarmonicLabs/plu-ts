@@ -10,10 +10,7 @@ import { HexString } from "../../../types/HexString";
 import { ByteString } from "../../../types/HexString/ByteString";
 import { Integer } from "../../../types/ints/Integer";
 import { Pair } from "../../../types/structs/Pair";
-import { Term, TermType, tyVar, typeExtends, int, bool, bs, str, unit, fn, ConstantableTermType, list } from "../Term";
-import { isWellFormedType, isTypeParam, isLambdaType, isPairType, isConstantableTermType, isListType } from "../Term/Type/kinds";
-import { ToPType } from "../Term/Type/ts-pluts-conversion";
-import { termTypeToString, getNRequiredLambdaArgs } from "../Term/Type/utils";
+import { termTypeToString, getNRequiredLambdaArgs } from "../type_system/utils";
 import { UtilityTermOf } from "./addUtilityForType";
 import { pfn } from "./pfn";
 import { pList } from "./std/list/const";
@@ -23,6 +20,8 @@ import { pStr } from "./std/str/pStr";
 import { pBool } from "./std/bool/pBool";
 import { pInt } from "./std/int/pInt";
 import { pmakeUnit } from "./std/unit/pmakeUnit";
+import { Term } from "../Term";
+import { TermType, ToPType, tyVar, isWellFormedType, typeExtends, int, bool, isTypeParam, bs, str, unit, fn, list, PrimType } from "../type_system";
 
 
 type _TsFunctionSatisfying<KnownArgs extends Term<PType>[], POut extends PType> =
@@ -207,7 +206,8 @@ export function pappArgToTerm<ArgT extends TermType>(
             // if must extend any
             isTypeParam( mustExtend ) ||
             // or must extend something different than a function
-            !isLambdaType( mustExtend ) || 
+            mustExtend[0] !== PrimType.Lambda || 
+            // or missing args
             funcNArgs <= 0
         )
         {
@@ -231,7 +231,7 @@ export function pappArgToTerm<ArgT extends TermType>(
 
         for( let i = 0; i < funcNArgs; i++ )
         {
-            if( !isLambdaType(outTy) )
+            if( outTy[0] !== PrimType.Lambda )
             {
                 throw JsRuntime.makeNotSupposedToHappenError(
                     "unexpected `outTy` while constructing `pfn`; " +
@@ -286,7 +286,7 @@ export function pappArgToTerm<ArgT extends TermType>(
             return pList( elemsT )( arg.map(elem => pappArgToTerm( elem,  elemsT ) ) ) as any;
         }
 
-        if( isPairType( mustExtend ) )
+        if( mustExtend[0] === PrimType.Pair )
         {
             if( arg.length !== 2 )
             throw new BasePlutsError(
@@ -295,8 +295,8 @@ export function pappArgToTerm<ArgT extends TermType>(
 
             const [ fst, snd ] = arg as PappArg<PType>[];
     
-            const fstT = isConstantableTermType( mustExtend[1] ) ? mustExtend[1] : tryGetConstantableType( fst );
-            const sndT = isConstantableTermType( mustExtend[2] ) ? mustExtend[2] : tryGetConstantableType( snd );
+            const fstT = isWellFormedType( mustExtend[1] ) ? mustExtend[1] : tryGetConstantableType( fst );
+            const sndT = isWellFormedType( mustExtend[2] ) ? mustExtend[2] : tryGetConstantableType( snd );
 
             return pPair( fstT, sndT )(
                 pappArgToTerm( fst, fstT ),
@@ -304,9 +304,9 @@ export function pappArgToTerm<ArgT extends TermType>(
             ) as any;
         }
 
-        if( isListType( mustExtend ) )
+        if( mustExtend[0] === PrimType.List )
         {
-            const elemsT = isConstantableTermType( mustExtend[1] ) ? mustExtend[1] : tryInferElemsT( arg );
+            const elemsT = isWellFormedType( mustExtend[1] ) ? mustExtend[1] : tryInferElemsT( arg );
             return pList( elemsT )( arg.map(elem => pappArgToTerm( elem,  elemsT ) ) ) as any;
         }
     }
@@ -333,10 +333,10 @@ export function pappArgToTerm<ArgT extends TermType>(
             ) as any;
         }
 
-        if( isPairType( mustExtend ) )
+        if( mustExtend[0] === PrimType.Pair )
         {
-            const fstT = isConstantableTermType( mustExtend[1] ) ? mustExtend[1] : tryGetConstantableType( fst );
-            const sndT = isConstantableTermType( mustExtend[2] ) ? mustExtend[2] : tryGetConstantableType( snd );
+            const fstT = isWellFormedType( mustExtend[1] ) ? mustExtend[1] : tryGetConstantableType( fst );
+            const sndT = isWellFormedType( mustExtend[2] ) ? mustExtend[2] : tryGetConstantableType( snd );
 
             return pPair( fstT, sndT )(
                 pappArgToTerm( fst, fstT ),
@@ -387,7 +387,7 @@ function getPossiblePlutsTypesOf( value: PappArg<PType> ): TermType[]
                 (new Array((value as Function).length))
                 .map( ( _ , i ) => tyVar("arg_" + i) ) as any,
                 tyVar("fn_output")
-            )
+            ) as any
         ];
     }
 
@@ -408,7 +408,7 @@ function getPossiblePlutsTypesOf( value: PappArg<PType> ): TermType[]
     return types;
 }
 
-function tryGetConstantableType( someValue: PappArg<PType> ): ConstantableTermType
+function tryGetConstantableType( someValue: PappArg<PType> ): TermType
 {
     const tys = getPossiblePlutsTypesOf( someValue );
     if( tys.length !== 1 )
@@ -417,7 +417,7 @@ function tryGetConstantableType( someValue: PappArg<PType> ): ConstantableTermTy
     );
 
     const t = tys[0];
-    if( !isConstantableTermType( t ) )
+    if( !isWellFormedType( t ) )
     throw new BasePlutsError(
         "inferred type was not constantable: type: " + termTypeToString( t )
     );
@@ -425,7 +425,7 @@ function tryGetConstantableType( someValue: PappArg<PType> ): ConstantableTermTy
     return t;
 }
 
-function tryInferElemsT( arg: PappArg<PType>[] ): ConstantableTermType
+function tryInferElemsT( arg: PappArg<PType>[] ): TermType
 {
     if( arg.length === 0 )
     throw new BasePlutsError(
@@ -449,7 +449,7 @@ function tryInferElemsT( arg: PappArg<PType>[] ): ConstantableTermType
         "elements type of a possible plu-ts `list` was ambigous; try to specify a type"
     );
 
-    if( !isConstantableTermType(elemsT) )
+    if( !isWellFormedType(elemsT) )
     throw new BasePlutsError(
         "inferred type was not constantable: type: " + termTypeToString( elemsT )
     );

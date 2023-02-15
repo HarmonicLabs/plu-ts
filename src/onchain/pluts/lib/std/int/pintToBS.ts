@@ -1,5 +1,5 @@
 import { ByteString } from "../../../../../types/HexString/ByteString";
-import { int, bs } from "../../../Term/Type";
+import { bs, int } from "../../../type_system/types";
 import { phoist } from "../../phoist";
 import { plam } from "../../plam";
 import { pByteString } from "../bs/pByteString";

@@ -3,7 +3,8 @@ import ObjectUtils from "../../../../../utils/ObjectUtils";
 import { PType } from "../../../PType";
 import { PPair } from "../../../PTypes";
 import { Term } from "../../../Term";
-import { isPairType, isConstantableTermType } from "../../../Term/Type/kinds";
+import { isWellFormedType, typeExtends } from "../../../type_system";
+import { tyVar, pair, TermType } from "../../../type_system/types";
 import { UtilityTermOf } from "../../addUtilityForType";
 import { pfstPair, psndPair } from "../../builtins";
 
@@ -15,32 +16,36 @@ export type TermPair<PFst extends PType, PSnd extends PType> = Term<PPair<PFst,P
     
 }
 
-export function addPPairMethods<PFst extends PType, PSnd extends PType>( pair: Term<PPair<PFst,PSnd>>)
+export function addPPairMethods<PFst extends PType, PSnd extends PType>( _pair: Term<PPair<PFst,PSnd>>)
 {
-    const pairT = pair.type;
+    const pairT = _pair.type;
 
-    if( !isPairType( pairT ) )
+    if( !typeExtends( pairT, pair( tyVar(), tyVar() ) ) )
     {
         throw new BasePlutsError(
             "can't add pair methods to a term that is not a pair"
         );
     };
 
-    const fstT =  pairT[1];
-    const sndT = pairT[2];
+    const fstT = pairT[1] as TermType;
+    const sndT = pairT[2] as TermType;
 
-    if( isConstantableTermType( fstT ) )
+    if( isWellFormedType( fstT ) )
+        // @ts-ignore
         ObjectUtils.defineReadOnlyProperty(
-            pair,
+            _pair,
             "fst",
-            pfstPair( fstT, sndT ).$( pair )
+            // @ts-ignore
+            pfstPair( fstT, sndT ).$( _pair )
         );
-    if( isConstantableTermType( sndT ) )
+    if( isWellFormedType( sndT ) )
+        // @ts-ignore
         ObjectUtils.defineReadOnlyProperty(
-            pair,
+            _pair,
             "snd",
-            psndPair( fstT, sndT ).$( pair )
+            // @ts-ignore
+            psndPair( fstT, sndT ).$( _pair )
         );
 
-    return pair as any;
+    return _pair as any;
 }

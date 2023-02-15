@@ -3,11 +3,9 @@ import ObjectUtils from "../../../../../utils/ObjectUtils";
 import { PType } from "../../../PType";
 import { PDataRepresentable } from "../../../PType/PDataRepresentable";
 import type { PList, TermFn, PInt, PLam, PBool } from "../../../PTypes";
-import { unwrapAlias } from "../../../PTypes/PAlias/unwrapAlias";
-import { Term, ConstantableTermType, TermType } from "../../../Term";
-import { isAliasType, isConstantableTermType, isLambdaType } from "../../../Term/Type/kinds";
-import { ToPType } from "../../../Term/Type/ts-pluts-conversion";
-import { termTypeToString } from "../../../Term/Type/utils";
+import { Term } from "../../../Term";
+import { ToPType, TermType, unwrapAlias, isTaggedAsAlias, isWellFormedGenericType, PrimType } from "../../../type_system";
+import { termTypeToString } from "../../../type_system/utils";
 import { UtilityTermOf } from "../../addUtilityForType";
 import { phead, ptail } from "../../builtins";
 import { pprepend } from "../../builtins/pprepend";
@@ -95,9 +93,9 @@ export type TermList<PElemsT extends PDataRepresentable> = Term<PList<PElemsT>> 
     // readonly concat: TermFn<[PList<PElemsT>], PList<PElemsT>>
     
     // transform
-    readonly mapTerm: <ResultT extends ConstantableTermType>( resultT: ResultT ) => TermFn<[PLam<PElemsT, ToPType<ResultT>>], PList<ToPType<ResultT>>>
+    readonly mapTerm: <ResultT extends TermType>( resultT: ResultT ) => TermFn<[PLam<PElemsT, ToPType<ResultT>>], PList<ToPType<ResultT>>>
     readonly map:     <PResultElemT extends PType>( f: PappArg<PLam<PElemsT,PResultElemT>> ) => TermList<PResultElemT>
-    // readonly reduce: <ResultT extends ConstantableTermType>( resultT: ResultT ) => TermFn<[PLam<ToPType<ResultT>, PLam<PList<PElemsT>, ToPType<ResultT>>>], ToPType<ResultT>> 
+    // readonly reduce: <ResultT extends TermType>( resultT: ResultT ) => TermFn<[PLam<ToPType<ResultT>, PLam<PList<PElemsT>, ToPType<ResultT>>>], ToPType<ResultT>> 
 
     // predicates
     readonly everyTerm: TermFn<[PLam<PElemsT, PBool>], PBool>
@@ -107,7 +105,7 @@ export type TermList<PElemsT extends PDataRepresentable> = Term<PList<PElemsT>> 
     readonly some:      ( predicate: PappArg<PLam<PElemsT, PBool>> ) => TermBool
 };
 
-function getHoistedFlipped<T extends TermType | ConstantableTermType, PSomething extends PType, PReturnT extends PType >( 
+function getHoistedFlipped<T extends TermType | TermType, PSomething extends PType, PReturnT extends PType >( 
     pfunc: (elemsT: T) => TermFn<[ PSomething, PList<ToPType<T>> ], PReturnT>
 ): (elemsT: T) => TermFn<[ PList<ToPType<T>>, PSomething ], PReturnT>
 {
@@ -115,7 +113,7 @@ function getHoistedFlipped<T extends TermType | ConstantableTermType, PSomething
 }
 
 const flippedPrepend = getHoistedFlipped( pprepend );
-const flippedFind = ( t: ConstantableTermType ) => phoist( pflip.$( pfind( t ) ) )
+const flippedFind = ( t: TermType ) => phoist( pflip.$( pfind( t ) ) )
 const flippedFilter = getHoistedFlipped( pfilter );
 const flippedEvery = getHoistedFlipped( pevery )
 const flippedSome = getHoistedFlipped( psome )
@@ -123,8 +121,8 @@ const flippedSome = getHoistedFlipped( psome )
 export function addPListMethods<PElemsT extends PType>( list: Term<PList<PElemsT>> )
     : TermList<PElemsT>
 {
-    const elemsT = (isAliasType( list.type ) ? unwrapAlias( list.type )[1] : list.type[1]) as ConstantableTermType;
-    if(!isConstantableTermType( elemsT as any ))
+    const elemsT = (isTaggedAsAlias( list.type ) ? unwrapAlias( list.type )[1] : list.type[1]) as TermType;
+    if(!isWellFormedGenericType( elemsT as any ))
     {
         throw new BasePlutsError(
             "`addPListMethods` can only be used on lists with concrete types; the type of the list was: " + termTypeToString( list.type )
@@ -224,7 +222,7 @@ export function addPListMethods<PElemsT extends PType>( list: Term<PList<PElemsT
     ObjectUtils.defineReadOnlyProperty(
         list,
         "mapTerm",
-        ( toType: ConstantableTermType ) => 
+        ( toType: TermType ) => 
             phoist( pflip.$( pmap( elemsT, toType ) ) )
             .$( list )
     );
@@ -234,8 +232,8 @@ export function addPListMethods<PElemsT extends PType>( list: Term<PList<PElemsT
         <PReturnElemT extends PType>( f: Term<PLam<PElemsT,PReturnElemT>> ) => {
             const predicateTy = f.type;
             if(!(
-                isLambdaType( predicateTy ) &&
-                isConstantableTermType( predicateTy[2] )
+                predicateTy[0] === PrimType.Lambda &&
+                isWellFormedGenericType( predicateTy[2] )
             ))
             throw new BasePlutsError(
                 `can't map plu-ts fuction of type "${predicateTy}" over a list of type "list(${termTypeToString(elemsT)})"`

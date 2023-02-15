@@ -2,9 +2,9 @@ import ObjectUtils from "../../../utils/ObjectUtils";
 import { Lambda } from "../../UPLC/UPLCTerms/Lambda";
 import { UPLCVar } from "../../UPLC/UPLCTerms/UPLCVar";
 import { PLam } from "../PTypes";
-import { TermType, Term, Type } from "../Term";
-import { isPairType } from "../Term/Type/kinds";
-import { ToPType } from "../Term/Type/ts-pluts-conversion";
+import { Term } from "../Term";
+import { ToPType } from "../type_system/ts-pluts-conversion";
+import { TermType, lam } from "../type_system/types";
 import { UtilityTermOf, addUtilityForType } from "./addUtilityForType";
 import { PappResult, papp } from "./papp";
 
@@ -18,7 +18,7 @@ export function plam<A extends TermType, B extends TermType >( inputType: A, out
 return ( termFunc: ( input: UtilityTermOf<ToPType<A>> ) => Term<ToPType<B>> ): PappResult<PLam<ToPType<A>,ToPType<B>>> =>
 {
     const lambdaTerm  = new Term<PLam<ToPType<A>,ToPType<B>>>(
-        Type.Lambda( inputType, outputType ),
+        lam( inputType, outputType ),
         dbn => {
             const thisLambdaPtr = dbn + BigInt( 1 );
 
@@ -34,14 +34,15 @@ return ( termFunc: ( input: UtilityTermOf<ToPType<A>> ) => Term<ToPType<B>> ): P
         }
     );
 
+    /*
     // define equivalent version but for pairs that are dynamic
-    if( isPairType( inputType ) )
+    if( typeExtends( inputType, pair( tyVar(), tyVar() ) ) )
     {
         ObjectUtils.defineReadOnlyHiddenProperty(
             lambdaTerm,
             "withDynamicPairAsInput",
             new Term<PLam<ToPType<A>,ToPType<B>>>(
-                Type.Lambda( inputType, outputType ),
+                lam( inputType, outputType ),
                 dbn => {
                     const thisLambdaPtr = dbn + BigInt( 1 );
     
@@ -66,6 +67,7 @@ return ( termFunc: ( input: UtilityTermOf<ToPType<A>> ) => Term<ToPType<B>> ): P
             )
         );
     }
+    //*/
 
     // allows ```lambdaTerm.$( input )``` syntax
     // rather than ```papp( lambdaTerm, input )```

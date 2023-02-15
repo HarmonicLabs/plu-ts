@@ -3,13 +3,13 @@ import { Force } from "../../UPLC/UPLCTerms/Force";
 import { PType } from "../PType";
 import { PDelayed } from "../PTypes";
 import { Term } from "../Term";
-import { isDelayedType } from "../Term/Type/kinds";
+import { PrimType } from "../type_system";
 import { UtilityTermOf, addUtilityForType } from "./addUtilityForType";
 
 export function pforce<PInstance extends PType >
 ( toForce: Term<PDelayed<PInstance>> | Term<PInstance> ): UtilityTermOf<PInstance>
 {
-    const outType = isDelayedType( toForce.type ) ? toForce.type[ 1 ] : toForce.type 
+    const outType = toForce.type[0] === PrimType.Delayed ? toForce.type[1] : toForce.type; 
 
     return addUtilityForType( outType )(
         new Term(

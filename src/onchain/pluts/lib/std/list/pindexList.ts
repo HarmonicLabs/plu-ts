@@ -1,6 +1,6 @@
 import type { TermFn, PList, PInt, PLam } from "../../../PTypes";
-import { ConstantableTermType, Type, Term } from "../../../Term";
-import { ToPType } from "../../../Term/Type/ts-pluts-conversion";
+import { Term } from "../../../Term";
+import { TermType, ToPType, fn, int, list } from "../../../type_system";
 import { pif, pisEmpty, plessInt, phead, ptail } from "../../builtins";
 import { papp } from "../../papp";
 import { perror } from "../../perror";
@@ -10,7 +10,7 @@ import { precursive } from "../../precursive";
 import { pInt } from "../int/pInt";
 
 
-export function pindexList<ElemsT extends ConstantableTermType>( elemsT: ElemsT )
+export function pindexList<ElemsT extends TermType>( elemsT: ElemsT )
 : TermFn<[ PList<ToPType<ElemsT>>, PInt ], ToPType<ElemsT>>
 {
     return phoist(
@@ -18,9 +18,9 @@ export function pindexList<ElemsT extends ConstantableTermType>( elemsT: ElemsT 
 
             pfn(
                 [
-                    Type.Fn([ Type.List( elemsT ), Type.Int ], elemsT),
-                    Type.List( elemsT ),
-                    Type.Int
+                    fn([list( elemsT ), int ], elemsT),
+                    list( elemsT ),
+                    int
                 ],
                 elemsT
             )(
@@ -50,7 +50,7 @@ export function pindexList<ElemsT extends ConstantableTermType>( elemsT: ElemsT 
                         )
 
                     )
-            )
+            ) as any
 
         )
     )

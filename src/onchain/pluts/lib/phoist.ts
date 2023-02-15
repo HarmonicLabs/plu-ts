@@ -1,7 +1,7 @@
 import type { PType } from "../PType";
 import type { Term } from "../Term";
 
-export function phoist<PInstance extends PType, SomeExtension extends {} >( closedTerm: Term<PInstance> & SomeExtension ): Term<PInstance> & SomeExtension
+export function phoist<PInstance extends PType, SomeExtension extends {}>( closedTerm: Term<PInstance> & SomeExtension ): Term<PInstance> & SomeExtension
 {
     /*
     the implementation has been moved to a method of the term

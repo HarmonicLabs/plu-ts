@@ -1,5 +1,5 @@
 import { DataConstr } from "../../../../../types/Data/DataConstr";
-import { bool, data } from "../../../Term/Type/base";
+import { bool, data } from "../../../type_system/types";
 import { pif } from "../../builtins";
 import { phoist } from "../../phoist";
 import { plam } from "../../plam";
