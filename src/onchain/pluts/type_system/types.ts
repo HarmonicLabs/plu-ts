@@ -60,7 +60,7 @@ type NonStructTag
     | PrimType.AsData;
 
 /*
-this is better but the typescript folks decided to hard code a silly limit in tsc and not include any lazy evaluation option
+//this is better but the typescript folks decided to hard code a silly limit in tsc and not include any lazy evaluation option
 
 export type TermType
     = readonly [ BaseT ]
@@ -123,7 +123,7 @@ export const data       = Object.freeze([ PrimType.Data ]) as [ PrimType.Data ];
 
 export const list       = 
     <T extends GenericTermType>( ofElem: T ): [ PrimType.List, T ] => 
-        Object.freeze([ PrimType.List, ofElem ]) as any ;
+        Object.freeze([ PrimType.List, ofElem ]) as any;
 
 export const pair       = 
     <FstT extends GenericTermType, SndT extends GenericTermType>

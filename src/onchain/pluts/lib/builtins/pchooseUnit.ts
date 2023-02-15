@@ -9,7 +9,7 @@ export function pchooseUnit<ReturnT extends TermType>( returnT: ReturnT )
 {
     return addApplications<[ PUnit, ToPType<ReturnT> ], ToPType<ReturnT>>(
         new Term(
-            fn([ unit, returnT ], returnT ),
+            fn([ unit, returnT ], returnT ) as any,
             _dbn => Builtin.chooseUnit,
         )
     );

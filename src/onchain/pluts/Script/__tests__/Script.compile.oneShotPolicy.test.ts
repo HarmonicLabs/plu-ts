@@ -1,7 +1,6 @@
-import { compile } from "../..";
+import { bool, compile, fn } from "../..";
 import { PTxOutRef, V2 } from "../../API";
 import { pstruct, pmatch } from "../../PTypes";
-import { bool, fn } from "../../Term";
 import { punsafeConvertType, peqData, perror, pfn, pisEmpty, plet } from "../../lib";
 
 const peqTxOutRef = punsafeConvertType(

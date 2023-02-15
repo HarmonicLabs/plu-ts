@@ -1,13 +1,6 @@
 import { showUPLC } from "../../../UPLC/UPLCTerm"
-import { pByteString } from "../../PTypes/PByteString"
-import { pmakeUnit } from "../../PTypes/PUnit"
-import { pInt } from "../../PTypes/PInt"
-import { pList } from "../../PTypes/PList"
-import { pBool } from "../../PTypes/PBool"
-import { Type, bool, bs, data, fn, int, pair, unit } from "../../Term/Type/base"
 import { compile, PlutusScriptVersion, scriptToJsonFormat } from "../compile"
 import { ByteString } from "../../../../types/HexString/ByteString"
-import { Term, list } from "../../Term"
 import { PScriptContext } from "../../API/V1/ScriptContext/PScriptContext"
 import { pmatch } from "../../PTypes/PStruct/pmatch"
 import { PTxInInfo } from "../../API/V1/Tx/PTxInInfo"
@@ -22,7 +15,6 @@ import { PTxId } from "../../API/V1/Tx/PTxId"
 import { PDatumHash } from "../../API/V1/ScriptsHashes/PDatumHash"
 import { PDCert } from "../../API/V1/PDCert"
 import { PValue } from "../../API/V1/Value/PValue"
-import { PPOSIXTimeRange, PPOSIXTime } from "../../API/V1/Time"
 import { PLowerBound } from "../../API/V1/Interval/PLowerBound"
 import { PExtended } from "../../API/V1/Interval/PExtended"
 import { PUpperBound } from "../../API/V1/Interval/PUpperBound"
@@ -32,7 +24,9 @@ import { PTxOut } from "../../API/V1/Tx/PTxOut"
 import { PAddress } from "../../API/V1/Address/PAddress"
 import { PCredential } from "../../API/V1/Address/PCredential"
 import { PValidatorHash } from "../../API/V1/ScriptsHashes/PValidatorHash"
-import { pfn, pif, punBData, perror, plet, pevery, plam, pfilter, peqBs, PMaybe, papp, pBSToData } from "../../lib"
+import { pfn, pif, punBData, perror, plet, pevery, plam, pfilter, peqBs, PMaybe, papp, pBSToData, pBool, pByteString, pInt, pList, pmakeUnit } from "../../lib"
+import { bool, bs, data, fn, int, pair, unit } from "../../type_system"
+import { Term, PPOSIXTimeRange, PValueEntryT } from "../.."
 
 
 describe.skip("scriptToJsonFormat", () => {
@@ -43,7 +37,7 @@ describe.skip("scriptToJsonFormat", () => {
 
         const contract = pfn([
             data,
-            Type.Data.BS,
+            data,
             data
         ],  unit
         )(
@@ -96,6 +90,7 @@ describe.skip("scriptToJsonFormat", () => {
                     .and(
                         ctx.extract("purpose","txInfo").in( ({purpose,txInfo}) =>
 
+                        // @ts-ignore
                             plet( pownHash.$( txInfo ).$( purpose ) ).in( ownHash =>
 
                                 txInfo.extract("outputs","inputs").in( ({ outputs }) =>
@@ -178,7 +173,7 @@ describe.skip("scriptToJsonFormat", () => {
         //*
         const unitDatumHash = PDatumHash.from( pByteString("923918e403bf43c34b4ef6b48eb2ee04babed17320d8d1b9ff9ad086e86f44ec") );
         const justUnitDatumHash = PMaybe( PDatumHash.type ).Just({ val: unitDatumHash });
-        const emptyValue = PValue.from( pList( PValue.type[1].type[1] )([]) as any );
+        const emptyValue = PValue.from( pList( PValueEntryT )([]) as any );
 
         const validatorSpendingUtxo = PTxOutRef.PTxOutRef({
             id: PTxId.PTxId({
@@ -222,12 +217,12 @@ describe.skip("scriptToJsonFormat", () => {
                         txId: pByteString("deadbeef")
                     }),
                     interval: PPOSIXTimeRange.PInterval({
-                        from: PLowerBound( PPOSIXTime.type ).PLowerBound({
-                            bound: PExtended( PPOSIXTime.type ).PNegInf({}),
+                        from: PLowerBound.PLowerBound({
+                            bound: PExtended.PNegInf({}),
                             inclusive: pBool( false )
                         }),
-                        to: PUpperBound( PPOSIXTime.type ).PUpperBound({
-                            bound: PExtended( PPOSIXTime.type ).PPosInf({}),
+                        to: PUpperBound.PUpperBound({
+                            bound: PExtended.PPosInf({}),
                             inclusive: pBool( false )
                         })
                     }),

@@ -1,6 +1,5 @@
 import { Cloneable } from "../../../types/interfaces/Cloneable";
 import { PDataRepresentable } from "../PType/PDataRepresentable";
-import { Type, TermType } from "../Term/Type/base";
 
 export class PBool extends PDataRepresentable
     implements Cloneable< PBool >
@@ -17,7 +16,5 @@ export class PBool extends PDataRepresentable
     {
         return new PBool( this._pbool );
     }
-
-    static override get termType(): TermType { return Type.Bool }
     
 }

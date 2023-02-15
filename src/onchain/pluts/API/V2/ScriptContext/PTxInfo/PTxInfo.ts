@@ -1,8 +1,8 @@
-import { list, pair, int, data } from "../../../../Term/Type/base";
 import { pstruct } from "../../../../PTypes/PStruct/pstruct";
 import { PTxInInfo } from "../../Tx/PTxInInfo";
 import { PTxOut } from "../../Tx/PTxOut";
 import { V1 } from "../../../V1";
+import { list, pair, int, data } from "../../../../type_system";
 
 export const PTxInfo = pstruct({
     PTxInfo: {

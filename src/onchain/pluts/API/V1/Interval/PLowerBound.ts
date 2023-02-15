@@ -1,21 +1,10 @@
-import ObjectUtils from "../../../../../utils/ObjectUtils";
-import { pstruct, typeofGenericStruct } from "../../../PTypes/PStruct/pstruct";
-import { bool, ConstantableTermType } from "../../../Term/Type/base";
+import { pstruct } from "../../../PTypes/PStruct/pstruct";
+import { bool } from "../../../type_system/types";
 import { PExtended } from "./PExtended";
 
-function _PLowerBound<T extends ConstantableTermType>( a: T )
-{
-    return pstruct({
-        PLowerBound: {
-            bound: PExtended( a ).type,
-            inclusive: bool 
-        }
-    });
-};
-
-
-export const PLowerBound = ObjectUtils.defineReadOnlyProperty(
-    _PLowerBound,
-    "type",
-    typeofGenericStruct( _PLowerBound as any )
-);;
+export const PLowerBound = pstruct({
+    PLowerBound: {
+        bound: PExtended.type,
+        inclusive: bool 
+    }
+});

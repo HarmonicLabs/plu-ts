@@ -39,7 +39,7 @@ import { PPubKeyHash } from "./PubKey/PPubKeyHash";
 import { PDatumHash } from "./ScriptsHashes/PDatumHash";
 import { PScriptHash } from "./ScriptsHashes/PScriptHash";
 import { PValidatorHash } from "./ScriptsHashes/PValidatorHash";
-import { PPOSIXTimeRange, PPOSIXTime } from "./Time";
+import { PPOSIXTimeRange } from "./Time";
 import { PTxId } from "./Tx/PTxId";
 import { PTxInInfo } from "./Tx/PTxInInfo";
 import { PTxOut } from "./Tx/PTxOut";
@@ -77,7 +77,6 @@ export const V1 = Object.freeze({
     PValidatorHash,
     
     // ./Time
-    PPOSIXTime,
     PPOSIXTimeRange,
 
     // ./Tx

@@ -18,7 +18,7 @@ export function plam<A extends TermType, B extends TermType >( inputType: A, out
 return ( termFunc: ( input: UtilityTermOf<ToPType<A>> ) => Term<ToPType<B>> ): PappResult<PLam<ToPType<A>,ToPType<B>>> =>
 {
     const lambdaTerm  = new Term<PLam<ToPType<A>,ToPType<B>>>(
-        lam( inputType, outputType ),
+        lam( inputType, outputType ) as any,
         dbn => {
             const thisLambdaPtr = dbn + BigInt( 1 );
 

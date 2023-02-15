@@ -1,6 +1,9 @@
+import { PType } from "../../../PType";
 import type { TermFn, PLam, PBool, PList } from "../../../PTypes";
+import { Term } from "../../../Term";
 import { ToPType, lam, bool, list, TermType } from "../../../type_system";
 import { papp } from "../../papp";
+import { pdelay } from "../../pdelay";
 import { pfn } from "../../pfn";
 import { phoist } from "../../phoist";
 import { plam } from "../../plam";
@@ -19,13 +22,11 @@ export function pevery<ElemsT extends TermType>( elemsT: ElemsT )
                 bool
             )
         )
-        (( predicate ) => {
+        // @ts-ingore
+        ((( predicate: Term<PLam<PType, PType>> ) => {
 
             return precursiveList( bool, elemsT )
-            .$(
-                plam( lam( list( elemsT ), bool ), bool )
-                ( ( _self ) => pBool( true ) )
-            )
+            .$( _self => pdelay( pBool( true ) ) )
             .$(
                 pfn([
                     lam( list( elemsT ), bool ),
@@ -37,6 +38,7 @@ export function pevery<ElemsT extends TermType>( elemsT: ElemsT )
                     papp(
                         predicate,
                         head as any
+                    // @ts-ignore
                     ).and(
                         papp(
                             self,
@@ -44,9 +46,9 @@ export function pevery<ElemsT extends TermType>( elemsT: ElemsT )
                         )
                     )
 
-                )
+                ) as any
             )
             // .$( _list )
-        })
+        }) as any)
     ) as any;
 }

@@ -12,7 +12,7 @@ export function pprepend<ListElemT extends TermType>( listElemType: ListElemT )
 
     return addApplications<[ ToPType<ListElemT> , PList<ToPType<ListElemT>> ], PList<ToPType<ListElemT>>>(
         new Term(
-            fn([ listElemT, list( listElemT ) ], list( listElemT ) ),
+            fn([ listElemT, list( listElemT ) ], list( listElemT ) ) as any,
             _dbn => Builtin.mkCons
         )
     );

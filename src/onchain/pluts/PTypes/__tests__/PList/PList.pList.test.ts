@@ -5,18 +5,18 @@ import { UPLCConst } from "../../../../UPLC/UPLCTerms/UPLCConst"
 import { constT } from "../../../../UPLC/UPLCTerms/UPLCConst/ConstType"
 import { UPLCVar } from "../../../../UPLC/UPLCTerms/UPLCVar"
 import { Term } from "../../../Term"
-import { Type } from "../../../Term/Type/base"
 import { pInt } from "../../../lib/std/int/pInt"
 import { pList, pnil } from "../../../lib/std/list/const"
+import { int } from "../../../type_system/types"
 import { PInt } from "../../PInt"
 
 
 describe("pList", () => {
 
-    test("pList( Type.Int )([]) is Nil", () => {
+    test("pList( int )([]) is Nil", () => {
 
         const expectNil = expect(
-            pList( Type.Int )([]).toUPLC( 0 )
+            pList( int )([]).toUPLC( 0 )
         );
 
         expectNil.toEqual(
@@ -24,7 +24,7 @@ describe("pList", () => {
         );
 
         expectNil.toEqual(
-            pnil( Type.Int ).toUPLC( 0 )
+            pnil( int ).toUPLC( 0 )
         );
         
     })
@@ -32,20 +32,20 @@ describe("pList", () => {
     test("pList( Type.Any )( < only constants > ) is an UPLCConst", () => {
 
         expect(
-            pList( Type.Int )([ pInt( 2 ), pInt( 3 ), pInt( 4 ) ]).toUPLC( 0 )
+            pList( int )([ pInt( 2 ), pInt( 3 ), pInt( 4 ) ]).toUPLC( 0 )
         ).toEqual(
             UPLCConst.listOf( constT.int )([ 2, 3, 4 ] as any )
         );
 
     })
 
-    test("pList( Type.Int )( < any Term<PInt> > ) is a constructed List", () => {
+    test("pList( int )( < any Term<PInt> > ) is a constructed List", () => {
 
         expect(
             new Lambda(
-                pList( Type.Int )([
+                pList( int )([
                     new Term<PInt>(
-                        Type.Int,
+                        int,
                         _dbn => new UPLCVar( 0 )
                     )
                 ]).toUPLC( 0 )
@@ -57,7 +57,7 @@ describe("pList", () => {
                         Builtin.mkCons,
                         new UPLCVar( 0 )
                     ),
-                    pnil( Type.Int ).toUPLC( 0 )
+                    pnil( int ).toUPLC( 0 )
                 )
             )
         );

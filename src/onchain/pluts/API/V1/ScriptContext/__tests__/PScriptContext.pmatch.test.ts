@@ -1,6 +1,5 @@
 import { Machine } from "../../../../../CEK";
 import { pmatch } from "../../../../PTypes/PStruct/pmatch";
-import { pair, data, int, bs, map, dynPair, list } from "../../../../Term/Type/base";
 import { PAddress } from "../../Address/PAddress";
 import { PCredential } from "../../Address/PCredential";
 import { PStakingCredential } from "../../Address/PStakingCredential";
@@ -11,7 +10,7 @@ import { PDCert } from "../../PDCert";
 import { PPubKeyHash } from "../../PubKey/PPubKeyHash";
 import { PDatumHash } from "../../ScriptsHashes/PDatumHash";
 import { PValidatorHash } from "../../ScriptsHashes/PValidatorHash";
-import { PPOSIXTimeRange, PPOSIXTime } from "../../Time";
+import { PPOSIXTimeRange } from "../../Time";
 import { PTxId } from "../../Tx/PTxId";
 import { PTxInInfo } from "../../Tx/PTxInInfo";
 import { PTxOut } from "../../Tx/PTxOut";
@@ -26,12 +25,12 @@ import { pByteString } from "../../../../lib/std/bs/pByteString";
 import { pList } from "../../../../lib/std/list/const";
 import { PMaybe } from "../../../../lib/std/PMaybe/PMaybe";
 import { pBool } from "../../../../lib/std/bool/pBool";
-import { perror, pisEmpty } from "../../../../lib";
+import { pPair, perror, pisEmpty } from "../../../../lib";
 import { PCurrencySymbol } from "../../Value/PCurrencySymbol";
 import { PTokenName } from "../../Value/PTokenName";
-import { pdynPair } from "../../../../lib/std/pair/pdynPair";
 import { ErrorUPLC } from "../../../../../UPLC/UPLCTerms/ErrorUPLC";
 import { Term } from "../../../../Term";
+import { list, int, pair, data } from "../../../../type_system";
 
 
 let unitDatumHash: Term<typeof PDatumHash>;
@@ -53,11 +52,11 @@ beforeAll(() => {
     });
     beef32 = PValue.from(
         pList( PValueEntryT )([
-            pdynPair( PCurrencySymbol.type, list( PAssetsEntryT ) )
+            pPair( PCurrencySymbol.type, list( PAssetsEntryT ) )
             (
                 PCurrencySymbol.from( pByteString("deadbeef") ),
                 pList( PAssetsEntryT )([
-                    pdynPair( PTokenName.type, int )
+                    pPair( PTokenName.type, int )
                     (
                         PTokenName.from( pByteString("beef") ),
                         pInt( 32 )
@@ -76,12 +75,12 @@ beforeAll(() => {
             txId: pByteString("deadbeef")
         }),
         interval: PPOSIXTimeRange.PInterval({
-            from: PLowerBound( PPOSIXTime.type ).PLowerBound({
-                bound: PExtended( PPOSIXTime.type ).PFinite({ _0: PPOSIXTime.from( pInt(1) ) }),
+            from: PLowerBound.PLowerBound({
+                bound: PExtended.PFinite({ _0: pInt(1) }),
                 inclusive: pBool( false )
             }),
-            to: PUpperBound( PPOSIXTime.type ).PUpperBound({
-                bound: PExtended( PPOSIXTime.type ).PPosInf({}),
+            to: PUpperBound.PUpperBound({
+                bound: PExtended.PPosInf({}),
                 inclusive: pBool( false )
             })
         }),
@@ -242,7 +241,7 @@ describe("pmatch( <PScriptContext> )", () => {
 
                     pmatch( bound )
                     .onPFinite( _ => _.extract("_0").in( ({ _0 }) => _0 ))
-                    ._( _ => perror( PPOSIXTime.type ) )
+                    ._( _ => perror( int ) )
                     )))))
                 )
             ).toEqual(

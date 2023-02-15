@@ -1,20 +1,19 @@
 import { ByteString } from "../../../../../../types/HexString/ByteString";
 import { Machine } from "../../../../../CEK";
 import { UPLCConst } from "../../../../../UPLC/UPLCTerms/UPLCConst";
-import { bool, bs, int, pair, tyVar } from "../../../../Term/Type/base";
+import { int, bs, pair, tyVar, bool, TermType } from "../../../../type_system";
 import { plam } from "../../../plam";
 import { pByteString } from "../../bs/pByteString";
 import { pInt } from "../../int/pInt";
 import { pPair } from "../pPair";
-import { pdynPair } from "../pdynPair";
 
-describe("pdynPair",() => {
+describe("pPair",() => {
 
     test("fst | snd", () => {
 
         const helloBS = pByteString(ByteString.fromAscii("hello"));
-        const pairIntBS = pdynPair( int, bs )( pInt(2).add(2), helloBS );
-        const _pairIntBS = pdynPair( int, bs )( pInt(2), helloBS );
+        const pairIntBS = pPair( int, bs )( pInt(2).add(2), helloBS );
+        const _pairIntBS = pPair( int, bs )( pInt(2), helloBS );
         const pairIntBSConst = pPair( int, bs )( pInt(2), helloBS );
 
         expect(
@@ -53,12 +52,12 @@ describe("pdynPair",() => {
 
     test("fancy fst", () => {
 
-        const fancyFstIntEq = plam( pair( int, tyVar() ), bool )
+        const fancyFstIntEq = ( sndT: TermType ) => plam( pair( int, sndT ), bool )
         ( p => p.fst.eq( p.fst ) )
 
 
-        const result = fancyFstIntEq.$(
-            pdynPair( int, int )( pInt(1).add( pInt(3) ), pInt(2) )
+        const result = fancyFstIntEq( int ).$(
+            pPair( int, int )( pInt(1).add( pInt(3) ), pInt(2) )
         );
 
     })

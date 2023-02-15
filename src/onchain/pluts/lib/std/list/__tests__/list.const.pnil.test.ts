@@ -3,12 +3,12 @@ import { Application } from "../../../../../UPLC/UPLCTerms/Application"
 import { Builtin } from "../../../../../UPLC/UPLCTerms/Builtin"
 import { HoistedUPLC } from "../../../../../UPLC/UPLCTerms/HoistedUPLC"
 import { UPLCConst } from "../../../../../UPLC/UPLCTerms/UPLCConst"
-import { Type, data, dynPair, pair } from "../../../../Term/Type/base"
+import { asData, bs, data, int, pair } from "../../../../type_system"
 import { pnil } from "../const"
 
 describe("pnil", () => {
 
-    test.only("just data", () => {
+    test("just data", () => {
 
         const received  = showUPLC(
             pnil( data ).toUPLC(0)
@@ -28,11 +28,11 @@ describe("pnil", () => {
 
     });
 
-    test("dataPair( data, data )", () => {
+    test("pair( data, data )", () => {
 
         expect(
             showUPLC(
-                pnil( Type.Data.Pair( data, data ) ).toUPLC(0)
+                pnil( pair( data, data ) ).toUPLC(0)
             )
         )
         .toEqual(
@@ -45,11 +45,11 @@ describe("pnil", () => {
 
     });
 
-    test("dynPair( data, data )", () => {
+    test("pair( asData( int ), asData( bs ) )", () => {
 
         expect(
             showUPLC(
-                pnil( dynPair( data, data ) ).toUPLC(0)
+                pnil( pair( asData( int ), asData( bs ) ) ).toUPLC(0)
             )
         )
         .toEqual(

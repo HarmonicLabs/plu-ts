@@ -1,9 +1,8 @@
 import { pstruct, pgenericStruct } from "../pstruct"
 import { ByteString } from "../../../../../types/HexString/ByteString";
-import { evalScript } from "../../../../CEK";
+import { Machine } from "../../../../CEK/Machine";
 import { UPLCConst } from "../../../../UPLC/UPLCTerms/UPLCConst";
 import { Term } from "../../../Term";
-import { bs, ConstantableTermType, int, unit } from "../../../Term/Type/base";
 import { pmatch } from "../pmatch";
 import { PMaybe } from "../../../lib/std/PMaybe/PMaybe";
 import { pInt } from "../../../lib/std/int/pInt";
@@ -11,6 +10,8 @@ import { pmakeUnit } from "../../../lib/std/unit/pmakeUnit";
 import { pByteString } from "../../../lib/std/bs/pByteString";
 import { padd, pconsBs, pindexBs } from "../../../lib/builtins";
 import { perror } from "../../../lib/perror";
+import { TermType, bs, int, unit } from "../../../type_system/types";
+import { pList } from "../../../lib";
 
 const SingleCtor = pstruct({
     Ctor : {
@@ -27,7 +28,7 @@ describe("pmatch", () => {
     test("pmatch( <single constructor> )", () => {
 
         expect(
-            evalScript(
+            Machine.evalSimple(
                 pmatch( SingleCtor.Ctor({
                     num: pInt( 42 ),
                     name: pByteString( ByteString.fromAscii("Cardano NFTs lmaooooo") ),
@@ -44,7 +45,7 @@ describe("pmatch", () => {
     test("two ctors", () => {
 
         expect(
-            evalScript(
+            Machine.evalSimple(
                 pmatch( PMaybe( int ).Just({ val: pInt(2) }) )
                 .onJust( f => f.extract("val").in( v => v.val ) )
                 .onNothing( _ => pInt( 0 ) )
@@ -87,7 +88,7 @@ describe("pmatch", () => {
         //*/
         
         expect(
-            evalScript(
+            Machine.evalSimple(
                 matchNothing
                 .onNothing( rawFields => pInt( 1 ) )
                 .onJust( rawFields => pInt( 0 ) )
@@ -102,7 +103,7 @@ describe("pmatch", () => {
         test("pmatch with extraction", () => {
     
             expect(
-                evalScript(
+                Machine.evalSimple(
                     pmatch( PMaybe(int).Just({ val: pInt(42) }) )
                     .onJust( rawFields =>
                         rawFields.extract("val")
@@ -117,7 +118,7 @@ describe("pmatch", () => {
             );
     
             expect(
-                evalScript(
+                Machine.evalSimple(
                     pmatch( PMaybe(int).Nothing({}) )
                     .onJust( rawFields =>
                         rawFields.extract("val")
@@ -148,7 +149,7 @@ describe("pmatch", () => {
         test("pmatch; extract multiple fields", () => {
 
             expect(
-                evalScript(
+                Machine.evalSimple(
                     pmatch( Nums.TwoNums({ a: pInt(2), b: pInt(3) }) )
                     .onTwoNums( nums_ =>  nums_.extract("a", "b").in( ({ a, b }) =>
                         padd.$( a ).$(
@@ -195,7 +196,7 @@ describe("pmatch", () => {
                 b: pByteString( ByteString.fromAscii("b") )
             });
 
-            const makeMatch = ( continuation: ( fields: { nums: Term<typeof Nums>, bss: Term<typeof BSs> } ) => Term<any>, outTy: ConstantableTermType ) => pmatch( NumOrBs.Both({
+            const makeMatch = ( continuation: ( fields: { nums: Term<typeof Nums>, bss: Term<typeof BSs> } ) => Term<any>, outTy: TermType ) => pmatch( NumOrBs.Both({
                 nums,
                 bss
             }))
@@ -204,29 +205,29 @@ describe("pmatch", () => {
             .onNumsOnly( _ => perror( outTy ) )
 
             expect(
-                evalScript(
+                Machine.evalSimple(
                     makeMatch( both => both.bss, BSs.type )
                 )
             )
             .toEqual(
-                evalScript(
+                Machine.evalSimple(
                     bss
                 )
             );
 
             expect(
-                evalScript(
+                Machine.evalSimple(
                     makeMatch( both => both.nums, Nums.type )
                 )
             )
             .toEqual(
-                evalScript(
+                Machine.evalSimple(
                     nums
                 )
             );
 
             expect(
-                evalScript(
+                Machine.evalSimple(
                     makeMatch(
                         
                         both =>
@@ -241,13 +242,13 @@ describe("pmatch", () => {
                 )
             )
             .toEqual(
-                evalScript(
+                Machine.evalSimple(
                     pByteString( ByteString.fromAscii("a") )
                 )
             );
             
             expect(
-                evalScript(
+                Machine.evalSimple(
                     makeMatch(
                         
                         both =>
@@ -262,14 +263,14 @@ describe("pmatch", () => {
                 )
             )
             .toEqual(
-                evalScript(
+                Machine.evalSimple(
                     pByteString( ByteString.fromAscii("b") )
                 )
             );
             
 
             expect(
-                evalScript(
+                Machine.evalSimple(
                     makeMatch(
                         
                         both => 
@@ -289,13 +290,13 @@ describe("pmatch", () => {
                     )
                 )
             ).toEqual(
-                evalScript(
+                Machine.evalSimple(
                     pInt( 1 )
                 )
             )
 
             expect(
-                evalScript(
+                Machine.evalSimple(
 
                     makeMatch( both => 
                         pmatch( both.bss )
@@ -314,13 +315,13 @@ describe("pmatch", () => {
                     )
                 )
             ).toEqual(
-                evalScript(
+                Machine.evalSimple(
                     pInt( 2 )
                 )
             )
 
             expect(
-                evalScript(
+                Machine.evalSimple(
 
                     makeMatch( both => 
                         pmatch( both.bss )
@@ -339,13 +340,13 @@ describe("pmatch", () => {
                     )
                 )
             ).toEqual(
-                evalScript(
+                Machine.evalSimple(
                     pByteString( Buffer.from("0161","hex") )
                 )
             )
 
             expect(
-                evalScript(
+                Machine.evalSimple(
                     makeMatch(
                         
                         both => 
@@ -380,7 +381,7 @@ describe("pmatch", () => {
                     )
                 )
             ).toEqual(
-                evalScript(
+                Machine.evalSimple(
                     pByteString( Buffer.from("01610262","hex") )
                 )
             )
@@ -407,12 +408,12 @@ describe("pmatch", () => {
         test("pmatch( stuff )._( _ => result) === result", () => {
 
             expect(
-                evalScript(
+                Machine.evalSimple(
                     pmatch( OneCtor.Ctor({}) )
                     ._( _ => pInt(1) )
                 )
             ).toEqual(
-                evalScript(
+                Machine.evalSimple(
                     pmatch( OneCtor.Ctor({}) )
                     .onCtor( _ => pInt(1) )
                 )
@@ -421,61 +422,61 @@ describe("pmatch", () => {
             // ---------------------------------- TwoCtors ---------------------------------- //
 
             expect(
-                evalScript(
+                Machine.evalSimple(
                     pmatch( TwoCtors.Fst({}) )
                     .onFst( _ => pInt( 1 ) )
                     .onSnd( _ => pInt( 2 ) )
                 )
             ).toEqual(
-                evalScript(
+                Machine.evalSimple(
                     pInt(1)
                 )
             );
 
             expect(
-                evalScript(
+                Machine.evalSimple(
                     pmatch( TwoCtors.Fst({}) )
                     .onFst( _ => pInt( 1 ) )
                     ._( _ => pInt( 2 ) )
                 )
             ).toEqual(
-                evalScript(
+                Machine.evalSimple(
                     pInt(1)
                 )
             );
 
             expect(
-                evalScript(
+                Machine.evalSimple(
                     pmatch( TwoCtors.Snd({}) )
                     .onFst( _ => pInt( 1 ) )
                     .onSnd( _ => pInt( 2 ) )
                 )
             ).toEqual(
-                evalScript(
+                Machine.evalSimple(
                     pInt(2)
                 )
             );
 
             expect(
-                evalScript(
+                Machine.evalSimple(
                     pmatch( TwoCtors.Snd({}) )
                     .onSnd( _ => pInt( 2 ) )
                     ._( _ => pInt( 1 ) )
                 )
             ).toEqual(
-                evalScript(
+                Machine.evalSimple(
                     pInt(2)
                 )
             );
 
             expect(
-                evalScript(
+                Machine.evalSimple(
                     pmatch( TwoCtors.Snd({}) )
                     .onFst( _ => pInt( 1 ) )
                     ._( _ => pInt( 2 ) )
                 )
             ).toEqual(
-                evalScript(
+                Machine.evalSimple(
                     pInt(2)
                 )
             );
@@ -483,7 +484,7 @@ describe("pmatch", () => {
             // ---------------------------------- FourCtors ---------------------------------- //
 
             expect(
-                evalScript(
+                Machine.evalSimple(
                     pmatch( FourCtors.A({}) )
                     .onA( _ => pInt( 1 ) )
                     .onB( _ => pInt( 2 ) )
@@ -491,13 +492,13 @@ describe("pmatch", () => {
                     .onD( _ => pInt( 4 ) )
                 )
             ).toEqual(
-                evalScript(
+                Machine.evalSimple(
                     pInt(1)
                 )
             );
 
             expect(
-                evalScript(
+                Machine.evalSimple(
                     pmatch( FourCtors.A({}) )
                     .onA( _ => pInt( 1 ) )
                     .onB( _ => pInt( 2 ) )
@@ -505,79 +506,79 @@ describe("pmatch", () => {
                     ._( _ => pInt( 4 ) )
                 )
             ).toEqual(
-                evalScript(
+                Machine.evalSimple(
                     pInt(1)
                 )
             );
 
             expect(
-                evalScript(
+                Machine.evalSimple(
                     pmatch( FourCtors.A({}) )
                     .onA( _ => pInt( 1 ) )
                     .onB( _ => pInt( 2 ) )
                     ._( _ => pInt( 0 ) )
                 )
             ).toEqual(
-                evalScript(
+                Machine.evalSimple(
                     pInt(1)
                 )
             );
 
             expect(
-                evalScript(
+                Machine.evalSimple(
                     pmatch( FourCtors.A({}) )
                     .onA( _ => pInt( 1 ) )
                     ._( _ => pInt( 0 ) )
                 )
             ).toEqual(
-                evalScript(
+                Machine.evalSimple(
                     pInt(1)
                 )
             );
 
             expect(
-                evalScript(
+                Machine.evalSimple(
                     pmatch( FourCtors.A({}) )
                     ._( _ => pInt( 0 ) )
                 )
             ).toEqual(
-                evalScript(
+                Machine.evalSimple(
                     pInt(0)
                 )
             );
 
             expect(
-                evalScript(
+                Machine.evalSimple(
                     pmatch( FourCtors.A({}) )
                     .onB( _ => pInt( 1 ) )
                     ._( _ => pInt( 0 ) )
                 )
             ).toEqual(
-                evalScript(
+                Machine.evalSimple(
                     pInt( 0 )
                 )
             );
 
             expect(
-                evalScript(
+                Machine.evalSimple(
                     pmatch( FourCtors.B({}) )
                     .onB( _ => pInt( 1 ) )
                     ._( _ => pInt( 0 ) )
                 )
             ).toEqual(
-                evalScript(
+                Machine.evalSimple(
                     pInt( 1 )
                 )
             );
 
             expect(
-                evalScript(
+                Machine.evalSimple(
                     pmatch( FourCtors.B({}) )
                     .onA( _ => pInt( 1 ) )
                     ._( _ => pInt( 0 ) )
                 )
             ).toEqual(
-                evalScript(
+                Machine.evalSimple(
                     pInt( 0 )
                 )
             );

@@ -1,5 +1,5 @@
 import { PType } from "../../../PType";
-import { TermFn, PLam, PList } from "../../../PTypes";
+import { TermFn, PLam, PList, PDelayed } from "../../../PTypes";
 import { TermType, tyVar, ToPType, fn, list, delayed } from "../../../type_system";
 import { pchooseList, phead, pstrictChooseList, ptail } from "../../builtins";
 import { papp } from "../../papp";
@@ -10,7 +10,7 @@ import { phoist } from "../../phoist";
 
 
 export function pmatchList<ReturnT  extends TermType, PElemsT extends PType>( returnT: ReturnT, elemsT: TermType )
-: TermFn<[ PElemsT, PLam<PElemsT,PLam<PList<PElemsT>, ToPType<ReturnT>>>, PList<PElemsT> ], ToPType<ReturnT>>
+: TermFn<[ PDelayed<PElemsT>, PLam<PElemsT,PLam<PList<PElemsT>, ToPType<ReturnT>>>, PList<PElemsT> ], ToPType<ReturnT>>
 {
 return phoist(
     pfn([

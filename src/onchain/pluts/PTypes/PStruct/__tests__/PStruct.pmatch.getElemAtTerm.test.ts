@@ -1,7 +1,7 @@
 import { pstruct } from "..";
-import { evalScript } from "../../../../CEK";
-import { data, int, list, unit } from "../../../Term";
-import { pBool, pInt, phead, phoist, plam, pmakeUnit } from "../../../lib"
+import { Machine } from "../../../../CEK/Machine";
+import { pInt, phead, phoist, plam, pmakeUnit } from "../../../lib"
+import { data, list, unit, int } from "../../../type_system";
 import { getElemAtTerm, pmatch } from "../pmatch"
 
 describe("getElemAtTerm", () => {
@@ -102,7 +102,7 @@ describe("getElemAtTerm", () => {
     test("extract nested", () => {
 
         expect(
-            evalScript(
+            Machine.evalSimple(
                 pmatch( stuff )
                 .onStruct3( _ => _.extract("m").in( ({ m }) =>
                 m.extract("i").in( ({ i }) =>
@@ -110,7 +110,7 @@ describe("getElemAtTerm", () => {
                 )))
             )
         ).toEqual(
-            evalScript(
+            Machine.evalSimple(
                 pInt( 42 )
             )
         )

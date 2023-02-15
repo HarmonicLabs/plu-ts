@@ -1,8 +1,6 @@
-import type { TermType } from "../Term/Type/base";
+
 import type { UPLCTerm } from "../../UPLC/UPLCTerm";
-
-import { Type } from "../Term/Type/base";
-
+import { TermType, tyVar } from "../type_system/types";
 
 /**
  * @abstract
@@ -18,7 +16,4 @@ export class PType
     protected readonly _PTypeUPLCTerm?: UPLCTerm;
 
     constructor() {}
-
-    static get termType(): TermType { return Type.Any };
-    static get type(): TermType { return Type.Any };
 };

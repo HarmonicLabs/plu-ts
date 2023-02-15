@@ -7,28 +7,33 @@ import { UPLCConst } from "../../../../UPLC/UPLCTerms/UPLCConst";
 import { constT, constTypeEq } from "../../../../UPLC/UPLCTerms/UPLCConst/ConstType";
 import { PList, PData } from "../../../PTypes";
 import { Term } from "../../../Term";
-import { termTyToConstTy } from "../../../Term/Type/constTypeConversion";
-import { termTypeToString } from "../../../type_system/utils";
+import { ToPType, isWellFormedType } from "../../../type_system";
+import { termTyToConstTy } from "../../../type_system/termTyToConstTy";
+import { typeExtends } from "../../../type_system/typeExtends";
+import { PrimType, TermType, data, delayed, lam, list, pair, tyVar } from "../../../type_system/types";
 import { pnilPairData, pnilData, pprepend, ppairData, pfstPair, psndPair } from "../../builtins";
 import { punsafeConvertType } from "../../punsafeConvertType";
 import { TermList, addPListMethods } from "../UtilityTerms";
-import { getToDataForType } from "../data/conversion/getToDataTermForType";
+import { toData } from "../data/conversion/toData";
 
 
-function assertValidListType( elemsT: ConstantableTermType ): void
+function assertValidListType( elemsT: TermType ): void
 {
     JsRuntime.assert(
-        isConstantableTermType( elemsT ),
+        isWellFormedType( elemsT ) &&
+        !(
+            ( elemsT[0] === PrimType.Lambda ) ||
+            ( elemsT[0] === PrimType.Delayed )
+        ),
         "plutus only supports lists of types that can be converted to constants"
     );
 }
 
-export function pnil<ElemsT extends ConstantableTermType>( elemsT: ElemsT ): TermList<ToPType<ElemsT>>
+export function pnil<ElemsT extends TermType>( elemsT: ElemsT ): TermList<ToPType<ElemsT>>
 {
     assertValidListType( elemsT );
 
     if(
-        elemsT[0] === PrimType.PairAsData ||
         typeExtends( elemsT, pair( data, data ) )
     )
     {
@@ -42,14 +47,14 @@ export function pnil<ElemsT extends ConstantableTermType>( elemsT: ElemsT ): Ter
 
     return addPListMethods(
         new Term<PList<ToPType<ElemsT>>>(
-            Type.List( elemsT ),
+            list( elemsT ) as any,
             _dbn => UPLCConst.listOf( termTyToConstTy( elemsT ) )([]),
             true
         )
     );
 }
 
-export function pconstList<ElemsT extends ConstantableTermType>( elemsT: ElemsT ): ( elems: Term<ToPType<ElemsT>>[] ) => TermList<ToPType<ElemsT>>
+export function pconstList<ElemsT extends TermType>( elemsT: ElemsT ): ( elems: Term<ToPType<ElemsT>>[] ) => TermList<ToPType<ElemsT>>
 {
     assertValidListType( elemsT );
 
@@ -68,11 +73,9 @@ export function pconstList<ElemsT extends ConstantableTermType>( elemsT: ElemsT 
 
         return addPListMethods(
             new Term<PList<ToPType<ElemsT>>>(
-                Type.List( elemsT ),
+                list( elemsT ) as any,
                 dbn => {
-
                     const expectedConstTy = termTyToConstTy( elemsT );
-                    console.log( elemsT, expectedConstTy )
 
                     return UPLCConst.listOf( expectedConstTy )
                     ( 
@@ -82,37 +85,6 @@ export function pconstList<ElemsT extends ConstantableTermType>( elemsT: ElemsT 
                                     el.toUPLC(dbn)
                                 ) as any);
 
-                                console.log( res );
-
-                                if( 
-                                    (
-                                        res instanceof ErrorUPLC &&
-                                        el.type[0] === PrimType.PairAsData
-                                    ) || (
-                                        res instanceof UPLCConst &&
-                                        !constTypeEq( res.type, expectedConstTy )
-                                    )
-                                )
-                                {
-                                    const [ _, fstT, sndT ] = el.type as any as ConstantableTermType[];
-                                    el = ppairData( data, data )
-                                        .$(
-                                            getToDataForType( fstT )(
-                                                pfstPair( fstT, sndT ).$( el as any )
-                                            )
-                                        )
-                                        .$(
-                                            getToDataForType( sndT )(
-                                                psndPair( fstT, sndT ).$( el as any )
-                                            )
-                                        ) as any
-                                    res = (Machine.evalSimple(
-                                        el.toUPLC(dbn)
-                                    ) as any);
-                                }
-
-                                console.log( res );
-                                
                                 if(!(res instanceof UPLCConst))
                                 {
                                     console.log("------------------- pconstList -------------------");
@@ -132,7 +104,7 @@ export function pconstList<ElemsT extends ConstantableTermType>( elemsT: ElemsT 
     }
 }
 
-export function pList<ElemsT extends ConstantableTermType>( elemsT: ElemsT ): ( elems: Term<ToPType<ElemsT>>[] ) => TermList<ToPType<ElemsT>>
+export function pList<ElemsT extends TermType>( elemsT: ElemsT ): ( elems: Term<ToPType<ElemsT>>[] ) => TermList<ToPType<ElemsT>>
 {
     return ( elems: Term<ToPType<ElemsT>>[] ): TermList<ToPType<ElemsT>> => {
         JsRuntime.assert(
@@ -180,11 +152,10 @@ export function pList<ElemsT extends ConstantableTermType>( elemsT: ElemsT ): ( 
 
         for( let i = elems.length - nConstantFromEnd - 1; i >= 0; i-- )
         {
-
             plist =
-                // @ ts-ignoreType instantiation is excessively deep and possibly infinite
                 pprepend( elemsT )
-                .$( elems[i] ).$( plist );
+                .$( elems[i] )
+                .$( plist );
         }
 
         return plist;
@@ -199,7 +170,7 @@ export function pDataList( datas: Data[] ): Term<PList<PData>>
     );
 
     return new Term(
-        Type.List( Type.Data.Any ),
+        list( data ),
         _dbn => UPLCConst.listOf( constT.data )( datas ),
         true
     );

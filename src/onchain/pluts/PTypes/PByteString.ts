@@ -1,6 +1,5 @@
 import type { ByteString } from "../../../types/HexString/ByteString";
 import { PDataRepresentable } from "../PType/PDataRepresentable";
-import { Type, TermType } from "../Term/Type/base";
 
 export class PByteString extends PDataRepresentable
 {
@@ -11,7 +10,5 @@ export class PByteString extends PDataRepresentable
         super();
         this._pbytestring = bs;
     }
-
-    static override get termType(): TermType { return Type.BS }
     
 }

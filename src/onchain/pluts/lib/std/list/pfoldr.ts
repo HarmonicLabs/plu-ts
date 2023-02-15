@@ -1,6 +1,7 @@
 import { TermFn, PFn, PList } from "../../../PTypes";
-import { TermType, ToPType, lam, list, fn } from "../../../type_system";
+import { TermType, ToPType, lam, list, fn, delayed } from "../../../type_system";
 import { papp } from "../../papp";
+import { pdelay } from "../../pdelay";
 import { pfn } from "../../pfn";
 import { phoist } from "../../phoist";
 import { plam } from "../../plam";
@@ -27,8 +28,9 @@ export function pfoldr<ElemsT extends TermType, ResultT extends TermType>( elems
             
             return precursiveList( resultT, elemsT )
             .$(
-                plam( selfType , resultT )
-                ( _foldr => accumulator )
+                // @ts-ignore
+                plam( selfType , delayed( resultT ) )
+                ( _foldr => pdelay( accumulator ) )
             )
             .$(
                 pfn([
@@ -50,7 +52,7 @@ export function pfoldr<ElemsT extends TermType, ResultT extends TermType>( elems
                             tail
                         )
                     )
-                )
+                ) as any
             ) as any
         })
     ) as any;

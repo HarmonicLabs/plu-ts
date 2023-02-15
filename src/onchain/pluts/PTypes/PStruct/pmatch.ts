@@ -1,7 +1,7 @@
 import JsRuntime from "../../../../utils/JsRuntime";
 import ObjectUtils from "../../../../utils/ObjectUtils";
 
-import { RestrictedStructInstance, PStruct } from "./pstruct";
+import { RestrictedStructInstance, PStruct, pstruct } from "./pstruct";
 import { constT } from "../../../UPLC/UPLCTerms/UPLCConst/ConstType";
 import { termTypeToString } from "../../type_system/utils";
 import { BasePlutsError } from "../../../../errors/BasePlutsError";
@@ -30,7 +30,10 @@ import { punsafeConvertType } from "../../lib/punsafeConvertType";
 import { TermList } from "../../lib/std/UtilityTerms/TermList";
 import { plam } from "../../lib/plam";
 import { TermFn } from "../PFn";
-import { phead } from "../../lib";
+import { MaybeT, PMaybe, PMaybeT, fromData, phead } from "../../lib";
+import { LamT, PrimType, StructCtorDef, StructDefinition, TermType, data, fn, int, lam, list, tyVar } from "../../type_system/types";
+import { isStructDefinition } from "../../type_system";
+import { PInt } from "../PInt";
 
 
 const elemAtCache: { [n: number]: TermFn<[ PList<PData> ], PData > } = {};
@@ -73,7 +76,7 @@ export function getElemAtTerm( n: number ): TermFn<[ PList<PData> ], PData >
 }
 
 
-export type RawFields<CtorDef extends ConstantableStructCtorDef> = 
+export type RawFields<CtorDef extends StructCtorDef> = 
     Term<PList<PData>> &
     {
         extract: <Fields extends (keyof CtorDef)[]>( ...fields: Fields ) => {
@@ -81,8 +84,7 @@ export type RawFields<CtorDef extends ConstantableStructCtorDef> =
         }
     }
 
-
-function getExtractedFieldsExpr<CtorDef extends ConstantableStructCtorDef, Fields extends (keyof CtorDef)[], PExprResult extends PType>(
+function getExtractedFieldsExpr<CtorDef extends StructCtorDef, Fields extends (keyof CtorDef)[], PExprResult extends PType>(
     fieldsData: Term<PList<PData>>,
     ctorDef: CtorDef,
     allFIndexes: number[],
@@ -101,7 +103,7 @@ function getExtractedFieldsExpr<CtorDef extends ConstantableStructCtorDef, Field
     const fieldType = ctorDef[ allFieldsNames[ idx ] ];
 
     return plet(
-        getFromDataForType( fieldType )(
+        fromData( fieldType )(
             getElemAtTerm( idx ).$( fieldsData )
         )
     ).in( value => {
@@ -112,7 +114,6 @@ function getExtractedFieldsExpr<CtorDef extends ConstantableStructCtorDef, Field
             addUtilityForType( fieldType )( value )
         );
 
-        // @ts-ignore Type instantiation is excessively deep and possibly infinite.
         return getExtractedFieldsExpr(
             fieldsData,
             ctorDef,
@@ -123,12 +124,12 @@ function getExtractedFieldsExpr<CtorDef extends ConstantableStructCtorDef, Field
     });
 }
 
-function defineExtract<CtorDef extends ConstantableStructCtorDef>
-    ( fieldsList: Readonly<Term<PList<PData>>>, ctorDef: CtorDef ): RawFields<CtorDef>
+function defineExtract<CtorDef extends StructCtorDef>
+    ( fieldsList: Term<PList<PData>>, ctorDef: CtorDef ): RawFields<CtorDef>
 {
     const fieldsNames = Object.keys( ctorDef );
     // basically cloning;
-    const _fieldsList = punsafeConvertType( fieldsList as any, fieldsList.type );
+    const _fieldsList = fieldsList;
 
     return ObjectUtils.defineReadOnlyProperty(
         _fieldsList,
@@ -163,7 +164,7 @@ function defineExtract<CtorDef extends ConstantableStructCtorDef>
     ) as any;
 }
 
-type CtorCallback<SDef extends ConstantableStructDefinition> = ( rawFields: RawFields<SDef[keyof SDef & string]> ) => Term<PType>;
+type CtorCallback<SDef extends StructDefinition> = ( rawFields: RawFields<SDef[keyof SDef & string]> ) => Term<PType>;
 
 type EmptyObject = { [x: string | number | symbol ]: never };
 
@@ -171,7 +172,7 @@ type MatchRest<PReturnT extends PType> = {
     _: ( continuation: ( rawFields: TermList<PData> ) => Term<PReturnT> ) => Term<PReturnT>
 }
 
-type TypedPMatchOptions<SDef extends ConstantableStructDefinition, PReturnT extends PType> = {
+type TypedPMatchOptions<SDef extends StructDefinition, PReturnT extends PType> = {
     [Ctor in keyof SDef as `on${Capitalize<string & Ctor>}`]
         : ( cb: ( rawFields: RawFields<SDef[Ctor]> ) => Term<PReturnT> )
             =>  Omit<SDef,Ctor> extends EmptyObject ?
@@ -180,7 +181,7 @@ type TypedPMatchOptions<SDef extends ConstantableStructDefinition, PReturnT exte
 } & MatchRest<PReturnT>
 
 
-export type PMatchOptions<SDef extends ConstantableStructDefinition> = {
+export type PMatchOptions<SDef extends StructDefinition> = {
     [Ctor in keyof SDef as `on${Capitalize<string & Ctor>}`]
         : <PReturnT extends PType>( cb: ( rawFields: RawFields<SDef[Ctor]> ) => Term<PReturnT> )
             =>  Omit<SDef,Ctor> extends EmptyObject ?
@@ -280,17 +281,18 @@ export function matchNCtorsIdxs( _n: number, returnT: TermType )
         )
     );
 
+    type ContinuationT = LamT<[PrimType.List, [PrimType.Data]], TermType>
+
     return new Term(
         fn([
             data,
-            ...(new Array( n ).fill( continuationT ))
-        ],  returnT
-        ),
+            ...(new Array( n ).fill( continuationT )) as [ ContinuationT, ...ContinuationT[] ]
+        ],  returnT) as any,
         _dbn => body
     );
 }
 
-function getReturnTypeFromContinuation<SDef extends ConstantableStructDefinition>(
+function getReturnTypeFromContinuation<SDef extends StructDefinition>(
     cont: CtorCallback<SDef>,
     ctorDef: StructCtorDef
 ): TermType
@@ -312,7 +314,7 @@ function getReturnTypeFromContinuation<SDef extends ConstantableStructDefinition
     ).type;
 }
 
-function hoistedMatchCtors<SDef extends ConstantableStructDefinition>(
+function hoistedMatchCtors<SDef extends StructDefinition>(
     structData: Term<PData>,
     sDef: SDef,
     ctorCbs: (CtorCallback<SDef> | Term<PLam<PList<PData>, PType>>)[],
@@ -332,7 +334,7 @@ function hoistedMatchCtors<SDef extends ConstantableStructDefinition>(
 
         if( cont instanceof Term )
         {
-            if( !isLambdaType( cont.type ) )
+            if( cont.type[0] !== PrimType.Lambda )
             {
                 // todo: add proper error
                 throw new BasePlutsError(
@@ -342,7 +344,7 @@ function hoistedMatchCtors<SDef extends ConstantableStructDefinition>(
 
             return papp(
                 papp(
-                    matchSingleCtorStruct,
+                    matchSingleCtorStruct( cont.type[2] ),
                     structData
                 ),
                 cont
@@ -350,12 +352,14 @@ function hoistedMatchCtors<SDef extends ConstantableStructDefinition>(
         }
 
         const thisCtor = sDef[ ctors[0] ] as SDef[string];
+        const returnT = getReturnTypeFromContinuation( cont, thisCtor );
+
         return papp(
             papp(
-                matchSingleCtorStruct,
+                matchSingleCtorStruct( returnT ),
                 structData
             ),
-            plam( list(data), getReturnTypeFromContinuation( cont, thisCtor ) )
+            plam( list(data), returnT )
             ( fieldsListData => 
                 cont( 
                     defineExtract( 
@@ -371,13 +375,17 @@ function hoistedMatchCtors<SDef extends ConstantableStructDefinition>(
 
     let cont = ctorCbs.find( cb => typeof cb === "function" ) ?? ctorCbs[ 0 ];
 
+    const thisCtor = sDef[
+        ctorCbs.indexOf( cont ) ?? 0
+    ] as SDef[string];
+
     let returnT: TermType | undefined = 
         cont instanceof Term ?
         cont.type[2] as TermType :
-        undefined
+        getReturnTypeFromContinuation( cont, thisCtor )
     
     let result = papp(
-        matchNCtorsIdxs( ctors.length, tyVar("will_be_substituted_by_lambda_applicaiton") ) as any,
+        matchNCtorsIdxs( ctors.length, returnT ) as any,
         structData
     );
 
@@ -404,10 +412,10 @@ function hoistedMatchCtors<SDef extends ConstantableStructDefinition>(
     return result;
 }
 
-export function pmatch<SDef extends ConstantableStructDefinition>( struct: Term<PStruct<SDef>> ): PMatchOptions<SDef>
+export function pmatch<SDef extends StructDefinition>( struct: Term<PStruct<SDef>> ): PMatchOptions<SDef>
 {
-    const sDef = struct.type[1] as ConstantableStructDefinition;
-    if( !isConstantableStructDefinition( sDef ) )
+    const sDef = struct.type[1] as StructDefinition;
+    if( !isStructDefinition( sDef ) )
     {
         /**
          * @todo add proper error
@@ -528,3 +536,16 @@ export function pmatch<SDef extends ConstantableStructDefinition>( struct: Term<
 
     return permutations( ctors ) as any;
 }
+
+
+/*
+const makeThing = <T extends TermType>( t: T ) => pstruct({ C: { v: t } });
+
+const _thing = makeThing( int ).C;
+
+type _test = typeof _thing
+
+const thing  = PMaybe( int ).Nothing;
+
+type test = typeof thing
+//*/

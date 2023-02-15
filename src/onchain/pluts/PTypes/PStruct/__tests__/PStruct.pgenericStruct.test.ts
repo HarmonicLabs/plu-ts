@@ -1,6 +1,6 @@
-import { int } from "../../../Term/Type/base";
 import { PMaybe } from "../../../lib/std/PMaybe/PMaybe";
 import { pStr } from "../../../lib/std/str/pStr";
+import { int } from "../../../type_system/types";
 
 
 describe("pgenericStruct", () => {

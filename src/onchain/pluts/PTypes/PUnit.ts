@@ -1,4 +1,3 @@
-import { Type, TermType } from "../Term/Type/base";
 import { PDataRepresentable } from "../PType/PDataRepresentable";
 
 export class PUnit extends PDataRepresentable
@@ -10,6 +9,4 @@ export class PUnit extends PDataRepresentable
         super();
         this._unit = undefined;
     }
-
-    static override get termType(): TermType { return Type.Unit };
 }

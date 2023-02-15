@@ -12,7 +12,7 @@ import { phoist } from "../phoist";
 export function pid<TermT extends TermType>( termT: TermT ): TermFn<[ ToPType<TermT> ], ToPType<TermT>>
 {
     const idTerm = new Term<PLam<ToPType<TermT>,ToPType<TermT>>>(
-        lam( termT, termT ),
+        lam( termT, termT ) as any,
         _dbn => new Lambda( new UPLCVar(0) )
     );
     return phoist(

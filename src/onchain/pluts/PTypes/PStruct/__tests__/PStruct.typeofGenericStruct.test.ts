@@ -1,7 +1,7 @@
 import { typeofGenericStruct } from "../pstruct"
-import { Type, struct } from "../../../Term/Type/base"
-import { structExtends } from "../../../Term/Type/extension"
 import { PMaybe } from "../../../lib/std/PMaybe/PMaybe";
+import { struct, tyVar } from "../../../type_system/types";
+import { typeExtends } from "../../../type_system";
 
 
 describe("typeofGenericStruct", () => {
@@ -9,21 +9,21 @@ describe("typeofGenericStruct", () => {
     test("single arguent", () => {
 
 
-        const PMaybeTermType = typeofGenericStruct( PMaybe as any );
+        const PMaybeTermType = typeofGenericStruct( PMaybe as any ) as any;
         const manualType = struct({
-            Just: { val: Type.Var() },
+            Just: { val: tyVar() as any },
             Nothing: {}
         });
 
         expect(
-            structExtends(
+            typeExtends(
                 PMaybeTermType,
                 manualType
             )
         ).toBe( true );
 
         expect(
-            structExtends(
+            typeExtends(
                 manualType,
                 PMaybeTermType
             )

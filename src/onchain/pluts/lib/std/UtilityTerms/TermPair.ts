@@ -31,19 +31,15 @@ export function addPPairMethods<PFst extends PType, PSnd extends PType>( _pair: 
     const sndT = pairT[2] as TermType;
 
     if( isWellFormedType( fstT ) )
-        // @ts-ignore
         ObjectUtils.defineReadOnlyProperty(
             _pair,
             "fst",
-            // @ts-ignore
             pfstPair( fstT, sndT ).$( _pair )
         );
     if( isWellFormedType( sndT ) )
-        // @ts-ignore
         ObjectUtils.defineReadOnlyProperty(
             _pair,
             "snd",
-            // @ts-ignore
             psndPair( fstT, sndT ).$( _pair )
         );
 

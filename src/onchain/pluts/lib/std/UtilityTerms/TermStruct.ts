@@ -10,12 +10,16 @@ import { capitalize } from "../../../../../utils/ts/capitalize";
 // `../../../Term/Type/kinds` is also a dependecy of `pmatch`
 import { pmatch } from "../../../PTypes/PStruct/pmatch";
 import { StructDefinition, StructCtorDef, isStructType, isStructDefinition } from "../../../type_system";
+import { peqData } from "../../builtins/data";
+import { TermFn } from "../../../PTypes/PFn/PFn";
+import { PBool } from "../../../PTypes/PBool";
+import { TermBool } from "./TermBool";
 
 
 export type TermStruct<SDef extends StructDefinition> = Term<PStruct<SDef>> & {
-    /*
-    eqTerm: TermFn<[PStruct<SDef>], PBool>
-    eq: ( other: Term<PStruct<SDef>> ) => TermBool
+    //*
+    readonly eqTerm: TermFn<[PStruct<SDef>], PBool>
+    readonly eq: ( other: Term<PStruct<SDef>> ) => TermBool
     //*/
 } & 
 (
@@ -59,9 +63,15 @@ export function addPStructMethods<SDef extends StructDefinition>( struct: Term<P
         )
     }
 
-    /*
-    ObjectUtils.defineReadOnlyProperty(
-        struct, "eqTerm", peqData.$( struct as any )
+    //*
+    Object.defineProperty(
+        struct, "eqTerm",
+        {
+            get: () => peqData.$( struct as any ),
+            set: () => {},
+            configurable: false,
+            enumerable: true 
+        }
     )
 
     ObjectUtils.defineReadOnlyProperty(

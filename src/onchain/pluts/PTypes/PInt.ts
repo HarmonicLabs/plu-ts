@@ -1,4 +1,3 @@
-import { Type, TermType } from "../Term/Type/base";
 import { Integer } from "../../../types/ints/Integer";
 import { PDataRepresentable } from "../PType/PDataRepresentable";
 
@@ -17,6 +16,4 @@ export class PInt extends PDataRepresentable
 
         this._pint = int;
     }
-
-    static override get termType(): TermType { return Type.Int }
 }

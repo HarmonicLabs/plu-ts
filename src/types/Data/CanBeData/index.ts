@@ -4,12 +4,11 @@ import { CborObj, isCborObj } from "../../../cbor/CborObj";
 import { CborString } from "../../../cbor/CborString";
 import { BasePlutsError } from "../../../errors/BasePlutsError";
 import { Data, isData } from "../Data";
-import { anyStruct, PData, PStruct, struct, typeExtends } from "../../../onchain";
 import { Machine } from "../../../onchain/CEK/Machine";
 import { UPLCConst } from "../../../onchain/UPLC/UPLCTerms/UPLCConst";
 import { Term } from "../../../onchain/pluts/Term";
-import { Type } from "../../../onchain/pluts/Term/Type/base";
 import { dataFromCbor, dataFromCborObj } from "../fromCbor";
+import { PData, PStruct, typeExtends, struct, data } from "../../../onchain";
 
 export type CanBeData = Data | Term<PData> | Term<PStruct<any>> | CborObj | CborString
 
@@ -20,15 +19,14 @@ export function canBeData( something: any ): something is CanBeData
         isData( something ) || 
         (
             something instanceof Term &&
-            (
-                typeExtends( something.type, Type.Data.Any ) ||
-                typeExtends( something.type, struct( anyStruct ) )
-            )
+            typeExtends( something.type, data )
         ) ||
         something instanceof CborString ||
         isCborObj( something )
     );
 }
+
+const data_t = data;
 
 export function forceData( data: CanBeData ): Data
 {
@@ -39,7 +37,7 @@ export function forceData( data: CanBeData ): Data
 
     if( data instanceof Term )
     {
-        if( !typeExtends( data.type, Type.Data.Any ) )
+        if( !typeExtends( data.type, data_t ) )
         {
             throw new BasePlutsError(
                 "datum was a term of a type that doesn't extends 'data'"

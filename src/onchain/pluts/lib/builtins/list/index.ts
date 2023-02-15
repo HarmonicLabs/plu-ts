@@ -19,7 +19,7 @@ export function pstrictChooseList<ListElemT extends TermType, ReturnT extends Te
 
     return addApplications<[ PList< ToPType<ListElemT>> , ToPType<ReturnT>, ToPType<ReturnT> ], ToPType<ReturnT>>(
         new Term(
-            fn([ list( listElemT ), returnT, returnT ], returnT ),
+            fn([ list( listElemT ), returnT, returnT ], returnT ) as any,
             _dbn => Builtin.chooseList
         )
     );
@@ -65,7 +65,7 @@ export function pchooseList<ListElemT extends TermType, ReturnT extends TermType
            >
        >
    >(
-        fn([list( listElemT ), delayed( returnT ), delayed( returnT )], returnT ),
+        fn([list( listElemT ), delayed( returnT ), delayed( returnT )], returnT ) as any,
         _dbn => Builtin.chooseList
     );
 
@@ -121,7 +121,7 @@ export function phead<ListElemT extends TermType>( listElemType: ListElemT )
 
     return addApplications<[ PList< ToPType<ListElemT>> ], ToPType<ListElemT>>(
         new Term(
-            lam( list( listElemT ), listElemT ),
+            lam( list( listElemT ), listElemT ) as any,
             _dbn => Builtin.headList
         )
     );
@@ -132,7 +132,7 @@ export function ptail<ListElemT extends TermType>( listElemT: ListElemT )
 {
     return addApplications<[ PList< ToPType<ListElemT>> ], PList< ToPType<ListElemT>>>(
         new Term(
-            lam( list( listElemT ), list( listElemT ) ),
+            lam( list( listElemT ), list( listElemT ) ) as any,
             _dbn => Builtin.tailList
         )
     );
@@ -140,7 +140,7 @@ export function ptail<ListElemT extends TermType>( listElemT: ListElemT )
 
 export const pisEmpty: TermFn<[PList<PType>], PBool> = addApplications<[ PList<PType> ], PBool>(
         new Term(
-            lam( list( Type.Any ), bool ),
+            lam( list( tyVar() ), bool ) as any,
             _dbn => Builtin.nullList
         )
     );

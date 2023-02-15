@@ -30,7 +30,7 @@ export function pstrictChooseData<ReturnT extends TermType>( returnT: ReturnT )
         new Term(
             fn(
                 [ data, returnT, returnT, returnT, returnT, returnT ], returnT
-            ),
+            ) as any,
             _dbn => Builtin.chooseData
         )
     );
@@ -106,7 +106,7 @@ export function pchooseData<ReturnT extends TermType>( returnT: ReturnT )
    >(
         fn(
             [ data, delayed( returnT ), delayed( returnT ), delayed( returnT ), delayed( returnT ), delayed( returnT ) ], delayed( returnT )
-        ),
+        ) as any,
         _dbn => Builtin.chooseData
     );
 
@@ -214,7 +214,7 @@ export const pMapToData: TermFn<[ PMap<PData, PData> ], PData>
             lam(
                 list( pair( data, data ) ),
                 asData( list( pair( data, data ) ) )
-            ),
+            ) as any,
             _dbn => Builtin.mapData
         )
     );
@@ -230,7 +230,7 @@ export const pListToData: TermFn<[ PList<PData> ], PData>
 export const pIntToData: TermFn<[ PInt ], PData> 
     = addApplications<[ PInt ], PData>(
         new Term<PLam<PInt, PData>>(
-            lam( int, asData( int ) ),
+            lam( int, asData( int ) ) as any,
             _dbn => Builtin.iData
         )
     );
@@ -238,7 +238,7 @@ export const pIntToData: TermFn<[ PInt ], PData>
 export const pBSToData: TermFn<[ PByteString ], PData> 
     = addApplications<[ PByteString ], PData>(
         new Term<PLam<PByteString, PData>>(
-            lam( bs, asData( bs ) ),
+            lam( bs, asData( bs ) ) as any,
             _dbn => Builtin.bData
         )
     );
@@ -255,7 +255,7 @@ export const punConstrData
 export const punMapData: TermFn<[ PData, PData ], PList<PPair<PData, PData>>>
     = addApplications<[ PData, PData ], PList<PPair<PData, PData>>>(
         new Term(
-            lam( data, list( pair( data, data ) ) ),
+            lam( data, list( pair( data, data ) ) ) as any,
             _dbn => Builtin.unMapData
         )
     );

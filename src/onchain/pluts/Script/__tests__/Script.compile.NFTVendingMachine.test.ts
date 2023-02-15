@@ -1,12 +1,10 @@
 import { RestrictedStructInstance } from "../../PTypes/PStruct/pstruct";
-import { PByteString, PList, PPair, PInt, Term, PBool, TermPair, pBSToData, pByteString, pand, pdelay, perror, pfn, pintToBS, pisEmpty, plet, pmatch, punBData, punIData } from "../..";
+import { PByteString, PList, PPair, PInt, Term, PBool, TermPair, pBSToData, pByteString, pand, pdelay, perror, pfn, pintToBS, pisEmpty, plet, pmatch, punBData, punIData, bool, data, asData, bs, TermType } from "../..";
 import { ByteString } from "../../../../types/HexString/ByteString";
 import { PPubKeyHash } from "../../API/V1/PubKey/PPubKeyHash";
 import { PScriptContext } from "../../API/V2/ScriptContext/PScriptContext";
 import { PCurrencySymbol } from "../../API/V1/Value/PCurrencySymbol";
-import { Type } from "../../Term/Type/base";
 import { compile } from "../compile";
-import { data, bool, ConstantableTermType } from "../../Term/Type";
 
 describe("NFTVendingMachine", () => {
 
@@ -14,10 +12,10 @@ describe("NFTVendingMachine", () => {
 
         const nftPolicy = pfn([
 
-            Type.Data.BS, // owner public key hash
+            data, // owner public key hash
 
-            Type.Data.BS, // counter thread identifier policy
-            Type.Data.BS, // price oracle thread identifier policy
+            data, // counter thread identifier policy
+            data, // price oracle thread identifier policy
             
             data,
             PScriptContext.type
@@ -122,7 +120,7 @@ describe("NFTVendingMachine", () => {
                                                         valueEntry.fst.length.eq( 0 ) // empty bytestring (policy of ADA)
                                                     )
                                                 )
-                                                .onJust( _ => _.extract("val").in((({val}: { val: TermPair<PByteString,PList<PPair<PByteString, PInt>>>}): Term<PBool> =>
+                                                .onJust( _ => _.extract("val").in((({val}): Term<PBool> =>
                                                     
                                                     // list( pair( bs, int ) )
                                                     val.snd
@@ -136,10 +134,10 @@ describe("NFTVendingMachine", () => {
                                                             ._( _ => perror( data ) )
                                                         )
                                                     )
-                                                ) as (extracted: RestrictedStructInstance<{ val: ConstantableTermType; }, ["val"]>) => Term<PBool>))
+                                                )))
                                                 .onNothing( _ => perror( bool ) ) as Term<PBool>
 
-                                            ))
+                                            ) as any )
 
                                         )
                                     ))
@@ -154,7 +152,7 @@ describe("NFTVendingMachine", () => {
             
             ))
             ._( _ => perror( bool ) )
-        ))
+        ) as any)
 
         function makeNFTweetPolicy(
             owner: Term<typeof PPubKeyHash>,

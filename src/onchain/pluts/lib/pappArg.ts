@@ -28,7 +28,6 @@ type _TsFunctionSatisfying<KnownArgs extends Term<PType>[], POut extends PType> 
     POut extends PLam<infer POutIn extends PType, infer POutOut extends PType> ?
         (
             ( ...args: KnownArgs ) => Term<POut> | // functions that do return `PLam` are fine too
-            // @ts-ignore Type instantiation is excessively deep and possibly infinite.
             _TsFunctionSatisfying<[ ...KnownArgs, UtilityTermOf<POutIn> ], POutOut>
         ) :
         ( ...args: KnownArgs ) => Term<POut>

@@ -1,5 +1,4 @@
 import { PType } from "../../PType";
-import { Type, TermType } from "../../Term/Type/base";
 import { PDataRepresentable } from "../../PType/PDataRepresentable";
 /*
 Class static side 'typeof PPair' incorrectly extends base class static side 'typeof PDataRepresentable'.
@@ -22,5 +21,4 @@ export class PPair<A extends PType, B extends PType > extends PDataRepresentable
         this._b = b;
     }
 
-    static override get termType(): TermType { return Type.Pair( Type.Any, Type.Any ) };
 }

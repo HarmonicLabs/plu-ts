@@ -47,7 +47,7 @@ export class Term<A extends PType>
         } 
     };
 
-    constructor( type: FromPType<A> , toUPLC: ( dbn: bigint ) => UPLCTerm, isConstant: boolean = false )
+    constructor( type: FromPType<A> | FromPType<ToPType<TermType>> , toUPLC: ( dbn: bigint ) => UPLCTerm, isConstant: boolean = false )
     {
         JsRuntime.assert(
             isWellFormedGenericType( type ) || Boolean(void console.log( type )),

@@ -1,5 +1,5 @@
-import { int } from "../../../Term/Type/base";
 import { pstruct } from "../../../PTypes/PStruct/pstruct";
+import { int } from "../../../type_system/types";
 import { PCredential } from "./PCredential";
 
 export const PStakingCredential = pstruct({

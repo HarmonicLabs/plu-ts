@@ -1,20 +1,20 @@
-import { pstruct, pgenericStruct } from "../pstruct"
+import { pstruct } from "../pstruct"
 import { DataConstr } from "../../../../../types/Data/DataConstr";
 import { DataI } from "../../../../../types/Data/DataI";
-import { evalScript } from "../../../../CEK";
+import { Machine } from "../../../../CEK/Machine";
 import { UPLCConst } from "../../../../UPLC/UPLCTerms/UPLCConst";
-import { ConstantableTermType, int, str } from "../../../Term/Type/base"
 import { pInt } from "../../../lib/std/int/pInt";
+import { TermType, int, str } from "../../../type_system";
 
 
-const PMaybe = <T extends ConstantableTermType>( tyArg: T ) => {
+const PMaybe = <T extends TermType>( tyArg: T ) => {
     return pstruct({
         Just: { value: tyArg },
         Nothing: {}
     })
 };
 
-const PEither = <A extends ConstantableTermType, B extends ConstantableTermType>( a: A, b: B ) =>
+const PEither = <A extends TermType, B extends TermType>( a: A, b: B ) =>
     pstruct({
         Left: { left: a },
         Right: { right: b },
@@ -27,7 +27,7 @@ describe("evaluated struct", () => {
         test("Just == Constr 0 [ value ] ", () => {
 
             expect(
-                evalScript(
+                Machine.evalSimple(
                     PMaybe( int ).Just({ value: pInt(2) })
                 )
             ).toEqual(
@@ -39,7 +39,7 @@ describe("evaluated struct", () => {
             )
 
             expect(
-                evalScript(
+                Machine.evalSimple(
                     PMaybe( int ).Just({ value: pInt(2) })
                 )
             ).toEqual(
@@ -55,7 +55,7 @@ describe("evaluated struct", () => {
         test("Nothing == Constr 1 [] ", () => {
 
             expect(
-                evalScript(
+                Machine.evalSimple(
                     PMaybe( int ).Nothing({})
                 )
             ).toEqual(
@@ -67,7 +67,7 @@ describe("evaluated struct", () => {
             )
 
             expect(
-                evalScript(
+                Machine.evalSimple(
                     PMaybe( str ).Nothing({})
                 )
             ).toEqual(

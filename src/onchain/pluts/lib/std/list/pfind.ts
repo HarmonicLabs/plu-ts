@@ -32,10 +32,10 @@ return phoist(
                 plet( phead( elemsT ).$( _list ) ).in( head => 
                     pif( PMaybeElem.type ).$( papp( predicate, head ) )
                     .then( PMaybeElem.Just({ val: head as any }))
-                    .else( papp( papp( self, predicate) , ptail( elemsT ).$( _list ) ) )
+                    .else( papp( papp( self, predicate) as any , ptail( elemsT ).$( _list ) ) )
                 )
             )
-        )
+        ) as any
 
     )
 ) as any;

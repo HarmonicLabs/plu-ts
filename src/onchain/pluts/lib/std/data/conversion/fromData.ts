@@ -2,7 +2,7 @@ import { PType } from "../../../../PType";
 import { PData } from "../../../../PTypes";
 import { TermFn } from "../../../../PTypes/PFn/PFn";
 import { Term } from "../../../../Term";
-import { ListT, PairT, asData, bool, lam, list, pair, tyVar, unit } from "../../../../type_system";
+import { ListT, PairT, PrimType, asData, bool, lam, list, pair, tyVar, unit } from "../../../../type_system";
 import { TermType, bs, data, int, str } from "../../../../type_system";
 import { isTaggedAsAlias } from "../../../../type_system/kinds/isTaggedAsAlias";
 import { ToPType } from "../../../../type_system/ts-pluts-conversion";
@@ -45,6 +45,10 @@ const pPairFromData =
 export function fromData<T extends TermType>( t: T ): ( term: Term<PData> ) => Term<ToPType<T>>
 {
     if( isTaggedAsAlias( t ) ) return fromData( unwrapAlias( t ) ) as any;
+
+    // unwera asData before `t extends data`
+    if( t[0] === PrimType.AsData ) t = t[1] as T;
+    
     if( typeExtends( t, data ) ) 
         return (( term: Term<PType> ) =>
             punsafeConvertType( term, t as any )) as any;

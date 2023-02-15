@@ -1,6 +1,6 @@
 import { showUPLC } from "../../../../../UPLC/UPLCTerm"
 import { PTxInInfo } from "../../../../API/V2/Tx/PTxInInfo"
-import { data } from "../../../../Term"
+import { data } from "../../../../type_system"
 import { pList, pnil } from "../const"
 
 describe("pList", () => {
@@ -13,7 +13,7 @@ describe("pList", () => {
             )
         ).toEqual(
             showUPLC(
-                pnil(data)
+                pnil( data )
                 .toUPLC(0)
             )
         )

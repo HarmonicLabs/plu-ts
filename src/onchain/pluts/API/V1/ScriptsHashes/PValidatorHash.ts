@@ -1,4 +1,4 @@
 import { palias } from "../../../PTypes/PAlias/palias";
-import { bs } from "../../../Term/Type/base";
+import { bs } from "../../../type_system/types";
 
 export const PValidatorHash = palias( bs );

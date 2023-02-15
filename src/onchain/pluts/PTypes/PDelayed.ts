@@ -1,5 +1,4 @@
 import { Cloneable, isCloneable } from "../../../types/interfaces/Cloneable";
-import { Type, TermType } from "../Term/Type/base";
 import { PType } from "../PType";
 
 export class PDelayed< DelayedPType extends PType > extends PType
@@ -21,6 +20,4 @@ export class PDelayed< DelayedPType extends PType > extends PType
                 this._delayedPType
         );
     }
-
-    static override get termType(): TermType { return Type.Delayed( Type.Any ) }
 }

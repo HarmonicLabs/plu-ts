@@ -1,6 +1,5 @@
-import type { StructCtorDef, StructDefinition } from "../../Term/Type/base";
-
 import ObjectUtils from "../../../../utils/ObjectUtils";
+import { StructCtorDef, StructDefinition } from "../../type_system";
 
 
 export function cloneStructCtorDef<CtorDef extends StructCtorDef>( ctorDef: Readonly<CtorDef> ): CtorDef

@@ -1,8 +1,8 @@
 import { palias } from "../palias"
-import { evalScript } from "../../../../CEK";
+import { Machine } from "../../../../CEK/Machine";
 import { UPLCConst } from "../../../../UPLC/UPLCTerms/UPLCConst";
-import { int } from "../../../Term/Type/base"
 import { pInt } from "../../../lib/std/int/pInt";
+import { int } from "../../../type_system/types";
 
 
 describe("palias", () => {
@@ -13,7 +13,7 @@ describe("palias", () => {
     test("evaluates to the aliased type", () => {
 
         expect(
-            evalScript(
+            Machine.evalSimple(
                 fancy69
             )
         ).toEqual( UPLCConst.int( 69 ) )
@@ -23,7 +23,7 @@ describe("palias", () => {
     test("aliases can be used in place of original types", () => {
 
         expect(
-            evalScript(
+            Machine.evalSimple(
                 pInt(1).add( fancy69 as any )
             )
         ).toEqual( UPLCConst.int( 69 + 1 ) )

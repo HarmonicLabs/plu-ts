@@ -1,13 +1,14 @@
 import { UPLCConst } from "../../../../UPLC/UPLCTerms/UPLCConst";
-import { Term, Type } from "../../../Term";
+import { Term } from "../../../Term";
 import { TermStr, addPStringMethods } from "../UtilityTerms";
+import { str } from "../../../type_system/types"
 
-export function pStr( str: string ): TermStr
+export function pStr( string: string ): TermStr
 {
     return addPStringMethods(
         new Term(
-            Type.Str,
-            _dbn => UPLCConst.str( str )
+            str,
+            _dbn => UPLCConst.str( string )
         )
     );
 }

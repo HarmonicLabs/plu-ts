@@ -1,10 +1,12 @@
 import { TermFn, PFn, PList } from "../../../PTypes";
 import { TermType, ToPType, fn, list, lam } from "../../../type_system";
 import { papp } from "../../papp";
+import { pdelay } from "../../pdelay";
 import { pfn } from "../../pfn";
 import { phoist } from "../../phoist";
 import { plam } from "../../plam";
 import { precursive } from "../../precursive";
+import { pmatchList } from "./pmatchList";
 
 export function pfoldl<ElemsT extends TermType, ResultT extends TermType>( elemsT: ElemsT, resultT: ResultT )
 : TermFn<[
@@ -35,14 +37,13 @@ export function pfoldl<ElemsT extends TermType, ResultT extends TermType>( elems
                 ],  lam( list( a ), b ))
                 (( self, accum ) => 
 
-                    // @ts-ignore Type instantiation is excessively deep and possibly infinite.
                     pmatchList( b, a )
-                    .$( accum )
+                    .$( pdelay( accum ) )
                     .$(
-                        pfn([ a, list( a ) ], b )
+                        // @ts-ignore
+                        (pfn([ a, list( a ) ], b )
                         (( head, tail ) =>
                             papp(
-                                // @ts-ignore Type instantiation is excessively deep and possibly infinite.
                                 papp(
                                     self,
                                     // compute new accumulator
@@ -53,13 +54,13 @@ export function pfoldl<ElemsT extends TermType, ResultT extends TermType>( elems
                                     ).$(
                                         head
                                     )
-                                ),
+                                ) as any,
                                 tail
                             ) as any
-                        )
+                        ) as any)
                     ) as any
                     // .$( lst )
-                )
+                ) as any
             ) as any
 
         )

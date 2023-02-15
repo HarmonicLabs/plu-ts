@@ -1,5 +1,6 @@
-import { TermType, int, lam, list } from "../../../type_system";
+import { TermType, delayed, int, lam, list } from "../../../type_system";
 import { papp } from "../../papp";
+import { pdelay } from "../../pdelay";
 import { pfn } from "../../pfn";
 import { plam } from "../../plam";
 import { pInt } from "../int/pInt";
@@ -12,10 +13,9 @@ export const plength = ( elemsT: TermType ) => {
     .$(
         plam(
             lam( list( elemsT ), int ),
-            int
-        )(
-            ( _self ) => pInt( 0 )
+            delayed(int)
         )
+        (_self => pdelay( pInt( 0 ) ) )
     )
     .$(
         pfn([

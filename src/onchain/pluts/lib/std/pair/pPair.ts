@@ -2,11 +2,14 @@ import JsRuntime from "../../../../../utils/JsRuntime";
 // !!! IMPORTANT !!!
 // `isWellFormedType` is used both here and by `addPPairMethods`
 // DO NOT change the order of the two imports
-import { TermType, ToPType, typeExtends, pair, isWellFormedType } from "../../../type_system";
+import { TermType, ToPType, typeExtends, pair, isWellFormedType, asData } from "../../../type_system";
 import { TermPair, addPPairMethods } from "../../std/UtilityTerms/TermPair";
 import { UPLCConst } from "../../../../UPLC/UPLCTerms/UPLCConst";
 import { PPair } from "../../../PTypes";
 import { Term } from "../../../Term";
+import { Machine } from "../../../../CEK/Machine";
+import { termTyToConstTy } from "../../../type_system/termTyToConstTy";
+import { fromData, ppairData, punsafeConvertType, toData } from "../..";
 
 
 export function pPair<FstT extends TermType, SndT extends TermType>(
@@ -39,17 +42,47 @@ export function pPair<FstT extends TermType, SndT extends TermType>(
         if(
             !(_fst as any).isConstant ||
             !(_snd as any).isConstant
-        ) return pdynPair( fstT, sndT )( _fst, _snd ) as any;
+        ){
+
+            let fst = toData( fstT )( _fst );
+            let snd = toData( sndT )( _snd );
+
+            if( (fst as any).isConstant )
+            {
+                fst = new Term(
+                    fst.type,
+                    _dbn => Machine.evalSimple( fst )
+                )
+            }
+
+            if( (snd as any).isConstant )
+            {
+                snd = new Term(
+                    snd.type,
+                    _dbn => Machine.evalSimple( snd )
+                )
+            }
+
+            return punsafeConvertType(
+                ppairData
+                .$( fst )
+                .$( snd ),
+                pair(
+                    asData( fstT ),
+                    asData( sndT )
+                )
+            ) as any;
+        }
         
         return addPPairMethods(
             new Term<PPair<ToPType<FstT>,ToPType<SndT>>>(
-                pair( fstT, sndT ),
+                pair( fstT, sndT ) as any ,
                 dbn => UPLCConst.pairOf(
                     termTyToConstTy( fstT ),
                     termTyToConstTy( sndT )
                 )(
-                    (_fst.toUPLC( dbn ) as UPLCConst).value,
-                    (_snd.toUPLC( dbn ) as UPLCConst).value
+                    (Machine.evalSimple( _fst ) as UPLCConst).value,
+                    (Machine.evalSimple( _snd ) as UPLCConst).value
                 ),
                 true // isConstant
             )

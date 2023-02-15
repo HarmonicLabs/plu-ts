@@ -1,10 +1,10 @@
-import { data, lam, list, int, tyVar } from "../../Term/Type/base";
 import { psndPair, punConstrData } from "../../lib/builtins";
 import { papp } from "../../lib/papp";
 import { pfn } from "../../lib/pfn";
 import { phoist } from "../../lib/phoist";
+import { data, lam, list, int, TermType } from "../../type_system";
 
-export const matchSingleCtorStruct = (( returnT ) =>  phoist(
+export const matchSingleCtorStruct = (( returnT: TermType ) =>  phoist(
     pfn([
         data,
         lam( list(data), returnT )
@@ -15,4 +15,4 @@ export const matchSingleCtorStruct = (( returnT ) =>  phoist(
         // an attacker can always change the data to match the ctor index expected 
         papp( continuation, psndPair( int, list(data) ).$( punConstrData.$( structData ) ) )
     )
-))( tyVar("matchSingleCtorStruct_returnT") );
+));
