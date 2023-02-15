@@ -54,7 +54,7 @@ export const isGenericStructDefinition = getIsStructDefWithTermTypeCheck(
 ) as  ( def: object ) => def is GenericStructDefinition;
 
 
-export function isStructType( t: TermType ): t is StructT<StructDefinition>
+export function isStructType( t: GenericTermType ): t is StructT<StructDefinition>
 {
     return (
         Array.isArray( t ) &&

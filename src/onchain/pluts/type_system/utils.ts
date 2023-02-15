@@ -1,7 +1,7 @@
 import JsRuntime from "../../../utils/JsRuntime";
 import { isTaggedAsAlias } from "./kinds/isTaggedAsAlias";
 import { unwrapAlias } from "./unwrapAlias";
-import { PrimType, StructCtorDef, StructDefinition, TermType, cloneStructDef } from "./types";
+import { GenericTermType, PrimType, StructCtorDef, StructDefinition, TermType, cloneStructDef } from "./types";
 import { isStructType } from "./kinds/isWellFormedType";
 
 export function getNRequiredLambdaArgs( type: TermType ): number
@@ -53,7 +53,7 @@ export function structDefToString( def: StructDefinition ): string
     return  str
 }
 
-export function termTypeToString( t: TermType ): string
+export function termTypeToString( t: GenericTermType ): string
 {
     if( t[0] === PrimType.Struct )
     {

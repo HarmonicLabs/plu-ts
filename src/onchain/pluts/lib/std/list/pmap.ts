@@ -39,13 +39,12 @@ return phoist(
                             )
                         )
                         ( (elem) =>
-                            // @ts-ignore
                             pprepend( toT ).$( papp( mapFunc, elem as any ) )
-                        ) as any
-                    ) as any
+                        ) 
+                    )
                 ) 
             )
-            .$( f ) as any,
+            .$( f ),
             pnil( toT )
         )
         // .$( _list )

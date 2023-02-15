@@ -1,6 +1,4 @@
-import { PType } from "../../../PType";
 import type { TermFn, PLam, PBool, PList } from "../../../PTypes";
-import { Term } from "../../../Term";
 import { ToPType, lam, bool, list, TermType } from "../../../type_system";
 import { papp } from "../../papp";
 import { pdelay } from "../../pdelay";
@@ -22,8 +20,7 @@ export function pevery<ElemsT extends TermType>( elemsT: ElemsT )
                 bool
             )
         )
-        // @ts-ingore
-        ((( predicate: Term<PLam<PType, PType>> ) => {
+        (( predicate ) => {
 
             return precursiveList( bool, elemsT )
             .$( _self => pdelay( pBool( true ) ) )
@@ -38,7 +35,6 @@ export function pevery<ElemsT extends TermType>( elemsT: ElemsT )
                     papp(
                         predicate,
                         head as any
-                    // @ts-ignore
                     ).and(
                         papp(
                             self,
@@ -46,9 +42,9 @@ export function pevery<ElemsT extends TermType>( elemsT: ElemsT )
                         )
                     )
 
-                ) as any
+                )
             )
             // .$( _list )
-        }) as any)
+        })
     ) as any;
 }

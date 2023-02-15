@@ -38,7 +38,7 @@ export function pindexList<ElemsT extends TermType>( elemsT: ElemsT )
                     .else(
 
                         pif( elemsT ).$( pInt( 0 ).eq( idx ) )
-                        .then( phead( elemsT ).$( list ) as any )
+                        .then( phead( elemsT ).$( list )  as any )
                         .else(
                             papp(
                                 papp(
@@ -50,7 +50,7 @@ export function pindexList<ElemsT extends TermType>( elemsT: ElemsT )
                         )
 
                     )
-            ) as any
+            )
 
         )
     )

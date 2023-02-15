@@ -118,7 +118,7 @@ export function structDefExtends( extendingDef: StructDefinition, sDef: GenericS
 /*
  * equivalent to ```A extends B``` but at plu-ts level
  */
-export function typeExtends( extending: TermType, extended: GenericTermType ): boolean
+export function typeExtends( extending: GenericTermType, extended: GenericTermType ): boolean
 {
     if(!(
         isWellFormedType( extending ) &&

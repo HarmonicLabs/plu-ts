@@ -1,4 +1,5 @@
 import { TermFn, PLam, PBool, PList } from "../../../PTypes";
+import { Term } from "../../../Term";
 import { TermType, ToPType, lam, bool, list, delayed } from "../../../type_system";
 import { papp } from "../../papp";
 import { pdelay } from "../../pdelay";
@@ -21,13 +22,12 @@ return phoist(
             bool
         )
     )
-    // @ts-ignore
     (( predicate ) => {
 
         return precursiveList( bool , elemsT )
         .$(
             plam( lam( list( elemsT ), bool ), delayed( bool ) )
-            ( _self => pdelay( pBool( true ) ) ) as any
+            ( _self => pdelay( pBool( true ) ) )
         )
         .$(
             pfn([
@@ -39,7 +39,7 @@ return phoist(
 
                 papp(
                     predicate,
-                    head as any
+                    head
                 ).or(
                     papp(
                         self,
@@ -47,7 +47,7 @@ return phoist(
                     )
                 )
 
-            ) as any
+            ) as Term<PLam<PLam<PList<ToPType<ElemsT>>, PBool>, PLam<ToPType<ElemsT>, PLam<PList<ToPType<ElemsT>>, PBool>>>>
         )
         // .$( _list )
     })

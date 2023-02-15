@@ -117,7 +117,7 @@ export function pchooseList<ListElemT extends TermType, ReturnT extends TermType
 export function phead<ListElemT extends TermType>( listElemType: ListElemT )
     : TermFn<[ PList<ToPType<ListElemT>> ], ToPType<ListElemT>>
 {
-    const listElemT = listElemType ?? tyVar("pprepend_listElemType");
+    const listElemT = listElemType;
 
     return addApplications<[ PList< ToPType<ListElemT>> ], ToPType<ListElemT>>(
         new Term(

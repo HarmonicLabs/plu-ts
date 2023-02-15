@@ -46,9 +46,9 @@ export function precursiveList<ReturnT  extends TermType, ElemtsT extends TermTy
                         papp(
                             self,
                             matchNil
-                        ) as any,
+                        ),
                         matchCons
-                    ) as any
+                    )
                 ).in( finalSelf =>
                     pmatchList( returnT, elemsT )
                     .$(
@@ -65,7 +65,7 @@ export function precursiveList<ReturnT  extends TermType, ElemtsT extends TermTy
                     )
                     .$( lst )
                 ) as any
-            ) as any
-        )  as any
+            )
+        )
     ) as any;
 }

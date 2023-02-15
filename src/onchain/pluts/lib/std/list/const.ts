@@ -37,17 +37,17 @@ export function pnil<ElemsT extends TermType>( elemsT: ElemsT ): TermList<ToPTyp
         typeExtends( elemsT, pair( data, data ) )
     )
     {
-        return punsafeConvertType( pnilPairData, list( elemsT ) ) as any;
+        return punsafeConvertType( pnilPairData, list( elemsT ) );
     }
 
     if( typeExtends( elemsT, data ) )
     {
-        return punsafeConvertType( pnilData, list( elemsT ) ) as any;
+        return punsafeConvertType( pnilData, list( elemsT ) );
     }
 
     return addPListMethods(
         new Term<PList<ToPType<ElemsT>>>(
-            list( elemsT ) as any,
+            list( elemsT ),
             _dbn => UPLCConst.listOf( termTyToConstTy( elemsT ) )([]),
             true
         )
@@ -73,7 +73,7 @@ export function pconstList<ElemsT extends TermType>( elemsT: ElemsT ): ( elems: 
 
         return addPListMethods(
             new Term<PList<ToPType<ElemsT>>>(
-                list( elemsT ) as any,
+                list( elemsT ),
                 dbn => {
                     const expectedConstTy = termTyToConstTy( elemsT );
 
@@ -83,7 +83,7 @@ export function pconstList<ElemsT extends TermType>( elemsT: ElemsT ): ( elems: 
                             el => {
                                 let res: UPLCTerm = (Machine.evalSimple(
                                     el.toUPLC(dbn)
-                                ) as any);
+                                ));
 
                                 if(!(res instanceof UPLCConst))
                                 {
@@ -95,7 +95,7 @@ export function pconstList<ElemsT extends TermType>( elemsT: ElemsT ): ( elems: 
 
                                 return res.value as Data
                             }
-                        ) as any
+                        )
                     )
                 },
                 true

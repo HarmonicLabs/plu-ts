@@ -40,8 +40,7 @@ export function pfoldl<ElemsT extends TermType, ResultT extends TermType>( elems
                     pmatchList( b, a )
                     .$( pdelay( accum ) )
                     .$(
-                        // @ts-ignore
-                        (pfn([ a, list( a ) ], b )
+                        pfn([ a, list( a ) ], b )
                         (( head, tail ) =>
                             papp(
                                 papp(
@@ -54,13 +53,13 @@ export function pfoldl<ElemsT extends TermType, ResultT extends TermType>( elems
                                     ).$(
                                         head
                                     )
-                                ) as any,
+                                ),
                                 tail
                             ) as any
-                        ) as any)
+                        )
                     ) as any
                     // .$( lst )
-                ) as any
+                )
             ) as any
 
         )

@@ -33,9 +33,9 @@ return phoist(
                         ),
                         ptail( elemsT ).$( list )
                     )
-                ) as any
+                )
             )
         )
-    ) as any
-);
+    )
+) as any;
 }

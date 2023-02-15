@@ -1,6 +1,6 @@
 import { PType } from "../PType";
 import { PInt, PByteString, PString, PUnit, PBool, PList, PPair, PDelayed, PLam, PAlias, PStruct, PData } from "../PTypes";
-import { AliasT, PrimType, StructDefinition, TermType, data, fn } from "./types";
+import { AliasT, GenericTermType, PrimType, StructDefinition, TermType, data, fn } from "./types";
 
 
 export type ToPType<T extends TermType> =
@@ -20,7 +20,7 @@ T extends [ PrimType.Str ]   ? PString :
 T extends [ PrimType.Unit ]  ? PUnit :
 T extends [ PrimType.Bool ]  ? PBool :
 T extends [ PrimType.Data ]  ? PData :
-T extends TermType ? PType :
+T extends GenericTermType ? PType :
 // T extends FromPType<infer PT extends PType> ? PT : // !!! IMPORTANT !!! can only be present in one of the two types; breaks TypeScript LSP otherwise
 never;
 
@@ -39,7 +39,7 @@ PT extends PLam<infer FstTyArg extends PType, infer SndTyArg extends PType>     
 PT extends PStruct<infer SDef extends StructDefinition> ? [ PrimType.Struct, SDef ] :
 PT extends PAlias<infer T extends TermType> ? AliasT<T> :
 PT extends ToPType<infer T extends TermType> ? T : // !!! IMPORTANT !!! can only be present in one of the two types; breaks TypeScript LSP otherwise
-PT extends PType    ? TermType :
+PT extends PType    ? GenericTermType :
 // PT extends ToPType<infer T extends TermType> ? T :
 never;
 

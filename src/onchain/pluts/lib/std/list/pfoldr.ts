@@ -28,7 +28,6 @@ export function pfoldr<ElemsT extends TermType, ResultT extends TermType>( elems
             
             return precursiveList( resultT, elemsT )
             .$(
-                // @ts-ignore
                 plam( selfType , delayed( resultT ) )
                 ( _foldr => pdelay( accumulator ) )
             )
@@ -52,7 +51,7 @@ export function pfoldr<ElemsT extends TermType, ResultT extends TermType>( elems
                             tail
                         )
                     )
-                ) as any
+                )
             ) as any
         })
     ) as any;

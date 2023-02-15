@@ -16,5 +16,5 @@ export function preverse<ElemsT extends TermType>( elemsT: ElemsT )
             .$( pprepend( elemsT ) )
         )
         .$( pnil( elemsT ) )
-    ) as any;
+    );
 }

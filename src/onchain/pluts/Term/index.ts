@@ -9,7 +9,7 @@ import { HoistedUPLC } from "../../UPLC/UPLCTerms/HoistedUPLC";
 import { Machine } from "../../CEK";
 import { FromPType, ToPType } from "../type_system/ts-pluts-conversion";
 import { isWellFormedGenericType, isWellFormedType } from "../type_system/kinds/isWellFormedType";
-import { TermType } from "../type_system/types";
+import { GenericTermType, TermType } from "../type_system/types";
 
 export type UnTerm<T extends Term<PType>> = T extends Term<infer PT extends PType > ? PT : never;
 
@@ -30,8 +30,10 @@ export class Term<A extends PType>
             this._pInstance;
     }
 
-    _type!: FromPType<A>;
-    get type(): FromPType<A> {
+    // typescript being silly here
+    _type!: FromPType<A> | TermType;
+    get type(): FromPType<A> | TermType
+    {
         return this._type
     };
 

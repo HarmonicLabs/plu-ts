@@ -33,7 +33,7 @@ return phoist(
                 )
                 .then( accum.prepend( elem ) )
                 .else( accum )
-            ) as any
+            )
         ).$( pnil( elemsT ) ) as any
         // .$( lst )
 
