@@ -2,19 +2,18 @@ import { Data, isData } from "../../../../../types/Data/Data";
 import JsRuntime from "../../../../../utils/JsRuntime";
 import { Machine } from "../../../../CEK";
 import { UPLCTerm, showUPLC } from "../../../../UPLC/UPLCTerm";
-import { ErrorUPLC } from "../../../../UPLC/UPLCTerms/ErrorUPLC";
 import { UPLCConst } from "../../../../UPLC/UPLCTerms/UPLCConst";
-import { constT, constTypeEq } from "../../../../UPLC/UPLCTerms/UPLCConst/ConstType";
+import { constT } from "../../../../UPLC/UPLCTerms/UPLCConst/ConstType";
 import { PList, PData } from "../../../PTypes";
 import { Term } from "../../../Term";
 import { ToPType, isWellFormedType } from "../../../type_system";
 import { termTyToConstTy } from "../../../type_system/termTyToConstTy";
 import { typeExtends } from "../../../type_system/typeExtends";
-import { PrimType, TermType, data, delayed, lam, list, pair, tyVar } from "../../../type_system/types";
-import { pnilPairData, pnilData, pprepend, ppairData, pfstPair, psndPair } from "../../builtins";
+import { PrimType, TermType, data, list, pair } from "../../../type_system/types";
+import { pnilData, pnilPairData } from "../../builtins/data";
+import { pprepend } from "../../builtins/pprepend";
 import { punsafeConvertType } from "../../punsafeConvertType";
 import { TermList, addPListMethods } from "../UtilityTerms";
-import { toData } from "../data/conversion/toData";
 
 
 function assertValidListType( elemsT: TermType ): void

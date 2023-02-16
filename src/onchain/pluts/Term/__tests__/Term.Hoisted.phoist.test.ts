@@ -1,21 +1,12 @@
 import { Term } from ".."
 import { UPLCVar } from "../../../UPLC/UPLCTerms/UPLCVar"
-import { phoist, pgreaterInt, pInt } from "../../lib"
-import { Type } from "../Type/base"
+import { pgreaterInt } from "../../lib/builtins/int/intBinOpToBool"
+import { phoist } from "../../lib/phoist"
+import { pInt } from "../../lib/std/int/pInt"
+import { int } from "../../type_system"
 
 
 describe("phoist", () => {
-
-    it.skip("throws on non closed terms", () => {
-
-        expect( () => phoist(
-            new Term(
-                Type.Int,
-                _dbn => new UPLCVar( -1 )
-            )
-        )).toThrow()
-
-    })
 
     it("keeps Term's properties", () => {
 

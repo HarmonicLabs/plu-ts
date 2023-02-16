@@ -12,9 +12,9 @@ import { Term } from "../Term";
 import { typeExtends } from "../type_system/typeExtends";
 import { PrimType, TermType } from "../type_system/types";
 import { termTypeToString } from "../type_system/utils";
-import { UtilityTermOf, addUtilityForType } from "./addUtilityForType";
+import { type UtilityTermOf, addUtilityForType } from "./addUtilityForType";
 import { PappArg, pappArgToTerm } from "./pappArg";
-import { fromData } from "./std";
+import { fromData_minimal } from "./std/data/conversion/fromData_minimal";
 
 
 function isIdentityUPLC( uplc: UPLCTerm ): boolean
@@ -59,7 +59,7 @@ export function papp<Input extends PType, Output extends PType>( a: Term<PLam<In
     if( b instanceof Term )
     {
         // unwrap 'asData' if is the case
-        b = (b.type[0] === PrimType.AsData ? fromData( b.type[1] )( b as any ) : b) as any;
+        b = (b.type[0] === PrimType.AsData ? fromData_minimal( b.type[1] )( b as any ) : b) as any;
 
         JsRuntime.assert(
             typeExtends( b.type, lambdaType[ 1 ] ),

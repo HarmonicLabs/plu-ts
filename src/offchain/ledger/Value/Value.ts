@@ -2,7 +2,6 @@ import BufferUtils, { Ord } from "../../../utils/BufferUtils";
 import JsRuntime from "../../../utils/JsRuntime";
 import ObjectUtils from "../../../utils/ObjectUtils";
 
-import { ByteString } from "../../..";
 import { Cbor } from "../../../cbor/Cbor";
 import { CborObj } from "../../../cbor/CborObj";
 import { CborBytes } from "../../../cbor/CborObj/CborBytes";
@@ -23,6 +22,7 @@ import { Hash28 } from "../../hashes/Hash28/Hash28";
 import { isIValue, addIValues, subIValues, IValue, cloneIValue, IValueToJson } from "./IValue";
 import { Buffer } from "buffer";
 import { CborArray } from "../../../cbor/CborObj/CborArray";
+import { ByteString } from "../../../types/HexString/ByteString";
 
 export class Value
     implements ToCbor, Cloneable<Value>, ToData, ToJson

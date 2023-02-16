@@ -64,7 +64,7 @@ export function addPStructMethods<SDef extends StructDefinition>( struct: Term<P
     }
 
     //*
-    Object.defineProperty(
+    ObjectUtils.definePropertyIfNotPresent(
         struct, "eqTerm",
         {
             get: () => peqData.$( struct as any ),

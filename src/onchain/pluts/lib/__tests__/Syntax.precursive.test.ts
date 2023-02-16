@@ -8,18 +8,18 @@ import { UPLCVar } from "../../../UPLC/UPLCTerms/UPLCVar"
 import { PType } from "../../PType"
 import { PLam } from "../../PTypes/PFn/PLam"
 import { Term } from "../../Term"
-import { Type } from "../../Term/Type/base"
 import { papp } from "../papp"
 import { pfn } from "../pfn"
 import { precursive } from "../precursive"
 import { pif } from "../builtins"
 import { pInt } from "../std/int/pInt"
+import { int, lam, tyVar } from "../../type_system"
 
 
 describe("precursive", () => {
 
-    const a = Type.Var("a");
-    const b = Type.Var("b");
+    const a = tyVar("a");
+    const b = tyVar("b");
 
     const innerZ = new Lambda( // toMakeRecursive
         new Application(
@@ -48,10 +48,10 @@ describe("precursive", () => {
             PLam<PType,PType>
             >
         >(
-            Type.Lambda(
-                Type.Lambda( Type.Lambda( a, b ), Type.Lambda( a, b ) ),
-                Type.Lambda( a, b ),
-            ),
+            lam(
+                lam( lam( a, b ), lam( a, b ) ),
+                lam( a, b ),
+            ) as any,
             _dbn => new HoistedUPLC(
                 new Lambda( // Z
                     new Application(
@@ -80,13 +80,13 @@ describe("precursive", () => {
         const pfactorial = precursive(
             pfn(
                 [
-                    Type.Lambda( Type.Int, Type.Int ),
-                    Type.Int
+                    lam( int, int ),
+                    int
                 ],
-                Type.Int
+                int
             )( ( self , n ) => {
 
-                    return pif( Type.Int ).$( n.ltEq( pInt( 1 ) ) )
+                    return pif( int ).$( n.ltEq( pInt( 1 ) ) )
                         .then( pInt( 1 ) )
                         .else(
                             n.mult(

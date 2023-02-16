@@ -5,7 +5,9 @@ import { Term } from "../../../Term";
 import { fn, str, bool, lam, bs } from "../../../type_system";
 import { papp } from "../../papp";
 import { PappArg } from "../../pappArg";
-import { TermStr, addPStringMethods, TermBool, addPBoolMethods, TermBS, addPByteStringMethods } from "../../std";
+import { TermBS, addPByteStringMethods } from "../../std/UtilityTerms/TermBS";
+import { TermBool, addPBoolMethods } from "../../std/UtilityTerms/TermBool";
+import { TermStr, addPStringMethods } from "../../std/UtilityTerms/TermStr";
 
 
 export type StrBinOPToStr = Term<PLam<PString, PLam<PString,PString>>>

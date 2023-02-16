@@ -144,7 +144,7 @@ export const fn         =
 
         if( inputs.length === 1 ) return Object.freeze( lam( inputs[0], output ) ) as any;
 
-        return Object.freeze( lam( inputs[ 0 ], lam( inputs.slice( 1 ) as any, output ) as any ) ) as any;
+        return Object.freeze( lam( inputs[ 0 ], fn( inputs.slice( 1 ) as any, output ) as any ) ) as any;
     }
 
 export const delayed    = 

@@ -6,6 +6,7 @@ import { UPLCProgram } from "../../UPLC/UPLCProgram";
 import { UPLCVersion } from "../../UPLC/UPLCProgram/UPLCVersion";
 import { PType } from "../PType";
 import { Term } from "../Term";
+import { PlutusScriptVersion, ScriptJsonFormat } from "./PlutusScriptVersion";
 
 const defaultVersion: [ number, number, number ] = [ 1, 0, 0 ];
 
@@ -25,17 +26,6 @@ export function compile( term: Term<PType>, version: Readonly<[number, number, n
             term.toUPLC( 0 )
         )
     ).toBuffer().buffer;
-}
-
-export const enum PlutusScriptVersion {
-    V1 = "PlutusScriptV1",
-    V2 = "PlutusScriptV2"
-};
-
-export interface ScriptJsonFormat<V extends PlutusScriptVersion = PlutusScriptVersion> {
-    type: V,
-    description: string,
-    cborHex: string
 }
 
 export function scriptToJsonFormat( compiledScript: Buffer, plutusScriptVersion: PlutusScriptVersion, description: string = "" ): ScriptJsonFormat

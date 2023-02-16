@@ -1,5 +1,4 @@
 import BigIntUtils from "../../../../utils/BigIntUtils";
-import { data, delayed, unit } from "../../../pluts/Term/Type/base";
 import { BitStream } from "../../../../types/bits/BitStream";
 import { ByteString } from "../../../../types/HexString/ByteString";
 import { compile } from "../../../pluts/Script/compile";
@@ -10,7 +9,7 @@ import { Application } from "../../UPLCTerms/Application";
 import { Builtin } from "../../UPLCTerms/Builtin";
 import { Force } from "../../UPLCTerms/Force";
 import { UPLCConst } from "../../UPLCTerms/UPLCConst";
-import { ptrace, ptraceIfFalse, pfn, pforce, pdelay, perror, pByteString, pStr, pmakeUnit } from "../../../pluts";
+import { ptrace, ptraceIfFalse, pfn, pforce, pdelay, perror, pByteString, pStr, pmakeUnit, data, delayed, unit } from "../../../pluts";
 
 
 describe("serializeBuiltin", () => {

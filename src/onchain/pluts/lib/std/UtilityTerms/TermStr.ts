@@ -1,7 +1,7 @@
 import ObjectUtils from "../../../../../utils/ObjectUtils"
 import { PString, TermFn, PBool } from "../../../PTypes"
 import { Term } from "../../../Term"
-import { pencodeUtf8, pappendStr, peqStr } from "../../builtins"
+import { pappendStr, pencodeUtf8, peqStr } from "../../builtins/str"
 import { PappArg } from "../../pappArg"
 import { TermBS } from "./TermBS"
 import { TermBool } from "./TermBool"

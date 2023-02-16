@@ -30,10 +30,10 @@ import { punsafeConvertType } from "../../lib/punsafeConvertType";
 import { TermList } from "../../lib/std/UtilityTerms/TermList";
 import { plam } from "../../lib/plam";
 import { TermFn } from "../PFn";
-import { MaybeT, PMaybe, PMaybeT, fromData, phead } from "../../lib";
 import { LamT, PrimType, StructCtorDef, StructDefinition, TermType, data, fn, int, lam, list, tyVar } from "../../type_system/types";
 import { isStructDefinition } from "../../type_system";
-import { PInt } from "../PInt";
+import { phead } from "../../lib/builtins/list";
+import { fromData_minimal } from "../../lib/std/data/conversion/fromData_minimal";
 
 
 const elemAtCache: { [n: number]: TermFn<[ PList<PData> ], PData > } = {};
@@ -103,7 +103,7 @@ function getExtractedFieldsExpr<CtorDef extends StructCtorDef, Fields extends (k
     const fieldType = ctorDef[ allFieldsNames[ idx ] ];
 
     return plet(
-        fromData( fieldType )(
+        fromData_minimal( fieldType )(
             getElemAtTerm( idx ).$( fieldsData )
         )
     ).in( value => {
@@ -375,9 +375,10 @@ function hoistedMatchCtors<SDef extends StructDefinition>(
 
     let cont = ctorCbs.find( cb => typeof cb === "function" ) ?? ctorCbs[ 0 ];
 
-    const thisCtor = sDef[
-        ctorCbs.indexOf( cont ) ?? 0
-    ] as SDef[string];
+    let ctorIdx = ctorCbs.indexOf( cont );
+    ctorIdx = ctorIdx < 0 ? 0 : ctorIdx;
+
+    const thisCtor = sDef[ctorIdx] as SDef[string];
 
     let returnT: TermType | undefined = 
         cont instanceof Term ?

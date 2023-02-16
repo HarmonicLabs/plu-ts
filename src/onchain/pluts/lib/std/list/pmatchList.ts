@@ -1,7 +1,7 @@
 import { PType } from "../../../PType";
 import { TermFn, PLam, PList, PDelayed } from "../../../PTypes";
 import { TermType, tyVar, ToPType, fn, list, delayed } from "../../../type_system";
-import { pchooseList, phead, pstrictChooseList, ptail } from "../../builtins";
+import { phead, pstrictChooseList, ptail } from "../../builtins/list";
 import { papp } from "../../papp";
 import { pdelay } from "../../pdelay";
 import { pfn } from "../../pfn";

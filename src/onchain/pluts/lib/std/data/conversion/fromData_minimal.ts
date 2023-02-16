@@ -1,30 +1,66 @@
 import { UtilityTermOf } from "../../..";
+import { Application } from "../../../../../UPLC/UPLCTerms/Application";
+import { Builtin } from "../../../../../UPLC/UPLCTerms/Builtin";
+import { HoistedUPLC } from "../../../../../UPLC/UPLCTerms/HoistedUPLC";
+import { Lambda } from "../../../../../UPLC/UPLCTerms/Lambda";
+import { UPLCVar } from "../../../../../UPLC/UPLCTerms/UPLCVar";
 import { PType } from "../../../../PType";
-import { PData } from "../../../../PTypes";
+import { PByteString, PData, PLam, PString } from "../../../../PTypes";
 import { TermFn } from "../../../../PTypes/PFn/PFn";
 import { Term } from "../../../../Term";
-import { PairT, PrimType, asData, bool, lam, list, pair, tyVar, unit } from "../../../../type_system";
+import { PairT, PrimType, asData, bool, fn, lam, list, pair, tyVar, unit } from "../../../../type_system";
 import { TermType, bs, data, int, str } from "../../../../type_system";
 import { isTaggedAsAlias } from "../../../../type_system/kinds/isTaggedAsAlias";
 import { ToPType } from "../../../../type_system/ts-pluts-conversion";
 import { typeExtends } from "../../../../type_system/typeExtends";
 import { unwrapAlias } from "../../../../type_system/unwrapAlias";
-import { ppairData } from "../../../builtins/ppairData";
-import { pdecodeUtf8 } from "../../../builtins/str";
-import { papp } from "../../../papp";
 import { phoist } from "../../../phoist";
 import { plam } from "../../../plam";
 import { plet } from "../../../plet";
 import { punsafeConvertType } from "../../../punsafeConvertType";
 import { pBoolFromData } from "../../bool";
-import { pcompose } from "../../combinators";
 import { pUnitFromData } from "../../unit";
-import { punBData, punIData, punListData, punMapData } from "../../../builtins/data";
+import { _papp, _pcompose } from "./minimal_common";
 
+const punBData = new Term<PLam<PData, PByteString>>(
+    lam( data, bs ),
+    _dbn => Builtin.unBData
+);
+
+const punIData = new Term(
+    lam( data, int ),
+    _dbn => Builtin.unIData,
+);
+
+const pdecodeUtf8  =new Term<PLam<PByteString, PString>>(
+    lam( bs, str ),
+    _dbn => Builtin.decodeUtf8,
+);
+
+const punListData = new Term(
+    lam( data, list( data ) ),
+    _dbn => Builtin.unListData
+);
+
+const punMapData = new Term(
+    lam( data, list( pair( data, data ) ) ) as any,
+    _dbn => Builtin.unMapData
+);
+
+const ppairData = new Term(
+    fn([ data, data ], pair( data, data ) ),
+    _dbn => Builtin.mkPairData
+)
 
 const pStrFromData =
     phoist(
-        pcompose( data, bs, str ).$( pdecodeUtf8 ).$( punBData )
+        _papp(
+            _papp(
+                _pcompose( data, bs, str ),
+                pdecodeUtf8,
+            ),
+            punBData
+        )
     );
 
 const pPairFromData =
@@ -35,18 +71,22 @@ const pPairFromData =
         )
         ( assumedList =>
             plet(
-                punListData.$( assumedList )
+                _papp( punListData, assumedList )
             ).in( listData =>
-                ppairData
-                .$( listData.head )
-                .$( listData.tail.head )
-            )
+                _papp(
+                    _papp(
+                        ppairData,
+                        (listData as any).head
+                    ),
+                    (listData as any).tail.head
+                )
+            ) as any
         )
     );
 
-export function fromData<T extends TermType>( t: T ): ( term: Term<PData> ) => UtilityTermOf<ToPType<T>>
+export function fromData_minimal<T extends TermType>( t: T ): ( term: Term<PData> ) => Term<ToPType<T>>
 {
-    if( isTaggedAsAlias( t ) ) return fromData( unwrapAlias( t ) ) as any;
+    if( isTaggedAsAlias( t ) ) return fromData_minimal( unwrapAlias( t ) ) as any;
 
     // unwrap asData before `t extends data`
     if( t[0] === PrimType.AsData ) t = t[1] as T;
@@ -57,7 +97,7 @@ export function fromData<T extends TermType>( t: T ): ( term: Term<PData> ) => U
 
     function applyToTerm( termFunc: Term<any> ): ( term: Term<PData> ) => UtilityTermOf<ToPType<T>>
     {
-        return ( term ) => papp( termFunc, term );
+        return ( term ) => _papp( termFunc, term ) as any;
     }
 
     if( typeExtends( t, int ) )     return applyToTerm( punIData );
@@ -96,7 +136,10 @@ export function fromData<T extends TermType>( t: T ): ( term: Term<PData> ) => U
         return (
             ( term: Term<any> ) => 
                 punsafeConvertType(
-                    punMapData.$( term ),
+                    _papp(
+                        punMapData,
+                        term
+                    ),
                     list(
                         pair(
                             asData( fstT ),
@@ -127,7 +170,10 @@ export function fromData<T extends TermType>( t: T ): ( term: Term<PData> ) => U
         return (
             ( term: Term<PData> ) => 
                 punsafeConvertType(
-                    punListData.$( term ),
+                    _papp(
+                        punListData,
+                        term
+                    ),
                     list(
                         asData( elemsT )
                     )
@@ -168,9 +214,9 @@ function pid<T extends TermType, TT extends TermType>( fromT: T, toT: TT ): Term
     ) as any;
 }
 
-export function pfromData<T extends TermType>( t: T ): TermFn<[ PData ], ToPType<T> >
+function pfromData_minimal<T extends TermType>( t: T ): TermFn<[ PData ], ToPType<T> >
 {
-    if( isTaggedAsAlias( t ) ) return pfromData( unwrapAlias( t ) ) as any;
+    if( isTaggedAsAlias( t ) ) return pfromData_minimal( unwrapAlias( t ) ) as any;
     if( typeExtends( t, data ) ) 
         return pid( data, t );
 

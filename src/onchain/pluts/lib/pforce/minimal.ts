@@ -1,18 +1,16 @@
-import { Delay } from "../../UPLC/UPLCTerms/Delay";
-import { Force } from "../../UPLC/UPLCTerms/Force";
-import { PType } from "../PType";
-import { PDelayed } from "../PTypes";
-import { Term } from "../Term";
-import { PrimType } from "../type_system";
-import { UtilityTermOf, addUtilityForType } from "./addUtilityForType";
+import { Delay } from "../../../UPLC/UPLCTerms/Delay";
+import { Force } from "../../../UPLC/UPLCTerms/Force";
+import { PType } from "../../PType";
+import { PDelayed } from "../../PTypes/PDelayed";
+import { Term } from "../../Term";
+import { PrimType } from "../../type_system/types";
 
-export function pforce<PInstance extends PType >
-( toForce: Term<PDelayed<PInstance>> | Term<PInstance> ): UtilityTermOf<PInstance>
+export function pforce_minimal<PInstance extends PType >
+( toForce: Term<PDelayed<PInstance>> | Term<PInstance> ): Term<PInstance>
 {
     const outType = toForce.type[0] === PrimType.Delayed ? toForce.type[1] : toForce.type; 
 
-    return addUtilityForType( outType )(
-        new Term(
+    return new Term(
             outType as any,
             (dbn) => {
                 const toForceUPLC = toForce.toUPLC( dbn );
@@ -30,6 +28,5 @@ export function pforce<PInstance extends PType >
                     toForceUPLC
                 );
             }
-        )
-    ) as any;
+        );
 }

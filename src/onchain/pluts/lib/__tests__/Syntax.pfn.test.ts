@@ -7,7 +7,7 @@ import { PBool } from "../../PTypes/PBool"
 import { PInt } from "../../PTypes/PInt"
 import { PUnit } from "../../PTypes/PUnit"
 import { Term } from "../../Term"
-import { Type } from "../../Term/Type/base"
+import { bool, int, lam, unit } from "../../type_system"
 import { plessEqInt } from "../builtins"
 import { pfn } from "../pfn"
 import { plam } from "../plam"
@@ -19,8 +19,8 @@ describe("pfn", () => {
     test("throws on void input function", () => {
         
         expect(
-            () => pfn([Type.Unit], Type.Int )(
-                () => new Term( Type.Int, _dbn => UPLCConst.int( 2 ) )
+            () => pfn([ unit ], int )(
+                () => new Term( int, _dbn => UPLCConst.int( 2 ) )
             )
         ).toThrow();
 
@@ -28,11 +28,11 @@ describe("pfn", () => {
 
     test("single input functions as plam", () => {
 
-        const withPFn = pfn([Type.Unit], Type.Int )(
-            ( unit: Term<PUnit> ) => new Term( Type.Int, _dbn => UPLCConst.int( 2 ) )
+        const withPFn = pfn([unit], int )(
+            ( unit: Term<PUnit> ) => new Term( int, _dbn => UPLCConst.int( 2 ) )
         );
-        const withPLam = plam( Type.Unit, Type.Int )(
-            ( unit: Term<PUnit> ) => new Term<PInt>( Type.Int, _dbn => UPLCConst.int( 2 ) )
+        const withPLam = plam( unit, int )(
+            ( unit: Term<PUnit> ) => new Term<PInt>( int, _dbn => UPLCConst.int( 2 ) )
         );
         
         expect(
@@ -41,7 +41,7 @@ describe("pfn", () => {
             withPLam.toUPLC( 0 )
         )
 
-        const termUnit = new Term<PUnit>( Type.Unit, _dbn => UPLCConst.unit );
+        const termUnit = new Term<PUnit>( unit, _dbn => UPLCConst.unit );
 
         expect(
             withPFn.$( termUnit ).toUPLC( 0 )
@@ -54,12 +54,12 @@ describe("pfn", () => {
 
     test("binary operation got using 'pfn' is the same as 'plam( x => plam( y => binOp.$( x ).$( y ) ) )' (double 'plam')", () => {
 
-        const pfnBinOp = pfn([ Type.Int, Type.Int ], Type.Bool )(
+        const pfnBinOp = pfn([ int, int ], bool )(
             ( a: Term<PInt>, b: Term<PInt> ) => plessEqInt.$( b ).$( a )
         )
-        const plamBinOp = plam( Type.Int, Type.Lambda( Type.Int, Type.Bool ) )(
+        const plamBinOp = plam( int, lam( int, bool ) )(
             ( a: Term<PInt> ) =>
-                plam( Type.Int, Type.Bool )(
+                plam( int, bool )(
                     ( b: Term<PInt> ): Term<PBool> => plessEqInt.$( b ).$( a )
                 )
         );

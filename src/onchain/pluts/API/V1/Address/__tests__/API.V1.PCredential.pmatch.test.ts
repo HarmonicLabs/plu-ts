@@ -20,7 +20,7 @@ describe("pmatch( PCredentials )", () => {
                     ({ pkh }) => pkh
                 )
             )
-            .onPScriptCredential( _ => perror( PPubKeyHash.type ) )
+            .onPScriptCredential( _ => perror( PPubKeyHash.type ) as any )
         );
 
     });

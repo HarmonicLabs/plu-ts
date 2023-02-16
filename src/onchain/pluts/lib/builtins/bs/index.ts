@@ -7,11 +7,13 @@ import { Term } from "../../../Term";
 import { fn, bs, bool, int, lam } from "../../../type_system";
 import { papp } from "../../papp";
 import { PappArg } from "../../pappArg";
-import { pfn } from "../../pfn";
 import { phoist } from "../../phoist";
-import { TermBS, addPByteStringMethods, TermBool, addPBoolMethods, TermInt, addPIntMethods } from "../../std";
+import { TermBS, addPByteStringMethods } from "../../std/UtilityTerms/TermBS";
+import { TermBool, addPBoolMethods } from "../../std/UtilityTerms/TermBool";
+import { TermInt, addPIntMethods } from "../../std/UtilityTerms/TermInt";
 import { _pflipUPLC } from "../_pflipUPLC";
 import { addApplications } from "../addApplications";
+import { pfn } from "../../pfn";
 
 
 

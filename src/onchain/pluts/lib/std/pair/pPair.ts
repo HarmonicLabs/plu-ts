@@ -9,7 +9,9 @@ import { PPair } from "../../../PTypes";
 import { Term } from "../../../Term";
 import { Machine } from "../../../../CEK/Machine";
 import { termTyToConstTy } from "../../../type_system/termTyToConstTy";
-import { fromData, ppairData, punsafeConvertType, toData } from "../..";
+import { toData_minimal } from "../data/conversion/toData_minimal";
+import { punsafeConvertType } from "../../punsafeConvertType";
+import { ppairData } from "../../builtins/ppairData";
 
 
 export function pPair<FstT extends TermType, SndT extends TermType>(
@@ -44,8 +46,8 @@ export function pPair<FstT extends TermType, SndT extends TermType>(
             !(_snd as any).isConstant
         ){
 
-            let fst = toData( fstT )( _fst );
-            let snd = toData( sndT )( _snd );
+            let fst = toData_minimal( fstT )( _fst );
+            let snd = toData_minimal( sndT )( _snd );
 
             if( (fst as any).isConstant )
             {

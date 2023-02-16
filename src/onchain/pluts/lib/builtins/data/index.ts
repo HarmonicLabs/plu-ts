@@ -11,8 +11,8 @@ import { UtilityTermOf } from "../../addUtilityForType";
 import { papp } from "../../papp";
 import { PappArg } from "../../pappArg";
 import { pdelay } from "../../pdelay";
-import { pforce } from "../../pforce";
-import { TermBS, addPByteStringMethods } from "../../std";
+import { pforce_minimal } from "../../pforce/minimal";
+import { TermBS, addPByteStringMethods } from "../../std/UtilityTerms/TermBS";
 import { addApplications } from "../addApplications";
 
 
@@ -65,7 +65,7 @@ export type CaseConstrFn<RetT extends PType> = ( constrCase: PappArg< RetT> ) =>
     }
 
 /*
-@fixme implement a recursive utility function to
+@todo implement a recursive utility function to
 
 automatically add delays to all alrguments except the first;
 add aliases for the applications except the first;
@@ -149,7 +149,7 @@ export function pchooseData<ReturnT extends TermType>( returnT: ReturnT )
                                                 _cDDCMLWithInt,
                                                 "$",
                                                 ( bCase: Term<ToPType<ReturnT>> ) : Term<ToPType<ReturnT>> => {
-                                                    return pforce(
+                                                    return pforce_minimal(
                                                         papp( _cDDCMLWithInt, pdelay( bCase ) as any )
                                                     ) as any;
                                                 }
@@ -309,7 +309,7 @@ export const pnilData: Term<PList< PData>>
         _dbn => new HoistedUPLC(
             new Application( Builtin.mkNilData, UPLCConst.unit )
         ),
-        true // isConstant
+        // true // isConstant
     );
 
 export const pnilPairData: Term<PList< PPair<PData, PData>>>
@@ -318,7 +318,7 @@ export const pnilPairData: Term<PList< PPair<PData, PData>>>
         _dbn => new HoistedUPLC(
             new Application( Builtin.mkNilPairData, UPLCConst.unit )
         ),
-        true // isConstant
+        // true // isConstant
     );
 
 

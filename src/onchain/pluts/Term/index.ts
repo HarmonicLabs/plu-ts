@@ -10,6 +10,7 @@ import { Machine } from "../../CEK";
 import { FromPType, ToPType } from "../type_system/ts-pluts-conversion";
 import { isWellFormedGenericType, isWellFormedType } from "../type_system/kinds/isWellFormedType";
 import { GenericTermType, TermType } from "../type_system/types";
+import { termTypeToString } from "../type_system";
 
 export type UnTerm<T extends Term<PType>> = T extends Term<infer PT extends PType > ? PT : never;
 
@@ -52,7 +53,8 @@ export class Term<A extends PType>
     constructor( type: FromPType<A> | FromPType<ToPType<TermType>> , toUPLC: ( dbn: bigint ) => UPLCTerm, isConstant: boolean = false )
     {
         JsRuntime.assert(
-            isWellFormedGenericType( type ) || Boolean(void console.log( type )),
+            isWellFormedGenericType( type ) ||
+            Boolean(void console.log( type )),
             "invalid type while constructing Term"
         );
 

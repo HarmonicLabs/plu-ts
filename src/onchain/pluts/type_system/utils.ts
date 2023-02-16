@@ -8,14 +8,8 @@ export function getNRequiredLambdaArgs( type: TermType ): number
 {
     if( type[0] !== PrimType.Lambda ) return 0;
 
-    let t;
-    let n = 1;
-
-    while( (t = (t[2] as any)) === PrimType.Lambda ) n++;
-
-    return n;
+    return 1 + getNRequiredLambdaArgs( type[2] )
 }
-
 /**
  * @deprecated use ```getNRequiredLambdaArgs```
  */

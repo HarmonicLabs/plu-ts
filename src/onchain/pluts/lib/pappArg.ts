@@ -21,7 +21,7 @@ import { pBool } from "./std/bool/pBool";
 import { pInt } from "./std/int/pInt";
 import { pmakeUnit } from "./std/unit/pmakeUnit";
 import { Term } from "../Term";
-import { TermType, ToPType, tyVar, isWellFormedType, typeExtends, int, bool, isTypeParam, bs, str, unit, fn, list, PrimType } from "../type_system";
+import { TermType, ToPType, tyVar, isWellFormedType, typeExtends, int, bool, isTypeParam, bs, str, unit, fn, list, PrimType, GenericTermType, isWellFormedGenericType } from "../type_system";
 
 
 type _TsFunctionSatisfying<KnownArgs extends Term<PType>[], POut extends PType> =
@@ -51,10 +51,10 @@ export type PappArg<PIn extends PType> =
 
 export function pappArgToTerm<ArgT extends TermType>(
     arg: PappArg<ToPType<ArgT>>,
-    mustExtend: ArgT = tyVar("pappArgToTerm_mustExtend_any") as any
+    mustExtend: GenericTermType = tyVar("pappArgToTerm_mustExtend_any") as any
 ): UtilityTermOf<ToPType<ArgT>>
 {
-    if( !isWellFormedType( mustExtend ) )
+    if( !isWellFormedGenericType( mustExtend ) )
     {
         throw new BasePlutsError(
             "can't convert argument for `papp` to invalid type"
@@ -225,7 +225,7 @@ export function pappArgToTerm<ArgT extends TermType>(
             `expected lambda type was: ${termTypeToString(mustExtend)}`
         );
 
-        let outTy: TermType = mustExtend;
+        let outTy = mustExtend as TermType;
         const fnInputsTys = [];
 
         for( let i = 0; i < funcNArgs; i++ )

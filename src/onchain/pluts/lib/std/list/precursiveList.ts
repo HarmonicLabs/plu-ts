@@ -1,5 +1,5 @@
 import { TermFn, PLam, PList, PDelayed } from "../../../PTypes";
-import { TermType, tyVar, ToPType, lam, list, fn, delayed } from "../../../type_system";
+import { TermType, ToPType, lam, list, fn, delayed } from "../../../type_system";
 import { papp } from "../../papp";
 import { pfn } from "../../pfn";
 import { phoist } from "../../phoist";

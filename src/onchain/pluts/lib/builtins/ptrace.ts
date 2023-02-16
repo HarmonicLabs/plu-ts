@@ -17,7 +17,6 @@ export function ptrace<ReturnT extends TermType>( returnT: ReturnT )
     : TermFn<[ PString, ToPType<ReturnT> ], ToPType<ReturnT>>
 {
     return addApplications<[ PString, ToPType<ReturnT> ], ToPType<ReturnT>>(
-        // @ts-ignore Type instantiation is excessively deep and possibly infinite.
         new Term(
             fn([ str, returnT ], returnT )  as any,
             _dbn => Builtin.trace

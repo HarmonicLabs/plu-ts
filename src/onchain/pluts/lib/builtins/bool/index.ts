@@ -2,7 +2,7 @@ import ObjectUtils from "../../../../../utils/ObjectUtils";
 import { Builtin } from "../../../../UPLC/UPLCTerms/Builtin";
 import { TermFn, PBool, PLam, PDelayed } from "../../../PTypes";
 import { Term } from "../../../Term";
-import { TermType, ToPType, tyVar, fn, bool, delayed } from "../../../type_system";
+import { TermType, ToPType, tyVar, fn, bool, delayed, lam } from "../../../type_system";
 import { UtilityTermOf } from "../../addUtilityForType";
 import { papp } from "../../papp";
 import { PappArg } from "../../pappArg";
@@ -11,14 +11,15 @@ import { pfn } from "../../pfn";
 import { pforce } from "../../pforce";
 import { phoist } from "../../phoist";
 import { plam } from "../../plam";
-import { TermBool, addPBoolMethods, pBool } from "../../std";
+import { TermBool, addPBoolMethods } from "../../std/UtilityTerms/TermBool";
+import { pBool } from "../../std/bool/pBool";
 import { addApplications } from "../addApplications";
 
 
 
-export function pstrictIf<ReturnT extends TermType>( returnType: ReturnT | undefined = undefined ): TermFn<[ PBool, ToPType<ReturnT>, ToPType<ReturnT> ], ToPType<ReturnT>>
+export function pstrictIf<ReturnT extends TermType>( returnType: ReturnT ): TermFn<[ PBool, ToPType<ReturnT>, ToPType<ReturnT> ], ToPType<ReturnT>>
 {
-    const returnT = returnType ?? tyVar("pstrictIf_returnType");
+    const returnT = returnType;
 
     return addApplications<[ PBool, ToPType<ReturnT>, ToPType<ReturnT> ], ToPType<ReturnT>>(
         new Term<
@@ -158,6 +159,8 @@ export const pnot
         )
     ) as any;
 
+
+
 export const pstrictAnd
     : Term<PLam<PBool, PLam<PBool, PBool>>>
     & {
@@ -168,17 +171,13 @@ export const pstrictAnd
             }
     }
     = phoist(
-        pfn([ bool, bool ], bool )
-        (( a: Term<PBool>, b: Term<PBool> ) => {
-
-            // it makes no sense to use `pif` as
-            // what is delayed are variables (already evaluated)
-            return addPBoolMethods(
-                pstrictIf( bool ).$( a )
+        plam(
+            bool, lam( bool, bool )
+        )( a => plam( bool, bool )
+            ( b => pstrictIf( bool ).$( a )
                 .$( b )
                 .$( pBool( false ) )
-            );
-        })
+        ))
     ) as any;
 
 export const pand
@@ -191,17 +190,16 @@ export const pand
             }
     }
     = phoist(
-        pfn([ bool, delayed( bool ) ], bool )
-        (( a: Term<PBool>, b: Term<PDelayed<PBool>> ) => {
-
-            return addPBoolMethods(
+        plam(
+            bool, lam( delayed( bool ), bool )
+        )( a => plam( delayed( bool ), bool )
+            ( b =>
                 pforce(
                     pstrictIf( delayed( bool ) ).$( a )
                     .$( b )
                     .$( pdelay( pBool( false ) ) )
-                )
-            );
-        })
+                ) 
+        ))
     ) as any;
 
 export const pstrictOr
@@ -214,17 +212,13 @@ export const pstrictOr
             }
     }
     = phoist(
-        pfn([ bool, bool ], bool )
-        (( a: Term<PBool>, b: Term<PBool> ) => {
-
-            // it makes no sense to use `pif` as
-            // what is delayed are variables (already evaluated)
-            return addPBoolMethods(
-                pstrictIf( bool  ).$( a )
+        plam(
+            bool, lam( bool, bool )
+        )( a => plam( bool, bool )
+            ( b => pstrictIf( bool ).$( a )
                 .$( pBool( true ) )
                 .$( b )
-            );
-        })
+        ))
     ) as any;
 
 export const por
@@ -237,16 +231,15 @@ export const por
             }
     }
     = phoist(
-        pfn([ bool, delayed( bool ) ], bool )
-        (( a: Term<PBool>, b: Term<PDelayed<PBool>> ) => {
-
-            return addPBoolMethods(
+        plam(
+            bool, lam( delayed( bool ), bool )
+        )( a => plam( delayed( bool ), bool )
+            ( b =>
                 pforce(
                     pstrictIf( delayed( bool ) ).$( a )
                     .$( pdelay( pBool( true ) ) )
                     .$( b )
-                )
-            );
-        })
+                ) 
+        ))
     ) as any;
 

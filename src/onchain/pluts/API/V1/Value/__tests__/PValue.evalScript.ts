@@ -1,12 +1,11 @@
+import { Term, TermInt } from "../../../..";
 import { Machine } from "../../../../../CEK";
 import { showUPLC } from "../../../../../UPLC/UPLCTerm";
 import { UPLCConst } from "../../../../../UPLC/UPLCTerms/UPLCConst";
-import { pmatch } from "../../../../PTypes";
-import { int, dynPair, list, bs, pair } from "../../../../Term";
-import { PMaybe, addUtilityForType, pByteString, pInt, pPair, perror, pfn, phoist, punsafeConvertType } from "../../../../lib";
-import { getToDataForType } from "../../../../lib/std/data/conversion/getToDataTermForType";
+import { PInt, pmatch } from "../../../../PTypes";
+import { PMaybe, addUtilityForType, pByteString, pInt, pPair, pfn, phoist, punsafeConvertType, toData } from "../../../../lib";
 import { pList } from "../../../../lib/std/list/const";
-import { pdynPair } from "../../../../lib/std/pair/pdynPair";
+import { bs, int } from "../../../../type_system/types";
 import { PCurrencySymbol } from "../PCurrencySymbol";
 import { PTokenName } from "../PTokenName";
 import { PAssetsEntryT, PValue, PValueEntryT } from "../PValue";
@@ -16,11 +15,11 @@ const tn = PTokenName.from( pByteString("") );
 
 const oneEntryValue = PValue.from( 
     pList( PValueEntryT )([
-        pdynPair( PValueEntryT[1], PValueEntryT[2] )
+        pPair( PValueEntryT[1], PValueEntryT[2] )
         (
             currSym,
             pList( PAssetsEntryT )([
-                pdynPair( PAssetsEntryT[1], PAssetsEntryT[2] )
+                pPair( PAssetsEntryT[1], PAssetsEntryT[2] )
                 ( 
                     tn,
                     pInt(1_000_000)
@@ -36,7 +35,7 @@ describe("Machine.evalSimple( PValue )", () => {
     test("empty value constructed correctly", () => {
         expect(
             Machine.evalSimple(
-                PValue.from( pList( PValue.type[1].type[1] )([]) as any )
+                PValue.from( pList( PValueEntryT )([]) as any )
             ) instanceof UPLCConst
         ).toBe( true )
         
@@ -51,7 +50,7 @@ describe("Machine.evalSimple( PValue )", () => {
     test("one entry to data", () => {
 
         const { result } = Machine.eval(
-            getToDataForType( PValue.type )( oneEntryValue )
+            toData( PValue.type )( oneEntryValue )
         );
 
         expect(
@@ -86,33 +85,15 @@ const pvalueOf = phoist(
                 entry.fst.eq( currSym )
             )
         )
-        .onJust( _ => _.extract("val").in( ({ val: _policyEntry }) => {
+        .onJust( _ => _.extract("val").in( ({ val: policyEntry }) => {
 
-            const valType = dynPair(
-                PCurrencySymbol.type,
-                list(dynPair(
-                    PTokenName.type,
-                    int
-                ))
-            );
-
-            const policyEntry = addUtilityForType( valType )(
-                punsafeConvertType(
-                    _policyEntry,
-                    valType
-                )
-            );
-            
             return pmatch(
                 policyEntry.snd.find( entry =>
                     entry.fst.eq( tokenName )
                 )
             )
             .onJust( _ => _.extract("val").in(({ val: entry }) =>
-                punsafeConvertType(
-                    entry, 
-                    dynPair( PTokenName.type, int)
-                ).snd 
+                entry.snd 
             ))
             .onNothing( _ => pInt( 0 ) )
         }))

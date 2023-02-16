@@ -1,10 +1,10 @@
+import type { PType } from "../PType";
+import type { TermType } from "../type_system/types";
+import type { ToPType } from "../type_system/ts-pluts-conversion";
+import { type UtilityTermOf, addUtilityForType } from "./addUtilityForType";
 import { BasePlutsError } from "../../../errors/BasePlutsError";
-import { PType } from "../PType";
-import { Term } from "../Term";
-import { UtilityTermOf, addUtilityForType } from "./addUtilityForType";
 import { isWellFormedType } from "../type_system/kinds/isWellFormedType";
-import { ToPType } from "../type_system/ts-pluts-conversion";
-import { TermType } from "../type_system/types";
+import { Term } from "../Term";
 
 
 export function punsafeConvertType<FromPInstance extends PType, ToTermType extends TermType>

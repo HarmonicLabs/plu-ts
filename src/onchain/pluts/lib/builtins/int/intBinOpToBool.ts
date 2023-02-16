@@ -2,14 +2,12 @@ import ObjectUtils from "../../../../../utils/ObjectUtils";
 import { Application } from "../../../../UPLC/UPLCTerms/Application";
 import { Builtin } from "../../../../UPLC/UPLCTerms/Builtin";
 import { HoistedUPLC } from "../../../../UPLC/UPLCTerms/HoistedUPLC";
-import { Lambda } from "../../../../UPLC/UPLCTerms/Lambda";
-import { UPLCVar } from "../../../../UPLC/UPLCTerms/UPLCVar";
 import { PLam, PInt, PBool } from "../../../PTypes";
 import { Term } from "../../../Term";
 import { fn, int, bool } from "../../../type_system";
 import { papp } from "../../papp";
 import { PappArg } from "../../pappArg";
-import { TermBool, addPBoolMethods } from "../../std";
+import { TermBool, addPBoolMethods } from "../../std/UtilityTerms/TermBool";
 import { _pflipUPLC } from "../_pflipUPLC";
 import { addApplications } from "../addApplications";
 

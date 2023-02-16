@@ -6,10 +6,10 @@ import { isTaggedAsAlias } from "../type_system/kinds/isTaggedAsAlias";
 import { isStructType } from "../type_system/kinds/isWellFormedType";
 import { ToPType } from "../type_system/ts-pluts-conversion";
 import { typeExtends } from "../type_system/typeExtends";
-import { AliasT, PrimType, StructDefinition, TermType, bool, bs, int, lam, list, pair, str, tyVar } from "../type_system/types";
+import { AliasT, StructDefinition, TermType, bool, bs, int, lam, list, pair, str, tyVar } from "../type_system/types";
 import { unwrapAlias } from "../type_system/unwrapAlias";
+import type { PappArg } from "./pappArg";
 import { papp } from "./papp";
-import { PappArg } from "./pappArg";
 import {
     TermAlias,
     TermBool,       addPBoolMethods,

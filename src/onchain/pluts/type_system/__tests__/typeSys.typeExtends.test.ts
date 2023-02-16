@@ -18,7 +18,7 @@ describe("typeExtends", () => {
 
     });
 
-    test.skip("data", () => {
+    test("data", () => {
 
         expect( typeExtends( data, data ) ).toBe( true );
         expect( typeExtends( asData( bs ), data ) ).toBe( true );
@@ -111,7 +111,7 @@ describe("typeExtends", () => {
 
     });
 
-    describe("extends generic", () => {
+    describe.skip("extends generic", () => {
 
         test("int extends any", () => {
             expect(

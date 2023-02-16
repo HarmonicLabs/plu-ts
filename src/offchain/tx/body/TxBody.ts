@@ -1,7 +1,7 @@
 import JsRuntime from "../../../utils/JsRuntime";
 import ObjectUtils from "../../../utils/ObjectUtils";
 
-import { UInteger } from "../../..";
+import { UInteger } from "../../../types/ints/Integer";
 import { ToCbor } from "../../../cbor/interfaces/CBORSerializable";
 import { CborMap, CborMapEntry } from "../../../cbor/CborObj/CborMap";
 import { Certificate, AnyCertificate, certificatesToDepositLovelaces } from "../../ledger/certs/Certificate";

@@ -1,5 +1,6 @@
 import { ByteString } from "../../../../../types/HexString/ByteString";
-import { evalScript } from "../../../../CEK";
+import { Machine } from "../../../../CEK/Machine";
+import { bs, int } from "../../../type_system";
 import { pconsBs } from "../../builtins";
 import { pByteString } from "../bs/pByteString";
 import { pflip } from "../combinators";
@@ -10,16 +11,16 @@ describe("pflip", () => {
 
     test("flip pconsBs", () => {
 
-        const flippedCons = pflip.$( pconsBs );
+        const flippedCons = pflip( bs, int, bs ).$( pconsBs );
 
         const fst = pInt( 31 );
         const snd = pByteString( ByteString.fromAscii("hello") );
         expect(
-            evalScript(
+            Machine.evalSimple(
                 flippedCons.$( snd ).$( fst )
             )
         ).toEqual(
-            evalScript(
+            Machine.evalSimple(
                 pconsBs.$( fst ).$( snd )
             )
         )

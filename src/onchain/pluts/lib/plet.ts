@@ -7,7 +7,7 @@ import { PType } from "../PType";
 import { Term } from "../Term";
 import { PrimType } from "../type_system";
 import { addUtilityForType } from "./addUtilityForType";
-import { fromData } from "./std";
+import { fromData_minimal } from "./std/data/conversion/fromData_minimal";
 
 
 export function plet<PVarT extends PType, SomeExtension extends object>( varValue: Term<PVarT> & SomeExtension )
@@ -15,7 +15,7 @@ export function plet<PVarT extends PType, SomeExtension extends object>( varValu
     type TermPVar = Term<PVarT> & SomeExtension;
 
     // unwrap 'asData' if is the case
-    varValue = (varValue.type[0] === PrimType.AsData ? fromData( varValue.type[1] )( varValue as any ) : varValue) as any;
+    varValue = (varValue.type[0] === PrimType.AsData ? fromData_minimal( varValue.type[1] )( varValue as any ) : varValue) as any;
     
     const continuation = <PExprResult extends PType>( expr: (value: TermPVar) => Term<PExprResult> ): Term<PExprResult> => {
 

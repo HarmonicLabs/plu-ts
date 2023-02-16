@@ -1,26 +1,27 @@
 import JsRuntime from "../../../../utils/JsRuntime";
 import ObjectUtils from "../../../../utils/ObjectUtils";
 
-import { TermFn } from "../PFn";
-import { structDefToString, termTypeToString } from "../../type_system/utils";
-import { Pair } from "../../../../types/structs/Pair";
-import { HoistedUPLC } from "../../../UPLC/UPLCTerms/HoistedUPLC";
-import { UPLCConst } from "../../../UPLC/UPLCTerms/UPLCConst";
-import { Term } from "../../Term";
-import { Application } from "../../../UPLC/UPLCTerms/Application";
-import { PData } from "../PData/PData";
-import { Builtin } from "../../../UPLC/UPLCTerms/Builtin";
+import type { TermFn } from "../PFn";
+import type { PData } from "../PData/PData";
 import { PDataRepresentable } from "../../PType/PDataRepresentable";
-import { UtilityTermOf } from "../../lib/addUtilityForType";
-import { pList } from "../../lib/std/list";
-import { punsafeConvertType } from "../../lib/punsafeConvertType";
-import { Data, DataConstr } from "../../../../types/Data";
-import { Machine } from "../../../CEK";
+import type { UtilityTermOf } from "../../lib/addUtilityForType";
+
+import { structDefToString, termTypeToString } from "../../type_system/utils";
+import { HoistedUPLC } from "../../../UPLC/UPLCTerms/HoistedUPLC";
+import { Pair } from "../../../../types/structs/Pair";
+import { UPLCConst } from "../../../UPLC/UPLCTerms/UPLCConst";
+import { Application } from "../../../UPLC/UPLCTerms/Application";
+import { Builtin } from "../../../UPLC/UPLCTerms/Builtin";
 import { showUPLC } from "../../../UPLC/UPLCTerm";
+import { Machine } from "../../../CEK";
+import { pList } from "../../lib/std/list/const";
+import { Data, DataConstr } from "../../../../types/Data";
 import { AliasT, GenericStructCtorDef, GenericStructDefinition, GenericTermType, PrimType, StructCtorDef, StructDefinition, StructT, TermType, alias, data, int, struct, tyVar, unit } from "../../type_system/types";
 import { ToPType } from "../../type_system/ts-pluts-conversion";
 import { typeExtends, isStructDefinition, isStructType, isTaggedAsAlias } from "../../type_system";
-import { toData } from "../../lib";
+import { Term } from "../../Term";
+import { punsafeConvertType } from "../../lib/punsafeConvertType";
+import { toData_minimal } from "../../lib/std/data/conversion/toData_minimal";
 
 /**
  * intermediate class useful to reconize structs form primitives
@@ -300,7 +301,7 @@ export function pstruct<StructDef extends StructDefinition>( def: StructDef ): P
                                     i,
                                     ctorDefFieldsNames.map<Data>(
                                         fieldKey => {
-                                            const _term = toData( thisCtorDef[ fieldKey ] )
+                                            const _term = toData_minimal( thisCtorDef[ fieldKey ] )
                                             ( jsStruct[ fieldKey ] );
                                             const res = (Machine.evalSimple(
                                                 _term
@@ -340,7 +341,7 @@ export function pstruct<StructDef extends StructDefinition>( def: StructDef ): P
                                     
                                 ctorDefFieldsNames.map<Term<any>>(
                                     fieldKey => {
-                                        return toData( thisCtorDef[ fieldKey ] )( jsStruct[ fieldKey ] )
+                                        return toData_minimal( thisCtorDef[ fieldKey ] )( jsStruct[ fieldKey ] )
                                     })
                                 ).toUPLC( dbn )
                             )

@@ -1,9 +1,20 @@
-import { bs, fn, int, lam, list, padd, pair, papp, pBool, PBool, pByteString, PByteString, pfn, pInt, PInt, plam, PLam, pList, pmakeUnit, pnil, pPair, PrimType, pStr, PType, PUnit, str, Term, tyVar } from "../..";
 import { ByteString } from "../../../../types/HexString/ByteString";
 import { Pair } from "../../../../types/structs/Pair";
 import { evalScript } from "../../../CEK";
+import { PType } from "../../PType";
+import { Term } from "../../Term";
 import { TermInt } from "../../lib/std/UtilityTerms/TermInt";
+import { PrimType, bs, fn, int, lam, list, pair, str, tyVar } from "../../type_system/types";
+import { padd } from "../builtins/int/padd";
 import { pappArgToTerm } from "../pappArg";
+import { pfn } from "../pfn";
+import { plam } from "../plam";
+import { pList, pnil, pPair } from "../std";
+import { pBool } from "../std/bool/pBool";
+import { pByteString } from "../std/bs/pByteString";
+import { pInt } from "../std/int/pInt";
+import { pStr } from "../std/str/pStr";
+import { pmakeUnit } from "../std/unit/pmakeUnit";
 
 function expectScriptToEq( received: Term<PType>, expected: Term<PType> ): void
 {

@@ -1,5 +1,6 @@
 import ObjectUtils from "../../../../utils/ObjectUtils";
 import { GenericStructDefinition, GenericTermType, PrimType, StructCtorDef, StructDefinition, StructT, TermType } from "../types";
+import { termTypeToString } from "../utils";
 import { isPrimTypeTag } from "./isPrimTypeTag";
 import { isTaggedAsAlias } from "./isTaggedAsAlias";
 import { isTypeParam } from "./isTypePAram";
@@ -88,7 +89,7 @@ export function isWellFormedType( t: GenericTermType ): t is TermType
     if(!(
         isPrimTypeTag( t[0] )
     )) return false;
-    
+
     // just base type
     if( t.length === 1 ) return true;
 

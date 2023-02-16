@@ -7,7 +7,6 @@ import { addApplications } from "./addApplications";
 
 export const ppairData: TermFn<[ PData, PData ], PPair<PData,PData>>
     = addApplications<[ PData, PData ], PPair<PData,PData>>(
-        // @ts-ingore Type instantiation is excessively deep and possibly infinite
         new Term(
             fn([ data, data ], pair( data, data ) ),
             _dbn => Builtin.mkPairData

@@ -4,14 +4,14 @@ import { PType } from "../../../PType";
 import { PDataRepresentable } from "../../../PType/PDataRepresentable";
 import type { PList, TermFn, PInt, PLam, PBool } from "../../../PTypes";
 import { Term } from "../../../Term";
-import { ToPType, TermType, unwrapAlias, isTaggedAsAlias, isWellFormedGenericType, PrimType, bool, lam, list, FromPType } from "../../../type_system";
+import { ToPType, TermType, unwrapAlias, isTaggedAsAlias, isWellFormedGenericType, PrimType, bool, lam, list, FromPType, struct } from "../../../type_system";
 import { termTypeToString } from "../../../type_system/utils";
 import { UtilityTermOf } from "../../addUtilityForType";
-import { phead, ptail } from "../../builtins";
+import { phead, ptail } from "../../builtins/list";
 import { pprepend } from "../../builtins/pprepend";
 import { PappArg } from "../../pappArg";
 import { phoist } from "../../phoist";
-import { PMaybe, PMaybeT } from "../PMaybe";
+import type { PMaybeT } from "../PMaybe/PMaybe";
 import { pflip } from "../combinators";
 import { pevery } from "../list/pevery";
 import { pfilter } from "../list/pfilter";
@@ -115,7 +115,10 @@ const flippedFind = ( t: TermType ) => phoist(
         pflip( 
             list( t ), 
             lam( t, bool ),
-            PMaybe( t ).type
+            struct({
+                Just: { val: t },
+                Nothing: {}
+            })
         ).$( pfind( t ) as any )
     )
 const flippedFilter = ( t: TermType ) => phoist(
