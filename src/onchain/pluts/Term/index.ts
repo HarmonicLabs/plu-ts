@@ -1,7 +1,7 @@
 import JsRuntime from "../../../utils/JsRuntime";
 import ObjectUtils from "../../../utils/ObjectUtils";
 
-import type { UPLCTerm } from "../../UPLC/UPLCTerm";
+import { UPLCTerm, showUPLC } from "../../UPLC/UPLCTerm";
 import type { PType } from "../PType";
 
 import { isCloneable } from "../../../types/interfaces/Cloneable";
@@ -11,6 +11,8 @@ import { FromPType, ToPType } from "../type_system/ts-pluts-conversion";
 import { isWellFormedGenericType, isWellFormedType } from "../type_system/kinds/isWellFormedType";
 import { GenericTermType, TermType } from "../type_system/types";
 import { termTypeToString } from "../type_system";
+import { HoistedSourceUID } from "../../UPLC/UPLCTerms/HoistedUPLC/HoistedSourceUID";
+import { genHoistedSourceUID } from "../../UPLC/UPLCTerms/HoistedUPLC/HoistedSourceUID/genHoistedSourceUID";
 
 export type UnTerm<T extends Term<PType>> = T extends Term<infer PT extends PType > ? PT : never;
 
@@ -44,9 +46,22 @@ export class Term<A extends PType>
         return ( deBruijnLevel: bigint | number ) =>
         {
             if( typeof deBruijnLevel !== "bigint" ) deBruijnLevel = BigInt( deBruijnLevel );
-            if( (this as any).isConstant )
-                return Machine.evalSimple( this._toUPLC( deBruijnLevel ) )
-            return this._toUPLC( deBruijnLevel );
+
+            // const t0 = performance.now();
+            // console.log( deBruijnLevel, t0 );
+
+            const uplc = ( (this as any).isConstant ) ?
+                Machine.evalSimple( this._toUPLC( deBruijnLevel ) ) :
+                this._toUPLC( deBruijnLevel );
+
+            // if( performance.now() - t0 > 1e4 )
+            // {
+            //     console.log(
+            //         showUPLC( uplc )
+            //     );
+            // }
+
+            return uplc;
         } 
     };
 
@@ -86,6 +101,15 @@ export class Term<A extends PType>
             }
         );
 
+        let _this_hoistedUID: HoistedSourceUID | undefined = undefined;
+        const getThisHoistedUID = () => {
+            if( typeof _this_hoistedUID !== "string" )
+            {
+                _this_hoistedUID = genHoistedSourceUID();
+            }
+            return _this_hoistedUID;
+        }
+
         ObjectUtils.defineReadOnlyHiddenProperty(
             this,
             "hoist",
@@ -101,7 +125,8 @@ export class Term<A extends PType>
                         // throws if the term is not closed
                         // for how terms are created it should never be the case
                         return new HoistedUPLC(
-                            hoisted
+                            hoisted,
+                            getThisHoistedUID()
                         );
                     }
                 } as any;

@@ -14,6 +14,7 @@ import { TermInt, addPIntMethods } from "../../std/UtilityTerms/TermInt";
 import { _pflipUPLC } from "../_pflipUPLC";
 import { addApplications } from "../addApplications";
 import { pfn } from "../../pfn";
+import { genHoistedSourceUID } from "../../../../UPLC/UPLCTerms/HoistedUPLC/HoistedSourceUID/genHoistedSourceUID";
 
 
 
@@ -123,6 +124,8 @@ export const pconsBs: Term<PLam<PInt, PLam< PByteString, PByteString>>>
     ) as any;
 })();
 
+const flippedConsUID = genHoistedSourceUID();
+
 export const flippedCons = addApplications<[ PByteString, PInt ], PByteString>( 
     new Term(
         fn([ bs, int ], bs),
@@ -130,7 +133,8 @@ export const flippedCons = addApplications<[ PByteString, PInt ], PByteString>(
             new Application(
                 _pflipUPLC.clone(),
                 Builtin.consByteString
-            )
+            ),
+            flippedConsUID
         )
     )
 );

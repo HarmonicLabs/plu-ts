@@ -1,11 +1,10 @@
-import { Term, TermInt } from "../../../..";
 import { Machine } from "../../../../../CEK";
 import { showUPLC } from "../../../../../UPLC/UPLCTerm";
 import { UPLCConst } from "../../../../../UPLC/UPLCTerms/UPLCConst";
-import { PInt, pmatch } from "../../../../PTypes";
-import { PMaybe, addUtilityForType, pByteString, pInt, pPair, pfn, phoist, punsafeConvertType, toData } from "../../../../lib";
+import { pmatch } from "../../../../PTypes";
+import { PMaybe, pByteString, pInt, pPair, pdelay, pfn, phoist, pif, precursiveList, toData } from "../../../../lib";
 import { pList } from "../../../../lib/std/list/const";
-import { bs, int } from "../../../../type_system/types";
+import { bs, fn, int, list } from "../../../../type_system/types";
 import { PCurrencySymbol } from "../PCurrencySymbol";
 import { PTokenName } from "../PTokenName";
 import { PAssetsEntryT, PValue, PValueEntryT } from "../PValue";
@@ -101,6 +100,48 @@ const pvalueOf = phoist(
     )
 );
 
+const pvalueOfBetter = phoist(
+    pfn([
+        PValue.type,
+        PCurrencySymbol.type,
+        PTokenName.type
+    ],  int)
+    (( value, currSym, tokenName ) =>
+        precursiveList( int, PValueEntryT )
+        .$( _self => pdelay( pInt(0) ) )
+        .$( 
+            pfn([
+                fn([ list(PValueEntryT) ], int ),
+                PValueEntryT,
+                list( PValueEntryT )
+            ],  int)
+            ((self, head, tail ) =>
+            pif( int ).$( head.fst.eq( currSym ) )
+            .then(
+
+                precursiveList( int, PAssetsEntryT )
+                .$( _self => pdelay( pInt(0) ) )
+                .$(
+                    pfn([
+                        fn([ list(PAssetsEntryT) ], int ),
+                        PAssetsEntryT,
+                        list( PAssetsEntryT )
+                    ],  int)
+                    (
+                        (self, head, tail) =>
+                        pif( int ).$( head.fst.eq( tokenName ) )
+                        .then( head.snd )
+                        .else( self.$( tail ) as any )
+                    )
+                )
+                .$( head.snd )
+            )
+            .else( self.$( tail ) as any ))
+        )
+        .$( value )
+    )
+);
+
 describe("pvalueOf", () => {
 
     test("non exsistent coin", () => {
@@ -133,12 +174,7 @@ describe("pvalueOf", () => {
 
         const term = pvalueOf.$( oneEntryValue ).$( currSym as any ).$( tn as any );
 
-        console.log(
-            showUPLC(
-                term.toUPLC(0)
-            )
-        );
-        const expected = Machine.evalSimple( pInt(0) );
+        const expected = Machine.evalSimple( pInt(1_000_000) );
         const received = Machine.evalSimple( term );
 
         console.log( received );

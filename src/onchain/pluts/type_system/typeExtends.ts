@@ -1,6 +1,6 @@
 import { isTaggedAsAlias } from "./kinds/isTaggedAsAlias";
 import { isGenericStructType, isStructType, isWellFormedGenericType, isWellFormedType } from "./kinds/isWellFormedType";
-import { unwrapAlias } from "./unwrapAlias";
+import { unwrapAlias } from "./tyArgs/unwrapAlias";
 import { GenericStructCtorDef, GenericStructDefinition, GenericTermType, PrimType, StructCtorDef, StructDefinition, TermType, data } from "./types";
 
 
@@ -140,15 +140,28 @@ export function typeExtends( extending: GenericTermType, extended: GenericTermTy
                 a[0] === PrimType.AsData
             );
         }
-
-        if( typeof b[0] === "symbol" )
+        if( b[0] === PrimType.AsData )
         {
-            return false;
+            if( a[0] === PrimType.Data ) return true;
+            if( a[0] === PrimType.AsData ) return unchecked( a[1], b[1] );
+
+            // check unwrapped asData
+            return unchecked( a, b[1] );
+        }
+        if( a[0] === PrimType.AsData )
+        {
+            // checked above
+            // if( b[0] === PrimType.Data ) return true;
+            // if( b[0] === PrimType.AsData ) return unchecked( a[1], b[1] );
+
+            // check unwrapped asData
+            return unchecked( a[1], b );
         }
 
         if( isGenericStructType( b ) ) return isStructType( a ) && structDefExtends( a[1], b[1] );
 
         if( isStructType( a ) ) return unchecked( b as any, data );
+
 
         const bTyArgs = b.slice(1) as TermType[];
         return (

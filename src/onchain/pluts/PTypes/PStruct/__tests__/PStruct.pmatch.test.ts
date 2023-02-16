@@ -11,7 +11,6 @@ import { pByteString } from "../../../lib/std/bs/pByteString";
 import { padd, pconsBs, pindexBs } from "../../../lib/builtins";
 import { perror } from "../../../lib/perror";
 import { TermType, bs, int, unit } from "../../../type_system/types";
-import { pList } from "../../../lib";
 
 const SingleCtor = pstruct({
     Ctor : {

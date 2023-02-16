@@ -2,6 +2,7 @@ import { showUPLC } from "../../../../../UPLC/UPLCTerm"
 import { Application } from "../../../../../UPLC/UPLCTerms/Application"
 import { Builtin } from "../../../../../UPLC/UPLCTerms/Builtin"
 import { HoistedUPLC } from "../../../../../UPLC/UPLCTerms/HoistedUPLC"
+import { genHoistedSourceUID } from "../../../../../UPLC/UPLCTerms/HoistedUPLC/HoistedSourceUID/genHoistedSourceUID"
 import { UPLCConst } from "../../../../../UPLC/UPLCTerms/UPLCConst"
 import { asData, bs, data, int, pair } from "../../../../type_system"
 import { pnil } from "../const"
@@ -15,7 +16,8 @@ describe("pnil", () => {
         );
         const expected  = showUPLC(
             new HoistedUPLC(
-                new Application( Builtin.mkNilData, UPLCConst.unit )
+                new Application( Builtin.mkNilData, UPLCConst.unit ),
+                genHoistedSourceUID() // doesn't matter
             )
         );
 
@@ -38,7 +40,8 @@ describe("pnil", () => {
         .toEqual(
             showUPLC(
                 new HoistedUPLC(
-                    new Application( Builtin.mkNilPairData, UPLCConst.unit )
+                    new Application( Builtin.mkNilPairData, UPLCConst.unit ),
+                    genHoistedSourceUID() // doesn't matter
                 )
             )
         );
@@ -55,7 +58,8 @@ describe("pnil", () => {
         .toEqual(
             showUPLC(
                 new HoistedUPLC(
-                    new Application( Builtin.mkNilPairData, UPLCConst.unit )
+                    new Application( Builtin.mkNilPairData, UPLCConst.unit ),
+                    genHoistedSourceUID() // doesn't matter
                 )
             )
         );
@@ -72,7 +76,8 @@ describe("pnil", () => {
         .toEqual(
             showUPLC(
                 new HoistedUPLC(
-                    new Application( Builtin.mkNilPairData, UPLCConst.unit )
+                    new Application( Builtin.mkNilPairData, UPLCConst.unit ),
+                    genHoistedSourceUID() // doesn't matter
                 )
             )
         );

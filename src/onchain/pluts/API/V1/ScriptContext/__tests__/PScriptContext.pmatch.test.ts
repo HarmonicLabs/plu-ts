@@ -33,6 +33,29 @@ import { Term } from "../../../../Term";
 import { list, int, pair, data } from "../../../../type_system";
 
 
+import fs from "node:fs"
+
+import v8Profiler from 'v8-profiler-next';
+v8Profiler.setGenerateType(1);
+const title = 'pvalueOf';
+
+v8Profiler.startProfiling(title, true);
+
+afterAll(() => {
+    const profile = v8Profiler.stopProfiling(title);
+    profile.export(function (error, result: any) {
+        // if it doesn't have the extension .cpuprofile then
+        // chrome's profiler tool won't like it.
+        // examine the profile:
+        //   Navigate to chrome://inspect
+        //   Click Open dedicated DevTools for Node
+        //   Select the profiler tab
+        //   Load your file
+        fs.writeFileSync(`./${title}.cpuprofile`, result);
+        profile.delete();
+    });
+});
+
 let unitDatumHash: Term<typeof PDatumHash>;
 let emptyValue: Term<typeof PValue>;
 let validatorSpendingUtxo: Term<typeof PTxOutRef>;

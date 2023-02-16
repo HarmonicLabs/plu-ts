@@ -1,19 +1,30 @@
+import { BitStream } from "../../../../types/bits/BitStream";
 import { Application } from "../Application";
 import { HoistedUPLC, getSortedHoistedSet } from "../HoistedUPLC"
 import { Lambda } from "../Lambda";
 import { UPLCConst } from "../UPLCConst";
 import { UPLCVar } from "../UPLCVar";
 
+(expect as any).addEqualityTesters([
+    (a: HoistedUPLC, b: HoistedUPLC) => {
+        if(!(
+            a instanceof HoistedUPLC &&
+            b instanceof HoistedUPLC
+        )) return undefined;
+
+        return BitStream.eq( a.compiled, b.compiled );
+    }
+])
 
 describe("getSortedHoistedSet",() => {
 
-    const hoistedId = new HoistedUPLC( new Lambda( new UPLCVar( 0 ) ) );
+    const hoistedId = new HoistedUPLC( new Lambda( new UPLCVar( 0 ) ), undefined );
     const hoistedConst = new HoistedUPLC(
         new Lambda(
             new Lambda(
                 new UPLCVar( 1 )
             )
-        )
+        ), undefined
     );
     const flippedConst = new HoistedUPLC(
         new Lambda(
@@ -24,7 +35,7 @@ describe("getSortedHoistedSet",() => {
                 ),
                 new UPLCVar( 0 )
             )
-        )
+        ), undefined
     );
 
     test("[] is []",() => {
@@ -34,15 +45,15 @@ describe("getSortedHoistedSet",() => {
     test("singleton is singleton", () => {
         
         expect( getSortedHoistedSet([
-            new HoistedUPLC( UPLCConst.unit )
+            new HoistedUPLC( UPLCConst.unit, undefined )
         ])).toEqual([
-            new HoistedUPLC( UPLCConst.unit )
+            new HoistedUPLC( UPLCConst.unit, undefined )
         ]);
 
         expect( getSortedHoistedSet([
-            new HoistedUPLC( UPLCConst.int( 32 ) )
+            new HoistedUPLC( UPLCConst.int( 32 ), undefined )
         ])).toEqual([
-            new HoistedUPLC( UPLCConst.int( 32 ) )
+            new HoistedUPLC( UPLCConst.int( 32 ), undefined )
         ]);
 
         expect( getSortedHoistedSet([ hoistedId ]) ).toEqual([ hoistedId ]);
@@ -51,8 +62,8 @@ describe("getSortedHoistedSet",() => {
 
     test("dependecy before dependent; [ dependecy, dependent ]", () => {
 
-        const dependecy = new HoistedUPLC( UPLCConst.int( 42 ) );
-        const dependent = new HoistedUPLC( new Lambda( dependecy ) );
+        const dependecy = new HoistedUPLC( UPLCConst.int( 42 ), undefined );
+        const dependent = new HoistedUPLC( new Lambda( dependecy ), undefined );
 
         expect(
             getSortedHoistedSet([ dependent ])
@@ -92,7 +103,7 @@ describe("getSortedHoistedSet",() => {
 
         expect(
             getSortedHoistedSet([ flippedConst, hoistedId, hoistedConst ])
-        ).toEqual([
+        ).toStrictEqual([
             hoistedId, hoistedConst, flippedConst
         ]);
         

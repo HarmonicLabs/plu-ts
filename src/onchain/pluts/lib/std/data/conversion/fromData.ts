@@ -8,7 +8,7 @@ import { TermType, bs, data, int, str } from "../../../../type_system";
 import { isTaggedAsAlias } from "../../../../type_system/kinds/isTaggedAsAlias";
 import { ToPType } from "../../../../type_system/ts-pluts-conversion";
 import { typeExtends } from "../../../../type_system/typeExtends";
-import { unwrapAlias } from "../../../../type_system/unwrapAlias";
+import { unwrapAlias } from "../../../../type_system/tyArgs/unwrapAlias";
 import { ppairData } from "../../../builtins/ppairData";
 import { pdecodeUtf8 } from "../../../builtins/str";
 import { papp } from "../../../papp";
@@ -20,6 +20,7 @@ import { pBoolFromData } from "../../bool";
 import { pcompose } from "../../combinators";
 import { pUnitFromData } from "../../unit";
 import { punBData, punIData, punListData, punMapData } from "../../../builtins/data";
+import { getElemsT, getFstT, getSndT } from "../../../../type_system/tyArgs";
 
 
 const pStrFromData =
@@ -46,7 +47,7 @@ const pPairFromData =
 
 export function fromData<T extends TermType>( t: T ): ( term: Term<PData> ) => UtilityTermOf<ToPType<T>>
 {
-    if( isTaggedAsAlias( t ) ) return fromData( unwrapAlias( t ) ) as any;
+    if( isTaggedAsAlias( t ) ) return fromData( unwrapAlias( t as any ) ) as any;
 
     // unwrap asData before `t extends data`
     if( t[0] === PrimType.AsData ) t = t[1] as T;
@@ -90,9 +91,9 @@ export function fromData<T extends TermType>( t: T ): ( term: Term<PData> ) => U
         )
     )
     {
-        const elemsT = t[1] as PairT<TermType,TermType>;
-        const fstT = elemsT[1];
-        const sndT = elemsT[2];
+        const elemsT = getElemsT( t ) as PairT<TermType,TermType>;
+        const fstT = getFstT( elemsT );
+        const sndT = getSndT( elemsT );
         return (
             ( term: Term<any> ) => 
                 punsafeConvertType(
@@ -123,7 +124,7 @@ export function fromData<T extends TermType>( t: T ): ( term: Term<PData> ) => U
         )
     )
     {
-        const elemsT = t[1] as TermType;
+        const elemsT = getElemsT( t );
         return (
             ( term: Term<PData> ) => 
                 punsafeConvertType(
@@ -145,8 +146,8 @@ export function fromData<T extends TermType>( t: T ): ( term: Term<PData> ) => U
         )
     )
     {
-        const fstT = t[1] as TermType;
-        const sndT = t[2] as TermType;
+        const fstT = getFstT( t ) as TermType;
+        const sndT = getSndT( t ) as TermType;
         return (( term: Term<PData> ) =>
             punsafeConvertType(
                 pPairFromData.$( term ),
@@ -170,7 +171,7 @@ function pid<T extends TermType, TT extends TermType>( fromT: T, toT: TT ): Term
 
 export function pfromData<T extends TermType>( t: T ): TermFn<[ PData ], ToPType<T> >
 {
-    if( isTaggedAsAlias( t ) ) return pfromData( unwrapAlias( t ) ) as any;
+    if( isTaggedAsAlias( t ) ) return pfromData( unwrapAlias( t as any ) ) as any;
     if( typeExtends( t, data ) ) 
         return pid( data, t );
 
@@ -205,9 +206,9 @@ export function pfromData<T extends TermType>( t: T ): TermFn<[ PData ], ToPType
         )
     )
     {
-        const elemsT = t[1] as PairT<TermType,TermType>;
-        const fstT = elemsT[1];
-        const sndT = elemsT[2];
+        const elemsT = getElemsT( t ) as PairT<TermType,TermType>;
+        const fstT = getFstT( elemsT );
+        const sndT = getSndT( elemsT );
         return punsafeConvertType(
             punMapData,
             lam(
@@ -238,7 +239,7 @@ export function pfromData<T extends TermType>( t: T ): TermFn<[ PData ], ToPType
         )
     )
     {
-        const elemsT = t[1] as TermType;
+        const elemsT = getElemsT( t );
         return punsafeConvertType(
             punListData,
             lam(
@@ -260,8 +261,8 @@ export function pfromData<T extends TermType>( t: T ): TermFn<[ PData ], ToPType
         )
     )
     {
-        const fstT = t[1] as TermType;
-        const sndT = t[2] as TermType;
+        const fstT = getFstT( t ) as TermType;
+        const sndT = getFstT( t ) as TermType;
         return punsafeConvertType(
             pPairFromData,
             lam(

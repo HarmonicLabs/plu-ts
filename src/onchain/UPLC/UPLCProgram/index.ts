@@ -28,23 +28,4 @@ export class UPLCProgram
         this._body = body;
     }
 
-    // deprecated
-    //
-    // toUPLCBitStream(): BitStream
-    // {
-    //     const result = this.version.toUPLCBitStream();
-    //
-    //     result.append(
-    //         this.body.toUPLCBitStream(
-    //             new UPLCSerializationContex({
-    //                 currLength: result.length
-    //             })
-    //         )
-    //     );
-    //     
-    //     UPLCFlatUtils.padToByte( result );
-    //     
-    //     return result;
-    // }
-
 }

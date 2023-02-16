@@ -12,10 +12,10 @@ describe("NFTVendingMachine", () => {
 
         const nftPolicy = pfn([
 
-            data, // owner public key hash
+            bs, // owner public key hash
 
-            data, // counter thread identifier policy
-            data, // price oracle thread identifier policy
+            bs, // counter thread identifier policy
+            bs, // price oracle thread identifier policy
             
             data,
             PScriptContext.type

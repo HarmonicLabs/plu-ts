@@ -164,7 +164,7 @@ describe("pappArgToTerm", () => {
 
         expectScriptToEq(
             pappArgToTerm(
-                n => n.add( pInt(2) ),
+                ((n: any) => n.add( pInt(2) ) ) as any,
                 lam( int, int )
             ),
             plam( int, int )
@@ -216,7 +216,7 @@ describe("pappArgToTerm", () => {
 
         expectScriptToEq(
             pappArgToTerm(
-                [1,2,3],
+                [1,2,3] as any,
                 list( int )
             ),
             pList( int )( [1,2,3].map( pInt ) )
@@ -231,7 +231,7 @@ describe("pappArgToTerm", () => {
         ).toThrow()
 
         expectScriptToEq(
-            pappArgToTerm( [], list( int ) ),
+            pappArgToTerm( [] as any, list( int ) ),
             pnil( int )
         );
 
@@ -249,7 +249,7 @@ describe("pappArgToTerm", () => {
 
         expectScriptToEq(
             pappArgToTerm(
-                ["hello","world"],
+                ["hello","world"] as any,
                 list( str )
             ),
             pList( str )( ["hello","world"].map( pStr ) )
@@ -257,7 +257,7 @@ describe("pappArgToTerm", () => {
 
         expectScriptToEq(
             pappArgToTerm(
-                ["hello","world"],
+                ["hello","world"] as any,
                 list( bs )
             ),
             pList( bs )( ["hello","world"].map( str =>  pByteString( Buffer.from( str, "ascii" ) ) ) )
@@ -269,7 +269,7 @@ describe("pappArgToTerm", () => {
 
         expectScriptToEq(
             pappArgToTerm(
-                ["hello","world"],
+                ["hello","world"] as any,
                 pair( bs, bs )
             ),
             pPair( bs, bs )(
@@ -280,7 +280,7 @@ describe("pappArgToTerm", () => {
 
         expectScriptToEq(
             pappArgToTerm(
-                [1,2],
+                [1,2] as any,
                 pair( int, int )
             ),
             pPair( int, int )(
@@ -291,7 +291,7 @@ describe("pappArgToTerm", () => {
 
         expectScriptToEq(
             pappArgToTerm(
-                [1,"hello"],
+                [1,"hello"] as any,
                 pair( int, bs )
             ),
             pPair( int, bs )(
@@ -303,7 +303,7 @@ describe("pappArgToTerm", () => {
 
         expectScriptToEq(
             pappArgToTerm(
-                { fst: 1, snd: "hello" },
+                { fst: 1, snd: "hello" } as any,
                 pair( int, bs )
             ),
             pPair( int, bs )(
@@ -314,7 +314,7 @@ describe("pappArgToTerm", () => {
 
         expectScriptToEq(
             pappArgToTerm(
-                new Pair( 1, "hello" ),
+                new Pair( 1, "hello" ) as any,
                 pair( int, bs )
             ),
             pPair( int, bs )(

@@ -4,7 +4,8 @@ import { PType } from "../../../PType";
 import { PDataRepresentable } from "../../../PType/PDataRepresentable";
 import type { PList, TermFn, PInt, PLam, PBool } from "../../../PTypes";
 import { Term } from "../../../Term";
-import { ToPType, TermType, unwrapAlias, isTaggedAsAlias, isWellFormedGenericType, PrimType, bool, lam, list, FromPType, struct } from "../../../type_system";
+import { ToPType, TermType, unwrapAlias, isTaggedAsAlias, isWellFormedGenericType, PrimType, bool, lam, list, FromPType, struct, typeExtends, tyVar } from "../../../type_system";
+import { getElemsT } from "../../../type_system/tyArgs";
 import { termTypeToString } from "../../../type_system/utils";
 import { UtilityTermOf } from "../../addUtilityForType";
 import { phead, ptail } from "../../builtins/list";
@@ -146,12 +147,19 @@ const flippedSome = ( t: TermType ) => phoist(
 export function addPListMethods<PElemsT extends PType>( lst: Term<PList<PElemsT>> )
     : TermList<PElemsT>
 {
-    const elemsT = (isTaggedAsAlias( lst.type ) ? unwrapAlias( lst.type )[1] : lst.type[1]) as TermType;
+    const elemsT = getElemsT( lst.type );
+
     if(!isWellFormedGenericType( elemsT as any ))
     {
         throw new BasePlutsError(
             "`addPListMethods` can only be used on lists with concrete types; the type of the lst was: " + termTypeToString( lst.type )
         );
+    }
+
+    if( typeExtends( elemsT, list( tyVar() ) ) )
+    {
+        console.log( termTypeToString( elemsT ) );
+        console.log( Error().stack );
     }
 
     // console.log( "addPMethods; __isListOfDynPairs", (lst as any).__isListOfDynPairs )

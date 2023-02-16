@@ -10,10 +10,11 @@ import { PType } from "../PType";
 import { PLam } from "../PTypes";
 import { Term } from "../Term";
 import { typeExtends } from "../type_system/typeExtends";
-import { PrimType, TermType } from "../type_system/types";
+import { PrimType, TermType, data, list, pair, tyVar } from "../type_system/types";
 import { termTypeToString } from "../type_system/utils";
 import { type UtilityTermOf, addUtilityForType } from "./addUtilityForType";
 import { PappArg, pappArgToTerm } from "./pappArg";
+import { pmap } from "./std/list/pmap";
 import { fromData_minimal } from "./std/data/conversion/fromData_minimal";
 
 
@@ -37,6 +38,22 @@ export type PappResult<Output extends PType> =
         } :
     UtilityTermOf<Output>
 
+function unwrapDataIfNeeded( input: Term<any>, expectedInputTy: TermType ): Term<any>
+{
+    input = (
+        // we know the actual type that the data represents
+        input.type[0] === PrimType.AsData &&
+        // and the function is not expecting actually data
+        !typeExtends( expectedInputTy, data )
+    ) ?
+    // transform to the value
+    fromData_minimal( input.type[1] as any )( input ) :
+    // keep the data
+    input;
+
+    return input;
+}
+
 /**
  * 
  * @param {Term<PLam<Input, Output>>} a Term that evalueates to an UPLC function ( type: ```Type.Lambda( inputT, outputT )``` ) 
@@ -59,12 +76,13 @@ export function papp<Input extends PType, Output extends PType>( a: Term<PLam<In
     if( b instanceof Term )
     {
         // unwrap 'asData' if is the case
-        b = (b.type[0] === PrimType.AsData ? fromData_minimal( b.type[1] )( b as any ) : b) as any;
+        b = unwrapDataIfNeeded( b, lambdaType[1] );
 
         JsRuntime.assert(
             typeExtends( b.type, lambdaType[ 1 ] ),
             "while applying 'Lambda'; unexpected type of input; it should be possible to assign the input to \"" + termTypeToString( lambdaType[1] ) +
-            "\"; received input was of type: \"" + termTypeToString( b.type ) + "\""
+            "\"; received input was of type: \"" + termTypeToString( b.type ) + "\"" + 
+            "output would be of type: \"" + termTypeToString( a.type[2] as any ) + "\""
         );
         _b = b as any;
     }
@@ -111,7 +129,5 @@ export function papp<Input extends PType, Output extends PType>( a: Term<PLam<In
             ( someInput: any ) => papp( outputTerm as any, someInput )
         ) as any;
 
-   
-    // @ts-ignore Type instantiation is excessively deep and possibly infinite.
     return outputTerm as any;
 }

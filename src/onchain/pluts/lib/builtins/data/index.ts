@@ -2,6 +2,7 @@ import ObjectUtils from "../../../../../utils/ObjectUtils";
 import { Application } from "../../../../UPLC/UPLCTerms/Application";
 import { Builtin } from "../../../../UPLC/UPLCTerms/Builtin";
 import { HoistedUPLC } from "../../../../UPLC/UPLCTerms/HoistedUPLC";
+import { genHoistedSourceUID } from "../../../../UPLC/UPLCTerms/HoistedUPLC/HoistedSourceUID/genHoistedSourceUID";
 import { UPLCConst } from "../../../../UPLC/UPLCTerms/UPLCConst";
 import { PType } from "../../../PType";
 import { TermFn, PData, PLam, PInt, PList, PPair, PByteString, PBool } from "../../../PTypes";
@@ -303,20 +304,25 @@ export const peqData: TermFn<[ PData, PData ], PBool>
         )
     );
 
+
+const pnilDataUID = genHoistedSourceUID();
 export const pnilData: Term<PList< PData>>
     = new Term(
         list( data ),
         _dbn => new HoistedUPLC(
-            new Application( Builtin.mkNilData, UPLCConst.unit )
+            new Application( Builtin.mkNilData, UPLCConst.unit ),
+            pnilDataUID
         ),
         // true // isConstant
     );
 
+const pnilPairDataUID = genHoistedSourceUID();
 export const pnilPairData: Term<PList< PPair<PData, PData>>>
     = new Term(
         list( pair( data, data ) ),
         _dbn => new HoistedUPLC(
-            new Application( Builtin.mkNilPairData, UPLCConst.unit )
+            new Application( Builtin.mkNilPairData, UPLCConst.unit ),
+            pnilPairDataUID
         ),
         // true // isConstant
     );

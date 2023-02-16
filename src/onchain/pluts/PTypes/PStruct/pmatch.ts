@@ -34,6 +34,7 @@ import { LamT, PrimType, StructCtorDef, StructDefinition, TermType, data, fn, in
 import { isStructDefinition } from "../../type_system";
 import { phead } from "../../lib/builtins/list";
 import { fromData_minimal } from "../../lib/std/data/conversion/fromData_minimal";
+import { genHoistedSourceUID } from "../../../UPLC/UPLCTerms/HoistedUPLC/HoistedSourceUID/genHoistedSourceUID";
 
 
 const elemAtCache: { [n: number]: TermFn<[ PList<PData> ], PData > } = {};
@@ -58,7 +59,15 @@ export function getElemAtTerm( n: number ): TermFn<[ PList<PData> ], PData >
         n--;
     }
 
-    uplc = new HoistedUPLC( new Lambda( new Application( Builtin.headList, uplc ) ) );
+    uplc = new HoistedUPLC(
+        new Lambda(
+            new Application(
+                Builtin.headList,
+                uplc
+            )
+        ),
+        genHoistedSourceUID() // executed once, all other times for the same n we get the term from the 'cache'
+    );
 
     const term = new Term( lam( list(data), data ), _dbn => uplc );
 
@@ -151,13 +160,15 @@ function defineExtract<CtorDef extends StructCtorDef>
 
                     if( fieldsIdxs.length === 0 ) return expr({} as any);
 
-                    return getExtractedFieldsExpr(
+                    const res = getExtractedFieldsExpr(
                         _fieldsList,
                         ctorDef,
                         fieldsIdxs,
                         expr,
                         {}
                     );
+
+                    return res;
                 }
             )
         }
@@ -191,11 +202,15 @@ export type PMatchOptions<SDef extends StructDefinition> = {
     _: <PReturnT extends PType>( continuation: ( rawFields: TermList<PData> ) => Term<PReturnT> ) => Term<PReturnT>
 }
 
+const matchNCtorsIdxsCache: { [n: number]: Term<any> } = {};
+
 export function matchNCtorsIdxs( _n: number, returnT: TermType )
 {
     if( _n <= 1 ) throw new BasePlutsError("mathcing ill formed struct data");
     const n = Math.round( _n );
     if( _n !== n ) throw new BasePlutsError("number of ctors to match must be an integer");
+
+    if( matchNCtorsIdxsCache[n] !== undefined ) return matchNCtorsIdxsCache[n];
 
     const continuationT = lam( list(data), returnT );
 
@@ -278,7 +293,8 @@ export function matchNCtorsIdxs( _n: number, returnT: TermType )
     body = new HoistedUPLC(
         new Lambda( // structData
             body
-        )
+        ),
+        genHoistedSourceUID() // executed once, all other times for the same n we get the term from the 'cache'
     );
 
     type ContinuationT = LamT<[PrimType.List, [PrimType.Data]], TermType>
@@ -372,13 +388,18 @@ function hoistedMatchCtors<SDef extends StructDefinition>(
     }
 
     // multiple ctors struct case
+    let ctorIdx = 0;
+    let cont = ctorCbs.find(
+        (cb, i) => {
+            if( typeof cb === "function" )
+            {
+                ctorIdx = i;
+                return true;
+            }
+            return false;
+        }) ?? ctorCbs[ 0 ];
 
-    let cont = ctorCbs.find( cb => typeof cb === "function" ) ?? ctorCbs[ 0 ];
-
-    let ctorIdx = ctorCbs.indexOf( cont );
-    ctorIdx = ctorIdx < 0 ? 0 : ctorIdx;
-
-    const thisCtor = sDef[ctorIdx] as SDef[string];
+    const thisCtor = sDef[ Object.keys( sDef )[ ctorIdx ] ] as SDef[string];
 
     let returnT: TermType | undefined = 
         cont instanceof Term ?
@@ -525,11 +546,13 @@ export function pmatch<SDef extends StructDefinition>( struct: Term<PStruct<SDef
                         }
                     }
 
-                    return hoistedMatchCtors(
+                    const res =  hoistedMatchCtors(
                         punsafeConvertType( struct, data ),
                         sDef,
                         ctorCbs as any
                     );
+
+                    return res;
                 })
             }
         );

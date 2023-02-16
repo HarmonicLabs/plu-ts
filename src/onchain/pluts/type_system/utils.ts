@@ -1,6 +1,6 @@
 import JsRuntime from "../../../utils/JsRuntime";
 import { isTaggedAsAlias } from "./kinds/isTaggedAsAlias";
-import { unwrapAlias } from "./unwrapAlias";
+import { unwrapAlias } from "./tyArgs/unwrapAlias";
 import { GenericTermType, PrimType, StructCtorDef, StructDefinition, TermType, cloneStructDef } from "./types";
 import { isStructType } from "./kinds/isWellFormedType";
 
@@ -49,7 +49,8 @@ export function structDefToString( def: StructDefinition ): string
 
 export function termTypeToString( t: GenericTermType ): string
 {
-    if( t[0] === PrimType.Struct )
+    const tag = t[0];
+    if( tag === PrimType.Struct )
     {
         return "struct(" + (
             structDefToString( t[1] as StructDefinition )
@@ -61,6 +62,27 @@ export function termTypeToString( t: GenericTermType ): string
             unwrapAlias( t )
         ) + ")";
     }
+    if( tag === PrimType.AsData )
+    {
+        return "asData(" + (
+            termTypeToString( t[1] as any )
+        ) + ")";
+    }
+    if( tag === PrimType.List )
+    {
+        return "list(" + (
+            termTypeToString( t[1] as any )
+        ) + ")";
+    }
+    if( tag === PrimType.Pair )
+    {
+        return "pair(" + (
+            termTypeToString( t[1] as any )
+        ) + "," + (
+            termTypeToString( t[2] as any )
+        ) + ")";
+    }
+
     if( typeof t[0] === "symbol" ) return "tyParam("+ (t[0] as any).description +")";
     const tyArgs = t.slice(1) as TermType[];
     return ( t[0] + (tyArgs.length > 0 ? ',': "") + tyArgs.map( termTypeToString ).toString() );

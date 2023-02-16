@@ -26,6 +26,8 @@ import { UPLCSerializationContex } from "./UPLCSerializationContext";
 import { CborString } from "../../../cbor/CborString";
 import { dataFromCbor } from "../../../types/Data/fromCbor";
 import { dataToCbor } from "../../../types/Data/toCbor";
+import { genHoistedSourceUID } from "../UPLCTerms/HoistedUPLC/HoistedSourceUID/genHoistedSourceUID";
+import { BasePlutsError } from "../../../errors/BasePlutsError";
 
 /*
  * --------------------------- [encode vs serialize methods] ---------------------------
@@ -182,6 +184,27 @@ export function serializeBuiltin( bn: Builtin ): BitStream
 // --------------------------------------------------- UPLCEncoder --------------------------------------------------- //
 // ------------------------------------------------------------------------------------------------------------------- //
 
+function properlyCloneUPLC( uplc: UPLCTerm ): UPLCTerm
+{
+    if( uplc instanceof UPLCVar ) return new UPLCVar( uplc.deBruijn );
+    if( uplc instanceof Delay ) return new Delay( properlyCloneUPLC( uplc.delayedTerm ) );
+    if( uplc instanceof Lambda ) return new Lambda( properlyCloneUPLC( uplc.body ) );
+    if( uplc instanceof Application )
+        return new Application(
+            properlyCloneUPLC( uplc.funcTerm ),
+            properlyCloneUPLC( uplc.argTerm )
+        );
+    if( uplc instanceof UPLCConst ) return new UPLCConst( uplc.type, uplc.value as any);
+    if( uplc instanceof Force ) return new Force( properlyCloneUPLC( uplc.termToForce ) );
+    if( uplc instanceof ErrorUPLC ) return new ErrorUPLC( uplc.msg, uplc.addInfos );
+    if( uplc instanceof Builtin ) return new Builtin( uplc.tag );
+    if( uplc instanceof HoistedUPLC ) return new HoistedUPLC( uplc.UPLC, undefined );
+
+    throw new BasePlutsError(
+        "unknown UPLC in 'properlyCloneUPLC'"
+    );
+}
+
 /**
  * ### !! Important !!
  * 
@@ -317,7 +340,11 @@ export class UPLCEncoder
 
         const uplc = program.body;
         
-        const progrTerm = replaceHoistedTermsInplace( uplc.clone() );
+        const progrTerm = replaceHoistedTermsInplace(
+            // HoistedUPLC relies on this clone
+            // if this ever changes make sure that `HositeUPLC` is safe
+            uplc.clone()
+        );
         if( !isPureUPLCTerm( progrTerm ) )
         {
             throw JsRuntime.makeNotSupposedToHappenError(

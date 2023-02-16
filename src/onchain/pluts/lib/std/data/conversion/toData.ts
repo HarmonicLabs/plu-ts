@@ -8,7 +8,7 @@ import { TermType, bs, data, int, str } from "../../../../type_system";
 import { isTaggedAsAlias } from "../../../../type_system/kinds/isTaggedAsAlias";
 import { ToPType } from "../../../../type_system/ts-pluts-conversion";
 import { typeExtends } from "../../../../type_system/typeExtends";
-import { unwrapAlias } from "../../../../type_system/unwrapAlias";
+import { unwrapAlias } from "../../../../type_system/tyArgs/unwrapAlias";
 import { pBSToData, pIntToData, pListToData, pMapToData, pencodeUtf8 } from "../../../builtins";
 import { ppairData } from "../../../builtins/ppairData";
 import { papp } from "../../../papp";
@@ -19,6 +19,7 @@ import { pBoolToData } from "../../bool/pBoolToData";
 import { pcompose } from "../../combinators";
 import { pList, pmap } from "../../list";
 import { pData } from "../pData";
+import { getElemsT, getFstT, getSndT } from "../../../../type_system/tyArgs";
 
 const pStrToData =
     phoist(
@@ -46,7 +47,7 @@ const pPairToData = ( fstT: TermType, sndT: TermType ) =>
 
 export function toData<T extends TermType>( t: T ): ( term: Term<ToPType<T>> ) => Term<PData>
 {
-    if( isTaggedAsAlias( t ) ) return toData( unwrapAlias( t ) ) as any;
+    if( isTaggedAsAlias( t ) ) return toData( unwrapAlias( t as any ) ) as any;
     if( typeExtends( t, data ) ) 
         return (( term: Term<PType> ) =>
             punsafeConvertType( term, t as any )) as any;
@@ -86,9 +87,9 @@ export function toData<T extends TermType>( t: T ): ( term: Term<ToPType<T>> ) =
         )
     )
     {
-        const elemsT = t[1] as PairT<TermType,TermType>;
-        const fstT = elemsT[1];
-        const sndT = elemsT[2];
+        const elemsT = getElemsT( t ) as PairT<TermType,TermType>;
+        const fstT = getFstT( elemsT ) ;
+        const sndT = getSndT( elemsT ) ;
         return (( term: Term<any> ) => {
             return pMapToData.$(
                 pmap( elemsT, pair( data, data ) )
@@ -139,8 +140,8 @@ export function toData<T extends TermType>( t: T ): ( term: Term<ToPType<T>> ) =
         )
     )
     {
-        const fstT = t[1] as TermType;
-        const sndT = t[2] as TermType;
+        const fstT = getFstT( t ) as TermType;
+        const sndT = getSndT( t ) as TermType;
         return (( term: Term<any> ) => pPairToData( fstT, sndT ).$( term )) as any;
     };
 
@@ -162,7 +163,7 @@ function pid<T extends TermType, TT extends TermType>( fromT: T, toT: TT ): Term
 
 export function ptoData<T extends TermType>( t: T ): TermFn<[ ToPType<T> ], PData>
 {
-    if( isTaggedAsAlias( t ) ) return toData( unwrapAlias( t ) ) as any;
+    if( isTaggedAsAlias( t ) ) return toData( unwrapAlias( t as any ) ) as any;
     if( typeExtends( t, data ) ) 
         return pid( t, data );
 
@@ -197,9 +198,9 @@ export function ptoData<T extends TermType>( t: T ): TermFn<[ ToPType<T> ], PDat
         )
     )
     {
-        const elemsT = t[1] as PairT<TermType,TermType>;
-        const fstT = elemsT[1];
-        const sndT = elemsT[2];
+        const elemsT = getElemsT( t ) as PairT<TermType,TermType>;
+        const fstT = getFstT( elemsT );
+        const sndT = getSndT( elemsT );
         return plam( t, data )
         (( term ) => {
             return pMapToData.$(
@@ -252,8 +253,8 @@ export function ptoData<T extends TermType>( t: T ): TermFn<[ ToPType<T> ], PDat
         )
     )
     {
-        const fstT = t[1] as TermType;
-        const sndT = t[2] as TermType;
+        const fstT = getFstT( t ) as TermType;
+        const sndT = getSndT( t ) as TermType;
         return pPairToData( fstT, sndT ) as any;
     };
 

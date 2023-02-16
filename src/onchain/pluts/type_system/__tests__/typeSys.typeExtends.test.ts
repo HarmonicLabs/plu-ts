@@ -3,7 +3,7 @@ import { alias, asData, bs, data, int, lam, list, pair, str, struct, tyVar, unit
 
 describe("typeExtends", () => {
 
-    test.skip("int", () => {
+    test("int", () => {
 
         expect( typeExtends( int, int ) ).toBe( true );
 
@@ -12,7 +12,6 @@ describe("typeExtends", () => {
         expect( typeExtends( unit, int ) ).toBe( false );
         expect( typeExtends( data, int ) ).toBe( false );
         expect( typeExtends( pair( int, int ), int ) ).toBe( false );
-        expect( typeExtends( asData( int ), int ) ).toBe( false );
         expect( typeExtends( lam( int, int ), int ) ).toBe( false );
         expect( typeExtends( struct({ H: { h: int } }), int ) ).toBe( false );
 
@@ -47,7 +46,7 @@ describe("typeExtends", () => {
 
     });
 
-    test.skip("struct", () => {
+    test("struct", () => {
 
         expect(
             typeExtends(
@@ -111,7 +110,7 @@ describe("typeExtends", () => {
 
     });
 
-    describe.skip("extends generic", () => {
+    describe("extends generic", () => {
 
         test("int extends any", () => {
             expect(
@@ -189,8 +188,48 @@ describe("typeExtends", () => {
                     asData( pair( int, bs ) ),
                     pair( tyVar(), tyVar() )
                 )
-            ).toBe( false );
+            ).toBe( true );
 
+        });
+
+    });
+
+    describe("asData", () => {
+
+        test("asData( int ) extends int", () => {
+            expect(
+                typeExtends(
+                    asData( int ),
+                    int
+                )
+            ).toBe( true )
+        });
+
+        test("asData( list( int ) ) extends list( int )", () => {
+            expect(
+                typeExtends(
+                    asData( list( int ) ),
+                    list( int )
+                )
+            ).toBe( true )
+        });
+
+        test("list( asData( int ) ) extends list( int )", () => {
+            expect(
+                typeExtends(
+                    list( asData( int ) ),
+                    list( int )
+                )
+            ).toBe( true )
+        });
+
+        test("asData( pair( int, bs ) ) extends pair( int, bs )", () => {
+            expect(
+                typeExtends(
+                    asData( pair( int, bs ) ),
+                    pair( int, bs )
+                )
+            ).toBe( true )
         });
 
     })

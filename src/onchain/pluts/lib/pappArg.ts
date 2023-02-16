@@ -215,7 +215,7 @@ export function pappArgToTerm<ArgT extends TermType>(
             )
         };
 
-        const nLambdaArgs = getNRequiredLambdaArgs( mustExtend );
+        const nLambdaArgs = getNRequiredLambdaArgs( mustExtend as any );
 
         if(!(
             funcNArgs <= nLambdaArgs

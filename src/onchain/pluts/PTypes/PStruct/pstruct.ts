@@ -22,6 +22,8 @@ import { typeExtends, isStructDefinition, isStructType, isTaggedAsAlias } from "
 import { Term } from "../../Term";
 import { punsafeConvertType } from "../../lib/punsafeConvertType";
 import { toData_minimal } from "../../lib/std/data/conversion/toData_minimal";
+import { HoistedSourceUID } from "../../../UPLC/UPLCTerms/HoistedUPLC/HoistedSourceUID";
+import { genHoistedSourceUID } from "../../../UPLC/UPLCTerms/HoistedUPLC/HoistedSourceUID/genHoistedSourceUID";
 
 /**
  * intermediate class useful to reconize structs form primitives
@@ -170,6 +172,7 @@ function isStructInstanceOfDefinition<SCtorDef extends StructCtorDef>
     );
 }
 
+const hoistedEmptyCtorUID: { [i: number]: HoistedSourceUID } = {}
 
 export function pstruct<StructDef extends StructDefinition>( def: StructDef ): PStruct<StructDef>
 {
@@ -257,7 +260,7 @@ export function pstruct<StructDef extends StructDefinition>( def: StructDef ): P
             PStructExt.prototype,
             ctorName,
             ( jsStruct: StructInstance<any> ): Term<PStructExt> => {
-                
+
                 JsRuntime.assert(
                     ObjectUtils.isObject( jsStruct ),
                     "cannot build a plu-ts structure if the input is not an object with named fields"
@@ -272,10 +275,14 @@ export function pstruct<StructDef extends StructDefinition>( def: StructDef ): P
 
                 if( ctorDefFieldsNames.length === 0 )
                 {
+                    if( hoistedEmptyCtorUID[i] === undefined )
+                        hoistedEmptyCtorUID[i] = genHoistedSourceUID();
+                        
                     return new Term(
                         thisStructType,
                         _dbn => new HoistedUPLC(
-                            UPLCConst.data( new DataConstr( i, [] ) )
+                            UPLCConst.data( new DataConstr( i, [] ) ),
+                            hoistedEmptyCtorUID[i]
                         ),
                         true, // isConstant
                     );
@@ -290,7 +297,9 @@ export function pstruct<StructDef extends StructDefinition>( def: StructDef ): P
                 let dataReprTerm: Term<any>;
 
                 if(
-                    ctorDefFieldsNames.every( fieldKey => (jsStruct[ fieldKey ] as any).isConstant )
+                    ctorDefFieldsNames.every( fieldKey => 
+                        (jsStruct[ fieldKey ] as any).isConstant
+                    )
                 )
                 {
                     dataReprTerm = new Term(

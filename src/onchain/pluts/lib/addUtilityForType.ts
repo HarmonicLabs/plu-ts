@@ -6,8 +6,8 @@ import { isTaggedAsAlias } from "../type_system/kinds/isTaggedAsAlias";
 import { isStructType } from "../type_system/kinds/isWellFormedType";
 import { ToPType } from "../type_system/ts-pluts-conversion";
 import { typeExtends } from "../type_system/typeExtends";
-import { AliasT, StructDefinition, TermType, bool, bs, int, lam, list, pair, str, tyVar } from "../type_system/types";
-import { unwrapAlias } from "../type_system/unwrapAlias";
+import { AliasT, PrimType, StructDefinition, TermType, bool, bs, int, lam, list, pair, str, tyVar } from "../type_system/types";
+import { unwrapAlias } from "../type_system/tyArgs/unwrapAlias";
 import type { PappArg } from "./pappArg";
 import { papp } from "./papp";
 import {
@@ -53,7 +53,8 @@ export type UtilityTermOf<PElem extends PType> =
 export function addUtilityForType<T extends TermType>( t: T )
     : ( term: Term<ToPType<T>> ) => UtilityTermOf<ToPType<T>>
 {
-    if( isTaggedAsAlias( t ) ) return addUtilityForType( unwrapAlias( t ) ) as any;
+    if( t[0] === PrimType.AsData ) return addUtilityForType( t[1] as any ) as any;
+    if( isTaggedAsAlias( t ) ) return addUtilityForType( unwrapAlias( t as any ) ) as any;
 
     if( typeExtends( t , bool ) ) return addPBoolMethods as any;
     if( typeExtends( t , bs   ) ) return addPByteStringMethods as any;

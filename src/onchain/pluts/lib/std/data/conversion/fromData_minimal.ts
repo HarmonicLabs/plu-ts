@@ -13,7 +13,7 @@ import { TermType, bs, data, int, str } from "../../../../type_system";
 import { isTaggedAsAlias } from "../../../../type_system/kinds/isTaggedAsAlias";
 import { ToPType } from "../../../../type_system/ts-pluts-conversion";
 import { typeExtends } from "../../../../type_system/typeExtends";
-import { unwrapAlias } from "../../../../type_system/unwrapAlias";
+import { unwrapAlias } from "../../../../type_system/tyArgs/unwrapAlias";
 import { phoist } from "../../../phoist";
 import { plam } from "../../../plam";
 import { plet } from "../../../plet";
@@ -21,6 +21,7 @@ import { punsafeConvertType } from "../../../punsafeConvertType";
 import { pBoolFromData } from "../../bool";
 import { pUnitFromData } from "../../unit";
 import { _papp, _pcompose } from "./minimal_common";
+import { getElemsT, getFstT, getSndT } from "../../../../type_system/tyArgs";
 
 const punBData = new Term<PLam<PData, PByteString>>(
     lam( data, bs ),
@@ -86,7 +87,7 @@ const pPairFromData =
 
 export function fromData_minimal<T extends TermType>( t: T ): ( term: Term<PData> ) => Term<ToPType<T>>
 {
-    if( isTaggedAsAlias( t ) ) return fromData_minimal( unwrapAlias( t ) ) as any;
+    if( isTaggedAsAlias( t ) ) return fromData_minimal( unwrapAlias( t as any ) ) as any;
 
     // unwrap asData before `t extends data`
     if( t[0] === PrimType.AsData ) t = t[1] as T;
@@ -130,9 +131,9 @@ export function fromData_minimal<T extends TermType>( t: T ): ( term: Term<PData
         )
     )
     {
-        const elemsT = t[1] as PairT<TermType,TermType>;
-        const fstT = elemsT[1];
-        const sndT = elemsT[2];
+        const elemsT = getElemsT( t ) as PairT<TermType,TermType>;
+        const fstT = getFstT( elemsT );
+        const sndT = getSndT( elemsT );
         return (
             ( term: Term<any> ) => 
                 punsafeConvertType(
@@ -166,7 +167,7 @@ export function fromData_minimal<T extends TermType>( t: T ): ( term: Term<PData
         )
     )
     {
-        const elemsT = t[1] as TermType;
+        const elemsT = getElemsT( t );
         return (
             ( term: Term<PData> ) => 
                 punsafeConvertType(
@@ -191,8 +192,8 @@ export function fromData_minimal<T extends TermType>( t: T ): ( term: Term<PData
         )
     )
     {
-        const fstT = t[1] as TermType;
-        const sndT = t[2] as TermType;
+        const fstT = getFstT( t ) as TermType;
+        const sndT = getSndT( t ) as TermType;
         return (( term: Term<PData> ) =>
             punsafeConvertType(
                 pPairFromData.$( term ),
@@ -216,7 +217,7 @@ function pid<T extends TermType, TT extends TermType>( fromT: T, toT: TT ): Term
 
 function pfromData_minimal<T extends TermType>( t: T ): TermFn<[ PData ], ToPType<T> >
 {
-    if( isTaggedAsAlias( t ) ) return pfromData_minimal( unwrapAlias( t ) ) as any;
+    if( isTaggedAsAlias( t ) ) return pfromData_minimal( unwrapAlias( t as any ) ) as any;
     if( typeExtends( t, data ) ) 
         return pid( data, t );
 
@@ -251,9 +252,9 @@ function pfromData_minimal<T extends TermType>( t: T ): TermFn<[ PData ], ToPTyp
         )
     )
     {
-        const elemsT = t[1] as PairT<TermType,TermType>;
-        const fstT = elemsT[1];
-        const sndT = elemsT[2];
+        const elemsT = getElemsT( t ) as PairT<TermType,TermType>;
+        const fstT = getFstT( elemsT );
+        const sndT = getSndT( elemsT );
         return punsafeConvertType(
             punMapData,
             lam(
@@ -284,7 +285,7 @@ function pfromData_minimal<T extends TermType>( t: T ): TermFn<[ PData ], ToPTyp
         )
     )
     {
-        const elemsT = t[1] as TermType;
+        const elemsT = getElemsT( t );
         return punsafeConvertType(
             punListData,
             lam(
@@ -306,8 +307,8 @@ function pfromData_minimal<T extends TermType>( t: T ): TermFn<[ PData ], ToPTyp
         )
     )
     {
-        const fstT = t[1] as TermType;
-        const sndT = t[2] as TermType;
+        const fstT = getFstT( t ) as TermType;
+        const sndT = getFstT( t ) as TermType;
         return punsafeConvertType(
             pPairFromData,
             lam(

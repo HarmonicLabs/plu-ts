@@ -2,6 +2,7 @@ import ObjectUtils from "../../../../../utils/ObjectUtils";
 import { Application } from "../../../../UPLC/UPLCTerms/Application";
 import { Builtin } from "../../../../UPLC/UPLCTerms/Builtin";
 import { HoistedUPLC } from "../../../../UPLC/UPLCTerms/HoistedUPLC";
+import { genHoistedSourceUID } from "../../../../UPLC/UPLCTerms/HoistedUPLC/HoistedSourceUID/genHoistedSourceUID";
 import { PLam, PInt, PBool } from "../../../PTypes";
 import { Term } from "../../../Term";
 import { fn, int, bool } from "../../../type_system";
@@ -54,33 +55,32 @@ export const plessInt   = intBinOpToBool( Builtin.lessThanInteger );
 export const plessEqInt = intBinOpToBool( Builtin.lessThanEqualInteger );
 
 
+const pgreaterIntUID = genHoistedSourceUID();
 
-
-// @ts-ignore Type instantiation is excessively deep and possibly infinite.
 export const pgreaterInt = addApplications<[ PInt, PInt ], PBool>( 
         new Term<PLam<PInt, PLam<PInt, PBool>>>(
         fn([ int, int ], bool ),
         _dbn => new HoistedUPLC(
             new Application(
                 _pflipUPLC.clone(),
-
                 plessInt.toUPLC( 0 )
-            
-            )
+            ),
+            pgreaterIntUID
         )
     )
 );
+
+const pgreaterEqIntUID = genHoistedSourceUID();
 
 export const pgreaterEqInt = addApplications<[ PInt, PInt ], PBool>( 
     new Term<PLam<PInt, PLam<PInt, PBool>>>(
     fn([ int, int ], bool ),
     _dbn => new HoistedUPLC(
         new Application(
-            _pflipUPLC.clone(),
-
+            _pflipUPLC,
             plessEqInt.toUPLC( 0 )
-        
-        )
+        ),
+        pgreaterEqIntUID
     )
 )
 );

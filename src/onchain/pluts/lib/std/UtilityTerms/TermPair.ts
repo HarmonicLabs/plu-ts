@@ -4,6 +4,7 @@ import { PType } from "../../../PType";
 import { PPair } from "../../../PTypes";
 import { Term } from "../../../Term";
 import { isWellFormedType, typeExtends } from "../../../type_system";
+import { getFstT, getSndT } from "../../../type_system/tyArgs";
 import { tyVar, pair, TermType } from "../../../type_system/types";
 import { UtilityTermOf } from "../../addUtilityForType";
 import { pfstPair, psndPair } from "../../builtins";
@@ -27,8 +28,8 @@ export function addPPairMethods<PFst extends PType, PSnd extends PType>( _pair: 
         );
     };
 
-    const fstT = pairT[1] as TermType;
-    const sndT = pairT[2] as TermType;
+    const fstT = getFstT( pairT );
+    const sndT = getSndT( pairT );
 
     if( isWellFormedType( fstT ) )
         ObjectUtils.defineReadOnlyProperty(

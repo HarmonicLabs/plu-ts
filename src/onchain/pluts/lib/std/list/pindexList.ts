@@ -16,40 +16,36 @@ export function pindexList<ElemsT extends TermType>( elemsT: ElemsT )
     return phoist(
         precursive<PList<ToPType<ElemsT>>, PLam<PInt,ToPType<ElemsT>>>(
 
-            pfn(
-                [
-                    fn([list( elemsT ), int ], elemsT),
-                    list( elemsT ),
-                    int
-                ],
-                elemsT
-            )(
-                ( self, list, idx ) => 
+            pfn([
+                fn([list( elemsT ), int ], elemsT),
+                list( elemsT ),
+                int
+            ],elemsT)
+            (( self, list, idx ) => 
+                pif( elemsT ).$(
 
-                    pif( elemsT ).$(
-
-                        pisEmpty.$( list )
-                        .strictOr(
-                            plessInt.$( idx ).$( pInt( 0 ) ) 
-                        )
-                        
+                    pisEmpty.$( list )
+                    .strictOr(
+                        plessInt.$( idx ).$( pInt( 0 ) ) 
                     )
-                    .then( perror( elemsT, "pindexList" ) )
+                    
+                )
+                .then( perror( elemsT, "pindexList" ) )
+                .else(
+
+                    pif( elemsT ).$( pInt( 0 ).eq( idx ) )
+                    .then( phead( elemsT ).$( list )  as any )
                     .else(
-
-                        pif( elemsT ).$( pInt( 0 ).eq( idx ) )
-                        .then( phead( elemsT ).$( list )  as any )
-                        .else(
+                        papp(
                             papp(
-                                papp(
-                                    self,
-                                    ptail( elemsT ).$( list )
-                                ),
-                                pInt( -1 ).add( idx )
-                            ) as Term<ToPType<ElemsT>>
-                        )
-
+                                self,
+                                ptail( elemsT ).$( list )
+                            ),
+                            pInt( -1 ).add( idx )
+                        ) as Term<ToPType<ElemsT>>
                     )
+
+                )
             )
 
         )

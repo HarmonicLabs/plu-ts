@@ -3,7 +3,7 @@ import { Builtin } from "../../../../UPLC/UPLCTerms/Builtin";
 import { Delay } from "../../../../UPLC/UPLCTerms/Delay";
 import { Force } from "../../../../UPLC/UPLCTerms/Force";
 import { UPLCConst } from "../../../../UPLC/UPLCTerms/UPLCConst";
-import { Type } from "../../../Term";
+import { int } from "../../../type_system/types";
 import { pif, pstrictIf } from "../../builtins";
 import { pBool } from "../bool/pBool";
 import { pInt } from "../int/pInt";
@@ -23,7 +23,7 @@ describe("pif", () => {
         );
     
         expect(
-            pif( Type.Int ).$( pBool( true ) )
+            pif( int ).$( pBool( true ) )
             .then( pInt( 42 ) )
             .else( pInt( 69 ))
     
@@ -32,7 +32,7 @@ describe("pif", () => {
     
         expect(
     
-            pif( Type.Int ).$( pBool( true ) )
+            pif( int ).$( pBool( true ) )
             .$( pInt( 42 ) )
             .else( pInt( 69 ))
     
@@ -42,7 +42,7 @@ describe("pif", () => {
     
         expect(
     
-            pif( Type.Int ).$( pBool( true ) )
+            pif( int ).$( pBool( true ) )
             .then( pInt( 42 ) )
             .$( pInt( 69 ))
     
@@ -52,7 +52,7 @@ describe("pif", () => {
     
         expect(
     
-            pif( Type.Int ).$( pBool( true ) )
+            pif( int ).$( pBool( true ) )
             .$( pInt( 42 ) )
             .$( pInt( 69 ))
     
@@ -65,7 +65,7 @@ describe("pif", () => {
 
     expect(
 
-        pstrictIf( Type.Int ).$( pBool( true ) )
+        pstrictIf( int ).$( pBool( true ) )
         .$( pInt( 42 ) )
         .$( pInt( 69 ))
 

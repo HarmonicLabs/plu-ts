@@ -8,7 +8,7 @@ import { TermType, bs, data, fn, int, str, PairT, asData, bool, lam, list, pair,
 import { isTaggedAsAlias } from "../../../../type_system/kinds/isTaggedAsAlias";
 import { ToPType } from "../../../../type_system/ts-pluts-conversion";
 import { typeExtends } from "../../../../type_system/typeExtends";
-import { unwrapAlias } from "../../../../type_system/unwrapAlias";
+import { unwrapAlias } from "../../../../type_system/tyArgs/unwrapAlias";
 import { papp } from "../../../papp";
 import { phoist } from "../../../phoist";
 import { plam } from "../../../plam";
@@ -17,6 +17,7 @@ import { pBoolToData } from "../../bool/pBoolToData";
 import { pList, pmap } from "../../list";
 import { pData } from "../pData";
 import { _papp, _pcompose } from "./minimal_common";
+import { getElemsT, getFstT, getSndT } from "../../../../type_system/tyArgs";
 
 const pIntToData  =new Term<PLam<PInt, PData>>(
     lam( int, asData( int ) ) as any,
@@ -86,7 +87,7 @@ const pPairToData = ( fstT: TermType, sndT: TermType ) =>
 
 export function toData_minimal<T extends TermType>( t: T ): ( term: Term<ToPType<T>> ) => Term<PData>
 {
-    if( isTaggedAsAlias( t ) ) return toData_minimal( unwrapAlias( t ) ) as any;
+    if( isTaggedAsAlias( t ) ) return toData_minimal( unwrapAlias( t as any ) ) as any;
     if( typeExtends( t, data ) ) 
         return (( term: Term<PType> ) =>
             punsafeConvertType( term, t as any )) as any;
@@ -126,9 +127,9 @@ export function toData_minimal<T extends TermType>( t: T ): ( term: Term<ToPType
         )
     )
     {
-        const elemsT = t[1] as PairT<TermType,TermType>;
-        const fstT = elemsT[1];
-        const sndT = elemsT[2];
+        const elemsT = getElemsT( t ) as PairT<TermType,TermType>;
+        const fstT = getFstT( elemsT );
+        const sndT = getSndT( elemsT );
         return (( term: Term<any> ) => {
             return _papp(
                 pMapToData,
@@ -165,7 +166,7 @@ export function toData_minimal<T extends TermType>( t: T ): ( term: Term<ToPType
         )
     )
     {
-        const elemsT = t[1] as PairT<TermType,TermType>;
+        const elemsT = getElemsT( t ) as PairT<TermType,TermType>;
         return (( term: Term<any> ) => {
             return _papp(
                 pMapToData,
@@ -186,8 +187,8 @@ export function toData_minimal<T extends TermType>( t: T ): ( term: Term<ToPType
         )
     )
     {
-        const fstT = t[1] as TermType;
-        const sndT = t[2] as TermType;
+        const fstT = getFstT( t ) as TermType;
+        const sndT = getSndT( t ) as TermType;
         return (( term: Term<any> ) => pPairToData( fstT, sndT ).$( term )) as any;
     };
 
@@ -204,7 +205,7 @@ function pid<T extends TermType, TT extends TermType>( fromT: T, toT: TT ): Term
 
 function ptoData_minimal<T extends TermType>( t: T ): Term<PLam<ToPType<T>, PData>>
 {
-    if( isTaggedAsAlias( t ) ) return toData_minimal( unwrapAlias( t ) ) as any;
+    if( isTaggedAsAlias( t ) ) return toData_minimal( unwrapAlias( t as any ) ) as any;
     if( typeExtends( t, data ) ) 
         return pid( t, data );
 
@@ -239,9 +240,9 @@ function ptoData_minimal<T extends TermType>( t: T ): Term<PLam<ToPType<T>, PDat
         )
     )
     {
-        const elemsT = t[1] as PairT<TermType,TermType>;
-        const fstT = elemsT[1];
-        const sndT = elemsT[2];
+        const elemsT = getElemsT( t ) as PairT<TermType,TermType>;
+        const fstT = getFstT( elemsT );
+        const sndT = getSndT( elemsT );
         return plam( t, data )
         ((( term: any ) => {
             return _papp(
@@ -279,7 +280,7 @@ function ptoData_minimal<T extends TermType>( t: T ): Term<PLam<ToPType<T>, PDat
         )
     )
     {
-        const elemsT = t[1] as TermType;
+        const elemsT = getElemsT( t ) as TermType;
         return plam( t, data )
         ((( term: Term<any> ) => {
             return _papp(
@@ -301,8 +302,8 @@ function ptoData_minimal<T extends TermType>( t: T ): Term<PLam<ToPType<T>, PDat
         )
     )
     {
-        const fstT = t[1] as TermType;
-        const sndT = t[2] as TermType;
+        const fstT = getFstT( t ) as TermType;
+        const sndT = getSndT( t ) as TermType;
         return pPairToData( fstT, sndT ) as any;
     };
 

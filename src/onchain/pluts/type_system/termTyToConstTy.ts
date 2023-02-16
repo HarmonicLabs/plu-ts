@@ -1,7 +1,7 @@
 import { BasePlutsError } from "../../../errors/BasePlutsError";
 import { ConstType, constT } from "../../UPLC/UPLCTerms/UPLCConst/ConstType";
 import { PrimType, TermType } from "./types";
-import { unwrapAlias } from "./unwrapAlias";
+import { unwrapAlias } from "./tyArgs/unwrapAlias";
 
 export function termTyToConstTy( t: TermType ): ConstType
 {

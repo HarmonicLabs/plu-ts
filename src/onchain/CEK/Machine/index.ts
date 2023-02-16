@@ -98,6 +98,7 @@ export class Machine<V extends MachineVersion = MachineVersion>
 
     eval( _term: UPLCTerm | Term<any> ): { result: PureUPLCTerm, budgetSpent: ExBudget, logs: string[] }
     {
+
         // new budget for each call
         const budget = new ExBudget({ mem: 0, cpu: 0 });
         const spend = budget.add;
@@ -372,7 +373,7 @@ export class Machine<V extends MachineVersion = MachineVersion>
         }
     
         // Debug.timeEnd(timeTag);
-    
+
         // console.log( n_compute, n_returns );
         return {
             result: (steps.pop() as ReturnStep).value ?? new ErrorUPLC("steps.pop() was not a ReturnStep"),

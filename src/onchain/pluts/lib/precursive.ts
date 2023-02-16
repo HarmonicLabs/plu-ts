@@ -1,6 +1,7 @@
 import JsRuntime from "../../../utils/JsRuntime";
 import { Application } from "../../UPLC/UPLCTerms/Application";
 import { HoistedUPLC } from "../../UPLC/UPLCTerms/HoistedUPLC";
+import { genHoistedSourceUID } from "../../UPLC/UPLCTerms/HoistedUPLC/HoistedSourceUID/genHoistedSourceUID";
 import { Lambda } from "../../UPLC/UPLCTerms/Lambda";
 import { UPLCVar } from "../../UPLC/UPLCTerms/UPLCVar";
 import { PType } from "../PType";
@@ -9,6 +10,8 @@ import { Term } from "../Term";
 import { TermType, lam, tyVar, typeExtends } from "../type_system";
 import { addUtilityForType } from "./addUtilityForType";
 
+
+const ZUPLC_UID = genHoistedSourceUID();
 
 /**
  * for reference the "Z combinator in js": https://medium.com/swlh/y-and-z-combinators-in-javascript-lambda-calculus-with-real-code-31f25be934ec
@@ -76,7 +79,8 @@ export function precursive<A extends PType, B extends PType>
                innerZ,
                innerZ
            )
-       )
+       ),
+       ZUPLC_UID
    );
 
    const recursiveFn = new Term(
