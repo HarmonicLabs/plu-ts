@@ -1,14 +1,8 @@
-import { BasePlutsError } from "../../../../../errors/BasePlutsError";
-import ObjectUtils from "../../../../../utils/ObjectUtils";
 import { Builtin } from "../../../../UPLC/UPLCTerms/Builtin";
 import { TermFn, PPair, PLam } from "../../../PTypes";
 import { Term } from "../../../Term";
-import { TermType, ToPType, lam, pair, PrimType, data, tyVar, isWellFormedType } from "../../../type_system";
-import { UtilityTermOf, addUtilityForType } from "../../addUtilityForType";
-import { papp } from "../../papp";
-import { punsafeConvertType } from "../../punsafeConvertType";
+import { TermType, ToPType, lam, pair } from "../../../type_system";
 import { addApplications } from "../addApplications";
-
 
 
 export function pfstPair<A extends TermType, B extends TermType>( fstType: A, sndType: B )

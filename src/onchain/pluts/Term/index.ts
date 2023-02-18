@@ -52,7 +52,8 @@ export class Term<A extends PType>
 
             const uplc = ( (this as any).isConstant ) ?
                 Machine.evalSimple( this._toUPLC( deBruijnLevel ) ) :
-                this._toUPLC( deBruijnLevel );
+            
+            this._toUPLC( deBruijnLevel );
 
             // if( performance.now() - t0 > 1e4 )
             // {
@@ -110,24 +111,22 @@ export class Term<A extends PType>
             return _this_hoistedUID;
         }
 
+        let hoisted: HoistedUPLC | undefined = undefined;
         ObjectUtils.defineReadOnlyHiddenProperty(
             this,
             "hoist",
             () => {
                 this._toUPLC = {
                     proof: proofSym,
-                    value: (_dbn : bigint) => {
+                    value: (_dbn: bigint) => {
 
-                        const hoisted = toUPLC( BigInt( 0 ) );
+                        if( hoisted === undefined || !(hoisted instanceof HoistedUPLC) ) 
+                            hoisted = new HoistedUPLC(
+                                toUPLC( BigInt( 0 ) ),
+                                getThisHoistedUID()
+                            );
 
-                        // console.log( showUPLC( hoisted ) );
-                        
-                        // throws if the term is not closed
-                        // for how terms are created it should never be the case
-                        return new HoistedUPLC(
-                            hoisted,
-                            getThisHoistedUID()
-                        );
+                        return hoisted.clone()
                     }
                 } as any;
             }
@@ -141,20 +140,8 @@ export class Term<A extends PType>
                 get: () => _isConstant,
                 set: ( isConst: boolean ) => {
                     if( typeof isConst !== "boolean" ) return;
-                    if( isConst === true )
-                    {
-                        // const compiled = this._toUPLC( BigInt( 0 ) )
-                        // true if the compiled term is instance of ```UPLCConst``` (any type)
-                        // _isConstant = compiled instanceof UPLCConst ||
-                        //     compiled instanceof ErrorUPLC || 
-                        //     (compiled instanceof HoistedUPLC && compiled.UPLC instanceof UPLCConst)
-                        _isConstant = true
-                    }
-                    else
-                    {
-                        _isConstant = false;
-                    }
-                    return;
+                    
+                    _isConstant = isConst;
                 },
                 enumerable: false,
                 configurable: false

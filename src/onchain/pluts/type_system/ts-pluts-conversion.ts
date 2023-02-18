@@ -13,7 +13,7 @@ T extends [ PrimType.Struct, infer SDef extends StructDefinition ]  ? PStruct<SD
 T extends [ PrimType.Alias, infer T extends TermType ]  ? PAlias<T> :
 // asData elements should be assignable to normal elements
 // coversion habdled in application (`papp`())
-T extends [ PrimType.AsData, infer ExpectedT extends TermType ] ? ToPType<ExpectedT> & PData :
+T extends [ PrimType.AsData, infer ExpectedT extends TermType ] ? ToPType<ExpectedT> | PData :
 T extends [ PrimType.Int ]   ? PInt :
 T extends [ PrimType.BS ]    ? PByteString :
 T extends [ PrimType.Str ]   ? PString :

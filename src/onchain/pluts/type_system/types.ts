@@ -1,5 +1,6 @@
 import JsRuntime from "../../../utils/JsRuntime";
 import ObjectUtils from "../../../utils/ObjectUtils";
+import { getElemsT } from "./tyArgs";
 
 export const enum PrimType {
     Int  = "int",
@@ -172,10 +173,44 @@ export function asData<T extends GenericTermType>( someT: T ): [ PrimType.AsData
 export function asData<T extends GenericTermType>( someT: T ): [ PrimType.AsData, T ] | T 
 {
     if(
+        someT[0] === PrimType.Lambda ||
+        someT[0] === PrimType.Delayed
+    ) return someT;
+
+    if(
         someT[0] === PrimType.Struct ||
         someT[0] === PrimType.Data   ||
         someT[0] === PrimType.AsData
     ) return someT;
+
+    // map `asData` down if the type is structured
+
+    // if the type is an alias temporarely unwrap;
+    // this to prevent blocking the mapping of `asData`
+    let wasAlias = false;
+    if( someT[0] === PrimType.Alias )
+    {
+        wasAlias = true;
+        someT = someT[1] as any;
+    }
+
+    // here mapping
+    if( someT[0] === PrimType.List )
+    {
+        const elemsT = getElemsT( someT );
+        if( elemsT[0] === PrimType.Pair )
+        {
+            someT = list( pair( asData( elemsT[1] as any ), asData( elemsT[2] as any ) ) ) as any;
+        }
+        else
+        {
+            someT = list( asData( elemsT ) ) as any
+        }
+    }
+
+    // re-wrap in alias if it was infact an alias
+    // before finally wrapping everything in `asData`
+    if( wasAlias ) someT = alias( someT ) as any;
 
     return Object.freeze([ PrimType.AsData, someT ]) as any;
 }

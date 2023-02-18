@@ -1,7 +1,7 @@
 import { typeofGenericStruct } from "../pstruct"
 import { PMaybe } from "../../../lib/std/PMaybe/PMaybe";
 import { struct, tyVar } from "../../../type_system/types";
-import { typeExtends } from "../../../type_system";
+import { termTypeToString, typeExtends } from "../../../type_system";
 
 
 describe("typeofGenericStruct", () => {
@@ -15,19 +15,13 @@ describe("typeofGenericStruct", () => {
             Nothing: {}
         });
 
-        expect(
-            typeExtends(
-                PMaybeTermType,
-                manualType
-            )
-        ).toBe( true );
 
         expect(
-            typeExtends(
-                manualType,
-                PMaybeTermType
-            )
-        ).toBe( true )
+            termTypeToString( PMaybeTermType )
+        )
+        .toEqual(
+            termTypeToString( manualType )
+        )
 
     });
 

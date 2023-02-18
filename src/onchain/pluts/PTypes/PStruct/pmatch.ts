@@ -3,7 +3,7 @@ import ObjectUtils from "../../../../utils/ObjectUtils";
 
 import { RestrictedStructInstance, PStruct, pstruct } from "./pstruct";
 import { constT } from "../../../UPLC/UPLCTerms/UPLCConst/ConstType";
-import { termTypeToString } from "../../type_system/utils";
+import { ctorDefToString, termTypeToString } from "../../type_system/utils";
 import { BasePlutsError } from "../../../../errors/BasePlutsError";
 import { UPLCTerm } from "../../../UPLC/UPLCTerm";
 import { Application } from "../../../UPLC/UPLCTerms/Application";
@@ -30,7 +30,7 @@ import { punsafeConvertType } from "../../lib/punsafeConvertType";
 import { TermList } from "../../lib/std/UtilityTerms/TermList";
 import { plam } from "../../lib/plam";
 import { TermFn } from "../PFn";
-import { LamT, PrimType, StructCtorDef, StructDefinition, TermType, data, fn, int, lam, list, tyVar } from "../../type_system/types";
+import { LamT, PrimType, StructCtorDef, StructDefinition, TermType, data, fn, int, lam, list, struct, tyVar } from "../../type_system/types";
 import { isStructDefinition } from "../../type_system";
 import { phead } from "../../lib/builtins/list";
 import { fromData_minimal } from "../../lib/std/data/conversion/fromData_minimal";
@@ -112,15 +112,17 @@ function getExtractedFieldsExpr<CtorDef extends StructCtorDef, Fields extends (k
     const fieldType = ctorDef[ allFieldsNames[ idx ] ];
 
     return plet(
-        fromData_minimal( fieldType )(
-            getElemAtTerm( idx ).$( fieldsData )
+        addUtilityForType( fieldType )(
+            fromData_minimal( fieldType )(
+                getElemAtTerm( idx ).$( fieldsData )
+            )
         )
     ).in( value => {
 
         ObjectUtils.defineNormalProperty(
             partialExtracted,
             allFieldsNames[ idx ],
-            addUtilityForType( fieldType )( value )
+            punsafeConvertType( value, fieldType )
         );
 
         return getExtractedFieldsExpr(
@@ -147,7 +149,7 @@ function defineExtract<CtorDef extends StructCtorDef>
             in: <PExprResult extends PType>( expr: ( extracted: RestrictedStructInstance<CtorDef,Fields> ) => Term<PExprResult> ) => Term<PExprResult>
         } => {
 
-            const fieldsIdxs = fields
+            const fieldsIndicies = fields
                 .map( f => fieldsNames.findIndex( fName => fName === f ) )
                 // ignore fields not present in the definion or duplicates
                 .filter( ( idx, i, thisArr ) => idx >= 0 && thisArr.indexOf( idx ) === i )
@@ -158,12 +160,12 @@ function defineExtract<CtorDef extends StructCtorDef>
                 "in",
                 <PExprResult extends PType>( expr: ( extracted: RestrictedStructInstance<CtorDef,Fields> ) => Term<PExprResult> ): Term<PExprResult> => {
 
-                    if( fieldsIdxs.length === 0 ) return expr({} as any);
+                    if( fieldsIndicies.length === 0 ) return expr({} as any);
 
                     const res = getExtractedFieldsExpr(
                         _fieldsList,
                         ctorDef,
-                        fieldsIdxs,
+                        fieldsIndicies,
                         expr,
                         {}
                     );
@@ -330,8 +332,16 @@ function getReturnTypeFromContinuation<SDef extends StructDefinition>(
     ).type;
 }
 
+/**
+ * 
+ * @param structData 
+ * @param sDef 
+ * @param ctorCbs
+ *  
+ * @returns the term that matches the ctor 
+ */
 function hoistedMatchCtors<SDef extends StructDefinition>(
-    structData: Term<PData>,
+    structData: Term<PStruct<SDef>>,
     sDef: SDef,
     ctorCbs: (CtorCallback<SDef> | Term<PLam<PList<PData>, PType>>)[],
 )
@@ -361,7 +371,7 @@ function hoistedMatchCtors<SDef extends StructDefinition>(
             return papp(
                 papp(
                     matchSingleCtorStruct( cont.type[2] ),
-                    structData
+                    structData as any
                 ),
                 cont
             );
@@ -373,7 +383,7 @@ function hoistedMatchCtors<SDef extends StructDefinition>(
         return papp(
             papp(
                 matchSingleCtorStruct( returnT ),
-                structData
+                structData as any
             ),
             plam( list(data), returnT )
             ( fieldsListData => 
@@ -484,7 +494,7 @@ export function pmatch<SDef extends StructDefinition>( struct: Term<PStruct<SDef
                     ctorCbs[idx] = cb;
 
                     return hoistedMatchCtors(
-                        punsafeConvertType( struct, data ),
+                        struct as any,
                         sDef,
                         ctorCbs as any
                     );
@@ -500,6 +510,7 @@ export function pmatch<SDef extends StructDefinition>( struct: Term<PStruct<SDef
 
         const remainingCtorsObj = {};
 
+        // here add all the missing ctors contiunuations
         missingCtors.forEach( ctor => {
 
             const idx = indexOfCtor( ctor );
@@ -547,7 +558,7 @@ export function pmatch<SDef extends StructDefinition>( struct: Term<PStruct<SDef
                     }
 
                     const res =  hoistedMatchCtors(
-                        punsafeConvertType( struct, data ),
+                        struct as any,
                         sDef,
                         ctorCbs as any
                     );

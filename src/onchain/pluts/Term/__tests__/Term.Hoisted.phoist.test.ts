@@ -1,9 +1,5 @@
-import { Term } from ".."
-import { UPLCVar } from "../../../UPLC/UPLCTerms/UPLCVar"
 import { pgreaterInt } from "../../lib/builtins/int/intBinOpToBool"
-import { phoist } from "../../lib/phoist"
 import { pInt } from "../../lib/std/int/pInt"
-import { int } from "../../type_system"
 
 
 describe("phoist", () => {

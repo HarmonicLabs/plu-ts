@@ -59,7 +59,7 @@ export function termTypeToString( t: GenericTermType ): string
     if( isTaggedAsAlias( t ) )
     {
         return "alias(" + (
-            unwrapAlias( t )
+            unwrapAlias( t as any )
         ) + ")";
     }
     if( tag === PrimType.AsData )
@@ -83,7 +83,7 @@ export function termTypeToString( t: GenericTermType ): string
         ) + ")";
     }
 
-    if( typeof t[0] === "symbol" ) return "tyParam("+ (t[0] as any).description +")";
+    if( typeof t[0] === "symbol" ) return "tyParam("+ ((t[0] as any).description ?? "") +")";
     const tyArgs = t.slice(1) as TermType[];
     return ( t[0] + (tyArgs.length > 0 ? ',': "") + tyArgs.map( termTypeToString ).toString() );
 }

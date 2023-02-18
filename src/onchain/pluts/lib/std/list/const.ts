@@ -80,6 +80,7 @@ export function pconstList<ElemsT extends TermType>( elemsT: ElemsT ): ( elems: 
                     ( 
                         elems.map(
                             el => {
+                                console.log( el );
                                 let res: UPLCTerm = (Machine.evalSimple(
                                     el.toUPLC(dbn)
                                 ));

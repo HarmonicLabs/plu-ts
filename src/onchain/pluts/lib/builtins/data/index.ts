@@ -248,7 +248,7 @@ export const punConstrData
     : TermFn<[ PData ], PPair<PInt, PList<PData>>>
     = addApplications<[ PData ], PPair<PInt, PList<PData>>>(
         new Term(
-            lam( data, pair( int, list( data ))), // @fixme @todo keep track of the data types in ```list( data )```
+            lam( data, pair( int, list( data ) ) ), // @fixme @todo keep track of the data types in ```list( data )```
             _dbn => Builtin.unConstrData
         )
     );

@@ -4,7 +4,7 @@ import ObjectUtils from "../../../../utils/ObjectUtils";
 import type { TermFn } from "../PFn";
 import type { PData } from "../PData/PData";
 import { PDataRepresentable } from "../../PType/PDataRepresentable";
-import type { UtilityTermOf } from "../../lib/addUtilityForType";
+import { UtilityTermOf, addUtilityForType } from "../../lib/addUtilityForType";
 
 import { structDefToString, termTypeToString } from "../../type_system/utils";
 import { HoistedUPLC } from "../../../UPLC/UPLCTerms/HoistedUPLC";
@@ -24,6 +24,7 @@ import { punsafeConvertType } from "../../lib/punsafeConvertType";
 import { toData_minimal } from "../../lib/std/data/conversion/toData_minimal";
 import { HoistedSourceUID } from "../../../UPLC/UPLCTerms/HoistedUPLC/HoistedSourceUID";
 import { genHoistedSourceUID } from "../../../UPLC/UPLCTerms/HoistedUPLC/HoistedSourceUID/genHoistedSourceUID";
+import { TermStruct } from "../../lib/std/UtilityTerms/TermStruct";
 
 /**
  * intermediate class useful to reconize structs form primitives
@@ -57,7 +58,7 @@ export type PStruct<SDef extends StructDefinition> = {
 
 } & PDataRepresentable & {
     [Ctor in keyof SDef]:
-        ( ctorFields: StructInstance<SDef[Ctor]> ) => Term<PStruct<SDef>>
+        ( ctorFields: StructInstance<SDef[Ctor]> ) => TermStruct<SDef>
 }
 
 type Includes<As extends any[], Elem extends any> =
@@ -259,7 +260,7 @@ export function pstruct<StructDef extends StructDefinition>( def: StructDef ): P
         ObjectUtils.defineReadOnlyProperty(
             PStructExt.prototype,
             ctorName,
-            ( jsStruct: StructInstance<any> ): Term<PStructExt> => {
+            ( jsStruct: StructInstance<any> ): UtilityTermOf<PStructExt> => {
 
                 JsRuntime.assert(
                     ObjectUtils.isObject( jsStruct ),
@@ -278,14 +279,16 @@ export function pstruct<StructDef extends StructDefinition>( def: StructDef ): P
                     if( hoistedEmptyCtorUID[i] === undefined )
                         hoistedEmptyCtorUID[i] = genHoistedSourceUID();
                         
-                    return new Term(
-                        thisStructType,
-                        _dbn => new HoistedUPLC(
-                            UPLCConst.data( new DataConstr( i, [] ) ),
-                            hoistedEmptyCtorUID[i]
-                        ),
-                        true, // isConstant
-                    );
+                    return addUtilityForType(thisStructType)(
+                        new Term(
+                            thisStructType,
+                            _dbn => new HoistedUPLC(
+                                UPLCConst.data( new DataConstr( i, [] ) ),
+                                hoistedEmptyCtorUID[i]
+                            ),
+                            true, // isConstant
+                        )
+                    ) as any;
                 }
 
                 // still we must be sure that the jsStruct has at least all the fields
@@ -358,7 +361,7 @@ export function pstruct<StructDef extends StructDefinition>( def: StructDef ): P
                     )
                 }
 
-                return dataReprTerm;
+                return addUtilityForType( thisStructType )( dataReprTerm ) as any;
             }
         );
 

@@ -1,8 +1,21 @@
 import { pstruct } from "..";
+import { BitStream } from "../../../../../types/bits/BitStream";
 import { Machine } from "../../../../CEK/Machine";
+import { HoistedUPLC } from "../../../../UPLC/UPLCTerms/HoistedUPLC";
 import { pInt, phead, phoist, plam, pmakeUnit } from "../../../lib"
 import { data, list, unit, int } from "../../../type_system";
 import { getElemAtTerm, pmatch } from "../pmatch"
+
+(expect as any).addEqualityTesters([
+    (a: HoistedUPLC, b: HoistedUPLC) => {
+        if(!(
+            a instanceof HoistedUPLC &&
+            b instanceof HoistedUPLC
+        )) return undefined;
+
+        return BitStream.eq( a.compiled, b.compiled );
+    }
+])
 
 describe("getElemAtTerm", () => {
 

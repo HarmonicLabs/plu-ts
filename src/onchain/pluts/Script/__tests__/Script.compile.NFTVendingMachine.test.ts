@@ -36,7 +36,7 @@ describe("NFTVendingMachine", () => {
                         // includes the **verified** input of the counter
                         // since the token that verifies the utxo is unique
                         // it makes no sense to check for the validator hash too
-                        inputValue.some( policy => policy.fst.eq( punBData.$( counterValId ) ) )
+                        inputValue.some( policy => policy.fst.eq( counterValId ) )
 
                         // and delays the computation; in this case is not a detail
                         // because otherwhise it would have ran for each element of the list
@@ -92,60 +92,66 @@ describe("NFTVendingMachine", () => {
                 .and(
                     pisEmpty.$( tx.refInputs.tail )
                     .and(
-                        tx.refInputs.head.extract("resolved").in( ({ resolved: oracleRefInput }) =>
-                            oracleRefInput.extract("datum","value").in( oracle =>
+                        (() => {
 
-                                // includes identifier
-                                // safe if the token is unique (NFT)
-                                oracle.value.some( valueEntry => valueEntry.fst.eq( punBData.$( priceOracleId ) ) )
-                                .and(
-                                    
-                                    tx.outputs.some( output =>
-                                    output.extract("address","value").in( out =>
-                                        out.address.extract("credential").in( outAddr =>
+                            console.log( tx.refInputs.head );
+                            console.log( tx.refInputs.head.type );
 
-                                            pand.$(
-
-                                                //tx output going to owner
-                                                pmatch( outAddr.credential )
-                                                .onPPubKeyCredential( _ => _.extract("pkh").in( ({ pkh }) =>
-                                                    pkh.eq( punBData.$( ownerPkh ) ) 
-                                                ))
-                                                ._( _ => perror( bool ) )
-                                            
-                                            ).$(pdelay(
+                            return tx.refInputs.head.extract("resolved").in( ({ resolved: oracleRefInput }) =>
+                                oracleRefInput.extract("datum","value").in( oracle =>
+    
+                                    // includes identifier
+                                    // safe if the token is unique (NFT)
+                                    oracle.value.some( valueEntry => valueEntry.fst.eq( priceOracleId ) )
+                                    .and(
+                                        
+                                        tx.outputs.some( output =>
+                                        output.extract("address","value").in( out =>
+                                            out.address.extract("credential").in( outAddr =>
+    
+                                                pand.$(
+    
+                                                    //tx output going to owner
+                                                    pmatch( outAddr.credential )
+                                                    .onPPubKeyCredential( _ => _.extract("pkh").in( ({ pkh }) =>
+                                                        pkh.eq( ownerPkh ) 
+                                                    ))
+                                                    ._( _ => perror( bool ) )
                                                 
-                                                pmatch(
-                                                    out.value.find( valueEntry =>
-                                                        valueEntry.fst.length.eq( 0 ) // empty bytestring (policy of ADA)
-                                                    )
-                                                )
-                                                .onJust( _ => _.extract("val").in((({val}): Term<PBool> =>
+                                                ).$(pdelay(
                                                     
-                                                    // list( pair( bs, int ) )
-                                                    val.snd
-                                                    // pair( bs, int )
-                                                    .at( 0 )
-                                                    // int ( lovelaces )
-                                                    .snd.gtEq(
-                                                        punIData.$( 
-                                                            pmatch( oracle.datum )
-                                                            .onInlineDatum( _ => _.extract("datum").in(({ datum }) => datum ))
-                                                            ._( _ => perror( data ) )
+                                                    pmatch(
+                                                        out.value.find( valueEntry =>
+                                                            valueEntry.fst.length.eq( 0 ) // empty bytestring (policy of ADA)
                                                         )
                                                     )
-                                                )))
-                                                .onNothing( _ => perror( bool ) ) as Term<PBool>
-
-                                            ) as any )
-
-                                        )
-                                    ))
-
+                                                    .onJust( _ => _.extract("val").in((({val}): Term<PBool> =>
+                                                        
+                                                        // list( pair( bs, int ) )
+                                                        val.snd
+                                                        // pair( bs, int )
+                                                        .at( 0 )
+                                                        // int ( lovelaces )
+                                                        .snd.gtEq(
+                                                            punIData.$( 
+                                                                pmatch( oracle.datum )
+                                                                .onInlineDatum( _ => _.extract("datum").in(({ datum }) => datum ))
+                                                                ._( _ => perror( data ) )
+                                                            )
+                                                        )
+                                                    )))
+                                                    .onNothing( _ => perror( bool ) ) as Term<PBool>
+    
+                                                ) as any )
+    
+                                            )
+                                        ))
+    
+                                    )
+    
                                 )
-
                             )
-                        )
+                        })()
                     )
                 )
             )
@@ -161,9 +167,9 @@ describe("NFTVendingMachine", () => {
         )
         {
             return nftPolicy
-            .$( pBSToData.$( owner as any ) )
-            .$( pBSToData.$( counterNFT as any ) )
-            .$( pBSToData.$( priceOracleNFT as any ) );
+            .$( owner as any )
+            .$( counterNFT as any )
+            .$( priceOracleNFT as any );
         }
 
         compile(

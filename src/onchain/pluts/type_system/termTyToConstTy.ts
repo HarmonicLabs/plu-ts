@@ -7,7 +7,7 @@ export function termTyToConstTy( t: TermType ): ConstType
 {
     switch( t[0] )
     {
-        case PrimType.Alias:    return termTyToConstTy( unwrapAlias( t ) );
+        case PrimType.Alias:    return termTyToConstTy( unwrapAlias( t as any ) );
         case PrimType.Unit:     return constT.unit;
         case PrimType.Int:      return constT.int;
         case PrimType.BS:       return constT.byteStr;

@@ -1,6 +1,6 @@
 import JsRuntime from "../../../utils/JsRuntime";
 import ObjectUtils from "../../../utils/ObjectUtils";
-import { UPLCTerm } from "../../UPLC/UPLCTerm";
+import { UPLCTerm, showUPLC } from "../../UPLC/UPLCTerm";
 import { Application } from "../../UPLC/UPLCTerms/Application";
 import { ErrorUPLC } from "../../UPLC/UPLCTerms/ErrorUPLC";
 import { HoistedUPLC } from "../../UPLC/UPLCTerms/HoistedUPLC";
@@ -10,12 +10,15 @@ import { PType } from "../PType";
 import { PLam } from "../PTypes";
 import { Term } from "../Term";
 import { typeExtends } from "../type_system/typeExtends";
-import { PrimType, TermType, data, list, pair, tyVar } from "../type_system/types";
+import { PrimType, TermType, data, lam, list, pair, tyVar } from "../type_system/types";
 import { termTypeToString } from "../type_system/utils";
 import { type UtilityTermOf, addUtilityForType } from "./addUtilityForType";
 import { PappArg, pappArgToTerm } from "./pappArg";
 import { pmap } from "./std/list/pmap";
 import { fromData_minimal } from "./std/data/conversion/fromData_minimal";
+import { getElemsT } from "../type_system/tyArgs";
+import { Builtin } from "../../UPLC/UPLCTerms/Builtin";
+import { _papp } from "./std/data/conversion/minimal_common";
 
 
 function isIdentityUPLC( uplc: UPLCTerm ): boolean
@@ -38,7 +41,7 @@ export type PappResult<Output extends PType> =
         } :
     UtilityTermOf<Output>
 
-function unwrapDataIfNeeded( input: Term<any>, expectedInputTy: TermType ): Term<any>
+function unwrapDataIfNeeded( input: Term<PType>, expectedInputTy: TermType ): Term<any>
 {
     input = (
         // we know the actual type that the data represents
@@ -47,9 +50,45 @@ function unwrapDataIfNeeded( input: Term<any>, expectedInputTy: TermType ): Term
         !typeExtends( expectedInputTy, data )
     ) ?
     // transform to the value
-    fromData_minimal( input.type[1] as any )( input ) :
+    fromData_minimal( input.type[1] as any )( input as any ) :
     // keep the data
     input;
+
+    if(
+        typeExtends(
+            expectedInputTy,
+            list( tyVar() )
+        ) &&
+        !typeExtends(
+            expectedInputTy,
+            list( data )
+        ) &&
+        // any lisat of pair will construct pairs dynamiccaly
+        // that means that mapping `fromData` is useless on pairs
+        // because pairs are the hell and do not allow anything other than data if built dynamically
+        !typeExtends(
+            expectedInputTy,
+            list( 
+                pair(
+                    tyVar(),
+                    tyVar()
+                )
+            )
+        )
+    )
+    {
+        const expectedElemsT = getElemsT( expectedInputTy );
+        input =
+        _papp(
+            pmap(
+                getElemsT( input.type ),
+                expectedElemsT
+            ).$(
+                fromData_minimal( expectedElemsT )
+            ),
+            input
+        )
+    }
 
     return input;
 }
@@ -92,6 +131,7 @@ export function papp<Input extends PType, Output extends PType>( a: Term<PLam<In
     }
 
     const outputType = lambdaType[2]; // applyLambdaType( lambdaType, _b.type );
+
     const outputTerm = addUtilityForType( outputType )(
         new Term(
             outputType,

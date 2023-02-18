@@ -205,7 +205,7 @@ describe("pappArgToTerm", () => {
 
     });
 
-    test("list", () => {
+    test.only("list", () => {
 
         expectScriptToEq(
             pappArgToTerm<[ PrimType.List, [ PrimType.Int ] ]>(
@@ -247,6 +247,7 @@ describe("pappArgToTerm", () => {
             () => pappArgToTerm<[ PrimType.List, [ PrimType.Str ] ]>( ["hello","world"] )
         ).toThrow() // ambigous type
 
+        // here stack overflow
         expectScriptToEq(
             pappArgToTerm(
                 ["hello","world"] as any,
@@ -319,7 +320,7 @@ describe("pappArgToTerm", () => {
             ),
             pPair( int, bs )(
                 pInt( 1 ),
-                pByteString(  ByteString.fromAscii("hello") )
+                pByteString( ByteString.fromAscii("hello") )
             )
         );
 

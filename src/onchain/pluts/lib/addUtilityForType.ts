@@ -20,6 +20,7 @@ import {
     TermStr,        addPStringMethods,
     TermStruct,     addPStructMethods
 } from "./std/UtilityTerms";
+import { termTypeToString } from "../type_system";
 
 
 // given the index returns the previous number ( PrevNum[2] -> 1; etc... )
