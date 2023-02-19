@@ -3,7 +3,7 @@ import { PType } from "../../../../PType";
 import { PData } from "../../../../PTypes";
 import { TermFn } from "../../../../PTypes/PFn/PFn";
 import { Term } from "../../../../Term";
-import { PairT, asData, bool, list, pair, tyVar, unit } from "../../../../type_system";
+import { PairT, asData, bool, list, pair, termTypeToString, tyVar, unit } from "../../../../type_system";
 import { TermType, bs, data, int, str } from "../../../../type_system";
 import { isTaggedAsAlias } from "../../../../type_system/kinds/isTaggedAsAlias";
 import { ToPType } from "../../../../type_system/ts-pluts-conversion";
@@ -90,16 +90,17 @@ export function toData<T extends TermType>( t: T ): ( term: Term<ToPType<T>> ) =
         const elemsT = getElemsT( t ) as PairT<TermType,TermType>;
         const fstT = getFstT( elemsT ) ;
         const sndT = getSndT( elemsT ) ;
+
         return (( term: Term<any> ) => {
             return pMapToData.$(
-                pmap( elemsT, pair( data, data ) )
+                pmap( elemsT, pair( asData( fstT ), asData( sndT ) ) )
                 .$(
                     _pair => 
                         ppairData
                         .$( toData( fstT )( _pair.fst ) )
                         .$( toData( sndT )( _pair.snd ) )
                 )
-                .$( term )
+                .$( term ) as any
             )
         });
     };
@@ -122,10 +123,10 @@ export function toData<T extends TermType>( t: T ): ( term: Term<ToPType<T>> ) =
     {
         const elemsT = t[1] as PairT<TermType,TermType>;
         return (( term: Term<any> ) => {
-            return pMapToData.$(
-                pmap( elemsT, pair( data, data ) )
+            return pListToData.$(
+                pmap( elemsT, asData( elemsT ) )
                 .$( ptoData( elemsT ) as any )
-                .$( term )
+                .$( term ) as any
             )
         });
     };
@@ -235,10 +236,10 @@ export function ptoData<T extends TermType>( t: T ): TermFn<[ ToPType<T> ], PDat
         const elemsT = t[1] as TermType;
         return plam( t, data )
         (( term: Term<any> ) => {
-            return pMapToData.$(
-                pmap( elemsT, pair( data, data ) )
+            return pListToData.$(
+                pmap( elemsT, asData( elemsT ) )
                 .$( ptoData( elemsT ) as any )
-                .$( term )
+                .$( term ) as any
             )
         });
     };

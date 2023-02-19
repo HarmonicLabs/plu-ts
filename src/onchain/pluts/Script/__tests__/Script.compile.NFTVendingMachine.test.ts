@@ -94,9 +94,6 @@ describe("NFTVendingMachine", () => {
                     .and(
                         (() => {
 
-                            console.log( tx.refInputs.head );
-                            console.log( tx.refInputs.head.type );
-
                             return tx.refInputs.head.extract("resolved").in( ({ resolved: oracleRefInput }) =>
                                 oracleRefInput.extract("datum","value").in( oracle =>
     

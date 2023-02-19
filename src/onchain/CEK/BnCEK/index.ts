@@ -1066,12 +1066,8 @@ export class BnCEK
             "; elemsT: " +
             (elem instanceof UPLCConst ? constTypeToStirng( elem.type ) : "" ),
             {
-                list: (list as any).value,
-                elem: (elem as any).value,
-                fst: (elem as any).value.fst.bytes,
-                sndFst: (elem as any).value.snd.map[0].fst.bytes,
-                sndSnd: (elem as any).value.snd.map[0].snd.int,
-
+                list,
+                elem
             }
         );
 
@@ -1391,7 +1387,13 @@ export class BnCEK
     unIData( data: UPLCTerm ): ConstOrErr
     {
         const d = getData( data );
-        if( d === undefined ) return new ErrorUPLC("not data; unIData");
+        if( d === undefined )
+            return new ErrorUPLC(
+                "not data; unIData",
+                {
+                    data
+                }
+            );
 
         if( !( d instanceof DataI ) ) return new ErrorUPLC("not a data integer");
 

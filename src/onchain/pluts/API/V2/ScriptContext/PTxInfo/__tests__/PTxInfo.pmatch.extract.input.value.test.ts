@@ -26,9 +26,8 @@ import { POutputDatum } from "../../../Tx/POutputDatum";
 import { PTxInInfo } from "../../../Tx/PTxInInfo";
 import { PTxOut } from "../../../Tx/PTxOut";
 import { data, int, list, pair } from "../../../../../type_system/types";
-import { PMaybe, pPair } from "../../../../../lib";
-import { getHoistedTerms, showUPLC } from "../../../../../../UPLC/UPLCTerm";
-import { getSortedHoistedSet } from "../../../../../../UPLC/UPLCTerms/HoistedUPLC";
+import { PMaybe, pPair, punMapData, toData } from "../../../../../lib";
+import { showUPLC } from "../../../../../../UPLC/UPLCTerm";
 
 const unitDatumHash = PDatumHash.from( pByteString("923918e403bf43c34b4ef6b48eb2ee04babed17320d8d1b9ff9ad086e86f44ec") );
 const emptyValue = PValue.from( pList( PValueEntryT )([]) as any );
@@ -110,21 +109,31 @@ describe("input value extraction", () => {
 
     })
 
-    test.only("extracts input value", () => {
+    test("extracts input value", () => {
 
-        const uplc = tx.extract("inputs").in( ({ inputs }) => inputs
-        ).toUPLC(0);
+        const uplc = tx.extract("inputs").in( ({ inputs }) => 
+            inputs.head.extract("resolved").in( ({ resolved: input }) => 
+            input.extract("value").in( ({ value }) => value
+        ))).toUPLC(0);
 
-        console.log( showUPLC( uplc ) );
+        // console.log( showUPLC( uplc ) )
+
+        const res = Machine.evalSimple(
+            uplc
+        );
+
+        // console.log( res );
+
+        const expected = Machine.evalSimple(
+            punMapData.$( toData( PValue.type )( beef32 ) )
+        );
+
+        // console.log( expected )
         
         expect(
-            Machine.evalSimple(
-                uplc
-            )
+            res
         ).toEqual(
-            Machine.evalSimple(
-                beef32
-            )
+            expected
         );
 
     })

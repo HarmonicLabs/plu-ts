@@ -175,7 +175,7 @@ export function toData_minimal<T extends TermType>( t: T ): ( term: Term<ToPType
         return (( term: Term<any> ) => {
             return _papp(
                 pListToData as any,
-                pmap( elemsT, pair( data, data ) )
+                pmap( elemsT, asData(elemsT) )
                 .$( ptoData_minimal( elemsT ) as any )
                 .$( term )
             );
@@ -202,7 +202,6 @@ export function toData_minimal<T extends TermType>( t: T ): ( term: Term<ToPType
 
 function pid<T extends TermType, TT extends TermType>( fromT: T, toT: TT ): TermFn<[ ToPType<T> ], ToPType<TT>>
 {
-    // @ts-ignore Type instantiation is excessively deep and possibly infinite
     return phoist(
         plam( fromT, toT )( x => punsafeConvertType( x, toT ) )
     ) as any;
@@ -290,7 +289,7 @@ function ptoData_minimal<T extends TermType>( t: T ): Term<PLam<ToPType<T>, PDat
         ((( term: Term<any> ) => {
             return _papp(
                 pListToData as any,
-                pmap( elemsT, pair( data, data ) )
+                pmap( elemsT, asData( elemsT ) )
                 .$( ptoData_minimal( elemsT ) as any )
                 .$( term )
             )

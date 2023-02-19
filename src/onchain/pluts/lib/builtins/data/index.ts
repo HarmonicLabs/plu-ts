@@ -214,7 +214,7 @@ export const pMapToData: TermFn<[ PMap<PData, PData> ], PData>
         new Term(
             lam(
                 list( pair( data, data ) ),
-                asData( list( pair( data, data ) ) )
+                data
             ) as any,
             _dbn => Builtin.mapData
         )

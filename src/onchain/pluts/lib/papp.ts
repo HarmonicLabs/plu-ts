@@ -54,43 +54,6 @@ function unwrapDataIfNeeded( input: Term<PType>, expectedInputTy: TermType ): Te
     // keep the data
     input;
 
-    if(
-        typeExtends(
-            expectedInputTy,
-            list( tyVar() )
-        ) &&
-        !typeExtends(
-            expectedInputTy,
-            list( data )
-        ) &&
-        // any list of pairs will construct pairs dynamicaly
-        // that means that mapping `fromData` is useless on pairs
-        // because pairs are the hell and do not allow anything other than data if built dynamically
-        !typeExtends(
-            expectedInputTy,
-            list( 
-                pair(
-                    tyVar(),
-                    tyVar()
-                )
-            )
-        )
-    )
-    {
-        const expectedElemsT = getElemsT( expectedInputTy );
-        input =
-        _papp(
-            _papp(
-                _pmap(
-                    getElemsT( input.type ),
-                    expectedElemsT
-                ) as any,
-                pfromData_minimal( expectedElemsT ) as any
-            ) as any,
-            input
-        )
-    }
-
     return input;
 }
 
