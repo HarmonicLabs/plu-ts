@@ -174,8 +174,6 @@ export function addPListMethods<PElemsT extends PType>( lst: Term<PList<PElemsT>
         console.log( Error().stack );
     }
 
-    // console.log( "addPMethods; __isListOfDynPairs", (_lst as any).__isListOfDynPairs )
-
     ObjectUtils.definePropertyIfNotPresent(
         _lst,
         "head",
@@ -183,9 +181,7 @@ export function addPListMethods<PElemsT extends PType>( lst: Term<PList<PElemsT>
             get: () => {
                 return phead( elemsT ).$( _lst )
             },
-            set: () => {},
-            configurable: false,
-            enumerable: true
+            ...getterOnly
         }
     );
     ObjectUtils.definePropertyIfNotPresent(
@@ -193,9 +189,7 @@ export function addPListMethods<PElemsT extends PType>( lst: Term<PList<PElemsT>
         "tail",
         {
             get: () => ptail( elemsT ).$( _lst ),
-            set: () => {},
-            configurable: false,
-            enumerable: true
+            ...getterOnly
         }
     );
     ObjectUtils.definePropertyIfNotPresent(
@@ -203,9 +197,7 @@ export function addPListMethods<PElemsT extends PType>( lst: Term<PList<PElemsT>
         "length",
         {
             get: () => plength( elemsT ).$( _lst ),
-            set: () => {},
-            configurable: false,
-            enumerable: true
+            ...getterOnly
         }
     );
     ObjectUtils.definePropertyIfNotPresent(
@@ -213,17 +205,18 @@ export function addPListMethods<PElemsT extends PType>( lst: Term<PList<PElemsT>
         "reversed",
         {
             get: () => preverse( elemsT ).$( _lst ),
-            set: () => {},
-            configurable: false,
-            enumerable: true
+            ...getterOnly
         }
     );
 
 
-    ObjectUtils.defineReadOnlyProperty(
+    ObjectUtils.definePropertyIfNotPresent(
         _lst,
         "atTerm",
-        pindexList( elemsT ).$( _lst )
+        {
+            get: () => pindexList( elemsT ).$( _lst ),
+            ...getterOnly
+        }
     );
     ObjectUtils.defineReadOnlyProperty(
         _lst,
@@ -231,10 +224,13 @@ export function addPListMethods<PElemsT extends PType>( lst: Term<PList<PElemsT>
         ( index: PappArg<PInt> ): UtilityTermOf<PElemsT> => pindexList( elemsT ).$( _lst ).$( index ) as any
     );
 
-    ObjectUtils.defineReadOnlyProperty(
+    ObjectUtils.definePropertyIfNotPresent(
         _lst,
         "findTerm",
-        flippedFind( elemsT ).$( _lst )
+        {
+            get: () => flippedFind( elemsT ).$( _lst ),
+            ...getterOnly
+        }
     );
     ObjectUtils.defineReadOnlyProperty(
         _lst,
@@ -243,10 +239,13 @@ export function addPListMethods<PElemsT extends PType>( lst: Term<PList<PElemsT>
             pfind( elemsT ).$( predicate ).$( _lst ) as any
     );
 
-    ObjectUtils.defineReadOnlyProperty(
+    ObjectUtils.definePropertyIfNotPresent(
         _lst,
         "filterTerm",
-        flippedFilter( elemsT ).$( _lst )
+        {
+            get: () => flippedFilter( elemsT ).$( _lst ),
+            ...getterOnly
+        }
     );
     ObjectUtils.defineReadOnlyProperty(
         _lst,
@@ -255,10 +254,13 @@ export function addPListMethods<PElemsT extends PType>( lst: Term<PList<PElemsT>
             pfilter( elemsT ).$( predicate as any ).$( _lst ) as any
     );
 
-    ObjectUtils.defineReadOnlyProperty(
+    ObjectUtils.definePropertyIfNotPresent(
         _lst,
         "prependTerm",
-        flippedPrepend( elemsT ).$( _lst )
+        {
+            get: () => flippedPrepend( elemsT ).$( _lst ),
+            ...getterOnly
+        }
     );
     ObjectUtils.defineReadOnlyProperty(
         _lst,
@@ -296,11 +298,14 @@ export function addPListMethods<PElemsT extends PType>( lst: Term<PList<PElemsT>
         }
     );
 
-    ObjectUtils.defineReadOnlyProperty(
+    ObjectUtils.definePropertyIfNotPresent(
         _lst,
         "everyTerm",
-        flippedEvery( elemsT )
-        .$( _lst )
+        {
+            get: () => flippedEvery( elemsT )
+            .$( _lst ),
+            ...getterOnly
+        }
     );
     ObjectUtils.defineReadOnlyProperty(
         _lst,
@@ -308,11 +313,15 @@ export function addPListMethods<PElemsT extends PType>( lst: Term<PList<PElemsT>
         ( predicate: PappArg<PLam<PElemsT, PBool>> ): TermBool => pevery( elemsT ).$( predicate as any ).$( _lst )
     );
 
-    ObjectUtils.defineReadOnlyProperty(
+    ObjectUtils.definePropertyIfNotPresent(
         _lst,
         "someTerm",
-        flippedSome( elemsT )
-        .$( _lst )
+        {
+            get: () => flippedSome( elemsT )
+            .$( _lst ),
+            ...getterOnly
+        }
+        
     );
     ObjectUtils.defineReadOnlyProperty(
         _lst,

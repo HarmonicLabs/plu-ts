@@ -1,3 +1,5 @@
+import { PScriptPurpose } from "../../API/V1/ScriptContext/PScriptPurpose";
+import { pList } from "../../lib/std/list/const";
 import { typeExtends } from "../typeExtends";
 import { alias, asData, bs, data, int, lam, list, pair, str, struct, tyVar, unit } from "../types";
 
@@ -232,6 +234,17 @@ describe("typeExtends", () => {
             ).toBe( true )
         });
 
+    });
+
+    test("list(pair( dataLike, dataLike )", () => {
+
+        expect(
+            typeExtends(
+                pList( pair( PScriptPurpose.type, data ) )([]).type,
+                list( pair( data, data ) )
+            )
+        ).toBe( true )
+        
     })
 
 })

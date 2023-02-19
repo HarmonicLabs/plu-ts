@@ -200,10 +200,10 @@ export function showUPLC( term: UPLCTerm ): string
         return "";
     }
 
-        return loop(
-            replaceHoistedTermsInplace( term.clone() ),
-            0
-        );
+    return loop(
+        replaceHoistedTermsInplace( term.clone() ),
+        0
+    );
 
 }
 

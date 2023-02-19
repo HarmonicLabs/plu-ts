@@ -4,6 +4,28 @@ import { pInt } from "../../int";
 import { pStr } from "../../str";
 import { pList, pnil } from "../const"
 
+import * as fs from "node:fs";
+
+import v8Profiler from 'v8-profiler-next';
+v8Profiler.setGenerateType(1);
+const title = 'list.const';
+
+v8Profiler.startProfiling(title, true);
+  afterAll(() => {
+    const profile = v8Profiler.stopProfiling(title);
+    profile.export(function (error, result: any) {
+      // if it doesn't have the extension .cpuprofile then
+      // chrome's profiler tool won't like it.
+      // examine the profile:
+      //   Navigate to chrome://inspect
+      //   Click Open dedicated DevTools for Node
+      //   Select the profiler tab
+      //   Load your file
+      fs.writeFileSync(`${title}.cpuprofile`, result);
+      profile.delete();
+    });
+});
+
 describe("pList", () => {
 
     test("pList( PTxInInfo.type )([])", () => {
@@ -16,15 +38,15 @@ describe("pList", () => {
         )
     });
 
-    test.only("pList( int )( [1,2,3].map( pInt ) )", () => {
+    test("pList( int )( [1,2,3].map( pInt ) )", () => {
 
         expect(
-            () => pList( int )( [1].map( pInt ) ).toUPLC(0)
+            () => pList( int )( [1,2,3].map( pInt ) ).toUPLC(0)
         ).not.toThrow()
 
     });
 
-    test.only("pList( str )( [\"hello\",\"world\"].map( pStr ) )", () => {
+    test("pList( str )( [\"hello\",\"world\"].map( pStr ) )", () => {
 
         expect(
             () => pList( str )( ["hello","world"].map( pStr ) ).toUPLC(0)

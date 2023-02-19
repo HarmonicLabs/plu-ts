@@ -1,4 +1,3 @@
-import { UtilityTermOf } from "../../..";
 import { PType } from "../../../../PType";
 import { PData } from "../../../../PTypes";
 import { TermFn } from "../../../../PTypes/PFn/PFn";
@@ -21,6 +20,8 @@ import { pcompose } from "../../combinators";
 import { pUnitFromData } from "../../unit";
 import { punBData, punIData, punListData, punMapData } from "../../../builtins/data";
 import { getElemsT, getFstT, getSndT } from "../../../../type_system/tyArgs";
+import { UtilityTermOf } from "../../../addUtilityForType";
+import { pmap } from "../../list/pmap";
 
 
 const pStrFromData =
@@ -125,15 +126,13 @@ export function fromData<T extends TermType>( t: T ): ( term: Term<PData> ) => U
     )
     {
         const elemsT = getElemsT( t );
-        return (
-            ( term: Term<PData> ) => 
-                punsafeConvertType(
-                    punListData.$( term ),
-                    list(
-                        asData( elemsT )
-                    )
-                )
-        ) as any
+
+        return ( term: Term<PData> ) => {
+
+            return punListData
+                .$( term )
+                .map( pfromData( elemsT ) ) as any
+        }
     };
 
     if(
@@ -240,15 +239,9 @@ export function pfromData<T extends TermType>( t: T ): TermFn<[ PData ], ToPType
     )
     {
         const elemsT = getElemsT( t );
-        return punsafeConvertType(
-            punListData,
-            lam(
-                data,
-                list(
-                    asData( elemsT )
-                )
-            )
-        ) as any
+        return pcompose( data, list( data ) , t )
+            .$( pmap( data, elemsT ).$( pfromData(elemsT) ) as any )
+            .$( punListData )
     };
 
     if(

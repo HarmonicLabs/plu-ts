@@ -34,6 +34,12 @@ export type TermStruct<SDef extends StructDefinition> = Term<PStruct<SDef>> & {
     : {}
 );
 
+const getterOnly = {
+    set: () => {},
+    configurable: false,
+    enumerable: true
+};
+
 export function addPStructMethods<SDef extends StructDefinition>( struct: Term<PStruct<SDef>> ): TermStruct<SDef>
 {
     const t = struct.type;

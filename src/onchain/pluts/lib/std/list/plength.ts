@@ -4,7 +4,7 @@ import { pdelay } from "../../pdelay";
 import { pfn } from "../../pfn";
 import { plam } from "../../plam";
 import { pInt } from "../int/pInt";
-import { precursiveList } from "./precursiveList";
+import { precursiveList } from "./precursiveList/index.ts";
 
 
 export const plength = ( elemsT: TermType ) => {

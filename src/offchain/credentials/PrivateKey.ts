@@ -7,7 +7,6 @@ import { PublicKey } from "./PublicKey";
 
 export class PrivateKey extends Hash32
 {
-
     derivePublicKey(): PublicKey
     {
         return new PublicKey(

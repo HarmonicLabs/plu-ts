@@ -78,28 +78,38 @@ const jsLikeSlice = phoist(
     )
 );
 
+const getterOnly = {
+    set: () => {},
+    configurable: false,
+    enumerable: true
+};
+
 export function addPByteStringMethods( term: Term<PByteString> ): TermBS
 {
-    ObjectUtils.defineReadOnlyProperty(
+    ObjectUtils.definePropertyIfNotPresent(
         term,
         "length",
-        plengthBs.$( term )
+        {
+            get: () => plengthBs.$( term ),
+            ...getterOnly
+        }
     );
     ObjectUtils.definePropertyIfNotPresent(
         term,
         "utf8Decoded",
         {
             get: () => pdecodeUtf8.$( term ),
-            set: () => {},
-            configurable: false,
-            enumerable: true
+            ...getterOnly
         }
     );
 
-    ObjectUtils.defineReadOnlyProperty(
+    ObjectUtils.definePropertyIfNotPresent(
         term,
         "concatTerm",
-        pappendBs.$( term )
+        {
+            get: () => pappendBs.$( term ),
+            ...getterOnly
+        }
     );
     ObjectUtils.defineReadOnlyProperty(
         term,
@@ -110,7 +120,10 @@ export function addPByteStringMethods( term: Term<PByteString> ): TermBS
     ObjectUtils.defineReadOnlyProperty(
         term,
         "prependTerm",
-        flippedCons.$( term )
+        {
+            get: () => flippedCons.$( term ), 
+            ...getterOnly
+        }
     );
     ObjectUtils.defineReadOnlyProperty(
         term,
@@ -118,10 +131,13 @@ export function addPByteStringMethods( term: Term<PByteString> ): TermBS
         ( byte: PappArg<PInt>): TermBS => pconsBs.$( byte ).$( term )
     );
 
-    ObjectUtils.defineReadOnlyProperty(
+    ObjectUtils.definePropertyIfNotPresent(
         term,
         "subByteStringTerm",
-        subByteString.$( term )
+        {
+            get: () => subByteString.$( term ),
+            ...getterOnly
+        }
     );
     ObjectUtils.defineReadOnlyProperty(
         term,
@@ -129,10 +145,13 @@ export function addPByteStringMethods( term: Term<PByteString> ): TermBS
         ( fromInclusive: PappArg<PInt>, ofLength: PappArg<PInt> ): TermBS => psliceBs.$( fromInclusive ).$( ofLength ).$( term )
     );
 
-    ObjectUtils.defineReadOnlyProperty(
+    ObjectUtils.definePropertyIfNotPresent(
         term,
         "sliceTerm",
-        jsLikeSlice.$( term )
+        {
+            get: () => jsLikeSlice.$( term ),
+            ...getterOnly
+        }
     );
     ObjectUtils.defineReadOnlyProperty(
         term,
@@ -140,10 +159,13 @@ export function addPByteStringMethods( term: Term<PByteString> ): TermBS
         ( fromInclusive: PappArg<PInt>, toExclusive: PappArg<PInt> ): TermBS => jsLikeSlice.$( term ).$( fromInclusive ).$( toExclusive )
     );
 
-    ObjectUtils.defineReadOnlyProperty(
+    ObjectUtils.definePropertyIfNotPresent(
         term,
         "atTerm",
-        pindexBs.$( term )
+        {
+            get: () => pindexBs.$( term ),
+            ...getterOnly
+        }
     );
     ObjectUtils.defineReadOnlyProperty(
         term,
@@ -151,10 +173,13 @@ export function addPByteStringMethods( term: Term<PByteString> ): TermBS
         ( index: PappArg<PInt> ): TermInt => pindexBs.$( term ).$( index )
     );
 
-    ObjectUtils.defineReadOnlyProperty(
+    ObjectUtils.definePropertyIfNotPresent(
         term,
         "eqTerm",
-        peqBs.$( term )
+        {
+            get: () => peqBs.$( term ),
+            ...getterOnly
+        }
     );
     ObjectUtils.defineReadOnlyProperty(
         term,
@@ -165,7 +190,10 @@ export function addPByteStringMethods( term: Term<PByteString> ): TermBS
     ObjectUtils.defineReadOnlyProperty(
         term,
         "ltTerm",
-        plessBs.$( term )
+        {
+            get: () => plessBs.$( term ),
+            ...getterOnly
+        }
     );
     ObjectUtils.defineReadOnlyProperty(
         term,
@@ -173,10 +201,13 @@ export function addPByteStringMethods( term: Term<PByteString> ): TermBS
         ( other: PappArg<PByteString> ): TermBool => plessBs.$( term ).$( other )
     );
 
-    ObjectUtils.defineReadOnlyProperty(
+    ObjectUtils.definePropertyIfNotPresent(
         term,
         "ltEqTerm",
-        plessEqBs.$( term )
+        {
+            get: () => plessEqBs.$( term ),
+            ...getterOnly
+        }
     );
     ObjectUtils.defineReadOnlyProperty(
         term,
@@ -184,10 +215,13 @@ export function addPByteStringMethods( term: Term<PByteString> ): TermBS
         ( other: PappArg<PByteString> ): TermBool => plessEqBs.$( term ).$( other )
     );
 
-    ObjectUtils.defineReadOnlyProperty(
+    ObjectUtils.definePropertyIfNotPresent(
         term,
         "gtTerm",
-        pgreaterBS.$( term )
+        {
+            get: () => pgreaterBS.$( term ),
+            ...getterOnly
+        }
     );
     ObjectUtils.defineReadOnlyProperty(
         term,
@@ -195,10 +229,13 @@ export function addPByteStringMethods( term: Term<PByteString> ): TermBS
         ( other: PappArg<PByteString> ): TermBool => pgreaterBS.$( term ).$( other )
     );
 
-    ObjectUtils.defineReadOnlyProperty(
+    ObjectUtils.definePropertyIfNotPresent(
         term,
         "gtEqTerm",
-        pgreaterEqBS.$( term )
+        {
+            get: () => pgreaterEqBS.$( term ),
+            ...getterOnly
+        }
     );
     ObjectUtils.defineReadOnlyProperty(
         term,

@@ -3,12 +3,15 @@ import { HoistedUPLC } from "../../../../../UPLC/UPLCTerms/HoistedUPLC"
 import { genHoistedSourceUID } from "../../../../../UPLC/UPLCTerms/HoistedUPLC/HoistedSourceUID/genHoistedSourceUID"
 import { Lambda } from "../../../../../UPLC/UPLCTerms/Lambda"
 import { UPLCVar } from "../../../../../UPLC/UPLCTerms/UPLCVar"
+import { PType } from "../../../../PType"
+import { PLam } from "../../../../PTypes"
 import { Term } from "../../../../Term"
 import { TermType, fn, lam } from "../../../../type_system"
 
 
-export function _papp( a: Term<any>, b: Term<any> )
+export function _papp<Input extends PType, Output extends PType>( a: Term<PLam<Input,Output>>, b: Term<Input> ): Term<Output>
 {
+    if( b.toUPLC === undefined ) console.log( b, Error().stack );
     return new Term(
         a.type[2] as TermType,
         dbn => new Application(

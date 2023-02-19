@@ -14,11 +14,11 @@ import { PrimType, TermType, data, lam, list, pair, tyVar } from "../type_system
 import { termTypeToString } from "../type_system/utils";
 import { type UtilityTermOf, addUtilityForType } from "./addUtilityForType";
 import { PappArg, pappArgToTerm } from "./pappArg";
-import { pmap } from "./std/list/pmap";
-import { fromData_minimal } from "./std/data/conversion/fromData_minimal";
+import { fromData_minimal, pfromData_minimal } from "./std/data/conversion/fromData_minimal";
 import { getElemsT } from "../type_system/tyArgs";
-import { Builtin } from "../../UPLC/UPLCTerms/Builtin";
 import { _papp } from "./std/data/conversion/minimal_common";
+import { _pmap } from "./std/list/pmap/minimal";
+import { plam } from "./plam";
 
 
 function isIdentityUPLC( uplc: UPLCTerm ): boolean
@@ -63,7 +63,7 @@ function unwrapDataIfNeeded( input: Term<PType>, expectedInputTy: TermType ): Te
             expectedInputTy,
             list( data )
         ) &&
-        // any lisat of pair will construct pairs dynamiccaly
+        // any list of pairs will construct pairs dynamicaly
         // that means that mapping `fromData` is useless on pairs
         // because pairs are the hell and do not allow anything other than data if built dynamically
         !typeExtends(
@@ -80,12 +80,13 @@ function unwrapDataIfNeeded( input: Term<PType>, expectedInputTy: TermType ): Te
         const expectedElemsT = getElemsT( expectedInputTy );
         input =
         _papp(
-            pmap(
-                getElemsT( input.type ),
-                expectedElemsT
-            ).$(
-                fromData_minimal( expectedElemsT )
-            ),
+            _papp(
+                _pmap(
+                    getElemsT( input.type ),
+                    expectedElemsT
+                ) as any,
+                pfromData_minimal( expectedElemsT ) as any
+            ) as any,
             input
         )
     }

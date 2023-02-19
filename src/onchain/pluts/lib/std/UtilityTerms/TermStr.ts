@@ -18,18 +18,30 @@ export type TermStr = Term<PString> & {
     readonly eq:        ( other: PappArg<PString> ) => TermBool
 }
 
+const getterOnly = {
+    set: () => {},
+    configurable: false,
+    enumerable: true
+};
+
 export function addPStringMethods( term: Term<PString> ): TermStr
 {
-    ObjectUtils.defineReadOnlyProperty(
+    ObjectUtils.definePropertyIfNotPresent(
         term,
         "utf8Encoded",
-        pencodeUtf8.$( term )
+        {
+            get: () => pencodeUtf8.$( term ),
+            ...getterOnly
+        }
     );
 
-    ObjectUtils.defineReadOnlyProperty(
+    ObjectUtils.definePropertyIfNotPresent(
         term,
         "concatTerm",
-        pappendStr.$( term )
+        {
+            get: () => pappendStr.$( term ),
+            ...getterOnly
+        }
     );
     ObjectUtils.defineReadOnlyProperty(
         term,
@@ -37,10 +49,13 @@ export function addPStringMethods( term: Term<PString> ): TermStr
         ( other: PappArg<PString> ): TermStr => pappendStr.$( term ).$( other )
     );
 
-    ObjectUtils.defineReadOnlyProperty(
+    ObjectUtils.definePropertyIfNotPresent(
         term,
         "eqTerm",
-        peqStr.$( term )
+        {
+            get: () => peqStr.$( term ),
+            ...getterOnly
+        }
     );
     ObjectUtils.defineReadOnlyProperty(
         term,

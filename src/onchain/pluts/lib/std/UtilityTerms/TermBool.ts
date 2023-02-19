@@ -39,12 +39,21 @@ function pdelay<PInstance extends PType>(toDelay: Term<PInstance>): Term<PDelaye
     );
 }
 
+const getterOnly = {
+    set: () => {},
+    configurable: false,
+    enumerable: true
+};
+
 export function addPBoolMethods( term: Term<PBool> ): TermBool
 {
-    ObjectUtils.defineReadOnlyProperty(
+    ObjectUtils.definePropertyIfNotPresent(
         term,
         "orTerm",
-        por.$( term )
+        {
+            get: () => por.$( term ),
+            ...getterOnly
+        }
     );
     ObjectUtils.defineReadOnlyProperty(
         term,
@@ -58,10 +67,13 @@ export function addPBoolMethods( term: Term<PBool> ): TermBool
             ))
     );
 
-    ObjectUtils.defineReadOnlyProperty(
+    ObjectUtils.definePropertyIfNotPresent(
         term,
         "strictOrTerm",
-        pstrictOr.$( term )
+        {
+            get: () => pstrictOr.$( term ),
+            ...getterOnly
+        }
     );
     ObjectUtils.defineReadOnlyProperty(
         term,
@@ -70,10 +82,13 @@ export function addPBoolMethods( term: Term<PBool> ): TermBool
     );
 
 
-    ObjectUtils.defineReadOnlyProperty(
+    ObjectUtils.definePropertyIfNotPresent(
         term,
         "andTerm",
-        pand.$( term )
+        {
+            get: () => pand.$( term ),
+            ...getterOnly
+        }
     );
     ObjectUtils.defineReadOnlyProperty(
         term,
@@ -87,10 +102,13 @@ export function addPBoolMethods( term: Term<PBool> ): TermBool
             ))
     );
 
-    ObjectUtils.defineReadOnlyProperty(
+    ObjectUtils.definePropertyIfNotPresent(
         term,
         "strictAndTerm",
-        pstrictAnd.$( term )
+        {
+            get: () => pstrictAnd.$( term ),
+            ...getterOnly
+        }
     );
     ObjectUtils.defineReadOnlyProperty(
         term,

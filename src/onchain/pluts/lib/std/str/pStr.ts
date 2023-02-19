@@ -8,7 +8,8 @@ export function pStr( string: string ): TermStr
     return addPStringMethods(
         new Term(
             str,
-            _dbn => UPLCConst.str( string )
+            _dbn => UPLCConst.str( string ),
+            // true // isConstant
         )
     );
 }

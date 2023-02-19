@@ -1252,7 +1252,13 @@ export class BnCEK
                     constT.data
                 )
             )
-        )) return new ErrorUPLC("not a list of data");
+        ))
+        return new ErrorUPLC(
+            "listData :: not a list of data",
+            {
+                listOfData,
+            }
+        );
 
         const list: Data[] | undefined = getList( listOfData ) as any ;
         if( list === undefined ) return new ErrorUPLC("not a list");

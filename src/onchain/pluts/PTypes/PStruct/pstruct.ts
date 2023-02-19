@@ -350,11 +350,11 @@ export function pstruct<StructDef extends StructDefinition>( def: StructDef ): P
                                     UPLCConst.int( i )
                                 ),
                                 pList( data )(
-                                    
-                                ctorDefFieldsNames.map<Term<any>>(
-                                    fieldKey => {
-                                        return toData_minimal( thisCtorDef[ fieldKey ] )( jsStruct[ fieldKey ] )
-                                    })
+                                    ctorDefFieldsNames.map<Term<any>>(
+                                        fieldKey => {
+                                            return toData_minimal( thisCtorDef[ fieldKey ] )( jsStruct[ fieldKey ] );
+                                        }
+                                    )
                                 ).toUPLC( dbn )
                             )
                         }

@@ -17,6 +17,12 @@ export type TermPair<PFst extends PType, PSnd extends PType> = Term<PPair<PFst,P
     
 }
 
+const getterOnly = {
+    set: () => {},
+    configurable: false,
+    enumerable: true
+};
+
 export function addPPairMethods<PFst extends PType, PSnd extends PType>( _pair: Term<PPair<PFst,PSnd>>)
 {
     const pairT = _pair.type;
@@ -32,16 +38,22 @@ export function addPPairMethods<PFst extends PType, PSnd extends PType>( _pair: 
     const sndT = getSndT( pairT );
 
     if( isWellFormedType( fstT ) )
-        ObjectUtils.defineReadOnlyProperty(
+        ObjectUtils.definePropertyIfNotPresent(
             _pair,
             "fst",
-            pfstPair( fstT, sndT ).$( _pair )
+            {
+                get: () => pfstPair( fstT, sndT ).$( _pair ),
+                ...getterOnly
+            }
         );
     if( isWellFormedType( sndT ) )
-        ObjectUtils.defineReadOnlyProperty(
+        ObjectUtils.definePropertyIfNotPresent(
             _pair,
             "snd",
-            psndPair( fstT, sndT ).$( _pair )
+            {
+                get: () => psndPair( fstT, sndT ).$( _pair ),
+                ...getterOnly
+            }
         );
 
     return _pair as any;

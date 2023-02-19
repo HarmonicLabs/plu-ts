@@ -1,5 +1,6 @@
 import ObjectUtils from "../../../../utils/ObjectUtils";
-import { GenericStructDefinition, GenericTermType, PrimType, StructCtorDef, StructDefinition, StructT, TermType } from "../types";
+import { typeExtends } from "../typeExtends";
+import { GenericStructDefinition, GenericTermType, PrimType, StructCtorDef, StructDefinition, StructT, TermType, alias, bs, lam, list } from "../types";
 import { termTypeToString } from "../utils";
 import { isPrimTypeTag } from "./isPrimTypeTag";
 import { isTaggedAsAlias } from "./isTaggedAsAlias";

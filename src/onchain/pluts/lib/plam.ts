@@ -34,41 +34,6 @@ return ( termFunc: ( input: UtilityTermOf<ToPType<A>> ) => Term<ToPType<B>> ): P
         }
     );
 
-    /*
-    // define equivalent version but for pairs that are dynamic
-    if( typeExtends( inputType, pair( tyVar(), tyVar() ) ) )
-    {
-        ObjectUtils.defineReadOnlyHiddenProperty(
-            lambdaTerm,
-            "withDynamicPairAsInput",
-            new Term<PLam<ToPType<A>,ToPType<B>>>(
-                lam( inputType, outputType ),
-                dbn => {
-                    const thisLambdaPtr = dbn + BigInt( 1 );
-    
-                    const boundVar = new Term<ToPType<A>>(
-                        inputType as any,
-                        dbnAccessLevel => new UPLCVar( dbnAccessLevel - thisLambdaPtr )
-                    );
-                    
-                    const body = termFunc(
-                        addUtilityForType( inputType )(
-                            ObjectUtils.defineReadOnlyHiddenProperty(
-                                boundVar,
-                                "__isDynamicPair",
-                                true
-                            )
-                        ) as any
-                    );
-    
-                    // here the debruijn level is incremented
-                    return new Lambda( body.toUPLC( thisLambdaPtr ) );
-                }
-            )
-        );
-    }
-    //*/
-
     // allows ```lambdaTerm.$( input )``` syntax
     // rather than ```papp( lambdaTerm, input )```
     // preserving Term Type

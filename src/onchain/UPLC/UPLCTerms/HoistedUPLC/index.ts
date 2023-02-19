@@ -126,20 +126,6 @@ export class HoistedUPLC
             )
         );
 
-        if( source_uid !== undefined )
-        {
-            registerUID( source_uid, this );
-            Object.defineProperty(
-                this, "uid", 
-                {
-                    value: source_uid,
-                    writable: false,
-                    configurable: false,
-                    enumerable: false
-                }
-            );
-        }
-
         const _deps = Array.isArray( deps ) ? deps : getSortedHoistedSet( getHoistedTerms( UPLC ) );
 
         this.UPLC = UPLC
@@ -203,7 +189,22 @@ export class HoistedUPLC
                 _deps, // no deps clone
                 this.compiled
             )
-        )
+        );
+
+        if( source_uid !== undefined )
+        {
+            // clones internally
+            registerUID( source_uid, this );
+            Object.defineProperty(
+                this, "uid", 
+                {
+                    value: source_uid,
+                    writable: false,
+                    configurable: false,
+                    enumerable: false
+                }
+            );
+        }
     }
 
     clone!: () =>  HoistedUPLC

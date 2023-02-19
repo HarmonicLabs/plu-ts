@@ -6,7 +6,7 @@ import { pfn } from "../../pfn";
 import { phoist } from "../../phoist";
 import { plam } from "../../plam";
 import { pBool } from "../bool/pBool";
-import { precursiveList } from "./precursiveList";
+import { precursiveList } from "./precursiveList/index.ts";
 
 
 export function pevery<ElemsT extends TermType>( elemsT: ElemsT )

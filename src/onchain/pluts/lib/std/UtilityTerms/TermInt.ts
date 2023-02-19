@@ -49,13 +49,22 @@ export type TermInt = Term<PInt> & {
         
 };
 
+const getterOnly = {
+    set: () => {},
+    configurable: false,
+    enumerable: true
+};
+
 export function addPIntMethods( term: Term<PInt> )
     : TermInt
 {
     ObjectUtils.defineReadOnlyProperty(
         term,
         "addTerm",
-        padd.$( term )
+        {
+            get: () => padd.$( term ),
+            ...getterOnly
+        }
     );
     ObjectUtils.defineReadOnlyProperty(
         term,
@@ -66,7 +75,10 @@ export function addPIntMethods( term: Term<PInt> )
     ObjectUtils.defineReadOnlyProperty(
         term,
         "subTerm",
-        psub.$( term )
+        {
+            get: () => psub.$( term ),
+            ...getterOnly
+        }
     );
     ObjectUtils.defineReadOnlyProperty(
         term,
@@ -77,7 +89,10 @@ export function addPIntMethods( term: Term<PInt> )
     ObjectUtils.defineReadOnlyProperty(
         term,
         "multTerm",
-        pmult.$( term )
+        {
+            get: () => pmult.$( term ),
+            ...getterOnly
+        }
     );
     ObjectUtils.defineReadOnlyProperty(
         term,
@@ -88,7 +103,10 @@ export function addPIntMethods( term: Term<PInt> )
     ObjectUtils.defineReadOnlyProperty(
         term,
         "divTerm",
-        pdiv.$( term )
+        {
+            get: () => pdiv.$( term ),
+            ...getterOnly
+        }
     );
     ObjectUtils.defineReadOnlyProperty(
         term,
@@ -99,7 +117,10 @@ export function addPIntMethods( term: Term<PInt> )
     ObjectUtils.defineReadOnlyProperty(
         term,
         "quotTerm",
-        pquot.$( term )
+        {
+            get: () => pquot.$( term ),
+            ...getterOnly
+        }
     );
     ObjectUtils.defineReadOnlyProperty(
         term,
@@ -110,7 +131,10 @@ export function addPIntMethods( term: Term<PInt> )
     ObjectUtils.defineReadOnlyProperty(
         term,
         "remainderTerm",
-        prem.$( term )
+        {
+            get: () => prem.$( term ),
+            ...getterOnly
+        }
     );
     ObjectUtils.defineReadOnlyProperty(
         term,
@@ -121,7 +145,10 @@ export function addPIntMethods( term: Term<PInt> )
     ObjectUtils.defineReadOnlyProperty(
         term,
         "modTerm",
-        pmod.$( term )
+        {
+            get: () => pmod.$( term ),
+            ...getterOnly
+        }
     );
     ObjectUtils.defineReadOnlyProperty(
         term,
@@ -133,7 +160,10 @@ export function addPIntMethods( term: Term<PInt> )
     ObjectUtils.defineReadOnlyProperty(
         term,
         "eqTerm",
-        peqInt.$( term )
+        {
+            get: () => peqInt.$( term ),
+            ...getterOnly
+        }
     );
     ObjectUtils.defineReadOnlyProperty(
         term,
@@ -144,7 +174,10 @@ export function addPIntMethods( term: Term<PInt> )
     ObjectUtils.defineReadOnlyProperty(
         term,
         "ltTerm",
-        plessInt.$( term )
+        {
+            get: () => plessInt.$( term ),
+            ...getterOnly
+        }
     );
     ObjectUtils.defineReadOnlyProperty(
         term,
@@ -155,7 +188,10 @@ export function addPIntMethods( term: Term<PInt> )
     ObjectUtils.defineReadOnlyProperty(
         term,
         "ltEqTerm",
-        plessEqInt.$( term )
+        {
+            get: () => plessEqInt.$( term ),
+            ...getterOnly
+        }
     );
     ObjectUtils.defineReadOnlyProperty(
         term,
@@ -166,23 +202,29 @@ export function addPIntMethods( term: Term<PInt> )
     ObjectUtils.defineReadOnlyProperty(
         term,
         "gtTerm",
-        pgreaterInt.$( term )
+        {
+            get: () => pgreaterInt.$( term ),
+            ...getterOnly
+        }
     );
     ObjectUtils.defineReadOnlyProperty(
         term,
         "gt",
-        ( other: PappArg<PInt> ): TermBool => pgreaterInt.$( term ).$( other )
+        ( other: PappArg<PInt> ): TermBool => plessInt.$( other ).$( term )
     );
 
     ObjectUtils.defineReadOnlyProperty(
         term,
         "gtEqTerm",
-        pgreaterEqInt.$( term )
+        {
+            get: () => pgreaterEqInt.$( term ),
+            ...getterOnly
+        }
     );
     ObjectUtils.defineReadOnlyProperty(
         term,
         "gtEq",
-        ( other: PappArg<PInt> ): TermBool => pgreaterEqInt.$( term ).$( other )
+        ( other: PappArg<PInt> ): TermBool => plessEqInt.$( other ).$( term )
     );
 
 

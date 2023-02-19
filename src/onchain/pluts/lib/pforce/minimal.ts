@@ -5,7 +5,7 @@ import { PDelayed } from "../../PTypes/PDelayed";
 import { Term } from "../../Term";
 import { PrimType } from "../../type_system/types";
 
-export function pforce_minimal<PInstance extends PType >
+export function _pforce<PInstance extends PType >
 ( toForce: Term<PDelayed<PInstance>> | Term<PInstance> ): Term<PInstance>
 {
     const outType = toForce.type[0] === PrimType.Delayed ? toForce.type[1] : toForce.type; 
@@ -30,3 +30,5 @@ export function pforce_minimal<PInstance extends PType >
             }
         );
 }
+
+export const pforce_minimal = _pforce;
