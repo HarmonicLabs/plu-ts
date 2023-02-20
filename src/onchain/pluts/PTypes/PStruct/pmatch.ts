@@ -571,16 +571,3 @@ export function pmatch<SDef extends StructDefinition>( struct: Term<PStruct<SDef
 
     return permutations( ctors ) as any;
 }
-
-
-/*
-const makeThing = <T extends TermType>( t: T ) => pstruct({ C: { v: t } });
-
-const _thing = makeThing( int ).C;
-
-type _test = typeof _thing
-
-const thing  = PMaybe( int ).Nothing;
-
-type test = typeof thing
-//*/

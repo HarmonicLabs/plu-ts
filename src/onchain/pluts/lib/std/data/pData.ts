@@ -1,7 +1,7 @@
 import { Data } from "../../../../../types/Data/Data";
 import { UPLCConst } from "../../../../UPLC/UPLCTerms/UPLCConst";
 import { Term } from "../../../Term";
-import { PByteString, PData, PInt } from "../../../PTypes";
+import { PAsData, PByteString, PData, PInt } from "../../../PTypes";
 import { asData, bs, data, int } from "../../../type_system/types";
 import { DataI } from "../../../../../types/Data";
 
@@ -15,7 +15,7 @@ export function pData( dataElem: Data )
     );
 }
 
-export function pDataI( n: number | bigint ): Term<PInt | PData>
+export function pDataI( n: number | bigint ): Term<PAsData<PInt>>
 {
     return new Term(
         asData( int ),
@@ -25,7 +25,7 @@ export function pDataI( n: number | bigint ): Term<PInt | PData>
 }
 
 
-export function pDataB( n: number | bigint ): Term<PByteString | PData>
+export function pDataB( n: number | bigint ): Term<PAsData<PByteString>>
 {
     return new Term(
         asData( bs ),

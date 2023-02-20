@@ -7,7 +7,7 @@ import { phoist } from "../../phoist";
 import { plet } from "../../plet";
 import { precursive } from "../../precursive";
 import { PMaybeT, PMaybe } from "../PMaybe/PMaybe";
-import { ptoData_minimal } from "../data/conversion/toData_minimal";
+import { _ptoData } from "../data/conversion/toData_minimal";
 
 export function pfind<ElemsT extends TermType, PElemsT extends ToPType<ElemsT> = ToPType<ElemsT>>( elemsT: ElemsT )
 : TermFn<[ PLam<PElemsT,PBool>, PList<PElemsT> ], PMaybeT<PElemsT>>
@@ -61,5 +61,5 @@ export function pfind<ElemsT extends TermType, PElemsT extends ToPType<ElemsT> =
             )
         )
 
-    ).$( ptoData_minimal( elemsT ) ) as any ;
+    ).$( _ptoData( elemsT ) ) as any ;
 }

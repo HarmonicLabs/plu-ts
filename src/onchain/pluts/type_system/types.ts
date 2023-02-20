@@ -133,7 +133,7 @@ export const pair       =
 
 export const map        = 
     <FstT extends GenericTermType, SndT extends GenericTermType>
-    ( fst: FstT, snd: SndT ): [ PrimType.Pair, FstT, SndT ] => 
+    ( fst: FstT, snd: SndT ): [ PrimType.List, [ PrimType.Pair, FstT, SndT ] ] => 
         list( pair( fst, snd ) ) as any ;
             
 export const lam        = 
