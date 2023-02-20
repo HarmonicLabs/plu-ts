@@ -2,11 +2,11 @@ import JsRuntime from "../../../../utils/JsRuntime";
 import ObjectUtils from "../../../../utils/ObjectUtils";
 
 import type { TermFn } from "../PFn";
-import type { PData } from "../PData/PData";
+import type { PAsData, PData } from "../PData/PData";
 import { PDataRepresentable } from "../../PType/PDataRepresentable";
 import { UtilityTermOf, addUtilityForType } from "../../lib/addUtilityForType";
 
-import { structDefToString, termTypeToString } from "../../type_system/utils";
+import { ctorDefToString, structDefToString, termTypeToString } from "../../type_system/utils";
 import { HoistedUPLC } from "../../../UPLC/UPLCTerms/HoistedUPLC";
 import { Pair } from "../../../../types/structs/Pair";
 import { UPLCConst } from "../../../UPLC/UPLCTerms/UPLCConst";
@@ -38,7 +38,7 @@ class _PStruct extends PDataRepresentable
 }
 
 export type StructInstance<SCtorDef extends StructCtorDef> = {
-    [Field in keyof SCtorDef]: Term<ToPType<SCtorDef[Field]>>
+    [Field in keyof SCtorDef]: Term<PAsData<ToPType<SCtorDef[Field]>>>
 }
 
 export type PStruct<SDef extends StructDefinition> = {
@@ -352,7 +352,9 @@ export function pstruct<StructDef extends StructDefinition>( def: StructDef ): P
                                 pList( data )(
                                     ctorDefFieldsNames.map<Term<any>>(
                                         fieldKey => {
-                                            return toData_minimal( thisCtorDef[ fieldKey ] )( jsStruct[ fieldKey ] );
+                                            const res = toData_minimal( thisCtorDef[ fieldKey ] )( jsStruct[ fieldKey ] );
+
+                                            return res;
                                         }
                                     )
                                 ).toUPLC( dbn )

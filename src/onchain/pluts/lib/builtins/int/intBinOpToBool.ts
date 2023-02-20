@@ -35,7 +35,6 @@ function intBinOpToBool( builtin: Builtin )
         "$",
         ( fstIn: Term<PInt> ): Term<PLam<PInt, PBool>> => {
             const oneIn =
-                // @ts-ingore Type instantiation is excessively deep and possibly infinite.
                 papp( op, fstIn );
             
             return ObjectUtils.defineReadOnlyProperty(

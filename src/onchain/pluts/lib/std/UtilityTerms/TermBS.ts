@@ -117,7 +117,7 @@ export function addPByteStringMethods( term: Term<PByteString> ): TermBS
         ( other: PappArg<PByteString>): TermBS => pappendBs.$( term ).$( other )
     );
 
-    ObjectUtils.defineReadOnlyProperty(
+    ObjectUtils.definePropertyIfNotPresent(
         term,
         "prependTerm",
         {
@@ -187,7 +187,7 @@ export function addPByteStringMethods( term: Term<PByteString> ): TermBS
         ( other: PappArg<PByteString> ): TermBool => peqBs.$( term ).$( other )
     );
 
-    ObjectUtils.defineReadOnlyProperty(
+    ObjectUtils.definePropertyIfNotPresent(
         term,
         "ltTerm",
         {

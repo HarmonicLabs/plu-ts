@@ -1,6 +1,6 @@
 import { DataConstr } from "../../../../../../types/Data";
 import { PType } from "../../../../PType";
-import { PData } from "../../../../PTypes";
+import { PAsData, PData } from "../../../../PTypes";
 import { TermFn } from "../../../../PTypes/PFn/PFn";
 import { Term } from "../../../../Term";
 import { PairT, asData, bool, list, pair, termTypeToString, tyVar, unit } from "../../../../type_system";
@@ -45,7 +45,7 @@ const pPairToData = ( fstT: TermType, sndT: TermType ) =>
         )) as any )
     )
 
-export function toData<T extends TermType>( t: T ): ( term: Term<ToPType<T>> ) => Term<PData>
+export function toData<T extends TermType>( t: T ): ( term: Term<ToPType<T>> ) => Term<PAsData<ToPType<T>>>
 {
     if( isTaggedAsAlias( t ) ) return toData( unwrapAlias( t as any ) ) as any;
     if( typeExtends( t, data ) ) 
@@ -162,7 +162,7 @@ function pid<T extends TermType, TT extends TermType>( fromT: T, toT: TT ): Term
     ) as any;
 }
 
-export function ptoData<T extends TermType>( t: T ): TermFn<[ ToPType<T> ], PData>
+export function ptoData<T extends TermType>( t: T ): TermFn<[ ToPType<T> ], PAsData<ToPType<T>>>
 {
     if( isTaggedAsAlias( t ) ) return toData( unwrapAlias( t as any ) ) as any;
     if( typeExtends( t, data ) ) 

@@ -31,7 +31,6 @@ export const pappendStr: StrBinOPToStr = (() => {
         "$",
         ( fstIn: Term<PString> ): Term<PLam<PString, PString>> => {
             const oneIn =
-                // @ts-ingore Type instantiation is excessively deep and possibly infinite.
                 papp( op, fstIn );
 
             return ObjectUtils.defineReadOnlyProperty(

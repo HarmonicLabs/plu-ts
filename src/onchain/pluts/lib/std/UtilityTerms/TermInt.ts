@@ -58,7 +58,7 @@ const getterOnly = {
 export function addPIntMethods( term: Term<PInt> )
     : TermInt
 {
-    ObjectUtils.defineReadOnlyProperty(
+    ObjectUtils.definePropertyIfNotPresent(
         term,
         "addTerm",
         {
@@ -72,7 +72,7 @@ export function addPIntMethods( term: Term<PInt> )
         ( other: PappArg<PInt> ): TermInt => padd.$( term ).$( other )
     );
 
-    ObjectUtils.defineReadOnlyProperty(
+    ObjectUtils.definePropertyIfNotPresent(
         term,
         "subTerm",
         {
@@ -86,7 +86,7 @@ export function addPIntMethods( term: Term<PInt> )
         ( other: PappArg<PInt> ): TermInt => psub.$( term ).$( other )
     );
 
-    ObjectUtils.defineReadOnlyProperty(
+    ObjectUtils.definePropertyIfNotPresent(
         term,
         "multTerm",
         {
@@ -100,7 +100,7 @@ export function addPIntMethods( term: Term<PInt> )
         ( other: PappArg<PInt> ): TermInt => pmult.$( term ).$( other )
     );
 
-    ObjectUtils.defineReadOnlyProperty(
+    ObjectUtils.definePropertyIfNotPresent(
         term,
         "divTerm",
         {
@@ -114,7 +114,7 @@ export function addPIntMethods( term: Term<PInt> )
         ( other: PappArg<PInt> ): TermInt => pdiv.$( term ).$( other )
     );
 
-    ObjectUtils.defineReadOnlyProperty(
+    ObjectUtils.definePropertyIfNotPresent(
         term,
         "quotTerm",
         {
@@ -128,7 +128,7 @@ export function addPIntMethods( term: Term<PInt> )
         ( other: PappArg<PInt> ): TermInt => pquot.$( term ).$( other )
     );
 
-    ObjectUtils.defineReadOnlyProperty(
+    ObjectUtils.definePropertyIfNotPresent(
         term,
         "remainderTerm",
         {
@@ -142,7 +142,7 @@ export function addPIntMethods( term: Term<PInt> )
         ( other: PappArg<PInt> ): TermInt => prem.$( term ).$( other )
     );
 
-    ObjectUtils.defineReadOnlyProperty(
+    ObjectUtils.definePropertyIfNotPresent(
         term,
         "modTerm",
         {
@@ -157,7 +157,7 @@ export function addPIntMethods( term: Term<PInt> )
     );
 
 
-    ObjectUtils.defineReadOnlyProperty(
+    ObjectUtils.definePropertyIfNotPresent(
         term,
         "eqTerm",
         {
@@ -171,7 +171,7 @@ export function addPIntMethods( term: Term<PInt> )
         ( other: PappArg<PInt> ): TermBool => peqInt.$( term ).$( other )
     );
 
-    ObjectUtils.defineReadOnlyProperty(
+    ObjectUtils.definePropertyIfNotPresent(
         term,
         "ltTerm",
         {
@@ -185,7 +185,7 @@ export function addPIntMethods( term: Term<PInt> )
         ( other: PappArg<PInt> ): TermBool => plessInt.$( term ).$( other )
     );
 
-    ObjectUtils.defineReadOnlyProperty(
+    ObjectUtils.definePropertyIfNotPresent(
         term,
         "ltEqTerm",
         {
@@ -199,7 +199,7 @@ export function addPIntMethods( term: Term<PInt> )
         ( other: PappArg<PInt> ): TermBool => plessEqInt.$( term ).$( other )
     );
 
-    ObjectUtils.defineReadOnlyProperty(
+    ObjectUtils.definePropertyIfNotPresent(
         term,
         "gtTerm",
         {
@@ -213,7 +213,7 @@ export function addPIntMethods( term: Term<PInt> )
         ( other: PappArg<PInt> ): TermBool => plessInt.$( other ).$( term )
     );
 
-    ObjectUtils.defineReadOnlyProperty(
+    ObjectUtils.definePropertyIfNotPresent(
         term,
         "gtEqTerm",
         {

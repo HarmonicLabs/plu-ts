@@ -1,10 +1,10 @@
 import { DataConstr } from "../../../../../../types/Data";
 import { Builtin } from "../../../../../UPLC/UPLCTerms/Builtin";
 import { PType } from "../../../../PType";
-import { PByteString, PData, PInt, PLam, PString } from "../../../../PTypes";
+import { PAsData, PByteString, PData, PInt, PLam, PString } from "../../../../PTypes";
 import { TermFn } from "../../../../PTypes/PFn/PFn";
 import { Term } from "../../../../Term";
-import { TermType, bs, data, fn, int, str, PairT, asData, bool, lam, list, pair, tyVar, unit, termTypeToString } from "../../../../type_system";
+import { TermType, bs, data, fn, int, str, PairT, asData, bool, lam, list, pair, tyVar, unit, termTypeToString, PrimType } from "../../../../type_system";
 import { isTaggedAsAlias } from "../../../../type_system/kinds/isTaggedAsAlias";
 import { ToPType } from "../../../../type_system/ts-pluts-conversion";
 import { typeExtends } from "../../../../type_system/typeExtends";
@@ -17,7 +17,9 @@ import { pBoolToData } from "../../bool/pBoolToData";
 import { pList, pmap } from "../../list";
 import { pData } from "../pData";
 import { _papp, _pcompose } from "./minimal_common";
-import { getElemsT, getFstT, getSndT } from "../../../../type_system/tyArgs";
+import { getElemsT, getFstT, getSndT, unwrapAsData } from "../../../../type_system/tyArgs";
+import { pfstPair, psndPair } from "../../../builtins";
+import { _punsafeConvertType } from "../../../punsafeConvertType/minimal";
 
 const pIntToData  =new Term<PLam<PInt, PData>>(
     lam( int, asData( int ) ) as any,
@@ -74,15 +76,30 @@ const pPairToData = ( fstT: TermType, sndT: TermType ) =>
             pair( fstT, sndT ),
             asData( pair( fstT, sndT ) )
         )
-        ( _pair => (
-            _papp(
-                pListToData as any,
-                pList( data )([
-                    toData_minimal( fstT )( _pair.fst ),
-                    toData_minimal( sndT )( _pair.snd )
-                ])
-            ) as any
-        )) as any
+        ( _pair => {
+
+            const _fstData = fstT[0] === PrimType.AsData ?
+                pfstPair( data, data ).$( _punsafeConvertType( _pair, pair( data, data ) ) as any ) : 
+                toData_minimal( fstT )( _pair.fst );
+
+            const _sndData = sndT[0] === PrimType.AsData ?
+                psndPair( data, data ).$( _punsafeConvertType( _pair, pair( data, data ) ) as any ) : 
+                toData_minimal( sndT )( _pair.snd );
+
+
+            console.log( fstT, _fstData.type );
+            console.log( sndT, _sndData.type );
+            
+            return (
+                _papp(
+                    pListToData as any,
+                    pList( data )([
+                        _fstData,
+                        _sndData
+                    ])
+                ) as any
+            )
+        })
     );
 
 export function toData_minimal<T extends TermType>( t: T ): ( term: Term<ToPType<T>> ) => Term<PData>
@@ -207,7 +224,7 @@ function pid<T extends TermType, TT extends TermType>( fromT: T, toT: TT ): Term
     ) as any;
 }
 
-function ptoData_minimal<T extends TermType>( t: T ): Term<PLam<ToPType<T>, PData>>
+export function ptoData_minimal<T extends TermType>( t: T ): Term<PLam<ToPType<T>, PAsData<ToPType<T>>>>
 {
     if( isTaggedAsAlias( t ) ) return toData_minimal( unwrapAlias( t as any ) ) as any;
     if( typeExtends( t, data ) ) 

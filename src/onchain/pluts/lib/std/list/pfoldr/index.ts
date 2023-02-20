@@ -5,7 +5,7 @@ import { pdelay } from "../../../pdelay";
 import { pfn } from "../../../pfn";
 import { phoist } from "../../../phoist";
 import { plam } from "../../../plam";
-import { precursiveList } from "../precursiveList/index.ts";
+import { precursiveList } from "../precursiveList/index";
 
 export function pfoldr<ElemsT extends TermType, ResultT extends TermType>( elemsT: ElemsT, resultT: ResultT )
 : TermFn<[

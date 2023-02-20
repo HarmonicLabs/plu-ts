@@ -41,7 +41,6 @@ function byteStrBinOpToBS( builtin: Builtin )
         "$",
         ( fstIn: Term<PByteString> ): Term<PLam<PByteString, PByteString>> => {
             const oneIn =
-                // @ts-ignore Type instantiation is excessively deep and possibly infinite
                 papp( op, fstIn );
 
             return ObjectUtils.defineReadOnlyProperty(

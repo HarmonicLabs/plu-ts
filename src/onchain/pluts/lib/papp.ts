@@ -1,6 +1,6 @@
 import JsRuntime from "../../../utils/JsRuntime";
 import ObjectUtils from "../../../utils/ObjectUtils";
-import { UPLCTerm, showUPLC } from "../../UPLC/UPLCTerm";
+import { UPLCTerm } from "../../UPLC/UPLCTerm";
 import { Application } from "../../UPLC/UPLCTerms/Application";
 import { ErrorUPLC } from "../../UPLC/UPLCTerms/ErrorUPLC";
 import { HoistedUPLC } from "../../UPLC/UPLCTerms/HoistedUPLC";
@@ -10,15 +10,12 @@ import { PType } from "../PType";
 import { PLam } from "../PTypes";
 import { Term } from "../Term";
 import { typeExtends } from "../type_system/typeExtends";
-import { PrimType, TermType, data, lam, list, pair, tyVar } from "../type_system/types";
+import { PrimType, TermType, data } from "../type_system/types";
 import { termTypeToString } from "../type_system/utils";
 import { type UtilityTermOf, addUtilityForType } from "./addUtilityForType";
 import { PappArg, pappArgToTerm } from "./pappArg";
-import { fromData_minimal, pfromData_minimal } from "./std/data/conversion/fromData_minimal";
-import { getElemsT } from "../type_system/tyArgs";
+import { fromData_minimal } from "./std/data/conversion/fromData_minimal";
 import { _papp } from "./std/data/conversion/minimal_common";
-import { _pmap } from "./std/list/pmap/minimal";
-import { plam } from "./plam";
 
 
 function isIdentityUPLC( uplc: UPLCTerm ): boolean
@@ -79,7 +76,7 @@ export function papp<Input extends PType, Output extends PType>( a: Term<PLam<In
     if( b instanceof Term )
     {
         // unwrap 'asData' if is the case
-        b = unwrapDataIfNeeded( b, lambdaType[1] );
+       //  b = unwrapDataIfNeeded( b, lambdaType[1] );
 
         JsRuntime.assert(
             typeExtends( b.type, lambdaType[ 1 ] ),

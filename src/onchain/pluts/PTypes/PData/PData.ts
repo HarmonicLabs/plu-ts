@@ -14,3 +14,17 @@ export class PData extends PType
         this._data = data;
     }
 }
+
+export class PAsData<PT extends PType> extends PData
+{
+    protected _pty: PT
+
+    get pty(): PT { return this._pty; }
+
+    constructor( pty: PT, data: Data = new DataConstr( 0, [] ) )
+    {
+        super( data );
+
+        this._pty = pty;
+    }
+}

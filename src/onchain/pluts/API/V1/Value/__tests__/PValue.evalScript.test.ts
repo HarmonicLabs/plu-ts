@@ -1,12 +1,11 @@
-import { DataI } from "../../../../../../types/Data/DataI";
 import { Machine } from "../../../../../CEK";
+import { UPLCEncoder } from "../../../../../UPLC/UPLCEncoder";
+import { UPLCProgram } from "../../../../../UPLC/UPLCProgram";
 import { showUPLC } from "../../../../../UPLC/UPLCTerm";
 import { UPLCConst } from "../../../../../UPLC/UPLCTerms/UPLCConst";
-import { PData, PInt, pmatch } from "../../../../PTypes";
-import { Term } from "../../../../Term";
-import { PMaybe, pBool, pByteString, pData, pDataI, pInt, pPair, pdelay, pfn, phoist, pif, precursiveList, toData } from "../../../../lib";
+import { pmatch } from "../../../../PTypes/PStruct/pmatch";
+import { PMaybe, pBool, pByteString, pInt, pPair, pdelay, pfn, phoist, pif, precursiveList, toData } from "../../../../lib";
 import { pList } from "../../../../lib/std/list/const";
-import { termTypeToString } from "../../../../type_system";
 import { asData, bs, fn, int, list } from "../../../../type_system/types";
 import { PCurrencySymbol } from "../PCurrencySymbol";
 import { PTokenName } from "../PTokenName";
@@ -64,7 +63,7 @@ describe("Machine.evalSimple( PValue )", () => {
     test("value in maybe", () => {
 
         const { result } = Machine.eval(
-            PMaybe( PValue.type ).Just({ val: oneEntryValue })
+            PMaybe( PValue.type ).Just({ val: toData( PValue.type )( oneEntryValue ) })
         );
         
         expect(
@@ -74,12 +73,13 @@ describe("Machine.evalSimple( PValue )", () => {
     })
 
 });
+
 const pvalueOf = phoist(
     pfn([
         PValue.type,
         bs,
         bs
-    ],  asData( int ))
+    ],  int)
     (( value, currSym, tokenName ) =>
         pmatch(
             value.find( entry => 
@@ -96,9 +96,9 @@ const pvalueOf = phoist(
             .onJust( _ => _.extract("val").in(({ val: entry }) =>
                 entry.snd 
             ))
-            .onNothing( _ => pDataI( 0 ) as any )
+            .onNothing( _ => pInt( 0 ) )
         ))
-        .onNothing( _ => pDataI( 0 ) as any )
+        .onNothing( _ => pInt( 0 ) )
     )
 );
 
@@ -148,7 +148,7 @@ describe("pvalueOf", () => {
 
     test("non exsistent coin", () => {
 
-        const expected = Machine.evalSimple( pDataI(0) );
+        const expected = Machine.evalSimple( pInt(0) );
         const { result: received, budgetSpent: exBudget } = Machine.eval( pvalueOf.$( oneEntryValue ).$("").$("") );
         const _expected = Machine.evalSimple( pInt(0) );
         const { result: _received, budgetSpent } = Machine.eval( pvalueOfBetter.$( oneEntryValue ).$("" as any).$("" as any) );
@@ -163,7 +163,7 @@ describe("pvalueOf", () => {
 
     test("policy present but not token", () => {
 
-        const expected = Machine.evalSimple( pDataI(0) );
+        const expected = Machine.evalSimple( pInt(0) );
         const received = Machine.evalSimple( pvalueOf.$( oneEntryValue ).$( currSym as any ).$("abc") );
 
         expect(
@@ -178,8 +178,15 @@ describe("pvalueOf", () => {
 
         const term = pvalueOf.$( oneEntryValue ).$( currSym as any ).$( tn as any );
 
-        const expected = Machine.evalSimple( pDataI( 1_000_000 ) );
-        const received = Machine.evalSimple( term );
+        const uplc = term.toUPLC(0);
+
+        const expected = Machine.evalSimple( pInt( 1_000_000 ) );
+        const received = Machine.evalSimple( uplc );
+        
+        const compiled = UPLCEncoder.compile( new UPLCProgram([1,0,0], uplc.clone() ) ).toBuffer().buffer;
+        console.log( showUPLC( uplc ) );
+        console.log( compiled.toString("hex") );
+        console.log( compiled.length );
 
         expect(
             received
@@ -190,9 +197,8 @@ describe("pvalueOf", () => {
         expect(
             term.type
         )
-        .toEqual( asData( int ) )
+        .toEqual( int )
 
-        // `asData( int )` threadted as `int`
         expect(
             Machine.evalSimple(
                 pInt(1_000_000).eq( term as any )

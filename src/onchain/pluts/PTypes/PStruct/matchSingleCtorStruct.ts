@@ -1,4 +1,5 @@
-import { psndPair, punConstrData } from "../../lib/builtins";
+import { punConstrData } from "../../lib/builtins/data";
+import { psndPair } from "../../lib/builtins/pair";
 import { papp } from "../../lib/papp";
 import { pfn } from "../../lib/pfn";
 import { phoist } from "../../lib/phoist";

@@ -5,7 +5,7 @@ import { HoistedUPLC } from "../../../../UPLC/UPLCTerms/HoistedUPLC";
 import { genHoistedSourceUID } from "../../../../UPLC/UPLCTerms/HoistedUPLC/HoistedSourceUID/genHoistedSourceUID";
 import { UPLCConst } from "../../../../UPLC/UPLCTerms/UPLCConst";
 import { PType } from "../../../PType";
-import { TermFn, PData, PLam, PInt, PList, PPair, PByteString, PBool } from "../../../PTypes";
+import { TermFn, PData, PLam, PInt, PList, PPair, PByteString, PBool, PAsData } from "../../../PTypes";
 import { Term } from "../../../Term";
 import { TermType, ToPType, fn, data, delayed, int, list, lam, pair, asData, bs, bool } from "../../../type_system";
 import { UtilityTermOf } from "../../addUtilityForType";
@@ -228,18 +228,18 @@ export const pListToData: TermFn<[ PList<PData> ], PData>
         )
     );
 
-export const pIntToData: TermFn<[ PInt ], PData> 
-    = addApplications<[ PInt ], PData>(
-        new Term<PLam<PInt, PData>>(
-            lam( int, asData( int ) ) as any,
+export const pIntToData: TermFn<[ PInt ], PAsData<PInt>> 
+    = addApplications<[ PInt ], PAsData<PInt>>(
+        new Term<PLam<PInt, PAsData<PInt>>>(
+            lam( int, asData( int ) ),
             _dbn => Builtin.iData
         )
     );
 
-export const pBSToData: TermFn<[ PByteString ], PData> 
-    = addApplications<[ PByteString ], PData>(
-        new Term<PLam<PByteString, PData>>(
-            lam( bs, asData( bs ) ) as any,
+export const pBSToData: TermFn<[ PByteString ], PAsData<PByteString>> 
+    = addApplications<[ PByteString ], PAsData<PByteString>>(
+        new Term<PLam<PByteString, PAsData<PByteString>>>(
+            lam( bs, asData( bs ) ),
             _dbn => Builtin.bData
         )
     );

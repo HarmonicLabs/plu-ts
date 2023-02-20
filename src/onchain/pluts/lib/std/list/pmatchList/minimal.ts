@@ -1,11 +1,12 @@
 import { PType } from "../../../../PType";
 import { TermFn, PLam, PList, PDelayed } from "../../../../PTypes";
-import { TermType, ToPType, fn, list, delayed } from "../../../../type_system";
+import { TermType, ToPType, fn, list, delayed, data } from "../../../../type_system";
 import { _phead, _pstrictChooseList, _ptail } from "../../../builtins/list/minimal";
 import { pdelay } from "../../../pdelay";
 import { pfn } from "../../../pfn";
 import { _pforce } from "../../../pforce/minimal";
 import { phoist } from "../../../phoist";
+import { _punsafeConvertType } from "../../../punsafeConvertType/minimal";
 import { _papp } from "../../data/conversion/minimal_common";
 
 
@@ -20,13 +21,13 @@ return phoist(
         ], 
         returnT 
     )
-    ( ( matchNil, matchCons, list ) =>
+    ( ( matchNil, matchCons, lst ) =>
         _pforce(
             _papp(
                 _papp(
                     _papp(
-                        _pstrictChooseList( elemsT, delayed( returnT ) ),
-                        list
+                        _pstrictChooseList( data, delayed( returnT ) ),
+                        _punsafeConvertType( lst, list( data ) )
                     ),
                     matchNil
                 ),
@@ -36,12 +37,12 @@ return phoist(
                             matchCons,
                             _papp(
                                 _phead( elemsT ),
-                                list
+                                lst
                             )
                         ),
                         _papp(
                             _ptail( elemsT ),
-                            list
+                            lst
                         )
                     )
                 )

@@ -2,7 +2,7 @@ import { UPLCConst } from "../../../../UPLC/UPLCTerms/UPLCConst";
 import type { PBool } from "../../../PTypes/PBool";
 import { Term } from "../../../Term";
 import { bool } from "../../../type_system";
-import { TermBool, addPBoolMethods } from "../UtilityTerms";
+import { TermBool, addPBoolMethods } from "../UtilityTerms/TermBool";
 
 export function pBool( b: boolean ): TermBool
 {

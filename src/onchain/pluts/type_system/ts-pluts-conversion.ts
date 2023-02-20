@@ -1,5 +1,5 @@
 import { PType } from "../PType";
-import { PInt, PByteString, PString, PUnit, PBool, PList, PPair, PDelayed, PLam, PAlias, PStruct, PData } from "../PTypes";
+import { PInt, PByteString, PString, PUnit, PBool, PList, PPair, PDelayed, PLam, PAlias, PStruct, PData, PAsData } from "../PTypes";
 import { AliasT, GenericTermType, PrimType, StructDefinition, TermType, data, fn } from "./types";
 
 
@@ -11,9 +11,8 @@ T extends [ PrimType.Lambda, infer InputTyArg extends TermType, infer OutputTyAr
     PLam<ToPType<InputTyArg>, ToPType<OutputTyArg>> :
 T extends [ PrimType.Struct, infer SDef extends StructDefinition ]  ? PStruct<SDef> :
 T extends [ PrimType.Alias, infer T extends TermType ]  ? PAlias<T> :
-// asData elements should be assignable to normal elements
-// coversion habdled in application (`papp`())
-T extends [ PrimType.AsData, infer ExpectedT extends TermType ] ? ToPType<ExpectedT> | PData :
+// asData elements should NOT be assignable to normal elements
+T extends [ PrimType.AsData, infer ExpectedT extends TermType ] ? PAsData<ToPType<ExpectedT>> :
 T extends [ PrimType.Int ]   ? PInt :
 T extends [ PrimType.BS ]    ? PByteString :
 T extends [ PrimType.Str ]   ? PString :
@@ -30,6 +29,8 @@ PT extends PByteString  ? [ PrimType.BS  ] :
 PT extends PString      ? [ PrimType.Str ] :
 PT extends PUnit        ? [ PrimType.Unit ] :
 PT extends PBool        ? [ PrimType.Bool ] :
+// PAsData MUST preceed PData, since every PAsData extends PData
+PT extends PAsData<infer PExpected extends PType> ? [ PrimType.AsData, FromPType<PExpected> ] :
 PT extends PData        ? [ PrimType.Data ] :
 PT extends PList<infer TyArg extends PType> ? [ PrimType.List, FromPType<TyArg> ] :
 PT extends PPair<infer FstTyArg extends PType, infer SndTyArg extends PType> ?
