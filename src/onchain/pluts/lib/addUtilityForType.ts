@@ -54,7 +54,6 @@ export type UtilityTermOf<PElem extends PType> =
 export function addUtilityForType<T extends TermType>( t: T )
     : ( term: Term<ToPType<T>> ) => UtilityTermOf<ToPType<T>>
 {
-    if( t[0] === PrimType.AsData ) return addUtilityForType( t[1] as any ) as any;
     if( isTaggedAsAlias( t ) ) return addUtilityForType( unwrapAlias( t as any ) ) as any;
 
     if( typeExtends( t , bool ) ) return addPBoolMethods as any;
@@ -79,5 +78,6 @@ export function addUtilityForType<T extends TermType>( t: T )
         return addPStructMethods as any;
     }
 
+    // no utility
     return ((x: any) => x) as any;
 }

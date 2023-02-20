@@ -2,11 +2,11 @@ import JsRuntime from "../../../../utils/JsRuntime";
 import ObjectUtils from "../../../../utils/ObjectUtils";
 
 import type { TermFn } from "../PFn";
-import type { PAsData, PData } from "../PData/PData";
+import { PAsData, PData } from "../PData/PData";
 import { PDataRepresentable } from "../../PType/PDataRepresentable";
 import { UtilityTermOf, addUtilityForType } from "../../lib/addUtilityForType";
 
-import { ctorDefToString, structDefToString, termTypeToString } from "../../type_system/utils";
+import { structDefToString, termTypeToString } from "../../type_system/utils";
 import { HoistedUPLC } from "../../../UPLC/UPLCTerms/HoistedUPLC";
 import { Pair } from "../../../../types/structs/Pair";
 import { UPLCConst } from "../../../UPLC/UPLCTerms/UPLCConst";
@@ -15,13 +15,12 @@ import { Builtin } from "../../../UPLC/UPLCTerms/Builtin";
 import { showUPLC } from "../../../UPLC/UPLCTerm";
 import { Machine } from "../../../CEK";
 import { pList } from "../../lib/std/list/const";
-import { Data, DataConstr } from "../../../../types/Data";
-import { AliasT, GenericStructCtorDef, GenericStructDefinition, GenericTermType, PrimType, StructCtorDef, StructDefinition, StructT, TermType, alias, data, int, struct, tyVar, unit } from "../../type_system/types";
+import { Data, DataConstr, isData } from "../../../../types/Data";
+import { AliasT, GenericStructCtorDef, GenericStructDefinition, GenericTermType, PrimType, StructCtorDef, StructDefinition, StructT, TermType, alias, asData, data, int, struct, tyVar, unit } from "../../type_system/types";
 import { ToPType } from "../../type_system/ts-pluts-conversion";
 import { typeExtends, isStructDefinition, isStructType, isTaggedAsAlias } from "../../type_system";
 import { Term } from "../../Term";
 import { punsafeConvertType } from "../../lib/punsafeConvertType";
-import { toData_minimal } from "../../lib/std/data/conversion/toData_minimal";
 import { HoistedSourceUID } from "../../../UPLC/UPLCTerms/HoistedUPLC/HoistedSourceUID";
 import { genHoistedSourceUID } from "../../../UPLC/UPLCTerms/HoistedUPLC/HoistedSourceUID/genHoistedSourceUID";
 import { TermStruct } from "../../lib/std/UtilityTerms/TermStruct";
@@ -29,7 +28,7 @@ import { TermStruct } from "../../lib/std/UtilityTerms/TermStruct";
 /**
  * intermediate class useful to reconize structs form primitives
  */
-class _PStruct extends PDataRepresentable
+class _PStruct extends PData
 {
     protected constructor()
     {
@@ -167,7 +166,7 @@ function isStructInstanceOfDefinition<SCtorDef extends StructCtorDef>
             structInstance[fieldKey] instanceof Term /*thisCtorDef[fieldKey]*/ &&
             typeExtends(
                 structInstance[fieldKey].type,
-                definition[fieldKey]
+                asData( definition[fieldKey] )
             )
         )
     );
@@ -313,13 +312,15 @@ export function pstruct<StructDef extends StructDefinition>( def: StructDef ): P
                                     i,
                                     ctorDefFieldsNames.map<Data>(
                                         fieldKey => {
-                                            const _term = toData_minimal( thisCtorDef[ fieldKey ] )
-                                            ( jsStruct[ fieldKey ] );
+
+                                            const _term = jsStruct[ fieldKey ];
+                                            // toData_minimal( thisCtorDef[ fieldKey ] )
+                                            // ( jsStruct[ fieldKey ] );
                                             const res = (Machine.evalSimple(
                                                 _term
-                                            ) as any);
+                                            ));
 
-                                            if(!(res instanceof UPLCConst))
+                                            if(!(res instanceof UPLCConst && isData( res.value ) ))
                                             {
                                                 console.log("--------------------------------");
                                                 console.log( ctorDefFieldsNames );
@@ -352,7 +353,8 @@ export function pstruct<StructDef extends StructDefinition>( def: StructDef ): P
                                 pList( data )(
                                     ctorDefFieldsNames.map<Term<any>>(
                                         fieldKey => {
-                                            const res = toData_minimal( thisCtorDef[ fieldKey ] )( jsStruct[ fieldKey ] );
+                                            const res = jsStruct[ fieldKey ];
+                                            // toData_minimal( thisCtorDef[ fieldKey ] )( jsStruct[ fieldKey ] );
 
                                             return res;
                                         }

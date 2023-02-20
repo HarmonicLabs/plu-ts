@@ -131,6 +131,11 @@ export const pair       =
     ( fst: FstT, snd: SndT ): [ PrimType.Pair, FstT, SndT ] => 
         Object.freeze([ PrimType.Pair, fst, snd ]) as any ;
 
+export const map        = 
+    <FstT extends GenericTermType, SndT extends GenericTermType>
+    ( fst: FstT, snd: SndT ): [ PrimType.Pair, FstT, SndT ] => 
+        list( pair( fst, snd ) ) as any ;
+            
 export const lam        = 
     <InT extends GenericTermType, OutT extends GenericTermType>
     ( input: InT, output: OutT ): LamT< InT, OutT > =>

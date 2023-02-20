@@ -1,16 +1,30 @@
 import { DataConstr } from "../../../../../types/Data/DataConstr";
-import { bool, data } from "../../../type_system/types";
+import { asData, bool } from "../../../type_system/types";
 import { pif } from "../../builtins";
 import { phoist } from "../../phoist";
 import { plam } from "../../plam";
+import { _punsafeConvertType } from "../../punsafeConvertType/minimal";
 import { pData } from "../data/pData";
 
 export const pBoolToData = phoist(
-    plam( bool, data )
+    plam( bool, asData( bool ) )
     ( b =>
-        pif( data ).$( b )
-        // 'pnilData' is an hoisted term; no need to 'plet'
-        .then( pData(new DataConstr( 0, [] ) ) )
-        .else( pData(new DataConstr( 1, [] ) ) )
+        pif( asData( bool ) ).$( b )
+        .then(
+            _punsafeConvertType(
+                pData(
+                    new DataConstr( 0, [] )
+                ),
+                asData( bool )
+            )
+        )
+        .else(
+            _punsafeConvertType(
+                pData(
+                    new DataConstr( 1, [] )
+                ),
+                asData( bool )
+            )
+        )
     )
 );

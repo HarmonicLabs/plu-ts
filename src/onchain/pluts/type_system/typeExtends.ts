@@ -142,20 +142,21 @@ export function typeExtends( extending: GenericTermType, extended: GenericTermTy
         }
         if( b[0] === PrimType.AsData )
         {
-            if( a[0] === PrimType.Data ) return true;
-            if( a[0] === PrimType.AsData ) return unchecked( a[1], b[1] );
-
-            // check unwrapped asData
-            return unchecked( a, b[1] );
+            return (
+                (
+                    a[0] === PrimType.AsData &&
+                    unchecked( a[1], b[1] )
+                ) ||
+                a[0] === PrimType.Struct || 
+                a[0] === PrimType.Data
+            );
         }
         if( a[0] === PrimType.AsData )
         {
             // checked above
             // if( b[0] === PrimType.Data ) return true;
             // if( b[0] === PrimType.AsData ) return unchecked( a[1], b[1] );
-
-            // check unwrapped asData
-            return unchecked( a[1], b );
+            return b[0] === PrimType.Struct;
         }
 
         if( isGenericStructType( b ) ) return isStructType( a ) && structDefExtends( a[1], b[1] );

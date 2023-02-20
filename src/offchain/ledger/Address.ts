@@ -21,6 +21,7 @@ import { CborBytes } from "../../cbor/CborObj/CborBytes";
 import { Cbor } from "../../cbor/Cbor";
 import { ToJson } from "../../utils/ts/ToJson";
 import { InvalidCborFormatError } from "../../errors/InvalidCborFormatError";
+import { hexToBytes } from "../../crypto/utils/hexToBytes";
 
 export type AddressStr = `${"addr1"|"addr_test1"}${string}`;
 
@@ -171,8 +172,10 @@ export class Address
         );
     }
 
-    static fromBytes( bs: byte[] ): Address
+    static fromBytes( bs: byte[] | string ): Address
     {
+        bs = typeof bs === "string" ? hexToBytes( bs ) : bs;
+
         const [ header, ...payload ] = bs;
 
         const addrType = (header & 0b1111_0000) >> 4;
@@ -247,9 +250,13 @@ export class Address
         return Buffer.from( this.toBytes() )
     }
 
-    static fromBuffer( buff: Buffer ): Address
+    static fromBuffer( buff: Buffer | string ): Address
     {
-        return Address.fromBytes( Array.from( buff ) as any )
+        return Address.fromBytes(
+            typeof buff === "string" ?
+            buff : 
+            Array.from( buff ) as byte[]
+        )
     }
 
     toCborObj(): CborObj

@@ -11,9 +11,13 @@ import { TermType, fn, lam } from "../../../../type_system"
 
 export function _papp<Input extends PType, Output extends PType>( a: Term<PLam<Input,Output>>, b: Term<Input> ): Term<Output>
 {
-    if( b.toUPLC === undefined ) console.log( b, Error().stack );
+    const outT = a.type[2];
+    if( outT === undefined )
+    {
+        console.log( a.type );
+    }
     return new Term(
-        a.type[2] as TermType,
+        outT as any,
         dbn => new Application(
             a.toUPLC(dbn),
             b.toUPLC(dbn)

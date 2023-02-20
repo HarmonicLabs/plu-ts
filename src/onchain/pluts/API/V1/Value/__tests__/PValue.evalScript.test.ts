@@ -6,7 +6,7 @@ import { UPLCConst } from "../../../../../UPLC/UPLCTerms/UPLCConst";
 import { pmatch } from "../../../../PTypes/PStruct/pmatch";
 import { PMaybe, pBool, pByteString, pInt, pPair, pdelay, pfn, phoist, pif, precursiveList, toData } from "../../../../lib";
 import { pList } from "../../../../lib/std/list/const";
-import { asData, bs, fn, int, list } from "../../../../type_system/types";
+import { bs, fn, int, list } from "../../../../type_system/types";
 import { PCurrencySymbol } from "../PCurrencySymbol";
 import { PTokenName } from "../PTokenName";
 import { PAssetsEntryT, PValue, PValueEntryT } from "../PValue";
@@ -86,19 +86,20 @@ const pvalueOf = phoist(
                 entry.fst.eq( currSym )
             )
         )
-        .onJust( _ => _.extract("val").in( ({ val: policyEntry }) => 
-            
-            pmatch(
-                policyEntry.snd.find( assetEntry => 
-                    assetEntry.fst.eq( tokenName )
+        .onJust( _ => _.extract("val").in( ({ val: policyEntry }) => {
+
+            return pmatch(
+                    policyEntry.snd.find( assetEntry => 
+                        assetEntry.fst.eq( tokenName )
+                    )
                 )
-            )
-            .onJust( _ => _.extract("val").in(({ val: entry }) =>
-                entry.snd 
-            ))
-            .onNothing( _ => pInt( 0 ) )
-        ))
+                .onJust( _ => _.extract("val").in(({ val: entry }) =>
+                    entry.snd 
+                ))
+                .onNothing( _ => pInt( 0 ) );
+        }))
         .onNothing( _ => pInt( 0 ) )
+            
     )
 );
 

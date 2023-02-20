@@ -1,4 +1,3 @@
-import { UtilityTermOf } from "../../..";
 import { Builtin } from "../../../../../UPLC/UPLCTerms/Builtin";
 import { PType } from "../../../../PType";
 import { PByteString, PData, PLam, PString } from "../../../../PTypes";
@@ -19,6 +18,7 @@ import { pUnitFromData } from "../../unit";
 import { _papp, _pcompose } from "./minimal_common";
 import { getElemsT, getFstT, getSndT } from "../../../../type_system/tyArgs";
 import { _pmap } from "../../list/pmap/minimal";
+import { fromData } from "./fromData";
 
 const punBData = new Term<PLam<PData, PByteString>>(
     lam( data, bs ),
@@ -82,9 +82,14 @@ const pPairFromData =
         )
     );
 
-export function fromData_minimal<T extends TermType>( t: T ): ( term: Term<PData> ) => Term<ToPType<T>>
+/**
+ * @deprecated use `_fromData` instead
+ */
+export const fromData_minimal = _fromData;
+
+export function _fromData<T extends TermType>( t: T ): ( term: Term<PData> ) => Term<ToPType<T>>
 {
-    if( isTaggedAsAlias( t ) ) return fromData_minimal( unwrapAlias( t as any ) ) as any;
+    if( isTaggedAsAlias( t ) ) return _fromData( unwrapAlias( t as any ) ) as any;
 
     // unwrap asData before `t extends data`
     if( t[0] === PrimType.AsData ) t = t[1] as T;
@@ -93,17 +98,11 @@ export function fromData_minimal<T extends TermType>( t: T ): ( term: Term<PData
         return (( term: Term<PType> ) =>
             punsafeConvertType( term, t as any )) as any;
 
-    function applyToTerm( termFunc: Term<any> ): ( term: Term<PData> ) => UtilityTermOf<ToPType<T>>
+    function applyToTerm( termFunc: Term<any> ): ( term: Term<PData> ) => Term<ToPType<T>>
     {
         return ( term ) => _papp( termFunc, term ) as any;
     }
 
-    if( typeExtends( t, int ) )     return applyToTerm( punIData );
-    if( typeExtends( t, bs ) )      return applyToTerm( punBData );
-    if( typeExtends( t, str ) )     return applyToTerm( pStrFromData );
-    if( typeExtends( t, unit ) )    return applyToTerm( pUnitFromData );
-    if( typeExtends( t, bool ) )    return applyToTerm( pBoolFromData );
-    
     if(
         typeExtends(
             t, 
@@ -202,7 +201,7 @@ export function fromData_minimal<T extends TermType>( t: T ): ( term: Term<PData
         )
     };
 
-    return ((x: any) => punsafeConvertType( x, t ));
+    return applyToTerm( _pfromData( t ) );
 }
 
 function pid<T extends TermType, TT extends TermType>( fromT: T, toT: TT ): TermFn<[ ToPType<T> ], ToPType<TT>>
@@ -212,9 +211,14 @@ function pid<T extends TermType, TT extends TermType>( fromT: T, toT: TT ): Term
     ) as any;
 }
 
-export function pfromData_minimal<T extends TermType>( t: T ): TermFn<[ PData ], ToPType<T> >
+/**
+ * @deprecated use `_pfromData` instead
+ */
+export const pfromData_minimal = _pfromData; 
+
+export function _pfromData<T extends TermType>( t: T ): TermFn<[ PData ], ToPType<T> >
 {
-    if( isTaggedAsAlias( t ) ) return pfromData_minimal( unwrapAlias( t as any ) ) as any;
+    if( isTaggedAsAlias( t ) ) return _pfromData( unwrapAlias( t as any ) ) as any;
     if( typeExtends( t, data ) ) 
         return pid( data, t );
 
@@ -286,7 +290,7 @@ export function pfromData_minimal<T extends TermType>( t: T ): TermFn<[ PData ],
         return _papp(
             _papp(
                 _pcompose( data, list( data ) , t ) as any,
-                _pmap( data, elemsT ).$( pfromData_minimal(elemsT) )
+                _pmap( data, elemsT ).$( _pfromData(elemsT) )
             ) as any ,
             punListData
         ) as any
@@ -316,5 +320,5 @@ export function pfromData_minimal<T extends TermType>( t: T ): TermFn<[ PData ],
         ) as any;
     };
 
-    return ((x: any) => punsafeConvertType( x, data )) as any
+    return plam( data, t )( fromData( t ) ) as any
 }

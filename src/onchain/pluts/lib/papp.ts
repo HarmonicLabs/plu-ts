@@ -10,7 +10,7 @@ import { PType } from "../PType";
 import { PLam } from "../PTypes";
 import { Term } from "../Term";
 import { typeExtends } from "../type_system/typeExtends";
-import { PrimType, TermType, data } from "../type_system/types";
+import { PrimType, TermType, data, list, pair } from "../type_system/types";
 import { termTypeToString } from "../type_system/utils";
 import { type UtilityTermOf, addUtilityForType } from "./addUtilityForType";
 import { PappArg, pappArgToTerm } from "./pappArg";
@@ -76,13 +76,13 @@ export function papp<Input extends PType, Output extends PType>( a: Term<PLam<In
     if( b instanceof Term )
     {
         // unwrap 'asData' if is the case
-       //  b = unwrapDataIfNeeded( b, lambdaType[1] );
+        b = unwrapDataIfNeeded( b, lambdaType[1] );
 
         JsRuntime.assert(
             typeExtends( b.type, lambdaType[ 1 ] ),
-            "while applying 'Lambda'; unexpected type of input; it should be possible to assign the input to \"" + termTypeToString( lambdaType[1] ) +
-            "\"; received input was of type: \"" + termTypeToString( b.type ) + "\"" + 
-            "output would be of type: \"" + termTypeToString( a.type[2] as any ) + "\""
+            "while applying 'Lambda'; unexpected type of input;\n\nit should be possible to assign the input to \"" + termTypeToString( lambdaType[1] ) +
+            "\";\nreceived input was of type: \"" + termTypeToString( b.type ) + "\"" + 
+            "\n\noutput would be of type: \"" + termTypeToString( a.type[2] as any ) + "\""
         );
         _b = b as any;
     }

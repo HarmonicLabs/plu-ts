@@ -1,7 +1,7 @@
 import { DataConstr } from "../../../../../../types/Data";
 import { Builtin } from "../../../../../UPLC/UPLCTerms/Builtin";
 import { PType } from "../../../../PType";
-import { PAsData, PByteString, PData, PInt, PLam, PString } from "../../../../PTypes";
+import { PAsData, PByteString, PData, PInt, PLam, PList, PPair, PString } from "../../../../PTypes";
 import { TermFn } from "../../../../PTypes/PFn/PFn";
 import { Term } from "../../../../Term";
 import { TermType, bs, data, fn, int, str, PairT, asData, bool, lam, list, pair, tyVar, unit, termTypeToString, PrimType } from "../../../../type_system";
@@ -21,12 +21,12 @@ import { getElemsT, getFstT, getSndT, unwrapAsData } from "../../../../type_syst
 import { pfstPair, psndPair } from "../../../builtins";
 import { _punsafeConvertType } from "../../../punsafeConvertType/minimal";
 
-const pIntToData  =new Term<PLam<PInt, PData>>(
+const pIntToData  =new Term<PLam<PInt, PAsData<PInt>>>(
     lam( int, asData( int ) ) as any,
     _dbn => Builtin.iData
 );
 
-const pBSToData = new Term<PLam<PByteString, PData>>(
+const pBSToData = new Term<PLam<PByteString, PAsData<PByteString>>>(
     lam( bs, asData( bs ) ) as any,
     _dbn => Builtin.bData
 );
@@ -36,7 +36,7 @@ const pencodeUtf8  =new Term<PLam<PString, PByteString>>(
     _dbn => Builtin.encodeUtf8
 );
 
-const pStrToData =
+const pStrToData: Term<PLam<PString, PAsData<PString>>> =
     phoist(
         _papp(
             _papp(
@@ -48,16 +48,29 @@ const pStrToData =
     );
 
 const pUnitToData = phoist(
-    plam( unit, data )
-    ( _ => pData(new DataConstr(0,[])) )
+    plam( unit, asData( unit ) )
+    ( _ => _punsafeConvertType( 
+        pData( 
+            new DataConstr(0,[])
+        ), 
+        asData( unit )
+    ))
 );
 
-const pListToData = new Term(
-    lam( list( data ), data ),
+const pListToData = <ElT extends TermType>( elemsT: ElT ) => 
+new Term<PLam<PList<PData>, PAsData<PList<PAsData<ToPType<ElT>>>>>>(
+    lam( list( data ), asData( list( asData( elemsT ) ) ) ),
     _dbn => Builtin.listData
 );
 
-const pMapToData = ( fstT: TermType, sndT: TermType ) => new Term(
+const pMapToData = <A extends TermType, B extends TermType>( fstT: A, sndT: B ) =>
+new Term<PLam<
+    PList<PPair<PData,PData>>,
+    PAsData<PList<PPair<
+        PAsData<ToPType<A>>,
+        PAsData<ToPType<B>>
+    >>>
+>>(
     lam(
         list( pair( data, data ) ),
         asData( list( pair( asData( fstT ), asData( sndT ) ) ) )
@@ -65,8 +78,8 @@ const pMapToData = ( fstT: TermType, sndT: TermType ) => new Term(
     _dbn => Builtin.mapData
 );
 
-const ppairData = new Term(
-    fn([ data, data ], pair( data, data ) ),
+const ppairData = ( fstT: TermType, sndT: TermType ) => new Term(
+    fn([ data, data ], pair( fstT, sndT ) ),
     _dbn => Builtin.mkPairData
 );
 
@@ -80,19 +93,15 @@ const pPairToData = ( fstT: TermType, sndT: TermType ) =>
 
             const _fstData = fstT[0] === PrimType.AsData ?
                 pfstPair( data, data ).$( _punsafeConvertType( _pair, pair( data, data ) ) as any ) : 
-                toData_minimal( fstT )( _pair.fst );
+                _toData( fstT )( _pair.fst );
 
             const _sndData = sndT[0] === PrimType.AsData ?
                 psndPair( data, data ).$( _punsafeConvertType( _pair, pair( data, data ) ) as any ) : 
-                toData_minimal( sndT )( _pair.snd );
+                _toData( sndT )( _pair.snd );
 
-
-            console.log( fstT, _fstData.type );
-            console.log( sndT, _sndData.type );
-            
             return (
                 _papp(
-                    pListToData as any,
+                    pListToData( data ),
                     pList( data )([
                         _fstData,
                         _sndData
@@ -102,24 +111,22 @@ const pPairToData = ( fstT: TermType, sndT: TermType ) =>
         })
     );
 
-export function toData_minimal<T extends TermType>( t: T ): ( term: Term<ToPType<T>> ) => Term<PData>
+export function _toData<T extends TermType>( t: T ): ( term: Term<ToPType<T>> ) => Term<PAsData<ToPType<T>>>
 {
-    if( isTaggedAsAlias( t ) ) return toData_minimal( unwrapAlias( t as any ) ) as any;
+    if( isTaggedAsAlias( t ) ) return _toData( unwrapAlias( t as any ) ) as any;
     if( typeExtends( t, data ) ) 
         return (( term: Term<PType> ) =>
             punsafeConvertType( term, asData( t ) as any )) as any;
 
-    function applyToTerm( termFunc: Term<any> ): ( term: Term<ToPType<T>> ) => Term<PData>
+    function applyToTerm( termFunc: Term<PLam<ToPType<T>, PAsData<ToPType<T>>>> ): ( term: Term<ToPType<T>> ) => Term<PAsData<ToPType<T>>>
     {
-        return ( term ) => _papp( termFunc, term ) as any;
+        return ( term ) => 
+            _punsafeConvertType(
+                _papp( termFunc, term ),
+                asData( t )
+            );
     }
 
-    if( typeExtends( t, int ) )     return applyToTerm( pIntToData );
-    if( typeExtends( t, bs ) )      return applyToTerm( pBSToData );
-    if( typeExtends( t, str ) )     return applyToTerm( pStrToData );
-    if( typeExtends( t, unit ) )    return applyToTerm( pUnitToData );
-    if( typeExtends( t, bool ) )    return applyToTerm( pBoolToData );
-    
     if(
         typeExtends(
             t, 
@@ -134,7 +141,7 @@ export function toData_minimal<T extends TermType>( t: T ): ( term: Term<ToPType
         const elemsT = getElemsT( t ) as PairT<TermType,TermType>;
         const fstT = getFstT( elemsT );
         const sndT = getSndT( elemsT );
-        return applyToTerm( pMapToData( fstT, sndT ) );
+        return applyToTerm( pMapToData( fstT, sndT ) as any );
     }
 
     if(
@@ -160,10 +167,10 @@ export function toData_minimal<T extends TermType>( t: T ): ( term: Term<ToPType
                     ((_pair: any) =>
                         _papp(
                             _papp(
-                                ppairData as any,
-                                toData_minimal( fstT )( _pair.fst )
+                                ppairData( fstT, sndT ) as any,
+                                _toData( fstT )( _pair.fst )
                             ) as any,
-                            toData_minimal( sndT )( _pair.snd )
+                            _toData( sndT )( _pair.snd )
                         )
                     ) as any
                 )
@@ -177,7 +184,7 @@ export function toData_minimal<T extends TermType>( t: T ): ( term: Term<ToPType
             t,
             list( data )
         )
-    ) return applyToTerm( pListToData );
+    ) return applyToTerm( pListToData( getElemsT( t ) ) as any );
 
     if(
         typeExtends(
@@ -191,13 +198,22 @@ export function toData_minimal<T extends TermType>( t: T ): ( term: Term<ToPType
         const elemsT = getElemsT( t ) as PairT<TermType,TermType>;
         return (( term: Term<any> ) => {
             return _papp(
-                pListToData as any,
+                pListToData( asData( elemsT ) ),
                 pmap( elemsT, asData(elemsT) )
-                .$( ptoData_minimal( elemsT ) as any )
+                .$( _ptoData( elemsT ) )
                 .$( term )
             );
         }) as any;
     };
+
+    /*
+    // all the cases below are handled by `applyToTerm( _ptoData( t ) )`
+
+    if( typeExtends( t, int ) )     return applyToTerm( pIntToData );
+    if( typeExtends( t, bs ) )      return applyToTerm( pBSToData );
+    if( typeExtends( t, str ) )     return applyToTerm( pStrToData );
+    if( typeExtends( t, unit ) )    return applyToTerm( pUnitToData );
+    if( typeExtends( t, bool ) )    return applyToTerm( pBoolToData );
 
     if(
         typeExtends(
@@ -214,8 +230,15 @@ export function toData_minimal<T extends TermType>( t: T ): ( term: Term<ToPType
         return (( term: Term<any> ) => pPairToData( fstT, sndT ).$( term )) as any;
     };
 
-    return ((x: any) => punsafeConvertType( x, data )) as any
+    //*/
+
+    return applyToTerm( _ptoData( t ) );
 }
+
+/**
+ * @deprecated use `_toData` instead
+ */
+export const toData_minimal = _toData;
 
 function pid<T extends TermType, TT extends TermType>( fromT: T, toT: TT ): TermFn<[ ToPType<T> ], ToPType<TT>>
 {
@@ -224,18 +247,17 @@ function pid<T extends TermType, TT extends TermType>( fromT: T, toT: TT ): Term
     ) as any;
 }
 
-export function ptoData_minimal<T extends TermType>( t: T ): Term<PLam<ToPType<T>, PAsData<ToPType<T>>>>
+export function _ptoData<T extends TermType>( t: T ): Term<PLam<ToPType<T>, PAsData<ToPType<T>>>>
 {
-    if( isTaggedAsAlias( t ) ) return toData_minimal( unwrapAlias( t as any ) ) as any;
+    if( isTaggedAsAlias( t ) ) return _ptoData( unwrapAlias( t as any ) );
     if( typeExtends( t, data ) ) 
-        return pid( t, data );
+        return pid( t, asData( t ) );
 
-
-    if( typeExtends( t, int ) )     return pIntToData as any;
-    if( typeExtends( t, bs ) )      return pBSToData as any;
-    if( typeExtends( t, str ) )     return pStrToData as any;
-    if( typeExtends( t, unit ) )    return pUnitToData as any;
-    if( typeExtends( t, bool ) )    return pBoolToData as any;
+    if( typeExtends( t, int ) )     return pIntToData   as any;
+    if( typeExtends( t, bs ) )      return pBSToData    as any;
+    if( typeExtends( t, str ) )     return pStrToData   as any;
+    if( typeExtends( t, unit ) )    return pUnitToData  as any;
+    if( typeExtends( t, bool ) )    return pBoolToData  as any;
     
     if(
         typeExtends(
@@ -247,8 +269,15 @@ export function ptoData_minimal<T extends TermType>( t: T ): Term<PLam<ToPType<T
                 )
             )
         )
-    ) return pMapToData as any;
+    ){
+        const entryT = getElemsT( t );
+        const kT = getFstT( entryT );
+        const vT = getSndT( entryT );
+        return pMapToData( kT, vT ) as any;
+    };
 
+    /*
+    // handled in `_toData`
     if(
         typeExtends(
             t, 
@@ -264,7 +293,8 @@ export function ptoData_minimal<T extends TermType>( t: T ): Term<PLam<ToPType<T
         const elemsT = getElemsT( t ) as PairT<TermType,TermType>;
         const fstT = getFstT( elemsT );
         const sndT = getSndT( elemsT );
-        return plam( t, data )
+
+        return plam( t, asData( t ) )
         ((( term: any ) => {
             return _papp(
                 pMapToData( fstT, sndT ) as any,
@@ -273,10 +303,10 @@ export function ptoData_minimal<T extends TermType>( t: T ): Term<PLam<ToPType<T
                     ((_pair: any) =>
                         _papp(
                             _papp(
-                                ppairData as any,
-                                toData_minimal( fstT )( _pair.fst )
+                                ppairData( data, data ) as any,
+                                _toData( fstT )( _pair.fst )
                             ) as any,
-                            toData_minimal( sndT )( _pair.snd )
+                            _toData( sndT )( _pair.snd )
                         )
                     ) as any
                 )
@@ -284,14 +314,17 @@ export function ptoData_minimal<T extends TermType>( t: T ): Term<PLam<ToPType<T
             )
         }) as any)
     };
+    //*/
     
     if(
         typeExtends(
             t,
             list( data )
         )
-    ) return pListToData as any;
+    ) return pListToData( getElemsT( t ) ) as any;
 
+    /*
+    // handled in `_toData`
     if(
         typeExtends(
             t, 
@@ -302,16 +335,17 @@ export function ptoData_minimal<T extends TermType>( t: T ): Term<PLam<ToPType<T
     )
     {
         const elemsT = getElemsT( t ) as TermType;
-        return plam( t, data )
+        return plam( t, asData( t ) )
         ((( term: Term<any> ) => {
             return _papp(
-                pListToData as any,
+                pListToData( asData( elemsT ) ),
                 pmap( elemsT, asData( elemsT ) )
-                .$( ptoData_minimal( elemsT ) as any )
+                .$( _ptoData( elemsT ) )
                 .$( term )
             )
         }) as any);
     };
+    //*/
 
     if(
         typeExtends(
@@ -328,9 +362,10 @@ export function ptoData_minimal<T extends TermType>( t: T ): Term<PLam<ToPType<T
         return pPairToData( fstT, sndT ) as any;
     };
 
-    if(
-        typeExtends( t, data )
-    ) return ((x: any) => x) as any;
-
-    return ((x: any) => punsafeConvertType( x, data )) as any
+    return plam( t, asData( t ) )( _toData(t) );
 }
+
+/**
+ * @deprecated use `_ptoData` instead
+ */
+export const ptoData_minimal = _ptoData
