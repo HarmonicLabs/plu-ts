@@ -7,7 +7,7 @@ import { pfn } from "../../pfn";
 import { phoist } from "../../phoist";
 import { plam } from "../../plam";
 import { pBool } from "../bool/pBool";
-import { precursiveList } from "./precursiveList/index.ts";
+import { precursiveList } from "./precursiveList";
 
 
 
