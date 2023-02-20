@@ -2,7 +2,7 @@ import { pstruct } from "..";
 import { BitStream } from "../../../../../types/bits/BitStream";
 import { Machine } from "../../../../CEK/Machine";
 import { HoistedUPLC } from "../../../../UPLC/UPLCTerms/HoistedUPLC";
-import { pInt, phead, phoist, plam, pmakeUnit } from "../../../lib"
+import { pDataI, pInt, phead, phoist, plam, pmakeUnit, toData } from "../../../lib"
 import { data, list, unit, int } from "../../../type_system";
 import { getElemAtTerm, pmatch } from "../pmatch"
 
@@ -94,22 +94,24 @@ describe("getElemAtTerm", () => {
         }
     });
 
+    const unitAsData = toData( unit )( pmakeUnit() );
+
     const stuff = Struct3.Struct3({
-        j: pmakeUnit(),
-        k: pmakeUnit(),
-        l: pmakeUnit(),
+        j: unitAsData,
+        k: unitAsData,
+        l: unitAsData,
         m: Struct2.Struct2({
-            f: pmakeUnit(),
-            g: pmakeUnit(),
-            h: pmakeUnit(),
+            f: unitAsData,
+            g: unitAsData,
+            h: unitAsData,
             i: Struct1.Struct1({
-                a: pmakeUnit(),
-                b: pmakeUnit(),
-                c: pmakeUnit(),
-                d: pmakeUnit(),
-                e: pInt(42),
-            }),
-        })
+                b: unitAsData,
+                a: unitAsData,
+                c: unitAsData,
+                d: unitAsData,
+                e: pDataI(42),
+            }) as any,
+        }) as any
     })
 
     test("extract nested", () => {

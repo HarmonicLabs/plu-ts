@@ -5,6 +5,7 @@ import { Machine } from "../../../../CEK/Machine";
 import { UPLCConst } from "../../../../UPLC/UPLCTerms/UPLCConst";
 import { pInt } from "../../../lib/std/int/pInt";
 import { TermType, int, str } from "../../../type_system";
+import { pDataI } from "../../../lib";
 
 
 const PMaybe = <T extends TermType>( tyArg: T ) => {
@@ -28,7 +29,7 @@ describe("evaluated struct", () => {
 
             expect(
                 Machine.evalSimple(
-                    PMaybe( int ).Just({ value: pInt(2) })
+                    PMaybe( int ).Just({ value: pDataI(2) })
                 )
             ).toEqual(
                 UPLCConst.data(
@@ -40,7 +41,7 @@ describe("evaluated struct", () => {
 
             expect(
                 Machine.evalSimple(
-                    PMaybe( int ).Just({ value: pInt(2) })
+                    PMaybe( int ).Just({ value: pDataI(2) })
                 )
             ).toEqual(
                 UPLCConst.data(

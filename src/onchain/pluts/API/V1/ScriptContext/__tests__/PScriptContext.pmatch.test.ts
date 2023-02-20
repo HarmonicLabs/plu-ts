@@ -1,38 +1,15 @@
 import { Machine } from "../../../../../CEK";
 import { pmatch } from "../../../../PTypes/PStruct/pmatch";
-import { PAddress } from "../../Address/PAddress";
-import { PCredential } from "../../Address/PCredential";
-import { PStakingCredential } from "../../Address/PStakingCredential";
-import { PExtended } from "../../Interval/PExtended";
-import { PLowerBound } from "../../Interval/PLowerBound";
-import { PUpperBound } from "../../Interval/PUpperBound";
-import { PDCert } from "../../PDCert";
-import { PPubKeyHash } from "../../PubKey/PPubKeyHash";
-import { PDatumHash } from "../../ScriptsHashes/PDatumHash";
-import { PValidatorHash } from "../../ScriptsHashes/PValidatorHash";
-import { PPOSIXTimeRange } from "../../Time";
-import { PTxId } from "../../Tx/PTxId";
-import { PTxInInfo } from "../../Tx/PTxInInfo";
-import { PTxOut } from "../../Tx/PTxOut";
-import { PTxOutRef } from "../../Tx/PTxOutRef";
-import { PAssetsEntryT, PValue, PValueEntryT } from "../../Value/PValue";
-import { PScriptContext } from "../PScriptContext";
-import { PScriptPurpose } from "../PScriptPurpose";
-import { PTxInfo } from "../PTxInfo/PTxInfo";
+import { PValue } from "../../Value/PValue";
 import { UPLCConst } from "../../../../../UPLC/UPLCTerms/UPLCConst";
 import { pInt } from "../../../../lib/std/int/pInt";
-import { pByteString } from "../../../../lib/std/bs/pByteString";
-import { pList } from "../../../../lib/std/list/const";
-import { PMaybe } from "../../../../lib/std/PMaybe/PMaybe";
 import { pBool } from "../../../../lib/std/bool/pBool";
-import { fromData, pDataI, pPair, perror, pisEmpty, toData } from "../../../../lib";
-import { PCurrencySymbol } from "../../Value/PCurrencySymbol";
-import { PTokenName } from "../../Value/PTokenName";
+import { fromData, perror, pisEmpty } from "../../../../lib";
 import { ErrorUPLC } from "../../../../../UPLC/UPLCTerms/ErrorUPLC";
-import { Term } from "../../../../Term";
-import { list, int, pair, data, bs, map, bool } from "../../../../type_system";
+import { int } from "../../../../type_system";
+import { _purp, beef32AsData, ctx, txInfo_v1 } from "../../../../../test_utils"
 
-
+/*
 import fs from "node:fs"
 
 import v8Profiler from 'v8-profiler-next';
@@ -56,126 +33,7 @@ afterAll(() => {
         profile.delete();
     });
 });
-
-let unitDatumHash: Term<typeof PDatumHash>;
-let emptyValue: Term<typeof PValue>;
-let emptyValueAsData: Term<PAsData<typeof PValue>>;
-let validatorSpendingUtxo: Term<typeof PTxOutRef>;
-let validatorSpendingUtxoAsData: Term<PAsData<typeof PTxOutRef>>;
-let beef32: Term<typeof PValue>;
-let beef32AsData: Term<PAsData<typeof PValue>>;
-let _txInfo: Term<typeof PTxInfo>;
-let _purp: Term<typeof PScriptPurpose>;
-let ctx: Term<typeof PScriptContext>
-
-beforeAll(() => {
-    unitDatumHash = PDatumHash.from( pByteString("923918e403bf43c34b4ef6b48eb2ee04babed17320d8d1b9ff9ad086e86f44ec") );
-    emptyValue = PValue.from( pList( PValueEntryT )([]) as any );
-
-    emptyValueAsData = toData( PValue.type )( emptyValue );
-
-    validatorSpendingUtxo = PTxOutRef.PTxOutRef({
-        id: toData( PTxId.type )(
-            PTxId.PTxId({
-                txId: toData( bs )( pByteString("deadbeef") )
-            })
-        ),
-        index: pDataI( 0 )
-    });
-
-    validatorSpendingUtxoAsData = toData( PTxOutRef.type )( validatorSpendingUtxo );
-
-    beef32 = PValue.from(
-        pList( PValueEntryT )([
-            pPair( PCurrencySymbol.type, list( PAssetsEntryT ) )
-            (
-                PCurrencySymbol.from( pByteString("deadbeef") ),
-                pList( PAssetsEntryT )([
-                    pPair( PTokenName.type, int )
-                    (
-                        PTokenName.from( pByteString("beef") ),
-                        pInt( 32 )
-                    )
-                ])
-            )
-        ])
-    );
-
-    beef32AsData = toData( PValue.type )( beef32 );
-
-    _txInfo = PTxInfo.PTxInfo({
-        datums: toData( map( PDatumHash.type, data ) )
-            (
-                pList( pair( PDatumHash.type, data ) )([])
-            ),
-        dCertificates: toData( list( PDCert.type ) )
-            (
-                pList( PDCert.type )([])
-            ),
-        fee: emptyValueAsData,
-        mint: emptyValueAsData,
-        id: toData( PTxId.type )(
-            PTxId.PTxId({
-                txId: toData( bs )( pByteString("deadbeef") )
-            })
-        ),
-        interval: toData( PPOSIXTimeRange.type )(
-            PPOSIXTimeRange.PInterval({
-                from: toData( PLowerBound.type )(
-                    PLowerBound.PLowerBound({
-                        bound: toData( PExtended.type )( PExtended.PFinite({ _0: pDataI(1) }) ),
-                        inclusive: toData( bool )( pBool( false ) )
-                    })
-                ),
-                to: toData( PUpperBound.type )(
-                    PUpperBound.PUpperBound({
-                        bound: toData( PExtended.type )( PExtended.PPosInf({}) ),
-                        inclusive: toData( bool )( pBool( false ) )
-                    })
-                )
-            })
-        ),
-        signatories: toData( list( PPubKeyHash.type ) )( pList( PPubKeyHash.type )([]) ),
-        withdrawals: toData( map( PStakingCredential.type, int ) )( pList( pair( PStakingCredential.type, int ) )([]) ),
-        inputs: toData( list( PTxInInfo.type ) )(
-            pList( PTxInInfo.type )([
-                PTxInInfo.PTxInInfo({
-                    utxoRef: validatorSpendingUtxoAsData,
-                    resolved: toData( PTxOut.type )(
-                        PTxOut.PTxOut({
-                            address: toData( PAddress.type )(
-                                PAddress.PAddress({
-                                    credential: PCredential.PScriptCredential({
-                                        valHash: toData( PValidatorHash.type )( PValidatorHash.from( pByteString("caffee") ) )
-                                    }) as any,
-                                    stakingCredential: PMaybe( PStakingCredential.type ).Nothing({}) as any
-                                })
-                            ),
-                            datumHash: PMaybe( PDatumHash.type ).Just({ val: toData( PDatumHash.type )(unitDatumHash) }) as any,
-                            value: beef32AsData
-                        })
-                    )
-                })
-            ])
-        ),
-        outputs: toData( list( PTxOut.type ) )(
-            pList( PTxOut.type )([])
-        ) 
-    });
-
-    _purp = PScriptPurpose.Spending({
-        utxoRef: validatorSpendingUtxo as any
-    });
-    
-    ctx = PScriptContext.PScriptContext({
-        txInfo: _txInfo as any,
-        purpose: _purp as any
-    });
-    
-})
-
-
-
+//*/
 
 describe("pmatch( <PScriptContext> )", () => {
 
@@ -190,7 +48,7 @@ describe("pmatch( <PScriptContext> )", () => {
             )
         ).toEqual(
             Machine.evalSimple(
-                _txInfo
+                txInfo_v1
             )
         );
 
@@ -207,7 +65,7 @@ describe("pmatch( <PScriptContext> )", () => {
             )
         ).toEqual(
             Machine.evalSimple(
-                _txInfo
+                txInfo_v1
             )
         );
 
@@ -220,7 +78,7 @@ describe("pmatch( <PScriptContext> )", () => {
             )
         ).toEqual(
             Machine.evalSimple(
-                _txInfo
+                txInfo_v1
             )
         );
 

@@ -190,7 +190,7 @@ describe("typeExtends", () => {
                     asData( pair( int, bs ) ),
                     pair( tyVar(), tyVar() )
                 )
-            ).toBe( true );
+            ).toBe( false );
 
         });
 
@@ -198,40 +198,40 @@ describe("typeExtends", () => {
 
     describe("asData", () => {
 
-        test("asData( int ) extends int", () => {
+        test("asData( int ) doesn't  extends int", () => {
             expect(
                 typeExtends(
                     asData( int ),
                     int
                 )
-            ).toBe( true )
+            ).toBe( false )
         });
 
-        test("asData( list( int ) ) extends list( int )", () => {
+        test("asData( list( int ) ) doesn't extends list( int )", () => {
             expect(
                 typeExtends(
                     asData( list( int ) ),
                     list( int )
                 )
-            ).toBe( true )
+            ).toBe( false )
         });
 
-        test("list( asData( int ) ) extends list( int )", () => {
+        test("list( asData( int ) ) doesn't extends list( int )", () => {
             expect(
                 typeExtends(
                     list( asData( int ) ),
                     list( int )
                 )
-            ).toBe( true )
+            ).toBe( false )
         });
 
-        test("asData( pair( int, bs ) ) extends pair( int, bs )", () => {
+        test("asData( pair( int, bs ) ) doesn't extends pair( int, bs )", () => {
             expect(
                 typeExtends(
                     asData( pair( int, bs ) ),
                     pair( int, bs )
                 )
-            ).toBe( true )
+            ).toBe( false )
         });
 
     });

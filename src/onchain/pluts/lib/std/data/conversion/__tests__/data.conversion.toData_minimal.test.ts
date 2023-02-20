@@ -24,7 +24,7 @@ describe("toData_minimal", () => {
             )
         ).toEqual( true )
 
-        //*
+        /*
         console.log(
             termTypeToString(
                 lst.type
@@ -33,12 +33,13 @@ describe("toData_minimal", () => {
                 toData_minimal( lst.type )( lst ).type
             )
         )
+        //*/
+
         expect(
             toData_minimal( lst.type )( lst ).type
         ).toEqual(
             asData( lst.type )
         )
-        //*/
     });
 
     const myPair = pPair( bs, int )( pByteString(""), pInt(42) );
@@ -51,7 +52,7 @@ describe("toData_minimal", () => {
 
         const stuff = toData_minimal( int )( myPair.snd );
         const uplc = stuff.toUPLC(0);
-        console.log( showUPLC( uplc ) );
+        // console.log( showUPLC( uplc ) );
 
         expect(
             Machine.evalSimple(
@@ -75,7 +76,7 @@ describe("toData_minimal", () => {
 
         const stuff = toData_minimal( myPair.type )( myPair );
         const uplc = stuff.toUPLC(0);
-        console.log( showUPLC( uplc ) );
+        // console.log( showUPLC( uplc ) );
 
         expect(
             Machine.evalSimple(

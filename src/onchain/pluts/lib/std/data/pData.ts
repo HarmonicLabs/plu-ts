@@ -3,7 +3,8 @@ import { UPLCConst } from "../../../../UPLC/UPLCTerms/UPLCConst";
 import { Term } from "../../../Term";
 import { PAsData, PByteString, PData, PInt } from "../../../PTypes";
 import { asData, bs, data, int } from "../../../type_system/types";
-import { DataI } from "../../../../../types/Data";
+import { DataB, DataI } from "../../../../../types/Data";
+import { ByteString } from "../../../../../types/HexString/ByteString";
 
 export function pData( dataElem: Data )
 : Term<PData>
@@ -25,11 +26,11 @@ export function pDataI( n: number | bigint ): Term<PAsData<PInt>>
 }
 
 
-export function pDataB( n: number | bigint ): Term<PAsData<PByteString>>
+export function pDataB( b: string | ByteString | Buffer ): Term<PAsData<PByteString>>
 {
     return new Term(
         asData( bs ),
-        _dbn => UPLCConst.data( new DataI( n ) ),
+        _dbn => UPLCConst.data( new DataB( b ) ),
         true // isConstant
     );
 }

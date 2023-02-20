@@ -11,6 +11,7 @@ import { pByteString } from "../../../lib/std/bs/pByteString";
 import { padd, pconsBs, pindexBs } from "../../../lib/builtins";
 import { perror } from "../../../lib/perror";
 import { TermType, bs, int, unit } from "../../../type_system/types";
+import { pDataB, pDataI, toData } from "../../../lib";
 
 const SingleCtor = pstruct({
     Ctor : {
@@ -29,9 +30,9 @@ describe("pmatch", () => {
         expect(
             Machine.evalSimple(
                 pmatch( SingleCtor.Ctor({
-                    num: pInt( 42 ),
-                    name: pByteString( ByteString.fromAscii("Cardano NFTs lmaooooo") ),
-                    aUnitCauseWhyNot: pmakeUnit()
+                    num: pDataI( 42 ),
+                    name: pDataB( ByteString.fromAscii("Cardano NFTs lmaooooo") ),
+                    aUnitCauseWhyNot: toData( unit )( pmakeUnit() )
                 }))
                 .onCtor( rawFields => rawFields.extract("num").in( ({ num }) => num ) ) 
             )
@@ -45,7 +46,7 @@ describe("pmatch", () => {
 
         expect(
             Machine.evalSimple(
-                pmatch( PMaybe( int ).Just({ val: pInt(2) }) )
+                pmatch( PMaybe( int ).Just({ val: pDataI(2) }) )
                 .onJust( f => f.extract("val").in( v => v.val ) )
                 .onNothing( _ => pInt( 0 ) )
             )
@@ -103,7 +104,7 @@ describe("pmatch", () => {
     
             expect(
                 Machine.evalSimple(
-                    pmatch( PMaybe(int).Just({ val: pInt(42) }) )
+                    pmatch( PMaybe(int).Just({ val: pDataI(42) }) )
                     .onJust( rawFields =>
                         rawFields.extract("val")
                         .in( fields => 
@@ -149,7 +150,7 @@ describe("pmatch", () => {
 
             expect(
                 Machine.evalSimple(
-                    pmatch( Nums.TwoNums({ a: pInt(2), b: pInt(3) }) )
+                    pmatch( Nums.TwoNums({ a: pDataI(2), b: pDataI(3) }) )
                     .onTwoNums( nums_ =>  nums_.extract("a", "b").in( ({ a, b }) =>
                         padd.$( a ).$(
                             padd.$( a ).$( b )
@@ -187,17 +188,18 @@ describe("pmatch", () => {
             });
 
             const nums = Nums.TwoNums({
-                a: pInt( 1 ),
-                b: pInt( 2 )
+                a: pDataI( 1 ),
+                b: pDataI( 2 )
             });
             const bss= BSs.TwoBS({
-                a: pByteString( ByteString.fromAscii("a") ),
-                b: pByteString( ByteString.fromAscii("b") )
+                a: pDataB( ByteString.fromAscii("a") ),
+                b: pDataB( ByteString.fromAscii("b") )
             });
 
-            const makeMatch = ( continuation: ( fields: { nums: Term<typeof Nums>, bss: Term<typeof BSs> } ) => Term<any>, outTy: TermType ) => pmatch( NumOrBs.Both({
-                nums,
-                bss
+            const makeMatch = ( continuation: ( fields: { nums: Term<typeof Nums>, bss: Term<typeof BSs> } ) => Term<any>, outTy: TermType ) => 
+            pmatch( NumOrBs.Both({
+                nums: toData( Nums.type )( nums ),
+                bss: toData( BSs.type )( bss )
             }))
             .onBoth( rawFields => rawFields.extract("nums", "bss").in( continuation ))
             .onBSsOnly( _ =>  perror( outTy ) )

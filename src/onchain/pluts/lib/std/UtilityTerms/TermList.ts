@@ -4,7 +4,7 @@ import { PType } from "../../../PType";
 import { PDataRepresentable } from "../../../PType/PDataRepresentable";
 import type { PList, TermFn, PInt, PLam, PBool } from "../../../PTypes";
 import { Term } from "../../../Term";
-import { ToPType, TermType, unwrapAlias, isTaggedAsAlias, isWellFormedGenericType, PrimType, bool, lam, list, FromPType, struct, typeExtends, tyVar } from "../../../type_system";
+import { ToPType, TermType, isWellFormedGenericType, PrimType, bool, lam, list, struct, typeExtends, tyVar } from "../../../type_system";
 import { getElemsT } from "../../../type_system/tyArgs";
 import { termTypeToString } from "../../../type_system/utils";
 import { UtilityTermOf } from "../../addUtilityForType";

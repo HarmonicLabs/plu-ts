@@ -8,7 +8,6 @@ describe("typeofGenericStruct", () => {
 
     test("single arguent", () => {
 
-
         const PMaybeTermType = typeofGenericStruct( PMaybe as any ) as any;
         const manualType = struct({
             Just: { val: tyVar() as any },

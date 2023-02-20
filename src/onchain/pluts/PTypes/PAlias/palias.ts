@@ -38,7 +38,7 @@ export type PAlias<T extends TermType, PClass extends _PAlias = _PAlias> =
     readonly fromData: ( data: Term<PData> ) => Term<PClass>;
     readonly toData: ( data: Term<PClass> ) => Term<PData>;
 
-    readonly from: ( toAlias: Term<ToPType<T>> ) => Term<PAlias<T, PClass>>
+    readonly from: ( toAlias: PappArg<ToPType<T>> ) => Term<PAlias<T, PClass>>
 
 } & PDataRepresentable
 

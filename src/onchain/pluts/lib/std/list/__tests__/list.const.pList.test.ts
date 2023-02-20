@@ -1,3 +1,4 @@
+import { Machine } from "../../../../../CEK";
 import { PTxInInfo } from "../../../../API/V2/Tx/PTxInInfo"
 import { data, int, str } from "../../../../type_system"
 import { pInt } from "../../int";
@@ -30,11 +31,15 @@ describe("pList", () => {
 
     test("pList( PTxInInfo.type )([])", () => {
         expect(
-            pList( PTxInInfo.type )([])
-            .toUPLC(0)
+            Machine.evalSimple(
+                pList( PTxInInfo.type )([])
+                .toUPLC(0)
+            )
         ).toEqual(
-            pnil( data )
-            .toUPLC(0)
+            Machine.evalSimple(
+                pnil( data )
+                .toUPLC(0)
+            )
         )
     });
 

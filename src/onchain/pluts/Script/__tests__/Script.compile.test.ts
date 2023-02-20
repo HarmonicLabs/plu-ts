@@ -1,5 +1,5 @@
 import { showUPLC } from "../../../UPLC/UPLCTerm"
-import { compile, PlutusScriptVersion, scriptToJsonFormat } from "../compile"
+import { compile, scriptToJsonFormat } from "../compile"
 import { ByteString } from "../../../../types/HexString/ByteString"
 import { PScriptContext } from "../../API/V1/ScriptContext/PScriptContext"
 import { pmatch } from "../../PTypes/PStruct/pmatch"
@@ -172,7 +172,7 @@ describe.skip("scriptToJsonFormat", () => {
         console.time(dataCreationTimeTag);
         //*
         const unitDatumHash = PDatumHash.from( pByteString("923918e403bf43c34b4ef6b48eb2ee04babed17320d8d1b9ff9ad086e86f44ec") );
-        const justUnitDatumHash = PMaybe( PDatumHash.type ).Just({ val: unitDatumHash });
+        const justUnitDatumHash = PMaybe( PDatumHash.type ).Just({ val: unitDatumHashAsData });
         const emptyValue = PValue.from( pList( PValueEntryT )([]) as any );
 
         const validatorSpendingUtxo = PTxOutRef.PTxOutRef({

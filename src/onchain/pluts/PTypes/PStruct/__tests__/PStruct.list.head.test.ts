@@ -1,5 +1,5 @@
 import { Machine } from "../../../../CEK";
-import { pDataI, pInt, pList } from "../../../lib";
+import { pDataI, pInt, pList, toData } from "../../../lib";
 import { int, list, termTypeToString } from "../../../type_system";
 import { getElemsT } from "../../../type_system/tyArgs";
 import { pstruct } from "../pstruct";
@@ -10,7 +10,7 @@ const MyStruct = pstruct({
 });
 
 const myList = pList( MyStruct.type )([
-    MyStruct.Hello({ there: pInt(42) })
+    MyStruct.Hello({ there: pDataI(42) })
 ]);
 
 describe("structList.head", () => {
@@ -46,7 +46,7 @@ const MyOtherStruct = pstruct({
     There: { hello: list( MyStruct.type ) }
 });
 
-const myOtherStruct = MyOtherStruct.There({ hello: myList })
+const myOtherStruct = MyOtherStruct.There({ hello: toData( list( MyStruct.type ) )(myList) })
 
 describe("struct.listField.head", () => {
 
@@ -72,14 +72,6 @@ describe("struct.listField.head", () => {
                 MyStruct.type
             )
 
-            console.log(
-                Object.getOwnPropertyDescriptor( hello, "head" )
-            );
-
-            console.log(
-                hello.head
-            )
-            
             expect(
                 hello.head.type
             ).toEqual(
