@@ -8,6 +8,7 @@ import { Cloneable } from "../../types/interfaces/Cloneable";
 import { StakeKeyHash } from "../credentials/StakeKeyHash";
 import { Hash28 } from "../hashes/Hash28/Hash28";
 import { BasePlutsError } from "../../errors/BasePlutsError";
+import { hexToBytes } from "../../crypto/utils/hexToBytes";
 
 
 export type StakeAddressBech32 = `stake1${string}` | `stake_test1${string}`;
@@ -96,6 +97,26 @@ export class StakeAddress<T extends StakeAddressType = StakeAddressType>
             new Hash28( Buffer.from( creds ) ),
             type
         );
+    }
+
+    toBytes(): byte[]
+    {
+        return Array.from( this.credentials.asBytes ) as any;
+    }
+
+    static fromBytes(
+        bs: byte[] | string,
+        netwok: NetworkT = "mainnet",
+        type: StakeAddressType = "stakeKey"
+    ): StakeAddress
+    {
+        bs = typeof bs === "string" ? hexToBytes( bs ) : bs;
+
+        return new StakeAddress(
+            netwok,
+            new Hash28( Buffer.from( bs ) ),
+            type
+        )
     }
 
     toStakeCredentials(): StakeCredentials<T>
