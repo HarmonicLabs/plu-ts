@@ -121,7 +121,7 @@ function getExtractedFieldsExpr<CtorDef extends StructCtorDef, Fields extends (k
         ObjectUtils.defineNormalProperty(
             partialExtracted,
             allFieldsNames[ idx ],
-            punsafeConvertType( value, withAllPairElemsAsData( fieldType ) )
+            punsafeConvertType( value, fieldType )
         );
 
         return getExtractedFieldsExpr(
