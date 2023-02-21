@@ -31,10 +31,11 @@ import { TermList } from "../../lib/std/UtilityTerms/TermList";
 import { plam } from "../../lib/plam";
 import { TermFn } from "../PFn";
 import { LamT, PrimType, StructCtorDef, StructDefinition, TermType, data, fn, int, lam, list, struct, tyVar } from "../../type_system/types";
-import { isStructDefinition } from "../../type_system";
+import { isStructDefinition, withAllPairElemsAsData } from "../../type_system";
 import { phead } from "../../lib/builtins/list";
-import { fromData_minimal } from "../../lib/std/data/conversion/fromData_minimal";
+import { _fromData } from "../../lib/std/data/conversion/fromData_minimal";
 import { genHoistedSourceUID } from "../../../UPLC/UPLCTerms/HoistedUPLC/HoistedSourceUID/genHoistedSourceUID";
+import { fromData } from "../../lib/std/data/conversion/fromData";
 
 
 const elemAtCache: { [n: number]: TermFn<[ PList<PData> ], PData > } = {};
@@ -112,17 +113,15 @@ function getExtractedFieldsExpr<CtorDef extends StructCtorDef, Fields extends (k
     const fieldType = ctorDef[ allFieldsNames[ idx ] ];
 
     return plet(
-        addUtilityForType( fieldType )(
-            fromData_minimal( fieldType )(
-                getElemAtTerm( idx ).$( fieldsData )
-            )
+        fromData( fieldType )(
+            getElemAtTerm( idx ).$( fieldsData )
         )
     ).in( value => {
 
         ObjectUtils.defineNormalProperty(
             partialExtracted,
             allFieldsNames[ idx ],
-            punsafeConvertType( value, fieldType )
+            punsafeConvertType( value, withAllPairElemsAsData( fieldType ) )
         );
 
         return getExtractedFieldsExpr(

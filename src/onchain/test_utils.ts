@@ -66,8 +66,7 @@ export const beef32 = PValue.from(
         (
             PCurrencySymbol.from( pByteString("deadbeef") ),
             pList( PAssetsEntryT )([
-                pPair( PTokenName.type,
-    int )
+                pPair( PTokenName.type, int )
                 (
                     PTokenName.from( pByteString("beef") ),
                     pInt( 32 )

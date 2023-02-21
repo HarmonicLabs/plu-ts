@@ -12,12 +12,13 @@ import { termTyToConstTy } from "../../../type_system/termTyToConstTy";
 import { toData_minimal } from "../data/conversion/toData_minimal";
 import { punsafeConvertType } from "../../punsafeConvertType";
 import { ppairData } from "../../builtins/ppairData";
+import { PappArg, pappArgToTerm } from "../../pappArg";
 
 
 export function pPair<FstT extends TermType, SndT extends TermType>(
     fstT: FstT,
     sndT: SndT
-): ( fst: Term<ToPType<FstT>>, snd: Term<ToPType<SndT>> ) => TermPair<ToPType<FstT>,ToPType<SndT>>
+): ( fst: PappArg<ToPType<FstT>>, snd: PappArg<ToPType<SndT>> ) => TermPair<ToPType<FstT>,ToPType<SndT>>
 {
     JsRuntime.assert(
         isWellFormedType( fstT ),
@@ -28,47 +29,56 @@ export function pPair<FstT extends TermType, SndT extends TermType>(
         "plutus only supports pairs of types that can be converted to constants"
     );
 
-    return ( _fst: Term<ToPType<FstT>>, _snd: Term<ToPType<SndT>> ): TermPair<ToPType<FstT>,ToPType<SndT>> => {
+    return ( _fst: PappArg<ToPType<FstT>>, _snd: PappArg<ToPType<SndT>> ): TermPair<ToPType<FstT>,ToPType<SndT>> => {
+
+        if(!( _fst instanceof Term ))
+        _fst = pappArgToTerm( _fst, fstT );
+
+        if(!( _snd instanceof Term ))
+        _snd = pappArgToTerm( _snd, sndT );
+
+        const fst = _fst as Term<ToPType<FstT>>;
+        const snd = _snd as Term<ToPType<SndT>>;
 
         JsRuntime.assert(
-            _fst instanceof Term &&
-            typeExtends( _fst.type, fstT ),
+            fst instanceof Term &&
+            typeExtends( fst.type, fstT ),
             "first element of a constant pair was not a constant"
         );
         JsRuntime.assert(
-            _snd instanceof Term &&
-            typeExtends( _snd.type, sndT ),
+            snd instanceof Term &&
+            typeExtends( snd.type, sndT ),
             "second element of a constant pair was not a constant"
         );
 
         if(
-            !(_fst as any).isConstant ||
-            !(_snd as any).isConstant
+            !(fst as any).isConstant ||
+            !(snd as any).isConstant
         ){
 
-            let fst = toData_minimal( fstT )( _fst );
-            let snd = toData_minimal( sndT )( _snd );
+            let _fst_ = toData_minimal( fstT )( fst );
+            let _snd_ = toData_minimal( sndT )( snd );
 
             if( (fst as any).isConstant )
             {
-                fst = new Term(
-                    fst.type,
-                    _dbn => Machine.evalSimple( fst )
-                )
+                _fst_ = new Term(
+                    _fst_.type,
+                    _dbn => Machine.evalSimple( _fst_ )
+                ) as any
             }
 
             if( (snd as any).isConstant )
             {
-                snd = new Term(
-                    snd.type,
+                _snd_ = new Term(
+                    _snd_.type,
                     _dbn => Machine.evalSimple( snd )
-                )
+                ) as any
             }
 
             return punsafeConvertType(
                 ppairData
-                .$( fst )
-                .$( snd ),
+                .$( _fst_ )
+                .$( _snd_ ),
                 pair(
                     asData( fstT ),
                     asData( sndT )
@@ -83,8 +93,8 @@ export function pPair<FstT extends TermType, SndT extends TermType>(
                     termTyToConstTy( fstT ),
                     termTyToConstTy( sndT )
                 )(
-                    (Machine.evalSimple( _fst ) as UPLCConst).value,
-                    (Machine.evalSimple( _snd ) as UPLCConst).value
+                    (Machine.evalSimple( fst ) as UPLCConst).value,
+                    (Machine.evalSimple( snd ) as UPLCConst).value
                 ),
                 true // isConstant
             )

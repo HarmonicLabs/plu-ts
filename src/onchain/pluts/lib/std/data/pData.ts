@@ -3,8 +3,9 @@ import { UPLCConst } from "../../../../UPLC/UPLCTerms/UPLCConst";
 import { Term } from "../../../Term";
 import { PAsData, PByteString, PData, PInt } from "../../../PTypes";
 import { asData, bs, data, int } from "../../../type_system/types";
-import { DataB, DataI } from "../../../../../types/Data";
 import { ByteString } from "../../../../../types/HexString/ByteString";
+import { DataI } from "../../../../../types/Data/DataI";
+import { DataB } from "../../../../../types/Data/DataB";
 
 export function pData( dataElem: Data )
 : Term<PData>

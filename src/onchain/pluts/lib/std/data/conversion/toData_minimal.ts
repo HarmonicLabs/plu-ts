@@ -91,6 +91,14 @@ const pPairToData = ( fstT: TermType, sndT: TermType ) =>
         )
         ( _pair => {
 
+            /*
+            `pfstPair` and `psndPair` will extract `asData` types automatically
+
+            this is done to provide support for pairs generated dynamically;
+            however transforming pairs to data we already have data fields there
+            so it makes no sense extracting data to re-transform it to data.
+            */
+
             const _fstData = fstT[0] === PrimType.AsData ?
                 pfstPair( data, data ).$( _punsafeConvertType( _pair, pair( data, data ) ) as any ) : 
                 _toData( fstT )( _pair.fst );
@@ -120,11 +128,14 @@ export function _toData<T extends TermType>( t: T ): ( term: Term<ToPType<T>> ) 
 
     function applyToTerm( termFunc: Term<PLam<ToPType<T>, PAsData<ToPType<T>>>> ): ( term: Term<ToPType<T>> ) => Term<PAsData<ToPType<T>>>
     {
-        return ( term ) => 
-            _punsafeConvertType(
+        return ( term ) => {
+            const theTerm = _punsafeConvertType(
                 _papp( termFunc, term ),
                 asData( t )
-            );
+            ) as any;
+            theTerm.isConstant = (term as any).isConstant;
+            return theTerm;
+        }
     }
 
     if(
@@ -159,23 +170,29 @@ export function _toData<T extends TermType>( t: T ): ( term: Term<ToPType<T>> ) 
         const elemsT = getElemsT( t ) as PairT<TermType,TermType>;
         const fstT = getFstT( elemsT );
         const sndT = getSndT( elemsT );
+
+
         return (( term: Term<any> ) => {
-            return _papp(
+            const theTerm = _papp(
                 pMapToData( fstT, sndT ) as any,
                 pmap( elemsT, pair( asData( fstT ) , asData( sndT ) ) )
                 .$(
-                    ((_pair: any) =>
-                        _papp(
+                    ((_pair: any) => {
+
+                        return _papp(
                             _papp(
                                 ppairData( fstT, sndT ) as any,
                                 _toData( fstT )( _pair.fst )
                             ) as any,
                             _toData( sndT )( _pair.snd )
-                        )
+                        )                        
+                    }
                     ) as any
                 )
                 .$( term )
-            )
+            ) as any;
+            theTerm.isConstant = (term as any).isConstant;
+            return theTerm;
         }) as any;
     };
     
@@ -197,40 +214,16 @@ export function _toData<T extends TermType>( t: T ): ( term: Term<ToPType<T>> ) 
     {
         const elemsT = getElemsT( t ) as PairT<TermType,TermType>;
         return (( term: Term<any> ) => {
-            return _papp(
+            const theTerm = _papp(
                 pListToData( asData( elemsT ) ),
                 pmap( elemsT, asData(elemsT) )
                 .$( _ptoData( elemsT ) )
                 .$( term )
-            );
+            ) as any;
+            theTerm.isConstant = (term as any).isConstant;
+            return theTerm;
         }) as any;
     };
-
-    /*
-    // all the cases below are handled by `applyToTerm( _ptoData( t ) )`
-
-    if( typeExtends( t, int ) )     return applyToTerm( pIntToData );
-    if( typeExtends( t, bs ) )      return applyToTerm( pBSToData );
-    if( typeExtends( t, str ) )     return applyToTerm( pStrToData );
-    if( typeExtends( t, unit ) )    return applyToTerm( pUnitToData );
-    if( typeExtends( t, bool ) )    return applyToTerm( pBoolToData );
-
-    if(
-        typeExtends(
-            t, 
-            pair( 
-                tyVar(), // handles data to
-                tyVar()
-            )
-        )
-    )
-    {
-        const fstT = getFstT( t ) as TermType;
-        const sndT = getSndT( t ) as TermType;
-        return (( term: Term<any> ) => pPairToData( fstT, sndT ).$( term )) as any;
-    };
-
-    //*/
 
     return applyToTerm( _ptoData( t ) );
 }
@@ -276,76 +269,12 @@ export function _ptoData<T extends TermType>( t: T ): Term<PLam<ToPType<T>, PAsD
         return pMapToData( kT, vT ) as any;
     };
 
-    /*
-    // handled in `_toData`
-    if(
-        typeExtends(
-            t, 
-            list( 
-                pair( 
-                    tyVar(), 
-                    tyVar()
-                )
-            )
-        )
-    )
-    {
-        const elemsT = getElemsT( t ) as PairT<TermType,TermType>;
-        const fstT = getFstT( elemsT );
-        const sndT = getSndT( elemsT );
-
-        return plam( t, asData( t ) )
-        ((( term: any ) => {
-            return _papp(
-                pMapToData( fstT, sndT ) as any,
-                pmap( elemsT, pair( data, data ) )
-                .$(
-                    ((_pair: any) =>
-                        _papp(
-                            _papp(
-                                ppairData( data, data ) as any,
-                                _toData( fstT )( _pair.fst )
-                            ) as any,
-                            _toData( sndT )( _pair.snd )
-                        )
-                    ) as any
-                )
-                .$( term )
-            )
-        }) as any)
-    };
-    //*/
-    
     if(
         typeExtends(
             t,
             list( data )
         )
     ) return pListToData( getElemsT( t ) ) as any;
-
-    /*
-    // handled in `_toData`
-    if(
-        typeExtends(
-            t, 
-            list( 
-                tyVar()
-            )
-        )
-    )
-    {
-        const elemsT = getElemsT( t ) as TermType;
-        return plam( t, asData( t ) )
-        ((( term: Term<any> ) => {
-            return _papp(
-                pListToData( asData( elemsT ) ),
-                pmap( elemsT, asData( elemsT ) )
-                .$( _ptoData( elemsT ) )
-                .$( term )
-            )
-        }) as any);
-    };
-    //*/
 
     if(
         typeExtends(

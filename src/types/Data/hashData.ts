@@ -2,7 +2,7 @@ import { Data, isData } from "./Data";
 import { blake2b_256 } from "../../crypto";
 import { BasePlutsError } from "../../errors/BasePlutsError";
 import { dataToCbor } from "./toCbor";
-import { Hash32 } from "../../offchain";
+import { Hash32 } from "../../offchain/hashes/Hash32/Hash32";
 
 export function hashData( data: Data ): Hash32
 {

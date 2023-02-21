@@ -7,8 +7,10 @@ export function getFstT( t: TermType ): TermType
 export function getFstT( t: GenericTermType ): GenericTermType
 export function getFstT( t: GenericTermType ): GenericTermType
 {
-    while( t[0] === PrimType.AsData ) t = t[1];
-    while( t[0] === PrimType.Alias ) t = t[1];
+    while(
+        t[0] === PrimType.AsData || 
+        t[0] === PrimType.Alias
+    ) t = t[1];
 
     return t[1] as any;
 }

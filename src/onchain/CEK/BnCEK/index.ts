@@ -1411,7 +1411,13 @@ export class BnCEK
     unBData( data: UPLCTerm ): ConstOrErr
     {
         const d = getData( data );
-        if( d === undefined ) return new ErrorUPLC("not data; unBData");
+        if( d === undefined )
+            return new ErrorUPLC(
+                "not data; unBData",
+                {
+                    data,
+                }
+            );
 
         if( !( d instanceof DataB ) ) return new ErrorUPLC("not a data BS", {UPLCTerm: ((data as UPLCConst).value as DataConstr).constr.asBigInt });
 

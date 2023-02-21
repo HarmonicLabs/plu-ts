@@ -25,7 +25,11 @@ export function ptoData<T extends TermType>( t: T ): TermFn<[ ToPType<T> ], PAsD
     return ObjectUtils.definePropertyIfNotPresent(
         term, "$",
         {
-            get: () => ( other: Term<ToPType<T>> ) => papp( term, other ),
+            get: () => ( other: Term<ToPType<T>> ) => {
+                const theTerm = papp( term, other );
+                (theTerm as any).isConstant = (other as any).isConstant;
+                return theTerm;
+            },
             set: () => {},
             configurable: false,
             enumerable: true

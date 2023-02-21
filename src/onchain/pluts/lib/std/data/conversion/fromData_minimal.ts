@@ -13,7 +13,7 @@ import { phoist } from "../../../phoist";
 import { plam } from "../../../plam";
 import { plet } from "../../../plet";
 import { punsafeConvertType } from "../../../punsafeConvertType";
-import { pBoolFromData } from "../../bool";
+import { pBoolFromData } from "../../bool/pBoolFromData";
 import { pUnitFromData } from "../../unit";
 import { _papp, _pcompose } from "./minimal_common";
 import { getElemsT, getFstT, getSndT } from "../../../../type_system/tyArgs";
@@ -95,12 +95,20 @@ export function _fromData<T extends TermType>( t: T ): ( term: Term<PData> ) => 
     if( t[0] === PrimType.AsData ) t = t[1] as T;
     
     if( typeExtends( t, data ) ) 
-        return (( term: Term<PType> ) =>
-            punsafeConvertType( term, t as any )) as any;
+        return (( term: Term<PType> ) => {
+            const theTerm = punsafeConvertType( term, t );
+            (theTerm as any).isConstant = (term as any).isConstant;
+
+            return theTerm;
+        }) as any;
 
     function applyToTerm( termFunc: Term<any> ): ( term: Term<PData> ) => Term<ToPType<T>>
     {
-        return ( term ) => _papp( termFunc, term ) as any;
+        return ( term ) => {
+            const theTerm = _papp( termFunc, term ) as any
+            theTerm.isConstant = (term as any).isConstant;
+            return theTerm;
+        };
     }
 
     if(
@@ -131,8 +139,9 @@ export function _fromData<T extends TermType>( t: T ): ( term: Term<PData> ) => 
         const fstT = getFstT( elemsT );
         const sndT = getSndT( elemsT );
         return (
-            ( term: Term<any> ) => 
-                punsafeConvertType(
+            ( term: Term<any> ) => {
+
+                const theTerm = punsafeConvertType(
                     _papp(
                         punMapData as any,
                         term
@@ -143,7 +152,10 @@ export function _fromData<T extends TermType>( t: T ): ( term: Term<PData> ) => 
                             asData( sndT )
                         )
                     )
-            )
+                );
+                (theTerm as any).isConstant = (term as any).isConstant;
+                return theTerm;
+            }
         ) as any
     };
     
@@ -165,8 +177,9 @@ export function _fromData<T extends TermType>( t: T ): ( term: Term<PData> ) => 
     {
         const elemsT = getElemsT( t );
         return (
-            ( term: Term<PData> ) => 
-                punsafeConvertType(
+            ( term: Term<PData> ) => {
+
+                const theTerm = punsafeConvertType(
                     _papp(
                         punListData as any,
                         term
@@ -174,7 +187,10 @@ export function _fromData<T extends TermType>( t: T ): ( term: Term<PData> ) => 
                     list(
                         asData( elemsT )
                     )
-                )
+                );
+                (theTerm as any).isConstant = (term as any).isConstant;
+                return theTerm;
+            }
         ) as any
     };
 
@@ -190,15 +206,18 @@ export function _fromData<T extends TermType>( t: T ): ( term: Term<PData> ) => 
     {
         const fstT = getFstT( t ) as TermType;
         const sndT = getSndT( t ) as TermType;
-        return (( term: Term<PData> ) =>
-            punsafeConvertType(
+        return (( term: Term<PData> ) => {
+
+            const theTerm = punsafeConvertType(
                 pPairFromData.$( term ),
                 pair(
                     asData( fstT ),
                     asData( sndT )
                 )
             ) as any
-        )
+            theTerm.isConstant = (term as any).isConstant;
+            return theTerm;
+        })
     };
 
     return applyToTerm( _pfromData( t ) );

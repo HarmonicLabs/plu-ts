@@ -326,7 +326,7 @@ export function pstruct<StructDef extends StructDefinition>( def: StructDef ): P
                                                 console.log( ctorDefFieldsNames );
                                                 console.log( fieldKey, termTypeToString( thisCtorDef[ fieldKey ] ) );
                                                 console.log( res )
-                                                console.log( showUPLC( _term.toUPLC( _dbn ) ) )
+                                                // console.log( showUPLC( _term.toUPLC( _dbn ) ) )
                                                 throw res;
                                             }
                                             

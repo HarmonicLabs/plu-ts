@@ -3,7 +3,7 @@ import ObjectUtils from "../../../../../utils/ObjectUtils";
 import { PType } from "../../../PType";
 import { PPair } from "../../../PTypes";
 import { Term } from "../../../Term";
-import { isWellFormedType, typeExtends } from "../../../type_system";
+import { isWellFormedType, termTypeToString, typeExtends } from "../../../type_system";
 import { getFstT, getSndT } from "../../../type_system/tyArgs";
 import { tyVar, pair, TermType } from "../../../type_system/types";
 import { UtilityTermOf } from "../../addUtilityForType";

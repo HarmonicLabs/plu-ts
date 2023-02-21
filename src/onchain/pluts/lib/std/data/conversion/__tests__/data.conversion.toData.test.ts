@@ -1,17 +1,20 @@
-import { DataB, DataI, DataList } from "../../../../../../../types/Data";
+import { DataB, DataI, DataList, DataPair } from "../../../../../../../types/Data";
 import { Machine } from "../../../../../../CEK";
 import { showUPLC } from "../../../../../../UPLC/UPLCTerm";
-import { PScriptPurpose } from "../../../../../API";
+import { ErrorUPLC } from "../../../../../../UPLC/UPLCTerms/ErrorUPLC";
+import { PAssetsEntryT, PCurrencySymbol, PScriptPurpose, PTokenName, PValue, PValueEntryT } from "../../../../../API";
 import { pair, data, asData, typeExtends, list, termTypeToString, int, bs } from "../../../../../type_system";
 import { pByteString } from "../../../bs";
 import { pInt } from "../../../int";
 import { pList } from "../../../list";
 import { pPair } from "../../../pair";
 import { pData, pDataI } from "../../pData";
-import { toData_minimal } from "../toData_minimal"
+import { fromData } from "../fromData";
+import { toData } from "../toData";
+import { _toData } from "../toData_minimal"
 
 
-describe("toData_minimal", () => {
+describe("_toData", () => {
 
     test("pList( pair( PScriptPurpose.type, data ) )([])", () => {
 
@@ -30,13 +33,13 @@ describe("toData_minimal", () => {
                 lst.type
             ),"\n\n",
             termTypeToString(
-                toData_minimal( lst.type )( lst ).type
+                _toData( lst.type )( lst ).type
             )
         )
         //*/
 
         expect(
-            toData_minimal( lst.type )( lst ).type
+            _toData( lst.type )( lst ).type
         ).toEqual(
             asData( lst.type )
         )
@@ -44,13 +47,13 @@ describe("toData_minimal", () => {
 
     const myPair = pPair( bs, int )( pByteString(""), pInt(42) );
 
-    test("toData_minimal( int )( pair.snd )", () => {
+    test("_toData( int )( pair.snd )", () => {
 
         expect(
             (myPair as any).isConstant
         ).toBe( true );
 
-        const stuff = toData_minimal( int )( myPair.snd );
+        const stuff = _toData( int )( myPair.snd );
         const uplc = stuff.toUPLC(0);
         // console.log( showUPLC( uplc ) );
 
@@ -66,17 +69,17 @@ describe("toData_minimal", () => {
 
     });
 
-    test("toData_minimal( pair.type )( pair )", () => {
+    test("_toData( pair.type )( pair )", () => {
 
-        const myPair = pPair( bs, int )( pByteString(""), pInt(42) );
+        const myPair = pPair( bs, int )( "", 42 );
 
         expect(
             (myPair as any).isConstant
         ).toBe( true );
 
-        const stuff = toData_minimal( myPair.type )( myPair );
+        const stuff = _toData( myPair.type )( myPair );
+
         const uplc = stuff.toUPLC(0);
-        // console.log( showUPLC( uplc ) );
 
         expect(
             Machine.evalSimple(
@@ -93,5 +96,30 @@ describe("toData_minimal", () => {
             )
         );
 
+    });
+
+    test("_toData( PValue.type )( beef32 )", () => {
+        const beef32 = PValue.from(
+            pList( PValueEntryT )([
+                pPair( PCurrencySymbol.type,
+            list( PAssetsEntryT ) )
+                (
+                    PCurrencySymbol.from( pByteString("deadbeef") ),
+                    pList( PAssetsEntryT )([
+                        pPair( PTokenName.type, int )
+                        (
+                            PTokenName.from( pByteString("beef") ),
+                            pInt( 32 )
+                        )
+                    ])
+                )
+            ])
+        );
+        
+        const beef32AsData = toData( PValue.type )( beef32 );
+
+        expect(
+            Machine.evalSimple( beef32AsData ) instanceof ErrorUPLC
+        ).toBe( false )
     });
 })

@@ -1,8 +1,6 @@
-import JsRuntime from "../../../utils/JsRuntime";
 import { isTaggedAsAlias } from "./kinds/isTaggedAsAlias";
 import { unwrapAlias } from "./tyArgs/unwrapAlias";
-import { GenericTermType, PrimType, StructCtorDef, StructDefinition, TermType, cloneStructDef } from "./types";
-import { isStructType } from "./kinds/isWellFormedType";
+import { GenericTermType, PrimType, StructCtorDef, StructDefinition, TermType } from "./types";
 
 export function getNRequiredLambdaArgs( type: TermType ): number
 {
@@ -59,7 +57,7 @@ export function termTypeToString( t: GenericTermType ): string
     if( isTaggedAsAlias( t ) )
     {
         return "alias(" + (
-            unwrapAlias( t as any )
+            termTypeToString( unwrapAlias( t as any ) )
         ) + ")";
     }
     if( tag === PrimType.AsData )

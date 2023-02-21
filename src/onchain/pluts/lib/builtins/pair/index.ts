@@ -6,7 +6,7 @@ import { TermFn, PPair, PLam } from "../../../PTypes";
 import { Term } from "../../../Term";
 import { PrimType, TermType, ToPType, lam, pair } from "../../../type_system";
 import { unwrapAsData } from "../../../type_system/tyArgs";
-import { pfromData_minimal } from "../../std/data/conversion/fromData_minimal";
+import { _pfromData } from "../../std/data/conversion/fromData_minimal";
 import { addApplications } from "../addApplications";
 
 
@@ -25,7 +25,7 @@ export function pfstPair<A extends TermType, B extends TermType>( fstType: A, sn
                 if( a[0] === PrimType.AsData )
                 return new Lambda(
                     new Application(
-                        pfromData_minimal( outT ).toUPLC( dbn ),
+                        _pfromData( outT ).toUPLC( dbn ),
                         new Application(
                             Builtin.fstPair,
                             new UPLCVar(0)
@@ -54,7 +54,7 @@ export function psndPair<A extends TermType, B extends TermType>( fstType: A, sn
                 if( b[0] === PrimType.AsData )
                 return new Lambda(
                     new Application(
-                        pfromData_minimal( outT ).toUPLC( dbn ),
+                        _pfromData( outT ).toUPLC( dbn ),
                         new Application(
                             Builtin.sndPair,
                             new UPLCVar(0)

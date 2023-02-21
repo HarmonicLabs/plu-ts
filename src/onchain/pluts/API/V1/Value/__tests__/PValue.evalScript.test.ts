@@ -185,10 +185,13 @@ describe("pvalueOf", () => {
         const received = Machine.evalSimple( uplc );
         
         const compiled = UPLCEncoder.compile( new UPLCProgram([1,0,0], uplc.clone() ) ).toBuffer().buffer;
+        
+        /*
         console.log( showUPLC( uplc ) );
         console.log( compiled.toString("hex") );
         console.log( compiled.length );
-
+        //*/
+        
         expect(
             received
         ).toEqual(

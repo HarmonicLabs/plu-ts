@@ -47,20 +47,12 @@ export class Term<A extends PType>
         {
             if( typeof deBruijnLevel !== "bigint" ) deBruijnLevel = BigInt( deBruijnLevel );
 
-            // const t0 = performance.now();
-            // console.log( deBruijnLevel, t0 );
-
-            const uplc = ( (this as any).isConstant ) ?
-                Machine.evalSimple( this._toUPLC( deBruijnLevel ) ) :
-            
-            this._toUPLC( deBruijnLevel );
-
-            // if( performance.now() - t0 > 1e4 )
-            // {
-            //     console.log(
-            //         showUPLC( uplc )
-            //     );
-            // }
+            let uplc = this._toUPLC( deBruijnLevel );
+            if( (this as any).isConstant )
+            {
+                // console.log("evaluating:\n\n", showUPLC( uplc ) );
+                uplc = Machine.evalSimple( uplc )
+            }
 
             return uplc;
         } 

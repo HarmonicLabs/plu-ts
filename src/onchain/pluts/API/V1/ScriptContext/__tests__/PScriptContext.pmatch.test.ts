@@ -6,8 +6,9 @@ import { pInt } from "../../../../lib/std/int/pInt";
 import { pBool } from "../../../../lib/std/bool/pBool";
 import { fromData, perror, pisEmpty } from "../../../../lib";
 import { ErrorUPLC } from "../../../../../UPLC/UPLCTerms/ErrorUPLC";
-import { int } from "../../../../type_system";
+import { int, termTypeToString } from "../../../../type_system";
 import { _purp, beef32AsData, ctx, txInfo_v1 } from "../../../../../test_utils"
+import { showUPLC } from "../../../../../UPLC/UPLCTerm";
 
 /*
 import fs from "node:fs"
@@ -190,21 +191,19 @@ describe("pmatch( <PScriptContext> )", () => {
             )
         })
 
-        test("txId (last field)", () => {
+        test.only("extract txInfo only", () => {
 
+            const term = pmatch( ctx )
+                .onPScriptContext( _ => _.extract("txInfo").in( ({ txInfo }) => txInfo ));
+            const uplc = term.toUPLC(0);
             let result = Machine.evalSimple(
-                pmatch( ctx )
-                .onPScriptContext( _ => _.extract("txInfo").in( ({ txInfo }) => txInfo ))
+                uplc
             );
 
             /*
-            console.log(
-                showUPLC(
-                    pmatch( ctx )
-                    .onPScriptContext( _ => _.extract("txInfo").in( ({ txInfo }) => txInfo ))
-                    .toUPLC(0)
-                )
-            );
+            // console.log( showUPLC( uplc ) );
+            // console.log( termTypeToString( term.type ) );
+            console.log( result );
             //*/
 
             expect(

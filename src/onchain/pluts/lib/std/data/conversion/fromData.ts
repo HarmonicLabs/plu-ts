@@ -2,7 +2,7 @@ import ObjectUtils from "../../../../../../utils/ObjectUtils";
 import { PData } from "../../../../PTypes";
 import { TermFn } from "../../../../PTypes/PFn/PFn";
 import { Term } from "../../../../Term";
-import { TermType } from "../../../../type_system";
+import { TermType, termTypeToString } from "../../../../type_system";
 import { ToPType } from "../../../../type_system/ts-pluts-conversion";
 import { UtilityTermOf, addUtilityForType } from "../../../addUtilityForType";
 import { papp } from "../../../papp";
@@ -26,7 +26,11 @@ export function pfromData<T extends TermType>( t: T ): TermFn<[ PData ], ToPType
     return ObjectUtils.definePropertyIfNotPresent(
         term, "$",
         {
-            get: () => ( other: Term<PData> ) => papp( term, other ),
+            get: () => ( other: Term<PData> ) => {
+               const theTerm = papp( term, other );
+               (theTerm as any).isConstant = (other as any).isConstant;
+               return theTerm;
+            },
             set: () => {},
             configurable: false,
             enumerable: true
