@@ -1,14 +1,19 @@
 import { Data, isData } from "./Data";
-import { blake2b_256, byte } from "../../crypto";
+import { blake2b_256 } from "../../crypto";
 import { BasePlutsError } from "../../errors/BasePlutsError";
 import { dataToCbor } from "./toCbor";
+import { Hash32 } from "../../offchain";
 
-export function hashData( data: Data ): byte[]
+export function hashData( data: Data ): Hash32
 {
     if( !isData( data ) )
     throw new BasePlutsError(
         "hashData only works with Data"
     );
 
-    return blake2b_256( dataToCbor( data ).asBytes )
+    return new Hash32(
+        Buffer.from(
+            blake2b_256( dataToCbor( data ).asBytes )
+        )
+    );
 }

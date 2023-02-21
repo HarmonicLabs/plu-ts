@@ -100,7 +100,7 @@ export class TxWitnessSet
      * if true adds the witness
      * otherwise nothing happens (the signature is not added)
     **/
-    // readonly addVKeyWitnessIfNeeded: ( vkeyWit: VKeyWitness ) => void
+    readonly addVKeyWitnessIfNeeded: ( vkeyWit: VKeyWitness ) => void
     /*
      * @returns {boolean}
      *  `true` if all the signers needed
@@ -112,16 +112,14 @@ export class TxWitnessSet
      *  - required by withdrawals
      *  - additional specified in the `requiredSigners` field
      */
-    // readonly isComplete: () => boolean
+    readonly isComplete: boolean
 
-    constructor( witnesses: ITxWitnessSet, allRequiredSigners: Hash28[] = [] )
+    constructor( witnesses: ITxWitnessSet, allRequiredSigners: Hash28[] | undefined = undefined )
     {
         JsRuntime.assert(
             isITxWitnessSet( witnesses ),
             "invalid witnesses passed"
         );
-
-        // let _required = allRequiredSigners.map( sig => sig.asString );
 
         const defGetter = ( name: keyof ITxWitnessSet, get: () => any ) =>
         {
@@ -160,13 +158,51 @@ export class TxWitnessSet
             redeemers
         } = witnesses;
 
-        defGetterArr( "vkeyWitnesses", vkeyWitnesses );
+        const _vkeyWits = vkeyWitnesses?.map( wit => wit.clone() ) ?? [];
+
+        defGetterArr( "vkeyWitnesses", _vkeyWits );
         defGetterArr( "bootstrapWitnesses", bootstrapWitnesses );
         defGetterArr( "datums", datums );
         defGetterArr( "nativeScripts", nativeScripts );
         defGetterArr( "plutusV1Scripts", plutusV1Scripts );
         defGetterArr( "plutusV2Scripts", plutusV2Scripts );
         defGetterArr( "redeemers", redeemers );
+
+        const _reqSigs =
+            Array.isArray( allRequiredSigners ) && allRequiredSigners.every( reqSig => reqSig instanceof Hash28 ) ? 
+            allRequiredSigners.map( sig => sig.toString() ) :
+            undefined;
+
+        const noRequiredSigs = _reqSigs === undefined; 
+
+        Object.defineProperty(
+            this, "isComplete",
+            {
+                get: () => noRequiredSigs ||
+                    _reqSigs.every( 
+                        sig => 
+                        _vkeyWits.some( 
+                            wit => wit.vkey.hash.toString() === sig 
+                        )
+                    ),
+                set: () => {},
+                configurable: false,
+                enumerable: true 
+            }
+        );
+
+        ObjectUtils.defineReadOnlyProperty(
+            this, "addVKeyWitnessIfNeeded",
+            ( vkeyWit: VKeyWitness ) => {
+                if(
+                    noRequiredSigs ||
+                    _reqSigs.includes( vkeyWit.vkey.hash.toString() )
+                )
+                {
+                    _vkeyWits.push( vkeyWit.clone() );
+                }
+            }
+        )
     }
 
     toJson()

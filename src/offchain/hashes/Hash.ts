@@ -115,6 +115,11 @@ export class Hash
         return this._bytes;
     }
 
+    toBytes(): Buffer
+    {
+        return this._bytes;
+    }
+
     clone(): Hash
     {
         return new Hash( this._str );

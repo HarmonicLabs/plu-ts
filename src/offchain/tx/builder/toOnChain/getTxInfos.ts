@@ -36,9 +36,7 @@ export function getTxInfos( transaction: Tx ): { v1: Data | undefined, v2: Data 
             ?.map( dat => 
                 new DataPair( 
                     new DataB(
-                        Buffer.from(
-                            hashData( dat )
-                        )
+                        hashData( dat ).asBytes
                     ),
                     dat
                 )

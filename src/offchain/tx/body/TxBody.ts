@@ -23,7 +23,7 @@ import { CborUInt } from "../../../cbor/CborObj/CborUInt";
 import { CborArray } from "../../../cbor/CborObj/CborArray";
 import { Hash32 } from "../../hashes/Hash32/Hash32";
 import { ToJson } from "../../../utils/ts/ToJson";
-import { UTxO } from "./output/UTxO";
+import { TxOutRef, UTxO } from "./output/UTxO";
 import { InvalidCborFormatError } from "../../../errors/InvalidCborFormatError";
 
 export interface ITxBody {
@@ -606,7 +606,7 @@ export class TxBody
         }
 
         return new TxBody({
-            inputs: _ins.array.map( UTxO.fromCborObj ) as any,
+            inputs: _ins.array.map( txOutRefAsUTxOFromCborObj ) as [UTxO, ...UTxO[]],
             outputs: _outs.array.map( TxOut.fromCborObj ),
             fee: _fee.num,
             ttl,
@@ -617,12 +617,12 @@ export class TxBody
             validityIntervalStart:      _validityStart instanceof CborUInt ? _validityStart.num : undefined,
             mint:                       _mint === undefined ? undefined : Value.fromCborObj( _mint ),
             scriptDataHash:             _scriptDataHash === undefined ? undefined : ScriptDataHash.fromCborObj( _scriptDataHash ),
-            collateralInputs:           _collIns instanceof CborArray ? _collIns.array.map( UTxO.fromCborObj ) : undefined ,
+            collateralInputs:           _collIns instanceof CborArray ? _collIns.array.map( txOutRefAsUTxOFromCborObj ) : undefined ,
             requiredSigners:            _reqSigs instanceof CborArray  ? _reqSigs.array.map( PubKeyHash.fromCborObj ) : undefined,
             network:                    _net instanceof CborUInt ? (Number( _net.num ) === 0 ? "testnet": "mainnet") : undefined,
             collateralReturn:           _collRet === undefined ? undefined : TxOut.fromCborObj( _collRet ),
             totCollateral:              _totColl instanceof CborUInt ? _totColl.num : undefined,
-            refInputs:                  _refIns instanceof CborArray ? _refIns.array.map( UTxO.fromCborObj ) : undefined
+            refInputs:                  _refIns instanceof CborArray ? _refIns.array.map( txOutRefAsUTxOFromCborObj ) : undefined
         });
     }
 
@@ -689,3 +689,12 @@ export class TxBody
     }
 
 };
+
+
+function txOutRefAsUTxOFromCborObj( cObj: CborObj ): UTxO
+{
+    return new UTxO({
+        utxoRef: TxOutRef.fromCborObj( cObj ),
+        resolved: TxOut.fake
+    });
+}

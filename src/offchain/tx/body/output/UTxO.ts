@@ -10,6 +10,8 @@ import { ToData } from "../../../../types/Data/toData/interface";
 import { ToJson } from "../../../../utils/ts/ToJson";
 import { TxOut, ITxOut, isITxOut } from "./TxOut";
 import { TxOutRef, ITxOutRef, isITxOutRef } from "./TxOutRef";
+import { CborArray } from "../../../../cbor/CborObj/CborArray";
+import { InvalidCborFormatError } from "../../../../errors/InvalidCborFormatError";
 
 export interface IUTxO {
     utxoRef: ITxOutRef,
@@ -63,7 +65,10 @@ export class UTxO
     }
     toCborObj()
     {
-        return this.utxoRef.toCborObj()
+        return new CborArray([
+            this.utxoRef.toCborObj(),
+            this.resolved.toCborObj()
+        ])
     }
 
     static fromCbor( cStr: CanBeCborString ): UTxO
@@ -72,9 +77,29 @@ export class UTxO
     }
     static fromCborObj( cObj: CborObj ): UTxO
     {
+        if(!(cObj instanceof CborArray))
+        throw new InvalidCborFormatError("UTxO");
+
+        const [ ref, res ] = cObj.array;
+
+        let utxoRef: TxOutRef;
+        let resolved: TxOut;
+
+        if( ref === undefined )
+        throw new InvalidCborFormatError("UTxO");
+
+        if( res === undefined )
+        throw new InvalidCborFormatError(
+            "UTxO",
+            "if you are trying to parse only a TxOutRef instead (<hex>#<index>) you should use `TxOutRef.fromCborObj`"
+        );
+
+        utxoRef = TxOutRef.fromCborObj( ref );
+        resolved = TxOut.fromCborObj( res );
+
         return new UTxO({
-            utxoRef: TxOutRef.fromCborObj( cObj ),
-            resolved: TxOut.fake
+            utxoRef,
+            resolved
         })
     }
 

@@ -15,6 +15,11 @@ import { Hash28 } from "../hashes/Hash28/Hash28";
 import { PubKeyHash } from "../credentials/PubKeyHash";
 import { ToJson } from "../../utils/ts/ToJson";
 import { InvalidCborFormatError } from "../../errors/InvalidCborFormatError";
+import { signEd25519 } from "../../crypto";
+import { PrivateKey, StakeCredentials } from "../credentials";
+import { Signature } from "../hashes";
+import { VKeyWitness, VKey } from "./TxWitnessSet";
+import { CertificateType, PoolParams } from "../ledger";
 
 export interface ITx {
     body: ITxBody
@@ -39,13 +44,13 @@ export class Tx
      * one might prefer to use this method instead of `signWith`
      * when signature is provided by a third party (example CIP30 wallet)
     **/
-    // readonly addVKeyWitnessIfNeeded!: ( vkeyWit: VKeyWitness ) => void
+    readonly addVKeyWitnessIfNeeded!: ( vkeyWit: VKeyWitness ) => void
     /**
      * checks that the signer is needed
      * if true signs the transaction with the specified key
      * otherwise nothing happens (the signature is not added)
     **/
-    // readonly signWith!: ( signer: PrivateKey ) => void
+    readonly signWith!: ( signer: PrivateKey ) => void
     /**
      * @returns {boolean}
      *  `true` if all the signers needed
@@ -57,7 +62,7 @@ export class Tx
      *  - required by withdrawals
      *  - additional spefified in the `requiredSigners` field
      */
-    // readonly isComplete!: () => boolean
+    readonly isComplete!: boolean
     /**
      * getter
      */
@@ -123,7 +128,7 @@ export class Tx
             }
         );
 
-        /*
+        //*
         ObjectUtils.defineReadOnlyProperty(
             this, "addVKeyWitnessIfNeeded",
             this.witnesses.addVKeyWitnessIfNeeded
@@ -143,9 +148,15 @@ export class Tx
             }
         )
 
-        ObjectUtils.defineReadOnlyProperty(
+        Object.defineProperty(
             this, "isComplete",
-            this.witnesses.isComplete
+            {
+                // calls the `TxWitnessSet` getter
+                get: () => this.witnesses.isComplete,
+                set: () => {},
+                configurable: false,
+                enumerable: true
+            }
         );
         //*/
     }
@@ -215,8 +226,8 @@ export class Tx
 export function getAllRequiredSigners( body: Readonly<TxBody> ): Hash28[]
 {
     return (
-        body.inputs
-        .reduce(
+        // required for spending pubKey utxo
+        body.inputs.reduce(
             ( acc, _in ) => {
 
                 const { type, hash } =  _in.resolved.address.paymentCreds;
@@ -226,7 +237,45 @@ export function getAllRequiredSigners( body: Readonly<TxBody> ): Hash28[]
                 return acc;
             },
             [] as Hash28[]
-        ).concat(
+        )
+        // required to sign certificate
+        .concat(
+            body.certs?.reduce( (acc, cert) => {
+
+                const [_0, _1, _2] = cert.params;
+
+                let hash: Hash28 | undefined = undefined;
+
+                switch( cert.certType )
+                {
+                    case CertificateType.StakeRegistration:
+                    case CertificateType.StakeDeRegistration:
+                    case CertificateType.StakeDelegation:
+                        hash = (_0 as StakeCredentials).hash as any;
+                    break;
+                    case CertificateType.PoolRegistration:
+                        hash = (_0 as PoolParams).operator;
+                    break;
+                    case CertificateType.PoolRetirement:
+                    case CertificateType.GenesisKeyDelegation:
+                        hash = _0 as any;
+                    break;
+                }
+
+                if( hash instanceof Hash28 ) acc.push( hash );
+                return acc;
+            },
+            [] as Hash28[]
+            ) ?? []
+        )
+        // requred for withdrawal
+        .concat(
+            body.withdrawals?.map
+            .map( ({ rewardAccount }) => rewardAccount.credentials.clone() )
+            ?? []
+        )
+        // requred signers explicitly specified by the tx
+        .concat(
             ...body.requiredSigners
             ?.map( sig => sig.clone() ) ?? []
         )

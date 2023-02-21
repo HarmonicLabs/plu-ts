@@ -6,7 +6,7 @@ import { Hash28 } from "../../hashes/Hash28/Hash28";
 export type IValue = (IValuePolicyEntry | IValueAdaEntry)[]
 
 export type IValueAssets = {
-    [assetNameAscii: string]: number | bigint
+    [assetNameAscii: string]: number | bigint,
 }
 
 export type IValuePolicyEntry = {

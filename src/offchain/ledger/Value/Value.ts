@@ -23,11 +23,22 @@ import { isIValue, addIValues, subIValues, IValue, cloneIValue, IValueToJson } f
 import { Buffer } from "buffer";
 import { CborArray } from "../../../cbor/CborObj/CborArray";
 import { ByteString } from "../../../types/HexString/ByteString";
+import { IValueAssets } from "./IValue";
+import { hex } from "../../../types/HexString";
 
 export class Value
     implements ToCbor, Cloneable<Value>, ToData, ToJson
 {
     readonly map!: IValue
+
+    *[Symbol.iterator]()
+    {
+        for( const { policy, assets } of this.map )
+        {
+            yield { policy: policy.toString() as hex, assets: assets as IValueAssets };
+        }
+        return;
+    }
 
     constructor( map: IValue )
     {
