@@ -9,6 +9,7 @@ import { StakeKeyHash } from "../credentials/StakeKeyHash";
 import { Hash28 } from "../hashes/Hash28/Hash28";
 import { BasePlutsError } from "../../errors/BasePlutsError";
 import { hexToBytes } from "../../crypto/utils/hexToBytes";
+import { PubKeyHash, PublicKey } from "../credentials";
 
 
 export type StakeAddressBech32 = `stake1${string}` | `stake_test1${string}`;
@@ -105,16 +106,16 @@ export class StakeAddress<T extends StakeAddressType = StakeAddressType>
     }
 
     static fromBytes(
-        bs: byte[] | string,
+        bs: byte[] | string | Buffer,
         netwok: NetworkT = "mainnet",
         type: StakeAddressType = "stakeKey"
     ): StakeAddress
     {
-        bs = typeof bs === "string" ? hexToBytes( bs ) : bs;
+        bs = Buffer.from( typeof bs === "string" ? hexToBytes( bs ) : bs );
 
         return new StakeAddress(
             netwok,
-            new Hash28( Buffer.from( bs ) ),
+            bs.length === 28 ? new Hash28( bs ) : new PublicKey( bs ).hash,
             type
         )
     }
