@@ -113,7 +113,10 @@ function getExtractedFieldsExpr<CtorDef extends StructCtorDef, Fields extends (k
     const fieldType = ctorDef[ allFieldsNames[ idx ] ];
 
     return plet(
-        fromData( fieldType )(
+        // needs to be minimal
+        // it MUST not add the fieldType utilities
+        // it will add the `withAllPairElemsAsData` version utilities
+        _fromData( fieldType )(
             getElemAtTerm( idx ).$( fieldsData )
         )
     ).in( value => {
@@ -121,7 +124,7 @@ function getExtractedFieldsExpr<CtorDef extends StructCtorDef, Fields extends (k
         ObjectUtils.defineNormalProperty(
             partialExtracted,
             allFieldsNames[ idx ],
-            punsafeConvertType( value, fieldType )
+            punsafeConvertType( value, withAllPairElemsAsData( fieldType ) )
         );
 
         return getExtractedFieldsExpr(

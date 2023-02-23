@@ -7,10 +7,13 @@ export function getFstT( t: TermType ): TermType
 export function getFstT( t: GenericTermType ): GenericTermType
 export function getFstT( t: GenericTermType ): GenericTermType
 {
+    t = t[1] as any;
+    // this unwrapping is assumed in `typeExtends`
+    // if this ever changes please reflect the change to `typeExtends` too
     while(
         t[0] === PrimType.AsData || 
         t[0] === PrimType.Alias
     ) t = t[1];
 
-    return t[1] as any;
+    return t as any;
 }

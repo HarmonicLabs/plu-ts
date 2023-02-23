@@ -2,5 +2,6 @@ import { PrimType, TermType } from "../types";
 
 export function unwrapAlias<T extends TermType>( t: [ PrimType.Alias, T  ] ): T
 {
-    return t[1] as any;
+    while( t[0] === PrimType.Alias ) t = t[1] as any;
+    return t as any;
 }

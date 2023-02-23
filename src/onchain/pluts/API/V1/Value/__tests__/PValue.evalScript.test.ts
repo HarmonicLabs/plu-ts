@@ -184,12 +184,13 @@ describe("pvalueOf", () => {
         const expected = Machine.evalSimple( pInt( 1_000_000 ) );
         const received = Machine.evalSimple( uplc );
         
-        const compiled = UPLCEncoder.compile( new UPLCProgram([1,0,0], uplc.clone() ) ).toBuffer().buffer;
-        
         /*
+        const compiled = UPLCEncoder.compile( new UPLCProgram([1,0,0], uplc.clone() ) ).toBuffer().buffer;
+
         console.log( showUPLC( uplc ) );
-        console.log( compiled.toString("hex") );
-        console.log( compiled.length );
+        // console.log( compiled.toString("hex") );
+        // console.log( compiled.length );
+        console.log( received );
         //*/
         
         expect(

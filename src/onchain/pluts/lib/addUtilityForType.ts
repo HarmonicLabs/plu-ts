@@ -54,6 +54,7 @@ export type UtilityTermOf<PElem extends PType> =
 export function addUtilityForType<T extends TermType>( t: T )
     : ( term: Term<ToPType<T>> ) => UtilityTermOf<ToPType<T>>
 {
+    // console.log("adding utility to ", termTypeToString( t ) );
     if( isTaggedAsAlias( t ) ) return addUtilityForType( unwrapAlias( t as any ) ) as any;
 
     if( typeExtends( t , bool ) ) return addPBoolMethods as any;

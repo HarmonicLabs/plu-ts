@@ -5,7 +5,7 @@ import { PPair } from "../../../PTypes";
 import { Term } from "../../../Term";
 import { isWellFormedType, termTypeToString, typeExtends } from "../../../type_system";
 import { getFstT, getSndT } from "../../../type_system/tyArgs";
-import { tyVar, pair, TermType } from "../../../type_system/types";
+import { tyVar, pair, TermType, PrimType } from "../../../type_system/types";
 import { UtilityTermOf } from "../../addUtilityForType";
 import { pfstPair, psndPair } from "../../builtins";
 
@@ -34,8 +34,14 @@ export function addPPairMethods<PFst extends PType, PSnd extends PType>( _pair: 
         );
     };
 
-    const fstT = getFstT( pairT );
-    const sndT = getSndT( pairT );
+    // MUST NOT unwrap `asData`
+    let fstT: TermType = pairT[1] as TermType;
+    while( fstT[0] === PrimType.Alias ) fstT = fstT[1];
+
+    // MUST NOT unwrap `asData`    
+    let sndT: TermType = pairT[2] as TermType;
+    while( sndT[0] === PrimType.Alias ) sndT = sndT[1];
+
 
     if( isWellFormedType( fstT ) )
         ObjectUtils.definePropertyIfNotPresent(

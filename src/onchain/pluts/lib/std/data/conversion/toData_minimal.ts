@@ -286,8 +286,8 @@ export function _ptoData<T extends TermType>( t: T ): Term<PLam<ToPType<T>, PAsD
         )
     )
     {
-        const fstT = getFstT( t ) as TermType;
-        const sndT = getSndT( t ) as TermType;
+        const fstT = unwrapAlias( t[1] as any );
+        const sndT = unwrapAlias( t[2] as any );
         return pPairToData( fstT, sndT ) as any;
     };
 

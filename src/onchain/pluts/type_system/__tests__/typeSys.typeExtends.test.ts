@@ -1,7 +1,9 @@
+import { PValue } from "../../API";
 import { PScriptPurpose } from "../../API/V1/ScriptContext/PScriptPurpose";
 import { pList } from "../../lib/std/list/const";
 import { typeExtends } from "../typeExtends";
-import { alias, asData, bs, data, int, lam, list, pair, str, struct, tyVar, unit } from "../types";
+import { alias, asData, bs, data, delayed, int, lam, list, pair, str, struct, tyVar, unit } from "../types";
+import { withAllPairElemsAsData } from "../withAllPairElemsAsData";
 
 describe("typeExtends", () => {
 
@@ -236,6 +238,30 @@ describe("typeExtends", () => {
 
     });
 
+    describe("pair( asData( a ), asData( b ) )", () => {
+
+        test("int,bs", () => {
+            expect(
+                typeExtends(
+                    pair( asData( int ), asData( bs ) ),
+                    pair( int, bs )
+                )
+            ).toBe( true );
+        })
+
+        test("PValue", () => {
+            expect(
+                typeExtends(
+                    withAllPairElemsAsData(
+                        PValue.type
+                    ),
+                    PValue.type
+                )
+            ).toBe( true );
+        });
+
+    })
+
     test("list(pair( dataLike, dataLike )", () => {
 
         expect(
@@ -245,6 +271,25 @@ describe("typeExtends", () => {
             )
         ).toBe( true )
         
+    });
+
+    describe("delayed", () => {
+
+        test("PValue", () => {
+            expect(
+                typeExtends(
+                    delayed(
+                        withAllPairElemsAsData(
+                            PValue.type
+                        )
+                    ),
+                    delayed(
+                        PValue.type
+                    )
+                )
+            ).toBe( true );
+        })
+
     })
 
 })

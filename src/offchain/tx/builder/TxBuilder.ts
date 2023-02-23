@@ -7,7 +7,7 @@ import { costModelsToLanguageViewCbor, defaultV1Costs, defaultV2Costs, isCostMod
 import { txBuildOutToTxOut } from "./txBuild/ITxBuildOutput";
 import { forceBigUInt } from "../../../types/ints/Integer";
 import { Script, ScriptType } from "../../script/Script";
-import { ProtocolParamters, isProtocolParameters } from "../../ledger/protocol/ProtocolParameters";
+import { ProtocolParamters, isPartialProtocolParameters, isProtocolParameters } from "../../ledger/protocol/ProtocolParameters";
 import { getTxInfos } from "./toOnChain/getTxInfos";
 import { blake2b_256, byte } from "../../../crypto";
 import { Tx, getNSignersNeeded } from "../Tx";
@@ -57,7 +57,7 @@ export class TxBuilder
         );
 
         JsRuntime.assert(
-            isProtocolParameters( protocolParamters ),
+            isPartialProtocolParameters( protocolParamters ),
             "invlaid 'protocolParamters' argument while constructing a 'TxBuilder' instance"
         );
         ObjectUtils.defineReadOnlyProperty(

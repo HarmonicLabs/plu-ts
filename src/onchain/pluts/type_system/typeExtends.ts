@@ -1,7 +1,9 @@
 import { isTaggedAsAlias } from "./kinds/isTaggedAsAlias";
 import { isGenericStructType, isStructType, isWellFormedGenericType, isWellFormedType } from "./kinds/isWellFormedType";
+import { getFstT, getSndT } from "./tyArgs";
 import { unwrapAlias } from "./tyArgs/unwrapAlias";
 import { GenericStructCtorDef, GenericStructDefinition, GenericTermType, PrimType, StructCtorDef, StructDefinition, TermType, data } from "./types";
+import { termTypeToString } from "./utils";
 
 
 /**
@@ -150,6 +152,33 @@ export function typeExtends( extending: GenericTermType, extended: GenericTermTy
                 a[0] === PrimType.Struct || 
                 a[0] === PrimType.Data
             );
+        }
+        if( b[0] === PrimType.Pair )
+        {
+            // `getFstT` and `getSndT` unwraps `alias`es and `asData`s
+            return (
+                a[0] === PrimType.Pair &&
+                (
+                    unchecked(
+                        getFstT(a),
+                        getFstT(b)
+                    ) ||
+                    (
+                        unchecked( b[1] as any, data ) && 
+                        unchecked( a[1], data ) 
+                    )
+                )&&
+                (
+                    unchecked(
+                        getSndT(a),
+                        getSndT(b)
+                    ) ||
+                    (
+                        unchecked( b[2] as any, data ) && 
+                        unchecked( a[2], data ) 
+                    )
+                )
+            )
         }
         if( a[0] === PrimType.AsData )
         {

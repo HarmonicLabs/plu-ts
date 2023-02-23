@@ -706,10 +706,24 @@ export class BnCEK
     equalsByteString( a: UPLCTerm, b: UPLCTerm ): ConstOrErr
     {
         const _a = getBS( a );
-        if( _a === undefined ) return new ErrorUPLC("equalsByteString :: not BS");
+        if( _a === undefined )
+        return new ErrorUPLC(
+            "equalsByteString :: first argument not BS",
+            {
+                bs_0: a,
+                bs_1: b 
+            }
+        );
         
         const _b = getBS( b );
-        if( _b === undefined ) return new ErrorUPLC("equalsByteString :: not BS");
+        if( _b === undefined )
+        return new ErrorUPLC(
+            "equalsByteString :: secondt argument not BS",
+            {
+                bs_0: a,
+                bs_1: b 
+            }
+        )
 
         const f = this.getBuiltinCostFunc( UPLCBuiltinTag.equalsByteString );
                 

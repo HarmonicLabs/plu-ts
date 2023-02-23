@@ -48,7 +48,10 @@ export class Term<A extends PType>
             if( typeof deBruijnLevel !== "bigint" ) deBruijnLevel = BigInt( deBruijnLevel );
 
             let uplc = this._toUPLC( deBruijnLevel );
-            if( (this as any).isConstant )
+            if( 
+                !(uplc instanceof HoistedUPLC) &&
+                (this as any).isConstant
+            )
             {
                 // console.log("evaluating:\n\n", showUPLC( uplc ) );
                 uplc = Machine.evalSimple( uplc )

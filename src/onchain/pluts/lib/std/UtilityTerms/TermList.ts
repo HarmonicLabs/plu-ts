@@ -168,12 +168,6 @@ export function addPListMethods<PElemsT extends PType>( lst: Term<PList<PElemsT>
         );
     }
 
-    if( typeExtends( elemsT, list( tyVar() ) ) )
-    {
-        console.log( termTypeToString( elemsT ) );
-        console.log( Error().stack );
-    }
-
     ObjectUtils.definePropertyIfNotPresent(
         _lst,
         "head",
