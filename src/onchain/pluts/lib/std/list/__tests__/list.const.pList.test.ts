@@ -5,6 +5,7 @@ import { pInt } from "../../int";
 import { pStr } from "../../str";
 import { pList, pnil } from "../const"
 
+/*/
 import * as fs from "node:fs";
 
 import v8Profiler from 'v8-profiler-next';
@@ -26,6 +27,7 @@ v8Profiler.startProfiling(title, true);
       profile.delete();
     });
 });
+//*/
 
 describe("pList", () => {
 

@@ -15,8 +15,6 @@ describe("dataFromCbor", () => {
             )
         ).not.toThrow();
 
-        console.log( data );
-
         expect(
             data
         ).toEqual(
