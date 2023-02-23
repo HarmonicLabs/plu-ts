@@ -123,7 +123,7 @@ describe("oneShotNFT", () => {
     test("no execution errors", () => {
 
         /*
-        console.log(
+        // console.log(
             showUPLC(
                 oneshotParametrized.toUPLC(0)
             )
@@ -138,7 +138,7 @@ describe("oneShotNFT", () => {
             )
         );
 
-        // console.log( result );
+        // // console.log( result );
 
         expect(
             result instanceof ErrorUPLC
@@ -152,10 +152,15 @@ describe("oneShotNFT", () => {
 
         const oneshotParametrizedUPLC = oneshotParametrized.toUPLC(0);
 
-        const oneShotAsScript = new Script(
-            ScriptType.PlutusV2,
-            compile( oneshotParametrized )
-        )
+        expect(
+            () => deserialized = UPLCDecoder.parse(
+                Buffer.from(
+                    "5901e45901e101000032323232323232323232323222330050012323233008002232323233300b00923300e2330143371e646eb8d55ce8008008018991980a9aba335744002266e20c8dd69aab9e001357420029000191bab35573c0020020064660266601c46601c00246466ebc004038d5d080080209980711980a19b8f32375c6aae7400400400c4c8cc054d5d19aba23756002266e1cc8dd69aab9e001357420029001191bab35573c002002006646666602600a0020020024640026eb8d5d0800931bab301200237586ae84004c040008d5d0800a6129d87982d8798158205dafdbe833a241350d679348d03599db3d5179385f96521f89ff8fa51fd57ebf000022232332533357346002900008018a999ab9a300148008401058dc39aab9d00135573c0026ea800c88c004d55cf1baa002233002214a244466010600800426006002600244446466600e6008002600600200466008006004464600446600400400246004466004004002444a666aae7c00400c4cc008d5d08009aba200122533357340042944004894ccd5cd0010008a502222232332533357346002900008018a999ab9a300148008401054ccd5cd1800a4008200a2a666ae68c0052006100616370e6aae74004d55cf0009baa0052357426ae88d5d11aba23574400246ae84d5d10009",
+                    "hex"
+                ),
+                "cbor"
+            ).body
+        ).not.toThrow();
 
         const myCompiled = Cbor.encode(
             new CborBytes(
@@ -177,34 +182,49 @@ describe("oneShotNFT", () => {
             "cbor"
         ).body;
 
-        const myCompiledStr = myCompiled.toString();
-
+        const _0 = showUPLC( myCompiledDeserialized );
+        // console.log( _0 );
         expect(
-            () => deserialized = UPLCDecoder.parse(
-                Buffer.from(
-                    "5901e45901e101000032323232323232323232323222330050012323233008002232323233300b00923300e2330143371e646eb8d55ce8008008018991980a9aba335744002266e20c8dd69aab9e001357420029000191bab35573c0020020064660266601c46601c00246466ebc004038d5d080080209980711980a19b8f32375c6aae7400400400c4c8cc054d5d19aba23756002266e1cc8dd69aab9e001357420029001191bab35573c002002006646666602600a0020020024640026eb8d5d0800931bab301200237586ae84004c040008d5d0800a6129d87982d8798158205dafdbe833a241350d679348d03599db3d5179385f96521f89ff8fa51fd57ebf000022232332533357346002900008018a999ab9a300148008401058dc39aab9d00135573c0026ea800c88c004d55cf1baa002233002214a244466010600800426006002600244446466600e6008002600600200466008006004464600446600400400246004466004004002444a666aae7c00400c4cc008d5d08009aba200122533357340042944004894ccd5cd0010008a502222232332533357346002900008018a999ab9a300148008401054ccd5cd1800a4008200a2a666ae68c0052006100616370e6aae74004d55cf0009baa0052357426ae88d5d11aba23574400246ae84d5d10009",
-                    "hex"
-                ),
-                "cbor"
-            ).body
-        ).not.toThrow();
-
-        expect(
-            showUPLC( myCompiledDeserialized )
+            _0
         ).toEqual(
             showUPLC( oneshotParametrizedUPLC )
         )
 
+        const oneShotAsScript = new Script(
+            ScriptType.PlutusV2,
+            compile( oneshotParametrized )
+        )
+        oneShotAsScript.hash;
+        const _1 = showUPLC(
+            UPLCDecoder.parse(
+                Buffer.from(
+                    (oneShotAsScript.toJson() as any).cborHex ,
+                    "hex"
+                ),
+                "cbor"
+            ).body
+        );
+        // console.log( _1 );
         expect(
-            showUPLC(
-                UPLCDecoder.parse(
-                    Buffer.from(
-                        (oneShotAsScript.toJson() as any).cborHex ,
-                        "hex"
-                    ),
-                    "cbor"
-                ).body
-            )
+            _1
+        ).toEqual(
+            showUPLC( oneshotParametrizedUPLC )
+        )
+
+        const myCompiledStr = myCompiled.toString();
+        
+        const _2 = showUPLC(
+            UPLCDecoder.parse(
+                Buffer.from(
+                    myCompiledStr,
+                    "hex"
+                ),
+                "cbor"
+            ).body
+        );
+        // console.log( _2 );
+        expect(
+            _2
         ).toEqual(
             showUPLC( oneshotParametrizedUPLC )
         )

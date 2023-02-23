@@ -2,11 +2,12 @@ import { Machine } from "../../../../../CEK";
 import { UPLCEncoder } from "../../../../../UPLC/UPLCEncoder";
 import { UPLCProgram } from "../../../../../UPLC/UPLCProgram";
 import { showUPLC } from "../../../../../UPLC/UPLCTerm";
+import { ErrorUPLC } from "../../../../../UPLC/UPLCTerms/ErrorUPLC";
 import { UPLCConst } from "../../../../../UPLC/UPLCTerms/UPLCConst";
 import { pmatch } from "../../../../PTypes/PStruct/pmatch";
-import { PMaybe, pBool, pByteString, pInt, pPair, pdelay, pfn, phoist, pif, precursiveList, toData } from "../../../../lib";
+import { PMaybe, fromData, pBool, pByteString, pInt, pPair, pdelay, pfn, phoist, pif, plam, precursiveList, toData } from "../../../../lib";
 import { pList } from "../../../../lib/std/list/const";
-import { bs, fn, int, list } from "../../../../type_system/types";
+import { bool, bs, fn, int, list } from "../../../../type_system/types";
 import { PCurrencySymbol } from "../PCurrencySymbol";
 import { PTokenName } from "../PTokenName";
 import { PAssetsEntryT, PValue, PValueEntryT } from "../PValue";
@@ -29,6 +30,12 @@ const oneEntryValue = PValue.from(
         )
     ])
 );
+
+const dynamicOneEntryValue = fromData( PValue.type )(
+    toData( PValue.type )(
+        oneEntryValue
+    )
+)
 
 
 describe("Machine.evalSimple( PValue )", () => {
@@ -216,4 +223,78 @@ describe("pvalueOf", () => {
 
     });
 
+    describe("with dynamic value", () => {
+
+        test("something simple", () => {
+
+            expect(
+                Machine.evalSimple(
+                    dynamicOneEntryValue.head.fst.eq("")
+                ) instanceof ErrorUPLC
+            ).toBe(
+                false
+            );
+
+        });
+
+        test("something simple but in function", () => {
+
+            const somethingSimple = plam( PValue.type, bool )
+            ( mySuperDuperValue => mySuperDuperValue.head.fst.eq("") );
+
+            const res = Machine.evalSimple(
+                somethingSimple.$( dynamicOneEntryValue )
+            );
+
+            // console.log( res );
+
+            expect(
+                res instanceof ErrorUPLC
+            ).toBe(
+                false
+            );
+
+        })
+
+        test("token present", () => {
+
+            const term = pvalueOf.$( dynamicOneEntryValue ).$( currSym as any ).$( tn as any );
+
+            const uplc = term.toUPLC(0);
+
+            const expected = Machine.evalSimple( pInt( 1_000_000 ) );
+            const received = Machine.evalSimple( uplc );
+            
+            /*
+            const compiled = UPLCEncoder.compile( new UPLCProgram([1,0,0], uplc.clone() ) ).toBuffer().buffer;
+
+            console.log( showUPLC( uplc ) );
+            // console.log( compiled.toString("hex") );
+            // console.log( compiled.length );
+            console.log( received );
+            //*/
+            
+            expect(
+                received
+            ).toEqual(
+                expected
+            );
+
+            expect(
+                term.type
+            )
+            .toEqual( int )
+
+            expect(
+                Machine.evalSimple(
+                    pInt(1_000_000).eq( term as any )
+                )
+            ).toEqual(
+                Machine.evalSimple(
+                    pBool( true )
+                )
+            );
+
+        })
+    })
 })

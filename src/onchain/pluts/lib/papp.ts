@@ -9,6 +9,7 @@ import { UPLCVar } from "../../UPLC/UPLCTerms/UPLCVar";
 import { PType } from "../PType";
 import { PLam } from "../PTypes";
 import { Term } from "../Term";
+import { includesDynamicPairs } from "../type_system/includesDynamicPairs";
 import { typeExtends } from "../type_system/typeExtends";
 import { PrimType, TermType, data, list, pair } from "../type_system/types";
 import { termTypeToString } from "../type_system/utils";
@@ -98,7 +99,12 @@ export function papp<Input extends PType, Output extends PType>( a: Term<PLam<In
             outputType,
             dbn => {
 
-                const funcUPLC = a.toUPLC( dbn );
+                const funcUPLC = (
+                    includesDynamicPairs( _b.type ) && ObjectUtils.hasOwn( a, "__withDynamicPairsAsInput__" ) ? 
+                        (a as any).__withDynamicPairsAsInput__ : 
+                        a
+                ).toUPLC( dbn );
+
                 if( funcUPLC instanceof ErrorUPLC ) return funcUPLC;
                 
                 const argUPLC  = _b.toUPLC( dbn );

@@ -18,7 +18,6 @@ import { pUnitFromData } from "../../unit";
 import { _papp, _pcompose } from "./minimal_common";
 import { getElemsT, getFstT, getSndT } from "../../../../type_system/tyArgs";
 import { _pmap } from "../../list/pmap/minimal";
-import { fromData } from "./fromData";
 
 const punBData = new Term<PLam<PData, PByteString>>(
     lam( data, bs ),
@@ -339,5 +338,5 @@ export function _pfromData<T extends TermType>( t: T ): TermFn<[ PData ], ToPTyp
         ) as any;
     };
 
-    return plam( data, t )( fromData( t ) ) as any
+    return plam( data, t )( _fromData( t ) ) as any
 }
