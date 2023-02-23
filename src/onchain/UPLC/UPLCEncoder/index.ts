@@ -311,6 +311,8 @@ export function replaceHoistedTermsInplace( uplc: UPLCTerm ): PureUPLCTerm
             );
         }
 
+        console.log( t )
+
         throw JsRuntime.makeNotSupposedToHappenError(
             "'replaceWithUPLCVar', local funciton in 'replaceHoistedTermsInplace'; did not match any 'UPLCTerm' constructor"
         )
@@ -584,7 +586,7 @@ export class UPLCEncoder
         {
             value = dataFromCbor( value );
         }
-        if(isData( value ) )
+        if( isData( value ) )
         {
             return this.encodeConstValueData( value );
         }
@@ -614,7 +616,9 @@ export class UPLCEncoder
      */
     encodeConstValueData( data: Data ): BitStream
     {
-        const cborBytes = dataToCbor( data ).asBytes;
+        const dataCbor = dataToCbor( data );
+        console.log( dataCbor.asBytes.toString("hex") );
+        const cborBytes = dataCbor.asBytes;
 
         if( cborBytes.length < 64 ) return this.encodeConstValueByteString( new ByteString( cborBytes ) );
 
@@ -666,7 +670,11 @@ export class UPLCEncoder
     encodeConstValueByteString( bs: ByteString ): BitStream
     {
         let missingBytes = bs.asString;
+        const isBadOne = missingBytes === "d87982d87981582066f225ce3f1acd5e9b133a09b571af99ea4f0742741d008e482d3d33a7329da300";
+
         const hexChunks: string[] = [];
+
+        if( isBadOne ) console.log("badOne.length", missingBytes.length / 2 );
 
         while( (missingBytes.length / 2) > 0b1111_1111 )
         {
@@ -681,6 +689,8 @@ export class UPLCEncoder
                 missingBytes
             );
         }
+
+        if( isBadOne ) console.log( (missingBytes.length / 2).toString(16).padStart( 2, '0' ) );
         
         // end chunk
         hexChunks.push( "00" );
@@ -702,6 +712,8 @@ export class UPLCEncoder
                 0
             )
         );
+
+        if( isBadOne ) console.log( result.toBuffer().buffer.toString("hex") )
 
         this._ctx.incrementLengthBy( result.length );
 

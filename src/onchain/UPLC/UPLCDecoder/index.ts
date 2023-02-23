@@ -6,7 +6,7 @@ import { Cbor } from "../../../cbor/Cbor";
 import { CborBytes } from "../../../cbor/CborObj/CborBytes";
 import { CborString } from "../../../cbor/CborString";
 import { UPLCDeserializaitonError } from "../../../errors/UPLCError/UPLCDeserializationError";
-import { dataFromCbor } from "../../../types/Data/fromCbor";
+import { dataFromCbor, dataFromCborObj } from "../../../types/Data/fromCbor";
 import { ByteString } from "../../../types/HexString/ByteString";
 import { Integer } from "../../../types/ints/Integer";
 import { Pair } from "../../../types/structs/Pair";
@@ -24,6 +24,7 @@ import { UPLCVar } from "../UPLCTerms/UPLCVar";
 import { UPLCConst } from "../UPLCTerms/UPLCConst";
 import { ConstType, constListTypeUtils, constPairTypeUtils, constT, constTypeEq, ConstTyTag, isWellFormedConstType } from "../UPLCTerms/UPLCConst/ConstType";
 import { ConstValue, ConstValueList } from "../UPLCTerms/UPLCConst/ConstValue";
+import { DataB } from "../../../types/Data/DataB";
 
 export type SerializedScriptFormat = "flat" | "cbor"
 
@@ -75,9 +76,9 @@ export class UPLCDecoder
             currPtr += n;
         }
 
-        function logState(): void
+        function logState( forced: boolean = false ): void
         {
-            if( debugLogs )
+            if( forced || debugLogs )
             {
                 console.log("UPLCDecoder state: " + JSON.stringify({
                     currPtr,
@@ -345,7 +346,7 @@ export class UPLCDecoder
                     for( let i = 0; i < chunkLen; i++ )
                     {
                         hexChunks.push(
-                            BigIntUtils.toBuffer( readNBits(8) ).toString("hex")
+                            readNBits(8).toString(16).padStart(2,'0')
                         );
                     }
                 }
@@ -364,9 +365,7 @@ export class UPLCDecoder
             if( constTypeEq( t, constT.data ) )
             {
                 return dataFromCbor(
-                    new CborString(
-                        (readConstValueOfType( constT.byteStr ) as ByteString).asBytes 
-                    )
+                    (readConstValueOfType( constT.byteStr ) as ByteString).asBytes
                 );
             }
             if( constTypeEq( t, constT.bool ) ) return (Number(readNBits(1)) === 1);
