@@ -15,7 +15,7 @@ export class Hash32 extends Hash
 
         JsRuntime.assert(
             this._bytes.length === 32,
-            "'" + className + "' must be an hash of length 32"
+            "'" + className + "' must be an hash of length 32; length was: " + this._bytes.length
         );
     }
 

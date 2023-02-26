@@ -3,7 +3,7 @@ import { PType } from "../../../../PType";
 import { PByteString, PData, PLam, PString } from "../../../../PTypes";
 import { TermFn } from "../../../../PTypes/PFn/PFn";
 import { Term } from "../../../../Term";
-import { PairT, PrimType, asData, bool, fn, lam, list, pair, tyVar, unit } from "../../../../type_system";
+import { PairT, PrimType, asData, bool, fn, isWellFormedType, lam, list, pair, tyVar, unit } from "../../../../type_system";
 import { TermType, bs, data, int, str } from "../../../../type_system";
 import { isTaggedAsAlias } from "../../../../type_system/kinds/isTaggedAsAlias";
 import { ToPType } from "../../../../type_system/ts-pluts-conversion";
@@ -18,6 +18,7 @@ import { pUnitFromData } from "../../unit";
 import { _papp, _pcompose } from "./minimal_common";
 import { getElemsT, getFstT, getSndT } from "../../../../type_system/tyArgs";
 import { _pmap } from "../../list/pmap/minimal";
+import { _punsafeConvertType } from "../../../punsafeConvertType/minimal";
 
 const punBData = new Term<PLam<PData, PByteString>>(
     lam( data, bs ),
@@ -101,10 +102,11 @@ export function _fromData<T extends TermType>( t: T ): ( term: Term<PData> ) => 
             return theTerm;
         }) as any;
 
-    function applyToTerm( termFunc: Term<any> ): ( term: Term<PData> ) => Term<ToPType<T>>
+    function applyToTerm( termFunc: Term<any>, t?: TermType ): ( term: Term<PData> ) => Term<ToPType<T>>
     {
         return ( term ) => {
-            const theTerm = _papp( termFunc, term ) as any
+            let theTerm = _papp( termFunc, term ) as any
+            theTerm = t !== undefined && isWellFormedType( t ) ? _punsafeConvertType( theTerm, t ) : theTerm;
             theTerm.isConstant = (term as any).isConstant;
             return theTerm;
         };
@@ -120,7 +122,7 @@ export function _fromData<T extends TermType>( t: T ): ( term: Term<PData> ) => 
                 )
             )
         )
-    ) return applyToTerm( punMapData );
+    ) return applyToTerm( punMapData, t );
 
     if(
         typeExtends(
@@ -178,15 +180,16 @@ export function _fromData<T extends TermType>( t: T ): ( term: Term<PData> ) => 
         return (
             ( term: Term<PData> ) => {
 
-                const theTerm = punsafeConvertType(
-                    _papp(
-                        punListData as any,
-                        term
-                    ),
-                    list(
-                        asData( elemsT )
-                    )
-                );
+                const theTerm = 
+                    _pmap( data, elemsT )
+                    .$( _pfromData( elemsT ) )
+                    .$(
+                        _papp(
+                            punListData as any,
+                            term
+                        )
+                    );
+
                 (theTerm as any).isConstant = (term as any).isConstant;
                 return theTerm;
             }
@@ -257,7 +260,7 @@ export function _pfromData<T extends TermType>( t: T ): TermFn<[ PData ], ToPTyp
                 )
             )
         )
-    ) return punMapData as any;
+    ) return _punsafeConvertType( punMapData, lam( data, t ) ) as any;
 
     if(
         typeExtends(

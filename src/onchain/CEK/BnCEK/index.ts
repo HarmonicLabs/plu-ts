@@ -232,13 +232,14 @@ function getData( data: UPLCTerm ): Data | undefined
     return data.value;
 }
 
-function intBinOp( a: UPLCTerm, b: UPLCTerm , op: (a: bigint, b: bigint) => bigint | undefined ): ConstOrErr
+function intBinOp( a: UPLCTerm, b: UPLCTerm , op: (a: bigint, b: bigint) => bigint | undefined , fnName: string ): ConstOrErr
 {
     const ints = getInts( a, b );
-    if( ints === undefined ) return new ErrorUPLC("");
+    if( ints === undefined )
+    return new ErrorUPLC(`${fnName} :: invalid arguments`, { a, b });
 
     const result = op( ints.a, ints.b);
-    if( result === undefined ) return new ErrorUPLC("");
+    if( result === undefined ) return new ErrorUPLC(`${fnName} :: operation error`, { a, b });
 
     return UPLCConst.int( result );
 }
@@ -407,7 +408,8 @@ export class BnCEK
                 
                 return a + b;
 
-            }).bind(this)
+            }).bind(this),
+            "addInteger"
         );
     }
     subtractInteger( _a: UPLCTerm, _b: UPLCTerm ): ConstOrErr
@@ -427,7 +429,8 @@ export class BnCEK
                 
                 return a - b;
 
-            }).bind(this)
+            }).bind(this),
+            "subtractInteger"
         );
     }
     multiplyInteger( _a: UPLCTerm, _b: UPLCTerm ): ConstOrErr
@@ -447,7 +450,8 @@ export class BnCEK
                 
                 return a * b;
 
-            }).bind(this)
+            }).bind(this),
+            "multiplyInteger"
         );
     }
     divideInteger( _a: UPLCTerm, _b: UPLCTerm ): ConstOrErr
@@ -467,7 +471,8 @@ export class BnCEK
                 
                 return haskellDiv( a, b );
 
-            }).bind(this)
+            }).bind(this),
+            "divideInteger"
         );
     }
     quotientInteger( _a: UPLCTerm, _b: UPLCTerm ): ConstOrErr
@@ -487,7 +492,8 @@ export class BnCEK
                 
                 return haskellQuot( a, b );
 
-            }).bind(this)
+            }).bind(this),
+            "quotientInteger"
         );
     }
     remainderInteger( _a: UPLCTerm, _b: UPLCTerm ): ConstOrErr
@@ -507,7 +513,8 @@ export class BnCEK
                 
                 return haskellRem( a, b );
 
-            }).bind(this)
+            }).bind(this),
+            "remainderInteger"
         );
     }
     modInteger( _a: UPLCTerm, _b: UPLCTerm ): ConstOrErr
@@ -527,7 +534,8 @@ export class BnCEK
                 
                 return haskellMod( a, b );
 
-            }).bind(this)
+            }).bind(this),
+            "modInteger"
         );
     }
     equalsInteger( a: UPLCTerm, b: UPLCTerm ): ConstOrErr
@@ -1054,7 +1062,7 @@ export class BnCEK
     chooseList( list: UPLCTerm, whateverA: UPLCTerm, whateverB: UPLCTerm ): UPLCTerm 
     {
         const l = getList( list );
-        if( l === undefined ) return new ErrorUPLC("not a list");
+        if( l === undefined ) return new ErrorUPLC("chooseList :: not a list");
 
         const f = this.getBuiltinCostFunc( UPLCBuiltinTag.chooseList );
 
@@ -1086,7 +1094,7 @@ export class BnCEK
         );
 
         const l = getList( list );
-        if( l === undefined ) return new ErrorUPLC("not a list");
+        if( l === undefined ) return new ErrorUPLC("mkCons :: not a list");
 
         const value = elem.value;
 
@@ -1108,7 +1116,7 @@ export class BnCEK
     headList( list: UPLCTerm ): ConstOrErr 
     {
         const l = getList( list );
-        if( l === undefined || l.length === 0 ) return new ErrorUPLC(l === undefined ? "not a list" : "empty list passed to 'head'");
+        if( l === undefined || l.length === 0 ) return new ErrorUPLC(l === undefined ? "headList :: not a list" : "headList :: empty list passed to 'head'");
 
         const f = this.getBuiltinCostFunc( UPLCBuiltinTag.headList );
 
@@ -1127,7 +1135,7 @@ export class BnCEK
     tailList( list: UPLCTerm ): ConstOrErr 
     {
         const l = getList( list );
-        if( l === undefined || l.length === 0 ) return new ErrorUPLC(l === undefined ? "not a list" : "empty list passed to 'tail'");
+        if( l === undefined || l.length === 0 ) return new ErrorUPLC(l === undefined ? "tailList :: not a list" : "tailList :: empty list passed to 'tail'");
 
         const f = this.getBuiltinCostFunc( UPLCBuiltinTag.tailList );
 
@@ -1146,7 +1154,7 @@ export class BnCEK
     nullList( list: UPLCTerm ): ConstOrErr 
     {
         const l = getList( list );
-        if( l === undefined ) return new ErrorUPLC("not a list");
+        if( l === undefined ) return new ErrorUPLC("nullList :: not a list");
 
         const f = this.getBuiltinCostFunc( UPLCBuiltinTag.nullList );
 
@@ -1186,10 +1194,10 @@ export class BnCEK
         const i = getInt( idx );
         if( i === undefined ) return new ErrorUPLC("not int");
 
-        if( !constTypeEq( (fields as any).type, constT.listOf( constT.data ) ) ) return new ErrorUPLC("passed fields are not a list of Data");
+        if( !constTypeEq( (fields as any).type, constT.listOf( constT.data ) ) ) return new ErrorUPLC("constrData :: passed fields are not a list of Data");
         
         const _fields: Data[] | undefined = getList( fields ) as any;
-        if( _fields === undefined ) return new ErrorUPLC("not a list");
+        if( _fields === undefined ) return new ErrorUPLC("constrData :: not a list");
 
         const f = this.getBuiltinCostFunc( UPLCBuiltinTag.constrData );
 
@@ -1203,7 +1211,7 @@ export class BnCEK
 
         // assert we got a list of data
         // ( the type has been forced but not the value )
-        if( !_fields.every( field => isData( field ) ) ) return new ErrorUPLC("some of the fields are not Data, mismatching type btw");
+        if( !_fields.every( field => isData( field ) ) ) return new ErrorUPLC("constrData :: some of the fields are not Data, mismatching type btw");
 
         return UPLCConst.data(
             new DataConstr( i, _fields )
@@ -1225,7 +1233,7 @@ export class BnCEK
         )) return new ErrorUPLC("not a const map");
 
         const list: Pair<Data,Data>[] | undefined = getList( listOfPair ) as any ;
-        if( list === undefined ) return new ErrorUPLC("not a list");
+        if( list === undefined ) return new ErrorUPLC("mapData :: not a list");
 
         // assert we got a list of pair of datas
         // ( the type has been forced but not the value )
@@ -1271,7 +1279,7 @@ export class BnCEK
         );
 
         const list: Data[] | undefined = getList( listOfData ) as any ;
-        if( list === undefined ) return new ErrorUPLC("not a list");
+        if( list === undefined ) return new ErrorUPLC("listData :: not a list");
 
         // assert we got a list of data
         // ( the type has been forced but not the value )
@@ -1381,9 +1389,9 @@ export class BnCEK
     unListData( data: UPLCTerm ): ConstOrErr
     {
         const d = getData( data );
-        if( d === undefined ) return new ErrorUPLC("not data; unListData");
+        if( d === undefined ) return new ErrorUPLC("unListData :: not data",{ data });
 
-        if( !( d instanceof DataList ) ) return new ErrorUPLC("not a data list");
+        if( !( d instanceof DataList ) ) return new ErrorUPLC("unListData :: not a data list", { data: d } );
 
         const f = this.getBuiltinCostFunc( UPLCBuiltinTag.unListData );
 

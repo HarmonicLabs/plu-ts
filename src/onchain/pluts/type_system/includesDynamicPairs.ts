@@ -1,9 +1,10 @@
 import { unwrapAlias } from "./tyArgs";
-import { GenericTermType, PrimType } from "./types";
+import { GenericTermType, PrimType, StructDefinition } from "./types";
 
 
-export function includesDynamicPairs( t: GenericTermType ): boolean
+export function includesDynamicPairs( t: GenericTermType | StructDefinition ): boolean
 {
+    if( !Array.isArray( t ) ) return false;
     if( t[0] === PrimType.Alias ) return includesDynamicPairs( unwrapAlias( t as any ) );
     if( t[0] === PrimType.AsData ) return false;
     if( t[0] === PrimType.List ) return includesDynamicPairs( t[1] );

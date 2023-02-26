@@ -1,12 +1,13 @@
 import { Machine } from "../../../../../CEK";
 import { UPLCEncoder } from "../../../../../UPLC/UPLCEncoder";
 import { UPLCProgram } from "../../../../../UPLC/UPLCProgram";
-import { showUPLC } from "../../../../../UPLC/UPLCTerm";
+import { UPLCTerm, showUPLC } from "../../../../../UPLC/UPLCTerm";
 import { ErrorUPLC } from "../../../../../UPLC/UPLCTerms/ErrorUPLC";
 import { UPLCConst } from "../../../../../UPLC/UPLCTerms/UPLCConst";
 import { pmatch } from "../../../../PTypes/PStruct/pmatch";
 import { PMaybe, fromData, pBool, pByteString, pInt, pPair, pdelay, pfn, phoist, pif, plam, precursiveList, toData } from "../../../../lib";
 import { pList } from "../../../../lib/std/list/const";
+import { termTypeToString } from "../../../../type_system";
 import { bool, bs, fn, int, list } from "../../../../type_system/types";
 import { PCurrencySymbol } from "../PCurrencySymbol";
 import { PTokenName } from "../PTokenName";
@@ -35,8 +36,7 @@ const dynamicOneEntryValue = fromData( PValue.type )(
     toData( PValue.type )(
         oneEntryValue
     )
-)
-
+) as any
 
 describe("Machine.evalSimple( PValue )", () => {
 
@@ -97,7 +97,9 @@ const pvalueOf = phoist(
 
             return pmatch(
                     policyEntry.snd.find( assetEntry => 
-                        assetEntry.fst.eq( tokenName )
+                        {
+                            return assetEntry.fst.eq( tokenName )
+                        }
                     )
                 )
                 .onJust( _ => _.extract("val").in(({ val: entry }) =>
@@ -167,18 +169,31 @@ describe("pvalueOf", () => {
             expected
         );
 
+        expect(
+            _received
+        ).toEqual(
+            _expected
+        );
+
     });
 
+    /**
+     * example of bad UPLC
+     */
     test("policy present but not token", () => {
 
         const expected = Machine.evalSimple( pInt(0) );
-        const received = Machine.evalSimple( pvalueOf.$( oneEntryValue ).$( currSym as any ).$("abc") );
-
+        let received !: UPLCTerm;
+        expect(
+            () => received = Machine.evalSimple( pvalueOf.$( oneEntryValue ).$( currSym as any ).$("abc") )
+        ).not.toThrow()
+        //*
         expect(
             received
         ).toEqual(
             expected
         );
+        //*/
 
     });
 
@@ -267,6 +282,50 @@ describe("pvalueOf", () => {
             
             /*
             const compiled = UPLCEncoder.compile( new UPLCProgram([1,0,0], uplc.clone() ) ).toBuffer().buffer;
+
+            console.log( showUPLC( uplc ) );
+            // console.log( compiled.toString("hex") );
+            // console.log( compiled.length );
+            console.log( received );
+            //*/
+            
+            expect(
+                received
+            ).toEqual(
+                expected
+            );
+
+            expect(
+                term.type
+            )
+            .toEqual( int )
+
+            expect(
+                Machine.evalSimple(
+                    pInt(1_000_000).eq( term as any )
+                )
+            ).toEqual(
+                Machine.evalSimple(
+                    pBool( true )
+                )
+            );
+
+        });
+
+        /**
+         * this will be a interesting one to solve
+         */
+        test("token present (pvalueOfBetter)", () => {
+
+            const term = pvalueOfBetter.$( dynamicOneEntryValue ).$( currSym as any ).$( tn as any );
+
+            const uplc = term.toUPLC(0);
+
+            const expected = Machine.evalSimple( pInt( 1_000_000 ) );
+            const received = Machine.evalSimple( uplc );
+            
+            /*
+            // const compiled = UPLCEncoder.compile( new UPLCProgram([1,0,0], uplc.clone() ) ).toBuffer().buffer;
 
             console.log( showUPLC( uplc ) );
             // console.log( compiled.toString("hex") );

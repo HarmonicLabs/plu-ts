@@ -1,7 +1,8 @@
 import { Machine } from "../../../../../../CEK";
 import { PValue } from "../../../../V1/Value/PValue";
-import { punMapData, toData } from "../../../../../lib";
+import { pBool, punMapData, toData } from "../../../../../lib";
 import { beef32, tx_v2 } from "../../../../../../test_utils";
+import { showUPLC } from "../../../../../../UPLC/UPLCTerm";
 
 
 describe("input value extraction", () => {
@@ -41,6 +42,23 @@ describe("input value extraction", () => {
             expected
         );
 
+    });
+
+    test("extracts signatories", () => {
+
+        const term = tx_v2.extract("signatories").in( ({ signatories: sigs }) => sigs.head.eq("deadbeef") );
+        const uplc = term.toUPLC(0);
+        const res = Machine.evalSimple(
+            uplc
+        );
+
+        expect(
+            res
+        ).toEqual(
+            Machine.evalSimple(
+                pBool( true )
+            )
+        )
     })
     
 })

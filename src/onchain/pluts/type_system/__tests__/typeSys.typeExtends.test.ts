@@ -2,7 +2,7 @@ import { PValue } from "../../API";
 import { PScriptPurpose } from "../../API/V1/ScriptContext/PScriptPurpose";
 import { pList } from "../../lib/std/list/const";
 import { typeExtends } from "../typeExtends";
-import { alias, asData, bs, data, delayed, int, lam, list, pair, str, struct, tyVar, unit } from "../types";
+import { alias, asData, bs, data, delayed, int, lam, list, map, pair, str, struct, tyVar, unit } from "../types";
 import { withAllPairElemsAsData } from "../withAllPairElemsAsData";
 
 describe("typeExtends", () => {
@@ -139,7 +139,39 @@ describe("typeExtends", () => {
                     list( int ),
                     list( tyVar() )
                 )
-            )
+            ).toBe( true )
+
+        });
+
+        test("list of alias", () => {
+
+            expect(
+                typeExtends(
+                    list( alias( bs ) ),
+                    tyVar()
+                )
+            ).toBe( true )
+
+            expect(
+                typeExtends(
+                    list( alias( bs ) ),
+                    list( tyVar() )
+                )
+            ).toBe( true )
+
+            expect(
+                typeExtends(
+                    list( alias( bs ) ),
+                    list( bs )
+                )
+            ).toBe( true )
+
+            expect(
+                typeExtends(
+                    list( alias( bs ) ),
+                    map( tyVar(), tyVar() )
+                )
+            ).toBe( false )
 
         });
 

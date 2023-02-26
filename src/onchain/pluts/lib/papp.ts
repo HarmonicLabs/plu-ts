@@ -1,3 +1,4 @@
+import { BasePlutsError } from "../../../errors/BasePlutsError";
 import JsRuntime from "../../../utils/JsRuntime";
 import ObjectUtils from "../../../utils/ObjectUtils";
 import { UPLCTerm } from "../../UPLC/UPLCTerm";
@@ -99,11 +100,31 @@ export function papp<Input extends PType, Output extends PType>( a: Term<PLam<In
             outputType,
             dbn => {
 
-                const funcUPLC = (
-                    includesDynamicPairs( _b.type ) && ObjectUtils.hasOwn( a, "__withDynamicPairsAsInput__" ) ? 
-                        (a as any).__withDynamicPairsAsInput__ : 
-                        a
-                ).toUPLC( dbn );
+                let funcUPLC;
+
+                if((_b as any).__isDynamicPair || (includesDynamicPairs( _b.type ) && !includesDynamicPairs( lambdaType[1] )))
+                {
+                    if(!ObjectUtils.hasOwn( a, "unsafeWithInputOfType" ))
+                    {
+                        /*
+                        console.warn(
+`%c WARNING: %ctrying to apply a function that takes pairs as inputs but it doesn't have an equivalent version
+that handles pairs built with 'asData' elements (pairs built dynamically).
+It is possible that this will generate invalid UPLC and this is a known issue which will be fixed in a future verson of plu-ts
+Meanwhile you can either open an issue (https://github.com/HarmonicLabs/plu-ts/issues)
+or you can join Harmonic Labs' discord and ask for help on your specific issue (https://discord.gg/CGKNcG7ade)\n`,
+                            "color: black; background-color: yellow",
+                            "color:yellow"
+                        )
+                        //*/
+                        funcUPLC = a.toUPLC(dbn)
+                    }
+                    else funcUPLC = (a as any).unsafeWithInputOfType( _b.type ).toUPLC(dbn)
+                }
+                else
+                {
+                    funcUPLC = a.toUPLC(dbn)
+                }
 
                 if( funcUPLC instanceof ErrorUPLC ) return funcUPLC;
                 

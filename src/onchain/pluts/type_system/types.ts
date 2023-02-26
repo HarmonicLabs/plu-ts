@@ -129,7 +129,8 @@ export const list       =
 export const pair       = 
     <FstT extends GenericTermType, SndT extends GenericTermType>
     ( fst: FstT, snd: SndT ): [ PrimType.Pair, FstT, SndT ] => 
-        Object.freeze([ PrimType.Pair, fst, snd ]) as any ;
+        // all pairs must be "asData"; breaks uplc otherwhise
+        Object.freeze([ PrimType.Pair, asData( fst ), asData( snd ) ]) as any ;
 
 export const map        = 
     <FstT extends GenericTermType, SndT extends GenericTermType>

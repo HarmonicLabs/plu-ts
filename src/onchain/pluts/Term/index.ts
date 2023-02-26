@@ -1,16 +1,15 @@
 import JsRuntime from "../../../utils/JsRuntime";
 import ObjectUtils from "../../../utils/ObjectUtils";
 
-import { UPLCTerm, showUPLC } from "../../UPLC/UPLCTerm";
+import { UPLCTerm } from "../../UPLC/UPLCTerm";
 import type { PType } from "../PType";
 
 import { isCloneable } from "../../../types/interfaces/Cloneable";
 import { HoistedUPLC } from "../../UPLC/UPLCTerms/HoistedUPLC";
 import { Machine } from "../../CEK";
 import { FromPType, ToPType } from "../type_system/ts-pluts-conversion";
-import { isWellFormedGenericType, isWellFormedType } from "../type_system/kinds/isWellFormedType";
-import { GenericTermType, TermType } from "../type_system/types";
-import { termTypeToString } from "../type_system";
+import { isWellFormedGenericType } from "../type_system/kinds/isWellFormedType";
+import { TermType } from "../type_system/types";
 import { HoistedSourceUID } from "../../UPLC/UPLCTerms/HoistedUPLC/HoistedSourceUID";
 import { genHoistedSourceUID } from "../../UPLC/UPLCTerms/HoistedUPLC/HoistedSourceUID/genHoistedSourceUID";
 
@@ -54,6 +53,10 @@ export class Term<A extends PType>
             )
             {
                 // console.log("evaluating:\n\n", showUPLC( uplc ) );
+
+                // !!! IMPORTANT !!!
+                // pair creation assumes this evaluation is happening here
+                // if for whatever reason this is removed please adapt the rest of the codebas
                 uplc = Machine.evalSimple( uplc )
             }
 

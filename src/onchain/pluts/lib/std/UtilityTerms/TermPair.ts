@@ -1,7 +1,7 @@
 import { BasePlutsError } from "../../../../../errors/BasePlutsError";
 import ObjectUtils from "../../../../../utils/ObjectUtils";
 import { PType } from "../../../PType";
-import { PPair } from "../../../PTypes";
+import { PAsData, PPair } from "../../../PTypes";
 import { Term } from "../../../Term";
 import { isWellFormedType, termTypeToString, typeExtends } from "../../../type_system";
 import { getFstT, getSndT } from "../../../type_system/tyArgs";
@@ -9,11 +9,15 @@ import { tyVar, pair, TermType, PrimType } from "../../../type_system/types";
 import { UtilityTermOf } from "../../addUtilityForType";
 import { pfstPair, psndPair } from "../../builtins";
 
+type UnwrapPAsData<PT extends PType> = 
+    PT extends PAsData<infer PTy extends PType> ? PTy :
+    PT
+
 export type TermPair<PFst extends PType, PSnd extends PType> = Term<PPair<PFst,PSnd>> & {
 
-    readonly fst: UtilityTermOf<PFst>
+    readonly fst: UtilityTermOf<UnwrapPAsData<PFst>>
 
-    readonly snd: UtilityTermOf<PSnd>
+    readonly snd: UtilityTermOf<UnwrapPAsData<PSnd>>
     
 }
 

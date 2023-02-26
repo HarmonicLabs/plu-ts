@@ -3,7 +3,7 @@ import { Lambda } from "../../UPLC/UPLCTerms/Lambda";
 import { UPLCVar } from "../../UPLC/UPLCTerms/UPLCVar";
 import { PLam } from "../PTypes";
 import { Term } from "../Term";
-import { withAllPairElemsAsData } from "../type_system";
+import { includesDynamicPairs } from "../type_system/includesDynamicPairs";
 import { ToPType } from "../type_system/ts-pluts-conversion";
 import { TermType, lam } from "../type_system/types";
 import { UtilityTermOf, addUtilityForType } from "./addUtilityForType";
@@ -35,24 +35,30 @@ return ( termFunc: ( input: UtilityTermOf<ToPType<A>> ) => Term<ToPType<B>> ): P
         }
     );
 
-    const dynPairsInputT = withAllPairElemsAsData( inputType );
-
     ObjectUtils.defineReadOnlyHiddenProperty(
-        lambdaTerm, "__withDynamicPairsAsInput__",
-        new Term<PLam<ToPType<A>,ToPType<B>>>(
+        lambdaTerm, "unsafeWithInputOfType",
+        ( inT: TermType ) => new Term<PLam<ToPType<A>,ToPType<B>>>(
             lam(
-                dynPairsInputT, 
+                inT, 
                 outputType
             ) as any,
             dbn => {
                 const thisLambdaPtr = dbn + BigInt( 1 );
     
                 const boundVar = new Term<ToPType<A>>(
-                    dynPairsInputT as any,
+                    inT as any,
                     dbnAccessLevel => new UPLCVar( dbnAccessLevel - thisLambdaPtr )
                 );
                 
-                const body = termFunc( addUtilityForType( dynPairsInputT )( boundVar ) as any);
+                const body = termFunc(
+                    addUtilityForType( inT )(
+                        ObjectUtils.defineReadOnlyHiddenProperty(
+                            boundVar,
+                            "__isDynamicPair",
+                            includesDynamicPairs( inT )
+                        )
+                    ) as any
+                );
     
                 // here the debruijn level is incremented
                 return new Lambda( body.toUPLC( thisLambdaPtr ) );

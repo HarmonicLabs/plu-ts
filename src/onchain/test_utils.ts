@@ -111,7 +111,9 @@ export const interval = toData( PPOSIXTimeRange.type )(
     })
 );
 
-export const signatories = toData( list( PPubKeyHash.type ) )( pList( PPubKeyHash.type )([]) );
+export const signatories = toData( list( PPubKeyHash.type ) )( pList( PPubKeyHash.type )([
+    PPubKeyHash.from("deadbeef")
+]) );
 
 export const withdrawals = 
     toData( map( PStakingCredential.type,int ) )( 
@@ -135,7 +137,7 @@ export const inputs = toData( list( V1.PTxInInfo.type ) )(
                 V1.PTxOut.PTxOut({
                     address,
                     datumHash: PMaybe( PDatumHash.type ).Just({ val: toData( PDatumHash.type )(unitDatumHash) }) as any,
-                    value: beef32AsData
+                    value: beef32AsData as any
                 })
             )
         })
@@ -149,8 +151,8 @@ export const outputs = toData( list( V1.PTxOut.type ) )(
 export const txInfo_v1 = V1.PTxInfo.PTxInfo({
     datums,
     dCertificates,
-    fee: emptyValueAsData,
-    mint: emptyValueAsData,
+    fee:  emptyValueAsData as any,
+    mint: emptyValueAsData as any,
     id: txId,
     interval,
     signatories,
@@ -172,7 +174,7 @@ export const v2_out = toData( PTxOut.type )
 (
     V2.PTxOut.PTxOut({
         address,
-        value: beef32AsData,
+        value: beef32AsData as any,
         datum: POutputDatum.NoDatum({}) as any,
         refScrpt: PMaybe( PValidatorHash.type ).Nothing({}) as any
     })
@@ -205,8 +207,8 @@ export const tx_v2 = addUtilityForType( PTxInfo.type )(
     PTxInfo.PTxInfo({
         datums,
         dCertificates,
-        fee:  emptyValueAsData,
-        mint: emptyValueAsData,
+        fee:  emptyValueAsData as any,
+        mint: emptyValueAsData as any,
         id: txId,
         interval,
         signatories,

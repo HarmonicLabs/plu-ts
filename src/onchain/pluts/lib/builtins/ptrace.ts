@@ -24,8 +24,6 @@ export function ptrace<ReturnT extends TermType>( returnT: ReturnT )
     );
 }
 
-
-// @ts-ignore Type instantiation is excessively deep and possibly infinite.
 export const ptraceIfTrue = phoist(
     pfn([
         str,
@@ -50,13 +48,13 @@ export const ptraceIfFalse = phoist(
     )
 );
 
-export function ptraceError<T extends TermType>( t: T )
+export function ptraceError<T extends TermType>( t: T, somemsg?: string )
     : TermFn<[ PString ], ToPType<T>>
 {
     return phoist(
         plam( str, t )
         ( msg => pforce(
-            ptrace( delayed( t ) ).$( msg ).$( pdelay( perror( t ) ) )
+            ptrace( delayed( t ) ).$( msg ).$( pdelay( perror( t, somemsg ) ) )
         ) as any )
     ) as any;
 }
