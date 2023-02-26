@@ -7,7 +7,7 @@ import { UPLCConst } from "../../../../UPLC/UPLCTerms/UPLCConst";
 import { PType } from "../../../PType";
 import { TermFn, PData, PLam, PInt, PList, PPair, PByteString, PBool, PAsData } from "../../../PTypes";
 import { Term } from "../../../Term";
-import { TermType, ToPType, fn, data, delayed, int, list, lam, pair, asData, bs, bool } from "../../../type_system";
+import { TermType, ToPType, fn, data, delayed, int, list, lam, pair, asData, bs, bool, _pair } from "../../../type_system";
 import { UtilityTermOf } from "../../addUtilityForType";
 import { papp } from "../../papp";
 import { PappArg } from "../../pappArg";
@@ -248,7 +248,8 @@ export const punConstrData
     : TermFn<[ PData ], PPair<PInt, PList<PData>>>
     = addApplications<[ PData ], PPair<PInt, PList<PData>>>(
         new Term(
-            lam( data, pair( int, list( data ) ) ), // @fixme @todo keep track of the data types in ```list( data )```
+            // MUST be `_pair` and NOT `pair` because elements aren't data
+            lam( data, _pair( int, list( data ) ) ),
             _dbn => Builtin.unConstrData
         )
     );

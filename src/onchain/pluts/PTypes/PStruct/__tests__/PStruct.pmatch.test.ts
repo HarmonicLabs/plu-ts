@@ -12,6 +12,7 @@ import { padd, pconsBs, pindexBs } from "../../../lib/builtins";
 import { perror } from "../../../lib/perror";
 import { TermType, bs, int, unit } from "../../../type_system/types";
 import { pDataB, pDataI, toData } from "../../../lib";
+import { showUPLC } from "../../../../UPLC/UPLCTerm";
 
 const SingleCtor = pstruct({
     Ctor : {
@@ -21,9 +22,26 @@ const SingleCtor = pstruct({
     }
 })
 
-
+const SingleField = pstruct({
+    SingleField: { field: int }
+})
 
 describe("pmatch", () => {
+
+    test("pmatch( <single field> )", () => {
+
+        const term = SingleField.SingleField({ field: pDataI(42) }).extract("field").in( ({ field }) => field );
+        const uplc = term.toUPLC(0);
+        const res = Machine.evalSimple( uplc );
+
+        expect(
+            res
+        ).toEqual(
+            Machine.evalSimple(
+                pInt(42)
+            )
+        )
+    })
 
     test("pmatch( <single constructor> )", () => {
 

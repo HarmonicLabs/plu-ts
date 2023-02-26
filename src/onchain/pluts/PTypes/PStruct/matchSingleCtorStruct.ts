@@ -1,5 +1,5 @@
 import { punConstrData } from "../../lib/builtins/data";
-import { psndPair } from "../../lib/builtins/pair";
+import { psndPairNoUnwrap } from "../../lib/builtins/pair/noUnwrap";
 import { papp } from "../../lib/papp";
 import { pfn } from "../../lib/pfn";
 import { phoist } from "../../lib/phoist";
@@ -14,6 +14,6 @@ export const matchSingleCtorStruct = (( returnT: TermType ) =>  phoist(
         // it makes no sense to extract the ctor index for datatype defined as single ctors
         // even from security point of view
         // an attacker can always change the data to match the ctor index expected 
-        papp( continuation, psndPair( int, list(data) ).$( punConstrData.$( structData ) ) )
+        papp( continuation, psndPairNoUnwrap( int, list(data) ).$( punConstrData.$( structData ) ) )
     )
 ));

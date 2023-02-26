@@ -35,7 +35,6 @@ import { isStructDefinition, withAllPairElemsAsData } from "../../type_system";
 import { phead } from "../../lib/builtins/list";
 import { _fromData } from "../../lib/std/data/conversion/fromData_minimal";
 import { genHoistedSourceUID } from "../../../UPLC/UPLCTerms/HoistedUPLC/HoistedSourceUID/genHoistedSourceUID";
-import { fromData } from "../../lib/std/data/conversion/fromData";
 
 
 const elemAtCache: { [n: number]: TermFn<[ PList<PData> ], PData > } = {};

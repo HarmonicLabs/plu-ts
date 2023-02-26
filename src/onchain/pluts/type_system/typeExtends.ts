@@ -162,20 +162,12 @@ export function typeExtends( extending: GenericTermType, extended: GenericTermTy
                     unchecked(
                         getFstT(a),
                         getFstT(b)
-                    ) ||
-                    (
-                        unchecked( b[1] as any, data ) && 
-                        unchecked( a[1], data ) 
                     )
                 )&&
                 (
                     unchecked(
                         getSndT(a),
                         getSndT(b)
-                    ) ||
-                    (
-                        unchecked( b[2] as any, data ) && 
-                        unchecked( a[2], data ) 
                     )
                 )
             )

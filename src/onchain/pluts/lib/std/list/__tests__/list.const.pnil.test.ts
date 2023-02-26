@@ -48,11 +48,11 @@ describe("pnil", () => {
 
     });
 
-    test("pair( asData( int ), asData( bs ) )", () => {
+    test("pair( int, bs ) (still data elems)", () => {
 
         expect(
             showUPLC(
-                pnil( pair( asData( int ), asData( bs ) ) ).toUPLC(0)
+                pnil( pair( int, bs ) ).toUPLC(0)
             )
         )
         .toEqual(

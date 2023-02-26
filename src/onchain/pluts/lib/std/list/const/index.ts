@@ -9,7 +9,7 @@ import { Term } from "../../../../Term";
 import { ToPType, isWellFormedType, termTypeToString } from "../../../../type_system";
 import { termTyToConstTy } from "../../../../type_system/termTyToConstTy";
 import { typeExtends } from "../../../../type_system/typeExtends";
-import { PrimType, TermType, data, list, pair } from "../../../../type_system/types";
+import { PrimType, TermType, data, list, pair, tyVar } from "../../../../type_system/types";
 import { pnilData, pnilPairData } from "../../../builtins/data";
 import { pprepend } from "../../../builtins/pprepend";
 import { punsafeConvertType } from "../../../punsafeConvertType";
@@ -34,7 +34,7 @@ export function pnil<ElemsT extends TermType>( elemsT: ElemsT ): TermList<ToPTyp
     assertValidListType( elemsT );
 
     if(
-        typeExtends( elemsT, pair( data, data ) )
+        typeExtends( elemsT, pair( tyVar(), tyVar() ) )
     )
     {
         return punsafeConvertType( pnilPairData, list( elemsT ) );
