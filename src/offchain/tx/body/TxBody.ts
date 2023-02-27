@@ -653,7 +653,10 @@ export class TxBody
 
     /**
      * tests that
-     * inputs + withdrawals + refund  === outputs + deposit + fee
+     * inputs + withdrawals + refund + mints === outputs + burns + deposit + fee
+     * 
+     * @todo add mints and burns
+     * @deprecated until mints and burns are added
      */
     static isValueConserved( tx: TxBody ): boolean
     {

@@ -16,6 +16,7 @@ import { ToCbor } from "../../cbor/interfaces/CBORSerializable";
 import { CborObj } from "../../cbor/CborObj";
 import { CborArray } from "../../cbor/CborObj/CborArray";
 import { BasePlutsError } from "../../errors/BasePlutsError";
+import { CborTag } from "../../cbor/CborObj/CborTag";
 
 export const enum ScriptType {
     NativeScript = "NativeScript",
@@ -189,13 +190,14 @@ export class Script<T extends ScriptType = ScriptType>
 
     toCbor(): CborString
     {
-        return new CborString(
-            BufferUtils.copy( this.cbor )
-        );
+        return Cbor.encode( new CborTag( 24, new CborBytes(this.cbor) ) );
     }
     toCborObj(): CborObj
     {
+        if( this.type === ScriptType.NativeScript )
         return Cbor.parse( this.cbor );
+
+        return new CborTag( 24, new CborBytes( this.cbor ) );
     }
 
     static fromCbor( cbor: CanBeCborString ): Script
@@ -235,6 +237,8 @@ export class Script<T extends ScriptType = ScriptType>
                 "invalid script type specified"
             );
         }
+        
+        while( cObj instanceof CborTag ) cObj = cObj.data;
 
         return new Script( type as any, Cbor.encode( cObj ).asBytes );
     }

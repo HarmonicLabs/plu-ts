@@ -9,7 +9,7 @@ import { Script, ScriptType } from "../../../script/Script";
 import { CborString, CanBeCborString, forceCborString } from "../../../../cbor/CborString";
 import { Value } from "../../../ledger/Value/Value";
 import { CborMap, CborMapEntry } from "../../../../cbor/CborObj/CborMap";
-import { dataToCborObj } from "../../../../types/Data/toCbor";
+import { dataToCbor, dataToCborObj } from "../../../../types/Data/toCbor";
 import { IValue, isIValue } from "../../../ledger/Value/IValue";
 import { Hash32 } from "../../../hashes/Hash32/Hash32";
 import { Cbor } from "../../../../cbor/Cbor";
@@ -180,6 +180,18 @@ export class TxOut
     {
         const datum = this.datum;
 
+        if( !Value.isPositive( this.value ) )
+        {
+            console.log(
+                JSON.stringify(
+                    this.toJson(),
+                    undefined,
+                    2
+                )
+            )
+            throw new BasePlutsError("TxOut values can only be positive; value was: " + JSON.stringify( this.value.toJson() ));
+        }
+
         return new CborMap([
             {
                 k: new CborUInt( 0 ),
@@ -199,7 +211,12 @@ export class TxOut
                     ]) :
                     new CborArray([
                         new CborUInt( 1 ),
-                        dataToCborObj( datum )
+                        new CborTag(
+                            24,
+                            new CborBytes(
+                                dataToCbor( datum ).asBytes
+                            )
+                        )
                     ])
             },
             this.refScript === undefined ? undefined :
@@ -287,7 +304,9 @@ export class TxOut
                     _1 instanceof CborTag &&
                     _1.data instanceof CborBytes
                 ))
-                throw new InvalidCborFormatError("TxOut");
+                {
+                    throw new InvalidCborFormatError("TxOut");
+                }
 
                 datum = dataFromCborObj( Cbor.parse( _1.data.buffer ) )
             }

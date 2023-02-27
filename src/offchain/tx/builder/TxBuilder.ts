@@ -149,7 +149,7 @@ export class TxBuilder
             )
         }
 
-        let totInputValue = Value.zero;
+        let totInputValue = mints?.reduce( ( prev, curr ) => Value.add( prev, curr.value ), Value.zero ) ?? Value.zero;
         const refIns: UTxO[] = readonlyRefInputs?.slice() ?? [];
 
         const outs = outputs?.map( txBuildOutToTxOut ) ?? [];

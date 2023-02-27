@@ -133,6 +133,13 @@ export class Value
         )
     }
 
+    static isPositive( v: Value ): boolean
+    {
+        return v.map.every( ({ assets }) =>
+            Object.keys( assets ).every( assetName => Number( (assets as any)[assetName] ?? -1 ) > 0 )
+        )
+    }
+
     static isAdaOnly( v: Value ): boolean
     {
         return v.map.length === 1;
@@ -192,6 +199,7 @@ export class Value
 
         const multiasset = new CborMap(
             this.map
+            // only keep hash28
             .filter(({ policy }) => policy.toString().length === 56 )
             .map( entry => {
                 const assets = entry.assets;
