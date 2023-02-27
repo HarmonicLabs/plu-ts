@@ -37,6 +37,7 @@ import { DataConstr } from "../../../types/Data/DataConstr";
 import { ErrorUPLC } from "../../../onchain/UPLC/UPLCTerms/ErrorUPLC";
 import { UTxO } from "../body/output/UTxO";
 import { Hash28 } from "../../hashes/Hash28/Hash28";
+import { CborPositiveRational } from "../../../cbor/extra/CborRational";
 
 export class TxBuilder
 {
@@ -81,11 +82,11 @@ export class TxBuilder
 
         const costmdls = protocolParamters.costModels;
         const cekVersion =
-            isCostModelsV2( costmdls.PlutusV2 ) ? machineVersionV2 :
-            isCostModelsV1( costmdls.PlutusV1 ) ? machineVersionV1 : "none";
+            isCostModelsV2( costmdls.PlutusScriptV2 ) ? machineVersionV2 :
+            isCostModelsV1( costmdls.PlutusScriptV1 ) ? machineVersionV1 : "none";
         const costs = cekVersion === machineVersionV2 ?
-            costmdls.PlutusV2 ?? defaultV2Costs :
-            costmdls.PlutusV1 ?? defaultV1Costs;
+            costmdls.PlutusScriptV2 ?? defaultV2Costs :
+            costmdls.PlutusScriptV1 ?? defaultV1Costs;
 
         if( cekVersion !== "none" )
         ObjectUtils.definePropertyIfNotPresent(
@@ -108,9 +109,9 @@ export class TxBuilder
     calcLinearFee( tx: Tx | CborString ): bigint
     {
         return (
-            forceBigUInt( this.protocolParamters.minFeeCoefficient ) *
+            forceBigUInt( this.protocolParamters.txFeePerByte ) *
             BigInt( (tx instanceof Tx ? tx.toCbor() : tx ).asBytes.length ) +
-            forceBigUInt( this.protocolParamters.minFeeFixed )
+            forceBigUInt( this.protocolParamters.txFeeFixed )
         );
     }
 
@@ -389,7 +390,7 @@ export class TxBuilder
                         requiredOutputValue,
                         Value.lovelaces(
                             forceBigUInt(
-                                this.protocolParamters.minFeeCoefficient 
+                                this.protocolParamters.txFeePerByte 
                             )
                         )
                     )
@@ -601,7 +602,7 @@ export class TxBuilder
             isScriptValid
         });
 
-        const minFeeMultiplier = forceBigUInt( this.protocolParamters.minFeeCoefficient );
+        const minFeeMultiplier = forceBigUInt( this.protocolParamters.txFeePerByte );
 
         const nVkeyWits = BigInt( getNSignersNeeded( dummyTx.body ) );
 
@@ -679,7 +680,13 @@ export class TxBuilder
             );
         }
 
-        const [ memRational, cpuRational ] = this.protocolParamters.execCosts;
+        const executionUnitPrices = this.protocolParamters.executionUnitPrices;
+        const [ memRational, cpuRational ] = Array.isArray( executionUnitPrices ) ?
+            executionUnitPrices :
+            [
+                CborPositiveRational.fromNumber( executionUnitPrices.priceSteps  ),
+                CborPositiveRational.fromNumber( executionUnitPrices.priceMemory )
+            ];
 
         const spendScriptsToExec = scriptsToExec.filter( elem => elem.rdmrTag === TxRedeemerTag.Spend );
         const mintScriptsToExec = scriptsToExec.filter( elem => elem.rdmrTag === TxRedeemerTag.Mint );

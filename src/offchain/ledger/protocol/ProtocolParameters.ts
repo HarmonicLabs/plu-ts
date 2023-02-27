@@ -6,123 +6,137 @@ import { CborMap, CborMapEntry } from "../../../cbor/CborObj/CborMap";
 import { CborUInt } from "../../../cbor/CborObj/CborUInt";
 import { CborPositiveRational } from "../../../cbor/extra/CborRational";
 import { InvalidCborFormatError } from "../../../errors/InvalidCborFormatError";
-import { ExBudget } from "../../../onchain/CEK/Machine/ExBudget";
-import { canBeUInteger, CanBeUInteger, forceUInteger } from "../../../types/ints/Integer";
+import { ExBudget, ExBudgetJson } from "../../../onchain/CEK/Machine/ExBudget";
+import { canBeUInteger, CanBeUInteger, forceBigUInt, forceUInteger } from "../../../types/ints/Integer";
 import { CostModels, costModelsFromCborObj, costModelsToCborObj, costModelsToJson, defaultV1Costs, defaultV2Costs, isCostModels } from "../CostModels";
 import type { Epoch } from "../Epoch";
 import type { Coin } from "../Coin";
+import { UnTerm } from "../../../onchain";
 
 export interface ProtocolParamters {
-    minFeeCoefficient: CanBeUInteger,
-    minFeeFixed: CanBeUInteger,
+    txFeePerByte: CanBeUInteger,
+    txFeeFixed: CanBeUInteger,
     maxBlockBodySize: CanBeUInteger,
     maxTxSize: CanBeUInteger,
     maxBlockHeaderSize: CanBeUInteger,
-    keyDeposit: Coin,
-    poolDeposit: Coin,
-    epoch: Epoch,
-    kParam: CanBeUInteger,
-    pledgeInfluence: CborPositiveRational,
-    expansionRate: CborPositiveRational,
-    treasureryGrowthRate: CborPositiveRational,
-    protocolVersion: [ CanBeUInteger, CanBeUInteger ],
-    poolMinFee: Coin,
-    adaPerUtxoByte: Coin,
+    stakeAddressDeposit: Coin,
+    stakePoolDeposit: Coin,
+    poolRetireMaxEpoch: Epoch,
+    stakePoolTargetNum: CanBeUInteger,
+    poolPledgeInfluence: CborPositiveRational | number,
+    monetaryExpansion: CborPositiveRational | number,
+    treasuryCut: CborPositiveRational | number,
+    protocolVersion: [ CanBeUInteger, CanBeUInteger ] | { major: number, minor: number },
+    minPoolCost: Coin,
+    utxoCostPerByte: Coin,
     costModels: CostModels,
-    execCosts: [
+    executionUnitPrices: [
         mem_price: CborPositiveRational,
         step_price: CborPositiveRational,
-    ]
-    maxTxExecUnits: ExBudget,
-    maxBlockExecUnits: ExBudget,
-    maxValuesSize: CanBeUInteger,
+    ] | {
+        priceMemory: number,
+        priceSteps: number
+    }
+    maxTxExecutionUnits: ExBudget | ExBudgetJson,
+    maxBlockExecutionUnits: ExBudget | ExBudgetJson,
+    maxValueSize: CanBeUInteger,
     collateralPercentage: CanBeUInteger,
-    maxCollateralIns: CanBeUInteger
+    maxCollateralInputs: CanBeUInteger
 }
 
 export function isProtocolParameters( something: any ): something is ProtocolParamters
 {
     const expectedKeys = [
-        "minFeeCoefficient",
-        "minFeeFixed",
+        "txFeePerByte",
+        "txFeeFixed",
         "maxBlockBodySize",
         "maxTxSize",
         "maxBlockHeaderSize",
-        "keyDeposit",
-        "poolDeposit",
-        "epoch",
-        "kParam",
-        "pledgeInfluence",
-        "expansionRate",
-        "treasureryGrowthRate",
+        "stakeAddressDeposit",
+        "stakePoolDeposit",
+        "poolRetireMaxEpoch",
+        "stakePoolTargetNum",
+        "poolPledgeInfluence",
+        "monetaryExpansion",
+        "treasuryCut",
         "protocolVersion",
-        "poolMinFee",
-        "adaPerUtxoByte",
+        "minPoolCost",
+        "utxoCostPerByte",
         "costModels",
-        "execCosts",
-        "maxTxExecUnits",
-        "maxBlockExecUnits",
-        "maxValuesSize",
+        "executionUnitPrices",
+        "maxTxExecutionUnits",
+        "maxBlockExecutionUnits",
+        "maxValueSize",
         "collateralPercentage",
-        "maxCollateralIns"
+        "maxCollateralInputs"
     ] as const;
 
+    const actualKeys = Object.keys( something )
+
     if(
-        !ObjectUtils.has_n_determined_keys(
-            something,
-            expectedKeys.length,
-            ...expectedKeys
-        )
+        !expectedKeys.every( k => actualKeys.includes( k ) )
     ) return false;
 
     const pp: ProtocolParamters = something;
 
     if(!
         ([
-            "minFeeCoefficient",
-            "minFeeFixed",
+            "txFeePerByte",
+            "txFeeFixed",
             "maxBlockBodySize",
             "maxTxSize",
             "maxBlockHeaderSize",
-            "keyDeposit",
-            "poolDeposit",
-            "epoch",
-            "kParam",
-            "poolMinFee",
-            "adaPerUtxoByte",
-            "maxValuesSize",
+            "stakeAddressDeposit",
+            "stakePoolDeposit",
+            "poolRetireMaxEpoch",
+            "stakePoolTargetNum",
+            "minPoolCost",
+            "utxoCostPerByte",
+            "maxValueSize",
             "collateralPercentage",
-            "maxCollateralIns"
+            "maxCollateralInputs"
         ] as const).every( uintKey => canBeUInteger( pp[uintKey] ) )
     ) return false;
 
-
     if(!(
-        pp.pledgeInfluence instanceof CborPositiveRational &&
-        pp.expansionRate instanceof CborPositiveRational &&
-        pp.treasureryGrowthRate instanceof CborPositiveRational
+        typeof pp.poolPledgeInfluence === "number" || pp.poolPledgeInfluence instanceof CborPositiveRational &&
+        typeof pp.monetaryExpansion === "number" || pp.monetaryExpansion instanceof CborPositiveRational &&
+        typeof pp.treasuryCut === "number" || pp.treasuryCut instanceof CborPositiveRational
     )) return false
 
     const ppv = pp.protocolVersion;
 
     if(!(
-        Array.isArray( ppv ) &&
-        ppv.length >= 2 &&
-        canBeUInteger( ppv[0] ) && canBeUInteger( ppv[1] )
+        (
+            Array.isArray( ppv ) &&
+            ppv.length >= 2 &&
+            canBeUInteger( ppv[0] ) && canBeUInteger( ppv[1] )
+        ) || (
+            ObjectUtils.isObject( ppv ) &&
+            canBeUInteger( (ppv as any).major ) &&
+            canBeUInteger( (ppv as any).minor )
+        )
     )) return false;
 
-    const ppexecCosts = pp.execCosts;
+    const ppexecCosts = pp.executionUnitPrices;
 
     if(!(
-        Array.isArray( ppexecCosts ) &&
-        ppexecCosts.length >= 2 &&
-        ppexecCosts[0] instanceof CborPositiveRational &&
-        ppexecCosts[1] instanceof CborPositiveRational
+        (
+            Array.isArray( ppexecCosts ) &&
+            ppexecCosts.length >= 2 &&
+            ppexecCosts[0] instanceof CborPositiveRational &&
+            ppexecCosts[1] instanceof CborPositiveRational
+        ) ||
+        (
+            ObjectUtils.isObject( ppexecCosts ) &&
+            typeof (ppexecCosts as any).priceSteps === "number" &&
+            typeof (ppexecCosts as any).priceMemory === "number"
+        )
     )) return false;
 
     if(!(
-        pp.maxTxExecUnits instanceof ExBudget &&
-        pp.maxBlockExecUnits instanceof ExBudget
+        pp.maxTxExecutionUnits instanceof ExBudget      || ExBudget.isJson(pp.maxTxExecutionUnits) &&
+        pp.maxBlockExecutionUnits instanceof ExBudget   || ExBudget.isJson(pp.maxBlockExecutionUnits)
     )) return false
 
     if(!(
@@ -130,6 +144,11 @@ export function isProtocolParameters( something: any ): something is ProtocolPar
     )) return false;
 
     return true;
+}
+
+function maybeValidCborPosRat( _: any ): boolean
+{
+    return (_ === undefined || _ instanceof CborPositiveRational || typeof _ === "number" );
 }
 
 export function isPartialProtocolParameters( something: object ): something is Partial<ProtocolParamters>
@@ -140,27 +159,28 @@ export function isPartialProtocolParameters( something: object ): something is P
 
     if(!
         ([
-            "minFeeCoefficient",
-            "minFeeFixed",
+            "txFeePerByte",
+            "txFeeFixed",
             "maxBlockBodySize",
             "maxTxSize",
             "maxBlockHeaderSize",
-            "keyDeposit",
-            "poolDeposit",
-            "epoch",
-            "kParam",
-            "poolMinFee",
-            "adaPerUtxoByte",
-            "maxValuesSize",
+            "stakeAddressDeposit",
+            "stakePoolDeposit",
+            "poolRetireMaxEpoch",
+            "stakePoolTargetNum",
+            "minPoolCost",
+            "utxoCostPerByte",
+            "maxValueSize",
             "collateralPercentage",
-            "maxCollateralIns"
+            "maxCollateralInputs"
         ] as const).every( uintKey => pp[uintKey] === undefined || canBeUInteger( pp[uintKey] ) )
     ) return false;
 
+
     if(!(
-        (pp.pledgeInfluence === undefined       || pp.pledgeInfluence instanceof CborPositiveRational ) &&
-        (pp.expansionRate === undefined         || pp.expansionRate instanceof CborPositiveRational ) &&
-        (pp.treasureryGrowthRate === undefined  || pp.treasureryGrowthRate instanceof CborPositiveRational)
+        maybeValidCborPosRat( pp.poolPledgeInfluence ) &&
+        maybeValidCborPosRat( pp.monetaryExpansion ) &&
+        maybeValidCborPosRat( pp.treasuryCut )
     )) return false;
 
     const ppv = pp.protocolVersion;
@@ -171,10 +191,15 @@ export function isPartialProtocolParameters( something: object ): something is P
             Array.isArray( ppv ) &&
             ppv.length >= 2 &&
             canBeUInteger( ppv[0] ) && canBeUInteger( ppv[1] )
+        ) || 
+        (
+            ObjectUtils.isObject( ppv ) &&
+            typeof (ppv as any).major === "number" &&
+            typeof (ppv as any).minor === "number"
         )
     )) return false;
 
-    const ppexecCosts = pp.execCosts;
+    const ppexecCosts = pp.executionUnitPrices;
 
     if(!(
         ppexecCosts === undefined ||
@@ -183,12 +208,24 @@ export function isPartialProtocolParameters( something: object ): something is P
             ppexecCosts.length >= 2 &&
             ppexecCosts[0] instanceof CborPositiveRational &&
             ppexecCosts[1] instanceof CborPositiveRational
+        ) || (
+            ObjectUtils.isObject( ppexecCosts ) &&
+            typeof (ppexecCosts as any).priceMemory === "number" &&
+            typeof (ppexecCosts as any).priceSteps  === "number"
         )
     )) return false;
 
     if(!(
-        (pp.maxTxExecUnits === undefined        || pp.maxTxExecUnits instanceof ExBudget) &&
-        (pp.maxBlockExecUnits === undefined     || pp.maxBlockExecUnits instanceof ExBudget)
+        (
+            pp.maxTxExecutionUnits === undefined        ||
+            pp.maxTxExecutionUnits instanceof ExBudget  ||
+            ExBudget.isJson( pp.maxTxExecutionUnits )
+        ) &&
+        (
+            pp.maxBlockExecutionUnits === undefined         ||
+            pp.maxBlockExecutionUnits instanceof ExBudget   ||
+            ExBudget.isJson( pp.maxBlockExecutionUnits )
+        )
     )) return false
 
     if(!(
@@ -224,53 +261,58 @@ export function partialProtocolParametersToCborObj( pps: Partial<ProtocolParamte
 {
     const {
         protocolVersion,
-        execCosts,
-        maxTxExecUnits,
-        maxBlockExecUnits,
+        executionUnitPrices,
+        maxTxExecutionUnits,
+        maxBlockExecutionUnits,
         costModels
     } = pps;
 
     const costModelsKeys = Object.keys( costModels ?? {} );
 
     return new CborMap([
-        mapUIntEntryOrUndefined( 0, pps.minFeeCoefficient ),
-        mapUIntEntryOrUndefined( 1, pps.minFeeFixed ),
+        mapUIntEntryOrUndefined( 0, pps.txFeePerByte ),
+        mapUIntEntryOrUndefined( 1, pps.txFeeFixed ),
         mapUIntEntryOrUndefined( 2, pps.maxBlockBodySize ),
         mapUIntEntryOrUndefined( 3, pps.maxTxSize ),
         mapUIntEntryOrUndefined( 4, pps.maxBlockHeaderSize ),
-        mapUIntEntryOrUndefined( 5, pps.keyDeposit ),
-        mapUIntEntryOrUndefined( 6, pps.poolDeposit ),
-        mapUIntEntryOrUndefined( 7, pps.epoch ),
-        mapUIntEntryOrUndefined( 8, pps.kParam ),
-        kv( 9 , pps.pledgeInfluence ),
-        kv( 10, pps.expansionRate ),
-        kv( 11, pps.treasureryGrowthRate ),
+        mapUIntEntryOrUndefined( 5, pps.stakeAddressDeposit ),
+        mapUIntEntryOrUndefined( 6, pps.stakePoolDeposit ),
+        mapUIntEntryOrUndefined( 7, pps.poolRetireMaxEpoch ),
+        mapUIntEntryOrUndefined( 8, pps.stakePoolTargetNum ),
+        kv( 9 , typeof pps.poolPledgeInfluence === "number" ? CborPositiveRational.fromNumber( pps.poolPledgeInfluence ) : pps.poolPledgeInfluence ),
+        kv( 10, typeof pps.monetaryExpansion === "number" ? CborPositiveRational.fromNumber( pps.monetaryExpansion ) : pps.monetaryExpansion ),
+        kv( 11, typeof pps.treasuryCut === "number" ? CborPositiveRational.fromNumber( pps.treasuryCut ) : pps.treasuryCut ),
         protocolVersion === undefined ? undefined:
         {
             k: new CborUInt( 14 ),
             v: new CborArray([
-                new CborUInt( forceUInteger( protocolVersion[0] ).asBigInt ),
-                new CborUInt( forceUInteger( protocolVersion[1] ).asBigInt )
+                new CborUInt( forceBigUInt( Array.isArray(protocolVersion) ? protocolVersion[0] : protocolVersion.major ) ),
+                new CborUInt( forceBigUInt( Array.isArray(protocolVersion) ? protocolVersion[1] : protocolVersion.minor ) )
             ])
         },
-        mapUIntEntryOrUndefined( 16, pps.poolMinFee ),
-        mapUIntEntryOrUndefined( 17, pps.adaPerUtxoByte ),
+        mapUIntEntryOrUndefined( 16, pps.minPoolCost ),
+        mapUIntEntryOrUndefined( 17, pps.utxoCostPerByte ),
         kv( 18, 
             (costModels === undefined || 
             (!costModelsKeys.includes("PlutusV1") && !costModelsKeys.includes("PlutusV2"))) ?
                 undefined :
                 costModelsToCborObj( costModels )
         ),
-        execCosts === undefined ? undefined:
+        executionUnitPrices === undefined ? undefined:
         {
             k: new CborUInt( 19 ),
-            v: new CborArray(execCosts)
+            v: Array.isArray(executionUnitPrices) ? 
+                new CborArray(executionUnitPrices) :
+                new CborArray([
+                    CborPositiveRational.fromNumber( executionUnitPrices.priceSteps ),
+                    CborPositiveRational.fromNumber( executionUnitPrices.priceMemory ),
+                ])
         },
-        kv( 20, maxTxExecUnits == undefined ? undefined : maxTxExecUnits.toCborObj() ),
-        kv( 21, maxBlockExecUnits == undefined ? undefined : maxBlockExecUnits.toCborObj() ),
-        mapUIntEntryOrUndefined( 22, pps.maxValuesSize ),
+        kv( 20, ExBudget.isJson( maxTxExecutionUnits    ) ? ExBudget.fromJson( maxTxExecutionUnits    ).toCborObj() : maxTxExecutionUnits?.toCborObj()      ),
+        kv( 21, ExBudget.isJson( maxBlockExecutionUnits ) ? ExBudget.fromJson( maxBlockExecutionUnits ).toCborObj() : maxBlockExecutionUnits?.toCborObj()   ),
+        mapUIntEntryOrUndefined( 22, pps.maxValueSize ),
         mapUIntEntryOrUndefined( 23, pps.collateralPercentage ),
-        mapUIntEntryOrUndefined( 24, pps.maxCollateralIns ),
+        mapUIntEntryOrUndefined( 24, pps.maxCollateralInputs ),
     ].filter( elem => elem !== undefined ) as CborMapEntry[])
 }
 
@@ -328,88 +370,93 @@ export function partialProtocolParametersFromCborObj( cObj: CborObj ): Partial<P
     [ _protocolVersion.array[0].num, _protocolVersion.array[1].num ]
     : undefined;
 
-    let execCosts: [CborPositiveRational, CborPositiveRational] | undefined = undefined;
+    let executionUnitPrices: [CborPositiveRational, CborPositiveRational] | undefined = undefined;
     if( _execCosts instanceof CborArray )
     {
         const mem_price = CborPositiveRational.fromCborObjOrUndef( _execCosts.array[0] )
         const cpu_price = CborPositiveRational.fromCborObjOrUndef( _execCosts.array[1] )
-        execCosts = mem_price !== undefined && cpu_price !== undefined ? [ mem_price, cpu_price ] : undefined;
+        executionUnitPrices = mem_price !== undefined && cpu_price !== undefined ? [ mem_price, cpu_price ] : undefined;
     }
 
     const _costModels = costModelsFromCborObj( _costmdls );
 
     return {
-        minFeeCoefficient:      fromUIntOrUndef( _minFeeCoeff ),
-        minFeeFixed:            fromUIntOrUndef( _minFeeFix ),
+        txFeePerByte:      fromUIntOrUndef( _minFeeCoeff ),
+        txFeeFixed:            fromUIntOrUndef( _minFeeFix ),
         maxBlockBodySize:       fromUIntOrUndef( _maxBlockBodySize ),
         maxTxSize:              fromUIntOrUndef( _maxTxSize ),
         maxBlockHeaderSize:     fromUIntOrUndef( _maxBlockHeaderSize ),
-        keyDeposit:             fromUIntOrUndef( _keyDep ),
-        poolDeposit:            fromUIntOrUndef( _poolDep ),
-        epoch:                  fromUIntOrUndef( _epoch ),
-        kParam:                 fromUIntOrUndef( _kParam ),
-        pledgeInfluence:        CborPositiveRational.fromCborObjOrUndef( _pledgeInfluence ),
-        expansionRate:          CborPositiveRational.fromCborObjOrUndef( _expansionRate ),
-        treasureryGrowthRate:   CborPositiveRational.fromCborObjOrUndef( _treasureryGrowthRate ),
+        stakeAddressDeposit:             fromUIntOrUndef( _keyDep ),
+        stakePoolDeposit:            fromUIntOrUndef( _poolDep ),
+        poolRetireMaxEpoch:                  fromUIntOrUndef( _epoch ),
+        stakePoolTargetNum:                 fromUIntOrUndef( _kParam ),
+        poolPledgeInfluence:        CborPositiveRational.fromCborObjOrUndef( _pledgeInfluence ),
+        monetaryExpansion:          CborPositiveRational.fromCborObjOrUndef( _expansionRate ),
+        treasuryCut:   CborPositiveRational.fromCborObjOrUndef( _treasureryGrowthRate ),
         protocolVersion,
-        poolMinFee:             fromUIntOrUndef( _poolMinFee ),
-        adaPerUtxoByte:         fromUIntOrUndef( _adaPerUtxoByte ),
+        minPoolCost:             fromUIntOrUndef( _poolMinFee ),
+        utxoCostPerByte:         fromUIntOrUndef( _adaPerUtxoByte ),
         costModels:             Object.keys( _costModels ).length === 0 ? undefined : _costModels,
-        execCosts,
-        maxTxExecUnits:     _maxTxExecUnits === undefined ? undefined : ExBudget.fromCborObj( _maxTxExecUnits ),
-        maxBlockExecUnits:  _maxBlockExecUnits === undefined ? undefined : ExBudget.fromCborObj( _maxBlockExecUnits ),
-        maxValuesSize:          fromUIntOrUndef( _maxValueSize ),
+        executionUnitPrices,
+        maxTxExecutionUnits:     _maxTxExecUnits === undefined ? undefined : ExBudget.fromCborObj( _maxTxExecUnits ),
+        maxBlockExecutionUnits:  _maxBlockExecUnits === undefined ? undefined : ExBudget.fromCborObj( _maxBlockExecUnits ),
+        maxValueSize:          fromUIntOrUndef( _maxValueSize ),
         collateralPercentage:   fromUIntOrUndef( _collatearalPerc ),
-        maxCollateralIns:       fromUIntOrUndef( _maxCollIns ),
+        maxCollateralInputs:       fromUIntOrUndef( _maxCollIns ),
     }
 }
 
 export const defaultProtocolParameters: ProtocolParamters = ObjectUtils.freezeAll({
-    minFeeCoefficient: 44,
-    minFeeFixed: 155381,
+    txFeePerByte: 44,
+    txFeeFixed: 155381,
     maxBlockBodySize: 73728,
     maxTxSize: 16384,
     maxBlockHeaderSize: 1100,
-    keyDeposit:  2_000_000,
-    poolDeposit: 500_000_000,
-    epoch: 18,
-    kParam: 500,
-    pledgeInfluence: new CborPositiveRational( 3, 10 ),
-    expansionRate: new CborPositiveRational( 3, 1000 ),
-    treasureryGrowthRate: new CborPositiveRational( 2, 10 ),
+    stakeAddressDeposit:  2_000_000,
+    stakePoolDeposit: 500_000_000,
+    poolRetireMaxEpoch: 18,
+    stakePoolTargetNum: 500,
+    poolPledgeInfluence: new CborPositiveRational( 3, 10 ),
+    monetaryExpansion: new CborPositiveRational( 3, 1000 ),
+    treasuryCut: new CborPositiveRational( 2, 10 ),
     protocolVersion: [ 8, 0 ],
-    poolMinFee: 340_000_000,
-    adaPerUtxoByte: 34482,
+    minPoolCost: 340_000_000,
+    utxoCostPerByte: 34482,
     costModels: {
-        PlutusV1: defaultV1Costs,
-        PlutusV2: defaultV2Costs
+        PlutusScriptV1: defaultV1Costs,
+        PlutusScriptV2: defaultV2Costs
     },
-    execCosts: [
+    executionUnitPrices: [
         new CborPositiveRational( 577, 1e2 ), // mem
         new CborPositiveRational( 721, 1e5 )  // cpu
     ],
-    maxTxExecUnits: new ExBudget({ mem: 12_500_000, cpu: 10_000_000_000 }),
-    maxBlockExecUnits: new ExBudget({ mem: 50_000_000, cpu: 40_000_000_000 }),
-    maxValuesSize: 5000,
+    maxTxExecutionUnits: new ExBudget({ mem: 12_500_000, cpu: 10_000_000_000 }),
+    maxBlockExecutionUnits: new ExBudget({ mem: 50_000_000, cpu: 40_000_000_000 }),
+    maxValueSize: 5000,
     collateralPercentage: 150,
-    maxCollateralIns: 3
+    maxCollateralInputs: 3
 })
 
 function cborRationalToNum( rat: CborPositiveRational | undefined ): number | undefined
 {
-    return rat === undefined ? undefined : Number( rat.num ) / Number( rat.den )
+    return rat?.toNumber()
 }
 
 export function partialProtocolParamsToJson( pp: Partial<ProtocolParamters> )
 {
     return {
         ...pp,
-        pledgeInfluence: cborRationalToNum( pp.pledgeInfluence ),
-        expansionRate: cborRationalToNum( pp.expansionRate ),
-        treasureryGrowthRate: cborRationalToNum( pp.treasureryGrowthRate ),
+        poolPledgeInfluence:    typeof pp.poolPledgeInfluence === "number" ? pp.poolPledgeInfluence : pp.poolPledgeInfluence?.toNumber() ,
+        monetaryExpansion:      typeof pp.monetaryExpansion === "number" ? pp.monetaryExpansion : pp.monetaryExpansion?.toNumber() ,
+        treasuryCut:            typeof pp.treasuryCut === "number" ? pp.treasuryCut : pp.treasuryCut?.toNumber() ,
         costModels: pp.costModels === undefined ? undefined : costModelsToJson( pp.costModels ),
-        execCosts: pp.execCosts?.map( cborRationalToNum ),
-        maxTxExecUnits: pp.maxTxExecUnits?.toJson(),
-        maxBlockExecUnits: pp.maxBlockExecUnits?.toJson(),
+        executionUnitPrices: Array.isArray(pp.executionUnitPrices) ?
+            {
+                priceSteps:  pp.executionUnitPrices[1].toNumber(),
+                priceMemory: pp.executionUnitPrices[0].toNumber()
+            } :
+            pp.executionUnitPrices,
+        maxTxExecutionUnits:    ExBudget.isJson( pp.maxTxExecutionUnits ) ?    pp.maxTxExecutionUnits    : pp.maxTxExecutionUnits?.toJson(),
+        maxBlockExecutionUnits: ExBudget.isJson( pp.maxBlockExecutionUnits ) ? pp.maxBlockExecutionUnits : pp.maxBlockExecutionUnits?.toJson(),
     }
 }

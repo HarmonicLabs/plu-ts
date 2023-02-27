@@ -21,6 +21,7 @@ import { Cloneable } from "../../../types/interfaces/Cloneable"
 import { ToJson } from "../../../utils/ts/ToJson"
 import { Hash32 } from "../../hashes/Hash32/Hash32"
 import { TxBody } from "../body/TxBody"
+import { Hash28 } from "../../hashes"
 
 export const enum TxRedeemerTag {
     Spend    = 0,
@@ -210,7 +211,7 @@ export class TxRedeemer
         {
             ctorIdx = 0;
             const policy = tx.mint?.map[ this.index ].policy;
-            if(!( policy instanceof Hash32 ))
+            if(!( policy instanceof Hash28 ))
             throw new BasePlutsError(
                 "invalid minting policy for minting redeemer " + this.index.toString()
             );

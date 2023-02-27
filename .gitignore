@@ -9,3 +9,5 @@ coverage/
 
 # output of build
 dist
+
+src/offchain/tx/builder/__tests__/TxBuilder.contracts.test.ts

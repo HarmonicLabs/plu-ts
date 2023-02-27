@@ -40,6 +40,20 @@ export class CborPositiveRational extends CborTag
             new CborPositiveRational( cObj.data.array[0].num, cObj.data.array[1].num )
             : undefined
         ); 
-    } 
+    }
+
+    static fromNumber( n: number ): CborPositiveRational
+    {
+        const [ a, b ] = n.toString().split(".");
+        return new CborPositiveRational(
+            Number( a + b ),
+            Number(`1e${b.length}`)
+        );
+    }
+
+    toNumber(): number
+    {
+        return Number( this.num ) / Number( this.den );
+    }
 
 }

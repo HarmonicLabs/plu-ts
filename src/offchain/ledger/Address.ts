@@ -209,14 +209,13 @@ export class Address
             case "bootstrap":
             case "enterprise":
             case "pointer":
-                if( payload.length !== 28 )
+                if( payload.length < 28 )
                 throw new BasePlutsError(
-                    "address' payload is incorrect"
+                    "address' payload is incorrect; payload.length: " + payload.length.toString()
                 );
 
-                payment = payload.slice(),
+                payment = payload.slice(0,28),
                 stake = []; // ignore pointer; might change in future version
-            
             break;
             default:
                 throw new BasePlutsError("unknown addres type; can't extract payload") 

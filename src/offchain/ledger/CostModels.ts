@@ -15,8 +15,8 @@ export type AnyV1CostModel = CostModelPlutusV1 | CostModelPlutusV1Array;
 export type AnyV2CostModel = CostModelPlutusV2 | CostModelPlutusV2Array;
 
 export interface CostModels {
-    PlutusV1?: AnyV1CostModel
-    PlutusV2?: AnyV2CostModel
+    PlutusScriptV1?: AnyV1CostModel
+    PlutusScriptV2?: AnyV2CostModel
 }
 
 export const defaultV1Costs: CostModelPlutusV1 = Object.freeze({
@@ -431,16 +431,22 @@ export function isCostModels( something: any ): something is CostModels
 {
     if(!ObjectUtils.isObject( something )) return false;
 
-    if( ObjectUtils.hasOwn<object,"PlutusV1">( something, "PlutusV1" ) )
+    let hasV1, hasV2;
+    hasV1 = hasV2 = false;
+
+    if( ObjectUtils.hasOwn<object,"PlutusScriptV1">( something, "PlutusScriptV1" ) )
     {
-        if( !isCostModelsV1( something.PlutusV1 ) ) return false;
+        hasV1 = true;
+        if( !isCostModelsV1( something.PlutusScriptV1 ) ) return false;
     }
-    else if( ObjectUtils.hasOwn<object,"PlutusV2">( something, "PlutusV2" ) )
+    
+    if( ObjectUtils.hasOwn<object,"PlutusScriptV2">( something, "PlutusScriptV2" ) )
     {
-        if( !isCostModelsV2( something.PlutusV2 ) ) return false;
+        hasV2 = true;
+        if( !isCostModelsV2( something.PlutusScriptV2 ) ) return false;
     }
-    // no PlutusV2, nor PlutusV1 found
-    else return false;
+
+    if(!( hasV1 || hasV2 )) return false
 
     return true
 };
@@ -448,20 +454,20 @@ export function isCostModels( something: any ): something is CostModels
 export function costModelsToCborObj( costmdls: CostModels ): CborMap
 {
     const {
-        PlutusV1,
-        PlutusV2
+        PlutusScriptV1,
+        PlutusScriptV2
     } = costmdls;
 
     return new CborMap([
-        PlutusV1 === undefined ? undefined :
+        PlutusScriptV1 === undefined ? undefined :
         {
             k: new CborUInt( 0 ),
-            v: new CborArray( toCostModelArrV1( PlutusV1 ).map( n => new CborUInt( forceUInteger( n ).asBigInt ) ) )
+            v: new CborArray( toCostModelArrV1( PlutusScriptV1 ).map( n => new CborUInt( forceUInteger( n ).asBigInt ) ) )
         },
-        PlutusV2 === undefined ? undefined :
+        PlutusScriptV2 === undefined ? undefined :
         {
             k: new CborUInt( 1 ),
-            v: new CborArray( toCostModelArrV2( PlutusV2 ).map( n => new CborUInt( forceUInteger( n ).asBigInt ) ) )
+            v: new CborArray( toCostModelArrV2( PlutusScriptV2 ).map( n => new CborUInt( forceUInteger( n ).asBigInt ) ) )
         }
     ].filter( elem => elem !== undefined ) as CborMapEntry[])
 }
@@ -482,13 +488,13 @@ export function costModelsFromCborObj( cObj: CborObj | undefined ): CostModels
         if( Number( k0.num ) === 0 )
         {
             ObjectUtils.defineReadOnlyProperty(
-                costs, "PlutusV1", toCostModelV1( (v0.array.map( n => (n as CborUInt).num ) ) as any )
+                costs, "PlutusScriptV1", toCostModelV1( (v0.array.map( n => (n as CborUInt).num ) ) as any )
             )
         }
         if( Number( k0.num ) === 1 )
         {
             ObjectUtils.defineReadOnlyProperty(
-                costs, "PlutusV2", toCostModelV2( (v0.array.map( n => (n as CborUInt).num ) ) as any )
+                costs, "PlutusScriptV2", toCostModelV2( (v0.array.map( n => (n as CborUInt).num ) ) as any )
             )
         }
     }
@@ -498,13 +504,13 @@ export function costModelsFromCborObj( cObj: CborObj | undefined ): CostModels
         if( Number( k1.num ) === 0 )
         {
             ObjectUtils.defineReadOnlyProperty(
-                costs, "PlutusV1", toCostModelV1( (v1.array.map( n => (n as CborUInt).num ) ) as any )
+                costs, "PlutusScriptV1", toCostModelV1( (v1.array.map( n => (n as CborUInt).num ) ) as any )
             )
         }
         if( Number( k1.num ) === 1 )
         {
             ObjectUtils.defineReadOnlyProperty(
-                costs, "PlutusV2", toCostModelV2( (v1.array.map( n => (n as CborUInt).num ) ) as any )
+                costs, "PlutusScriptV2", toCostModelV2( (v1.array.map( n => (n as CborUInt).num ) ) as any )
             )
         }
     }
@@ -515,13 +521,13 @@ export function costModelsFromCborObj( cObj: CborObj | undefined ): CostModels
 export function costModelsToLanguageViewCbor( costmdls: CostModels ): CborString
 {
     const {
-        PlutusV1,
-        PlutusV2
+        PlutusScriptV1,
+        PlutusScriptV2
     } = costmdls;
 
     return Cbor.encode(
         new CborMap([
-            PlutusV1 === undefined ? undefined :
+            PlutusScriptV1 === undefined ? undefined :
             {
                 k: new CborUInt( 0 ),
 
@@ -529,7 +535,7 @@ export function costModelsToLanguageViewCbor( costmdls: CostModels ): CborString
                 v: new CborBytes(
                     Cbor.encode(
                         new CborArray(
-                            toCostModelArrV1( PlutusV1 )
+                            toCostModelArrV1( PlutusScriptV1 )
                             .map( n => new CborUInt( forceUInteger( n ).asBigInt ) ),
                             {
                                 indefinite: true
@@ -538,10 +544,10 @@ export function costModelsToLanguageViewCbor( costmdls: CostModels ): CborString
                     ).asBytes
                 )
             },
-            PlutusV2 === undefined ? undefined :
+            PlutusScriptV2 === undefined ? undefined :
             {
                 k: new CborUInt( 1 ),
-                v: new CborArray( toCostModelArrV2( PlutusV2 ).map( n => new CborUInt( forceUInteger( n ).asBigInt ) ) )
+                v: new CborArray( toCostModelArrV2( PlutusScriptV2 ).map( n => new CborUInt( forceUInteger( n ).asBigInt ) ) )
             }
         ].filter( elem => elem !== undefined ) as CborMapEntry[])
     )
@@ -549,8 +555,8 @@ export function costModelsToLanguageViewCbor( costmdls: CostModels ): CborString
 
 export function costModelsToJson( costmdls: CostModels )
 {
-    const _pv1 = costmdls.PlutusV1 === undefined ? undefined : toCostModelV1( costmdls.PlutusV1 );
-    const _pv2 = costmdls.PlutusV2 === undefined ? undefined : toCostModelV2( costmdls.PlutusV2 );
+    const _pv1 = costmdls.PlutusScriptV1 === undefined ? undefined : toCostModelV1( costmdls.PlutusScriptV1 );
+    const _pv2 = costmdls.PlutusScriptV2 === undefined ? undefined : toCostModelV2( costmdls.PlutusScriptV2 );
 
     const pv1 = {};
     if( _pv1 !== undefined )
@@ -579,8 +585,8 @@ export function costModelsToJson( costmdls: CostModels )
     }
 
     return {
-        PlutusV1: pv1,
-        PlutusV2: pv2
+        PlutusScriptV1: pv1,
+        PlutusScriptV2: pv2
     }
 
 }

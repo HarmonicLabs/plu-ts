@@ -93,11 +93,11 @@ export class StakeAddress<T extends StakeAddressType = StakeAddressType>
             "invalid stake address string"
         );
 
-        return new StakeAddress(
+        return StakeAddress.fromBytes(
+            creds,
             hrp === "stake" ? "mainnet" : "testnet",
-            new Hash28( Buffer.from( creds ) ),
             type
-        );
+        )
     }
 
     toBytes(): byte[]
@@ -112,6 +112,14 @@ export class StakeAddress<T extends StakeAddressType = StakeAddressType>
     ): StakeAddress
     {
         bs = Buffer.from( typeof bs === "string" ? hexToBytes( bs ) : bs );
+
+        if( bs.length === 29 )
+        {
+            const header = bs[0];
+            bs = bs.slice(1);
+            type = Boolean(header && 0b0001_0000) ? "script" : "stakeKey";
+            netwok = Boolean(header & 0b1111) ? "mainnet" : "testnet";
+        }
 
         return new StakeAddress(
             netwok,

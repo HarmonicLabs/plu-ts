@@ -17,6 +17,11 @@ export interface IExBudget {
     cpu: CanBeUInteger
 }
 
+export interface ExBudgetJson {
+    steps: number,
+    memory: number
+}
+
 export class ExBudget
     implements IExBudget, Cloneable<ExBudget>, ToCbor, ToJson
 {
@@ -154,8 +159,25 @@ export class ExBudget
     toJson()
     {
         return {
-            cpu: this.cpu.toString(),
-            mem: this.mem.toString()
+            steps: this.cpu.toString(),
+            memory: this.mem.toString()
         }
+    }
+
+    static fromJson( stuff: ExBudgetJson ): ExBudget
+    {
+        return new ExBudget({
+            mem: stuff.memory,
+            cpu: stuff.steps,
+        })
+    }
+
+    static isJson<T>( stuff: T ): stuff is (T & ExBudgetJson)
+    {
+        return (
+            ObjectUtils.isObject( stuff ) &&
+            typeof (stuff as any).memory === "number" &&
+            typeof (stuff as any).steps === "number"
+        )
     }
 }
