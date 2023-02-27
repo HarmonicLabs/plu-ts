@@ -7,7 +7,7 @@ import { costModelsToLanguageViewCbor, defaultV1Costs, defaultV2Costs, isCostMod
 import { txBuildOutToTxOut } from "./txBuild/ITxBuildOutput";
 import { forceBigUInt } from "../../../types/ints/Integer";
 import { Script, ScriptType } from "../../script/Script";
-import { ProtocolParamters, isPartialProtocolParameters, isProtocolParameters } from "../../ledger/protocol/ProtocolParameters";
+import { ProtocolParamters, isPartialProtocolParameters } from "../../ledger/protocol/ProtocolParameters";
 import { getTxInfos } from "./toOnChain/getTxInfos";
 import { blake2b_256, byte } from "../../../crypto";
 import { Tx, getNSignersNeeded } from "../Tx";
@@ -18,7 +18,7 @@ import { ITxBuildOptions } from "./txBuild/ITxBuildOptions";
 import { TxIn } from "../body/TxIn";
 import { TxOut } from "../body/output/TxOut";
 import { Value } from "../../ledger/Value/Value";
-import { TxRedeemer, TxRedeemerTag } from "../TxWitnessSet/TxRedeemer";
+import { TxRedeemer, TxRedeemerTag, txRdmrTagToString } from "../TxWitnessSet/TxRedeemer";
 import { BasePlutsError } from "../../../errors/BasePlutsError";
 import { VKeyWitness } from "../TxWitnessSet/VKeyWitness/VKeyWitness";
 import { Data } from "../../../types/Data/Data";
@@ -422,6 +422,11 @@ export class TxBuilder
                     })
                 ]);
 
+                if( !(value.lovelaces === BigInt(0)) )
+                {
+                    throw new BasePlutsError("mint value containing non-zero ADA; lovelaces can't be minted or burned")
+                }
+
                 return Value.add( accum, value )   
             },
             Value.zero
@@ -439,7 +444,7 @@ export class TxBuilder
 
             mintRedeemers.push(new TxRedeemer({
                 data: dummyRdmr.data,
-                index: i,
+                index: i - 1, // "- 1" because final value will exclude lovelaces (can't mint or burn ADA)
                 execUnits: dummyRdmr.execUnits,
                 tag: TxRedeemerTag.Mint
             }));
@@ -710,7 +715,9 @@ export class TxBuilder
             for( let i = 0 ; i < nRdmrs; i++)
             {
                 const rdmr = rdmrs[i];
-                const { tag, data: rdmrData, index } = rdmr;
+                const { tag, data: rdmrData, index: rdmr_idx } = rdmr;
+                // "+ 1" because we keep track of lovelaces even if in mint values these are 0
+                const index = rdmr_idx + (tag === TxRedeemerTag.Mint ? 1 : 0);
                 const spendingPurpose = rdmr.toSpendingPurposeData( tx.body );
 
                 const onlyRedeemerArg = ( purposeScriptsToExec: ScriptToExecEntry[] ) =>
@@ -719,7 +726,7 @@ export class TxBuilder
 
                     if( script === undef )
                     throw new BasePlutsError(
-                        "missing script for " + tag + " redeemer " + index
+                        "missing script for " + txRdmrTagToString(tag) + " redeemer " + (index - 1)
                     );
 
                     const { result, budgetSpent, logs } = cek.eval(

@@ -30,6 +30,18 @@ export const enum TxRedeemerTag {
     Withdraw = 3
 };
 
+export function txRdmrTagToString( tag: TxRedeemerTag ): string
+{
+    switch( tag )
+    {
+        case TxRedeemerTag.Cert: return "Cert";
+        case TxRedeemerTag.Mint: return "Mint";
+        case TxRedeemerTag.Spend: return "Spend";
+        case TxRedeemerTag.Withdraw: return "Withdraw";
+        default: return "";
+    }
+}
+
 export type TxRedeemerTagStr<Tag extends TxRedeemerTag> =
     Tag extends TxRedeemerTag.Spend     ? "Spend"       :
     Tag extends TxRedeemerTag.Mint      ? "Mint"        :
@@ -210,7 +222,10 @@ export class TxRedeemer
         if( tag === TxRedeemerTag.Mint )
         {
             ctorIdx = 0;
-            const policy = tx.mint?.map[ this.index ].policy;
+            const policy = tx.mint
+                // "+ 1" because in `plu-ts` values we keep track of lovelaces anyway
+                ?.map[ this.index + 1 ]
+                .policy;
             if(!( policy instanceof Hash28 ))
             throw new BasePlutsError(
                 "invalid minting policy for minting redeemer " + this.index.toString()
