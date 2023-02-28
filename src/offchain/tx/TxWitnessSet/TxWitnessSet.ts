@@ -20,6 +20,7 @@ import { Hash28 } from "../../hashes/Hash28/Hash28";
 import { BootstrapWitness } from "./BootstrapWitness";
 import { TxRedeemer } from "./TxRedeemer";
 import { VKeyWitness } from "./VKeyWitness/VKeyWitness";
+import { CborBytes } from "../../../cbor/CborObj/CborBytes";
 
 export interface ITxWitnessSet {
     vkeyWitnesses?: VKeyWitness[],
@@ -240,7 +241,7 @@ export class TxWitnessSet
                     v: new CborArray(
                         this.nativeScripts.map( 
                             nativeScript => nativeScript instanceof Script ?
-                            Cbor.parse( nativeScript.cbor ) :
+                            Cbor.parse( nativeScript.bytes ) :
                             nativeScriptToCborObj( nativeScript ) )
                     )
                 },
@@ -258,7 +259,7 @@ export class TxWitnessSet
                     k: new CborUInt( 3 ),
                     v: new CborArray(
                         this.plutusV1Scripts
-                        .map( script => Cbor.parse( script.cbor ) )
+                        .map( script => new CborBytes( script.bytes ) )
                     )
                 },
 
@@ -283,7 +284,7 @@ export class TxWitnessSet
                     k: new CborUInt( 6 ),
                     v: new CborArray(
                         this.plutusV2Scripts
-                        .map( script => Cbor.parse( script.cbor ) )
+                        .map( script => new CborBytes( script.bytes ) )
                     )
                 },
             ]

@@ -22,6 +22,7 @@ import { Cbor } from "../../cbor/Cbor";
 import { ToJson } from "../../utils/ts/ToJson";
 import { InvalidCborFormatError } from "../../errors/InvalidCborFormatError";
 import { hexToBytes } from "../../crypto/utils/hexToBytes";
+import { bytesToHex } from "../../crypto/utils/bytesToHex";
 
 export type AddressStr = `${"addr1"|"addr_test1"}${string}`;
 
@@ -210,9 +211,12 @@ export class Address
             case "enterprise":
             case "pointer":
                 if( payload.length < 28 )
-                throw new BasePlutsError(
-                    "address' payload is incorrect; payload.length: " + payload.length.toString()
-                );
+                {
+                    console.log( bytesToHex( payload ) )
+                    throw new BasePlutsError(
+                        "address' payload is incorrect; payload.length: " + payload.length.toString()
+                    );
+                }
 
                 payment = payload.slice(0,28),
                 stake = []; // ignore pointer; might change in future version

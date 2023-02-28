@@ -277,7 +277,7 @@ export class TxBody
         if( auxDataHash !== undefined )
         {
             JsRuntime.assert(
-                auxDataHash instanceof AuxiliaryDataHash,
+                auxDataHash instanceof Hash32,
                 "invalid 'auxDataHash' while constructing a 'Tx'"
             )
         }
@@ -285,7 +285,7 @@ export class TxBody
         ObjectUtils.defineReadOnlyProperty(
             this,
             "auxDataHash",
-            auxDataHash
+            auxDataHash === undefined ? undefined : new AuxiliaryDataHash( auxDataHash )
         );
         
         // -------------------------------------- validityIntervalStart -------------------------------------- //
@@ -325,7 +325,7 @@ export class TxBody
         if( scriptDataHash !== undefined )
         {
             JsRuntime.assert(
-                scriptDataHash instanceof ScriptDataHash,
+                scriptDataHash instanceof Hash32,
                 "invalid 'scriptDataHash' while constructing a 'Tx'"
             )
         }
@@ -333,7 +333,7 @@ export class TxBody
         ObjectUtils.defineReadOnlyProperty(
             this,
             "scriptDataHash",
-            scriptDataHash
+            scriptDataHash === undefined ? undefined : new ScriptDataHash( scriptDataHash )
         );
 
         // -------------------------------------- collateral inputs -------------------------------------- //
@@ -577,7 +577,9 @@ export class TxBody
             _auxDataHash,
             _validityStart,
             _mint,
+            _10,
             _scriptDataHash,
+            _12,
             _collIns,
             _reqSigs,
             _net,

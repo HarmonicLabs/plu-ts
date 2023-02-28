@@ -222,7 +222,7 @@ export class TxOut
             this.refScript === undefined ? undefined :
             {
                 k: new CborUInt( 3 ),
-                v: new CborTag( 24, new CborBytes( this.refScript.cbor ) )
+                v: new CborTag( 24, new CborBytes( this.refScript.toCbor().asBytes ) )
             }
         ].filter( elem => elem !== undefined ) as CborMapEntry[])
     }

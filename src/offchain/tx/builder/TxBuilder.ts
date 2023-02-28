@@ -27,7 +27,7 @@ import { ExBudget } from "../../../onchain/CEK/Machine/ExBudget";
 import { AuxiliaryData } from "../AuxiliaryData/AuxiliaryData";
 import { Hash32 } from "../../hashes/Hash32/Hash32";
 import { CborString } from "../../../cbor/CborString";
-import { dataToCbor } from "../../../types/Data/toCbor";
+import { dataToCbor, dataToCborObj } from "../../../types/Data/toCbor";
 import { ScriptDataHash } from "../../hashes/Hash32/ScriptDataHash";
 import { UPLCTerm } from "../../../onchain/UPLC/UPLCTerm";
 import { UPLCDecoder } from "../../../onchain/UPLC/UPLCDecoder";
@@ -38,6 +38,9 @@ import { ErrorUPLC } from "../../../onchain/UPLC/UPLCTerms/ErrorUPLC";
 import { UTxO } from "../body/output/UTxO";
 import { Hash28 } from "../../hashes/Hash28/Hash28";
 import { CborPositiveRational } from "../../../cbor/extra/CborRational";
+import { TxWitnessSet } from "../TxWitnessSet";
+import { Cbor } from "../../../cbor/Cbor";
+import { CborArray } from "../../../cbor/CborObj/CborArray";
 
 export class TxBuilder
 {
@@ -193,8 +196,8 @@ export class TxBuilder
                     script: {
                         type: script.type,
                         uplc: UPLCDecoder.parse(
-                            script.cbor,
-                            "cbor"
+                            script.bytes,
+                            "flat"
                         ).body
                     },
                     datum
@@ -515,52 +518,36 @@ export class TxBuilder
             .concat( withdrawRedeemers )
             .concat( certRedeemers );
         
-        const datumsScriptData = datums.reduce(
-            (acc, dat) => acc.concat( Array.from( dataToCbor( dat ).asBytes ) ),
-            [] as number[]
-        ) as byte[];
+        const dummyTxWitnesses = new TxWitnessSet({
+            vkeyWitnesses,
+            bootstrapWitnesses,
+            datums,
+            redeemers,
+            nativeScripts: nativeScriptsWitnesses,
+            plutusV1Scripts: plutusV1ScriptsWitnesses,
+            plutusV2Scripts: plutusV2ScriptsWitnesses
+        });
 
-        const scriptData =
-            redeemers.length === 0 && datums.length === 0 ?
-            undef : 
-            redeemers.length === 0 && datums.length > 0 ?
-            /*
-            ; in the case that a transaction includes datums but does not
-            ; include any redeemers, the script data format becomes (in hex):
-            ; [ 80 | datums | A0 ]
-            ; corresponding to a CBOR empty list and an empty map.
-            */
-            [ 0x80, ...datumsScriptData, 0xa0 ] as byte[] :
-            /*
-            ; script data format:
-            ; [ redeemers | datums | language views ]
-            ; The redeemers are exactly the data present in the transaction witness set.
-            ; Similarly for the datums, if present. If no datums are provided, the middle
-            ; field is an empty string.
-            */
-            redeemers.reduce(
-                (acc, rdmr) => acc.concat( Array.from( dataToCbor( rdmr.data ).asBytes ) ),
-                [] as number[]
-            )
-            .concat(
-                datumsScriptData
-            )
-            .concat(
+        const datumsScriptData =
+            datums.length > 0 ?
                 Array.from(
-                    costModelsToLanguageViewCbor(
-                        this.protocolParamters.costModels
-                    ).asBytes
-                )
-            ) as byte[];
+                    Cbor.encode(
 
-        const scriptDataHash = scriptData === undef ? undef :
-        new ScriptDataHash(
-            Buffer.from(
-                blake2b_256(
-                    scriptData
-                )
-            )
-        );
+                        new CborArray(
+                            datums.map( dataToCborObj )
+                        )
+                        
+                    ).asBytes
+                ) 
+            : [];
+
+        const languageViews = costModelsToLanguageViewCbor(
+            this.protocolParamters.costModels,
+            {
+                mustHaveV1: plutusV1ScriptsWitnesses.length > 0,
+                mustHaveV2: plutusV2ScriptsWitnesses.length > 0
+            }
+        ).asBytes;
 
         const dummyTx = new Tx({
             body: {
@@ -591,18 +578,10 @@ export class TxBuilder
                     undef :
                     forceBigUInt( invalidAfter ) - forceBigUInt( invalidBefore ),
                 auxDataHash: auxData?.hash,
-                scriptDataHash,
+                scriptDataHash: getScriptDataHash( redeemers, datumsScriptData, languageViews ),
                 network: this.network
             },
-            witnesses: {
-                vkeyWitnesses,
-                bootstrapWitnesses,
-                datums,
-                redeemers,
-                nativeScripts: nativeScriptsWitnesses,
-                plutusV1Scripts: plutusV1ScriptsWitnesses,
-                plutusV2Scripts: plutusV2ScriptsWitnesses
-            },
+            witnesses: dummyTxWitnesses,
             auxiliaryData: auxData,
             isScriptValid
         });
@@ -865,11 +844,12 @@ export class TxBuilder
                 body: {
                     ...tx.body,
                     outputs: txOuts,
-                    fee: fee
+                    fee: fee,
+                    scriptDataHash: getScriptDataHash( rdmrs, datumsScriptData, languageViews )
                 },
                 witnesses: {
                     ...tx.witnesses,
-                    redeemers: rdmrs
+                    redeemers: rdmrs,
                 },
                 isScriptValid: _isScriptValid
             });
@@ -896,7 +876,49 @@ export class TxBuilderRunner
     }
 }
 
-function ceilBigInt( n: number ): bigint
+
+export function getScriptDataHash( rdmrs: TxRedeemer[], datumsScriptData: number[], languageViews: Buffer ): ScriptDataHash | undefined
 {
-    return BigInt( Math.ceil( n ) );
+    const undef = void 0;
+
+    const scriptData =
+        rdmrs.length === 0 && datumsScriptData.length === 0 ?
+        undef : 
+        rdmrs.length === 0 && datumsScriptData.length > 0 ?
+        /*
+        ; in the case that a transaction includes datums but does not
+        ; include any redeemers, the script data format becomes (in hex):
+        ; [ 80 | datums | A0 ]
+        ; corresponding to a CBOR empty list and an empty map.
+        */
+        [ 0x80, ...datumsScriptData, 0xa0 ] as byte[] :
+        /*
+        ; script data format:
+        ; [ redeemers | datums | language views ]
+        ; The redeemers are exactly the data present in the transaction witness set.
+        ; Similarly for the datums, if present. If no datums are provided, the middle
+        ; field is an empty string.
+        */
+        Array.from(
+            Cbor.encode(
+                new CborArray(
+                    rdmrs.map( r => r.toCborObj() )
+                )
+            ).asBytes
+        )
+        .concat(
+            datumsScriptData
+        )
+        .concat(
+            Array.from(
+                languageViews
+            )
+        ) as byte[];
+
+    return scriptData === undef ? undef :
+        new ScriptDataHash(
+            Buffer.from(
+                blake2b_256( scriptData )
+            )
+        );
 }

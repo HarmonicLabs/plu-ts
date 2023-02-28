@@ -16,7 +16,7 @@ import { CborUInt } from "../../../cbor/CborObj/CborUInt";
 import { InvalidCborFormatError } from "../../../errors/InvalidCborFormatError";
 import { ToJson } from "../../../utils/ts/ToJson";
 import { AuxiliaryDataHash } from "../../hashes/Hash32/AuxiliaryDataHash";
-import { NativeScript } from "../../script/NativeScript";
+import { NativeScript, nativeScriptFromCborObj } from "../../script/NativeScript";
 import { Script, ScriptType } from "../../script/Script";
 
 export interface IAuxiliaryData {
@@ -29,7 +29,7 @@ export interface IAuxiliaryData {
 function scriptArrToCbor( scripts: Script[] ): CborArray
 {
     return new CborArray(
-        scripts.map( script => new CborBytes( script.cbor ) )
+        scripts.map( script => new CborBytes( script.bytes ) )
     );
 }
 
@@ -213,6 +213,28 @@ export class AuxiliaryData
     }
     static fromCborObj( cObj: CborObj ): AuxiliaryData
     {
+        // shelley; metadata only
+        if( cObj instanceof CborMap )
+        {
+            return new AuxiliaryData({
+                metadata: TxMetadata.fromCborObj( cObj )
+            });
+        }
+
+        // shelley multi assets; metadata + native scripts
+        if( cObj instanceof CborArray )
+        {
+            if(!(
+                cObj.array[1] instanceof CborArray
+            ))
+            throw new InvalidCborFormatError("AuxiliaryData")
+
+            return new AuxiliaryData({
+                metadata: TxMetadata.fromCborObj( cObj.array[0] ),
+                nativeScripts: cObj.array[1].array.map( nativeScriptFromCborObj )
+            });
+        }
+
         if(!(
             cObj instanceof CborTag &&
             cObj.data instanceof CborMap
