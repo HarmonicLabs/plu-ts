@@ -231,7 +231,7 @@ describe("src/crypto", () => {
             ) as any
         )
 
-        // for(let i = 0; i < 10; i++)
+        // for(let i = 0; i < 10000; i++)
         // {
             const data = new Array( Math.round( Math.random() * 1024 ) ).fill(0).map( _ => Math.round( Math.random() * 255 ));
             test_eq_224( data as any )

@@ -356,14 +356,14 @@ export const defaultV2Costs: CostModelPlutusV2 = Object.freeze({
     "unListData-memory-arguments": 32,
     "unMapData-cpu-arguments": 38314,
     "unMapData-memory-arguments": 32,
-    "verifyEcdsaSecp256k1Signature-cpu-arguments": 20000000000,
-    "verifyEcdsaSecp256k1Signature-memory-arguments": 20000000000,
-    "verifyEd25519Signature-cpu-arguments-intercept": 9462713,
-    "verifyEd25519Signature-cpu-arguments-slope": 1021,
+    "verifyEcdsaSecp256k1Signature-cpu-arguments": 35892428,
+    "verifyEcdsaSecp256k1Signature-memory-arguments": 10,
+    "verifyEd25519Signature-cpu-arguments-intercept": 57996947,
+    "verifyEd25519Signature-cpu-arguments-slope": 18975,
     "verifyEd25519Signature-memory-arguments": 10,
-    "verifySchnorrSecp256k1Signature-cpu-arguments-intercept": 20000000000,
-    "verifySchnorrSecp256k1Signature-cpu-arguments-slope": 0,
-    "verifySchnorrSecp256k1Signature-memory-arguments": 20000000000
+    "verifySchnorrSecp256k1Signature-cpu-arguments-intercept": 38887044,
+    "verifySchnorrSecp256k1Signature-cpu-arguments-slope": 32947,
+    "verifySchnorrSecp256k1Signature-memory-arguments": 10
 }) as any;
 
 export const costModelV1Keys: (keyof CostModelPlutusV1)[] = Object.freeze( Object.keys( defaultV1Costs ) ) as any;
@@ -480,15 +480,15 @@ export function costModelsFromCborObj( cObj: CborObj | undefined ): CostModels
 
     cObj.map.forEach( ({ k, v }) => {
 
-        if( k instanceof CborBytes && v instanceof CborArray && v.array.every( n => n instanceof CborUInt ))
+        if( k instanceof CborUInt && v instanceof CborArray && v.array.every( n => n instanceof CborUInt ))
         {
-            if( k.buffer.at(0) === 0 )
+            if( Number( k.num ) === 0 )
             {
                 ObjectUtils.defineReadOnlyProperty(
                     costs, "PlutusScriptV1", toCostModelV1( (v.array.map( n => (n as CborUInt).num ) ) as any )
                 )
             }
-            if( k.buffer.at(0) === 1 )
+            if( Number( k.num ) === 1 )
             {
                 ObjectUtils.defineReadOnlyProperty(
                     costs, "PlutusScriptV2", toCostModelV2( (v.array.map( n => (n as CborUInt).num ) ) as any )
@@ -505,7 +505,7 @@ export interface CostModelsToLanguageViewCborOpts {
     mustHaveV2?: boolean
 }
 
-export function costModelsToLanguageViewCbor( costmdls: CostModels, opts: Partial<CostModelsToLanguageViewCborOpts> = {} ): CborString
+export function costModelsToLanguageViewCbor( costmdls: CostModels, opts: CostModelsToLanguageViewCborOpts ): CborString
 {
     const {
         PlutusScriptV1,
@@ -518,20 +518,18 @@ export function costModelsToLanguageViewCbor( costmdls: CostModels, opts: Partia
     if( opts.mustHaveV2 === true && PlutusScriptV2 === undefined )
     throw new BasePlutsError("missing required PlutusScriptV2")
 
-    const includeV1 = PlutusScriptV1 !== undefined && opts.mustHaveV1 === true;
-    const includeV2 = PlutusScriptV2 !== undefined && opts.mustHaveV2 === true;
-
     return Cbor.encode(
         new CborMap([
-            !includeV1 ? undefined :
+            opts.mustHaveV1 ?
             {
+                // k: new CborUInt(1),
                 k: new CborBytes(Buffer.from([0])),
 
                 // plutus v1 language view is messed up, not my fault
                 v: new CborBytes(
                     Cbor.encode(
                         new CborArray(
-                            toCostModelArrV1( PlutusScriptV1 )
+                            toCostModelArrV1( PlutusScriptV1 as any )
                             .map( n => new CborUInt( forceBigUInt( n ) ) ),
                             {
                                 indefinite: true
@@ -539,12 +537,12 @@ export function costModelsToLanguageViewCbor( costmdls: CostModels, opts: Partia
                         )
                     ).asBytes
                 )
-            },
-            !includeV2 ? undefined :
+            } : undefined,
+            opts.mustHaveV2 ? 
             {
-                k: new CborBytes(Buffer.from([1])),
-                v: new CborArray( toCostModelArrV2( PlutusScriptV2 ).map( n => new CborUInt( forceBigUInt( n ) ) ) )
-            }
+                k: new CborUInt(1),
+                v: new CborArray( toCostModelArrV2( PlutusScriptV2 as any ).map( n => new CborUInt( forceBigUInt( n ) ) ) )
+            } : undefined
         ].filter( elem => elem !== undefined ) as CborMapEntry[])
     )
 }
