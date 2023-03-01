@@ -679,6 +679,61 @@ export class TxBuilder
 
         const maxRound = 3;
 
+        const onEvaluationResult = (
+            i: number,
+            totExBudget: ExBudget,
+            rdmr: TxRedeemer,
+            result: UPLCTerm, 
+            budgetSpent: ExBudget, 
+            logs: string[] 
+        ): void => {
+            onScriptResult && onScriptResult(
+                rdmr.clone(),
+                result.clone(),
+                budgetSpent.clone(),
+                logs.slice()
+            );
+
+            if( result instanceof ErrorUPLC )
+            {
+                if( typeof onScriptInvalid === "function" )
+                {
+                    onScriptInvalid( rdmr.clone(), logs.slice() );
+                    _isScriptValid = false;
+                }
+                else
+                {
+                    throw new BasePlutsError(
+                        `script consumed with ${txRedeemerTagToString(rdmr.tag)} redemer ` +
+                        `and index "${rdmr.index.toString()}" failed with \n`+
+                        `error: ${result.msg}\n`+ 
+                        `additional infos: ${
+                            JSON.stringify(
+                                result.addInfos,
+                                ( k, v ) => {
+                                    if( Buffer.isBuffer( v ) )
+                                    return v.toString("hex");
+
+                                    if( typeof v === "bigint" )
+                                    return v.toString();
+
+                                    return v
+                                }
+                            )
+                        }\n\n` +
+                        `script execution logs: [${logs.toString()}]`
+                    );
+                }
+            }
+
+            rdmrs[i] = new TxRedeemer({
+                ...rdmr,
+                execUnits: budgetSpent
+            });
+
+            totExBudget.add( budgetSpent );
+        };
+
         let _isScriptValid: boolean = true;
         let fee = minFee;
         let prevFee: bigint;
@@ -725,51 +780,14 @@ export class TxBuilder
                         )
                     );
 
-                    onScriptResult && onScriptResult(
-                        rdmr.clone(),
-                        result.clone(),
-                        budgetSpent.clone(),
-                        logs.slice()
+                    onEvaluationResult(
+                        i,
+                        totExBudget,
+                        rdmr,
+                        result,
+                        budgetSpent,
+                        logs
                     );
-
-                    if( result instanceof ErrorUPLC )
-                    {
-                        if( typeof onScriptInvalid === "function" )
-                        {
-                            onScriptInvalid( rdmr.clone(), logs.slice() );
-                            _isScriptValid = false;
-                        }
-                        else
-                        {
-                            throw new BasePlutsError(
-                                `script consumed with ${txRedeemerTagToString(rdmr.tag)} redemer ` +
-                                `and index "${rdmr.index.toString()}" failed with \n`+
-                                `error: ${result.msg}\n`+ 
-                                `additional infos: ${
-                                    JSON.stringify(
-                                        result.addInfos,
-                                        ( k, v ) => {
-                                            if( Buffer.isBuffer( v ) )
-                                            return v.toString("hex");
-
-                                            if( typeof v === "bigint" )
-                                            return v.toString();
-
-                                            return v
-                                        }
-                                    )
-                                }\n\n` +
-                                `script execution logs: [${logs.toString()}]`
-                            );
-                        }
-                    }
-
-                    rdmrs[i] = new TxRedeemer({
-                        ...rdmr,
-                        execUnits: budgetSpent
-                    });
-
-                    totExBudget.add( budgetSpent );
                 }
 
                 if( tag === TxRedeemerTag.Spend )
@@ -808,26 +826,14 @@ export class TxBuilder
                         )
                     );
 
-                    onScriptResult && onScriptResult(
-                        rdmr.clone(),
-                        result.clone(),
-                        budgetSpent.clone(),
-                        logs.slice()
+                    onEvaluationResult(
+                        i,
+                        totExBudget,
+                        rdmr,
+                        result,
+                        budgetSpent,
+                        logs
                     );
-
-                    if( result instanceof ErrorUPLC )
-                    {
-                        onScriptInvalid && onScriptInvalid( rdmr.clone(), logs.slice() );
-
-                        _isScriptValid = false;
-                    }
-
-                    rdmrs[i] = new TxRedeemer({
-                        ...rdmr,
-                        execUnits: budgetSpent,
-                    });
-
-                    totExBudget.add( budgetSpent );
                 }
                 else if( tag === TxRedeemerTag.Mint )       onlyRedeemerArg( mintScriptsToExec )
                 else if( tag === TxRedeemerTag.Cert )       onlyRedeemerArg( certScriptsToExec )
