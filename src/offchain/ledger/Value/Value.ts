@@ -136,7 +136,11 @@ export class Value
     static isPositive( v: Value ): boolean
     {
         return v.map.every( ({ assets }) =>
-            Object.keys( assets ).every( assetName => Number( (assets as any)[assetName] ?? -1 ) > 0 )
+            Object.keys( assets )
+            .every( assetName => 
+                Number( (assets as any)[assetName] ?? -1 ) 
+                >= 0 
+            )
         )
     }
 

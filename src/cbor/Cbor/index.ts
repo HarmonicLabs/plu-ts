@@ -657,10 +657,10 @@ export class Cbor
                     
                     const nLen = Number( length );
 
-                    if( nLen === 20 ) return new CborSimple( false );
-                    if( nLen === 21 ) return new CborSimple( true );
-                    if( nLen === 22 ) return new CborSimple( null );
-                    if( nLen === 23 ) return new CborSimple( undefined );
+                    if( nLen === 20 ) return new CborSimple( false );       // f4
+                    if( nLen === 21 ) return new CborSimple( true );        // f5
+                    if( nLen === 22 ) return new CborSimple( null );        // f6
+                    if( nLen === 23 ) return new CborSimple( undefined );   // f7
 
                     // flaots handled at the beginning of the function
                     // since length isn't required

@@ -18,7 +18,7 @@ import { ITxBuildOptions } from "./txBuild/ITxBuildOptions";
 import { TxIn } from "../body/TxIn";
 import { TxOut } from "../body/output/TxOut";
 import { Value } from "../../ledger/Value/Value";
-import { TxRedeemer, TxRedeemerTag, txRdmrTagToString } from "../TxWitnessSet/TxRedeemer";
+import { TxRedeemer, TxRedeemerTag, txRdmrTagToString, txRedeemerTagToString } from "../TxWitnessSet/TxRedeemer";
 import { BasePlutsError } from "../../../errors/BasePlutsError";
 import { VKeyWitness } from "../TxWitnessSet/VKeyWitness/VKeyWitness";
 import { Data } from "../../../types/Data/Data";
@@ -734,8 +734,34 @@ export class TxBuilder
 
                     if( result instanceof ErrorUPLC )
                     {
-                        onScriptInvalid && onScriptInvalid( rdmr.clone(), logs.slice() );
-                        _isScriptValid = false;
+                        if( typeof onScriptInvalid === "function" )
+                        {
+                            onScriptInvalid( rdmr.clone(), logs.slice() );
+                            _isScriptValid = false;
+                        }
+                        else
+                        {
+                            throw new BasePlutsError(
+                                `script consumed with ${txRedeemerTagToString(rdmr.tag)} redemer ` +
+                                `and index "${rdmr.index.toString()}" failed with \n`+
+                                `error: ${result.msg}\n`+ 
+                                `additional infos: ${
+                                    JSON.stringify(
+                                        result.addInfos,
+                                        ( k, v ) => {
+                                            if( Buffer.isBuffer( v ) )
+                                            return v.toString("hex");
+
+                                            if( typeof v === "bigint" )
+                                            return v.toString();
+
+                                            return v
+                                        }
+                                    )
+                                }\n\n` +
+                                `script execution logs: [${logs.toString()}]`
+                            );
+                        }
                     }
 
                     rdmrs[i] = new TxRedeemer({
