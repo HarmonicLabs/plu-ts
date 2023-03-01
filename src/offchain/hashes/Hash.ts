@@ -100,6 +100,9 @@ export class Hash
         );
     }
 
+    /**
+     * @deprecated use `toString()` instead
+     */
     get asString(): string
     {
         return this._str;
@@ -110,11 +113,22 @@ export class Hash
         return this._str;
     }
 
+    /**
+     * @deprecated use `toBuffer()` instead
+     */
     get asBytes(): Buffer
     {
         return this._bytes;
     }
 
+    toBuffer(): Buffer
+    {
+        return this._bytes;
+    }
+
+    /**
+     * @deprecated use `toBuffer()` instead
+     */
     toBytes(): Buffer
     {
         return this._bytes;

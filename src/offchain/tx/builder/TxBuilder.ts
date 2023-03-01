@@ -113,7 +113,7 @@ export class TxBuilder
     {
         return (
             forceBigUInt( this.protocolParamters.txFeePerByte ) *
-            BigInt( (tx instanceof Tx ? tx.toCbor() : tx ).asBytes.length ) +
+            BigInt( (tx instanceof Tx ? tx.toCbor() : tx ).toBuffer().length ) +
             forceBigUInt( this.protocolParamters.txFeeFixed )
         );
     }
@@ -237,7 +237,7 @@ export class TxBuilder
                     "multiple scripts specified"
                 );
 
-                const refScript = script.ref.resolved.refScript;
+                const refScript = (script.ref as UTxO).resolved.refScript;
 
                 if( refScript === (void 0) )
                 throw new BasePlutsError(
@@ -481,11 +481,11 @@ export class TxBuilder
         ?.sort( ({ withdrawal: fst }, { withdrawal: snd }) =>
             BufferUtils.lexCompare(
                 fst.rewardAccount instanceof Hash28 ?
-                    fst.rewardAccount.asBytes :
-                    fst.rewardAccount.credentials.asBytes,
+                    fst.rewardAccount.toBuffer() :
+                    fst.rewardAccount.credentials.toBuffer(),
                 snd.rewardAccount instanceof Hash28 ?
-                    snd.rewardAccount.asBytes :
-                    snd.rewardAccount.credentials.asBytes
+                    snd.rewardAccount.toBuffer() :
+                    snd.rewardAccount.credentials.toBuffer()
             )
         )
         .map( ({
@@ -537,7 +537,7 @@ export class TxBuilder
                             datums.map( dataToCborObj )
                         )
                         
-                    ).asBytes
+                    ).toBuffer()
                 ) 
             : [];
 
@@ -547,7 +547,7 @@ export class TxBuilder
                 mustHaveV1: plutusV1ScriptsWitnesses.length > 0,
                 mustHaveV2: plutusV2ScriptsWitnesses.length > 0
             }
-        ).asBytes;
+        ).toBuffer();
 
         const dummyTx = new Tx({
             body: {
@@ -904,7 +904,7 @@ export function getScriptDataHash( rdmrs: TxRedeemer[], datumsScriptData: number
                 new CborArray(
                     rdmrs.map( r => r.toCborObj() )
                 )
-            ).asBytes
+            ).toBuffer()
         )
         .concat(
             datumsScriptData

@@ -4,7 +4,7 @@ import BufferUtils from "../../utils/BufferUtils";
 
 import { Buffer } from "buffer";
 import { blake2b_224, byte } from "../../crypto";
-import { PlutusScriptVersion, ScriptJsonFormat } from "../../onchain/pluts/Script";
+import { ScriptJsonFormat } from "../../onchain/pluts/Script";
 import { NativeScript, nativeScriptFromCbor, nativeScriptToCbor } from "./NativeScript";
 import { Cloneable } from "../../types/interfaces/Cloneable";
 import { Hash28 } from "../hashes/Hash28/Hash28";
@@ -15,7 +15,6 @@ import { CanBeCborString, CborString, forceCborString } from "../../cbor/CborStr
 import { ToCbor } from "../../cbor/interfaces/CBORSerializable";
 import { CborObj } from "../../cbor/CborObj";
 import { CborArray } from "../../cbor/CborObj/CborArray";
-import { CborTag } from "../../cbor/CborObj/CborTag";
 import { CborUInt } from "../../cbor/CborObj/CborUInt";
 import { InvalidCborFormatError } from "../../errors/InvalidCborFormatError";
 
@@ -35,6 +34,7 @@ export class Script<T extends ScriptType = ScriptType>
 {
     readonly type!: T;
     readonly bytes!: Buffer;
+    readonly cbor!: CborString;
     readonly hash!: Hash28;
 
     constructor( scriptType: T, bytes: Buffer | (T extends ScriptType.NativeScript ? NativeScript : ScriptJsonFormat) )
@@ -63,7 +63,7 @@ export class Script<T extends ScriptType = ScriptType>
             }
             else
             {
-                bytes = nativeScriptToCbor( bytes as NativeScript ).asBytes
+                bytes = nativeScriptToCbor( bytes as NativeScript ).toBuffer()
             }
         }
         else bytes = BufferUtils.copy( bytes )
@@ -97,6 +97,21 @@ export class Script<T extends ScriptType = ScriptType>
             bytes
         );
 
+        ObjectUtils.defineReadOnlyProperty(
+            this,
+            "cbor",
+            this.type === ScriptType.NativeScript ? new CborString( bytes ) :
+            Cbor.encode(
+                new CborBytes(
+                    Cbor.encode(
+                        new CborBytes(
+                            BufferUtils.copy( bytes )
+                        )
+                    ).toBuffer()
+                )
+            )
+        );
+
         let _hash: Hash28 = undefined as any;
 
         ObjectUtils.definePropertyIfNotPresent(
@@ -116,7 +131,7 @@ export class Script<T extends ScriptType = ScriptType>
                                 new CborBytes(
                                     this.bytes
                                 )
-                            ).asBytes
+                            ).toBuffer()
                         );
 
                         scriptDataToBeHashed = [
@@ -164,7 +179,7 @@ export class Script<T extends ScriptType = ScriptType>
                             new CborBytes(
                                 this.bytes
                             )
-                        ).asBytes
+                        ).toBuffer()
                     )
                 ).toString()
             }
@@ -202,7 +217,11 @@ export class Script<T extends ScriptType = ScriptType>
             new CborUInt(
                 this.type === ScriptType.PlutusV1 ? 1 : 2
             ),
-            new CborBytes( this.bytes )
+            new CborBytes(
+                Cbor.encode(
+                    new CborBytes( BufferUtils.copy( this.bytes ) )
+                ).toBuffer()
+            )
         ]);
     }
 
@@ -211,8 +230,17 @@ export class Script<T extends ScriptType = ScriptType>
         return Script.fromCborObj( Cbor.parse( forceCborString( cbor ) ) );
     }
 
-    static fromCborObj( cObj: CborObj ): Script
+    static fromCborObj( cObj: CborObj, defType: ScriptType = ScriptType.PlutusV2 ): Script
     {
+        // read tx_witness_set
+        if( cObj instanceof CborBytes )
+        {
+            return new Script(
+                defType,
+                Cbor.encode( cObj ).toBuffer()
+            );
+        }
+
         if(!(
             cObj instanceof CborArray   &&
             cObj.array.length >= 2      &&
@@ -226,7 +254,7 @@ export class Script<T extends ScriptType = ScriptType>
             ScriptType.PlutusV2;
 
         if( t === ScriptType.NativeScript )
-        return new Script( t, Cbor.encode( cObj.array[1] ).asBytes );
+        return new Script( t, Cbor.encode( cObj.array[1] ).toBuffer() );
 
         if(!( cObj.array[1] instanceof CborBytes ))
         throw new InvalidCborFormatError("Script");

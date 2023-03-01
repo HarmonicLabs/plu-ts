@@ -9,7 +9,7 @@ import { Script, ScriptType } from "../../../script/Script";
 import { CborString, CanBeCborString, forceCborString } from "../../../../cbor/CborString";
 import { Value } from "../../../ledger/Value/Value";
 import { CborMap, CborMapEntry } from "../../../../cbor/CborObj/CborMap";
-import { dataToCbor, dataToCborObj } from "../../../../types/Data/toCbor";
+import { dataToCbor } from "../../../../types/Data/toCbor";
 import { IValue, isIValue } from "../../../ledger/Value/IValue";
 import { Hash32 } from "../../../hashes/Hash32/Hash32";
 import { Cbor } from "../../../../cbor/Cbor";
@@ -214,7 +214,7 @@ export class TxOut
                         new CborTag(
                             24,
                             new CborBytes(
-                                dataToCbor( datum ).asBytes
+                                dataToCbor( datum ).toBuffer()
                             )
                         )
                     ])
@@ -222,7 +222,7 @@ export class TxOut
             this.refScript === undefined ? undefined :
             {
                 k: new CborUInt( 3 ),
-                v: new CborTag( 24, new CborBytes( this.refScript.toCbor().asBytes ) )
+                v: new CborTag( 24, new CborBytes( this.refScript.toCbor().toBuffer() ) )
             }
         ].filter( elem => elem !== undefined ) as CborMapEntry[])
     }

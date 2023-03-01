@@ -11,7 +11,7 @@ export class Hash28 extends Hash
 {
     constructor( bs: string | Buffer | Hash28 , className: string = "Hash28" )
     {
-        super( bs instanceof Hash28 ? bs.asBytes : bs );
+        super( bs instanceof Hash28 ? bs.toBuffer() : bs );
 
         JsRuntime.assert(
             this._bytes.length === 28,
@@ -26,7 +26,7 @@ export class Hash28 extends Hash
 
     clone(): Hash28
     {
-        return new Hash28( this.asBytes );
+        return new Hash28( this.toBuffer() );
     }
 
     static fromCbor( cStr: CanBeCborString ): Hash28

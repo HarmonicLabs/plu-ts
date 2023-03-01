@@ -101,7 +101,7 @@ export class TxWitnessSet
      * if true adds the witness
      * otherwise nothing happens (the signature is not added)
     **/
-    readonly addVKeyWitnessIfNeeded: ( vkeyWit: VKeyWitness ) => void
+    readonly addVKeyWitness: ( vkeyWit: VKeyWitness ) => void
     /*
      * @returns {boolean}
      *  `true` if all the signers needed
@@ -193,15 +193,16 @@ export class TxWitnessSet
         );
 
         ObjectUtils.defineReadOnlyProperty(
-            this, "addVKeyWitnessIfNeeded",
+            this, "addVKeyWitness",
             ( vkeyWit: VKeyWitness ) => {
-                if(
-                    noRequiredSigs ||
-                    _reqSigs.includes( vkeyWit.vkey.hash.toString() )
-                )
-                {
-                    _vkeyWits.push( vkeyWit.clone() );
-                }
+                // if(
+                //     noRequiredSigs ||
+                //     _reqSigs.includes( vkeyWit.vkey.hash.toString() )
+                // )
+                // {
+                //     _vkeyWits.push( vkeyWit.clone() );
+                // }
+                _vkeyWits.push( vkeyWit.clone() );
             }
         )
     }
@@ -241,7 +242,7 @@ export class TxWitnessSet
                     v: new CborArray(
                         this.nativeScripts.map( 
                             nativeScript => nativeScript instanceof Script ?
-                            Cbor.parse( nativeScript.bytes ) :
+                            Cbor.parse( nativeScript.cbor ) :
                             nativeScriptToCborObj( nativeScript ) )
                     )
                 },
@@ -259,7 +260,7 @@ export class TxWitnessSet
                     k: new CborUInt( 3 ),
                     v: new CborArray(
                         this.plutusV1Scripts
-                        .map( script => new CborBytes( script.bytes ) )
+                        .map( script =>  Cbor.parse( script.cbor ) )
                     )
                 },
 
@@ -284,7 +285,7 @@ export class TxWitnessSet
                     k: new CborUInt( 6 ),
                     v: new CborArray(
                         this.plutusV2Scripts
-                        .map( script => new CborBytes( script.bytes ) )
+                        .map( script => Cbor.parse( script.cbor ) )
                     )
                 },
             ]

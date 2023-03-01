@@ -38,6 +38,9 @@ export class ByteString
         this._bytes = bs;
     }
 
+    /**
+     * @deprecated use `toString()` instead
+     */
     get asString(): string
     {
         return this._bytes.toString( "hex" );
@@ -48,7 +51,15 @@ export class ByteString
         return this.asString;
     }
 
+    /**
+     * @deprecated use `toBuffer()` instead
+     */
     get asBytes(): Buffer
+    {
+        return BufferUtils.copy( this._bytes );
+    }
+
+    toBuffer(): Buffer
     {
         return BufferUtils.copy( this._bytes );
     }
@@ -65,7 +76,7 @@ export class ByteString
 
     public static toAscii( bStr: ByteString ): string
     {
-        return bStr.asBytes.toString("ascii")
+        return bStr.toBuffer().toString("ascii")
     }
 
     public static isValidHexValue( str: string ): boolean

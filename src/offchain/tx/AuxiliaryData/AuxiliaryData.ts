@@ -159,7 +159,7 @@ export class AuxiliaryData
 
                     _hash = new AuxiliaryDataHash(
                         Buffer.from(
-                            blake2b_256( this.toCbor().asBytes )
+                            blake2b_256( this.toCbor().toBuffer() )
                         )
                     );
 
@@ -274,21 +274,21 @@ export class AuxiliaryData
                 _native.array.map( nativeCborObj => 
                     new Script(
                         ScriptType.NativeScript, 
-                        Cbor.encode( nativeCborObj ).asBytes
+                        Cbor.encode( nativeCborObj ).toBuffer()
                     )
                 ),
             plutusV1Scripts: _pV1 === undefined ? undefined :
                 _pV1.array.map( cbor =>
                     new Script(
                         ScriptType.PlutusV1,
-                        Cbor.encode( cbor ).asBytes
+                        Cbor.encode( cbor ).toBuffer()
                     )
                 ),
             plutusV2Scripts: _pV2 === undefined ? undefined :
                 _pV2.array.map( cbor =>
                     new Script(
                         ScriptType.PlutusV2,
-                        Cbor.encode( cbor ).asBytes
+                        Cbor.encode( cbor ).toBuffer()
                     )
                 )
         })

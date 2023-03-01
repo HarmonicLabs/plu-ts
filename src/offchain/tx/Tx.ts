@@ -44,7 +44,7 @@ export class Tx
      * one might prefer to use this method instead of `signWith`
      * when signature is provided by a third party (example CIP30 wallet)
     **/
-    readonly addVKeyWitnessIfNeeded!: ( vkeyWit: VKeyWitness ) => void
+    readonly addVKeyWitness!: ( vkeyWit: VKeyWitness ) => void
     /**
      * checks that the signer is needed
      * if true signs the transaction with the specified key
@@ -130,8 +130,8 @@ export class Tx
 
         //*
         ObjectUtils.defineReadOnlyProperty(
-            this, "addVKeyWitnessIfNeeded",
-            this.witnesses.addVKeyWitnessIfNeeded
+            this, "addVKeyWitness",
+            this.witnesses.addVKeyWitness
         );
 
         ObjectUtils.defineReadOnlyProperty(
@@ -139,7 +139,7 @@ export class Tx
             ( signer: PrivateKey ): void => {
                 const [ derivedPubKey, signature ] = signEd25519( this.body.hash.asBytes, signer.asBytes );
 
-                this.addVKeyWitnessIfNeeded(
+                this.addVKeyWitness(
                     new VKeyWitness(
                         new VKey( Buffer.from( derivedPubKey ) ),
                         new Signature( Buffer.from( signature ) )
