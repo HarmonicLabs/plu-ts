@@ -138,8 +138,8 @@ export function showUPLCConstValue( v: ConstValue ): string
     if( v instanceof Integer ) return v.asBigInt.toString();
     if( typeof v === "string" ) return `"${v}"`;
     if( typeof v === "boolean" )  return v ? "True" : "False";
-    if( v instanceof ByteString ) return "#" + v.asString;
-    if( isData( v ) ) return "#" + dataToCbor( v ).asString;
+    if( v instanceof ByteString ) return "#" + v.toString();
+    if( isData( v ) ) return "#" + dataToCbor( v ).toString();
     if( Array.isArray( v ) ) return "[" + v.map( showUPLCConstValue ).join(',') + "]";
     if( v instanceof Pair ) return `(${showUPLCConstValue(v.fst)},${showUPLCConstValue(v.snd)})`;
     
@@ -152,13 +152,20 @@ export function showConstType( t: ConstType ): string
 {
     if( t[0] === ConstTyTag.list )
     {
-        return `[(con list) (con ${showConstType( constListTypeUtils.getTypeArgument( t as any ) )})]`;
+        return `list( ${showConstType( constListTypeUtils.getTypeArgument( t as any ) )} )`;
     }
     if( t[0] === ConstTyTag.pair )
     {
-        return `[[(con pair) (con ${showConstType( constPairTypeUtils.getFirstTypeArgument( t as any ) )})] (con ${showConstType( constPairTypeUtils.getSecondTypeArgument( t as any ) )})`;
+        return `pair( ${
+            showConstType( 
+                constPairTypeUtils.getFirstTypeArgument( t as any ) 
+            )
+        }, ${
+            showConstType( 
+                constPairTypeUtils.getSecondTypeArgument( t as any )
+            )
+        } )`;
     }
-    if( t[0] === ConstTyTag.bool ) return "bool";
 
     return constTypeToStirng( t );
 }

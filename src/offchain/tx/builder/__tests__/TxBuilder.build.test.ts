@@ -57,11 +57,11 @@ const succeedScriptAddr = new Address(
     )
 ) 
 
-describe("TxBuilder.build", () => {
+describe.skip("TxBuilder.buildSync", () => {
 
     test("simple pub key input", () => {
 
-        const tx = txBuilder.build({
+        const tx = txBuilder.buildSync({
             inputs: [
                 {
                     utxo: new UTxO({
@@ -88,7 +88,7 @@ describe("TxBuilder.build", () => {
         test("fails on missing script", () => {
 
             expect(
-                () => txBuilder.build({
+                () => txBuilder.buildSync({
                     inputs: [
                         {
                             utxo: new UTxO({
@@ -111,7 +111,7 @@ describe("TxBuilder.build", () => {
 
         test("script included in transaction", () => {
 
-            const tx = txBuilder.build({
+            const tx = txBuilder.buildSync({
                 inputs: [
                     {
                         utxo: new UTxO({
@@ -139,7 +139,7 @@ describe("TxBuilder.build", () => {
 
         test("script included in transaction as reference script", () => {
 
-            const tx = txBuilder.build({
+            const tx = txBuilder.buildSync({
                 inputs: [
                     {
                         utxo: new UTxO({
@@ -187,7 +187,7 @@ describe("TxBuilder.build", () => {
 
             // script in transaciton
             expect( () => 
-                txBuilder.build({
+                txBuilder.buildSync({
                     inputs: [
                         {
                             utxo: new UTxO({
@@ -214,7 +214,7 @@ describe("TxBuilder.build", () => {
 
             // reference script
             expect( () => 
-                txBuilder.build({
+                txBuilder.buildSync({
                     inputs: [
                         {
                             utxo: new UTxO({

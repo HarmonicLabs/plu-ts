@@ -274,7 +274,13 @@ export class UPLCDecoder
                     return new Force( forced );
                 case 6:
                     partialUPLC += "(error)";
-                    return new ErrorUPLC();
+                    return new ErrorUPLC(
+                        "error got from deserialization;",
+                        {
+                            debruijnLevel: currDbn,
+                            byteIndex: currByteIndex(),
+                            bitIndex: currPtr
+                        });
                 case 7:
                     const bn_tag = Number( readNBits(7) );
                     partialUPLC += `(builtin ${builtinTagToString( bn_tag )})`;

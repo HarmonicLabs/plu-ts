@@ -118,7 +118,18 @@ export class TxBuilder
         );
     }
 
-    build({
+    /**
+     * 
+     * @deprecated this is here only to reflect what will be the final interface
+     * 
+     * as for now is only calling `buildSync` internally, so you may want to use `buildSync` instead
+     */
+    async build(args: ITxBuildArgs, opts: ITxBuildOptions = {}): Promise<Tx>
+    {
+        return this.buildSync(args, opts)
+    }
+
+    buildSync({
         inputs,
         changeAddress,
         outputs,
@@ -705,16 +716,22 @@ export class TxBuilder
                 }
                 else
                 {
-                    let validationInfosMsg = ""
+
                     throw new BasePlutsError(
                         `script consumed with ${txRedeemerTagToString(rdmr.tag)} redemer ` +
-                        `and index "${rdmr.index.toString()}"\n` +
-                        `${validationInfosMsg}\n`+
+                        `and index '${rdmr.index.toString()}'\n\n` +
                         `called with data arguments:\n${
                             callArgs
-                            .map( (d, i) => i.toString() + ": " + dataToCbor( d ).toString() )
+                            .map( (d, i) =>
+                                (
+                                    i === 0 ? ( rdmr.tag === TxRedeemerTag.Spend ? "datum" : "redeemer" ) :
+                                    i === 1 ? ( rdmr.tag === TxRedeemerTag.Spend ? "redeemer" : "script context" ) :
+                                    i === 2 ? ( rdmr.tag === TxRedeemerTag.Spend ? "script context" : i.toString() ) :
+                                    i.toString()
+                                ) + ": " + dataToCbor( d ).toString()
+                            )
                             .join("\n")
-                        }\n` +
+                        }\n\n` +
                         `failed with \n`+
                         `error message: ${result.msg}\n`+ 
                         `additional infos: ${
