@@ -685,28 +685,38 @@ export class TxBuilder
             rdmr: TxRedeemer,
             result: UPLCTerm, 
             budgetSpent: ExBudget, 
-            logs: string[] 
+            logs: string[],
+            callArgs: Data[],
         ): void => {
             onScriptResult && onScriptResult(
                 rdmr.clone(),
                 result.clone(),
                 budgetSpent.clone(),
-                logs.slice()
+                logs.slice(),
+                callArgs.map( d => d.clone() )
             );
 
             if( result instanceof ErrorUPLC )
             {
                 if( typeof onScriptInvalid === "function" )
                 {
-                    onScriptInvalid( rdmr.clone(), logs.slice() );
+                    onScriptInvalid( rdmr.clone(), logs.slice(), callArgs.map( d => d.clone() ) );
                     _isScriptValid = false;
                 }
                 else
                 {
+                    let validationInfosMsg = ""
                     throw new BasePlutsError(
                         `script consumed with ${txRedeemerTagToString(rdmr.tag)} redemer ` +
-                        `and index "${rdmr.index.toString()}" failed with \n`+
-                        `error: ${result.msg}\n`+ 
+                        `and index "${rdmr.index.toString()}"\n` +
+                        `${validationInfosMsg}\n`+
+                        `called with data arguments:\n${
+                            callArgs
+                            .map( (d, i) => i.toString() + ": " + dataToCbor( d ).toString() )
+                            .join("\n")
+                        }\n` +
+                        `failed with \n`+
+                        `error message: ${result.msg}\n`+ 
                         `additional infos: ${
                             JSON.stringify(
                                 result.addInfos,
@@ -720,8 +730,8 @@ export class TxBuilder
                                     return v
                                 }
                             )
-                        }\n\n` +
-                        `script execution logs: [${logs.toString()}]`
+                        }\n` +
+                        `script execution logs: [${logs.toString()}]\n`
                     );
                 }
             }
@@ -763,6 +773,13 @@ export class TxBuilder
                         "missing script for " + txRdmrTagToString(tag) + " redeemer " + (index - 1)
                     );
 
+                    const ctxData = getCtx(
+                        script.type,
+                        spendingPurpose,
+                        txInfosV1,
+                        txInfosV2
+                    );
+
                     const { result, budgetSpent, logs } = cek.eval(
                         new Application(
                             new Application(
@@ -770,12 +787,7 @@ export class TxBuilder
                                 UPLCConst.data( rdmrData )
                             ),
                             UPLCConst.data(
-                                getCtx(
-                                    script.type,
-                                    spendingPurpose,
-                                    txInfosV1,
-                                    txInfosV2
-                                )
+                                ctxData
                             )
                         )
                     );
@@ -786,7 +798,11 @@ export class TxBuilder
                         rdmr,
                         result,
                         budgetSpent,
-                        logs
+                        logs,
+                        [
+                            rdmrData,
+                            ctxData
+                        ]
                     );
                 }
 
@@ -806,6 +822,13 @@ export class TxBuilder
                         "missing datum for spend redeemer " + index
                     );
 
+                    const ctxData = getCtx(
+                        script.type,
+                        spendingPurpose,
+                        txInfosV1,
+                        txInfosV2
+                    );
+
                     const { result, budgetSpent, logs } = cek.eval(
                         new Application(
                             new Application(
@@ -816,12 +839,7 @@ export class TxBuilder
                                 UPLCConst.data( rdmrData )
                             ),
                             UPLCConst.data(
-                                getCtx(
-                                    script.type,
-                                    spendingPurpose,
-                                    txInfosV1,
-                                    txInfosV2
-                                )
+                                ctxData
                             )
                         )
                     );
@@ -832,7 +850,12 @@ export class TxBuilder
                         rdmr,
                         result,
                         budgetSpent,
-                        logs
+                        logs,
+                        [
+                            datum,
+                            rdmrData,
+                            ctxData
+                        ]
                     );
                 }
                 else if( tag === TxRedeemerTag.Mint )       onlyRedeemerArg( mintScriptsToExec )
