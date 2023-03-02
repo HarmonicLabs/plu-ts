@@ -159,7 +159,9 @@ export class TxOut
                 new DataConstr( 0, [] ) : 
             this.datum instanceof Hash32 ?
                 new DataConstr( 1, [ this.datum.toData() ]) :
-            this.datum; // inline
+            new DataConstr( // inline
+                2, [ this.datum.clone() ]
+            );
 
         return new DataConstr(
             0,

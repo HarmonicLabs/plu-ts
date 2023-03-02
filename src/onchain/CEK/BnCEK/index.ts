@@ -1348,9 +1348,15 @@ export class BnCEK
     unConstrData( data: UPLCTerm ): ConstOrErr
     {
         const d = getData( data );
-        if( d === undefined ) return new ErrorUPLC(`not data; unConstrData${ data instanceof UPLCConst ? "; " + constTypeToStirng(data.type) :""}`);
+        if( d === undefined ) return new ErrorUPLC(`unConstrData :: not data; ${ data instanceof UPLCConst ? "UPLCConst type: " + constTypeToStirng(data.type) :""}`);
 
-        if( !( d instanceof DataConstr ) ) return new ErrorUPLC("not a data constructor");
+        if( !( d instanceof DataConstr ) )
+        return new ErrorUPLC(
+            "unConstrData :: not a data constructor",
+            {
+                data: dataToCbor( d ).toString()
+            }
+        );
 
         const f = this.getBuiltinCostFunc( UPLCBuiltinTag.unConstrData );
 
