@@ -107,6 +107,42 @@ export class TxBuilder
                 configurable: false
             }
         );
+
+        ///////////////////////////////////////////////////////////////////////////////////////
+        // --------------------------------  private stuff  -------------------------------- //
+        // -------------------------------- AND things that -------------------------------- //
+        // -------------------------------- needs to access -------------------------------- //
+        // --------------------------------  private stuff  -------------------------------- //
+        ///////////////////////////////////////////////////////////////////////////////////////
+
+        
+
+        ObjectUtils.defineReadOnlyProperty(
+            this, "build",
+            async ({
+                inputs,
+                changeAddress,
+                outputs,
+                readonlyRefInputs,
+                requiredSigners,
+                collaterals,
+                collateralReturn,
+                mints,
+                invalidBefore,
+                invalidAfter,
+                certificates,
+                withdrawals,
+                metadata,
+                protocolUpdateProposal
+            }: ITxBuildArgs,
+            {
+                onScriptInvalid,
+                onScriptResult
+            }: ITxBuildOptions = {}
+            ): Promise<Tx> => {
+
+            }
+        )
     }
 
     calcLinearFee( tx: Tx | CborString ): bigint
@@ -124,10 +160,7 @@ export class TxBuilder
      * 
      * as for now is only calling `buildSync` internally, so you may want to use `buildSync` instead
      */
-    async build(args: ITxBuildArgs, opts: ITxBuildOptions = {}): Promise<Tx>
-    {
-        return this.buildSync(args, opts)
-    }
+    build!: (args: ITxBuildArgs, opts?: ITxBuildOptions) => Promise<Tx>
 
     buildSync({
         inputs,
@@ -298,8 +331,6 @@ export class TxBuilder
         }
 
         let isScriptValid: boolean = true;
-
-        const requiredSpendScripts = [];
 
         const _inputs = inputs.map( ({
             utxo,
