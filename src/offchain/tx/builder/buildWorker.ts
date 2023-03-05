@@ -1,3 +1,4 @@
+import { Value } from "../../ledger/Value/Value";
 
 /**
  * when the thread is terminated is possible (very likely if something is asyncronous) that something is still running
@@ -51,7 +52,8 @@ else
 {
     master = self;
 
-    const postMessage = self.postMessage.bind( master );
+    const postMessage = ( data: any, transfers?: Transferable[] ) => 
+        self.postMessage.bind( master )( data, "*", transfers );
 
     function rejectWeb( reason: any )
     {
@@ -75,16 +77,29 @@ else
 }
 
 async function taskHandler(
-    data: TaskHandlerData, 
-    resolve: ( v: any ) => void, 
+    { method, args }: TaskHandlerData, 
+    postMessage: (message: any, transfer?: Transferable[] | undefined) => void,
     reject: ( reason: any ) => void
 )
 {
-    if( data.method === "sleep" )
+    if( method === "addValues" )
     {
+        master.postMessage( 
+            args.reduce(
+                (accum, buff) => Value.add(
+                    accum, 
+                    Value.fromCbor(
+                        Array.from<number>( buff ).map(
+                            n => n.toString(16).padStart(2,'0') 
+                        ).join('')
+                    )
+                ),
+                Value.zero
+            )
+         )
     }
     else
     {
-        reject( "unknown method: " + data.method );
+        reject( "unknown method: " + method );
     }
 }

@@ -1,4 +1,6 @@
 import { WorkerPool } from "../../../../worker-pool/WorkerPool";
+import { Hash28 } from "../../../hashes/Hash28/Hash28";
+import { Value } from "../../../ledger/Value/Value";
 
 const _workerPool = new WorkerPool("./src/offchain/tx/builder/rollup-out/buildWorker.js");
 
@@ -8,19 +10,45 @@ afterAll(async () => {
 
 describe("TxBuilder :: _workerPool", () => {
 
-    describe("addValues", () => {
+    test("unknown method", async () => {
 
-        test("simple add", async () => {
-
-            const result = await _workerPool.run({
-                method: "addValues",
+        let threw = false;
+        try {
+            await _workerPool.run({
+                method: "this_doesnt_exsists",
                 args: []
             });
+        } catch { threw = true };
 
-            console.log( result );
+        expect( threw ).toBe( true )
 
+    });
+
+    describe("addValues", () => {
+
+        test("add two", async () => {
+
+            const cborValues = [
+                Value.lovelaces( 2000000 ),
+                new Value([
+                    {
+                        policy: "", assets: { "": 2000000 }
+                    },
+                    {
+                        policy: new Hash28( "ff".repeat(28) ),
+                        assets: { hello: 2 }
+                    }
+                ])
+            ].map( v => v.toCbor().toBuffer() )
+            const result = Value.fromCbor(
+                await _workerPool.run({
+                    method: "addValues",
+                    args: cborValues,
+                    transfers: cborValues
+                })
+            );
+            
         })
-
     })
     
 })
