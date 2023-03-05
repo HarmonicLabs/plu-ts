@@ -71,7 +71,8 @@
   "exclude": [
     "**/__tests__/**/*",
     "**/*.test.ts",
-    "jest_cache"
+    "jest_cache",
+    "src/offchain/tx/builder/buildWorker.ts"
   ],
   "tsc-alias": {
     "verbose": false,

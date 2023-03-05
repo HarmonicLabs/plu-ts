@@ -1,12 +1,12 @@
 {
   "compilerOptions": {
     "skipLibCheck": true,
-    "target": "ES5",          
-    "module": "CommonJS",     
+    "target": "ES2015",          
+    "module": "ES2015",     
     "allowJs": true,          
     "checkJs": false,       
     "outDir": "./src/offchain/tx/builder/tsc-out",
-    "rootDir": "./src/offchain/tx/builder",       
+    "rootDir": "./src",       
     "downlevelIteration": true,           
     "strict": false,                      
     "noImplicitAny": true,                
@@ -21,11 +21,8 @@
     "esModuleInterop": true,                
     "forceConsistentCasingInFileNames": true
   },
-  "include": ["./src/offchain/tx/builder"],
-  "exclude": [
-    "**/__tests__/**/*",
-    "**/*.test.ts",
-    "jest_cache"
+  "files": [
+    "src/offchain/tx/builder/buildWorker.ts"
   ],
   "tsc-alias": {
     "verbose": false,

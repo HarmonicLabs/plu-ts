@@ -41,6 +41,7 @@ import { CborPositiveRational } from "../../../cbor/extra/CborRational";
 import { TxWitnessSet } from "../TxWitnessSet";
 import { Cbor } from "../../../cbor/Cbor";
 import { CborArray } from "../../../cbor/CborObj/CborArray";
+import { WorkerPool } from "../../../worker-pool/WorkerPool";
 
 export class TxBuilder
 {
@@ -115,7 +116,7 @@ export class TxBuilder
         // --------------------------------  private stuff  -------------------------------- //
         ///////////////////////////////////////////////////////////////////////////////////////
 
-        
+        const _workerPool = new WorkerPool("./rollup-out/buildWorker.js")
 
         ObjectUtils.defineReadOnlyProperty(
             this, "build",
