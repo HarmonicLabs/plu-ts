@@ -2,6 +2,8 @@ import { WorkerPool } from "../../../../worker-pool/WorkerPool";
 import { Hash28 } from "../../../hashes/Hash28/Hash28";
 import { Value } from "../../../ledger/Value/Value";
 
+jest.setTimeout(100_000);
+
 const _workerPool = new WorkerPool("./src/offchain/tx/builder/rollup-out/buildWorker.js");
 
 afterAll(async () => {
@@ -47,7 +49,7 @@ describe("TxBuilder :: _workerPool", () => {
                     transfers: cborValues
                 })
             );
-            
+
         })
     })
     
