@@ -32,14 +32,11 @@ if( // isNode
 
     function rejectNode( reason: any )
     {
-        if( !(reason instanceof Event ) )
-        {
-            const data = reason;
-            reason = new Event("error");
-            reason.data = data;
-        }
-
-        postMessage( reason )
+        postMessage({
+            isTrusted: true,
+            data: reason,
+            type: "error"
+        })
     }
 
     parentPort.on("message", ( data: TaskHandlerData) => {
@@ -88,7 +85,6 @@ async function taskHandler(
     }
     else
     {
-        console.log("hello tehre")
         reject( "unknown method: " + data.method );
     }
 }

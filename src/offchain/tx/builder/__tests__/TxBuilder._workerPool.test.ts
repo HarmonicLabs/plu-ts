@@ -12,10 +12,12 @@ describe("TxBuilder :: _workerPool", () => {
 
         test("simple add", async () => {
 
-            await _workerPool.run({
+            const result = await _workerPool.run({
                 method: "addValues",
                 args: []
-            })
+            });
+
+            console.log( result );
 
         })
 

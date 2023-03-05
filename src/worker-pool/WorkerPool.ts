@@ -108,12 +108,10 @@ async function getWorkerCtor(): Promise<typeof Worker>
                     // auto add listeners
                     self.on('message', (data =>
                         {
-                            console.log(data)
-
-                            const event = new Event('message');
+                            const event = new Event(data.type ?? 'message');
                             Object.defineProperty(
                                 event, "data", {
-                                    value: data,
+                                    value: data.data,
                                     enumerable: true
                                 }
                             )
@@ -267,12 +265,10 @@ export class WorkerPool
             {
                 // mark as free thread before next task
                 workerStates[ freeWorkerIdx ] = WorkerState.idle;
-                self.terminateAll();
-                task?.resolver.reject( reason );
 
                 cleanListeners();
-
-                throw reason;
+                
+                task?.resolver.reject( reason.data );
             }
 
             myWorker.addEventListener("message", resolve );

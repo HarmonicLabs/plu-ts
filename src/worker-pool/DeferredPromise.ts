@@ -36,7 +36,7 @@ export class DeferredPromise<T>
             };
             reject = ( reason: any ) => {
                 state = "rejected";
-                res( reason )
+                rej( reason )
             };
         }) as any;
 
