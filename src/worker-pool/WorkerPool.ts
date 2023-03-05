@@ -1,5 +1,6 @@
 import { Queque } from "./Queque";
 import { DeferredPromise } from "./DeferredPromise";
+import { BasePlutsError } from "../errors/BasePlutsError";
 
 const defaultMaxWorkers = 4;
 
@@ -61,12 +62,6 @@ async function getWorkerCtor(): Promise<typeof Worker>
                             },
                             dispatchEvent: {
                                 value: ( evt: Event ) => {
-
-                                    if( evt.type === "error" )
-                                    {
-                                        console.trace()
-                                    }
-
                                     const event = {
                                         ...evt,
                                         type: evt.type,
@@ -113,6 +108,8 @@ async function getWorkerCtor(): Promise<typeof Worker>
                     // auto add listeners
                     self.on('message', (data =>
                         {
+                            console.log(data)
+
                             const event = new Event('message');
                             Object.defineProperty(
                                 event, "data", {
@@ -124,10 +121,11 @@ async function getWorkerCtor(): Promise<typeof Worker>
                         }) as EventCallBack
                     );
 
-                    self.on('error', (error =>
+                    self.on('error', (data =>
                         {
-                            console.log( error );
-                            error.type = 'error';
+                            const error = new Error("error");
+                            (error as any).data = data;
+                            (error as any).type = "error"
                             self.dispatchEvent(error);
                         }) as EventCallBack
                     );
@@ -267,12 +265,12 @@ export class WorkerPool
 
             function reject( reason: any )
             {
-                cleanListeners();
                 // mark as free thread before next task
                 workerStates[ freeWorkerIdx ] = WorkerState.idle;
-
                 self.terminateAll();
                 task?.resolver.reject( reason );
+
+                cleanListeners();
 
                 throw reason;
             }

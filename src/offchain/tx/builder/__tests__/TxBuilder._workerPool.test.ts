@@ -1,15 +1,19 @@
 import { WorkerPool } from "../../../../worker-pool/WorkerPool";
 
-const _workerPool = new WorkerPool("../rollup-out/buildWorker.js");
+const _workerPool = new WorkerPool("./src/offchain/tx/builder/rollup-out/buildWorker.js");
+
+afterAll(async () => {
+    await _workerPool.terminateAll()
+})
 
 describe("TxBuilder :: _workerPool", () => {
 
     describe("addValues", () => {
 
-        test("simple add", () => {
+        test("simple add", async () => {
 
-            _workerPool.run({
-                method: "hello",
+            await _workerPool.run({
+                method: "addValues",
                 args: []
             })
 

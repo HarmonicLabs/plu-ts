@@ -32,7 +32,14 @@ if( // isNode
 
     function rejectNode( reason: any )
     {
-        master.dispatchEvent( reason )
+        if( !(reason instanceof Event ) )
+        {
+            const data = reason;
+            reason = new Event("error");
+            reason.data = data;
+        }
+
+        postMessage( reason )
     }
 
     parentPort.on("message", ( data: TaskHandlerData) => {
@@ -51,6 +58,13 @@ else
 
     function rejectWeb( reason: any )
     {
+        if( !(reason instanceof Event ) )
+        {
+            const data = reason;
+            reason = new Event("error");
+            reason.data = data;
+        }
+
         master.dispatchEvent( reason )
     }
 
@@ -74,6 +88,7 @@ async function taskHandler(
     }
     else
     {
-        reject.call( master, "unknown method: " + data.method );
+        console.log("hello tehre")
+        reject( "unknown method: " + data.method );
     }
 }
