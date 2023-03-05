@@ -11,3 +11,7 @@ coverage/
 dist
 
 src/offchain/tx/builder/__tests__/TxBuilder.contracts.test.ts
+
+# workers compilation
+src/offchain/tx/builder/tsc-out/
+src/offchain/tx/builder/rollup-out/

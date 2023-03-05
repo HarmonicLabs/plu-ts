@@ -1,0 +1,34 @@
+{
+  "compilerOptions": {
+    "skipLibCheck": true,
+    "target": "ES5",          
+    "module": "CommonJS",     
+    "allowJs": true,          
+    "checkJs": false,       
+    "outDir": "./src/offchain/tx/builder/tsc-out",
+    "rootDir": "./src/offchain/tx/builder",       
+    "downlevelIteration": true,           
+    "strict": false,                      
+    "noImplicitAny": true,                
+    "strictNullChecks": true,             
+    "strictFunctionTypes": false,         
+    "strictBindCallApply": true,          
+    "strictPropertyInitialization": false,
+    "noImplicitThis": true,               
+    "alwaysStrict": false,                
+    "moduleResolution": "node",            
+    "allowSyntheticDefaultImports": true,  
+    "esModuleInterop": true,                
+    "forceConsistentCasingInFileNames": true
+  },
+  "include": ["./src/offchain/tx/builder"],
+  "exclude": [
+    "**/__tests__/**/*",
+    "**/*.test.ts",
+    "jest_cache"
+  ],
+  "tsc-alias": {
+    "verbose": false,
+    "resolveFullPaths": true
+  }
+}

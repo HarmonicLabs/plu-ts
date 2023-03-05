@@ -14,7 +14,7 @@ import { Tx, getNSignersNeeded } from "../Tx";
 import { Machine, machineVersionV1, machineVersionV2 } from "../../../onchain/CEK/Machine";
 import { CanBeData, canBeData, forceData } from "../../../types/Data/CanBeData";
 import { ITxBuildArgs } from "./txBuild/ITxBuildArgs";
-import { ITxBuildOptions } from "./txBuild/ITxBuildOptions";
+import { ITxBuildOptions, ITxBuildSyncOptions } from "./txBuild/ITxBuildOptions";
 import { TxIn } from "../body/TxIn";
 import { TxOut } from "../body/output/TxOut";
 import { Value } from "../../ledger/Value/Value";
@@ -137,7 +137,8 @@ export class TxBuilder
             }: ITxBuildArgs,
             {
                 onScriptInvalid,
-                onScriptResult
+                onScriptResult,
+                keepWorkersAlive
             }: ITxBuildOptions = {}
             ): Promise<Tx> => {
 
@@ -181,7 +182,7 @@ export class TxBuilder
     {
         onScriptInvalid,
         onScriptResult
-    }: ITxBuildOptions = {}
+    }: ITxBuildSyncOptions = {}
     ): Tx
     {
         const cek: Machine = (this as any).cek;

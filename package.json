@@ -13,7 +13,8 @@
     "clear-jest": "jest --clearCache",
     "test-watch": "jest --watchman",
     "test-coverage": "jest --coverage",
-    "build": "tsc --project ./tsconfig.json && tsc-alias -p ./tsconfig.json",
+    "pre-build": "tsc -p ./workers-tsconfig.json && rollup --config rollup.config.js",
+    "build": "bpm run pre-build && tsc --project ./tsconfig.json && tsc-alias -p ./tsconfig.json",
     "start": "npm-run-all --parallel build:watch run:watch"
   },
   "publishConfig": {
