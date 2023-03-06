@@ -15,14 +15,14 @@ import { DataI } from "../../../types/Data/DataI";
 import { DataB } from "../../../types/Data/DataB";
 import { DataPair } from "../../../types/Data/DataPair";
 import { PlutsCEKError } from "../../../errors/PlutsCEKError";
-import { dataToCbor, dataToCborObj } from "../../../types/Data/toCbor";
+import { dataToCbor } from "../../../types/Data/toCbor";
 import { ExBudget } from "../Machine/ExBudget";
 import { BuiltinCostsOf } from "../Machine/BuiltinCosts";
-import { Buffer } from "buffer";
 import { ConstType, constListTypeUtils, constPairTypeUtils, constT, constTypeEq, constTypeToStirng, ConstTyTag } from "../../UPLC/UPLCTerms/UPLCConst/ConstType" 
 import { Integer, UInteger } from "../../../types/ints/Integer";
 import { Data, eqData, isData } from "../../../types/Data/Data";
 import { blake2b, byteArrToHex, sha2_256, sha3, verifyEd25519Signature } from "../../../crypto";
+import { fromUtf8, isUint8Array, toUtf8 } from "../../../uint8Array";
 
 
 function intToSize( n: bigint ): bigint
@@ -35,9 +35,9 @@ function intToSize( n: bigint ): bigint
     return ( BigIntUtils.log2( n << BigInt( 1 ) ) / BigInt( 8 )) + BigInt( 1 );
 }
 
-function bsToSize( bs: ByteString | Buffer ): bigint
+function bsToSize( bs: ByteString | Uint8Array ): bigint
 {
-    const len = (Buffer.isBuffer( bs ) ? bs : bs.asBytes).length;
+    const len = (isUint8Array( bs ) ? bs : bs.toBuffer()).length;
     return len === 0 ?
         // TODO: Bug in cardano-node; to fix next hard fork
         BigInt(1) :
@@ -46,7 +46,7 @@ function bsToSize( bs: ByteString | Buffer ): bigint
 
 function strToSize( str: string ): bigint
 {
-    return bsToSize( Buffer.from( str, "utf8" ) );
+    return bsToSize( fromUtf8( str ) )
 };
 
 const BOOL_SIZE: bigint = BigInt( 1 );
@@ -647,7 +647,7 @@ export class BnCEK
 
         const j = endIdx > maxIdx ? maxIdx : endIdx;
 
-        if( j < i ) return UPLCConst.byteString( new ByteString( Buffer.from([]) ) );
+        if( j < i ) return UPLCConst.byteString( new ByteString( Uint8Array.from([]) ) );
 
 
         const f = this.getBuiltinCostFunc( UPLCBuiltinTag.sliceByteString );
@@ -663,7 +663,7 @@ export class BnCEK
 
         return UPLCConst.byteString(
             new ByteString(
-                Buffer.from(
+                Uint8Array.from(
                     _bs.asBytes.slice(
                         Number( i ), Number( j )
                     )
@@ -958,7 +958,7 @@ export class BnCEK
             cpu: f.cpu.at( sa )
         });
 
-        return UPLCConst.byteString( new ByteString( Buffer.from( _a , "utf8" ) ) );
+        return UPLCConst.byteString( new ByteString( fromUtf8( _a ) ) );
     }
     decodeUtf8( a: UPLCTerm ): ConstOrErr
     {
@@ -974,7 +974,7 @@ export class BnCEK
             cpu: f.cpu.at( sa )
         });
 
-        return UPLCConst.str( _a.asBytes.toString("utf8") );
+        return UPLCConst.str( toUtf8( _a.toBuffer() ) );
     }
     ifThenElse( condition: UPLCTerm, caseTrue: ConstOrErr, caseFalse: ConstOrErr ): ConstOrErr
     {

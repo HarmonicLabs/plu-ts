@@ -1,5 +1,5 @@
 import { BasePlutsError } from "../errors/BasePlutsError";
-import { Buffer } from "buffer";
+import { isUint8Array } from "../uint8Array";
 import JsRuntime from "../utils/JsRuntime";
 
 export type uint5 = 
@@ -82,9 +82,9 @@ export function isByteArr( something: any ): something is byte[]
     );
 }
 
-export function buffToByteArr( buff: Buffer ): byte[]
+export function buffToByteArr( buff: Uint8Array ): byte[]
 {
-    if( !Buffer.isBuffer( buff ) )
+    if( !isUint8Array( buff ) )
     {
         if( isByteArr( buff ) ) return (buff as byte[]).slice();
 
@@ -110,13 +110,13 @@ export function byteArrToBin( bytes: byte[] ): string
  * 
  * `bytes` is **padded at the end** to be a multiple of 5
  */
-export function buffToUint5Arr(bytes: Buffer | byte[]): uint5[]
+export function buffToUint5Arr( bytes: Uint8Array | byte[] ): uint5[]
 {
     const result: uint5[] = [];
 
     let bits: string | ('0'|'1')[] =
-        Buffer.isBuffer( bytes ) ?
-            Array.from( bytes ).reduce( (acc, n) => acc + n.toString(2).padStart( 8 , '0' ), "" ) :
+        isUint8Array( bytes ) ?
+            Array.from<number>( bytes ).reduce( (acc, n) => acc + n.toString(2).padStart( 8 , '0' ), "" ) :
             (isByteArr( bytes ) ?
                 byteArrToBin( bytes ) :
                 undefined as any

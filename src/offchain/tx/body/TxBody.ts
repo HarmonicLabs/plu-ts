@@ -436,7 +436,7 @@ export class TxBody
                     if( _isHashValid === true && _hash !== undefined && _hash instanceof Hash32 ) return _hash.clone();
 
                     _hash = new Hash32(
-                        Buffer.from(
+                        new Uint8Array(
                             blake2b_256( this.toCbor().asBytes )
                         )
                     );

@@ -42,6 +42,7 @@ import { TxWitnessSet } from "../TxWitnessSet";
 import { Cbor } from "../../../cbor/Cbor";
 import { CborArray } from "../../../cbor/CborObj/CborArray";
 import { WorkerPool } from "../../../worker-pool/WorkerPool";
+import { isUint8Array, lexCompare, toHex } from "../../../uint8Array";
 
 export class TxBuilder
 {
@@ -523,7 +524,7 @@ export class TxBuilder
 
         const _wits = withdrawals
         ?.sort( ({ withdrawal: fst }, { withdrawal: snd }) =>
-            BufferUtils.lexCompare(
+            lexCompare(
                 fst.rewardAccount instanceof Hash28 ?
                     fst.rewardAccount.toBuffer() :
                     fst.rewardAccount.credentials.toBuffer(),
@@ -771,8 +772,8 @@ export class TxBuilder
                             JSON.stringify(
                                 result.addInfos,
                                 ( k, v ) => {
-                                    if( Buffer.isBuffer( v ) )
-                                    return v.toString("hex");
+                                    if( isUint8Array( v ) )
+                                    return toHex( v );
 
                                     if( typeof v === "bigint" )
                                     return v.toString();
@@ -982,7 +983,7 @@ export class TxBuilderRunner
 }
 
 
-export function getScriptDataHash( rdmrs: TxRedeemer[], datumsScriptData: number[], languageViews: Buffer ): ScriptDataHash | undefined
+export function getScriptDataHash( rdmrs: TxRedeemer[], datumsScriptData: number[], languageViews: Uint8Array ): ScriptDataHash | undefined
 {
     const undef = void 0;
 
@@ -1022,7 +1023,7 @@ export function getScriptDataHash( rdmrs: TxRedeemer[], datumsScriptData: number
 
     return scriptData === undef ? undef :
         new ScriptDataHash(
-            Buffer.from(
+            Uint8Array.from(
                 blake2b_256( scriptData )
             )
         );

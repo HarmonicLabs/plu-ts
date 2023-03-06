@@ -1,4 +1,3 @@
-import JsRuntime from "../../utils/JsRuntime";
 import { ToJson } from "../../utils/ts/ToJson";
 import { ByteString } from "../HexString/ByteString";
 import { Cloneable } from "../interfaces/Cloneable";
@@ -13,7 +12,7 @@ export class DataB
         return Object.freeze( this._bytes ) as any
     };
 
-    constructor( B: ByteString | Buffer | string )
+    constructor( B: ByteString | Uint8Array | string )
     {
         if(!(B instanceof ByteString)) B = new ByteString( B );
 

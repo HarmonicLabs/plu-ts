@@ -523,7 +523,7 @@ export function costModelsToLanguageViewCbor( costmdls: CostModels, opts: CostMo
             opts.mustHaveV1 ?
             {
                 // k: new CborUInt(1),
-                k: new CborBytes(Buffer.from([0])),
+                k: new CborBytes(Uint8Array.from([0])),
 
                 // plutus v1 language view is messed up, not my fault
                 v: new CborBytes(

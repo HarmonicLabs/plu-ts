@@ -14,6 +14,7 @@ import { ToJson } from "../../../utils/ts/ToJson";
 import { Hash32 } from "../../hashes/Hash32/Hash32";
 import { Signature } from "../../hashes/Signature";
 import { VKey } from "./VKeyWitness/VKey";
+import { isUint8Array, toHex } from "../../../uint8Array";
 
 export class BootstrapWitness
     implements ToCbor, Cloneable<BootstrapWitness>, ToJson
@@ -21,9 +22,9 @@ export class BootstrapWitness
     readonly pubKey!: VKey;
     readonly signature!: Signature;
     readonly chainCode!: Hash32;
-    readonly attributes!: Buffer;
+    readonly attributes!: Uint8Array;
 
-    constructor( pubKey: Hash32, signature: Signature, chainCode: Hash32, attributes: Buffer )
+    constructor( pubKey: Hash32, signature: Signature, chainCode: Hash32, attributes: Uint8Array )
     {
         JsRuntime.assert(
             pubKey instanceof Hash32,
@@ -56,13 +57,13 @@ export class BootstrapWitness
         );
 
         JsRuntime.assert(
-            Buffer.isBuffer( attributes ),
+            isUint8Array( attributes ),
             "invalid 'attributes' constructing 'BootstrapWitness'"
         );
         ObjectUtils.defineReadOnlyProperty(
             this,
             "attributes",
-            Buffer.from( attributes )
+            Uint8Array.from( attributes )
         );
     }
 
@@ -72,7 +73,7 @@ export class BootstrapWitness
             this.pubKey.clone(),
             this.signature.clone(),
             this.chainCode.clone(),
-            BufferUtils.copy( this.attributes )
+            this.attributes.slice()
         )
     }
 
@@ -115,10 +116,10 @@ export class BootstrapWitness
         this.chainCode;
 
         return {
-            pubKey: this.pubKey.asString,
-            signature: this.signature.asString,
-            chainCode: this.chainCode.asString,
-            attributes: this.attributes.toString("hex")
+            pubKey:     this.pubKey   .toString(),
+            signature:  this.signature.toString(),
+            chainCode:  this.chainCode.toString(),
+            attributes: toHex( this.attributes )
         }
     }
 }

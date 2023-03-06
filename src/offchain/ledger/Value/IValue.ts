@@ -1,3 +1,4 @@
+import { fromAscii, toHex } from "../../../uint8Array";
 import JsRuntime from "../../../utils/JsRuntime";
 import ObjectUtils from "../../../utils/ObjectUtils";
 
@@ -41,7 +42,7 @@ export function IValueToJson( iVal: IValue ): object
         {
             ObjectUtils.defineReadOnlyProperty(
                 _assets,
-                Buffer.from( k, "ascii" ).toString("hex"),
+                toHex( fromAscii( k ) ),
                 (assets as any)[k].toString()
             )
         }

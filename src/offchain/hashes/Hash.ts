@@ -13,6 +13,7 @@ import { DataB } from "../../types/Data/DataB";
 import { ToData } from "../../types/Data/toData/interface";
 import { HexString } from "../../types/HexString";
 import { Cloneable } from "../../types/interfaces/Cloneable";
+import { fromAscii, fromHex, isUint8Array, toAscii, toHex } from "../../uint8Array";
 
 
 export class Hash
@@ -23,7 +24,7 @@ export class Hash
         return Object.getPrototypeOf( bs ) === Hash.prototype
     }
 
-    protected get _bytes(): Buffer
+    protected get _bytes(): Uint8Array
     {
         const result = (this as any).__bytes;
         if( result === undefined )
@@ -31,14 +32,14 @@ export class Hash
             ObjectUtils.defineReadOnlyProperty(
                 this,
                 "__bytes",
-                Buffer.from( this._str, "hex" )
+                fromHex( this._str )
             );
             return BufferUtils.copy( (this as any).__bytes );
         }
-        if( !Buffer.isBuffer( result ) )
+        if( !isUint8Array( result ) )
         {
             throw JsRuntime.makeNotSupposedToHappenError(
-                "Hash.__bytes was not a Buffer"
+                "Hash.__bytes was not a Uint8Array"
             );
         }
 
@@ -53,7 +54,7 @@ export class Hash
             ObjectUtils.defineReadOnlyProperty(
                 this,
                 "__str",
-                this._bytes.toString("hex")
+                toHex( this._bytes )
             );
             return (this as any).__str;
         }
@@ -67,7 +68,7 @@ export class Hash
         return result;
     }
 
-    constructor( bs: string | Buffer )
+    constructor( bs: string | Uint8Array )
     {
         if( typeof bs == "string" )
         {
@@ -89,8 +90,8 @@ export class Hash
         }
 
         JsRuntime.assert(
-            Buffer.isBuffer( bs ),
-            "invalid Buffer input while constructing a Hash"
+            isUint8Array( bs ),
+            "invalid Uint8Array input while constructing a Hash"
         );
 
         ObjectUtils.defineReadOnlyProperty(
@@ -116,12 +117,12 @@ export class Hash
     /**
      * @deprecated use `toBuffer()` instead
      */
-    get asBytes(): Buffer
+    get asBytes(): Uint8Array
     {
         return this._bytes;
     }
 
-    toBuffer(): Buffer
+    toBuffer(): Uint8Array
     {
         return this._bytes;
     }
@@ -129,7 +130,7 @@ export class Hash
     /**
      * @deprecated use `toBuffer()` instead
      */
-    toBytes(): Buffer
+    toBytes(): Uint8Array
     {
         return this._bytes;
     }
@@ -162,17 +163,17 @@ export class Hash
 
     toData(): Data
     {
-        return new DataB( this.asBytes );
+        return new DataB( this.toBuffer() );
     }
 
     public static fromAscii( asciiStr: string ): Hash
     {
-        return new Hash( Buffer.from( asciiStr, "ascii" ) );
+        return new Hash( fromAscii( asciiStr ) );
     }
 
     public static toAscii( bStr: Hash ): string
     {
-        return bStr.asBytes.toString("ascii")
+        return toAscii( bStr.toBuffer() )
     }
 
     public static isValidHexValue( str: string ): boolean

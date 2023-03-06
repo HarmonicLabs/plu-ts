@@ -1,3 +1,4 @@
+import { isUint8Array } from "../uint8Array";
 import JsRuntime from "../utils/JsRuntime";
 import { byte, uint5, buffToUint5Arr } from "./types";
 import { BECH32_BASE32_ALPHABET, decodeBase32Bech32 } from "./utils/base32";
@@ -71,12 +72,12 @@ export function getBech32Checksum(humanReadablePart: string, data: uint5[]): [ui
  * encodeBech32("addr_test", hexToBytes("70a9508f015cfbcffc3d88ac4c1c934b5b82d2bb281d464672f6c49539")) => "addr_test1wz54prcptnaullpa3zkyc8ynfddc954m9qw5v3nj7mzf2wggs2uld"
  * @param {byte[]} data - uint8 0 - 256
  */
-export function encodeBech32(humanReadablePart: string, data: byte[] | Buffer ): string
+export function encodeBech32(humanReadablePart: string, data: byte[] | Uint8Array ): string
 {
     JsRuntime.assert(humanReadablePart.length > 0, "human-readable-part must have non-zero length");
 
     const _data = buffToUint5Arr( 
-        Buffer.isBuffer(data) ? data : Buffer.from(data)
+        isUint8Array(data) ? data : new Uint8Array(data)
     );
 
     return humanReadablePart + "1" + 

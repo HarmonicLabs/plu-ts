@@ -1,4 +1,5 @@
 import { BasePlutsError } from "../errors/BasePlutsError";
+import { isUint8Array } from "../uint8Array";
 import BigIntUtils from "../utils/BigIntUtils";
 import JsRuntime from "../utils/JsRuntime";
 import { sha2_512 } from "./sha2_512";
@@ -215,10 +216,10 @@ export function deriveEd25519PublicKey(privateKey: byte[]): byte[]
     return encodePoint(A);
 }
 
-export function signEd25519( message: byte[] | Buffer, privateKey: byte[] | Buffer ): [ pubKey: byte[], signature: byte[] ]
+export function signEd25519( message: byte[] | Uint8Array, privateKey: byte[] | Uint8Array ): [ pubKey: byte[], signature: byte[] ]
 {
-    message = Buffer.isBuffer( message ) ? buffToByteArr( message ) : message;
-    privateKey = Buffer.isBuffer( privateKey ) ? buffToByteArr( privateKey ) : privateKey;
+    message = isUint8Array( message ) ? buffToByteArr( message ) : message;
+    privateKey = isUint8Array( privateKey ) ? buffToByteArr( privateKey ) : privateKey;
 
     const privateKeyHash = sha2_512(privateKey);
     const a = getA(privateKeyHash);
@@ -233,29 +234,29 @@ export function signEd25519( message: byte[] | Buffer, privateKey: byte[] | Buff
     return [ publicKey, encodePoint(R).concat(encodeInt(S)) ];
 }
 
-export function getEd25519Signature( message: byte[] | Buffer, privateKey: byte[] | Buffer ): byte[]
+export function getEd25519Signature( message: byte[] | Uint8Array, privateKey: byte[] | Uint8Array ): byte[]
 {
     return signEd25519( message, privateKey )[1];
 }
 
-export function verifyEd25519Signature(signature: byte[] | Buffer, message: byte[] | Buffer, publicKey: byte[] | Buffer): boolean
+export function verifyEd25519Signature(signature: byte[] | Uint8Array, message: byte[] | Uint8Array, publicKey: byte[] | Uint8Array): boolean
 {
     if (signature.length !== 64 || publicKey.length != 32)
     {
         throw new BasePlutsError(`unexpected signature length ${signature.length}`);
     }
     
-    if( Buffer.isBuffer( signature ) )
+    if( isUint8Array( signature ) )
     {
         signature = buffToByteArr( signature );
     }
 
-    if( Buffer.isBuffer( message ) )
+    if( isUint8Array( message ) )
     {
         message = buffToByteArr( message );
     }
 
-    if( Buffer.isBuffer( publicKey ) )
+    if( isUint8Array( publicKey ) )
     {
         publicKey = buffToByteArr( publicKey );
     }

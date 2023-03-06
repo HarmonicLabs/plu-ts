@@ -38,7 +38,7 @@ export default class BufferUtils
             return Buffer.from( hex, "hex" );
         }
 
-        return hex.asBytes;
+        return hex.toBuffer();
     }
 
     static randomBufferOfLength( length: number, mustStartWith: number[] = [] ): Buffer

@@ -25,6 +25,7 @@ import { UPLCConst } from "../UPLCTerms/UPLCConst";
 import { ConstType, constListTypeUtils, constPairTypeUtils, constT, constTypeEq, ConstTyTag, isWellFormedConstType } from "../UPLCTerms/UPLCConst/ConstType";
 import { ConstValue, ConstValueList } from "../UPLCTerms/UPLCConst/ConstValue";
 import { DataB } from "../../../types/Data/DataB";
+import { fromHex, toUtf8 } from "../../../uint8Array";
 
 export type SerializedScriptFormat = "flat" | "cbor"
 
@@ -43,7 +44,7 @@ export class UPLCDecoder
 {
     private constructor() {}
 
-    static parse( serializedScript: Buffer , format: SerializedScriptFormat = "cbor", debugLogs: boolean = false ): UPLCProgram
+    static parse( serializedScript: Uint8Array , format: SerializedScriptFormat = "cbor", debugLogs: boolean = false ): UPLCProgram
     {
         if( !isSerializedScriptFormat( format ) )
         {
@@ -358,20 +359,19 @@ export class UPLCDecoder
                 }
 
                 return new ByteString(
-                    Buffer.from(
-                        hexChunks.join(""),
-                        "hex"
+                    fromHex(
+                        hexChunks.join("")
                     )
                 );
             }
             if( constTypeEq( t, constT.str ) )
             {
-                return (readConstValueOfType( constT.byteStr ) as ByteString).asBytes.toString("utf8");
+                return toUtf8( (readConstValueOfType( constT.byteStr ) as ByteString).toBuffer() );
             }
             if( constTypeEq( t, constT.data ) )
             {
                 return dataFromCbor(
-                    (readConstValueOfType( constT.byteStr ) as ByteString).asBytes
+                    (readConstValueOfType( constT.byteStr ) as ByteString).toBuffer()
                 );
             }
             if( constTypeEq( t, constT.bool ) ) return (Number(readNBits(1)) === 1);

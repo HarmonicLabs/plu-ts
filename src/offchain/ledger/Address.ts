@@ -236,24 +236,24 @@ export class Address
             network,
             new PaymentCredentials(
                 paymentType,
-                new Hash28( Buffer.from( payment ) )
+                new Hash28( new Uint8Array( payment ) )
             ),
             stake.length === 28 ?
                 new StakeCredentials(
                     stakeType,
-                    new Hash28( Buffer.from( stake ) )
+                    new Hash28( new Uint8Array( stake ) )
                 ):
                 undefined,
             type
         );
     };
 
-    toBuffer(): Buffer
+    toBuffer(): Uint8Array
     {
-        return Buffer.from( this.toBytes() )
+        return new Uint8Array( this.toBytes() )
     }
 
-    static fromBuffer( buff: Buffer | string ): Address
+    static fromBuffer( buff: Uint8Array | string ): Address
     {
         return Address.fromBytes(
             typeof buff === "string" ?

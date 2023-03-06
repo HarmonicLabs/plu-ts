@@ -10,7 +10,7 @@ export class VKey extends Hash32
      */
     readonly hash!: PubKeyHash
 
-    constructor( bs: string | Buffer | Hash32 )
+    constructor( bs: string | Uint8Array | Hash32 )
     {
         super( bs , "VKey" );
 
@@ -22,7 +22,7 @@ export class VKey extends Hash32
                     if( _hash instanceof PubKeyHash ) return _hash.clone();
 
                     _hash = new PubKeyHash(
-                        Buffer.from(
+                        Uint8Array.from(
                             blake2b_224( this.asBytes )
                         )
                     );

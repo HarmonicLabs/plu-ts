@@ -3,6 +3,7 @@ import JsRuntime from "../../utils/JsRuntime";
 
 import {Cloneable} from "../interfaces/Cloneable";
 import {HexString} from ".";
+import { fromHex, isUint8Array, toHex } from "../../uint8Array";
 
 export class ByteString
     implements Cloneable<ByteString>
@@ -12,9 +13,9 @@ export class ByteString
         return Object.getPrototypeOf( bs ) === ByteString.prototype
     }
 
-    protected _bytes: Buffer;
+    protected _bytes: Uint8Array;
 
-    constructor( bs: string | Buffer )
+    constructor( bs: string | Uint8Array )
     {
         if( typeof bs === "string" )
         {
@@ -26,13 +27,13 @@ export class ByteString
                 "invalid hex input while constructing a ByteString: " + bs
             )
             // even length
-            this._bytes = Buffer.from( (bs.length % 2) === 1 ? "0" + bs : bs , "hex" );
+            this._bytes = fromHex( (bs.length % 2) === 1 ? "0" + bs : bs );
             return;
         }
 
         JsRuntime.assert(
-            Buffer.isBuffer( bs ) || Boolean(void console.log( bs )),
-            "invalid Buffer input while constructing a ByteString"
+            isUint8Array( bs ),
+            "invalid Uint8Array input while constructing a ByteString"
         );
 
         this._bytes = bs;
@@ -43,35 +44,35 @@ export class ByteString
      */
     get asString(): string
     {
-        return this._bytes.toString( "hex" );
+        return toHex( this._bytes );
     }
 
     toString(): string
     {
-        return this._bytes.toString("hex");
+        return toHex( this._bytes );
     }
 
     /**
      * @deprecated use `toBuffer()` instead
      */
-    get asBytes(): Buffer
+    get asBytes(): Uint8Array
     {
-        return BufferUtils.copy( this._bytes );
+        return this._bytes.slice();
     }
 
-    toBuffer(): Buffer
+    toBuffer(): Uint8Array
     {
-        return BufferUtils.copy( this._bytes );
+        return this._bytes.slice();
     }
 
     clone(): ByteString
     {
-        return new ByteString( BufferUtils.copy( this._bytes ) );
+        return new ByteString( this._bytes.slice() );
     }
 
     public static fromAscii( asciiStr: string ): ByteString
     {
-        return new ByteString( Buffer.from( asciiStr, "ascii" ) );
+        return new ByteString( Uint8Array.from( asciiStr, "ascii" ) );
     }
 
     public static toAscii( bStr: ByteString ): string

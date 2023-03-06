@@ -1,4 +1,3 @@
-import { Buffer } from "buffer";
 import { CborObj } from "../../cbor/CborObj";
 import { CanBeCborString } from "../../cbor/CborString";
 import { byte, deriveEd25519PublicKey } from "../../crypto";
@@ -10,7 +9,7 @@ export class PrivateKey extends Hash32
     derivePublicKey(): PublicKey
     {
         return new PublicKey(
-            Buffer.from(
+            Uint8Array.from(
                 deriveEd25519PublicKey(
                     Array.from( this.asBytes ) as byte[]
                 )

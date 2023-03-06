@@ -1,3 +1,4 @@
+import { isUint8Array } from "../uint8Array";
 import { buffToByteArr, byte } from "./types";
 import { rotr32 } from "./utils/rotr32";
 
@@ -75,9 +76,9 @@ function sigma1(x: number ): number
  * @param {uint5[]} bytes - list of uint8 numbers
  * @returns {number[]} - list of uint8 numbers
  */
-export function sha2_256(bytes: byte[] | Buffer ):  byte[]
+export function sha2_256( bytes: byte[] | Uint8Array ):  byte[]
 {
-    if( Buffer.isBuffer( bytes ) )
+    if( isUint8Array( bytes ) )
     {
         bytes = buffToByteArr( bytes );
     }

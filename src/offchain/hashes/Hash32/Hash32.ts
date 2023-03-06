@@ -9,7 +9,7 @@ import { Hash } from "../Hash";
 
 export class Hash32 extends Hash
 {
-    constructor( bs: string | Buffer | Hash32 , className: string = "Hash32" )
+    constructor( bs: string | Uint8Array | Hash32 , className: string = "Hash32" )
     {
         super( bs instanceof Hash32 ? bs.asBytes : bs );
 

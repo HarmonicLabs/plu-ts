@@ -1,9 +1,10 @@
+import { isUint8Array } from "../../uint8Array/isUint8Array";
 import BufferUtils from "../../utils/BufferUtils";
 import JsRuntime from "../../utils/JsRuntime";
 import { ToRawObj } from "./interfaces/ToRawObj";
 
 export type RawCborBytes = {
-    bytes: Buffer
+    bytes: Uint8Array
 }
 
 export function isRawCborBytes( b: RawCborBytes ): boolean
@@ -15,20 +16,20 @@ export function isRawCborBytes( b: RawCborBytes ): boolean
     return (
         keys.length === 1 &&
         keys[0] === "bytes"  &&
-        Buffer.isBuffer( b.bytes )
+        isUint8Array( b.bytes )
     );
 }
 
 export class CborBytes
     implements ToRawObj
 {
-    private _buff : Buffer;
-    get buffer(): Buffer { return BufferUtils.copy( this._buff ) }
+    private _buff : Uint8Array;
+    get buffer(): Uint8Array { return this._buff.slice() }
     
-    constructor( bytes: Buffer )
+    constructor( bytes: Uint8Array )
     {
         JsRuntime.assert(
-            Buffer.isBuffer(bytes),
+            isUint8Array(bytes),
             "invalid buffer in CborBytes"
         );
 

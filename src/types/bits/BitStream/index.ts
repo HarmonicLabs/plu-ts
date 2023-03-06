@@ -4,11 +4,11 @@ import Debug from "../../../utils/Debug";
 import JsRuntime from "../../../utils/JsRuntime";
 
 import { Indexable } from "../../interfaces/Indexable";
-import { Buffer } from "buffer";
 import { Cloneable } from "../../interfaces/Cloneable";
 import { Int32 } from "../../ints/Int32";
 import { BinaryString } from "../BinaryString";
 import { Bit, forceInByteOffset, InByteOffset } from "../Bit";
+import { isUint8Array, readUint8 } from "../../../uint8Array";
 
 export class BitStream
     implements Cloneable<BitStream>, Indexable<Bit>
@@ -80,8 +80,8 @@ export class BitStream
 
     constructor( bytes?: undefined )
     constructor( bytes: bigint, nInitialZeroes?: number )
-    constructor( bytes: Buffer, nZeroesAsEndPadding?: InByteOffset )
-    constructor( bytes: bigint | Buffer | undefined , nInitialZeroes: number = 0 )
+    constructor( bytes: Uint8Array, nZeroesAsEndPadding?: InByteOffset )
+    constructor( bytes: bigint | Uint8Array | undefined , nInitialZeroes: number = 0 )
     {
         // case empty BitStream
         // aka. new BitStream() || new BitStream( undefined )
@@ -116,12 +116,12 @@ export class BitStream
             return;
         }
 
-        // construct form Buffer
+        // construct form Uint8Array
 
-        // assert got Buffer instance as input
+        // assert got Uint8Array instance as input
         JsRuntime.assert(
-            Buffer.isBuffer( bytes ),
-            "expected a Buffer instance", new Debug.AddInfos({
+            isUint8Array(bytes),
+            "expected a Uint8Array instance", new Debug.AddInfos({
                 got: bytes,
                 nativeType: typeof bytes
             })
@@ -141,7 +141,7 @@ export class BitStream
 
         while( allZeroesBytes < bytes.length )
         {
-            firstNonZeroByte = bytes.readUint8( allZeroesBytes );
+            firstNonZeroByte = readUint8( bytes, allZeroesBytes );
 
             if( firstNonZeroByte > 0 ) break;
 
@@ -160,7 +160,7 @@ export class BitStream
         JsRuntime.assert(
             this._nInitialZeroes >= 0,
             JsRuntime.makeNotSupposedToHappenError(
-                "this._nInitialZeroes was setted badly in a BitStream creation using a Buffer as input."
+                "this._nInitialZeroes was setted badly in a BitStream creation using a Uint8Array as input."
             )
         )
 
@@ -264,7 +264,7 @@ export class BitStream
     /**
      * 
      * @returns {object} 
-     *      with a @property {Buffer} bigint containing the bigint
+     *      with a @property {Uint8Array} bigint containing the bigint
      *      and a @property {InByteOffset} nInitialZeroes 
      *      containing a non-negative integer
      *      indicating how many (non-tracked in the bigint) zeroes are present in the ```BitStream```
@@ -293,23 +293,23 @@ export class BitStream
     /**
      * 
      * @returns {object} 
-     *      with a @property {Buffer} buffer containing the buffer
+     *      with a @property {Uint8Array} buffer containing the buffer
      *      and a @property {InByteOffset} nZeroesAsEndPadding 
      *      containing a number between 7 and 1 both included,
      *      indicating how many of the end bits should be ignored
      */
     toBuffer(): {
-        buffer: Buffer,
+        buffer: Uint8Array,
         nZeroesAsEndPadding: InByteOffset
     }
     {
         if( this.isEmpty() ) return {
-            buffer: Buffer.from( [] ),
+            buffer: Uint8Array.from( [] ),
             nZeroesAsEndPadding: 0
         };
 
         if( this.isAllZeroes() ) return {
-            buffer: this.nInitialZeroes <= 0 ? Buffer.from( [] ) : Buffer.from( "00".repeat( Math.ceil( this.nInitialZeroes / 8 ) ), "hex" ),
+            buffer: this.nInitialZeroes <= 0 ? Uint8Array.from( [] ) : Uint8ArrayfromHex( "00".repeat( Math.ceil( this.nInitialZeroes / 8 ) ), "hex" ),
             nZeroesAsEndPadding: 
                 this._nInitialZeroes % 8 === 0 ? 
                 0 : 
@@ -370,7 +370,7 @@ export class BitStream
         )
         {
             return {
-                buffer: Buffer.from( bitsArr ),
+                buffer: Uint8Array.from( bitsArr ),
                 nZeroesAsEndPadding: 0
             };
         }
@@ -416,7 +416,7 @@ export class BitStream
             bitsArr.push( lostBits ); 
 
             return {
-                buffer: Buffer.from( bitsArr ),
+                buffer: Uint8Array.from( bitsArr ),
                 nZeroesAsEndPadding: (8 - shiftBy) as InByteOffset 
             };
         }
@@ -457,7 +457,7 @@ export class BitStream
         }
 
         return {
-            buffer: Buffer.from( shiftedlBitsArr ),
+            buffer: Uint8Array.from( shiftedlBitsArr ),
             nZeroesAsEndPadding: shiftBy as InByteOffset 
         };
 
@@ -560,7 +560,7 @@ export class BitStream
 
 export class BitStreamIterator
 {
-    private _bitStreamBuff: Buffer;
+    private _bitStreamBuff: Uint8Array;
     private _nZeroesAsPadding: InByteOffset
 
     private _currByteIndex: number;
@@ -571,7 +571,7 @@ export class BitStreamIterator
     {
         if( bitStream.length === 0 )
         {
-            this._bitStreamBuff = Buffer.from( [] );
+            this._bitStreamBuff = Uint8Array.from( [] );
             this._nZeroesAsPadding = 0;
 
             this._currByteIndex = 0;
@@ -588,7 +588,7 @@ export class BitStreamIterator
         this._nZeroesAsPadding = nZeroesAsEndPadding;
 
         this._currByteIndex = 0;
-        this._currByte = this._bitStreamBuff.readUint8( this._currByteIndex );
+        this._currByte = readUint8( this._bitStreamBuff, this._currByteIndex );
         this._currBitIndex = 0;
 
         this._updateByte = this._updateByte.bind(this);
@@ -644,7 +644,7 @@ export class BitStreamIterator
 
         if(this._currByteIndex < this._bitStreamBuff.length )
         {
-            this._currByte = this._bitStreamBuff.readUint8( this._currByteIndex );
+            this._currByte = readUint8( this._bitStreamBuff, this._currByteIndex );
         }
     }
 
@@ -661,4 +661,8 @@ export class BitStreamIterator
         );
     }
 
+}
+
+function Uint8ArrayfromHex(arg0: string, arg1: string): Uint8Array {
+    throw new Error("Function not implemented.");
 }

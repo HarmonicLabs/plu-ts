@@ -2,7 +2,6 @@ import JsRuntime from "../../utils/JsRuntime";
 import ObjectUtils from "../../utils/ObjectUtils";
 import BufferUtils from "../../utils/BufferUtils";
 
-import { Buffer } from "buffer";
 import { blake2b_224, byte } from "../../crypto";
 import { ScriptJsonFormat } from "../../onchain/pluts/Script";
 import { NativeScript, nativeScriptFromCbor, nativeScriptToCbor } from "./NativeScript";
@@ -17,6 +16,7 @@ import { CborObj } from "../../cbor/CborObj";
 import { CborArray } from "../../cbor/CborObj/CborArray";
 import { CborUInt } from "../../cbor/CborObj/CborUInt";
 import { InvalidCborFormatError } from "../../errors/InvalidCborFormatError";
+import { fromHex, isUint8Array } from "../../uint8Array";
 
 export const enum ScriptType {
     NativeScript = "NativeScript",
@@ -24,7 +24,7 @@ export const enum ScriptType {
     PlutusV2 = "PlutusScriptV2"
 }
 
-function parseCborBytes( cbor: Buffer ): Buffer
+function parseCborBytes( cbor: Uint8Array ): Uint8Array
 {
     return ( Cbor.parse( cbor ) as CborBytes ).buffer
 }
@@ -33,11 +33,11 @@ export class Script<T extends ScriptType = ScriptType>
     implements Cloneable<Script<T>>, ToJson, ToCbor
 {
     readonly type!: T;
-    readonly bytes!: Buffer;
+    readonly bytes!: Uint8Array;
     readonly cbor!: CborString;
     readonly hash!: Hash28;
 
-    constructor( scriptType: T, bytes: Buffer | (T extends ScriptType.NativeScript ? NativeScript : ScriptJsonFormat) )
+    constructor( scriptType: T, bytes: Uint8Array | (T extends ScriptType.NativeScript ? NativeScript : ScriptJsonFormat) )
     {
         JsRuntime.assert(
             scriptType === ScriptType.NativeScript  ||
@@ -52,21 +52,21 @@ export class Script<T extends ScriptType = ScriptType>
             scriptType
         );
 
-        if( !Buffer.isBuffer(bytes) )
+        if( !isUint8Array(bytes) )
         {
             if(
                 (bytes.type as any) === ScriptType.PlutusV1 ||
                 (bytes.type as any) === ScriptType.PlutusV2
             )
             {
-                bytes = Buffer.from( (bytes as ScriptJsonFormat).cborHex, "hex" );
+                bytes = fromHex( (bytes as ScriptJsonFormat).cborHex );
             }
             else
             {
                 bytes = nativeScriptToCbor( bytes as NativeScript ).toBuffer()
             }
         }
-        else bytes = BufferUtils.copy( bytes )
+        else bytes = bytes.slice()
 
         if(
             scriptType === ScriptType.PlutusV1 ||
@@ -105,7 +105,7 @@ export class Script<T extends ScriptType = ScriptType>
                 new CborBytes(
                     Cbor.encode(
                         new CborBytes(
-                            BufferUtils.copy( bytes )
+                            bytes.slice()
                         )
                     ).toBuffer()
                 )
@@ -140,7 +140,7 @@ export class Script<T extends ScriptType = ScriptType>
                     }
 
                     _hash = new Hash28(
-                        Buffer.from(
+                        Uint8Array.from(
                             blake2b_224( scriptDataToBeHashed as byte[] )
                         )
                     );
@@ -158,7 +158,7 @@ export class Script<T extends ScriptType = ScriptType>
     {
         return new Script(
             this.type as any,
-            BufferUtils.copy( this.bytes )
+            this.bytes.slice()
         );
     }
 
@@ -192,7 +192,7 @@ export class Script<T extends ScriptType = ScriptType>
 
         if( t === ScriptType.PlutusV1 || t === ScriptType.PlutusV2 )
         {
-            return new Script( t, Buffer.from( json.cborHex, "hex" ) );
+            return new Script( t, fromHex( json.cborHex ) );
         }
 
         return new Script(
@@ -219,7 +219,7 @@ export class Script<T extends ScriptType = ScriptType>
             ),
             new CborBytes(
                 Cbor.encode(
-                    new CborBytes( BufferUtils.copy( this.bytes ) )
+                    new CborBytes( this.bytes.slice() )
                 ).toBuffer()
             )
         ]);

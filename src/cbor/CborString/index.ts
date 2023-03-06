@@ -10,7 +10,7 @@ export class CborString extends ByteString
         return ( cborStr !== undefined && cborStr !== null ) && Object.getPrototypeOf( cborStr ) === CborString.prototype
     }
 
-    constructor( cbor: string | Buffer )
+    constructor( cbor: string | Uint8Array )
     {
         if( typeof cbor === "string" )
         {
@@ -34,7 +34,7 @@ export class CborString extends ByteString
     }
 }
 
-export type CanBeCborString = string | Buffer | ByteString;
+export type CanBeCborString = string | Uint8Array | ByteString;
 
 export function forceCborString( cStr: CanBeCborString ): CborString
 {

@@ -1,6 +1,7 @@
 import { byte, uint64 as uint64_t, uint6, buffToByteArr } from "./types";
 import JsRuntime from "../utils/JsRuntime";
 import { uint64, uint64Rotr, byteArrToHex, uint64ToBytesLE } from "./types";
+import { isUint8Array } from "../uint8Array";
 
 
 /**
@@ -18,9 +19,9 @@ import { uint64, uint64Rotr, byteArrToHex, uint64ToBytesLE } from "./types";
  * @example
  * bytesToHex(sha3((new Array(137)).fill(4))) => "f10b39c3e455006aa42120b9751faa0f35c821211c9d086beb28bf3c4134c6c6"
  */
-export function sha3(bytes: byte[] | Buffer): byte[]
+export function sha3(bytes: byte[] | Uint8Array): byte[]
 {
-    if( Buffer.isBuffer( bytes ) )
+    if( isUint8Array( bytes ) )
     {
         bytes = buffToByteArr( bytes );
     }

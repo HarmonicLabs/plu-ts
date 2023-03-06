@@ -9,7 +9,7 @@ export class PublicKey extends Hash32
 {
     readonly hash!: PubKeyHash;
 
-    constructor( pubKey: string | Buffer | Hash32 )
+    constructor( pubKey: string | Uint8Array | Hash32 )
     {
         super( pubKey, "PublicKey" );
 
@@ -21,7 +21,7 @@ export class PublicKey extends Hash32
                     if( _hash !== undefined && _hash instanceof PubKeyHash ) return _hash.clone();
 
                     _hash = new PubKeyHash(
-                        Buffer.from(
+                        new Uint8Array(
                             blake2b_224(
                                 this.asBytes
                             )

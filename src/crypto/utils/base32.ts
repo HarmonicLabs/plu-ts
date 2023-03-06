@@ -18,7 +18,7 @@ export const BECH32_BASE32_ALPHABET = Object.freeze([
     'u', 'a', '7', 'l'
 ] as const);
 
-export function encodeBase32rfc4648(bytes: Buffer)
+export function encodeBase32rfc4648(bytes: Uint8Array)
 {
     return buffToUint5Arr(bytes).map(c => rfc4648_ALPHABET[c]).join("");
 }

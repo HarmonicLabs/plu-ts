@@ -3,9 +3,8 @@ import { UPLCConst } from "../../../../UPLC/UPLCTerms/UPLCConst";
 import { Term } from "../../../Term";
 import { bs } from "../../../type_system/types";
 import { TermBS, addPByteStringMethods } from "../UtilityTerms/TermBS";
-import { Buffer } from "buffer";
 
-export function pByteString( _bs: ByteString | string | Buffer ): TermBS
+export function pByteString( _bs: ByteString | string | Uint8Array ): TermBS
 {
     const _bs_ = _bs instanceof ByteString ? _bs.clone() : new ByteString( _bs ); 
     return addPByteStringMethods(

@@ -9,7 +9,7 @@ import { Hash } from "../Hash";
 
 export class Hash28 extends Hash
 {
-    constructor( bs: string | Buffer | Hash28 , className: string = "Hash28" )
+    constructor( bs: string | Uint8Array | Hash28 , className: string = "Hash28" )
     {
         super( bs instanceof Hash28 ? bs.toBuffer() : bs );
 

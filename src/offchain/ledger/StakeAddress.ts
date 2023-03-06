@@ -106,12 +106,12 @@ export class StakeAddress<T extends StakeAddressType = StakeAddressType>
     }
 
     static fromBytes(
-        bs: byte[] | string | Buffer,
+        bs: byte[] | string | Uint8Array,
         netwok: NetworkT = "mainnet",
         type: StakeAddressType = "stakeKey"
     ): StakeAddress
     {
-        bs = Buffer.from( typeof bs === "string" ? hexToBytes( bs ) : bs );
+        bs = Uint8Array.from( typeof bs === "string" ? hexToBytes( bs ) : bs );
 
         if( bs.length === 29 )
         {

@@ -20,11 +20,11 @@ import { Cloneable } from "../../../types/interfaces/Cloneable";
 import { ToJson } from "../../../utils/ts/ToJson";
 import { Hash28 } from "../../hashes/Hash28/Hash28";
 import { isIValue, addIValues, subIValues, IValue, cloneIValue, IValueToJson } from "./IValue";
-import { Buffer } from "buffer";
 import { CborArray } from "../../../cbor/CborObj/CborArray";
 import { ByteString } from "../../../types/HexString/ByteString";
 import { IValueAssets } from "./IValue";
 import { hex } from "../../../types/HexString";
+import { fromAscii, isUint8Array, lexCompare, toAscii, toHex } from "../../../uint8Array";
 
 export class Value
     implements ToCbor, Cloneable<Value>, ToData, ToJson
@@ -74,7 +74,7 @@ export class Value
             {
                 return Ord.GT;
             }
-            return BufferUtils.lexCompare( a.policy.asBytes, b.policy.asBytes );
+            return lexCompare( a.policy.toBuffer(), b.policy.toBuffer() );
         });
 
         ObjectUtils.defineReadOnlyProperty(
@@ -94,7 +94,7 @@ export class Value
         );
     }
 
-    get( policy: Hash28 | Buffer | string , assetName: Buffer | string ): bigint
+    get( policy: Hash28 | Uint8Array | string , assetName: Uint8Array | string ): bigint
     {
         if( typeof policy === "string" )
         {
@@ -102,10 +102,10 @@ export class Value
             policy = new Hash28( policy );
         }
 
-        const policyStr = policy.toString("hex");
+        const policyStr = policy instanceof Hash28 ? policy.toString() : toHex( policy );
 
-        if( Buffer.isBuffer( assetName ) )
-        assetName = assetName.toString("ascii");
+        if( isUint8Array( assetName ) )
+        assetName = toAscii( assetName );
 
         return BigInt(
             (
@@ -209,12 +209,12 @@ export class Value
                 const assets = entry.assets;
                 const policy = entry.policy;
                 return {
-                    k: policy === "" ? new CborBytes(Buffer.from("","hex")) : policy.toCborObj(),
+                    k: policy === "" ? new CborBytes( new Uint8Array(0) ) : policy.toCborObj(),
                     v: new CborMap(
                         Object.keys( assets ).map( assetNameAscii => {
                             const amt = (assets as any)[ assetNameAscii ];
                             return {
-                                k: new CborBytes( Buffer.from( assetNameAscii, "ascii" ) ),
+                                k: new CborBytes( fromAscii( assetNameAscii ) ),
                                 v: amt < 0 ? new CborNegInt( amt ) : new CborUInt( amt )
                             };
                         })
@@ -307,7 +307,7 @@ export class Value
 
                 ObjectUtils.defineReadOnlyProperty(
                     assets,
-                    k.buffer.toString("ascii"),
+                    toAscii( k.buffer ),
                     v.num
                 );
             }

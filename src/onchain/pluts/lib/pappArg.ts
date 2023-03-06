@@ -22,6 +22,7 @@ import { pInt } from "./std/int/pInt";
 import { pmakeUnit } from "./std/unit/pmakeUnit";
 import { Term } from "../Term";
 import { TermType, ToPType, tyVar, isWellFormedType, typeExtends, int, bool, isTypeParam, bs, str, unit, fn, list, PrimType, GenericTermType, isWellFormedGenericType } from "../type_system";
+import { fromHex, isUint8Array } from "../../../uint8Array";
 
 
 type _TsFunctionSatisfying<KnownArgs extends Term<PType>[], POut extends PType> =
@@ -39,7 +40,7 @@ export type PappArg<PIn extends PType> =
     (
         PIn extends PInt ? bigint | number | Integer :
         PIn extends PBool ? boolean :
-        PIn extends PByteString ? ByteString | Buffer | Uint8Array | ArrayBuffer | string :
+        PIn extends PByteString ? ByteString | Uint8Array | Uint8Array | ArrayBuffer | string :
         PIn extends PString ? string :
         PIn extends PUnit ? undefined | null :
         PIn extends PPair<infer PFst extends PType, infer PSnd extends PType> ?
@@ -133,7 +134,7 @@ export function pappArgToTerm<ArgT extends TermType>(
             // first try ByteStrings
             if( HexString.isHex( arg ) && ( arg as string).length % 2 === 0 )
             {
-                return pByteString( Buffer.from( arg as string, "hex" ) ) as any;
+                return pByteString( fromHex( arg as string ) ) as any;
             }
 
             // otherwise return plain string
@@ -146,7 +147,7 @@ export function pappArgToTerm<ArgT extends TermType>(
             // first tries plain hex
             if( HexString.isHex( arg ) && ( arg as string).length % 2 === 0 )
             {
-                return pByteString( Buffer.from( arg, "hex" ) ) as any;
+                return pByteString( fromHex( arg ) ) as any;
             }
 
             // otherwise interpret as ascii
@@ -168,7 +169,7 @@ export function pappArgToTerm<ArgT extends TermType>(
 
     // PByteString
     if(
-        Buffer.isBuffer( arg )      ||
+        isUint8Array( arg )      ||
         arg instanceof Uint8Array   ||
         arg instanceof ArrayBuffer  ||
         (
@@ -192,7 +193,7 @@ export function pappArgToTerm<ArgT extends TermType>(
         }
         
         return pByteString(
-            Buffer.isBuffer( arg ) ? arg : Buffer.from( arg )
+            isUint8Array( arg ) ? arg : new Uint8Array( arg )
         ) as any; 
     }
 
@@ -374,7 +375,7 @@ function getPossiblePlutsTypesOf( value: PappArg<PType> ): TermType[]
 
     if(
         // hex string case covered below
-        Buffer.isBuffer( value ) ||
+        isUint8Array( value ) ||
         value instanceof Uint8Array ||
         value instanceof ArrayBuffer
     ) return [ bs ];
@@ -504,7 +505,7 @@ function isTsValueAssignableToPlutsType<PlutsType extends TermType>(
     {
         return (
             (typeof value === "string" && HexString.isHex( value ) && (value as string).length % 2 === 0) ||
-            Buffer.isBuffer( value ) ||
+            isUint8Array( value ) ||
             value instanceof Uint8Array ||
             value instanceof ArrayBuffer
         )

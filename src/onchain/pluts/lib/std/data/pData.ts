@@ -27,7 +27,7 @@ export function pDataI( n: number | bigint ): Term<PAsData<PInt>>
 }
 
 
-export function pDataB( b: string | ByteString | Buffer ): Term<PAsData<PByteString>>
+export function pDataB( b: string | ByteString | Uint8Array ): Term<PAsData<PByteString>>
 {
     return new Term(
         asData( bs ),

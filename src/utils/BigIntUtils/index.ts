@@ -1,6 +1,5 @@
+import { fromHex, isUint8Array, toHex } from "../../uint8Array";
 import JsRuntime from "../JsRuntime";
-
-import { Buffer } from "buffer"; 
 
 /**
  * @static
@@ -54,28 +53,28 @@ export default class BigIntUtils
      * uses the bytes of the buffer to construct a BigInteger
      * > **IMPORTANT** the bytes are considered in Little Endian order; use ```BigIntUtils.fromBuffer``` for Big Endian
      */
-    static fromBufferLE( buffer: Buffer ): bigint
+    static fromBufferLE( buffer: Uint8Array ): bigint
     {
         return BigIntUtils.fromBuffer(
             // need to copy so that it doesn't reverses the original buffer
-            Buffer.from( buffer )
+            Uint8Array.from( buffer )
             .reverse()
         );
 
     }
 
     /**
-     * converts a Buffer to a ```bigint```
+     * converts a Uint8Array to a ```bigint```
      * Big-Endian default
      */
-    static fromBuffer( buffer: Buffer ): bigint
+    static fromBuffer( buffer: Uint8Array ): bigint
     {
         JsRuntime.assert(
-            Buffer.isBuffer( buffer ),
+            isUint8Array( buffer ),
             "expected buffer as input, while constructing a bigint instance using BigIntUtils.fromBufferBE"
         );
 
-        const hexBuff = buffer.toString('hex');
+        const hexBuff = toHex( buffer );
 
         if ( hexBuff.length === 0 ) {
             return BigInt( 0 );
@@ -85,14 +84,14 @@ export default class BigIntUtils
     }
 
     /**
-     * converts a ```bigint``` to a ```Buffer``` of length ```nBytes``` given as second argument
+     * converts a ```bigint``` to a ```Uint8Array``` of length ```nBytes``` given as second argument
      * 
-     * if ```nBytes``` is not specified the Buffer takes only the bytes needed
+     * if ```nBytes``` is not specified the Uint8Array takes only the bytes needed
      * @param bigint 
      * @param nBytes 
      * @returns 
      */
-    static toBuffer( bigint: bigint, nBytes: number | undefined = undefined ): Buffer
+    static toBuffer( bigint: bigint, nBytes: number | undefined = undefined ): Uint8Array
     {
         JsRuntime.assert(
             bigint >= BigInt( 0 ),
@@ -103,10 +102,10 @@ export default class BigIntUtils
         {
             if(nBytes === undefined)
             {
-                return Buffer.from( [] );
+                return Uint8Array.from( [] );
             }
 
-            return Buffer.from( "00".repeat(nBytes), "hex" )
+            return new Uint8Array( nBytes )
         }
         
         let buffHexString = bigint.toString(16);
@@ -134,7 +133,7 @@ export default class BigIntUtils
             }
         }
 
-        return Buffer.from( buffHexString , "hex" );
+        return fromHex( buffHexString );
     }
 
 }

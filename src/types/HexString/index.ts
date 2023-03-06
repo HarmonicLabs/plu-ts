@@ -1,5 +1,5 @@
-import { Buffer } from "buffer";
 import {HexStringError} from "../../errors/PlutsTypeError/HexStringError";
+import { fromAscii, fromHex, isUint8Array, toAscii, toHex } from "../../uint8Array";
 
 export type hex = string & { __hex_string__ : never };
 
@@ -36,31 +36,47 @@ export class HexString
         this._hex = hex as hex;
     }
 
-    constructor( hexString : string | Buffer )
+    constructor( hexString : string | Uint8Array )
     {
-        if( Buffer.isBuffer( hexString ) )
+        if( isUint8Array( hexString ) )
         {
-            this._hex = hexString.toString("hex") as hex;
+            this._hex = toHex( hexString ) as hex;
             return;
         }
 
         // remove spaces
         hexString = hexString.trim().split(" ").join("").toLowerCase();
 
-        // if it wasn't a Buffer originally, the string may contain invalid chars
+        // if it wasn't a Uint8Array originally, the string may contain invalid chars
         HexString._assertHex( hexString );
 
         this._hex = hexString.toLowerCase() as hex;
     }
 
+    /**
+     * @deprecated use `toString()` instead
+     */
     get asString(): hex
     {
         return this._hex;
     }
-
-    get asBytes(): Buffer
+    
+    toString(): hex
     {
-        return Buffer.from( this._hex, "hex" );
+        return this._hex
+    }
+
+    /**
+     * @deprecated use `toBuffer()` instead
+     */
+    get asBytes(): Uint8Array
+    {
+        return fromHex( this._hex );
+    }
+
+    toBuffer(): Uint8Array
+    {
+        return fromHex( this._hex )
     }
 
     /**
@@ -80,17 +96,17 @@ export class HexString
 
     public static fromAscii( asciiStr: string ): HexString
     {
-        return new HexString( Buffer.from(asciiStr, "ascii").toString("hex") );
+        return new HexString( fromAscii( asciiStr ) );
     }
 
     public static toAscii( hexStr: HexString ): string
     {
-        return hexStr.asBytes.toString("ascii")
+        return toAscii( hexStr.asBytes )
     }
 
-    public static formBytes( buffer: Buffer ): HexString
+    public static formBytes( buffer: Uint8Array ): HexString
     {
-        return new HexString( ( buffer.toString("hex") ) )
+        return new HexString( toHex( buffer ) )
     }
     
 }

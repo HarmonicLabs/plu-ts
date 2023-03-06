@@ -1,8 +1,4 @@
-import { BasePlutsError } from "../errors/BasePlutsError";
-import ObjectUtils from "../utils/ObjectUtils";
-import { buffToByteArr, byte, uint64 as uint64_t } from "./types";
-import { byteArrToHex, forceUint64, uint64, uint64Rotr, uint64ToBytesLE } from "./types";
-import { Buffer } from "buffer";
+import type { byte } from "./types";
 
 /**
  * 64-bit unsigned addition
@@ -263,13 +259,13 @@ function blake2bFinal( ctx: Blake2bCtx )
     // little endian convert and store
     const out = new Uint8Array(ctx.digestSize)
     for (let i = 0; i < ctx.digestSize; i++) {
-    out[i] = ctx.h[i >> 2] >> (8 * (i & 3))
+        out[i] = ctx.h[i >> 2] >> (8 * (i & 3))
     }
     return out
 }
 
 
-export function blake2b( data: byte[] | Buffer | Uint8Array, digestSize: 28 | 32 | 64 = 32 ): byte[]
+export function blake2b( data: byte[] | Uint8Array | Uint8Array, digestSize: 28 | 32 | 64 = 32 ): byte[]
 {
     data = new Uint8Array(data);
     const ctx = blake2bInit(digestSize)
@@ -277,17 +273,17 @@ export function blake2b( data: byte[] | Buffer | Uint8Array, digestSize: 28 | 32
     return Array.from(blake2bFinal(ctx)) as any;
 }
 
-export function blake2b_224( data: byte[] | Buffer ): byte[]
+export function blake2b_224( data: byte[] | Uint8Array ): byte[]
 {
     return blake2b( data, 28 );
 }
 
-export function blake2b_256( data: byte[] | Buffer ): byte[]
+export function blake2b_256( data: byte[] | Uint8Array ): byte[]
 {
     return blake2b( data, 32 );
 }
 
-export function blake2b_512( data: byte[] | Buffer ): byte[]
+export function blake2b_512( data: byte[] | Uint8Array ): byte[]
 {
     return blake2b( data, 64 );
 }

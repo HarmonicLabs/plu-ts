@@ -14,6 +14,7 @@ import { ToCbor } from "../../../cbor/interfaces/CBORSerializable";
 import { InvalidCborFormatError } from "../../../errors/InvalidCborFormatError";
 import { ByteString } from "../../../types/HexString/ByteString";
 import { ToJson } from "../../../utils/ts/ToJson";
+import { isUint8Array, toHex } from "../../../uint8Array";
 
 
 export type TxMetadatum
@@ -195,14 +196,14 @@ export class TxMetadatumInt
 export class TxMetadatumBytes
     implements ToCbor, ToJson
 {
-    readonly bytes!: Buffer
+    readonly bytes!: Uint8Array
 
-    constructor( bytes: Buffer | ByteString )
+    constructor( bytes: Uint8Array | ByteString )
     {
         ObjectUtils.defineReadOnlyProperty(
             this,
             "bytes",
-            Buffer.isBuffer( bytes ) ? bytes : bytes.asBytes
+            isUint8Array( bytes ) ? bytes : bytes.toBuffer()
         );
     }
 
@@ -233,7 +234,7 @@ export class TxMetadatumBytes
 
     toJson(): { bytes: string }
     {
-        return { bytes: this.bytes.toString("hex") }
+        return { bytes: toHex( this.bytes ) }
     }
 }
 

@@ -6,7 +6,7 @@ import { Hash } from "../Hash";
 
 export class Signature extends Hash
 {
-    constructor( bs: string | Buffer | Signature  )
+    constructor( bs: string | Uint8Array | Signature  )
     {
         super( bs instanceof Signature ? bs.asBytes : bs );
 
@@ -18,7 +18,7 @@ export class Signature extends Hash
 
     clone(): Signature
     {
-        return new Signature( this.asBytes )
+        return new Signature( this.toBuffer() )
     }
 
     valueOf(): string

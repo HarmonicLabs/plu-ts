@@ -10,15 +10,15 @@ import { CborUInt } from "../../cbor/CborObj/CborUInt";
 import { BasePlutsError } from "../../errors/BasePlutsError";
 import { InvalidCborFormatError } from "../../errors/InvalidCborFormatError";
 import { canBeUInteger, CanBeUInteger, forceBigUInt, forceUInteger } from "../../types/ints/Integer";
-import { Buffer } from "buffer";
+import { isUint8Array, readUInt16BE, readUInt8 } from "../../uint8Array";
 
 export type IpPoolRelay = ({
-    ipv4: Buffer
+    ipv4: Uint8Array
 } | {
-    ipv6: Buffer
+    ipv6: Uint8Array
 } | {
-    ipv4: Buffer
-    ipv6: Buffer
+    ipv4: Uint8Array
+    ipv6: Uint8Array
 }) & {
     type: "ip",
     port?: CanBeUInteger
@@ -44,20 +44,20 @@ export function poolRelayToJson( relay: PoolRelay )
     switch( type )
     {
         case "ip":
-            const ipv4: Buffer | undefined = (relay as any).ipv4 === undefined ? undefined : (relay as any).ipv4;
-            const ipv6: Buffer | undefined = (relay as any).ipv6 === undefined ? undefined : (relay as any).ipv6;
+            const ipv4: Uint8Array | undefined = (relay as any).ipv4 === undefined ? undefined : (relay as any).ipv4;
+            const ipv6: Uint8Array | undefined = (relay as any).ipv6 === undefined ? undefined : (relay as any).ipv6;
             return {
                 type: "ip",
                 port: relay.port === undefined ? undefined : Number( forceBigUInt( relay.port ) ),
-                ipv4: ipv4 === undefined ? undefined : `${ipv4.readUInt8(0)}.${ipv4.readUInt8(1)}.${ipv4.readUInt8(2)}.${ipv4.readUInt8(3)}`,
+                ipv4: ipv4 === undefined ? undefined : `${readUInt8( ipv4, 0 )}.${readUInt8( ipv4, 1 )}.${readUInt8( ipv4, 2 )}.${readUInt8( ipv4, 3 )}`,
                 ipv6: ipv6 === undefined ? undefined :
                     [
-                        ipv6.readUInt16BE(0).toString(16),
-                        ipv6.readUInt16BE(2).toString(16),
-                        ipv6.readUInt16BE(4).toString(16),
-                        ipv6.readUInt16BE(6).toString(16),
-                        ipv6.readUInt16BE(8).toString(16),
-                        ipv6.readUInt16BE(10).toString(16)
+                        readUInt16BE( ipv6, 0   ).toString(16),
+                        readUInt16BE( ipv6, 2   ).toString(16),
+                        readUInt16BE( ipv6, 4   ).toString(16),
+                        readUInt16BE( ipv6, 6   ).toString(16),
+                        readUInt16BE( ipv6, 8   ).toString(16),
+                        readUInt16BE( ipv6, 10  ).toString(16)
                     ].join(':')
             }
         case "dns":
@@ -103,8 +103,8 @@ export function isIpPoolRelay<T extends object>( something: T ): something is (T
         minimumPoolRelayCheck( something ) &&
         (something as any).type === "ip" &&
         (
-            (ObjectUtils.hasOwn( something, "ipv4" ) && Buffer.isBuffer( ipv4 )) || 
-            (ObjectUtils.hasOwn( something, "ipv6" ) && Buffer.isBuffer( ipv6 )) 
+            (ObjectUtils.hasOwn( something, "ipv4" ) && isUint8Array( ipv4 )) || 
+            (ObjectUtils.hasOwn( something, "ipv6" ) && isUint8Array( ipv6 )) 
         ) &&
         ( ipv4 === undefined || ipv4.length === 4 ) &&
         ( ipv6 === undefined || ipv6.length === 16 ) &&

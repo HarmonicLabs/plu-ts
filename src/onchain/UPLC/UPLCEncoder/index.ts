@@ -28,6 +28,7 @@ import { dataFromCbor } from "../../../types/Data/fromCbor";
 import { dataToCbor } from "../../../types/Data/toCbor";
 import { genHoistedSourceUID } from "../UPLCTerms/HoistedUPLC/HoistedSourceUID/genHoistedSourceUID";
 import { BasePlutsError } from "../../../errors/BasePlutsError";
+import { fromHex, fromUtf8, toHex } from "../../../uint8Array";
 
 /*
  * --------------------------- [encode vs serialize methods] ---------------------------
@@ -520,7 +521,7 @@ export class UPLCEncoder
             */
             return this.encodeConstValue(
                 new ByteString(
-                    Buffer.from( value, "utf8" )
+                    fromUtf8( value )
                 )
             );
         }
@@ -647,12 +648,12 @@ export class UPLCEncoder
 
             largeCborData = largeCborData +
                 header +
-                cborBytes.subarray( ptr, chunkEnd ).toString("hex");
+                toHex( cborBytes.subarray( ptr, chunkEnd ) );
             
             ptr = chunkEnd;
         }
 
-        return this.encodeConstValueByteString( new ByteString( Buffer.from( largeCborData + "ff", "hex" ) ) );
+        return this.encodeConstValueByteString( new ByteString( fromHex( largeCborData + "ff" ) ) );
     }
 
     /**
@@ -665,7 +666,7 @@ export class UPLCEncoder
     
     encodeConstValueByteString( bs: ByteString ): BitStream
     {
-        let missingBytes = bs.asString;
+        let missingBytes = bs.toString();
         const isBadOne = missingBytes === "d87982d87981582066f225ce3f1acd5e9b133a09b571af99ea4f0742741d008e482d3d33a7329da300";
 
         const hexChunks: string[] = [];
@@ -697,9 +698,8 @@ export class UPLCEncoder
         // append chunks
         result.append(
             new BitStream(
-                Buffer.from(
-                    hexChunks.join(''),
-                    "hex"
+                fromHex(
+                    hexChunks.join('')
                 ),
                 0
             )

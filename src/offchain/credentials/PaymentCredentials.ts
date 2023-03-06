@@ -15,7 +15,6 @@ import { ToData } from "../../types/Data/toData/interface";
 import { Cloneable } from "../../types/interfaces/Cloneable";
 import { Hash28 } from "../hashes/Hash28/Hash28";
 import { PubKeyHash } from "./PubKeyHash";
-import { Buffer } from "buffer";
 
 export class ValidatorHash extends Hash28 {}
 
@@ -82,7 +81,7 @@ export class PaymentCredentials<T extends PaymentCredentialsType = PaymentCreden
         )
     }
 
-    static pubKey( hash: Buffer | Hash28 | string ): PaymentCredentials<"pubKey">
+    static pubKey( hash: Uint8Array | Hash28 | string ): PaymentCredentials<"pubKey">
     {
         return new PaymentCredentials(
             "pubKey",
@@ -92,7 +91,7 @@ export class PaymentCredentials<T extends PaymentCredentialsType = PaymentCreden
         );
     }
 
-    static script( hash: Buffer | Hash28 | string ): PaymentCredentials<"script">
+    static script( hash: Uint8Array | Hash28 | string ): PaymentCredentials<"script">
     {
         return new PaymentCredentials(
             "script",

@@ -2,6 +2,7 @@
 Intermediate data type that allows an easier conversion from (and to) CBOR to (and from) JSON serializables objects
 */
 
+import { isUint8Array } from "../../uint8Array";
 import JsRuntime from "../../utils/JsRuntime";
 import { CborArray, isRawCborArray, RawCborArray } from "./CborArray";
 import { CborBytes, isRawCborBytes, RawCborBytes } from "./CborBytes";
@@ -81,7 +82,7 @@ export function isRawCborObj( rawCborObj: RawCborObj ): boolean
         ( k === "uint" &&
         typeof (rawCborObj as RawCborUInt).uint === "bigint" &&
         (rawCborObj as RawCborUInt).uint >= 0)                                                  ||
-        ( k === "bytes" && Buffer.isBuffer( (rawCborObj as RawCborBytes).bytes ) )              ||
+        ( k === "bytes" && isUint8Array( (rawCborObj as RawCborBytes).bytes ) )              ||
         ( k === "text" && typeof (rawCborObj as RawCborText).text === "string")                 ||
 
         ( k === "array" && Array.isArray( (rawCborObj as RawCborArray).array ) &&

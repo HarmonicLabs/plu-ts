@@ -158,7 +158,7 @@ export class AuxiliaryData
                     if( _hash instanceof AuxiliaryDataHash ) return _hash.clone();
 
                     _hash = new AuxiliaryDataHash(
-                        Buffer.from(
+                        new Uint8Array(
                             blake2b_256( this.toCbor().toBuffer() )
                         )
                     );
