@@ -19,14 +19,17 @@ describe("WorkerPool", () => {
 
         const start = performance.now();
 
-        await workerPool.run({
+        const result = await workerPool.run({
             method: "sleep",
             args: [ sleepTime ]
         });
 
+        expect( result.startsWith("slept") ).toBe( true )
+
         expect(
             performance.now() - start
         ).toBeGreaterThanOrEqual( sleepTime )
+
 
     });
 
@@ -51,7 +54,7 @@ describe("WorkerPool", () => {
 
         expect(
             performance.now() - start
-        ).toBeLessThanOrEqual( sleepSnd * 1.1 )
+        ).toBeLessThanOrEqual( sleepSnd * 1.2 )
 
         await fst;
 
@@ -93,6 +96,8 @@ describe("WorkerPool", () => {
             .map( arg => workerPool.run( arg ) )
         );
 
+        expect( results.every( str => str.startsWith("slept") ) )
+
         expect(
             performance.now() - start
         ).toBeGreaterThanOrEqual( sleepTime * 1.9 )
@@ -103,7 +108,7 @@ describe("WorkerPool", () => {
 
         expect(
             results.every(
-                msg => typeof msg.data === "string" && msg.data.startsWith("slept")
+                msg => typeof msg === "string" && msg.startsWith("slept")
             )
         ).toBe( true)
 

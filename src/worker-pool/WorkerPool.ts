@@ -106,7 +106,6 @@ async function getWorkerCtor(): Promise<typeof Worker>
                     // auto add listeners
                     self.on('message', (response =>
                         {
-                            console.log("self.on(message) response:", response)
                             const event = new Event(response.type ?? 'message');
                             (event as any).data = response.data;
                             self.dispatchEvent(event);
@@ -252,13 +251,6 @@ export class WorkerPool
                 // trigger next promise with this same worker
                 _next( freeWorkerIdx );
 
-                response = {
-                    isTrusted: response.isTrusted,
-                    data: response.data,
-                    type: response.type,
-                }
-
-                console.log( "resolving with", response.data )
                 task?.resolver.resolve( response.data );
             }
 
@@ -286,7 +278,7 @@ export class WorkerPool
             myWorker.postMessage(
                 {
                     method: task.args.method,
-                    args: []
+                    args: task.args.args
                 }
             );
         }

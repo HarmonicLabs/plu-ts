@@ -1,3 +1,4 @@
+import { fromHex } from "../../../uint8Array";
 import { Data } from "../Data";
 import { DataB } from "../DataB";
 import { DataConstr } from "../DataConstr";
@@ -24,7 +25,7 @@ describe("dataFromCbor", () => {
                     new DataConstr(
                         0,
                         [
-                            new DataB( Buffer.from("8aa67408cffae7f04b6749c0ddedfe576e97b84b12da09605688632dd0ddd7f2", "hex") )
+                            new DataB( fromHex("8aa67408cffae7f04b6749c0ddedfe576e97b84b12da09605688632dd0ddd7f2") )
                         ]
                     ),
                     new DataI( 0 )

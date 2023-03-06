@@ -8,7 +8,7 @@ import { Cloneable } from "../../interfaces/Cloneable";
 import { Int32 } from "../../ints/Int32";
 import { BinaryString } from "../BinaryString";
 import { Bit, forceInByteOffset, InByteOffset } from "../Bit";
-import { isUint8Array, readUint8 } from "../../../uint8Array";
+import { fromHex, isUint8Array, readUint8 } from "../../../uint8Array";
 
 export class BitStream
     implements Cloneable<BitStream>, Indexable<Bit>
@@ -309,7 +309,7 @@ export class BitStream
         };
 
         if( this.isAllZeroes() ) return {
-            buffer: this.nInitialZeroes <= 0 ? Uint8Array.from( [] ) : Uint8ArrayfromHex( "00".repeat( Math.ceil( this.nInitialZeroes / 8 ) ), "hex" ),
+            buffer: this.nInitialZeroes <= 0 ? Uint8Array.from( [] ) : fromHex( "00".repeat( Math.ceil( this.nInitialZeroes / 8 ) ) ),
             nZeroesAsEndPadding: 
                 this._nInitialZeroes % 8 === 0 ? 
                 0 : 
@@ -661,8 +661,4 @@ export class BitStreamIterator
         );
     }
 
-}
-
-function Uint8ArrayfromHex(arg0: string, arg1: string): Uint8Array {
-    throw new Error("Function not implemented.");
 }

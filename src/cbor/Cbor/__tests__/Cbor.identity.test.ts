@@ -1,4 +1,5 @@
 import { Cbor } from "..";
+import { fromUtf8 } from "../../../uint8Array";
 import { CborObj, cborObjFromRaw } from "../../CborObj";
 
 
@@ -77,13 +78,13 @@ describe( "Cbor.parse( Cbor.encode( cObj ) ) === cObj", () => {
 
         identityTestFor(
             cborObjFromRaw({
-                bytes: Buffer.from( [] )
+                bytes: new Uint8Array(0)
             })
         );
 
         identityTestFor(
             cborObjFromRaw({
-                bytes: Buffer.from( "major type different but still utf8" )
+                bytes: fromUtf8( "major type different but still utf8" )
             })
         );
 

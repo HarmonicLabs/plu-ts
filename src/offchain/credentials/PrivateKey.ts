@@ -9,7 +9,7 @@ export class PrivateKey extends Hash32
     derivePublicKey(): PublicKey
     {
         return new PublicKey(
-            Uint8Array.from(
+            new Uint8Array(
                 deriveEd25519PublicKey(
                     Array.from( this.asBytes ) as byte[]
                 )

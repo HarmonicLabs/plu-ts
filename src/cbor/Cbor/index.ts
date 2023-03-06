@@ -13,7 +13,7 @@ import { CborSimple } from "../CborObj/CborSimple";
 import { CborUInt } from "../CborObj/CborUInt";
 import { CborNegInt } from "../CborObj/CborNegInt";
 import { PlutsCborParseError } from "../../errors/PlutsSerialError/PlutsCborError/PlutsCborParseError";
-import { fromUtf8, isUint8Array, readBigUInt64BE, readUInt16BE, readUInt32BE, readUInt8, toUtf8, writeBigUInt64BE, writeFloat64BE, writeUInt16BE, writeUInt32BE, writeUInt8 } from "../../uint8Array";
+import { fromHex, fromUtf8, isUint8Array, readBigUInt64BE, readFloat32BE, readFloat64BE, readUInt16BE, readUInt32BE, readUInt8, toUtf8, writeBigUInt64BE, writeFloat64BE, writeUInt16BE, writeUInt32BE, writeUInt8 } from "../../uint8Array";
 
 /**
  * @private to the module; not needed elsewhere
@@ -346,15 +346,16 @@ export class Cbor
         return new CborString( encoded.bytes );
     }
 
-    public static parse( cbor: CborString | Uint8Array ): CborObj
+    public static parse( cbor: CborString | Uint8Array | string ): CborObj
     {
+        if( typeof cbor === "string" ) cbor = fromHex( cbor )
         JsRuntime.assert(
             isUint8Array( cbor ) || CborString.isStrictInstance( cbor ),
             "in 'Cbor.parse' expected an instance of 'CborString' or a 'Uint8Array' as input; got: " + cbor
         );
         
         const bytes: Uint8Array = cbor instanceof CborString ?
-            cbor.asBytes :
+            cbor.toBuffer() :
             cbor;
 
         /**

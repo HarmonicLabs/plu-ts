@@ -1,5 +1,6 @@
 import { ByteString } from "../../../../types/HexString/ByteString";
 import { Pair } from "../../../../types/structs/Pair";
+import { fromAscii, fromHex } from "../../../../uint8Array";
 import { evalScript } from "../../../CEK";
 import { PType } from "../../PType";
 import { Term } from "../../Term";
@@ -124,22 +125,22 @@ describe("pappArgToTerm", () => {
 
         expectScriptToEq(
             pappArgBs( "hello" ), // from ascii
-            pByteString( Buffer.from( "hello", "ascii" ) )
+            pByteString( fromAscii( "hello" ) )
         );
 
         expectScriptToEq(
             pappArgBs( "deadbeef" ), // from hex
-            pByteString( Buffer.from( "deadbeef", "hex" ) )
+            pByteString( fromHex( "deadbeef" ) )
         );
 
         expectScriptToEq(
-            pappArgBs( Buffer.from( "deadbeef", "ascii" ) ), // from ascii even if it is hex
-            pByteString( Buffer.from( "deadbeef", "ascii" ) )
+            pappArgBs( fromAscii( "deadbeef" ) ), // from ascii even if it is hex
+            pByteString( fromAscii( "deadbeef" ) )
         );
 
         expectScriptToEq(
             pappArgBs( "dead  beef" ), // from ascii because spaces are not hex
-            pByteString( Buffer.from( "dead  beef", "ascii" ) )
+            pByteString( fromAscii( "dead  beef" ) )
         );
 
         expect(
@@ -261,7 +262,7 @@ describe("pappArgToTerm", () => {
                 ["hello","world"] as any,
                 list( bs )
             ),
-            pList( bs )( ["hello","world"].map( str =>  pByteString( Buffer.from( str, "ascii" ) ) ) )
+            pList( bs )( ["hello","world"].map( str =>  pByteString( fromAscii( str ) ) ) )
         );
 
     });

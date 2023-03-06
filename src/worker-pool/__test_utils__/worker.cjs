@@ -37,13 +37,25 @@ if( // isNode
 
     const postMessage = parentPort.postMessage.bind( master );
 
+    const resolve = ( result ) => {
+        postMessage({
+            type: "message",
+            data: result
+        })
+    }
+
+    const reject = ( reason ) => {
+        postMessage({
+            type: "error",
+            data: reason
+        })
+    }
+
     parentPort.on("message", (infos) => {
         workerListener(
             infos,
-            postMessage, 
-            rejectionReason => {
-                master.emit("messageerror",rejectionReason)
-            }
+            resolve, 
+            reject
         )
     });
 }
@@ -53,13 +65,25 @@ else
 
     const postMessage = self.postMessage.bind( master );
 
+    const resolve = ( result ) => {
+        postMessage({
+            type: "message",
+            data: result
+        })
+    }
+
+    const reject = ( reason ) => {
+        postMessage({
+            type: "error",
+            data: reason
+        })
+    }
+
     self.addEventListener("message", evt => {
         workerListener(
-            evt.data,
-            postMessage,
-            rejectionReason => {
-                master.dispatchEvent( "error", rejectionReason )
-            }
+            evt,
+            resolve, 
+            reject
         )
     });
 }

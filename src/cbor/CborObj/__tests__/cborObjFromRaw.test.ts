@@ -1,4 +1,5 @@
 import { cborObjFromRaw } from ".."
+import { fromUtf8 } from "../../../uint8Array";
 import { CborArray } from "../CborArray";
 import { CborBytes } from "../CborBytes";
 import { CborMap } from "../CborMap";
@@ -86,18 +87,18 @@ describe( "cborObjFromRaw", () => {
 
         expect(
             cborObjFromRaw({
-                bytes: Buffer.from( [] )
+                bytes: new Uint8Array(0)
             })
         ).toEqual(
-            new CborBytes( Buffer.from( [] ) )
+            new CborBytes( new Uint8Array(0) )
         );
 
         expect(
             cborObjFromRaw({
-                bytes: Buffer.from( "hello utf8" )
+                bytes: fromUtf8( "hello utf8" )
             })
         ).toEqual(
-            new CborBytes( Buffer.from( "hello utf8" ) )
+            new CborBytes( fromUtf8( "hello utf8" ) )
         );
         
     })

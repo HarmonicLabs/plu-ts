@@ -1,20 +1,21 @@
 import  { encodeBech32, byte, decodeBech32, isBech32, sha2_512, sha3, blake2b, sha2_256, blake2b_224, blake2b_256 } from "..";
 import blake2 from "blake2";
-import { Tx } from "../.."
+import { Tx } from "../../offchain/tx"
+import * as uint8Array from "../../uint8Array";
 
 function textToBytes( text: string ): byte[]
 {
-    return Array.from<byte>( Buffer.from( text , "utf8" ) as any );
+    return Array.from<byte>( uint8Array.fromUtf8( text ) as any );
 }
 
 function hexToBytes( hex: string ): byte[]
 {
-    return Array.from<byte>( Buffer.from( hex , "hex" ) as any );
+    return Array.from<byte>( uint8Array.fromHex( hex ) as any );
 }
 
 function bytesToHex( bytes: byte[] ): string
 {
-    return Buffer.from( bytes ).toString("hex");
+    return uint8Array.toHex( new Uint8Array( bytes ) );
 }
 
 describe("src/crypto", () => {
@@ -173,7 +174,7 @@ describe("src/crypto", () => {
         function test_eq_224( data: byte[] ): void
         {
             const expected = blake2.createHash('blake2b',{digestLength:28})
-                .update(Buffer.from(data))
+                .update(Buffer.from(data)) // node; this is fine
                 .digest("hex");
             const received = bytesToHex( blake2b_224( data ) );
 
@@ -192,7 +193,7 @@ describe("src/crypto", () => {
         function test_eq_256( data: byte[] ): void
         {
             const expected = blake2.createHash('blake2b',{digestLength:32})
-                .update(Buffer.from(data))
+                .update(Buffer.from(data)) // node; this is fine
                 .digest("hex");
             const received = bytesToHex( blake2b_256( data ) );
 

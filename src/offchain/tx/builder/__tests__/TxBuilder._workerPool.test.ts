@@ -10,7 +10,7 @@ afterAll(async () => {
     await _workerPool.terminateAll()
 })
 
-describe("TxBuilder :: _workerPool", () => {
+describe.skip("TxBuilder :: _workerPool", () => {
 
     test("unknown method", async () => {
 

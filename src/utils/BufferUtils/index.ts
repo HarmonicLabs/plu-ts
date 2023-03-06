@@ -41,7 +41,7 @@ export default class BufferUtils
         return hex.toBuffer();
     }
 
-    static randomBufferOfLength( length: number, mustStartWith: number[] = [] ): Buffer
+    static randomBufferOfLength( length: number, mustStartWith: number[] = [] ): Uint8Array
     {
         length = Math.round( Math.abs( length ) );
 
@@ -52,7 +52,7 @@ export default class BufferUtils
             byteNums.push( Math.round( Math.random() * 255 ) );
         }
 
-        return Buffer.from( byteNums );
+        return new Uint8Array( byteNums );
     }
 
     static lexCompare( a: Buffer, b: Buffer ): Ord

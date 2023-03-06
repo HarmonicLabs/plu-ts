@@ -1,4 +1,5 @@
 import { isRawCborObj } from "..";
+import { fromHex } from "../../../uint8Array";
 
 
 describe( "isRawCborObj", () => {
@@ -79,13 +80,13 @@ describe( "isRawCborObj", () => {
 
         expect(
             isRawCborObj({
-                bytes: Buffer.from( [] )
+                bytes: new Uint8Array(0)
             })
         ).toBe( true );
 
         expect(
             isRawCborObj({
-                bytes: Buffer.from( "deadbeef", "hex" )
+                bytes: fromHex( "deadbeef" )
             })
         ).toBe( true );
 
@@ -97,15 +98,9 @@ describe( "isRawCborObj", () => {
 
         expect(
             isRawCborObj({
-                bytes: new Uint8Array([]) as any
-            })
-        ).toBe( false );
-
-        expect(
-            isRawCborObj({
                 bytes: new Uint8Array([ 1, 2, 3, 4 ]) as any
             })
-        ).toBe( false );
+        ).toBe( true );
 
     })
 

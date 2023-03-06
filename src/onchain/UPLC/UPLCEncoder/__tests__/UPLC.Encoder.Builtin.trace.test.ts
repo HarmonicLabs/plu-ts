@@ -10,6 +10,7 @@ import { Builtin } from "../../UPLCTerms/Builtin";
 import { Force } from "../../UPLCTerms/Force";
 import { UPLCConst } from "../../UPLCTerms/UPLCConst";
 import { ptrace, ptraceIfFalse, pfn, pforce, pdelay, perror, pByteString, pStr, pmakeUnit, data, delayed, unit } from "../../../pluts";
+import { fromUtf8 } from "../../../../uint8Array";
 
 
 describe("serializeBuiltin", () => {
@@ -32,7 +33,7 @@ describe("serializeBuiltin", () => {
                 "1" + "0010" + "0", // const type string
                 "0000001", // pad 7
                 (11).toString(2).padStart( 8, '0' ), // bytestring chunk of length 11 follows
-                new BitStream( Buffer.from( "hello there", "utf-8" ) ,0).toBinStr().asString, // "hello there" in utf8 binary
+                new BitStream( fromUtf8( "hello there" ) , 0 ).toBinStr().asString, // "hello there" in utf8 binary
                 "00000000", // end bytestring
                 "0100", // UPLCConst
                 "1" + "0011" + "0", // const type unit

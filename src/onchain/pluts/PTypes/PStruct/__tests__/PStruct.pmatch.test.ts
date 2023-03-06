@@ -13,6 +13,7 @@ import { perror } from "../../../lib/perror";
 import { TermType, bs, int, unit } from "../../../type_system/types";
 import { pDataB, pDataI, toData } from "../../../lib";
 import { showUPLC } from "../../../../UPLC/UPLCTerm";
+import { fromHex } from "../../../../../uint8Array";
 
 const SingleCtor = pstruct({
     Ctor : {
@@ -360,7 +361,7 @@ describe("pmatch", () => {
                 )
             ).toEqual(
                 Machine.evalSimple(
-                    pByteString( Buffer.from("0161","hex") )
+                    pByteString( fromHex("0161") )
                 )
             )
 
@@ -401,7 +402,7 @@ describe("pmatch", () => {
                 )
             ).toEqual(
                 Machine.evalSimple(
-                    pByteString( Buffer.from("01610262","hex") )
+                    pByteString( fromHex("01610262") )
                 )
             )
 

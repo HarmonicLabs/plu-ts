@@ -3,7 +3,7 @@ import JsRuntime from "../../utils/JsRuntime";
 
 import {Cloneable} from "../interfaces/Cloneable";
 import {HexString} from ".";
-import { fromHex, isUint8Array, toHex } from "../../uint8Array";
+import { fromAscii, fromHex, isUint8Array, toAscii, toHex } from "../../uint8Array";
 
 export class ByteString
     implements Cloneable<ByteString>
@@ -72,12 +72,12 @@ export class ByteString
 
     public static fromAscii( asciiStr: string ): ByteString
     {
-        return new ByteString( Uint8Array.from( asciiStr, "ascii" ) );
+        return new ByteString( fromAscii( asciiStr ) );
     }
 
     public static toAscii( bStr: ByteString ): string
     {
-        return bStr.toBuffer().toString("ascii")
+        return toAscii( bStr.toBuffer() )
     }
 
     public static isValidHexValue( str: string ): boolean

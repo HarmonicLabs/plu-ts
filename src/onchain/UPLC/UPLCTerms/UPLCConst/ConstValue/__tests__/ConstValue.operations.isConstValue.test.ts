@@ -1,8 +1,8 @@
-import { Buffer } from "buffer";
 import { ConstValue, isConstValue, isConstValueList } from ".."
 import { Integer, UInteger } from "../../../../../../types/ints/Integer";
 import { ByteString } from "../../../../../../types/HexString/ByteString";
 import { Pair } from "../../../../../../types/structs/Pair";
+import { fromHex } from "../../../../../../uint8Array";
 
 describe("ConstValue :: isConstValue, simple values", () => {
 
@@ -25,12 +25,12 @@ describe("ConstValue :: isConstValue, simple values", () => {
     it("is true for strict ByteString instances", () => {
 
         expect( isConstValue( new ByteString( "abcd" ) ) ).toBe( true );
-        expect( isConstValue( new ByteString( Buffer.from( "abcd", "hex" ) ) ) ).toBe( true );
+        expect( isConstValue( new ByteString( fromHex( "abcd" ) ) ) ).toBe( true );
 
         class SomeExtendedBS extends ByteString {};
 
         expect( isConstValue( new SomeExtendedBS( "abcd" ) ) ).toBe( false );
-        expect( isConstValue( new SomeExtendedBS( Buffer.from( "abcd", "hex" ) ) ) ).toBe( false );
+        expect( isConstValue( new SomeExtendedBS( fromHex( "abcd" ) ) ) ).toBe( false );
 
     })
 
