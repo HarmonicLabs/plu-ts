@@ -41,6 +41,7 @@ if( // isNode
     }
 
     parentPort.on("message", ( data: TaskHandlerData) => {
+        console.log(data)
         taskHandler(
             data,
             postMessage, 
@@ -82,21 +83,23 @@ async function taskHandler(
     reject: ( reason: any ) => void
 )
 {
+    console.log(`hello ${method}`)
     if( method === "addValues" )
     {
+        console.log("posting value")
+        const result = args.reduce<Value>(
+            (accum, cborHexStr) => Value.add(
+                accum, 
+                Value.fromCbor(
+                    cborHexStr
+                )
+            ),
+            Value.zero
+        ).toCbor().toString();
+        console.log("about to return")
         master.postMessage( 
-            args.reduce(
-                (accum, buff) => Value.add(
-                    accum, 
-                    Value.fromCbor(
-                        Array.from<number>( buff ).map(
-                            n => n.toString(16).padStart(2,'0') 
-                        ).join('')
-                    )
-                ),
-                Value.zero
-            )
-         )
+            result
+        )
     }
     else
     {

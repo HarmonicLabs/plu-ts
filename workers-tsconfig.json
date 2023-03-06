@@ -2,11 +2,10 @@
   "compilerOptions": {
     "skipLibCheck": true,
     "target": "ES2015",          
-    "module": "system",     
+    "module": "ES2015",     
     "allowJs": true,          
     "checkJs": false,       
-    "outDir": "./src/offchain/tx/builder/tsc-out",
-    "outFile": "./src/offchain/tx/builder/tsc-out/buildWorker.js",
+    "outDir": "./tsc-out",
     "rootDir": "./src",       
     "downlevelIteration": true,           
     "strict": false,                      

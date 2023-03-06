@@ -248,6 +248,8 @@ export class WorkerPool
                 workerStates[ freeWorkerIdx ] = WorkerState.idle;
                 return;
             }
+            
+            console.log("got task", task.args)
 
             const myWorker = await _getWorker( freeWorkerIdx );
 
@@ -282,13 +284,15 @@ export class WorkerPool
                 myWorker.addEventListener("messageerror", reject );
             }
 
+            console.log(
+                _workers.map( w => w === myWorker )
+            )
             myWorker.postMessage(
                 {
                     method: task.args.method,
-                    args: task.args.args
-                }, task.args.transfers ?? []
+                    args: []
+                }
             );
-
         }
 
         Object.defineProperty(
