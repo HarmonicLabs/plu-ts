@@ -65,8 +65,6 @@ async function getWorkerCtor(): Promise<typeof Worker>
                                     const event = {
                                         ...evt,
                                         type: evt.type,
-                                        target: self,
-                                        currentTarget: self,
                                     };
                                     Object.setPrototypeOf( event, Event.prototype );
 
@@ -106,15 +104,11 @@ async function getWorkerCtor(): Promise<typeof Worker>
                     );
 
                     // auto add listeners
-                    self.on('message', (data =>
+                    self.on('message', (response =>
                         {
-                            const event = new Event(data.type ?? 'message');
-                            Object.defineProperty(
-                                event, "data", {
-                                    value: data.data,
-                                    enumerable: true
-                                }
-                            )
+                            console.log("self.on(message) response:", response)
+                            const event = new Event(response.type ?? 'message');
+                            (event as any).data = response.data;
                             self.dispatchEvent(event);
                         }) as EventCallBack
                     );
@@ -249,18 +243,23 @@ export class WorkerPool
                 return;
             }
             
-            console.log("got task", task.args)
-
             const myWorker = await _getWorker( freeWorkerIdx );
 
-            function resolve( data : any )
+            function resolve(response: any )
             {
                 cleanListeners();
 
                 // trigger next promise with this same worker
                 _next( freeWorkerIdx );
 
-                task?.resolver.resolve( data );
+                response = {
+                    isTrusted: response.isTrusted,
+                    data: response.data,
+                    type: response.type,
+                }
+
+                console.log( "resolving with", response.data )
+                task?.resolver.resolve( response.data );
             }
 
             function reject( reason: any )
@@ -284,9 +283,6 @@ export class WorkerPool
                 myWorker.addEventListener("messageerror", reject );
             }
 
-            console.log(
-                _workers.map( w => w === myWorker )
-            )
             myWorker.postMessage(
                 {
                     method: task.args.method,

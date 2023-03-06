@@ -31,7 +31,7 @@ export class ByteString
         }
 
         JsRuntime.assert(
-            Buffer.isBuffer( bs ),
+            Buffer.isBuffer( bs ) || Boolean(void console.log( bs )),
             "invalid Buffer input while constructing a ByteString"
         );
 
@@ -48,7 +48,7 @@ export class ByteString
 
     toString(): string
     {
-        return this.asString;
+        return this._bytes.toString("hex");
     }
 
     /**

@@ -1,8 +1,8 @@
 {
   "compilerOptions": {
     "skipLibCheck": true,
-    "target": "ES2015",          
-    "module": "ES2015",     
+    "target": "ES5",          
+    "module": "CommonJS",     
     "allowJs": true,          
     "checkJs": false,       
     "outDir": "./tsc-out",

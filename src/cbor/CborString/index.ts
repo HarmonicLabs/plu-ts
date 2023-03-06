@@ -39,6 +39,6 @@ export type CanBeCborString = string | Buffer | ByteString;
 export function forceCborString( cStr: CanBeCborString ): CborString
 {
     return new CborString(
-        cStr instanceof ByteString ? cStr.asBytes : cStr
+        cStr instanceof ByteString ? cStr.toBuffer() : cStr
     )
 }

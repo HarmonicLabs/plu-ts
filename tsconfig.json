@@ -72,6 +72,7 @@
     "**/__tests__/**/*",
     "**/*.test.ts",
     "jest_cache",
+    "tsc-out",
     "src/offchain/tx/builder/buildWorker.ts"
   ],
   "tsc-alias": {

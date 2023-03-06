@@ -25,29 +25,39 @@ if( // isNode
     process.versions.node != null
 )
 {
-    const { parentPort } = require('node:worker_threads');
-    
-    master = parentPort;
+    (async () => {
 
-    const postMessage = parentPort.postMessage.bind( master );
+        const { parentPort } = await import('node:worker_threads');
+        
+        master = parentPort as any;
 
-    function rejectNode( reason: any )
-    {
-        postMessage({
-            isTrusted: true,
-            data: reason,
-            type: "error"
-        })
-    }
+        const postMessage = (parentPort as any).postMessage.bind( master );
 
-    parentPort.on("message", ( data: TaskHandlerData) => {
-        console.log(data)
-        taskHandler(
-            data,
-            postMessage, 
-            rejectNode
-        )
-    });
+        const rejectNode = ( reason: any ) =>
+        {
+            postMessage({
+                data: reason,
+                type: "error"
+            })
+        }
+
+        const resolveNode = ( data: any, transfers?: Transferable[] ) => 
+        {
+            postMessage.call( master,{
+                data: data,
+                type: "message"
+            });
+        }
+
+        (parentPort as any).on("message", ( data: TaskHandlerData) => {
+            console.log("received from master:", data)
+            taskHandler(
+                data,
+                resolveNode, 
+                rejectNode
+            )
+        });
+    })()
 }
 else
 {
@@ -56,7 +66,7 @@ else
     const postMessage = ( data: any, transfers?: Transferable[] ) => 
         self.postMessage.bind( master )( data, "*", transfers );
 
-    function rejectWeb( reason: any )
+    const rejectWeb = ( reason: any ) =>
     {
         if( !(reason instanceof Event ) )
         {
@@ -79,14 +89,13 @@ else
 
 async function taskHandler(
     { method, args }: TaskHandlerData, 
-    postMessage: (message: any, transfer?: Transferable[] | undefined) => void,
+    resolve: (message: any, transfer?: Transferable[] | undefined) => void,
     reject: ( reason: any ) => void
 )
 {
-    console.log(`hello ${method}`)
+    console.log(`running ${method}...`)
     if( method === "addValues" )
     {
-        console.log("posting value")
         const result = args.reduce<Value>(
             (accum, cborHexStr) => Value.add(
                 accum, 
@@ -95,10 +104,11 @@ async function taskHandler(
                 )
             ),
             Value.zero
-        ).toCbor().toString();
-        console.log("about to return")
-        master.postMessage( 
-            result
+        );
+
+        console.log( result )
+        resolve( 
+            result.toCbor().toString()
         )
     }
     else

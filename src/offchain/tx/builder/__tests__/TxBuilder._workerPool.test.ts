@@ -30,9 +30,8 @@ describe("TxBuilder :: _workerPool", () => {
 
     describe("addValues", () => {
 
-        test("add two", async () => {
+        test.only("add two", async () => {
 
-            console.log("hello")
             const cborValues = [
                 Value.lovelaces( 2000000 ),
                 new Value([
@@ -45,13 +44,22 @@ describe("TxBuilder :: _workerPool", () => {
                     }
                 ])
             ].map( v => v.toCbor().toString() )
-            console.log(cborValues)
-            const result = Value.fromCbor(
-                await _workerPool.run({
-                    method: "addValues",
-                    args: cborValues
-                })
-            );
+            const wresult = await _workerPool.run({
+                method: "addValues",
+                args: cborValues
+            });
+
+            console.log("worker result",wresult)
+            
+            const result = Value.fromCbor( wresult.data );
+
+            console.log(
+                JSON.stringify(
+                    result.toJson(),
+                    undefined,
+                    2
+                )
+            )
 
         })
     })
