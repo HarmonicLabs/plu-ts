@@ -23,3 +23,8 @@ export function lexCompare( a: Uint8Array, b: Uint8Array ): Ord
 
     return Ord.EQ;
 }
+
+export function uint8ArrayEq( a: Uint8Array, b: Uint8Array )
+{
+    return a.length === b.length && a.every( (n,i) => n === b[i] );
+}

@@ -1,6 +1,5 @@
 import JsRuntime from "../../utils/JsRuntime";
 import ObjectUtils from "../../utils/ObjectUtils";
-import BufferUtils from "../../utils/BufferUtils";
 
 import { blake2b_224, byte } from "../../crypto";
 import { ScriptJsonFormat } from "../../onchain/pluts/Script";

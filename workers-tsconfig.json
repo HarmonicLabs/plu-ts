@@ -2,7 +2,7 @@
   "compilerOptions": {
     "skipLibCheck": true,
     "target": "ES5",          
-    "module": "CommonJS",     
+    "module": "commonjs",     
     "allowJs": true,          
     "checkJs": false,       
     "outDir": "./tsc-out",

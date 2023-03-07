@@ -1,6 +1,5 @@
 import JsRuntime from "../../../utils/JsRuntime";
 import ObjectUtils from "../../../utils/ObjectUtils";
-import BufferUtils from "../../../utils/BufferUtils";
 
 import type { NetworkT } from "../../ledger/Network";
 import { costModelsToLanguageViewCbor, defaultV1Costs, defaultV2Costs, isCostModelsV1, isCostModelsV2 } from "../../ledger/CostModels";

@@ -1,4 +1,3 @@
-import BufferUtils, { Ord } from "../../../utils/BufferUtils";
 import JsRuntime from "../../../utils/JsRuntime";
 import ObjectUtils from "../../../utils/ObjectUtils";
 
@@ -24,7 +23,7 @@ import { CborArray } from "../../../cbor/CborObj/CborArray";
 import { ByteString } from "../../../types/HexString/ByteString";
 import { IValueAssets } from "./IValue";
 import { hex } from "../../../types/HexString";
-import { fromAscii, isUint8Array, lexCompare, toAscii, toHex } from "../../../uint8Array";
+import { Ord, fromAscii, isUint8Array, lexCompare, toAscii, toHex } from "../../../uint8Array";
 
 export class Value
     implements ToCbor, Cloneable<Value>, ToData, ToJson

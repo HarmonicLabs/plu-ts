@@ -10,7 +10,7 @@ afterAll(async () => {
     await _workerPool.terminateAll()
 })
 
-describe.skip("TxBuilder :: _workerPool", () => {
+describe("TxBuilder :: _workerPool", () => {
 
     test("unknown method", async () => {
 
@@ -51,7 +51,7 @@ describe.skip("TxBuilder :: _workerPool", () => {
 
             console.log("worker result",wresult)
             
-            const result = Value.fromCbor( wresult.data );
+            const result = Value.fromCbor( wresult );
 
             console.log(
                 JSON.stringify(

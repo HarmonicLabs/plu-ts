@@ -1,4 +1,3 @@
-import BufferUtils from "../../../../../utils/BufferUtils";
 import JsRuntime from "../../../../../utils/JsRuntime";
 
 import { ByteString } from "../../../../../types/HexString/ByteString";
@@ -6,6 +5,7 @@ import { Integer } from "../../../../../types/ints/Integer";
 import { Pair } from "../../../../../types/structs/Pair";
 import { Data, eqData, isData } from "../../../../../types/Data/Data";
 import { ConstType, constTypeEq, constT, constTypeToStirng, ConstTyTag, isWellFormedConstType, constListTypeUtils, constPairTypeUtils } from "../ConstType";
+import { uint8ArrayEq } from "../../../../../uint8Array";
 
 
 export type ConstValueList
@@ -57,7 +57,7 @@ export function eqConstValue( a: ConstValue, b: ConstValue ): boolean
     );
     if( a instanceof ByteString ) return (
         b instanceof ByteString &&
-        BufferUtils.eq( a.asBytes, b.asBytes )
+        uint8ArrayEq( a.toBuffer(), b.toBuffer() )
     );
     if( typeof a === "string" ) return (
         typeof b === "string" &&

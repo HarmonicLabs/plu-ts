@@ -1,6 +1,5 @@
 import ObjectUtils from "../../utils/ObjectUtils";
 import JsRuntime from "../../utils/JsRuntime";
-import BufferUtils from "../../utils/BufferUtils";
 
 import { Cbor } from "../../cbor/Cbor";
 import { CborObj } from "../../cbor/CborObj";
@@ -34,7 +33,7 @@ export class Hash
                 "__bytes",
                 fromHex( this._str )
             );
-            return BufferUtils.copy( (this as any).__bytes );
+            return (this as any).__bytes.slice();
         }
         if( !isUint8Array( result ) )
         {

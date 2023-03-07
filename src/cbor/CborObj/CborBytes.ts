@@ -1,5 +1,4 @@
 import { isUint8Array } from "../../uint8Array/isUint8Array";
-import BufferUtils from "../../utils/BufferUtils";
 import JsRuntime from "../../utils/JsRuntime";
 import { ToRawObj } from "./interfaces/ToRawObj";
 
