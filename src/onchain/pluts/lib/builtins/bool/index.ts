@@ -5,7 +5,7 @@ import { Term } from "../../../Term";
 import { TermType, ToPType, tyVar, fn, bool, delayed, lam } from "../../../type_system";
 import { UtilityTermOf } from "../../addUtilityForType";
 import { papp } from "../../papp";
-import { PappArg } from "../../pappArg";
+import { PappArg, pappArgToTerm } from "../../pappArg";
 import { pdelay } from "../../pdelay";
 import { pfn } from "../../pfn";
 import { pforce } from "../../pforce";
@@ -98,19 +98,19 @@ export function pif<ReturnT extends TermType>( returnType: ReturnT | undefined =
                 _lambdaIfThen,
                 "$",
                 //@ts-ignore
-                ( caseTrue: Term<ToPType<ReturnT>> ): TermFn<[ ToPType<ReturnT> ],ToPType<ReturnT>> => (() => {
+                ( caseTrue: PappArg<ToPType<ReturnT>> ): TermFn<[ ToPType<ReturnT> ],ToPType<ReturnT>> => (() => {
                     /*
                     [
                         [ (builtin ifThenElse) condition ]
                         (delay case true)
                     ]
                     */
-                    const _lambdaIfThenElse = papp( _lambdaIfThen, pdelay( caseTrue ) as any );
+                    const _lambdaIfThenElse = papp( _lambdaIfThen, pdelay( pappArgToTerm( caseTrue, returnT ) ) as any );
 
                     const _lambdaIfThenElseApp = ObjectUtils.defineReadOnlyProperty(
                         _lambdaIfThenElse,
                         "$",
-                        ( caseFalse: Term<ToPType<ReturnT>> ): Term< ToPType<ReturnT>> =>
+                        ( caseFalse: PappArg<ToPType<ReturnT>> ): Term< ToPType<ReturnT>> =>
                             /*
                             (force [
                                 [
@@ -120,7 +120,7 @@ export function pif<ReturnT extends TermType>( returnType: ReturnT | undefined =
                                 (delay caseFalse)
                             ])
                             */
-                            pforce( papp( _lambdaIfThenElse, pdelay( caseFalse ) as any ) as any ) as any
+                            pforce( papp( _lambdaIfThenElse, pdelay( pappArgToTerm( caseFalse, returnT ) ) as any ) as any ) as any
                     );
                     
                     // @ts-ingore Type instantiation is excessively deep and possibly infinite.

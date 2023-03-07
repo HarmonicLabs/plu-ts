@@ -6,7 +6,7 @@ import { CborArray } from "../../cbor/CborObj/CborArray";
 import { CborBytes } from "../../cbor/CborObj/CborBytes";
 import { CborMap, CborMapEntry } from "../../cbor/CborObj/CborMap";
 import { CborUInt } from "../../cbor/CborObj/CborUInt";
-import { CborString } from "../../cbor/CborString";
+import { CanBeCborString, CborString, forceCborString } from "../../cbor/CborString";
 import { BasePlutsError } from "../../errors/BasePlutsError";
 import { canBeUInteger, CanBeUInteger, forceBigUInt, forceUInteger } from "../../types/ints/Integer";
 
@@ -472,6 +472,10 @@ export function costModelsToCborObj( costmdls: CostModels ): CborMap
     ].filter( elem => elem !== undefined ) as CborMapEntry[])
 }
 
+export function costModelsFromCbor( cStr: CanBeCborString ): CostModels
+{
+    return costModelsFromCborObj( Cbor.parse( forceCborString( cStr ) ) );
+}
 export function costModelsFromCborObj( cObj: CborObj | undefined ): CostModels
 {
     if( cObj === undefined || !( cObj instanceof CborMap )) return {};
@@ -796,7 +800,7 @@ export function toCostModelV2( v2: AnyV2CostModel ): CostModelPlutusV2
     
     for( let i = 0; i < costModelV2Keys.length; i++ )
     {
-        val = forceUInteger( v2[i] ).asBigInt;
+        val = forceBigUInt( v2[i] );
         if(  val === undefined )
         {
             throw new BasePlutsError(
@@ -804,7 +808,7 @@ export function toCostModelV2( v2: AnyV2CostModel ): CostModelPlutusV2
             );
         }
 
-        ObjectUtils.defineReadOnlyProperty(
+        ObjectUtils.defineNormalProperty(
             result,
             costModelV2Keys[i],
             val

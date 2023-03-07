@@ -32,18 +32,15 @@ import { DelayCEK } from "../DelayCEK";
 import { LambdaCEK } from "../LambdaCEK";
 import { ExBudget } from "./ExBudget";
 import { costModelV2ToMachineCosts } from "./MachineCosts";
+import { ScriptType } from "../../../offchain";
 
 
-export type MachineVersionV1 = PlutusScriptVersion.V1;
-export type MachineVersionV2 = PlutusScriptVersion.V2;
+export type MachineVersionV1 = ScriptType.PlutusV1;
+export type MachineVersionV2 = ScriptType.PlutusV2;
 
-export const machineVersionV1 = PlutusScriptVersion.V1 as const;
-export const machineVersionV2 = PlutusScriptVersion.V2 as const;
+export const machineVersionV1 = ScriptType.PlutusV1 as const;
+export const machineVersionV2 = ScriptType.PlutusV2 as const;
 
-/**
- * @todo
- * TODO: to substitute when modifying offchain
-**/
 export type MachineVersion = MachineVersionV1 | MachineVersionV2
 
 function isMachineVersion( something: any ): something is MachineVersion
@@ -52,8 +49,8 @@ function isMachineVersion( something: any ): something is MachineVersion
 }
 
 type CostModelOf<V extends MachineVersion> =
-    V extends PlutusScriptVersion.V1 ? AnyV1CostModel :    
-    V extends PlutusScriptVersion.V2 ? AnyV2CostModel :
+    V extends ScriptType.PlutusV1 ? AnyV1CostModel :    
+    V extends ScriptType.PlutusV2 ? AnyV2CostModel :
     never    
 
 export class Machine<V extends MachineVersion = MachineVersion>
@@ -80,7 +77,7 @@ export class Machine<V extends MachineVersion = MachineVersion>
     {
         return (
             new Machine(
-                PlutusScriptVersion.V2,
+                ScriptType.PlutusV2,
                 defaultV2Costs
             )
         ).eval( _term ).result;
@@ -90,7 +87,7 @@ export class Machine<V extends MachineVersion = MachineVersion>
     {
         return (
             new Machine(
-                PlutusScriptVersion.V2,
+                ScriptType.PlutusV2,
                 defaultV2Costs
             )
         ).eval( _term );

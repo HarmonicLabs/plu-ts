@@ -157,8 +157,18 @@ export interface WorkerCallArgs {
 
 export class WorkerPool
 {
-    run!: ( args: WorkerCallArgs ) => Promise<any>
+    run!: ( args: WorkerCallArgs, tryWorkerIndex?: number ) => Promise<any>
     terminateAll!: () => Promise<void>
+    /**
+     * ensures that at least `n` workers are setted up and ready to be used
+     */
+    prepareNWorkers!: ( n:number ) => Promise<void>
+
+    /**
+     * #### getter
+     * @returns number of workers actually created
+     */
+    readonly nWorkers!: number
 
     constructor( workerFile: string | URL, options?: WorkerOptions, _maxWorkers?: number )
     {
@@ -175,6 +185,24 @@ export class WorkerPool
         const _workers: (Worker | undefined)[] = new Array( maxWorkers ).fill( 0 ).map( _=> (void 0) );
         const workerStates: WorkerState[] = new Array( maxWorkers ).fill( WorkerState.idle );
 
+        Object.defineProperty(
+            this, "nWorkers",
+            {
+                get: () => {
+                    let n = 0;
+                    const len = _workers.length;
+                    for(let i = 0; i < len; i++)
+                    {
+                        if( _workers[i] !== undefined ) n++;
+                    }
+                    return n;
+                },
+                set: () => {},
+                enumerable: true,
+                configurable: false
+            }
+        )
+
         /**
          * @param idx index assumed to be in bound `0 <= idx <= maxWorkers`
          * @returns worker at that index
@@ -188,6 +216,31 @@ export class WorkerPool
             }
             return myWorker;
         }
+
+        async function prepareNWorkers( _n: number ): Promise<void>
+        {
+            let n = typeof _n === "number" && Number.isSafeInteger( _n ) ?
+                Math.max( 1, Math.min( maxWorkers, _n ) ) :
+                Math.round(defaultMaxWorkers / 2);
+
+            for( let i = 0; i < _workers.length && n > 0; i++ )
+            {
+                if( workerStates[i] === WorkerState.idle )
+                {
+                    await _getWorker(i);
+                    n--;
+                }
+            }
+        }
+        Object.defineProperty(
+            this, "prepareNWorkers",
+            {
+                value: prepareNWorkers,
+                writable: false,
+                enumerable: true,
+                configurable: false
+            }
+        );
 
         const tasks: Queque<{
             resolver: DeferredPromise<any>,
@@ -260,7 +313,7 @@ export class WorkerPool
                 workerStates[ freeWorkerIdx ] = WorkerState.idle;
 
                 cleanListeners();
-                
+
                 task?.resolver.reject( reason.data );
             }
 
@@ -285,12 +338,25 @@ export class WorkerPool
 
         Object.defineProperty(
             this, "run", {
-                value: ( args: WorkerCallArgs ): Promise<any> => {
+                value: ( args: WorkerCallArgs, tryWorkerIndex: number | undefined = undefined ): Promise<any> => {
 
                     const resolver = new DeferredPromise();
                     tasks.enqueue({ resolver, args });
 
-                    const freeWorkerIdx =  workerStates.indexOf( WorkerState.idle );
+                    let freeWorkerIdx: number;
+                    
+                    if( typeof tryWorkerIndex === "number" )
+                    {
+                        if( workerStates[ tryWorkerIndex ] === WorkerState.idle )
+                        freeWorkerIdx = tryWorkerIndex;
+                        else
+                        freeWorkerIdx = workerStates.indexOf( WorkerState.idle );
+                    }
+                    else
+                    {
+                        freeWorkerIdx = workerStates.indexOf( WorkerState.idle );
+                    }
+
                     // everything buisy
                     if( freeWorkerIdx < 0 )
                     {

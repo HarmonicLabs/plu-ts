@@ -9,6 +9,7 @@ import { CborUInt } from "../../cbor/CborObj/CborUInt";
 import { CborString } from "../../cbor/CborString";
 import { BasePlutsError } from "../../errors/BasePlutsError";
 import { Hash28 } from "../hashes/Hash28/Hash28";
+import { toHex } from "../../uint8Array";
 
 export type NativeScript
     = ScriptSignature
@@ -137,7 +138,7 @@ export function nativeScriptFromCborObj( cbor: CborObj ): NativeScript
             if( !(f1 instanceof CborBytes) )
             throw notNativeScriptError;
 
-            const pkh = f1.buffer.toString("hex");
+            const pkh = toHex( f1.buffer );
 
             return {
                 type: "sig",

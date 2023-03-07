@@ -8,7 +8,10 @@ import { Machine } from "../../../onchain/CEK/Machine";
 import { UPLCConst } from "../../../onchain/UPLC/UPLCTerms/UPLCConst";
 import { Term } from "../../../onchain/pluts/Term";
 import { dataFromCbor, dataFromCborObj } from "../fromCbor";
-import { PData, PStruct, typeExtends, struct, data } from "../../../onchain";
+import { PData } from "../../../onchain/pluts/PTypes/PData/PData";
+import { PStruct } from "../../../onchain/pluts/PTypes/PStruct/pstruct";
+import { data } from "../../../onchain/pluts/type_system/types";
+import { typeExtends } from "../../../onchain/pluts/type_system/typeExtends";
 
 export type CanBeData = Data | Term<PData> | Term<PStruct<any>> | CborObj | CborString
 

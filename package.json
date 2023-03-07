@@ -14,7 +14,7 @@
     "test-watch": "jest --watchman",
     "test-coverage": "jest --coverage",
     "pre-build": "tsc -p ./workers-tsconfig.json && tsc-alias -p ./workers-tsconfig.json && rollup --config rollup.config.js",
-    "build": "bpm run pre-build && tsc --project ./tsconfig.json && tsc-alias -p ./tsconfig.json",
+    "build": "npm run pre-build && tsc --project ./tsconfig.json && tsc-alias -p ./tsconfig.json",
     "start": "npm-run-all --parallel build:watch run:watch"
   },
   "publishConfig": {
@@ -51,8 +51,6 @@
     "@babel/preset-env": "^7.18.6",
     "@babel/preset-typescript": "^7.18.6",
     "@rollup/plugin-commonjs": "^24.0.1",
-    "@rollup/plugin-node-resolve": "^15.0.1",
-    "@rollup/plugin-replace": "^5.0.2",
     "@rollup/plugin-terser": "^0.4.0",
     "@types/blake2": "^4.0.1",
     "@types/jest": "^28.1.4",

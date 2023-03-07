@@ -56,11 +56,11 @@ const succeedScriptAddr = new Address(
     )
 ) 
 
-describe("TxBuilder.build", () => {
+describe("TxBuilder.buildSync", () => {
 
-    test("simple pub key input", async () => {
+    test("simple pub key input", () => {
 
-        const tx = await txBuilder.build({
+        const tx = txBuilder.buildSync({
             inputs: [
                 {
                     utxo: new UTxO({
@@ -84,35 +84,33 @@ describe("TxBuilder.build", () => {
 
     describe("simple spend script", () => {
 
-        test("fails on missing script", async () => {
+        test("fails on missing script", () => {
 
-            let rejected = false;
-
-            await txBuilder.build({
-                inputs: [
-                    {
-                        utxo: new UTxO({
-                            utxoRef: {
-                                id: "ff".repeat(32),
-                                index: 0
-                            },
-                            resolved: {
-                                address: succeedScriptAddr,
-                                value: Value.lovelaces( 10_000_000 )
-                            }
-                        })
-                    }
-                ],
-                changeAddress: pkAddr
-            }).catch( _ => rejected = true )
-
-            expect( rejected ).toBe( true );
+            expect(
+                () => txBuilder.buildSync({
+                    inputs: [
+                        {
+                            utxo: new UTxO({
+                                utxoRef: {
+                                    id: "ff".repeat(32),
+                                    index: 0
+                                },
+                                resolved: {
+                                    address: succeedScriptAddr,
+                                    value: Value.lovelaces( 10_000_000 )
+                                }
+                            })
+                        }
+                    ],
+                    changeAddress: pkAddr
+                })
+            ).toThrow()
     
         });
 
-        test("script included in transaction", async () => {
+        test("script included in transaction", () => {
 
-            const tx = await txBuilder.build({
+            const tx = txBuilder.buildSync({
                 inputs: [
                     {
                         utxo: new UTxO({
@@ -138,9 +136,9 @@ describe("TxBuilder.build", () => {
 
         });
 
-        test("script included in transaction as reference script", async () => {
+        test("script included in transaction as reference script", () => {
 
-            const tx = await txBuilder.build({
+            const tx = txBuilder.buildSync({
                 inputs: [
                     {
                         utxo: new UTxO({
@@ -176,74 +174,71 @@ describe("TxBuilder.build", () => {
 
         });
 
-        test("inline datum specified but none present", async () => {
+        test("inline datum specified but none present", () => {
 
-            let rejected = false;
             // script in transaciton
-            await txBuilder.build({
-                inputs: [
-                    {
-                        utxo: new UTxO({
-                            utxoRef: {
-                                id: "ff".repeat(32),
-                                index: 0
-                            },
-                            resolved: {
-                                address: succeedScriptAddr,
-                                value: Value.lovelaces( 10_000_000 ),
-                                // datum: new DataConstr( 0, [] )
-                            }
-                        }),
-                        inputScript: {
-                            script: succeedScript,
-                            datum: "inline",
-                            redeemer: new DataConstr( 0, [] )
-                        }
-                    }
-                ],
-                changeAddress: pkAddr
-            }).catch( _ => rejected = true )
-
-            expect( rejected ).toBe( true );
-
-            rejected = false;
-
-            // reference script
-            await txBuilder.build({
-                inputs: [
-                    {
-                        utxo: new UTxO({
-                            utxoRef: {
-                                id: "ff".repeat(32),
-                                index: 0
-                            },
-                            resolved: {
-                                address: succeedScriptAddr,
-                                value: Value.lovelaces( 10_000_000 ),
-                                // datum: new DataConstr( 0, [] )
-                            }
-                        }),
-                        referenceScriptV2: {
-                            datum: "inline",
-                            redeemer: new DataConstr( 0, [] ),
-                            refUtxo: new UTxO({
+            expect( () => 
+                txBuilder.buildSync({
+                    inputs: [
+                        {
+                            utxo: new UTxO({
                                 utxoRef: {
                                     id: "ff".repeat(32),
                                     index: 0
                                 },
                                 resolved: {
-                                    address: pkAddr,                // doesn't matter
-                                    value: Value.lovelaces( 0 ),   // doesn't matter
-                                    refScript: succeedScript
+                                    address: succeedScriptAddr,
+                                    value: Value.lovelaces( 10_000_000 ),
+                                    // datum: new DataConstr( 0, [] )
                                 }
-                            })
+                            }),
+                            inputScript: {
+                                script: succeedScript,
+                                datum: "inline",
+                                redeemer: new DataConstr( 0, [] )
+                            }
                         }
-                    }
-                ],
-                changeAddress: pkAddr
-            }).catch( _ => rejected = true )
+                    ],
+                    changeAddress: pkAddr
+                })
+            ).toThrow()
 
-            expect( rejected ).toBe( true );
+            // reference script
+            expect( () => 
+                txBuilder.buildSync({
+                    inputs: [
+                        {
+                            utxo: new UTxO({
+                                utxoRef: {
+                                    id: "ff".repeat(32),
+                                    index: 0
+                                },
+                                resolved: {
+                                    address: succeedScriptAddr,
+                                    value: Value.lovelaces( 10_000_000 ),
+                                    // datum: new DataConstr( 0, [] )
+                                }
+                            }),
+                            referenceScriptV2: {
+                                datum: "inline",
+                                redeemer: new DataConstr( 0, [] ),
+                                refUtxo: new UTxO({
+                                    utxoRef: {
+                                        id: "ff".repeat(32),
+                                        index: 0
+                                    },
+                                    resolved: {
+                                        address: pkAddr,                // doesn't matter
+                                        value: Value.lovelaces( 0 ),   // doesn't matter
+                                        refScript: succeedScript
+                                    }
+                                })
+                            }
+                        }
+                    ],
+                    changeAddress: pkAddr
+                })
+            ).toThrow()
 
         });
 
