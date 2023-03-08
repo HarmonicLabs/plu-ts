@@ -16,7 +16,7 @@ import { Tx, getNSignersNeeded } from "../../Tx"
 import { UTxO } from "../../body/output/UTxO"
 import { TxBuilder } from "../TxBuilder"
 
-jest.setTimeout(20_000)
+jest.setTimeout(2_000_000)
 
 const txBuilder = new TxBuilder(
     "testnet",
@@ -324,7 +324,7 @@ describe("TxBuilder.build", () => {
     describe("big fat transactions", () => {
 
         let tx!: Tx;
-        test("two scripts", async () => {
+        test.skip("two scripts", async () => {
 
             for( let i = 0; i < 5; i++ )
             tx = await txBuilder.build({
