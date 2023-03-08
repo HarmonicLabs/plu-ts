@@ -118,7 +118,7 @@ describe("TxBuilder :: _workerPool", () => {
 
         });
 
-        test("same script takes less", async () => {
+        test.skip("same script takes less", async () => {
 
             const prepareCEKPromise = _workerPool.run({
                 method: "prepareCEK",

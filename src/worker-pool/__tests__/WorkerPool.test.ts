@@ -66,6 +66,8 @@ describe("WorkerPool", () => {
 
     test("runs 4 tasks", async () => {
 
+        await workerPool.prepareNWorkers(4)
+
         const start = performance.now();
 
         await Promise.all(

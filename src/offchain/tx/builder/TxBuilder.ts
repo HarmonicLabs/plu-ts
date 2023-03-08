@@ -332,7 +332,7 @@ export class TxBuilder
                                     })
                                     .catch( error => {
     
-                                        if( error.code === 0 ) // missing CEK machine
+                                        if( typeof error === "object" && error !== null && error.code === 0 ) // missing CEK machine
                                         {
                                             return _workerPool.run({
                                                 method: "prepareCEK",
