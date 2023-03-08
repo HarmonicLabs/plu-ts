@@ -1,11 +1,9 @@
 import { Cbor } from "../../../../cbor/Cbor"
 import { CborBytes } from "../../../../cbor/CborObj/CborBytes"
-import { PScriptContext, PlutusScriptVersion, V2, bool, data, int, lam, list, makeRedeemerValidator, makeValidator, pfn, pif, pmakeUnit, precursive, unit } from "../../../../onchain"
-import { showUPLC } from "../../../../onchain/UPLC/UPLCTerm"
+import { PScriptContext, V2, bool, data, int, lam, list, makeRedeemerValidator, makeValidator, pfn, pif, pmakeUnit, precursive, unit } from "../../../../onchain"
 import { compile } from "../../../../onchain/pluts/Script/compile"
 import { DataI, DataList } from "../../../../types/Data"
 import { DataConstr } from "../../../../types/Data/DataConstr"
-import { WorkerPool } from "../../../../worker-pool/WorkerPool"
 import { PaymentCredentials } from "../../../credentials/PaymentCredentials"
 import { PubKeyHash } from "../../../credentials/PubKeyHash"
 import { Address } from "../../../ledger/Address"
@@ -20,8 +18,7 @@ jest.setTimeout(2_000_000)
 
 const txBuilder = new TxBuilder(
     "testnet",
-    defaultProtocolParameters,
-    new WorkerPool("./src/offchain/tx/builder/rollup-out/buildWorker.js", undefined, 16 )
+    defaultProtocolParameters
 )
 
 const pkAddr = new Address(
@@ -60,7 +57,7 @@ const succeedScriptAddr = new Address(
         "script",
         succeedScript.hash
     )
-) 
+)
 
 describe("TxBuilder.build", () => {
 
@@ -324,9 +321,9 @@ describe("TxBuilder.build", () => {
     describe("big fat transactions", () => {
 
         let tx!: Tx;
-        test.skip("two scripts", async () => {
+        test("two scripts", async () => {
 
-            for( let i = 0; i < 5; i++ )
+            // for( let i = 0; i < 5; i++ )
             tx = await txBuilder.build({
                 inputs: [
                     {

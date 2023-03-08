@@ -40,7 +40,6 @@ import { CborPositiveRational } from "../../../cbor/extra/CborRational";
 import { TxWitnessSet } from "../TxWitnessSet";
 import { Cbor } from "../../../cbor/Cbor";
 import { CborArray } from "../../../cbor/CborObj/CborArray";
-import { WorkerPool } from "../../../worker-pool/WorkerPool";
 import { isUint8Array, lexCompare, toHex } from "../../../uint8Array";
 
 type ScriptLike = {
@@ -79,7 +78,7 @@ export class TxBuilder
     readonly network!: NetworkT
     readonly protocolParamters!: ProtocolParamters
     
-    constructor( network: NetworkT, protocolParamters: Readonly<ProtocolParamters>, exsistentWorkerPool?: WorkerPool )
+    constructor( network: NetworkT, protocolParamters: Readonly<ProtocolParamters> )
     {
         JsRuntime.assert(
             network === "testnet" ||
@@ -148,356 +147,14 @@ export class TxBuilder
         // --------------------------------  private stuff  -------------------------------- //
         ///////////////////////////////////////////////////////////////////////////////////////
 
-        const _workerPool = exsistentWorkerPool instanceof WorkerPool ? 
-            exsistentWorkerPool : 
-            new WorkerPool("./rollup-out/buildWorker.js", undefined, 16);
-
         ObjectUtils.defineReadOnlyProperty(
             this, "build",
             async (
                 buildArgs: ITxBuildArgs,
-                {
-                    onScriptInvalid,
-                    onScriptResult,
-                    keepWorkersAlive
-                }: ITxBuildOptions = {}
+                buildOpts: ITxBuildOptions = {}
             ): Promise<Tx> => {
 
-                // redirect simple transactions to `buildSync`
-                const nInScripts = buildArgs.inputs
-                    .reduce( (acc, _in) => 
-                        _in.inputScript !== undefined ||
-                        _in.referenceScriptV2 !== undefined ?
-                        acc + 1 : acc, 0 
-                    );
-                if( nInScripts <= 1 )
-                {
-                    let totScripts = nInScripts + (buildArgs.mints?.length ?? 0)
-                    if( totScripts <= 1 )
-                    {
-                        totScripts += buildArgs.certificates
-                            ?.reduce( (acc, cert) => 
-                                cert.script !== undefined ? acc + 1 : acc, 
-                                0 
-                            ) ?? 0;
-                        if( totScripts <= 1 )
-                        {
-                            totScripts += buildArgs.withdrawals
-                                ?.reduce((acc, withdraw) => 
-                                withdraw.script !== undefined ? acc + 1 : acc, 
-                                0 
-                            ) ?? 0;
-                            if( totScripts <= 1 )
-                            {
-                                return this.buildSync( buildArgs, { onScriptInvalid, onScriptResult } )
-                            }
-                        }
-                    }
-                }
-
-                // here starts the fun
-                let {
-                    tx,
-                    scriptsToExec,
-                    minFee,
-                    datumsScriptData,
-                    languageViews,
-                    totInputValue,
-                    requiredOutputValue,
-                    outs
-                } = initTxBuild.bind( this )( buildArgs );
-        
-                const txOuts: TxOut[] = new Array( outs.length + 1 );
-        
-                const rdmrs = tx.witnesses.redeemers ?? [];
-                const nRdmrs = rdmrs.length;
-        
-                if( nRdmrs === 0 ) return tx;
-
-                const cek: Machine = (this as any).cek;
-        
-                if( !(cek instanceof Machine) )
-                throw new BasePlutsError(
-                    "unable to construct transaction including scripts " +
-                    "if the protocol params are missing the script evaluation costs"
-                );
-
-                let prepareCEKsPromise: Promise<void[]> | undefined = undefined;
-                if( _workerPool.nWorkers < nRdmrs ) 
-                {
-                    const costsCbor = getCostsCbor();
-                    prepareCEKsPromise = Promise.all(
-                        (new Array(nRdmrs)).map(
-                            (_, i) => {
-                                const costsCborsCopy = costsCbor.slice();
-
-                                return _workerPool.run({
-                                    method: "prepareCEK",
-                                    args: [ costsCborsCopy ]
-                                }, i)
-                            }
-                        )
-                    );
-                }
-
-                const executionUnitPrices = this.protocolParamters.executionUnitPrices;
-                const [ memRational, cpuRational ] = Array.isArray( executionUnitPrices ) ?
-                    executionUnitPrices :
-                    [
-                        CborPositiveRational.fromNumber( executionUnitPrices.priceSteps  ),
-                        CborPositiveRational.fromNumber( executionUnitPrices.priceMemory )
-                    ];
-
-                const spendScriptsToExec =      scriptsToExec.filter( elem => elem.rdmrTag === TxRedeemerTag.Spend );
-                const mintScriptsToExec =       scriptsToExec.filter( elem => elem.rdmrTag === TxRedeemerTag.Mint );
-                const certScriptsToExec =       scriptsToExec.filter( elem => elem.rdmrTag === TxRedeemerTag.Cert );
-                const withdrawScriptsToExec =   scriptsToExec.filter( elem => elem.rdmrTag === TxRedeemerTag.Withdraw );
-
-                const maxRound = 3;
-
-                let _isScriptValid: boolean = true;
-                let fee = minFee;
-                let prevFee: bigint;
-
-                await prepareCEKsPromise;
-
-                for( let round = 0; round < maxRound; round++ )
-                {
-                    prevFee = fee;
-
-                    const { v1: txInfosV1, v2: txInfosV2 } = getTxInfos( tx );
-
-                    let totExBudget = new ExBudget({ mem: 0, cpu: 0 });
-
-                    const results = await Promise.all(
-                        rdmrs
-                        .map((rdmr, i): Promise<any> => {
-
-                            const { tag, data: rdmrData, index: rdmr_idx } = rdmr;
-                            // "+ 1" because we keep track of lovelaces even if in mint values these are 0
-                            const index = rdmr_idx + (tag === TxRedeemerTag.Mint ? 1 : 0);
-                            const spendingPurpose = rdmr.toSpendingPurposeData( tx.body );
-
-                            const rdmrBytes  = dataToCbor( rdmrData ).toBuffer();
-
-                            if( tag === TxRedeemerTag.Spend )
-                            {
-                                const entry = spendScriptsToExec.find( ({ index: idx }) => idx === index );
-
-                                if( entry === undefined )
-                                throw new BasePlutsError(
-                                    "missing script for spend redeemer " + index
-                                );
-
-                                const { script, datum } = entry;
-
-                                if( datum === undefined )
-                                throw new BasePlutsError(
-                                    "missing datum for spend redeemer " + index
-                                );
-
-                                const datumBytes = dataToCbor( datum ).toBuffer();
-
-                                const ctxData = getCtx(
-                                    script.type,
-                                    spendingPurpose,
-                                    txInfosV1,
-                                    txInfosV2
-                                );
-                                const ctxBytes = dataToCbor( ctxData ).toBuffer();
-
-                                const retry = (): Promise<any> => {
-
-                                    return _workerPool.run({
-                                        method: "evalScript",
-                                        args: [
-                                            {
-                                                hash: script.hash,
-                                                bytes: script.bytes
-                                            },
-                                            [
-                                                datumBytes,
-                                                rdmrBytes,
-                                                ctxBytes
-                                            ]
-                                        ]
-                                    }, i)
-                                    .then( evalResult => {
-    
-                                        // add datum to result for `then`
-                                        evalResult.datum = datum;
-                                        // add ctxData to result for `then`
-                                        evalResult.ctxData = ctxData
-                                        return evalResult;
-                                    })
-                                    .catch( error => {
-    
-                                        if( typeof error === "object" && error !== null && error.code === 0 ) // missing CEK machine
-                                        {
-                                            return _workerPool.run({
-                                                method: "prepareCEK",
-                                                args: [ getCostsCbor().slice() ],
-                                            }, i)
-                                            .then( retry );
-                                        }
-    
-                                        throw error;
-                                    });
-                                };
-
-                                return retry();
-                            }
-                            else 
-                            {
-                                const script = (
-                                    tag === TxRedeemerTag.Mint ? mintScriptsToExec :
-                                    tag === TxRedeemerTag.Cert ? certScriptsToExec :
-                                    withdrawScriptsToExec
-                                ).find( ({ index: idx }) => idx === index )?.script;
-
-                                if( script === undefined )
-                                throw new BasePlutsError(
-                                    "missing script for " + txRdmrTagToString(tag) + " redeemer " + (index - 1)
-                                );
-
-                                const ctxData = getCtx(
-                                    script.type,
-                                    spendingPurpose,
-                                    txInfosV1,
-                                    txInfosV2
-                                );
-                                const ctxBytes = dataToCbor( ctxData ).toBuffer();
-
-                                const retry = (): Promise<any> => {
-
-                                    return _workerPool.run({
-                                        method: "evalScript",
-                                        args: [
-                                            {
-                                                hash: script.hash,
-                                                bytes: script.bytes
-                                            },
-                                            [
-                                                rdmrBytes,
-                                                ctxBytes
-                                            ]
-                                        ]
-                                    }, i)
-                                    .then( evalResult => {
-    
-                                        // add datum to result for `then`
-                                        // (no datum)
-                                        evalResult.datum = undefined;
-                                        // add ctxData to result for `then`
-                                        evalResult.ctxData = ctxData
-                                        return evalResult;
-                                    })
-                                    .catch( error => {
-
-                                        if( error.code === 0 ) // missing CEK machine
-                                        {
-                                            return _workerPool.run({
-                                                method: "prepareCEK",
-                                                args: [ getCostsCbor().slice() ],
-                                            }, i)
-                                            .then( retry );
-                                        }
-
-                                        throw error;
-                                    })
-                                };
-
-                                return retry()
-                            }
-                        })
-                        // map so that meanwhile workers can do their things
-                        .map((promise, i) => {
-
-                            return promise.then(({ result, budgetSpent, logs, ctxData, datum }) => {
-
-                                const rdmr = rdmrs[i]
-
-                                onEvaluationResult(
-                                    i,
-                                    totExBudget,
-                                    rdmr,
-                                    result,
-                                    ExBudget.fromJson( budgetSpent ),
-                                    logs,
-                                    datum === undefined || !isData( datum ) ?
-                                    [
-                                        rdmr.data,
-                                        ctxData
-                                    ] :
-                                    [
-                                        datum,
-                                        rdmr.data,
-                                        ctxData
-                                    ],
-                                    rdmrs,
-                                    onScriptResult,
-                                    onScriptInvalid
-                                )
-
-                                return { result, budgetSpent, logs };
-                            })
-                        })
-
-                    ); // await Promise.all
-
-                    fee = minFee +
-                        ((totExBudget.mem * memRational.num) / memRational.den) +
-                        ((totExBudget.cpu * cpuRational.num) / cpuRational.den) +
-                        // bigint division truncates always towards 0;
-                        // we don't like that so we add 1n for both divisions ( + 2n )
-                        BigInt(2);
-
-                    if( fee === prevFee ) break; // return last transaciton
-
-                    // reset for next loop
-                    
-                    // no need to reset if there's no next loop
-                    if( round === maxRound - 1 ) break;
-
-                    outs.forEach( (txO, i) => txOuts[i] = txO.clone() );
-                    txOuts[ txOuts.length - 1 ] = (
-                        new TxOut({
-                            address: buildArgs.changeAddress,
-                            value: Value.sub(
-                                totInputValue,
-                                Value.add(
-                                    requiredOutputValue,
-                                    Value.lovelaces( fee )
-                                )
-                            )
-                        })
-                    );
-
-                    tx = new Tx({
-                        ...tx,
-                        body: {
-                            ...tx.body,
-                            outputs: txOuts,
-                            fee: fee,
-                            scriptDataHash: getScriptDataHash( rdmrs, datumsScriptData, languageViews )
-                        },
-                        witnesses: {
-                            ...tx.witnesses,
-                            redeemers: rdmrs,
-                        },
-                        isScriptValid: _isScriptValid
-                    });
-
-                    _isScriptValid = true;
-                    totExBudget = new ExBudget({ mem: 0, cpu: 0 })
-                }
-
-                if( !Boolean( keepWorkersAlive ) )
-                {
-                    await _workerPool.terminateAll();
-                }
-
-                return tx;
+                return this.buildSync( buildArgs, buildOpts )
             }
         )
     }
@@ -511,6 +168,13 @@ export class TxBuilder
         );
     }
 
+    /**
+     * here mainly for forward compability
+     * 
+     * internally calls `buildSync` so really what `build` is doing is wrapping it in a `Promise`
+     * 
+     * In future this method might implement multi-threadung using `Worker`s
+     */
     build!: (args: ITxBuildArgs, opts?: ITxBuildOptions) => Promise<Tx>
 
     buildSync(
