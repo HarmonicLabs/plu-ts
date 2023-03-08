@@ -25,18 +25,20 @@ const Event = window?.Event ?? class Event {
 };
 
 let __WorkerCtor__: typeof Worker | undefined = undefined;
-async function getWorkerCtor(): Promise<typeof Worker>
+let getWorkerCtor: (() => Promise<typeof Worker>) = undefined as any;
+
+if( // isNode
+    typeof process !== "undefined" &&
+    process.versions != null &&
+    process.versions.node != null
+)
 {
-    if( __WorkerCtor__ !== undefined ) return __WorkerCtor__;
+    getWorkerCtor = async () => {
 
-    if( // isNode
-        typeof process !== "undefined" &&
-        process.versions != null &&
-        process.versions.node != null
-    )
-    {
+        if( __WorkerCtor__ !== undefined ) return __WorkerCtor__;
+
         __WorkerCtor__ = (await import("worker_threads")).Worker as any as (typeof Worker);
-
+    
         __WorkerCtor__ = new Proxy(
             __WorkerCtor__,
             {
@@ -46,9 +48,9 @@ async function getWorkerCtor(): Promise<typeof Worker>
                         // @ts-ignore A spread argument must either have a tuple type or be passed to a rest parameter.
                         ...args
                     );
-
+    
                     // add browser API functions
-
+    
                     // `EventTarget` interface
                     const EVENTS = Symbol("events");
                     Object.defineProperties(
@@ -67,7 +69,7 @@ async function getWorkerCtor(): Promise<typeof Worker>
                                         type: evt.type,
                                     };
                                     Object.setPrototypeOf( event, Event.prototype );
-
+    
                                     const callbacks: EventCallBack[] = (self as any)[EVENTS].get(event.type);
                                     if (callbacks == null) return;
                                     callbacks.forEach(handler => {
@@ -102,7 +104,7 @@ async function getWorkerCtor(): Promise<typeof Worker>
                             },
                         }
                     );
-
+    
                     // auto add listeners
                     self.on('message', (response =>
                         {
@@ -111,7 +113,7 @@ async function getWorkerCtor(): Promise<typeof Worker>
                             self.dispatchEvent(event);
                         }) as EventCallBack
                     );
-
+    
                     self.on('error', (data =>
                         {
                             const error = new Error("error");
@@ -120,13 +122,13 @@ async function getWorkerCtor(): Promise<typeof Worker>
                             self.dispatchEvent(error);
                         }) as EventCallBack
                     );
-
+    
                     self.on('exit', (() =>
                         {
                             self.dispatchEvent(new Event('close'));
                         }) as EventCallBack
                     );
-
+    
                     return self;
                 },
                 apply( fn, _thisArg, args )
@@ -134,14 +136,15 @@ async function getWorkerCtor(): Promise<typeof Worker>
                     return Reflect.apply( fn, self, args )
                 }
             }
-        )
+        );
 
+        return __WorkerCtor__;
     }
-    else {
-        // window.Worker
-        __WorkerCtor__ = Worker;
-    }
-    return  __WorkerCtor__;
+
+}
+else {
+    // window.Worker
+    getWorkerCtor = async () => Worker;
 }
 
 export const enum WorkerState {
