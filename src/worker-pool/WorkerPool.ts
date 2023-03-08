@@ -7,7 +7,7 @@ const defaultMaxWorkers = 4;
 type EventCallBack  =( ...stuff: any[] ) => void;
 
 // add Event Interface if we are in node
-const Event = window?.Event ?? class Event {
+const Event = typeof window !== "undefined" ? window?.Event : class Event {
 
     type: string
     timeStamp: number
