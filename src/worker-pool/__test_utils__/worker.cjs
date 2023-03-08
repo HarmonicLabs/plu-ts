@@ -31,7 +31,7 @@ if( // isNode
     process.versions.node != null
 )
 {
-    const { parentPort } = require('node:worker_threads');
+    const { parentPort } = require('worker_threads');
     
     master = parentPort
 

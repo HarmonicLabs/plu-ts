@@ -35,7 +35,7 @@ async function getWorkerCtor(): Promise<typeof Worker>
         process.versions.node != null
     )
     {
-        __WorkerCtor__ = (await import("node:worker_threads")).Worker as any as (typeof Worker);
+        __WorkerCtor__ = (await import("worker_threads")).Worker as any as (typeof Worker);
 
         __WorkerCtor__ = new Proxy(
             __WorkerCtor__,
