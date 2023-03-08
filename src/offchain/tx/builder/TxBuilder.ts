@@ -79,7 +79,7 @@ export class TxBuilder
     readonly network!: NetworkT
     readonly protocolParamters!: ProtocolParamters
     
-    constructor( network: NetworkT, protocolParamters: Readonly<ProtocolParamters> )
+    constructor( network: NetworkT, protocolParamters: Readonly<ProtocolParamters>, exsistentWorkerPool?: WorkerPool )
     {
         JsRuntime.assert(
             network === "testnet" ||
@@ -148,7 +148,9 @@ export class TxBuilder
         // --------------------------------  private stuff  -------------------------------- //
         ///////////////////////////////////////////////////////////////////////////////////////
 
-        const _workerPool = new WorkerPool("./src/offchain/tx/builder/rollup-out/buildWorker.js", undefined, 16);
+        const _workerPool = exsistentWorkerPool instanceof WorkerPool ? 
+            exsistentWorkerPool : 
+            new WorkerPool("./rollup-out/buildWorker.js", undefined, 16);
 
         ObjectUtils.defineReadOnlyProperty(
             this, "build",
@@ -161,8 +163,39 @@ export class TxBuilder
                 }: ITxBuildOptions = {}
             ): Promise<Tx> => {
 
-                const keepWorkers = Boolean( keepWorkersAlive );
+                // redirect simple transactions to `buildSync`
+                const nInScripts = buildArgs.inputs
+                    .reduce( (acc, _in) => 
+                        _in.inputScript !== undefined ||
+                        _in.referenceScriptV2 !== undefined ?
+                        acc + 1 : acc, 0 
+                    );
+                if( nInScripts <= 1 )
+                {
+                    let totScripts = nInScripts + (buildArgs.mints?.length ?? 0)
+                    if( totScripts <= 1 )
+                    {
+                        totScripts += buildArgs.certificates
+                            ?.reduce( (acc, cert) => 
+                                cert.script !== undefined ? acc + 1 : acc, 
+                                0 
+                            ) ?? 0;
+                        if( totScripts <= 1 )
+                        {
+                            totScripts += buildArgs.withdrawals
+                                ?.reduce((acc, withdraw) => 
+                                withdraw.script !== undefined ? acc + 1 : acc, 
+                                0 
+                            ) ?? 0;
+                            if( totScripts <= 1 )
+                            {
+                                return this.buildSync( buildArgs, { onScriptInvalid, onScriptResult } )
+                            }
+                        }
+                    }
+                }
 
+                // here starts the fun
                 let {
                     tx,
                     scriptsToExec,
@@ -459,7 +492,7 @@ export class TxBuilder
                     totExBudget = new ExBudget({ mem: 0, cpu: 0 })
                 }
 
-                if( !keepWorkers )
+                if( !Boolean( keepWorkersAlive ) )
                 {
                     await _workerPool.terminateAll();
                 }
@@ -1277,13 +1310,19 @@ function onEvaluationResult(
 
     onScriptResult && onScriptResult(
         rdmr.clone(),
-        result.clone(),
+        result,
         budgetSpent.clone(),
         logs.slice(),
         callArgs.map( d => d.clone() )
     );
 
-    if( result instanceof ErrorUPLC )
+    if(
+        result instanceof ErrorUPLC || 
+        ((resultKeys) =>
+            resultKeys.includes("msg") && 
+            resultKeys.includes("addInfos")
+        )(Object.keys( result ))
+    )
     {
         if( typeof onScriptInvalid === "function" )
         {
@@ -1292,7 +1331,6 @@ function onEvaluationResult(
         }
         else
         {
-
             throw new BasePlutsError(
                 `script consumed with ${txRedeemerTagToString(rdmr.tag)} redemer ` +
                 `and index '${rdmr.index.toString()}'\n\n` +
@@ -1309,10 +1347,10 @@ function onEvaluationResult(
                     .join("\n")
                 }\n\n` +
                 `failed with \n`+
-                `error message: ${result.msg}\n`+ 
+                `error message: ${(result as any).msg}\n`+ 
                 `additional infos: ${
                     JSON.stringify(
-                        result.addInfos,
+                        (result as any).addInfos,
                         ( k, v ) => {
                             if( isUint8Array( v ) )
                             return toHex( v );

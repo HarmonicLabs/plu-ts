@@ -34,7 +34,7 @@ if( // isNode
 {
     (async () => {
 
-        const { parentPort } = await import('node:worker_threads');
+        const { parentPort } = await import('worker_threads');
         
         master = parentPort as any;
 

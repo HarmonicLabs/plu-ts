@@ -14,7 +14,7 @@ module.exports = {
 			ignore :[
 				// imported dynamically when in node environment
 				// preserving require call
-				"node:worker_threads" 
+				"worker_threads" 
 			]
 		})
 	]

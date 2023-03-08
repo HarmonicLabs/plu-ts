@@ -963,7 +963,13 @@ export class BnCEK
     decodeUtf8( a: UPLCTerm ): ConstOrErr
     {
         const _a = getBS( a );
-        if( _a === undefined ) return new ErrorUPLC("decodeUtf8 :: not BS");
+        if( _a === undefined ) 
+        return new ErrorUPLC(
+            "decodeUtf8 :: not BS",
+            {
+                arg: a
+            }
+        );
 
         const f = this.getBuiltinCostFunc( UPLCBuiltinTag.decodeUtf8 );
 
@@ -1154,7 +1160,13 @@ export class BnCEK
     nullList( list: UPLCTerm ): ConstOrErr 
     {
         const l = getList( list );
-        if( l === undefined ) return new ErrorUPLC("nullList :: not a list");
+        if( l === undefined ) 
+        return new ErrorUPLC(
+            "nullList :: not a list",
+            {
+                arg: list
+            }
+        );
 
         const f = this.getBuiltinCostFunc( UPLCBuiltinTag.nullList );
 

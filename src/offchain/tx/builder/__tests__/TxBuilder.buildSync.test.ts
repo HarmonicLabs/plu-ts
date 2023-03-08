@@ -3,6 +3,7 @@ import { CborBytes } from "../../../../cbor/CborObj/CborBytes"
 import { V2, data, pfn, pmakeUnit, unit } from "../../../../onchain"
 import { compile } from "../../../../onchain/pluts/Script/compile"
 import { DataConstr } from "../../../../types/Data/DataConstr"
+import { WorkerPool } from "../../../../worker-pool/WorkerPool"
 import { PaymentCredentials } from "../../../credentials/PaymentCredentials"
 import { PubKeyHash } from "../../../credentials/PubKeyHash"
 import { Address } from "../../../ledger/Address"
@@ -15,7 +16,8 @@ import { TxBuilder } from "../TxBuilder"
 
 const txBuilder = new TxBuilder(
     "testnet",
-    defaultProtocolParameters
+    defaultProtocolParameters,
+    new WorkerPool("./src/offchain/tx/builder/rollup-out/buildWorker.js", undefined, 16 )
 )
 
 const pkAddr = new Address(

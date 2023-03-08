@@ -1,21 +1,27 @@
 import { Cbor } from "../../../../cbor/Cbor"
 import { CborBytes } from "../../../../cbor/CborObj/CborBytes"
-import { V2, data, pfn, pmakeUnit, unit } from "../../../../onchain"
+import { PScriptContext, PlutusScriptVersion, V2, bool, data, int, lam, list, makeRedeemerValidator, makeValidator, pfn, pif, pmakeUnit, precursive, unit } from "../../../../onchain"
+import { showUPLC } from "../../../../onchain/UPLC/UPLCTerm"
 import { compile } from "../../../../onchain/pluts/Script/compile"
+import { DataI, DataList } from "../../../../types/Data"
 import { DataConstr } from "../../../../types/Data/DataConstr"
+import { WorkerPool } from "../../../../worker-pool/WorkerPool"
 import { PaymentCredentials } from "../../../credentials/PaymentCredentials"
 import { PubKeyHash } from "../../../credentials/PubKeyHash"
 import { Address } from "../../../ledger/Address"
 import { Value } from "../../../ledger/Value/Value"
 import { defaultProtocolParameters } from "../../../ledger/protocol/ProtocolParameters"
 import { Script, ScriptType } from "../../../script/Script"
-import { getNSignersNeeded } from "../../Tx"
+import { Tx, getNSignersNeeded } from "../../Tx"
 import { UTxO } from "../../body/output/UTxO"
 import { TxBuilder } from "../TxBuilder"
 
+jest.setTimeout(20_000)
+
 const txBuilder = new TxBuilder(
     "testnet",
-    defaultProtocolParameters
+    defaultProtocolParameters,
+    new WorkerPool("./src/offchain/tx/builder/rollup-out/buildWorker.js", undefined, 16 )
 )
 
 const pkAddr = new Address(
@@ -246,6 +252,139 @@ describe("TxBuilder.build", () => {
             expect( rejected ).toBe( true );
 
         });
+
+    });
+
+    const pfactorial = precursive(
+        pfn([
+            lam( int, int ),
+            int
+        ],  int)
+        (( self, n ) =>
+            pif( int ).$( n.ltEq( 1 ) )
+            .then( 1 )
+            .else(
+                n.mult( self.$( n.sub(1) ) )
+            )
+        )
+    );
+
+    const onlyBigThirdElem = pfn([
+        data,
+        list( int ),
+        PScriptContext.type
+    ],  bool)
+    (( _dat, nums, _ctx ) => 
+        nums.at(2)
+        .gt( 
+            pfactorial.$( 
+                nums.at(1)
+                .add( nums.at(0) )
+            ) 
+        ) 
+    )
+
+    const mintSomething = pfn([
+        data,
+        PScriptContext.type
+    ],  bool)
+    (( _rdmr, ctx ) => 
+        ctx.extract("txInfo").in(({ txInfo }) => 
+        txInfo.extract("inputs").in(({ inputs }) => 
+            inputs.length.gtEq(2) 
+        ))
+    );
+
+    const onlyBigThirdScript = new Script(
+        ScriptType.PlutusV2,
+        compile(
+            makeValidator(
+                onlyBigThirdElem
+            )
+        )
+    );
+
+    const onlyBigThirdAddr = new Address(
+        "mainnet",
+        new PaymentCredentials(
+            "script",
+            onlyBigThirdScript.hash
+        )
+    );
+
+    const mintSomethingScript = new Script(
+        ScriptType.PlutusV2,
+        compile(
+            makeRedeemerValidator(
+                mintSomething
+            )
+        )
+    );
+
+    describe("big fat transactions", () => {
+
+        let tx!: Tx;
+        test("two scripts", async () => {
+
+            for( let i = 0; i < 5; i++ )
+            tx = await txBuilder.build({
+                inputs: [
+                    {
+                        utxo: new UTxO({
+                            utxoRef: {
+                                id: "ff".repeat(32),
+                                index: 0
+                            },
+                            resolved: {
+                                address: onlyBigThirdAddr,
+                                value: Value.lovelaces( 10_000_000 ),
+                                datum: new DataConstr( 0, [] )
+                            }
+                        }),
+                        inputScript: {
+                            datum: "inline",
+                            redeemer: new DataList([
+                                new DataI( 3 ),
+                                new DataI( 4 ),
+                                new DataI( (BigInt(1) << BigInt(64)) - BigInt(1) ),
+                            ]),
+                            script: onlyBigThirdScript
+                        }
+                    },
+                    {
+                        utxo: new UTxO({
+                            utxoRef: {
+                                id: "aa".repeat(32),
+                                index: 0
+                            },
+                            resolved: {
+                                address: Address.fake,
+                                value: Value.lovelaces( 10_000_000 ),
+                                datum: new DataConstr( 0, [] )
+                            }
+                        }),
+                    }
+                ],
+                mints: [
+                    {
+                        value: new Value([
+                            {
+                                policy: mintSomethingScript.hash,
+                                assets: { "hello": 2 }
+                            }
+                        ]),
+                        script: {
+                            inline: mintSomethingScript,
+                            policyId: mintSomethingScript.hash,
+                            redeemer: new DataI(0)
+                        }
+                    }
+                ],
+                changeAddress: pkAddr
+            });
+
+        });
+
 
     })
 })
