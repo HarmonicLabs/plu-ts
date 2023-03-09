@@ -41,7 +41,7 @@
     "dApp"
   ],
   "author": "Michele Nuzzi",
-  "license": "MIT",
+  "license": "Apache-2.0",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/HarmonicLabs/plu-ts.git"
