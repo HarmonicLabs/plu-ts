@@ -89,7 +89,7 @@ export type RawFields<CtorDef extends StructCtorDef> =
     Term<PList<PData>> &
     {
         extract: <Fields extends (keyof CtorDef)[]>( ...fields: Fields ) => {
-            in: <PExprResult extends PType>( expr: ( extracted: RestrictedStructInstance<CtorDef,Fields> ) => Term<PExprResult> ) => Term<PExprResult>
+            in: <PExprResult extends PType>( expr: ( extracted: RestrictedStructInstance<CtorDef,Fields> ) => Term<PExprResult> ) => UtilityTermOf<PExprResult>
         }
     }
 
@@ -183,7 +183,7 @@ type CtorCallback<SDef extends StructDefinition> = ( rawFields: RawFields<SDef[k
 type EmptyObject = { [x: string | number | symbol ]: never };
 
 type MatchRest<PReturnT extends PType> = {
-    _: ( continuation: ( rawFields: TermList<PData> ) => Term<PReturnT> ) => Term<PReturnT>
+    _: ( continuation: ( rawFields: TermList<PData> ) => Term<PReturnT> ) => UtilityTermOf<PReturnT>
 }
 
 type TypedPMatchOptions<SDef extends StructDefinition, PReturnT extends PType> = {
@@ -202,7 +202,7 @@ export type PMatchOptions<SDef extends StructDefinition> = {
                 UtilityTermOf<PReturnT> :
                 TypedPMatchOptions<Omit<SDef,Ctor>, PReturnT>
 } & {
-    _: <PReturnT extends PType>( continuation: ( rawFields: TermList<PData> ) => Term<PReturnT> ) => Term<PReturnT>
+    _: <PReturnT extends PType>( continuation: ( rawFields: TermList<PData> ) => Term<PReturnT> ) => UtilityTermOf<PReturnT>
 }
 
 const matchNCtorsIdxsCache: { [n: number]: Term<any> } = {};

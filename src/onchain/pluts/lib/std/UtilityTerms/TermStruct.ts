@@ -14,6 +14,7 @@ import { peqData } from "../../builtins/data";
 import { TermFn } from "../../../PTypes/PFn/PFn";
 import { PBool } from "../../../PTypes/PBool";
 import { TermBool } from "./TermBool";
+import { UtilityTermOf } from "../..";
 
 
 export type TermStruct<SDef extends StructDefinition> = Term<PStruct<SDef>> & {
@@ -27,7 +28,7 @@ export type TermStruct<SDef extends StructDefinition> = Term<PStruct<SDef>> & {
     (
         SDef[keyof SDef] extends infer CtorDef extends StructCtorDef ? {
             extract: <Fields extends (keyof CtorDef)[]>( ...fields: Fields ) => {
-                in: <PExprResult extends PType>( expr: ( extracted: RestrictedStructInstance<CtorDef,Fields> ) => Term<PExprResult> ) => Term<PExprResult>
+                in: <PExprResult extends PType>( expr: ( extracted: RestrictedStructInstance<CtorDef,Fields> ) => Term<PExprResult> ) => UtilityTermOf<PExprResult>
             }
         } : never
     )
