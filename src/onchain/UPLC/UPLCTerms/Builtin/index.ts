@@ -30,15 +30,15 @@
  *  •   We provide two versions of the division and remainder operations for integers. These differ
  *      in their treatment of negative arguments.
  */
-
-import BinaryString from "../../../../types/bits/BinaryString";
-import BitStream from "../../../../types/bits/BitStream";
-import Cloneable from "../../../../types/interfaces/Cloneable";
 import JsRuntime from "../../../../utils/JsRuntime";
-import UPLCBuiltinTag, { isUPLCBuiltinTag } from "./UPLCBuiltinTag";
+
+import { BinaryString } from "../../../../types/bits/BinaryString";
+import { BitStream } from "../../../../types/bits/BitStream";
+import { Cloneable } from "../../../../types/interfaces/Cloneable";
+import { UPLCBuiltinTag, isUPLCBuiltinTag } from "./UPLCBuiltinTag";
 
 
-export default class Builtin
+export class Builtin
     implements Cloneable<Builtin>
 {
     static get UPLCTag(): BitStream

@@ -1,0 +1,31 @@
+{
+  "compilerOptions": {
+    "skipLibCheck": true,
+    "target": "ES5",          
+    "module": "commonjs",     
+    "allowJs": true,          
+    "checkJs": false,       
+    "outDir": "./tsc-out",
+    "rootDir": "./src",       
+    "downlevelIteration": true,           
+    "strict": false,                      
+    "noImplicitAny": true,                
+    "strictNullChecks": true,             
+    "strictFunctionTypes": false,         
+    "strictBindCallApply": true,          
+    "strictPropertyInitialization": false,
+    "noImplicitThis": true,               
+    "alwaysStrict": false,                
+    "moduleResolution": "node",            
+    "allowSyntheticDefaultImports": true,  
+    "esModuleInterop": true,                
+    "forceConsistentCasingInFileNames": true
+  },
+  "files": [
+    "src/offchain/tx/builder/buildWorker.ts"
+  ],
+  "tsc-alias": {
+    "verbose": false,
+    "resolveFullPaths": true
+  }
+}

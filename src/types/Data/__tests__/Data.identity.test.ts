@@ -1,11 +1,12 @@
-import Data from "..";
-import DataB from "../DataB";
-import DataConstr from "../DataConstr";
-import DataI from "../DataI";
-import DataList from "../DataList";
-import DataMap from "../DataMap";
-import dataFromCbor, { dataFromCborObj } from "../fromCbor";
-import dataToCbor, { dataToCborObj } from "../toCbor";
+import { Data, DataPair } from "..";
+import { fromAscii, fromUtf8 } from "@harmoniclabs/uint8array-utils";
+import { DataB } from "../DataB";
+import { DataConstr } from "../DataConstr";
+import { DataI } from "../DataI";
+import { DataList } from "../DataList";
+import { DataMap } from "../DataMap";
+import { dataFromCbor, dataFromCborObj } from "../fromCbor";
+import { dataToCbor, dataToCborObj } from "../toCbor";
 
 function identityTestFor( data: Data ): void
 {
@@ -44,8 +45,8 @@ describe( "dataFromCborObj( dataToCborObj( data ) ) === data", () => {
 
     test( "DataB", () => {
 
-        identityTestFor(new DataB( Buffer.from( [] ) ));
-        identityTestFor(new DataB( Buffer.from( "some token name", "ascii" ) ));
+        identityTestFor(new DataB( new Uint8Array(0) ));
+        identityTestFor(new DataB( fromAscii( "some token name" ) ));
         
     })
 
@@ -65,7 +66,7 @@ describe( "dataFromCborObj( dataToCborObj( data ) ) === data", () => {
 
         identityTestFor(new DataList([
             new DataI( 1 ),
-            new DataB( Buffer.from( [] ) ),
+            new DataB( new Uint8Array(0) ),
         ]));
 
         identityTestFor(new DataList([
@@ -83,19 +84,19 @@ describe( "dataFromCborObj( dataToCborObj( data ) ) === data", () => {
         identityTestFor(new DataMap([]));
 
         identityTestFor(new DataMap([
-            [ new DataI( 0 ), new DataB( Buffer.from( "hello" ) ) ]
+            new DataPair( new DataI( 0 ), new DataB( fromUtf8( "hello" ) ) )
         ]));
 
         identityTestFor(new DataMap([
-            [ new DataI( 0 ), new DataB( Buffer.from( "hello" ) ) ],
-            [ new DataI( 1 ), new DataB( Buffer.from( "world" ) ) ]
+            new DataPair( new DataI( 0 ), new DataB( fromUtf8( "hello" ) ) ),
+            new DataPair( new DataI( 1 ), new DataB( fromUtf8( "world" ) ) )
         ]));
 
         identityTestFor(new DataMap([
-            [ new DataB( Buffer.from( "pubKey1", "ascii" ) ), new DataI( 0 ) ],
-            [ new DataB( Buffer.from( "pubKey2", "ascii" ) ), new DataI( 42 ) ],
-            [ new DataB( Buffer.from( "pubKey3", "ascii" ) ), new DataI( 69 ) ],
-            [ new DataB( Buffer.from( "pubKey4", "ascii" ) ), new DataI( 420 ) ],
+            new DataPair( new DataB( fromAscii( "pubKey1" ) ), new DataI( 0 ) ),
+            new DataPair( new DataB( fromAscii( "pubKey2" ) ), new DataI( 42 ) ),
+            new DataPair( new DataB( fromAscii( "pubKey3" ) ), new DataI( 69 ) ),
+            new DataPair( new DataB( fromAscii( "pubKey4" ) ), new DataI( 420 ) ),
         ]));
 
     })

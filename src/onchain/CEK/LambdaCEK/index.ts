@@ -1,8 +1,8 @@
-import Cloneable from "../../../types/interfaces/Cloneable";
-import UPLCTerm from "../../UPLC/UPLCTerm";
-import CEKEnv from "../CEKEnv";
+import { Cloneable } from "../../../types/interfaces/Cloneable";
+import { UPLCTerm } from "../../UPLC/UPLCTerm";
+import { CEKEnv } from "../CEKEnv";
 
-export default class LambdaCEK
+export class LambdaCEK
     implements Cloneable<LambdaCEK>
 {
     public body: UPLCTerm;

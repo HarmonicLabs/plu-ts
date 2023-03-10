@@ -1,4 +1,4 @@
-import ConstType, { constT, constTypeToStirng, ConstTyTag, isWellFormedConstType } from "..";
+import { ConstType, constT, ConstTyTag, isWellFormedConstType } from "..";
 import { makeRandomWellFormed } from "../test_utils";
 
 

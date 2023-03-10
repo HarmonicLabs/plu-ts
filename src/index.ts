@@ -1,8 +1,6 @@
 export * from "./onchain";
+export * from "./offchain";
 
-import _ByteString from "./types/HexString/ByteString";
-import _Integer, { UInteger as _UInteger } from "./types/ints/Integer";
-
-export const ByteString = _ByteString;
-export const Integer = _Integer;
-export const UInteger = _UInteger;
+export * from "./types/HexString/ByteString";
+export * from "./types/ints/Integer";
+export * from "./types/Data";

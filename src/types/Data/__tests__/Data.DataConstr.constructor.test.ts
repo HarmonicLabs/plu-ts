@@ -1,4 +1,4 @@
-import DataConstr from "../DataConstr"
+import {DataConstr} from "../DataConstr"
 
 describe( "DataConstr", () => {
 

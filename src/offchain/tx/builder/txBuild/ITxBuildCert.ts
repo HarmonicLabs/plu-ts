@@ -1,16 +1,15 @@
-import CanBeData from "../../../CanBeData/CanBeData";
-import Script from "../../../script/Script";
-import TxOutRef from "../../body/output/TxOutRef";
+import type { Script } from "../../../script/Script";
+import type { UTxO } from "../../body/output/UTxO";
+import type { AnyCertificate } from "../../../ledger/certs/Certificate";
+import type { CanBeData } from "../../../../types/Data/CanBeData";
 
 export interface ITxBuildCert {
-    cert: any
-    script: {
+    cert: AnyCertificate
+    script?: {
         inline: Script
         redeemer: CanBeData
     } | {
-        ref: TxOutRef
+        ref: UTxO
         redeemer: CanBeData
     }
 };
-
-export default ITxBuildCert;

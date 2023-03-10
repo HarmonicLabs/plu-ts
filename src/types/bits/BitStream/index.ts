@@ -1,16 +1,16 @@
-import { Buffer } from "buffer";
 import BigIntUtils from "../../../utils/BigIntUtils";
 import BitUtils from "../../../utils/BitUtils";
 import Debug from "../../../utils/Debug";
 import JsRuntime from "../../../utils/JsRuntime";
-import Cloneable from "../../interfaces/Cloneable";
-import Indexable from "../../interfaces/Indexable";
-import Int32 from "../../ints/Int32";
-import BinaryString from "../BinaryString";
-import Bit, { forceInByteOffset, InByteOffset } from "../Bit";
-import BitStreamIterator from "./BitStreamIterator";
 
-export default class BitStream
+import { Indexable } from "../../interfaces/Indexable";
+import { Cloneable } from "../../interfaces/Cloneable";
+import { Int32 } from "../../ints/Int32";
+import { BinaryString } from "../BinaryString";
+import { Bit, forceInByteOffset, InByteOffset } from "../Bit";
+import { fromHex, isUint8Array, readUint8 } from "@harmoniclabs/uint8array-utils";
+
+export class BitStream
     implements Cloneable<BitStream>, Indexable<Bit>
 {
     static isStrictInstance( value: any ): boolean
@@ -80,8 +80,8 @@ export default class BitStream
 
     constructor( bytes?: undefined )
     constructor( bytes: bigint, nInitialZeroes?: number )
-    constructor( bytes: Buffer, nZeroesAsEndPadding?: InByteOffset )
-    constructor( bytes: bigint | Buffer | undefined , nInitialZeroes: number = 0 )
+    constructor( bytes: Uint8Array, nZeroesAsEndPadding?: InByteOffset )
+    constructor( bytes: bigint | Uint8Array | undefined , nInitialZeroes: number = 0 )
     {
         // case empty BitStream
         // aka. new BitStream() || new BitStream( undefined )
@@ -116,12 +116,12 @@ export default class BitStream
             return;
         }
 
-        // construct form Buffer
+        // construct form Uint8Array
 
-        // assert got Buffer instance as input
+        // assert got Uint8Array instance as input
         JsRuntime.assert(
-            Buffer.isBuffer( bytes ),
-            "expected a Buffer instance", new Debug.AddInfos({
+            isUint8Array(bytes),
+            "expected a Uint8Array instance", new Debug.AddInfos({
                 got: bytes,
                 nativeType: typeof bytes
             })
@@ -141,7 +141,7 @@ export default class BitStream
 
         while( allZeroesBytes < bytes.length )
         {
-            firstNonZeroByte = bytes.readUint8( allZeroesBytes );
+            firstNonZeroByte = readUint8( bytes, allZeroesBytes );
 
             if( firstNonZeroByte > 0 ) break;
 
@@ -160,7 +160,7 @@ export default class BitStream
         JsRuntime.assert(
             this._nInitialZeroes >= 0,
             JsRuntime.makeNotSupposedToHappenError(
-                "this._nInitialZeroes was setted badly in a BitStream creation using a Buffer as input."
+                "this._nInitialZeroes was setted badly in a BitStream creation using a Uint8Array as input."
             )
         )
 
@@ -264,7 +264,7 @@ export default class BitStream
     /**
      * 
      * @returns {object} 
-     *      with a @property {Buffer} bigint containing the bigint
+     *      with a @property {Uint8Array} bigint containing the bigint
      *      and a @property {InByteOffset} nInitialZeroes 
      *      containing a non-negative integer
      *      indicating how many (non-tracked in the bigint) zeroes are present in the ```BitStream```
@@ -293,23 +293,23 @@ export default class BitStream
     /**
      * 
      * @returns {object} 
-     *      with a @property {Buffer} buffer containing the buffer
+     *      with a @property {Uint8Array} buffer containing the buffer
      *      and a @property {InByteOffset} nZeroesAsEndPadding 
      *      containing a number between 7 and 1 both included,
      *      indicating how many of the end bits should be ignored
      */
     toBuffer(): {
-        buffer: Buffer,
+        buffer: Uint8Array,
         nZeroesAsEndPadding: InByteOffset
     }
     {
         if( this.isEmpty() ) return {
-            buffer: Buffer.from( [] ),
+            buffer: Uint8Array.from( [] ),
             nZeroesAsEndPadding: 0
         };
 
         if( this.isAllZeroes() ) return {
-            buffer: this.nInitialZeroes <= 0 ? Buffer.from( [] ) : Buffer.from( "00".repeat( Math.ceil( this.nInitialZeroes / 8 ) ), "hex" ),
+            buffer: this.nInitialZeroes <= 0 ? Uint8Array.from( [] ) : fromHex( "00".repeat( Math.ceil( this.nInitialZeroes / 8 ) ) ),
             nZeroesAsEndPadding: 
                 this._nInitialZeroes % 8 === 0 ? 
                 0 : 
@@ -370,7 +370,7 @@ export default class BitStream
         )
         {
             return {
-                buffer: Buffer.from( bitsArr ),
+                buffer: Uint8Array.from( bitsArr ),
                 nZeroesAsEndPadding: 0
             };
         }
@@ -416,7 +416,7 @@ export default class BitStream
             bitsArr.push( lostBits ); 
 
             return {
-                buffer: Buffer.from( bitsArr ),
+                buffer: Uint8Array.from( bitsArr ),
                 nZeroesAsEndPadding: (8 - shiftBy) as InByteOffset 
             };
         }
@@ -457,7 +457,7 @@ export default class BitStream
         }
 
         return {
-            buffer: Buffer.from( shiftedlBitsArr ),
+            buffer: Uint8Array.from( shiftedlBitsArr ),
             nZeroesAsEndPadding: shiftBy as InByteOffset 
         };
 
@@ -551,6 +551,113 @@ export default class BitStream
         return (
             a.nInitialZeroes === b.nInitialZeroes &&
             a.bits === b.bits
+        );
+    }
+
+}
+
+
+
+export class BitStreamIterator
+{
+    private _bitStreamBuff: Uint8Array;
+    private _nZeroesAsPadding: InByteOffset
+
+    private _currByteIndex: number;
+    private _currByte: number;
+    private _currBitIndex: InByteOffset;
+
+    constructor( bitStream: Readonly<BitStream> )
+    {
+        if( bitStream.length === 0 )
+        {
+            this._bitStreamBuff = Uint8Array.from( [] );
+            this._nZeroesAsPadding = 0;
+
+            this._currByteIndex = 0;
+            this._currByte = 0;
+            this._currBitIndex = 0;
+
+            this._isDone = () => true;
+            return;
+        }
+
+        const { buffer, nZeroesAsEndPadding } = bitStream.toBuffer();
+        
+        this._bitStreamBuff = buffer;
+        this._nZeroesAsPadding = nZeroesAsEndPadding;
+
+        this._currByteIndex = 0;
+        this._currByte = readUint8( this._bitStreamBuff, this._currByteIndex );
+        this._currBitIndex = 0;
+
+        this._updateByte = this._updateByte.bind(this);
+        this._isDone = this._isDone.bind(this);
+    }
+
+    next(): {
+        done: boolean
+        value: Bit 
+    }
+    {
+        if( this._isDone() ) return { done: true, value: new Bit( 0 ) };
+
+        /*
+        Debug.ignore.log(
+            `currByte: ${this._currByte.toString(2).padStart( 8 , '0' )}`,
+            `\nmask    : ${( 0b1 << ( 7 - this._currBitIndex ) ).toString(2).padStart( 8 , '0' )}`,
+            `\nresult  : ${( 
+                this._currByte & 
+                ( 0b1 << ( 7 - this._currBitIndex ) ) 
+            ).toString(2).padStart( 8 , '0' )}`
+        )
+        //*/
+
+        // get value
+        const value = new Bit(
+            Boolean( 
+                this._currByte & 
+                ( 0b1 << ( 7 - this._currBitIndex ) ) 
+            )
+        )
+
+        // perform update for next call
+        this._currBitIndex++;
+
+        if( this._currBitIndex >= 8 )
+        {
+            this._currBitIndex = 0;
+
+            this._updateByte();
+        }
+
+        // yeilds value
+        return {
+            value,
+            done: false
+        }
+    }
+
+    private _updateByte(): void
+    {
+        this._currByteIndex++;
+
+        if(this._currByteIndex < this._bitStreamBuff.length )
+        {
+            this._currByte = readUint8( this._bitStreamBuff, this._currByteIndex );
+        }
+    }
+
+    private _isDone(): boolean
+    {
+        return (
+            (this._currByteIndex >= this._bitStreamBuff.length) ||
+            (
+                (this._currByteIndex === this._bitStreamBuff.length - 1) &&
+                (
+                    this._currBitIndex === ( 8 - this._nZeroesAsPadding )
+                )
+            )
         );
     }
 

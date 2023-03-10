@@ -1,9 +1,10 @@
-import HexString from ".";
-import BufferUtils from "../../utils/BufferUtils";
 import JsRuntime from "../../utils/JsRuntime";
-import Cloneable from "../interfaces/Cloneable";
 
-export default class ByteString
+import {Cloneable} from "../interfaces/Cloneable";
+import {HexString} from ".";
+import { fromAscii, fromHex, isUint8Array, toAscii, toHex } from "@harmoniclabs/uint8array-utils";
+
+export class ByteString
     implements Cloneable<ByteString>
 {
     static isStrictInstance( bs: any ): bs is ByteString
@@ -11,11 +12,11 @@ export default class ByteString
         return Object.getPrototypeOf( bs ) === ByteString.prototype
     }
 
-    protected _bytes: Buffer;
+    protected _bytes: Uint8Array;
 
-    constructor( bs: string | Buffer )
+    constructor( bs: string | Uint8Array )
     {
-        if( typeof bs == "string" )
+        if( typeof bs === "string" )
         {
             // remove spaces
             bs = bs.trim().split(" ").join("");
@@ -25,41 +26,57 @@ export default class ByteString
                 "invalid hex input while constructing a ByteString: " + bs
             )
             // even length
-            this._bytes = Buffer.from( (bs.length % 2) === 1 ? "0" + bs : bs , "hex" );
+            this._bytes = fromHex( (bs.length % 2) === 1 ? "0" + bs : bs );
             return;
         }
 
         JsRuntime.assert(
-            Buffer.isBuffer( bs ),
-            "invalid Buffer input while constructing a ByteString"
+            isUint8Array( bs ),
+            "invalid Uint8Array input while constructing a ByteString"
         );
 
         this._bytes = bs;
     }
 
+    /**
+     * @deprecated use `toString()` instead
+     */
     get asString(): string
     {
-        return this._bytes.toString( "hex" );
+        return toHex( this._bytes );
     }
 
-    get asBytes(): Buffer
+    toString(): string
     {
-        return BufferUtils.copy( this._bytes );
+        return toHex( this._bytes );
+    }
+
+    /**
+     * @deprecated use `toBuffer()` instead
+     */
+    get asBytes(): Uint8Array
+    {
+        return this._bytes.slice();
+    }
+
+    toBuffer(): Uint8Array
+    {
+        return this._bytes.slice();
     }
 
     clone(): ByteString
     {
-        return new ByteString( BufferUtils.copy( this._bytes ) );
+        return new ByteString( this._bytes.slice() );
     }
 
     public static fromAscii( asciiStr: string ): ByteString
     {
-        return new ByteString( Buffer.from( asciiStr, "ascii" ) );
+        return new ByteString( fromAscii( asciiStr ) );
     }
 
     public static toAscii( bStr: ByteString ): string
     {
-        return bStr.asBytes.toString("ascii")
+        return toAscii( bStr.toBuffer() )
     }
 
     public static isValidHexValue( str: string ): boolean

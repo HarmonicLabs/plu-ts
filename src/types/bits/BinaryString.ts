@@ -1,6 +1,6 @@
 import JsRuntime from "../../utils/JsRuntime";
 
-export default class BinaryString
+export class BinaryString
 {
     private _bin: string;
 

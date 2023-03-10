@@ -1,11 +1,11 @@
-import BitStream from "../../../types/bits/BitStream";
-import UPLCTerm from "../UPLCTerm";
-import BinaryString from "../../../types/bits/BinaryString";
-import UPLCVar from "./UPLCVar";
-import Lambda from "./Lambda";
-import Builtin from "./Builtin";
-import Force from "./Force";
-import Cloneable from "../../../types/interfaces/Cloneable";
+import { BitStream } from "../../../types/bits/BitStream";
+import { UPLCTerm } from "../UPLCTerm";
+import { BinaryString } from "../../../types/bits/BinaryString";
+import { UPLCVar } from "./UPLCVar";
+import { Lambda } from "./Lambda";
+import { Builtin } from "./Builtin";
+import { Force } from "./Force";
+import { Cloneable } from "../../../types/interfaces/Cloneable";
 
 export type UPLCApplicationBody = UPLCVar | Lambda | Application | Builtin | Force
 
@@ -23,7 +23,7 @@ export function isUPLCApplicationBody( uplc: UPLCTerm ): uplc is UPLCApplication
     );
 }
 
-export default class Application
+export class Application
     implements Cloneable<Application>
 {
     static get UPLCTag(): BitStream

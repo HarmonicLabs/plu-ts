@@ -1,21 +1,25 @@
-import CborPositiveRational from "../../cbor/extra/CborRational";
-import ByteString from "../../types/HexString/ByteString";
-import Coin from "./Coin";
-import PubKeyHash from "../credentials/PubKeyHash";
-import Hash32 from "../hashes/Hash32/Hash32";
-import PoolKeyHash from "../hashes/Hash28/PoolKeyHash";
-import VRFKeyHash from "../hashes/Hash32/VRFKeyHash";
-import PoolRelay, { isPoolRelay, poolRelayToCborObj } from "./PoolRelay";
-import { ToCbor } from "../../cbor/interfaces/CBORSerializable";
 import JsRuntime from "../../utils/JsRuntime";
 import ObjectUtils from "../../utils/ObjectUtils";
+
 import { canBeUInteger, forceUInteger } from "../../types/ints/Integer";
-import CborObj from "../../cbor/CborObj";
-import CborUInt from "../../cbor/CborObj/CborUInt";
-import CborSimple from "../../cbor/CborObj/CborSimple";
-import CborArray from "../../cbor/CborObj/CborArray";
-import CborString from "../../cbor/CborString";
-import CborText from "../../cbor/CborObj/CborText";
+import { PoolRelay, isPoolRelay, poolRelayFromCborObj, poolRelayToCborObj, poolRelayToJson } from "./PoolRelay";
+import { CborPositiveRational } from "../../cbor/extra/CborRational";
+import { ByteString } from "../../types/HexString/ByteString";
+import { Coin } from "./Coin";
+import { PubKeyHash } from "../credentials/PubKeyHash";
+import { Hash32 } from "../hashes/Hash32/Hash32";
+import { PoolKeyHash } from "../hashes/Hash28/PoolKeyHash";
+import { VRFKeyHash } from "../hashes/Hash32/VRFKeyHash";
+import { CborObj } from "../../cbor/CborObj";
+import { CborUInt } from "../../cbor/CborObj/CborUInt";
+import { CborSimple } from "../../cbor/CborObj/CborSimple";
+import { CborArray } from "../../cbor/CborObj/CborArray";
+import { CborText } from "../../cbor/CborObj/CborText";
+import { ToJson } from "../../utils/ts/ToJson";
+import { Hash28 } from "../hashes/Hash28/Hash28";
+import { InvalidCborFormatError } from "../../errors/InvalidCborFormatError";
+import { CborTag } from "../../cbor/CborObj/CborTag";
+import { CborBytes } from "../../cbor/CborObj/CborBytes";
 
 export interface IPoolParams {
     operator: PoolKeyHash,
@@ -23,21 +27,21 @@ export interface IPoolParams {
     pledge: Coin,
     cost: Coin,
     margin: CborPositiveRational,
-    rewardAccount: ByteString,
+    rewardAccount: Hash28,
     owners: PubKeyHash[],
     relays: PoolRelay[],
     metadata?: [poolMetadataUrl: string, hash: Hash32]
 }
 
-export default class PoolParams
-    implements IPoolParams
+export class PoolParams
+    implements IPoolParams, ToJson
 {
     readonly operator!: PoolKeyHash;
     readonly vrfKeyHash!: VRFKeyHash;
     readonly pledge!: bigint;
     readonly cost!: bigint;
     readonly margin!: CborPositiveRational;
-    readonly rewardAccount!: ByteString;
+    readonly rewardAccount!: Hash28;
     readonly owners!: PubKeyHash[];
     readonly relays!: PoolRelay[];
     readonly metadata?: [poolMetadataUrl: string, hash: Hash32];
@@ -148,8 +152,8 @@ export default class PoolParams
             new CborUInt( this.cost ),
             this.margin,
             this.rewardAccount.toCborObj(),
-            this.owners.map( owner => owner.toCborObj() ),
-            this.relays.map( poolRelayToCborObj ),
+            new CborArray( this.owners.map( owner => owner.toCborObj() ) ),
+            new CborArray( this.relays.map( poolRelayToCborObj ) ),
             this.metadata === undefined || this.metadata === null ?
                 new CborSimple( null ) :
                 new CborArray([
@@ -157,5 +161,66 @@ export default class PoolParams
                     this.metadata[1].toCborObj()
                 ])
         ]) as any;
+    }
+
+    static fromCborObjArray([
+        _operator,
+        _vrfKeyHash,
+        _pledge,
+        _cost,
+        _margin,
+        _rewAccount,
+        _owners,
+        _relays,
+        _metadata
+    ]: CborObj[]): PoolParams
+    {
+        if(!(
+            _pledge instanceof CborUInt &&
+            _cost instanceof CborUInt &&
+            _owners instanceof CborArray &&
+            _relays instanceof CborArray &&
+            _margin instanceof CborTag && _margin.data instanceof CborArray &&
+            _margin.data.array.every( n => n instanceof CborUInt ) && _margin.data.array.length >= 2
+        ))
+        throw new InvalidCborFormatError("PoolParams");
+
+        const [ margin_num, margin_den ] = _margin.data.array.map( n => (n as CborUInt).num )
+
+        return new PoolParams({
+            operator: PoolKeyHash.fromCborObj( _operator ),
+            vrfKeyHash: VRFKeyHash.fromCborObj( _vrfKeyHash ),
+            pledge: _pledge.num,
+            cost: _cost.num,
+            margin: new CborPositiveRational( margin_num, margin_den ),
+            rewardAccount: Hash28.fromCborObj( _rewAccount ),
+            owners: _owners.array.map( PubKeyHash.fromCborObj ),
+            relays: _relays.array.map( poolRelayFromCborObj ),
+            metadata: (
+                _metadata instanceof CborArray &&
+                _metadata.array[0] instanceof CborText &&
+                _metadata.array[1] instanceof CborBytes
+            ) ? 
+            [ _metadata.array[0].text, Hash32.fromCborObj( _metadata.array[1] ) ]
+            : undefined
+        })
+    }
+
+    toJson()
+    {
+        return {
+            operator: this.operator.asString,
+            vrfKeyHash: this.vrfKeyHash.asString,
+            pledge: this.pledge.toString(),
+            cost: this.cost.toString(),
+            margin: Number( this.margin.num ) / Number( this.margin.den ),
+            rewardAccount: this.rewardAccount.asString,
+            owners: this.owners.map( owner => owner.asString ),
+            relays: this.relays.map( poolRelayToJson ),
+            metadata: this.metadata === undefined ? undefined : {
+                poolMetadataUrl: this.metadata[0],
+                hash: this.metadata[1].asString
+            }
+        }
     }
 };

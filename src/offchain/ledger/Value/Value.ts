@@ -1,31 +1,52 @@
-import Cbor from "../../../cbor/Cbor";
-import CborBytes from "../../../cbor/CborObj/CborBytes";
-import CborMap from "../../../cbor/CborObj/CborMap";
-import CborNegInt from "../../../cbor/CborObj/CborNegInt";
-import CborUInt from "../../../cbor/CborObj/CborUInt";
-import CborString from "../../../cbor/CborString";
-import { ToCbor } from "../../../cbor/interfaces/CBORSerializable";
 import JsRuntime from "../../../utils/JsRuntime";
 import ObjectUtils from "../../../utils/ObjectUtils";
-import Hash32 from "../../hashes/Hash32/Hash32";
-import { IValuePolicyEntry, IValueAdaEntry, isIValue, addIValues, subIValues } from "./IValue";
 
-export type IValue = (IValuePolicyEntry | IValueAdaEntry)[]
+import { Cbor } from "../../../cbor/Cbor";
+import { CborObj } from "../../../cbor/CborObj";
+import { CborBytes } from "../../../cbor/CborObj/CborBytes";
+import { CborMap, CborMapEntry } from "../../../cbor/CborObj/CborMap";
+import { CborNegInt } from "../../../cbor/CborObj/CborNegInt";
+import { CborUInt } from "../../../cbor/CborObj/CborUInt";
+import { CborString, CanBeCborString, forceCborString } from "../../../cbor/CborString";
+import { ToCbor } from "../../../cbor/interfaces/CBORSerializable";
+import { InvalidCborFormatError } from "../../../errors/InvalidCborFormatError";
+import { DataB } from "../../../types/Data/DataB";
+import { DataI } from "../../../types/Data/DataI";
+import { DataMap } from "../../../types/Data/DataMap";
+import { DataPair } from "../../../types/Data/DataPair";
+import { ToData } from "../../../types/Data/toData/interface";
+import { Cloneable } from "../../../types/interfaces/Cloneable";
+import { ToJson } from "../../../utils/ts/ToJson";
+import { Hash28 } from "../../hashes/Hash28/Hash28";
+import { isIValue, addIValues, subIValues, IValue, cloneIValue, IValueToJson } from "./IValue";
+import { CborArray } from "../../../cbor/CborObj/CborArray";
+import { ByteString } from "../../../types/HexString/ByteString";
+import { IValueAssets } from "./IValue";
+import { hex } from "../../../types/HexString";
+import { fromAscii, isUint8Array, lexCompare, toAscii, toHex } from "@harmoniclabs/uint8array-utils";
 
-function policyToString( policy: "" | Hash32 ): string
-{
-    return policy === "" ? policy : policy.asString;
+const enum Ord {
+    LT = -1,
+    EQ = 0,
+    GT = 1
 }
 
 export class Value
-    implements ToCbor
+    implements ToCbor, Cloneable<Value>, ToData, ToJson
 {
     readonly map!: IValue
 
+    *[Symbol.iterator]()
+    {
+        for( const { policy, assets } of this.map )
+        {
+            yield { policy: policy.toString() as hex, assets: assets as IValueAssets };
+        }
+        return;
+    }
+
     constructor( map: IValue )
     {
-        if(!isIValue( map )) console.log( map );
-        
         JsRuntime.assert(
             isIValue( map ),
             "invalid value interface passed to contruct a 'value' instance"
@@ -39,7 +60,27 @@ export class Value
             Object.freeze( entry.policy );
         });
 
-        map.sort((a,b) => policyToString( a.policy ).localeCompare( policyToString( b.policy ) ) );
+        // value MUST have an ada entry
+        if( !map.some( entry => entry.policy === "" ) )
+        {
+            map.unshift({
+                policy: "",
+                assets: { "": 0 }
+            });
+        }
+
+        map.sort((a,b) => {
+            if( a.policy === "" )
+            {
+                if( b.policy === "" ) return Ord.EQ;
+                return Ord.LT;
+            };
+            if( b.policy === "" )
+            {
+                return Ord.GT;
+            }
+            return lexCompare( a.policy.toBuffer(), b.policy.toBuffer() );
+        });
 
         ObjectUtils.defineReadOnlyProperty(
             this,
@@ -48,9 +89,41 @@ export class Value
         );
     }
 
+    get lovelaces(): bigint
+    {
+        return BigInt(
+            this.map
+            .find( ({ policy }) => policy === "" )
+            ?.assets[""] 
+            ?? 0 
+        );
+    }
+
+    get( policy: Hash28 | Uint8Array | string , assetName: Uint8Array | string ): bigint
+    {
+        if( typeof policy === "string" )
+        {
+            if( policy === "" ) return this.lovelaces;
+            policy = new Hash28( policy );
+        }
+
+        const policyStr = policy instanceof Hash28 ? policy.toString() : toHex( policy );
+
+        if( isUint8Array( assetName ) )
+        assetName = toAscii( assetName );
+
+        return BigInt(
+            (
+                this.map
+                .find( ({ policy }) => policy.toString() === policyStr ) as any
+            )?.assets[assetName] 
+            ?? 0 
+        );
+    }
+
     static get zero(): Value
     {
-        return new Value([]);
+        return Value.lovelaces( 0 )
     }
 
     static isZero( v: Value ): boolean
@@ -63,6 +136,22 @@ export class Value
                 ) 
             )
         )
+    }
+
+    static isPositive( v: Value ): boolean
+    {
+        return v.map.every( ({ assets }) =>
+            Object.keys( assets )
+            .every( assetName => 
+                Number( (assets as any)[assetName] ?? -1 ) 
+                >= 0 
+            )
+        )
+    }
+
+    static isAdaOnly( v: Value ): boolean
+    {
+        return v.map.length === 1;
     }
 
     static lovelaces( n: number | bigint ): Value
@@ -82,24 +171,55 @@ export class Value
     {
         return new Value( subIValues( a.map, b.map ) );
     }
+
+    clone(): Value
+    {
+        return new Value( cloneIValue(this.map ) )
+    }
+
+    toData(): DataMap<DataB,DataMap<DataB,DataI>>
+    {
+        return new DataMap<DataB,DataMap<DataB,DataI>>(
+            this.map.map( ({ policy, assets }) =>
+                new DataPair(
+                    new DataB( new ByteString( policy === "" ? "" : policy.asBytes ) ),
+                    new DataMap(
+                        Object.keys( assets ).map( assetName =>
+                            new DataPair(
+                                new DataB(
+                                    ByteString.fromAscii( assetName )
+                                ),
+                                new DataI( (assets as any)[ assetName ] )
+                            )
+                        )
+                    )
+                )
+            )
+        )
+    }
     
     toCbor(): CborString
     {
         return Cbor.encode( this.toCborObj() );
     }
-    toCborObj(): CborMap
+    toCborObj(): CborObj
     {
-        return new CborMap(
-            this.map.map( entry => {
+        if( Value.isAdaOnly( this ) ) return new CborUInt( this.lovelaces );
+
+        const multiasset = new CborMap(
+            this.map
+            // only keep hash28
+            .filter(({ policy }) => policy.toString().length === 56 )
+            .map( entry => {
                 const assets = entry.assets;
                 const policy = entry.policy;
                 return {
-                    k: policy === "" ? new CborBytes(Buffer.from("","hex")) : policy.toCborObj(),
+                    k: policy === "" ? new CborBytes( new Uint8Array(0) ) : policy.toCborObj(),
                     v: new CborMap(
                         Object.keys( assets ).map( assetNameAscii => {
                             const amt = (assets as any)[ assetNameAscii ];
                             return {
-                                k: new CborBytes( Buffer.from( assetNameAscii, "ascii" ) ),
+                                k: new CborBytes( fromAscii( assetNameAscii ) ),
                                 v: amt < 0 ? new CborNegInt( amt ) : new CborUInt( amt )
                             };
                         })
@@ -107,7 +227,107 @@ export class Value
                 };
             })
         );
+
+        if( this.lovelaces === BigInt(0) ) return multiasset;
+
+        return new CborArray([
+            new CborUInt( this.lovelaces ),
+            multiasset
+        ]);
+    }
+
+    static fromCbor( cStr: CanBeCborString ): Value
+    {
+        return Value.fromCborObj( Cbor.parse( forceCborString( cStr ) ) )
+    }
+    static fromCborObj( cObj: CborObj ): Value
+    {
+        if(!(
+            cObj instanceof CborArray   ||  // ada and assets
+            cObj instanceof CborMap     ||  // only assets
+            cObj instanceof CborUInt        // only ada
+        ))
+        throw new InvalidCborFormatError("Value");
+
+        if( cObj instanceof CborUInt )
+        return Value.lovelaces( cObj.num );
+
+        let cborMap: CborMapEntry[];
+        let valueMap: IValue;
+
+        if( cObj instanceof CborArray )
+        {
+            if(!(
+                cObj.array[0] instanceof CborUInt &&
+                cObj.array[1] instanceof CborMap
+            ))
+            throw new InvalidCborFormatError("Value");
+
+            cborMap = cObj.array[1].map;
+            valueMap = new Array( cborMap.length + 1 );
+
+            valueMap[0] = {
+                policy: "",
+                assets: { "": cObj.array[0].num }
+            };
+        }
+        else
+        {
+            cborMap = cObj.map;
+            valueMap = new Array( cborMap.length + 1 );
+
+            valueMap[0] = {
+                policy: "",
+                assets: { "": 0 }
+            };
+        }
+        
+        const n = cborMap.length;
+
+        for( let i = 0; i < n; i++ )
+        {
+            const { k , v } = cborMap[i];
+
+            if(!( k instanceof CborBytes ))
+            throw new InvalidCborFormatError("Value");
+
+            const policy = k.buffer.length === 0 ? "" : new Hash28( k.buffer )
+
+            if(!( v instanceof CborMap ))
+            throw new InvalidCborFormatError("Value");
+
+            const assetsMap = v.map;
+            const assetsMapLen = v.map.length;
+
+            const assets = {};
+
+            for( let j = 0 ; j < assetsMapLen; j++ )
+            {
+                const { k, v } = assetsMap[j];
+                if(!( k instanceof CborBytes ))
+                throw new InvalidCborFormatError("Value");
+
+                if(!( v instanceof CborNegInt || v instanceof CborUInt ))
+                throw new InvalidCborFormatError("Value");
+
+                ObjectUtils.defineReadOnlyProperty(
+                    assets,
+                    toAscii( k.buffer ),
+                    v.num
+                );
+            }
+
+            valueMap[i + 1] = {
+                policy: policy as any,
+                assets
+            };
+        }
+
+        return new Value(valueMap);
+    }
+
+    toJson()
+    {
+        return IValueToJson( this.map );
     }
 }
-
-export default Value;

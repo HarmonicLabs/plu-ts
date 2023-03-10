@@ -1,5 +1,4 @@
-import PlutsStackError from "../../../errors/PlutsStructError/PlutsStackError";
-
+import { PlutsStackError } from "../../../errors/PlutsStructError/PlutsStackError";
 
 export default class Stack<T = any>
 {

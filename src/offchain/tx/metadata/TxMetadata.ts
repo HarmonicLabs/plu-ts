@@ -1,12 +1,15 @@
-import Cbor from "../../../cbor/Cbor";
-import CborObj from "../../../cbor/CborObj";
-import CborMap from "../../../cbor/CborObj/CborMap";
-import CborUInt from "../../../cbor/CborObj/CborUInt";
-import CborString from "../../../cbor/CborString";
-import { ToCbor } from "../../../cbor/interfaces/CBORSerializable";
 import JsRuntime from "../../../utils/JsRuntime";
 import ObjectUtils from "../../../utils/ObjectUtils";
-import TxMetadatum, { isTxMetadatum } from "./TxMetadatum";
+
+import { CborString, CanBeCborString, forceCborString } from "../../../cbor/CborString";
+import { ToCbor } from "../../../cbor/interfaces/CBORSerializable";
+import { Cbor } from "../../../cbor/Cbor";
+import { CborObj } from "../../../cbor/CborObj";
+import { CborMap } from "../../../cbor/CborObj/CborMap";
+import { CborUInt } from "../../../cbor/CborObj/CborUInt";
+import { InvalidCborFormatError } from "../../../errors/InvalidCborFormatError";
+import { ToJson } from "../../../utils/ts/ToJson";
+import { TxMetadatum, isTxMetadatum, txMetadatumFromCborObj } from "./TxMetadatum";
 
 export type ITxMetadata = {
     [metadatum_label: number | string]: TxMetadatum 
@@ -15,7 +18,7 @@ export type ITxMetadata = {
 type ITxMetadataStr = { [metadatum_label: string]: TxMetadatum };
 
 export class TxMetadata
-    implements ToCbor
+    implements ToCbor, ToJson
 {
     readonly metadata!: ITxMetadataStr;
 
@@ -28,7 +31,7 @@ export class TxMetadata
 
             ObjectUtils.defineReadOnlyProperty(
                 _metadata,
-                BigInt( k ).toString(10),
+                BigInt( k ).toString(),
                 (() => {
                     const v = metadata[k];
                     JsRuntime.assert(
@@ -63,5 +66,48 @@ export class TxMetadata
                 }
             })
         )
+    }
+
+    static fromCbor( cStr: CanBeCborString ): TxMetadata
+    {
+        return TxMetadata.fromCborObj( Cbor.parse( forceCborString( cStr ) ) );
+    }
+    static fromCborObj( cObj: CborObj ): TxMetadata
+    {
+        if(!( cObj instanceof CborMap ))
+        throw new InvalidCborFormatError("TxMetadata")
+
+        const meta = {};
+        const len = cObj.map.length;
+
+        for( let i = 0; i < len; i++ )
+        {
+            const { k, v } = cObj.map[i];
+
+            if(!( k instanceof CborUInt ))
+            throw new InvalidCborFormatError("TxMetadata")
+
+            ObjectUtils.defineReadOnlyProperty(
+                meta, k.num.toString(), txMetadatumFromCborObj( v )
+            )
+        }
+
+        return new TxMetadata( meta )
+    }
+
+    toJson()
+    {
+        const json = {}
+
+        const ks = Object.keys( this.metadata );
+
+        for(const k of ks)
+        {
+            ObjectUtils.defineReadOnlyProperty(
+                json, k, this.metadata[k].toJson()
+            )
+        }
+
+        return json as any;
     }
 }

@@ -1,11 +1,12 @@
-import Data, { isData } from ".";
 import JsRuntime from "../../utils/JsRuntime";
-import Cloneable from "../interfaces/Cloneable";
+import { Data, isData } from "./Data";
+import { ToJson } from "../../utils/ts/ToJson";
+import { Cloneable } from "../interfaces/Cloneable";
 import { UInteger, CanBeUInteger, forceUInteger } from "../ints/Integer";
 
 
-export default class DataConstr
-    implements Cloneable<DataConstr>
+export class DataConstr
+    implements Cloneable<DataConstr>, ToJson
 {
     private _constr: UInteger;
     get constr(): UInteger { return this._constr.clone() };
@@ -32,6 +33,14 @@ export default class DataConstr
             //.map( dataElem => dataElem.clone() ) as Data[]
             // the constructor clones the fields
         );
+    }
+
+    toJson(): any
+    {
+        return {
+            constr: Number( this._constr.asBigInt ),
+            fields: this._fields.map( f => f.toJson() )
+        }
     }
 }
 

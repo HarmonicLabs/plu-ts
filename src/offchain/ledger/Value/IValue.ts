@@ -1,14 +1,17 @@
+import { fromAscii, toHex } from "@harmoniclabs/uint8array-utils";
 import JsRuntime from "../../../utils/JsRuntime";
 import ObjectUtils from "../../../utils/ObjectUtils";
-import Hash32 from "../../hashes/Hash32/Hash32";
-import { IValue } from "./Value";
+
+import { Hash28 } from "../../hashes/Hash28/Hash28";
+
+export type IValue = (IValuePolicyEntry | IValueAdaEntry)[]
 
 export type IValueAssets = {
-    [assetNameAscii: string]: number | bigint
+    [assetNameAscii: string]: number | bigint,
 }
 
 export type IValuePolicyEntry = {
-    policy: Hash32,
+    policy: Hash28,
     assets: IValueAssets
 };
 
@@ -17,6 +20,64 @@ export type IValueAdaEntry = {
     assets: { "": number | bigint }
 }
 
+export function cloneIValue( ival: IValue ): IValue
+{
+    return ival.map( cloneIValueEntry );
+}
+
+function policyToString( policy: "" | Hash28 ): string
+{
+    return policy === "" ? policy : policy.asString;
+}
+
+export function IValueToJson( iVal: IValue ): object
+{
+    const result = {};
+
+    for( const { policy, assets } of iVal )
+    {
+        const _assets = {};
+
+        for( const k in assets )
+        {
+            ObjectUtils.defineReadOnlyProperty(
+                _assets,
+                toHex( fromAscii( k ) ),
+                (assets as any)[k].toString()
+            )
+        }
+        
+        ObjectUtils.defineReadOnlyProperty(
+            result,
+            policyToString( policy ),
+            _assets
+        );     
+    }
+
+    return result;
+}
+
+function cloneIValueAssets( iValAssets: IValueAssets ): IValueAssets
+{
+    const ks = Object.keys( iValAssets );
+    const res = {};
+    for(let i = 0; i < ks.length; i++)
+    {
+        const _k = ks[i];
+        ObjectUtils.defineNormalProperty(
+            res, _k, iValAssets[_k]
+        );
+    }
+    return res;
+}
+
+export function cloneIValueEntry<Entry extends (IValueAdaEntry | IValuePolicyEntry)>( { policy, assets }: Entry ): Entry
+{
+    return {
+        policy: policy,
+        assets: cloneIValueAssets( assets )
+    } as any;
+}
 
 /**
  * extended ascii
@@ -44,18 +105,9 @@ function isAdaEntry( entry: object ): entry is IValueAdaEntry
     );
 }
 
-function isStrSet( strs: string[] ): boolean
-{
-    return strs.every( (str,i) => i === strs.indexOf( str ) )
-}
-
 function isIValueAssets( assets: object ): assets is IValueAssets
 {
-    const names = Object.keys( assets );
-
-    if( !isStrSet( names ) ) return false;
-
-    return names.every( name => {
+    return Object.keys( assets ).every( name => {
 
         const amt = ((assets as any)[name]);
 
@@ -87,7 +139,8 @@ export function isIValue( entries: object[] ): entries is IValue
             ObjectUtils.isObject( entry ) &&
             ObjectUtils.hasOwn( entry, "policy" ) &&
             ObjectUtils.hasOwn( entry, "assets" )
-        )) return false;
+        ))
+        return false;
 
         if( entry.policy === "" )
         {
@@ -104,7 +157,7 @@ export function isIValue( entries: object[] ): entries is IValue
             continue;
         }
 
-        if( !(entry.policy instanceof Hash32) ) return false;
+        if( !(entry.policy instanceof Hash28) ) return false;
 
         const policyAsStr = entry.policy.asString;
 
@@ -261,8 +314,17 @@ export function subIValues( a: IValue, b: IValue ): IValue
 {
     const result: IValue = [];
 
-    const { assets: aAdaAssets } = a.find(  entry => (entry.policy as any) === "" ) ?? {};
-    const { assets: bAdaAssets } = b.find( entry => (entry.policy as any) === "" ) ?? {};
+    const bIndiciesIncluded: number[] = [];
+
+    const { assets: aAdaAssets } = a.find( entry => (entry.policy as any) === "" ) ?? {};
+    const { assets: bAdaAssets } = b.find( (entry, i) => {
+        if( (entry.policy as any) === "" )
+        {
+            bIndiciesIncluded.push( i )
+            return true
+        }
+        return false;
+    }) ?? {};
 
     if( aAdaAssets !== undefined || bAdaAssets !== undefined )
     {
@@ -290,12 +352,10 @@ export function subIValues( a: IValue, b: IValue ): IValue
 
         const lovelaces = BigInt(aVal) - BigInt(bVal);
         if( lovelaces !== BigInt(0) )
-        {
             result.push({
                 policy: "",
                 assets: { "": lovelaces }
             });
-        }
     }
 
     const _a = a as IValuePolicyEntry[];
@@ -303,25 +363,26 @@ export function subIValues( a: IValue, b: IValue ): IValue
 
     for( let i = 0; i < _a.length; i++ )
     {
-        const { policy, assets: sassets } = _a[i];
+        const { policy, assets: aAssets } = _a[i];
 
         if( (policy as any) === "" ) continue;
 
         const policyAsStr = policy.asString;
         
-        const { assets: lassets } = _b.find( (entry, i) => {
+        const { assets: bAssets } = _b.find( (entry, i) => {
             if( entry.policy.asString === policyAsStr )
             {
+                bIndiciesIncluded.push( i );
                 return true;
             }
             return false;
         }) ?? {};
 
-        if( lassets !== undefined )
+        if( bAssets !== undefined )
         {
             const subtractedAssets = subIValueAssets(
-                sassets,
-                lassets
+                aAssets,
+                bAssets
             );
 
             if( Object.keys( subtractedAssets ).length !== 0 )
@@ -336,9 +397,27 @@ export function subIValues( a: IValue, b: IValue ): IValue
         {
             result.push({
                 policy,
-                assets: sassets
+                assets: aAssets
             });
         }
+    }
+
+    for( let i = 0; i < _b.length; i++ )
+    {
+        if( bIndiciesIncluded.includes( i ) ) continue;
+
+        const subAssets = {};
+        const { policy, assets } = _b[i];
+        for(const assetName in assets)
+        {
+            ObjectUtils.defineNonDeletableNormalProperty(
+                subAssets, assetName, -assets[assetName]
+            );
+        }
+        result.push({
+            policy: policy.clone(),
+            assets: subAssets
+        });
     }
 
     return result;
@@ -356,12 +435,15 @@ function subIValueAssets( a: IValueAssets, b: IValueAssets ): IValueAssets
     const aKeys = Object.keys( a );
     const bKeys = Object.keys( b );
 
+    const includedBKeys: string [] = [];
+
     for( let i = 0; i < aKeys.length; i++ )
     {
         const name = aKeys[i];
 
         if( bKeys.includes( name ) )
         {
+            includedBKeys.push( name );
             const amt = subInt( a[name], b[name] );
 
             if( amt !== BigInt(0) )
@@ -377,6 +459,15 @@ function subIValueAssets( a: IValueAssets, b: IValueAssets ): IValueAssets
                 result, name, a[name]
             );
         }
+    }
+
+    for(const bKey of bKeys)
+    {
+        if( includedBKeys.includes(bKey) ) continue;
+        
+        ObjectUtils.defineNonDeletableNormalProperty(
+            result, bKey, -b[bKey]
+        );
     }
 
     return result;

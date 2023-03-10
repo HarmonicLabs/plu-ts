@@ -1,20 +1,18 @@
-import palias from "../../../../PTypes/PAlias/palias";
-import { int, list, pair } from "../../../../Term/Type/base";
-import PCurrencySymbol from "../PCurrencySymbol";
-import PTokenName from "../PTokenName";
+import { palias } from "../../../../PTypes/PAlias/palias";
+import { asData, int, list, pair } from "../../../../type_system/types";
+import { PCurrencySymbol } from "../PCurrencySymbol";
+import { PTokenName } from "../PTokenName";
 
-const PValue = palias(
-    list(
-        pair(
-            PCurrencySymbol.type,
-            list(
-                pair(
-                    PTokenName.type,
-                    int
-                )
-            )
-        )
-    )
+export const PAssetsEntryT = pair(
+    PTokenName.type,
+    int
 );
 
-export default PValue;
+export const PValueEntryT = pair(
+    PCurrencySymbol.type,
+    list( PAssetsEntryT )
+);
+
+export const PValue = palias(
+    list( PValueEntryT )
+);

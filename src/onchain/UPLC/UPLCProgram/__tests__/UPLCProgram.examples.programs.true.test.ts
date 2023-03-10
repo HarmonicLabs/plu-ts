@@ -9,12 +9,12 @@ cabal run uplc -- example -s true
 (program 1.0.0 (con bool True))
 */
 
-import UPLCProgram from "..";
-import BinaryString from "../../../../types/bits/BinaryString";
-import BitStream from "../../../../types/bits/BitStream";
 import Debug from "../../../../utils/Debug";
-import UPLCEncoder from "../../UPLCEncoder";
-import UPLCConst from "../../UPLCTerms/UPLCConst";
+import { UPLCProgram } from "..";
+import { BinaryString } from "../../../../types/bits/BinaryString";
+import { BitStream } from "../../../../types/bits/BitStream";
+import { UPLCEncoder } from "../../UPLCEncoder";
+import { UPLCConst } from "../../UPLCTerms/UPLCConst";
 
 
 describe("true", () => {

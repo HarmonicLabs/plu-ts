@@ -1,21 +1,24 @@
-import Cbor from "../../cbor/Cbor";
-import CborObj from "../../cbor/CborObj";
-import CborArray from "../../cbor/CborObj/CborArray";
-import CborBytes from "../../cbor/CborObj/CborBytes";
-import CborSimple from "../../cbor/CborObj/CborSimple";
-import CborText from "../../cbor/CborObj/CborText";
-import CborUInt from "../../cbor/CborObj/CborUInt";
-import { canBeUInteger, CanBeUInteger, forceUInteger } from "../../types/ints/Integer";
 import JsRuntime from "../../utils/JsRuntime";
 import ObjectUtils from "../../utils/ObjectUtils";
 
+import { CborObj } from "../../cbor/CborObj";
+import { CborArray } from "../../cbor/CborObj/CborArray";
+import { CborBytes } from "../../cbor/CborObj/CborBytes";
+import { CborSimple } from "../../cbor/CborObj/CborSimple";
+import { CborText } from "../../cbor/CborObj/CborText";
+import { CborUInt } from "../../cbor/CborObj/CborUInt";
+import { BasePlutsError } from "../../errors/BasePlutsError";
+import { InvalidCborFormatError } from "../../errors/InvalidCborFormatError";
+import { canBeUInteger, CanBeUInteger, forceBigUInt, forceUInteger } from "../../types/ints/Integer";
+import { isUint8Array, readUInt16BE, readUInt8 } from "@harmoniclabs/uint8array-utils";
+
 export type IpPoolRelay = ({
-    ipv4: Buffer
+    ipv4: Uint8Array
 } | {
-    ipv6: Buffer
+    ipv6: Uint8Array
 } | {
-    ipv4: Buffer
-    ipv6: Buffer
+    ipv4: Uint8Array
+    ipv6: Uint8Array
 }) & {
     type: "ip",
     port?: CanBeUInteger
@@ -34,7 +37,44 @@ export interface MultiHostPoolRelay {
 
 export type PoolRelay = IpPoolRelay | DnsPoolRelay | MultiHostPoolRelay;
 
-export default PoolRelay;
+export function poolRelayToJson( relay: PoolRelay )
+{
+    const type = relay.type;
+
+    switch( type )
+    {
+        case "ip":
+            const ipv4: Uint8Array | undefined = (relay as any).ipv4 === undefined ? undefined : (relay as any).ipv4;
+            const ipv6: Uint8Array | undefined = (relay as any).ipv6 === undefined ? undefined : (relay as any).ipv6;
+            return {
+                type: "ip",
+                port: relay.port === undefined ? undefined : Number( forceBigUInt( relay.port ) ),
+                ipv4: ipv4 === undefined ? undefined : `${readUInt8( ipv4, 0 )}.${readUInt8( ipv4, 1 )}.${readUInt8( ipv4, 2 )}.${readUInt8( ipv4, 3 )}`,
+                ipv6: ipv6 === undefined ? undefined :
+                    [
+                        readUInt16BE( ipv6, 0   ).toString(16),
+                        readUInt16BE( ipv6, 2   ).toString(16),
+                        readUInt16BE( ipv6, 4   ).toString(16),
+                        readUInt16BE( ipv6, 6   ).toString(16),
+                        readUInt16BE( ipv6, 8   ).toString(16),
+                        readUInt16BE( ipv6, 10  ).toString(16)
+                    ].join(':')
+            }
+        case "dns":
+            return {
+                type: "dns",
+                port: relay.port === undefined ? undefined : Number( forceBigUInt( relay.port ) ),
+                dnsName: relay.dnsName
+            }
+        case "multi-host":
+            return {
+                type: "multi-host",
+                dnsName: relay.dnsName
+            }
+        default: 
+            throw new BasePlutsError("unknown pool realy type")    
+    }
+}
 
 function minimumPoolRelayCheck( something: any ): boolean
 {
@@ -63,8 +103,8 @@ export function isIpPoolRelay<T extends object>( something: T ): something is (T
         minimumPoolRelayCheck( something ) &&
         (something as any).type === "ip" &&
         (
-            (ObjectUtils.hasOwn( something, "ipv4" ) && Buffer.isBuffer( ipv4 )) || 
-            (ObjectUtils.hasOwn( something, "ipv6" ) && Buffer.isBuffer( ipv6 )) 
+            (ObjectUtils.hasOwn( something, "ipv4" ) && isUint8Array( ipv4 )) || 
+            (ObjectUtils.hasOwn( something, "ipv6" ) && isUint8Array( ipv6 )) 
         ) &&
         ( ipv4 === undefined || ipv4.length === 4 ) &&
         ( ipv6 === undefined || ipv6.length === 16 ) &&
@@ -151,6 +191,57 @@ export function poolRelayToCborObj( poolRelay: PoolRelay ): CborObj
         ]);
     }
 
+    throw JsRuntime.makeNotSupposedToHappenError(
+        "can't match 'PoolRelay' type"
+    )
+}
+
+
+export function poolRelayFromCborObj( cObj: CborObj ): PoolRelay
+{
+    if(!( cObj instanceof CborArray ))
+    throw new InvalidCborFormatError("PoolRelay");
+
+    const [
+        _type,
+        _1,
+        _2,
+        _3
+    ] = cObj.array;
+
+    if(!( _type instanceof CborUInt ))
+    throw new InvalidCborFormatError("PoolRelay");
+
+    const n = Number( _type.num );
+
+    if( n === 0 )
+    {
+        return {
+            type: "ip",
+            port: _1 instanceof CborUInt ? _1.num : undefined,
+            ipv4: _2 instanceof CborBytes ? _2.buffer : undefined as any,
+            ipv6: _3 instanceof CborBytes ? _3.buffer : undefined as any,
+        }
+    }
+    if( n === 1 )
+    {
+        return {
+            type: "dns",
+            port: _1 instanceof CborUInt ? _1.num : undefined,
+            dnsName: _2 instanceof CborText ? _2.text : undefined as any,
+        }
+    }
+    if( n === 2 )
+    {
+        if(!( _1 instanceof CborText ))
+        throw new InvalidCborFormatError("PoolRelay");
+
+        return {
+            type: "multi-host",
+            dnsName: _1.text,
+        }
+    }
+    
     throw JsRuntime.makeNotSupposedToHappenError(
         "can't match 'PoolRelay' type"
     )

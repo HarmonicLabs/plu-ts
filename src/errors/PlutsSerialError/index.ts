@@ -1,3 +1,3 @@
-import BasePlutsError from "../BasePlutsError";
+import { BasePlutsError } from "../BasePlutsError";
 
-export default class PlutsSerialError extends BasePlutsError {}
+export class PlutsSerialError extends BasePlutsError {}

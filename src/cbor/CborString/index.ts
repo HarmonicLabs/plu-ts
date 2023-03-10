@@ -1,16 +1,16 @@
-import CborObj from "../CborObj";
-import Cbor from "../Cbor";
-import ByteString from "../../types/HexString/ByteString";
+import { CborObj } from "../CborObj";
+import { Cbor } from "../Cbor";
+import { ByteString } from "../../types/HexString/ByteString";
 
-export default
-class CborString extends ByteString
+
+export class CborString extends ByteString
 {
     static isStrictInstance( cborStr: any ): cborStr is CborString
     {
         return ( cborStr !== undefined && cborStr !== null ) && Object.getPrototypeOf( cborStr ) === CborString.prototype
     }
 
-    constructor( cbor: string | Buffer )
+    constructor( cbor: string | Uint8Array )
     {
         if( typeof cbor === "string" )
         {
@@ -32,4 +32,13 @@ class CborString extends ByteString
     {
         return Cbor.parse( this );
     }
+}
+
+export type CanBeCborString = string | Uint8Array | ByteString;
+
+export function forceCborString( cStr: CanBeCborString ): CborString
+{
+    return new CborString(
+        cStr instanceof ByteString ? cStr.toBuffer() : cStr
+    )
 }

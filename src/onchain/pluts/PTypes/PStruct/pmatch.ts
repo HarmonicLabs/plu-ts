@@ -1,51 +1,100 @@
-import { RestrictedStructInstance, PStruct } from "./pstruct";
-import BasePlutsError from "../../../../errors/BasePlutsError";
 import JsRuntime from "../../../../utils/JsRuntime";
 import ObjectUtils from "../../../../utils/ObjectUtils";
-import UPLCTerm from "../../../UPLC/UPLCTerm";
-import Application from "../../../UPLC/UPLCTerms/Application";
-import Builtin from "../../../UPLC/UPLCTerms/Builtin";
-import Delay from "../../../UPLC/UPLCTerms/Delay";
-import ErrorUPLC from "../../../UPLC/UPLCTerms/ErrorUPLC";
-import Force from "../../../UPLC/UPLCTerms/Force";
-import HoistedUPLC from "../../../UPLC/UPLCTerms/HoistedUPLC";
-import Lambda from "../../../UPLC/UPLCTerms/Lambda";
-import UPLCConst from "../../../UPLC/UPLCTerms/UPLCConst";
-import UPLCVar from "../../../UPLC/UPLCTerms/UPLCVar";
-import { pindexList } from "../../stdlib/List/methods";
-import TermList from "../../stdlib/UtilityTerms/TermList";
-import PType from "../../PType";
-import { plet, papp, plam } from "../../Syntax/syntax";
-import Term from "../../Term";
-import { ConstantableStructCtorDef, ConstantableStructDefinition, data, fn, lam, list, StructCtorDef, TermType, tyVar } from "../../Term/Type/base";
-import { isConstantableStructDefinition, isLambdaType } from "../../Term/Type/kinds";
-import { termTypeToString } from "../../Term/Type/utils";
-import PData from "../PData/PData";
-import PLam from "../PFn/PLam";
-import PInt, { pInt } from "../PInt";
-import PList from "../PList";
-import matchSingleCtorStruct from "./matchSingleCtorStruct";
-import capitalize from "../../../../utils/ts/capitalize";
-import DataI from "../../../../types/Data/DataI";
+
+import { RestrictedStructInstance, PStruct, pstruct } from "./pstruct";
 import { constT } from "../../../UPLC/UPLCTerms/UPLCConst/ConstType";
-import addUtilityForType from "../../stdlib/UtilityTerms/addUtilityForType";
-import punsafeConvertType from "../../Syntax/punsafeConvertType";
-import { getFromDataForType } from "../PData/conversion/getFromDataTermForType";
+import { ctorDefToString, termTypeToString } from "../../type_system/utils";
+import { BasePlutsError } from "../../../../errors/BasePlutsError";
+import { UPLCTerm } from "../../../UPLC/UPLCTerm";
+import { Application } from "../../../UPLC/UPLCTerms/Application";
+import { Builtin } from "../../../UPLC/UPLCTerms/Builtin";
+import { Delay } from "../../../UPLC/UPLCTerms/Delay";
+import { ErrorUPLC } from "../../../UPLC/UPLCTerms/ErrorUPLC";
+import { Force } from "../../../UPLC/UPLCTerms/Force";
+import { HoistedUPLC } from "../../../UPLC/UPLCTerms/HoistedUPLC";
+import { Lambda } from "../../../UPLC/UPLCTerms/Lambda";
+import { UPLCConst } from "../../../UPLC/UPLCTerms/UPLCConst";
+import { UPLCVar } from "../../../UPLC/UPLCTerms/UPLCVar";
+import { PType } from "../../PType";
+import { Term } from "../../Term";
+import { PData } from "../PData/PData";
+import { PLam } from "../PFn/PLam";
+import { PList } from "../PList";
+import { matchSingleCtorStruct } from "./matchSingleCtorStruct";
+import { capitalize } from "../../../../utils/ts/capitalize";
+import { DataI } from "../../../../types/Data/DataI";
+import { plet } from "../../lib/plet";
+import { papp } from "../../lib/papp";
+import { UtilityTermOf, addUtilityForType } from "../../lib/addUtilityForType";
+import { punsafeConvertType } from "../../lib/punsafeConvertType";
+import { TermList } from "../../lib/std/UtilityTerms/TermList";
+import { plam } from "../../lib/plam";
+import { TermFn } from "../PFn";
+import { LamT, PrimType, StructCtorDef, StructDefinition, TermType, data, fn, int, lam, list, struct, tyVar } from "../../type_system/types";
+import { isStructDefinition, withAllPairElemsAsData } from "../../type_system";
+import { phead } from "../../lib/builtins/list";
+import { _fromData } from "../../lib/std/data/conversion/fromData_minimal";
+import { genHoistedSourceUID } from "../../../UPLC/UPLCTerms/HoistedUPLC/HoistedSourceUID/genHoistedSourceUID";
 
 
-export type RawFields<CtorDef extends ConstantableStructCtorDef> = 
+const elemAtCache: { [n: number]: TermFn<[ PList<PData> ], PData > } = {};
+
+export function getElemAtTerm( n: number ): TermFn<[ PList<PData> ], PData >
+{
+    if( n < 0 || n !== Math.round(n) )
+    throw new BasePlutsError(
+        "unexpected index in pmatch field extraction"
+    );
+
+    if( elemAtCache[n] !== undefined ) return elemAtCache[n];
+
+    if( n === 0 ) return phead( data );
+
+    let uplc: UPLCTerm = new UPLCVar(0);
+
+    const initialN = n;
+    while( n > 0 )
+    {
+        uplc = new Application( Builtin.tailList, uplc );
+        n--;
+    }
+
+    uplc = new HoistedUPLC(
+        new Lambda(
+            new Application(
+                Builtin.headList,
+                uplc
+            )
+        ),
+        genHoistedSourceUID() // executed once, all other times for the same n we get the term from the 'cache'
+    );
+
+    const term = new Term( lam( list(data), data ), _dbn => uplc );
+
+    ObjectUtils.defineReadOnlyProperty(
+        term, "$",
+        ( lst: Term<PList<PData>>) => 
+            new Term(
+                data,
+                dbn => new Application( uplc.clone(), lst.toUPLC(dbn) )
+            )
+    );
+
+    elemAtCache[initialN] = term as any;
+    return term as any;
+}
+
+
+export type RawFields<CtorDef extends StructCtorDef> = 
     Term<PList<PData>> &
     {
         extract: <Fields extends (keyof CtorDef)[]>( ...fields: Fields ) => {
-            in: <PExprResult extends PType>( expr: ( extracted: RestrictedStructInstance<CtorDef,Fields> ) => Term<PExprResult> ) => Term<PExprResult>
+            in: <PExprResult extends PType>( expr: ( extracted: RestrictedStructInstance<CtorDef,Fields> ) => Term<PExprResult> ) => UtilityTermOf<PExprResult>
         }
     }
 
-
-function getExtractedFieldsExpr<CtorDef extends ConstantableStructCtorDef, Fields extends (keyof CtorDef)[], PExprResult extends PType>(
-    elemAt: Term<PLam<PInt, PData>> & {
-        $: (input: Term<PInt>) => Term<PData>;
-    },
+function getExtractedFieldsExpr<CtorDef extends StructCtorDef, Fields extends (keyof CtorDef)[], PExprResult extends PType>(
+    fieldsData: Term<PList<PData>>,
     ctorDef: CtorDef,
     allFIndexes: number[],
     expr: ( extracted: RestrictedStructInstance<CtorDef,Fields> ) => Term<PExprResult> ,
@@ -62,19 +111,23 @@ function getExtractedFieldsExpr<CtorDef extends ConstantableStructCtorDef, Field
     const idx = allFIndexes[0];
     const fieldType = ctorDef[ allFieldsNames[ idx ] ];
 
-    return plet( getFromDataForType( fieldType )(
-        // @ts-ignore Type instantiation is excessively deep and possibly infinite.
-        papp( elemAt, pInt( idx ) )
-    )).in( value => {
+    return plet(
+        // needs to be minimal
+        // it MUST not add the fieldType utilities
+        // it will add the `withAllPairElemsAsData` version utilities
+        _fromData( fieldType )(
+            getElemAtTerm( idx ).$( fieldsData )
+        )
+    ).in( value => {
 
         ObjectUtils.defineNormalProperty(
             partialExtracted,
             allFieldsNames[ idx ],
-            addUtilityForType( fieldType )( value )
+            punsafeConvertType( value, withAllPairElemsAsData( fieldType ) )
         );
 
         return getExtractedFieldsExpr(
-            elemAt,
+            fieldsData,
             ctorDef,
             allFIndexes.slice(1),
             expr,
@@ -83,12 +136,12 @@ function getExtractedFieldsExpr<CtorDef extends ConstantableStructCtorDef, Field
     });
 }
 
-function defineExtract<CtorDef extends ConstantableStructCtorDef>
-    ( fieldsList: Readonly<Term<PList<PData>>>, ctorDef: CtorDef ): RawFields<CtorDef>
+function defineExtract<CtorDef extends StructCtorDef>
+    ( fieldsList: Term<PList<PData>>, ctorDef: CtorDef ): RawFields<CtorDef>
 {
     const fieldsNames = Object.keys( ctorDef );
     // basically cloning;
-    const _fieldsList = punsafeConvertType( fieldsList as any, fieldsList.type );
+    const _fieldsList = fieldsList;
 
     return ObjectUtils.defineReadOnlyProperty(
         _fieldsList,
@@ -97,70 +150,70 @@ function defineExtract<CtorDef extends ConstantableStructCtorDef>
             in: <PExprResult extends PType>( expr: ( extracted: RestrictedStructInstance<CtorDef,Fields> ) => Term<PExprResult> ) => Term<PExprResult>
         } => {
 
-            // console.log( `extracting [${fields}] from [${fieldsNames}]` );
-
-            const fieldsIdxs = Object.freeze(
-                fields
+            const fieldsIndicies = fields
                 .map( f => fieldsNames.findIndex( fName => fName === f ) )
                 // ignore fields not present in the definion or duplicates
-                .filter( (idx, i, thisArr ) => idx >= 0 && thisArr.indexOf( idx ) === i )
-                .sort( ( a,b ) => a < b ? -1 : ( a === b ? 0 : 1 ) )
-            );
+                .filter( ( idx, i, thisArr ) => idx >= 0 && thisArr.indexOf( idx ) === i )
+                .sort( ( a,b ) => a < b ? -1 : ( a === b ? 0 : 1 ) );
 
             return ObjectUtils.defineReadOnlyProperty(
                 {},
                 "in",
                 <PExprResult extends PType>( expr: ( extracted: RestrictedStructInstance<CtorDef,Fields> ) => Term<PExprResult> ): Term<PExprResult> => {
 
-                    if( fieldsIdxs.length === 0 ) return expr({} as any);
+                    if( fieldsIndicies.length === 0 ) return expr({} as any);
 
-                    return plet( pindexList( data ).$( _fieldsList ) ).in( elemAt =>
-                        getExtractedFieldsExpr(
-                            elemAt,
-                            ctorDef,
-                            fieldsIdxs as any,
-                            expr,
-                            {}
-                        )
+                    const res = getExtractedFieldsExpr(
+                        _fieldsList,
+                        ctorDef,
+                        fieldsIndicies,
+                        expr,
+                        {}
                     );
+
+                    return res;
                 }
             )
         }
     ) as any;
 }
 
-type CtorCallback<SDef extends ConstantableStructDefinition> = ( rawFields: RawFields<SDef[keyof SDef & string]> ) => Term<PType>;
+type CtorCallback<SDef extends StructDefinition> = ( rawFields: RawFields<SDef[keyof SDef & string]> ) => Term<PType>;
 
 type EmptyObject = { [x: string | number | symbol ]: never };
 
 type MatchRest<PReturnT extends PType> = {
-    _: ( continuation: ( rawFields: TermList<PData> ) => Term<PReturnT> ) => Term<PReturnT>
+    _: ( continuation: ( rawFields: TermList<PData> ) => Term<PReturnT> ) => UtilityTermOf<PReturnT>
 }
 
-type TypedPMatchOptions<SDef extends ConstantableStructDefinition, PReturnT extends PType> = {
+type TypedPMatchOptions<SDef extends StructDefinition, PReturnT extends PType> = {
     [Ctor in keyof SDef as `on${Capitalize<string & Ctor>}`]
         : ( cb: ( rawFields: RawFields<SDef[Ctor]> ) => Term<PReturnT> )
             =>  Omit<SDef,Ctor> extends EmptyObject ?
-                Term<PReturnT> :
+                UtilityTermOf<PReturnT> :
                 TypedPMatchOptions<Omit<SDef,Ctor>, PReturnT>
 } & MatchRest<PReturnT>
 
 
-export type PMatchOptions<SDef extends ConstantableStructDefinition> = {
+export type PMatchOptions<SDef extends StructDefinition> = {
     [Ctor in keyof SDef as `on${Capitalize<string & Ctor>}`]
         : <PReturnT extends PType>( cb: ( rawFields: RawFields<SDef[Ctor]> ) => Term<PReturnT> )
             =>  Omit<SDef,Ctor> extends EmptyObject ?
-                Term<PReturnT> :
+                UtilityTermOf<PReturnT> :
                 TypedPMatchOptions<Omit<SDef,Ctor>, PReturnT>
 } & {
-    _: <PReturnT extends PType>( continuation: ( rawFields: TermList<PData> ) => Term<PReturnT> ) => Term<PReturnT>
+    _: <PReturnT extends PType>( continuation: ( rawFields: TermList<PData> ) => Term<PReturnT> ) => UtilityTermOf<PReturnT>
 }
+
+const matchNCtorsIdxsCache: { [n: number]: Term<any> } = {};
 
 export function matchNCtorsIdxs( _n: number, returnT: TermType )
 {
     if( _n <= 1 ) throw new BasePlutsError("mathcing ill formed struct data");
     const n = Math.round( _n );
     if( _n !== n ) throw new BasePlutsError("number of ctors to match must be an integer");
+
+    if( matchNCtorsIdxsCache[n] !== undefined ) return matchNCtorsIdxsCache[n];
 
     const continuationT = lam( list(data), returnT );
 
@@ -243,20 +296,22 @@ export function matchNCtorsIdxs( _n: number, returnT: TermType )
     body = new HoistedUPLC(
         new Lambda( // structData
             body
-        )
+        ),
+        genHoistedSourceUID() // executed once, all other times for the same n we get the term from the 'cache'
     );
+
+    type ContinuationT = LamT<[PrimType.List, [PrimType.Data]], TermType>
 
     return new Term(
         fn([
             data,
-            ...(new Array( n ).fill( continuationT ))
-        ],  returnT
-        ),
+            ...(new Array( n ).fill( continuationT )) as [ ContinuationT, ...ContinuationT[] ]
+        ],  returnT) as any,
         _dbn => body
     );
 }
 
-function getReturnTypeFromContinuation<SDef extends ConstantableStructDefinition>(
+function getReturnTypeFromContinuation<SDef extends StructDefinition>(
     cont: CtorCallback<SDef>,
     ctorDef: StructCtorDef
 ): TermType
@@ -278,8 +333,16 @@ function getReturnTypeFromContinuation<SDef extends ConstantableStructDefinition
     ).type;
 }
 
-function hoistedMatchCtors<SDef extends ConstantableStructDefinition>(
-    structData: Term<PData>,
+/**
+ * 
+ * @param structData 
+ * @param sDef 
+ * @param ctorCbs
+ *  
+ * @returns the term that matches the ctor 
+ */
+function hoistedMatchCtors<SDef extends StructDefinition>(
+    structData: Term<PStruct<SDef>>,
     sDef: SDef,
     ctorCbs: (CtorCallback<SDef> | Term<PLam<PList<PData>, PType>>)[],
 )
@@ -298,7 +361,7 @@ function hoistedMatchCtors<SDef extends ConstantableStructDefinition>(
 
         if( cont instanceof Term )
         {
-            if( !isLambdaType( cont.type ) )
+            if( cont.type[0] !== PrimType.Lambda )
             {
                 // todo: add proper error
                 throw new BasePlutsError(
@@ -308,20 +371,22 @@ function hoistedMatchCtors<SDef extends ConstantableStructDefinition>(
 
             return papp(
                 papp(
-                    matchSingleCtorStruct,
-                    structData
+                    matchSingleCtorStruct( cont.type[2] ),
+                    structData as any
                 ),
                 cont
             );
         }
 
         const thisCtor = sDef[ ctors[0] ] as SDef[string];
+        const returnT = getReturnTypeFromContinuation( cont, thisCtor );
+
         return papp(
             papp(
-                matchSingleCtorStruct,
-                structData
+                matchSingleCtorStruct( returnT ),
+                structData as any
             ),
-            plam( list(data), getReturnTypeFromContinuation( cont, thisCtor ) )
+            plam( list(data), returnT )
             ( fieldsListData => 
                 cont( 
                     defineExtract( 
@@ -334,16 +399,26 @@ function hoistedMatchCtors<SDef extends ConstantableStructDefinition>(
     }
 
     // multiple ctors struct case
+    let ctorIdx = 0;
+    let cont = ctorCbs.find(
+        (cb, i) => {
+            if( typeof cb === "function" )
+            {
+                ctorIdx = i;
+                return true;
+            }
+            return false;
+        }) ?? ctorCbs[ 0 ];
 
-    let cont = ctorCbs.find( cb => typeof cb === "function" ) ?? ctorCbs[ 0 ];
+    const thisCtor = sDef[ Object.keys( sDef )[ ctorIdx ] ] as SDef[string];
 
     let returnT: TermType | undefined = 
         cont instanceof Term ?
         cont.type[2] as TermType :
-        undefined
+        getReturnTypeFromContinuation( cont, thisCtor )
     
     let result = papp(
-        matchNCtorsIdxs( ctors.length, tyVar("will_be_substituted_by_lambda_applicaiton") ) as any,
+        matchNCtorsIdxs( ctors.length, returnT ) as any,
         structData
     );
 
@@ -370,10 +445,10 @@ function hoistedMatchCtors<SDef extends ConstantableStructDefinition>(
     return result;
 }
 
-export default function pmatch<SDef extends ConstantableStructDefinition>( struct: Term<PStruct<SDef>> ): PMatchOptions<SDef>
+export function pmatch<SDef extends StructDefinition>( struct: Term<PStruct<SDef>> ): PMatchOptions<SDef>
 {
-    const sDef = struct.type[1] as ConstantableStructDefinition;
-    if( !isConstantableStructDefinition( sDef ) )
+    const sDef = struct.type[1] as StructDefinition;
+    if( !isStructDefinition( sDef ) )
     {
         /**
          * @todo add proper error
@@ -420,7 +495,7 @@ export default function pmatch<SDef extends ConstantableStructDefinition>( struc
                     ctorCbs[idx] = cb;
 
                     return hoistedMatchCtors(
-                        punsafeConvertType( struct, data ),
+                        struct as any,
                         sDef,
                         ctorCbs as any
                     );
@@ -436,6 +511,7 @@ export default function pmatch<SDef extends ConstantableStructDefinition>( struc
 
         const remainingCtorsObj = {};
 
+        // here add all the missing ctors contiunuations
         missingCtors.forEach( ctor => {
 
             const idx = indexOfCtor( ctor );
@@ -482,11 +558,13 @@ export default function pmatch<SDef extends ConstantableStructDefinition>( struc
                         }
                     }
 
-                    return hoistedMatchCtors(
-                        punsafeConvertType( struct, data ),
+                    const res =  hoistedMatchCtors(
+                        struct as any,
                         sDef,
                         ctorCbs as any
                     );
+
+                    return res;
                 })
             }
         );

@@ -9,14 +9,14 @@ cabal run uplc -- example -s churchZero
 (program 1.0.0 (delay (lam z (lam f z))))
 */
 
-import UPLCProgram from "..";
-import BinaryString from "../../../../types/bits/BinaryString";
-import BitStream from "../../../../types/bits/BitStream";
 import Debug from "../../../../utils/Debug";
-import UPLCEncoder from "../../UPLCEncoder";
-import Delay from "../../UPLCTerms/Delay";
-import Lambda from "../../UPLCTerms/Lambda";
-import UPLCVar from "../../UPLCTerms/UPLCVar";
+import { UPLCProgram } from "..";
+import { BinaryString } from "../../../../types/bits/BinaryString";
+import { BitStream } from "../../../../types/bits/BitStream";
+import { UPLCEncoder } from "../../UPLCEncoder";
+import { Delay } from "../../UPLCTerms/Delay";
+import { Lambda } from "../../UPLCTerms/Lambda";
+import { UPLCVar } from "../../UPLCTerms/UPLCVar";
 
 
 describe.skip("churchZero", () => {

@@ -1,13 +1,13 @@
-import PlutsCEKFrameError from "../../../errors/PlutsCEKError/PlutsCEKFrameError";
-import Cloneable from "../../../types/interfaces/Cloneable";
+import { PlutsCEKFrameError } from "../../../errors/PlutsCEKError/PlutsCEKFrameError";
+import { Cloneable } from "../../../types/interfaces/Cloneable";
 import { showUPLC } from "../../UPLC/UPLCTerm";
-import ForceFrame from "./ForceFrame";
-import LApp from "./LApp";
-import RApp from "./RApp";
+import { ForceFrame } from "./ForceFrame";
+import { LApp } from "./LApp";
+import { RApp } from "./RApp";
 
 export type Frame = ForceFrame | LApp | RApp ;
 
-export default class CEKFrames
+export class CEKFrames
     implements Cloneable<CEKFrames>
 {
     private _frames: Frame[];

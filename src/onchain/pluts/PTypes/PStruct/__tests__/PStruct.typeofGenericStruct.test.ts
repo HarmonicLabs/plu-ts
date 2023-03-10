@@ -1,40 +1,26 @@
-import { pgenericStruct } from "../pstruct"
-import Type, { ConstantableTermType, int, struct, TermType } from "../../../Term/Type/base"
-import { structExtends } from "../../../Term/Type/extension"
+import { typeofGenericStruct } from "../pstruct"
+import { PMaybe } from "../../../lib/std/PMaybe/PMaybe";
+import { struct, tyVar } from "../../../type_system/types";
+import { termTypeToString, typeExtends } from "../../../type_system";
 
 
 describe("typeofGenericStruct", () => {
 
     test("single arguent", () => {
 
-        const PMaybeDef = (tyArg: ConstantableTermType) => {
-            return {
-                Just: { value: tyArg },
-                Nothing: {}
-            }
-        };
-
-        const PMaybe = pgenericStruct( PMaybeDef )
-
-        const PMaybeTermType = PMaybe.type;
+        const PMaybeTermType = typeofGenericStruct( PMaybe as any ) as any;
         const manualType = struct({
-            Just: { value: Type.Var() },
+            Just: { val: tyVar() as any },
             Nothing: {}
         });
 
-        expect(
-            structExtends(
-                PMaybeTermType,
-                manualType
-            )
-        ).toBe( true );
 
         expect(
-            structExtends(
-                manualType,
-                PMaybeTermType
-            )
-        ).toBe( true )
+            termTypeToString( PMaybeTermType )
+        )
+        .toEqual(
+            termTypeToString( manualType )
+        )
 
     });
 

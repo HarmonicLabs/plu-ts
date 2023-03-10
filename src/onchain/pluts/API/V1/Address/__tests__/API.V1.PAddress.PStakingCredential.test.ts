@@ -1,9 +1,9 @@
-import pstruct from "../../../../PTypes/PStruct/pstruct";
-import { int } from "../../../../Term/Type/base";
-import { isConstantableStructDefinition } from "../../../../Term/Type/kinds";
-import PPubKeyHash from "../../PubKey/PPubKeyHash";
-import PValidatorHash from "../../ScriptsHashes/PValidatorHash";
-import PCredential from "../PCredential";
+import { pstruct } from "../../../../PTypes/PStruct/pstruct";
+import { isStructDefinition } from "../../../../type_system";
+import { int } from "../../../../type_system/types";
+import { PPubKeyHash } from "../../PubKey/PPubKeyHash";
+import { PValidatorHash } from "../../ScriptsHashes/PValidatorHash";
+import { PCredential } from "../PCredential";
 
 
 describe("PStakingCredential", () => {
@@ -16,11 +16,11 @@ describe("PStakingCredential", () => {
         };
 
         expect(
-            isConstantableStructDefinition( PCredentialSDef )
+            isStructDefinition( PCredentialSDef )
         ).toBe( true )
 
         expect(
-            isConstantableStructDefinition({
+            isStructDefinition({
                 PStakingHash: { _0: PCredential.type },
                 PStakingPtr: {
                     _0: int,

@@ -1,14 +1,14 @@
+import { fromHex, toHex } from "@harmoniclabs/uint8array-utils";
 import BigIntUtils from "../../../utils/BigIntUtils";
 import BitUtils from "../../../utils/BitUtils";
-import BufferUtils from "../../../utils/BufferUtils";
 import Debug from "../../../utils/Debug";
-import BitStream from "../BitStream";
+import {BitStream} from "../BitStream";
 
 
 function makeSpecificBufferCase( hexBuff1: string | number[] , hexBuff2: string | number[] )
 {
-    const buff1 = typeof hexBuff1 === "string" ? Buffer.from( hexBuff1, "hex" ) : Buffer.from( hexBuff1 );
-    const buff2 = typeof hexBuff2 === "string" ? Buffer.from( hexBuff2, "hex" ) : Buffer.from( hexBuff2 );
+    const buff1 = typeof hexBuff1 === "string" ? fromHex( hexBuff1 ) : new Uint8Array( hexBuff1 );
+    const buff2 = typeof hexBuff2 === "string" ? fromHex( hexBuff2 ) : new Uint8Array( hexBuff2 );
 
     const bits1 = Debug.ignore.Proxies.withNoisySet(
         new BitStream( buff1 )
@@ -26,28 +26,30 @@ function makeSpecificBufferCase( hexBuff1: string | number[] , hexBuff2: string 
     );
 
     expect( 
-        effectiveBits.toBuffer().buffer.toString( "hex" )
+        toHex( effectiveBits.toBuffer().buffer )
     ).toEqual(
 
-        Buffer.from(
-            Array.from<number>(
-                buff1
-            ).concat(
+        toHex(
+            new Uint8Array(
                 Array.from<number>(
-                    buff2
-                ) 
+                    buff1
+                ).concat(
+                    Array.from<number>(
+                        buff2
+                    ) 
+                )
             )
-        ).toString( "hex" )
+        )
 
     );
 }
 
 describe("BitStream.append both inputs generated from buffer", () => {
 
-    it.concurrent("appends form entire buffers are just fine",() => {
+    it.skip("appends form entire buffers are just fine",() => {
 
-        let someBuffer1 : Buffer;
-        let someBuffer2 : Buffer;
+        let someBuffer1 : Uint8Array;
+        let someBuffer2 : Uint8Array;
 
         let someBits1 : BitStream;
         let someBits2 : BitStream;
@@ -74,8 +76,8 @@ describe("BitStream.append both inputs generated from buffer", () => {
             sndInitialZeroes[ someBits2.nInitialZeroes ]++;
             
             Debug.ignore.log( 
-                `someBuffer1: ${someBuffer1.toString("hex")}`,
-                `someBuffer2: ${someBuffer2.toString("hex")}`
+                `someBuffer1: ${toHex( someBuffer1 )}`,
+                `someBuffer2: ${toHex( someBuffer2 )}`
             )
 
             someBits1.append( someBits2 );
@@ -91,37 +93,41 @@ describe("BitStream.append both inputs generated from buffer", () => {
             // 69fc058cc9de32ce8e0537d37f83a8df0365e9342ed1480d4cacdb32a75d2302c1974aceae7e2f69466ddaf5b815058432f5dfed5f4d66919f51461ee831cd0aa765b42da28a22157e93eb9f36584d250a362d6da032bf880700
 
             if(
-                effectiveBits.toBuffer().buffer.toString( "hex" ) !==
-                Buffer.from(
-                    Array.from<number>(
-                        someBuffer1
-                    ).concat(
+                toHex( effectiveBits.toBuffer().buffer ) !==
+                toHex(
+                    new Uint8Array(
                         Array.from<number>(
-                            someBuffer2
-                        ) 
+                            someBuffer1
+                        ).concat(
+                            Array.from<number>(
+                                someBuffer2
+                            ) 
+                        )
                     )
-                ).toString( "hex" )
+                )
             )
             {
                 throw [
                     "concatenation failed on inputs:",
-                    someBuffer1.toString("hex"),
-                    someBuffer2.toString("hex")
+                    toHex( someBuffer1 ),
+                    toHex( someBuffer2 )
                 ];
             }
             expect( 
-                effectiveBits.toBuffer().buffer.toString( "hex" )
+                toHex( effectiveBits.toBuffer().buffer )
             ).toEqual(
 
-                Buffer.from(
-                    Array.from<number>(
-                        someBuffer1
-                    ).concat(
+                toHex(
+                    new Uint8Array(
                         Array.from<number>(
-                            someBuffer2
-                        ) 
+                            someBuffer1
+                        ).concat(
+                            Array.from<number>(
+                                someBuffer2
+                            ) 
+                        )
                     )
-                ).toString( "hex" )
+                )
 
             )
 

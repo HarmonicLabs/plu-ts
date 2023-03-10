@@ -1,3 +1,3 @@
-import UPLCError from ".";
+import { UPLCError } from ".";
 
-export default class UPLCDeserializaitonError extends UPLCError {}
+export class UPLCDeserializaitonError extends UPLCError {}

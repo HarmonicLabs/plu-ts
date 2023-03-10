@@ -1,5 +1,6 @@
-import Cbor from "..";
-import CborObj, { cborObjFromRaw } from "../../CborObj";
+import { Cbor } from "..";
+import { fromUtf8 } from "@harmoniclabs/uint8array-utils";
+import { CborObj, cborObjFromRaw } from "../../CborObj";
 
 
 function identityTestFor( cObj: CborObj ): void
@@ -77,13 +78,13 @@ describe( "Cbor.parse( Cbor.encode( cObj ) ) === cObj", () => {
 
         identityTestFor(
             cborObjFromRaw({
-                bytes: Buffer.from( [] )
+                bytes: new Uint8Array(0)
             })
         );
 
         identityTestFor(
             cborObjFromRaw({
-                bytes: Buffer.from( "major type different but still utf8" )
+                bytes: fromUtf8( "major type different but still utf8" )
             })
         );
 

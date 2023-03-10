@@ -1,5 +1,3 @@
-import BinaryString from "../../../../types/bits/BinaryString";
-import BitStream from "../../../../types/bits/BitStream";
 import JsRuntime from "../../../../utils/JsRuntime";
 
 export type UPLCBuiltinTagNumber
@@ -10,11 +8,10 @@ export type UPLCBuiltinTagNumber
     | 40 | 41 | 42 | 43 | 44 | 45 | 46 | 47 | 48 | 49 
     | 50 | 51 | 52 | 53 ;
 
-// export default below
 /**
  * to encode as 7-bits
  */
-const enum UPLCBuiltinTag {
+export const enum UPLCBuiltinTag {
     // integers monoidal operations
     addInteger                  = 0,  // 0000000
     subtractInteger             = 1,  // 0000001
@@ -80,8 +77,6 @@ const enum UPLCBuiltinTag {
     verifyEcdsaSecp256k1Signature   = 52,
     verifySchnorrSecp256k1Signature = 53
 }
-
-export default UPLCBuiltinTag;
 
 
 export function isUPLCBuiltinTag( tag: UPLCBuiltinTag | UPLCBuiltinTagNumber ): boolean

@@ -1,28 +1,31 @@
-import Cbor from "../../../cbor/Cbor";
-import CborBytes from "../../../cbor/CborObj/CborBytes";
-import CborString from "../../../cbor/CborString";
-import UPLCDeserializaitonError from "../../../errors/UPLCError/UPLCDeserializationError";
-import dataFromCbor from "../../../types/Data/fromCbor";
-import ByteString from "../../../types/HexString/ByteString";
-import Integer from "../../../types/ints/Integer";
-import Pair from "../../../types/structs/Pair";
 import BigIntUtils from "../../../utils/BigIntUtils";
 import JsRuntime from "../../../utils/JsRuntime";
 import UPLCFlatUtils from "../../../utils/UPLCFlatUtils";
-import UPLCProgram from "../UPLCProgram";
-import UPLCVersion from "../UPLCProgram/UPLCVersion";
+
+import { Cbor } from "../../../cbor/Cbor";
+import { CborBytes } from "../../../cbor/CborObj/CborBytes";
+import { CborString } from "../../../cbor/CborString";
+import { UPLCDeserializaitonError } from "../../../errors/UPLCError/UPLCDeserializationError";
+import { dataFromCbor, dataFromCborObj } from "../../../types/Data/fromCbor";
+import { ByteString } from "../../../types/HexString/ByteString";
+import { Integer } from "../../../types/ints/Integer";
+import { Pair } from "../../../types/structs/Pair";
+import { UPLCProgram } from "../UPLCProgram";
+import { UPLCVersion } from "../UPLCProgram/UPLCVersion";
 import { PureUPLCTerm, showConstType, showUPLCConstValue } from "../UPLCTerm";
-import Application from "../UPLCTerms/Application";
-import Builtin from "../UPLCTerms/Builtin";
+import { Application } from "../UPLCTerms/Application";
+import { Builtin } from "../UPLCTerms/Builtin";
 import { builtinTagToString } from "../UPLCTerms/Builtin/UPLCBuiltinTag";
-import Delay from "../UPLCTerms/Delay";
-import ErrorUPLC from "../UPLCTerms/ErrorUPLC";
-import Force from "../UPLCTerms/Force";
-import Lambda from "../UPLCTerms/Lambda";
-import UPLCConst from "../UPLCTerms/UPLCConst";
-import ConstType, { constListTypeUtils, constPairTypeUtils, constT, constTypeEq, ConstTyTag, isWellFormedConstType } from "../UPLCTerms/UPLCConst/ConstType";
-import ConstValue, { ConstValueList } from "../UPLCTerms/UPLCConst/ConstValue";
-import UPLCVar from "../UPLCTerms/UPLCVar";
+import { Delay } from "../UPLCTerms/Delay";
+import { ErrorUPLC } from "../UPLCTerms/ErrorUPLC";
+import { Force } from "../UPLCTerms/Force";
+import { Lambda } from "../UPLCTerms/Lambda";
+import { UPLCVar } from "../UPLCTerms/UPLCVar";
+import { UPLCConst } from "../UPLCTerms/UPLCConst";
+import { ConstType, constListTypeUtils, constPairTypeUtils, constT, constTypeEq, ConstTyTag, isWellFormedConstType } from "../UPLCTerms/UPLCConst/ConstType";
+import { ConstValue, ConstValueList } from "../UPLCTerms/UPLCConst/ConstValue";
+import { DataB } from "../../../types/Data/DataB";
+import { fromHex, toUtf8 } from "@harmoniclabs/uint8array-utils";
 
 export type SerializedScriptFormat = "flat" | "cbor"
 
@@ -37,11 +40,11 @@ function isSerializedScriptFormat( str: string ): str is SerializedScriptFormat
     );
 }
 
-export default class UPLCDecoder
+export class UPLCDecoder
 {
     private constructor() {}
 
-    static parse( serializedScript: Buffer , format: SerializedScriptFormat = "cbor", debugLogs: boolean = false ): UPLCProgram
+    static parse( serializedScript: Uint8Array , format: SerializedScriptFormat = "cbor", debugLogs: boolean = false ): UPLCProgram
     {
         if( !isSerializedScriptFormat( format ) )
         {
@@ -74,9 +77,9 @@ export default class UPLCDecoder
             currPtr += n;
         }
 
-        function logState(): void
+        function logState( forced: boolean = false ): void
         {
-            if( debugLogs )
+            if( forced || debugLogs )
             {
                 console.log("UPLCDecoder state: " + JSON.stringify({
                     currPtr,
@@ -145,7 +148,6 @@ export default class UPLCDecoder
                 (debugLogs || shouldLogResult) ?
                 ( result: bigint ): bigint =>
                 {
-                    console.log( "red " + n + " bits: "  + result.toString(2).padStart(n,'0') );
                     return result;
                 }: 
                 (x: any) => x 
@@ -155,11 +157,6 @@ export default class UPLCDecoder
 
             const currB = currByte();
             const inBytePtr = currPtr % 8;
-
-            if( currB >= 192 && currB <= 194 )
-            {
-                logState();
-            }
 
             if( n === 1 ){
                 incrementPtrBy( 1 );
@@ -278,7 +275,13 @@ export default class UPLCDecoder
                     return new Force( forced );
                 case 6:
                     partialUPLC += "(error)";
-                    return new ErrorUPLC();
+                    return new ErrorUPLC(
+                        "error got from deserialization;",
+                        {
+                            debruijnLevel: currDbn,
+                            byteIndex: currByteIndex(),
+                            bitIndex: currPtr
+                        });
                 case 7:
                     const bn_tag = Number( readNBits(7) );
                     partialUPLC += `(builtin ${builtinTagToString( bn_tag )})`;
@@ -350,28 +353,25 @@ export default class UPLCDecoder
                     for( let i = 0; i < chunkLen; i++ )
                     {
                         hexChunks.push(
-                            BigIntUtils.toBuffer( readNBits(8) ).toString("hex")
+                            readNBits(8).toString(16).padStart(2,'0')
                         );
                     }
                 }
 
                 return new ByteString(
-                    Buffer.from(
-                        hexChunks.join(""),
-                        "hex"
+                    fromHex(
+                        hexChunks.join("")
                     )
                 );
             }
             if( constTypeEq( t, constT.str ) )
             {
-                return (readConstValueOfType( constT.byteStr ) as ByteString).asBytes.toString("utf8");
+                return toUtf8( (readConstValueOfType( constT.byteStr ) as ByteString).toBuffer() );
             }
             if( constTypeEq( t, constT.data ) )
             {
                 return dataFromCbor(
-                    new CborString(
-                        (readConstValueOfType( constT.byteStr ) as ByteString).asBytes 
-                    )
+                    (readConstValueOfType( constT.byteStr ) as ByteString).toBuffer()
                 );
             }
             if( constTypeEq( t, constT.bool ) ) return (Number(readNBits(1)) === 1);

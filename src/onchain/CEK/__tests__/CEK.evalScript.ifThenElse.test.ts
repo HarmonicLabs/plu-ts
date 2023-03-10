@@ -1,21 +1,21 @@
-import evalScript from ".."
-import { pstrictIf } from "../../pluts/stdlib/Builtins"
-import { pInt } from "../../pluts/PTypes/PInt"
-import Type from "../../pluts/Term/Type/base"
-import Application from "../../UPLC/UPLCTerms/Application"
-import Builtin from "../../UPLC/UPLCTerms/Builtin"
-import Delay from "../../UPLC/UPLCTerms/Delay"
-import Force from "../../UPLC/UPLCTerms/Force"
-import UPLCConst from "../../UPLC/UPLCTerms/UPLCConst"
+import { pstrictIf } from "../../pluts/lib/builtins"
+import { pInt } from "../../pluts/lib/std/int/pInt"
+import { int } from "../../pluts/type_system/types"
+import { Application } from "../../UPLC/UPLCTerms/Application"
+import { Builtin } from "../../UPLC/UPLCTerms/Builtin"
+import { Delay } from "../../UPLC/UPLCTerms/Delay"
+import { Force } from "../../UPLC/UPLCTerms/Force"
+import { UPLCConst } from "../../UPLC/UPLCTerms/UPLCConst"
+import { Machine } from "../Machine"
 
-describe("CEK :: evalScript", () => {
+describe("CEK :: Machine.evalSimple", () => {
 
     describe("ifThenElse", () => {
 
         test("if( true ) 1 2 -> 1", () => {
 
             expect(
-                evalScript(
+                Machine.evalSimple(
                     new Application(
                         new Application(
                             new Application(
@@ -36,7 +36,7 @@ describe("CEK :: evalScript", () => {
         test("if( false ) 1 2 -> 2", () => {
 
             expect(
-                evalScript(
+                Machine.evalSimple(
                     new Application(
                         new Application(
                             new Application(
@@ -57,8 +57,8 @@ describe("CEK :: evalScript", () => {
         test("if( 0 === 0 ) 1 2 -> 1", () => {
 
             expect(
-                evalScript(
-                    pstrictIf( Type.Any ).$( pInt( 0 ).eq( pInt( 0 ) ) )
+                Machine.evalSimple(
+                    pstrictIf( int ).$( pInt( 0 ).eq( pInt( 0 ) ) )
                     .$( pInt( 1 ) )
                     .$( pInt( 2 ) )
                     .toUPLC( 0 )
@@ -86,7 +86,7 @@ describe("CEK :: evalScript", () => {
             }
 
             expect(
-                evalScript(
+                Machine.evalSimple(
                     mkPartialForce( true )
                 )
             ).toEqual(
@@ -94,7 +94,7 @@ describe("CEK :: evalScript", () => {
             );
 
             expect(
-                evalScript(
+                Machine.evalSimple(
                     mkPartialForce( false )
                 )
             ).toEqual(

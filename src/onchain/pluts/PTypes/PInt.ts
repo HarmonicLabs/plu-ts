@@ -1,16 +1,7 @@
-import Integer from "../../../types/ints/Integer";
-import UPLCConst from "../../UPLC/UPLCTerms/UPLCConst";
-import { pIntToData, punIData } from "../stdlib/Builtins";
-import TermInt, { addPIntMethods } from "../stdlib/UtilityTerms/TermInt";
-import Term from "../Term";
-import Type, { TermType } from "../Term/Type/base";
-import PData from "./PData/PData";
-import PDataInt from "./PData/PDataInt";
-import PLam from "./PFn/PLam";
-import { PappArg } from "../Syntax/pappArg";
-import PDataRepresentable from "../PType/PDataRepresentable";
+import { Integer } from "../../../types/ints/Integer";
+import { PDataRepresentable } from "../PType/PDataRepresentable";
 
-export default class PInt extends PDataRepresentable
+export class PInt extends PDataRepresentable
 //    implements Cloneable<PInt>
 {
     private _pint: bigint
@@ -25,41 +16,4 @@ export default class PInt extends PDataRepresentable
 
         this._pint = int;
     }
-
-    static override get termType(): TermType { return Type.Int }
-
-    static override get fromDataTerm(): Term<PLam<PData, PInt>> & { $: (input: PappArg<PData>) => Term<PInt>; }
-    {
-        return punIData;
-    }
-    /**
-     * @deprecated try to use 'fromDataTerm.$'
-     */
-    static override fromData(data: Term<PData>): TermInt
-    {
-        return punIData.$( data );
-    }
-    
-    static override get toDataTerm(): Term<PLam<any, PData>> & { $: (input: PappArg<any>) => Term<PData>; }
-    {
-        return pIntToData as any;
-    }
-    /**
-     * @deprecated try to use 'toDataTerm.$'
-     */
-    static override toData( int: Term<PInt> ): Term<PDataInt>
-    {
-        return pIntToData.$( int );
-    }
-}
-
-export function pInt( int: Integer | number | bigint ): TermInt
-{
-    return addPIntMethods(
-        new Term<PInt>(
-            Type.Int,
-            _dbn => UPLCConst.int( int ),
-            true
-        )
-    );
 }

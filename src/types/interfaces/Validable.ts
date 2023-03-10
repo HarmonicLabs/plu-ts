@@ -1,5 +1,5 @@
 
-export default interface Validable
+export interface Validable
 {
     isValid: ( ...args: any[] ) => boolean
 }

@@ -1,5 +1,5 @@
 import JsRuntime from "../../utils/JsRuntime";
-import ToRawObj from "./interfaces/ToRawObj";
+import { ToRawObj } from "./interfaces/ToRawObj";
 
 export type RawCborUInt = {
     uint: bigint
@@ -19,7 +19,7 @@ export function isRawCborUnsigned( unsign: RawCborUInt ): boolean
     );
 }
 
-export default class CborUInt
+export class CborUInt
     implements ToRawObj
 {
     private _unsigned : bigint;

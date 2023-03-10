@@ -1,5 +1,5 @@
 import { RawCborObj } from "..";
 
-export default interface ToRawObj {
+export interface ToRawObj {
     toRawObj(): RawCborObj
 } 

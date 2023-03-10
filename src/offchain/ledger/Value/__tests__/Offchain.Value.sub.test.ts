@@ -1,5 +1,5 @@
-import Hash32 from "../../../hashes/Hash32/Hash32";
-import Value from "../Value"
+import { Hash28 } from "../../../hashes/Hash28/Hash28";
+import { Value } from "../Value"
 
 
 describe("Value.sub", () => {
@@ -50,19 +50,19 @@ describe("Value.sub", () => {
 
     describe("unrelated assets", () => {
 
-        test("1a - 1b = 1a ( policy ) ", () => {
+        test("1a - 1b = 1a - 1b ( policy ) ", () => {
 
             expect(
                 Value.sub(
                     new Value([
                         {
-                            policy: new Hash32( "aa".repeat(32) ),
+                            policy: new Hash28( "aa".repeat(28) ),
                             assets: { a: 1 }
                         }
                     ]),
                     new Value([
                         {
-                            policy: new Hash32( "bb".repeat(32) ),
+                            policy: new Hash28( "bb".repeat(28) ),
                             assets: { b: 1 }
                         }
                     ])
@@ -70,26 +70,30 @@ describe("Value.sub", () => {
             ).toEqual(
                 new Value([
                     {
-                        policy: new Hash32( "aa".repeat(32) ),
+                        policy: new Hash28( "aa".repeat(28) ),
                         assets: { a: 1 }
+                    },
+                    {
+                        policy: new Hash28( "bb".repeat(28) ),
+                        assets: { b: -1 }
                     }
                 ])
             );
         })
 
-        test("1a.a - 1a.b = 1a.a ( assetName ) ", () => {
+        test("1a.a - 1a.b = 1a.a - 1a.b ( assetName ) ", () => {
 
             expect(
                 Value.sub(
                     new Value([
                         {
-                            policy: new Hash32( "aa".repeat(32) ),
+                            policy: new Hash28( "aa".repeat(28) ),
                             assets: { a: 1 }
                         }
                     ]),
                     new Value([
                         {
-                            policy: new Hash32( "aa".repeat(32) ),
+                            policy: new Hash28( "aa".repeat(28) ),
                             assets: { b: 1 }
                         }
                     ])
@@ -97,8 +101,8 @@ describe("Value.sub", () => {
             ).toEqual(
                 new Value([
                     {
-                        policy: new Hash32( "aa".repeat(32) ),
-                        assets: { a: 1 }
+                        policy: new Hash28( "aa".repeat(28) ),
+                        assets: { a: 1, b: -1 }
                     }
                 ])
             )
@@ -116,17 +120,17 @@ describe("Value.sub", () => {
                 Value.sub(
                     new Value([
                         {
-                            policy: new Hash32( "aa".repeat(32) ),
+                            policy: new Hash28( "aa".repeat(28) ),
                             assets: { "a": 1 }
                         },
                         {
-                            policy: new Hash32( "bb".repeat(32) ),
+                            policy: new Hash28( "bb".repeat(28) ),
                             assets: { "b": 3 }
                         }
                     ]),
                     new Value([
                         {
-                            policy: new Hash32( "bb".repeat(32) ),
+                            policy: new Hash28( "bb".repeat(28) ),
                             assets: { "b": 2 }
                         }
                     ])
@@ -134,11 +138,11 @@ describe("Value.sub", () => {
             ).toEqual(
                 new Value([
                     {
-                        policy: new Hash32( "bb".repeat(32) ),
+                        policy: new Hash28( "bb".repeat(28) ),
                         assets: { "b": 1n }
                     },
                     {
-                        policy: new Hash32( "aa".repeat(32) ),
+                        policy: new Hash28( "aa".repeat(28) ),
                         assets: { "a": 1 }
                     }
                 ])
@@ -146,38 +150,38 @@ describe("Value.sub", () => {
 
         });
 
-        test("1a.a 3b.a + 2b.b = 1a.a 3b.a (different names)", () => {
+        test("1a.a 3b.a - 2b.b = 1a.a 3b.a -2b.b (different names)", () => {
 
             expect(
                 Value.sub(
                     new Value([
                         {
-                            policy: new Hash32( "aa".repeat(32) ),
+                            policy: new Hash28( "aa".repeat(28) ),
                             assets: { "a": 1 }
                         },
                         {
-                            policy: new Hash32( "bb".repeat(32) ),
+                            policy: new Hash28( "bb".repeat(28) ),
                             assets: { "a": 3 }
                         }
                     ]),
                     new Value([
                         {
-                            policy: new Hash32( "bb".repeat(32) ),
+                            policy: new Hash28( "bb".repeat(28) ),
                             assets: { "b": 2 }
                         }
                     ])
-                )
+                ).toJson()
             ).toEqual(
                 new Value([
                     {
-                        policy: new Hash32( "aa".repeat(32) ),
+                        policy: new Hash28( "aa".repeat(28) ),
                         assets: { "a": 1 }
                     },
                     {
-                        policy: new Hash32( "bb".repeat(32) ),
-                        assets: { "a": 3 }
+                        policy: new Hash28( "bb".repeat(28) ),
+                        assets: { "a": 3, "b": -2 }
                     }
-                ])
+                ]).toJson()
             );
         });
 

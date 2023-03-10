@@ -1,7 +1,7 @@
-import CborObj, { cborObjFromRaw, isCborObj, isRawCborObj, RawCborObj } from "."
+import { CborObj, cborObjFromRaw, isCborObj, isRawCborObj, RawCborObj } from "."
+import { canBeUInteger } from "../../types/ints/Integer"
 import JsRuntime from "../../utils/JsRuntime"
-import ObjectUtils from "../../utils/ObjectUtils"
-import ToRawObj from "./interfaces/ToRawObj"
+import { ToRawObj } from "./interfaces/ToRawObj"
 
 export type RawCborTag = {
     tag: number | bigint,
@@ -18,12 +18,12 @@ export function isRawCborTag( t: RawCborTag ): boolean
         keys.length === 2 &&
         keys.includes( "tag" ) &&
         keys.includes( "data" ) &&
-        typeof t.tag === "number" &&
+        canBeUInteger( t.tag ) &&
         isRawCborObj( t.data )
     );
 }
 
-export default class CborTag
+export class CborTag
     implements ToRawObj
 {
     private _tag: bigint

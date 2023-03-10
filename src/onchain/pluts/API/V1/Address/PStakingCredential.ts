@@ -1,8 +1,8 @@
-import pstruct from "../../../PTypes/PStruct/pstruct";
-import { int } from "../../../Term/Type/base";
-import PCredential from "./PCredential";
+import { pstruct } from "../../../PTypes/PStruct/pstruct";
+import { int } from "../../../type_system/types";
+import { PCredential } from "./PCredential";
 
-const PStakingCredential = pstruct({
+export const PStakingCredential = pstruct({
     PStakingHash: { _0: PCredential.type },
     PStakingPtr: {
         _0: int,
@@ -10,5 +10,3 @@ const PStakingCredential = pstruct({
         _2: int
     }
 });
-
-export default PStakingCredential;

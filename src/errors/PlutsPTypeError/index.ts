@@ -1,4 +1,4 @@
-import BasePlutsError from "../BasePlutsError";
+import { BasePlutsError } from "../BasePlutsError";
 
 
-export default class PlutsPTypeError extends BasePlutsError {};
+export class PlutsPTypeError extends BasePlutsError {};

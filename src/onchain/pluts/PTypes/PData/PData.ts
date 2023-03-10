@@ -1,13 +1,8 @@
-import Data from "../../../../types/Data";
-import DataConstr from "../../../../types/Data/DataConstr";
-import UPLCConst from "../../../UPLC/UPLCTerms/UPLCConst";
-import PType from "../../PType";
-import Term from "../../Term";
-import Type from "../../Term/Type/base";
-import { PDataFromData } from "./conversion";
+import { Data } from "../../../../types/Data/Data";
+import { DataConstr } from "../../../../types/Data/DataConstr";
+import { PType } from "../../PType";
 
-
-export default class PData extends PType
+export class PData extends PType
 {
     protected _data: Data
     get data(): Data { return this._data; }
@@ -20,13 +15,16 @@ export default class PData extends PType
     }
 }
 
-export function pData<DataInstance extends Data>
-    ( data: DataInstance )
-    //@ts-ignore Type instantiation is excessively deep and possibly infinite
-    : Term<PDataFromData<DataInstance>>
+export class PAsData<PT extends PType> extends PData
 {
-    return new Term(
-        Type.Data.Any as any, //@fixme; get type based on Data constructor
-        _dbn => UPLCConst.data( data )
-    );
+    protected _pty: PT
+
+    get pty(): PT { return this._pty; }
+
+    constructor( pty: PT, data: Data = new DataConstr( 0, [] ) )
+    {
+        super( data );
+
+        this._pty = pty;
+    }
 }

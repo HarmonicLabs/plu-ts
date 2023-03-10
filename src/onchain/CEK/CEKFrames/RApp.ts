@@ -1,9 +1,9 @@
-import Cloneable from "../../../types/interfaces/Cloneable";
 import ObjectUtils from "../../../utils/ObjectUtils";
-import UPLCTerm from "../../UPLC/UPLCTerm";
-import CEKEnv from "../CEKEnv";
+import { Cloneable } from "../../../types/interfaces/Cloneable";
+import { UPLCTerm } from "../../UPLC/UPLCTerm";
+import { CEKEnv } from "../CEKEnv";
 
-export default class RApp
+export class RApp
     implements Cloneable<RApp>
 {
     readonly arg!: UPLCTerm;

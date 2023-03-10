@@ -1,7 +1,7 @@
-import BitStream from "../../../types/bits/BitStream";
-import BinaryString from "../../../types/bits/BinaryString";
+import { BitStream } from "../../../types/bits/BitStream";
+import { BinaryString } from "../../../types/bits/BinaryString";
 
-export default class ErrorUPLC
+export class ErrorUPLC
 {
     static get UPLCTag(): BitStream
     {

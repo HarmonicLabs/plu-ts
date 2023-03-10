@@ -1,31 +1,58 @@
-import Data, { isData } from "../../../../types/Data";
-import Hash32 from "../../../hashes/Hash32/Hash32";
-import Script from "../../../script/Script";
-import { Value } from "../../../ledger/Value/Value";
 import JsRuntime from "../../../../utils/JsRuntime";
 import ObjectUtils from "../../../../utils/ObjectUtils";
+
+import { maybeData } from "../../../../types/Data/toData/maybeData";
+import { dataFromCborObj } from "../../../../types/Data/fromCbor";
+import { Data, isData } from "../../../../types/Data/Data";
 import { ToCbor } from "../../../../cbor/interfaces/CBORSerializable";
-import CborString from "../../../../cbor/CborString";
-import Cbor from "../../../../cbor/Cbor";
-import Address from "../../../ledger/Address";
-import CborMap, { CborMapEntry } from "../../../../cbor/CborObj/CborMap";
-import CborUInt from "../../../../cbor/CborObj/CborUInt";
-import CborArray from "../../../../cbor/CborObj/CborArray";
-import { dataToCborObj } from "../../../../types/Data/toCbor";
-import CborTag from "../../../../cbor/CborObj/CborTag";
-import CborBytes from "../../../../cbor/CborObj/CborBytes";
+import { Script, ScriptType } from "../../../script/Script";
+import { CborString, CanBeCborString, forceCborString } from "../../../../cbor/CborString";
+import { Value } from "../../../ledger/Value/Value";
+import { CborMap, CborMapEntry } from "../../../../cbor/CborObj/CborMap";
+import { dataToCbor } from "../../../../types/Data/toCbor";
+import { IValue, isIValue } from "../../../ledger/Value/IValue";
+import { Hash32 } from "../../../hashes/Hash32/Hash32";
+import { Cbor } from "../../../../cbor/Cbor";
+import { Address, AddressStr, isAddressStr } from "../../../ledger/Address";
+import { CborUInt } from "../../../../cbor/CborObj/CborUInt";
+import { CborArray } from "../../../../cbor/CborObj/CborArray";
+import { CborTag } from "../../../../cbor/CborObj/CborTag";
+import { CborBytes } from "../../../../cbor/CborObj/CborBytes";
+import { Cloneable } from "../../../../types/interfaces/Cloneable";
+import { ToData } from "../../../../types/Data/toData/interface";
+import { DataConstr } from "../../../../types/Data/DataConstr";
+import { BasePlutsError } from "../../../../errors/BasePlutsError";
+import { ToJson } from "../../../../utils/ts/ToJson";
+import { CborObj } from "../../../../cbor/CborObj";
+import { InvalidCborFormatError } from "../../../../errors/InvalidCborFormatError";
 
 export interface ITxOut {
-    address: Address,
-    amount: Value,
+    address: Address | AddressStr,
+    value: Value | IValue,
     datum?: Hash32 | Data,
     refScript?: Script
 }
-export default class TxOut
-    implements ITxOut, ToCbor
+
+export function isITxOut( stuff: any ): stuff is ITxOut
+{
+    return (
+        ObjectUtils.isObject( stuff ) &&
+        ObjectUtils.hasOwn( stuff, "address" ) && (
+            stuff.address instanceof Address || isAddressStr( stuff.address )
+        ) &&
+        ObjectUtils.hasOwn( stuff, "value" ) && (
+            stuff.value instanceof Value || isIValue( stuff.value )
+        ) &&
+        ( stuff.datum === undefined || stuff.datum instanceof Hash32 || isData( stuff.datum ) ) &&
+        ( stuff.refScript === undefined || stuff.refScript instanceof Script )
+    );
+}
+
+export class TxOut
+    implements ITxOut, ToCbor, Cloneable<TxOut>, ToData, ToJson
 {
     readonly address!: Address
-    readonly amount!: Value
+    readonly value!: Value
     readonly datum?: Hash32 | Data
     readonly refScript?: Script
 
@@ -34,13 +61,13 @@ export default class TxOut
         JsRuntime.assert(
             ObjectUtils.isObject( txOutput ) &&
             ObjectUtils.hasOwn( txOutput, "address" ) &&
-            ObjectUtils.hasOwn( txOutput, "amount" ),
+            ObjectUtils.hasOwn( txOutput, "value" ),
             "txOutput is missing some necessary fields"
         );
 
         const {
             address,
-            amount,
+            value,
             datum,
             refScript
         } = txOutput;
@@ -50,8 +77,8 @@ export default class TxOut
             "invlaid 'address' while constructing 'TxOut'" 
         );
         JsRuntime.assert(
-            amount instanceof Value,
-            "invlaid 'amount' while constructing 'TxOut'" 
+            value instanceof Value,
+            "invlaid 'value' while constructing 'TxOut'" 
         );
 
         ObjectUtils.defineReadOnlyProperty(
@@ -61,8 +88,8 @@ export default class TxOut
         );
         ObjectUtils.defineReadOnlyProperty(
             this,
-            "amount",
-            amount
+            "value",
+            value
         );
 
         if( datum !== undefined )
@@ -88,6 +115,65 @@ export default class TxOut
         );
     }
 
+    clone(): TxOut
+    {
+        return new TxOut({
+            address: this.address.clone(),
+            value: this.value.clone(),
+            datum: this.datum?.clone(),
+            refScript: this.refScript?.clone() 
+        })
+    }
+
+    static get fake(): TxOut
+    {
+        return new TxOut({
+            address: Address.fake,
+            value: Value.lovelaces( 0 ),
+            datum: undefined,
+            refScript: undefined
+        })
+    }
+
+    toData( version: "v1" | "v2" = "v2" ): Data
+    {
+        if( version === "v1" )
+        {
+            if( isData( this.datum ) )
+            throw new BasePlutsError(
+                "trying to convert v2 utxo to v1"
+            );
+
+            return new DataConstr(
+                0,
+                [
+                    this.address.toData(),
+                    this.value.toData(),
+                    maybeData( this.datum?.toData() )
+                ]
+            )
+        }
+
+        const datumData =
+            this.datum === undefined ?
+                new DataConstr( 0, [] ) : 
+            this.datum instanceof Hash32 ?
+                new DataConstr( 1, [ this.datum.toData() ]) :
+            new DataConstr( // inline
+                2, [ this.datum.clone() ]
+            );
+
+        return new DataConstr(
+            0,
+            [
+                this.address.toData(),
+                this.value.toData(),
+                datumData,
+                maybeData( this.refScript?.hash.toData() )
+            ]
+        )
+    }
+
     toCbor(): CborString
     {
         return Cbor.encode( this.toCborObj() );
@@ -96,6 +182,18 @@ export default class TxOut
     {
         const datum = this.datum;
 
+        if( !Value.isPositive( this.value ) )
+        {
+            console.log(
+                JSON.stringify(
+                    this.toJson(),
+                    undefined,
+                    2
+                )
+            )
+            throw new BasePlutsError("TxOut values can only be positive; value was: " + JSON.stringify( this.value.toJson() ));
+        }
+
         return new CborMap([
             {
                 k: new CborUInt( 0 ),
@@ -103,7 +201,7 @@ export default class TxOut
             },
             {
                 k: new CborUInt( 1 ),
-                v: this.amount.toCborObj()
+                v: this.value.toCborObj()
             },
             datum === undefined ? undefined :
             {
@@ -114,16 +212,144 @@ export default class TxOut
                         datum.toCborObj()
                     ]) :
                     new CborArray([
-                        new CborUInt( 0 ),
                         new CborUInt( 1 ),
-                        dataToCborObj( datum )
+                        new CborTag(
+                            24,
+                            new CborBytes(
+                                dataToCbor( datum ).toBuffer()
+                            )
+                        )
                     ])
             },
             this.refScript === undefined ? undefined :
             {
                 k: new CborUInt( 3 ),
-                v: new CborTag( 24, new CborBytes( this.refScript.cbor ) )
+                v: new CborTag( 24, new CborBytes( this.refScript.toCbor().toBuffer() ) )
             }
         ].filter( elem => elem !== undefined ) as CborMapEntry[])
     }
+
+    static fromCbor( cStr: CanBeCborString ): TxOut
+    {
+        return TxOut.fromCborObj( Cbor.parse( forceCborString( cStr ) ) );
+    }
+    static fromCborObj( cObj: CborObj ): TxOut
+    {
+        if(!(
+            cObj instanceof CborMap ||
+            cObj instanceof CborArray
+        ))
+        throw new InvalidCborFormatError("TxOut");
+
+        // legacy
+        if( cObj instanceof CborArray )
+        {
+            const [ _addr, _val, _dat ] = cObj.array;
+            return new TxOut({
+                address: Address.fromCborObj( _addr ),
+                value: Value.fromCborObj( _val ),
+                datum: _dat === undefined ? undefined : Hash32.fromCborObj( _dat ),
+            });
+        }
+
+        let fields: (CborObj | undefined )[] = new Array( 4 ).fill( undefined );
+
+        for( let i = 0; i < 4; i++)
+        {
+            const { v } = (cObj as CborMap).map.find(
+                ({ k }) => {
+                    if(!( k instanceof CborUInt ))
+                    throw new InvalidCborFormatError("TxBody");
+
+                    return Number( k.num ) === i
+                }
+            ) ?? { v: undefined };
+
+            if( v === undefined ) continue;
+
+            fields[i] = v;
+        }
+
+        const [
+            _addr,
+            _amt,
+            _dat,
+            _refScript
+        ] = fields;
+
+        let datum: Hash32 | Data | undefined = undefined;
+
+        if( _dat !== undefined )
+        {
+            if(!(_dat instanceof CborArray))
+            throw new InvalidCborFormatError("TxOut");
+            
+            const [ _0, _1 ] = _dat.array;
+
+            if(!(_0 instanceof CborUInt))
+            throw new InvalidCborFormatError("TxOut");
+
+            const opt = Number( _0.num );
+
+            if( opt === 0 )
+            {
+                if(!(
+                    _1 instanceof CborBytes
+                ))
+                throw new InvalidCborFormatError("TxOut");
+
+                datum = new Hash32( _1.buffer );
+            }
+            else if( opt === 1 )
+            {
+                if(!(
+                    _1 instanceof CborTag &&
+                    _1.data instanceof CborBytes
+                ))
+                {
+                    throw new InvalidCborFormatError("TxOut");
+                }
+
+                datum = dataFromCborObj( Cbor.parse( _1.data.buffer ) )
+            }
+            else throw new InvalidCborFormatError("TxOut");
+
+        }
+
+        let refScript: Script | undefined = undefined;
+        if( _refScript !== undefined )
+        {
+            if(!(
+                _refScript instanceof CborTag &&
+                _refScript.data instanceof CborBytes
+            ))
+            throw new InvalidCborFormatError("TxOut");
+
+            refScript = new Script( ScriptType.PlutusV2, _refScript.data.buffer );
+        }
+
+        if( _addr === undefined || _amt === undefined )
+        throw new InvalidCborFormatError("TxOut");
+
+        return new TxOut({
+            address: Address.fromCborObj( _addr ),
+            value:  Value.fromCborObj( _amt ),
+            datum,
+            refScript
+        })
+    }
+
+    toJson()
+    {
+        return {
+            address: this.address.toString(),
+            value: this.value.toJson(),
+            datum: this.datum === undefined ? undefined :
+            this.datum instanceof Hash32 ?
+                this.datum.toString() :
+                this.datum.toJson(),
+            refScript: this.refScript?.toJson()
+        }
+    }
+
 }

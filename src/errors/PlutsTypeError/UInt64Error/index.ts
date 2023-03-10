@@ -1,3 +1,3 @@
-import PlutsTypeError from "..";
+import { PlutsTypeError } from "..";
 
-export default class UInt64Error extends PlutsTypeError {}
+export class UInt64Error extends PlutsTypeError {}

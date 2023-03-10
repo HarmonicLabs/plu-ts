@@ -1,6 +1,6 @@
-import BasePlutsError from "../../../errors/BasePlutsError";
 import BigIntUtils from "../../../utils/BigIntUtils";
-import Cloneable from "../../interfaces/Cloneable";
+import { BasePlutsError } from "../../../errors/BasePlutsError";
+import { Cloneable } from "../../interfaces/Cloneable";
 
 /**
  * javascript already has a builtin support for arbitrary length integers,
@@ -24,7 +24,7 @@ import Cloneable from "../../interfaces/Cloneable";
  * - javascript for the impatient programmer: https://exploringjs.com/impatient-js/ch_bigints.html
  * 
  */
-export default class Integer
+export class Integer
     implements Cloneable<Integer>
 {
     get [Symbol.toStringTag](): string
@@ -184,4 +184,32 @@ export function forceUInteger( toForce: CanBeUInteger ): UInteger
     }
 
     return new UInteger( typeof toForce === "number" ? Math.round( toForce ) : toForce );
-} 
+};
+
+export function forceBigUInt( toForce: CanBeUInteger ): bigint
+{
+    if( toForce instanceof UInteger && UInteger.isStrictInstance( toForce ) )
+    {
+        return toForce.asBigInt;
+    }
+    if( toForce instanceof Integer )
+    {
+        // makes sure is integer strict instance
+        toForce = toForce.toSigned();
+
+        if( toForce.asBigInt < BigInt( 0 ) )
+        {
+            throw new BasePlutsError( "trying to convert an integer to an unsigned Integer, the integer was negative" );
+        }
+        
+        return toForce.asBigInt;
+    }
+
+    if( toForce < 0 )
+    {
+        // console.error( toForce );
+        throw new BasePlutsError( "trying to convert an integer to an unsigned Integer, the number was negative" );
+    }
+
+    return BigInt( typeof toForce === "number" ? Math.round( toForce ) : toForce );
+};

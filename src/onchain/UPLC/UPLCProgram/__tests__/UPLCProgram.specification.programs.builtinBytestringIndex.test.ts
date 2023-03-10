@@ -1,12 +1,12 @@
-import UPLCProgram from ".."
-import BinaryString from "../../../../types/bits/BinaryString"
-import BitStream from "../../../../types/bits/BitStream"
-import ByteString from "../../../../types/HexString/ByteString"
 import Debug from "../../../../utils/Debug"
-import UPLCEncoder from "../../UPLCEncoder"
-import Application from "../../UPLCTerms/Application"
-import Builtin from "../../UPLCTerms/Builtin"
-import UPLCConst from "../../UPLCTerms/UPLCConst"
+import { UPLCProgram } from ".."
+import { BinaryString } from "../../../../types/bits/BinaryString"
+import { BitStream } from "../../../../types/bits/BitStream"
+import { ByteString } from "../../../../types/HexString/ByteString"
+import { UPLCEncoder } from "../../UPLCEncoder"
+import { Application } from "../../UPLCTerms/Application"
+import { Builtin } from "../../UPLCTerms/Builtin"
+import { UPLCConst } from "../../UPLCTerms/UPLCConst"
 
 describe("bnBytestrIdx UPLCProgram", () => {
 

@@ -1,24 +1,29 @@
-import Cbor from "../../cbor/Cbor";
-import CborObj from "../../cbor/CborObj";
-import CborBytes from "../../cbor/CborObj/CborBytes";
-import CborString from "../../cbor/CborString";
-import { ToCbor } from "../../cbor/interfaces/CBORSerializable";
-import HexString from "../../types/HexString";
-import Cloneable from "../../types/interfaces/Cloneable";
-import BufferUtils from "../../utils/BufferUtils";
-import JsRuntime from "../../utils/JsRuntime";
 import ObjectUtils from "../../utils/ObjectUtils";
+import JsRuntime from "../../utils/JsRuntime";
+
+import { Cbor } from "../../cbor/Cbor";
+import { CborObj } from "../../cbor/CborObj";
+import { CborBytes } from "../../cbor/CborObj/CborBytes";
+import { CborString, CanBeCborString, forceCborString } from "../../cbor/CborString";
+import { ToCbor } from "../../cbor/interfaces/CBORSerializable";
+import { InvalidCborFormatError } from "../../errors/InvalidCborFormatError";
+import { Data } from "../../types/Data/Data";
+import { DataB } from "../../types/Data/DataB";
+import { ToData } from "../../types/Data/toData/interface";
+import { HexString } from "../../types/HexString";
+import { Cloneable } from "../../types/interfaces/Cloneable";
+import { fromAscii, fromHex, isUint8Array, toAscii, toHex } from "@harmoniclabs/uint8array-utils";
 
 
-export default class Hash
-    implements Cloneable<Hash>, ToCbor
+export class Hash
+    implements Cloneable<Hash>, ToCbor, ToData
 {
     static isStrictInstance( bs: any ): bs is Hash
     {
         return Object.getPrototypeOf( bs ) === Hash.prototype
     }
 
-    protected get _bytes(): Buffer
+    protected get _bytes(): Uint8Array
     {
         const result = (this as any).__bytes;
         if( result === undefined )
@@ -26,14 +31,14 @@ export default class Hash
             ObjectUtils.defineReadOnlyProperty(
                 this,
                 "__bytes",
-                Buffer.from( this._str, "hex" )
+                fromHex( this._str )
             );
-            return BufferUtils.copy( (this as any).__bytes );
+            return (this as any).__bytes.slice();
         }
-        if( !Buffer.isBuffer( result ) )
+        if( !isUint8Array( result ) )
         {
             throw JsRuntime.makeNotSupposedToHappenError(
-                "Hash.__bytes was not a Buffer"
+                "Hash.__bytes was not a Uint8Array"
             );
         }
 
@@ -48,7 +53,7 @@ export default class Hash
             ObjectUtils.defineReadOnlyProperty(
                 this,
                 "__str",
-                this._bytes.toString("hex")
+                toHex( this._bytes )
             );
             return (this as any).__str;
         }
@@ -62,7 +67,7 @@ export default class Hash
         return result;
     }
 
-    constructor( bs: string | Buffer )
+    constructor( bs: string | Uint8Array )
     {
         if( typeof bs == "string" )
         {
@@ -84,8 +89,8 @@ export default class Hash
         }
 
         JsRuntime.assert(
-            Buffer.isBuffer( bs ),
-            "invalid Buffer input while constructing a Hash"
+            isUint8Array( bs ),
+            "invalid Uint8Array input while constructing a Hash"
         );
 
         ObjectUtils.defineReadOnlyProperty(
@@ -95,12 +100,36 @@ export default class Hash
         );
     }
 
+    /**
+     * @deprecated use `toString()` instead
+     */
     get asString(): string
     {
         return this._str;
     }
 
-    get asBytes(): Buffer
+    toString(): string
+    {
+        return this._str;
+    }
+
+    /**
+     * @deprecated use `toBuffer()` instead
+     */
+    get asBytes(): Uint8Array
+    {
+        return this._bytes;
+    }
+
+    toBuffer(): Uint8Array
+    {
+        return this._bytes;
+    }
+
+    /**
+     * @deprecated use `toBuffer()` instead
+     */
+    toBytes(): Uint8Array
     {
         return this._bytes;
     }
@@ -114,20 +143,36 @@ export default class Hash
     {
         return Cbor.encode( this.toCborObj() );
     }
-    
     toCborObj(): CborObj
     {
         return new CborBytes( this.asBytes )
     }
 
+    static fromCbor( cStr: CanBeCborString ): Hash
+    {
+        return Hash.fromCborObj( Cbor.parse( forceCborString( cStr ) ) );
+    }
+    static fromCborObj( cObj: CborObj ): Hash
+    {
+        if(!(cObj instanceof CborBytes ))
+        throw new InvalidCborFormatError("Hash");
+
+        return new Hash( cObj.buffer )
+    }
+
+    toData(): Data
+    {
+        return new DataB( this.toBuffer() );
+    }
+
     public static fromAscii( asciiStr: string ): Hash
     {
-        return new Hash( Buffer.from( asciiStr, "ascii" ) );
+        return new Hash( fromAscii( asciiStr ) );
     }
 
     public static toAscii( bStr: Hash ): string
     {
-        return bStr.asBytes.toString("ascii")
+        return toAscii( bStr.toBuffer() )
     }
 
     public static isValidHexValue( str: string ): boolean

@@ -1,6 +1,7 @@
-import Cbor from ".."
+import { Cbor } from ".."
+import { fromAscii } from "@harmoniclabs/uint8array-utils";
 import { cborObjFromRaw } from "../../CborObj"
-import CborString from "../../CborString"
+import { CborString } from "../../CborString"
 
 
 describe( "Cbor.encode", () => {
@@ -62,7 +63,7 @@ describe( "Cbor.encode", () => {
 
         expect( Cbor.encode(
             cborObjFromRaw({
-                bytes: Buffer.from( "ciaone", "ascii" )
+                bytes: fromAscii( "ciaone" )
             })
         ) ).toEqual( new CborString( "466369616F6E65" ) );
 
@@ -88,7 +89,7 @@ describe( "Cbor.encode", () => {
             cborObjFromRaw({
                 map: [
                     {
-                        k: { bytes: Buffer.from("ciaone", "ascii") },
+                        k: { bytes: fromAscii("ciaone" ) },
                         v: { text: "mondone" }
                     },
                     {

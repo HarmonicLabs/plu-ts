@@ -1,6 +1,5 @@
-import type { StructCtorDef, StructDefinition } from "../../Term/Type/base";
-
 import ObjectUtils from "../../../../utils/ObjectUtils";
+import { StructCtorDef, StructDefinition } from "../../type_system";
 
 
 export function cloneStructCtorDef<CtorDef extends StructCtorDef>( ctorDef: Readonly<CtorDef> ): CtorDef
@@ -15,7 +14,7 @@ export function cloneStructCtorDef<CtorDef extends StructCtorDef>( ctorDef: Read
     return clone;
 }
 
-export default function cloneStructDef<SDef extends StructDefinition>( def: Readonly<SDef> ): SDef
+export function cloneStructDef<SDef extends StructDefinition>( def: Readonly<SDef> ): SDef
 {
     const clone: SDef = {} as SDef;
     const ctors = Object.keys( def );

@@ -1,25 +1,23 @@
-import pstruct from "../../../PTypes/PStruct/pstruct";
-import { int } from "../../../Term/Type/base";
-import PStakingCredential from "../Address/PStakingCredential";
-import PPubKeyHash from "../PubKey/PPubKeyHash";
+import { pstruct } from "../../../PTypes/PStruct/pstruct";
+import { int } from "../../../type_system/types";
+import { PStakingCredential } from "../Address/PStakingCredential";
+import { PPubKeyHash } from "../PubKey/PPubKeyHash";
 
-const PDCert = pstruct({
+export const PDCert = pstruct({
     KeyRegistration: { _0: PStakingCredential.type },
     KeyDeRegistration: { _0: PStakingCredential.type },
     KeyDelegation: {
-        _0: PStakingCredential.type, // delegator
-        _1: PPubKeyHash.type              // delegatee
+        delegator: PStakingCredential.type,
+        poolKeyHash: PPubKeyHash.type
     },
     PoolRegistration: {
-        _0: PPubKeyHash.type,             // poolId
-        _1: PPubKeyHash.type,             // pool VFR
+        poolId: PPubKeyHash.type,
+        poolVFR: PPubKeyHash.type,
     },
     PoolRetire: {
-        _0: PPubKeyHash.type,
-        _1: int,                     // epoch
+        poolId: PPubKeyHash.type,
+        epoch: int,                     // epoch
     },
     Genesis: {},
-    Mir: {}
+    MoveInstantRewards: {}
 })
-
-export default PDCert;

@@ -1,8 +1,9 @@
-import BinaryString from "../../types/bits/BinaryString";
-import { InByteOffset, isInByteOffset } from "../../types/bits/Bit";
-import BitStream from "../../types/bits/BitStream";
 import BitUtils from "../BitUtils";
 import JsRuntime from "../JsRuntime";
+
+import { BinaryString } from "../../types/bits/BinaryString";
+import { InByteOffset, isInByteOffset } from "../../types/bits/Bit";
+import { BitStream } from "../../types/bits/BitStream";
 
 export interface BitStreamPadToByteOptions {
     onByteAllignedAddNewByte: boolean

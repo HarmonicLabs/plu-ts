@@ -1,7 +1,4 @@
-import palias from "../../../PTypes/PAlias/palias";
-import { bs } from "../../../Term/Type/base";
+import { palias } from "../../../PTypes/PAlias/palias";
+import { bs } from "../../../type_system/types";
 
-const PTokenName = palias( bs );
-// const PTokenName = bs;
-
-export default PTokenName;
+export const PTokenName = palias( bs );

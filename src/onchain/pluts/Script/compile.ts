@@ -1,11 +1,11 @@
-import { Buffer } from "buffer";
-import Cbor from "../../../cbor/Cbor";
-import CborBytes from "../../../cbor/CborObj/CborBytes";
-import UPLCEncoder from "../../UPLC/UPLCEncoder";
-import UPLCProgram from "../../UPLC/UPLCProgram";
-import UPLCVersion from "../../UPLC/UPLCProgram/UPLCVersion";
-import PType from "../PType";
-import Term from "../Term";
+import { Cbor } from "../../../cbor/Cbor";
+import { CborBytes } from "../../../cbor/CborObj/CborBytes";
+import { UPLCEncoder } from "../../UPLC/UPLCEncoder";
+import { UPLCProgram } from "../../UPLC/UPLCProgram";
+import { UPLCVersion } from "../../UPLC/UPLCProgram/UPLCVersion";
+import { PType } from "../PType";
+import { Term } from "../Term";
+import { PlutusScriptVersion, ScriptJsonFormat } from "./PlutusScriptVersion";
 
 const defaultVersion: [ number, number, number ] = [ 1, 0, 0 ];
 
@@ -15,7 +15,7 @@ function getValidVersion( version: Readonly<[number, number, number]> ): [number
     return ([0,1,2].map( i => Math.abs( Math.round( v[i] ?? 0 ) ) )) as any;
 }
 
-export default function compile( term: Term<PType>, version: Readonly<[number, number, number]> = defaultVersion ): Buffer
+export function compile( term: Term<PType>, version: Readonly<[number, number, number]> = defaultVersion ): Uint8Array
 {
     const v = getValidVersion( version );
 
@@ -27,18 +27,7 @@ export default function compile( term: Term<PType>, version: Readonly<[number, n
     ).toBuffer().buffer;
 }
 
-export const enum PlutusScriptVersion {
-    V1 = "PlutusScriptV1",
-    V2 = "PlutusScriptV2"
-};
-
-export interface ScriptJsonFormat<V extends PlutusScriptVersion = PlutusScriptVersion> {
-    type: V,
-    description: string,
-    cborHex: string
-}
-
-export function scriptToJsonFormat( compiledScript: Buffer, plutusScriptVersion: PlutusScriptVersion, description: string = "" ): ScriptJsonFormat
+export function scriptToJsonFormat( compiledScript: Uint8Array, plutusScriptVersion: PlutusScriptVersion, description: string = "" ): ScriptJsonFormat
 {
     return {
         type: plutusScriptVersion,

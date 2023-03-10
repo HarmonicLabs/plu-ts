@@ -1,10 +1,10 @@
-import pstruct from "../../../../PTypes/PStruct/pstruct";
-import { list, pair, int, data } from "../../../../Term/Type/base";
-import PTxInInfo from "../../Tx/PTxInInfo";
-import PTxOut from "../../Tx/PTxOut";
-import V1 from "../../../V1";
+import { pstruct } from "../../../../PTypes/PStruct/pstruct";
+import { PTxInInfo } from "../../Tx/PTxInInfo";
+import { PTxOut } from "../../Tx/PTxOut";
+import { V1 } from "../../../V1";
+import { list, pair, int, data } from "../../../../type_system";
 
-const PTxInfo = pstruct({
+export const PTxInfo = pstruct({
     PTxInfo: {
         inputs: list( PTxInInfo.type ),
         refInputs: list( PTxInInfo.type ),
@@ -20,5 +20,3 @@ const PTxInfo = pstruct({
         id: V1.PTxId.type
     }
 })
-
-export default PTxInfo;

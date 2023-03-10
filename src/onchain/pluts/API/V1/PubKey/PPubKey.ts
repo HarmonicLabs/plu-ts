@@ -1,7 +1,4 @@
-import palias from "../../../PTypes/PAlias/palias";
-import { bs } from "../../../Term/Type/base";
+import { palias } from "../../../PTypes/PAlias/palias";
+import { bs } from "../../../type_system/types";
 
-const PPubKey = palias( bs );
-// const PPubKey = bs;
-
-export default PPubKey;
+export const PPubKey = palias( bs );

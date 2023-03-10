@@ -1,6 +1,5 @@
-import CborObj, { cborObjFromRaw, isRawCborObj, RawCborObj } from ".";
-import ObjectUtils from "../../utils/ObjectUtils";
-import ToRawObj from "./interfaces/ToRawObj";
+import { CborObj, cborObjFromRaw, isRawCborObj, RawCborObj } from ".";
+import { ToRawObj } from "./interfaces/ToRawObj";
 
 export type RawCborMapEntry = {
     k: RawCborObj,
@@ -42,7 +41,7 @@ export type CborMapEntry = {
     v: CborObj
 };
 
-export default class CborMap
+export class CborMap
     implements ToRawObj
 {
     private _map : CborMapEntry[];

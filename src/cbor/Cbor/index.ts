@@ -1,40 +1,36 @@
-import type CborObj from "../CborObj";
-
 import JsRuntime from "../../utils/JsRuntime";
-import { Buffer } from "buffer";
-import CborString from "../CborString";
+
+import type { CborObj } from "../CborObj";
+import { CborString } from "../CborString";
 import { isCborObj } from "../CborObj";
 import { isMajorTypeTag, MajorType } from "./Constants";
-import CborNegativeInt from "../CborObj/CborNegInt";
-import CborBytes from "../CborObj/CborBytes";
-import CborText from "../CborObj/CborText";
-import CborArray from "../CborObj/CborArray";
-import CborMap, { CborMapEntry } from "../CborObj/CborMap";
-import CborTag from "../CborObj/CborTag";
-import CborSimple from "../CborObj/CborSimple";
-import CborUInt from "../CborObj/CborUInt";
-import CborNegInt from "../CborObj/CborNegInt";
-import BufferUtils from "../../utils/BufferUtils";
-import PlutsCborParseError from "../../errors/PlutsSerialError/PlutsCborError/PlutsCborParseError";
+import { CborBytes } from "../CborObj/CborBytes";
+import { CborText } from "../CborObj/CborText";
+import { CborArray } from "../CborObj/CborArray";
+import { CborMap, CborMapEntry } from "../CborObj/CborMap";
+import { CborTag } from "../CborObj/CborTag";
+import { CborSimple } from "../CborObj/CborSimple";
+import { CborUInt } from "../CborObj/CborUInt";
+import { CborNegInt } from "../CborObj/CborNegInt";
+import { PlutsCborParseError } from "../../errors/PlutsSerialError/PlutsCborError/PlutsCborParseError";
+import { fromHex, fromUtf8, isUint8Array, readBigUInt64BE, readFloat32BE, readFloat64BE, readUInt16BE, readUInt32BE, readUInt8, toUtf8, writeBigUInt64BE, writeFloat64BE, writeUInt16BE, writeUInt32BE, writeUInt8 } from "@harmoniclabs/uint8array-utils";
 
 /**
  * @private to the module; not needed elsewhere
  */
 class CborEncoding
 {
-    private _buff: Buffer;
+    private _buff: Uint8Array;
     private _len: number;
 
-    get bytes(): Buffer
+    get bytes(): Uint8Array
     {
-        return BufferUtils.copy(
-            this._buff.slice( 0, this._len )
-        );
+        return this._buff.slice( 0, this._len )
     }
 
     constructor()
     {
-        this._buff = Buffer.allocUnsafe(256); // (1 << 8) bytes, 1/4 kB
+        this._buff = new Uint8Array(256); // (1 << 8) bytes, 1/4 kB
         this._len = 0;
     }
 
@@ -43,20 +39,21 @@ class CborEncoding
         const requiredLen = this._len + l;
         let newBuffLen = this._buff.byteLength;
 
-        // expand the buffer if needed
+        // expand the Uint8Array if needed
         while( newBuffLen < requiredLen )
         {
             newBuffLen = newBuffLen << 1; // old length * 2
         }
 
-        // copies the old buffer if expanded
+        // copies the old Uint8Array if expanded
         if( newBuffLen !== this._buff.byteLength )
         {
-            const newBuff = Buffer.allocUnsafe( newBuffLen );
+            const newBuff = new Uint8Array( newBuffLen );
+
 
             for(let i = 0; i < this._len; i++)
             {
-                newBuff.writeUInt8( this._buff.readUInt8( i ), i );
+                writeUInt8( newBuff, readUInt8( this._buff, i ), i );
             }
 
             this._buff = newBuff;
@@ -78,7 +75,7 @@ class CborEncoding
 
         this._prepareAppendOfByteLength( 1 );
 
-        this._buff.writeUInt8( uint8, this._len );
+        writeUInt8( this._buff, uint8, this._len );
 
         this._commitAppendOfByteLength( 1 );
     }
@@ -93,7 +90,7 @@ class CborEncoding
 
         this._prepareAppendOfByteLength( 2 );
 
-        this._buff.writeUInt16BE( uint16, this._len );
+        writeUInt16BE( this._buff, uint16, this._len );
 
         this._commitAppendOfByteLength( 2 );
     }
@@ -108,7 +105,7 @@ class CborEncoding
 
         this._prepareAppendOfByteLength( 4 );
 
-        this._buff.writeUInt32BE( uint32, this._len );
+        writeUInt32BE( this._buff, uint32, this._len );
 
         this._commitAppendOfByteLength( 4 );
     }
@@ -123,7 +120,7 @@ class CborEncoding
 
         this._prepareAppendOfByteLength( 8 );
 
-        this._buff.writeBigUInt64BE( uint64, this._len );
+        writeBigUInt64BE( this._buff, uint64, this._len );
 
         this._commitAppendOfByteLength( 8 );
     }
@@ -137,22 +134,22 @@ class CborEncoding
 
         this._prepareAppendOfByteLength( 8 );
 
-        this._buff.writeDoubleBE( float64, this._len );
+        writeFloat64BE( this._buff, float64, this._len );
 
         this._commitAppendOfByteLength( 8 );
     }
 
-    appendRawBytes( bytes: Buffer )
+    appendRawBytes( bytes: Uint8Array )
     {
         JsRuntime.assert(
-            Buffer.isBuffer( bytes ),
+            isUint8Array( bytes ),
             "invalid bytes passed"
         );
         
         this._prepareAppendOfByteLength( bytes.length );
         for( let i = 0; i < bytes.length; i++ )
         {
-            this._buff.writeUInt8( bytes.readUInt8( i ) , this._len + i );
+            writeUInt8( this._buff, readUInt8( bytes, i ) , this._len + i );
         }
         this._commitAppendOfByteLength( bytes.length );
     }
@@ -228,7 +225,7 @@ class CborEncoding
             return;
         }
 
-        if( cObj instanceof CborNegativeInt )
+        if( cObj instanceof CborNegInt )
         {
             JsRuntime.assert(
                 cObj.num < BigInt( 0 ),
@@ -248,7 +245,7 @@ class CborEncoding
 
         if( cObj instanceof CborText )
         {
-            const bs = Buffer.from( cObj.text, "utf-8" );
+            const bs = fromUtf8( cObj.text );
             this.appendTypeAndLength( MajorType.text , bs.length );
             this.appendRawBytes( bs );
             return;
@@ -257,13 +254,21 @@ class CborEncoding
         if( cObj instanceof CborArray )
         {
             const arr = cObj.array;
+            const arrLen = arr.length;
 
-            this.appendTypeAndLength( MajorType.array, arr.length );
-            for( let i = 0; i < arr.length; i++ )
+            if( cObj.indefinite )
+                this.appendUInt8( 0x9f );
+            else
+                this.appendTypeAndLength( MajorType.array, arrLen );
+
+            for( let i = 0; i < arrLen; i++ )
             {
                 this.appendCborObjEncoding( arr[i] );
             }
 
+            if( cObj.indefinite )
+                this.appendUInt8( 0xff );
+                
             return;
         }
 
@@ -328,7 +333,7 @@ class CborEncoding
  * 
  * >**_NOTE:_** some tags that are not defined in the proper CBOR specification are automaticaly treated as PlutusData
  */
-export default class Cbor
+export class Cbor
 {
     private constructor() {}; // static class, working as namespace
 
@@ -341,15 +346,16 @@ export default class Cbor
         return new CborString( encoded.bytes );
     }
 
-    public static parse( cbor: CborString | Buffer ): CborObj
+    public static parse( cbor: CborString | Uint8Array | string ): CborObj
     {
+        if( typeof cbor === "string" ) cbor = fromHex( cbor )
         JsRuntime.assert(
-            Buffer.isBuffer( cbor ) || CborString.isStrictInstance( cbor ),
-            "in 'Cbor.parse' expected an instance of 'CborString' or a 'Buffer' as input; got: " + cbor
+            isUint8Array( cbor ) || CborString.isStrictInstance( cbor ),
+            "in 'Cbor.parse' expected an instance of 'CborString' or a 'Uint8Array' as input; got: " + cbor
         );
         
-        const bytes: Buffer = cbor instanceof CborString ?
-            cbor.asBytes :
+        const bytes: Uint8Array = cbor instanceof CborString ?
+            cbor.toBuffer() :
             cbor;
 
         /**
@@ -362,22 +368,21 @@ export default class Cbor
             offset += l;
         }
 
-        function getBytesOfLength( l: number ): Buffer
+        function getBytesOfLength( l: number ): Uint8Array
         {
             incrementOffsetBy( l );
-            return BufferUtils.copy(
-                bytes.slice(
+            return bytes.slice(
                     offset - l, // offset has been incremented prior reading
                     offset
                 )
-            );
         }
 
         function getUInt8(): CborUInt
         {
             incrementOffsetBy( 1 );
             return new CborUInt(
-                bytes.readUInt8(
+                readUInt8(
+                    bytes,
                     offset - 1 // offset has been incremented prior reading
                 )
             )
@@ -387,7 +392,8 @@ export default class Cbor
         {
             incrementOffsetBy( 2 );
             return new CborUInt(
-                bytes.readUInt16BE(
+                readUInt16BE(
+                    bytes,
                     offset - 2 // offset has been incremented prior reading
                 )
             )
@@ -397,7 +403,8 @@ export default class Cbor
         {
             incrementOffsetBy( 4 );
             return new CborUInt(
-                bytes.readUInt32BE(
+                readUInt32BE(
+                    bytes,
                     offset - 4 // offset has been incremented prior reading
                 )
             )
@@ -407,7 +414,8 @@ export default class Cbor
         {
             incrementOffsetBy( 8 );
             return new CborUInt(
-                bytes.readBigUInt64BE(
+                readBigUInt64BE(
+                    bytes,
                     offset - 8 // offset has been incremented prior reading
                 )
             )
@@ -447,7 +455,8 @@ export default class Cbor
         {
             incrementOffsetBy( 4 );
             return new CborSimple(
-                bytes.readFloatBE(
+                readFloat32BE(
+                    bytes,
                     offset - 4 // offset has been incremented prior reading
                 ),
                 "float"
@@ -458,7 +467,8 @@ export default class Cbor
         {
             incrementOffsetBy( 8 );
             return new CborSimple(
-                bytes.readDoubleBE(
+                readFloat64BE(
+                    bytes,
                     offset - 8 // offset has been incremented prior reading
                 ),
                 "float"
@@ -467,7 +477,7 @@ export default class Cbor
 
         function incrementIfBreak(): boolean
         {
-            if( bytes.readUInt8() !== 0xff ) return false;
+            if( readUInt8( bytes, offset ) !== 0xff ) return false;
             incrementOffsetBy( 1 );
             return true;
         }
@@ -508,7 +518,7 @@ export default class Cbor
         function getTextOfLength( l: number ): string
         {
             // increments offset while getting the bytes
-            return getBytesOfLength( l ).toString( "utf8" );
+            return toUtf8( getBytesOfLength( l ) );
         }
 
         function parseCborObj(): CborObj
@@ -541,13 +551,13 @@ export default class Cbor
 
                     if (length < 0) // data in UPLC v1.*.* serializes as indefinite length
                     {
-                        const chunks: Buffer[] = [];
-                        let fullBufferLength: number = 0;
+                        const chunks: Uint8Array[] = [];
+                        let fullUint8ArrayLength: number = 0;
 
                         let elementLength: bigint;
                         while ( (elementLength = getIndefiniteElemLengthOfType( major ) ) >= 0)
                         {
-                            fullBufferLength += Number( elementLength );
+                            fullUint8ArrayLength += Number( elementLength );
                             chunks.push(
                                 getBytesOfLength( // increments offset
                                     Number( elementLength )
@@ -555,17 +565,17 @@ export default class Cbor
                             );
                         }
 
-                        let fullBuffer = new Uint8Array(fullBufferLength);
-                        let fullBufferOffset = 0;
+                        let fullUint8Array = new Uint8Array(fullUint8ArrayLength);
+                        let fullUint8ArrayOffset = 0;
 
                         for (let i = 0; i < chunks.length; ++i)
                         {
-                          fullBuffer.set(chunks[i], fullBufferOffset);
-                          fullBufferOffset += chunks[i].length;
+                          fullUint8Array.set(chunks[i], fullUint8ArrayOffset);
+                          fullUint8ArrayOffset += chunks[i].length;
                         }
 
                         return new CborBytes(
-                            Buffer.from( fullBuffer )
+                            Uint8Array.from( fullUint8Array )
                         );
                     }
                     
@@ -650,10 +660,10 @@ export default class Cbor
                     
                     const nLen = Number( length );
 
-                    if( nLen === 20 ) return new CborSimple( false );
-                    if( nLen === 21 ) return new CborSimple( true );
-                    if( nLen === 22 ) return new CborSimple( null );
-                    if( nLen === 23 ) return new CborSimple( undefined );
+                    if( nLen === 20 ) return new CborSimple( false );       // f4
+                    if( nLen === 21 ) return new CborSimple( true );        // f5
+                    if( nLen === 22 ) return new CborSimple( null );        // f6
+                    if( nLen === 23 ) return new CborSimple( undefined );   // f7
 
                     // flaots handled at the beginning of the function
                     // since length isn't required

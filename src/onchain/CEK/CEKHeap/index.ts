@@ -1,9 +1,8 @@
-import Cloneable from "../../../types/interfaces/Cloneable";
-import { isConstTypeTag, isWellFormedConstType } from "../../UPLC/UPLCTerms/UPLCConst/ConstType";
+import { Cloneable } from "../../../types/interfaces/Cloneable";
 import { CEKValue, eqCEKValue } from "../CEKValue";
 
 
-export default class CEKHeap
+export class CEKHeap
     implements Cloneable<CEKHeap>
 {
     private _heap: CEKValue[];
@@ -15,7 +14,6 @@ export default class CEKHeap
 
     clone(): CEKHeap
     {
-        console.log( "cloning heap" );
         return new CEKHeap( this._heap.map( uplc => uplc.clone() ) )
     }
 

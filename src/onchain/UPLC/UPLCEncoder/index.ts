@@ -1,30 +1,34 @@
-import BinaryString from "../../../types/bits/BinaryString";
-import BitStream from "../../../types/bits/BitStream";
-import ByteString from "../../../types/HexString/ByteString";
-import Integer, { UInteger } from "../../../types/ints/Integer";
-import Pair from "../../../types/structs/Pair";
 import JsRuntime from "../../../utils/JsRuntime";
 import UPLCFlatUtils from "../../../utils/UPLCFlatUtils";
-import Data, { isData } from "../../../types/Data";
-import UPLCProgram from "../UPLCProgram";
-import UPLCVersion from "../UPLCProgram/UPLCVersion";
-import  UPLCTerm, { getHoistedTerms, isPureUPLCTerm, PureUPLCTerm, showUPLC } from "../UPLCTerm";
-import Application from "../UPLCTerms/Application";
-import Builtin from "../UPLCTerms/Builtin";
+
+import { ConstType, ConstTyTag, isWellFormedConstType } from "../UPLCTerms/UPLCConst/ConstType";
+import { ConstValue, isConstValue, isConstValueList } from "../UPLCTerms/UPLCConst/ConstValue";
 import { getNRequiredForces, isUPLCBuiltinTag } from "../UPLCTerms/Builtin/UPLCBuiltinTag";
-import UPLCConst from "../UPLCTerms/UPLCConst";
-import ConstType, { ConstTyTag, isWellFormedConstType } from "../UPLCTerms/UPLCConst/ConstType";
-import ConstValue, { isConstValue, isConstValueList } from "../UPLCTerms/UPLCConst/ConstValue";
-import Delay from "../UPLCTerms/Delay";
-import ErrorUPLC from "../UPLCTerms/ErrorUPLC";
-import Force from "../UPLCTerms/Force";
-import Lambda from "../UPLCTerms/Lambda";
-import UPLCVar from "../UPLCTerms/UPLCVar";
-import UPLCSerializationContex from "./UPLCSerializationContext";
-import CborString from "../../../cbor/CborString";
-import dataFromCbor from "../../../types/Data/fromCbor";
-import HoistedUPLC, { getSortedHoistedSet } from "../UPLCTerms/HoistedUPLC";
-import dataToCbor from "../../../types/Data/toCbor";
+import { Integer, UInteger } from "../../../types/ints/Integer";
+import { UPLCTerm, getHoistedTerms, isPureUPLCTerm, PureUPLCTerm, showUPLC } from "../UPLCTerm";
+import { HoistedUPLC, getSortedHoistedSet } from "../UPLCTerms/HoistedUPLC";
+import { BinaryString } from "../../../types/bits/BinaryString";
+import { BitStream } from "../../../types/bits/BitStream";
+import { ByteString } from "../../../types/HexString/ByteString";
+import { Pair } from "../../../types/structs/Pair";
+import { Data, isData } from "../../../types/Data/Data";
+import { UPLCProgram } from "../UPLCProgram";
+import { UPLCVersion } from "../UPLCProgram/UPLCVersion";
+import { Application } from "../UPLCTerms/Application";
+import { Builtin } from "../UPLCTerms/Builtin";
+import { UPLCConst } from "../UPLCTerms/UPLCConst";
+import { Delay } from "../UPLCTerms/Delay";
+import { ErrorUPLC } from "../UPLCTerms/ErrorUPLC";
+import { Force } from "../UPLCTerms/Force";
+import { Lambda } from "../UPLCTerms/Lambda";
+import { UPLCVar } from "../UPLCTerms/UPLCVar";
+import { UPLCSerializationContex } from "./UPLCSerializationContext";
+import { CborString } from "../../../cbor/CborString";
+import { dataFromCbor } from "../../../types/Data/fromCbor";
+import { dataToCbor } from "../../../types/Data/toCbor";
+import { genHoistedSourceUID } from "../UPLCTerms/HoistedUPLC/HoistedSourceUID/genHoistedSourceUID";
+import { BasePlutsError } from "../../../errors/BasePlutsError";
+import { fromHex, fromUtf8, toHex } from "@harmoniclabs/uint8array-utils";
 
 /*
  * --------------------------- [encode vs serialize methods] ---------------------------
@@ -181,6 +185,27 @@ export function serializeBuiltin( bn: Builtin ): BitStream
 // --------------------------------------------------- UPLCEncoder --------------------------------------------------- //
 // ------------------------------------------------------------------------------------------------------------------- //
 
+function properlyCloneUPLC( uplc: UPLCTerm ): UPLCTerm
+{
+    if( uplc instanceof UPLCVar ) return new UPLCVar( uplc.deBruijn );
+    if( uplc instanceof Delay ) return new Delay( properlyCloneUPLC( uplc.delayedTerm ) );
+    if( uplc instanceof Lambda ) return new Lambda( properlyCloneUPLC( uplc.body ) );
+    if( uplc instanceof Application )
+        return new Application(
+            properlyCloneUPLC( uplc.funcTerm ),
+            properlyCloneUPLC( uplc.argTerm )
+        );
+    if( uplc instanceof UPLCConst ) return new UPLCConst( uplc.type, uplc.value as any);
+    if( uplc instanceof Force ) return new Force( properlyCloneUPLC( uplc.termToForce ) );
+    if( uplc instanceof ErrorUPLC ) return new ErrorUPLC( uplc.msg, uplc.addInfos );
+    if( uplc instanceof Builtin ) return new Builtin( uplc.tag );
+    if( uplc instanceof HoistedUPLC ) return new HoistedUPLC( uplc.UPLC, undefined );
+
+    throw new BasePlutsError(
+        "unknown UPLC in 'properlyCloneUPLC'"
+    );
+}
+
 /**
  * ### !! Important !!
  * 
@@ -297,7 +322,7 @@ export function replaceHoistedTermsInplace( uplc: UPLCTerm ): PureUPLCTerm
     return program;
 }
 
-export default class UPLCEncoder
+export class UPLCEncoder
 {
     private _ctx: UPLCSerializationContex
 
@@ -316,7 +341,11 @@ export default class UPLCEncoder
 
         const uplc = program.body;
         
-        const progrTerm = replaceHoistedTermsInplace( uplc.clone() );
+        const progrTerm = replaceHoistedTermsInplace(
+            // HoistedUPLC relies on this clone
+            // if this ever changes make sure that `HositeUPLC` is safe
+            uplc.clone()
+        );
         if( !isPureUPLCTerm( progrTerm ) )
         {
             throw JsRuntime.makeNotSupposedToHappenError(
@@ -492,7 +521,7 @@ export default class UPLCEncoder
             */
             return this.encodeConstValue(
                 new ByteString(
-                    Buffer.from( value, "utf8" )
+                    fromUtf8( value )
                 )
             );
         }
@@ -556,7 +585,7 @@ export default class UPLCEncoder
         {
             value = dataFromCbor( value );
         }
-        if(isData( value ) )
+        if( isData( value ) )
         {
             return this.encodeConstValueData( value );
         }
@@ -619,12 +648,12 @@ export default class UPLCEncoder
 
             largeCborData = largeCborData +
                 header +
-                cborBytes.subarray( ptr, chunkEnd ).toString("hex");
+                toHex( cborBytes.subarray( ptr, chunkEnd ) );
             
             ptr = chunkEnd;
         }
 
-        return this.encodeConstValueByteString( new ByteString( Buffer.from( largeCborData + "ff", "hex" ) ) );
+        return this.encodeConstValueByteString( new ByteString( fromHex( largeCborData + "ff" ) ) );
     }
 
     /**
@@ -637,7 +666,9 @@ export default class UPLCEncoder
     
     encodeConstValueByteString( bs: ByteString ): BitStream
     {
-        let missingBytes = bs.asString;
+        let missingBytes = bs.toString();
+        const isBadOne = missingBytes === "d87982d87981582066f225ce3f1acd5e9b133a09b571af99ea4f0742741d008e482d3d33a7329da300";
+
         const hexChunks: string[] = [];
 
         while( (missingBytes.length / 2) > 0b1111_1111 )
@@ -667,9 +698,8 @@ export default class UPLCEncoder
         // append chunks
         result.append(
             new BitStream(
-                Buffer.from(
-                    hexChunks.join(''),
-                    "hex"
+                fromHex(
+                    hexChunks.join('')
                 ),
                 0
             )

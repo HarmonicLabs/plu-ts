@@ -1,6 +1,7 @@
-import BasePlutsError from "../../../../../errors/BasePlutsError";
 import Debug from "../../../../../utils/Debug";
 import JsRuntime from "../../../../../utils/JsRuntime";
+
+import { BasePlutsError } from "../../../../../errors/BasePlutsError";
 
 export const enum ConstTyTag {
     int = 0,
@@ -40,7 +41,7 @@ export const enum ConstTyTag {
  * > ```
  * 
 */
-type ConstType = [ ConstTyTag, ...ConstTyTag[] ];
+export type ConstType = [ ConstTyTag, ...ConstTyTag[] ];
 
 // maybe this one is to strict?
 //    = [ ConstTyTag.int ]
@@ -51,8 +52,6 @@ type ConstType = [ ConstTyTag, ...ConstTyTag[] ];
 //    | [ ConstTyTag.list, ...ConstTyTag[] ]
 //    | [ ConstTyTag.pair, ...ConstTyTag[] ]
 //    | [ ConstTyTag.data ];
-
-export default ConstType;
 
 export function isWellFormedConstType( type: any/*ConstType | ConstTyTag[]*/ ): type is ConstType
 {

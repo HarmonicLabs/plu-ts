@@ -9,16 +9,16 @@ cabal run uplc -- example -s churchSucc
 (program 1.0.0 (lam n (delay (lam z (lam f [ f [ [ (force n) z ] f ] ])))))
 */
 
-import UPLCProgram from "..";
-import BinaryString from "../../../../types/bits/BinaryString";
-import BitStream from "../../../../types/bits/BitStream";
 import Debug from "../../../../utils/Debug";
-import UPLCEncoder from "../../UPLCEncoder";
-import Application from "../../UPLCTerms/Application";
-import Delay from "../../UPLCTerms/Delay";
-import Force from "../../UPLCTerms/Force";
-import Lambda from "../../UPLCTerms/Lambda";
-import UPLCVar from "../../UPLCTerms/UPLCVar";
+import { UPLCProgram } from "..";
+import { BinaryString } from "../../../../types/bits/BinaryString";
+import { BitStream } from "../../../../types/bits/BitStream";
+import { UPLCEncoder } from "../../UPLCEncoder";
+import { Application } from "../../UPLCTerms/Application";
+import { Delay } from "../../UPLCTerms/Delay";
+import { Force } from "../../UPLCTerms/Force";
+import { Lambda } from "../../UPLCTerms/Lambda";
+import { UPLCVar } from "../../UPLCTerms/UPLCVar";
 
 
 describe.skip("churchSucc", () => {

@@ -1,29 +1,34 @@
-import DataConstr from "../../../../types/Data/DataConstr";
-import Pair from "../../../../types/structs/Pair";
 import JsRuntime from "../../../../utils/JsRuntime";
 import ObjectUtils from "../../../../utils/ObjectUtils";
-import HoistedUPLC from "../../../UPLC/UPLCTerms/HoistedUPLC";
-import UPLCConst from "../../../UPLC/UPLCTerms/UPLCConst";
-import Term from "../../Term";
-import Type, { AliasTermType, aliasType, ConstantableStructDefinition, ConstantableTermType, GenericStructDefinition, GenericStructType, int, PrimType, struct, StructCtorDef, StructDefinition, structType, StructType, tyVar } from "../../Term/Type/base";
-import { typeExtends } from "../../Term/Type/extension";
-import { isAliasType, isConstantableStructDefinition, isStructType } from "../../Term/Type/kinds";
-import { structDefToString, termTypeToString } from "../../Term/Type/utils";
-import PData from "../PData/PData";
-import { getToDataForType } from "../PData/conversion/getToDataTermForType";
-import { pList } from "../PList";
-import { UtilityTermOf } from "../../stdlib/UtilityTerms/addUtilityForType";
-import Application from "../../../UPLC/UPLCTerms/Application";
-import Builtin from "../../../UPLC/UPLCTerms/Builtin";
-import punsafeConvertType from "../../Syntax/punsafeConvertType";
-import PDataRepresentable from "../../PType/PDataRepresentable";
-import { TermFn } from "../PFn";
-import { ToPType } from "../../Term/Type/ts-pluts-conversion";
+
+import type { TermFn } from "../PFn";
+import { PAsData, PData } from "../PData/PData";
+import { PDataRepresentable } from "../../PType/PDataRepresentable";
+import { UtilityTermOf, addUtilityForType } from "../../lib/addUtilityForType";
+
+import { structDefToString, termTypeToString } from "../../type_system/utils";
+import { HoistedUPLC } from "../../../UPLC/UPLCTerms/HoistedUPLC";
+import { Pair } from "../../../../types/structs/Pair";
+import { UPLCConst } from "../../../UPLC/UPLCTerms/UPLCConst";
+import { Application } from "../../../UPLC/UPLCTerms/Application";
+import { Builtin } from "../../../UPLC/UPLCTerms/Builtin";
+import { showUPLC } from "../../../UPLC/UPLCTerm";
+import { Machine } from "../../../CEK";
+import { pList } from "../../lib/std/list/const";
+import { Data, DataConstr, isData } from "../../../../types/Data";
+import { AliasT, GenericStructCtorDef, GenericStructDefinition, GenericTermType, PrimType, StructCtorDef, StructDefinition, StructT, TermType, alias, asData, data, int, struct, tyVar, unit } from "../../type_system/types";
+import { ToPType } from "../../type_system/ts-pluts-conversion";
+import { typeExtends, isStructDefinition, isStructType, isTaggedAsAlias } from "../../type_system";
+import { Term } from "../../Term";
+import { punsafeConvertType } from "../../lib/punsafeConvertType";
+import { HoistedSourceUID } from "../../../UPLC/UPLCTerms/HoistedUPLC/HoistedSourceUID";
+import { genHoistedSourceUID } from "../../../UPLC/UPLCTerms/HoistedUPLC/HoistedSourceUID/genHoistedSourceUID";
+import { TermStruct } from "../../lib/std/UtilityTerms/TermStruct";
 
 /**
  * intermediate class useful to reconize structs form primitives
  */
-class _PStruct extends PDataRepresentable
+class _PStruct extends PData
 {
     protected constructor()
     {
@@ -32,14 +37,17 @@ class _PStruct extends PDataRepresentable
 }
 
 export type StructInstance<SCtorDef extends StructCtorDef> = {
-    [Field in keyof SCtorDef]: Term<ToPType<SCtorDef[Field]>>
+    [Field in keyof SCtorDef]: Term<PAsData<ToPType<SCtorDef[Field]>>>
 }
 
-export type PStruct<SDef extends ConstantableStructDefinition> = {
+export type PStruct<SDef extends StructDefinition> = {
     new(): _PStruct
 
-    readonly termType: [ typeof structType, SDef ];
-    readonly type: [ typeof structType, SDef ];
+    /**
+     * @deprecated
+     */
+    readonly termType: StructT<SDef>;
+    readonly type: StructT<SDef>;
 
     readonly fromDataTerm: TermFn<[PData],PStruct<SDef>>
     fromData: ( data: Term<PData> ) => Term<PStruct<SDef>>;
@@ -49,8 +57,7 @@ export type PStruct<SDef extends ConstantableStructDefinition> = {
 
 } & PDataRepresentable & {
     [Ctor in keyof SDef]:
-        //@ts-ignore Type 'StructDefinition[Ctor]' does not satisfy the constraint 'StructCtorDef'.
-        ( ctorFields: StructInstance<SDef[Ctor]> ) => Term<PStruct<SDef>>
+        ( ctorFields: StructInstance<SDef[Ctor]> ) => TermStruct<SDef>
 }
 
 type Includes<As extends any[], Elem extends any> =
@@ -63,7 +70,6 @@ type Includes<As extends any[], Elem extends any> =
 export type RestrictedStructInstance<SCtorDef extends StructCtorDef, Fields extends (keyof SCtorDef)[]> = {
     [Field in keyof SCtorDef]: Includes<Fields, Field> extends true ? UtilityTermOf<ToPType<SCtorDef[Field]>> : never
 }
-
 
 // this needs to be here;
 // not sure why it causes circluar dependecies when imported from "./cloneStructDef"
@@ -146,7 +152,6 @@ export function structDefEq( a: StructDefinition, b: StructDefinition ): boolean
 
 function isStructInstanceOfDefinition<SCtorDef extends StructCtorDef>
     ( structInstance: StructInstance<any>, definition: SCtorDef )
-    //@ts-ignore
     : structInstance is StructInstance<SCtorDef>
 {
     const jsStructFieldsNames = Object.keys( structInstance );
@@ -161,17 +166,18 @@ function isStructInstanceOfDefinition<SCtorDef extends StructCtorDef>
             structInstance[fieldKey] instanceof Term /*thisCtorDef[fieldKey]*/ &&
             typeExtends(
                 structInstance[fieldKey].type,
-                definition[fieldKey]
+                asData( definition[fieldKey] )
             )
         )
     );
 }
 
+const hoistedEmptyCtorUID: { [i: number]: HoistedSourceUID } = {}
 
-export default function pstruct<StructDef extends ConstantableStructDefinition>( def: StructDef ): PStruct<StructDef>
+export function pstruct<StructDef extends StructDefinition>( def: StructDef ): PStruct<StructDef>
 {
     JsRuntime.assert(
-        isConstantableStructDefinition( def ),
+        isStructDefinition( def ),
         "cannot construct 'PStruct' type; struct definition is not constant: " + structDefToString( def ) 
     );
 
@@ -186,13 +192,13 @@ export default function pstruct<StructDef extends ConstantableStructDefinition>(
             super();
         }
 
-        static termType: [ typeof structType, StructDef ];
-        static type: [ typeof structType, StructDef ];
+        static termType: [ PrimType.Struct, StructDef ];
+        static type: [ PrimType.Struct, StructDef ];
         static fromData: <Ext extends PStructExt = PStructExt>( data: Term<PData> ) => Term<Ext>
         static toData:   <Ext extends PStructExt>( data: Term<Ext> ) => Term<PData>;
     }
 
-    const thisStructType = Type.Struct( def );
+    const thisStructType = struct( def );
 
     ObjectUtils.defineReadOnlyProperty(
         PStructExt,
@@ -209,21 +215,18 @@ export default function pstruct<StructDef extends ConstantableStructDefinition>(
     ObjectUtils.defineReadOnlyProperty(
         PStructExt,
         "fromData",
-        ( data: Term<PData> ): Term<PStructExt> => {
+        ( dataTerm: Term<PData> ): Term<PStructExt> => {
 
             JsRuntime.assert(
-                typeExtends( data.type, Type.Data.Constr ),
+                typeExtends( dataTerm.type, data ),
                 "trying to construct a Struct using static method 'fromData'; but the `Data` argument is not a `Data.Constr`"
             );
 
-            return ObjectUtils.defineReadOnlyHiddenProperty(
-                // basically only mocking typescript here; still data
-                new Term(
-                    thisStructType,
-                    data.toUPLC
-                ),
-                "_pIsConstantStruct",
-                false
+            // basically only mocking typescript here; still data
+            return new Term(
+                thisStructType,
+                dataTerm.toUPLC,
+                (dataTerm as any).isConstant
             );
         }
     );
@@ -238,7 +241,7 @@ export default function pstruct<StructDef extends ConstantableStructDefinition>(
                 "trying to conver a struct using the wrong 'toData', perhaps you ment to call the 'toData' method of an other struct?"
             );
 
-            return punsafeConvertType( struct, Type.Data.Constr )
+            return punsafeConvertType( struct, data )
         }
     );
 
@@ -256,8 +259,8 @@ export default function pstruct<StructDef extends ConstantableStructDefinition>(
         ObjectUtils.defineReadOnlyProperty(
             PStructExt.prototype,
             ctorName,
-            ( jsStruct: StructInstance<any> ): Term<PStructExt> => {
-                
+            ( jsStruct: StructInstance<any> ): UtilityTermOf<PStructExt> => {
+
                 JsRuntime.assert(
                     ObjectUtils.isObject( jsStruct ),
                     "cannot build a plu-ts structure if the input is not an object with named fields"
@@ -272,16 +275,19 @@ export default function pstruct<StructDef extends ConstantableStructDefinition>(
 
                 if( ctorDefFieldsNames.length === 0 )
                 {
-                    return ObjectUtils.defineReadOnlyHiddenProperty(
+                    if( hoistedEmptyCtorUID[i] === undefined )
+                        hoistedEmptyCtorUID[i] = genHoistedSourceUID();
+                        
+                    return addUtilityForType(thisStructType)(
                         new Term(
                             thisStructType,
                             _dbn => new HoistedUPLC(
-                                UPLCConst.data( new DataConstr( i, [] ) )
-                            )
-                        ),
-                        "_pIsConstantStruct",
-                        true
-                    );
+                                UPLCConst.data( new DataConstr( i, [] ) ),
+                                hoistedEmptyCtorUID[i]
+                            ),
+                            true, // isConstant
+                        )
+                    ) as any;
                 }
 
                 // still we must be sure that the jsStruct has at least all the fields
@@ -290,32 +296,76 @@ export default function pstruct<StructDef extends ConstantableStructDefinition>(
                     "the fields passed do not match the struct definition for constructor: " + ctorName
                 );
 
-                const dataReprTerm = new Term(
-                    thisStructType,
-                    dbn => new Application(
-                        new Application(
-                            Builtin.constrData,
-                            UPLCConst.int( i )
-                        ),
-                        pList( Type.Data.Any )(
-                            
-                        ctorDefFieldsNames.map<Term<any>>(
-                            fieldKey => {
-                                return getToDataForType( thisCtorDef[ fieldKey ] )( jsStruct[ fieldKey ] )
-                            })
-                        ).toUPLC( dbn )
+                let dataReprTerm: Term<any>;
+
+                if(
+                    ctorDefFieldsNames.every( fieldKey => 
+                        (jsStruct[ fieldKey ] as any).isConstant
                     )
                 )
-                    
-                return ObjectUtils.defineReadOnlyHiddenProperty(
-                    new Term(
-                        // just mock ts return type
+                {
+                    dataReprTerm = new Term(
                         thisStructType,
-                        dataReprTerm.toUPLC
-                    ),
-                    "_pIsConstantStruct",
-                    true
-                );
+                        _dbn => {
+                            return UPLCConst.data(
+                                new DataConstr(
+                                    i,
+                                    ctorDefFieldsNames.map<Data>(
+                                        fieldKey => {
+
+                                            const _term = jsStruct[ fieldKey ];
+                                            // toData_minimal( thisCtorDef[ fieldKey ] )
+                                            // ( jsStruct[ fieldKey ] );
+                                            const res = (Machine.evalSimple(
+                                                _term
+                                            ));
+
+                                            if(!(res instanceof UPLCConst && isData( res.value ) ))
+                                            {
+                                                console.log("--------------------------------");
+                                                console.log( ctorDefFieldsNames );
+                                                console.log( fieldKey, termTypeToString( thisCtorDef[ fieldKey ] ) );
+                                                console.log( res )
+                                                // console.log( showUPLC( _term.toUPLC( _dbn ) ) )
+                                                throw res;
+                                            }
+                                            
+                                            return res.value as Data
+                                        }
+                                    )
+                                )
+                            );
+                        },
+                        true // isConstant
+                    )
+                }
+                else
+                {
+                    dataReprTerm = new Term(
+                        thisStructType,
+                        dbn => {
+    
+                            return new Application(
+                                new Application(
+                                    Builtin.constrData,
+                                    UPLCConst.int( i )
+                                ),
+                                pList( data )(
+                                    ctorDefFieldsNames.map<Term<any>>(
+                                        fieldKey => {
+                                            const res = jsStruct[ fieldKey ];
+                                            // toData_minimal( thisCtorDef[ fieldKey ] )( jsStruct[ fieldKey ] );
+
+                                            return res;
+                                        }
+                                    )
+                                ).toUPLC( dbn )
+                            )
+                        }
+                    )
+                }
+
+                return addUtilityForType( thisStructType )( dataReprTerm ) as any;
             }
         );
 
@@ -336,8 +386,8 @@ export default function pstruct<StructDef extends ConstantableStructDefinition>(
 }
 
 function replaceAliasesWith(
-    aliases: AliasTermType<symbol,[PrimType.Int]>[],
-    replacements: (ConstantableTermType | StructType | [symbol])[],
+    aliases: AliasT<[PrimType.Int]>[],
+    replacements: (GenericTermType)[],
     sDef: GenericStructDefinition
 ): void
 {
@@ -345,13 +395,13 @@ function replaceAliasesWith(
 
     for( let i = 0; i < ctors.length; i++ )
     {
-        const thisCtor = sDef[ ctors[ i ] ];
+        const thisCtor = sDef[ ctors[ i ] ] as GenericStructCtorDef;
         const fields = Object.keys( thisCtor );
 
         for( let j = 0; j < fields.length; j++ )
         {
             const thisField = fields[i];
-            const thisType = thisCtor[ thisField ];
+            const thisType = thisCtor[ thisField ] as TermType;
 
             if( isStructType( thisType ) )
             {
@@ -363,9 +413,12 @@ function replaceAliasesWith(
                 );
                 thisCtor[ thisField ] = struct( thisTypeSDefClone );
             }
-            else if ( isAliasType( thisType ) )
+            else if ( isTaggedAsAlias( thisType ) )
             {
-                const idx = aliases.findIndex( alias => typeExtends( thisType, alias ) );
+                const idx = aliases.findIndex(
+                    // object (pointer) equality 
+                    alias => thisType === alias
+                );
                 if( idx < 0 ) continue;
                 thisCtor[ thisField ] = replacements[ idx ];
             }
@@ -373,33 +426,27 @@ function replaceAliasesWith(
     }
 }
 
-function typeofGenericStruct(
-    genStruct: ( ...tyArgs: [ ConstantableTermType, ...ConstantableTermType[] ] )
-        => ConstantableStructDefinition
-): GenericStructType
+export function typeofGenericStruct(
+    genStruct: ( ...tyArgs: TermType[] )
+        => PStruct<StructDefinition>
+): StructT<GenericStructDefinition>
 {
     const nArgs = genStruct.length;
-    const aliases: AliasTermType<symbol,[PrimType.Int]>[] = Array( nArgs );
+    const aliases: AliasT<[PrimType.Int]>[] = Array( nArgs );
     const replacements: [ symbol ][] = Array( nArgs );
 
     for( let i = 0; i < nArgs; i++ )
     {
-        aliases[i] = Object.freeze([
-            aliasType,
-            Object.freeze({
-                id: Symbol(),
-                type: int
-            })
-        ]);
+        aliases[i] = alias( int );
         replacements[i] = tyVar();
     };
 
-    
+    const PStruct_ = genStruct(
+        ...aliases
+    );
+
     const sDef = cloneStructDef(
-        genStruct(
-            //@ts-ignore
-            ...aliases
-        )
+        PStruct_.type[1]
     );
 
     replaceAliasesWith(
@@ -408,21 +455,30 @@ function typeofGenericStruct(
         sDef
     );
 
-    return struct( sDef );
+    return struct( sDef ) as any;
 }
 
 /**
  * @param getDescriptor 
- * @returns 
+ * @returns
+ * 
+ * @deprecated
+ * 
+ * use a function that reutrns a struct based on the specfied types instead
  */
-export function pgenericStruct<ConstStructDef extends ConstantableStructDefinition, TypeArgs extends [ ConstantableTermType, ...ConstantableTermType[] ]>
+export function pgenericStruct<ConstStructDef extends StructDefinition, TypeArgs extends [ TermType, ...TermType[] ]>
     (
-        getDescriptor: ( ...tyArgs: TypeArgs ) => ConstStructDef
+        getDescriptor: ( ...tyArgs: TypeArgs ) => PStruct<ConstStructDef>
     ): (
         (<TyArgs extends TypeArgs>( ...tyArgs: TyArgs ) => PStruct<ConstStructDef>) &
-        { type: [ typeof structType, GenericStructDefinition ] }
+        { type: [ PrimType.Struct, GenericStructDefinition ] }
     )
 {
+    console.warn([
+        "you are using 'pgenericStruct' to create a paramterized sctruct;",
+        "this method is deprecated since v0.2.0 and might behave incorrectly",
+        "consider updating your code by defining your parametrized struct as a function that reutrns a determined struct"
+    ].join(" "))
     /*
     lambda called immediately
 
@@ -445,18 +501,19 @@ export function pgenericStruct<ConstStructDef extends ConstantableStructDefiniti
                     if( cachedResult !== undefined ) return cachedResult.snd;
                 }
                 
-                const result = pstruct<ConstStructDef>(
-                    getDescriptor(
+                let result = getDescriptor(
                         /*
-                        Argument of type '[ConstantableTermType, ...ConstantableTermType[]]' is not assignable to parameter of type 'TypeArgs'.
-                            '[ConstantableTermType, ...ConstantableTermType[]]' is assignable to the constraint of type 'TypeArgs',
+                        Argument of type '[TermType, ...TermType[]]' is not assignable to parameter of type 'TypeArgs'.
+                            '[TermType, ...TermType[]]' is assignable to the constraint of type 'TypeArgs',
                             but 'TypeArgs' could be instantiated with a different subtype of constraint
-                            '[ConstantableTermType, ...ConstantableTermType[]]'.ts(2345)
+                            '[TermType, ...TermType[]]'.ts(2345)
                         */
                         //@ts-ignore
                         tyArgs[0], ...tyArgs.slice(1)
-                    )
-                );
+                    );
+
+                if( !( result instanceof PDataRepresentable ) ) result = pstruct(result);
+
                 tyArgsCache.push( new Pair<string, PStruct<ConstStructDef>>( thisTyArgsKey, result ) );
 
                 return result;

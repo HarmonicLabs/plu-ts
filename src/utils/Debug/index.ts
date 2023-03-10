@@ -1,4 +1,4 @@
-import BasePluTsError from "../../errors/BasePlutsError";
+import { BasePlutsError } from "../../errors/BasePlutsError";
 import AdditionalInfos from "./AdditionalInfo";
 import DebugProxies from "./Proxies";
 
@@ -92,21 +92,21 @@ export default class Debug
      * @param args 
      * @returns 
      */
-    static assert<E extends BasePluTsError>( condition: boolean, errorMessage: string, ...args: any[])
+    static assert<E extends BasePlutsError>( condition: boolean, errorMessage: string, ...args: any[])
     {
         if( !Debug.isDeugging() ) return;
 
         if( condition ) return;
 
         args.length > 0 && console.error(...args);
-        throw (new BasePluTsError( errorMessage ) as E)
+        throw (new BasePlutsError( errorMessage ) as E)
     }
 
-    static throw<E extends BasePluTsError>( errorMessage: string, ...args: any[])
+    static throw<E extends BasePlutsError>( errorMessage: string, ...args: any[])
     {
         if( !Debug.isDeugging() ) return;
 
         args.length > 0 && console.error(...args);
-        throw (new BasePluTsError( errorMessage ) as E)
+        throw (new BasePlutsError( errorMessage ) as E)
     }
 }

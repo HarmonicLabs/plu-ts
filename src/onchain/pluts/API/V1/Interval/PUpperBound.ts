@@ -1,31 +1,10 @@
-import ObjectUtils from "../../../../../utils/ObjectUtils";
-import { pgenericStruct, PStruct } from "../../../PTypes/PStruct/pstruct";
-import { bool, ConstantableStructType, ConstantableTermType, PrimType } from "../../../Term/Type/base";
-import PExtended, { PExtendedT } from "./PExtended";
+import { pstruct } from "../../../PTypes/PStruct/pstruct";
+import { bool } from "../../../type_system/types";
+import { PExtended } from "./PExtended";
 
-export type PUpperBoundT<T extends ConstantableTermType> = PStruct<{
+export const PUpperBound = pstruct({
     PUpperBound: {
-        bound: PExtendedT<T>,
-        inclusive: [ PrimType.Bool ] 
-    }
-}> & ConstantableStructType
-
-const _PUpperBound = pgenericStruct( a => {
-    return {
-        PUpperBound: {
-            bound: PExtended( a ).type,
-            inclusive: bool 
-        }
+        bound: PExtended.type,
+        inclusive: bool 
     }
 });
-
-function PUpperBound<T extends ConstantableTermType>( tyArg: T ): PUpperBoundT<T>
-{
-    return _PUpperBound( tyArg ) as any;
-}
-
-export default ObjectUtils.defineReadOnlyProperty(
-    PUpperBound,
-    "type",
-    _PUpperBound.type
-);;;

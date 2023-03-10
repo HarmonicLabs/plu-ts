@@ -1,17 +1,10 @@
-import { PByteString, PList, PPair, PInt, Term, PBool } from "../..";
-import ByteString from "../../../../types/HexString/ByteString";
-import PPubKeyHash from "../../API/V1/PubKey/PPubKeyHash";
-import PScriptContext from "../../API/V2/ScriptContext/PScriptContext";
-import PCurrencySymbol from "../../API/V1/Value/PCurrencySymbol";
-import { pmatch, pByteString } from "../../PTypes";
 import { RestrictedStructInstance } from "../../PTypes/PStruct/pstruct";
-import { punBData, pisEmpty, punIData, pand, pBSToData } from "../../stdlib";
-import TermPair from "../../stdlib/UtilityTerms/TermPair";
-import { pdelay, perror, pfn, plet } from "../../Syntax/syntax";
-import { data, bool, ConstantableTermType } from "../../Term/Type";
-import Type from "../../Term/Type/base";
-import pintToBS from "../../stdlib/Int/pintToBS";
-import compile from "../compile";
+import { PByteString, PList, PPair, PInt, Term, PBool, TermPair, pBSToData, pByteString, pand, pdelay, perror, pfn, pintToBS, pisEmpty, plet, pmatch, punBData, punIData, bool, data, asData, bs, TermType } from "../..";
+import { ByteString } from "../../../../types/HexString/ByteString";
+import { PPubKeyHash } from "../../API/V1/PubKey/PPubKeyHash";
+import { PScriptContext } from "../../API/V2/ScriptContext/PScriptContext";
+import { PCurrencySymbol } from "../../API/V1/Value/PCurrencySymbol";
+import { compile } from "../compile";
 
 describe("NFTVendingMachine", () => {
 
@@ -19,10 +12,10 @@ describe("NFTVendingMachine", () => {
 
         const nftPolicy = pfn([
 
-            Type.Data.BS, // owner public key hash
+            bs, // owner public key hash
 
-            Type.Data.BS, // counter thread identifier policy
-            Type.Data.BS, // price oracle thread identifier policy
+            bs, // counter thread identifier policy
+            bs, // price oracle thread identifier policy
             
             data,
             PScriptContext.type
@@ -43,7 +36,7 @@ describe("NFTVendingMachine", () => {
                         // includes the **verified** input of the counter
                         // since the token that verifies the utxo is unique
                         // it makes no sense to check for the validator hash too
-                        inputValue.some( policy => policy.fst.eq( punBData.$( counterValId ) ) )
+                        inputValue.some( policy => policy.fst.eq( counterValId ) )
 
                         // and delays the computation; in this case is not a detail
                         // because otherwhise it would have ran for each element of the list
@@ -99,67 +92,70 @@ describe("NFTVendingMachine", () => {
                 .and(
                     pisEmpty.$( tx.refInputs.tail )
                     .and(
-                        tx.refInputs.head.extract("resolved").in( ({ resolved: oracleRefInput }) =>
-                            oracleRefInput.extract("datum","value").in( oracle =>
+                        (() => {
 
-                                // includes identifier
-                                // safe if the token is unique (NFT)
-                                oracle.value.some( valueEntry => valueEntry.fst.eq( punBData.$( priceOracleId ) ) )
-                                .and(
-                                    
-                                    tx.outputs.some( output =>
-                                    output.extract("address","value").in( out =>
-                                        out.address.extract("credential").in( outAddr =>
-
-                                            pand.$(
-
-                                                //tx output going to owner
-                                                pmatch( outAddr.credential )
-                                                .onPPubKeyCredential( _ => _.extract("pkh").in( ({ pkh }) =>
-                                                    pkh.eq( punBData.$( ownerPkh ) ) 
-                                                ))
-                                                ._( _ => perror( bool ) )
-                                            
-                                            ).$(pdelay(
+                            return tx.refInputs.head.extract("resolved").in( ({ resolved: oracleRefInput }) =>
+                                oracleRefInput.extract("datum","value").in( oracle =>
+    
+                                    // includes identifier
+                                    // safe if the token is unique (NFT)
+                                    oracle.value.some( valueEntry => valueEntry.fst.eq( priceOracleId ) )
+                                    .and(
+                                        
+                                        tx.outputs.some( output =>
+                                        output.extract("address","value").in( out =>
+                                            out.address.extract("credential").in( outAddr =>
+    
+                                                pand.$(
+    
+                                                    //tx output going to owner
+                                                    pmatch( outAddr.credential )
+                                                    .onPPubKeyCredential( _ => _.extract("pkh").in( ({ pkh }) =>
+                                                        pkh.eq( ownerPkh ) 
+                                                    ))
+                                                    ._( _ => perror( bool ) )
                                                 
-                                                pmatch(
-                                                    out.value.find( valueEntry =>
-                                                        valueEntry.fst.length.eq( 0 ) // empty bytestring (policy of ADA)
-                                                    )
-                                                )
-                                                .onJust( _ => _.extract("val").in((({val}: { val: TermPair<PByteString,PList<PPair<PByteString, PInt>>>}): Term<PBool> =>
+                                                ).$(pdelay(
                                                     
-                                                    // list( pair( bs, int ) )
-                                                    val.snd
-                                                    // pair( bs, int )
-                                                    .at( 0 )
-                                                    // int ( lovelaces )
-                                                    .snd.gtEq(
-                                                        punIData.$( 
-                                                            pmatch( oracle.datum )
-                                                            .onInlineDatum( _ => _.extract("datum").in(({ datum }) => datum ))
-                                                            ._( _ => perror( data ) )
+                                                    pmatch(
+                                                        out.value.find( valueEntry =>
+                                                            valueEntry.fst.length.eq( 0 ) // empty bytestring (policy of ADA)
                                                         )
                                                     )
-                                                ) as (extracted: RestrictedStructInstance<{ val: ConstantableTermType; }, ["val"]>) => Term<PBool>))
-                                                .onNothing( _ => perror( bool ) ) as Term<PBool>
-
-                                            ))
-
-                                        )
-                                    ))
-
+                                                    .onJust( _ => _.extract("val").in((({val}): Term<PBool> =>
+                                                        
+                                                        // list( pair( bs, int ) )
+                                                        val.snd
+                                                        // pair( bs, int )
+                                                        .at( 0 )
+                                                        // int ( lovelaces )
+                                                        .snd.gtEq(
+                                                            punIData.$( 
+                                                                pmatch( oracle.datum )
+                                                                .onInlineDatum( _ => _.extract("datum").in(({ datum }) => datum ))
+                                                                ._( _ => perror( data ) )
+                                                            )
+                                                        )
+                                                    )))
+                                                    .onNothing( _ => perror( bool ) ) as Term<PBool>
+    
+                                                ) as any )
+    
+                                            )
+                                        ))
+    
+                                    )
+    
                                 )
-
                             )
-                        )
+                        })()
                     )
                 )
             )
             
             ))
             ._( _ => perror( bool ) )
-        ))
+        ) as any)
 
         function makeNFTweetPolicy(
             owner: Term<typeof PPubKeyHash>,
@@ -168,9 +164,9 @@ describe("NFTVendingMachine", () => {
         )
         {
             return nftPolicy
-            .$( pBSToData.$( owner as any ) )
-            .$( pBSToData.$( counterNFT as any ) )
-            .$( pBSToData.$( priceOracleNFT as any ) );
+            .$( owner as any )
+            .$( counterNFT as any )
+            .$( priceOracleNFT as any );
         }
 
         compile(

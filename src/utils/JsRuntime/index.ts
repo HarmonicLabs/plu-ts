@@ -1,4 +1,4 @@
-import BasePlutsError from "../../errors/BasePlutsError";
+import { BasePlutsError } from "../../errors/BasePlutsError";
 import AdditionalInfo from "../Debug/AdditionalInfo";
 
 type Constructable<ReturnT, ConstructorParams extends any[] = any[]> = { new(...args: ConstructorParams): ReturnT }
@@ -62,11 +62,11 @@ export default class JsRuntime
         throw (new BasePlutsError( errorMessage ) as E)
     }
 
-    static makeNotSupposedToHappenError<E extends BasePlutsError>( prefix: string ): E
+    static makeNotSupposedToHappenError( prefix: string )
     {
-        return (new BasePlutsError( prefix + "\n\n\
+        return new BasePlutsError( prefix + "\n\n\
         this is not supposed to happen, please open an issue explaining how you got here: \
-        https://github.com/HarmonicLabs/plu-ts/issues") as E);
+        https://github.com/HarmonicLabs/plu-ts/issues");
     }
 
     static objWithUnderscoreAsPrivate<T extends object>( tInstance: T ) {

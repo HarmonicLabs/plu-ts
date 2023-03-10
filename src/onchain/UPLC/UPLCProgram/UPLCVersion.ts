@@ -1,6 +1,6 @@
 import { CanBeUInteger, forceUInteger, UInteger } from "../../../types/ints/Integer";
 
-export default class UPLCVersion
+export class UPLCVersion
 {
     private _major: UInteger
     private _minor: UInteger
@@ -16,14 +16,4 @@ export default class UPLCVersion
         this._minor = forceUInteger( minor );
         this._patch = forceUInteger( patch );
     }
-
-    // deprecated
-    //
-    // toUPLCBitStream(): BitStream
-    // {
-    //     const result = this.major.toUPLCBitStream();
-    //     result.append( this.minor.toUPLCBitStream() );
-    //     result.append( this.patch.toUPLCBitStream() );
-    //     return result;
-    // }
 }

@@ -1,7 +1,7 @@
-import evalScript from ".."
-import { pInt } from "../../pluts/PTypes/PInt"
-import ErrorUPLC from "../../UPLC/UPLCTerms/ErrorUPLC";
-import UPLCConst from "../../UPLC/UPLCTerms/UPLCConst"
+import { evalScript } from ".."
+import { ErrorUPLC } from "../../UPLC/UPLCTerms/ErrorUPLC";
+import { UPLCConst } from "../../UPLC/UPLCTerms/UPLCConst"
+import { pInt } from "../../pluts/lib/std/int/pInt";
 import { haskellDiv, haskellQuot, haskellRem } from "../BnCEK";
 
 

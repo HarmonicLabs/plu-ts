@@ -1,6 +1,6 @@
-import PlutsCEKComputeError from "..";
+import { PlutsCEKComputeError } from "..";
 
-export default class PlutsCEKUnboundVarError extends PlutsCEKComputeError
+export class PlutsCEKUnboundVarError extends PlutsCEKComputeError
 {
     constructor( msg: string = "trying to evaluate an unbound variable" )
     {

@@ -1,56 +1,103 @@
-import Cbor from "../../../../cbor/Cbor";
-import CborObj from "../../../../cbor/CborObj";
-import CborArray from "../../../../cbor/CborObj/CborArray";
-import CborUInt from "../../../../cbor/CborObj/CborUInt";
-import CborString from "../../../../cbor/CborString";
-import { ToCbor } from "../../../../cbor/interfaces/CBORSerializable";
-import ByteString from "../../../../types/HexString/ByteString";
-import { CanBeUInteger, forceUInteger } from "../../../../types/ints/Integer";
-import JsRuntime from "../../../../utils/JsRuntime";
-import ObjectUtils from "../../../../utils/ObjectUtils";
-import Hash32 from "../../../hashes/Hash32/Hash32";
-import TxOut, { ITxOut } from "./TxOut";
+import JsRuntime from "../../../../utils/JsRuntime"
+import ObjectUtils from "../../../../utils/ObjectUtils"
+
+import { ToCbor } from "../../../../cbor/interfaces/CBORSerializable"
+import { CborString, CanBeCborString, forceCborString } from "../../../../cbor/CborString"
+import { forceBigUInt } from "../../../../types/ints/Integer"
+import { ByteString } from "../../../../types/HexString/ByteString"
+import { Cbor } from "../../../../cbor/Cbor"
+import { CborObj } from "../../../../cbor/CborObj"
+import { CborArray } from "../../../../cbor/CborObj/CborArray"
+import { CborUInt } from "../../../../cbor/CborObj/CborUInt"
+import { InvalidCborFormatError } from "../../../../errors/InvalidCborFormatError"
+import { DataB } from "../../../../types/Data/DataB"
+import { DataConstr } from "../../../../types/Data/DataConstr"
+import { DataI } from "../../../../types/Data/DataI"
+import { ToData } from "../../../../types/Data/toData/interface"
+import { ToJson } from "../../../../utils/ts/ToJson"
+import { Hash32 } from "../../../hashes/Hash32/Hash32"
+import { BasePlutsError } from "../../../../errors/BasePlutsError"
+
+export type TxOutRefStr = `${string}#${number}`;
 
 export interface ITxOutRef {
     id: string | Hash32
     index: number
 }
-export default class TxOutRef
-    implements ITxOutRef, ToCbor
+
+export function isITxOutRef( stuff: any ): stuff is ITxOutRef
+{
+    return (
+        ObjectUtils.isObject( stuff ) &&
+        ObjectUtils.hasOwn( stuff, "id" ) && (
+            (typeof stuff.id === "string" && ByteString.isValidHexValue( stuff.id ) && (stuff.id.length === 64)) ||
+            (stuff.id instanceof Hash32)
+        ) &&
+        ObjectUtils.hasOwn( stuff, "index" ) && (
+            typeof stuff.index === "number" &&
+            stuff.index === Math.round( Math.abs( stuff.index ) )
+        )
+    )
+}
+
+export function ITxOutRefToStr( iRef: ITxOutRef ): TxOutRefStr
+{
+    if( !isITxOutRef( iRef ) )
+    throw new BasePlutsError(
+        "'ITxOutRefToStr' works on 'ITxOutRef' like objects"
+    );
+
+    return `${iRef.id.toString()}#${iRef.index.toString()}` as any;
+}
+
+export type UTxORefJson = {
+    id: string;
+    index: number;
+};
+
+export class TxOutRef
+    implements ITxOutRef, ToData, ToCbor, ToJson
 {
     readonly id!: Hash32
     readonly index!: number
-    readonly resolved!: TxOut
 
-    constructor( id: string | Hash32, index: CanBeUInteger, resolved: ITxOut )
+    constructor({ id, index }: ITxOutRef)
     {
         JsRuntime.assert(
             (typeof id === "string" && ByteString.isValidHexValue( id ) && (id.length === 64)) ||
             (id instanceof Hash32),
-            "tx output id (tx hash) invalid while constructing a 'TxOutRef'"
+            "tx output id (tx hash) invalid while constructing a 'UTxO'"
         );
 
         ObjectUtils.defineReadOnlyProperty(
             this,
             "id",
-            id
+            id instanceof Hash32 ? id : new Hash32( id )
         );
         ObjectUtils.defineReadOnlyProperty(
             this,
             "index",
-            Number( forceUInteger( index ).asBigInt )
-        );
-
-        ObjectUtils.defineReadOnlyProperty(
-            this,
-            "resolved",
-            resolved instanceof TxOut ? resolved : new TxOut( resolved )
+            Number( forceBigUInt( index ) )
         );
     }
 
-    toString(): string
+    toString(): TxOutRefStr
     {
-        return `${this.id}#${this.index.toString()}`;
+        return `${this.id.asString}#${this.index.toString()}` as any;
+    }
+
+    toData(): DataConstr
+    {
+        return new DataConstr(
+            0, // PTxOutRef only constructor
+            [
+                new DataConstr(
+                    0, // PTxId only constructor
+                    [ new DataB( this.id.asBytes ) ]
+                ),
+                new DataI( this.index )
+            ]
+        )
     }
 
     toCbor(): CborString
@@ -64,4 +111,35 @@ export default class TxOutRef
             new CborUInt( this.index )
         ])
     }
+
+    static fromCbor( cStr: CanBeCborString ): TxOutRef
+    {
+        return TxOutRef.fromCborObj( Cbor.parse( forceCborString( cStr ) ) );
+    }
+    static fromCborObj( cObj: CborObj ): TxOutRef
+    {
+        if(!(cObj instanceof CborArray ))
+        throw new InvalidCborFormatError("TxOutRef");
+
+        const [ _id, _index ] = cObj.array;
+
+        const idRes = Hash32.fromCborObj( _id );
+
+        if(!(_index instanceof CborUInt))
+        throw new InvalidCborFormatError("TxOutRef");
+
+        return new TxOutRef({
+            id: idRes,
+            index: Number( _index.num )
+        });
+    }
+
+    toJson(): UTxORefJson
+    {
+        return {
+            id: this.id.asString,
+            index: this.index
+        };
+    }
+    
 }

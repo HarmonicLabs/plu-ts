@@ -1,7 +1,4 @@
-import palias from "../../../PTypes/PAlias/palias";
-import { bs } from "../../../Term/Type/base";
+import { palias } from "../../../PTypes/PAlias/palias";
+import { bs } from "../../../type_system/types";
 
-const PScriptHash = palias( bs );
-// const PScriptHash = bs;
-
-export default PScriptHash;
+export const PScriptHash = palias( bs );

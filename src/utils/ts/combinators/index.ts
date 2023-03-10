@@ -1,4 +1,4 @@
-import BasePlutsError from "../../../errors/BasePlutsError";
+import { BasePlutsError } from "../../../errors/BasePlutsError";
 import { Params } from "../TyFn";
 import { Head, Tail } from "../TyLists";
 

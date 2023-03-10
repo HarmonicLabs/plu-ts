@@ -1,10 +1,9 @@
-import Cloneable from "../../types/interfaces/Cloneable";
-import Integer from "../../types/ints/Integer";
+import { Cloneable } from "../../types/interfaces/Cloneable";
+import { Integer } from "../../types/ints/Integer";
 import { PureUPLCTerm } from "../UPLC/UPLCTerm";
-import CEKHeap from "./CEKHeap";
-import { eqCEKValue } from "./CEKValue";
+import { CEKHeap } from "./CEKHeap";
 
-export default class CEKEnv
+export class CEKEnv
     implements Cloneable<CEKEnv>
 {
     private _heapRef: CEKHeap;

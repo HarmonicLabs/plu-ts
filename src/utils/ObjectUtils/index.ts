@@ -342,6 +342,20 @@ export default class ObjectUtils
         )
     }
 
+    static defineGetterOnlyProperty<ObjT extends object, PropKey extends keyof any , ValT >
+        ( obj: ObjT, name: PropKey, valueGetter: () => ValT ): ObjT
+    {
+        return ObjectUtils.definePropertyIfNotPresent(
+            obj, name,
+            {
+                get: valueGetter,
+                set: () => {},
+                configurable: false,
+                enumerable: true
+            }
+        );
+    }
+
     static defineWritableHiddenProperty<ObjT extends object, PropKey extends keyof any , ValT >
         ( obj: ObjT, name: PropKey, value: ValT)
     {

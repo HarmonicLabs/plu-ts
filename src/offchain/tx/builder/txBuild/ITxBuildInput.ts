@@ -1,21 +1,17 @@
-import { PData, PStruct, Term } from "../../../../onchain";
-import Data from "../../../../types/Data";
-import Script from "../../../script/Script";
-import TxOutRef from "../../body/output/TxOutRef";
+import { CanBeData } from "../../../../types/Data/CanBeData";
+import { Script } from "../../../script/Script";
+import { UTxO } from "../../body/output/UTxO";
 
 export interface ITxBuildInput {
-    utxo: TxOutRef,
+    utxo: UTxO,
     referenceScriptV2?: {
-        refUtxo: TxOutRef,
-        datum: Data | Term<PData> | Term<PStruct<any>> | "inline",
-        redeemer: Data | Term<PData> | Term<PStruct<any>>
+        refUtxo: UTxO,
+        datum: CanBeData | "inline",
+        redeemer: CanBeData,
     }
-    simpleReferenceScript?: TxOutRef
     inputScript?: {
         script: Script,
-        datum: Data | Term<PData> | Term<PStruct<any>> | "inline",
-        redeemer: Data | Term<PData> | Term<PStruct<any>>
+        datum: CanBeData | "inline",
+        redeemer: CanBeData
     }
 }
-
-export default ITxBuildInput

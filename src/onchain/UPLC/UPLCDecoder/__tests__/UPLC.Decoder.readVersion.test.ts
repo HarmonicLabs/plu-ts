@@ -1,8 +1,8 @@
-import UPLCDecoder from ".."
-import UPLCEncoder from "../../UPLCEncoder"
-import UPLCProgram from "../../UPLCProgram"
-import UPLCVersion from "../../UPLCProgram/UPLCVersion"
-import UPLCConst from "../../UPLCTerms/UPLCConst"
+import { UPLCDecoder } from ".."
+import { UPLCEncoder } from "../../UPLCEncoder"
+import { UPLCProgram } from "../../UPLCProgram"
+import { UPLCVersion } from "../../UPLCProgram/UPLCVersion"
+import { UPLCConst } from "../../UPLCTerms/UPLCConst"
 
 describe("readVersion", () => {
 

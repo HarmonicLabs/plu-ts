@@ -1,7 +1,7 @@
-import Cloneable, { isCloneable } from "../../../../types/interfaces/Cloneable";
-import PType from "../../PType"
+import { Cloneable, isCloneable } from "../../../../types/interfaces/Cloneable";
+import { PType } from "../../PType"
 
-export default class PLam<A extends PType, B extends PType > extends PType
+export class PLam<A extends PType, B extends PType > extends PType
     implements Cloneable<PLam<A,B>>
 {
     // phantom

@@ -1,9 +1,9 @@
-import BitStream from "../../../types/bits/BitStream";
-import UPLCTerm from "../UPLCTerm";
-import BinaryString from "../../../types/bits/BinaryString";
-import Cloneable from "../../../types/interfaces/Cloneable";
+import { BitStream } from "../../../types/bits/BitStream";
+import { UPLCTerm } from "../UPLCTerm";
+import { BinaryString } from "../../../types/bits/BinaryString";
+import { Cloneable } from "../../../types/interfaces/Cloneable";
 
-export default class Lambda
+export class Lambda
     implements Cloneable<Lambda>
 {
     static get UPLCTag(): BitStream

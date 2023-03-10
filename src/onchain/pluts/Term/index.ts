@@ -1,19 +1,21 @@
-import type UPLCTerm from "../../UPLC/UPLCTerm";
-import type PType from "../PType";
-import type { TermType } from "./Type/base";
-import type { FromPType, ToPType } from "./Type/ts-pluts-conversion";
-
-import { isCloneable } from "../../../types/interfaces/Cloneable";
 import JsRuntime from "../../../utils/JsRuntime";
 import ObjectUtils from "../../../utils/ObjectUtils";
-import HoistedUPLC from "../../UPLC/UPLCTerms/HoistedUPLC";
-import UPLCConst from "../../UPLC/UPLCTerms/UPLCConst";
-import { isWellFormedType } from "./Type/kinds";
 
+import { UPLCTerm } from "../../UPLC/UPLCTerm";
+import type { PType } from "../PType";
+
+import { isCloneable } from "../../../types/interfaces/Cloneable";
+import { HoistedUPLC } from "../../UPLC/UPLCTerms/HoistedUPLC";
+import { Machine } from "../../CEK";
+import { FromPType, ToPType } from "../type_system/ts-pluts-conversion";
+import { isWellFormedGenericType } from "../type_system/kinds/isWellFormedType";
+import { TermType } from "../type_system/types";
+import { HoistedSourceUID } from "../../UPLC/UPLCTerms/HoistedUPLC/HoistedSourceUID";
+import { genHoistedSourceUID } from "../../UPLC/UPLCTerms/HoistedUPLC/HoistedSourceUID/genHoistedSourceUID";
 
 export type UnTerm<T extends Term<PType>> = T extends Term<infer PT extends PType > ? PT : never;
 
-export default class Term<A extends PType>
+export class Term<A extends PType>
 {
     /**
      * in most cases it will never be used
@@ -30,8 +32,10 @@ export default class Term<A extends PType>
             this._pInstance;
     }
 
-    _type!: FromPType<A>;
-    get type(): FromPType<A> {
+    // typescript being silly here
+    _type!: FromPType<A> | TermType;
+    get type(): FromPType<A> | TermType
+    {
         return this._type
     };
 
@@ -41,14 +45,30 @@ export default class Term<A extends PType>
         return ( deBruijnLevel: bigint | number ) =>
         {
             if( typeof deBruijnLevel !== "bigint" ) deBruijnLevel = BigInt( deBruijnLevel );
-            return this._toUPLC( deBruijnLevel );
+
+            let uplc = this._toUPLC( deBruijnLevel );
+            if( 
+                !(uplc instanceof HoistedUPLC) &&
+                (this as any).isConstant
+            )
+            {
+                // console.log("evaluating:\n\n", showUPLC( uplc ) );
+
+                // !!! IMPORTANT !!!
+                // pair creation assumes this evaluation is happening here
+                // if for whatever reason this is removed please adapt the rest of the codebas
+                uplc = Machine.evalSimple( uplc )
+            }
+
+            return uplc;
         } 
     };
 
-    constructor( type: FromPType<A> , toUPLC: ( dbn: bigint ) => UPLCTerm, isConstant: boolean = false )
+    constructor( type: FromPType<A> | FromPType<ToPType<TermType>> , toUPLC: ( dbn: bigint ) => UPLCTerm, isConstant: boolean = false )
     {
         JsRuntime.assert(
-            isWellFormedType( type ),
+            isWellFormedGenericType( type ) ||
+            Boolean(void console.log( type )),
             "invalid type while constructing Term"
         );
 
@@ -80,23 +100,31 @@ export default class Term<A extends PType>
             }
         );
 
+        let _this_hoistedUID: HoistedSourceUID | undefined = undefined;
+        const getThisHoistedUID = () => {
+            if( typeof _this_hoistedUID !== "string" )
+            {
+                _this_hoistedUID = genHoistedSourceUID();
+            }
+            return _this_hoistedUID;
+        }
+
+        let hoisted: HoistedUPLC | undefined = undefined;
         ObjectUtils.defineReadOnlyHiddenProperty(
             this,
             "hoist",
             () => {
                 this._toUPLC = {
                     proof: proofSym,
-                    value: (_dbn : bigint) => {
+                    value: (_dbn: bigint) => {
 
-                        const hoisted = toUPLC( BigInt( 0 ) );
+                        if( hoisted === undefined || !(hoisted instanceof HoistedUPLC) ) 
+                            hoisted = new HoistedUPLC(
+                                toUPLC( BigInt( 0 ) ),
+                                getThisHoistedUID()
+                            );
 
-                        // console.log( showUPLC( hoisted ) );
-                        
-                        // throws if the term is not closed
-                        // for how terms are created it should never be the case
-                        return new HoistedUPLC(
-                            hoisted
-                        );
+                        return hoisted.clone()
                     }
                 } as any;
             }
@@ -110,18 +138,8 @@ export default class Term<A extends PType>
                 get: () => _isConstant,
                 set: ( isConst: boolean ) => {
                     if( typeof isConst !== "boolean" ) return;
-                    if( isConst === true )
-                    {
-                        // true if the compiled term is instance of ```UPLCConst``` (any type)
-                        _isConstant = Object.getPrototypeOf(
-                            this._toUPLC( BigInt( 0 ) )
-                        ) === UPLCConst.prototype
-                    }
-                    else
-                    {
-                        _isConstant = false;
-                    }
-                    return;
+                    
+                    _isConstant = isConst;
                 },
                 enumerable: false,
                 configurable: false

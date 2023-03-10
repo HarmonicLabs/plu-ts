@@ -1,6 +1,6 @@
 import UPLCFlatUtils from "../../../utils/UPLCFlatUtils";
-import BinaryString from "../BinaryString"
-import BitStream from "../BitStream"
+import { BinaryString } from "../BinaryString"
+import { BitStream } from "../BitStream"
 
 
 describe("UPLCFlatUtils.padToByte; default options", () => {

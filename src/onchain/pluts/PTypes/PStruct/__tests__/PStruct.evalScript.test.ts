@@ -1,25 +1,25 @@
-import pstruct, { pgenericStruct } from "../pstruct"
-import DataConstr from "../../../../../types/Data/DataConstr";
-import DataI from "../../../../../types/Data/DataI";
-import evalScript from "../../../../CEK";
-import UPLCConst from "../../../../UPLC/UPLCTerms/UPLCConst";
-import { int, str, struct } from "../../../Term/Type/base"
-import { pInt } from "../../PInt";
+import { pstruct } from "../pstruct"
+import { DataConstr } from "../../../../../types/Data/DataConstr";
+import { DataI } from "../../../../../types/Data/DataI";
+import { Machine } from "../../../../CEK/Machine";
+import { UPLCConst } from "../../../../UPLC/UPLCTerms/UPLCConst";
+import { pInt } from "../../../lib/std/int/pInt";
+import { TermType, int, str } from "../../../type_system";
+import { pDataI } from "../../../lib";
 
 
-const PMaybe = pgenericStruct( tyArg => {
-    return {
+const PMaybe = <T extends TermType>( tyArg: T ) => {
+    return pstruct({
         Just: { value: tyArg },
         Nothing: {}
-    }
-});
+    })
+};
 
-const PEither = pgenericStruct( ( a, b ) => {
-    return {
-        Left: { value: a },
-        Rigth: { value: b },
-    }
-})
+const PEither = <A extends TermType, B extends TermType>( a: A, b: B ) =>
+    pstruct({
+        Left: { left: a },
+        Right: { right: b },
+    })
 
 describe("evaluated struct", () => {
 
@@ -28,8 +28,8 @@ describe("evaluated struct", () => {
         test("Just == Constr 0 [ value ] ", () => {
 
             expect(
-                evalScript(
-                    PMaybe( int ).Just({ value: pInt(2) })
+                Machine.evalSimple(
+                    PMaybe( int ).Just({ value: pDataI(2) })
                 )
             ).toEqual(
                 UPLCConst.data(
@@ -40,8 +40,8 @@ describe("evaluated struct", () => {
             )
 
             expect(
-                evalScript(
-                    PMaybe( int ).Just({ value: pInt(2) })
+                Machine.evalSimple(
+                    PMaybe( int ).Just({ value: pDataI(2) })
                 )
             ).toEqual(
                 UPLCConst.data(
@@ -56,7 +56,7 @@ describe("evaluated struct", () => {
         test("Nothing == Constr 1 [] ", () => {
 
             expect(
-                evalScript(
+                Machine.evalSimple(
                     PMaybe( int ).Nothing({})
                 )
             ).toEqual(
@@ -68,7 +68,7 @@ describe("evaluated struct", () => {
             )
 
             expect(
-                evalScript(
+                Machine.evalSimple(
                     PMaybe( str ).Nothing({})
                 )
             ).toEqual(

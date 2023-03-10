@@ -1,6 +1,6 @@
 import BigIntUtils from "../../../utils/BigIntUtils";
 import BitUtils from "../../../utils/BitUtils";
-import BitStream from "../BitStream";
+import { BitStream } from "../BitStream";
 
 
 describe("new BitStream( bigint, some_initial_n_zeroes ).toBuffer()", () => {

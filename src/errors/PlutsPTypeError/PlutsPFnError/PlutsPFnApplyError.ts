@@ -1,3 +1,3 @@
-import PlutsPFnError from ".";
+import { PlutsPFnError } from ".";
 
-export default class PlutsPFnApplyError extends PlutsPFnError {};
+export class PlutsPFnApplyError extends PlutsPFnError {};

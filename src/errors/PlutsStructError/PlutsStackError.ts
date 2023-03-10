@@ -1,3 +1,3 @@
-import PlutsStructError from ".";
+import { PlutsStructError } from ".";
 
-export default class PlutsStackError extends PlutsStructError {}
+export class PlutsStackError extends PlutsStructError {}

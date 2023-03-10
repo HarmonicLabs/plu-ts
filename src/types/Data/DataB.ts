@@ -1,10 +1,10 @@
-import JsRuntime from "../../utils/JsRuntime";
-import ByteString from "../HexString/ByteString";
-import Cloneable from "../interfaces/Cloneable";
+import { ToJson } from "../../utils/ts/ToJson";
+import { ByteString } from "../HexString/ByteString";
+import { Cloneable } from "../interfaces/Cloneable";
 
 
-export default class DataB
-    implements Cloneable<DataB>
+export class DataB
+    implements Cloneable<DataB>, ToJson
 {
     private _bytes: ByteString
     get bytes(): ByteString
@@ -12,14 +12,9 @@ export default class DataB
         return Object.freeze( this._bytes ) as any
     };
 
-    constructor( B: ByteString | Buffer )
+    constructor( B: ByteString | Uint8Array | string )
     {
-        if( Buffer.isBuffer( B ) ) B = new ByteString( B );
-        
-        JsRuntime.assert(
-            ByteString.isStrictInstance( B ),
-            "invalid ByteString provided while constructing 'DataB' instance"
-        );
+        if(!(B instanceof ByteString)) B = new ByteString( B );
 
         this._bytes = B.clone();
     }
@@ -28,5 +23,10 @@ export default class DataB
     {
         // the constructor clones the bytes
         return new DataB( this._bytes );
+    }
+
+    toJson()
+    {
+        return { bytes: this._bytes.asString }
     }
 }

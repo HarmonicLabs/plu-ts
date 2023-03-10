@@ -1,24 +1,29 @@
-import Cbor from "../../../cbor/Cbor";
-import CborObj from "../../../cbor/CborObj";
-import CborArray from "../../../cbor/CborObj/CborArray";
-import CborBytes from "../../../cbor/CborObj/CborBytes";
-import CborString from "../../../cbor/CborString";
-import { ToCbor } from "../../../cbor/interfaces/CBORSerializable";
 import JsRuntime from "../../../utils/JsRuntime";
 import ObjectUtils from "../../../utils/ObjectUtils";
-import Hash32 from "../../hashes/Hash32/Hash32";
-import Signature from "../../hashes/Signature/Signature";
-import VKey from "./VKeyWitness/VKey";
 
-export default class BootstrapWitness
-    implements ToCbor
+import { Cbor } from "../../../cbor/Cbor";
+import { CborObj } from "../../../cbor/CborObj";
+import { CborArray } from "../../../cbor/CborObj/CborArray";
+import { CborBytes } from "../../../cbor/CborObj/CborBytes";
+import { CborString, CanBeCborString, forceCborString } from "../../../cbor/CborString";
+import { ToCbor } from "../../../cbor/interfaces/CBORSerializable";
+import { InvalidCborFormatError } from "../../../errors/InvalidCborFormatError";
+import { Cloneable } from "../../../types/interfaces/Cloneable";
+import { ToJson } from "../../../utils/ts/ToJson";
+import { Hash32 } from "../../hashes/Hash32/Hash32";
+import { Signature } from "../../hashes/Signature";
+import { VKey } from "./VKeyWitness/VKey";
+import { isUint8Array, toHex } from "@harmoniclabs/uint8array-utils";
+
+export class BootstrapWitness
+    implements ToCbor, Cloneable<BootstrapWitness>, ToJson
 {
     readonly pubKey!: VKey;
     readonly signature!: Signature;
     readonly chainCode!: Hash32;
-    readonly attributes!: Buffer;
+    readonly attributes!: Uint8Array;
 
-    constructor( pubKey: Hash32, signature: Signature, chainCode: Hash32, attributes: Buffer )
+    constructor( pubKey: Hash32, signature: Signature, chainCode: Hash32, attributes: Uint8Array )
     {
         JsRuntime.assert(
             pubKey instanceof Hash32,
@@ -51,14 +56,24 @@ export default class BootstrapWitness
         );
 
         JsRuntime.assert(
-            Buffer.isBuffer( attributes ),
+            isUint8Array( attributes ),
             "invalid 'attributes' constructing 'BootstrapWitness'"
         );
         ObjectUtils.defineReadOnlyProperty(
             this,
             "attributes",
-            Buffer.from( attributes )
+            Uint8Array.from( attributes )
         );
+    }
+
+    clone(): BootstrapWitness
+    {
+        return new BootstrapWitness(
+            this.pubKey.clone(),
+            this.signature.clone(),
+            this.chainCode.clone(),
+            this.attributes.slice()
+        )
     }
 
     toCbor(): CborString
@@ -73,5 +88,37 @@ export default class BootstrapWitness
             this.chainCode.toCborObj(),
             new CborBytes( this.attributes )
         ])
+    }
+
+    static fromCbor( cStr: CanBeCborString ): BootstrapWitness
+    {
+        return BootstrapWitness.fromCborObj( Cbor.parse( forceCborString( cStr ) ) );
+    }
+    static fromCborObj( cObj: CborObj ): BootstrapWitness
+    {
+        if(!(
+            cObj instanceof CborArray &&
+            cObj.array[3] instanceof CborBytes
+        ))
+        throw new InvalidCborFormatError("BootstrapWitness");
+
+        return new BootstrapWitness(
+            Hash32.fromCborObj( cObj.array[0] ),
+            Signature.fromCborObj( cObj.array[1] ),
+            Hash32.fromCborObj( cObj.array[2] ),
+            cObj.array[3].buffer
+        )
+    }
+
+    toJson()
+    {
+        this.chainCode;
+
+        return {
+            pubKey:     this.pubKey   .toString(),
+            signature:  this.signature.toString(),
+            chainCode:  this.chainCode.toString(),
+            attributes: toHex( this.attributes )
+        }
     }
 }

@@ -1,9 +1,9 @@
-import Cloneable from "../../../types/interfaces/Cloneable";
-import UPLCTerm from "../../UPLC/UPLCTerm";
-import UPLCBuiltinTag from "../../UPLC/UPLCTerms/Builtin/UPLCBuiltinTag";
+import { Cloneable } from "../../../types/interfaces/Cloneable";
+import { UPLCTerm } from "../../UPLC/UPLCTerm";
+import { UPLCBuiltinTag } from "../../UPLC/UPLCTerms/Builtin/UPLCBuiltinTag";
 
 
-export default class PartialBuiltin
+export class PartialBuiltin
     implements Cloneable<PartialBuiltin>
 {
     private _tag: UPLCBuiltinTag;

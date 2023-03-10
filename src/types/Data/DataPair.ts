@@ -1,9 +1,10 @@
-import Data, { isData } from ".";
 import JsRuntime from "../../utils/JsRuntime";
-import Cloneable from "../interfaces/Cloneable";
+
+import { Data, isData } from "./Data";
+import { Cloneable } from "../interfaces/Cloneable";
 
 
-export default class DataPair<DataFst extends Data, DataSnd extends Data>
+export class DataPair<DataFst extends Data, DataSnd extends Data>
     implements Cloneable<DataPair<DataFst,DataSnd>>
 {
     private _fst: DataFst;

@@ -1,5 +1,5 @@
-import { curry, fixFuncInputType } from "..";
-import PType from "../../../../onchain/pluts/PType";
+import { curry } from "..";
+import { PType } from "../../../../onchain/pluts/PType";
 
 
 describe( "curry", () => {

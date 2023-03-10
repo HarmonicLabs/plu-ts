@@ -1,7 +1,4 @@
-import palias from "../../../PTypes/PAlias/palias";
-import { bs } from "../../../Term/Type/base";
+import { palias } from "../../../PTypes/PAlias/palias";
+import { bs } from "../../../type_system/types";
 
-const PDatumHash = palias( bs );
-// const PDatumHash = bs;
-
-export default PDatumHash;
+export const PDatumHash = palias( bs );
