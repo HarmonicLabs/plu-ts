@@ -142,7 +142,7 @@ export class TxWitnessSet
 
         function defGetterArr( name: keyof ITxWitnessSet, elems?: Cloneable<any>[] )
         {
-            let _elems = cloneArr( elems );
+            let _elems = elems ?? [];
             defGetter(
                 name,
                 () => _elems.length === 0 ? undefined : cloneArr( _elems )

@@ -131,18 +131,18 @@ export class Tx
         //*
         ObjectUtils.defineReadOnlyProperty(
             this, "addVKeyWitness",
-            this.witnesses.addVKeyWitness
+            ( vkeyWit: VKeyWitness ) => this.witnesses.addVKeyWitness( vkeyWit )
         );
 
         ObjectUtils.defineReadOnlyProperty(
             this, "signWith",
             ( signer: PrivateKey ): void => {
-                const [ derivedPubKey, signature ] = signEd25519( this.body.hash.asBytes, signer.asBytes );
+                const [ derivedPubKey, signature ] = signEd25519( this.body.hash.toBuffer(), signer.toBuffer() );
 
                 this.addVKeyWitness(
                     new VKeyWitness(
                         new VKey( new Uint8Array( derivedPubKey ) ),
-                        new Signature( Uint8Array.from( signature ) )
+                        new Signature( new Uint8Array( signature ) )
                     )
                 );
             }

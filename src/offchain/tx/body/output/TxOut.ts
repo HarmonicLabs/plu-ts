@@ -65,13 +65,17 @@ export class TxOut
             "txOutput is missing some necessary fields"
         );
 
-        const {
+        let {
             address,
             value,
             datum,
             refScript
         } = txOutput;
 
+        if( typeof address === "string" )
+        {
+            address = Address.fromString(address);
+        }
         JsRuntime.assert(
             address instanceof Address,
             "invlaid 'address' while constructing 'TxOut'" 
