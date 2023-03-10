@@ -16,7 +16,6 @@
     "clear-jest": "jest --clearCache",
     "test-watch": "jest --watchman",
     "test-coverage": "jest --coverage",
-    "pre-build": "tsc -p ./workers-tsconfig.json && tsc-alias -p ./workers-tsconfig.json && rollup --config rollup.config.js",
     "build": "tsc --project ./tsconfig.json && tsc-alias -p ./tsconfig.json",
     "start": "npm-run-all --parallel build:watch run:watch"
   },
