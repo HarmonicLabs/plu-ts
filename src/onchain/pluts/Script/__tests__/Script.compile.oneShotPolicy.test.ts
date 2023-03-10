@@ -13,7 +13,7 @@ import { UPLCProgram } from "../../../UPLC/UPLCProgram";
 import { Cbor } from "../../../../cbor/Cbor";
 import { CborBytes } from "../../../../cbor/CborObj/CborBytes";
 import { Script, ScriptType } from "../../../../offchain/script/Script";
-import { fromHex } from "../../../../uint8Array";
+import { fromHex } from "@harmoniclabs/uint8array-utils";
 
 
 export const MintRdmr = pstruct({

@@ -1,5 +1,5 @@
 import { Data, DataPair } from "..";
-import { fromAscii, fromUtf8 } from "../../../uint8Array";
+import { fromAscii, fromUtf8 } from "@harmoniclabs/uint8array-utils";
 import { DataB } from "../DataB";
 import { DataConstr } from "../DataConstr";
 import { DataI } from "../DataI";

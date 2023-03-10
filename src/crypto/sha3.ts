@@ -1,7 +1,7 @@
 import { byte, uint64 as uint64_t, uint6, buffToByteArr } from "./types";
 import JsRuntime from "../utils/JsRuntime";
 import { uint64, uint64Rotr, byteArrToHex, uint64ToBytesLE } from "./types";
-import { isUint8Array } from "../uint8Array";
+import { isUint8Array } from "@harmoniclabs/uint8array-utils";
 
 
 /**

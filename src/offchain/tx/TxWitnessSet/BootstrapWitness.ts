@@ -13,7 +13,7 @@ import { ToJson } from "../../../utils/ts/ToJson";
 import { Hash32 } from "../../hashes/Hash32/Hash32";
 import { Signature } from "../../hashes/Signature";
 import { VKey } from "./VKeyWitness/VKey";
-import { isUint8Array, toHex } from "../../../uint8Array";
+import { isUint8Array, toHex } from "@harmoniclabs/uint8array-utils";
 
 export class BootstrapWitness
     implements ToCbor, Cloneable<BootstrapWitness>, ToJson

@@ -1,5 +1,5 @@
 import BigIntUtils from ".."
-import { toHex } from "../../../uint8Array"
+import { toHex } from "@harmoniclabs/uint8array-utils"
 
 describe("BigIntUtils.toBuffer", () => {
 

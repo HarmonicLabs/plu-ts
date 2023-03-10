@@ -40,7 +40,7 @@ import { CborPositiveRational } from "../../../cbor/extra/CborRational";
 import { TxWitnessSet } from "../TxWitnessSet";
 import { Cbor } from "../../../cbor/Cbor";
 import { CborArray } from "../../../cbor/CborObj/CborArray";
-import { isUint8Array, lexCompare, toHex } from "../../../uint8Array";
+import { isUint8Array, lexCompare, toHex } from "@harmoniclabs/uint8array-utils";
 
 type ScriptLike = {
     hash: string,

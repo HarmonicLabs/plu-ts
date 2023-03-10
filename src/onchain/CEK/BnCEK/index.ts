@@ -22,7 +22,7 @@ import { ConstType, constListTypeUtils, constPairTypeUtils, constT, constTypeEq,
 import { Integer, UInteger } from "../../../types/ints/Integer";
 import { Data, eqData, isData } from "../../../types/Data/Data";
 import { blake2b, byteArrToHex, sha2_256, sha3, verifyEd25519Signature } from "../../../crypto";
-import { fromUtf8, isUint8Array, toUtf8 } from "../../../uint8Array";
+import { fromUtf8, isUint8Array, toUtf8 } from "@harmoniclabs/uint8array-utils";
 
 
 function intToSize( n: bigint ): bigint

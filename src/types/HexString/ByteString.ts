@@ -2,7 +2,7 @@ import JsRuntime from "../../utils/JsRuntime";
 
 import {Cloneable} from "../interfaces/Cloneable";
 import {HexString} from ".";
-import { fromAscii, fromHex, isUint8Array, toAscii, toHex } from "../../uint8Array";
+import { fromAscii, fromHex, isUint8Array, toAscii, toHex } from "@harmoniclabs/uint8array-utils";
 
 export class ByteString
     implements Cloneable<ByteString>

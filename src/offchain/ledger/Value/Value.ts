@@ -23,7 +23,13 @@ import { CborArray } from "../../../cbor/CborObj/CborArray";
 import { ByteString } from "../../../types/HexString/ByteString";
 import { IValueAssets } from "./IValue";
 import { hex } from "../../../types/HexString";
-import { Ord, fromAscii, isUint8Array, lexCompare, toAscii, toHex } from "../../../uint8Array";
+import { fromAscii, isUint8Array, lexCompare, toAscii, toHex } from "@harmoniclabs/uint8array-utils";
+
+const enum Ord {
+    LT = -1,
+    EQ = 0,
+    GT = 1
+}
 
 export class Value
     implements ToCbor, Cloneable<Value>, ToData, ToJson

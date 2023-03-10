@@ -1,4 +1,4 @@
-import { fromHex, toHex } from "../../../uint8Array";
+import { fromHex, toHex } from "@harmoniclabs/uint8array-utils";
 import {BitStream} from "../BitStream"
 
 

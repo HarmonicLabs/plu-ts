@@ -2,7 +2,7 @@ import { ConstValue, isConstValue, isConstValueList } from ".."
 import { Integer, UInteger } from "../../../../../../types/ints/Integer";
 import { ByteString } from "../../../../../../types/HexString/ByteString";
 import { Pair } from "../../../../../../types/structs/Pair";
-import { fromHex } from "../../../../../../uint8Array";
+import { fromHex } from "@harmoniclabs/uint8array-utils";
 
 describe("ConstValue :: isConstValue, simple values", () => {
 

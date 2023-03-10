@@ -1,5 +1,5 @@
 import { UPLCDecoder } from ".."
-import { fromHex } from "../../../../uint8Array";
+import { fromHex } from "@harmoniclabs/uint8array-utils";
 import { showUPLC } from "../../UPLCTerm";
 
 

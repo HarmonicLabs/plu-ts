@@ -1,5 +1,5 @@
 import { isRawCborObj } from "..";
-import { fromHex } from "../../../uint8Array";
+import { fromHex } from "@harmoniclabs/uint8array-utils";
 
 
 describe( "isRawCborObj", () => {

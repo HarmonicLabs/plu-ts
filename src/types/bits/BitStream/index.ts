@@ -8,7 +8,7 @@ import { Cloneable } from "../../interfaces/Cloneable";
 import { Int32 } from "../../ints/Int32";
 import { BinaryString } from "../BinaryString";
 import { Bit, forceInByteOffset, InByteOffset } from "../Bit";
-import { fromHex, isUint8Array, readUint8 } from "../../../uint8Array";
+import { fromHex, isUint8Array, readUint8 } from "@harmoniclabs/uint8array-utils";
 
 export class BitStream
     implements Cloneable<BitStream>, Indexable<Bit>

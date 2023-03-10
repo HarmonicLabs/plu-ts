@@ -15,7 +15,7 @@ import { CborObj } from "../../cbor/CborObj";
 import { CborArray } from "../../cbor/CborObj/CborArray";
 import { CborUInt } from "../../cbor/CborObj/CborUInt";
 import { InvalidCborFormatError } from "../../errors/InvalidCborFormatError";
-import { fromHex, isUint8Array } from "../../uint8Array";
+import { fromHex, isUint8Array } from "@harmoniclabs/uint8array-utils";
 
 export const enum ScriptType {
     NativeScript = "NativeScript",

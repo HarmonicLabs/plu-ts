@@ -10,7 +10,7 @@ import { CborUInt } from "../../cbor/CborObj/CborUInt";
 import { BasePlutsError } from "../../errors/BasePlutsError";
 import { InvalidCborFormatError } from "../../errors/InvalidCborFormatError";
 import { canBeUInteger, CanBeUInteger, forceBigUInt, forceUInteger } from "../../types/ints/Integer";
-import { isUint8Array, readUInt16BE, readUInt8 } from "../../uint8Array";
+import { isUint8Array, readUInt16BE, readUInt8 } from "@harmoniclabs/uint8array-utils";
 
 export type IpPoolRelay = ({
     ipv4: Uint8Array

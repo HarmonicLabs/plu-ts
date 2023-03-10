@@ -25,7 +25,7 @@ import { UPLCConst } from "../UPLCTerms/UPLCConst";
 import { ConstType, constListTypeUtils, constPairTypeUtils, constT, constTypeEq, ConstTyTag, isWellFormedConstType } from "../UPLCTerms/UPLCConst/ConstType";
 import { ConstValue, ConstValueList } from "../UPLCTerms/UPLCConst/ConstValue";
 import { DataB } from "../../../types/Data/DataB";
-import { fromHex, toUtf8 } from "../../../uint8Array";
+import { fromHex, toUtf8 } from "@harmoniclabs/uint8array-utils";
 
 export type SerializedScriptFormat = "flat" | "cbor"
 

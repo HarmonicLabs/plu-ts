@@ -1,5 +1,5 @@
 import { blake2b_224 } from "../../../crypto";
-import * as uint8Array from "../../../uint8Array";
+import * as uint8Array from "@harmoniclabs/uint8array-utils";
 import { Hash28 } from "../../hashes/Hash28/Hash28";
 import { Script, ScriptType } from "../Script"
 

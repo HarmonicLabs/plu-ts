@@ -1,5 +1,5 @@
 import {HexStringError} from "../../errors/PlutsTypeError/HexStringError";
-import { fromAscii, fromHex, isUint8Array, toAscii, toHex } from "../../uint8Array";
+import { fromAscii, fromHex, isUint8Array, toAscii, toHex } from "@harmoniclabs/uint8array-utils";
 
 export type hex = string & { __hex_string__ : never };
 

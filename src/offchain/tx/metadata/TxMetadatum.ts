@@ -14,7 +14,7 @@ import { ToCbor } from "../../../cbor/interfaces/CBORSerializable";
 import { InvalidCborFormatError } from "../../../errors/InvalidCborFormatError";
 import { ByteString } from "../../../types/HexString/ByteString";
 import { ToJson } from "../../../utils/ts/ToJson";
-import { isUint8Array, toHex } from "../../../uint8Array";
+import { isUint8Array, toHex } from "@harmoniclabs/uint8array-utils";
 
 
 export type TxMetadatum

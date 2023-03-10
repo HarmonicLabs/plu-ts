@@ -5,7 +5,7 @@ import { Integer } from "../../../../../types/ints/Integer";
 import { Pair } from "../../../../../types/structs/Pair";
 import { Data, eqData, isData } from "../../../../../types/Data/Data";
 import { ConstType, constTypeEq, constT, constTypeToStirng, ConstTyTag, isWellFormedConstType, constListTypeUtils, constPairTypeUtils } from "../ConstType";
-import { uint8ArrayEq } from "../../../../../uint8Array";
+import { uint8ArrayEq } from "@harmoniclabs/uint8array-utils";
 
 
 export type ConstValueList

@@ -1,4 +1,4 @@
-import { isUint8Array } from "../../uint8Array/isUint8Array";
+import { isUint8Array } from "@harmoniclabs/uint8array-utils";
 import JsRuntime from "../../utils/JsRuntime";
 import { ToRawObj } from "./interfaces/ToRawObj";
 

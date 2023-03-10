@@ -1,4 +1,4 @@
-import { isUint8Array } from "../uint8Array";
+import { isUint8Array } from "@harmoniclabs/uint8array-utils";
 import JsRuntime from "../utils/JsRuntime";
 import { byte, uint5, buffToUint5Arr } from "./types";
 import { BECH32_BASE32_ALPHABET, decodeBase32Bech32 } from "./utils/base32";

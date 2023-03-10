@@ -1,4 +1,4 @@
-import { fromAscii, toHex } from "../../../uint8Array";
+import { fromAscii, toHex } from "@harmoniclabs/uint8array-utils";
 import JsRuntime from "../../../utils/JsRuntime";
 import ObjectUtils from "../../../utils/ObjectUtils";
 

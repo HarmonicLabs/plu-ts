@@ -13,7 +13,7 @@ import { perror } from "../../../lib/perror";
 import { TermType, bs, int, unit } from "../../../type_system/types";
 import { pDataB, pDataI, toData } from "../../../lib";
 import { showUPLC } from "../../../../UPLC/UPLCTerm";
-import { fromHex } from "../../../../../uint8Array";
+import { fromHex } from "@harmoniclabs/uint8array-utils";
 
 const SingleCtor = pstruct({
     Ctor : {

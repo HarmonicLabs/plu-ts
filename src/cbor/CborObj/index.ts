@@ -2,7 +2,7 @@
 Intermediate data type that allows an easier conversion from (and to) CBOR to (and from) JSON serializables objects
 */
 
-import { isUint8Array } from "../../uint8Array";
+import { isUint8Array } from "@harmoniclabs/uint8array-utils";
 import JsRuntime from "../../utils/JsRuntime";
 import { CborArray, isRawCborArray, RawCborArray } from "./CborArray";
 import { CborBytes, isRawCborBytes, RawCborBytes } from "./CborBytes";

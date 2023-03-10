@@ -49,7 +49,9 @@
     "url": "https://github.com/HarmonicLabs/plu-ts/issues"
   },
   "homepage": "https://github.com/HarmonicLabs/plu-ts#readme",
-  "dependencies": {},
+  "dependencies": {
+    "@harmoniclabs/uint8array-utils": "^1.0.0"
+  },
   "devDependencies": {
     "@babel/preset-env": "^7.18.6",
     "@babel/preset-typescript": "^7.18.6",

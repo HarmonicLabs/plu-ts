@@ -1,7 +1,7 @@
 import  { encodeBech32, byte, decodeBech32, isBech32, sha2_512, sha3, blake2b, sha2_256, blake2b_224, blake2b_256 } from "..";
 import blake2 from "blake2";
 import { Tx } from "../../offchain/tx"
-import * as uint8Array from "../../uint8Array";
+import * as uint8Array from "@harmoniclabs/uint8array-utils";
 
 function textToBytes( text: string ): byte[]
 {

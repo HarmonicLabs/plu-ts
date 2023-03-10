@@ -1,5 +1,5 @@
 import { BasePlutsError } from "../errors/BasePlutsError";
-import { isUint8Array } from "../uint8Array";
+import { isUint8Array } from "@harmoniclabs/uint8array-utils";
 import BigIntUtils from "../utils/BigIntUtils";
 import JsRuntime from "../utils/JsRuntime";
 import { sha2_512 } from "./sha2_512";

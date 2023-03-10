@@ -13,7 +13,7 @@ import { CborSimple } from "../CborObj/CborSimple";
 import { CborUInt } from "../CborObj/CborUInt";
 import { CborNegInt } from "../CborObj/CborNegInt";
 import { PlutsCborParseError } from "../../errors/PlutsSerialError/PlutsCborError/PlutsCborParseError";
-import { fromHex, fromUtf8, isUint8Array, readBigUInt64BE, readFloat32BE, readFloat64BE, readUInt16BE, readUInt32BE, readUInt8, toUtf8, writeBigUInt64BE, writeFloat64BE, writeUInt16BE, writeUInt32BE, writeUInt8 } from "../../uint8Array";
+import { fromHex, fromUtf8, isUint8Array, readBigUInt64BE, readFloat32BE, readFloat64BE, readUInt16BE, readUInt32BE, readUInt8, toUtf8, writeBigUInt64BE, writeFloat64BE, writeUInt16BE, writeUInt32BE, writeUInt8 } from "@harmoniclabs/uint8array-utils";
 
 /**
  * @private to the module; not needed elsewhere

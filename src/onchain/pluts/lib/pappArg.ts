@@ -22,7 +22,7 @@ import { pInt } from "./std/int/pInt";
 import { pmakeUnit } from "./std/unit/pmakeUnit";
 import { Term } from "../Term";
 import { TermType, ToPType, tyVar, isWellFormedType, typeExtends, int, bool, isTypeParam, bs, str, unit, fn, list, PrimType, GenericTermType, isWellFormedGenericType } from "../type_system";
-import { fromHex, isUint8Array } from "../../../uint8Array";
+import { fromHex, isUint8Array } from "@harmoniclabs/uint8array-utils";
 
 
 type _TsFunctionSatisfying<KnownArgs extends Term<PType>[], POut extends PType> =

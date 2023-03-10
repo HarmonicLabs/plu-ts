@@ -1,5 +1,5 @@
 import { Cbor } from ".."
-import { fromAscii } from "../../../uint8Array";
+import { fromAscii } from "@harmoniclabs/uint8array-utils";
 import { cborObjFromRaw } from "../../CborObj"
 import { CborString } from "../../CborString"
 

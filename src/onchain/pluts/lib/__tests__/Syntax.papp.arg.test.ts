@@ -1,6 +1,6 @@
 import { ByteString } from "../../../../types/HexString/ByteString";
 import { Pair } from "../../../../types/structs/Pair";
-import { fromAscii, fromHex } from "../../../../uint8Array";
+import { fromAscii, fromHex } from "@harmoniclabs/uint8array-utils";
 import { evalScript } from "../../../CEK";
 import { PType } from "../../PType";
 import { Term } from "../../Term";

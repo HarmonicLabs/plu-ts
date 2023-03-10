@@ -12,7 +12,7 @@ import { DataB } from "../../types/Data/DataB";
 import { ToData } from "../../types/Data/toData/interface";
 import { HexString } from "../../types/HexString";
 import { Cloneable } from "../../types/interfaces/Cloneable";
-import { fromAscii, fromHex, isUint8Array, toAscii, toHex } from "../../uint8Array";
+import { fromAscii, fromHex, isUint8Array, toAscii, toHex } from "@harmoniclabs/uint8array-utils";
 
 
 export class Hash

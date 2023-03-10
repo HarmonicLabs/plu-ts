@@ -9,7 +9,7 @@ import { CborUInt } from "../../cbor/CborObj/CborUInt";
 import { CborString } from "../../cbor/CborString";
 import { BasePlutsError } from "../../errors/BasePlutsError";
 import { Hash28 } from "../hashes/Hash28/Hash28";
-import { toHex } from "../../uint8Array";
+import { toHex } from "@harmoniclabs/uint8array-utils";
 
 export type NativeScript
     = ScriptSignature

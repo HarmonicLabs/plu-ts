@@ -1,4 +1,4 @@
-import { isUint8Array } from "../uint8Array";
+import { isUint8Array } from "@harmoniclabs/uint8array-utils";
 import { buffToByteArr, byte } from "./types";
 import { rotr32 } from "./utils/rotr32";
 

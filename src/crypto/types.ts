@@ -1,5 +1,5 @@
 import { BasePlutsError } from "../errors/BasePlutsError";
-import { isUint8Array } from "../uint8Array";
+import { isUint8Array } from "@harmoniclabs/uint8array-utils";
 import JsRuntime from "../utils/JsRuntime";
 
 export type uint5 = 

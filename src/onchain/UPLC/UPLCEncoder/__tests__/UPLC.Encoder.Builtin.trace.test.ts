@@ -10,7 +10,7 @@ import { Builtin } from "../../UPLCTerms/Builtin";
 import { Force } from "../../UPLCTerms/Force";
 import { UPLCConst } from "../../UPLCTerms/UPLCConst";
 import { ptrace, ptraceIfFalse, pfn, pforce, pdelay, perror, pByteString, pStr, pmakeUnit, data, delayed, unit } from "../../../pluts";
-import { fromUtf8 } from "../../../../uint8Array";
+import { fromUtf8 } from "@harmoniclabs/uint8array-utils";
 
 
 describe("serializeBuiltin", () => {
