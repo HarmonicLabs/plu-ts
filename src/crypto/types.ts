@@ -204,3 +204,4 @@ export function uint64Rotr( a: uint64, b: uint6 ): uint64
         forceUint64(a >> n) | forceUint64(a << ( BigInt(64) - n ))
     );
 }
+

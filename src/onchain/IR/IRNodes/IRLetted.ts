@@ -5,23 +5,19 @@ import { IRTerm } from "../IRTerm";
 import { IHash } from "../interfaces/IHash";
 import { concatUint8Arr } from "../utils/concatUint8Arr";
 
-export class IRHoisted
-    implements Cloneable<IRHoisted>, IHash
+export class IRLetted
+    implements Cloneable<IRLetted>, IHash
 {
     readonly hash!: Uint8Array;
 
-    readonly hoisted!: IRTerm
+    readonly value!: IRTerm
 
-    readonly dependecies!: IRTerm[];
+    clone!: () => IRLetted
 
-    clone!: () => IRHoisted;
-
-    constructor( hoisted: IRTerm, dependecies: IRTerm[] = [] )
+    constructor( value: IRTerm, dependencies: IRLetted[] = [] )
     {
-        // TODO check hoisted to be closed.
-
         ObjectUtils.defineReadOnlyProperty(
-            this, "hoisted", hoisted
+            this, "value", value
         );
 
         let hash: Uint8Array | undefined = undefined;
@@ -32,8 +28,8 @@ export class IRHoisted
                     {
                         hash = seahash(
                             concatUint8Arr(
-                                IRHoisted.tag,
-                                hoisted.hash
+                                IRLetted.tag,
+                                value.hash
                             )
                         )
                     }
@@ -45,31 +41,17 @@ export class IRHoisted
             }
         );
 
-        const deps = dependecies.slice();
+        const deps = dependencies // TODO
 
-        Object.defineProperty(
-            this, "dependecies",
-            {
-                get: () => deps.map( dep => dep.clone() ),
-                set: () => {},
-                enumerable: true,
-                configurable: false
-            }
-        )
-        
-        ObjectUtils.defineProperty(
+
+        ObjectUtils.defineReadOnlyProperty(
             this, "clone",
             () => {
-                return new IRHoisted(
-                    this.hoisted.clone(),
-                    deps
-                );
+                return new IRLetted( this.value.clone(), deps.slice() )
             }
-        );
-        
+        )
     }
 
-    static get tag(): Uint8Array { return new Uint8Array([ 0b0000_0110 ]); }
+    static get tag(): Uint8Array { return new Uint8Array([ 0b0000_0101 ]); }
 
-    
 }

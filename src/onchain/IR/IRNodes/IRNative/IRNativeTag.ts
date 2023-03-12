@@ -1,3 +1,4 @@
+import { builtinTagToString } from "../../../UPLC/UPLCTerms/Builtin/UPLCBuiltinTag";
 
 /**
  * we use positive for natives which map to `UPLCBuiltin`
@@ -95,15 +96,53 @@ export const enum IRNativeTag {
     _sndPair            = -13,
     _id                 = -14,
     _not                = -15,
-    _strictAnd          = -16,      
-    _and                = -17,      
-    _strictOr           = -18,      
+    _strictAnd          = -16,  
+    _and                = -17,  
+    _strictOr           = -18,  
     _or                 = -19,
     _gtBS               = -20,
     _gtEqBS             = -21,
     _gtInt              = -22,
     _gtEqInt            = -23,
-    _matchSingleCtor    = -24,
-    _matchStruct        = -25
-    // TODO data conversion
+    _strToData          = -24,
+    _pairToData         = -25,
+    _strFromData        = -26,
+    _pairFromData       = -27
+}
+
+export function nativeTagToString( nativeTag: IRNativeTag ): string
+{
+    if( nativeTag >= 0 ) return builtinTagToString( nativeTag as any );
+    switch( nativeTag )
+    {
+        case IRNativeTag.z_comb         : return "z_comb";
+        case IRNativeTag._matchList     : return "matchList";
+        case IRNativeTag._recList       : return "recList";
+        case IRNativeTag._indexList     : return "indexList";
+        case IRNativeTag._foldr         : return "foldr";
+        case IRNativeTag._foldl         : return "foldl";
+        case IRNativeTag._find          : return "find";
+        case IRNativeTag._length        : return "length";
+        case IRNativeTag._some          : return "some";
+        case IRNativeTag._every         : return "every";
+        case IRNativeTag._filter        : return "filter";
+        case IRNativeTag._fstPair       : return "fstPair";
+        case IRNativeTag._sndPair       : return "sndPair";
+        case IRNativeTag._id            : return "id";
+        case IRNativeTag._not           : return "not";
+        case IRNativeTag._strictAnd     : return "strictAnd";
+        case IRNativeTag._and           : return "and";
+        case IRNativeTag._strictOr      : return "strictOr";
+        case IRNativeTag._or            : return "or";
+        case IRNativeTag._gtBS          : return "gtBS";
+        case IRNativeTag._gtEqBS        : return "gtEqBS";
+        case IRNativeTag._gtInt         : return "gtInt";
+        case IRNativeTag._gtEqInt       : return "gtEqInt";
+        case IRNativeTag._strToData     : return "strToData";
+        case IRNativeTag._pairToData    : return "pairToData";
+        case IRNativeTag._strFromData   : return "strFromData";
+        case IRNativeTag._pairFromData  : return "pairFromData";
+
+        default: return ""
+    }
 }
