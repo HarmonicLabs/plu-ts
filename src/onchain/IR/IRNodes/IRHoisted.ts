@@ -25,7 +25,7 @@ export class IRHoisted
     readonly hash!: Uint8Array;
     markHashAsInvalid!: () => void;
 
-    readonly hoisted!: IRTerm
+    hoisted!: IRTerm
 
     // `IRHoisted` can have only other `IRHoisted` as deps
     readonly dependencies!: HoistedSetEntry[];
@@ -81,7 +81,7 @@ export class IRHoisted
                 configurable: false
             }
         );
-        
+
         Object.defineProperty(
             this, "hoisted",
             {
@@ -153,7 +153,7 @@ export class IRHoisted
  * @param {HoistedSetEntry[]} hoistedTerms
  * @returns {HoistedSetEntry[]} a **new** array with ```IRHoisted```s with no dependencies first, followed by the dependents
  */
-function getSortedHoistedSet( hoistedTerms: HoistedSetEntry[] ): HoistedSetEntry[]
+export function getSortedHoistedSet( hoistedTerms: HoistedSetEntry[] ): HoistedSetEntry[]
 {
     const set: HoistedSetEntry[] = [];
     const hashesSet: Uint8Array[] = [];
@@ -198,7 +198,7 @@ function getSortedHoistedSet( hoistedTerms: HoistedSetEntry[] ): HoistedSetEntry
     return set;
 }
 
-function getHoistedTerms( irTerm: IRTerm ): HoistedSetEntry[]
+export function getHoistedTerms( irTerm: IRTerm ): HoistedSetEntry[]
 {
     const hoisteds: HoistedSetEntry[] = [];
 
