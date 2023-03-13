@@ -8,6 +8,12 @@ import { concatUint8Arr } from "../utils/concatUint8Arr";
 import { IRApp } from "./IRApp";
 import { IRFunc } from "./IRFunc";
 
+
+type LettedSetEntry = {
+    letted: IRLetted,
+    nReferences: number
+};
+
 export class IRLetted
     implements Cloneable<IRLetted>, IHash
 {
@@ -15,11 +21,11 @@ export class IRLetted
 
     readonly value!: IRTerm
 
-    readonly dependencies!: IRLetted[]
+    readonly dependencies!: LettedSetEntry[]
 
     clone!: () => IRLetted
 
-    constructor( value: IRTerm, dependencies: IRLetted[] = [] )
+    constructor( value: IRTerm, dependencies: LettedSetEntry[] = [] )
     {
         ObjectUtils.defineReadOnlyProperty(
             this, "value", value
@@ -46,12 +52,15 @@ export class IRLetted
             }
         );
 
-        const deps = dependencies?.slice() ?? getSortedLettedSet( getLettedTerms( value ) );
+        const deps: LettedSetEntry[] = dependencies?.slice() ?? getSortedLettedSet( getLettedTerms( value ) );
 
         Object.defineProperty(
             this, "dependencies",
             {
-                get: () => deps.map( dep => dep.clone() ), // MUST return clones
+                get: (): LettedSetEntry[] => deps.map( dep => ({
+                    letted: dep.letted.clone(),
+                    nReferences: dep.nReferences
+                })), // MUST return clones
                 set: () => {},
                 enumerable: true,
                 configurable: false
@@ -72,16 +81,15 @@ export class IRLetted
 
 }
 
-
 /**
  * basically an insertion sort;
  * 
- * @param {IRLetted[]} hoistedTerms
- * @returns {IRLetted[]} a **new** array with ```IRLetted```s with no dependencies first, followed by the dependents
+ * @param {LettedSetEntry[]} hoistedTerms
+ * @returns {LettedSetEntry[]} a **new** array with ```IRLetted```s with no dependencies first, followed by the dependents
  */
-function getSortedLettedSet( hoistedTerms: IRLetted[] ): IRLetted[]
+function getSortedLettedSet( hoistedTerms: LettedSetEntry[] ): LettedSetEntry[]
 {
-    const set: IRLetted[] = [];
+    const set: LettedSetEntry[] = [];
     const hashesSet: Uint8Array[] = [];
      
     /**
@@ -93,21 +101,33 @@ function getSortedLettedSet( hoistedTerms: IRLetted[] ): IRLetted[]
      *      m = number of terms passed
      *      d = number of unique dependencies among the passed terms
      */
-    function addToSet( ..._terms: IRLetted[] ): void
+    function addToSet( ..._terms: LettedSetEntry[] ): void
     {
         for( let i = 0; i < _terms.length; i++ )
         {
-            const thisHash = _terms[i].hash;
+            const thisLettedEntry = _terms[i]; 
+            const thisHash = thisLettedEntry.letted.hash;
 
-            // if( !hashesSet.includes( compiled ) )
+            const idxInSet = hashesSet.findIndex( hash => uint8ArrayEq( hash, thisHash ) )
+            // if( !hashesSet.includes( hash ) )
             // "includes" uses standard equality (===)
-            if(!hashesSet.some( hash => uint8ArrayEq( hash, thisHash ) ))
+            if( idxInSet < 0 ) // not present
             {
                 // add dependencies first
-                addToSet( ..._terms[ i ].dependencies );
+                // dependencies don't have references
+                // to the current letted
+                // (of course, wouldn't be much of a dependecy otherwhise)
+                addToSet( ..._terms[ i ].letted.dependencies );
 
                 hashesSet.push( thisHash );
-                set.push( _terms[i] );
+                set.push({
+                    letted: thisLettedEntry.letted,
+                    nReferences: thisLettedEntry.nReferences
+                });
+            }
+            else
+            {
+                set[ idxInSet ].nReferences += thisLettedEntry.nReferences;
             }
         }
     }
@@ -117,15 +137,15 @@ function getSortedLettedSet( hoistedTerms: IRLetted[] ): IRLetted[]
     return set;
 }
 
-function getLettedTerms( irTerm: IRTerm ): IRLetted[]
+function getLettedTerms( irTerm: IRTerm ): LettedSetEntry[]
 {
-    const hoisteds: IRLetted[] = [];
+    const hoisteds: LettedSetEntry[] = [];
 
     function searchIn( term: IRTerm ): void
     {
         if( term instanceof IRLetted )
         {
-            hoisteds.push( ...term.dependencies, term );
+            hoisteds.push( ...term.dependencies, { letted: term, nReferences: 1 });
             return;
         }
 

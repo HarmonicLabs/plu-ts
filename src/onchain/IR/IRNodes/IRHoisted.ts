@@ -12,6 +12,11 @@ import { IRFunc } from "./IRFunc";
 import { IRLetted } from "./IRLetted";
 
 
+type HoistedSetEntry = {
+    hoisted: IRHoisted,
+    nReferences: number
+}
+
 export class IRHoisted
     implements Cloneable<IRHoisted>, IHash
 {
@@ -20,11 +25,11 @@ export class IRHoisted
     readonly hoisted!: IRTerm
 
     // `IRHoisted` can have only other `IRHoisted` as deps
-    readonly dependencies!: IRHoisted[];
+    readonly dependencies!: HoistedSetEntry[];
 
     clone!: () => IRHoisted;
 
-    constructor( hoisted: IRTerm, dependencies?: IRTerm[] )
+    constructor( hoisted: IRTerm, dependencies?: HoistedSetEntry[] )
     {
         // unwrap
         while( hoisted instanceof IRHoisted ) hoisted = hoisted.hoisted;
@@ -64,7 +69,10 @@ export class IRHoisted
         Object.defineProperty(
             this, "dependencies",
             {
-                get: () => deps.map( dep => dep.clone() ), // MUST return clones
+                get: (): HoistedSetEntry[] => deps.map( dep => ({
+                    hoisted: dep.hoisted.clone(),
+                    nReferences: dep.nReferences
+                })), // MUST return clones
                 set: () => {},
                 enumerable: true,
                 configurable: false
@@ -90,12 +98,12 @@ export class IRHoisted
 /**
  * basically an insertion sort;
  * 
- * @param {IRHoisted[]} hoistedTerms
- * @returns {IRHoisted[]} a **new** array with ```IRHoisted```s with no dependencies first, followed by the dependents
+ * @param {HoistedSetEntry[]} hoistedTerms
+ * @returns {HoistedSetEntry[]} a **new** array with ```IRHoisted```s with no dependencies first, followed by the dependents
  */
-function getSortedHoistedSet( hoistedTerms: IRHoisted[] ): IRHoisted[]
+function getSortedHoistedSet( hoistedTerms: HoistedSetEntry[] ): HoistedSetEntry[]
 {
-    const set: IRHoisted[] = [];
+    const set: HoistedSetEntry[] = [];
     const hashesSet: Uint8Array[] = [];
      
     /**
@@ -107,21 +115,28 @@ function getSortedHoistedSet( hoistedTerms: IRHoisted[] ): IRHoisted[]
      *      m = number of terms passed
      *      d = number of unique dependencies among the passed terms
      */
-    function addToSet( ..._terms: IRHoisted[] ): void
+    function addToSet( ..._terms: HoistedSetEntry[] ): void
     {
         for( let i = 0; i < _terms.length; i++ )
         {
-            const thisHash = _terms[i].hash;
+            const thisHoistedEntry = _terms[i]; 
+            const thisHash = thisHoistedEntry.hoisted.hash;
+
+            const idxInSet = hashesSet.findIndex( hash => uint8ArrayEq( hash, thisHash ) )
 
             // if( !hashesSet.includes( compiled ) )
             // "includes" uses standard equality (===)
-            if(!hashesSet.some( hash => uint8ArrayEq( hash, thisHash ) ))
+            if( idxInSet < 0 ) // not present
             {
                 // add dependencies first
-                addToSet( ..._terms[ i ].dependencies );
+                addToSet( ..._terms[ i ].hoisted.dependencies );
 
                 hashesSet.push( thisHash );
-                set.push( _terms[i] );
+                set.push( thisHoistedEntry );
+            }
+            else
+            {
+                set[ idxInSet ].nReferences += thisHoistedEntry.nReferences
             }
         }
     }
@@ -131,15 +146,15 @@ function getSortedHoistedSet( hoistedTerms: IRHoisted[] ): IRHoisted[]
     return set;
 }
 
-function getHoistedTerms( irTerm: IRTerm ): IRHoisted[]
+function getHoistedTerms( irTerm: IRTerm ): HoistedSetEntry[]
 {
-    const hoisteds: IRHoisted[] = [];
+    const hoisteds: HoistedSetEntry[] = [];
 
     function searchIn( term: IRTerm ): void
     {
         if( term instanceof IRHoisted )
         {
-            hoisteds.push( ...term.dependencies, term );
+            hoisteds.push( ...term.dependencies, {hoisted: term, nReferences: 1 });
             return;
         }
 
