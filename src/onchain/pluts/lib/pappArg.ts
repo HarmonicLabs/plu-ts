@@ -40,7 +40,7 @@ export type PappArg<PIn extends PType> =
     (
         PIn extends PInt ? bigint | number | Integer :
         PIn extends PBool ? boolean :
-        PIn extends PByteString ? ByteString | Uint8Array | Uint8Array | ArrayBuffer | string :
+        PIn extends PByteString ? ByteString | Uint8Array | string :
         PIn extends PString ? string :
         PIn extends PUnit ? undefined | null :
         PIn extends PPair<infer PFst extends PType, infer PSnd extends PType> ?

@@ -2,7 +2,7 @@ import { isTaggedAsAlias } from "./kinds/isTaggedAsAlias";
 import { unwrapAlias } from "./tyArgs/unwrapAlias";
 import { GenericTermType, PrimType, StructCtorDef, StructDefinition, TermType } from "./types";
 
-export function getNRequiredLambdaArgs( type: TermType ): number
+export function getNRequiredLambdaArgs( type: GenericTermType ): number
 {
     if( type[0] !== PrimType.Lambda ) return 0;
 

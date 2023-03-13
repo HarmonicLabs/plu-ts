@@ -8,7 +8,7 @@ import { Force } from "../UPLCTerms/Force";
 import { ErrorUPLC } from "../UPLCTerms/ErrorUPLC";
 import { Builtin } from "../UPLCTerms/Builtin";
 import { HoistedUPLC } from "../UPLCTerms/HoistedUPLC";
-import { ConstType, constListTypeUtils, constPairTypeUtils, constTypeEq, constTypeToStirng, ConstTyTag } from "../UPLCTerms/UPLCConst/ConstType";
+import { ConstType, constListTypeUtils, constPairTypeUtils, constTypeToStirng, ConstTyTag } from "../UPLCTerms/UPLCConst/ConstType";
 import { builtinTagToString, getNRequiredForces } from "../UPLCTerms/Builtin/UPLCBuiltinTag";
 import { ConstValue } from "../UPLCTerms/UPLCConst/ConstValue";
 import { Integer } from "../../../types/ints/Integer";

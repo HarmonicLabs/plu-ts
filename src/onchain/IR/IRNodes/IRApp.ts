@@ -1,4 +1,4 @@
-import { seahash } from "../../../crypto/seahash";
+import { blake2b_224 } from "../../../crypto";
 import { Cloneable } from "../../../types/interfaces/Cloneable";
 import { IRTerm } from "../IRTerm";
 import { IHash } from "../interfaces/IHash";
@@ -58,7 +58,7 @@ export class IRApp
                     )
                     {
                         // basically a merkle tree
-                        hash = seahash( concatUint8Arr( IRApp.tag, fn.hash, arg.hash ) );
+                        hash = blake2b_224( concatUint8Arr( IRApp.tag, fn.hash, arg.hash ) );
                         hashIsValid = true;
                     }
                     // return a copy

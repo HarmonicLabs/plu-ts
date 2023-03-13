@@ -55,44 +55,6 @@ export function getSortedHoistedSet( hoistedTerms: HoistedUPLC[] ): HoistedUPLC[
     return set;
 }
 
-export function isSortedHoistedSet( hoistedTerms: HoistedUPLC[] ): boolean
-{
-    let hasToHaveNDeps: number = hoistedTerms[ 0 ] === undefined ? 0 : hoistedTerms[ 0 ].nDeps ;
-
-    /**
-     * withNDeps[0] returns all HoistedTerms with 0 dependecies
-     * 
-     * withNDeps[1] returns all HoistedTerms with 1 dependecies
-     * 
-     * withNDeps[2] returns all HoistedTerms with 2 dependecies
-     * 
-     * etc...
-     */
-    const withNDeps: HoistedUPLC[][] = new Array(hasToHaveNDeps + 1).fill([]);
-
-    for( let hTerm of hoistedTerms )
-    {
-        if( hTerm.nDeps === hasToHaveNDeps || hTerm.nDeps === hasToHaveNDeps + 1 )
-        {
-            if( hTerm.nDeps === hasToHaveNDeps + 1 ) {
-                hasToHaveNDeps++;
-                withNDeps.push( [] );
-            }
-
-            withNDeps[ hasToHaveNDeps ].push( hTerm );
-
-            for( let j = 0; j < hTerm.nDeps; j++ )
-            {
-                const termDep = hTerm.dependencies[ j ];
-                if( !withNDeps[ termDep.nDeps ].includes( termDep ) ) return false;
-            }
-        }
-        else return false;
-    }
-
-    return true;
-}
-
 export class HoistedUPLC
     implements Cloneable<HoistedUPLC>
 {
@@ -210,3 +172,44 @@ export class HoistedUPLC
     clone!: () =>  HoistedUPLC
 
 }
+
+/*
+// unused
+export function isSortedHoistedSet( hoistedTerms: HoistedUPLC[] ): boolean
+{
+    let hasToHaveNDeps: number = hoistedTerms[ 0 ] === undefined ? 0 : hoistedTerms[ 0 ].nDeps ;
+
+    /**
+     * withNDeps[0] returns all HoistedTerms with 0 dependecies
+     * 
+     * withNDeps[1] returns all HoistedTerms with 1 dependecies
+     * 
+     * withNDeps[2] returns all HoistedTerms with 2 dependecies
+     * 
+     * etc...
+     * /
+    const withNDeps: HoistedUPLC[][] = new Array(hasToHaveNDeps + 1).fill([]);
+
+    for( let hTerm of hoistedTerms )
+    {
+        if( hTerm.nDeps === hasToHaveNDeps || hTerm.nDeps === hasToHaveNDeps + 1 )
+        {
+            if( hTerm.nDeps === hasToHaveNDeps + 1 ) {
+                hasToHaveNDeps++;
+                withNDeps.push( [] );
+            }
+
+            withNDeps[ hasToHaveNDeps ].push( hTerm );
+
+            for( let j = 0; j < hTerm.nDeps; j++ )
+            {
+                const termDep = hTerm.dependencies[ j ];
+                if( !withNDeps[ termDep.nDeps ].includes( termDep ) ) return false;
+            }
+        }
+        else return false;
+    }
+
+    return true;
+}
+//*/

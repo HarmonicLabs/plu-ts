@@ -1,4 +1,4 @@
-import { seahash } from "../../../../crypto";
+import { blake2b_224 } from "../../../../crypto";
 import { BitStream } from "../../../../types/bits/BitStream";
 import { Cloneable } from "../../../../types/interfaces/Cloneable";
 import UPLCFlatUtils from "../../../../utils/UPLCFlatUtils";
@@ -40,7 +40,7 @@ export class IRNative
                     if(nativeHashesCache[this.tag] === undefined)
                     {
                         
-                        nativeHashesCache[this.tag] = seahash( 
+                        nativeHashesCache[this.tag] = blake2b_224( 
                             concatUint8Arr( 
                                 IRNative.tag, 
                                 new Uint8Array([

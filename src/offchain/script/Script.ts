@@ -33,7 +33,10 @@ export class Script<T extends ScriptType = ScriptType>
 {
     readonly type!: T;
     readonly bytes!: Uint8Array;
-    readonly cbor!: CborString;
+    /**
+     * format expected by `cardano-cli`
+    **/
+    readonly cbor!: T extends ScriptType.NativeScript ? never : CborString;
     readonly hash!: Hash28;
 
     constructor( scriptType: T, bytes: Uint8Array | (T extends ScriptType.NativeScript ? NativeScript : ScriptJsonFormat) )
@@ -200,10 +203,16 @@ export class Script<T extends ScriptType = ScriptType>
         );
     }
 
+    /**
+     * format specified in the ledger CDDL
+    **/
     toCbor(): CborString
     {
         return Cbor.encode( this.toCborObj() );
     }
+    /**
+     * format specified in the ledger CDDL
+    **/
     toCborObj(): CborObj
     {
         if( this.type === ScriptType.NativeScript )
