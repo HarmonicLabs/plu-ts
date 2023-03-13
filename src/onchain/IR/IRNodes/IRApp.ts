@@ -2,33 +2,88 @@ import { blake2b_224 } from "../../../crypto";
 import { Cloneable } from "../../../types/interfaces/Cloneable";
 import { IRTerm } from "../IRTerm";
 import { IHash } from "../interfaces/IHash";
+import { IIRParent } from "../interfaces/IIRParent";
 import { concatUint8Arr } from "../utils/concatUint8Arr";
 import { isIRTerm } from "../utils/isIRTerm";
 
 export class IRApp
-    implements Cloneable<IRApp>, IHash
+    implements Cloneable<IRApp>, IHash, IIRParent
 {
     fn!: IRTerm;
     arg!: IRTerm;
 
     readonly hash!: Uint8Array;
+    markHashAsInvalid!: () => void;
 
-    constructor( _fn_: IRTerm, _arg_: IRTerm )
+    parent: IRTerm | undefined;
+
+    constructor( _fn_: IRTerm, _arg_: IRTerm, irParent?: IRTerm )
     {
         let fn  = _fn_;
+        fn.parent = this;
         let arg = _arg_;
+        arg.parent = this;
 
-        let hashIsValid: boolean = false;
         let hash: Uint8Array | undefined = undefined;
+        Object.defineProperty(
+            this, "hash",
+            {
+                get: () => {
+                    if(!( hash instanceof Uint8Array ))
+                    {
+                        // basically a merkle tree
+                        hash = blake2b_224( concatUint8Arr( IRApp.tag, fn.hash, arg.hash ) );
+                    }
+                    // return a copy
+                    return hash.slice()
+                },
+                set: () => {},
+                enumerable: true,
+                configurable: false
+            }
+        );
+
+        Object.defineProperty(
+            this, "markHashAsInvalid",
+            {
+                value: () => { 
+                    hash = undefined;
+                    this.parent?.markHashAsInvalid()
+                },
+                writable: false,
+                enumerable:  true,
+                configurable: false
+            }
+        );
+
+        let _parent: IRTerm | undefined = undefined;
+        Object.defineProperty(
+            this, "parent",
+            {
+                get: () => _parent,
+                set: ( newParent: IRTerm | undefined ) => {
+
+                    if( newParent === undefined || isIRTerm( newParent ) )
+                    {
+                        _parent = newParent;
+                    }
+
+                },
+                enumerable: true,
+                configurable: false
+            }
+        );
+        this.parent = irParent;
 
         Object.defineProperty(
             this, "fn", {
                 get: () => fn,
                 set: ( newFn: any ) => {
                     if( !isIRTerm( newFn ) ) return;
-
-                    hashIsValid = false;
+                    
+                    this.markHashAsInvalid();
                     fn = newFn;
+                    fn.parent = this;
                 },
                 enumerable: true,
                 configurable: false
@@ -40,31 +95,10 @@ export class IRApp
                 set: ( newArg: any ) => {
                     if( !isIRTerm( newArg ) ) return;
 
-                    hashIsValid = false;
+                    this.markHashAsInvalid();
                     arg = newArg;
+                    arg.parent = this;
                 },
-                enumerable: true,
-                configurable: false
-            }
-        );
-
-        Object.defineProperty(
-            this, "hash",
-            {
-                get: () => {
-                    if(
-                        !( hash instanceof Uint8Array ) ||
-                        !hashIsValid
-                    )
-                    {
-                        // basically a merkle tree
-                        hash = blake2b_224( concatUint8Arr( IRApp.tag, fn.hash, arg.hash ) );
-                        hashIsValid = true;
-                    }
-                    // return a copy
-                    return hash.slice()
-                },
-                set: () => {},
                 enumerable: true,
                 configurable: false
             }

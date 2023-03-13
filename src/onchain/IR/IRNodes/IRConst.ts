@@ -17,6 +17,10 @@ import { IHash } from "../interfaces/IHash";
 import { concatUint8Arr } from "../utils/concatUint8Arr";
 import { positiveBigIntAsBytes } from "../utils/positiveIntAsBytes";
 import { serialize } from "v8";
+import { IIRParent } from "../interfaces/IIRParent";
+import { IRTerm } from "../IRTerm";
+import { isIRTerm } from "../utils/isIRTerm";
+import { UnexpectedMarkHashInvalidCall } from "../../../errors/PlutsIRError/UnexpectedMarkHashInvalidCall";
 
 export type IRConstValue
     = CanBeUInteger
@@ -29,14 +33,17 @@ export type IRConstValue
 
 
 export class IRConst
-    implements Cloneable<IRConst>, IHash
+    implements Cloneable<IRConst>, IHash, IIRParent
 {
     readonly hash: Uint8Array;
+    markHashAsInvalid: () => void;
 
     readonly type!: TermType
     readonly value!: IRConstValue
 
-    constructor( t: TermType, v: IRConstValue )
+    parent: IRTerm | undefined;
+
+    constructor( t: TermType, v: IRConstValue, irParent?: IRTerm )
     {
         if(
             !isWellFormedType( t ) ||
@@ -66,6 +73,25 @@ export class IRConst
             this, "value", v
         );
 
+        let _parent: IRTerm | undefined = undefined;
+        Object.defineProperty(
+            this, "parent",
+            {
+                get: () => _parent,
+                set: ( newParent: IRTerm | undefined ) => {
+
+                    if( newParent === undefined || isIRTerm( newParent ) )
+                    {
+                        _parent = newParent;
+                    }
+
+                },
+                enumerable: true,
+                configurable: false
+            }
+        );
+        this.parent = irParent;
+
         let hash: Uint8Array | undefined = undefined;
         Object.defineProperty(
             this, "hash", {
@@ -84,6 +110,16 @@ export class IRConst
                 },
                 set: () => {},
                 enumerable: true,
+                configurable: false
+            }
+        );
+
+        Object.defineProperty(
+            this, "markHashAsInvalid",
+            {
+                value: () => { throw new UnexpectedMarkHashInvalidCall("IRConst") },
+                writable: false,
+                enumerable:  true,
                 configurable: false
             }
         );

@@ -7,6 +7,9 @@ import { IHash } from "../interfaces/IHash";
 import { concatUint8Arr } from "../utils/concatUint8Arr";
 import { IRApp } from "./IRApp";
 import { IRFunc } from "./IRFunc";
+import { IIRParent } from "../interfaces/IIRParent";
+import { isIRTerm } from "../utils/isIRTerm";
+import { BasePlutsError } from "../../../errors/BasePlutsError";
 
 
 type LettedSetEntry = {
@@ -15,21 +18,30 @@ type LettedSetEntry = {
 };
 
 export class IRLetted
-    implements Cloneable<IRLetted>, IHash
+    implements Cloneable<IRLetted>, IHash, IIRParent
 {
     readonly hash!: Uint8Array;
+    markHashAsInvalid!: () => void;
 
-    readonly value!: IRTerm
+    value!: IRTerm
 
     readonly dependencies!: LettedSetEntry[]
 
+    parent: IRTerm | undefined;
+
     clone!: () => IRLetted
 
-    constructor( value: IRTerm, dependencies: LettedSetEntry[] = [] )
+    constructor( value: IRTerm, dependencies: LettedSetEntry[] = [], irParent?: IRTerm )
     {
-        ObjectUtils.defineReadOnlyProperty(
-            this, "value", value
+        if( !isIRTerm( value ) )
+        throw new BasePlutsError(
+            "only closed terms can be hoisted"
         );
+        
+        // initialize without calling "set"
+        let _value: IRTerm = value;
+        _value.parent = this;
+        let _deps: LettedSetEntry[] = dependencies?.slice() ?? getSortedLettedSet( getLettedTerms( value ) );
 
         let hash: Uint8Array | undefined = undefined;
         Object.defineProperty(
@@ -51,13 +63,40 @@ export class IRLetted
                 configurable: false
             }
         );
-
-        const deps: LettedSetEntry[] = dependencies?.slice() ?? getSortedLettedSet( getLettedTerms( value ) );
+        Object.defineProperty(
+            this, "markHashAsInvalid",
+            {
+                value: () => { 
+                    hash = undefined;
+                    this.parent?.markHashAsInvalid()
+                },
+                writable: false,
+                enumerable:  true,
+                configurable: false
+            }
+        );
+        
+        Object.defineProperty(
+            this, "value",
+            {
+                get: () => _value,
+                set: ( newVal: IRTerm ) => {
+                    if( !isIRTerm( newVal ) )
+                    throw new BasePlutsError(
+                        "only closed terms can be hoisted"
+                    );
+                    this.markHashAsInvalid();
+                    _deps = getSortedLettedSet( getLettedTerms( newVal ) );
+                    _value = newVal;
+                    _value.parent = this
+                }
+            }
+        );
 
         Object.defineProperty(
             this, "dependencies",
             {
-                get: (): LettedSetEntry[] => deps.map( dep => ({
+                get: (): LettedSetEntry[] => _deps.map( dep => ({
                     letted: dep.letted.clone(),
                     nReferences: dep.nReferences
                 })), // MUST return clones
@@ -66,12 +105,32 @@ export class IRLetted
                 configurable: false
             }
         )
+
+        let _parent: IRTerm | undefined = undefined;
+        Object.defineProperty(
+            this, "parent",
+            {
+                get: () => _parent,
+                set: ( newParent: IRTerm | undefined ) => {
+
+                    if( newParent === undefined || isIRTerm( newParent ) )
+                    {
+                        _parent = newParent;
+                    }
+
+                },
+                enumerable: true,
+                configurable: false
+            }
+        );
+        this.parent = irParent;
+
         ObjectUtils.defineReadOnlyProperty(
             this, "clone",
             () => {
                 return new IRLetted(
                     this.value.clone(), 
-                    deps.slice() // as long as `dependecies` getter returns clones this is fine
+                    _deps.slice() // as long as `dependecies` getter returns clones this is fine
                 )
             }
         )

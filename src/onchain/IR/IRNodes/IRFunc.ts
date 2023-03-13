@@ -6,26 +6,31 @@ import { GenericTermType, PrimType, TermType, getNRequiredLambdaArgs, isWellForm
 import { cloneTermType } from "../../pluts/type_system/cloneTermType";
 import { IRTerm } from "../IRTerm";
 import { IHash } from "../interfaces/IHash";
+import { IIRParent } from "../interfaces/IIRParent";
 import { concatUint8Arr } from "../utils/concatUint8Arr";
 import { isIRTerm } from "../utils/isIRTerm";
 import { positiveIntAsBytes } from "../utils/positiveIntAsBytes";
 
 
 export class IRFunc
-    implements Cloneable<IRFunc>, IHash
+    implements Cloneable<IRFunc>, IHash, IIRParent
 {
     readonly arity!: number;
     readonly type!: [PrimType.Lambda,TermType,TermType]
 
     readonly hash!: Uint8Array;
+    markHashAsInvalid!: () => void;
 
-    readonly body!: IRTerm
+    body!: IRTerm
+
+    parent: IRTerm | undefined;
 
     clone!: () => IRFunc;
 
     constructor(
         t: [PrimType.Lambda,GenericTermType,GenericTermType],
-        body: IRTerm
+        body: IRTerm,
+        irParent?: IRTerm
     )
     {
         if( !isWellFormedGenericType( t ) )
@@ -40,15 +45,6 @@ export class IRFunc
             this, "type", cloneTermType( t )
         );
 
-        Object.defineProperty(
-            this, "body", {
-                value: body,
-                writable: false,
-                enumerable: true,
-                configurable: false
-            }
-        )
-        
         let hash: Uint8Array | undefined = undefined;
         Object.defineProperty(
             this, "hash", {
@@ -70,6 +66,58 @@ export class IRFunc
                 configurable: false
             }
         );
+        Object.defineProperty(
+            this, "markHashAsInvalid",
+            {
+                value: () => { 
+                    hash = undefined;
+                    this.parent?.markHashAsInvalid()
+                },
+                writable: false,
+                enumerable:  true,
+                configurable: false
+            }
+        );
+
+        let _body: IRTerm;
+        Object.defineProperty(
+            this, "body", {
+                get: () => _body,
+                set: ( newBody: IRTerm ) => {
+                    if(!isIRTerm( newBody ))
+                    {
+                        throw new BasePlutsError(
+                            "invalid IRTerm to be a function body"
+                        );
+                    }
+                    this.markHashAsInvalid();
+                    _body = newBody;
+                    _body.parent = this;
+                },
+                enumerable: true,
+                configurable: false
+            }
+        );
+        this.body = body;
+        
+        let _parent: IRTerm | undefined = undefined;
+        Object.defineProperty(
+            this, "parent",
+            {
+                get: () => _parent,
+                set: ( newParent: IRTerm | undefined ) => {
+
+                    if( newParent === undefined || isIRTerm( newParent ) )
+                    {
+                        _parent = newParent;
+                    }
+
+                },
+                enumerable: true,
+                configurable: false
+            }
+        );
+        this.parent = irParent;
 
         ObjectUtils.defineReadOnlyProperty(
             this, "clone",

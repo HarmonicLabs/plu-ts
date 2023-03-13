@@ -4,27 +4,21 @@ import { Cloneable } from "../../../types/interfaces/Cloneable";
 import ObjectUtils from "../../../utils/ObjectUtils";
 import { IRTerm } from "../IRTerm";
 import { IHash } from "../interfaces/IHash";
+import { IIRParent } from "../interfaces/IIRParent";
 import { concatUint8Arr } from "../utils/concatUint8Arr";
 import { isIRTerm } from "../utils/isIRTerm";
 
 export class IRDelayed
-    implements Cloneable<IRDelayed>, IHash
+    implements Cloneable<IRDelayed>, IHash, IIRParent
 {
-    readonly delayed!: IRTerm
+    delayed!: IRTerm
     readonly hash!: Uint8Array
+    markHashAsInvalid!: () => void;
 
-    constructor( delayed: IRTerm )
+    parent: IRTerm | undefined;
+
+    constructor( delayed: IRTerm, irParent?: IRTerm )
     {
-        if(!isIRTerm( delayed ))
-        {
-            throw new BasePlutsError(
-                "invalid IRTerm to be delayed"
-            );
-        }
-        ObjectUtils.defineReadOnlyProperty(
-            this, "delayed", delayed
-        );
-
         let hash: Uint8Array | undefined = undefined
         Object.defineProperty(
             this, "hash",
@@ -42,7 +36,62 @@ export class IRDelayed
                     return hash.slice();
                 }
             }
-        )
+        );
+
+        Object.defineProperty(
+            this, "markHashAsInvalid",
+            {
+                value: () => { 
+                    hash = undefined;
+                    this.parent?.markHashAsInvalid()
+                },
+                writable: false,
+                enumerable:  true,
+                configurable: false
+            }
+        );
+
+        let _delayed: IRTerm;
+        Object.defineProperty(
+            this, "delayed",
+            {
+                get: () => _delayed,
+                set: ( newDelayed: IRTerm | undefined ) => {
+                    if(!isIRTerm( newDelayed ))
+                    {
+                        throw new BasePlutsError(
+                            "invalid IRTerm to be delayed"
+                        );
+                    }
+                    this.markHashAsInvalid();
+                    _delayed = newDelayed;
+                    _delayed.parent = this;
+                },
+                enumerable: true,
+                configurable: false
+            }
+        );
+        this.delayed = delayed;
+
+        let _parent: IRTerm | undefined = undefined;
+        Object.defineProperty(
+            this, "parent",
+            {
+                get: () => _parent,
+                set: ( newParent: IRTerm | undefined ) => {
+
+                    if( newParent === undefined || isIRTerm( newParent ) )
+                    {
+                        _parent = newParent;
+                    }
+
+                },
+                enumerable: true,
+                configurable: false
+            }
+        );
+        this.parent = irParent;
+
     }
 
     static get tag(): Uint8Array

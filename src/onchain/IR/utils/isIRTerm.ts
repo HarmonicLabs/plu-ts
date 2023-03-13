@@ -10,7 +10,7 @@ import { IRNative } from "../IRNodes/IRNative";
 import { IRVar } from "../IRNodes/IRVar";
 import { IRTerm } from "../IRTerm";
 
-export function isIRTerm<T>( stuff: T ): stuff is (T & IRTerm)
+export function isIRTerm<T>( stuff: T ): stuff is (T extends IRTerm ? T : T & IRTerm)
 {
     return (
         stuff instanceof IRVar      ||

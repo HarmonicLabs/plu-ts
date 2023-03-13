@@ -10,6 +10,8 @@ import { BasePlutsError } from "../../../errors/BasePlutsError";
 import { IRApp } from "./IRApp";
 import { IRFunc } from "./IRFunc";
 import { IRLetted } from "./IRLetted";
+import { IIRParent } from "../interfaces/IIRParent";
+import { isIRTerm } from "../utils/isIRTerm";
 
 
 type HoistedSetEntry = {
@@ -18,18 +20,21 @@ type HoistedSetEntry = {
 }
 
 export class IRHoisted
-    implements Cloneable<IRHoisted>, IHash
+    implements Cloneable<IRHoisted>, IHash, IIRParent
 {
     readonly hash!: Uint8Array;
+    markHashAsInvalid!: () => void;
 
     readonly hoisted!: IRTerm
 
     // `IRHoisted` can have only other `IRHoisted` as deps
     readonly dependencies!: HoistedSetEntry[];
 
+    parent: IRTerm | undefined;
+
     clone!: () => IRHoisted;
 
-    constructor( hoisted: IRTerm, dependencies?: HoistedSetEntry[] )
+    constructor( hoisted: IRTerm, dependencies?: HoistedSetEntry[], irParent?: IRTerm )
     {
         // unwrap
         while( hoisted instanceof IRHoisted ) hoisted = hoisted.hoisted;
@@ -38,10 +43,11 @@ export class IRHoisted
         throw new BasePlutsError(
             "only closed terms can be hoisted"
         );
-
-        ObjectUtils.defineReadOnlyProperty(
-            this, "hoisted", hoisted
-        );
+        
+        // initialize without calling "set"
+        let _hoisted: IRTerm = hoisted;
+        _hoisted.parent = this;
+        let _deps: HoistedSetEntry[] = dependencies?.slice() ?? getSortedHoistedSet( getHoistedTerms( hoisted ) );
 
         let hash: Uint8Array | undefined = undefined;
         Object.defineProperty(
@@ -63,13 +69,40 @@ export class IRHoisted
                 configurable: false
             }
         );
-
-        const deps = dependencies?.slice() ?? getSortedHoistedSet( getHoistedTerms( hoisted ) );
+        Object.defineProperty(
+            this, "markHashAsInvalid",
+            {
+                value: () => { 
+                    hash = undefined;
+                    this.parent?.markHashAsInvalid()
+                },
+                writable: false,
+                enumerable:  true,
+                configurable: false
+            }
+        );
+        
+        Object.defineProperty(
+            this, "hoisted",
+            {
+                get: () => _hoisted,
+                set: ( newHoisted: IRTerm ) => {
+                    if( !isClosedIRTerm( hoisted ) )
+                    throw new BasePlutsError(
+                        "only closed terms can be hoisted"
+                    );
+                    this.markHashAsInvalid();
+                    _deps = getSortedHoistedSet( getHoistedTerms( newHoisted ) );
+                    _hoisted = newHoisted;
+                    _hoisted.parent = this
+                }
+            }
+        );
 
         Object.defineProperty(
             this, "dependencies",
             {
-                get: (): HoistedSetEntry[] => deps.map( dep => ({
+                get: (): HoistedSetEntry[] => _deps.map( dep => ({
                     hoisted: dep.hoisted.clone(),
                     nReferences: dep.nReferences
                 })), // MUST return clones
@@ -77,14 +110,33 @@ export class IRHoisted
                 enumerable: true,
                 configurable: false
             }
-        )
+        );
+
+        let _parent: IRTerm | undefined = undefined;
+        Object.defineProperty(
+            this, "parent",
+            {
+                get: () => _parent,
+                set: ( newParent: IRTerm | undefined ) => {
+
+                    if( newParent === undefined || isIRTerm( newParent ) )
+                    {
+                        _parent = newParent;
+                    }
+
+                },
+                enumerable: true,
+                configurable: false
+            }
+        );
+        this.parent = irParent;
         
         ObjectUtils.defineProperty(
             this, "clone",
             () => {
                 return new IRHoisted(
                     this.hoisted.clone(),
-                    deps.slice() // as long as `dependecies` getter returns clones this is fine
+                    _deps.slice() // as long as `dependecies` getter returns clones this is fine
                 );
             }
         );

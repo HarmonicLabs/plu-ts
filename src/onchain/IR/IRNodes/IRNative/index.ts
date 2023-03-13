@@ -1,9 +1,13 @@
 import { blake2b_224 } from "../../../../crypto";
+import { UnexpectedMarkHashInvalidCall } from "../../../../errors/PlutsIRError/UnexpectedMarkHashInvalidCall";
 import { BitStream } from "../../../../types/bits/BitStream";
 import { Cloneable } from "../../../../types/interfaces/Cloneable";
 import UPLCFlatUtils from "../../../../utils/UPLCFlatUtils";
+import { IRTerm } from "../../IRTerm";
 import { IHash } from "../../interfaces/IHash";
+import { IIRParent } from "../../interfaces/IIRParent";
 import { concatUint8Arr } from "../../utils/concatUint8Arr";
+import { isIRTerm } from "../../utils/isIRTerm";
 import { IRNativeTag } from "./IRNativeTag";
 
 /**
@@ -17,12 +21,15 @@ const nativeHashesCache: { [n: number/*IRNativeTag*/]: Uint8Array } = {} as any;
  * `IRNative` ⊇ `Builtins` + `std::fn`
 **/
 export class IRNative
-    implements Cloneable<IRNative>, IHash
+    implements Cloneable<IRNative>, IHash, IIRParent
 {
     readonly tag!: IRNativeTag;
     readonly hash!: Uint8Array;
+    markHashAsInvalid!: () => void;
 
-    constructor( tag: IRNativeTag )
+    parent: IRTerm | undefined;
+
+    constructor( tag: IRNativeTag, irParent?: IRTerm )
     {
         Object.defineProperty(
             this, "tag", {
@@ -33,13 +40,31 @@ export class IRNative
             }
         );
 
+        let _parent: IRTerm | undefined = undefined;
+        Object.defineProperty(
+            this, "parent",
+            {
+                get: () => _parent,
+                set: ( newParent: IRTerm | undefined ) => {
+
+                    if( newParent === undefined || isIRTerm( newParent ) )
+                    {
+                        _parent = newParent;
+                    }
+
+                },
+                enumerable: true,
+                configurable: false
+            }
+        );
+        this.parent = irParent;
+
         Object.defineProperty(
             this, "hash",
             {
                 get: () => {
                     if(nativeHashesCache[this.tag] === undefined)
                     {
-                        
                         nativeHashesCache[this.tag] = blake2b_224( 
                             concatUint8Arr( 
                                 IRNative.tag, 
@@ -56,13 +81,22 @@ export class IRNative
                                 ])
                             )
                         );
-
                     }
                     // return a copy
                     return nativeHashesCache[this.tag].slice()
                 },
                 set: () => {},
                 enumerable: true,
+                configurable: false
+            }
+        );
+
+        Object.defineProperty(
+            this, "markHashAsInvalid",
+            {
+                value: () => { throw new UnexpectedMarkHashInvalidCall("IRNative") },
+                writable: false,
+                enumerable:  true,
                 configurable: false
             }
         );
