@@ -146,7 +146,7 @@ export class IRLetted
  * @param {LettedSetEntry[]} hoistedTerms
  * @returns {LettedSetEntry[]} a **new** array with ```IRLetted```s with no dependencies first, followed by the dependents
  */
-function getSortedLettedSet( hoistedTerms: LettedSetEntry[] ): LettedSetEntry[]
+export function getSortedLettedSet( hoistedTerms: LettedSetEntry[] ): LettedSetEntry[]
 {
     const set: LettedSetEntry[] = [];
     const hashesSet: Uint8Array[] = [];
@@ -196,7 +196,7 @@ function getSortedLettedSet( hoistedTerms: LettedSetEntry[] ): LettedSetEntry[]
     return set;
 }
 
-function getLettedTerms( irTerm: IRTerm ): LettedSetEntry[]
+export function getLettedTerms( irTerm: IRTerm ): LettedSetEntry[]
 {
     const hoisteds: LettedSetEntry[] = [];
 
