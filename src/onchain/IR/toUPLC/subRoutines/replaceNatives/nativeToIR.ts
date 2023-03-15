@@ -1,13 +1,12 @@
 import { PlutsIRError } from "../../../../../errors/PlutsIRError";
 import { DataConstr } from "../../../../../types/Data";
-import { bool, data, int } from "../../../../pluts";
+import { bool, data, int, unit } from "../../../../pluts";
 import { IRApp } from "../../../IRNodes/IRApp";
 import { IRConst } from "../../../IRNodes/IRConst";
 import { IRDelayed } from "../../../IRNodes/IRDelayed";
 import { IRForced } from "../../../IRNodes/IRForced";
 import { IRFunc } from "../../../IRNodes/IRFunc";
 import { IRHoisted } from "../../../IRNodes/IRHoisted";
-import { IRLetted } from "../../../IRNodes/IRLetted";
 import { IRNative } from "../../../IRNodes/IRNative";
 import { IRNativeTag } from "../../../IRNodes/IRNative/IRNativeTag";
 import { IRVar } from "../../../IRNodes/IRVar";
@@ -530,6 +529,10 @@ export function nativeToIR( native: IRNative ): IRTerm
                                 new IRApp(
                                     IRNative.sndPair,
                                     new IRVar( 0 )
+                                ),
+                                new IRApp(
+                                    IRNative.mkNilData,
+                                    new IRConst( unit, undefined )
                                 )
                             )
                         )
@@ -538,16 +541,73 @@ export function nativeToIR( native: IRNative ): IRTerm
             );
         break;
         case IRNativeTag._strFromData   :
-            return new IRHoisted();
+            return new IRHoisted(
+                new IRFunc( 1, // data
+                    new IRApp(
+                        IRNative.decodeUtf8,
+                        new IRApp(
+                            IRNative.unBData,
+                            new IRVar( 0 ) // data
+                        )
+                    )
+                )
+            );
         break;
-        case IRNativeTag._pairFromData  :
-            return new IRHoisted();
+        case IRNativeTag._pairDataFromData  :
+            return new IRHoisted(
+                new IRFunc( 1, // data
+                    new IRApp(
+                        new IRFunc( 1, // unlisted_data
+                            _ir_apps(
+                                IRNative.mkPairData,
+                                new IRApp(
+                                    IRNative.headList,
+                                    new IRVar( 0 )  // unlised_data
+                                ),
+                                new IRApp(
+                                    IRNative.headList,
+                                    new IRApp(
+                                        IRNative.tailList,
+                                        new IRVar( 0 )  // unlised_data
+                                    )
+                                )
+                            )
+                        ),
+                        new IRApp(
+                            IRNative.unListData,
+                            new IRVar( 0 ) // data
+                        )
+                    )
+                )
+            );
         break;
         case IRNativeTag._lazyChooseList:
-            return new IRHoisted();
+            return new IRHoisted(
+                new IRFunc( 3, // list, delayed_caseNil, delayed_caseCons
+                    new IRForced(
+                        _ir_apps(
+                            IRNative.strictChooseList,
+                            new IRVar( 2 ),
+                            new IRVar( 1 ),
+                            new IRVar( 0 )
+                        )
+                    )
+                )
+            );
         break;
         case IRNativeTag._lazyIfThenElse:
-            return new IRHoisted();
+            return new IRHoisted(
+                new IRFunc( 3, // condition, delayed_caseTrue, delayed_caseFalse
+                    new IRForced(
+                        _ir_apps(
+                            IRNative.strictIfThenElse,
+                            new IRVar( 2 ), // condition
+                            new IRVar( 1 ), // delayed_caseTrue
+                            new IRVar( 0 )  // delayed_caseFalse
+                        )
+                    )
+                )
+            );
         break;
 
         default: throw new PlutsIRError("unknown (negative) native calling 'nativeToIR'")

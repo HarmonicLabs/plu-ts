@@ -199,7 +199,7 @@ export class IRNative
     static get _strToData() { return new IRNative( IRNativeTag._strToData ) }
     static get _pairDataToData() { return new IRNative( IRNativeTag._pairDataToData ) }
     static get _strFromData() { return new IRNative( IRNativeTag._strFromData ) }
-    static get _pairFromData() { return new IRNative( IRNativeTag._pairFromData ) }
+    static get _pairDataFromData() { return new IRNative( IRNativeTag._pairDataFromData ) }
     static get _lazyChooseList() { return new IRNative( IRNativeTag._lazyChooseList ) }
     static get _lazyIfThenElse() { return new IRNative( IRNativeTag._lazyIfThenElse ) }
 
