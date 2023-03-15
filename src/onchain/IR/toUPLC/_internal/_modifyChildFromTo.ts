@@ -7,7 +7,6 @@ import { IRForced } from "../../IRNodes/IRForced";
 import { IRFunc } from "../../IRNodes/IRFunc";
 import { IRHoisted } from "../../IRNodes/IRHoisted";
 import { IRLetted } from "../../IRNodes/IRLetted";
-import { IRVar } from "../../IRNodes/IRVar";
 import { IRTerm } from "../../IRTerm";
 
 

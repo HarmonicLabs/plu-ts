@@ -239,4 +239,74 @@ describe("handleLetted", () => {
 
     });
 
+    test("dependency reused", () => {
+
+        // `add2`
+        const dep = new IRLetted(
+            new IRApp(
+                new IRNative( IRNativeTag.addInteger ),
+                new IRConst( int, 2 )
+            )
+        );
+
+        // fancy `add4`
+        const lettedWithDep = new IRLetted(
+            new IRApp(
+                new IRNative( IRNativeTag.addInteger ),
+                new IRApp(
+                    dep,
+                    new IRConst( int, 2 )
+                )
+            )
+        );
+
+        const root = new IRForced(
+            new IRDelayed(
+                new IRApp(
+                    lettedWithDep,
+                    new IRApp(
+                        dep.clone(),
+                        new IRConst( int, 2 )
+                    )
+                )
+            )
+        );
+
+        const lettedInRoot = getLettedTerms( root );
+        expect( lettedInRoot.length ).toEqual( 2 );
+
+        handleLetted( root );
+
+        // all inlined
+        const expected = new IRForced(
+            new IRDelayed(
+                new IRApp(
+                    new IRFunc( 1,
+                        new IRApp( // least common ancestor
+                            new IRApp(
+                                new IRNative( IRNativeTag.addInteger ),
+                                new IRApp(
+                                    new IRVar(0),
+                                    new IRConst( int, 2 )
+                                )
+                            ),
+                            new IRApp(
+                                new IRVar( 0 ),
+                                new IRConst( int, 2 )
+                            )
+                        )
+                    ),
+                    new IRApp(
+                        new IRNative( IRNativeTag.addInteger ),
+                        new IRConst( int, 2 )
+                    )
+                )
+            )
+        );
+
+        expect( root.toJson() ).toEqual( expected.toJson() );
+        expect( root.hash ).toEqual( expected.hash );
+
+    });
+
 })
