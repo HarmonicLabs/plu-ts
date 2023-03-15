@@ -1,3 +1,4 @@
+import { toHex } from "@harmoniclabs/uint8array-utils";
 import { blake2b_224 } from "../../../crypto";
 import { Cloneable } from "../../../types/interfaces/Cloneable";
 import { IRTerm } from "../IRTerm";
@@ -5,9 +6,10 @@ import { IHash } from "../interfaces/IHash";
 import { IIRParent } from "../interfaces/IIRParent";
 import { concatUint8Arr } from "../utils/concatUint8Arr";
 import { isIRTerm } from "../utils/isIRTerm";
+import { ToJson } from "../../../utils/ts/ToJson";
 
 export class IRApp
-    implements Cloneable<IRApp>, IHash, IIRParent
+    implements Cloneable<IRApp>, IHash, IIRParent, ToJson
 {
     fn!: IRTerm;
     arg!: IRTerm;
@@ -19,10 +21,8 @@ export class IRApp
 
     constructor( _fn_: IRTerm, _arg_: IRTerm, irParent?: IRTerm )
     {
-        let fn  = _fn_;
-        fn.parent = this;
-        let arg = _arg_;
-        arg.parent = this;
+        let fn: IRTerm;
+        let arg: IRTerm;
 
         let hash: Uint8Array | undefined = undefined;
         Object.defineProperty(
@@ -89,6 +89,8 @@ export class IRApp
                 configurable: false
             }
         );
+        this.fn = _fn_;
+
         Object.defineProperty(
             this, "arg", {
                 get: () => arg,
@@ -103,6 +105,7 @@ export class IRApp
                 configurable: false
             }
         );
+        this.arg = _arg_
 
     }
 
@@ -114,5 +117,14 @@ export class IRApp
             this.fn.clone(),
             this.arg.clone()
         );
+    }
+
+    toJson(): any
+    {
+        return {
+            type: "IRApp",
+            fn: this.fn.toJson(),
+            arg: this.arg.toJson()
+        }
     }
 }

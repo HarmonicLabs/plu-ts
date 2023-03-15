@@ -1,4 +1,4 @@
-import { fn, int, lam, tyVar } from "../../../../pluts";
+import { int } from "../../../../pluts";
 import { IRConst } from "../../../IRNodes/IRConst";
 import { IRForced } from "../../../IRNodes/IRForced";
 import { IRFunc } from "../../../IRNodes/IRFunc";
@@ -24,7 +24,7 @@ describe("getDebruijnInTerm", () => {
         expect(
             getDebruijnInTerm(
                 new IRFunc(
-                    lam( tyVar(), tyVar() ),
+                    1,
                     target
                 ),
                 target
@@ -38,7 +38,7 @@ describe("getDebruijnInTerm", () => {
         expect(
             getDebruijnInTerm(
                 new IRFunc(
-                    fn([ tyVar(), tyVar(), tyVar(), tyVar() ], tyVar() ),
+                    4,
                     target
                 ),
                 target
@@ -53,7 +53,7 @@ describe("getDebruijnInTerm", () => {
         expect(
             getDebruijnInTerm(
                 new IRFunc(
-                    fn([ tyVar(), tyVar(), tyVar(), tyVar() ], tyVar() ),
+                    4,
                     target.clone()
                 ),
                 target

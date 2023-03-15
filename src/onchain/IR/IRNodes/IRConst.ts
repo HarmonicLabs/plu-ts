@@ -1,4 +1,4 @@
-import { fromUtf8 } from "@harmoniclabs/uint8array-utils";
+import { fromUtf8, toHex } from "@harmoniclabs/uint8array-utils";
 import { blake2b_224 } from "../../../crypto/blake2b";
 import { BasePlutsError } from "../../../errors/BasePlutsError";
 import { Data, dataToCbor, isData } from "../../../types/Data";
@@ -21,6 +21,7 @@ import { IIRParent } from "../interfaces/IIRParent";
 import { IRTerm } from "../IRTerm";
 import { isIRTerm } from "../utils/isIRTerm";
 import { UnexpectedMarkHashInvalidCall } from "../../../errors/PlutsIRError/UnexpectedMarkHashInvalidCall";
+import { ToJson } from "../../../utils/ts/ToJson";
 
 export type IRConstValue
     = CanBeUInteger
@@ -33,7 +34,7 @@ export type IRConstValue
 
 
 export class IRConst
-    implements Cloneable<IRConst>, IHash, IIRParent
+    implements Cloneable<IRConst>, IHash, IIRParent, ToJson
 {
     readonly hash: Uint8Array;
     markHashAsInvalid: () => void;
@@ -131,6 +132,15 @@ export class IRConst
     {
         return new IRConst( this.type, this.value );
     }
+
+    toJson(): any
+    {
+        return {
+            type: "IRConst",
+            constType: termTypeToString( this.type ),
+            value: constValueToJson( this.value )
+        }
+    }
 }
 
 
@@ -201,7 +211,7 @@ export function isIRConstValue( value: any ): boolean
         value instanceof ByteString ||
         typeof value === "string" ||
         typeof value === "boolean" ||
-        isIRConstValueList(value ) ||
+        isIRConstValueList( value ) ||
         (
             value instanceof Pair &&
             isIRConstValue( value.fst ) &&
@@ -209,6 +219,18 @@ export function isIRConstValue( value: any ): boolean
         ) || 
         isData( value )
     );
+}
+
+function constValueToJson( value: any ): any
+{
+    if( canBeUInteger( value ) ) return forceBigUInt( value ).toString();
+    if( value instanceof Uint8Array ) return toHex( value );
+    if( value instanceof ByteString ) return value.toString();
+    if( isIRConstValueList( value ) ) return value.map( constValueToJson );
+    if( value instanceof Pair ) return { fst: constValueToJson( value.fst ), snd: constValueToJson( value.snd ) };
+    if( isData( value ) ) return value.toJson();
+
+    return value;
 }
 
 function serializeIRConstValue( value: any, t: TermType ): Uint8Array

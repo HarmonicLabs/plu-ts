@@ -3,6 +3,7 @@ import { BasePlutsError } from "../../../errors/BasePlutsError";
 import { UnexpectedMarkHashInvalidCall } from "../../../errors/PlutsIRError/UnexpectedMarkHashInvalidCall";
 import { Cloneable } from "../../../types/interfaces/Cloneable";
 import ObjectUtils from "../../../utils/ObjectUtils";
+import { ToJson } from "../../../utils/ts/ToJson";
 import { IRTerm } from "../IRTerm";
 import { IHash } from "../interfaces/IHash";
 import { IIRParent } from "../interfaces/IIRParent";
@@ -12,7 +13,7 @@ import { positiveIntAsBytes } from "../utils/positiveIntAsBytes";
 
 
 export class IRVar
-    implements Cloneable<IRVar>, IHash, IIRParent
+    implements Cloneable<IRVar>, IHash, IIRParent, ToJson
 {
     readonly hash: Uint8Array;
     markHashAsInvalid!: () => void;
@@ -88,6 +89,14 @@ export class IRVar
     clone(): IRVar
     {
         return new IRVar( this.dbn );
+    }
+
+    toJson(): any
+    {
+        return {
+            type: "IRVar",
+            dbn: this.dbn
+        }
     }
 }
 

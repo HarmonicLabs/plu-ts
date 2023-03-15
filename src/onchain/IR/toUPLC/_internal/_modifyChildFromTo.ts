@@ -1,3 +1,4 @@
+import { toHex } from "@harmoniclabs/uint8array-utils";
 import { BasePlutsError } from "../../../../errors/BasePlutsError";
 import { PlutsIRError } from "../../../../errors/PlutsIRError";
 import { IRApp } from "../../IRNodes/IRApp";
@@ -6,6 +7,7 @@ import { IRForced } from "../../IRNodes/IRForced";
 import { IRFunc } from "../../IRNodes/IRFunc";
 import { IRHoisted } from "../../IRNodes/IRHoisted";
 import { IRLetted } from "../../IRNodes/IRLetted";
+import { IRVar } from "../../IRNodes/IRVar";
 import { IRTerm } from "../../IRTerm";
 
 

@@ -3,12 +3,13 @@ import { UnexpectedMarkHashInvalidCall } from "../../../../errors/PlutsIRError/U
 import { BitStream } from "../../../../types/bits/BitStream";
 import { Cloneable } from "../../../../types/interfaces/Cloneable";
 import UPLCFlatUtils from "../../../../utils/UPLCFlatUtils";
+import { ToJson } from "../../../../utils/ts/ToJson";
 import { IRTerm } from "../../IRTerm";
 import { IHash } from "../../interfaces/IHash";
 import { IIRParent } from "../../interfaces/IIRParent";
 import { concatUint8Arr } from "../../utils/concatUint8Arr";
 import { isIRTerm } from "../../utils/isIRTerm";
-import { IRNativeTag } from "./IRNativeTag";
+import { IRNativeTag, nativeTagToString } from "./IRNativeTag";
 
 /**
  * we might not need all the hashes
@@ -21,7 +22,7 @@ const nativeHashesCache: { [n: number/*IRNativeTag*/]: Uint8Array } = {} as any;
  * `IRNative` ⊇ `Builtins` + `std::fn`
 **/
 export class IRNative
-    implements Cloneable<IRNative>, IHash, IIRParent
+    implements Cloneable<IRNative>, IHash, IIRParent, ToJson
 {
     readonly tag!: IRNativeTag;
     readonly hash!: Uint8Array;
@@ -108,5 +109,13 @@ export class IRNative
     clone(): IRNative
     {
         return new IRNative( this.tag );
+    }
+
+    toJson()
+    {
+        return {
+            type: "IRNative",
+            native: nativeTagToString( this.tag )
+        };
     }
 }

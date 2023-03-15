@@ -60,7 +60,7 @@ export function handleHoistedAndReturnRoot( term: IRTerm ): IRTerm
     {
         root = new IRApp(
             new IRFunc(
-                lam( tyVar(), tyVar() ),
+                1,
                 root
             ),
             hoisteds[i].hoisted

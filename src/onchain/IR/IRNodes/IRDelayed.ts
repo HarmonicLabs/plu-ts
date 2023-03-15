@@ -1,7 +1,7 @@
 import { blake2b_224 } from "../../../crypto";
 import { BasePlutsError } from "../../../errors/BasePlutsError";
 import { Cloneable } from "../../../types/interfaces/Cloneable";
-import ObjectUtils from "../../../utils/ObjectUtils";
+import { ToJson } from "../../../utils/ts/ToJson";
 import { IRTerm } from "../IRTerm";
 import { IHash } from "../interfaces/IHash";
 import { IIRParent } from "../interfaces/IIRParent";
@@ -9,7 +9,7 @@ import { concatUint8Arr } from "../utils/concatUint8Arr";
 import { isIRTerm } from "../utils/isIRTerm";
 
 export class IRDelayed
-    implements Cloneable<IRDelayed>, IHash, IIRParent
+    implements Cloneable<IRDelayed>, IHash, IIRParent, ToJson
 {
     delayed!: IRTerm
     readonly hash!: Uint8Array
@@ -102,5 +102,13 @@ export class IRDelayed
     clone(): IRDelayed
     {
         return new IRDelayed( this.delayed.clone() )
+    }
+
+    toJson(): any
+    {
+        return {
+            type: "IRDelayed",
+            delayed: this.delayed.toJson()
+        }
     }
 }

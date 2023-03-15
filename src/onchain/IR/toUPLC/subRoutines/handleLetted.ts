@@ -56,7 +56,7 @@ export function handleLetted( term: IRTerm ): void
     // add depths to every node
     _addDepth( term );
 
-    for( let i = letteds.length - 1; i >= 0; i++ )
+    for( let i = letteds.length - 1; i >= 0; i-- )
     {
         letted = letteds[i];
 
@@ -67,19 +67,23 @@ export function handleLetted( term: IRTerm ): void
                 uint8ArrayEq( elem.hash, letted.hash )
         );
 
-        const lca = refs.reduce( lowestCommonAncestor );
+        let lca: IRTerm | undefined = refs[0];
+        for(let i = 1; i < refs.length; i++)
+        {
+            lca = lowestCommonAncestor( lca, refs[i] );
+        }
 
         if( lca === undefined )
-        throw new IRLettedMissingLCA( letted );
-
-        const lamDbn = getDebruijnInTerm( term, lca );
+        {
+            throw new IRLettedMissingLCA( letted );
+        }
 
         _modifyChildFromTo(
             lca.parent as IRTerm,
             lca,
             new IRApp(
                 new IRFunc(
-                    lam( tyVar(), tyVar() ),
+                    1,
                     lca
                 ),
                 letted.value

@@ -1,4 +1,4 @@
-import { uint8ArrayEq } from "@harmoniclabs/uint8array-utils";
+import { toHex, uint8ArrayEq } from "@harmoniclabs/uint8array-utils";
 import { blake2b_224 } from "../../../crypto";
 import { Cloneable } from "../../../types/interfaces/Cloneable";
 import ObjectUtils from "../../../utils/ObjectUtils";
@@ -10,6 +10,9 @@ import { IRFunc } from "./IRFunc";
 import { IIRParent } from "../interfaces/IIRParent";
 import { isIRTerm } from "../utils/isIRTerm";
 import { BasePlutsError } from "../../../errors/BasePlutsError";
+import { IRForced } from "./IRForced";
+import { IRDelayed } from "./IRDelayed";
+import { ToJson } from "../../../utils/ts/ToJson";
 
 
 type LettedSetEntry = {
@@ -18,7 +21,7 @@ type LettedSetEntry = {
 };
 
 export class IRLetted
-    implements Cloneable<IRLetted>, IHash, IIRParent
+    implements Cloneable<IRLetted>, IHash, IIRParent, ToJson
 {
     readonly hash!: Uint8Array;
     markHashAsInvalid!: () => void;
@@ -138,6 +141,14 @@ export class IRLetted
 
     static get tag(): Uint8Array { return new Uint8Array([ 0b0000_0101 ]); }
 
+    toJson(): any 
+    {
+        return {
+            type: "IRLetted",
+            hash: toHex( this.hash ),
+            value: this.value.toJson()
+        }
+    }
 }
 
 /**
@@ -200,11 +211,25 @@ export function getLettedTerms( irTerm: IRTerm ): LettedSetEntry[]
 {
     const hoisteds: LettedSetEntry[] = [];
 
+    function pushDependecies( deps: LettedSetEntry[] )
+    {
+        for(const dep of deps)
+        {
+            const depDeps = dep.letted.dependencies;
+            if( depDeps.length > 0 )
+            {
+                pushDependecies( depDeps )
+            }
+            hoisteds.push({ letted: dep.letted, nReferences: dep.nReferences });
+        }
+    }
+
     function searchIn( term: IRTerm ): void
     {
         if( term instanceof IRLetted )
         {
-            hoisteds.push( ...term.dependencies, { letted: term, nReferences: 1 });
+            pushDependecies( term.dependencies );
+            hoisteds.push({ letted: term, nReferences: 1 });
             return;
         }
 
@@ -218,6 +243,18 @@ export function getLettedTerms( irTerm: IRTerm ): LettedSetEntry[]
         if( term instanceof IRFunc )
         {
             searchIn( term.body );
+            return;
+        }
+
+        if( term instanceof IRForced )
+        {
+            searchIn( term.forced );
+            return;
+        }
+
+        if( term instanceof IRDelayed )
+        {
+            searchIn( term.delayed );
             return;
         }
 

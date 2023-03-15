@@ -1,4 +1,4 @@
-import { uint8ArrayEq } from "@harmoniclabs/uint8array-utils";
+import { toHex, uint8ArrayEq } from "@harmoniclabs/uint8array-utils";
 import { blake2b_224 } from "../../../crypto";
 import { Cloneable } from "../../../types/interfaces/Cloneable";
 import ObjectUtils from "../../../utils/ObjectUtils";
@@ -12,6 +12,7 @@ import { IRFunc } from "./IRFunc";
 import { IRLetted } from "./IRLetted";
 import { IIRParent } from "../interfaces/IIRParent";
 import { isIRTerm } from "../utils/isIRTerm";
+import { ToJson } from "../../../utils/ts/ToJson";
 
 
 type HoistedSetEntry = {
@@ -20,7 +21,7 @@ type HoistedSetEntry = {
 }
 
 export class IRHoisted
-    implements Cloneable<IRHoisted>, IHash, IIRParent
+    implements Cloneable<IRHoisted>, IHash, IIRParent, ToJson
 {
     readonly hash!: Uint8Array;
     markHashAsInvalid!: () => void;
@@ -144,6 +145,15 @@ export class IRHoisted
     }
 
     static get tag(): Uint8Array { return new Uint8Array([ 0b0000_0110 ]); }
+
+    toJson(): any
+    {
+        return {
+            type: "IRHoisted",
+            hash: toHex( this.hash ),
+            hoisted: this.hoisted.toJson()
+        }
+    }
 }
 
 

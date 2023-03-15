@@ -2,6 +2,7 @@ import { blake2b_224 } from "../../../crypto";
 import { BasePlutsError } from "../../../errors/BasePlutsError";
 import { Cloneable } from "../../../types/interfaces/Cloneable";
 import ObjectUtils from "../../../utils/ObjectUtils";
+import { ToJson } from "../../../utils/ts/ToJson";
 import { GenericTermType, PrimType, TermType, getNRequiredLambdaArgs, isWellFormedGenericType } from "../../pluts";
 import { cloneTermType } from "../../pluts/type_system/cloneTermType";
 import { IRTerm } from "../IRTerm";
@@ -13,10 +14,9 @@ import { positiveIntAsBytes } from "../utils/positiveIntAsBytes";
 
 
 export class IRFunc
-    implements Cloneable<IRFunc>, IHash, IIRParent
+    implements Cloneable<IRFunc>, IHash, IIRParent, ToJson
 {
     readonly arity!: number;
-    readonly type!: [PrimType.Lambda,TermType,TermType]
 
     readonly hash!: Uint8Array;
     markHashAsInvalid!: () => void;
@@ -28,23 +28,21 @@ export class IRFunc
     clone!: () => IRFunc;
 
     constructor(
-        t: [PrimType.Lambda,GenericTermType,GenericTermType],
+        arity: number,
         body: IRTerm,
         irParent?: IRTerm
     )
     {
-        if( !isWellFormedGenericType( t ) )
+        if( !Number.isSafeInteger( arity ) && arity >= 1 )
         throw new BasePlutsError(
-            "ill formed term type passed to IRFunc consturctor"
+            "invalid arity for 'IRfunc'"
         )
 
         ObjectUtils.defineReadOnlyProperty(
-            this, "arity", getNRequiredLambdaArgs( t )
-        );
-        ObjectUtils.defineReadOnlyProperty(
-            this, "type", cloneTermType( t )
+            this, "arity", arity
         );
 
+        let _body: IRTerm;
         let hash: Uint8Array | undefined = undefined;
         Object.defineProperty(
             this, "hash", {
@@ -55,7 +53,7 @@ export class IRFunc
                             concatUint8Arr(
                                 IRFunc.tag,
                                 positiveIntAsBytes( this.arity ),
-                                body.hash
+                                _body.hash
                             )
                         )
                     }
@@ -69,7 +67,7 @@ export class IRFunc
         Object.defineProperty(
             this, "markHashAsInvalid",
             {
-                value: () => { 
+                value: () => {
                     hash = undefined;
                     this.parent?.markHashAsInvalid()
                 },
@@ -79,7 +77,6 @@ export class IRFunc
             }
         );
 
-        let _body: IRTerm;
         Object.defineProperty(
             this, "body", {
                 get: () => _body,
@@ -124,7 +121,7 @@ export class IRFunc
             {
                 value: () => {
                     return new IRFunc(
-                        t,
+                        this.arity,
                         body.clone()
                     )
                 }
@@ -134,4 +131,12 @@ export class IRFunc
 
     static get tag(): Uint8Array { return new Uint8Array([ 0b0000_00001 ]); }
 
+    toJson(): any
+    {
+        return {
+            type: "IRFunc",
+            arity: this.arity,
+            body: this.body.toJson()
+        }
+    }
 }
