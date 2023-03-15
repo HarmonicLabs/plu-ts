@@ -87,10 +87,13 @@ export function handleLetted( term: IRTerm ): void
         }
 
         // TODO add 1 to every var's DeBruijn already present that is not closed in the term
+        //*
+        // NOT ALL VARIABLES NEED TO BE INCREMENTED
+        // ONLY THE ONES REFERENCING SOMETHIN OUTSIDE THE  TERM
         iterTree( lca, ( node, dbn ) => {
             if(
                 node instanceof IRVar &&
-                node.dbn < dbn
+                node.dbn >= dbn
             )
             {
                 // there's a new variable in town
@@ -99,6 +102,7 @@ export function handleLetted( term: IRTerm ): void
                 // (please help...)
             }
         })
+        //*/
 
         _modifyChildFromTo(
             lca.parent as IRTerm,
