@@ -309,4 +309,57 @@ describe("handleLetted", () => {
 
     });
 
+    test("vars outside and inside", () => {
+
+        const letted = new IRLetted( new IRConst( int, 2 ) );
+        
+        const root = new IRFunc( 2, // a, b
+            new IRApp(
+                new IRApp(
+                    new IRFunc( 2, // c, d
+                        new IRApp(
+                            new IRApp(
+                                IRNative.addInteger,
+                                new IRVar( 3 ) // a
+                            ),
+                            new IRVar( 1 ) // c
+                        )
+                    ),
+                    letted.clone()
+                ),
+                letted.clone()
+            )
+        );
+
+        handleLetted( root );
+
+        // all inlined
+        const expected = new IRFunc( 2, // a, b
+            new IRApp(
+                new IRFunc( 1,
+                    new IRApp( // lowest common ancestor
+                        new IRApp(
+                            new IRFunc( 2, // c, d
+                                new IRApp(
+                                    new IRApp(
+                                        IRNative.addInteger,
+                                        new IRVar( 4 ) // a incremented
+                                    ),
+                                    new IRVar( 1 ) // c
+                                )
+                            ),
+                            new IRVar( 0 )
+                        ),
+                        new IRVar( 0 )
+                    )
+                ), 
+                letted.value.clone()
+            )  
+        );
+
+        expect( root.toJson() ).toEqual( expected.toJson() );
+        expect( root.hash ).toEqual( expected.hash );
+
+    })
+
 })

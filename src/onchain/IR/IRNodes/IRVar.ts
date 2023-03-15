@@ -37,7 +37,7 @@ export class IRVar
                 get: () => {
                     if(!( hash instanceof Uint8Array ))
                     {
-                        hash = getVarHashAtDbn( dbn );
+                        hash = getVarHashAtDbn( this.dbn );
                     }
                     return hash.slice();
                 },
