@@ -422,7 +422,16 @@ export function nativeToIR( native: IRNative ): IRTerm
             );
         break;
         case IRNativeTag._and           :
-            return new IRHoisted();
+            return new IRHoisted(
+                new IRFunc( 2, // a, b
+                    _ir_apps(
+                        IRNative._lazyIfThenElse,
+                        new IRVar( 0 ), // a
+                        new IRVar( 1 ), // a == true  -> whatever b is
+                        new IRConst( bool, false )  // a == false -> false
+                    )
+                )
+            );
         break;
         case IRNativeTag._strictOr      :
             return new IRHoisted(
@@ -437,7 +446,16 @@ export function nativeToIR( native: IRNative ): IRTerm
             );
         break;
         case IRNativeTag._or            :
-            return new IRHoisted();
+            return new IRHoisted(
+                new IRFunc( 2, // a, b
+                    _ir_apps(
+                        IRNative._lazyIfThenElse,
+                        new IRVar( 0 ), // a
+                        new IRConst( bool, true ), // a == true  -> true
+                        new IRVar( 1 )  // a == false -> whatever b is
+                    )
+                )
+            );
         break;
         case IRNativeTag._gtBS          :
             return new IRHoisted();
