@@ -85,6 +85,8 @@ export function handleLetted( term: IRTerm ): void
             throw new IRLettedMissingLCA( letted );
         }
 
+        // TODO add 1 to every var's DeBruijn already present that is not closed in the term
+
         _modifyChildFromTo(
             lca.parent as IRTerm,
             lca,

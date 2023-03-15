@@ -5,6 +5,7 @@ import { _addDepth } from "./_internal/_addDepth";
 import { _makeAllNegativeNativesHoisted } from "./_internal/_makeAllNegativeNativesHoisted";
 import { handleLetted } from "./subRoutines/handleLetted";
 import { handleHoistedAndReturnRoot } from "./subRoutines/handleHoistedAndReturnRoot";
+import { replaceNatives } from "./subRoutines/replaceNatives";
 
 export function compileIRToUPLC( term: IRTerm ): UPLCTerm
 {   
@@ -14,7 +15,7 @@ export function compileIRToUPLC( term: IRTerm ): UPLCTerm
     // ------------------------------------------------------------------------- //
     ///////////////////////////////////////////////////////////////////////////////
 
-    _makeAllNegativeNativesHoisted( term );
+    // _makeAllNegativeNativesHoisted( term );
 
 
     ///////////////////////////////////////////////////////////////////////////////
@@ -47,6 +48,8 @@ export function compileIRToUPLC( term: IRTerm ): UPLCTerm
     // ------------------------------ final steps ------------------------------ //
     // ------------------------------------------------------------------------- //
     ///////////////////////////////////////////////////////////////////////////////
+
+    replaceNatives( term );
 
     term = handleHoistedAndReturnRoot( term );
 

@@ -38,6 +38,7 @@ export class IRHoisted
     constructor( hoisted: IRTerm, dependencies?: HoistedSetEntry[] )
     {
         // unwrap
+        // !!! IMPORTANT !!!
         while( hoisted instanceof IRHoisted ) hoisted = hoisted.hoisted;
 
         if( !isClosedIRTerm( hoisted ) )

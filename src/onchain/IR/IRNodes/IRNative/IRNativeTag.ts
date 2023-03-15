@@ -41,14 +41,14 @@ export const enum IRNativeTag {
     encodeUtf8                  = 24, // 0011000
     decodeUtf8                  = 25, // 0011001
     // control flow
-    ifThenElse                  = 26, // 0011010
+    strictIfThenElse            = 26, // 0011010
     chooseUnit                  = 27, // 0011011
     // tracing
     trace                       = 28, // 0011100
     // data
     fstPair                     = 29, // 0011101
     sndPair                     = 30, // 0011110
-    chooseList                  = 31, // 0011111
+    strictChooseList            = 31, // 0011111
     mkCons                      = 32, // 0100000
     headList                    = 33, // 0100001
     tailList                    = 34, // 0100010
@@ -82,32 +82,34 @@ export const enum IRNativeTag {
 
     z_comb              = -1, // useful to understand when we are going recursive during optimizations
     _matchList          = -2,
-    /** precursiveList */
-    _recList            = -3,
-    _indexList          = -4,
-    _foldr              = -5,
-    _foldl              = -6,
-    _find               = -7,
-    _length             = -8,
-    _some               = -9,
-    _every              = -10,
-    _filter             = -11,
-    _fstPair            = -12,
-    _sndPair            = -13,
-    _id                 = -14,
-    _not                = -15,
-    _strictAnd          = -16,  
-    _and                = -17,  
-    _strictOr           = -18,  
-    _or                 = -19,
-    _gtBS               = -20,
-    _gtEqBS             = -21,
-    _gtInt              = -22,
-    _gtEqInt            = -23,
-    _strToData          = -24,
-    _pairToData         = -25,
-    _strFromData        = -26,
-    _pairFromData       = -27
+    _recursiveList      = -3,
+    _dropList          = -4,
+    _indexList          = -5,
+    _foldr              = -6,
+    _foldl              = -7,
+    _mkFind               = -8,
+    _length             = -9,
+    _some               = -10,
+    _every              = -11,
+    _mkFilter             = -12,
+    // _fstPair            = -13,
+    // _sndPair            = -14,
+    _id                 = -15,
+    _not                = -16,  
+    _strictAnd          = -17,  
+    _and                = -18,  
+    _strictOr           = -19,
+    _or                 = -20,
+    _gtBS               = -21,
+    _gtEqBS             = -22,
+    _gtInt              = -23,
+    _gtEqInt            = -24,
+    _strToData          = -25,
+    _pairToData         = -26,
+    _strFromData        = -27,
+    _pairFromData       = -28,
+    _lazyChooseList     = -29,
+    _lazyIfThenElse     = -30
 }
 
 export function nativeTagToString( nativeTag: IRNativeTag ): string
@@ -117,17 +119,18 @@ export function nativeTagToString( nativeTag: IRNativeTag ): string
     {
         case IRNativeTag.z_comb         : return "z_comb";
         case IRNativeTag._matchList     : return "matchList";
-        case IRNativeTag._recList       : return "recList";
+        case IRNativeTag._recursiveList : return "recursiveList";
+        case IRNativeTag._dropList      : return "dropList";
         case IRNativeTag._indexList     : return "indexList";
         case IRNativeTag._foldr         : return "foldr";
         case IRNativeTag._foldl         : return "foldl";
-        case IRNativeTag._find          : return "find";
+        case IRNativeTag._mkFind          : return "mkFind";
         case IRNativeTag._length        : return "length";
         case IRNativeTag._some          : return "some";
         case IRNativeTag._every         : return "every";
-        case IRNativeTag._filter        : return "filter";
-        case IRNativeTag._fstPair       : return "fstPair";
-        case IRNativeTag._sndPair       : return "sndPair";
+        case IRNativeTag._mkFilter        : return "mkFilter";
+        // case IRNativeTag._fstPair       : return "fstPair";
+        // case IRNativeTag._sndPair       : return "sndPair";
         case IRNativeTag._id            : return "id";
         case IRNativeTag._not           : return "not";
         case IRNativeTag._strictAnd     : return "strictAnd";
@@ -142,6 +145,8 @@ export function nativeTagToString( nativeTag: IRNativeTag ): string
         case IRNativeTag._pairToData    : return "pairToData";
         case IRNativeTag._strFromData   : return "strFromData";
         case IRNativeTag._pairFromData  : return "pairFromData";
+        case IRNativeTag._lazyChooseList: return "lazyChooseList";
+
 
         default: return ""
     }

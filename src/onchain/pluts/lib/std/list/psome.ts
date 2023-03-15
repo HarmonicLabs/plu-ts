@@ -27,7 +27,7 @@ return phoist(
         return precursiveList( bool , elemsT )
         .$(
             plam( lam( list( elemsT ), bool ), delayed( bool ) )
-            ( _self => pdelay( pBool( true ) ) )
+            ( _self => pdelay( pBool( false ) ) )
         )
         .$(
             pfn([
