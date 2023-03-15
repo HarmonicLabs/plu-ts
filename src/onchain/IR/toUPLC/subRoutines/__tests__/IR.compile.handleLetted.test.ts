@@ -11,6 +11,7 @@ import { IRNativeTag } from "../../../IRNodes/IRNative/IRNativeTag";
 import { IRVar } from "../../../IRNodes/IRVar";
 import { _addDepth } from "../../_internal/_addDepth";
 import { handleLetted } from "../handleLetted";
+import { logJson } from "../../../../../utils/ts/ToJson";
 
 describe("handleLetted", () => {
 
@@ -118,8 +119,6 @@ describe("handleLetted", () => {
             )
         );
 
-        const h1 = new IRFunc( 1, letted.clone() ).hash
-
         const root = new IRForced(
             new IRDelayed(
                 new IRApp(
@@ -134,6 +133,8 @@ describe("handleLetted", () => {
                 )
             )
         );
+
+        // logJson( root )
 
         expect( getLettedTerms( root ).length ).toEqual( 2 );
 
@@ -162,8 +163,6 @@ describe("handleLetted", () => {
             )
         );
 
-        
-
         expect( getLettedTerms( root ) ).toEqual([]);
         expect( fstHash ).not.toEqual( root.hash );
         
@@ -172,6 +171,72 @@ describe("handleLetted", () => {
         expect( toHex( root.hash ) )
         .toEqual( toHex( expected.hash ) )
         
+    });
+
+    test("single letted with single dependency", () => {
+
+        // `add2`
+        const dep = new IRLetted(
+            new IRApp(
+                new IRNative( IRNativeTag.addInteger ),
+                new IRConst( int, 2 )
+            )
+        );
+
+        // console.log( dep.parent ); // undefined
+
+        // fancy `add4`
+        const lettedWithDep = new IRLetted(
+            new IRApp(
+                new IRNative( IRNativeTag.addInteger ),
+                new IRApp(
+                    dep,
+                    new IRConst( int, 2 )
+                )
+            )
+        );
+
+        // console.log( lettedWithDep.parent ); // undefined
+        // console.log( dep.parent ); // IRAPP
+
+        const root = new IRForced(
+            new IRDelayed(
+                new IRApp(
+                    lettedWithDep,
+                    new IRConst( int, 2 )
+                )
+            )
+        );
+
+        // console.log( lettedWithDep.parent ); // IRApp
+
+        const lettedInRoot = getLettedTerms( root );
+        expect( lettedInRoot.length ).toEqual( 1 );
+
+        handleLetted( root );
+
+        // all inlined
+        const expected = new IRForced(
+            new IRDelayed(
+                new IRApp(
+                    new IRApp(
+                        new IRNative( IRNativeTag.addInteger ),
+                        new IRApp(
+                            new IRApp(
+                                new IRNative( IRNativeTag.addInteger ),
+                                new IRConst( int, 2 )
+                            ),
+                            new IRConst( int, 2 )
+                        )
+                    ),
+                    new IRConst( int, 2 )
+                )
+            )
+        );
+
+        expect( root.toJson() ).toEqual( expected.toJson() );
+        expect( root.hash ).toEqual( expected.hash );
+
     });
 
 })

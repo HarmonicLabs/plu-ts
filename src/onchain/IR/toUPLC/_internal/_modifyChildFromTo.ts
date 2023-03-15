@@ -1,4 +1,4 @@
-import { toHex } from "@harmoniclabs/uint8array-utils";
+import { toHex, uint8ArrayEq } from "@harmoniclabs/uint8array-utils";
 import { BasePlutsError } from "../../../../errors/BasePlutsError";
 import { PlutsIRError } from "../../../../errors/PlutsIRError";
 import { IRApp } from "../../IRNodes/IRApp";
@@ -32,7 +32,9 @@ export function _modifyChildFromTo( parent: IRTerm | undefined, currentChild: IR
             "while calling '_modifyChildFromTo' on a 'IRApp' node; teh two childrens where the same"
         );
 
-        if( parent.fn === currentChild )
+        // DO NO USE SHALLOW EQUALITY
+        // child might be cloned
+        if( uint8ArrayEq( parent.fn.hash, currentChild.hash ) )
         {
             parent.fn = newChild;
         }

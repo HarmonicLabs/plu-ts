@@ -20,6 +20,14 @@ type LettedSetEntry = {
     nReferences: number
 };
 
+export function jsonLettedSetEntry( entry: LettedSetEntry )
+{
+    return {
+        letted: toHex(entry.letted.hash),
+        nReferences: entry.nReferences
+    }
+}
+
 export class IRLetted
     implements Cloneable<IRLetted>, IHash, IIRParent, ToJson
 {
@@ -34,7 +42,7 @@ export class IRLetted
 
     clone!: () => IRLetted
 
-    constructor( value: IRTerm, dependencies: LettedSetEntry[] = [], irParent?: IRTerm )
+    constructor( value: IRTerm, dependencies?: LettedSetEntry[], irParent?: IRTerm )
     {
         if( !isIRTerm( value ) )
         throw new BasePlutsError(
@@ -74,7 +82,7 @@ export class IRLetted
                     this.parent?.markHashAsInvalid()
                 },
                 writable: false,
-                enumerable:  true,
+                enumerable:  false,
                 configurable: false
             }
         );
@@ -92,17 +100,24 @@ export class IRLetted
                     _deps = getSortedLettedSet( getLettedTerms( newVal ) );
                     _value = newVal;
                     _value.parent = this
-                }
+                },
+                enumerable: true,
+                configurable: false
             }
         );
 
         Object.defineProperty(
             this, "dependencies",
             {
-                get: (): LettedSetEntry[] => _deps.map( dep => ({
-                    letted: dep.letted.clone(),
-                    nReferences: dep.nReferences
-                })), // MUST return clones
+                get: (): LettedSetEntry[] => _deps.map( dep => {
+
+                    const clone = dep.letted.clone();
+                    clone.parent = dep.letted.parent; 
+                    return {
+                        letted: clone,
+                        nReferences: dep.nReferences
+                    }
+                }), // MUST return clones
                 set: () => {},
                 enumerable: true,
                 configurable: false
@@ -122,7 +137,7 @@ export class IRLetted
                     }
 
                 },
-                enumerable: true,
+                enumerable: false,
                 configurable: false
             }
         );
@@ -178,6 +193,7 @@ export function getSortedLettedSet( hoistedTerms: LettedSetEntry[] ): LettedSetE
             const thisLettedEntry = _terms[i]; 
             const thisHash = thisLettedEntry.letted.hash;
 
+
             const idxInSet = hashesSet.findIndex( hash => uint8ArrayEq( hash, thisHash ) )
             // if( !hashesSet.includes( hash ) )
             // "includes" uses standard equality (===)
@@ -187,7 +203,7 @@ export function getSortedLettedSet( hoistedTerms: LettedSetEntry[] ): LettedSetE
                 // dependencies don't have references
                 // to the current letted
                 // (of course, wouldn't be much of a dependecy otherwhise)
-                addToSet( ..._terms[ i ].letted.dependencies );
+                addToSet( ...thisLettedEntry.letted.dependencies );
 
                 hashesSet.push( thisHash );
                 set.push({
@@ -211,24 +227,10 @@ export function getLettedTerms( irTerm: IRTerm ): LettedSetEntry[]
 {
     const hoisteds: LettedSetEntry[] = [];
 
-    function pushDependecies( deps: LettedSetEntry[] )
-    {
-        for(const dep of deps)
-        {
-            const depDeps = dep.letted.dependencies;
-            if( depDeps.length > 0 )
-            {
-                pushDependecies( depDeps )
-            }
-            hoisteds.push({ letted: dep.letted, nReferences: dep.nReferences });
-        }
-    }
-
     function searchIn( term: IRTerm ): void
     {
         if( term instanceof IRLetted )
         {
-            pushDependecies( term.dependencies );
             hoisteds.push({ letted: term, nReferences: 1 });
             return;
         }

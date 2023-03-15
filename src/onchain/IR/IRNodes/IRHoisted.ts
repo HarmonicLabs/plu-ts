@@ -78,7 +78,7 @@ export class IRHoisted
                     this.parent?.markHashAsInvalid()
                 },
                 writable: false,
-                enumerable:  true,
+                enumerable:  false,
                 configurable: false
             }
         );

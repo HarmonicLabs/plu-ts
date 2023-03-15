@@ -14,7 +14,7 @@ describe("isClosedIRTerm", () => {
     test("id", () => {
 
         const _id = new IRFunc(
-            lam( tyVar(), tyVar() ),
+            1,
             new IRVar(0)
         );
 
@@ -25,11 +25,11 @@ describe("isClosedIRTerm", () => {
     test("const", () => {
 
         const _const = new IRFunc(
-            lam( tyVar(), tyVar() ),
+            1,
             (() => {
 
                 const result = new IRFunc(
-                    lam( tyVar(), tyVar() ),
+                    1,
                     new IRVar( 1 )
                 );
 
@@ -51,7 +51,7 @@ describe("isClosedIRTerm", () => {
 
         const body = new IRVar(1);
         const _const = new IRFunc(
-            lam( tyVar(), lam( tyVar(), tyVar() ) ),
+            2,
             body
         );
 

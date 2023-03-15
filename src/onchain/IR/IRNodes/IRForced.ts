@@ -1,7 +1,6 @@
 import { blake2b_224 } from "../../../crypto";
 import { BasePlutsError } from "../../../errors/BasePlutsError";
 import { Cloneable } from "../../../types/interfaces/Cloneable";
-import ObjectUtils from "../../../utils/ObjectUtils";
 import { ToJson } from "../../../utils/ts/ToJson";
 import { IRTerm } from "../IRTerm";
 import { IHash } from "../interfaces/IHash";
@@ -46,7 +45,7 @@ export class IRForced
                     this.parent?.markHashAsInvalid()
                 },
                 writable: false,
-                enumerable:  true,
+                enumerable:  false,
                 configurable: false
             }
         );
@@ -107,7 +106,7 @@ export class IRForced
     {
         return {
             type: "IRForced",
-            delayed: this.forced.toJson()
+            forced: this.forced.toJson()
         }
     }
 }

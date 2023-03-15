@@ -51,7 +51,7 @@ export class IRApp
                     this.parent?.markHashAsInvalid()
                 },
                 writable: false,
-                enumerable:  true,
+                enumerable:  false,
                 configurable: false
             }
         );

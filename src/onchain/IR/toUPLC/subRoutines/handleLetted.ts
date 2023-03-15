@@ -1,9 +1,8 @@
-import { uint8ArrayEq } from "@harmoniclabs/uint8array-utils";
+import { toHex, uint8ArrayEq } from "@harmoniclabs/uint8array-utils";
 import { IRLettedMissingLCA } from "../../../../errors/PlutsIRError/IRCompilationError/IRLettedMissingLCA";
-import { lam, tyVar } from "../../../pluts";
 import { IRApp } from "../../IRNodes/IRApp";
 import { IRFunc } from "../../IRNodes/IRFunc";
-import { getSortedLettedSet, getLettedTerms, IRLetted } from "../../IRNodes/IRLetted";
+import { getSortedLettedSet, getLettedTerms, IRLetted, jsonLettedSetEntry } from "../../IRNodes/IRLetted";
 import { IRVar } from "../../IRNodes/IRVar";
 import { IRTerm } from "../../IRTerm";
 import { _addDepth } from "../_internal/_addDepth";
@@ -22,10 +21,14 @@ export function handleLetted( term: IRTerm ): void
     const letteds: IRLetted[] = new Array( n );
     const lettedToInline: IRLetted[] = new Array( n );
 
+    // console.log( lettedSet.map( jsonLettedSetEntry ) );
+    // console.log( lettedSet.map( letted => letted.letted.dependencies ) );
+    
     // filter out hoisted terms with single reference
     for( let i = 0; i < n; i++ )
     {
         const thisHoistedEntry = lettedSet[i];
+        // console.log( thisHoistedEntry.nReferences, thisHoistedEntry.letted.parent )
         if(
             thisHoistedEntry.nReferences === 1 &&
             thisHoistedEntry.letted.parent
@@ -40,12 +43,16 @@ export function handleLetted( term: IRTerm ): void
     // drop unused space
     letteds.length = a;
     lettedToInline.length = b;
+
+    // console.log( letteds.map( l => toHex( l.hash ) ) );
+    // console.log( lettedToInline.map( l => toHex( l.hash ) ) );
     
     // inline single references from last to first
+    // needs to be from last to first so that hashes will not change
     let letted: IRLetted;
-    for( let i = lettedToInline.length - 1; i >= 0; i-- )
+    for( let i = lettedToInline.length - 1; i >= 0 ; i-- )
     {
-        letted = lettedToInline.pop() as IRLetted;
+        letted = lettedToInline[i] as IRLetted;
         _modifyChildFromTo(
             letted.parent as IRTerm,
             letted,

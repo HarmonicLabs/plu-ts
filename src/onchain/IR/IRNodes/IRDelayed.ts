@@ -46,7 +46,7 @@ export class IRDelayed
                     this.parent?.markHashAsInvalid()
                 },
                 writable: false,
-                enumerable:  true,
+                enumerable:  false,
                 configurable: false
             }
         );
