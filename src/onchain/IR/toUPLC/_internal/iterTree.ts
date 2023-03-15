@@ -6,40 +6,54 @@ import { IRHoisted } from "../../IRNodes/IRHoisted";
 import { IRLetted } from "../../IRNodes/IRLetted";
 import { IRTerm } from "../../IRTerm";
 
-export function iterTree( term: IRTerm, fn: ( elem: IRTerm ) => void ): void
+export function iterTree( _term: IRTerm, fn: ( elem: IRTerm, dbn: number ) => (boolean | undefined | void) ): void
 {
-    const stack: IRTerm[] = [term];
+    const stack: { term: IRTerm, dbn: number }[] = [{ term: _term, dbn: 0 }];
 
     while( stack.length > 0 )
     {
-        const t = stack.pop() as IRTerm;
+        const { term: t, dbn } = stack.pop() as { term: IRTerm, dbn: number };
 
-        fn( t );
+        const termParent = t.parent;
+        const negDbn = t instanceof IRFunc ? t.arity : 0;
+
+        const modifiedParent = Boolean( fn( t, dbn ) );
+
+        if( modifiedParent && termParent !== undefined )
+        {
+            if( termParent instanceof IRApp )
+            {
+                // there is an extra node 
+                stack.pop();
+            }
+            stack.push({ term: termParent, dbn: dbn - negDbn });
+            continue;
+        }
         
         if( t instanceof IRApp )
         {
             stack.push(
-                t.fn,
-                t.arg
+                { term: t.fn, dbn  },
+                { term: t.arg, dbn }
             );
             continue;
         }
 
         if( t instanceof IRDelayed )
         {
-            stack.push( t.delayed )
+            stack.push({ term: t.delayed, dbn })
             continue;
         }
 
         if( t instanceof IRForced )
         {
-            stack.push( t.forced );
+            stack.push({ term: t.forced, dbn });
             continue;
         }
 
         if( t instanceof IRFunc )
         {
-            stack.push( t.body );
+            stack.push({ term: t.body, dbn: dbn + t.arity });
             continue;
         }
         
@@ -47,7 +61,7 @@ export function iterTree( term: IRTerm, fn: ( elem: IRTerm ) => void ): void
         {
             // 0 because hoisted are closed
             // for hoisted we keep track of the depth inside the term
-            stack.push( t.hoisted );
+            stack.push({ term: t.hoisted, dbn });
             continue;
         }
 
@@ -56,7 +70,7 @@ export function iterTree( term: IRTerm, fn: ( elem: IRTerm ) => void ): void
             // same stuff as the hoisted terms
             // the only difference is that depth is then incremented
             // once the letted term reaches its final position
-            stack.push( t.value );
+            stack.push({ term: t.value, dbn });
             continue;
         }
     }

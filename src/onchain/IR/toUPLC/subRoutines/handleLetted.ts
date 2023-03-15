@@ -10,6 +10,7 @@ import { _modifyChildFromTo } from "../_internal/_modifyChildFromTo";
 import { findAll } from "../_internal/findAll";
 import { getDebruijnInTerm } from "../_internal/getDebruijnInTerm";
 import { lowestCommonAncestor } from "../_internal/lowestCommonAncestor";
+import { iterTree } from "../_internal/iterTree";
 
 
 export function handleLetted( term: IRTerm ): void
@@ -86,6 +87,18 @@ export function handleLetted( term: IRTerm ): void
         }
 
         // TODO add 1 to every var's DeBruijn already present that is not closed in the term
+        iterTree( lca, ( node, dbn ) => {
+            if(
+                node instanceof IRVar &&
+                node.dbn < dbn
+            )
+            {
+                // there's a new variable in town
+                node.dbn++;
+                // (the town is the scope. Did you get it?)
+                // (please help...)
+            }
+        })
 
         _modifyChildFromTo(
             lca.parent as IRTerm,

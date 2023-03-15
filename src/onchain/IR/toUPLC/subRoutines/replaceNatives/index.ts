@@ -14,6 +14,7 @@ export function replaceNatives( tree: IRTerm ): void
                 elem,
                 nativeToIR( elem )
             );
+            return true;
         }
     });
 }

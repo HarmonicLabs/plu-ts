@@ -32,7 +32,7 @@ describe("IRLetted.dependencies", () => {
         
     });
 
-    test.only("one dependency has 1 ref", () => {
+    test("one dependency has 1 ref", () => {
 
         const dep = new IRLetted(
             new IRApp(

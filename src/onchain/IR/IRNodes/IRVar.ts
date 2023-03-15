@@ -25,7 +25,7 @@ export class IRVar
      * are skipping some DeBruijin levels that are instead present
      * in the final UPLC
     **/
-    readonly dbn!: number;
+    dbn!: number;
 
     parent: IRTerm | undefined;
 
@@ -49,20 +49,34 @@ export class IRVar
         Object.defineProperty(
             this, "markHashAsInvalid",
             {
-                value: () => { throw new UnexpectedMarkHashInvalidCall("IRVar") },
+                value: () => {
+                    hash = undefined;
+                    this.parent?.markHashAsInvalid()
+                },
                 writable: false,
                 enumerable:  true,
                 configurable: false
             }
         );
-        
-        if(!( Number.isSafeInteger( dbn ) && dbn >= 0 ))
-        throw new BasePlutsError(
-            "invalid index for an `IRVar` instance"
-        )
-        ObjectUtils.defineReadOnlyProperty(
-            this, "dbn", dbn
+
+        let _dbn: number
+        Object.defineProperty(
+            this, "dbn",
+            {
+                get: () => _dbn,
+                set: ( newDbn: number ) => {
+                    if(!(
+                        Number.isSafeInteger( newDbn ) && newDbn >= 0 
+                    )) throw new BasePlutsError(
+                        "invalid index for an `IRVar` instance"
+                    );
+
+                    this.markHashAsInvalid()
+                    _dbn = newDbn;
+                }
+            }
         );
+        this.dbn = dbn; // call set
         
         let _parent: IRTerm | undefined = undefined;
         Object.defineProperty(
