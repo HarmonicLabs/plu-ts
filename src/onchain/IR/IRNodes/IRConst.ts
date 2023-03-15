@@ -44,7 +44,7 @@ export class IRConst
 
     parent: IRTerm | undefined;
 
-    constructor( t: TermType, v: IRConstValue, irParent?: IRTerm )
+    constructor( t: TermType, v: IRConstValue )
     {
         if(
             !isWellFormedType( t ) ||
@@ -91,7 +91,6 @@ export class IRConst
                 configurable: false
             }
         );
-        this.parent = irParent;
 
         let hash: Uint8Array | undefined = undefined;
         Object.defineProperty(

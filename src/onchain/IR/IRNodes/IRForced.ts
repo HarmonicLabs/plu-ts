@@ -17,7 +17,7 @@ export class IRForced
 
     parent: IRTerm | undefined;
 
-    constructor( forced: IRTerm, irParent?: IRTerm )
+    constructor( forced: IRTerm )
     {
         let hash: Uint8Array | undefined = undefined
         Object.defineProperty(
@@ -89,7 +89,6 @@ export class IRForced
                 configurable: false
             }
         );
-        this.parent = irParent;
     }
 
     static get tag(): Uint8Array

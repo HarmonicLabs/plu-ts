@@ -19,7 +19,7 @@ export class IRError
 
     parent: IRTerm | undefined;
 
-    constructor( irParent?: IRTerm )
+    constructor()
     {
         let _parent: IRTerm | undefined = undefined;
         Object.defineProperty(
@@ -38,7 +38,6 @@ export class IRError
                 configurable: false
             }
         );
-        this.parent = irParent;
 
         Object.defineProperty(
             this, "hash", {

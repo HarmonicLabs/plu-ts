@@ -19,7 +19,7 @@ export class IRApp
 
     parent: IRTerm | undefined;
 
-    constructor( _fn_: IRTerm, _arg_: IRTerm, irParent?: IRTerm )
+    constructor( _fn_: IRTerm, _arg_: IRTerm )
     {
         let fn: IRTerm;
         let arg: IRTerm;
@@ -73,7 +73,6 @@ export class IRApp
                 configurable: false
             }
         );
-        this.parent = irParent;
 
         Object.defineProperty(
             this, "fn", {

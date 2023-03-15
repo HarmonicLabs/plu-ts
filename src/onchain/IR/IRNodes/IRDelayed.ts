@@ -17,7 +17,7 @@ export class IRDelayed
 
     parent: IRTerm | undefined;
 
-    constructor( delayed: IRTerm, irParent?: IRTerm )
+    constructor( delayed: IRTerm )
     {
         let hash: Uint8Array | undefined = undefined
         Object.defineProperty(
@@ -90,7 +90,6 @@ export class IRDelayed
                 configurable: false
             }
         );
-        this.parent = irParent;
 
     }
 

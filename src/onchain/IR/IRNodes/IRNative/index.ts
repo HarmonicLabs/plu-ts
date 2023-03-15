@@ -30,7 +30,7 @@ export class IRNative
 
     parent: IRTerm | undefined;
 
-    constructor( tag: IRNativeTag, irParent?: IRTerm )
+    constructor( tag: IRNativeTag )
     {
         Object.defineProperty(
             this, "tag", {
@@ -58,7 +58,6 @@ export class IRNative
                 configurable: false
             }
         );
-        this.parent = irParent;
 
         Object.defineProperty(
             this, "hash",

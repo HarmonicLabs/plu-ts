@@ -10,7 +10,7 @@ describe("IRFunc.body", () => {
         const body = new IRVar(0);
 
         const func = new IRFunc(
-            lam( tyVar(), tyVar() ),
+            1,
             body
         );
 

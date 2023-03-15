@@ -42,7 +42,7 @@ export class IRLetted
 
     clone!: () => IRLetted
 
-    constructor( value: IRTerm, dependencies?: LettedSetEntry[], irParent?: IRTerm )
+    constructor( value: IRTerm, dependencies?: LettedSetEntry[] )
     {
         if( !isIRTerm( value ) )
         throw new BasePlutsError(
@@ -141,7 +141,6 @@ export class IRLetted
                 configurable: false
             }
         );
-        this.parent = irParent;
 
         ObjectUtils.defineReadOnlyProperty(
             this, "clone",

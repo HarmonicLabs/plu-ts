@@ -29,7 +29,7 @@ export class IRVar
 
     parent: IRTerm | undefined;
 
-    constructor( dbn: number, irParent?: IRTerm )
+    constructor( dbn: number )
     {
         let hash: Uint8Array | undefined = undefined;
         Object.defineProperty(
@@ -81,7 +81,6 @@ export class IRVar
                 configurable: false
             }
         );
-        this.parent = irParent;
     }
 
     static get tag(): Uint8Array { return new Uint8Array([ 0b0000_0000 ]); }

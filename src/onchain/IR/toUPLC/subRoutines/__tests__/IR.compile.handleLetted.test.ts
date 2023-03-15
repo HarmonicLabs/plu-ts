@@ -265,7 +265,7 @@ describe("handleLetted", () => {
                 new IRApp(
                     lettedWithDep,
                     new IRApp(
-                        dep.clone(),
+                        dep.clone(), // clone is essential (we override `parent` otherwhise)
                         new IRConst( int, 2 )
                     )
                 )

@@ -35,7 +35,7 @@ export class IRHoisted
 
     clone!: () => IRHoisted;
 
-    constructor( hoisted: IRTerm, dependencies?: HoistedSetEntry[], irParent?: IRTerm )
+    constructor( hoisted: IRTerm, dependencies?: HoistedSetEntry[] )
     {
         // unwrap
         while( hoisted instanceof IRHoisted ) hoisted = hoisted.hoisted;
@@ -130,7 +130,6 @@ export class IRHoisted
                 configurable: false
             }
         );
-        this.parent = irParent;
         
         ObjectUtils.defineProperty(
             this, "clone",

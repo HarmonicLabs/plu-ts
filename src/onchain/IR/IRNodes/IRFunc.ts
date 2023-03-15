@@ -29,8 +29,7 @@ export class IRFunc
 
     constructor(
         arity: number,
-        body: IRTerm,
-        irParent?: IRTerm
+        body: IRTerm
     )
     {
         if( !Number.isSafeInteger( arity ) && arity >= 1 )
@@ -114,7 +113,6 @@ export class IRFunc
                 configurable: false
             }
         );
-        this.parent = irParent;
 
         ObjectUtils.defineReadOnlyProperty(
             this, "clone",
