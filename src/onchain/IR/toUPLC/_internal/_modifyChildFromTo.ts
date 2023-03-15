@@ -34,14 +34,47 @@ export function _modifyChildFromTo( parent: IRTerm | undefined, currentChild: IR
 
         // DO NO USE SHALLOW EQUALITY
         // child might be cloned
-        if( uint8ArrayEq( parent.fn.hash, currentChild.hash ) )
-        {
-            parent.fn = newChild;
+
+        if( // if the function is likely to already have an hash
+            parent.fn instanceof IRLetted ||
+            parent.fn instanceof IRHoisted
+        )
+        {   // then check the function first
+
+            if( uint8ArrayEq( parent.fn.hash, currentChild.hash ) )
+            {
+                parent.fn = newChild;
+            }
+            else if( uint8ArrayEq( parent.arg.hash, currentChild.hash ) )
+            {
+                parent.arg = newChild;
+            }
+            else throw new PlutsIRError(
+                "unknown 'IRApp' child to modify; given child to modify hash: " +
+                toHex( currentChild.hash ) +
+                "; function child hash: " + toHex( parent.fn.hash ) +
+                "; argument child hash: " + toHex( parent.arg.hash )
+            );
         }
-        else
+        else // check the argument first as it is more likely to have a smaller tree
         {
-            parent.arg = newChild;
+            if( uint8ArrayEq( parent.arg.hash, currentChild.hash ) )
+            {
+                parent.arg = newChild;
+            }
+            else if( uint8ArrayEq( parent.fn.hash, currentChild.hash ) )
+            {
+                parent.fn = newChild;
+            }
+            else throw new PlutsIRError(
+                "unknown 'IRApp' child to modify; given child to modify hash: " +
+                toHex( currentChild.hash ) +
+                "; function child hash: " + toHex( parent.fn.hash ) +
+                "; argument child hash: " + toHex( parent.arg.hash )
+            );
         }
+
+        
         return;
     }
 
