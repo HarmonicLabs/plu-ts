@@ -105,7 +105,7 @@ export const enum IRNativeTag {
     _gtInt              = -23,
     _gtEqInt            = -24,
     _strToData          = -25,
-    _pairToData         = -26,
+    _pairDataToData         = -26,
     _strFromData        = -27,
     _pairFromData       = -28,
     _lazyChooseList     = -29,
@@ -142,7 +142,7 @@ export function nativeTagToString( nativeTag: IRNativeTag ): string
         case IRNativeTag._gtInt         : return "gtInt";
         case IRNativeTag._gtEqInt       : return "gtEqInt";
         case IRNativeTag._strToData     : return "strToData";
-        case IRNativeTag._pairToData    : return "pairToData";
+        case IRNativeTag._pairDataToData    : return "pairToData";
         case IRNativeTag._strFromData   : return "strFromData";
         case IRNativeTag._pairFromData  : return "pairFromData";
         case IRNativeTag._lazyChooseList: return "lazyChooseList";

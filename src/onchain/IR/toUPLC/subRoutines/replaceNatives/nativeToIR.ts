@@ -414,8 +414,8 @@ export function nativeToIR( native: IRNative ): IRTerm
                 new IRFunc( 2, // a, b
                     _ir_apps(
                         IRNative.strictIfThenElse,
-                        new IRVar( 0 ), // a
-                        new IRVar( 1 ), // a == true  -> whatever b is
+                        new IRVar( 1 ), // a
+                        new IRVar( 0 ), // a == true  -> whatever b is
                         new IRConst( bool, false )  // a == false -> false
                     )
                 )
@@ -426,8 +426,8 @@ export function nativeToIR( native: IRNative ): IRTerm
                 new IRFunc( 2, // a, b
                     _ir_apps(
                         IRNative._lazyIfThenElse,
-                        new IRVar( 0 ), // a
-                        new IRVar( 1 ), // a == true  -> whatever b is
+                        new IRVar( 1 ), // a
+                        new IRVar( 0 ), // a == true  -> whatever b is
                         new IRConst( bool, false )  // a == false -> false
                     )
                 )
@@ -438,9 +438,9 @@ export function nativeToIR( native: IRNative ): IRTerm
                 new IRFunc( 2, // a, b
                     _ir_apps(
                         IRNative.strictIfThenElse,
-                        new IRVar( 0 ), // a
+                        new IRVar( 1 ), // a
                         new IRConst( bool, true ), // a == true  -> true
-                        new IRVar( 1 )  // a == false -> whatever b is
+                        new IRVar( 0 )  // a == false -> whatever b is
                     )
                 )
             );
@@ -450,30 +450,92 @@ export function nativeToIR( native: IRNative ): IRTerm
                 new IRFunc( 2, // a, b
                     _ir_apps(
                         IRNative._lazyIfThenElse,
-                        new IRVar( 0 ), // a
+                        new IRVar( 1 ), // a
                         new IRConst( bool, true ), // a == true  -> true
-                        new IRVar( 1 )  // a == false -> whatever b is
+                        new IRVar( 0 )  // a == false -> whatever b is
                     )
                 )
             );
         break;
         case IRNativeTag._gtBS          :
-            return new IRHoisted();
+            return new IRHoisted(
+                new IRFunc( 2, // a, b
+                    _ir_apps(
+                        IRNative.lessThanByteString,
+                        new IRVar( 0 ), // b
+                        new IRVar( 1 ), // a
+                    )
+                )
+            );
         break;
         case IRNativeTag._gtEqBS        :
-            return new IRHoisted();
+            return new IRHoisted(
+                new IRFunc( 2, // a, b
+                    _ir_apps(
+                        IRNative.lessThanEqualsByteString,
+                        new IRVar( 0 ), // b
+                        new IRVar( 1 ), // a
+                    )
+                )
+            );
         break;
         case IRNativeTag._gtInt         :
-            return new IRHoisted();
+            return new IRHoisted(
+                new IRFunc( 2, // a, b
+                    _ir_apps(
+                        IRNative.lessThanInteger,
+                        new IRVar( 0 ), // b
+                        new IRVar( 1 ), // a
+                    )
+                )
+            );
         break;
         case IRNativeTag._gtEqInt       :
-            return new IRHoisted();
+            return new IRHoisted(
+                new IRFunc( 2, // a, b
+                    _ir_apps(
+                        IRNative.lessThanEqualInteger,
+                        new IRVar( 0 ), // b
+                        new IRVar( 1 ), // a
+                    )
+                )
+            );
         break;
         case IRNativeTag._strToData     :
-            return new IRHoisted();
+            return new IRHoisted(
+                new IRFunc( 1, // str
+                    new IRApp(
+                        IRNative.bData,
+                        new IRApp(
+                            IRNative.encodeUtf8,
+                            new IRVar( 0 ) // str
+                        )
+                    )
+                )
+            );
         break;
-        case IRNativeTag._pairToData    :
-            return new IRHoisted();
+        case IRNativeTag._pairDataToData    :
+            return new IRHoisted(
+                new IRFunc( 1, // pair
+                    new IRApp(
+                        IRNative.listData,
+                        _ir_apps(
+                            IRNative.mkCons,
+                            new IRApp(
+                                IRNative.fstPair,
+                                new IRVar( 0 )
+                            ),
+                            _ir_apps(
+                                IRNative.mkCons,
+                                new IRApp(
+                                    IRNative.sndPair,
+                                    new IRVar( 0 )
+                                )
+                            )
+                        )
+                    )
+                )
+            );
         break;
         case IRNativeTag._strFromData   :
             return new IRHoisted();

@@ -197,7 +197,7 @@ export class IRNative
     static get _gtInt() { return new IRNative( IRNativeTag._gtInt ) }
     static get _gtEqInt() { return new IRNative( IRNativeTag._gtEqInt ) }
     static get _strToData() { return new IRNative( IRNativeTag._strToData ) }
-    static get _pairToData() { return new IRNative( IRNativeTag._pairToData ) }
+    static get _pairDataToData() { return new IRNative( IRNativeTag._pairDataToData ) }
     static get _strFromData() { return new IRNative( IRNativeTag._strFromData ) }
     static get _pairFromData() { return new IRNative( IRNativeTag._pairFromData ) }
     static get _lazyChooseList() { return new IRNative( IRNativeTag._lazyChooseList ) }

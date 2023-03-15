@@ -12,7 +12,7 @@ import { termTypeToString, typeExtends } from "../../pluts";
 import { cloneTermType } from "../../pluts/type_system/cloneTermType";
 import { isWellFormedType } from "../../pluts/type_system/kinds/isWellFormedType";
 import { termTyToConstTy } from "../../pluts/type_system/termTyToConstTy";
-import { GenericTermType, PrimType, TermType, bool, bs, data, delayed, int, lam, list, pair, str, tyVar } from "../../pluts/type_system/types";
+import { GenericTermType, PrimType, TermType, bool, bs, data, delayed, int, lam, list, pair, str, tyVar, unit } from "../../pluts/type_system/types";
 import { IHash } from "../interfaces/IHash";
 import { concatUint8Arr } from "../utils/concatUint8Arr";
 import { positiveBigIntAsBytes } from "../utils/positiveIntAsBytes";
@@ -30,7 +30,8 @@ export type IRConstValue
     | boolean
     | IRConstValue[]
     | Pair<IRConstValue, IRConstValue>
-    | Data;
+    | Data
+    | undefined;
 
 
 export class IRConst
@@ -145,6 +146,7 @@ export class IRConst
 
 function inferConstValueT( value: IRConstValue ): GenericTermType
 {
+    if( typeof value === "undefined" || value === null ) return unit;
     if( canBeUInteger( value ) ) return int;
 
     if(
@@ -205,6 +207,7 @@ function isIRConstValueAssignableToType( value: IRConstValue, t: GenericTermType
 export function isIRConstValue( value: any ): boolean
 {
     return (
+        typeof value === "undefined" ||
         canBeUInteger( value ) ||
         value instanceof Uint8Array ||
         value instanceof ByteString ||
@@ -234,6 +237,7 @@ function constValueToJson( value: any ): any
 
 function serializeIRConstValue( value: any, t: TermType ): Uint8Array
 {
+    if( value === undefined || t[0] === PrimType.Unit ) return new Uint8Array(0);
     if( t[0] === PrimType.Int )
     {
         return positiveBigIntAsBytes( forceBigUInt( value ) )
