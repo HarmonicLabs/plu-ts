@@ -49,7 +49,9 @@ export function compileIRToUPLC( term: IRTerm ): UPLCTerm
     // ------------------------------------------------------------------------- //
     ///////////////////////////////////////////////////////////////////////////////
 
-    replaceNatives( term );
+    const maybeRoot = replaceNatives( term );
+
+    if( maybeRoot !== undefined ) term =  maybeRoot;
 
     term = handleHoistedAndReturnRoot( term );
 
@@ -61,4 +63,5 @@ export function compileIRToUPLC( term: IRTerm ): UPLCTerm
     // ------------------------------------------------------------------------- //
     ///////////////////////////////////////////////////////////////////////////////
 
+    return term.toUPLC();
 }

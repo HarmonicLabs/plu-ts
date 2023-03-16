@@ -2,6 +2,9 @@ import { blake2b_224 } from "../../../crypto";
 import { BasePlutsError } from "../../../errors/BasePlutsError";
 import { Cloneable } from "../../../types/interfaces/Cloneable";
 import { ToJson } from "../../../utils/ts/ToJson";
+import { UPLCTerm } from "../../UPLC/UPLCTerm";
+import { Force } from "../../UPLC/UPLCTerms/Force";
+import { ToUPLC } from "../../UPLC/interfaces/ToUPLC";
 import { IRTerm } from "../IRTerm";
 import { IHash } from "../interfaces/IHash";
 import { IIRParent } from "../interfaces/IIRParent";
@@ -9,7 +12,7 @@ import { concatUint8Arr } from "../utils/concatUint8Arr";
 import { isIRTerm } from "../utils/isIRTerm";
 
 export class IRForced
-    implements Cloneable<IRForced>, IHash, IIRParent, ToJson
+    implements Cloneable<IRForced>, IHash, IIRParent, ToJson, ToUPLC
 {
     forced!: IRTerm
     readonly hash!: Uint8Array
@@ -107,5 +110,12 @@ export class IRForced
             type: "IRForced",
             forced: this.forced.toJson()
         }
+    }
+
+    toUPLC(): UPLCTerm
+    {
+        return new Force(
+            this.forced.toUPLC()
+        )
     }
 }

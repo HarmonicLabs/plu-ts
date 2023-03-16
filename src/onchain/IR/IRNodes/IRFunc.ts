@@ -3,8 +3,8 @@ import { BasePlutsError } from "../../../errors/BasePlutsError";
 import { Cloneable } from "../../../types/interfaces/Cloneable";
 import ObjectUtils from "../../../utils/ObjectUtils";
 import { ToJson } from "../../../utils/ts/ToJson";
-import { GenericTermType, PrimType, TermType, getNRequiredLambdaArgs, isWellFormedGenericType } from "../../pluts";
-import { cloneTermType } from "../../pluts/type_system/cloneTermType";
+import { Lambda } from "../../UPLC/UPLCTerms/Lambda";
+import { ToUPLC } from "../../UPLC/interfaces/ToUPLC";
 import { IRTerm } from "../IRTerm";
 import { IHash } from "../interfaces/IHash";
 import { IIRParent } from "../interfaces/IIRParent";
@@ -14,7 +14,7 @@ import { positiveIntAsBytes } from "../utils/positiveIntAsBytes";
 
 
 export class IRFunc
-    implements Cloneable<IRFunc>, IHash, IIRParent, ToJson
+    implements Cloneable<IRFunc>, IHash, IIRParent, ToJson, ToUPLC
 {
     readonly arity!: number;
 
@@ -114,7 +114,7 @@ export class IRFunc
             }
         );
 
-        ObjectUtils.defineReadOnlyProperty(
+        Object.defineProperty(
             this, "clone",
             {
                 value: () => {
@@ -122,7 +122,10 @@ export class IRFunc
                         this.arity,
                         body.clone()
                     )
-                }
+                },
+                writable: false,
+                enumerable: true,
+                configurable: false
             }
         );
     }
@@ -136,5 +139,19 @@ export class IRFunc
             arity: this.arity,
             body: this.body.toJson()
         }
+    }
+
+    toUPLC(): Lambda
+    {
+        let lam: Lambda = new Lambda(
+            this.body.toUPLC()
+        );
+
+        for( let i = 1; i < this.arity; i++ )
+        {
+            lam = new Lambda( lam );
+        }
+
+        return lam;
     }
 }

@@ -13,6 +13,9 @@ import { IRLetted } from "./IRLetted";
 import { IIRParent } from "../interfaces/IIRParent";
 import { isIRTerm } from "../utils/isIRTerm";
 import { ToJson } from "../../../utils/ts/ToJson";
+import { IllegalIRToUPLC } from "../../../errors/PlutsIRError/IRCompilationError/IllegalIRToUPLC";
+import { ToUPLC } from "../../UPLC/interfaces/ToUPLC";
+import { UPLCTerm } from "../../UPLC/UPLCTerm";
 
 
 type HoistedSetEntry = {
@@ -21,7 +24,7 @@ type HoistedSetEntry = {
 }
 
 export class IRHoisted
-    implements Cloneable<IRHoisted>, IHash, IIRParent, ToJson
+    implements Cloneable<IRHoisted>, IHash, IIRParent, ToJson, ToUPLC
 {
     readonly hash!: Uint8Array;
     markHashAsInvalid!: () => void;
@@ -153,6 +156,13 @@ export class IRHoisted
             hash: toHex( this.hash ),
             hoisted: this.hoisted.toJson()
         }
+    }
+
+    toUPLC(): UPLCTerm
+    {
+        throw new IllegalIRToUPLC(
+            "Can't convert 'IRHoisted' to valid UPLC"
+        );
     }
 }
 

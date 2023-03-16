@@ -50,21 +50,6 @@ export interface ScriptBefore {
     slot: CanBeUInteger
 }
 
-const hello: NativeScript = {
-    type: "all",
-    scripts:
-    [
-      {
-        type: "after",
-        slot: 22
-      },
-      {
-        type: "sig",
-        keyHash: "966e394a544f242081e41d1965137b1bb412ac230d40ed5407821c37"
-      }
-    ]
-};
-
 export function nativeScriptToCborObj( nativeScript: NativeScript ): CborArray
 {
     const type = nativeScript.type;
@@ -80,7 +65,7 @@ export function nativeScriptToCborObj( nativeScript: NativeScript ): CborArray
                     keyHash instanceof Hash28 ?
                         keyHash :
                         new Hash28( keyHash )
-                ).asBytes
+                ).toBuffer()
             )
         ]);
     }

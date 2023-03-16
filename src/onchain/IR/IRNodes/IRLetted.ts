@@ -13,6 +13,10 @@ import { BasePlutsError } from "../../../errors/BasePlutsError";
 import { IRForced } from "./IRForced";
 import { IRDelayed } from "./IRDelayed";
 import { ToJson } from "../../../utils/ts/ToJson";
+import { IllegalIRToUPLC } from "../../../errors/PlutsIRError/IRCompilationError/IllegalIRToUPLC";
+import { ToUPLC } from "../../UPLC/interfaces/ToUPLC";
+import { UPLCVar } from "../../UPLC/UPLCTerms/UPLCVar";
+import { UPLCTerm } from "../../UPLC/UPLCTerm";
 
 
 type LettedSetEntry = {
@@ -29,7 +33,7 @@ export function jsonLettedSetEntry( entry: LettedSetEntry )
 }
 
 export class IRLetted
-    implements Cloneable<IRLetted>, IHash, IIRParent, ToJson
+    implements Cloneable<IRLetted>, IHash, IIRParent, ToJson, ToUPLC
 {
     readonly hash!: Uint8Array;
     markHashAsInvalid!: () => void;
@@ -162,6 +166,13 @@ export class IRLetted
             hash: toHex( this.hash ),
             value: this.value.toJson()
         }
+    }
+    
+    toUPLC(): UPLCTerm
+    {
+        throw new IllegalIRToUPLC(
+            "Can't convert 'IRHoisted' to valid UPLC"
+        );
     }
 }
 

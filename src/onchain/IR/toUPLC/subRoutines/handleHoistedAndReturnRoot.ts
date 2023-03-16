@@ -63,8 +63,13 @@ export function handleHoistedAndReturnRoot( term: IRTerm ): IRTerm
                 1,
                 root
             ),
-            hoisteds[i].hoisted
+            hoisteds[i].hoisted.clone()
         )
+    }
+
+    if( root instanceof IRHoisted )
+    {
+        root = handleHoistedAndReturnRoot( root.hoisted.clone() );
     }
 
     function getIRVarForHoistedAtLevel( _hoisted: IRHoisted, level: number ): IRVar
@@ -116,7 +121,7 @@ export function handleHoistedAndReturnRoot( term: IRTerm ): IRTerm
         if( irTerm instanceof IRFunc )
         {
             stack.push(
-                { irTerm: irTerm.body, dbn }
+                { irTerm: irTerm.body, dbn: dbn + irTerm.arity }
             );
             continue;
         }

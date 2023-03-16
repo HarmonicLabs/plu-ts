@@ -345,7 +345,7 @@ describe("handleLetted", () => {
                                         IRNative.addInteger,
                                         new IRVar( 4 ) // a incremented
                                     ),
-                                    new IRVar( 1 ) // c
+                                    new IRVar( 1 ) // c stays the same
                                 )
                             ),
                             new IRVar( 0 )

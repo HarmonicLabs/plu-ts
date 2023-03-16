@@ -3,6 +3,7 @@ import { UnexpectedMarkHashInvalidCall } from "../../../errors/PlutsIRError/Unex
 import { BitStream } from "../../../types/bits/BitStream";
 import { Cloneable } from "../../../types/interfaces/Cloneable";
 import { ToJson } from "../../../utils/ts/ToJson";
+import { ErrorUPLC } from "../../UPLC/UPLCTerms/ErrorUPLC";
 import { IRTerm } from "../IRTerm";
 import { IHash } from "../interfaces/IHash";
 import { IIRParent } from "../interfaces/IIRParent";
@@ -70,6 +71,11 @@ export class IRError
         return {
             type: "IRError"
         }
+    }
+
+    toUPLC()
+    {
+        return new ErrorUPLC();
     }
 };
 

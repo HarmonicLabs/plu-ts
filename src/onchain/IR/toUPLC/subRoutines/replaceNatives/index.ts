@@ -4,8 +4,12 @@ import { _modifyChildFromTo } from "../../_internal/_modifyChildFromTo";
 import { iterTree } from "../../_internal/iterTree";
 import { nativeToIR } from "./nativeToIR";
 
-export function replaceNatives( tree: IRTerm ): void
+export function replaceNatives( tree: IRTerm ): IRTerm | undefined
 {
+    if( tree instanceof IRNative )
+    {
+        return nativeToIR( tree );
+    }
     iterTree( tree, elem => {
         if( elem instanceof IRNative )
         {

@@ -4,6 +4,7 @@ import { UnexpectedMarkHashInvalidCall } from "../../../errors/PlutsIRError/Unex
 import { Cloneable } from "../../../types/interfaces/Cloneable";
 import ObjectUtils from "../../../utils/ObjectUtils";
 import { ToJson } from "../../../utils/ts/ToJson";
+import { UPLCVar } from "../../UPLC/UPLCTerms/UPLCVar";
 import { IRTerm } from "../IRTerm";
 import { IHash } from "../interfaces/IHash";
 import { IIRParent } from "../interfaces/IIRParent";
@@ -110,6 +111,11 @@ export class IRVar
             type: "IRVar",
             dbn: this.dbn
         }
+    }
+
+    toUPLC()
+    {
+        return new UPLCVar( this.dbn );
     }
 }
 

@@ -22,6 +22,8 @@ import { IRTerm } from "../IRTerm";
 import { isIRTerm } from "../utils/isIRTerm";
 import { UnexpectedMarkHashInvalidCall } from "../../../errors/PlutsIRError/UnexpectedMarkHashInvalidCall";
 import { ToJson } from "../../../utils/ts/ToJson";
+import { ToUPLC } from "../../UPLC/interfaces/ToUPLC";
+import { UPLCConst } from "../../UPLC/UPLCTerms/UPLCConst";
 
 export type IRConstValue
     = CanBeUInteger
@@ -35,7 +37,7 @@ export type IRConstValue
 
 
 export class IRConst
-    implements Cloneable<IRConst>, IHash, IIRParent, ToJson
+    implements Cloneable<IRConst>, IHash, IIRParent, ToJson, ToUPLC
 {
     readonly hash: Uint8Array;
     markHashAsInvalid: () => void;
@@ -140,6 +142,14 @@ export class IRConst
             constType: termTypeToString( this.type ),
             value: constValueToJson( this.value )
         }
+    }
+
+    toUPLC()
+    {
+        return new UPLCConst(
+            termTyToConstTy( this.type ),
+            this.value as any
+        );
     }
 }
 
