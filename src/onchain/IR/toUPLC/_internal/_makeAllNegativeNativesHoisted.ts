@@ -14,6 +14,7 @@ export function _makeAllNegativeNativesHoisted( term: IRTerm ): void
                 elem,
                 new IRHoisted( elem )
             );
+            return true;
         }
     })
 }

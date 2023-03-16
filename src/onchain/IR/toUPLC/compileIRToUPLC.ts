@@ -5,7 +5,9 @@ import { _addDepth } from "./_internal/_addDepth";
 import { _makeAllNegativeNativesHoisted } from "./_internal/_makeAllNegativeNativesHoisted";
 import { handleLetted } from "./subRoutines/handleLetted";
 import { handleHoistedAndReturnRoot } from "./subRoutines/handleHoistedAndReturnRoot";
-import { replaceNatives } from "./subRoutines/replaceNatives";
+import { replaceNativesAndReturnRoot } from "./subRoutines/replaceNatives";
+import { logJson } from "../../../utils/ts/ToJson";
+import { IRLetted } from "../IRNodes/IRLetted";
 
 export function compileIRToUPLC( term: IRTerm ): UPLCTerm
 {   
@@ -49,12 +51,16 @@ export function compileIRToUPLC( term: IRTerm ): UPLCTerm
     // ------------------------------------------------------------------------- //
     ///////////////////////////////////////////////////////////////////////////////
 
-    const maybeRoot = replaceNatives( term );
-
-    if( maybeRoot !== undefined ) term =  maybeRoot;
+    term = replaceNativesAndReturnRoot( term );
 
     term = handleHoistedAndReturnRoot( term );
 
+    // unwrap letted
+    while( term instanceof IRLetted )
+    {
+        term = term.value;
+        term.parent = undefined;
+    }
     handleLetted( term )
 
     ///////////////////////////////////////////////////////////////////////////////
@@ -63,5 +69,6 @@ export function compileIRToUPLC( term: IRTerm ): UPLCTerm
     // ------------------------------------------------------------------------- //
     ///////////////////////////////////////////////////////////////////////////////
 
+    logJson( term )
     return term.toUPLC();
 }

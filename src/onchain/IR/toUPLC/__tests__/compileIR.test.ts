@@ -78,6 +78,29 @@ describe("compileIRToUPLC", () => {
             ZUPLC
         )
 
+    });
+
+    test("_matchList", () => {
+
+        const uplc = compileIRToUPLC( IRNative._matchList );
+
+        const expectedUplcStr =
+            "[(lam a a) (lam a (lam b (lam c (force [[[(force (force (builtin chooseList))) c] a] (delay [[b [(force (builtin headList)) c]] [(force (builtin tailList)) c]])]))))]";
+
+        expect(
+            showUPLC( uplc )
+        ).toEqual(
+            expectedUplcStr
+        )
+
+    });
+
+    test.only("_recursiveList (requireing other negative natives)", () => {
+
+        const uplc = compileIRToUPLC( IRNative._recursiveList );
+        
+        console.log( showUPLC( uplc ) );
+        
     })
 
 });

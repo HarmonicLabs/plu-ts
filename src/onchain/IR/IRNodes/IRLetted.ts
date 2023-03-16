@@ -40,6 +40,16 @@ export class IRLetted
 
     value!: IRTerm
 
+    /**
+     * we need to keep track of the debruijn at which the `IRLetted` is instantiated
+     * 
+     * this is because stuff like `new IRLetted( new IRVar(0) )` has different meaning 
+     * at different DeBruijn levels
+     * 
+     * knowing the DeBruijn we can differentiate them
+     */
+    dbn: number todo
+
     readonly dependencies!: LettedSetEntry[]
 
     parent: IRTerm | undefined;
