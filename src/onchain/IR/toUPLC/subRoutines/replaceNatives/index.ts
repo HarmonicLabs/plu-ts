@@ -100,7 +100,7 @@ export function replaceNestedNativesAndReturnRoot( tree: IRTerm ): IRTerm
         let prev = replacement;
         while( includesNegativeNatives( replacement ) )
         {
-            prev = replacement
+            prev = re
         };
 
         return prev
