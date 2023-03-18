@@ -1,3 +1,4 @@
+import { toHex } from "@harmoniclabs/uint8array-utils";
 import { logJson } from "../../../../utils/ts/ToJson";
 import { IRApp } from "../../IRNodes/IRApp";
 import { IRDelayed } from "../../IRNodes/IRDelayed";
@@ -57,6 +58,7 @@ describe("compileIRToUPLC", () => {
 
         test("same scope; different DeBruijn", () => {
 
+            // we use `IRDelayed` because plain `IRVars`a re inlined
             const tree = new IRFunc(
                 1,
                 new IRApp(
@@ -64,14 +66,24 @@ describe("compileIRToUPLC", () => {
                         2,
                         new IRLetted(
                             3,
-                            new IRVar(2)
+                            new IRDelayed(
+                                new IRVar(2)
+                            )
                         )
                     ),
                     new IRLetted(
                         1,
-                        new IRVar(0)
+                        new IRDelayed(
+                            new IRVar(0)
+                        )
                     )
                 )
+            );
+
+            expect(
+                (tree as any).body.fn.body.hash
+            ).toEqual(
+                (tree as any).body.arg.hash
             );
 
             handleLetted( tree )
@@ -80,9 +92,9 @@ describe("compileIRToUPLC", () => {
             .toEqual(
                 new IRFunc(
                     1,
-                    // new IRApp(
-                    //     new IRFunc(
-                    //         1,
+                    new IRApp(
+                        new IRFunc(
+                            1,
                             new IRApp(
                                 new IRFunc(
                                     2,
@@ -90,11 +102,15 @@ describe("compileIRToUPLC", () => {
                                 ),
                                 new IRVar( 0 )
                             )
-                    //     ),
-                    //     new IRVar( 0 )
-                    // )
+                        ),
+                        new IRDelayed(
+                            new IRVar( 0 )
+                        )
+                    )
                 ).toJson()
-            )
+            );
+
+            
         });
 
     });

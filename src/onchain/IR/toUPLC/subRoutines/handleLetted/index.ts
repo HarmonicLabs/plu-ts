@@ -77,12 +77,32 @@ export function handleLetted( term: IRTerm ): void
         {
             letted = letteds[i];
 
-            const refs: IRTerm[] = findAll(
+            // we know is an `IRLetted` array
+            // an not a generic `IRTerm` array
+            // because that's what the 
+            // filter funciton checks for
+            const refs: IRLetted[] = findAll(
                 theMaxScope,
                 elem => 
                     elem instanceof IRLetted &&
                     uint8ArrayEq( elem.hash, letted.hash )
-            );
+            ) as any;
+
+            // if letting a plain varible
+            // just inline the variable as it is more efficient
+            if( letted.value instanceof IRVar )
+            {
+                // inline directly the refereces
+                for( const ref of refs )
+                {
+                    _modifyChildFromTo(
+                        ref?.parent,
+                        ref as any,
+                        ref.value
+                    )
+                }
+                continue;
+            }
 
             // group by scope
 
@@ -112,6 +132,13 @@ export function handleLetted( term: IRTerm ): void
                     // (the town is the scope. Did you get it?)
                     // (please help...)
                 }
+                if( node instanceof IRLetted )
+                {
+                    // `IRLambdas` DeBruijn are tracking the level of instantiation
+                    // since a new var has been introduced above
+                    // we must increment regardless
+                    node.dbn++
+                }
             })
             //*/
 
@@ -131,7 +158,7 @@ export function handleLetted( term: IRTerm ): void
             if( diffDbn > 0 )
             {
                 iterTree( clonedLettedVal, (elem) => {
-                    if( elem instanceof IRVar )
+                    if( elem instanceof IRVar || elem instanceof IRLetted )
                     {
                         elem.dbn -= diffDbn
                     }

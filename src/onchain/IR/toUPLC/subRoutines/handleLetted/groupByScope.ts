@@ -44,9 +44,8 @@ export function groupByScope( letteds: LettedSetEntry[] ): ScopedLettedTerms[]
             minUnboundDbn -= maxScope.arity
         }
 
-        while( minUnboundDbn > 0 )
+        while( minUnboundDbn >= 0 )
         {
-            console.log( minUnboundDbn );
             maxScope = maxScope?.parent;
             if( maxScope instanceof IRFunc )
             {

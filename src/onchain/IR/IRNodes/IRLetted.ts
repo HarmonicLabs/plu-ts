@@ -355,7 +355,7 @@ function getNormalizedLettedArgs( dbn: number, value: IRTerm ): [ normalized_dbn
     if( minDbn === undefined ) return undefined;
     
     iterTree( normalized_value, (node) => {
-        if( node instanceof IRVar )
+        if( node instanceof IRVar || node instanceof IRLetted )
         {
             node.dbn -= minDbn
         }
