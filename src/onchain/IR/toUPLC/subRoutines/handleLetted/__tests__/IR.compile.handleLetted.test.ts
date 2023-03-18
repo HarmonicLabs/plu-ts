@@ -10,10 +10,10 @@ import { IRNative } from "../../../../IRNodes/IRNative";
 import { IRNativeTag } from "../../../../IRNodes/IRNative/IRNativeTag";
 import { IRVar } from "../../../../IRNodes/IRVar";
 import { _addDepth } from "../../../_internal/_addDepth";
-import { handleLettedAndReturnRoot } from "..";
+import { handleLetted } from "..";
 import { IRTerm } from "../../../../IRTerm";
 
-describe("handleLettedAndReturnRoot", () => {
+describe("handleLetted", () => {
 
     test("single ref inlined", () => {
 
@@ -36,7 +36,7 @@ describe("handleLettedAndReturnRoot", () => {
 
         const fstHash = root.hash.slice();
 
-        handleLettedAndReturnRoot( root );
+        handleLetted( root );
 
         const expected = new IRForced(
             new IRDelayed(
@@ -85,7 +85,7 @@ describe("handleLettedAndReturnRoot", () => {
 
         const fstHash = root.hash.slice();
 
-        handleLettedAndReturnRoot( root );
+        handleLetted( root );
 
         const expected = new IRForced(
             new IRDelayed(
@@ -144,7 +144,7 @@ describe("handleLettedAndReturnRoot", () => {
 
         const fstHash = root.hash.slice();
 
-        handleLettedAndReturnRoot( root );
+        handleLetted( root );
 
         const expected = new IRForced(
             new IRDelayed(
@@ -219,7 +219,7 @@ describe("handleLettedAndReturnRoot", () => {
         const lettedInRoot = getLettedTerms( root );
         expect( lettedInRoot.length ).toEqual( 1 );
 
-        handleLettedAndReturnRoot( root );
+        handleLetted( root );
 
         // logJson( root, 4 )
 
@@ -287,7 +287,7 @@ describe("handleLettedAndReturnRoot", () => {
         const lettedInRoot = getLettedTerms( root );
         expect( lettedInRoot.length ).toEqual( 2 );
 
-        handleLettedAndReturnRoot( root );
+        handleLetted( root );
 
         // all inlined
         const expected = new IRForced(
@@ -343,7 +343,7 @@ describe("handleLettedAndReturnRoot", () => {
             )
         );
 
-        handleLettedAndReturnRoot( root );
+        handleLetted( root );
 
         // all inlined
         const expected = new IRFunc( 2, // a, b

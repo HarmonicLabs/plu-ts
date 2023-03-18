@@ -30,7 +30,7 @@ describe("IRLetted.hash", () => {
 
     });
 
-    test("different vars; proportilonally different lettted dbn => same hash", () => {
+    test("different vars; proportilonally different letted dbn => same hash", () => {
 
         const a = new IRLetted( 4, new IRVar( 1 ) );
         const b = new IRLetted( 6, new IRVar( 3 ) );
@@ -40,7 +40,7 @@ describe("IRLetted.hash", () => {
 
     });
 
-    test("different vars; un-proportilonally different lettted dbn => different hash", () => {
+    test("different vars; un-proportilonally different letted dbn => different hash", () => {
 
         const a = new IRLetted( 4, new IRVar( 1 ) );
         const b = new IRLetted( 7, new IRVar( 3 ) );

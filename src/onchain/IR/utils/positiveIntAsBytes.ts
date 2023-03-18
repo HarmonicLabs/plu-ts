@@ -15,6 +15,7 @@ export function positiveIntAsBytes( n: number | bigint ): Uint8Array
     if( !Number.isSafeInteger( n ) || n < 0 )
     {
         console.log( n );
+        console.trace(); // some help
         throw new BasePlutsError(
             "how did you end up here? the name of the function explicitly says 'positiveIntAsBytes'"
         );
@@ -40,9 +41,13 @@ export function positiveIntAsBytes( n: number | bigint ): Uint8Array
 export function positiveBigIntAsBytes( n: bigint ): Uint8Array
 {
     if( n < 0 || typeof n !== "bigint" )
-    throw new BasePlutsError(
-        "how did you end up here? the name of the function explicitly says 'positiveBigIntAsBytes'"
-    );
+    {
+        console.log( n );
+        console.trace();  // some help
+        throw new BasePlutsError(
+            "how did you end up here? the name of the function explicitly says 'positiveBigIntAsBytes'"
+        );
+    }
 
     let strHex = n.toString(16);
     strHex = strHex.length % 2 === 0 ? strHex : "0" + strHex;

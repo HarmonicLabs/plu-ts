@@ -11,6 +11,7 @@ describe("IRLetted.dependencies", () => {
     test("one dependency", () => {
         // `add2`
         const dep = new IRLetted(
+            0,
             new IRApp(
                 new IRNative( IRNativeTag.addInteger ),
                 new IRConst( int, 2 )
@@ -19,6 +20,7 @@ describe("IRLetted.dependencies", () => {
 
         // fancy `add4`
         const lettedWithDep = new IRLetted(
+            0,
             new IRApp(
                 new IRNative( IRNativeTag.addInteger ),
                 new IRApp(
@@ -35,6 +37,7 @@ describe("IRLetted.dependencies", () => {
     test("one dependency has 1 ref", () => {
 
         const dep = new IRLetted(
+            0,
             new IRApp(
                 new IRNative( IRNativeTag.addInteger ),
                 new IRConst( int, 2 )
@@ -43,6 +46,7 @@ describe("IRLetted.dependencies", () => {
 
         // fancy `add4`
         const lettedWithDep = new IRLetted(
+            0,
             new IRApp(
                 new IRNative( IRNativeTag.addInteger ),
                 new IRApp(

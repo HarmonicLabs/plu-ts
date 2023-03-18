@@ -3,7 +3,7 @@ import { IRTerm } from "../IRTerm";
 import { _modifyChildFromTo } from "./_internal/_modifyChildFromTo";
 import { _addDepth } from "./_internal/_addDepth";
 import { _makeAllNegativeNativesHoisted } from "./_internal/_makeAllNegativeNativesHoisted";
-import { handleLettedAndReturnRoot } from "./subRoutines/handleLettedAndReturnRoot/index";
+import { handleLetted } from "./subRoutines/handleLetted";
 import { handleHoistedAndReturnRoot } from "./subRoutines/handleHoistedAndReturnRoot";
 import { replaceNativesAndReturnRoot } from "./subRoutines/replaceNatives";
 import { logJson } from "../../../utils/ts/ToJson";
@@ -63,7 +63,7 @@ export function compileIRToUPLC( term: IRTerm ): UPLCTerm
         term = term.value;
         term.parent = undefined;
     }
-    handleLettedAndReturnRoot( term );
+    handleLetted( term );
 
     ///////////////////////////////////////////////////////////////////////////////
     // ------------------------------------------------------------------------- //

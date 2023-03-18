@@ -6,7 +6,7 @@ import { IRFunc } from "../../IRNodes/IRFunc";
 import { IRLetted } from "../../IRNodes/IRLetted";
 import { IRVar } from "../../IRNodes/IRVar";
 import { IRTerm } from "../../IRTerm";
-import { handleLettedAndReturnRoot } from "../subRoutines/handleLettedAndReturnRoot/index";
+import { handleLetted } from "../subRoutines/handleLetted/index";
 
 
 describe("compileIRToUPLC", () => {
@@ -34,9 +34,7 @@ describe("compileIRToUPLC", () => {
                 )
             );
 
-            irTree = handleLettedAndReturnRoot( irTree );
-
-            // logJson( irTree );
+            handleLetted( irTree );
 
             expect(
                 irTree.toJson()
@@ -76,7 +74,7 @@ describe("compileIRToUPLC", () => {
                 )
             );
 
-            handleLettedAndReturnRoot( tree )
+            handleLetted( tree )
 
             expect( tree.toJson() )
             .toEqual(

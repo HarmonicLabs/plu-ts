@@ -12,16 +12,11 @@ import { getDebruijnInTerm } from "../../_internal/getDebruijnInTerm";
 import { lowestCommonAncestor } from "../../_internal/lowestCommonAncestor";
 import { iterTree } from "../../_internal/iterTree";
 import { groupByScope } from "./groupByScope";
-import { logJson } from "../../../../../utils/ts/ToJson";
-import { getRoot } from "../../../tree_utils/getRoot";
 
 
-export function handleLettedAndReturnRoot( term: IRTerm ): IRTerm
+export function handleLetted( term: IRTerm ): void
 {
-    let root = term;
-    root.parent = undefined; // make root;
-
-    const allLetteds = getLettedTerms( root );
+    const allLetteds = getLettedTerms( term );
 
     const groupedLetteds = groupByScope( allLetteds );
 
@@ -73,18 +68,17 @@ export function handleLettedAndReturnRoot( term: IRTerm ): IRTerm
             );
         }
 
-        // assign new root
-        lettedToInline.length > 0 && (root = getRoot( lettedToInline[0] ));
+        const theMaxScope = maxScope ?? term;
 
         // add depths to every node
-        _addDepth( maxScope ?? term );
+        _addDepth( theMaxScope );
 
         for( let i = letteds.length - 1; i >= 0; i-- )
         {
             letted = letteds[i];
 
             const refs: IRTerm[] = findAll(
-                maxScope ?? term,
+                theMaxScope,
                 elem => 
                     elem instanceof IRLetted &&
                     uint8ArrayEq( elem.hash, letted.hash )
@@ -123,12 +117,33 @@ export function handleLettedAndReturnRoot( term: IRTerm ): IRTerm
 
             // save parent so when replacing we don't create a circular ref
             const parent = lca.parent;
+            let node = letted;
+            const clonedLettedVal = letted.value.clone();
+            let diffDbn = 0;
+            while( node !== parent )
+            {
+                node = node.parent as any;
+                if( node instanceof IRFunc )
+                {
+                    diffDbn += node.arity;
+                }
+            }
+            if( diffDbn > 0 )
+            {
+                iterTree( clonedLettedVal, (elem) => {
+                    if( elem instanceof IRVar )
+                    {
+                        elem.dbn -= diffDbn
+                    }
+                });
+            }
+
             const newNode = new IRApp(
                 new IRFunc(
                     1,
                     lca
                 ),
-                letted.value
+                clonedLettedVal
             );
 
             _modifyChildFromTo(
@@ -136,8 +151,6 @@ export function handleLettedAndReturnRoot( term: IRTerm ): IRTerm
                 lca,
                 newNode
             );
-
-            root = getRoot( lca.parent as any );
 
             for( const ref of refs )
             {
@@ -151,6 +164,4 @@ export function handleLettedAndReturnRoot( term: IRTerm ): IRTerm
         }
         
     }
-
-    return root;
 }
