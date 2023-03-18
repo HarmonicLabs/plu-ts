@@ -55,7 +55,7 @@ export class IRVar
                     this.parent?.markHashAsInvalid()
                 },
                 writable: false,
-                enumerable:  true,
+                enumerable:  false,
                 configurable: false
             }
         );
@@ -72,9 +72,13 @@ export class IRVar
                         "invalid index for an `IRVar` instance"
                     );
 
+                    if( newDbn === _dbn ) return; // everything ok
+
                     this.markHashAsInvalid()
                     _dbn = newDbn;
-                }
+                },
+                enumerable: true,
+                configurable: false
             }
         );
         this.dbn = dbn; // call set
@@ -92,7 +96,7 @@ export class IRVar
                     }
 
                 },
-                enumerable: true,
+                enumerable: false,
                 configurable: false
             }
         );

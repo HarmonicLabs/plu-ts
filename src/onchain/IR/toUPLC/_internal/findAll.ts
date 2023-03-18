@@ -9,7 +9,7 @@ import { IRTerm } from "../../IRTerm";
 export function findAll( term: IRTerm, predicate: ( elem: IRTerm ) => boolean ): IRTerm[]
 {
     const stack: IRTerm[] = [term];
-    const result: IRTerm[] = []
+    const result: IRTerm[] = [];
 
     while( stack.length > 0 )
     {

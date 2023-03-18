@@ -3,7 +3,7 @@ import { IRTerm } from "../IRTerm";
 import { _modifyChildFromTo } from "./_internal/_modifyChildFromTo";
 import { _addDepth } from "./_internal/_addDepth";
 import { _makeAllNegativeNativesHoisted } from "./_internal/_makeAllNegativeNativesHoisted";
-import { handleLetted } from "./subRoutines/handleLetted";
+import { handleLettedAndReturnRoot } from "./subRoutines/handleLettedAndReturnRoot/index";
 import { handleHoistedAndReturnRoot } from "./subRoutines/handleHoistedAndReturnRoot";
 import { replaceNativesAndReturnRoot } from "./subRoutines/replaceNatives";
 import { logJson } from "../../../utils/ts/ToJson";
@@ -53,15 +53,15 @@ export function compileIRToUPLC( term: IRTerm ): UPLCTerm
 
     term = replaceNativesAndReturnRoot( term );
 
-    term = handleHoistedAndReturnRoot( term );
-
     // unwrap letted
     while( term instanceof IRLetted )
     {
         term = term.value;
         term.parent = undefined;
     }
-    handleLetted( term )
+    handleLettedAndReturnRoot( term );
+
+    term = handleHoistedAndReturnRoot( term );
 
     ///////////////////////////////////////////////////////////////////////////////
     // ------------------------------------------------------------------------- //
@@ -69,6 +69,6 @@ export function compileIRToUPLC( term: IRTerm ): UPLCTerm
     // ------------------------------------------------------------------------- //
     ///////////////////////////////////////////////////////////////////////////////
 
-    logJson( term )
+    // logJson( term )
     return term.toUPLC();
 }

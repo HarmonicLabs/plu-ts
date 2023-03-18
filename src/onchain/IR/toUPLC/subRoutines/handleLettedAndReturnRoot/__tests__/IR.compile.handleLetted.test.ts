@@ -1,19 +1,19 @@
 import { toHex } from "@harmoniclabs/uint8array-utils";
-import { int, lam, tyVar } from "../../../../pluts/type_system/types";
-import { IRApp } from "../../../IRNodes/IRApp";
-import { IRConst } from "../../../IRNodes/IRConst";
-import { IRDelayed } from "../../../IRNodes/IRDelayed";
-import { IRForced } from "../../../IRNodes/IRForced";
-import { IRFunc } from "../../../IRNodes/IRFunc";
-import { IRLetted, getLettedTerms } from "../../../IRNodes/IRLetted";
-import { IRNative } from "../../../IRNodes/IRNative";
-import { IRNativeTag } from "../../../IRNodes/IRNative/IRNativeTag";
-import { IRVar } from "../../../IRNodes/IRVar";
-import { _addDepth } from "../../_internal/_addDepth";
-import { handleLetted } from "../handleLetted";
-import { logJson } from "../../../../../utils/ts/ToJson";
+import { int, lam, tyVar } from "../../../../../pluts/type_system/types";
+import { IRApp } from "../../../../IRNodes/IRApp";
+import { IRConst } from "../../../../IRNodes/IRConst";
+import { IRDelayed } from "../../../../IRNodes/IRDelayed";
+import { IRForced } from "../../../../IRNodes/IRForced";
+import { IRFunc } from "../../../../IRNodes/IRFunc";
+import { IRLetted, getLettedTerms } from "../../../../IRNodes/IRLetted";
+import { IRNative } from "../../../../IRNodes/IRNative";
+import { IRNativeTag } from "../../../../IRNodes/IRNative/IRNativeTag";
+import { IRVar } from "../../../../IRNodes/IRVar";
+import { _addDepth } from "../../../_internal/_addDepth";
+import { handleLettedAndReturnRoot } from "..";
+import { IRTerm } from "../../../../IRTerm";
 
-describe("handleLetted", () => {
+describe("handleLettedAndReturnRoot", () => {
 
     test("single ref inlined", () => {
 
@@ -35,7 +35,7 @@ describe("handleLetted", () => {
 
         const fstHash = root.hash.slice();
 
-        handleLetted( root );
+        handleLettedAndReturnRoot( root );
 
         const expected = new IRForced(
             new IRDelayed(
@@ -78,11 +78,12 @@ describe("handleLetted", () => {
             )
         );
 
+
         expect( getLettedTerms( root ).length ).toEqual( 2 );
 
         const fstHash = root.hash.slice();
 
-        handleLetted( root );
+        handleLettedAndReturnRoot( root );
 
         const expected = new IRForced(
             new IRDelayed(
@@ -140,7 +141,7 @@ describe("handleLetted", () => {
 
         const fstHash = root.hash.slice();
 
-        handleLetted( root );
+        handleLettedAndReturnRoot( root );
 
         const expected = new IRForced(
             new IRDelayed(
@@ -199,7 +200,7 @@ describe("handleLetted", () => {
         // console.log( lettedWithDep.parent ); // undefined
         // console.log( dep.parent ); // IRAPP
 
-        const root = new IRForced(
+        let root: IRTerm = new IRForced(
             new IRDelayed(
                 new IRApp(
                     lettedWithDep,
@@ -213,7 +214,9 @@ describe("handleLetted", () => {
         const lettedInRoot = getLettedTerms( root );
         expect( lettedInRoot.length ).toEqual( 1 );
 
-        handleLetted( root );
+        handleLettedAndReturnRoot( root );
+
+        // logJson( root, 4 )
 
         // all inlined
         const expected = new IRForced(
@@ -233,6 +236,8 @@ describe("handleLetted", () => {
                 )
             )
         );
+
+        // logJson( root, 4 )
 
         expect( root.toJson() ).toEqual( expected.toJson() );
         expect( root.hash ).toEqual( expected.hash );
@@ -275,7 +280,7 @@ describe("handleLetted", () => {
         const lettedInRoot = getLettedTerms( root );
         expect( lettedInRoot.length ).toEqual( 2 );
 
-        handleLetted( root );
+        handleLettedAndReturnRoot( root );
 
         // all inlined
         const expected = new IRForced(
@@ -331,7 +336,7 @@ describe("handleLetted", () => {
             )
         );
 
-        handleLetted( root );
+        handleLettedAndReturnRoot( root );
 
         // all inlined
         const expected = new IRFunc( 2, // a, b

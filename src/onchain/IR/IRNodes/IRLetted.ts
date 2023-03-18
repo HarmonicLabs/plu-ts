@@ -12,14 +12,14 @@ import { isIRTerm } from "../utils/isIRTerm";
 import { BasePlutsError } from "../../../errors/BasePlutsError";
 import { IRForced } from "./IRForced";
 import { IRDelayed } from "./IRDelayed";
-import { ToJson } from "../../../utils/ts/ToJson";
+import { ToJson, logJson } from "../../../utils/ts/ToJson";
 import { IllegalIRToUPLC } from "../../../errors/PlutsIRError/IRCompilationError/IllegalIRToUPLC";
 import { ToUPLC } from "../../UPLC/interfaces/ToUPLC";
-import { UPLCVar } from "../../UPLC/UPLCTerms/UPLCVar";
 import { UPLCTerm } from "../../UPLC/UPLCTerm";
+import { getRoot } from "../tree_utils/getRoot";
 
 
-type LettedSetEntry = {
+export type LettedSetEntry = {
     letted: IRLetted,
     nReferences: number
 };
@@ -40,34 +40,24 @@ export class IRLetted
 
     value!: IRTerm
 
-    /**
-     * we need to keep track of the debruijn at which the `IRLetted` is instantiated
-     * 
-     * this is because stuff like `new IRLetted( new IRVar(0) )` has different meaning 
-     * at different DeBruijn levels
-     * 
-     * knowing the DeBruijn we can differentiate them
-     */
-    dbn: number todo
-
     readonly dependencies!: LettedSetEntry[]
 
     parent: IRTerm | undefined;
 
     clone!: () => IRLetted
 
-    constructor( value: IRTerm, dependencies?: LettedSetEntry[] )
+    constructor( toLet: IRTerm )
     {
-        if( !isIRTerm( value ) )
+        if( !isIRTerm( toLet ) )
         throw new BasePlutsError(
-            "only closed terms can be hoisted"
+            "letted value was not an IRTerm"
         );
-        
-        // initialize without calling "set"
-        let _value: IRTerm = value;
-        _value.parent = this;
-        let _deps: LettedSetEntry[] = dependencies?.slice() ?? getSortedLettedSet( getLettedTerms( value ) );
 
+        // initialize without calling "set"
+        let _value: IRTerm = toLet.clone();
+        _value.parent = this;
+
+        // we need the has before setting dependecies
         let hash: Uint8Array | undefined = undefined;
         Object.defineProperty(
             this, "hash", {
@@ -77,7 +67,7 @@ export class IRLetted
                         hash = blake2b_224(
                             concatUint8Arr(
                                 IRLetted.tag,
-                                value.hash
+                                _value.hash
                             )
                         )
                     }
@@ -100,6 +90,10 @@ export class IRLetted
                 configurable: false
             }
         );
+
+        // make sure to use the cloned `_value` and NOT `toLet`
+        // since we need the same root ( setted trough `parent` )
+        let _deps: LettedSetEntry[] = getSortedLettedSet( getLettedTerms( _value ) );
         
         Object.defineProperty(
             this, "value",
@@ -160,11 +154,12 @@ export class IRLetted
             this, "clone",
             () => {
                 return new IRLetted(
-                    this.value.clone(), 
-                    _deps.slice() // as long as `dependecies` getter returns clones this is fine
+                    this.value.clone()
+                    // doesn't work because dependecies need to be bounded to the cloned value
+                    // _deps.slice() // as long as `dependecies` getter returns clones this is fine
                 )
             }
-        )
+        );
     }
 
     static get tag(): Uint8Array { return new Uint8Array([ 0b0000_0101 ]); }
@@ -181,7 +176,7 @@ export class IRLetted
     toUPLC(): UPLCTerm
     {
         throw new IllegalIRToUPLC(
-            "Can't convert 'IRHoisted' to valid UPLC"
+            "Can't convert 'IRLetted' to valid UPLC"
         );
     }
 }
@@ -189,10 +184,10 @@ export class IRLetted
 /**
  * basically an insertion sort;
  * 
- * @param {LettedSetEntry[]} hoistedTerms
+ * @param {LettedSetEntry[]} lettedTerms
  * @returns {LettedSetEntry[]} a **new** array with ```IRLetted```s with no dependencies first, followed by the dependents
  */
-export function getSortedLettedSet( hoistedTerms: LettedSetEntry[] ): LettedSetEntry[]
+export function getSortedLettedSet( lettedTerms: LettedSetEntry[] ): LettedSetEntry[]
 {
     const set: LettedSetEntry[] = [];
     const hashesSet: Uint8Array[] = [];
@@ -212,7 +207,6 @@ export function getSortedLettedSet( hoistedTerms: LettedSetEntry[] ): LettedSetE
         {
             const thisLettedEntry = _terms[i]; 
             const thisHash = thisLettedEntry.letted.hash;
-
 
             const idxInSet = hashesSet.findIndex( hash => uint8ArrayEq( hash, thisHash ) )
             // if( !hashesSet.includes( hash ) )
@@ -238,20 +232,20 @@ export function getSortedLettedSet( hoistedTerms: LettedSetEntry[] ): LettedSetE
         }
     }
 
-    addToSet( ...hoistedTerms );
+    addToSet( ...lettedTerms );
 
     return set;
 }
 
 export function getLettedTerms( irTerm: IRTerm ): LettedSetEntry[]
 {
-    const hoisteds: LettedSetEntry[] = [];
+    const lettedTerms: LettedSetEntry[] = [];
 
     function searchIn( term: IRTerm ): void
     {
         if( term instanceof IRLetted )
         {
-            hoisteds.push({ letted: term, nReferences: 1 });
+            lettedTerms.push({ letted: term, nReferences: 1 });
             return;
         }
 
@@ -289,5 +283,5 @@ export function getLettedTerms( irTerm: IRTerm ): LettedSetEntry[]
 
     searchIn( irTerm );
 
-    return hoisteds;
+    return lettedTerms;
 }
