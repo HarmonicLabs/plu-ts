@@ -30,7 +30,7 @@ export class IRVar
 
     parent: IRTerm | undefined;
 
-    constructor( dbn: number )
+    constructor( DeBruijn: number )
     {
         let hash: Uint8Array | undefined = undefined;
         Object.defineProperty(
@@ -81,7 +81,7 @@ export class IRVar
                 configurable: false
             }
         );
-        this.dbn = dbn; // call set
+        this.dbn = DeBruijn; // call set
         
         let _parent: IRTerm | undefined = undefined;
         Object.defineProperty(

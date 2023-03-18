@@ -21,6 +21,7 @@ describe("handleLettedAndReturnRoot", () => {
             new IRDelayed(
                 new IRApp(
                     new IRLetted(
+                        0,
                         new IRApp(
                             new IRNative( IRNativeTag.addInteger ),
                             new IRConst( int, 2 )
@@ -60,6 +61,7 @@ describe("handleLettedAndReturnRoot", () => {
     test("two refs hoisted", () => {
 
         const letted = new IRLetted(
+            0,
             new IRApp(
                 new IRNative( IRNativeTag.addInteger ),
                 new IRConst( int, 2 )
@@ -114,6 +116,7 @@ describe("handleLettedAndReturnRoot", () => {
     test("two refs hoisted with different DeBruijn", () => {
 
         const letted = new IRLetted(
+            0,
             new IRApp(
                 new IRNative( IRNativeTag.addInteger ),
                 new IRConst( int, 2 )
@@ -178,6 +181,7 @@ describe("handleLettedAndReturnRoot", () => {
 
         // `add2`
         const dep = new IRLetted(
+            0,
             new IRApp(
                 new IRNative( IRNativeTag.addInteger ),
                 new IRConst( int, 2 )
@@ -188,6 +192,7 @@ describe("handleLettedAndReturnRoot", () => {
 
         // fancy `add4`
         const lettedWithDep = new IRLetted(
+            0,
             new IRApp(
                 new IRNative( IRNativeTag.addInteger ),
                 new IRApp(
@@ -248,6 +253,7 @@ describe("handleLettedAndReturnRoot", () => {
 
         // `add2`
         const dep = new IRLetted(
+            0,
             new IRApp(
                 new IRNative( IRNativeTag.addInteger ),
                 new IRConst( int, 2 )
@@ -256,6 +262,7 @@ describe("handleLettedAndReturnRoot", () => {
 
         // fancy `add4`
         const lettedWithDep = new IRLetted(
+            0,
             new IRApp(
                 new IRNative( IRNativeTag.addInteger ),
                 new IRApp(
@@ -316,7 +323,7 @@ describe("handleLettedAndReturnRoot", () => {
 
     test("vars outside and inside", () => {
 
-        const letted = new IRLetted( new IRConst( int, 2 ) );
+        const letted = new IRLetted( 0, new IRConst( int, 2 ) );
         
         const root = new IRFunc( 2, // a, b
             new IRApp(

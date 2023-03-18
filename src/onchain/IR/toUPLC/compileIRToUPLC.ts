@@ -53,15 +53,17 @@ export function compileIRToUPLC( term: IRTerm ): UPLCTerm
 
     term = replaceNativesAndReturnRoot( term );
 
-    // unwrap letted
+    term = handleHoistedAndReturnRoot( term );
+
+    // unwrap top level letted;
+    // should rarely be the case
+    // since most of the time we'll have hoisted stuff
     while( term instanceof IRLetted )
     {
         term = term.value;
         term.parent = undefined;
     }
     handleLettedAndReturnRoot( term );
-
-    term = handleHoistedAndReturnRoot( term );
 
     ///////////////////////////////////////////////////////////////////////////////
     // ------------------------------------------------------------------------- //

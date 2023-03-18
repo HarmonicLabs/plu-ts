@@ -14,6 +14,7 @@ describe("_getMinUnboundDbn", () => {
         const root = new IRForced(
             new IRDelayed(
                 new IRLetted(
+                    0,
                     new IRConst( int, 2 )
                 )
             )
@@ -31,6 +32,7 @@ describe("_getMinUnboundDbn", () => {
         
         const inScope = new IRFunc( 1,
             new IRLetted(
+                1,
                 new IRVar( 0 )
             )
         );
@@ -43,14 +45,17 @@ describe("_getMinUnboundDbn", () => {
 
     test("out of scope", () => {
         
+        const letted  =new IRLetted(
+            1,
+            new IRVar( 0 )
+        );
+
         const outScope = new IRFunc( 1,
-            new IRLetted(
-                new IRVar( 1 )
-            )
+            letted
         );
 
         expect(
-            _getMinUnboundDbn( outScope )
+            _getMinUnboundDbn( letted.value )
         ).toBe( 0 );
 
     });
@@ -59,6 +64,7 @@ describe("_getMinUnboundDbn", () => {
         
         const inScope = new IRFunc( 2,
             new IRLetted(
+                2,
                 new IRVar( 1 )
             )
         );

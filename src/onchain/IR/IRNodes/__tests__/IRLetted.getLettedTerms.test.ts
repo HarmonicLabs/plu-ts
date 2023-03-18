@@ -15,6 +15,7 @@ describe("getLettedTerms", () => {
             new IRDelayed(
                 new IRApp(
                     new IRLetted(
+                        0,
                         new IRApp(
                             new IRNative( IRNativeTag.addInteger ),
                             new IRConst( int, 2 )

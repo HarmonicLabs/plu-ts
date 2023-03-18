@@ -10,26 +10,41 @@ describe("groupByScope", () => {
 
     test("different scopes", () => {
 
+        const sameLetted = new IRLetted(
+            1,
+            new IRVar(0)
+        )
+
         const irTree = new IRForced(
             new IRDelayed(
                 new IRApp(
-                    new IRFunc(2,
-                        new IRLetted(
-                            new IRVar(0)
-                        )
+                    new IRFunc( 1,
+                        sameLetted
                     ),
                     new IRFunc( 1,
-                        new IRLetted(
-                            new IRVar( 0 )
-                        )
+                        sameLetted.clone()
                     )
                 )
             )
         );
 
-        console.log(
-            groupByScope( getLettedTerms( irTree ) )
+        expect(
+            groupByScope( getLettedTerms( irTree ) ).length
+        ).toEqual( 2 );
+
+        // make sure we are testing the same terms
+        expect(
+            sameLetted.hash
+        ).toEqual(
+            (irTree as any).forced.delayed.arg.body.hash
         );
+
+        expect(
+            (irTree as any).forced.delayed.fn.body.hash
+        ).toEqual(
+            (irTree as any).forced.delayed.arg.body.hash
+        );
+
     })
 
 })

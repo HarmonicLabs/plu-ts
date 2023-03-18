@@ -12,10 +12,13 @@ export function positiveIntAsBytes( n: number | bigint ): Uint8Array
         return positiveBigIntAsBytes( n );
     }
     
-    if( n < 0 || !Number.isSafeInteger( n ) )
-    throw new BasePlutsError(
-        "how did you end up here? the name of the function explicitly says 'positiveIntAsBytes'"
-    );
+    if( !Number.isSafeInteger( n ) || n < 0 )
+    {
+        console.log( n );
+        throw new BasePlutsError(
+            "how did you end up here? the name of the function explicitly says 'positiveIntAsBytes'"
+        );
+    }
 
     let max = 0x100;
     let nBytes = 1;

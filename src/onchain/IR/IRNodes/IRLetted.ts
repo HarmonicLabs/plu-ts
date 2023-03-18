@@ -17,6 +17,9 @@ import { IllegalIRToUPLC } from "../../../errors/PlutsIRError/IRCompilationError
 import { ToUPLC } from "../../UPLC/interfaces/ToUPLC";
 import { UPLCTerm } from "../../UPLC/UPLCTerm";
 import { getRoot } from "../tree_utils/getRoot";
+import { iterTree } from "../toUPLC/_internal/iterTree";
+import { IRVar } from "./IRVar";
+import { positiveIntAsBytes } from "../utils/positiveIntAsBytes";
 
 
 export type LettedSetEntry = {
@@ -40,14 +43,52 @@ export class IRLetted
 
     value!: IRTerm
 
+    /**
+     * we need to keep track of the debruijn at which the `IRLetted` is instantiated
+     * 
+     * this is because stuff like `new IRLetted( new IRVar(0) )` has different meaning 
+     * at different DeBruijn levels
+     * 
+     * knowing the DeBruijn we can differentiate them
+     */
+    dbn: number
+
     readonly dependencies!: LettedSetEntry[]
 
     parent: IRTerm | undefined;
 
     clone!: () => IRLetted
 
-    constructor( toLet: IRTerm )
+    constructor( DeBruijn: number, toLet: IRTerm )
     {
+        if(!(
+            Number.isSafeInteger( DeBruijn ) && DeBruijn >= 0 
+        )) throw new BasePlutsError(
+            "invalid index for an `IRLetted` instance"
+        );
+
+        let _dbn: number =  DeBruijn;
+        Object.defineProperty(
+            this, "dbn",
+            {
+                get: () => _dbn,
+                set: ( newDbn: number ) => {
+                    if(!(
+                        Number.isSafeInteger( newDbn ) && newDbn >= 0 
+                    )) throw new BasePlutsError(
+                        "invalid index for an `IRLetted` instance"
+                    );
+
+                    if( newDbn === _dbn ) return; // everything ok
+
+                    this.markHashAsInvalid()
+                    _dbn = newDbn;
+                },
+                enumerable: true,
+                configurable: false
+            }
+        );
+
         if( !isIRTerm( toLet ) )
         throw new BasePlutsError(
             "letted value was not an IRTerm"
@@ -64,12 +105,30 @@ export class IRLetted
                 get: () => {
                     if(!( hash instanceof Uint8Array ))
                     {
-                        hash = blake2b_224(
-                            concatUint8Arr(
-                                IRLetted.tag,
-                                _value.hash
-                            )
-                        )
+                        const normalized = getNormalizedLettedArgs( this.dbn, _value );
+                        if( normalized === undefined )
+                        {
+                            // `_value` doesn't includes any `IRVar`
+                            // aka. there is nothing to normalize
+                            // just use the value regardless of the
+                            // `IRLetted` dbn instantiation
+                            hash = blake2b_224(
+                                concatUint8Arr(
+                                    IRLetted.tag,
+                                    _value.hash
+                                )
+                            );
+                        }
+                        else
+                        {
+                            hash = blake2b_224(
+                                concatUint8Arr(
+                                    IRLetted.tag,
+                                    positiveIntAsBytes( normalized[0] ),
+                                    normalized[1].hash
+                                )
+                            );
+                        }
                     }
                     return hash.slice();
                 },
@@ -154,6 +213,7 @@ export class IRLetted
             this, "clone",
             () => {
                 return new IRLetted(
+                    this.dbn,
                     this.value.clone()
                     // doesn't work because dependecies need to be bounded to the cloned value
                     // _deps.slice() // as long as `dependecies` getter returns clones this is fine
@@ -284,4 +344,35 @@ export function getLettedTerms( irTerm: IRTerm ): LettedSetEntry[]
     searchIn( irTerm );
 
     return lettedTerms;
+}
+
+
+function getNormalizedLettedArgs( dbn: number, value: IRTerm ): [ normalized_dbn: number, noramlized_value: IRTerm ] | undefined
+{
+    const normalized_value = value.clone();
+    const minDbn = getMinVarDbnIn( normalized_value );
+
+    if( minDbn === undefined ) return undefined;
+    
+    iterTree( normalized_value, (node) => {
+        if( node instanceof IRVar )
+        {
+            node.dbn -= minDbn
+        }
+    });
+    return [ dbn - minDbn, normalized_value ];
+}
+
+function getMinVarDbnIn( term: IRTerm ): number | undefined
+{
+    let min: number | undefined = undefined;
+
+    iterTree( term, (node) => {
+        if( node instanceof IRVar )
+        {
+            min = typeof min === "number" ? Math.min( min, node.dbn ) : node.dbn
+        }
+    });
+
+    return min;
 }

@@ -20,11 +20,13 @@ describe("compileIRToUPLC", () => {
                     new IRApp(
                         new IRFunc(1,
                             new IRLetted(
+                                1,
                                 new IRVar(0)
                             )
                         ),
                         new IRFunc( 1,
                             new IRLetted(
+                                1,
                                 new IRVar( 0 )
                             )
                         )
@@ -34,7 +36,7 @@ describe("compileIRToUPLC", () => {
 
             irTree = handleLettedAndReturnRoot( irTree );
 
-            logJson( irTree );
+            // logJson( irTree );
 
             expect(
                 irTree.toJson()
@@ -63,10 +65,12 @@ describe("compileIRToUPLC", () => {
                     new IRFunc(
                         2,
                         new IRLetted(
+                            3,
                             new IRVar(2)
                         )
                     ),
                     new IRLetted(
+                        1,
                         new IRVar(0)
                     )
                 )
