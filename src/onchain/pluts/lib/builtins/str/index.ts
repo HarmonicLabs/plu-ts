@@ -1,5 +1,5 @@
 import ObjectUtils from "../../../../../utils/ObjectUtils";
-import { Builtin } from "../../../../UPLC/UPLCTerms/Builtin";
+import { IRNative } from "../../../../IR/IRNodes/IRNative";
 import { PLam, PString, PBool, PByteString } from "../../../PTypes";
 import { Term } from "../../../Term";
 import { fn, str, bool, lam, bs } from "../../../type_system";
@@ -23,7 +23,7 @@ export type StrBinOPToStr = Term<PLam<PString, PLam<PString,PString>>>
 export const pappendStr: StrBinOPToStr = (() => {
     const op = new Term<PLam<PString, PLam<PString,PString>>>(
         fn([ str, str ], str ),
-        _dbn => Builtin.appendString
+        _dbn => IRNative.appendString
     );
 
     return  ObjectUtils.defineReadOnlyProperty(
@@ -56,7 +56,7 @@ export type StrBinOPToBool = Term<PLam<PString,PLam<PString, PBool>>>
 export const peqStr: StrBinOPToBool = (() => {
     const op = new Term<PLam<PString,PLam<PString, PBool>>>(
         fn([ str, str ], bool ),
-        _dbn => Builtin.equalsString,
+        _dbn => IRNative.equalsString,
     );
 
     return  ObjectUtils.defineReadOnlyProperty(
@@ -82,7 +82,7 @@ export const pencodeUtf8: Term<PLam<PString, PByteString>>
 } = (() => {
     const encodeUtf8  =new Term<PLam<PString, PByteString>>(
             lam( str, bs ),
-            _dbn => Builtin.encodeUtf8
+            _dbn => IRNative.encodeUtf8
         );
 
     return ObjectUtils.defineReadOnlyProperty(
@@ -98,7 +98,7 @@ export const pdecodeUtf8: Term<PLam<PByteString, PString>>
 } = (() => {
     const decodeUtf8  =new Term<PLam<PByteString, PString>>(
         lam( bs, str ),
-        _dbn => Builtin.decodeUtf8,
+        _dbn => IRNative.decodeUtf8,
         );
 
     return ObjectUtils.defineReadOnlyProperty(

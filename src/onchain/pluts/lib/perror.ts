@@ -1,3 +1,4 @@
+import { IRError } from "../../IR/IRNodes/IRError";
 import { ErrorUPLC } from "../../UPLC/UPLCTerms/ErrorUPLC";
 import { Term } from "../Term";
 import { TermType, ToPType } from "../type_system";
@@ -6,6 +7,6 @@ export function perror<T extends TermType>( type: T , msg: string | undefined = 
 {
     return new Term(
         type as any,
-        _dbn => new ErrorUPLC( msg, addInfos )
+        _dbn => new IRError( msg, addInfos )
     )
 }

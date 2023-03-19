@@ -1,5 +1,5 @@
 import ObjectUtils from "../../../../../utils/ObjectUtils";
-import { Builtin } from "../../../../UPLC/UPLCTerms/Builtin";
+import { IRNative } from "../../../../IR/IRNodes/IRNative";
 import { PType } from "../../../PType";
 import { TermFn, PList, PLam, PBool } from "../../../PTypes";
 import { Term } from "../../../Term";
@@ -20,7 +20,7 @@ export function pstrictChooseList<ListElemT extends TermType, ReturnT extends Te
     return addApplications<[ PList< ToPType<ListElemT>> , ToPType<ReturnT>, ToPType<ReturnT> ], ToPType<ReturnT>>(
         new Term(
             fn([ list( listElemT ), returnT, returnT ], returnT ) as any,
-            _dbn => Builtin.chooseList
+            _dbn => IRNative.strictChooseList
         )
     );
 }
@@ -66,7 +66,7 @@ export function pchooseList<ListElemT extends TermType, ReturnT extends TermType
        >
    >(
         fn([list( listElemT ), delayed( returnT ), delayed( returnT )], returnT ) as any,
-        _dbn => Builtin.chooseList
+        _dbn => IRNative.strictChooseList
     );
 
     return ObjectUtils.defineReadOnlyProperty(
@@ -122,7 +122,7 @@ export function phead<ListElemT extends TermType>( listElemType: ListElemT )
     return addApplications<[ PList< ToPType<ListElemT>> ], ToPType<ListElemT>>(
         new Term(
             lam( list( listElemT ), listElemT ) as any,
-            _dbn => Builtin.headList
+            _dbn => IRNative.headList
         )
     );
 }
@@ -133,7 +133,7 @@ export function ptail<ListElemT extends TermType>( listElemT: ListElemT )
     return addApplications<[ PList< ToPType<ListElemT>> ], PList< ToPType<ListElemT>>>(
         new Term(
             lam( list( listElemT ), list( listElemT ) ) as any,
-            _dbn => Builtin.tailList
+            _dbn => IRNative.tailList
         )
     );
 }
@@ -141,6 +141,6 @@ export function ptail<ListElemT extends TermType>( listElemT: ListElemT )
 export const pisEmpty: TermFn<[PList<PType>], PBool> = addApplications<[ PList<PType> ], PBool>(
         new Term(
             lam( list( tyVar() ), bool ) as any,
-            _dbn => Builtin.nullList
+            _dbn => IRNative.nullList
         )
     );

@@ -1,4 +1,5 @@
 import ObjectUtils from "../../../../../utils/ObjectUtils";
+import { IRNative } from "../../../../IR/IRNodes/IRNative";
 import { Builtin } from "../../../../UPLC/UPLCTerms/Builtin";
 import { TermFn, PBool, PLam, PDelayed } from "../../../PTypes";
 import { Term } from "../../../Term";
@@ -36,7 +37,7 @@ export function pstrictIf<ReturnT extends TermType>( returnType: ReturnT ): Term
        >
         (
             fn([ bool, returnT, returnT ], returnT ) as any,
-            _dbn => Builtin.ifThenElse
+            _dbn => IRNative.strictIfThenElse
         ) as any
     ) as any;
 }
@@ -81,7 +82,7 @@ export function pif<ReturnT extends TermType>( returnType: ReturnT | undefined =
         // ```papp``` throws if types don't match;
         // but the perceived type form the user perspective is the one of the generic
         fn([ bool, delayed( returnT ), delayed( returnT ) ], delayed( returnT ) ) as any,
-        _dbn => Builtin.ifThenElse
+        _dbn => IRNative.strictIfThenElse
     );
 
     return ObjectUtils.defineReadOnlyProperty(

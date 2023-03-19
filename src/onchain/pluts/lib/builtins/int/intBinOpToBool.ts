@@ -9,7 +9,7 @@ import { fn, int, bool } from "../../../type_system";
 import { papp } from "../../papp";
 import { PappArg } from "../../pappArg";
 import { TermBool, addPBoolMethods } from "../../std/UtilityTerms/TermBool";
-import { _pflipUPLC } from "../_pflipUPLC";
+import { _pflipUPLC } from "../_pflipIR";
 import { addApplications } from "../addApplications";
 
 export type IntBinOPToBool = Term<PLam<PInt, PLam<PInt, PInt>>>

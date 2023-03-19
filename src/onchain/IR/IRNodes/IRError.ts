@@ -20,7 +20,7 @@ export class IRError
 
     parent: IRTerm | undefined;
 
-    constructor()
+    constructor( msg?: string, addInfos?: object )
     {
         let _parent: IRTerm | undefined = undefined;
         Object.defineProperty(

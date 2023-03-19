@@ -4,17 +4,15 @@ import JsRuntime from "../../../../../utils/JsRuntime";
 // DO NOT change the order of the two imports
 import { TermType, ToPType, typeExtends, pair, isWellFormedType, asData, data } from "../../../type_system";
 import { TermPair, addPPairMethods } from "../../std/UtilityTerms/TermPair";
-import { UPLCConst } from "../../../../UPLC/UPLCTerms/UPLCConst";
 import { PPair } from "../../../PTypes";
 import { Term } from "../../../Term";
 import { Machine } from "../../../../CEK/Machine";
-import { termTyToConstTy } from "../../../type_system/termTyToConstTy";
 import { _toData } from "../data/conversion/toData_minimal";
 import { punsafeConvertType } from "../../punsafeConvertType";
 import { ppairData } from "../../builtins/ppairData";
 import { PappArg, pappArgToTerm } from "../../pappArg";
-import { constT } from "../../../../UPLC/UPLCTerms/UPLCConst/ConstType";
 import { unwrapAsData } from "../../../type_system/tyArgs/unwrapAsData";
+import { IRConst } from "../../../../IR/IRNodes/IRConst";
 
 
 export function pPair<FstT extends TermType, SndT extends TermType>(
@@ -84,12 +82,12 @@ export function pPair<FstT extends TermType, SndT extends TermType>(
             // causes problem in uplc generation otherwhise
             new Term<PPair<ToPType<FstT>,ToPType<SndT>>>(
                 pair( asData( fstT ), asData( sndT ) ) as any ,
-                dbn => UPLCConst.pairOf(
-                    constT.data,
-                    constT.data
+                _dbn => IRConst.pairOf(
+                    data,
+                    data
                 )(
-                    (Machine.evalSimple( _fst_ ) as UPLCConst).value,
-                    (Machine.evalSimple( _snd_ ) as UPLCConst).value
+                    (Machine.evalSimple( _fst_ ) as IRConst).value,
+                    (Machine.evalSimple( _snd_ ) as IRConst).value
                 ),
                 true // isConstant
             )

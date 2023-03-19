@@ -1,12 +1,11 @@
 import { Data, isData } from "../../../../../../types/Data/Data";
 import JsRuntime from "../../../../../../utils/JsRuntime";
 import { Machine } from "../../../../../CEK";
+import { IRConst } from "../../../../../IR/IRNodes/IRConst";
 import { UPLCTerm, showUPLC } from "../../../../../UPLC/UPLCTerm";
-import { UPLCConst } from "../../../../../UPLC/UPLCTerms/UPLCConst";
-import { constT } from "../../../../../UPLC/UPLCTerms/UPLCConst/ConstType";
 import { PList, PData } from "../../../../PTypes";
 import { Term } from "../../../../Term";
-import { ToPType, isWellFormedType, termTypeToString } from "../../../../type_system";
+import { ToPType, isWellFormedType } from "../../../../type_system";
 import { termTyToConstTy } from "../../../../type_system/termTyToConstTy";
 import { typeExtends } from "../../../../type_system/typeExtends";
 import { PrimType, TermType, data, list, pair, tyVar } from "../../../../type_system/types";
@@ -48,7 +47,7 @@ export function pnil<ElemsT extends TermType>( elemsT: ElemsT ): TermList<ToPTyp
     return addPListMethods(
         new Term<PList<ToPType<ElemsT>>>(
             list( elemsT ),
-            _dbn => UPLCConst.listOf( termTyToConstTy( elemsT ) )([]),
+            _dbn => IRConst.listOf( elemsT )([]),
             true
         )
     );
@@ -75,9 +74,7 @@ export function pconstList<ElemsT extends TermType>( elemsT: ElemsT ): ( elems: 
             new Term<PList<ToPType<ElemsT>>>(
                 list( elemsT ),
                 dbn => {
-                    const expectedConstTy = termTyToConstTy( elemsT );
-
-                    return UPLCConst.listOf( expectedConstTy )
+                    return IRConst.listOf( elemsT )
                     ( 
                         elems.map(
                             el => {
@@ -85,7 +82,7 @@ export function pconstList<ElemsT extends TermType>( elemsT: ElemsT ): ( elems: 
                                     el.toUPLC(dbn)
                                 ));
 
-                                if(!(res instanceof UPLCConst))
+                                if(!(res instanceof IRConst))
                                 {
                                     console.log("------------------- pconstList -------------------");
                                     console.log( res )
@@ -176,7 +173,7 @@ export function pDataList( datas: Data[] ): Term<PList<PData>>
 
     return new Term(
         list( data ),
-        _dbn => UPLCConst.listOf( constT.data )( datas ),
+        _dbn => IRConst.listOf( data )( datas ),
         true
     );
 }

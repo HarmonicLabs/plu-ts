@@ -1,5 +1,4 @@
-import { RestrictedStructInstance } from "../../PTypes/PStruct/pstruct";
-import { PByteString, PList, PPair, PInt, Term, PBool, TermPair, pBSToData, pByteString, pand, pdelay, perror, pfn, pintToBS, pisEmpty, plet, pmatch, punBData, punIData, bool, data, asData, bs, TermType } from "../..";
+import { Term, PBool, pByteString, pand, pdelay, perror, pfn, pintToBS, pisEmpty, plet, pmatch, punIData, bool, data, bs } from "../..";
 import { ByteString } from "../../../../types/HexString/ByteString";
 import { PPubKeyHash } from "../../API/V1/PubKey/PPubKeyHash";
 import { PScriptContext } from "../../API/V2/ScriptContext/PScriptContext";

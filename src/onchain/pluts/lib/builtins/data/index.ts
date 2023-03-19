@@ -1,9 +1,8 @@
 import ObjectUtils from "../../../../../utils/ObjectUtils";
-import { Application } from "../../../../UPLC/UPLCTerms/Application";
-import { Builtin } from "../../../../UPLC/UPLCTerms/Builtin";
-import { HoistedUPLC } from "../../../../UPLC/UPLCTerms/HoistedUPLC";
-import { genHoistedSourceUID } from "../../../../UPLC/UPLCTerms/HoistedUPLC/HoistedSourceUID/genHoistedSourceUID";
-import { UPLCConst } from "../../../../UPLC/UPLCTerms/UPLCConst";
+import { IRApp } from "../../../../IR/IRNodes/IRApp";
+import { IRConst } from "../../../../IR/IRNodes/IRConst";
+import { IRHoisted } from "../../../../IR/IRNodes/IRHoisted";
+import { IRNative } from "../../../../IR/IRNodes/IRNative";
 import { PType } from "../../../PType";
 import { TermFn, PData, PLam, PInt, PList, PPair, PByteString, PBool, PAsData } from "../../../PTypes";
 import { Term } from "../../../Term";
@@ -32,7 +31,7 @@ export function pstrictChooseData<ReturnT extends TermType>( returnT: ReturnT )
             fn(
                 [ data, returnT, returnT, returnT, returnT, returnT ], returnT
             ) as any,
-            _dbn => Builtin.chooseData
+            _dbn => IRNative.chooseData
         )
     );
 }
@@ -108,7 +107,7 @@ export function pchooseData<ReturnT extends TermType>( returnT: ReturnT )
         fn(
             [ data, delayed( returnT ), delayed( returnT ), delayed( returnT ), delayed( returnT ), delayed( returnT ) ], delayed( returnT )
         ) as any,
-        _dbn => Builtin.chooseData
+        _dbn => IRNative.chooseData
     );
 
     return ObjectUtils.defineReadOnlyProperty(
@@ -203,7 +202,7 @@ export const pConstrToData:
     = addApplications<[ PInt, PList<PData> ], PData>(
         new Term(
             fn([ int, list( data ) ], data ),
-            _dbn => Builtin.constrData
+            _dbn => IRNative.constrData
         )
     );
 
@@ -216,7 +215,7 @@ export const pMapToData: TermFn<[ PMap<PData, PData> ], PData>
                 list( pair( data, data ) ),
                 data
             ) as any,
-            _dbn => Builtin.mapData
+            _dbn => IRNative.mapData
         )
     );
 
@@ -224,7 +223,7 @@ export const pListToData: TermFn<[ PList<PData> ], PData>
     = addApplications<[ PList<PData> ], PData>(
         new Term(
             lam( list( data ), data ),
-            _dbn => Builtin.listData
+            _dbn => IRNative.listData
         )
     );
 
@@ -232,7 +231,7 @@ export const pIntToData: TermFn<[ PInt ], PAsData<PInt>>
     = addApplications<[ PInt ], PAsData<PInt>>(
         new Term<PLam<PInt, PAsData<PInt>>>(
             lam( int, asData( int ) ),
-            _dbn => Builtin.iData
+            _dbn => IRNative.iData
         )
     );
 
@@ -240,7 +239,7 @@ export const pBSToData: TermFn<[ PByteString ], PAsData<PByteString>>
     = addApplications<[ PByteString ], PAsData<PByteString>>(
         new Term<PLam<PByteString, PAsData<PByteString>>>(
             lam( bs, asData( bs ) ),
-            _dbn => Builtin.bData
+            _dbn => IRNative.bData
         )
     );
 
@@ -250,7 +249,7 @@ export const punConstrData
         new Term(
             // MUST be `_pair` and NOT `pair` because elements aren't data
             lam( data, _pair( int, list( data ) ) ),
-            _dbn => Builtin.unConstrData
+            _dbn => IRNative.unConstrData
         )
     );
 
@@ -258,7 +257,7 @@ export const punMapData: TermFn<[ PData, PData ], PList<PPair<PData, PData>>>
     = addApplications<[ PData, PData ], PList<PPair<PData, PData>>>(
         new Term(
             lam( data, list( pair( data, data ) ) ) as any,
-            _dbn => Builtin.unMapData
+            _dbn => IRNative.unMapData
         )
     );
 
@@ -267,7 +266,7 @@ export const punListData: TermFn<[ PData ], PList<PData>>
     = addApplications<[ PData ], PList<PData>>(
         new Term(
             lam( data, list( data ) ),
-            _dbn => Builtin.unListData
+            _dbn => IRNative.unListData
         )
     );
 
@@ -275,7 +274,7 @@ export const punIData: TermFn<[ PData ], PInt>
     = addApplications<[ PData ], PInt>(
         new Term(
             lam( data, int ),
-            _dbn => Builtin.unIData,
+            _dbn => IRNative.unIData,
         )
         //, addPIntMethods
     );
@@ -286,7 +285,7 @@ export const punBData: Term<PLam<PData, PByteString>>
 } = (() => {
     const unBData = new Term<PLam<PData, PByteString>>(
         lam( data, bs ),
-        _dbn => Builtin.unBData
+        _dbn => IRNative.unBData
     );
 
     return ObjectUtils.defineReadOnlyProperty(
@@ -301,29 +300,25 @@ export const peqData: TermFn<[ PData, PData ], PBool>
     = addApplications<[ PData, PData ], PBool>(
         new Term<PLam<PData, PLam< PData, PBool>>>(
             fn([ data, data ], bool ),
-            _dbn => Builtin.equalsData
+            _dbn => IRNative.equalsData
         )
     );
 
 
-const pnilDataUID = genHoistedSourceUID();
 export const pnilData: Term<PList< PData>>
     = new Term(
         list( data ),
-        _dbn => new HoistedUPLC(
-            new Application( Builtin.mkNilData, UPLCConst.unit ),
-            pnilDataUID
+        _dbn => new IRHoisted(
+            new IRApp( IRNative.mkNilData, IRConst.unit )
         ),
         // true // isConstant
     );
 
-const pnilPairDataUID = genHoistedSourceUID();
 export const pnilPairData: Term<PList< PPair<PData, PData>>>
     = new Term(
         list( pair( data, data ) ),
-        _dbn => new HoistedUPLC(
-            new Application( Builtin.mkNilPairData, UPLCConst.unit ),
-            pnilPairDataUID
+        _dbn => new IRHoisted(
+            new IRApp( IRNative.mkNilPairData, IRConst.unit )
         ),
         // true // isConstant
     );
@@ -337,6 +332,6 @@ export const pserialiseData: TermFn<[ PData ], PByteString>
     = addApplications<[ PData ], PByteString>(
         new Term(
             lam( data, bs ),
-            _dbn => Builtin.serialiseData
+            _dbn => IRNative.serialiseData
         )
     );

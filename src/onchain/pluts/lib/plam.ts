@@ -1,4 +1,6 @@
 import ObjectUtils from "../../../utils/ObjectUtils";
+import { IRFunc } from "../../IR/IRNodes/IRFunc";
+import { IRVar } from "../../IR/IRNodes/IRVar";
 import { Lambda } from "../../UPLC/UPLCTerms/Lambda";
 import { UPLCVar } from "../../UPLC/UPLCTerms/UPLCVar";
 import { PLam } from "../PTypes";
@@ -25,13 +27,13 @@ return ( termFunc: ( input: UtilityTermOf<ToPType<A>> ) => Term<ToPType<B>> ): P
 
             const boundVar = new Term<ToPType<A>>(
                 inputType as any,
-                dbnAccessLevel => new UPLCVar( dbnAccessLevel - thisLambdaPtr )
+                dbnAccessLevel => new IRVar( dbnAccessLevel - thisLambdaPtr )
             );
             
             const body = termFunc( addUtilityForType( inputType )( boundVar ) as any);
 
             // here the debruijn level is incremented
-            return new Lambda( body.toUPLC( thisLambdaPtr ) );
+            return new IRFunc( 1, body.toIR( thisLambdaPtr ) );
         }
     );
 
@@ -47,7 +49,7 @@ return ( termFunc: ( input: UtilityTermOf<ToPType<A>> ) => Term<ToPType<B>> ): P
     
                 const boundVar = new Term<ToPType<A>>(
                     inT as any,
-                    dbnAccessLevel => new UPLCVar( dbnAccessLevel - thisLambdaPtr )
+                    dbnAccessLevel => new IRVar( dbnAccessLevel - thisLambdaPtr )
                 );
                 
                 const body = termFunc(
@@ -61,7 +63,7 @@ return ( termFunc: ( input: UtilityTermOf<ToPType<A>> ) => Term<ToPType<B>> ): P
                 );
     
                 // here the debruijn level is incremented
-                return new Lambda( body.toUPLC( thisLambdaPtr ) );
+                return new IRFunc( 1, body.toIR( thisLambdaPtr ) );
             }
         )
     )

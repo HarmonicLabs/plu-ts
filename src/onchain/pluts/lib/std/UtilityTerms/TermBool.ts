@@ -1,12 +1,12 @@
 import ObjectUtils from "../../../../../utils/ObjectUtils"
 import type { PType } from "../../../PType"
 import type { PBool, TermFn, PDelayed } from "../../../PTypes"
-import { Delay } from "../../../../UPLC/UPLCTerms/Delay"
 import { Term } from "../../../Term"
 import { pBool } from "../bool/pBool"
 import { PappArg } from "../../pappArg"
 import { por, pstrictOr, pand, pstrictAnd } from "../../builtins/bool"
 import { delayed } from "../../../type_system/types"
+import { IRDelayed } from "../../../../IR/IRNodes/IRDelayed"
 
 
 export type TermBool = Term<PBool> & {
@@ -32,8 +32,8 @@ function pdelay<PInstance extends PType>(toDelay: Term<PInstance>): Term<PDelaye
     return new Term(
         delayed( toDelay.type ),
         (dbn) => {
-            return new Delay(
-                toDelay.toUPLC( dbn )
+            return new IRDelayed(
+                toDelay.toIR( dbn )
             );
         }
     );

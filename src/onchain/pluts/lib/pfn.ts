@@ -59,7 +59,6 @@ export function pfn<InputsTypes extends [ TermType, ...TermType[] ], OutputType 
     {
         if( nMissingArgs === 1 ) 
         return plam( inputsTypes[ inputsTypes.length - 1 ], outputType )
-            // @ts-ignore Type instantiation is excessively deep and possibly infinite.
             ( curriedFn as any ) as any;
 
         const currentInputIndex = inputsTypes.length - nMissingArgs;

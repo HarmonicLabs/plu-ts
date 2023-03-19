@@ -23,6 +23,7 @@ import { Cloneable } from "../../interfaces/Cloneable";
  * useful documentaion:
  * - javascript for the impatient programmer: https://exploringjs.com/impatient-js/ch_bigints.html
  * 
+ * @deprecated
  */
 export class Integer
     implements Cloneable<Integer>
@@ -85,6 +86,9 @@ export class Integer
     }
 }
 
+/**
+ * @deprecated
+ */
 export class UInteger extends Integer
     implements Cloneable<UInteger>
 {

@@ -151,6 +151,47 @@ export class IRConst
             this.value as any
         );
     }
+    
+
+    static get unit(): IRConst
+    {
+        return new IRConst( unit, undefined );
+    }
+
+    static bool( b: boolean ): IRConst
+    {
+        return new IRConst( bool, b );
+    }
+
+    static byteString( b: ByteString | Uint8Array ): IRConst
+    {
+        return new IRConst( bs, b );
+    }
+
+    static int( n: number | bigint ): IRConst
+    {
+        return new IRConst( int, n );
+    }
+
+    static str( string: string ): IRConst
+    {
+        return new IRConst( str, string );
+    }
+
+    static data( d: Data ): IRConst
+    {
+        return new IRConst( data, d );
+    }
+
+    static listOf( t: TermType ): ( vals: IRConstValue[] ) => IRConst
+    {
+        return ( vals: IRConstValue[] ) => new IRConst( list( t ), vals );
+    }
+
+    static pairOf( a: TermType, b: TermType ): ( fst: IRConstValue, snd: IRConstValue ) => IRConst
+    {
+        return ( fst: IRConstValue, snd: IRConstValue ) => new IRConst( pair( a, b ), new Pair( fst, snd ) )
+    }
 }
 
 

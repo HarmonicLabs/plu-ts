@@ -1,4 +1,3 @@
-import { Builtin } from "../../../../../UPLC/UPLCTerms/Builtin";
 import { PType } from "../../../../PType";
 import { PByteString, PData, PLam, PString } from "../../../../PTypes";
 import { TermFn } from "../../../../PTypes/PFn/PFn";
@@ -19,35 +18,36 @@ import { _papp, _pcompose } from "./minimal_common";
 import { getElemsT, getFstT, getSndT } from "../../../../type_system/tyArgs";
 import { _pmap } from "../../list/pmap/minimal";
 import { _punsafeConvertType } from "../../../punsafeConvertType/minimal";
+import { IRNative } from "../../../../../IR/IRNodes/IRNative";
 
 const punBData = new Term<PLam<PData, PByteString>>(
     lam( data, bs ),
-    _dbn => Builtin.unBData
+    _dbn => IRNative.unBData
 );
 
 const punIData = new Term(
     lam( data, int ),
-    _dbn => Builtin.unIData,
+    _dbn => IRNative.unIData,
 );
 
 const pdecodeUtf8  =new Term<PLam<PByteString, PString>>(
     lam( bs, str ),
-    _dbn => Builtin.decodeUtf8,
+    _dbn => IRNative.decodeUtf8,
 );
 
 const punListData = new Term(
     lam( data, list( data ) ),
-    _dbn => Builtin.unListData
+    _dbn => IRNative.unListData
 );
 
 const punMapData = new Term(
     lam( data, list( pair( data, data ) ) ) as any,
-    _dbn => Builtin.unMapData
+    _dbn => IRNative.unMapData
 );
 
 const ppairData = new Term(
     fn([ data, data ], pair( data, data ) ),
-    _dbn => Builtin.mkPairData
+    _dbn => IRNative.mkPairData
 )
 
 const pStrFromData =

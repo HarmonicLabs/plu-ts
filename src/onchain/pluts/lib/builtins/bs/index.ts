@@ -1,7 +1,4 @@
 import ObjectUtils from "../../../../../utils/ObjectUtils";
-import { Application } from "../../../../UPLC/UPLCTerms/Application";
-import { Builtin } from "../../../../UPLC/UPLCTerms/Builtin";
-import { HoistedUPLC } from "../../../../UPLC/UPLCTerms/HoistedUPLC";
 import { PLam, PByteString, PBool, PInt, PFn, TermFn } from "../../../PTypes";
 import { Term } from "../../../Term";
 import { fn, bs, bool, int, lam } from "../../../type_system";
@@ -11,10 +8,12 @@ import { phoist } from "../../phoist";
 import { TermBS, addPByteStringMethods } from "../../std/UtilityTerms/TermBS";
 import { TermBool, addPBoolMethods } from "../../std/UtilityTerms/TermBool";
 import { TermInt, addPIntMethods } from "../../std/UtilityTerms/TermInt";
-import { _pflipUPLC } from "../_pflipUPLC";
 import { addApplications } from "../addApplications";
 import { pfn } from "../../pfn";
-import { genHoistedSourceUID } from "../../../../UPLC/UPLCTerms/HoistedUPLC/HoistedSourceUID/genHoistedSourceUID";
+import { IRNative } from "../../../../IR/IRNodes/IRNative";
+import { IRApp } from "../../../../IR/IRNodes/IRApp";
+import { IRHoisted } from "../../../../IR/IRNodes/IRHoisted";
+import { _pflipIR } from "../_pflipIR";
 
 
 
@@ -28,7 +27,7 @@ export type ByteStrBinOPToBS = Term< PLam< PByteString, PLam< PByteString, PByte
         }
 }
 
-function byteStrBinOpToBS( builtin: Builtin )
+function byteStrBinOpToBS( builtin: IRNative )
     : ByteStrBinOPToBS
 {
     const op = new Term<PLam<PByteString, PLam<PByteString, PByteString>>>(
@@ -64,7 +63,7 @@ export type ByteStrBinOPToBool = Term< PLam< PByteString, PLam< PByteString, PBo
         }
 }
 
-function byteStrBinOpToBool( builtin: Builtin )
+function byteStrBinOpToBool( builtin: IRNative )
     : ByteStrBinOPToBool
 {
     const op = new Term<PLam<PByteString, PLam<PByteString, PBool>>>(
@@ -91,7 +90,7 @@ function byteStrBinOpToBool( builtin: Builtin )
     ) as any;
 }
 
-export const pappendBs = byteStrBinOpToBS( Builtin.appendByteString );
+export const pappendBs = byteStrBinOpToBS( IRNative.appendByteString );
 export const pconsBs: Term<PLam<PInt, PLam< PByteString, PByteString>>>
 & {
     $: ( input: PappArg<PInt> ) => 
@@ -103,7 +102,7 @@ export const pconsBs: Term<PLam<PInt, PLam< PByteString, PByteString>>>
 } = (() => {
     const consByteString = new Term<PFn<[ PInt, PByteString], PByteString>>(
         fn([ int, bs ], bs ),
-        _dbn => Builtin.consByteString
+        _dbn => IRNative.consByteString
     );
 
     return  ObjectUtils.defineReadOnlyProperty(
@@ -123,17 +122,14 @@ export const pconsBs: Term<PLam<PInt, PLam< PByteString, PByteString>>>
     ) as any;
 })();
 
-const flippedConsUID = genHoistedSourceUID();
-
 export const flippedCons = addApplications<[ PByteString, PInt ], PByteString>( 
     new Term(
         fn([ bs, int ], bs),
-        _dbn => new HoistedUPLC(
-            new Application(
-                _pflipUPLC.clone(),
-                Builtin.consByteString
-            ),
-            flippedConsUID
+        _dbn => new IRHoisted(
+            new IRApp(
+                _pflipIR.clone(),
+                IRNative.consByteString
+            )
         )
     )
 );
@@ -152,7 +148,7 @@ export const psliceBs: Term<PLam<PInt, PLam< PInt, PLam< PByteString, PByteStrin
 } = (() => {
     const sliceBs = new Term<PFn<[ PInt, PInt, PByteString ], PByteString>>(
         fn([ int, int, bs ], bs ),
-        _dbn => Builtin.sliceByteString,
+        _dbn => IRNative.sliceByteString,
     );
 
     return ObjectUtils.defineReadOnlyProperty(
@@ -197,7 +193,7 @@ export const plengthBs :TermFn<[ PByteString ], PInt>
     = (() => {
         const lenBS = new Term<PLam< PByteString, PInt>>(
             lam( bs, int ),
-            _dbn => Builtin.lengthOfByteString,
+            _dbn => IRNative.lengthOfByteString,
         );
 
         return ObjectUtils.defineReadOnlyProperty(
@@ -220,7 +216,7 @@ export const pindexBs
     = (() => {
         const idxBS = new Term<PFn<[ PByteString, PInt ], PInt>>(
                 fn([ bs, int ], int ),
-                _dbn => Builtin.indexByteString,
+                _dbn => IRNative.indexByteString,
             );
         
         return ObjectUtils.defineReadOnlyProperty(
@@ -244,9 +240,9 @@ export const pindexBs
         )
     })();
 
-export const peqBs      = byteStrBinOpToBool( Builtin.equalsByteString );
-export const plessBs    = byteStrBinOpToBool( Builtin.lessThanByteString );
-export const plessEqBs  = byteStrBinOpToBool( Builtin.lessThanEqualsByteString );
+export const peqBs      = byteStrBinOpToBool( IRNative.equalsByteString );
+export const plessBs    = byteStrBinOpToBool( IRNative.lessThanByteString );
+export const plessEqBs  = byteStrBinOpToBool( IRNative.lessThanEqualsByteString );
 
 export const pgreaterBS: ByteStrBinOPToBool =
     phoist(
@@ -266,21 +262,21 @@ export const psha2_256: TermFn<[ PByteString ], PByteString> =
     addApplications<[ PByteString ], PByteString>(
         new Term(
             lam( bs, bs ),
-            _dbn => Builtin.sha2_256
+            _dbn => IRNative.sha2_256
         )
     );
 export const psha3_256: TermFn<[ PByteString ], PByteString> =
     addApplications<[ PByteString ], PByteString>(
         new Term(
             lam( bs, bs ),
-            _dbn => Builtin.sha3_256
+            _dbn => IRNative.sha3_256
         )
     );
 export const pblake2b_256: TermFn<[ PByteString ], PByteString> =
     addApplications<[ PByteString ], PByteString>(
         new Term(
             lam( bs, bs ),
-            _dbn => Builtin.blake2b_256
+            _dbn => IRNative.blake2b_256
         )
     );
 
@@ -299,7 +295,7 @@ export const pverifyEd25519: TermFn<[ PByteString, PByteString, PByteString ], P
     addApplications<[ PByteString, PByteString, PByteString ], PBool>(
         new Term(
             fn([ bs, bs, bs ], bool),
-            _dbn => Builtin.verifyEd25519Signature
+            _dbn => IRNative.verifyEd25519Signature
         )
     );
 
@@ -332,7 +328,7 @@ export const pverifySecp256k1ECDSA: TermFn<[ PByteString, PByteString, PByteStri
 addApplications<[ PByteString, PByteString, PByteString ], PBool>(
     new Term(
         fn([ bs, bs, bs ], bool),
-        _dbn => Builtin.verifyEcdsaSecp256k1Signature
+        _dbn => IRNative.verifyEcdsaSecp256k1Signature
     )
 );
 
@@ -351,6 +347,6 @@ export const pverifySecp256k1Schnorr: TermFn<[ PByteString, PByteString, PByteSt
 addApplications<[ PByteString, PByteString, PByteString ], PBool>(
     new Term(
         fn([ bs, bs, bs ], bool),
-        _dbn => Builtin.verifySchnorrSecp256k1Signature
+        _dbn => IRNative.verifySchnorrSecp256k1Signature
     )
 );

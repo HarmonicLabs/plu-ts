@@ -1,9 +1,8 @@
-import { bool, compile, termTypeToString } from "../..";
+import { bool, compile } from "../..";
 import { Machine } from "../../../CEK";
 import { PTxId, PTxOutRef, V2 } from "../../API";
 import { pstruct, pmatch } from "../../PTypes";
-import { pByteString, pData, pDataB, pDataI, perror, pfn, pfstPair, pisEmpty, plet, punsafeConvertType } from "../../lib";
-import { tx_v2, validatorSpendingUtxo } from "../../../test_utils";
+import { pData, pDataB, pDataI, perror, pfn, pisEmpty, plet, punsafeConvertType } from "../../lib";
 import { ErrorUPLC } from "../../../UPLC/UPLCTerms/ErrorUPLC";
 import { dataFromCbor } from "../../../../types/Data";
 import { UPLCTerm, showUPLC } from "../../../UPLC/UPLCTerm";
