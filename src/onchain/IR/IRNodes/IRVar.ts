@@ -30,8 +30,10 @@ export class IRVar
 
     parent: IRTerm | undefined;
 
-    constructor( DeBruijn: number )
+    constructor( DeBruijn: number | bigint )
     {
+        DeBruijn = typeof DeBruijn === "number" ? DeBruijn : Number( DeBruijn );
+        
         let hash: Uint8Array | undefined = undefined;
         Object.defineProperty(
             this, "hash", {
