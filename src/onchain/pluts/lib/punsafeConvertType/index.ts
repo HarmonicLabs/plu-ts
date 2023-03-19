@@ -15,7 +15,7 @@ export function punsafeConvertType<FromPInstance extends PType, ToTermType exten
 
     const converted = new Term(
         toType,
-        someTerm.toUPLC,
+        someTerm.toIR,
         Boolean((someTerm as any).isConstant) // isConstant
     ) as any;
 

@@ -15,11 +15,17 @@ import { genHoistedSourceUID } from "../../UPLC/UPLCTerms/HoistedUPLC/HoistedSou
 import { cloneTermType } from "../type_system/cloneTermType";
 import { ToUPLC } from "../../UPLC/interfaces/ToUPLC";
 import { ToIR } from "../../IR/interfaces/ToIR";
+import { IRTerm } from "../../IR/IRTerm";
+import { IRHoisted } from "../../IR/IRNodes/IRHoisted";
+import { compileIRToUPLC } from "../../IR/toUPLC/compileIRToUPLC";
+import { UPLCConst } from "../../UPLC/UPLCTerms/UPLCConst";
+import { IRConst } from "../../IR/IRNodes/IRConst";
+import { IRError } from "../../IR/IRNodes/IRError";
 
 export type UnTerm<T extends Term<PType>> = T extends Term<infer PT extends PType > ? PT : never;
 
 export class Term<A extends PType>
-    implements ToUPLC
+    implements ToUPLC, ToIR
 {
     /**
      * in most cases it will never be used
@@ -39,9 +45,11 @@ export class Term<A extends PType>
     // typescript being silly here
     readonly type!: FromPType<A> | TermType;
     
-    readonly toUPLC!: ( deBruijnLevel: bigint | number ) => UPLCTerm
+    readonly toUPLC!: ( deBruijnLevel?: bigint | number ) => UPLCTerm
 
-    constructor( type: FromPType<A> | FromPType<ToPType<TermType>> , _toUPLC: ( dbn: bigint ) => UPLCTerm, isConstant: boolean = false )
+    readonly toIR!: ( deBruijnLevel?: bigint | number ) => IRTerm
+
+    constructor( type: FromPType<A> | FromPType<ToPType<TermType>> , _toIR: ( dbn: bigint ) => IRTerm, isConstant: boolean = false )
     {
         JsRuntime.assert(
             isWellFormedGenericType( type ) ||
@@ -61,44 +69,61 @@ export class Term<A extends PType>
             }
         );
 
-        let _toUPLC_ = _toUPLC;
+        let _toIR_ = _toIR;
+
+        Object.defineProperty(
+            this, "toIR",
+            {
+                value: ( deBruijnLevel: bigint | number = 0 ) =>
+                {
+                    if( typeof deBruijnLevel !== "bigint" ) deBruijnLevel = BigInt( deBruijnLevel );
+        
+                    let ir = _toIR_( deBruijnLevel );
+                    if( 
+                        !(ir instanceof IRHoisted) &&
+                        (this as any).isConstant
+                    )
+                    {
+                        // !!! IMPORTANT !!!
+                        // `compileIRToUPLC` modifies the `IRTerm` in place !
+                        // as for the current implementation we don't care
+                        // because we are going to re-assign the variable `ir` anyway
+                        // if this ever changes make sure to call `ir.clone()`
+                        let uplc = compileIRToUPLC( ir/*.clone()*/ );
+        
+                        // !!! IMPORTANT !!!
+                        // pair creation assumes this evaluation is happening here
+                        // if for whatever reason this is removed please adapt the rest of the codebas
+                        uplc = Machine.evalSimple( uplc );
+
+                        if( uplc instanceof UPLCConst )
+                        {
+                            ir = new IRConst( this.type, uplc.value );
+                        }
+                        else
+                        {
+                            ir = new IRError();
+                        }
+                    }
+        
+                    return ir;
+                },
+                writable: false,
+                enumerable: true,
+                configurable: false
+            });
 
         Object.defineProperty(
         this, "toUPLC",
         {
-            value: ( deBruijnLevel: bigint | number ) =>
+            value: ( deBruijnLevel: bigint | number = 0 ) =>
             {
-                if( typeof deBruijnLevel !== "bigint" ) deBruijnLevel = BigInt( deBruijnLevel );
-    
-                let uplc = _toUPLC_( deBruijnLevel );
-                if( 
-                    !(uplc instanceof HoistedUPLC) &&
-                    (this as any).isConstant
-                )
-                {
-                    // console.log("evaluating:\n\n", showUPLC( uplc ) );
-    
-                    // !!! IMPORTANT !!!
-                    // pair creation assumes this evaluation is happening here
-                    // if for whatever reason this is removed please adapt the rest of the codebas
-                    uplc = Machine.evalSimple( uplc )
-                }
-    
-                return uplc;
+                return compileIRToUPLC( this.toIR( deBruijnLevel ) )
             },
             writable: false,
             enumerable: true,
             configurable: false
         });
-
-        let _this_hoistedUID: HoistedSourceUID | undefined = undefined;
-        const getThisHoistedUID = () => {
-            if( typeof _this_hoistedUID !== "string" )
-            {
-                _this_hoistedUID = genHoistedSourceUID();
-            }
-            return _this_hoistedUID;
-        }
 
         let wasEverHoisted: boolean = false;
         ObjectUtils.defineReadOnlyHiddenProperty(
@@ -108,12 +133,11 @@ export class Term<A extends PType>
                 if( wasEverHoisted ) return;
                 else wasEverHoisted = true;
                 
-                const prev_toUPLC_ = _toUPLC_;
+                const prev_toIR_= _toIR_;
                 
-                _toUPLC_ = ( dbn: bigint ) =>
-                    new HoistedUPLC(
-                        prev_toUPLC_( dbn ), 
-                        getThisHoistedUID()
+                _toIR_ = ( dbn: bigint ) =>
+                    new IRHoisted(
+                        prev_toIR_( dbn )
                     );
             }
         )

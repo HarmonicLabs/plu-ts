@@ -1,7 +1,7 @@
 import type { PType } from "../../PType";
 import type { TermType } from "../../type_system/types";
 import type { ToPType } from "../../type_system/ts-pluts-conversion";
-import { type UtilityTermOf, addUtilityForType } from "../addUtilityForType";
+import { type UtilityTermOf } from "../addUtilityForType";
 import { BasePlutsError } from "../../../../errors/BasePlutsError";
 import { isWellFormedType } from "../../type_system/kinds/isWellFormedType";
 import { Term } from "../../Term";
@@ -15,7 +15,7 @@ export function _punsafeConvertType<FromPInstance extends PType, ToTermType exte
 
     const converted = new Term(
         toType,
-        someTerm.toUPLC,
+        someTerm.toIR,
         Boolean((someTerm as any).isConstant) // isConstant
     ) as any;
 
