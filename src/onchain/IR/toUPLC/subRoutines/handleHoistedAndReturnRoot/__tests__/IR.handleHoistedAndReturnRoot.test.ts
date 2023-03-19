@@ -23,9 +23,9 @@ describe("handleHoistedAndReturnRoot", () => {
                             new IRApp(
                                 new IRVar( 0 ),
                                 new IRApp(
-                                    IRNative.sndPair,
+                                    new IRHoisted( IRNative.sndPair ),
                                     new IRApp(
-                                        IRNative.unConstrData,
+                                        new IRHoisted( IRNative.unConstrData ),
                                         new IRVar( 1 )
                                     )
                                 )
@@ -67,10 +67,6 @@ describe("handleHoistedAndReturnRoot", () => {
                 new IRFunc( 1, IRConst.int( 1 ) )
             ).toJson()
         );
-
-        console.log( showUPLC( root.toUPLC() ) )
-
-        console.log( showUPLC( compileIRToUPLC( initalRootClone ) ) )
 
     });
 

@@ -107,10 +107,15 @@ export class IRHoisted
         Object.defineProperty(
             this, "dependencies",
             {
-                get: (): HoistedSetEntry[] => _deps.map( dep => ({
-                    hoisted: dep.hoisted.clone(),
-                    nReferences: dep.nReferences
-                })), // MUST return clones
+                get: (): HoistedSetEntry[] => _deps.map( dep => {
+
+                    const hoisted = dep.hoisted.clone();
+                    hoisted.parent = dep.hoisted.parent;
+                    return {
+                        hoisted,
+                        nReferences: dep.nReferences
+                    };
+                }), // MUST return clones
                 set: () => {},
                 enumerable: true,
                 configurable: false
@@ -139,8 +144,8 @@ export class IRHoisted
             this, "clone",
             () => {
                 return new IRHoisted(
-                    this.hoisted.clone(),
-                    _deps.slice() // as long as `dependecies` getter returns clones this is fine
+                    this.hoisted.clone()
+                    // _deps.slice() // as long as `dependecies` getter returns clones this is fine
                 );
             }
         );
@@ -226,7 +231,9 @@ export function getHoistedTerms( irTerm: IRTerm ): HoistedSetEntry[]
     {
         if( term instanceof IRHoisted )
         {
-            hoisteds.push( ...term.dependencies, {hoisted: term, nReferences: 1 });
+            // only push direct hoisteds
+            // dependencies are counted calling `getSortedHoistedSet`
+            hoisteds.push({hoisted: term, nReferences: 1 });
             return;
         }
 

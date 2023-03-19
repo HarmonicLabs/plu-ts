@@ -1,4 +1,4 @@
-import { uint8ArrayEq } from "@harmoniclabs/uint8array-utils";
+import { toHex, uint8ArrayEq } from "@harmoniclabs/uint8array-utils";
 import { IRApp } from "../../../IRNodes/IRApp";
 import { IRDelayed } from "../../../IRNodes/IRDelayed";
 import { IRForced } from "../../../IRNodes/IRForced";
@@ -36,12 +36,12 @@ export function handleHoistedAndReturnRoot( term: IRTerm ): IRTerm
     // drop unused space
     hoisteds.length = a;
     hoistedsToInline.length = b;
-    
+
     // inline single references from last to first
     let hoisted : IRHoisted;
     for( let i = hoistedsToInline.length - 1; i >= 0; i-- )
     {
-        hoisted = hoistedsToInline.pop() as IRHoisted;
+        hoisted = hoistedsToInline[i] as IRHoisted;
         _modifyChildFromTo(
             hoisted.parent as IRTerm,
             hoisted,

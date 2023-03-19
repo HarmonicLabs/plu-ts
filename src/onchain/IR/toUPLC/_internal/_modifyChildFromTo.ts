@@ -8,6 +8,7 @@ import { IRFunc } from "../../IRNodes/IRFunc";
 import { IRHoisted } from "../../IRNodes/IRHoisted";
 import { IRLetted } from "../../IRNodes/IRLetted";
 import { IRTerm } from "../../IRTerm";
+import { logJson } from "../../../../utils/ts/ToJson";
 
 
 /**
@@ -16,7 +17,7 @@ import { IRTerm } from "../../IRTerm";
  * @param currentChild mainly passed to distinguish in case of `IRApp`
  * @param newChild new node's child
  */
-export function _modifyChildFromTo( parent: IRTerm | undefined, currentChild: IRTerm, newChild: IRTerm ): void
+export function _modifyChildFromTo( parent: IRTerm | undefined, currentChild: IRTerm | Uint8Array, newChild: IRTerm ): void
 {
     if( parent === undefined )
     {
@@ -34,43 +35,48 @@ export function _modifyChildFromTo( parent: IRTerm | undefined, currentChild: IR
         // DO NO USE SHALLOW EQUALITY
         // child might be cloned
 
+        const currChildHash = currentChild instanceof Uint8Array ? currentChild : currentChild.hash;
+
         if( // if the function is likely to already have an hash
             parent.fn instanceof IRLetted ||
             parent.fn instanceof IRHoisted
         )
         {   // then check the function first
 
-            if( uint8ArrayEq( parent.fn.hash, currentChild.hash ) )
+            if( uint8ArrayEq( parent.fn.hash, currChildHash ) )
             {
                 parent.fn = newChild;
             }
-            else if( uint8ArrayEq( parent.arg.hash, currentChild.hash ) )
+            else if( uint8ArrayEq( parent.arg.hash, currChildHash ) )
             {
                 parent.arg = newChild;
             }
             else throw new PlutsIRError(
                 "unknown 'IRApp' child to modify; given child to modify hash: " +
-                toHex( currentChild.hash ) +
+                toHex( currChildHash ) +
                 "; function child hash: " + toHex( parent.fn.hash ) +
                 "; argument child hash: " + toHex( parent.arg.hash )
             );
         }
         else // check the argument first as it is more likely to have a smaller tree
         {
-            if( uint8ArrayEq( parent.arg.hash, currentChild.hash ) )
+            if( uint8ArrayEq( parent.arg.hash, currChildHash ) )
             {
                 parent.arg = newChild;
             }
-            else if( uint8ArrayEq( parent.fn.hash, currentChild.hash ) )
+            else if( uint8ArrayEq( parent.fn.hash, currChildHash ) )
             {
                 parent.fn = newChild;
             }
-            else throw new PlutsIRError(
-                "unknown 'IRApp' child to modify; given child to modify hash: " +
-                toHex( currentChild.hash ) +
-                "; function child hash: " + toHex( parent.fn.hash ) +
-                "; argument child hash: " + toHex( parent.arg.hash )
-            );
+            else
+            {
+                throw new PlutsIRError(
+                    "unknown 'IRApp' child to modify; given child to modify hash: " +
+                    toHex( currChildHash ) +
+                    "; function child hash: " + toHex( parent.fn.hash ) +
+                    "; argument child hash: " + toHex( parent.arg.hash )
+                );
+            }
         }
 
         

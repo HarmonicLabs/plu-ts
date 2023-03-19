@@ -51,9 +51,7 @@ export function compileIRToUPLC( term: IRTerm ): UPLCTerm
     // ------------------------------------------------------------------------- //
     ///////////////////////////////////////////////////////////////////////////////
 
-    logJson( term, 4 );
     term = replaceNativesAndReturnRoot( term );
-    logJson( term, 4 );
 
     term = handleHoistedAndReturnRoot( term );
 

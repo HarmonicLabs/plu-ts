@@ -190,7 +190,8 @@ const hoisted_foldr = new IRHoisted(
 
 export function nativeToIR( native: IRNative ): IRTerm
 {
-    if( native.tag >= 0 ) return new IRHoisted( native );
+    // positive natives are translated to uplc builtins (no need to hoist)
+    if( native.tag >= 0 ) return native;
 
     switch( native.tag )
     {
