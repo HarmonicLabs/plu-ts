@@ -12,10 +12,14 @@ import { isWellFormedGenericType } from "../type_system/kinds/isWellFormedType";
 import { TermType } from "../type_system/types";
 import { HoistedSourceUID } from "../../UPLC/UPLCTerms/HoistedUPLC/HoistedSourceUID";
 import { genHoistedSourceUID } from "../../UPLC/UPLCTerms/HoistedUPLC/HoistedSourceUID/genHoistedSourceUID";
+import { cloneTermType } from "../type_system/cloneTermType";
+import { ToUPLC } from "../../UPLC/interfaces/ToUPLC";
+import { ToIR } from "../../IR/interfaces/ToIR";
 
 export type UnTerm<T extends Term<PType>> = T extends Term<infer PT extends PType > ? PT : never;
 
 export class Term<A extends PType>
+    implements ToUPLC
 {
     /**
      * in most cases it will never be used
@@ -33,38 +37,11 @@ export class Term<A extends PType>
     }
 
     // typescript being silly here
-    _type!: FromPType<A> | TermType;
-    get type(): FromPType<A> | TermType
-    {
-        return this._type
-    };
+    readonly type!: FromPType<A> | TermType;
+    
+    readonly toUPLC!: ( deBruijnLevel: bigint | number ) => UPLCTerm
 
-    protected _toUPLC!: ( deBruijnLevel: bigint ) => UPLCTerm
-    get toUPLC(): ( deBruijnLevel: bigint | number ) => UPLCTerm
-    {
-        return ( deBruijnLevel: bigint | number ) =>
-        {
-            if( typeof deBruijnLevel !== "bigint" ) deBruijnLevel = BigInt( deBruijnLevel );
-
-            let uplc = this._toUPLC( deBruijnLevel );
-            if( 
-                !(uplc instanceof HoistedUPLC) &&
-                (this as any).isConstant
-            )
-            {
-                // console.log("evaluating:\n\n", showUPLC( uplc ) );
-
-                // !!! IMPORTANT !!!
-                // pair creation assumes this evaluation is happening here
-                // if for whatever reason this is removed please adapt the rest of the codebas
-                uplc = Machine.evalSimple( uplc )
-            }
-
-            return uplc;
-        } 
-    };
-
-    constructor( type: FromPType<A> | FromPType<ToPType<TermType>> , toUPLC: ( dbn: bigint ) => UPLCTerm, isConstant: boolean = false )
+    constructor( type: FromPType<A> | FromPType<ToPType<TermType>> , _toUPLC: ( dbn: bigint ) => UPLCTerm, isConstant: boolean = false )
     {
         JsRuntime.assert(
             isWellFormedGenericType( type ) ||
@@ -72,33 +49,47 @@ export class Term<A extends PType>
             "invalid type while constructing Term"
         );
 
-        ObjectUtils.defineReadOnlyProperty(
-            this,
-            "_type",
-            type
-        );
-
-        const proofSym = Symbol("overwrite_toUPLC_proofSym");
-
-        // "copying" the function ref is needed to prevent potential "external" js override
-        // 'toUPLC' (the constructor param) is used to override in case of hoisting
-        // '_toUPLC' is used to get and set the property
-        let _toUPLC = toUPLC;
+        let _type = cloneTermType( type );
         Object.defineProperty(
             this,
-            "_toUPLC",
+            "type",
             {
-                get: () => _toUPLC,
-                set: ( v: { proof: symbol, value: ( dbn: bigint ) => UPLCTerm }) => {
-                    if( typeof v === "object" && v?.proof === proofSym )
-                    {
-                        _toUPLC = v.value;
-                    }
-                },
-                configurable: false,
-                enumerable: true
+                get: () => cloneTermType( _type ),
+                set: () => {},
+                enumerable: true,
+                configurable: false
             }
         );
+
+        let _toUPLC_ = _toUPLC;
+
+        Object.defineProperty(
+        this, "toUPLC",
+        {
+            value: ( deBruijnLevel: bigint | number ) =>
+            {
+                if( typeof deBruijnLevel !== "bigint" ) deBruijnLevel = BigInt( deBruijnLevel );
+    
+                let uplc = _toUPLC_( deBruijnLevel );
+                if( 
+                    !(uplc instanceof HoistedUPLC) &&
+                    (this as any).isConstant
+                )
+                {
+                    // console.log("evaluating:\n\n", showUPLC( uplc ) );
+    
+                    // !!! IMPORTANT !!!
+                    // pair creation assumes this evaluation is happening here
+                    // if for whatever reason this is removed please adapt the rest of the codebas
+                    uplc = Machine.evalSimple( uplc )
+                }
+    
+                return uplc;
+            },
+            writable: false,
+            enumerable: true,
+            configurable: false
+        });
 
         let _this_hoistedUID: HoistedSourceUID | undefined = undefined;
         const getThisHoistedUID = () => {
@@ -109,24 +100,21 @@ export class Term<A extends PType>
             return _this_hoistedUID;
         }
 
-        let hoisted: HoistedUPLC | undefined = undefined;
+        let wasEverHoisted: boolean = false;
         ObjectUtils.defineReadOnlyHiddenProperty(
             this,
             "hoist",
             () => {
-                this._toUPLC = {
-                    proof: proofSym,
-                    value: (_dbn: bigint) => {
-
-                        if( hoisted === undefined || !(hoisted instanceof HoistedUPLC) ) 
-                            hoisted = new HoistedUPLC(
-                                toUPLC( BigInt( 0 ) ),
-                                getThisHoistedUID()
-                            );
-
-                        return hoisted.clone()
-                    }
-                } as any;
+                if( wasEverHoisted ) return;
+                else wasEverHoisted = true;
+                
+                const prev_toUPLC_ = _toUPLC_;
+                
+                _toUPLC_ = ( dbn: bigint ) =>
+                    new HoistedUPLC(
+                        prev_toUPLC_( dbn ), 
+                        getThisHoistedUID()
+                    );
             }
         )
 

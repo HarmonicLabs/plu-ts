@@ -21,7 +21,8 @@ export function _punsafeConvertType<FromPInstance extends PType, ToTermType exte
 
     Object.keys( someTerm ).forEach( k => {
 
-        if( k === "_type" || k === "_toUPLC" ) return;
+        // do not overwrite `type` and `toUPLC` properties
+        if( k === "type" || k === "toUPLC" ) return;
         
         Object.defineProperty(
             converted,
