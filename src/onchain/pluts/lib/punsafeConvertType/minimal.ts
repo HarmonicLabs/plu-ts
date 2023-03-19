@@ -22,7 +22,7 @@ export function _punsafeConvertType<FromPInstance extends PType, ToTermType exte
     Object.keys( someTerm ).forEach( k => {
 
         // do not overwrite `type` and `toUPLC` properties
-        if( k === "type" || k === "toUPLC" ) return;
+        if( k === "type" || k === "toUPLC" || k === "toIR") return;
         
         Object.defineProperty(
             converted,

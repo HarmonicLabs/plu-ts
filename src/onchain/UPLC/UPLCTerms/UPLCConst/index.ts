@@ -2,11 +2,10 @@ import JsRuntime from "../../../../utils/JsRuntime";
 import { BinaryString } from "../../../../types/bits/BinaryString";
 import { BitStream } from "../../../../types/bits/BitStream";
 import { ByteString } from "../../../../types/HexString/ByteString";
-import { Integer, UInteger } from "../../../../types/ints/Integer";
 import { Pair } from "../../../../types/structs/Pair";
 import { Data } from "../../../../types/Data/Data";
 import { ConstType, constT, constTypeToStirng, isWellFormedConstType } from "./ConstType";
-import { ConstValue, canConstValueBeOfConstType, ConstValueList, inferConstTypeFromConstValue } from "./ConstValue";
+import { ConstValue, canConstValueBeOfConstType, ConstValueList, inferConstTypeFromConstValue, isConstValueInt } from "./ConstValue";
 import { Cloneable } from "../../../../types/interfaces/Cloneable";
 
 
@@ -35,7 +34,7 @@ export class UPLCConst
         return this._value;
     }
 
-    constructor( type: ConstType, value: Integer )
+    constructor( type: ConstType, value: number | bigint )
     constructor( type: ConstType, value: ByteString )
     constructor( type: ConstType, value: string )
     constructor( type: ConstType, value?: undefined )
@@ -56,8 +55,7 @@ export class UPLCConst
         JsRuntime.assert(
             canConstValueBeOfConstType( value, typeTag ),
             `trying to construct an UPLC constant with an invalid value for type "${constTypeToStirng( typeTag )}";
-             input value was: ${value}; 
-             of inferred type: ${constTypeToStirng( inferConstTypeFromConstValue(value) ?? constT.unit )}`
+             input value was: ${value}`
         )
         
         this._type = typeTag;
@@ -72,45 +70,12 @@ export class UPLCConst
         );
     }
 
-    // toUPLCBitStream( ctx: UPLCSerializationContex ): BitStream
-    // {
-    //     const constBitStream = UPLCConst.UPLCTag;
-    //     
-    //     constBitStream.append(
-    //         encodeConstTypeToUPLCBitStream(
-    //             this.type
-    //         )
-    //     );
-// 
-    //     ctx.updateWithBitStreamAppend( constBitStream );
-// 
-    //     const valueBitStream = encodeConstValueToUPLCBitStream(
-    //         this.value,
-    //         ctx
-    //     );
-// 
-    //     constBitStream.append( valueBitStream );
-// 
-    //     ctx.updateWithBitStreamAppend( valueBitStream );
-// 
-    //     return constBitStream;
-    // }
-    
-    static int( int: Integer | number | bigint ): UPLCConst
+    static int( int: number | bigint ): UPLCConst
     {
         // new Integer works for both number | bigint
-        if( !(int instanceof Integer) )
+        if( !isConstValueInt( int ) )
         {
-            // throws if Math.round( int ) !== int
-            int = new Integer( int );
-        }
-
-        if( int instanceof Integer )
-        {
-            if( !Integer.isStrictInstance( int ) )
-            {
-                int = (int as UInteger).toSigned();
-            }
+            int = BigInt( int );
         }
 
         return new UPLCConst( constT.int , int );
@@ -140,9 +105,7 @@ export class UPLCConst
     {
         return function ( values: ConstValueList ): UPLCConst
         {
-            if( typeof values[0] === "number" || typeof values[0] === "bigint" )
-                values = values.map( v => new Integer( v as any ) );
-            return new UPLCConst( constT.listOf( typeArg ), values );
+            return new UPLCConst( constT.listOf( typeArg ), values.map( n => BigInt( n as any ) ) );
         };
     }
 

@@ -8,7 +8,6 @@ import { CanBeUInteger, canBeUInteger, forceBigUInt } from "../../../types/ints/
 import { Pair } from "../../../types/structs/Pair";
 import ObjectUtils from "../../../utils/ObjectUtils";
 import { isConstValueList } from "../../UPLC/UPLCTerms/UPLCConst/ConstValue";
-import { termTypeToString, typeExtends } from "../../pluts";
 import { cloneTermType } from "../../pluts/type_system/cloneTermType";
 import { isWellFormedType } from "../../pluts/type_system/kinds/isWellFormedType";
 import { termTyToConstTy } from "../../pluts/type_system/termTyToConstTy";
@@ -24,6 +23,8 @@ import { UnexpectedMarkHashInvalidCall } from "../../../errors/PlutsIRError/Unex
 import { ToJson } from "../../../utils/ts/ToJson";
 import { ToUPLC } from "../../UPLC/interfaces/ToUPLC";
 import { UPLCConst } from "../../UPLC/UPLCTerms/UPLCConst";
+import { typeExtends } from "../../pluts/type_system/typeExtends";
+import { termTypeToString } from "../../pluts/type_system/utils";
 
 export type IRConstValue
     = CanBeUInteger

@@ -1,14 +1,13 @@
 import { uint8ArrayEq } from "@harmoniclabs/uint8array-utils";
-import { lam, tyVar } from "../../../pluts";
-import { IRApp } from "../../IRNodes/IRApp";
-import { IRDelayed } from "../../IRNodes/IRDelayed";
-import { IRForced } from "../../IRNodes/IRForced";
-import { IRFunc } from "../../IRNodes/IRFunc";
-import { getSortedHoistedSet, getHoistedTerms, IRHoisted } from "../../IRNodes/IRHoisted";
-import { IRLetted } from "../../IRNodes/IRLetted";
-import { IRVar } from "../../IRNodes/IRVar";
-import { IRTerm } from "../../IRTerm";
-import { _modifyChildFromTo } from "../_internal/_modifyChildFromTo";
+import { IRApp } from "../../../IRNodes/IRApp";
+import { IRDelayed } from "../../../IRNodes/IRDelayed";
+import { IRForced } from "../../../IRNodes/IRForced";
+import { IRFunc } from "../../../IRNodes/IRFunc";
+import { getSortedHoistedSet, getHoistedTerms, IRHoisted } from "../../../IRNodes/IRHoisted";
+import { IRLetted } from "../../../IRNodes/IRLetted";
+import { IRVar } from "../../../IRNodes/IRVar";
+import { IRTerm } from "../../../IRTerm";
+import { _modifyChildFromTo } from "../../_internal/_modifyChildFromTo";
 
 export function handleHoistedAndReturnRoot( term: IRTerm ): IRTerm
 {

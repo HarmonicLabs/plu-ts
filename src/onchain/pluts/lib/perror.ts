@@ -1,5 +1,4 @@
 import { IRError } from "../../IR/IRNodes/IRError";
-import { ErrorUPLC } from "../../UPLC/UPLCTerms/ErrorUPLC";
 import { Term } from "../Term";
 import { TermType, ToPType } from "../type_system";
 

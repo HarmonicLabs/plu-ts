@@ -1,6 +1,6 @@
 import { PlutsIRError } from "../../../../../errors/PlutsIRError";
 import { DataConstr } from "../../../../../types/Data";
-import { bool, data, int, unit } from "../../../../pluts";
+import { bool, data, int, unit } from "../../../../pluts/type_system/types";
 import { IRApp } from "../../../IRNodes/IRApp";
 import { IRConst } from "../../../IRNodes/IRConst";
 import { IRDelayed } from "../../../IRNodes/IRDelayed";

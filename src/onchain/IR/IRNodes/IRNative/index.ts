@@ -13,6 +13,7 @@ import { IHash } from "../../interfaces/IHash";
 import { IIRParent } from "../../interfaces/IIRParent";
 import { concatUint8Arr } from "../../utils/concatUint8Arr";
 import { isIRTerm } from "../../utils/isIRTerm";
+import { positiveBigIntAsBytes, positiveIntAsBytes } from "../../utils/positiveIntAsBytes";
 import { IRNativeTag, nativeTagToString } from "./IRNativeTag";
 
 /**
@@ -72,8 +73,8 @@ export class IRNative
                         nativeHashesCache[this.tag] = blake2b_224( 
                             concatUint8Arr( 
                                 IRNative.tag, 
-                                new Uint8Array([
-                                    parseInt(
+                                positiveBigIntAsBytes(
+                                    BigInt(
                                         "0b" + 
                                         UPLCFlatUtils.zigzagBigint(
                                             BigInt( this.tag )
@@ -82,7 +83,7 @@ export class IRNative
                                         // zigzagged it becomes up to 8
                                         .toString(2).padStart( 8, '0' )
                                     )
-                                ])
+                                )
                             )
                         );
                     }

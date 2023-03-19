@@ -6,11 +6,11 @@ import { _makeAllNegativeNativesHoisted } from "./_internal/_makeAllNegativeNati
 import { handleLetted } from "./subRoutines/handleLetted";
 import { handleHoistedAndReturnRoot } from "./subRoutines/handleHoistedAndReturnRoot";
 import { replaceNativesAndReturnRoot } from "./subRoutines/replaceNatives";
-import { logJson } from "../../../utils/ts/ToJson";
 import { IRLetted } from "../IRNodes/IRLetted";
+import { logJson } from "../../../utils/ts/ToJson";
 
 export function compileIRToUPLC( term: IRTerm ): UPLCTerm
-{   
+{
     ///////////////////////////////////////////////////////////////////////////////
     // ------------------------------------------------------------------------- //
     // --------------------------------- init  --------------------------------- //
@@ -51,7 +51,9 @@ export function compileIRToUPLC( term: IRTerm ): UPLCTerm
     // ------------------------------------------------------------------------- //
     ///////////////////////////////////////////////////////////////////////////////
 
+    logJson( term, 4 );
     term = replaceNativesAndReturnRoot( term );
+    logJson( term, 4 );
 
     term = handleHoistedAndReturnRoot( term );
 

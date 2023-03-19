@@ -5,7 +5,6 @@ import { PlutsCEKError } from "../../../errors/PlutsCEKError";
 import { BuiltinCostsOf, costModelV2ToBuiltinCosts } from "./BuiltinCosts";
 import { PlutsCEKUnboundVarError } from "../../../errors/PlutsCEKError/PlutsCEKComputeError/PlutsCEKUnboundVarError";
 import type { MachineCosts } from "./MachineCosts";
-import { PlutusScriptVersion } from "../../pluts/Script/PlutusScriptVersion";
 import { AnyV1CostModel, AnyV2CostModel, costModelV1ToFakeV2, defaultV2Costs, isCostModelsV1, isCostModelsV2, toCostModelV2 } from "../../../offchain/ledger/CostModels";
 import { CEKSteps, ComputeStep, ReturnStep } from "../CEKSteps";
 import { UPLCTerm, PureUPLCTerm, showUPLC } from "../../UPLC/UPLCTerm";
@@ -45,7 +44,7 @@ export type MachineVersion = MachineVersionV1 | MachineVersionV2
 
 function isMachineVersion( something: any ): something is MachineVersion
 {
-    return something === PlutusScriptVersion.V1 || something === PlutusScriptVersion.V2;
+    return something === ScriptType.PlutusV1 || something === ScriptType.PlutusV2;
 }
 
 type CostModelOf<V extends MachineVersion> =

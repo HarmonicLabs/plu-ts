@@ -10,7 +10,7 @@ import { Builtin } from "../UPLCTerms/Builtin";
 import { HoistedUPLC } from "../UPLCTerms/HoistedUPLC";
 import { ConstType, constListTypeUtils, constPairTypeUtils, constTypeToStirng, ConstTyTag } from "../UPLCTerms/UPLCConst/ConstType";
 import { builtinTagToString, getNRequiredForces } from "../UPLCTerms/Builtin/UPLCBuiltinTag";
-import { ConstValue } from "../UPLCTerms/UPLCConst/ConstValue";
+import { ConstValue, isConstValueInt } from "../UPLCTerms/UPLCConst/ConstValue";
 import { Integer } from "../../../types/ints/Integer";
 import { ByteString } from "../../../types/HexString/ByteString";
 import { isData } from "../../../types/Data/Data";
@@ -135,7 +135,7 @@ export function isClosedTerm( term: UPLCTerm ): boolean
 export function showUPLCConstValue( v: ConstValue ): string
 {
     if( v === undefined ) return "()";
-    if( v instanceof Integer ) return v.asBigInt.toString();
+    if( isConstValueInt( v ) ) return v.toString();
     if( typeof v === "string" ) return `"${v}"`;
     if( typeof v === "boolean" )  return v ? "True" : "False";
     if( v instanceof ByteString ) return "#" + v.toString();

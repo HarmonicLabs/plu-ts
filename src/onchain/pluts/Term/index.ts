@@ -5,13 +5,10 @@ import { UPLCTerm } from "../../UPLC/UPLCTerm";
 import type { PType } from "../PType";
 
 import { isCloneable } from "../../../types/interfaces/Cloneable";
-import { HoistedUPLC } from "../../UPLC/UPLCTerms/HoistedUPLC";
 import { Machine } from "../../CEK";
 import { FromPType, ToPType } from "../type_system/ts-pluts-conversion";
 import { isWellFormedGenericType } from "../type_system/kinds/isWellFormedType";
 import { TermType } from "../type_system/types";
-import { HoistedSourceUID } from "../../UPLC/UPLCTerms/HoistedUPLC/HoistedSourceUID";
-import { genHoistedSourceUID } from "../../UPLC/UPLCTerms/HoistedUPLC/HoistedSourceUID/genHoistedSourceUID";
 import { cloneTermType } from "../type_system/cloneTermType";
 import { ToUPLC } from "../../UPLC/interfaces/ToUPLC";
 import { ToIR } from "../../IR/interfaces/ToIR";

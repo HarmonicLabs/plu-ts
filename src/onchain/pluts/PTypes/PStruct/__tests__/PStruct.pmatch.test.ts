@@ -1,4 +1,4 @@
-import { pstruct, pgenericStruct } from "../pstruct"
+import { pstruct } from "../pstruct"
 import { ByteString } from "../../../../../types/HexString/ByteString";
 import { Machine } from "../../../../CEK/Machine";
 import { UPLCConst } from "../../../../UPLC/UPLCTerms/UPLCConst";
@@ -425,12 +425,16 @@ describe("pmatch", () => {
             A: {}, B: {}, C: {}, D: {}
         })
 
-        test("pmatch( stuff )._( _ => result) === result", () => {
+        test.only("pmatch( stuff )._( _ => result) === result", () => {
+
+            const uplc = pmatch( OneCtor.Ctor({}) )
+                ._( _ => pInt(1) ).toUPLC();
+
+            console.log( showUPLC( uplc ) );
 
             expect(
                 Machine.evalSimple(
-                    pmatch( OneCtor.Ctor({}) )
-                    ._( _ => pInt(1) )
+                    uplc
                 )
             ).toEqual(
                 Machine.evalSimple(
