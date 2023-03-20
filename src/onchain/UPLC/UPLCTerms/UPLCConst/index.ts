@@ -101,7 +101,7 @@ export class UPLCConst
     {
         return function ( values: ConstValueList ): UPLCConst
         {
-            return new UPLCConst( constT.listOf( typeArg ), values.map( n => BigInt( n as any ) ) );
+            return new UPLCConst( constT.listOf( typeArg ), values );
         };
     }
 

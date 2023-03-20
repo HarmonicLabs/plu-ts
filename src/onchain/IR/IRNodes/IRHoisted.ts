@@ -280,3 +280,11 @@ export function getHoistedTerms( irTerm: IRTerm ): HoistedSetEntry[]
 
     return hoisteds;
 }
+
+export function cloneHoistedSetEntry({hoisted, nReferences}: HoistedSetEntry ): HoistedSetEntry
+{
+    return {
+        hoisted: hoisted.clone(),
+        nReferences
+    };
+}

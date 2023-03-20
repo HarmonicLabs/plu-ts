@@ -1,7 +1,7 @@
 import JsRuntime from "../../../utils/JsRuntime";
 import ObjectUtils from "../../../utils/ObjectUtils";
 
-import { UPLCTerm } from "../../UPLC/UPLCTerm";
+import { UPLCTerm, showUPLC } from "../../UPLC/UPLCTerm";
 import type { PType } from "../PType";
 
 import { isCloneable } from "../../../types/interfaces/Cloneable";
@@ -20,6 +20,7 @@ import { IRConst } from "../../IR/IRNodes/IRConst";
 import { IRError } from "../../IR/IRNodes/IRError";
 import { isIRTerm } from "../../IR/utils/isIRTerm";
 import { logJson } from "../../../utils/ts/ToJson";
+import { showIR } from "../../IR/utils/showIR";
 
 export type UnTerm<T extends Term<PType>> = T extends Term<infer PT extends PType > ? PT : never;
 
@@ -83,6 +84,7 @@ export class Term<A extends PType>
                         (this as any).isConstant
                     )
                     {
+                        // console.log( showIR( ir ).text );
                         // logJson( ir )
                         // !!! IMPORTANT !!!
                         // `compileIRToUPLC` modifies the `IRTerm` in place !
@@ -90,6 +92,8 @@ export class Term<A extends PType>
                         // because we are going to re-assign the variable `ir` anyway
                         // if this ever changes make sure to call `ir.clone()`
                         let uplc = compileIRToUPLC( ir/*.clone()*/ );
+
+                        // console.log( showUPLC( uplc ) )
         
                         // !!! IMPORTANT !!!
                         // pair creation assumes this evaluation is happening here
