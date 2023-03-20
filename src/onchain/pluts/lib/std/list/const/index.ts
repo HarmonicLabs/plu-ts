@@ -3,6 +3,7 @@ import JsRuntime from "../../../../../../utils/JsRuntime";
 import { Machine } from "../../../../../CEK";
 import { IRConst } from "../../../../../IR/IRNodes/IRConst";
 import { UPLCTerm, showUPLC } from "../../../../../UPLC/UPLCTerm";
+import { UPLCConst } from "../../../../../UPLC/UPLCTerms/UPLCConst";
 import { PList, PData } from "../../../../PTypes";
 import { Term } from "../../../../Term";
 import { ToPType, isWellFormedType } from "../../../../type_system";
@@ -82,7 +83,7 @@ export function pconstList<ElemsT extends TermType>( elemsT: ElemsT ): ( elems: 
                                     el.toUPLC(dbn)
                                 ));
 
-                                if(!(res instanceof IRConst))
+                                if(!(res instanceof UPLCConst))
                                 {
                                     console.log("------------------- pconstList -------------------");
                                     console.log( res )

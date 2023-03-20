@@ -69,8 +69,9 @@ export class IRConst
             isIRConstValueAssignableToType( v, t )
         ))
         {
+            console.log( v )
             throw new BasePlutsError(
-                "invalid constant value for type " + termTypeToString( t )
+                "invalid IR constant value for type " + termTypeToString( t )
             );
         }
 
@@ -239,17 +240,31 @@ function isIRConstValueList( value: any ): value is IRConstValue[]
     return value.every( elem => isIRConstValueAssignableToType( elem, elemsT ) )
 }
 
-function isIRConstValueAssignableToType( value: IRConstValue, t: GenericTermType )
+function isIRConstValueAssignableToType( value: IRConstValue, t: GenericTermType ): boolean
 {
-    // handle some `[]` edge case value
     if(
-        isConstValueList( value ) &&
-        value.length === 0
-    )
+        t[0] === PrimType.AsData ||
+        t[0] === PrimType.Struct ||
+        t[0] === PrimType.Data
+    ) return isData( value );
+
+    if( t[0] === PrimType.List )
     {
-        return t[0] === PrimType.List
+        return (
+            Array.isArray( value ) &&
+            value.every( v => isIRConstValueAssignableToType( v, t[1] ) )
+        );
     }
 
+    if( t[0] === PrimType.Pair )
+    {
+        return (
+            value instanceof Pair &&
+            isIRConstValueAssignableToType( value.fst, t[1] ) &&
+            isIRConstValueAssignableToType( value.snd, t[2] )
+        )
+    }
+    
     return typeExtends(
         inferConstValueT( value ),
         t
@@ -289,6 +304,7 @@ function constValueToJson( value: any ): any
 
 function serializeIRConstValue( value: any, t: TermType ): Uint8Array
 {
+    if( t[0] === PrimType.Alias ) return serializeIRConstValue( value, t[1] );
     if( value === undefined || t[0] === PrimType.Unit ) return new Uint8Array(0);
     if( t[0] === PrimType.Int )
     {
@@ -325,7 +341,12 @@ function serializeIRConstValue( value: any, t: TermType ): Uint8Array
         return dataToCbor( value ).toBuffer();
     }
 
-    console.error( "unexpected value calling 'serializeIRConstValue'", value );
+    console.log( "unexpected value calling 'serializeIRConstValue'", value );
+    console.log( termTypeToString( t ) )
+    console.log( value );
+    console.log( value instanceof ByteString );
+    console.log( value instanceof Uint8Array );
+    throw "hello";
     throw new BasePlutsError(
         "unexpected value calling 'serializeIRConstValue'"
     );

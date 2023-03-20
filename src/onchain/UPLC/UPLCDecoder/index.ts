@@ -337,7 +337,7 @@ export class UPLCDecoder
         {
             if( constTypeEq( t, constT.int ) )
             {
-                return new Integer( readSignedInt() )
+                return readSignedInt()
             }
             if( constTypeEq( t, constT.byteStr ) )
             {

@@ -1,4 +1,4 @@
 import { intBinOpToInt } from "./intBinOpToInt";
-import { Builtin } from "../../../../UPLC/UPLCTerms/Builtin";
+import { IRNative } from "../../../../IR/IRNodes/IRNative";
 
-export const psub   = intBinOpToInt( Builtin.subtractInteger);
+export const psub   = intBinOpToInt( IRNative.subtractInteger);

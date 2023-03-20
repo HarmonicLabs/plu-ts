@@ -38,7 +38,7 @@ export class IRHoisted
 
     clone!: () => IRHoisted;
 
-    constructor( hoisted: IRTerm, dependencies?: HoistedSetEntry[] )
+    constructor( hoisted: IRTerm )
     {
         // unwrap
         // !!! IMPORTANT !!!
@@ -52,7 +52,13 @@ export class IRHoisted
         // initialize without calling "set"
         let _hoisted: IRTerm = hoisted;
         _hoisted.parent = this;
-        let _deps: HoistedSetEntry[] = dependencies?.slice() ?? getSortedHoistedSet( getHoistedTerms( hoisted ) );
+        let _deps: HoistedSetEntry[] | undefined = undefined;
+        function _getDeps(): HoistedSetEntry[]
+        {
+            if( _deps === undefined )
+            _deps = getSortedHoistedSet( getHoistedTerms( _hoisted ) );
+            return _deps;
+        }
 
         let hash: Uint8Array | undefined = undefined;
         Object.defineProperty(
@@ -79,6 +85,8 @@ export class IRHoisted
             {
                 value: () => { 
                     hash = undefined;
+                    // tree changed; possibly dependencies too
+                    _deps = undefined;
                     this.parent?.markHashAsInvalid()
                 },
                 writable: false,
@@ -97,7 +105,7 @@ export class IRHoisted
                         "only closed terms can be hoisted"
                     );
                     this.markHashAsInvalid();
-                    _deps = getSortedHoistedSet( getHoistedTerms( newHoisted ) );
+                    _deps = undefined;
                     _hoisted = newHoisted;
                     _hoisted.parent = this
                 }
@@ -107,15 +115,18 @@ export class IRHoisted
         Object.defineProperty(
             this, "dependencies",
             {
-                get: (): HoistedSetEntry[] => _deps.map( dep => {
+                get: (): HoistedSetEntry[] => {
+                    
+                    return _getDeps().map( dep => {
 
-                    const hoisted = dep.hoisted.clone();
-                    hoisted.parent = dep.hoisted.parent;
-                    return {
-                        hoisted,
-                        nReferences: dep.nReferences
-                    };
-                }), // MUST return clones
+                        const hoisted = dep.hoisted.clone();
+                        hoisted.parent = dep.hoisted.parent;
+                        return {
+                            hoisted,
+                            nReferences: dep.nReferences
+                        };
+                    });
+                }, // MUST return clones
                 set: () => {},
                 enumerable: true,
                 configurable: false
@@ -145,7 +156,7 @@ export class IRHoisted
             () => {
                 return new IRHoisted(
                     this.hoisted.clone()
-                    // _deps.slice() // as long as `dependecies` getter returns clones this is fine
+                    // _getDeps().slice() // as long as `dependecies` getter returns clones this is fine
                 );
             }
         );

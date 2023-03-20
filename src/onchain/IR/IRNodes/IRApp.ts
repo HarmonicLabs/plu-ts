@@ -10,6 +10,7 @@ import { ToJson } from "../../../utils/ts/ToJson";
 import { ToUPLC } from "../../UPLC/interfaces/ToUPLC";
 import { Application } from "../../UPLC/UPLCTerms/Application";
 import { UPLCTerm } from "../../UPLC/UPLCTerm";
+import { PlutsIRError } from "../../../errors/PlutsIRError";
 
 export class IRApp
     implements Cloneable<IRApp>, IHash, IIRParent, ToJson, ToUPLC
@@ -24,6 +25,20 @@ export class IRApp
 
     constructor( _fn_: IRTerm, _arg_: IRTerm )
     {
+        if( !isIRTerm( _fn_ ) )
+        {
+            throw new PlutsIRError(
+                "invalidn function node for `IRApp`"
+            );
+        }
+
+        if( !isIRTerm( _arg_ ) )
+        {
+            throw new PlutsIRError(
+                "invalidn function node for `IRApp`"
+            );
+        }
+
         let fn: IRTerm;
         let arg: IRTerm;
 
@@ -59,24 +74,6 @@ export class IRApp
             }
         );
 
-        let _parent: IRTerm | undefined = undefined;
-        Object.defineProperty(
-            this, "parent",
-            {
-                get: () => _parent,
-                set: ( newParent: IRTerm | undefined ) => {
-
-                    if( newParent === undefined || isIRTerm( newParent ) )
-                    {
-                        _parent = newParent;
-                    }
-
-                },
-                enumerable: true,
-                configurable: false
-            }
-        );
-
         Object.defineProperty(
             this, "fn", {
                 get: () => fn,
@@ -107,7 +104,25 @@ export class IRApp
                 configurable: false
             }
         );
-        this.arg = _arg_
+        this.arg = _arg_;
+
+        let _parent: IRTerm | undefined = undefined;
+        Object.defineProperty(
+            this, "parent",
+            {
+                get: () => _parent,
+                set: ( newParent: IRTerm | undefined ) => {
+
+                    if( newParent === undefined || isIRTerm( newParent ) )
+                    {
+                        _parent = newParent;
+                    }
+
+                },
+                enumerable: true,
+                configurable: false
+            }
+        );
 
     }
 

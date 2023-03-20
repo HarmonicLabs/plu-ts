@@ -167,19 +167,23 @@ describe("pmatch", () => {
 
         test("pmatch; extract multiple fields", () => {
 
+            const term =  pmatch( Nums.TwoNums({ a: pDataI(2), b: pDataI(3) }) )
+            .onTwoNums( nums_ =>  nums_.extract("a", "b").in( ({ a, b }) =>
+                padd.$( a ).$(
+                    padd.$( a ).$( b )
+                )
+            ))
+            .onThreeNums( nums_ => nums_.extract("c","d","e").in( nums => 
+                padd.$( nums.c ).$(
+                    padd.$( nums.d ).$( nums.e )
+                )
+            ));
+
+            const uplc = term.toUPLC();
+
             expect(
                 Machine.evalSimple(
-                    pmatch( Nums.TwoNums({ a: pDataI(2), b: pDataI(3) }) )
-                    .onTwoNums( nums_ =>  nums_.extract("a", "b").in( ({ a, b }) =>
-                        padd.$( a ).$(
-                            padd.$( a ).$( b )
-                        )
-                    ))
-                    .onThreeNums( nums_ => nums_.extract("c","d","e").in( nums => 
-                        padd.$( nums.c ).$(
-                            padd.$( nums.d ).$( nums.e )
-                        )
-                    ))
+                   uplc
                 )
             ).toEqual(
                 UPLCConst.int( 2 + 2 + 3 )
@@ -425,12 +429,10 @@ describe("pmatch", () => {
             A: {}, B: {}, C: {}, D: {}
         })
 
-        test.only("pmatch( stuff )._( _ => result) === result", () => {
+        test("pmatch( stuff )._( _ => result) === result", () => {
 
             const uplc = pmatch( OneCtor.Ctor({}) )
                 ._( _ => pInt(1) ).toUPLC();
-
-            console.log( showUPLC( uplc ) );
 
             expect(
                 Machine.evalSimple(
@@ -443,19 +445,32 @@ describe("pmatch", () => {
                 )
             );
 
-            // ---------------------------------- TwoCtors ---------------------------------- //
+        })
+
+        test("two ctors", () => {
+
+            const uplc  =pmatch( TwoCtors.Fst({}) )
+            .onFst( _ => pInt( 1 ) )
+            .onSnd( _ => pInt( 2 ) )
+            .toUPLC()
 
             expect(
                 Machine.evalSimple(
-                    pmatch( TwoCtors.Fst({}) )
-                    .onFst( _ => pInt( 1 ) )
-                    .onSnd( _ => pInt( 2 ) )
+                    uplc
                 )
             ).toEqual(
                 Machine.evalSimple(
                     pInt(1)
                 )
             );
+
+        })
+
+        test("multi ctors", () => {
+
+            // ---------------------------------- TwoCtors ---------------------------------- //
+
+            
 
             expect(
                 Machine.evalSimple(

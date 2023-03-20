@@ -14,6 +14,10 @@ import { precursive } from "../precursive"
 import { pif } from "../builtins"
 import { pInt } from "../std/int/pInt"
 import { int, lam, tyVar } from "../../type_system"
+import { IRHoisted } from "../../../IR/IRNodes/IRHoisted"
+import { IRFunc } from "../../../IR/IRNodes/IRFunc"
+import { IRApp } from "../../../IR/IRNodes/IRApp"
+import { IRVar } from "../../../IR/IRNodes/IRVar"
 
 
 describe("precursive", () => {
@@ -21,16 +25,16 @@ describe("precursive", () => {
     const a = tyVar("a");
     const b = tyVar("b");
 
-    const innerZ = new Lambda( // toMakeRecursive
-        new Application(
-            new UPLCVar( 1 ), // Z
-            new Lambda( // value
-                new Application(
-                    new Application(
-                        new UPLCVar( 1 ), // toMakeRecursive
-                        new UPLCVar( 1 )  // toMakeRecursive
+    const innerZ = new IRFunc( 1, // toMakeRecursive
+        new IRApp(
+            new IRVar( 1 ), // Z
+            new IRFunc( 1, // value
+                new IRApp(
+                    new IRApp(
+                        new IRVar( 1 ), // toMakeRecursive
+                        new IRVar( 1 )  // toMakeRecursive
                     ),
-                    new UPLCVar( 0 ) // value
+                    new IRVar( 0 ) // value
                 )
             )
         )
@@ -52,9 +56,9 @@ describe("precursive", () => {
                 lam( lam( a, b ), lam( a, b ) ),
                 lam( a, b ),
             ) as any,
-            _dbn => new HoistedUPLC(
-                new Lambda( // Z
-                    new Application(
+            _dbn => new IRHoisted(
+                new IRFunc( 1, // Z
+                    new IRApp(
                         innerZ,
                         innerZ
                     )

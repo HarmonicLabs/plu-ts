@@ -8,6 +8,7 @@ import { IRLetted } from "../../../IRNodes/IRLetted";
 import { IRVar } from "../../../IRNodes/IRVar";
 import { IRTerm } from "../../../IRTerm";
 import { _modifyChildFromTo } from "../../_internal/_modifyChildFromTo";
+import { logJson } from "../../../../../utils/ts/ToJson";
 
 export function handleHoistedAndReturnRoot( term: IRTerm ): IRTerm
 {

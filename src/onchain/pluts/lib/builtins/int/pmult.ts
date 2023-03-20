@@ -1,4 +1,4 @@
 import { intBinOpToInt } from "./intBinOpToInt";
-import { Builtin } from "../../../../UPLC/UPLCTerms/Builtin";
+import { IRNative } from "../../../../IR/IRNodes/IRNative";
 
-export const pmult = intBinOpToInt( Builtin.multiplyInteger);
+export const pmult = intBinOpToInt( IRNative.multiplyInteger );

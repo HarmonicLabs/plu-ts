@@ -51,12 +51,17 @@ export function _modifyChildFromTo( parent: IRTerm | undefined, currentChild: IR
             {
                 parent.arg = newChild;
             }
-            else throw new PlutsIRError(
-                "unknown 'IRApp' child to modify; given child to modify hash: " +
-                toHex( currChildHash ) +
-                "; function child hash: " + toHex( parent.fn.hash ) +
-                "; argument child hash: " + toHex( parent.arg.hash )
-            );
+            else
+            {
+                // logJson( currentChild as any )
+                // logJson( parent.fn )
+                throw new PlutsIRError(
+                    "unknown 'IRApp' child to modify; given child to modify hash: " +
+                    toHex( currChildHash ) +
+                    "; function child hash: " + toHex( parent.fn.hash ) +
+                    "; argument child hash: " + toHex( parent.arg.hash )
+                );
+            }
         }
         else // check the argument first as it is more likely to have a smaller tree
         {

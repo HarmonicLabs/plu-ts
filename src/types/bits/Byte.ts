@@ -17,7 +17,7 @@ export class Byte
 
     private constructor( byte: number )
     {
-        throw Error("byte construction asserts not implemented")
+        throw new Error("byte construction asserts not implemented")
         this._byte = byte;
     }
 }

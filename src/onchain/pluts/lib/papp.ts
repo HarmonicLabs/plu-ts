@@ -8,6 +8,7 @@ import { IRNative } from "../../IR/IRNodes/IRNative";
 import { IRNativeTag } from "../../IR/IRNodes/IRNative/IRNativeTag";
 import { IRVar } from "../../IR/IRNodes/IRVar";
 import { IRTerm } from "../../IR/IRTerm";
+import { isIRTerm } from "../../IR/utils/isIRTerm";
 import { PType } from "../PType";
 import { PLam } from "../PTypes";
 import { Term } from "../Term";
@@ -97,6 +98,8 @@ export function papp<Input extends PType, Output extends PType>( a: Term<PLam<In
 
     const outputType = lambdaType[2]; // applyLambdaType( lambdaType, _b.type );
 
+    const e_stack = Error().stack;
+
     const outputTerm = addUtilityForType( outputType )(
         new Term(
             outputType,
@@ -135,6 +138,11 @@ or you can join Harmonic Labs' discord and ask for help on your specific issue (
 
                 // omit id function
                 if( isIdentityIR( funcIR ) ) return argIR;
+
+                if(!isIRTerm( funcIR ))
+                {
+                    console.log( e_stack );
+                }
 
                 const app = new IRApp(
                     funcIR,

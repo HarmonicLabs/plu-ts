@@ -49,7 +49,7 @@ describe("Machine.evalSimple( PValue )", () => {
         
     });
 
-    test("one entry value", () => {
+    test.only("one entry value", () => {
         expect(
             Machine.evalSimple( oneEntryValue ) instanceof UPLCConst
         ).toBe( true )

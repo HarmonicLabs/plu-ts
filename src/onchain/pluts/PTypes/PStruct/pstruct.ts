@@ -21,6 +21,7 @@ import { IRApp } from "../../../IR/IRNodes/IRApp";
 import { IRConst } from "../../../IR/IRNodes/IRConst";
 import { IRHoisted } from "../../../IR/IRNodes/IRHoisted";
 import { IRNative } from "../../../IR/IRNodes/IRNative";
+import { UPLCConst } from "../../../UPLC/UPLCTerms/UPLCConst";
 
 /**
  * intermediate class useful to reconize structs form primitives
@@ -311,7 +312,7 @@ export function pstruct<StructDef extends StructDefinition>( def: StructDef ): P
                                                 _term
                                             ));
 
-                                            if(!(res instanceof IRConst && isData( res.value ) ))
+                                            if(!(res instanceof UPLCConst && isData( res.value ) ))
                                             {
                                                 console.log("--------------------------------");
                                                 console.log( ctorDefFieldsNames );

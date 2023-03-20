@@ -18,6 +18,8 @@ import { compileIRToUPLC } from "../../IR/toUPLC/compileIRToUPLC";
 import { UPLCConst } from "../../UPLC/UPLCTerms/UPLCConst";
 import { IRConst } from "../../IR/IRNodes/IRConst";
 import { IRError } from "../../IR/IRNodes/IRError";
+import { isIRTerm } from "../../IR/utils/isIRTerm";
+import { logJson } from "../../../utils/ts/ToJson";
 
 export type UnTerm<T extends Term<PType>> = T extends Term<infer PT extends PType > ? PT : never;
 
@@ -81,6 +83,7 @@ export class Term<A extends PType>
                         (this as any).isConstant
                     )
                     {
+                        // logJson( ir )
                         // !!! IMPORTANT !!!
                         // `compileIRToUPLC` modifies the `IRTerm` in place !
                         // as for the current implementation we don't care
@@ -102,7 +105,7 @@ export class Term<A extends PType>
                             ir = new IRError();
                         }
                     }
-        
+
                     return ir;
                 },
                 writable: false,

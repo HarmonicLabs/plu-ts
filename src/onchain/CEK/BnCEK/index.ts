@@ -5,7 +5,7 @@ import { UPLCBuiltinTag } from "../../UPLC/UPLCTerms/Builtin/UPLCBuiltinTag";
 import { ErrorUPLC } from "../../UPLC/UPLCTerms/ErrorUPLC";
 import { UPLCConst } from "../../UPLC/UPLCTerms/UPLCConst";
 import { PartialBuiltin } from "./PartialBuiltin";
-import { ConstValue } from "../../UPLC/UPLCTerms/UPLCConst/ConstValue";
+import { ConstValue, isConstValueInt } from "../../UPLC/UPLCTerms/UPLCConst/ConstValue";
 import { ByteString } from "../../../types/HexString/ByteString";
 import { Pair } from "../../../types/structs/Pair";
 import { DataConstr } from "../../../types/Data/DataConstr";
@@ -27,6 +27,7 @@ import { fromUtf8, isUint8Array, toUtf8 } from "@harmoniclabs/uint8array-utils";
 
 function intToSize( n: bigint ): bigint
 {
+    n = BigInt( n );
     if ( n === BigInt( 0 ) ) return BigInt( 1 );
 
     // same as `intToSize( -n - BigInt( 1 ) )` but inlined
@@ -54,7 +55,7 @@ const ANY_SIZE: bigint = BigInt( 1 );
 
 function constValueToSize( v: ConstValue ): bigint
 {
-    if( v instanceof Integer ) return intToSize( v.asBigInt );
+    if( isConstValueInt( v ) ) return intToSize( BigInt( v as any ) );
     if( v instanceof ByteString ) return bsToSize( v.toBuffer() );
     if( typeof v === "string" ) return strToSize( v );
     if( typeof v === "undefined" ) return ANY_SIZE;
@@ -71,7 +72,7 @@ function constValueToSize( v: ConstValue ): bigint
 
 function listToSize( l: ConstValue[] ): bigint
 {
-    return l.reduce( (acc, elem) => acc + constValueToSize( elem ), BigInt(0) );
+    return l.reduce<bigint>( (acc, elem) => acc + constValueToSize( elem ), BigInt(0) );
 }
 
 function pairToSize( pairValue: Pair<ConstValue,ConstValue> ): bigint
@@ -109,7 +110,7 @@ function dataToSize( data: Data ): bigint
         }
         else if( top instanceof DataI )
         {
-            tot += intToSize( top.int.asBigInt );
+            tot += intToSize( top.int );
         }
         else if( top instanceof DataB )
         {
@@ -128,10 +129,7 @@ function isConstOfType( constant: Readonly<UPLCTerm>, ty: Readonly<ConstType> ):
     {
         if( constTypeEq( constT.int, ty ) )
         {
-            return (
-                v instanceof Integer ||
-                v instanceof UInteger
-            );
+            return isConstValueInt( v );
         }
 
         if( constTypeEq( constT.bool, ty ) )
@@ -173,7 +171,7 @@ function isConstOfType( constant: Readonly<UPLCTerm>, ty: Readonly<ConstType> ):
 function getInt( a: UPLCTerm ): bigint | undefined
 {
     if( !isConstOfType( a, constT.int ) ) return undefined;
-    return (a.value as Integer).asBigInt;
+    return BigInt( a.value as any );
 }
 
 function getInts( a: UPLCTerm, b: UPLCTerm ): ( { a: bigint,  b: bigint } | undefined )
@@ -182,8 +180,8 @@ function getInts( a: UPLCTerm, b: UPLCTerm ): ( { a: bigint,  b: bigint } | unde
     if( !isConstOfType( b, constT.int ) ) return undefined;
 
     return {
-        a: (a.value as Integer).asBigInt,
-        b: (b.value as Integer).asBigInt
+        a: BigInt( a.value as any ),
+        b: BigInt( b.value as any )
     };
 }
 
@@ -541,7 +539,11 @@ export class BnCEK
     equalsInteger( a: UPLCTerm, b: UPLCTerm ): ConstOrErr
     {
         const ints = getInts( a, b );
-        if( ints === undefined ) return new ErrorUPLC("not integers");
+        if( ints === undefined )
+        return new ErrorUPLC(
+            "equalsInteger :: not integers",
+            { a, b, ints }
+        );
 
         const f = this.getBuiltinCostFunc( UPLCBuiltinTag.equalsInteger );
                 
@@ -558,7 +560,11 @@ export class BnCEK
     lessThanInteger( a: UPLCTerm, b: UPLCTerm ): ConstOrErr
     {
         const ints = getInts( a, b );
-        if( ints === undefined ) return new ErrorUPLC("not integers");
+        if( ints === undefined )
+        return new ErrorUPLC(
+            "lessThanInteger :: not integers",
+            { a, b }
+        );
 
         const f = this.getBuiltinCostFunc( UPLCBuiltinTag.lessThanInteger );
                 
@@ -575,7 +581,11 @@ export class BnCEK
     lessThanEqualInteger( a: UPLCTerm, b: UPLCTerm ): ConstOrErr
     {
         const ints = getInts( a, b );
-        if( ints === undefined ) return new ErrorUPLC("not integers");
+        if( ints === undefined )
+        return new ErrorUPLC(
+            "lessThanEqualInteger :: not integers",
+            { a, b }
+        );
 
         const f = this.getBuiltinCostFunc( UPLCBuiltinTag.lessThanEqualInteger );
                 
@@ -1457,7 +1467,7 @@ export class BnCEK
                 }
             );
 
-        if( !( d instanceof DataB ) ) return new ErrorUPLC("not a data BS", {UPLCTerm: ((data as UPLCConst).value as DataConstr).constr.asBigInt });
+        if( !( d instanceof DataB ) ) return new ErrorUPLC("not a data BS", {UPLCTerm: ((data as UPLCConst).value as DataConstr).constr });
 
         const f = this.getBuiltinCostFunc( UPLCBuiltinTag.unBData );
 

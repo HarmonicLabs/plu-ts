@@ -72,11 +72,7 @@ export class UPLCConst
 
     static int( int: number | bigint ): UPLCConst
     {
-        // new Integer works for both number | bigint
-        if( !isConstValueInt( int ) )
-        {
-            int = BigInt( int );
-        }
+        int = BigInt( int );
 
         return new UPLCConst( constT.int , int );
     }

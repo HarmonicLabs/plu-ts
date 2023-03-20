@@ -20,8 +20,14 @@ export class IRError
 
     parent: IRTerm | undefined;
 
-    constructor( msg?: string, addInfos?: object )
+    msg?: string
+    addInfos?: any
+
+    constructor( msg?: string, addInfos?: any )
     {
+        this.msg = msg;
+        this.addInfos = addInfos;
+
         let _parent: IRTerm | undefined = undefined;
         Object.defineProperty(
             this, "parent",
@@ -75,7 +81,7 @@ export class IRError
 
     toUPLC()
     {
-        return new ErrorUPLC();
+        return new ErrorUPLC( this.msg, this.addInfos );
     }
 };
 

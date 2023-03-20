@@ -6,17 +6,12 @@ import { Integer } from "../ints/Integer";
 export class DataI
     implements Cloneable<DataI>, ToJson
 {
-    private _int: Integer
-    get int(): Integer { return Object.freeze( this._int ) as any }
+    private _int: bigint
+    get int(): bigint { return Object.freeze( this._int ) as any }
 
-    constructor( I: Integer | number | bigint = 0 )
+    constructor( I: number | bigint = 0 )
     {
-        if( typeof I === "number" || typeof I === "bigint" )
-        {
-            I = new Integer( I );
-        }
-
-        this._int = I.clone();
+        this._int = BigInt( I );
     }
 
     clone(): DataI
@@ -30,6 +25,6 @@ export class DataI
 
     toJson()
     {
-        return { int: this._int.asBigInt.toString() }
+        return { int: this._int.toString() }
     }
 }

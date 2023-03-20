@@ -142,6 +142,8 @@ export class IRLetted
             {
                 value: () => { 
                     hash = undefined;
+                    // tree changed; possibly dependencies too
+                    _deps = undefined;
                     this.parent?.markHashAsInvalid()
                 },
                 writable: false,
@@ -152,7 +154,13 @@ export class IRLetted
 
         // make sure to use the cloned `_value` and NOT `toLet`
         // since we need the same root ( setted trough `parent` )
-        let _deps: LettedSetEntry[] = getSortedLettedSet( getLettedTerms( _value ) );
+        let _deps: LettedSetEntry[] | undefined = undefined;
+        function _getDeps(): LettedSetEntry[]
+        {
+            if( _deps === undefined )
+            _deps = getSortedLettedSet( getLettedTerms( _value ) );
+            return _deps
+        }
         
         Object.defineProperty(
             this, "value",
@@ -164,7 +172,7 @@ export class IRLetted
                         "only closed terms can be hoisted"
                     );
                     this.markHashAsInvalid();
-                    _deps = getSortedLettedSet( getLettedTerms( newVal ) );
+                    _deps = undefined;
                     _value = newVal;
                     _value.parent = this
                 },
@@ -176,7 +184,7 @@ export class IRLetted
         Object.defineProperty(
             this, "dependencies",
             {
-                get: (): LettedSetEntry[] => _deps.map( dep => {
+                get: (): LettedSetEntry[] => _getDeps().map( dep => {
 
                     const clone = dep.letted.clone();
                     clone.parent = dep.letted.parent; 
@@ -216,7 +224,7 @@ export class IRLetted
                     this.dbn,
                     this.value.clone()
                     // doesn't work because dependecies need to be bounded to the cloned value
-                    // _deps.slice() // as long as `dependecies` getter returns clones this is fine
+                    // _getDeps().slice() // as long as `dependecies` getter returns clones this is fine
                 )
             }
         );

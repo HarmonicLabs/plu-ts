@@ -1,3 +1,4 @@
+import { IRVar } from "../../../../IR/IRNodes/IRVar"
 import { Application } from "../../../../UPLC/UPLCTerms/Application"
 import { Builtin } from "../../../../UPLC/UPLCTerms/Builtin"
 import { Lambda } from "../../../../UPLC/UPLCTerms/Lambda"
@@ -46,7 +47,7 @@ describe("pList", () => {
                 pList( int )([
                     new Term<PInt>(
                         int,
-                        _dbn => new UPLCVar( 0 )
+                        _dbn => new IRVar( 0 )
                     )
                 ]).toUPLC( 0 )
             )
