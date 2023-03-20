@@ -242,6 +242,7 @@ function isIRConstValueList( value: any ): value is IRConstValue[]
 
 function isIRConstValueAssignableToType( value: IRConstValue, t: GenericTermType ): boolean
 {
+    if( t[0] === PrimType.Alias ) return isIRConstValueAssignableToType( value, t[1] ); 
     if(
         t[0] === PrimType.AsData ||
         t[0] === PrimType.Struct ||
