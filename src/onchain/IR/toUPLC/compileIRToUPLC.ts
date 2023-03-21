@@ -1,4 +1,4 @@
-import { UPLCTerm } from "../../UPLC/UPLCTerm";
+import { UPLCTerm, showUPLC } from "../../UPLC/UPLCTerm";
 import { IRTerm } from "../IRTerm";
 import { _modifyChildFromTo } from "./_internal/_modifyChildFromTo";
 import { _addDepth } from "./_internal/_addDepth";
@@ -8,6 +8,7 @@ import { handleHoistedAndReturnRoot } from "./subRoutines/handleHoistedAndReturn
 import { replaceNativesAndReturnRoot } from "./subRoutines/replaceNatives";
 import { IRLetted } from "../IRNodes/IRLetted";
 import { logJson } from "../../../utils/ts/ToJson";
+import { showIR } from "../utils/showIR";
 
 export function compileIRToUPLC( term: IRTerm ): UPLCTerm
 {
@@ -51,6 +52,8 @@ export function compileIRToUPLC( term: IRTerm ): UPLCTerm
     // ------------------------------------------------------------------------- //
     ///////////////////////////////////////////////////////////////////////////////
 
+    console.log( showIR( term ).text )
+
     term = replaceNativesAndReturnRoot( term );
 
     term = handleHoistedAndReturnRoot( term );
@@ -72,5 +75,7 @@ export function compileIRToUPLC( term: IRTerm ): UPLCTerm
     ///////////////////////////////////////////////////////////////////////////////
 
     // logJson( term )
-    return term.toUPLC();
+    console.log( showIR( term ).text )
+    const uplc = term.toUPLC(0);
+    return uplc;
 }

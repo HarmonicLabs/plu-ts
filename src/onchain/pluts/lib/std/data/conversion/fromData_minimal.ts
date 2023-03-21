@@ -10,7 +10,6 @@ import { typeExtends } from "../../../../type_system/typeExtends";
 import { unwrapAlias } from "../../../../type_system/tyArgs/unwrapAlias";
 import { phoist } from "../../../phoist";
 import { plam } from "../../../plam";
-import { plet } from "../../../plet";
 import { punsafeConvertType } from "../../../punsafeConvertType";
 import { pBoolFromData } from "../../bool/pBoolFromData";
 import { pUnitFromData } from "../../unit";
@@ -68,9 +67,8 @@ const pPairFromData =
             pair( data, data )
         )
         ( assumedList =>
-            plet(
-                _papp( punListData as any, assumedList )
-            ).in( listData =>
+            plam( list( data ), pair( data, data ) )
+            ( listData =>
                 _papp(
                     _papp(
                         ppairData as any,
@@ -78,7 +76,10 @@ const pPairFromData =
                     ) as any,
                     (listData as any).tail.head
                 )
-            ) as any
+            )
+            .$(
+                _papp( punListData as any, assumedList )
+            )
         )
     );
 

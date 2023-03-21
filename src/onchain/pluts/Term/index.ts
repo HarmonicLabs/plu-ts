@@ -13,13 +13,11 @@ import { cloneTermType } from "../type_system/cloneTermType";
 import { ToUPLC } from "../../UPLC/interfaces/ToUPLC";
 import { ToIR } from "../../IR/interfaces/ToIR";
 import { IRTerm } from "../../IR/IRTerm";
-import { IRHoisted } from "../../IR/IRNodes/IRHoisted";
 import { compileIRToUPLC } from "../../IR/toUPLC/compileIRToUPLC";
 import { UPLCConst } from "../../UPLC/UPLCTerms/UPLCConst";
 import { IRConst } from "../../IR/IRNodes/IRConst";
 import { IRError } from "../../IR/IRNodes/IRError";
-import { isIRTerm } from "../../IR/utils/isIRTerm";
-import { logJson } from "../../../utils/ts/ToJson";
+import { IRHoisted } from "../../IR/IRNodes/IRHoisted";
 import { showIR } from "../../IR/utils/showIR";
 
 export type UnTerm<T extends Term<PType>> = T extends Term<infer PT extends PType > ? PT : never;
@@ -69,7 +67,8 @@ export class Term<A extends PType>
             }
         );
 
-        let _toIR_ = _toIR;
+        let _toIR_ = _toIR.bind( this );
+        let shouldHoist = false;
 
         Object.defineProperty(
             this, "toIR",
@@ -77,8 +76,18 @@ export class Term<A extends PType>
                 value: ( deBruijnLevel: bigint | number = 0 ) =>
                 {
                     if( typeof deBruijnLevel !== "bigint" ) deBruijnLevel = BigInt( deBruijnLevel );
+
+                    if( Number(deBruijnLevel) === 0 )
+                    console.log( "called toIR; shouldHoist: ", shouldHoist )
         
                     let ir = _toIR_( deBruijnLevel );
+                    if( shouldHoist )
+                    {
+                        const res = new IRHoisted( ir );
+                        console.log("shouldHoist === true result: ", showIR( res ).text )
+                        return res;
+                    }
+                    
                     if( 
                         !(ir instanceof IRHoisted) &&
                         (this as any).isConstant
@@ -129,20 +138,13 @@ export class Term<A extends PType>
             configurable: false
         });
 
+
         let wasEverHoisted: boolean = false;
         ObjectUtils.defineReadOnlyHiddenProperty(
             this,
             "hoist",
             () => {
-                if( wasEverHoisted ) return;
-                else wasEverHoisted = true;
-                
-                const prev_toIR_= _toIR_;
-                
-                _toIR_ = ( dbn: bigint ) =>
-                    new IRHoisted(
-                        prev_toIR_( dbn )
-                    );
+                shouldHoist = true;
             }
         )
 

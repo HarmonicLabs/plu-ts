@@ -193,7 +193,7 @@ export function showUPLC( term: UPLCTerm ): string
             return `(lam ${getVarNameForDbn( dbn )} ${ loop( t.body, dbn + 1 ) })`;
         }
         if( t instanceof Application ) return `[${ loop( t.funcTerm, dbn ) } ${ loop( t.argTerm, dbn ) }]`;
-        if( t instanceof UPLCConst ) return `( con ${showConstType(t.type)} ${ showUPLCConstValue( t.value ) } )`;
+        if( t instanceof UPLCConst ) return `(con ${showConstType(t.type)} ${ showUPLCConstValue( t.value ) })`;
         if( t instanceof Force ) return `(force ${ loop( t.termToForce, dbn ) })`;
         if( t instanceof ErrorUPLC ) return "(error)";
         if( t instanceof Builtin )

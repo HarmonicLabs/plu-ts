@@ -16,6 +16,9 @@ import { ToJson } from "../../../utils/ts/ToJson";
 import { IllegalIRToUPLC } from "../../../errors/PlutsIRError/IRCompilationError/IllegalIRToUPLC";
 import { ToUPLC } from "../../UPLC/interfaces/ToUPLC";
 import { UPLCTerm } from "../../UPLC/UPLCTerm";
+import { showIR } from "../utils/showIR";
+import { IRForced } from "./IRForced";
+import { IRDelayed } from "./IRDelayed";
 
 
 type HoistedSetEntry = {
@@ -35,6 +38,8 @@ export class IRHoisted
     readonly dependencies!: HoistedSetEntry[];
 
     parent: IRTerm | undefined;
+
+    src: string 
 
     clone!: () => IRHoisted;
 
@@ -112,11 +117,17 @@ export class IRHoisted
             }
         );
 
+        this.src = Error().stack?.split("\n")[2] as any
+
         Object.defineProperty(
             this, "dependencies",
             {
                 get: (): HoistedSetEntry[] => {
-                    
+
+                    // console.log( toHex( this.hash ), this.src );
+                    // console.log( showIR( this.hoisted ).text );
+                    // console.log( _getDeps().map( d => showIR(d.hoisted.hoisted).text ) );
+
                     return _getDeps().map( dep => {
 
                         const hoisted = dep.hoisted.clone();
@@ -154,6 +165,10 @@ export class IRHoisted
         ObjectUtils.defineProperty(
             this, "clone",
             () => {
+                if( toHex( this.hash ) === "10a2d468cf7e12a6eacfb62443607847abf9622e7eb02d700a6a0a1f" )
+                {
+                    console.warn( this.src );
+                }
                 return new IRHoisted(
                     this.hoisted.clone()
                     // _getDeps().slice() // as long as `dependecies` getter returns clones this is fine
@@ -176,8 +191,9 @@ export class IRHoisted
 
     toUPLC(): UPLCTerm
     {
+        // return this.hoisted.toUPLC();
         throw new IllegalIRToUPLC(
-            "Can't convert 'IRHoisted' to valid UPLC"
+            "Can't convert 'IRHoisted' to valid UPLC;\nhoisted term was: " + showIR( this.hoisted ).text
         );
     }
 }
@@ -236,15 +252,18 @@ export function getSortedHoistedSet( hoistedTerms: HoistedSetEntry[] ): HoistedS
 
 export function getHoistedTerms( irTerm: IRTerm ): HoistedSetEntry[]
 {
+    console.log("getting hoisted terms of " + showIR( irTerm ).text );
     const hoisteds: HoistedSetEntry[] = [];
 
     function searchIn( term: IRTerm ): void
     {
+        console.log("searching hoisted terms in " + showIR( term ).text );
+
         if( term instanceof IRHoisted )
         {
             // only push direct hoisteds
             // dependencies are counted calling `getSortedHoistedSet`
-            hoisteds.push({hoisted: term, nReferences: 1 });
+            hoisteds.push({ hoisted: term, nReferences: 1 });
             return;
         }
 
@@ -267,6 +286,18 @@ export function getHoistedTerms( irTerm: IRTerm ): HoistedSetEntry[]
             // dependecies are still in the body anyway
 
             searchIn( term.value );
+            return;
+        }
+
+        if( term instanceof IRForced )
+        {
+            searchIn( term.forced );
+            return;
+        }
+
+        if( term instanceof IRDelayed )
+        {
+            searchIn( term.delayed );
             return;
         }
 

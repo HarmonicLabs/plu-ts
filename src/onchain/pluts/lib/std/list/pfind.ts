@@ -15,51 +15,53 @@ export function pfind<ElemsT extends TermType, PElemsT extends ToPType<ElemsT> =
     const PMaybeElem = PMaybe( elemsT ) as any as PMaybeT<PElemsT>;
 
     return phoist(
-        
-        pfn([
-            lam( elemsT, asData( elemsT ) ),
-            lam( elemsT, bool )
-        ], lam(
-            list( elemsT ),
-            PMaybeElem.type
-        ))
-        ( (elemToData, predicate) => 
+        phoist(
+            
+            pfn([
+                lam( elemsT, asData( elemsT ) ),
+                lam( elemsT, bool )
+            ], lam(
+                list( elemsT ),
+                PMaybeElem.type
+            ))
+            ( (elemToData, predicate) => 
 
-            precursive(
-                pfn([
-                    lam(
-                        list( elemsT ),  PMaybeElem.type
-                    ),
-                    list( elemsT )
-                ],  PMaybeElem.type )
-        
-                (( self, _list ) => 
-                    pif( PMaybeElem.type ).$( pisEmpty.$( _list ) )
-                    .then(
-                        PMaybeElem.Nothing({})
-                    )
-                    .else(
+                precursive(
+                    pfn([
+                        lam(
+                            list( elemsT ),  PMaybeElem.type
+                        ),
+                        list( elemsT )
+                    ],  PMaybeElem.type )
+            
+                    (( self, _list ) => 
+                        pif( PMaybeElem.type ).$( pisEmpty.$( _list ) )
+                        .then(
+                            PMaybeElem.Nothing({})
+                        )
+                        .else(
 
-                        plet( phead( elemsT ).$( _list ) ).in( head => 
+                            plet( phead( elemsT ).$( _list ) ).in( head => 
 
-                            pif( PMaybeElem.type ).$( papp( predicate, head ) )
-                            .then(
-                                PMaybeElem.Just({ 
-                                    // "as any" because of 
-                                    // "Type 'Term<PAsData<ToPType<ElemsT>>>' is not assignable to type 'Term<PAsData<ToPType<FromPType<PElemsT>>>>'"
-                                    val: papp( elemToData, head ) as any
-                                })
-                            )
-                            .else(
-                                papp( self, ptail( elemsT ).$( _list ) )
+                                pif( PMaybeElem.type ).$( papp( predicate, head ) )
+                                .then(
+                                    PMaybeElem.Just({ 
+                                        // "as any" because of 
+                                        // "Type 'Term<PAsData<ToPType<ElemsT>>>' is not assignable to type 'Term<PAsData<ToPType<FromPType<PElemsT>>>>'"
+                                        val: papp( elemToData, head ) as any
+                                    })
+                                )
+                                .else(
+                                    papp( self, ptail( elemsT ).$( _list ) )
+                                )
+
                             )
 
                         )
-
                     )
                 )
             )
-        )
 
-    ).$( _ptoData( elemsT ) ) as any ;
+        ).$( _ptoData( elemsT ) ) as any
+    );
 }

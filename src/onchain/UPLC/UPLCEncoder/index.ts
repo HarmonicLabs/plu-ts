@@ -26,7 +26,6 @@ import { UPLCSerializationContex } from "./UPLCSerializationContext";
 import { CborString } from "../../../cbor/CborString";
 import { dataFromCbor } from "../../../types/Data/fromCbor";
 import { dataToCbor } from "../../../types/Data/toCbor";
-import { genHoistedSourceUID } from "../UPLCTerms/HoistedUPLC/HoistedSourceUID/genHoistedSourceUID";
 import { BasePlutsError } from "../../../errors/BasePlutsError";
 import { fromHex, fromUtf8, toHex } from "@harmoniclabs/uint8array-utils";
 

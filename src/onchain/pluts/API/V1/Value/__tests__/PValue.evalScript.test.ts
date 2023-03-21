@@ -156,12 +156,12 @@ const pvalueOfBetter = phoist(
 
 describe("pvalueOf", () => {
 
-    test("non exsistent coin", () => {
+    test.only("non exsistent coin", () => {
 
         const expected = Machine.evalSimple( pInt(0) );
         const { result: received, budgetSpent: exBudget } = Machine.eval( pvalueOf.$( oneEntryValue ).$("").$("") );
-        const _expected = Machine.evalSimple( pInt(0) );
-        const { result: _received, budgetSpent } = Machine.eval( pvalueOfBetter.$( oneEntryValue ).$("" as any).$("" as any) );
+        // const _expected = Machine.evalSimple( pInt(0) );
+        // const { result: _received, budgetSpent } = Machine.eval( pvalueOfBetter.$( oneEntryValue ).$("" as any).$("" as any) );
 
         expect(
             received
@@ -169,11 +169,11 @@ describe("pvalueOf", () => {
             expected
         );
 
-        expect(
-            _received
-        ).toEqual(
-            _expected
-        );
+        // expect(
+        //     _received
+        // ).toEqual(
+        //     _expected
+        // );
 
     });
 

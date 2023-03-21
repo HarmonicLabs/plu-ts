@@ -119,7 +119,7 @@ export class IRVar
         }
     }
 
-    toUPLC()
+    toUPLC( _n?: number | bigint )
     {
         return new UPLCVar( this.dbn );
     }
