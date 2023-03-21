@@ -33,16 +33,6 @@ export function handleHoistedAndReturnRoot( term: IRTerm ): IRTerm
     // nothing to do; shortcut.
     if( n === 0 ) return term;
 
-    console.log(
-        allHoisteds.map( h =>
-            toHex( h.hoisted.hash ) + " - " + showIR( h.hoisted.hoisted ).text
-        ).join("\n\n")
-    )
-
-    // console.log("-----------------------------------------------------------------");
-    // console.log( "root hash: ", toHex( term.hash ), "\ndirectHoisteds", toHashArr( directHoisteds.map( h => h.hoisted ) ) )
-    // console.log( "root hash: ", toHex( term.hash ), "\nallHoisteds", toHashArr( allHoisteds.map( h => h.hoisted ) ) )
-    
     let a = 0;
     let b = 0;
     const hoisteds: IRHoisted[] = new Array( n );
@@ -66,29 +56,10 @@ export function handleHoistedAndReturnRoot( term: IRTerm ): IRTerm
     // drop unused space
     hoisteds.length = a;
     hoistedsToInline.length = b;
+    const hoistedsToInlineHashes = hoistedsToInline.map( h => h.hash );
 
-    // console.log( "hoisteds", toHashArr( hoisteds ) );
-    // console.log( "hoistedsToInline", toHashArr( hoistedsToInline ) );
-    // console.log( "root hash: ", toHex( term.hash ) );
-
-    // inline single references from last to first
-    let hoisted : IRHoisted;
-    for( let i = hoistedsToInline.length - 1; i >= 0; i-- )
-    {
-        hoisted = hoistedsToInline[i] as IRHoisted;
-        // console.log("inlining", toHex( hoisted.hash ) );
-        _modifyChildFromTo(
-            hoisted.parent as IRTerm,
-            hoisted,
-            hoisted.hoisted
-        );
-    }
-
-    // console.log("--------------------- after inline ---------------------");
-    // console.log( "\nallHoisteds", toHashArr( allHoisteds.map( h => h.hoisted ) ) )
-    // console.log( "hoisteds", toHashArr( hoisteds ) );
-    // console.log( "hoistedsToInline", toHashArr( hoistedsToInline ) );
-    // console.log( "root hash: ", toHex( term.hash ) );
+    // console.log( "hoisteds", hoisteds.map( h => ({ ...showIR( h.hoisted ), hash: toHex( h.hash ) }) ) );
+    // console.log( "hoistedsToInline", hoistedsToInline.map( h => ({ ...showIR( h.hoisted ), hash: toHex( h.hash ) }) ) );
 
     let root: IRTerm = term;
     while( root.parent !== undefined ) root = root.parent;
@@ -123,73 +94,90 @@ export function handleHoistedAndReturnRoot( term: IRTerm ): IRTerm
             ),
             thisHoisted.hoisted.clone()
         );
-        const thisHoistedHash = thisHoisted.hash;
+    }
 
-        // replace hoisted references with variables
-        const stack: { irTerm: IRTerm, dbn: number }[] = [{ irTerm: prevRoot, dbn: i + 1 }];
-        while( stack.length > 0 )
+    // replace hoisted references with variables
+    const stack: { irTerm: IRTerm, dbn: number }[] = [{ irTerm: root, dbn: 0 }];
+    while( stack.length > 0 )
+    {
+        const { irTerm, dbn }  = stack.pop() as { irTerm: IRTerm, dbn: number };
+
+        const irTermHash = irTerm.hash;
+        if(
+            // is hoiseted
+            irTerm instanceof IRHoisted &&
+            // is not one to be inlined
+            !hoistedsToInlineHashes.some( h => uint8ArrayEq( h, irTermHash ) )
+        )
         {
-            const { irTerm, dbn }  = stack.pop() as { irTerm: IRTerm, dbn: number };
-
-            const irTermHash = irTerm.hash;
-            if( irTerm instanceof IRHoisted && uint8ArrayEq( irTermHash, thisHoistedHash ))
+            const irvar = getIRVarForHoistedAtLevel( irTermHash, dbn );
+            if( irvar.dbn >= dbn )
             {
-                // console.log("replacing hoisted with var", toHex( irTermHash ))
-                const irvar = getIRVarForHoistedAtLevel( irTermHash, dbn );
-                if( irvar.dbn >= dbn )
-                {
-                    throw new PlutsIRError(
-                        `out of bound hoisted term; hash: ${toHex( irTerm.hash )}; var's DeBruijn: ${irvar.dbn} (starts from 0); tot hoisted in scope: ${dbn}`
-                    )
-                }
-                _modifyChildFromTo(
-                    irTerm.parent as IRTerm,
-                    irTerm,
-                    irvar
-                );
-                continue;
+                throw new PlutsIRError(
+                    `out of bound hoisted term; hash: ${toHex( irTerm.hash )}; var's DeBruijn: ${irvar.dbn} (starts from 0); tot hoisted in scope: ${dbn}`
+                )
             }
+            _modifyChildFromTo(
+                irTerm.parent as IRTerm,
+                irTerm,
+                irvar
+            );
+            // don't push anything
+            // because we just replaced with a variable
+            // so we know there's not a tree to explore
+            continue;
+        }
+        else if( irTerm instanceof IRHoisted )
+        {
+            const toInline = irTerm.hoisted;
+            _modifyChildFromTo(
+                irTerm.parent as IRTerm,
+                irTerm,
+                toInline
+            );
+            stack.push({ irTerm: toInline, dbn });
+            continue;
+        }
 
-            if( irTerm instanceof IRApp )
-            {
-                stack.push(
-                    { irTerm: irTerm.fn , dbn },
-                    { irTerm: irTerm.arg, dbn },
-                );
-                continue;
-            }
+        if( irTerm instanceof IRApp )
+        {
+            stack.push(
+                { irTerm: irTerm.fn , dbn },
+                { irTerm: irTerm.arg, dbn },
+            );
+            continue;
+        }
 
-            if( irTerm instanceof IRDelayed )
-            {
-                stack.push(
-                    { irTerm: irTerm.delayed, dbn }
-                );
-                continue;
-            }
+        if( irTerm instanceof IRDelayed )
+        {
+            stack.push(
+                { irTerm: irTerm.delayed, dbn }
+            );
+            continue;
+        }
 
-            if( irTerm instanceof IRForced )
-            {
-                stack.push(
-                    { irTerm: irTerm.forced, dbn }
-                );
-                continue;
-            }
+        if( irTerm instanceof IRForced )
+        {
+            stack.push(
+                { irTerm: irTerm.forced, dbn }
+            );
+            continue;
+        }
 
-            if( irTerm instanceof IRFunc )
-            {
-                stack.push(
-                    { irTerm: irTerm.body, dbn: dbn + irTerm.arity }
-                );
-                continue;
-            }
+        if( irTerm instanceof IRFunc )
+        {
+            stack.push(
+                { irTerm: irTerm.body, dbn: dbn + irTerm.arity }
+            );
+            continue;
+        }
 
-            if( irTerm instanceof IRLetted )
-            {
-                stack.push(
-                    { irTerm: irTerm.value, dbn }
-                );
-                continue;
-            }
+        if( irTerm instanceof IRLetted )
+        {
+            stack.push(
+                { irTerm: irTerm.value, dbn }
+            );
+            continue;
         }
     }
 

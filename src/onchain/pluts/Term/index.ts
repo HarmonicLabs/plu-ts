@@ -77,14 +77,10 @@ export class Term<A extends PType>
                 {
                     if( typeof deBruijnLevel !== "bigint" ) deBruijnLevel = BigInt( deBruijnLevel );
 
-                    if( Number(deBruijnLevel) === 0 )
-                    console.log( "called toIR; shouldHoist: ", shouldHoist )
-        
                     let ir = _toIR_( deBruijnLevel );
                     if( shouldHoist )
                     {
                         const res = new IRHoisted( ir );
-                        console.log("shouldHoist === true result: ", showIR( res ).text )
                         return res;
                     }
                     

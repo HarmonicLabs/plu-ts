@@ -43,7 +43,7 @@ export class IRHoisted
 
     clone!: () => IRHoisted;
 
-    constructor( hoisted: IRTerm )
+    constructor( hoisted: IRTerm, src?: string )
     {
         // unwrap
         // !!! IMPORTANT !!!
@@ -117,16 +117,12 @@ export class IRHoisted
             }
         );
 
-        this.src = Error().stack?.split("\n")[2] as any
+        this.src = src ?? Error().stack?.split("\n")[2] as any
 
         Object.defineProperty(
             this, "dependencies",
             {
                 get: (): HoistedSetEntry[] => {
-
-                    // console.log( toHex( this.hash ), this.src );
-                    // console.log( showIR( this.hoisted ).text );
-                    // console.log( _getDeps().map( d => showIR(d.hoisted.hoisted).text ) );
 
                     return _getDeps().map( dep => {
 
@@ -165,12 +161,9 @@ export class IRHoisted
         ObjectUtils.defineProperty(
             this, "clone",
             () => {
-                if( toHex( this.hash ) === "10a2d468cf7e12a6eacfb62443607847abf9622e7eb02d700a6a0a1f" )
-                {
-                    console.warn( this.src );
-                }
                 return new IRHoisted(
-                    this.hoisted.clone()
+                    this.hoisted.clone(),
+                    Error().stack?.split("\n")[2]
                     // _getDeps().slice() // as long as `dependecies` getter returns clones this is fine
                 );
             }
@@ -193,7 +186,9 @@ export class IRHoisted
     {
         // return this.hoisted.toUPLC();
         throw new IllegalIRToUPLC(
-            "Can't convert 'IRHoisted' to valid UPLC;\nhoisted term was: " + showIR( this.hoisted ).text
+            "Can't convert 'IRHoisted' to valid UPLC;" +
+            "\nhoisted hash was: " + toHex( this.hash ) +
+            "\nhoisted term was: " + showIR( this.hoisted ).text
         );
     }
 }
@@ -252,13 +247,10 @@ export function getSortedHoistedSet( hoistedTerms: HoistedSetEntry[] ): HoistedS
 
 export function getHoistedTerms( irTerm: IRTerm ): HoistedSetEntry[]
 {
-    console.log("getting hoisted terms of " + showIR( irTerm ).text );
     const hoisteds: HoistedSetEntry[] = [];
 
     function searchIn( term: IRTerm ): void
     {
-        console.log("searching hoisted terms in " + showIR( term ).text );
-
         if( term instanceof IRHoisted )
         {
             // only push direct hoisteds

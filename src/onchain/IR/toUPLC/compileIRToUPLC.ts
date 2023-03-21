@@ -52,8 +52,6 @@ export function compileIRToUPLC( term: IRTerm ): UPLCTerm
     // ------------------------------------------------------------------------- //
     ///////////////////////////////////////////////////////////////////////////////
 
-    console.log( showIR( term ).text )
-
     term = replaceNativesAndReturnRoot( term );
 
     term = handleHoistedAndReturnRoot( term );
@@ -75,7 +73,5 @@ export function compileIRToUPLC( term: IRTerm ): UPLCTerm
     ///////////////////////////////////////////////////////////////////////////////
 
     // logJson( term )
-    console.log( showIR( term ).text )
-    const uplc = term.toUPLC(0);
-    return uplc;
+    return term.toUPLC(0);
 }

@@ -1,11 +1,13 @@
 import { Machine } from "../../../../../CEK";
+import { getHoistedTerms, getSortedHoistedSet } from "../../../../../IR/IRNodes/IRHoisted";
+import { compileIRToUPLC } from "../../../../../IR/toUPLC/compileIRToUPLC";
 import { UPLCEncoder } from "../../../../../UPLC/UPLCEncoder";
 import { UPLCProgram } from "../../../../../UPLC/UPLCProgram";
 import { UPLCTerm, showUPLC } from "../../../../../UPLC/UPLCTerm";
 import { ErrorUPLC } from "../../../../../UPLC/UPLCTerms/ErrorUPLC";
 import { UPLCConst } from "../../../../../UPLC/UPLCTerms/UPLCConst";
 import { pmatch } from "../../../../PTypes/PStruct/pmatch";
-import { PMaybe, fromData, pBool, pByteString, pInt, pPair, pdelay, pfn, phoist, pif, plam, precursiveList, toData } from "../../../../lib";
+import { PMaybe, fromData, pBool, pByteString, pInt, pPair, pdelay, pfn, phoist, pif, plam, precursiveList, ptoData, toData } from "../../../../lib";
 import { pList } from "../../../../lib/std/list/const";
 import { termTypeToString } from "../../../../type_system";
 import { bool, bs, fn, int, list } from "../../../../type_system/types";
@@ -54,12 +56,22 @@ describe("Machine.evalSimple( PValue )", () => {
             Machine.evalSimple( oneEntryValue ) instanceof UPLCConst
         ).toBe( true )
     });
+
+    test("ptoData( PValue.type )", () => {
+
+        const term = ptoData( PValue.type );
+        const ir = term.toIR();
+        const uplc = compileIRToUPLC( ir );
+
+    })
     
     test("one entry to data", () => {
 
-        const { result } = Machine.eval(
-            toData( PValue.type )( oneEntryValue )
-        );
+        const term = toData( PValue.type )( oneEntryValue );
+        const ir = term.toIR();
+        const uplc = compileIRToUPLC( ir );
+
+        const { result } = Machine.eval( uplc );
 
         expect(
             result instanceof UPLCConst
@@ -156,7 +168,7 @@ const pvalueOfBetter = phoist(
 
 describe("pvalueOf", () => {
 
-    test.only("non exsistent coin", () => {
+    test("non exsistent coin", () => {
 
         const expected = Machine.evalSimple( pInt(0) );
         const { result: received, budgetSpent: exBudget } = Machine.eval( pvalueOf.$( oneEntryValue ).$("").$("") );
