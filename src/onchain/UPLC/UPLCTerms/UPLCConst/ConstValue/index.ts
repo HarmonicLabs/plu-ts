@@ -26,7 +26,7 @@ export type ConstValue
     | Pair<ConstValue,ConstValue>
     | Data;
 
-export function isConstValueInt( n: any ): boolean
+export function isConstValueInt( n: any ): n is ( number | bigint )
 {
     return (
         typeof n === "bigint" ||

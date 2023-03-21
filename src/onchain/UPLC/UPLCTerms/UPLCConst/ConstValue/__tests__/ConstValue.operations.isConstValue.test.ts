@@ -101,7 +101,7 @@ describe("ConstValue :: isConstValue, simple values", () => {
     it("is false for Pairs that do contain non ConstValue values", () => {
 
         expect( 
-            isConstValue( new Pair( 2 , 42 ) )
+            isConstValue( new Pair( 2 , {} ) )
         ).toBe( false );
 
     })

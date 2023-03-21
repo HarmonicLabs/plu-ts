@@ -1,12 +1,12 @@
-import type { PType } from "../PType";
-import { IRApp } from "../../IR/IRNodes/IRApp";
-import { IRFunc } from "../../IR/IRNodes/IRFunc";
-import { IRLetted } from "../../IR/IRNodes/IRLetted";
-import { IRVar } from "../../IR/IRNodes/IRVar";
-import { Term } from "../Term";
-import { PrimType } from "../type_system/types";
-import { UtilityTermOf, addUtilityForType } from "./addUtilityForType";
-import { _fromData } from "./std/data/conversion/fromData_minimal";
+import type { PType } from "../../PType";
+import { IRApp } from "../../../IR/IRNodes/IRApp";
+import { IRFunc } from "../../../IR/IRNodes/IRFunc";
+import { IRLetted } from "../../../IR/IRNodes/IRLetted";
+import { IRVar } from "../../../IR/IRNodes/IRVar";
+import { Term } from "../../Term";
+import { PrimType } from "../../type_system/types";
+import { UtilityTermOf, addUtilityForType } from "../addUtilityForType";
+import { _fromData } from "../std/data/conversion/fromData_minimal";
 
 export type LettedTerm<PVarT extends PType> = UtilityTermOf<PVarT> & {
     /**

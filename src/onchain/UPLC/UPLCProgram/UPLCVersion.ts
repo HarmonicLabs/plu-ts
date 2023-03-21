@@ -1,19 +1,19 @@
-import { CanBeUInteger, forceUInteger, UInteger } from "../../../types/ints/Integer";
+import { CanBeUInteger, forceBigUInt } from "../../../types/ints/Integer";
 
 export class UPLCVersion
 {
-    private _major: UInteger
-    private _minor: UInteger
-    private _patch: UInteger
+    private _major: bigint
+    private _minor: bigint
+    private _patch: bigint
 
-    get major(): UInteger {return this._major};
-    get minor(): UInteger {return this._minor};
-    get patch(): UInteger {return this._patch};
+    get major(): bigint {return this._major};
+    get minor(): bigint {return this._minor};
+    get patch(): bigint {return this._patch};
 
     constructor( major: CanBeUInteger, minor: CanBeUInteger, patch: CanBeUInteger )
     {
-        this._major = forceUInteger( major );
-        this._minor = forceUInteger( minor );
-        this._patch = forceUInteger( patch );
+        this._major = forceBigUInt( major );
+        this._minor = forceBigUInt( minor );
+        this._patch = forceBigUInt( patch );
     }
 }

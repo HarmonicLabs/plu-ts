@@ -7,7 +7,7 @@ import { Cloneable } from "../../../types/interfaces/Cloneable";
 import { CanBeUInteger, canBeUInteger, forceBigUInt } from "../../../types/ints/Integer";
 import { Pair } from "../../../types/structs/Pair";
 import ObjectUtils from "../../../utils/ObjectUtils";
-import { isConstValueList } from "../../UPLC/UPLCTerms/UPLCConst/ConstValue";
+import { isConstValueInt, isConstValueList } from "../../UPLC/UPLCTerms/UPLCConst/ConstValue";
 import { cloneTermType } from "../../pluts/type_system/cloneTermType";
 import { isWellFormedType } from "../../pluts/type_system/kinds/isWellFormedType";
 import { termTyToConstTy } from "../../pluts/type_system/termTyToConstTy";
@@ -25,6 +25,7 @@ import { ToUPLC } from "../../UPLC/interfaces/ToUPLC";
 import { UPLCConst } from "../../UPLC/UPLCTerms/UPLCConst";
 import { typeExtends } from "../../pluts/type_system/typeExtends";
 import { termTypeToString } from "../../pluts/type_system/utils";
+import UPLCFlatUtils from "../../../utils/UPLCFlatUtils";
 
 export type IRConstValue
     = CanBeUInteger
@@ -200,7 +201,7 @@ export class IRConst
 function inferConstValueT( value: IRConstValue ): GenericTermType
 {
     if( typeof value === "undefined" || value === null ) return unit;
-    if( canBeUInteger( value ) ) return int;
+    if( isConstValueInt( value ) || canBeUInteger( value ) ) return int;
 
     if(
         value instanceof Uint8Array ||
@@ -309,7 +310,13 @@ function serializeIRConstValue( value: any, t: TermType ): Uint8Array
     if( value === undefined || t[0] === PrimType.Unit ) return new Uint8Array(0);
     if( t[0] === PrimType.Int )
     {
-        return positiveBigIntAsBytes( forceBigUInt( value ) )
+        return positiveBigIntAsBytes(
+            // forceBigUInt(
+                UPLCFlatUtils.zigzagBigint(
+                    BigInt( value )
+                )
+            // )
+        )
     }
 
     if( t[0] === PrimType.BS )

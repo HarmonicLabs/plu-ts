@@ -129,6 +129,17 @@ export function handleHoistedAndReturnRoot( term: IRTerm ): IRTerm
         }
         else if( irTerm instanceof IRHoisted )
         {
+            if( !hoistedsToInlineHashes.some( h => uint8ArrayEq( h, irTermHash ) ))
+            {
+                throw new PlutsIRError(
+                    "unexpected hoisted term found with hash: " + toHex( irTermHash ) +
+                    "\n showIR of the term: " + JSON.stringify(
+                        showIR( irTerm ),
+                        undefined,
+                        2
+                    )
+                );
+            }
             const toInline = irTerm.hoisted;
             _modifyChildFromTo(
                 irTerm.parent as IRTerm,

@@ -32,7 +32,7 @@ import { IRHoisted } from "../../../IR/IRNodes/IRHoisted";
 import { IRFunc } from "../../../IR/IRNodes/IRFunc";
 import { IRError } from "../../../IR/IRNodes/IRError";
 import { IRForced } from "../../../IR/IRNodes/IRForced";
-import { plet } from "../../lib/plet";
+import { _old_plet } from "../../lib/plet/minimal";
 
 
 const elemAtCache: { [n: number]: TermFn<[ PList<PData> ], PData > } = {};
@@ -108,7 +108,7 @@ function getExtractedFieldsExpr<CtorDef extends StructCtorDef, Fields extends (k
     const idx = allFIndexes[0];
     const fieldType = ctorDef[ allFieldsNames[ idx ] ];
 
-    return plet(
+    return _old_plet(
         // needs to be minimal
         // it MUST not add the fieldType utilities
         // it will add the `withAllPairElemsAsData` version utilities
@@ -542,7 +542,7 @@ export function pmatch<SDef extends StructDefinition>( struct: Term<PStruct<SDef
                     ]
                 )
                 
-                return plet(
+                return _old_plet(
                     plam( list(data), returnT )( cb )
                 ).in( othCtorsContinuation => {
 
