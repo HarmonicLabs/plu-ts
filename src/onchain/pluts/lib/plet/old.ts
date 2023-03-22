@@ -1,29 +1,20 @@
-import type { PType } from "../../PType";
 import { IRApp } from "../../../IR/IRNodes/IRApp";
 import { IRFunc } from "../../../IR/IRNodes/IRFunc";
 import { IRLetted } from "../../../IR/IRNodes/IRLetted";
 import { IRVar } from "../../../IR/IRNodes/IRVar";
+import type { PType } from "../../PType";
 import { Term } from "../../Term";
-import { PrimType } from "../../type_system/types";
+import { PrimType } from "../../type_system";
 import { UtilityTermOf, addUtilityForType } from "../addUtilityForType";
 import { _fromData } from "../std/data/conversion/fromData_minimal";
-import { showIR } from "../../../IR/utils/showIR";
+
 
 export type LettedTerm<PVarT extends PType> = UtilityTermOf<PVarT> & {
-    /**
-     * @deprecated you can use the result of `plet` directly
-     * 
-     * @example
-     * ```ts
-     * const myTerm = plet( myValue );
-     * ```
-     * 
-     * ## the `in` method will be removed in a future version
-    **/
+    // not deprecated here
     in: <PExprResult extends PType>( expr: (value: UtilityTermOf<PVarT>) => Term<PExprResult> ) => Term<PExprResult>
 }
 
-export function plet<PVarT extends PType, SomeExtension extends object>( varValue: Term<PVarT> & SomeExtension ): LettedTerm<PVarT>
+export function _old_plet<PVarT extends PType, SomeExtension extends object>( varValue: Term<PVarT> & SomeExtension ): LettedTerm<PVarT>
 {
     type TermPVar = Term<PVarT> & SomeExtension;
 
@@ -34,17 +25,12 @@ export function plet<PVarT extends PType, SomeExtension extends object>( varValu
 
     const letted = new Term(
         type,
-        dbn => {
-
-            console.log("instantiating lettted ad dbn: " + dbn.toString() );
-            const val = varValue.toIR( dbn );
-            console.log( showIR(val) ); 
-            return new IRLetted(
+        dbn =>
+            new IRLetted(
                 Number( dbn ),
-                val
-            );
-        }
-);
+                varValue.toIR( dbn )
+            )
+    );
     
     const continuation = <PExprResult extends PType>( expr: (value: TermPVar) => Term<PExprResult> ): Term<PExprResult> => {
 
@@ -102,5 +88,5 @@ export function plet<PVarT extends PType, SomeExtension extends object>( varValu
         }
     );
 
-    return addUtilityForType( type )( letted ) as any;
+    return letted as any;
 }

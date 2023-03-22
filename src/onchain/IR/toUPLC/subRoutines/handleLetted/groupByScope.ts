@@ -7,7 +7,7 @@ import { IRVar } from "../../../IRNodes/IRVar";
 import { IRTerm } from "../../../IRTerm";
 
 type ScopedLettedTerms = {
-    maxScope: IRTerm | undefined, // udefined is any scope (root)
+    maxScope: IRFunc | undefined, // udefined is any scope (root)
     group: LettedSetEntry[]
 }
 
@@ -15,7 +15,7 @@ export function groupByScope( letteds: LettedSetEntry[] ): ScopedLettedTerms[]
 {
     const scopes: ScopedLettedTerms[] = [];
 
-    function pushScope( scope: IRTerm | undefined, letted: LettedSetEntry )
+    function pushScope( scope: IRFunc | undefined, letted: LettedSetEntry )
     {
         const scopeEntry = scopes.find( entry => entry.maxScope === scope );
         if( scopeEntry === undefined )
@@ -53,7 +53,7 @@ export function groupByScope( letteds: LettedSetEntry[] ): ScopedLettedTerms[]
             }
         }
 
-        pushScope( maxScope, { letted, nReferences } )
+        pushScope( maxScope as IRFunc, { letted, nReferences } )
     }
 
     return scopes;

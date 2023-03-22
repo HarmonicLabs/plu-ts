@@ -21,7 +21,7 @@ import { IRForced } from "./IRForced";
 import { IRDelayed } from "./IRDelayed";
 
 
-type HoistedSetEntry = {
+export type HoistedSetEntry = {
     hoisted: IRHoisted,
     nReferences: number
 }

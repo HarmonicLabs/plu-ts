@@ -355,7 +355,7 @@ export function getLettedTerms( irTerm: IRTerm ): LettedSetEntry[]
 }
 
 
-function getNormalizedLettedArgs( dbn: number, value: IRTerm ): [ normalized_dbn: number, noramlized_value: IRTerm ] | undefined
+export function getNormalizedLettedArgs( dbn: number, value: IRTerm ): [ normalized_dbn: number, noramlized_value: IRTerm ] | undefined
 {
     const normalized_value = value.clone();
     const minDbn = getMinVarDbnIn( normalized_value );

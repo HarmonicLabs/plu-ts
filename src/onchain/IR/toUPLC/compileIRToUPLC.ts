@@ -7,8 +7,9 @@ import { handleLetted } from "./subRoutines/handleLetted";
 import { handleHoistedAndReturnRoot } from "./subRoutines/handleHoistedAndReturnRoot";
 import { replaceNativesAndReturnRoot } from "./subRoutines/replaceNatives";
 import { IRLetted } from "../IRNodes/IRLetted";
-import { logJson } from "../../../utils/ts/ToJson";
 import { showIR } from "../utils/showIR";
+import { IRHoisted } from "../IRNodes/IRHoisted";
+import { replaceClosedLettedWithHoisted } from "./subRoutines/replaceClosedLettedWithHoisted";
 
 export function compileIRToUPLC( term: IRTerm ): UPLCTerm
 {
@@ -17,6 +18,16 @@ export function compileIRToUPLC( term: IRTerm ): UPLCTerm
     // --------------------------------- init  --------------------------------- //
     // ------------------------------------------------------------------------- //
     ///////////////////////////////////////////////////////////////////////////////
+
+    // unwrap top level letted and hoisted;
+    while( term instanceof IRLetted || term instanceof IRHoisted )
+    {
+        // replace with value
+        term = term instanceof IRLetted ? term.value : term.hoisted;
+
+        // forget the parent; this is the new root
+        term.parent = undefined;
+    }
 
     // _makeAllNegativeNativesHoisted( term );
 
@@ -54,17 +65,11 @@ export function compileIRToUPLC( term: IRTerm ): UPLCTerm
 
     term = replaceNativesAndReturnRoot( term );
 
-    term = handleHoistedAndReturnRoot( term );
+    replaceClosedLettedWithHoisted( term );
 
-    // unwrap top level letted;
-    // should rarely be the case
-    // since most of the time we'll have hoisted stuff
-    while( term instanceof IRLetted )
-    {
-        term = term.value;
-        term.parent = undefined;
-    }
     handleLetted( term );
+
+    term = handleHoistedAndReturnRoot( term );
 
     ///////////////////////////////////////////////////////////////////////////////
     // ------------------------------------------------------------------------- //
@@ -72,6 +77,5 @@ export function compileIRToUPLC( term: IRTerm ): UPLCTerm
     // ------------------------------------------------------------------------- //
     ///////////////////////////////////////////////////////////////////////////////
 
-    // logJson( term )
     return term.toUPLC(0);
 }

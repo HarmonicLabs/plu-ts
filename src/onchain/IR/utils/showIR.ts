@@ -62,22 +62,34 @@ export function showIRText( _ir: IRTerm ): string
 export function showIR( _ir: IRTerm )
 : { 
     text: string, 
-    // letted: { [hash: string]: string }, 
+    letted: { [hash: string]: string }, 
     hoisted: { [hash: string]: string } 
 }
 {
-    /*
+    //*
     const lettedHashes: Uint8Array[] = [];
     const letted: { [hash: string]: string } = {};
 
-    function addLetted( letted: IRLetted )
+    function addLetted( l: IRLetted )
     {
-        const hash = letted.hash;
+        const hash = l.hash;
         if( !lettedHashes.some( lettedHash => uint8ArrayEq( lettedHash, hash ) ) )
         {
-            const deps = letted.dependencies;
-            for()
-            lettedHashes.push( hash )
+            const deps = l.dependencies;
+            for(let i = 0; i < 0; i++)
+            {
+                addLetted( deps[i].letted );
+            }
+
+            lettedHashes.push( hash.slice() );
+            Object.defineProperty(
+                letted, toHex( hash ), {
+                    value: showIRText( l.value ),
+                    writable: false,
+                    enumerable: true,
+                    configurable: false
+                }
+            );
         }
     }
     //*/
@@ -114,7 +126,7 @@ export function showIR( _ir: IRTerm )
         if( ir instanceof IRNative ) return `(native ${nativeTagToString(ir.tag)})`;
         if( ir instanceof IRLetted )
         {
-            // addLetted( ir );
+            addLetted( ir );
             return `(letted ${toHex( ir.hash )})`;
         }
         if( ir instanceof IRHoisted )
@@ -144,7 +156,7 @@ export function showIR( _ir: IRTerm )
 
     return {
         text,
-        // letted,
+        letted,
         hoisted
     }
 }

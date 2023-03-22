@@ -1,17 +1,21 @@
 import { toHex } from "@harmoniclabs/uint8array-utils";
-import { int, lam, tyVar } from "../../../../../pluts/type_system/types";
+import { int } from "../../../../../pluts/type_system/types";
 import { IRApp } from "../../../../IRNodes/IRApp";
 import { IRConst } from "../../../../IRNodes/IRConst";
 import { IRDelayed } from "../../../../IRNodes/IRDelayed";
 import { IRForced } from "../../../../IRNodes/IRForced";
 import { IRFunc } from "../../../../IRNodes/IRFunc";
-import { IRLetted, getLettedTerms } from "../../../../IRNodes/IRLetted";
+import { IRLetted, getLettedTerms, getNormalizedLettedArgs } from "../../../../IRNodes/IRLetted";
 import { IRNative } from "../../../../IRNodes/IRNative";
 import { IRNativeTag } from "../../../../IRNodes/IRNative/IRNativeTag";
 import { IRVar } from "../../../../IRNodes/IRVar";
 import { _addDepth } from "../../../_internal/_addDepth";
 import { handleLetted } from "..";
 import { IRTerm } from "../../../../IRTerm";
+import { _ir_apps } from "../../../../tree_utils/_ir_apps";
+import { IRHoisted } from "../../../../IRNodes/IRHoisted";
+import { compileIRToUPLC } from "../../../compileIRToUPLC";
+import { showUPLC } from "../../../../../UPLC/UPLCTerm";
 
 describe("handleLetted", () => {
 
@@ -36,7 +40,7 @@ describe("handleLetted", () => {
 
         const fstHash = root.hash.slice();
 
-        handleLetted( root );
+        const compiled = compileIRToUPLC( root );
 
         const expected = new IRForced(
             new IRDelayed(
@@ -50,12 +54,13 @@ describe("handleLetted", () => {
             )
         );
 
-        _addDepth( expected );
-
-        expect( getLettedTerms( root ) ).toEqual([]);
-        expect( fstHash ).not.toEqual( root.hash );
-        expect( root.hash ).toEqual( expected.hash );
-        
+        expect(
+            compiled
+        ).toEqual(
+            compileIRToUPLC(
+                expected
+            )
+        )
     });
 
     test("two refs hoisted", () => {
@@ -83,33 +88,31 @@ describe("handleLetted", () => {
 
         expect( getLettedTerms( root ).length ).toEqual( 2 );
 
-        const fstHash = root.hash.slice();
-
-        handleLetted( root );
+        const compiled = compileIRToUPLC( root );
 
         const expected = new IRForced(
             new IRDelayed(
                 new IRApp(
-                    new IRFunc(
-                        1,
-                        new IRApp(
-                            new IRVar( 0 ),
-                            new IRApp(
-                                new IRVar( 0 ),
-                                new IRConst( int, 2 )
-                            )
-                        )
+                    new IRHoisted(
+                        letted.clone().value
                     ),
-                    letted.value.clone()
+                    new IRApp(
+                        new IRHoisted(
+                            letted.clone().value
+                        ),
+                        new IRConst( int, 2 )
+                    )
                 )
             )
         );
 
-        _addDepth( expected );
-
-        expect( getLettedTerms( root ) ).toEqual([]);
-        expect( fstHash ).not.toEqual( root.hash );
-        expect( root.hash ).toEqual( expected.hash );
+        expect(
+            compiled
+        ).toEqual(
+            compileIRToUPLC(
+                expected
+            )
+        )
         
     });
 
@@ -142,15 +145,13 @@ describe("handleLetted", () => {
 
         expect( getLettedTerms( root ).length ).toEqual( 2 );
 
-        const fstHash = root.hash.slice();
+        const compiled = compileIRToUPLC( root );
 
-        handleLetted( root );
-
-        const expected = new IRForced(
-            new IRDelayed(
-                new IRApp(
-                    new IRFunc(
-                        1,
+        const expected = new IRFunc(
+            1,
+            new IRApp(
+                new IRForced(
+                    new IRDelayed(
                         new IRApp(
                             new IRVar( 0 ),
                             new IRApp(
@@ -161,19 +162,21 @@ describe("handleLetted", () => {
                                 new IRConst( int, 2 )
                             )
                         )
-                    ),
-                    letted.value.clone()
-                )
+                    )
+                ),
+                letted.value.clone()
             )
         );
 
-        expect( getLettedTerms( root ) ).toEqual([]);
-        expect( fstHash ).not.toEqual( root.hash );
-        
-        expect( root.toJson() ).toEqual( expected.toJson() );
+        const expectedCompiled = compileIRToUPLC(
+            expected
+        );
 
-        expect( toHex( root.hash ) )
-        .toEqual( toHex( expected.hash ) )
+        expect(
+            showUPLC( compiled )
+        ).toEqual(
+            "[(lam a (force (delay [a [[(lam b a) (con integer 0)] (con integer 2)]]))) [(builtin addInteger) (con integer 2)]]"
+        )
         
     });
 
@@ -219,7 +222,6 @@ describe("handleLetted", () => {
         const lettedInRoot = getLettedTerms( root );
         expect( lettedInRoot.length ).toEqual( 1 );
 
-        handleLetted( root );
 
         // logJson( root, 4 )
 
@@ -244,8 +246,11 @@ describe("handleLetted", () => {
 
         // logJson( root, 4 )
 
-        expect( root.toJson() ).toEqual( expected.toJson() );
-        expect( root.hash ).toEqual( expected.hash );
+        const compiled = compileIRToUPLC( root );
+
+        expect(
+            showUPLC( compiled )
+        ).toEqual("(force (delay [[(builtin addInteger) [[(builtin addInteger) (con integer 2)] (con integer 2)]] (con integer 2)]))")
 
     });
 
@@ -287,8 +292,6 @@ describe("handleLetted", () => {
         const lettedInRoot = getLettedTerms( root );
         expect( lettedInRoot.length ).toEqual( 2 );
 
-        handleLetted( root );
-
         // all inlined
         const expected = new IRForced(
             new IRDelayed(
@@ -316,9 +319,10 @@ describe("handleLetted", () => {
             )
         );
 
-        expect( root.toJson() ).toEqual( expected.toJson() );
-        expect( root.hash ).toEqual( expected.hash );
+        const compiled = compileIRToUPLC( root );
 
+        expect( showUPLC( compiled ) )
+        .toEqual("[(lam a (force (delay [[(builtin addInteger) [a (con integer 2)]] [a (con integer 2)]]))) [(builtin addInteger) (con integer 2)]]")
     });
 
     test("vars outside and inside", () => {
@@ -343,7 +347,10 @@ describe("handleLetted", () => {
             )
         );
 
-        handleLetted( root );
+        const compiled = compileIRToUPLC( root );
+
+        expect( showUPLC( compiled ) )
+        .toEqual("[(lam a (lam b (lam c [[(lam d (lam e [[(builtin addInteger) b] d])) a] a]))) (con integer 2)]");
 
         // all inlined
         const expected = new IRFunc( 2, // a, b
@@ -369,9 +376,60 @@ describe("handleLetted", () => {
             )  
         );
 
-        expect( root.toJson() ).toEqual( expected.toJson() );
-        expect( root.hash ).toEqual( expected.hash );
+    });
 
+
+    test("letted term hoisted correctly", () => {
+
+        const funcArity = 1;
+
+        const lettedDoubled = new IRLetted(
+            1,
+            new IRApp(
+                new IRFunc( 1,
+                    _ir_apps(
+                        IRNative.addInteger,
+                        new IRVar( 0 ),
+                        new IRVar( 0 )
+                    )
+                ),
+                new IRVar(0)
+            )
+        )
+        const quadrupleIR = new IRFunc(
+            funcArity,
+            _ir_apps(
+                IRNative.addInteger,
+                lettedDoubled.clone(),
+                lettedDoubled.clone()
+            )
+        );
+
+        const newIR = quadrupleIR.clone();
+
+        // console.log( showIR( newIR ) );
+
+        handleLetted( newIR );
+
+        const expected = new IRFunc(
+            funcArity,
+            new IRApp(
+                new IRFunc( 1,
+                    _ir_apps(
+                        IRNative.addInteger,
+                        new IRVar( 0 ),
+                        new IRVar( 0 )
+                    )
+                ),
+                lettedDoubled.value
+            )
+        ); 
+
+        // console.log( showIR( newIR ) );
+        // console.log( showIR( expected ) );
+
+        expect( newIR.toJson() )
+        .toEqual( expected.toJson() )
     })
 
 })

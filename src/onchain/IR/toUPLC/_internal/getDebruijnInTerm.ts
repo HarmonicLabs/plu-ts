@@ -1,3 +1,4 @@
+import { uint8ArrayEq } from "@harmoniclabs/uint8array-utils";
 import { IRApp } from "../../IRNodes/IRApp";
 import { IRDelayed } from "../../IRNodes/IRDelayed";
 import { IRForced } from "../../IRNodes/IRForced";
@@ -8,13 +9,14 @@ import { IRTerm } from "../../IRTerm";
 
 export function getDebruijnInTerm( root: IRTerm, termToFind: IRTerm ): number
 {
+    const termTofindHash = termToFind.hash
     const stack: { term: IRTerm, dbn: number }[] = [{ term: root, dbn: 0 }];
 
     while( stack.length > 0 )
     {
         const { term, dbn } = stack.pop() as { term: IRTerm, dbn: number };
 
-        if( term === termToFind ) return dbn;
+        if( uint8ArrayEq( term.hash, termTofindHash ) ) return dbn;
 
         if( term instanceof IRApp )
         {

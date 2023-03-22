@@ -33,15 +33,12 @@ describe("compileIRToUPLC", () => {
                 )
             );
     
-            const ZUPLC = new Application(
-                new Lambda( new UPLCVar( 0 ) ),
-                new Lambda( // Z
-                    new Application(
-                        innerZ,
-                        innerZ.clone()
-                    )
+            const ZUPLC = new Lambda( // Z
+                new Application(
+                    innerZ,
+                    innerZ.clone()
                 )
-            );
+            )
     
             // console.log( showUPLC( ir_zUPLC ) )
             // console.log( showUPLC( ZUPLC ) )
@@ -59,7 +56,7 @@ describe("compileIRToUPLC", () => {
             const uplc = compileIRToUPLC( IRNative._matchList );
     
             const expectedUplcStr =
-                "[(lam a a) (lam a (lam b (lam c (force [[[(force (force (builtin chooseList))) c] a] (delay [[b [(force (builtin headList)) c]] [(force (builtin tailList)) c]])]))))]";
+                "(lam a (lam b (lam c (force [[[(force (force (builtin chooseList))) c] a] (delay [[b [(force (builtin headList)) c]] [(force (builtin tailList)) c]])]))))";
     
             expect(
                 showUPLC( uplc )
@@ -75,7 +72,7 @@ describe("compileIRToUPLC", () => {
             
             expect( showUPLC( uplc ) )
             .toEqual(
-                "[(lam a [(lam b [(lam c c) [a (lam c (lam d (lam e (lam f [(lam g [[[b [d g]] [e g]] f]) [[c d] e]]))))]]) (lam b (lam c (lam d (force [[[(force (force (builtin chooseList))) d] b] (delay [[c [(force (builtin headList)) d]] [(force (builtin tailList)) d]])]))))]) (lam a [(lam b [a (lam c [[b b] c])]) (lam b [a (lam c [[b b] c])])])]"
+                "[(lam a [(lam b [a (lam c [[b b] c])]) (lam b [a (lam c [[b b] c])])]) (lam a (lam b (lam c (lam d [(lam e [[[(lam f (lam g (lam h (force [[[(force (force (builtin chooseList))) h] f] (delay [[g [(force (builtin headList)) h]] [(force (builtin tailList)) h]])])))) [b e]] [c e]] d]) [[a b] c]]))))]"
             )
             
         })

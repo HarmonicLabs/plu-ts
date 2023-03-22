@@ -1,6 +1,8 @@
-import { lam, tyVar } from "../../../pluts"
 import { isClosedIRTerm } from "../../utils/isClosedIRTerm"
+import { IRApp } from "../IRApp"
+import { IRConst } from "../IRConst"
 import { IRFunc } from "../IRFunc"
+import { IRNative } from "../IRNative"
 import { IRVar } from "../IRVar"
 
 describe("isClosedIRTerm", () => {
@@ -63,5 +65,19 @@ describe("isClosedIRTerm", () => {
             isClosedIRTerm( _const )
         ).toBe( true )
 
-    })
+    });
+
+    test("[(native addInteger) (const int 2)] -> true", () => {
+
+        expect(
+            isClosedIRTerm(
+                new IRApp(
+                    IRNative.addInteger,
+                    IRConst.int( 2 )
+                )
+            )
+        ).toEqual( true );
+
+    });
+    
 })

@@ -46,7 +46,7 @@ describe("NFTVendingMachine", () => {
 
                                 // checks that a SINGLE TOKEN is minted
                                 // with `ownCurrSym` as policy,
-                                // `NFTweet#<nftCounter>` as asset name
+                                // `Collection#<nftCounter>` as asset name
                                 // and `1` as quantity
                                 pisEmpty.$( tx.mint.tail )
                                 .and(
@@ -64,11 +64,11 @@ describe("NFTVendingMachine", () => {
                                                         asset.snd.eq( 1 )
                                                         .and(
 
-                                                            // `NFTweet#<nftCounter>` as asset name
+                                                            // `Collection#<nftCounter>` as asset name
                                                             asset.fst.eq(
                                                                 pByteString(
                                                                     ByteString.fromAscii(
-                                                                        "NFTweet#"
+                                                                        "Collection#"
                                                                     )
                                                                 ).concat(
                                                                     pintToBS.$( punIData.$( nftCounter ) )

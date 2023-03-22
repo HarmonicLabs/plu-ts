@@ -8,7 +8,7 @@ import { IRTerm } from "../../IRTerm";
 
 export function iterTree( _term: IRTerm, fn: ( elem: IRTerm, dbn: number ) => (boolean | undefined | void) ): void
 {
-    const stack: { term: IRTerm, dbn: number }[] = [{ term: _term, dbn: 0 }];
+    const stack: { term: IRTerm, dbn: number, isIRAppArg?: boolean }[] = [{ term: _term, dbn: 0 }];
 
     while( stack.length > 0 )
     {
@@ -21,7 +21,7 @@ export function iterTree( _term: IRTerm, fn: ( elem: IRTerm, dbn: number ) => (b
 
         if( modifiedParent && termParent !== undefined )
         {
-            if( termParent instanceof IRApp )
+            if( stack.length > 0 && stack[ stack.length - 1 ].isIRAppArg )
             {
                 // there is an extra node 
                 stack.pop();
@@ -34,7 +34,7 @@ export function iterTree( _term: IRTerm, fn: ( elem: IRTerm, dbn: number ) => (b
         {
             stack.push(
                 { term: t.fn, dbn  },
-                { term: t.arg, dbn }
+                { term: t.arg, dbn, isIRAppArg: true }
             );
             continue;
         }

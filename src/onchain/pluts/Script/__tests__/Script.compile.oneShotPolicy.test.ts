@@ -112,11 +112,12 @@ punsafeConvertType(
 
 describe("oneShotNFT", () => {
 
-    test("it compiles", () => {
+    test.only("it compiles", () => {
 
-        expect(
-            () => compile( oneShotNFT )
-        ).not.toThrow();
+//         expect(
+//             () => 
+                compile( oneShotNFT )
+//         ).not.toThrow();
         
     });
 

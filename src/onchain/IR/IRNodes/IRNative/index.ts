@@ -127,7 +127,7 @@ export class IRNative
     {
         if( this.tag < 0 )
         throw new IllegalIRToUPLC(
-            "Can't translate 'IRNative' with tag " + this.tag.toString() + " to Builtin"
+            "Can't translate '" + nativeTagToString( this.tag ) + "' 'IRNative' to 'UPLCBuiltin'"
         );
 
         return new Builtin( this.tag as any );

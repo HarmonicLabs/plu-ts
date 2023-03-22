@@ -4,7 +4,7 @@ import { BitStream } from "../../../../types/bits/BitStream";
 import { ByteString } from "../../../../types/HexString/ByteString";
 import { Pair } from "../../../../types/structs/Pair";
 import { Data } from "../../../../types/Data/Data";
-import { ConstType, constT, constTypeToStirng, isWellFormedConstType } from "./ConstType";
+import { ConstTyTag, ConstType, constPairTypeUtils, constT, constTypeEq, constTypeToStirng, isWellFormedConstType } from "./ConstType";
 import { ConstValue, canConstValueBeOfConstType, ConstValueList, inferConstTypeFromConstValue, isConstValueInt } from "./ConstValue";
 import { Cloneable } from "../../../../types/interfaces/Cloneable";
 
@@ -57,6 +57,35 @@ export class UPLCConst
             `trying to construct an UPLC constant with an invalid value for type "${constTypeToStirng( typeTag )}";
              input value was: ${value}`
         )
+
+        if( constTypeEq( typeTag, constT.int ) )
+        value = BigInt( value as any );
+
+
+        if( constTypeEq( typeTag, constT.listOf( constT.int ) ) )
+        value = ( value as number[] ).map( n => BigInt( n ) );
+
+        if(
+            typeTag[0] === ConstTyTag.pair
+        )
+        {
+            if(
+                constTypeEq(
+                    constPairTypeUtils.getFirstTypeArgument( typeTag ),
+                    constT.int
+                )
+            )
+            (value as Pair<any,any>).fst = BigInt( (value as Pair<any,any>).fst );
+
+            if(
+                constTypeEq(
+                    constPairTypeUtils.getSecondTypeArgument( typeTag ),
+                    constT.int
+                )
+            )
+            (value as Pair<any,any>).snd = BigInt( (value as Pair<any,any>).snd );
+            
+        }
         
         this._type = typeTag;
         this._value = value;

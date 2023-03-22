@@ -4,10 +4,14 @@ import { IRApp } from "../../IRNodes/IRApp";
 import { IRDelayed } from "../../IRNodes/IRDelayed";
 import { IRForced } from "../../IRNodes/IRForced";
 import { IRFunc } from "../../IRNodes/IRFunc";
-import { IRLetted } from "../../IRNodes/IRLetted";
+import { IRLetted, getNormalizedLettedArgs } from "../../IRNodes/IRLetted";
 import { IRVar } from "../../IRNodes/IRVar";
 import { IRTerm } from "../../IRTerm";
 import { handleLetted } from "../subRoutines/handleLetted/index";
+import { _ir_apps } from "../../tree_utils/_ir_apps";
+import { IRNative } from "../../IRNodes/IRNative";
+import { showIR } from "../../utils/showIR";
+import { compileIRToUPLC } from "../compileIRToUPLC";
 
 
 describe("compileIRToUPLC", () => {
@@ -109,11 +113,9 @@ describe("compileIRToUPLC", () => {
                     )
                 ).toJson()
             );
-
-            
+ 
         });
 
     });
-
 
 });

@@ -138,7 +138,7 @@ export function handleHoistedAndReturnRoot( term: IRTerm ): IRTerm
                         undefined,
                         2
                     )
-                );
+                )
             }
             const toInline = irTerm.hoisted;
             _modifyChildFromTo(

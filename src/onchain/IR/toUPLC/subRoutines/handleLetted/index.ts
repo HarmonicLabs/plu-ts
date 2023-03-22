@@ -9,10 +9,10 @@ import { _addDepth } from "../../_internal/_addDepth";
 import { _modifyChildFromTo } from "../../_internal/_modifyChildFromTo";
 import { findAll } from "../../_internal/findAll";
 import { getDebruijnInTerm } from "../../_internal/getDebruijnInTerm";
-import { lowestCommonAncestor } from "../../_internal/lowestCommonAncestor";
 import { iterTree } from "../../_internal/iterTree";
 import { groupByScope } from "./groupByScope";
-
+import { IRCompilationError } from "../../../../../errors/PlutsIRError/IRCompilationError";
+import { showIR } from "../../../utils/showIR";
 
 export function handleLetted( term: IRTerm ): void
 {
@@ -22,17 +22,31 @@ export function handleLetted( term: IRTerm ): void
 
     for( const { maxScope, group } of groupedLetteds )
     {
+        if( maxScope === undefined )
+        {
+            throw new IRCompilationError(
+                "found 'IRLetted' with closed value not replaced by an 'IRHoisted'\n\nclosed letted terms: " +
+                JSON.stringify(
+                    group.map(
+                        entry => showIR(entry.letted.value)
+                    ),
+                    undefined,
+                    2
+                )
+            );
+        }
+
         const lettedSet = getSortedLettedSet( group );
         let n = lettedSet.length;
         let a = 0;
         let b = 0;
-        const letteds: IRLetted[] = new Array( n );
-        const lettedToInline: IRLetted[] = new Array( n );
+        const toLet: IRLetted[] = new Array( n );
+        const toInline: IRLetted[] = new Array( n );
 
         // console.log( lettedSet.map( jsonLettedSetEntry ) );
         // console.log( lettedSet.map( letted => letted.letted.dependencies ) );
         
-        // filter out hoisted terms with single reference
+        // filter out terms with single reference
         for( let i = 0; i < n; i++ )
         {
             const thisLettedEntry = lettedSet[i];
@@ -42,25 +56,24 @@ export function handleLetted( term: IRTerm ): void
                 thisLettedEntry.letted.parent
             )
             {
-                // inline hoisted with single reference
-                lettedToInline[ b++ ] = thisLettedEntry.letted
+                // inline with single reference
+                toInline[ b++ ] = thisLettedEntry.letted
             }
-            else letteds[ a++ ] = thisLettedEntry.letted;
+            else toLet[ a++ ] = thisLettedEntry.letted;
         }
 
         // drop unused space
-        letteds.length = a;
-        lettedToInline.length = b;
+        toLet.length = a;
+        toInline.length = b;
 
-        // console.log( letteds.map( l => toHex( l.hash ) ) );
-        // console.log( lettedToInline.map( l => toHex( l.hash ) ) );
+        const toInlineHashes = toInline.map( termToInline => termToInline.hash );
 
+        let letted: IRLetted;
         // inline single references from last to first
         // needs to be from last to first so that hashes will not change
-        let letted: IRLetted;
-        for( let i = lettedToInline.length - 1; i >= 0 ; i-- )
+        for( let i = toInline.length - 1; i >= 0 ; i-- )
         {
-            letted = lettedToInline[i] as IRLetted;
+            letted = toInline[i] as IRLetted;
             _modifyChildFromTo(
                 letted.parent,
                 letted,
@@ -68,21 +81,22 @@ export function handleLetted( term: IRTerm ): void
             );
         }
 
-        const theMaxScope = maxScope ?? term;
-
-        // add depths to every node
-        _addDepth( theMaxScope );
-
-        for( let i = letteds.length - 1; i >= 0; i-- )
+        for( let i = toLet.length - 1; i >= 0; i-- )
         {
-            letted = letteds[i];
+            // one of the many to be letted
+            letted = toLet[i];
 
-            // we know is an `IRLetted` array
-            // an not a generic `IRTerm` array
-            // because that's what the 
-            // filter funciton checks for
+            /**
+             * all the letted corresponding to this value
+             * 
+             * @type {IRLetted[]}
+             * we know is an `IRLetted` array
+             * an not a generic `IRTerm` array
+             * because that's what the 
+             * filter funciton checks for
+             */
             const refs: IRLetted[] = findAll(
-                theMaxScope,
+                maxScope,
                 elem => 
                     elem instanceof IRLetted &&
                     uint8ArrayEq( elem.hash, letted.hash )
@@ -90,6 +104,7 @@ export function handleLetted( term: IRTerm ): void
 
             // if letting a plain varible
             // just inline the variable as it is more efficient
+            // and then continue with next group
             if( letted.value instanceof IRVar )
             {
                 // inline directly the refereces
@@ -104,59 +119,65 @@ export function handleLetted( term: IRTerm ): void
                 continue;
             }
 
-            // group by scope
-
-            let lca: IRTerm | undefined = refs[0];
-            for(let i = 1; i < refs.length; i++)
-            {
-                lca = lowestCommonAncestor( lca, refs[i] );
-            }
-
-            if( lca === undefined )
-            {
-                throw new IRLettedMissingLCA( letted );
-            }
-
-            // add 1 to every var's DeBruijn already present
-            // in the maxScope that can access the letted value 
-            // that is not closed ( that accesses stuff outside the maxScope )
-            // (this is because we added a new lambda in between)
-            iterTree( lca, ( node, dbn ) => {
+            // add 1 to every var's DeBruijn that accesses stuff outside the max scope
+            iterTree( maxScope, ( node, dbn ) => {
                 if(
                     node instanceof IRVar &&
                     node.dbn >= dbn
                 )
                 {
-                    // there's a new variable in town
+                    // there's a new variable in scope
                     node.dbn++;
-                    // (the town is the scope. Did you get it?)
-                    // (please help...)
                 }
                 if( node instanceof IRLetted )
                 {
-                    // `IRLambdas` DeBruijn are tracking the level of instantiation
-                    // since a new var has been introduced above
-                    // we must increment regardless
-                    node.dbn++
+                    if( // the letted has is one of the ones to be inlined
+                        toInlineHashes.some( h => uint8ArrayEq( h, node.hash ) )
+                    )
+                    {
+                        // inline
+                        _modifyChildFromTo(
+                            node.parent,
+                            node,
+                            node.value
+                        );
+                    }
+                    else
+                    {
+                        // `IRLambdas` DeBruijn are tracking the level of instantiation
+                        // since a new var has been introduced above
+                        // we must increment regardless
+                        node.dbn++
+                    }
                 }
             })
-            //*/
-
-            // save parent so when replacing we don't create a circular ref
-            const parent = lca.parent;
-            let node = letted;
-            const clonedLettedVal = letted.value.clone();
+            
+            // get the difference in DeBruijn
+            // between the maxScope and the letted term
+            let tmpNode: IRTerm = letted;
             let diffDbn = 0;
-            while( node !== parent )
+            while( tmpNode !== maxScope )
             {
-                node = node.parent as any;
-                if( node instanceof IRFunc )
+                tmpNode = tmpNode.parent as any;
+                if( // is an intermediate `IRFunc`
+                    tmpNode instanceof IRFunc && 
+                    tmpNode !== maxScope 
+                )
                 {
-                    diffDbn += node.arity;
+                    // increment differential in DeBruijn by n vars indroduced here
+                    diffDbn += tmpNode.arity;
                 }
             }
+
+            // now we inline
+            const clonedLettedVal = letted.value.clone();
+
+            // if there is any actual difference between the letted term
+            // and the position where it will be finally placed
+            // the value needs to be modified accoridingly
             if( diffDbn > 0 )
             {
+                // adapt the variables in the term to be instantiated
                 iterTree( clonedLettedVal, (elem) => {
                     if( elem instanceof IRVar || elem instanceof IRLetted )
                     {
@@ -165,17 +186,25 @@ export function handleLetted( term: IRTerm ): void
                 });
             }
 
+            // save parent so when replacing we don't create a circular refs
+            const parent = maxScope;
+            // keep pointer to the old body
+            // so we don't have to count the newly introduced `IRFunc` in `newNode`
+            // while calling `getDeBruijnInTerm`
+            // (subtracting 1 works too but this is an operation less)
+            const oldBody = maxScope.body
+
             const newNode = new IRApp(
                 new IRFunc(
                     1,
-                    lca
+                    maxScope.body
                 ),
                 clonedLettedVal
             );
 
             _modifyChildFromTo(
                 parent,
-                lca,
+                maxScope.body,
                 newNode
             );
 
@@ -184,7 +213,8 @@ export function handleLetted( term: IRTerm ): void
                 _modifyChildFromTo(
                     ref?.parent,
                     ref as any,
-                    new IRVar( getDebruijnInTerm( lca, ref as any ) )
+                    // "- 1" is couting the `IRFunc` introduced with `newNode`
+                    new IRVar( getDebruijnInTerm( oldBody, ref ) )
                 )
             }
             

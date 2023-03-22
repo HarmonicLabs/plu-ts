@@ -32,7 +32,7 @@ import { IRHoisted } from "../../../IR/IRNodes/IRHoisted";
 import { IRFunc } from "../../../IR/IRNodes/IRFunc";
 import { IRError } from "../../../IR/IRNodes/IRError";
 import { IRForced } from "../../../IR/IRNodes/IRForced";
-import { _old_plet } from "../../lib/plet/minimal";
+import { _old_plet } from "../../lib/plet/old";
 
 
 const elemAtCache: { [n: number]: TermFn<[ PList<PData> ], PData > } = {};
