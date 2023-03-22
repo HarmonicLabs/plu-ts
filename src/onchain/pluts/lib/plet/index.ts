@@ -34,17 +34,11 @@ export function plet<PVarT extends PType, SomeExtension extends object>( varValu
 
     const letted = new Term(
         type,
-        dbn => {
-
-            console.log("instantiating lettted ad dbn: " + dbn.toString() );
-            const val = varValue.toIR( dbn );
-            console.log( showIR(val) ); 
-            return new IRLetted(
-                Number( dbn ),
-                val
-            );
-        }
-);
+        dbn => new IRLetted(
+            Number( dbn ),
+            varValue.toIR( dbn )
+        )
+    );
     
     const continuation = <PExprResult extends PType>( expr: (value: TermPVar) => Term<PExprResult> ): Term<PExprResult> => {
 
