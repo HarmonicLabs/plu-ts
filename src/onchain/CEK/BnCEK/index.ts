@@ -19,7 +19,6 @@ import { dataToCbor } from "../../../types/Data/toCbor";
 import { ExBudget } from "../Machine/ExBudget";
 import { BuiltinCostsOf } from "../Machine/BuiltinCosts";
 import { ConstType, constListTypeUtils, constPairTypeUtils, constT, constTypeEq, constTypeToStirng, ConstTyTag } from "../../UPLC/UPLCTerms/UPLCConst/ConstType" 
-import { Integer, UInteger } from "../../../types/ints/Integer";
 import { Data, eqData, isData } from "../../../types/Data/Data";
 import { blake2b, byteArrToHex, sha2_256, sha3, verifyEd25519Signature } from "../../../crypto";
 import { fromUtf8, isUint8Array, toUtf8 } from "@harmoniclabs/uint8array-utils";
@@ -405,7 +404,6 @@ export class BnCEK
                 });
                 
                 return a + b;
-
             }).bind(this),
             "addInteger"
         );

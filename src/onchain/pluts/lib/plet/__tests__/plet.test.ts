@@ -1,7 +1,7 @@
-import { pfn, plet } from "../.."
+import { pBool, pfn, plet } from "../.."
 import { compileIRToUPLC } from "../../../../IR/toUPLC/compileIRToUPLC";
 import { showUPLC } from "../../../../UPLC/UPLCTerm";
-import { int } from "../../../type_system"
+import { bool, int } from "../../../type_system"
 
 
 const double = pfn([ int ], int)
@@ -9,7 +9,7 @@ const double = pfn([ int ], int)
 
 describe("plet", () => {
 
-    test("add factorials", () => {
+    test("quadruple", () => {
 
         const quadruple = pfn([ int ], int )
         ( n => {
@@ -34,9 +34,23 @@ describe("plet", () => {
         const oldIR = oldQuadruple.toIR();
         const oldUPLC = compileIRToUPLC( oldIR )
 
-        console.log( showUPLC( uplc ) );
-
         expect( uplc ).toEqual( oldUPLC )
+    });
+
+    test.only("let in and", () => {
+
+        const fancyIsZero = pfn([ int ], bool )
+        ( n => pBool( true )
+            .and(
+                plet( n.add( 4 ) ).in( expected4 => expected4.eq( 4 ) )
+            )
+        );
+
+        const ir = fancyIsZero.toIR();
+        const uplc = compileIRToUPLC( ir );
+
+        // console.log( showUPLC( uplc ) );
+
     });
 
 })

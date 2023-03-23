@@ -1,8 +1,6 @@
 import ObjectUtils from "../../../utils/ObjectUtils";
 import { IRFunc } from "../../IR/IRNodes/IRFunc";
 import { IRVar } from "../../IR/IRNodes/IRVar";
-import { Lambda } from "../../UPLC/UPLCTerms/Lambda";
-import { UPLCVar } from "../../UPLC/UPLCTerms/UPLCVar";
 import { PLam } from "../PTypes";
 import { Term } from "../Term";
 import { includesDynamicPairs } from "../type_system/includesDynamicPairs";

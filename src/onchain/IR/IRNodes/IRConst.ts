@@ -51,6 +51,10 @@ export class IRConst
 
     constructor( t: TermType, v: IRConstValue )
     {
+        if( v === undefined )
+        {
+            console.log( Error().stack );
+        }
         if(
             !isWellFormedType( t ) ||
             typeExtends( t, lam( tyVar(), tyVar() ) ) &&

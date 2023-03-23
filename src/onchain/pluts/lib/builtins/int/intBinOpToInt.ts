@@ -32,9 +32,7 @@ export function intBinOpToInt( builtin: IRTerm )
         "$",
         ( fstIn: PappArg<PInt> ): Term<PLam<PInt, PInt>> => {
 
-            const oneIn =
-                // @ts-ingore Type instantiation is excessively deep and possibly infinite.
-                papp( op, fstIn );
+            const oneIn = papp( op, fstIn );
 
             return ObjectUtils.defineReadOnlyProperty(
                 oneIn,

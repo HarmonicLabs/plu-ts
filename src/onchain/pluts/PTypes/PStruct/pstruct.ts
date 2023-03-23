@@ -35,6 +35,10 @@ class _PStruct extends PData
 }
 
 export type StructInstance<SCtorDef extends StructCtorDef> = {
+    [Field in keyof SCtorDef]: UtilityTermOf<ToPType<SCtorDef[Field]>>
+}
+
+export type StructInstanceAsData<SCtorDef extends StructCtorDef> = {
     [Field in keyof SCtorDef]: Term<PAsData<ToPType<SCtorDef[Field]>>>
 }
 
@@ -55,7 +59,7 @@ export type PStruct<SDef extends StructDefinition> = {
 
 } & PDataRepresentable & {
     [Ctor in keyof SDef]:
-        ( ctorFields: StructInstance<SDef[Ctor]> ) => TermStruct<SDef>
+        ( ctorFields: StructInstanceAsData<SDef[Ctor]> ) => TermStruct<SDef>
 }
 
 type Includes<As extends any[], Elem extends any> =
@@ -149,8 +153,8 @@ export function structDefEq( a: StructDefinition, b: StructDefinition ): boolean
 }
 
 function isStructInstanceOfDefinition<SCtorDef extends StructCtorDef>
-    ( structInstance: StructInstance<any>, definition: SCtorDef )
-    : structInstance is StructInstance<SCtorDef>
+    ( structInstance: StructInstanceAsData<any>, definition: SCtorDef )
+    : structInstance is StructInstanceAsData<SCtorDef>
 {
     const jsStructFieldsNames = Object.keys( structInstance );
     const defKeys = Object.keys( definition );
@@ -255,7 +259,7 @@ export function pstruct<StructDef extends StructDefinition>( def: StructDef ): P
         ObjectUtils.defineReadOnlyProperty(
             PStructExt.prototype,
             ctorName,
-            ( jsStruct: StructInstance<any> ): UtilityTermOf<PStructExt> => {
+            ( jsStruct: StructInstanceAsData<any> ): UtilityTermOf<PStructExt> => {
 
                 JsRuntime.assert(
                     ObjectUtils.isObject( jsStruct ),

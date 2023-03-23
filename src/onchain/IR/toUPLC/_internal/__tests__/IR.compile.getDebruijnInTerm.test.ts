@@ -48,7 +48,7 @@ describe("getDebruijnInTerm", () => {
     });
 
 
-    test("not present", () => {
+    test("deep equality (hash equality)", () => {
 
         expect(
             getDebruijnInTerm(
@@ -58,7 +58,7 @@ describe("getDebruijnInTerm", () => {
                 ),
                 target
             )
-        ).toBe( -1 );
+        ).toBe( 4 );
 
     });
 

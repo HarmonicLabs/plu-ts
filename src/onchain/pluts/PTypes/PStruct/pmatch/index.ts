@@ -1,38 +1,38 @@
-import JsRuntime from "../../../../utils/JsRuntime";
-import ObjectUtils from "../../../../utils/ObjectUtils";
+import JsRuntime from "../../../../../utils/JsRuntime";
+import ObjectUtils from "../../../../../utils/ObjectUtils";
 
-import { RestrictedStructInstance, PStruct } from "./pstruct";
-import { termTypeToString } from "../../type_system/utils";
-import { BasePlutsError } from "../../../../errors/BasePlutsError";
-import { PType } from "../../PType";
-import { Term } from "../../Term";
-import { PData } from "../PData/PData";
-import { PLam } from "../PFn/PLam";
-import { PList } from "../PList";
-import { matchSingleCtorStruct } from "./matchSingleCtorStruct";
-import { capitalize } from "../../../../utils/ts/capitalize";
-import { DataI } from "../../../../types/Data/DataI";
-import { papp } from "../../lib/papp";
-import { UtilityTermOf } from "../../lib/addUtilityForType";
-import { punsafeConvertType } from "../../lib/punsafeConvertType";
-import { TermList } from "../../lib/std/UtilityTerms/TermList";
-import { plam } from "../../lib/plam";
-import { TermFn } from "../PFn";
-import { LamT, PrimType, StructCtorDef, StructDefinition, TermType, data, fn, lam, list } from "../../type_system/types";
-import { isStructDefinition, withAllPairElemsAsData } from "../../type_system";
-import { phead } from "../../lib/builtins/list";
-import { _fromData } from "../../lib/std/data/conversion/fromData_minimal";
-import { IRApp } from "../../../IR/IRNodes/IRApp";
-import { IRNative } from "../../../IR/IRNodes/IRNative";
-import { IRConst } from "../../../IR/IRNodes/IRConst";
-import { IRDelayed } from "../../../IR/IRNodes/IRDelayed";
-import { IRVar } from "../../../IR/IRNodes/IRVar";
-import { IRTerm } from "../../../IR/IRTerm";
-import { IRHoisted } from "../../../IR/IRNodes/IRHoisted";
-import { IRFunc } from "../../../IR/IRNodes/IRFunc";
-import { IRError } from "../../../IR/IRNodes/IRError";
-import { IRForced } from "../../../IR/IRNodes/IRForced";
-import { _old_plet } from "../../lib/plet/old";
+import { RestrictedStructInstance, PStruct } from "../pstruct";
+import { termTypeToString } from "../../../type_system/utils";
+import { BasePlutsError } from "../../../../../errors/BasePlutsError";
+import { PType } from "../../../PType";
+import { Term } from "../../../Term";
+import { PData } from "../../PData/PData";
+import { PLam } from "../../PFn/PLam";
+import { PList } from "../../PList";
+import { matchSingleCtorStruct } from "../matchSingleCtorStruct";
+import { capitalize } from "../../../../../utils/ts/capitalize";
+import { DataI } from "../../../../../types/Data/DataI";
+import { papp } from "../../../lib/papp";
+import { UtilityTermOf } from "../../../lib/addUtilityForType";
+import { punsafeConvertType } from "../../../lib/punsafeConvertType";
+import { TermList } from "../../../lib/std/UtilityTerms/TermList";
+import { plam } from "../../../lib/plam";
+import { TermFn } from "../../PFn";
+import { LamT, PrimType, StructCtorDef, StructDefinition, TermType, data, fn, lam, list } from "../../../type_system/types";
+import { isStructDefinition, withAllPairElemsAsData } from "../../../type_system";
+import { phead } from "../../../lib/builtins/list";
+import { _fromData } from "../../../lib/std/data/conversion/fromData_minimal";
+import { IRApp } from "../../../../IR/IRNodes/IRApp";
+import { IRNative } from "../../../../IR/IRNodes/IRNative";
+import { IRConst } from "../../../../IR/IRNodes/IRConst";
+import { IRDelayed } from "../../../../IR/IRNodes/IRDelayed";
+import { IRVar } from "../../../../IR/IRNodes/IRVar";
+import { IRTerm } from "../../../../IR/IRTerm";
+import { IRHoisted } from "../../../../IR/IRNodes/IRHoisted";
+import { IRFunc } from "../../../../IR/IRNodes/IRFunc";
+import { IRError } from "../../../../IR/IRNodes/IRError";
+import { IRForced } from "../../../../IR/IRNodes/IRForced";
+import { _old_plet } from "../../../lib/plet/old";
 
 
 const elemAtCache: { [n: number]: TermFn<[ PList<PData> ], PData > } = {};
@@ -174,6 +174,8 @@ function defineExtract<CtorDef extends StructCtorDef>
         }
     ) as any;
 }
+
+
 
 type CtorCallback<SDef extends StructDefinition> = ( rawFields: RawFields<SDef[keyof SDef & string]> ) => Term<PType>;
 
@@ -554,7 +556,7 @@ export function pmatch<SDef extends StructDefinition>( struct: Term<PStruct<SDef
                         }
                     }
 
-                    const res =  hoistedMatchCtors(
+                    const res = hoistedMatchCtors(
                         struct as any,
                         sDef,
                         ctorCbs as any

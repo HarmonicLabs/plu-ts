@@ -82,7 +82,7 @@ export function pappArgToTerm<ArgT extends TermType>(
     // PUnit
     if( arg === undefined || arg === null )
     {
-        if( !typeExtends( int, mustExtend ) )
+        if( !typeExtends( mustExtend, unit ) || typeof mustExtend[0] === "symbol" )
         {
             // TODO: add proper error
             throw new BasePlutsError(
@@ -96,8 +96,7 @@ export function pappArgToTerm<ArgT extends TermType>(
     // PInt
     if(
         typeof arg === "number" ||
-        typeof arg === "bigint" ||
-        arg instanceof Integer
+        typeof arg === "bigint"
     )
     {
         if( !typeExtends( int, mustExtend ) )
@@ -345,6 +344,7 @@ export function pappArgToTerm<ArgT extends TermType>(
         }
     }
 
+    console.log( arg );
     throw new BasePlutsError(
         "pappArgToTerm :: it was not possible to transform `arg` to a plu-ts value" +
         "; `arg` was " + arg +

@@ -70,6 +70,8 @@ export class Term<A extends PType>
         let _toIR_ = _toIR.bind( this );
         let shouldHoist = false;
 
+        const e_stack = Error().stack;
+
         Object.defineProperty(
             this, "toIR",
             {
@@ -78,6 +80,10 @@ export class Term<A extends PType>
                     if( typeof deBruijnLevel !== "bigint" ) deBruijnLevel = BigInt( deBruijnLevel );
 
                     let ir = _toIR_( deBruijnLevel );
+                    if( ir instanceof IRConst && ir.value === undefined )
+                    {
+                        console.error( e_stack );
+                    }
                     if( shouldHoist )
                     {
                         const res = new IRHoisted( ir );

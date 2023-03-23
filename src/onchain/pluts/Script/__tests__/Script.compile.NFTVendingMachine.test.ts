@@ -1,9 +1,22 @@
-import { Term, PBool, pByteString, pand, pdelay, perror, pfn, pintToBS, pisEmpty, plet, pmatch, punIData, bool, data, bs } from "../..";
 import { ByteString } from "../../../../types/HexString/ByteString";
 import { PPubKeyHash } from "../../API/V1/PubKey/PPubKeyHash";
 import { PScriptContext } from "../../API/V2/ScriptContext/PScriptContext";
 import { PCurrencySymbol } from "../../API/V1/Value/PCurrencySymbol";
 import { compile } from "../compile";
+import { bool, bs, data } from "../../type_system/types";
+import { pmatch } from "../../PTypes/PStruct/pmatch";
+import { pfn } from "../../lib/pfn";
+import { pisEmpty } from "../../lib/builtins/list";
+import { pByteString } from "../../lib/std/bs/pByteString";
+import { pintToBS } from "../../lib/std/int/pintToBS";
+import { punIData } from "../../lib/builtins/data";
+import { perror } from "../../lib/perror";
+import { pdelay } from "../../lib/pdelay";
+import { pand } from "../../lib/builtins/bool";
+import { Term } from "../../Term";
+import { PBool } from "../../PTypes/PBool";
+import { plet } from "../../lib/plet";
+import { _old_plet } from "../../lib/plet/old";
 
 describe("NFTVendingMachine", () => {
 
@@ -55,7 +68,7 @@ describe("NFTVendingMachine", () => {
                                         // `ownCurrSym` as policy,
                                         head.fst.eq( ownCurrSym )
                                         .and(
-                                            plet( head.snd ).in( assets =>
+                                            _old_plet( head.snd ).in( assets =>
                                                 pisEmpty.$( assets.tail )
                                                 .and(
                                                     plet( assets.head ).in( asset =>
