@@ -1147,7 +1147,11 @@ export class BnCEK
     tailList( list: UPLCTerm ): ConstOrErr 
     {
         const l = getList( list );
-        if( l === undefined || l.length === 0 ) return new ErrorUPLC(l === undefined ? "tailList :: not a list" : "tailList :: empty list passed to 'tail'");
+        if( l === undefined || l.length === 0 )
+        return new ErrorUPLC(
+            l === undefined ? "tailList :: not a list" : "tailList :: empty list passed to 'tail'",
+            { list }
+        );
 
         const f = this.getBuiltinCostFunc( UPLCBuiltinTag.tailList );
 

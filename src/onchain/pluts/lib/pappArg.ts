@@ -344,7 +344,6 @@ export function pappArgToTerm<ArgT extends TermType>(
         }
     }
 
-    console.log( arg );
     throw new BasePlutsError(
         "pappArgToTerm :: it was not possible to transform `arg` to a plu-ts value" +
         "; `arg` was " + arg +
@@ -367,8 +366,7 @@ function getPossiblePlutsTypesOf( value: PappArg<PType> ): TermType[]
 
     if(
         typeof value === "number" ||
-        typeof value === "bigint" ||
-        value instanceof Integer
+        typeof value === "bigint"
     ) return [ int ];
 
     if( typeof value === "boolean" ) return [ bool ];

@@ -170,9 +170,10 @@ export function showConstType( t: ConstType ): string
     return constTypeToStirng( t );
 }
 
+const vars = "abcdefghilmopqrstuvzwxyjkABCDEFGHILJMNOPQRSTUVZWXYJK".split('');
+
 export function showUPLC( term: UPLCTerm ): string
 {
-    const vars = "abcdefghilmopqrstuvzwxyjkABCDEFGHILJMNOPQRSTUVZWXYJK".split('');
 
     function getVarNameForDbn( dbn: number ): string
     {
@@ -214,9 +215,53 @@ export function showUPLC( term: UPLCTerm ): string
 
 }
 
-function isVarImSearchingFor( uplcVar: UPLCTerm, dbn: bigint ): boolean
+
+export function prettyUPLC( term: UPLCTerm, _indent: number ): string
 {
-    return uplcVar instanceof UPLCVar && uplcVar.deBruijn.asBigInt === dbn;
+    if( !Number.isSafeInteger( _indent ) || _indent < 1 ) return showUPLC( term );
+
+    const indentStr = " ".repeat(_indent)
+
+    function getVarNameForDbn( dbn: number ): string
+    {
+        if( dbn < 0 ) return `(${dbn})`;
+        if( dbn < vars.length ) return vars[ dbn ];
+        return vars[ Math.floor( dbn / vars.length ) ] + getVarNameForDbn( dbn - vars.length )
+    }
+
+    function loop( t: UPLCTerm, dbn: number, depth: number): string
+    {
+        const indent = `\n${indentStr.repeat( depth )}`;
+        if( t instanceof UPLCVar )
+        {
+            return indent + getVarNameForDbn( dbn - 1 - Number( t.deBruijn.asBigInt ) )
+        }
+        if( t instanceof Delay ) return `${indent}(delay ${ loop( t.delayedTerm, dbn, depth + 1 ) }${indent})`;
+        if( t instanceof Lambda ) 
+        {
+            return `\n${indentStr.repeat(depth)}(lam ${getVarNameForDbn( dbn )} ${ loop( t.body, dbn + 1, depth + 1 ) }${indent})`;
+        }
+        if( t instanceof Application ) return `${indent}[${ loop( t.funcTerm, dbn, depth + 1 ) } ${ loop( t.argTerm, dbn, depth + 1 ) }${indent}]`;
+        if( t instanceof UPLCConst ) return `${indent}(con ${showConstType(t.type)} ${ showUPLCConstValue( t.value ) })`;
+        if( t instanceof Force ) return `${indent}(force ${ loop( t.termToForce, dbn, depth + 1 ) }${indent})`;
+        if( t instanceof ErrorUPLC ) return "(error)";
+        if( t instanceof Builtin )
+        {
+            const nForces = getNRequiredForces( t.tag );
+    
+            return indent + "(force ".repeat( nForces ) +`(builtin ${builtinTagToString( t.tag )})` + ')'.repeat( nForces )
+        }
+        if( t instanceof HoistedUPLC ) return loop( t.UPLC, dbn, depth )
+        
+        return "";
+    }
+
+    return loop(
+        replaceHoistedTermsInplace( term.clone() ),
+        0,
+        0
+    );
+
 }
 
 /**

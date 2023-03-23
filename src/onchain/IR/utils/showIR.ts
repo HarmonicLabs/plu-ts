@@ -4,7 +4,7 @@ import { IRLetted } from "../IRNodes/IRLetted";
 import { IRNative } from "../IRNodes/IRNative";
 import { nativeTagToString } from "../IRNodes/IRNative/IRNativeTag";
 import { IRTerm } from "../IRTerm";
-import { IRHoisted } from "../IRNodes/IRHoisted";
+import { IRHoisted, getHoistedTerms } from "../IRNodes/IRHoisted";
 import { IRVar } from "../IRNodes/IRVar";
 import { IRConst } from "../IRNodes/IRConst";
 import { showUPLCConstValue } from "../../UPLC/UPLCTerm";
@@ -66,34 +66,6 @@ export function showIR( _ir: IRTerm )
     hoisted: { [hash: string]: string } 
 }
 {
-    //*
-    const lettedHashes: Uint8Array[] = [];
-    const letted: { [hash: string]: string } = {};
-
-    function addLetted( l: IRLetted )
-    {
-        const hash = l.hash;
-        if( !lettedHashes.some( lettedHash => uint8ArrayEq( lettedHash, hash ) ) )
-        {
-            const deps = l.dependencies;
-            for(let i = 0; i < 0; i++)
-            {
-                addLetted( deps[i].letted );
-            }
-
-            lettedHashes.push( hash.slice() );
-            Object.defineProperty(
-                letted, toHex( hash ), {
-                    value: showIRText( l.value ),
-                    writable: false,
-                    enumerable: true,
-                    configurable: false
-                }
-            );
-        }
-    }
-    //*/
-
     const hoistedHashes: Uint8Array[] = [];
     const hoisted: { [hash: string]: string } = {};
 
@@ -112,6 +84,35 @@ export function showIR( _ir: IRTerm )
             Object.defineProperty(
                 hoisted, toHex( hash ), {
                     value: showIRText( h.hoisted ),
+                    writable: false,
+                    enumerable: true,
+                    configurable: false
+                }
+            );
+        }
+    }
+
+    const lettedHashes: Uint8Array[] = [];
+    const letted: { [hash: string]: string } = {};
+
+    function addLetted( l: IRLetted )
+    {
+        const hash = l.hash;
+        if( !lettedHashes.some( lettedHash => uint8ArrayEq( lettedHash, hash ) ) )
+        {
+            const deps = l.dependencies;
+            for(let i = 0; i < 0; i++)
+            {
+                addLetted( deps[i].letted );
+            }
+
+            lettedHashes.push( hash.slice() );
+            
+            getHoistedTerms( l.value.clone() ).forEach( ({ hoisted }) => addHoisted( hoisted ) );
+
+            Object.defineProperty(
+                letted, toHex( hash ), {
+                    value: showIRText( l.value ),
                     writable: false,
                     enumerable: true,
                     configurable: false
