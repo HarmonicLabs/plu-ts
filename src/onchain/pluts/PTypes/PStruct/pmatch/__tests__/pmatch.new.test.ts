@@ -90,8 +90,6 @@ describe("pmatch", () => {
         const uplc = compileIRToUPLC( ir );
         const uplcStr =  showUPLC( uplc );
 
-        console.log( prettyUPLC( uplc, 2 ) );
-        
         expect(
             uplcStr
         ).toEqual(

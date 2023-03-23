@@ -1,5 +1,5 @@
 import { toHex } from "@harmoniclabs/uint8array-utils";
-import { int } from "../../../../../pluts/type_system/types";
+import { data, int } from "../../../../../pluts/type_system/types";
 import { IRApp } from "../../../../IRNodes/IRApp";
 import { IRConst } from "../../../../IRNodes/IRConst";
 import { IRDelayed } from "../../../../IRNodes/IRDelayed";
@@ -15,7 +15,10 @@ import { IRTerm } from "../../../../IRTerm";
 import { _ir_apps } from "../../../../tree_utils/_ir_apps";
 import { IRHoisted } from "../../../../IRNodes/IRHoisted";
 import { compileIRToUPLC } from "../../../compileIRToUPLC";
-import { showUPLC } from "../../../../../UPLC/UPLCTerm";
+import { prettyUPLC, showUPLC } from "../../../../../UPLC/UPLCTerm";
+import { showIR } from "../../../../utils/showIR";
+import { DataI } from "../../../../../../types/Data";
+import { Machine, pInt } from "../../../../..";
 
 describe("handleLetted", () => {
 
@@ -430,6 +433,97 @@ describe("handleLetted", () => {
 
         expect( newIR.toJson() )
         .toEqual( expected.toJson() )
+    });
+
+    test.only("strange edge case", () => {
+
+        const theLetted = new IRLetted(
+            1,
+            new IRApp(
+                IRNative.unIData,
+                new IRApp(
+                    IRNative.headList,
+                    new IRVar( 0 )
+                )
+            )
+        );
+
+        expect(
+            toHex(
+                theLetted.hash
+            )
+        ).toEqual( "a2e4577837a81482df776f3af7d3aa5a0d7c9f6bdeed63ee2cff9237" );
+
+        const sndListHoisted = new IRHoisted(
+            new IRFunc( 1,
+                new IRApp(
+                    IRNative.headList,
+                    new IRApp(
+                        IRNative.tailList,
+                        new IRVar( 0 )
+                    )
+                )
+            )
+        );
+
+        expect(
+            toHex(
+                sndListHoisted.hash
+            )
+        ).toEqual( "d4d3ebaae980c36d7cad0395ca28e9174c7dc20bfcdca93d38c65c71" );
+
+        const theOtherLetted = new IRLetted(
+            1,
+            new IRApp(
+                IRNative.unIData,
+                new IRApp(
+                    sndListHoisted.clone(),
+                    new IRVar( 0 )
+                )
+            )
+        );
+
+        expect(
+            toHex(
+                theOtherLetted.hash
+            )
+        ).toEqual( "fab075af17acb983912d80bf27dfbe21f711c12ba624db648b8882df" );
+
+        const edgeCase = new IRFunc( 1,
+            _ir_apps(
+                IRNative.addInteger,
+                theLetted.clone(),
+                _ir_apps(
+                    IRNative.addInteger,
+                    theLetted.clone(),
+                    theOtherLetted.clone()
+                )
+            )
+        );
+
+        const appliedEdgeCase = new IRApp(
+            edgeCase.clone(),
+            IRConst.listOf( data )([
+                new DataI( 2 ),
+                new DataI( 3 )
+            ])
+        );
+
+        console.log( showIR( edgeCase ) );
+        const uplc = compileIRToUPLC( edgeCase );
+        
+        console.log( prettyUPLC( uplc, 2 ) );
+
+        expect(
+            Machine.evalSimple(
+                compileIRToUPLC(appliedEdgeCase)
+            )
+        ).toEqual(
+            Machine.evalSimple(
+                pInt( 7 )
+            )
+        );
+
     })
 
 })

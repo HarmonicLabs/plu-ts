@@ -61,7 +61,7 @@ export function iterTree( _term: IRTerm, fn: ( elem: IRTerm, dbn: number ) => (b
         {
             // 0 because hoisted are closed
             // for hoisted we keep track of the depth inside the term
-            stack.push({ term: t.hoisted, dbn });
+            stack.push({ term: t.hoisted, dbn: 0 });
             continue;
         }
 

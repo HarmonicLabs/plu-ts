@@ -13,6 +13,9 @@ import { iterTree } from "../../_internal/iterTree";
 import { groupByScope } from "./groupByScope";
 import { IRCompilationError } from "../../../../../errors/PlutsIRError/IRCompilationError";
 import { showIR } from "../../../utils/showIR";
+import { fn } from "../../../../pluts";
+import { IRDelayed } from "../../../IRNodes/IRDelayed";
+import { IRForced } from "../../../IRNodes/IRForced";
 
 export function handleLetted( term: IRTerm ): void
 {
@@ -120,26 +123,47 @@ export function handleLetted( term: IRTerm ): void
             }
 
             // add 1 to every var's DeBruijn that accesses stuff outside the max scope
-            iterTree( maxScope, ( node, dbn ) => {
+            // maxScope node is non inclusive since the new function is added insite the node 
+            const stack: { term: IRTerm, dbn: number }[] = [{ term: maxScope.body, dbn: 0 }];
+
+            while( stack.length > 0 )
+            {
+                const { term: t, dbn } = stack.pop() as { term: IRTerm, dbn: number };
+
+                if( t instanceof IRVar )
+                {
+                    console.log(
+                        "----------------------------------------------------------------------------\n",
+                        "adding letted: " + toHex( letted.hash ) + "\n",
+                        "with value: " + JSON.stringify( showIR( letted.value ), undefined, 2 ) + "\n\n",
+                        showIR( t.parent as any ), 
+                        "\n\nnode.dbn", t.dbn, "\ndbn", dbn,
+                        "\n----------------------------------------------------------------------------",
+                    )
+                }
+
                 if(
-                    node instanceof IRVar &&
-                    node.dbn >= dbn
+                    t instanceof IRVar &&
+                    t.dbn >= dbn
                 )
                 {
                     // there's a new variable in scope
-                    node.dbn++;
+                    t.dbn++;
+                    console.log(
+                        showIR( maxScope )
+                    )
                 }
-                if( node instanceof IRLetted )
+                if( t instanceof IRLetted )
                 {
                     if( // the letted has is one of the ones to be inlined
-                        toInlineHashes.some( h => uint8ArrayEq( h, node.hash ) )
+                        toInlineHashes.some( h => uint8ArrayEq( h, t.hash ) )
                     )
                     {
                         // inline
                         _modifyChildFromTo(
-                            node.parent,
-                            node,
-                            node.value
+                            t.parent,
+                            t,
+                            t.value
                         );
                     }
                     else
@@ -147,11 +171,59 @@ export function handleLetted( term: IRTerm ): void
                         // `IRLambdas` DeBruijn are tracking the level of instantiation
                         // since a new var has been introduced above
                         // we must increment regardless
-                        node.dbn++
+                        t.dbn++
                     }
                 }
-            })
-            
+
+                
+                if( t instanceof IRApp )
+                {
+                    stack.push(
+                        { term: t.fn, dbn  },
+                        { term: t.arg, dbn }
+                    );
+                    continue;
+                }
+
+                if( t instanceof IRDelayed )
+                {
+                    stack.push({ term: t.delayed, dbn })
+                    continue;
+                }
+
+                if( t instanceof IRForced )
+                {
+                    stack.push({ term: t.forced, dbn });
+                    continue;
+                }
+
+                if( t instanceof IRFunc )
+                {
+                    stack.push({ term: t.body, dbn: dbn + t.arity });
+                    continue;
+                }
+                
+                // skip hoisted and letted
+                // we only want to modify the current body
+
+                // if( t instanceof IRHoisted )
+                // {
+                //     // 0 because hoisted are closed
+                //     // for hoisted we keep track of the depth inside the term
+                //     stack.push({ term: t.hoisted, dbn });
+                //     continue;
+                // }
+
+                // if( t instanceof IRLetted )
+                // {
+                //     // same stuff as the hoisted terms
+                //     // the only difference is that depth is then incremented
+                //     // once the letted term reaches its final position
+                //     stack.push({ term: t.value, dbn });
+                //     continue;
+                // }
+            }
+
             // get the difference in DeBruijn
             // between the maxScope and the letted term
             let tmpNode: IRTerm = letted;
