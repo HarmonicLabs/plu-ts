@@ -33,10 +33,7 @@ describe("pmatch", () => {
 
         const ir = term.toIR();
 
-        console.log( showIR( ir ) );
         const uplc = compileIRToUPLC( ir );
-        console.log( showUPLC( uplc ) );
-        
 
         expect(Machine.evalSimple(
             uplc
@@ -64,7 +61,7 @@ describe("pmatch", () => {
         
     });
 
-    test.only("strange edge case", () => {
+    test("strange edge case", () => {
 
         const term =  pmatch( Nums.TwoNums({ a: pDataI(2), b: pDataI(3) }) )
         .onTwoNums( nums => {
@@ -86,7 +83,7 @@ describe("pmatch", () => {
 
         const ir = term.toIR();
 
-        console.log( showIR( ir ) );
+        // console.log( showIR( ir ) );
         const uplc = compileIRToUPLC( ir );
         const uplcStr =  showUPLC( uplc );
 

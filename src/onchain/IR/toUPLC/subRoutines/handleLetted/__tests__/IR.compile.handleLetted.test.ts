@@ -435,7 +435,7 @@ describe("handleLetted", () => {
         .toEqual( expected.toJson() )
     });
 
-    test.only("strange edge case", () => {
+    test("strange edge case", () => {
 
         const theLetted = new IRLetted(
             1,
@@ -509,10 +509,9 @@ describe("handleLetted", () => {
             ])
         );
 
-        console.log( showIR( edgeCase ) );
-        const uplc = compileIRToUPLC( edgeCase );
-        
-        console.log( prettyUPLC( uplc, 2 ) );
+        // console.log( showIR( edgeCase ) );
+        // const uplc = compileIRToUPLC( edgeCase );
+        // console.log( prettyUPLC( uplc, 2 ) );
 
         expect(
             Machine.evalSimple(

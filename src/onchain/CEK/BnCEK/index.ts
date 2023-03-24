@@ -22,6 +22,7 @@ import { ConstType, constListTypeUtils, constPairTypeUtils, constT, constTypeEq,
 import { Data, eqData, isData } from "../../../types/Data/Data";
 import { blake2b, byteArrToHex, sha2_256, sha3, verifyEd25519Signature } from "../../../crypto";
 import { fromUtf8, isUint8Array, toUtf8 } from "@harmoniclabs/uint8array-utils";
+import { logJson } from "../../../utils/ts/ToJson";
 
 
 function intToSize( n: bigint ): bigint

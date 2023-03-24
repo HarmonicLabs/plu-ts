@@ -39,11 +39,9 @@ export class IRHoisted
 
     parent: IRTerm | undefined;
 
-    src: string 
-
     clone!: () => IRHoisted;
 
-    constructor( hoisted: IRTerm, src?: string )
+    constructor( hoisted: IRTerm )
     {
         // unwrap
         // !!! IMPORTANT !!!
@@ -117,8 +115,6 @@ export class IRHoisted
             }
         );
 
-        this.src = src ?? Error().stack?.split("\n")[2] as any
-
         Object.defineProperty(
             this, "dependencies",
             {
@@ -162,8 +158,7 @@ export class IRHoisted
             this, "clone",
             () => {
                 return new IRHoisted(
-                    this.hoisted.clone(),
-                    Error().stack?.split("\n")[2]
+                    this.hoisted.clone()
                     // _getDeps().slice() // as long as `dependecies` getter returns clones this is fine
                 );
             }

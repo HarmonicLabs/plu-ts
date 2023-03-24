@@ -28,17 +28,17 @@ import { fromHex, isUint8Array } from "@harmoniclabs/uint8array-utils";
 type _TsFunctionSatisfying<KnownArgs extends Term<PType>[], POut extends PType> =
     POut extends PLam<infer POutIn extends PType, infer POutOut extends PType> ?
         (
-            ( ...args: KnownArgs ) => Term<POut> | // functions that do return `PLam` are fine too
+            // ( ...args: KnownArgs ) => Term<POut> | // functions that do return `PLam` are fine too
             _TsFunctionSatisfying<[ ...KnownArgs, UtilityTermOf<POutIn> ], POutOut>
         ) :
         ( ...args: KnownArgs ) => Term<POut>
 
-type TsFunctionSatisfying<PIn extends PType, POut extends PType> =
+export type TsFunctionSatisfying<PIn extends PType, POut extends PType> =
     _TsFunctionSatisfying<[ UtilityTermOf<PIn> ], POut>
 
 export type PappArg<PIn extends PType> =
     (
-        PIn extends PInt ? bigint | number | Integer :
+        PIn extends PInt ? bigint | number :
         PIn extends PBool ? boolean :
         PIn extends PByteString ? ByteString | Uint8Array | string :
         PIn extends PString ? string :

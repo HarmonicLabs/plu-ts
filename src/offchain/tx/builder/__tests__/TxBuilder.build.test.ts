@@ -1,6 +1,8 @@
 import { Cbor } from "../../../../cbor/Cbor"
 import { CborBytes } from "../../../../cbor/CborObj/CborBytes"
-import { PScriptContext, V2, bool, data, int, lam, list, makeRedeemerValidator, makeValidator, pfn, pif, pmakeUnit, precursive, unit } from "../../../../onchain"
+import { Machine, PScriptContext, V2, bool, data, int, lam, list, makeRedeemerValidator, makeValidator, pInt, pfn, pif, pmakeUnit, precursive, unit } from "../../../../onchain"
+import { showIR } from "../../../../onchain/IR/utils/showIR"
+import { prettyUPLC } from "../../../../onchain/UPLC/UPLCTerm"
 import { compile } from "../../../../onchain/pluts/Script/compile"
 import { DataI, DataList } from "../../../../types/Data"
 import { DataConstr } from "../../../../types/Data/DataConstr"
@@ -258,7 +260,7 @@ describe("TxBuilder.build", () => {
             int
         ],  int)
         (( self, n ) =>
-            pif( int ).$( n.ltEq( 1 ) )
+            pif( int ).$( n.lt( 2 ) )
             .then( 1 )
             .else(
                 n.mult( self.$( n.sub(1) ) )
@@ -272,13 +274,7 @@ describe("TxBuilder.build", () => {
         PScriptContext.type
     ],  bool)
     (( _dat, nums, _ctx ) => 
-        nums.at(2)
-        .gt( 
-            pfactorial.$( 
-                nums.at(1)
-                .add( nums.at(0) )
-            ) 
-        ) 
+        nums.at(2).eq( (BigInt(1) << BigInt(64)) - BigInt(1) )
     )
 
     const mintSomething = pfn([
@@ -296,7 +292,8 @@ describe("TxBuilder.build", () => {
         ScriptType.PlutusV2,
         compile(
             makeValidator(
-                onlyBigThirdElem
+                onlyBigThirdElem,
+                "a"
             )
         )
     );
@@ -323,6 +320,25 @@ describe("TxBuilder.build", () => {
         let tx!: Tx;
         test("two scripts", async () => {
 
+            const nums = [
+                (BigInt(1) << BigInt(64)) - BigInt(1),
+                BigInt( 1 ),
+                BigInt( 1 )
+            ];
+
+            console.log( showIR( onlyBigThirdElem.toIR() ) )
+
+            // console.log(
+            //     Machine.evalSimple(
+            //         pInt( nums[0] ).gt(
+            //             pfactorial.$(
+            //                 nums[1] + nums[2]
+            //             )
+            //         )
+            //     ),
+            //     nums
+            // )
+
             // for( let i = 0; i < 5; i++ )
             tx = await txBuilder.build({
                 inputs: [
@@ -341,8 +357,8 @@ describe("TxBuilder.build", () => {
                         inputScript: {
                             datum: "inline",
                             redeemer: new DataList([
+                                new DataI( 2 ),
                                 new DataI( 3 ),
-                                new DataI( 4 ),
                                 new DataI( (BigInt(1) << BigInt(64)) - BigInt(1) ),
                             ]),
                             script: onlyBigThirdScript

@@ -75,7 +75,7 @@ export function showIR( _ir: IRTerm )
         if( !hoistedHashes.some( hoistedHash => uint8ArrayEq( hoistedHash, hash ) ) )
         {
             const deps = h.dependencies;
-            for(let i = 0; i < 0; i++)
+            for(let i = 0; i < deps.length; i++)
             {
                 addHoisted( deps[i].hoisted );
             }

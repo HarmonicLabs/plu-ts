@@ -5,7 +5,7 @@ import type { NetworkT } from "../../ledger/Network";
 import { costModelV1ToFakeV2, costModelsToCborObj, costModelsToLanguageViewCbor, defaultV1Costs, defaultV2Costs, isCostModelsV1, isCostModelsV2, toCostModelV2 } from "../../ledger/CostModels";
 import { txBuildOutToTxOut } from "./txBuild/ITxBuildOutput";
 import { forceBigUInt } from "../../../types/ints/Integer";
-import { Script, ScriptType } from "../../script/Script";
+import { LitteralScriptType, Script, ScriptType } from "../../script/Script";
 import { ProtocolParamters, isPartialProtocolParameters } from "../../ledger/protocol/ProtocolParameters";
 import { getTxInfos } from "./toOnChain/getTxInfos";
 import { blake2b_256, byte } from "../../../crypto";
@@ -41,6 +41,7 @@ import { TxWitnessSet } from "../TxWitnessSet";
 import { Cbor } from "../../../cbor/Cbor";
 import { CborArray } from "../../../cbor/CborObj/CborArray";
 import { isUint8Array, lexCompare, toHex } from "@harmoniclabs/uint8array-utils";
+import { logJson } from "../../../utils/ts/ToJson";
 
 type ScriptLike = {
     hash: string,
@@ -409,7 +410,7 @@ type ScriptToExecEntry = {
     rdmrTag: TxRedeemerTag,
     index: number,
     script: {
-        type: ScriptType,
+        type: LitteralScriptType,
         bytes: Uint8Array,
         hash: string
     },
@@ -921,7 +922,7 @@ function initTxBuild(
 }
 
 function getCtx(
-    scriptType: ScriptType,
+    scriptType: LitteralScriptType,
     spendingPurpose: DataConstr,
     txInfosV1: Data | undefined,
     txInfosV2: Data

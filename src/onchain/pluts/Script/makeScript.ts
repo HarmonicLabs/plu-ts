@@ -10,7 +10,7 @@ import type { PDataRepresentable } from "../PType/PDataRepresentable";
 import { TermFn } from "../PTypes/PFn/PFn";
 import { perror } from "../lib/perror";
 import { pmakeUnit } from "../lib/std/unit/pmakeUnit";
-import { pif } from "../lib/builtins";
+import { pif, ptrace, ptraceError } from "../lib/builtins";
 import { papp } from "../lib/papp";
 import { pfn } from "../lib/pfn";
 import { PrimType, bool, data, unit } from "../type_system/types";
@@ -30,8 +30,9 @@ export function makeValidator(
                 >
             >
         >
-    > )
-    : TermFn<[PData,PData,PData], PUnit>
+    >,
+    errorMessage?: string
+): TermFn<[PData,PData,PData], PUnit>
 {
     return pfn([
         data,
@@ -68,6 +69,9 @@ export function makeValidator(
 
         if( !typeExtends( expectedBool, bool ) ) throw err;
 
+        const errorTerm = errorMessage === undefined ?
+            perror( unit ) : ptraceError( unit, errorMessage ).$(errorMessage);
+
         return pif( unit ).$(
                 papp(
                     papp(
@@ -81,7 +85,7 @@ export function makeValidator(
                 )
             )
             .$( pmakeUnit() )
-            .$( perror( unit ) );
+            .$( errorTerm );
     });
 }
 
@@ -95,9 +99,9 @@ export function makeRedeemerValidator(
                     PBool
                 >
         >
-    >
-    )
-    : TermFn<[PData,PData], PUnit>
+    >,
+    errorMessage?: string
+): TermFn<[PData,PData], PUnit>
 {
     return pfn([
         data,
@@ -126,6 +130,9 @@ export function makeRedeemerValidator(
 
         if( !typeExtends( expectedBool, bool ) ) throw err;
 
+        const errorTerm = errorMessage === undefined ?
+            perror( unit ) : ptraceError( unit, errorMessage ).$(errorMessage);
+
         return pif( unit ).$(
                 papp(
                     papp(
@@ -136,6 +143,6 @@ export function makeRedeemerValidator(
                 )
             )
             .$( pmakeUnit() )
-            .$( perror( unit ) );
+            .$( errorTerm );
     });
 }

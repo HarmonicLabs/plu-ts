@@ -38,7 +38,7 @@ export type UPLCTerm
  * @param {UPLCTerm} t ```UPLCTerm``` to check 
  * @returns {boolean} ```true``` if the argument is instance of any of the ```UPLCTerm``` constructors, ```false``` otherwise
  */
-export function isUPLCTerm( t: UPLCTerm ): t is UPLCTerm
+export function isUPLCTerm( t: any ): t is UPLCTerm
 {
     const proto = Object.getPrototypeOf( t );
 
@@ -216,7 +216,7 @@ export function showUPLC( term: UPLCTerm ): string
 }
 
 
-export function prettyUPLC( term: UPLCTerm, _indent: number ): string
+export function prettyUPLC( term: UPLCTerm, _indent: number = 2 ): string
 {
     if( !Number.isSafeInteger( _indent ) || _indent < 1 ) return showUPLC( term );
 

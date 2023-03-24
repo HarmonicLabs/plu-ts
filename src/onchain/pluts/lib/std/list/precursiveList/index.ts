@@ -4,6 +4,7 @@ import { papp } from "../../../papp";
 import { pfn } from "../../../pfn";
 import { phoist } from "../../../phoist";
 import { plet } from "../../../plet";
+import { _old_plet } from "../../../plet/old";
 import { precursive } from "../../../precursive";
 import { _papp } from "../../data/conversion/minimal_common";
 import { pmatchList } from "../pmatchList";
@@ -14,7 +15,7 @@ export function precursiveList<ReturnT  extends TermType, ElemtsT extends TermTy
     [
         PLam< // caseNil
             PLam<PList<ToPType<ElemtsT>>, ToPType<ReturnT>>, // self
-            PDelayed<ToPType<ReturnT>> // result for nil
+            ToPType<ReturnT> // result for nil
         >,
         PLam< // caseCons
             PLam<PList<ToPType<ElemtsT>>, ToPType<ReturnT>>, // self
@@ -31,27 +32,27 @@ export function precursiveList<ReturnT  extends TermType, ElemtsT extends TermTy
         precursive(
             pfn([
                     fn([
-                        lam( finalType, delayed( returnT ) ),
+                        lam( finalType, returnT ),
                         fn([ finalType, elemsT, list( elemsT ) ], returnT ),
                         list( elemsT )
                     ],  returnT ),
-                    lam( finalType, delayed( returnT ) ),
+                    lam( finalType, returnT ),
                     fn([ finalType, elemsT, list( elemsT ) ], returnT ),
                     list( elemsT )
                 ], 
                 returnT
             )
-            ( ( self, matchNil, matchCons, lst ) => 
-                plet(
-                    papp(
+            ( ( self, matchNil, matchCons, lst ) =>
+                _papp(
+                    _old_plet(
                         papp(
-                            self,
-                            matchNil
-                        ),
-                        matchCons
-                    )
-                ).in( finalSelf =>
-                    _papp(
+                            papp(
+                                self,
+                                matchNil
+                            ),
+                            matchCons
+                        )
+                    ).in( finalSelf =>
                         pmatchList( returnT, elemsT )
                         .$(
                             papp(
@@ -64,10 +65,10 @@ export function precursiveList<ReturnT  extends TermType, ElemtsT extends TermTy
                                 matchCons,
                                 finalSelf as any
                             ) as any
-                        ),
-                        lst
-                    ) as any
-                ) as any
+                        )
+                    ) as any,
+                    lst
+                )
             )
         )
     ) as any;

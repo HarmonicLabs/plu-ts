@@ -130,18 +130,6 @@ export function handleLetted( term: IRTerm ): void
             {
                 const { term: t, dbn } = stack.pop() as { term: IRTerm, dbn: number };
 
-                if( t instanceof IRVar )
-                {
-                    console.log(
-                        "----------------------------------------------------------------------------\n",
-                        "adding letted: " + toHex( letted.hash ) + "\n",
-                        "with value: " + JSON.stringify( showIR( letted.value ), undefined, 2 ) + "\n\n",
-                        showIR( t.parent as any ), 
-                        "\n\nnode.dbn", t.dbn, "\ndbn", dbn,
-                        "\n----------------------------------------------------------------------------",
-                    )
-                }
-
                 if(
                     t instanceof IRVar &&
                     t.dbn >= dbn
@@ -149,9 +137,6 @@ export function handleLetted( term: IRTerm ): void
                 {
                     // there's a new variable in scope
                     t.dbn++;
-                    console.log(
-                        showIR( maxScope )
-                    )
                 }
                 if( t instanceof IRLetted )
                 {

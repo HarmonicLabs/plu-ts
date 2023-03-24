@@ -13,6 +13,7 @@ import { Cbor } from "../../../../cbor/Cbor";
 import { CborBytes } from "../../../../cbor/CborObj/CborBytes";
 import { Script, ScriptType } from "../../../../offchain/script/Script";
 import { fromHex } from "@harmoniclabs/uint8array-utils";
+import { _old_plet } from "../../lib/plet/old";
 
 
 export const MintRdmr = pstruct({
@@ -51,7 +52,7 @@ export const oneShotNFT = pfn([
                     return entry.fst.eq( ownCurrSym )
 
                     .and(
-                        plet( entry.snd ).in( assets =>
+                        _old_plet( entry.snd ).in( assets =>
 
                             pisEmpty.$( assets.tail )
                             .and(
@@ -72,7 +73,7 @@ export const oneShotNFT = pfn([
                 entry.fst.eq( ownCurrSym )
 
                 .and(
-                    plet( entry.snd ).in( assets =>
+                    _old_plet( entry.snd ).in( assets =>
 
                         pisEmpty.$( assets.tail )
                         .and(
