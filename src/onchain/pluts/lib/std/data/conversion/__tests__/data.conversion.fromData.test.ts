@@ -21,8 +21,8 @@ describe("fromData", () => {
 
         const plistInt = punListData.$( pd );
 
-        console.log( showIR( plistInt.toIR() ) );
-        console.log( prettyUPLC( plistInt.toUPLC() ) );
+        // console.log( showIR( plistInt.toIR() ) );
+        // console.log( prettyUPLC( plistInt.toUPLC() ) );
 
         console.log(
             Machine.evalSimple(

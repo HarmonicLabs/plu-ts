@@ -1,5 +1,4 @@
 import { Cloneable } from "../../types/interfaces/Cloneable";
-import { Integer } from "../../types/ints/Integer";
 import { PureUPLCTerm } from "../UPLC/UPLCTerm";
 import { CEKHeap } from "./CEKHeap";
 
@@ -25,10 +24,9 @@ export class CEKEnv
         this._heapPtrs.push( this._heapRef.add( varValue ) );
     }
 
-    get( dbn: number | bigint | Integer ): PureUPLCTerm | undefined
+    get( dbn: number | bigint ): PureUPLCTerm | undefined
     {
         const _dbn: number = 
-            dbn instanceof Integer ? Number( dbn.asBigInt ) :
             typeof dbn === "bigint" ? Number( dbn ):
             dbn;
         if( (this._heapPtrs.length - _dbn) < 1 ) return undefined;

@@ -51,7 +51,7 @@ export function eqCEKValue( a: Readonly<CEKValue>, b: Readonly<CEKValue> ): bool
 
     if( a instanceof UPLCVar && b instanceof UPLCVar)
     {
-        return a.deBruijn.asBigInt === b.deBruijn.asBigInt;
+        return a.deBruijn === b.deBruijn;
     }
 
     if( a instanceof Delay && b instanceof Delay )

@@ -1,6 +1,6 @@
 import JsRuntime from "../../utils/JsRuntime";
 
-import { CanBeUInteger, forceUInteger } from "../../types/ints/Integer";
+import { CanBeUInteger, forceBigUInt } from "../../types/ints/Integer";
 import { Cbor } from "../../cbor/Cbor";
 import { CborObj } from "../../cbor/CborObj";
 import { CborArray } from "../../cbor/CborObj/CborArray";
@@ -79,7 +79,7 @@ export function nativeScriptToCborObj( nativeScript: NativeScript ): CborArray
     if( type === "atLeast" )
         return new CborArray([
             new CborUInt( 3 ),
-            new CborUInt( forceUInteger( nativeScript.required ).asBigInt ),
+            new CborUInt( forceBigUInt( nativeScript.required ) ),
             new CborArray(
                 nativeScript.scripts.map( nativeScriptToCborObj )
             )
@@ -87,7 +87,7 @@ export function nativeScriptToCborObj( nativeScript: NativeScript ): CborArray
     if( type === "after" || type === "before" )
         return new CborArray([
             new CborUInt( type === "after" ? 4 : 5 ),
-            new CborUInt( forceUInteger( nativeScript.slot ).asBigInt ),
+            new CborUInt( forceBigUInt( nativeScript.slot ) ),
         ]);
 
     throw JsRuntime.makeNotSupposedToHappenError(

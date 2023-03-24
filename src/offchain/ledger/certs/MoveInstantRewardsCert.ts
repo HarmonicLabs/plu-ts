@@ -13,7 +13,7 @@ import { InvalidCborFormatError } from "../../../errors/InvalidCborFormatError";
 import { ToJson } from "../../../utils/ts/ToJson";
 import { ToCbor } from "../../../cbor/interfaces/CBORSerializable";
 import { StakeCredentials } from "../../credentials/StakeCredentials";
-import { canBeUInteger, forceBigUInt, forceUInteger } from "../../../types/ints/Integer";
+import { canBeUInteger, forceBigUInt } from "../../../types/ints/Integer";
 import { Coin } from "../Coin";
 
 export const enum InstantRewardsSource {
@@ -141,7 +141,7 @@ export class MoveInstantRewardsCert
         return new CborArray([
             new CborUInt( this.source ),
             canBeUInteger( this.destintaion ) ?
-                new CborUInt( forceUInteger( this.destintaion ).asBigInt ) :
+                new CborUInt( forceBigUInt( this.destintaion ) ) :
                 rewardsMapToCborObj( this.destintaion )
         ]);
     }

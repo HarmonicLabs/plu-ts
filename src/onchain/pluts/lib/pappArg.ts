@@ -8,7 +8,6 @@ import { CborString } from "../../../cbor/CborString";
 import { BasePlutsError } from "../../../errors/BasePlutsError";
 import { HexString } from "../../../types/HexString";
 import { ByteString } from "../../../types/HexString/ByteString";
-import { Integer } from "../../../types/ints/Integer";
 import { Pair } from "../../../types/structs/Pair";
 import { termTypeToString, getNRequiredLambdaArgs } from "../type_system/utils";
 import { UtilityTermOf } from "./addUtilityForType";
@@ -481,8 +480,7 @@ function isTsValueAssignableToPlutsType<PlutsType extends TermType>(
     {
         return (
             typeof value === "number" ||
-            typeof value === "bigint" ||
-            value instanceof Integer
+            typeof value === "bigint"
         );
     }
 

@@ -9,7 +9,7 @@ import { ToCbor } from "../../../cbor/interfaces/CBORSerializable";
 import { BasePlutsError } from "../../../errors/BasePlutsError";
 import { InvalidCborFormatError } from "../../../errors/InvalidCborFormatError";
 import { Cloneable } from "../../../types/interfaces/Cloneable";
-import { Integer, CanBeUInteger, forceBigUInt } from "../../../types/ints/Integer";
+import { CanBeUInteger, forceBigUInt } from "../../../types/ints/Integer";
 import { ToJson } from "../../../utils/ts/ToJson";
 
 export interface IExBudget {
@@ -35,7 +35,7 @@ export class ExBudget
         let _cpu: bigint;
         let _mem: bigint;
 
-        if( typeof args_or_cpu === "object" && !( args_or_cpu instanceof Integer ) )
+        if( typeof args_or_cpu === "object" )
         {
             _cpu = forceBigUInt( args_or_cpu.cpu );
             _mem = forceBigUInt( args_or_cpu.mem );

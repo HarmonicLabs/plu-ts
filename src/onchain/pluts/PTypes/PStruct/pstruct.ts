@@ -22,6 +22,7 @@ import { IRConst } from "../../../IR/IRNodes/IRConst";
 import { IRHoisted } from "../../../IR/IRNodes/IRHoisted";
 import { IRNative } from "../../../IR/IRNodes/IRNative";
 import { UPLCConst } from "../../../UPLC/UPLCTerms/UPLCConst";
+import { BasePlutsError } from "../../../../errors/BasePlutsError";
 
 /**
  * intermediate class useful to reconize structs form primitives
@@ -35,7 +36,7 @@ class _PStruct extends PData
 }
 
 export type StructInstance<SCtorDef extends StructCtorDef> = {
-    [Field in keyof SCtorDef]: UtilityTermOf<ToPType<SCtorDef[Field]>>
+    readonly [Field in keyof SCtorDef]: UtilityTermOf<ToPType<SCtorDef[Field]>>
 }
 
 export type StructInstanceAsData<SCtorDef extends StructCtorDef> = {
@@ -174,6 +175,12 @@ function isStructInstanceOfDefinition<SCtorDef extends StructCtorDef>
     );
 }
 
+const RESERVED_STRUCT_KEYS = Object.freeze([
+    "eq",
+    "eqTerm",
+    "extract"
+]);
+
 export function pstruct<StructDef extends StructDefinition>( def: StructDef ): PStruct<StructDef>
 {
     JsRuntime.assert(
@@ -272,6 +279,16 @@ export function pstruct<StructDef extends StructDefinition>( def: StructDef ): P
                 // order of fields in the 'jsStruct' migth be different than the order of the definiton
                 // to preserve the order we need to use the keys got form the ctor definition
                 const ctorDefFieldsNames = Object.keys( thisCtorDef );
+
+                for( const fieldName of ctorDefFieldsNames )
+                {
+                    if( RESERVED_STRUCT_KEYS.includes( fieldName ) )
+                    {
+                        throw new BasePlutsError(
+                            `"${fieldName}" is a reserved struct key; it can't be used as custom struct property.`
+                        )
+                    }
+                }
 
                 if( ctorDefFieldsNames.length === 0 )
                 {

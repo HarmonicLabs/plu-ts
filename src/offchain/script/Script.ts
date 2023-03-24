@@ -26,7 +26,7 @@ export type PlutusScriptType = ScriptType.PlutusV1 | ScriptType.PlutusV2 | "Plut
 
 export type LitteralScriptType = ScriptType | "NativeScript" | "PlutusScriptV1" | "PlutusScriptV2"
 
-export interface PlutusScriptJsonFormat {
+export interface PlutusScriptJsonFormat<T extends PlutusScriptType = PlutusScriptType> {
     type: PlutusScriptType,
     description?: string,
     cborHex: string

@@ -13,7 +13,7 @@ describe("pmatch", () => {
         expect(
             Machine.evalSimple(
                 pmatchList( int, int )
-                .$( pInt( -1 ) )
+                .$( pdelay( pInt( -1 ) ) )
                 .$(
                     pfn([ int, list( int ) ], int )
                     (( head, _tail ) => head )

@@ -12,7 +12,7 @@ import { InvalidCborFormatError } from "../../../errors/InvalidCborFormatError";
 import { DataConstr } from "../../../types/Data/DataConstr";
 import { DataI } from "../../../types/Data/DataI";
 import { ToData } from "../../../types/Data/toData/interface";
-import { canBeUInteger, forceBigUInt, forceUInteger, UInteger } from "../../../types/ints/Integer";
+import { canBeUInteger, forceBigUInt } from "../../../types/ints/Integer";
 import { ToJson } from "../../../utils/ts/ToJson";
 import { StakeCredentials } from "../../credentials/StakeCredentials";
 import { GenesisDelegateHash } from "../../hashes/Hash28/GenesisDelegateHash";
@@ -141,13 +141,12 @@ export class Certificate<CertTy extends CertificateType>
                 params[0] instanceof PoolKeyHash &&
                 (
                     typeof params[1] === "bigint" ||
-                    typeof params[1] === "number" ||
-                    params[1] instanceof UInteger
+                    typeof params[1] === "number"
                 ),
                 "invalid paramters for stake delegation"
             );
             
-            const epoch = forceUInteger( params[1] as any ).asBigInt;
+            const epoch = forceBigUInt( params[1] as any );
 
             ObjectUtils.defineReadOnlyProperty(
                 this,
@@ -285,7 +284,7 @@ export class Certificate<CertTy extends CertificateType>
             return new CborArray([
                 new CborUInt( this.certType ),
                 (this.params[0] as ParamsOfCert<4>[0]).toCborObj(),
-                new CborUInt( forceUInteger( this.params[1] as any ).asBigInt )
+                new CborUInt( forceBigUInt( this.params[1] as any ) )
             ]);
         }
 

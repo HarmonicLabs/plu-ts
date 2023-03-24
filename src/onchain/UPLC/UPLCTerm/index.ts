@@ -11,7 +11,6 @@ import { HoistedUPLC } from "../UPLCTerms/HoistedUPLC";
 import { ConstType, constListTypeUtils, constPairTypeUtils, constTypeToStirng, ConstTyTag } from "../UPLCTerms/UPLCConst/ConstType";
 import { builtinTagToString, getNRequiredForces } from "../UPLCTerms/Builtin/UPLCBuiltinTag";
 import { ConstValue, isConstValueInt } from "../UPLCTerms/UPLCConst/ConstValue";
-import { Integer } from "../../../types/ints/Integer";
 import { ByteString } from "../../../types/HexString/ByteString";
 import { isData } from "../../../types/Data/Data";
 import { dataToCbor } from "../../../types/Data/toCbor";
@@ -89,7 +88,7 @@ export function isClosedTerm( term: UPLCTerm ): boolean
 
         if( t instanceof UPLCVar )
             // deBruijn variables are 0 indexed (as arrays)
-            return maxDeBruijn > t.deBruijn.asBigInt;
+            return maxDeBruijn > t.deBruijn;
 
         else if( t instanceof Delay )
             return _isClosedTerm( maxDeBruijn , t.delayedTerm );
@@ -186,7 +185,7 @@ export function showUPLC( term: UPLCTerm ): string
     {
         if( t instanceof UPLCVar )
         {
-            return getVarNameForDbn( dbn - 1 - Number( t.deBruijn.asBigInt ) )
+            return getVarNameForDbn( dbn - 1 - Number( t.deBruijn ) )
         }
         if( t instanceof Delay ) return `(delay ${ loop( t.delayedTerm, dbn ) })`;
         if( t instanceof Lambda ) 
@@ -234,7 +233,7 @@ export function prettyUPLC( term: UPLCTerm, _indent: number = 2 ): string
         const indent = `\n${indentStr.repeat( depth )}`;
         if( t instanceof UPLCVar )
         {
-            return indent + getVarNameForDbn( dbn - 1 - Number( t.deBruijn.asBigInt ) )
+            return indent + getVarNameForDbn( dbn - 1 - Number( t.deBruijn ) )
         }
         if( t instanceof Delay ) return `${indent}(delay ${ loop( t.delayedTerm, dbn, depth + 1 ) }${indent})`;
         if( t instanceof Lambda ) 
@@ -279,7 +278,7 @@ export function hasAnyRefsInTerm( varDeBruijn: number | bigint, t: UPLCTerm ): b
 
     const dbn = BigInt( varDeBruijn );
 
-    if( t instanceof UPLCVar )      return t.deBruijn.asBigInt === dbn;
+    if( t instanceof UPLCVar )      return t.deBruijn === dbn;
     if( t instanceof Delay )        return hasAnyRefsInTerm( dbn, t.delayedTerm );
     if( t instanceof Lambda )       return hasAnyRefsInTerm( dbn + BigInt(1), t.body );
     if( t instanceof Application )  return hasAnyRefsInTerm( dbn, t.funcTerm ) || hasAnyRefsInTerm( dbn, t.argTerm );
@@ -346,7 +345,7 @@ export function getUPLCVarRefsInTerm( term: UPLCTerm, varDeBruijn: number | bigi
             "'getUPLCVarRefsInTerm' expects an UPLCTerms"
         );
 
-        if( t instanceof UPLCVar )      return countedUntilNow + (t.deBruijn.asBigInt === dbn ? 1 : 0);
+        if( t instanceof UPLCVar )      return countedUntilNow + (t.deBruijn === dbn ? 1 : 0);
         if( t instanceof Delay )        return _getUPLCVarRefsInTerm( dbn, t.delayedTerm, countedUntilNow );
         if( t instanceof Lambda )       return _getUPLCVarRefsInTerm( dbn + BigInt( 1 ) , t.body, countedUntilNow );
         if( t instanceof Application )  return _getUPLCVarRefsInTerm( dbn , t.funcTerm, countedUntilNow ) + _getUPLCVarRefsInTerm( dbn , t.argTerm, countedUntilNow );

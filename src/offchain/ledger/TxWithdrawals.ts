@@ -2,7 +2,7 @@ import ObjectUtils from "../../utils/ObjectUtils";
 import JsRuntime from "../../utils/JsRuntime";
 
 import { isHex } from "../../types/HexString";
-import { canBeUInteger, forceBigUInt, UInteger } from "../../types/ints/Integer";
+import { canBeUInteger, forceBigUInt } from "../../types/ints/Integer";
 import { ToCbor } from "../../cbor/interfaces/CBORSerializable";
 import { Coin } from "./Coin";
 import { Hash28 } from "../hashes/Hash28/Hash28";
@@ -93,8 +93,7 @@ export class TxWithdrawals
                     ) &&
                     (
                         (typeof amount === "bigint" && amount >= BigInt( 0 )) ||
-                        (typeof amount === "number" && amount === Math.round( Math.abs( amount ) ) ) ||
-                        (amount instanceof UInteger)
+                        (typeof amount === "number" && amount === Math.round( Math.abs( amount ) ) )
                     )
                 
                 )),

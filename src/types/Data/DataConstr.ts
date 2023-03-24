@@ -2,7 +2,7 @@ import JsRuntime from "../../utils/JsRuntime";
 import { Data, isData } from "./Data";
 import { ToJson } from "../../utils/ts/ToJson";
 import { Cloneable } from "../interfaces/Cloneable";
-import { UInteger, CanBeUInteger, forceUInteger, forceBigUInt } from "../ints/Integer";
+import { CanBeUInteger, forceBigUInt } from "../ints/Integer";
 
 
 export class DataConstr

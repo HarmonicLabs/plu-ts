@@ -45,9 +45,9 @@ export class UPLCSerializationContex
     {
         this._updateWith({
             version: {
-                major: uplcVersion.major.asBigInt,
-                minor: uplcVersion.minor.asBigInt,
-                patch: uplcVersion.patch.asBigInt,
+                major: uplcVersion.major,
+                minor: uplcVersion.minor,
+                patch: uplcVersion.patch,
             }
         })
     }

@@ -11,11 +11,11 @@ import { _papp } from "../../data/conversion/minimal_common";
 
 
 export function pmatchList<ReturnT  extends TermType, PElemsT extends PType>( returnT: ReturnT, elemsT: TermType )
-: TermFn<[ PElemsT, PLam<PElemsT,PLam<PList<PElemsT>, ToPType<ReturnT>>>, PList<PElemsT> ], ToPType<ReturnT>>
+: TermFn<[ PDelayed<PElemsT>, PLam<PElemsT,PLam<PList<PElemsT>, ToPType<ReturnT>>>, PList<PElemsT> ], ToPType<ReturnT>>
 {
 return phoist(
     pfn([
-            returnT,
+            delayed( returnT ),
             fn([ elemsT, list( elemsT ) ], returnT ),
             list( elemsT )
         ], 
@@ -23,11 +23,11 @@ return phoist(
     )
     ( ( matchNil, matchCons, lst ) =>
         pforce(
-            pstrictChooseList( data, delayed(returnT) )
+            pstrictChooseList( data, delayed( returnT ) )
             .$(
                 _punsafeConvertType( lst, list( data ) ) as any
             )
-            .$( pdelay( matchNil ) ) // caseNil
+            .$( matchNil ) // caseNil
             .$(
                 pdelay(
                     _papp(

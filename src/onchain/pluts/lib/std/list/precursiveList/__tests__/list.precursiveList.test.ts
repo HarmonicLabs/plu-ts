@@ -8,7 +8,7 @@ import { precursiveList } from "../index";
 describe("pmatch", () => {
 
     const plast =  precursiveList( int, int )
-    .$( _ => pInt( -1 ) )
+    .$( _ => pdelay( pInt( -1 ) ) )
     .$(
         pfn([
             lam( list( int ), int ),

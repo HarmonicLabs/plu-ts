@@ -85,7 +85,7 @@ function serializeUPLCVar( uplcVar: UPLCVar ): BitStream
         serializeUInt(
             // no idea why deBruijn indicies start form 1...s
             // can dev do something?
-            uplcVar.deBruijn.asBigInt + BigInt( 1 )
+            uplcVar.deBruijn + BigInt( 1 )
         )
     );
     return result;

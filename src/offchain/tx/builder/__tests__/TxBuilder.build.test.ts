@@ -274,19 +274,22 @@ describe("TxBuilder.build", () => {
         PScriptContext.type
     ],  bool)
     (( _dat, nums, _ctx ) => 
-        nums.at(2).eq( (BigInt(1) << BigInt(64)) - BigInt(1) )
+        nums.at(0).ltEq( (BigInt(1) << BigInt(64)) - BigInt(1) )
     )
 
     const mintSomething = pfn([
         data,
         PScriptContext.type
     ],  bool)
-    (( _rdmr, ctx ) => 
-        ctx.extract("txInfo").in(({ txInfo }) => 
+    (( _rdmr, ctx ) => {
+
+        ctx.txInfo.inputs.length.gtEq( 2 )
+
+        return ctx.extract("txInfo").in(({ txInfo }) => 
         txInfo.extract("inputs").in(({ inputs }) => 
             inputs.length.gtEq(2) 
         ))
-    );
+    });
 
     const onlyBigThirdScript = new Script(
         ScriptType.PlutusV2,
@@ -326,7 +329,7 @@ describe("TxBuilder.build", () => {
                 BigInt( 1 )
             ];
 
-            console.log( showIR( onlyBigThirdElem.toIR() ) )
+            // console.log( showIR( onlyBigThirdElem.toIR() ) )
 
             // console.log(
             //     Machine.evalSimple(

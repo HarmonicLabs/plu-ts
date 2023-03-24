@@ -1,7 +1,7 @@
 import JsRuntime from "../../utils/JsRuntime";
 import ObjectUtils from "../../utils/ObjectUtils";
 
-import { canBeUInteger, forceUInteger } from "../../types/ints/Integer";
+import { canBeUInteger, forceBigUInt } from "../../types/ints/Integer";
 import { PoolRelay, isPoolRelay, poolRelayFromCborObj, poolRelayToCborObj, poolRelayToJson } from "./PoolRelay";
 import { CborPositiveRational } from "../../cbor/extra/CborRational";
 import { ByteString } from "../../types/HexString/ByteString";
@@ -89,13 +89,13 @@ export class PoolParams
             canBeUInteger( pledge ),
             "invalid 'pledge' constructing 'PoolParams'"
         );
-        ObjectUtils.defineReadOnlyProperty( this, "pledge", forceUInteger( pledge ).asBigInt );
+        ObjectUtils.defineReadOnlyProperty( this, "pledge", forceBigUInt( pledge ) );
         
         JsRuntime.assert(
             canBeUInteger( cost ),
             "invalid 'cost' constructing 'PoolParams'"
         );
-        ObjectUtils.defineReadOnlyProperty( this, "cost", forceUInteger( cost ).asBigInt );
+        ObjectUtils.defineReadOnlyProperty( this, "cost", forceBigUInt( cost ) );
 
         JsRuntime.assert(
             margin instanceof CborPositiveRational,
