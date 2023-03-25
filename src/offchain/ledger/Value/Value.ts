@@ -105,7 +105,6 @@ export class Value
                     ?? 0 
                 ),
                 set: () => {},
-                writable: false,
                 enumerable: true,
                 configurable: false
             }
