@@ -1,6 +1,6 @@
 import ObjectUtils from "../../../utils/ObjectUtils";
 
-import { canBeUInteger, forceBigUInt, forceUInteger } from "../../../types/ints/Integer";
+import { canBeUInteger, forceBigUInt } from "../../../types/ints/Integer";
 import { CborObj } from "../../../cbor/CborObj";
 import { CborArray } from "../../../cbor/CborObj/CborArray";
 import { CborMap } from "../../../cbor/CborObj/CborMap";
@@ -79,7 +79,7 @@ export function protocolUpdateProposalToCborObj( protocolUpdate: ProtocolUpdateP
 {
     return new CborArray([
         protocolParametersUpdateMapToCborObj( protocolUpdate[0] ),
-        new CborUInt( forceUInteger( protocolUpdate[1] ).asBigInt )
+        new CborUInt( forceBigUInt( protocolUpdate[1] ) )
     ])
 }
 

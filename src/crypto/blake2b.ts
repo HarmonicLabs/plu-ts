@@ -265,25 +265,25 @@ function blake2bFinal( ctx: Blake2bCtx )
 }
 
 
-export function blake2b( data: byte[] | Uint8Array | Uint8Array, digestSize: 28 | 32 | 64 = 32 ): byte[]
+export function blake2b( data: byte[] | Uint8Array | Uint8Array, digestSize: 28 | 32 | 64 = 32 ): Uint8Array
 {
     data = new Uint8Array(data);
     const ctx = blake2bInit(digestSize)
     blake2bUpdate(ctx, data)
-    return Array.from(blake2bFinal(ctx)) as any;
+    return blake2bFinal(ctx);
 }
 
-export function blake2b_224( data: byte[] | Uint8Array ): byte[]
+export function blake2b_224( data: byte[] | Uint8Array ): Uint8Array
 {
     return blake2b( data, 28 );
 }
 
-export function blake2b_256( data: byte[] | Uint8Array ): byte[]
+export function blake2b_256( data: byte[] | Uint8Array ): Uint8Array
 {
     return blake2b( data, 32 );
 }
 
-export function blake2b_512( data: byte[] | Uint8Array ): byte[]
+export function blake2b_512( data: byte[] | Uint8Array ): Uint8Array
 {
     return blake2b( data, 64 );
 }

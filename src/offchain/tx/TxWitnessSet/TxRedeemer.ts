@@ -2,7 +2,7 @@ import JsRuntime from "../../../utils/JsRuntime"
 import ObjectUtils from "../../../utils/ObjectUtils"
 
 import { StakeCredentials, StakeValidatorHash } from "../../credentials/StakeCredentials"
-import { canBeUInteger, CanBeUInteger, forceUInteger } from "../../../types/ints/Integer"
+import { canBeUInteger, CanBeUInteger, forceBigUInt } from "../../../types/ints/Integer"
 import { dataFromCborObj } from "../../../types/Data/fromCbor"
 import { dataToCborObj } from "../../../types/Data/toCbor"
 import { CborString, CanBeCborString, forceCborString } from "../../../cbor/CborString"
@@ -119,7 +119,7 @@ export class TxRedeemer
         ObjectUtils.defineReadOnlyProperty(
             this,
             "index",
-            Number( forceUInteger( index ).asBigInt )
+            Number( forceBigUInt( index ) )
         );
 
         JsRuntime.assert(

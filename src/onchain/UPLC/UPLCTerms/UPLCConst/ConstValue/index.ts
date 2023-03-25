@@ -1,7 +1,6 @@
 import JsRuntime from "../../../../../utils/JsRuntime";
 
 import { ByteString } from "../../../../../types/HexString/ByteString";
-import { Integer } from "../../../../../types/ints/Integer";
 import { Pair } from "../../../../../types/structs/Pair";
 import { Data, eqData, isData } from "../../../../../types/Data/Data";
 import { ConstType, constTypeEq, constT, constTypeToStirng, ConstTyTag, isWellFormedConstType, constListTypeUtils, constPairTypeUtils } from "../ConstType";
@@ -9,7 +8,7 @@ import { uint8ArrayEq } from "@harmoniclabs/uint8array-utils";
 
 
 export type ConstValueList
-    = Integer[]
+    = (number | bigint)[]
     | ByteString[]
     | string[]
     | undefined[]
@@ -18,7 +17,7 @@ export type ConstValueList
     | Data[];
 
 export type ConstValue
-    = Integer 
+    = number | bigint
     | ByteString 
     | string
     | undefined 
@@ -27,11 +26,21 @@ export type ConstValue
     | Pair<ConstValue,ConstValue>
     | Data;
 
+export function isConstValueInt( n: any ): n is ( number | bigint )
+{
+    return (
+        typeof n === "bigint" ||
+        (
+            typeof n === "number" && Number.isSafeInteger( n )
+        )
+    );
+}
+
 export function isConstValue( value: any ): value is ConstValue
 {
     return (
         value === undefined                                                     ||
-        (value instanceof Integer)        ||
+        isConstValueInt( value )                                                ||
         (value instanceof ByteString && ByteString.isStrictInstance( value ) )  ||
         typeof value === "string"                                               ||
         typeof value === "boolean"                                              ||
@@ -51,9 +60,9 @@ export function eqConstValue( a: ConstValue, b: ConstValue ): boolean
         isConstValue( b )
     )) return false;
 
-    if( a instanceof Integer ) return (
-        b instanceof Integer &&
-        a.asBigInt === b.asBigInt
+    if( (typeof a === "number" || typeof a == "bigint" ) ) return (
+        (typeof b === "number" || typeof b == "bigint" ) &&
+        BigInt( a ) === BigInt( b )
     );
     if( a instanceof ByteString ) return (
         b instanceof ByteString &&
@@ -100,7 +109,7 @@ export function inferConstTypeFromConstValue( val: ConstValue ): (ConstType | un
 
     if( val === undefined ) return constT.unit;
     
-    if( val instanceof Integer ) return constT.int;
+    if( isConstValueInt( val ) ) return constT.int;
 
     if( val instanceof ByteString && ByteString.isStrictInstance( val ) ) return constT.byteStr;
 
@@ -198,7 +207,7 @@ export function canConstValueBeOfConstType( val: Readonly<ConstValue>, ty: Reado
     if( constTypeEq( ty, constT.bool ) )        return typeof val === "boolean";
     if( constTypeEq( ty, constT.byteStr ) )     return (val instanceof ByteString && ByteString.isStrictInstance( val ) );
     if( constTypeEq( ty, constT.data ) )        return val === undefined ? false : isData( val );
-    if( constTypeEq( ty, constT.int ) )         return (val instanceof Integer);
+    if( constTypeEq( ty, constT.int ) )         return isConstValueInt( val );
     if( constTypeEq( ty, constT.str ) )         return typeof val === "string";
     if( ty[ 0 ] === ConstTyTag.list )
         return (

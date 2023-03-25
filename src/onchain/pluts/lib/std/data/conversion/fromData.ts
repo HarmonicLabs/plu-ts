@@ -2,7 +2,7 @@ import ObjectUtils from "../../../../../../utils/ObjectUtils";
 import { PData } from "../../../../PTypes";
 import { TermFn } from "../../../../PTypes/PFn/PFn";
 import { Term } from "../../../../Term";
-import { TermType, termTypeToString } from "../../../../type_system";
+import { TermType } from "../../../../type_system";
 import { ToPType } from "../../../../type_system/ts-pluts-conversion";
 import { UtilityTermOf, addUtilityForType } from "../../../addUtilityForType";
 import { papp } from "../../../papp";

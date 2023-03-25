@@ -4,11 +4,9 @@ import UPLCFlatUtils from "../../../utils/UPLCFlatUtils";
 
 import { Cbor } from "../../../cbor/Cbor";
 import { CborBytes } from "../../../cbor/CborObj/CborBytes";
-import { CborString } from "../../../cbor/CborString";
 import { UPLCDeserializaitonError } from "../../../errors/UPLCError/UPLCDeserializationError";
-import { dataFromCbor, dataFromCborObj } from "../../../types/Data/fromCbor";
+import { dataFromCbor } from "../../../types/Data/fromCbor";
 import { ByteString } from "../../../types/HexString/ByteString";
-import { Integer } from "../../../types/ints/Integer";
 import { Pair } from "../../../types/structs/Pair";
 import { UPLCProgram } from "../UPLCProgram";
 import { UPLCVersion } from "../UPLCProgram/UPLCVersion";
@@ -24,7 +22,6 @@ import { UPLCVar } from "../UPLCTerms/UPLCVar";
 import { UPLCConst } from "../UPLCTerms/UPLCConst";
 import { ConstType, constListTypeUtils, constPairTypeUtils, constT, constTypeEq, ConstTyTag, isWellFormedConstType } from "../UPLCTerms/UPLCConst/ConstType";
 import { ConstValue, ConstValueList } from "../UPLCTerms/UPLCConst/ConstValue";
-import { DataB } from "../../../types/Data/DataB";
 import { fromHex, toUtf8 } from "@harmoniclabs/uint8array-utils";
 
 export type SerializedScriptFormat = "flat" | "cbor"
@@ -337,7 +334,7 @@ export class UPLCDecoder
         {
             if( constTypeEq( t, constT.int ) )
             {
-                return new Integer( readSignedInt() )
+                return readSignedInt()
             }
             if( constTypeEq( t, constT.byteStr ) )
             {

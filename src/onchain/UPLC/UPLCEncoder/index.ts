@@ -2,9 +2,8 @@ import JsRuntime from "../../../utils/JsRuntime";
 import UPLCFlatUtils from "../../../utils/UPLCFlatUtils";
 
 import { ConstType, ConstTyTag, isWellFormedConstType } from "../UPLCTerms/UPLCConst/ConstType";
-import { ConstValue, isConstValue, isConstValueList } from "../UPLCTerms/UPLCConst/ConstValue";
+import { ConstValue, isConstValue, isConstValueInt, isConstValueList } from "../UPLCTerms/UPLCConst/ConstValue";
 import { getNRequiredForces, isUPLCBuiltinTag } from "../UPLCTerms/Builtin/UPLCBuiltinTag";
-import { Integer, UInteger } from "../../../types/ints/Integer";
 import { UPLCTerm, getHoistedTerms, isPureUPLCTerm, PureUPLCTerm, showUPLC } from "../UPLCTerm";
 import { HoistedUPLC, getSortedHoistedSet } from "../UPLCTerms/HoistedUPLC";
 import { BinaryString } from "../../../types/bits/BinaryString";
@@ -26,7 +25,6 @@ import { UPLCSerializationContex } from "./UPLCSerializationContext";
 import { CborString } from "../../../cbor/CborString";
 import { dataFromCbor } from "../../../types/Data/fromCbor";
 import { dataToCbor } from "../../../types/Data/toCbor";
-import { genHoistedSourceUID } from "../UPLCTerms/HoistedUPLC/HoistedSourceUID/genHoistedSourceUID";
 import { BasePlutsError } from "../../../errors/BasePlutsError";
 import { fromHex, fromUtf8, toHex } from "@harmoniclabs/uint8array-utils";
 
@@ -51,24 +49,23 @@ import { fromHex, fromUtf8, toHex } from "@harmoniclabs/uint8array-utils";
  *  ```
 */
 
-function serializeUInt( uint: UInteger | bigint ): BitStream
+function serializeUInt( uint: bigint ): BitStream
 {
-    return UPLCFlatUtils.encodeBigIntAsVariableLengthBitStream( typeof uint === "bigint" ? uint : uint.asBigInt );
+    return UPLCFlatUtils.encodeBigIntAsVariableLengthBitStream( BigInt( uint ) );
 }
 
-function serializeInt( int: Integer ): BitStream
+function serializeInt( int: bigint | number ): BitStream
 {
     JsRuntime.assert(
-        Integer.isStrictInstance( int ),
+        typeof int === "number" || typeof int === "bigint",
         "'serializeInt' only works for Signed Integer; " +
         "try using int.toSigned() if you are using a derived class; inpout was: " + int
     )
 
+    int = typeof int === "number" ? BigInt( int ) : int
     return serializeUInt(
-        new UInteger(
-            UPLCFlatUtils.zigzagBigint(
-                int.asBigInt
-            )
+        UPLCFlatUtils.zigzagBigint(
+            int
         )
     );
 }
@@ -88,7 +85,7 @@ function serializeUPLCVar( uplcVar: UPLCVar ): BitStream
         serializeUInt(
             // no idea why deBruijn indicies start form 1...s
             // can dev do something?
-            uplcVar.deBruijn.asBigInt + BigInt( 1 )
+            uplcVar.deBruijn + BigInt( 1 )
         )
     );
     return result;
@@ -235,25 +232,7 @@ export function replaceHoistedTermsInplace( uplc: UPLCTerm ): PureUPLCTerm
             sortedHoistedSet[i].UPLC
         );
     }
-
-    /*
-     * TODO:
-     */
-    /*
-    const shouldBeReplaced: boolean[] = new Array( sortedHoistedSet.length ).fill( true );
-
-    function inlineSingleRefs( term: UPLCTerm ): void
-    {
-
-    }
-    //*/
-
-    /*
-    IMPORTANT
-
-    THIS NEEDS TO BE MODIFIED ONCE THE ABOVE IS IMPLEMENTED
-    SINCE INLINING MAY IMPLY CHANGING THE DEBRUJN LEVEL OF OTHER HOISTED TERMS
-    */
+ 
     function getUPLCVarForHoistedAtLevel( _hoisted: HoistedUPLC, level: number ): UPLCVar
     {
         const levelOfTerm = sortedHoistedSet.findIndex( sortedH => BitStream.eq( sortedH.compiled, _hoisted.compiled ) );
@@ -491,7 +470,7 @@ export class UPLCEncoder
         );
     
         if( value === undefined ) return new BitStream();
-        if( value instanceof Integer ) 
+        if( isConstValueInt( value ) ) 
         {
             const _i = serializeInt( value );
             // ints are always serialized in chunks of 8 bits

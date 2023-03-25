@@ -1,6 +1,9 @@
-import { BasePlutsError } from "../../../../../errors/BasePlutsError";
 import ObjectUtils from "../../../../../utils/ObjectUtils";
+<<<<<<< HEAD
 import { Builtin } from "../../../../UPLC/UPLCTerms/Builtin";;
+=======
+import { IRNative } from "../../../../IR/IRNodes/IRNative";
+>>>>>>> v0.3.0
 import { TermFn, PPair, PLam } from "../../../PTypes";
 import { Term } from "../../../Term";
 import { PrimType, TermType, ToPType, data, lam, pair } from "../../../type_system";
@@ -22,7 +25,7 @@ export function pfstPair<A extends TermType, B extends TermType>( fstType: A, sn
 
     const bnTerm = new Term<PLam<PPair<ToPType<A>, ToPType<B>>, ToPType<A>>>(
         lam( pair( a, b ), outT ) as any,
-        _dbn =>  Builtin.fstPair
+        _dbn =>  IRNative.fstPair
     );
 
     ObjectUtils.defineReadOnlyProperty(
@@ -64,7 +67,7 @@ export function psndPair<A extends TermType, B extends TermType>( fstType: A, sn
 
     const bnTerm = new Term<PLam<PPair<ToPType<A>, ToPType<B>>, ToPType<B>>>(
         lam( pair( a, b ), outT ) as any,
-        _dbn =>  Builtin.sndPair
+        _dbn =>  IRNative.sndPair
     );
 
     ObjectUtils.defineReadOnlyProperty(

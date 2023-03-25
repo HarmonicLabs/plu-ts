@@ -15,13 +15,14 @@ export function punsafeConvertType<FromPInstance extends PType, ToTermType exten
 
     const converted = new Term(
         toType,
-        someTerm.toUPLC,
+        someTerm.toIR,
         Boolean((someTerm as any).isConstant) // isConstant
     ) as any;
 
     Object.keys( someTerm ).forEach( k => {
 
-        if( k === "_type" || k === "_toUPLC" ) return;
+        // do not overwrite `type` and `toUPLC` properties
+        if( k === "type" || k === "toUPLC" || k === "toIR" ) return;
         
         Object.defineProperty(
             converted,

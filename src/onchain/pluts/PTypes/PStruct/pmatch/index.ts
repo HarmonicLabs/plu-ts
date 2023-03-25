@@ -1,40 +1,38 @@
-import JsRuntime from "../../../../utils/JsRuntime";
-import ObjectUtils from "../../../../utils/ObjectUtils";
+import JsRuntime from "../../../../../utils/JsRuntime";
+import ObjectUtils from "../../../../../utils/ObjectUtils";
 
-import { RestrictedStructInstance, PStruct, pstruct } from "./pstruct";
-import { constT } from "../../../UPLC/UPLCTerms/UPLCConst/ConstType";
-import { ctorDefToString, termTypeToString } from "../../type_system/utils";
-import { BasePlutsError } from "../../../../errors/BasePlutsError";
-import { UPLCTerm } from "../../../UPLC/UPLCTerm";
-import { Application } from "../../../UPLC/UPLCTerms/Application";
-import { Builtin } from "../../../UPLC/UPLCTerms/Builtin";
-import { Delay } from "../../../UPLC/UPLCTerms/Delay";
-import { ErrorUPLC } from "../../../UPLC/UPLCTerms/ErrorUPLC";
-import { Force } from "../../../UPLC/UPLCTerms/Force";
-import { HoistedUPLC } from "../../../UPLC/UPLCTerms/HoistedUPLC";
-import { Lambda } from "../../../UPLC/UPLCTerms/Lambda";
-import { UPLCConst } from "../../../UPLC/UPLCTerms/UPLCConst";
-import { UPLCVar } from "../../../UPLC/UPLCTerms/UPLCVar";
-import { PType } from "../../PType";
-import { Term } from "../../Term";
-import { PData } from "../PData/PData";
-import { PLam } from "../PFn/PLam";
-import { PList } from "../PList";
-import { matchSingleCtorStruct } from "./matchSingleCtorStruct";
-import { capitalize } from "../../../../utils/ts/capitalize";
-import { DataI } from "../../../../types/Data/DataI";
-import { plet } from "../../lib/plet";
-import { papp } from "../../lib/papp";
-import { UtilityTermOf, addUtilityForType } from "../../lib/addUtilityForType";
-import { punsafeConvertType } from "../../lib/punsafeConvertType";
-import { TermList } from "../../lib/std/UtilityTerms/TermList";
-import { plam } from "../../lib/plam";
-import { TermFn } from "../PFn";
-import { LamT, PrimType, StructCtorDef, StructDefinition, TermType, data, fn, int, lam, list, struct, tyVar } from "../../type_system/types";
-import { isStructDefinition, withAllPairElemsAsData } from "../../type_system";
-import { phead } from "../../lib/builtins/list";
-import { _fromData } from "../../lib/std/data/conversion/fromData_minimal";
-import { genHoistedSourceUID } from "../../../UPLC/UPLCTerms/HoistedUPLC/HoistedSourceUID/genHoistedSourceUID";
+import { RestrictedStructInstance, PStruct } from "../pstruct";
+import { termTypeToString } from "../../../type_system/utils";
+import { BasePlutsError } from "../../../../../errors/BasePlutsError";
+import { PType } from "../../../PType";
+import { Term } from "../../../Term";
+import { PData } from "../../PData/PData";
+import { PLam } from "../../PFn/PLam";
+import { PList } from "../../PList";
+import { matchSingleCtorStruct } from "../matchSingleCtorStruct";
+import { capitalize } from "../../../../../utils/ts/capitalize";
+import { DataI } from "../../../../../types/Data/DataI";
+import { papp } from "../../../lib/papp";
+import { UtilityTermOf } from "../../../lib/addUtilityForType";
+import { punsafeConvertType } from "../../../lib/punsafeConvertType";
+import { TermList } from "../../../lib/std/UtilityTerms/TermList";
+import { plam } from "../../../lib/plam";
+import { TermFn } from "../../PFn";
+import { LamT, PrimType, StructCtorDef, StructDefinition, TermType, data, fn, lam, list } from "../../../type_system/types";
+import { isStructDefinition, withAllPairElemsAsData } from "../../../type_system";
+import { phead } from "../../../lib/builtins/list";
+import { _fromData } from "../../../lib/std/data/conversion/fromData_minimal";
+import { IRApp } from "../../../../IR/IRNodes/IRApp";
+import { IRNative } from "../../../../IR/IRNodes/IRNative";
+import { IRConst } from "../../../../IR/IRNodes/IRConst";
+import { IRDelayed } from "../../../../IR/IRNodes/IRDelayed";
+import { IRVar } from "../../../../IR/IRNodes/IRVar";
+import { IRTerm } from "../../../../IR/IRTerm";
+import { IRHoisted } from "../../../../IR/IRNodes/IRHoisted";
+import { IRFunc } from "../../../../IR/IRNodes/IRFunc";
+import { IRError } from "../../../../IR/IRNodes/IRError";
+import { IRForced } from "../../../../IR/IRNodes/IRForced";
+import { _old_plet } from "../../../lib/plet/old";
 
 
 const elemAtCache: { [n: number]: TermFn<[ PList<PData> ], PData > } = {};
@@ -50,23 +48,22 @@ export function getElemAtTerm( n: number ): TermFn<[ PList<PData> ], PData >
 
     if( n === 0 ) return phead( data );
 
-    let uplc: UPLCTerm = new UPLCVar(0);
+    let uplc: IRTerm = new IRVar(0);
 
     const initialN = n;
     while( n > 0 )
     {
-        uplc = new Application( Builtin.tailList, uplc );
+        uplc = new IRApp( IRNative.tailList, uplc );
         n--;
     }
 
-    uplc = new HoistedUPLC(
-        new Lambda(
-            new Application(
-                Builtin.headList,
+    uplc = new IRHoisted(
+        new IRFunc( 1,
+            new IRApp(
+                IRNative.headList,
                 uplc
             )
-        ),
-        genHoistedSourceUID() // executed once, all other times for the same n we get the term from the 'cache'
+        )
     );
 
     const term = new Term( lam( list(data), data ), _dbn => uplc );
@@ -76,7 +73,7 @@ export function getElemAtTerm( n: number ): TermFn<[ PList<PData> ], PData >
         ( lst: Term<PList<PData>>) => 
             new Term(
                 data,
-                dbn => new Application( uplc.clone(), lst.toUPLC(dbn) )
+                dbn => new IRApp( uplc.clone(), lst.toIR(dbn) )
             )
     );
 
@@ -111,7 +108,7 @@ function getExtractedFieldsExpr<CtorDef extends StructCtorDef, Fields extends (k
     const idx = allFIndexes[0];
     const fieldType = ctorDef[ allFieldsNames[ idx ] ];
 
-    return plet(
+    return _old_plet(
         // needs to be minimal
         // it MUST not add the fieldType utilities
         // it will add the `withAllPairElemsAsData` version utilities
@@ -178,6 +175,8 @@ function defineExtract<CtorDef extends StructCtorDef>
     ) as any;
 }
 
+
+
 type CtorCallback<SDef extends StructDefinition> = ( rawFields: RawFields<SDef[keyof SDef & string]> ) => Term<PType>;
 
 type EmptyObject = { [x: string | number | symbol ]: never };
@@ -222,82 +221,81 @@ export function matchNCtorsIdxs( _n: number, returnT: TermType )
     // all this mess just to allow hoisting
     // you have got to reason backwards to understand the process
 
-    let body: UPLCTerm = new ErrorUPLC("matchNCtorsIdxs; unmatched");
+    let body: IRTerm = new IRError("matchNCtorsIdxs; unmatched");
 
     for(let i = n - 1; i >= 0; i-- )
     {
         // pif( continuationT ).$( isCtorIdx.$( pInt( i ) ) )
         // .then( continuation_i )
         // .else( ... )
-        body = new Force(
-            new Application(
-                new Application(
-                    new Application(
-                        Builtin.ifThenElse,
-                        new Application(
-                            new UPLCVar( 0 ),         // isCtorIdx // last variable introduced (see below)
-                            UPLCConst.int( i )        // .$( pInt( i ) )
+        body = new IRForced(
+            new IRApp(
+                new IRApp(
+                    new IRApp(
+                        IRNative.strictIfThenElse,
+                        new IRApp(
+                            new IRVar( 0 ),         // isCtorIdx // last variable introduced (see below)
+                            IRConst.int( i )        // .$( pInt( i ) )
                         )
                     ),
-                    new Delay( new UPLCVar(
+                    new IRDelayed( new IRVar(
                         2 + // isCtorIdx and structConstrPair are in scope
                         i   // continuation_i
                     ) ) // then matching continuation
                 ),
-                new Delay( body ) // else go check the next index; or error if it was last possible index
+                new IRDelayed( body ) // else go check the next index; or error if it was last possible index
             )
         );
     }
 
     // plet( peqInt.$( pfstPir(...).$( structConstrPair ) ) ).in( isCtorIdx => ... )
-    body = new Application(
-        new Lambda( // isCtorIdx
+    body = new IRApp(
+        new IRFunc( 1, // isCtorIdx
             body
         ),
         // peqInt.$( pfstPir(...).$( structConstrPair ) )
-        new Application(
-            Builtin.equalsInteger,
-            new Application(
-                Builtin.fstPair,
-                new UPLCVar( 0 ) // structConstrPair // last variable introduced (see below)
+        new IRApp(
+            IRNative.equalsInteger,
+            new IRApp(
+                IRNative.fstPair,
+                new IRVar( 0 ) // structConstrPair // last variable introduced (see below)
             )
         )
     );
 
     // <whatever continuation was matched>.$( psndPair(...).$( structConstrPair ) )
     // aka passing the fields to the continuation
-    body = new Application(
+    body = new IRApp(
         body,
-        new Application(
-            Builtin.sndPair,
-            new UPLCVar( 0 ), // structConstrPair // last variable introduced (see below)
+        new IRApp(
+            IRNative.sndPair,
+            new IRVar( 0 ), // structConstrPair // last variable introduced (see below)
         )
     );
 
     // plet( punConstrData.$( structData ) )  ).in( structConstrPair => ... )
-    body = new Application(
-        new Lambda( // structConstrPair
+    body = new IRApp(
+        new IRFunc( 1, // structConstrPair
             body
         ),
-        new Application(
-            Builtin.unConstrData,
-            new UPLCVar( n ) // structData
+        new IRApp(
+            IRNative.unConstrData,
+            new IRVar( n ) // structData
         )
     );
 
     for(let i = n - 1; i >= 0; i-- )
     {
-        body = new Lambda( // continuation n - 1 - i
+        body = new IRFunc( 1, // continuation n - 1 - i
             body
         );
     }
 
-    // seriously, all this mess for this HoistedUPLC
-    body = new HoistedUPLC(
-        new Lambda( // structData
+    // seriously, all this mess for this IRHoisted
+    body = new IRHoisted(
+        new IRFunc( 1, // structData
             body
-        ),
-        genHoistedSourceUID() // executed once, all other times for the same n we get the term from the 'cache'
+        )
     );
 
     type ContinuationT = LamT<[PrimType.List, [PrimType.Data]], TermType>
@@ -323,7 +321,7 @@ function getReturnTypeFromContinuation<SDef extends StructDefinition>(
             new Term(
                 list( data ),
                 _dbn =>
-                    UPLCConst.listOf( constT.data )(
+                    IRConst.listOf( data )(
                         (new Array( Object.keys( ctorDef ).length ))
                         .fill( new DataI( 0 ) )
                     )
@@ -546,7 +544,7 @@ export function pmatch<SDef extends StructDefinition>( struct: Term<PStruct<SDef
                     ]
                 )
                 
-                return plet(
+                return _old_plet(
                     plam( list(data), returnT )( cb )
                 ).in( othCtorsContinuation => {
 
@@ -558,7 +556,7 @@ export function pmatch<SDef extends StructDefinition>( struct: Term<PStruct<SDef
                         }
                     }
 
-                    const res =  hoistedMatchCtors(
+                    const res = hoistedMatchCtors(
                         struct as any,
                         sDef,
                         ctorCbs as any

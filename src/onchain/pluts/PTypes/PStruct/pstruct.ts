@@ -7,12 +7,7 @@ import { PDataRepresentable } from "../../PType/PDataRepresentable";
 import { UtilityTermOf, addUtilityForType } from "../../lib/addUtilityForType";
 
 import { structDefToString, termTypeToString } from "../../type_system/utils";
-import { HoistedUPLC } from "../../../UPLC/UPLCTerms/HoistedUPLC";
 import { Pair } from "../../../../types/structs/Pair";
-import { UPLCConst } from "../../../UPLC/UPLCTerms/UPLCConst";
-import { Application } from "../../../UPLC/UPLCTerms/Application";
-import { Builtin } from "../../../UPLC/UPLCTerms/Builtin";
-import { showUPLC } from "../../../UPLC/UPLCTerm";
 import { Machine } from "../../../CEK";
 import { pList } from "../../lib/std/list/const";
 import { Data, DataConstr, isData } from "../../../../types/Data";
@@ -21,9 +16,13 @@ import { ToPType } from "../../type_system/ts-pluts-conversion";
 import { typeExtends, isStructDefinition, isStructType, isTaggedAsAlias } from "../../type_system";
 import { Term } from "../../Term";
 import { punsafeConvertType } from "../../lib/punsafeConvertType";
-import { HoistedSourceUID } from "../../../UPLC/UPLCTerms/HoistedUPLC/HoistedSourceUID";
-import { genHoistedSourceUID } from "../../../UPLC/UPLCTerms/HoistedUPLC/HoistedSourceUID/genHoistedSourceUID";
 import { TermStruct } from "../../lib/std/UtilityTerms/TermStruct";
+import { IRApp } from "../../../IR/IRNodes/IRApp";
+import { IRConst } from "../../../IR/IRNodes/IRConst";
+import { IRHoisted } from "../../../IR/IRNodes/IRHoisted";
+import { IRNative } from "../../../IR/IRNodes/IRNative";
+import { UPLCConst } from "../../../UPLC/UPLCTerms/UPLCConst";
+import { BasePlutsError } from "../../../../errors/BasePlutsError";
 
 /**
  * intermediate class useful to reconize structs form primitives
@@ -37,6 +36,10 @@ class _PStruct extends PData
 }
 
 export type StructInstance<SCtorDef extends StructCtorDef> = {
+    readonly [Field in keyof SCtorDef]: UtilityTermOf<ToPType<SCtorDef[Field]>>
+}
+
+export type StructInstanceAsData<SCtorDef extends StructCtorDef> = {
     [Field in keyof SCtorDef]: Term<PAsData<ToPType<SCtorDef[Field]>>>
 }
 
@@ -57,7 +60,7 @@ export type PStruct<SDef extends StructDefinition> = {
 
 } & PDataRepresentable & {
     [Ctor in keyof SDef]:
-        ( ctorFields: StructInstance<SDef[Ctor]> ) => TermStruct<SDef>
+        ( ctorFields: StructInstanceAsData<SDef[Ctor]> ) => TermStruct<SDef>
 }
 
 type Includes<As extends any[], Elem extends any> =
@@ -151,8 +154,8 @@ export function structDefEq( a: StructDefinition, b: StructDefinition ): boolean
 }
 
 function isStructInstanceOfDefinition<SCtorDef extends StructCtorDef>
-    ( structInstance: StructInstance<any>, definition: SCtorDef )
-    : structInstance is StructInstance<SCtorDef>
+    ( structInstance: StructInstanceAsData<any>, definition: SCtorDef )
+    : structInstance is StructInstanceAsData<SCtorDef>
 {
     const jsStructFieldsNames = Object.keys( structInstance );
     const defKeys = Object.keys( definition );
@@ -172,7 +175,11 @@ function isStructInstanceOfDefinition<SCtorDef extends StructCtorDef>
     );
 }
 
-const hoistedEmptyCtorUID: { [i: number]: HoistedSourceUID } = {}
+const RESERVED_STRUCT_KEYS = Object.freeze([
+    "eq",
+    "eqTerm",
+    "extract"
+]);
 
 export function pstruct<StructDef extends StructDefinition>( def: StructDef ): PStruct<StructDef>
 {
@@ -225,7 +232,7 @@ export function pstruct<StructDef extends StructDefinition>( def: StructDef ): P
             // basically only mocking typescript here; still data
             return new Term(
                 thisStructType,
-                dataTerm.toUPLC,
+                dataTerm.toIR,
                 (dataTerm as any).isConstant
             );
         }
@@ -259,7 +266,7 @@ export function pstruct<StructDef extends StructDefinition>( def: StructDef ): P
         ObjectUtils.defineReadOnlyProperty(
             PStructExt.prototype,
             ctorName,
-            ( jsStruct: StructInstance<any> ): UtilityTermOf<PStructExt> => {
+            ( jsStruct: StructInstanceAsData<any> ): UtilityTermOf<PStructExt> => {
 
                 JsRuntime.assert(
                     ObjectUtils.isObject( jsStruct ),
@@ -273,17 +280,23 @@ export function pstruct<StructDef extends StructDefinition>( def: StructDef ): P
                 // to preserve the order we need to use the keys got form the ctor definition
                 const ctorDefFieldsNames = Object.keys( thisCtorDef );
 
+                for( const fieldName of ctorDefFieldsNames )
+                {
+                    if( RESERVED_STRUCT_KEYS.includes( fieldName ) )
+                    {
+                        throw new BasePlutsError(
+                            `"${fieldName}" is a reserved struct key; it can't be used as custom struct property.`
+                        )
+                    }
+                }
+
                 if( ctorDefFieldsNames.length === 0 )
                 {
-                    if( hoistedEmptyCtorUID[i] === undefined )
-                        hoistedEmptyCtorUID[i] = genHoistedSourceUID();
-                        
                     return addUtilityForType(thisStructType)(
                         new Term(
                             thisStructType,
-                            _dbn => new HoistedUPLC(
-                                UPLCConst.data( new DataConstr( i, [] ) ),
-                                hoistedEmptyCtorUID[i]
+                            _dbn => new IRHoisted(
+                                IRConst.data( new DataConstr( i, [] ) )
                             ),
                             true, // isConstant
                         )
@@ -307,7 +320,7 @@ export function pstruct<StructDef extends StructDefinition>( def: StructDef ): P
                     dataReprTerm = new Term(
                         thisStructType,
                         _dbn => {
-                            return UPLCConst.data(
+                            return IRConst.data(
                                 new DataConstr(
                                     i,
                                     ctorDefFieldsNames.map<Data>(
@@ -326,7 +339,7 @@ export function pstruct<StructDef extends StructDefinition>( def: StructDef ): P
                                                 console.log( ctorDefFieldsNames );
                                                 console.log( fieldKey, termTypeToString( thisCtorDef[ fieldKey ] ) );
                                                 console.log( res )
-                                                // console.log( showUPLC( _term.toUPLC( _dbn ) ) )
+                                                // console.log( showUPLC( _term.toIR( _dbn ) ) )
                                                 throw res;
                                             }
                                             
@@ -345,10 +358,10 @@ export function pstruct<StructDef extends StructDefinition>( def: StructDef ): P
                         thisStructType,
                         dbn => {
     
-                            return new Application(
-                                new Application(
-                                    Builtin.constrData,
-                                    UPLCConst.int( i )
+                            return new IRApp(
+                                new IRApp(
+                                    IRNative.constrData,
+                                    IRConst.int( i )
                                 ),
                                 pList( data )(
                                     ctorDefFieldsNames.map<Term<any>>(
@@ -359,7 +372,7 @@ export function pstruct<StructDef extends StructDefinition>( def: StructDef ): P
                                             return res;
                                         }
                                     )
-                                ).toUPLC( dbn )
+                                ).toIR( dbn )
                             )
                         }
                     )

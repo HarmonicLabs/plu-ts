@@ -1,6 +1,6 @@
 import { PFn, TermFn } from "../../../PTypes"
 import { Term } from "../../../Term"
-import { TermType, ToPType, fn, tyVar } from "../../../type_system"
+import { TermType, ToPType, fn } from "../../../type_system"
 import { papp } from "../../papp"
 import { pfn } from "../../pfn"
 import { phoist } from "../../phoist"

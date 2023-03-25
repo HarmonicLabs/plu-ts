@@ -5,7 +5,7 @@ import { UPLCBuiltinTag } from "../../UPLC/UPLCTerms/Builtin/UPLCBuiltinTag";
 import { ErrorUPLC } from "../../UPLC/UPLCTerms/ErrorUPLC";
 import { UPLCConst } from "../../UPLC/UPLCTerms/UPLCConst";
 import { PartialBuiltin } from "./PartialBuiltin";
-import { ConstValue } from "../../UPLC/UPLCTerms/UPLCConst/ConstValue";
+import { ConstValue, isConstValueInt } from "../../UPLC/UPLCTerms/UPLCConst/ConstValue";
 import { ByteString } from "../../../types/HexString/ByteString";
 import { Pair } from "../../../types/structs/Pair";
 import { DataConstr } from "../../../types/Data/DataConstr";
@@ -19,14 +19,15 @@ import { dataToCbor } from "../../../types/Data/toCbor";
 import { ExBudget } from "../Machine/ExBudget";
 import { BuiltinCostsOf } from "../Machine/BuiltinCosts";
 import { ConstType, constListTypeUtils, constPairTypeUtils, constT, constTypeEq, constTypeToStirng, ConstTyTag } from "../../UPLC/UPLCTerms/UPLCConst/ConstType" 
-import { Integer, UInteger } from "../../../types/ints/Integer";
 import { Data, eqData, isData } from "../../../types/Data/Data";
 import { blake2b, byteArrToHex, sha2_256, sha3, verifyEd25519Signature } from "../../../crypto";
 import { fromUtf8, isUint8Array, toUtf8 } from "@harmoniclabs/uint8array-utils";
+import { logJson } from "../../../utils/ts/ToJson";
 
 
 function intToSize( n: bigint ): bigint
 {
+    n = BigInt( n );
     if ( n === BigInt( 0 ) ) return BigInt( 1 );
 
     // same as `intToSize( -n - BigInt( 1 ) )` but inlined
@@ -54,8 +55,8 @@ const ANY_SIZE: bigint = BigInt( 1 );
 
 function constValueToSize( v: ConstValue ): bigint
 {
-    if( v instanceof Integer ) return intToSize( v.asBigInt );
-    if( v instanceof ByteString ) return bsToSize( v.asBytes );
+    if( isConstValueInt( v ) ) return intToSize( BigInt( v as any ) );
+    if( v instanceof ByteString ) return bsToSize( v.toBuffer() );
     if( typeof v === "string" ) return strToSize( v );
     if( typeof v === "undefined" ) return ANY_SIZE;
     if( typeof v === "boolean" ) return BOOL_SIZE;
@@ -71,7 +72,7 @@ function constValueToSize( v: ConstValue ): bigint
 
 function listToSize( l: ConstValue[] ): bigint
 {
-    return l.reduce( (acc, elem) => acc + constValueToSize( elem ), BigInt(0) );
+    return l.reduce<bigint>( (acc, elem) => acc + constValueToSize( elem ), BigInt(0) );
 }
 
 function pairToSize( pairValue: Pair<ConstValue,ConstValue> ): bigint
@@ -109,7 +110,7 @@ function dataToSize( data: Data ): bigint
         }
         else if( top instanceof DataI )
         {
-            tot += intToSize( top.int.asBigInt );
+            tot += intToSize( top.int );
         }
         else if( top instanceof DataB )
         {
@@ -128,10 +129,7 @@ function isConstOfType( constant: Readonly<UPLCTerm>, ty: Readonly<ConstType> ):
     {
         if( constTypeEq( constT.int, ty ) )
         {
-            return (
-                v instanceof Integer ||
-                v instanceof UInteger
-            );
+            return isConstValueInt( v );
         }
 
         if( constTypeEq( constT.bool, ty ) )
@@ -173,7 +171,7 @@ function isConstOfType( constant: Readonly<UPLCTerm>, ty: Readonly<ConstType> ):
 function getInt( a: UPLCTerm ): bigint | undefined
 {
     if( !isConstOfType( a, constT.int ) ) return undefined;
-    return (a.value as Integer).asBigInt;
+    return BigInt( a.value as any );
 }
 
 function getInts( a: UPLCTerm, b: UPLCTerm ): ( { a: bigint,  b: bigint } | undefined )
@@ -182,8 +180,8 @@ function getInts( a: UPLCTerm, b: UPLCTerm ): ( { a: bigint,  b: bigint } | unde
     if( !isConstOfType( b, constT.int ) ) return undefined;
 
     return {
-        a: (a.value as Integer).asBigInt,
-        b: (b.value as Integer).asBigInt
+        a: BigInt( a.value as any ),
+        b: BigInt( b.value as any )
     };
 }
 
@@ -407,7 +405,6 @@ export class BnCEK
                 });
                 
                 return a + b;
-
             }).bind(this),
             "addInteger"
         );
@@ -541,7 +538,11 @@ export class BnCEK
     equalsInteger( a: UPLCTerm, b: UPLCTerm ): ConstOrErr
     {
         const ints = getInts( a, b );
-        if( ints === undefined ) return new ErrorUPLC("not integers");
+        if( ints === undefined )
+        return new ErrorUPLC(
+            "equalsInteger :: not integers",
+            { a, b, ints }
+        );
 
         const f = this.getBuiltinCostFunc( UPLCBuiltinTag.equalsInteger );
                 
@@ -558,7 +559,11 @@ export class BnCEK
     lessThanInteger( a: UPLCTerm, b: UPLCTerm ): ConstOrErr
     {
         const ints = getInts( a, b );
-        if( ints === undefined ) return new ErrorUPLC("not integers");
+        if( ints === undefined )
+        return new ErrorUPLC(
+            "lessThanInteger :: not integers",
+            { a, b }
+        );
 
         const f = this.getBuiltinCostFunc( UPLCBuiltinTag.lessThanInteger );
                 
@@ -575,7 +580,11 @@ export class BnCEK
     lessThanEqualInteger( a: UPLCTerm, b: UPLCTerm ): ConstOrErr
     {
         const ints = getInts( a, b );
-        if( ints === undefined ) return new ErrorUPLC("not integers");
+        if( ints === undefined )
+        return new ErrorUPLC(
+            "lessThanEqualInteger :: not integers",
+            { a, b }
+        );
 
         const f = this.getBuiltinCostFunc( UPLCBuiltinTag.lessThanEqualInteger );
                 
@@ -643,7 +652,7 @@ export class BnCEK
         const i = idx < BigInt( 0 ) ? BigInt( 0 ) : idx;
 
         const endIdx = idx + length - BigInt( 1 );
-        const maxIdx = BigInt( _bs.asBytes.length ) - BigInt( 1 );
+        const maxIdx = BigInt( _bs.toBuffer().length ) - BigInt( 1 );
 
         const j = endIdx > maxIdx ? maxIdx : endIdx;
 
@@ -664,7 +673,7 @@ export class BnCEK
         return UPLCConst.byteString(
             new ByteString(
                 Uint8Array.from(
-                    _bs.asBytes.slice(
+                    _bs.toBuffer().slice(
                         Number( i ), Number( j )
                     )
                 )
@@ -685,7 +694,7 @@ export class BnCEK
             cpu: f.cpu.at( sbs )
         });
 
-        return UPLCConst.int( _bs.asBytes.length );
+        return UPLCConst.int( _bs.toBuffer().length );
     }
     indexByteString( bs: UPLCTerm, idx: UPLCTerm ): ConstOrErr
     {
@@ -693,9 +702,9 @@ export class BnCEK
         if( _bs === undefined ) return new ErrorUPLC("indexByteString :: not BS");
         
         const i = getInt( idx );
-        if( i === undefined || i >= _bs.asBytes.length || i < BigInt( 0 ) ) return new ErrorUPLC("not int");
+        if( i === undefined || i >= _bs.toBuffer().length || i < BigInt( 0 ) ) return new ErrorUPLC("not int");
 
-        const result = _bs.asBytes.at( Number( i ) );
+        const result = _bs.toBuffer().at( Number( i ) );
         if( result === undefined ) return new ErrorUPLC("indexByteString :: out of bytestring length");
 
 
@@ -753,8 +762,8 @@ export class BnCEK
         const _b = getBS( b );
         if( _b === undefined ) return new ErrorUPLC("lessThanByteString :: not BS");
 
-        const aBytes = _a.asBytes;
-        const bBytes = _b.asBytes;
+        const aBytes = _a.toBuffer();
+        const bBytes = _b.toBuffer();
 
         const f = this.getBuiltinCostFunc( UPLCBuiltinTag.lessThanByteString );
                 
@@ -821,7 +830,7 @@ export class BnCEK
         return UPLCConst.byteString(
             new ByteString(
                 byteArrToHex(
-                    sha2_256( b.asBytes )
+                    sha2_256( b.toBuffer() )
                 )
             )
         );
@@ -844,7 +853,7 @@ export class BnCEK
         return UPLCConst.byteString(
             new ByteString(
                 byteArrToHex(
-                    sha3( b.asBytes )
+                    sha3( b.toBuffer() )
                 )
             )
         );
@@ -866,9 +875,7 @@ export class BnCEK
 
         return UPLCConst.byteString(
             new ByteString(
-                byteArrToHex(
-                    blake2b( b.asBytes, 32 )
-                )
+                blake2b( b.toBuffer(), 32 )
             )
         );
     }
@@ -878,7 +885,7 @@ export class BnCEK
         const k = getBS( key );
         if( k === undefined ) return new ErrorUPLC("verifyEd25519Signature :: key not BS");
         
-        const kBytes = k.asBytes;
+        const kBytes = k.toBuffer();
         if( kBytes.length !== 32 ) return new ErrorUPLC("sha2_verifyEd25519Signature256 :: wrong message length");
 
         const m = getBS( message );
@@ -886,7 +893,7 @@ export class BnCEK
 
         const s = getBS( signature );
         if( s === undefined ) return new ErrorUPLC("verifyEd25519Signature :: singature not BS");
-        const sBytes = s.asBytes;
+        const sBytes = s.toBuffer();
         if( sBytes.length !== 64 ) return new ErrorUPLC("sha2_verifyEd25519Signature256 :: wrong signature length");
 
 
@@ -901,7 +908,7 @@ export class BnCEK
             cpu: f.cpu.at( sk, sm, ss )
         });
 
-        return UPLCConst.bool( verifyEd25519Signature( sBytes, m.asBytes, kBytes ) );
+        return UPLCConst.bool( verifyEd25519Signature( sBytes, m.toBuffer(), kBytes ) );
     }
 
     appendString( a: UPLCTerm, b: UPLCTerm ): ConstOrErr
@@ -1141,7 +1148,11 @@ export class BnCEK
     tailList( list: UPLCTerm ): ConstOrErr 
     {
         const l = getList( list );
-        if( l === undefined || l.length === 0 ) return new ErrorUPLC(l === undefined ? "tailList :: not a list" : "tailList :: empty list passed to 'tail'");
+        if( l === undefined || l.length === 0 )
+        return new ErrorUPLC(
+            l === undefined ? "tailList :: not a list" : "tailList :: empty list passed to 'tail'",
+            { list }
+        );
 
         const f = this.getBuiltinCostFunc( UPLCBuiltinTag.tailList );
 
@@ -1459,7 +1470,7 @@ export class BnCEK
                 }
             );
 
-        if( !( d instanceof DataB ) ) return new ErrorUPLC("not a data BS", {UPLCTerm: ((data as UPLCConst).value as DataConstr).constr.asBigInt });
+        if( !( d instanceof DataB ) ) return new ErrorUPLC("not a data BS", {UPLCTerm: ((data as UPLCConst).value as DataConstr).constr });
 
         const f = this.getBuiltinCostFunc( UPLCBuiltinTag.unBData );
 
@@ -1551,7 +1562,7 @@ export class BnCEK
             cpu: f.cpu.at( sData )
         });
 
-        return UPLCConst.byteString( new ByteString( dataToCbor( d ).asBytes ) );
+        return UPLCConst.byteString( new ByteString( dataToCbor( d ).toBuffer() ) );
     } 
     // @todo
     //                   

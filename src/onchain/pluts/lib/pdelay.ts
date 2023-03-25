@@ -1,4 +1,4 @@
-import { Delay } from "../../UPLC/UPLCTerms/Delay";
+import { IRDelayed } from "../../IR/IRNodes/IRDelayed";
 import { PType } from "../PType";
 import { PDelayed } from "../PTypes";
 import { Term } from "../Term";
@@ -9,8 +9,8 @@ export function pdelay<PInstance extends PType>(toDelay: Term<PInstance>): Term<
     return new Term(
         delayed( toDelay.type ),
         (dbn) => {
-            return new Delay(
-                toDelay.toUPLC( dbn )
+            return new IRDelayed(
+                toDelay.toIR( dbn )
             );
         }
     );

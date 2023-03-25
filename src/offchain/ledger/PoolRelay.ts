@@ -9,7 +9,7 @@ import { CborText } from "../../cbor/CborObj/CborText";
 import { CborUInt } from "../../cbor/CborObj/CborUInt";
 import { BasePlutsError } from "../../errors/BasePlutsError";
 import { InvalidCborFormatError } from "../../errors/InvalidCborFormatError";
-import { canBeUInteger, CanBeUInteger, forceBigUInt, forceUInteger } from "../../types/ints/Integer";
+import { canBeUInteger, CanBeUInteger, forceBigUInt } from "../../types/ints/Integer";
 import { isUint8Array, readUInt16BE, readUInt8 } from "@harmoniclabs/uint8array-utils";
 
 export type IpPoolRelay = ({
@@ -162,7 +162,7 @@ export function poolRelayToCborObj( poolRelay: PoolRelay ): CborObj
             new CborUInt(0),
             poolRelay.port === undefined ?
                 new CborSimple( null ) :
-                new CborUInt( forceUInteger( poolRelay.port ).asBigInt ),
+                new CborUInt( forceBigUInt( poolRelay.port ) ),
             ipv4 === undefined ?
                 new CborSimple( null ) :
                 new CborBytes( ipv4 ),
@@ -178,7 +178,7 @@ export function poolRelayToCborObj( poolRelay: PoolRelay ): CborObj
             new CborUInt(1),
             poolRelay.port === undefined ?
                 new CborSimple( null ) :
-                new CborUInt( forceUInteger( poolRelay.port ).asBigInt ),
+                new CborUInt( forceBigUInt( poolRelay.port ) ),
             new CborText( poolRelay.dnsName )
         ]);
     }

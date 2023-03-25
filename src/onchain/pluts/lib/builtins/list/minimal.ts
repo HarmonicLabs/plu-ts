@@ -1,4 +1,4 @@
-import { Builtin } from "../../../../UPLC/UPLCTerms/Builtin";
+import { IRNative } from "../../../../IR/IRNodes/IRNative";
 import { TermFn, PList } from "../../../PTypes";
 import { Term } from "../../../Term";
 import { TermType, ToPType, fn, lam, list } from "../../../type_system";
@@ -8,7 +8,7 @@ export function _pstrictChooseList<ListElemT extends TermType, ReturnT extends T
 {
     return new Term(
             fn([ list( listElemT ), returnT, returnT ], returnT ) as any,
-            _dbn => Builtin.chooseList
+            _dbn => IRNative.strictChooseList
         ) as any;
 }
 
@@ -20,7 +20,7 @@ export function _phead<ListElemT extends TermType>( listElemType: ListElemT )
 
     return new Term(
             lam( list( listElemT ), listElemT ) as any,
-            _dbn => Builtin.headList
+            _dbn => IRNative.headList
         ) as any;
 }
 
@@ -29,6 +29,6 @@ export function _ptail<ListElemT extends TermType>( listElemT: ListElemT )
 {
     return new Term(
             lam( list( listElemT ), list( listElemT ) ) as any,
-            _dbn => Builtin.tailList
+            _dbn => IRNative.tailList
         ) as any;
 }

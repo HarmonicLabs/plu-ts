@@ -1,22 +1,38 @@
 import JsRuntime from "../../../utils/JsRuntime";
 import ObjectUtils from "../../../utils/ObjectUtils";
 
-import { UPLCTerm } from "../../UPLC/UPLCTerm";
+import { UPLCTerm, showUPLC } from "../../UPLC/UPLCTerm";
 import type { PType } from "../PType";
 
+<<<<<<< HEAD
 import { Cloneable, isCloneable } from "../../../types/interfaces/Cloneable";
 import { HoistedUPLC } from "../../UPLC/UPLCTerms/HoistedUPLC";
+=======
+import { isCloneable } from "../../../types/interfaces/Cloneable";
+>>>>>>> v0.3.0
 import { Machine } from "../../CEK";
 import { FromPType, ToPType } from "../type_system/ts-pluts-conversion";
 import { isWellFormedGenericType } from "../type_system/kinds/isWellFormedType";
 import { TermType } from "../type_system/types";
-import { HoistedSourceUID } from "../../UPLC/UPLCTerms/HoistedUPLC/HoistedSourceUID";
-import { genHoistedSourceUID } from "../../UPLC/UPLCTerms/HoistedUPLC/HoistedSourceUID/genHoistedSourceUID";
+import { cloneTermType } from "../type_system/cloneTermType";
+import { ToUPLC } from "../../UPLC/interfaces/ToUPLC";
+import { ToIR } from "../../IR/interfaces/ToIR";
+import { IRTerm } from "../../IR/IRTerm";
+import { compileIRToUPLC } from "../../IR/toUPLC/compileIRToUPLC";
+import { UPLCConst } from "../../UPLC/UPLCTerms/UPLCConst";
+import { IRConst } from "../../IR/IRNodes/IRConst";
+import { IRError } from "../../IR/IRNodes/IRError";
+import { IRHoisted } from "../../IR/IRNodes/IRHoisted";
+import { showIR } from "../../IR/utils/showIR";
 
 export type UnTerm<T extends Term<PType>> = T extends Term<infer PT extends PType > ? PT : never;
 
 export class Term<A extends PType>
+<<<<<<< HEAD
     implements Cloneable<Term<A>>
+=======
+    implements ToUPLC, ToIR
+>>>>>>> v0.3.0
 {
     /**
      * in most cases it will never be used
@@ -34,6 +50,7 @@ export class Term<A extends PType>
     }
 
     // typescript being silly here
+<<<<<<< HEAD
     _type!: FromPType<A> | TermType;
     get type(): FromPType<A> | TermType
     {
@@ -62,12 +79,15 @@ export class Term<A extends PType>
                 // if for whatever reason this is removed please adapt the rest of the codebas
                 uplc = Machine.evalSimple( uplc )
             }
+=======
+    readonly type!: FromPType<A> | TermType;
+    
+    readonly toUPLC!: ( deBruijnLevel?: bigint | number ) => UPLCTerm
+>>>>>>> v0.3.0
 
-            return uplc;
-        } 
-    };
+    readonly toIR!: ( deBruijnLevel?: bigint | number ) => IRTerm
 
-    constructor( type: FromPType<A> | FromPType<ToPType<TermType>> , toUPLC: ( dbn: bigint ) => UPLCTerm, isConstant: boolean = false )
+    constructor( type: FromPType<A> | FromPType<ToPType<TermType>> , _toIR: ( dbn: bigint ) => IRTerm, isConstant: boolean = false )
     {
         JsRuntime.assert(
             isWellFormedGenericType( type ) ||
@@ -75,61 +95,94 @@ export class Term<A extends PType>
             "invalid type while constructing Term"
         );
 
-        ObjectUtils.defineReadOnlyProperty(
-            this,
-            "_type",
-            type
-        );
-
-        const proofSym = Symbol("overwrite_toUPLC_proofSym");
-
-        // "copying" the function ref is needed to prevent potential "external" js override
-        // 'toUPLC' (the constructor param) is used to override in case of hoisting
-        // '_toUPLC' is used to get and set the property
-        let _toUPLC = toUPLC;
+        let _type = cloneTermType( type );
         Object.defineProperty(
             this,
-            "_toUPLC",
+            "type",
             {
-                get: () => _toUPLC,
-                set: ( v: { proof: symbol, value: ( dbn: bigint ) => UPLCTerm }) => {
-                    if( typeof v === "object" && v?.proof === proofSym )
-                    {
-                        _toUPLC = v.value;
-                    }
-                },
-                configurable: false,
-                enumerable: true
+                get: () => cloneTermType( _type ),
+                set: () => {},
+                enumerable: true,
+                configurable: false
             }
         );
 
-        let _this_hoistedUID: HoistedSourceUID | undefined = undefined;
-        const getThisHoistedUID = () => {
-            if( typeof _this_hoistedUID !== "string" )
-            {
-                _this_hoistedUID = genHoistedSourceUID();
-            }
-            return _this_hoistedUID;
-        }
+        let _toIR_ = _toIR.bind( this );
+        let shouldHoist = false;
 
-        let hoisted: HoistedUPLC | undefined = undefined;
+        const e_stack = Error().stack;
+
+        Object.defineProperty(
+            this, "toIR",
+            {
+                value: ( deBruijnLevel: bigint | number = 0 ) =>
+                {
+                    if( typeof deBruijnLevel !== "bigint" ) deBruijnLevel = BigInt( deBruijnLevel );
+
+                    let ir = _toIR_( deBruijnLevel );
+                    if( shouldHoist )
+                    {
+                        const res = new IRHoisted( ir );
+                        return res;
+                    }
+                    
+                    if( 
+                        !(ir instanceof IRHoisted) &&
+                        (this as any).isConstant
+                    )
+                    {
+                        // console.log( showIR( ir ).text );
+                        // logJson( ir )
+                        // !!! IMPORTANT !!!
+                        // `compileIRToUPLC` modifies the `IRTerm` in place !
+                        // as for the current implementation we don't care
+                        // because we are going to re-assign the variable `ir` anyway
+                        // if this ever changes make sure to call `ir.clone()`
+                        let uplc = compileIRToUPLC( ir/*.clone()*/ );
+
+                        // console.log( showUPLC( uplc ) )
+        
+                        // !!! IMPORTANT !!!
+                        // pair creation assumes this evaluation is happening here
+                        // if for whatever reason this is removed please adapt the rest of the codebas
+                        uplc = Machine.evalSimple( uplc );
+
+                        if( uplc instanceof UPLCConst )
+                        {
+                            ir = new IRConst( this.type, uplc.value );
+                        }
+                        else
+                        {
+                            ir = new IRError();
+                        }
+                    }
+
+                    return ir;
+                },
+                writable: false,
+                enumerable: true,
+                configurable: false
+            });
+
+        Object.defineProperty(
+        this, "toUPLC",
+        {
+            value: ( deBruijnLevel: bigint | number = 0 ) =>
+            {
+                return compileIRToUPLC( this.toIR( deBruijnLevel ) )
+            },
+            writable: false,
+            enumerable: true,
+            configurable: false
+        });
+
+
+        let wasEverHoisted: boolean = false;
         ObjectUtils.defineReadOnlyHiddenProperty(
             this,
             "hoist",
             () => {
-                this._toUPLC = {
-                    proof: proofSym,
-                    value: (_dbn: bigint) => {
-
-                        if( hoisted === undefined || !(hoisted instanceof HoistedUPLC) ) 
-                            hoisted = new HoistedUPLC(
-                                toUPLC( BigInt( 0 ) ),
-                                getThisHoistedUID()
-                            );
-
-                        return hoisted.clone()
-                    }
-                } as any;
+                shouldHoist = true;
             }
         )
 

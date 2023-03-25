@@ -8,7 +8,6 @@ import { CborString } from "../../../cbor/CborString";
 import { BasePlutsError } from "../../../errors/BasePlutsError";
 import { HexString } from "../../../types/HexString";
 import { ByteString } from "../../../types/HexString/ByteString";
-import { Integer } from "../../../types/ints/Integer";
 import { Pair } from "../../../types/structs/Pair";
 import { termTypeToString, getNRequiredLambdaArgs } from "../type_system/utils";
 import { UtilityTermOf } from "./addUtilityForType";
@@ -28,19 +27,19 @@ import { fromHex, isUint8Array } from "@harmoniclabs/uint8array-utils";
 type _TsFunctionSatisfying<KnownArgs extends Term<PType>[], POut extends PType> =
     POut extends PLam<infer POutIn extends PType, infer POutOut extends PType> ?
         (
-            ( ...args: KnownArgs ) => Term<POut> | // functions that do return `PLam` are fine too
+            // ( ...args: KnownArgs ) => Term<POut> | // functions that do return `PLam` are fine too
             _TsFunctionSatisfying<[ ...KnownArgs, UtilityTermOf<POutIn> ], POutOut>
         ) :
         ( ...args: KnownArgs ) => Term<POut>
 
-type TsFunctionSatisfying<PIn extends PType, POut extends PType> =
+export type TsFunctionSatisfying<PIn extends PType, POut extends PType> =
     _TsFunctionSatisfying<[ UtilityTermOf<PIn> ], POut>
 
 export type PappArg<PIn extends PType> =
     (
-        PIn extends PInt ? bigint | number | Integer :
+        PIn extends PInt ? bigint | number :
         PIn extends PBool ? boolean :
-        PIn extends PByteString ? ByteString | Uint8Array | Uint8Array | ArrayBuffer | string :
+        PIn extends PByteString ? ByteString | Uint8Array | string :
         PIn extends PString ? string :
         PIn extends PUnit ? undefined | null :
         PIn extends PPair<infer PFst extends PType, infer PSnd extends PType> ?
@@ -82,7 +81,7 @@ export function pappArgToTerm<ArgT extends TermType>(
     // PUnit
     if( arg === undefined || arg === null )
     {
-        if( !typeExtends( int, mustExtend ) )
+        if( !typeExtends( mustExtend, unit ) || typeof mustExtend[0] === "symbol" )
         {
             // TODO: add proper error
             throw new BasePlutsError(
@@ -96,8 +95,7 @@ export function pappArgToTerm<ArgT extends TermType>(
     // PInt
     if(
         typeof arg === "number" ||
-        typeof arg === "bigint" ||
-        arg instanceof Integer
+        typeof arg === "bigint"
     )
     {
         if( !typeExtends( int, mustExtend ) )
@@ -367,8 +365,7 @@ function getPossiblePlutsTypesOf( value: PappArg<PType> ): TermType[]
 
     if(
         typeof value === "number" ||
-        typeof value === "bigint" ||
-        value instanceof Integer
+        typeof value === "bigint"
     ) return [ int ];
 
     if( typeof value === "boolean" ) return [ bool ];
@@ -483,8 +480,7 @@ function isTsValueAssignableToPlutsType<PlutsType extends TermType>(
     {
         return (
             typeof value === "number" ||
-            typeof value === "bigint" ||
-            value instanceof Integer
+            typeof value === "bigint"
         );
     }
 

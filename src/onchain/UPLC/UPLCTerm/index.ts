@@ -8,10 +8,9 @@ import { Force } from "../UPLCTerms/Force";
 import { ErrorUPLC } from "../UPLCTerms/ErrorUPLC";
 import { Builtin } from "../UPLCTerms/Builtin";
 import { HoistedUPLC } from "../UPLCTerms/HoistedUPLC";
-import { ConstType, constListTypeUtils, constPairTypeUtils, constTypeEq, constTypeToStirng, ConstTyTag } from "../UPLCTerms/UPLCConst/ConstType";
+import { ConstType, constListTypeUtils, constPairTypeUtils, constTypeToStirng, ConstTyTag } from "../UPLCTerms/UPLCConst/ConstType";
 import { builtinTagToString, getNRequiredForces } from "../UPLCTerms/Builtin/UPLCBuiltinTag";
-import { ConstValue } from "../UPLCTerms/UPLCConst/ConstValue";
-import { Integer } from "../../../types/ints/Integer";
+import { ConstValue, isConstValueInt } from "../UPLCTerms/UPLCConst/ConstValue";
 import { ByteString } from "../../../types/HexString/ByteString";
 import { isData } from "../../../types/Data/Data";
 import { dataToCbor } from "../../../types/Data/toCbor";
@@ -38,7 +37,7 @@ export type UPLCTerm
  * @param {UPLCTerm} t ```UPLCTerm``` to check 
  * @returns {boolean} ```true``` if the argument is instance of any of the ```UPLCTerm``` constructors, ```false``` otherwise
  */
-export function isUPLCTerm( t: UPLCTerm ): t is UPLCTerm
+export function isUPLCTerm( t: any ): t is UPLCTerm
 {
     const proto = Object.getPrototypeOf( t );
 
@@ -89,7 +88,7 @@ export function isClosedTerm( term: UPLCTerm ): boolean
 
         if( t instanceof UPLCVar )
             // deBruijn variables are 0 indexed (as arrays)
-            return maxDeBruijn > t.deBruijn.asBigInt;
+            return maxDeBruijn > t.deBruijn;
 
         else if( t instanceof Delay )
             return _isClosedTerm( maxDeBruijn , t.delayedTerm );
@@ -135,7 +134,7 @@ export function isClosedTerm( term: UPLCTerm ): boolean
 export function showUPLCConstValue( v: ConstValue ): string
 {
     if( v === undefined ) return "()";
-    if( v instanceof Integer ) return v.asBigInt.toString();
+    if( isConstValueInt( v ) ) return v.toString();
     if( typeof v === "string" ) return `"${v}"`;
     if( typeof v === "boolean" )  return v ? "True" : "False";
     if( v instanceof ByteString ) return "#" + v.toString();
@@ -170,9 +169,10 @@ export function showConstType( t: ConstType ): string
     return constTypeToStirng( t );
 }
 
+const vars = "abcdefghilmopqrstuvzwxyjkABCDEFGHILJMNOPQRSTUVZWXYJK".split('');
+
 export function showUPLC( term: UPLCTerm ): string
 {
-    const vars = "abcdefghilmopqrstuvzwxyjkABCDEFGHILJMNOPQRSTUVZWXYJK".split('');
 
     function getVarNameForDbn( dbn: number ): string
     {
@@ -185,7 +185,7 @@ export function showUPLC( term: UPLCTerm ): string
     {
         if( t instanceof UPLCVar )
         {
-            return getVarNameForDbn( dbn - 1 - Number( t.deBruijn.asBigInt ) )
+            return getVarNameForDbn( dbn - 1 - Number( t.deBruijn ) )
         }
         if( t instanceof Delay ) return `(delay ${ loop( t.delayedTerm, dbn ) })`;
         if( t instanceof Lambda ) 
@@ -193,7 +193,7 @@ export function showUPLC( term: UPLCTerm ): string
             return `(lam ${getVarNameForDbn( dbn )} ${ loop( t.body, dbn + 1 ) })`;
         }
         if( t instanceof Application ) return `[${ loop( t.funcTerm, dbn ) } ${ loop( t.argTerm, dbn ) }]`;
-        if( t instanceof UPLCConst ) return `( con ${showConstType(t.type)} ${ showUPLCConstValue( t.value ) } )`;
+        if( t instanceof UPLCConst ) return `(con ${showConstType(t.type)} ${ showUPLCConstValue( t.value ) })`;
         if( t instanceof Force ) return `(force ${ loop( t.termToForce, dbn ) })`;
         if( t instanceof ErrorUPLC ) return "(error)";
         if( t instanceof Builtin )
@@ -214,9 +214,53 @@ export function showUPLC( term: UPLCTerm ): string
 
 }
 
-function isVarImSearchingFor( uplcVar: UPLCTerm, dbn: bigint ): boolean
+
+export function prettyUPLC( term: UPLCTerm, _indent: number = 2 ): string
 {
-    return uplcVar instanceof UPLCVar && uplcVar.deBruijn.asBigInt === dbn;
+    if( !Number.isSafeInteger( _indent ) || _indent < 1 ) return showUPLC( term );
+
+    const indentStr = " ".repeat(_indent)
+
+    function getVarNameForDbn( dbn: number ): string
+    {
+        if( dbn < 0 ) return `(${dbn})`;
+        if( dbn < vars.length ) return vars[ dbn ];
+        return vars[ Math.floor( dbn / vars.length ) ] + getVarNameForDbn( dbn - vars.length )
+    }
+
+    function loop( t: UPLCTerm, dbn: number, depth: number): string
+    {
+        const indent = `\n${indentStr.repeat( depth )}`;
+        if( t instanceof UPLCVar )
+        {
+            return indent + getVarNameForDbn( dbn - 1 - Number( t.deBruijn ) )
+        }
+        if( t instanceof Delay ) return `${indent}(delay ${ loop( t.delayedTerm, dbn, depth + 1 ) }${indent})`;
+        if( t instanceof Lambda ) 
+        {
+            return `\n${indentStr.repeat(depth)}(lam ${getVarNameForDbn( dbn )} ${ loop( t.body, dbn + 1, depth + 1 ) }${indent})`;
+        }
+        if( t instanceof Application ) return `${indent}[${ loop( t.funcTerm, dbn, depth + 1 ) } ${ loop( t.argTerm, dbn, depth + 1 ) }${indent}]`;
+        if( t instanceof UPLCConst ) return `${indent}(con ${showConstType(t.type)} ${ showUPLCConstValue( t.value ) })`;
+        if( t instanceof Force ) return `${indent}(force ${ loop( t.termToForce, dbn, depth + 1 ) }${indent})`;
+        if( t instanceof ErrorUPLC ) return "(error)";
+        if( t instanceof Builtin )
+        {
+            const nForces = getNRequiredForces( t.tag );
+    
+            return indent + "(force ".repeat( nForces ) +`(builtin ${builtinTagToString( t.tag )})` + ')'.repeat( nForces )
+        }
+        if( t instanceof HoistedUPLC ) return loop( t.UPLC, dbn, depth )
+        
+        return "";
+    }
+
+    return loop(
+        replaceHoistedTermsInplace( term.clone() ),
+        0,
+        0
+    );
+
 }
 
 /**
@@ -234,7 +278,7 @@ export function hasAnyRefsInTerm( varDeBruijn: number | bigint, t: UPLCTerm ): b
 
     const dbn = BigInt( varDeBruijn );
 
-    if( t instanceof UPLCVar )      return t.deBruijn.asBigInt === dbn;
+    if( t instanceof UPLCVar )      return t.deBruijn === dbn;
     if( t instanceof Delay )        return hasAnyRefsInTerm( dbn, t.delayedTerm );
     if( t instanceof Lambda )       return hasAnyRefsInTerm( dbn + BigInt(1), t.body );
     if( t instanceof Application )  return hasAnyRefsInTerm( dbn, t.funcTerm ) || hasAnyRefsInTerm( dbn, t.argTerm );
@@ -301,7 +345,7 @@ export function getUPLCVarRefsInTerm( term: UPLCTerm, varDeBruijn: number | bigi
             "'getUPLCVarRefsInTerm' expects an UPLCTerms"
         );
 
-        if( t instanceof UPLCVar )      return countedUntilNow + (t.deBruijn.asBigInt === dbn ? 1 : 0);
+        if( t instanceof UPLCVar )      return countedUntilNow + (t.deBruijn === dbn ? 1 : 0);
         if( t instanceof Delay )        return _getUPLCVarRefsInTerm( dbn, t.delayedTerm, countedUntilNow );
         if( t instanceof Lambda )       return _getUPLCVarRefsInTerm( dbn + BigInt( 1 ) , t.body, countedUntilNow );
         if( t instanceof Application )  return _getUPLCVarRefsInTerm( dbn , t.funcTerm, countedUntilNow ) + _getUPLCVarRefsInTerm( dbn , t.argTerm, countedUntilNow );

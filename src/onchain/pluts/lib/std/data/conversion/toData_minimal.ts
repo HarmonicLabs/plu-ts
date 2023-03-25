@@ -1,5 +1,4 @@
 import { DataConstr } from "../../../../../../types/Data";
-import { Builtin } from "../../../../../UPLC/UPLCTerms/Builtin";
 import { PType } from "../../../../PType";
 import { PAsData, PByteString, PData, PInt, PLam, PList, PPair, PString } from "../../../../PTypes";
 import { TermFn } from "../../../../PTypes/PFn/PFn";
@@ -20,20 +19,21 @@ import { _papp, _pcompose } from "./minimal_common";
 import { getElemsT, getFstT, getSndT, unwrapAsData } from "../../../../type_system/tyArgs";
 import { pfstPair, psndPair } from "../../../builtins";
 import { _punsafeConvertType } from "../../../punsafeConvertType/minimal";
+import { IRNative } from "../../../../../IR/IRNodes/IRNative";
 
 const pIntToData  =new Term<PLam<PInt, PAsData<PInt>>>(
     lam( int, asData( int ) ) as any,
-    _dbn => Builtin.iData
+    _dbn => IRNative.iData
 );
 
 const pBSToData = new Term<PLam<PByteString, PAsData<PByteString>>>(
     lam( bs, asData( bs ) ) as any,
-    _dbn => Builtin.bData
+    _dbn => IRNative.bData
 );
 
 const pencodeUtf8  =new Term<PLam<PString, PByteString>>(
     lam( str, bs ),
-    _dbn => Builtin.encodeUtf8
+    _dbn => IRNative.encodeUtf8
 );
 
 const pStrToData: Term<PLam<PString, PAsData<PString>>> =
@@ -60,7 +60,7 @@ const pUnitToData = phoist(
 const pListToData = <ElT extends TermType>( elemsT: ElT ) => 
 new Term<PLam<PList<PData>, PAsData<PList<PAsData<ToPType<ElT>>>>>>(
     lam( list( data ), asData( list( asData( elemsT ) ) ) ),
-    _dbn => Builtin.listData
+    _dbn => IRNative.listData
 );
 
 const pMapToData = <A extends TermType, B extends TermType>( fstT: A, sndT: B ) =>
@@ -75,12 +75,12 @@ new Term<PLam<
         list( pair( data, data ) ),
         asData( list( pair( asData( fstT ), asData( sndT ) ) ) )
     ) as any,
-    _dbn => Builtin.mapData
+    _dbn => IRNative.mapData
 );
 
 const ppairData = ( fstT: TermType, sndT: TermType ) => new Term(
     fn([ data, data ], pair( fstT, sndT ) ),
-    _dbn => Builtin.mkPairData
+    _dbn => IRNative.mkPairData
 );
 
 const pPairToData = ( fstT: TermType, sndT: TermType ) =>

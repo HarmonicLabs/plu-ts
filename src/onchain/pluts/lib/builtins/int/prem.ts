@@ -1,4 +1,4 @@
-import { Builtin } from "../../../../UPLC/UPLCTerms/Builtin";
+import { IRNative } from "../../../../IR/IRNodes/IRNative";
 import { intBinOpToInt } from "./intBinOpToInt";
 
-export const prem = intBinOpToInt( Builtin.remainderInteger );
+export const prem = intBinOpToInt( IRNative.remainderInteger );

@@ -1,11 +1,12 @@
 import { Cbor } from "../../../cbor/Cbor";
 import { CborBytes } from "../../../cbor/CborObj/CborBytes";
+import { PlutusScriptJsonFormat, PlutusScriptType } from "../../../offchain";
 import { UPLCEncoder } from "../../UPLC/UPLCEncoder";
 import { UPLCProgram } from "../../UPLC/UPLCProgram";
 import { UPLCVersion } from "../../UPLC/UPLCProgram/UPLCVersion";
 import { PType } from "../PType";
 import { Term } from "../Term";
-import { PlutusScriptVersion, ScriptJsonFormat } from "./PlutusScriptVersion";
+
 
 const defaultVersion: [ number, number, number ] = [ 1, 0, 0 ];
 
@@ -27,7 +28,12 @@ export function compile( term: Term<PType>, version: Readonly<[number, number, n
     ).toBuffer().buffer;
 }
 
-export function scriptToJsonFormat( compiledScript: Uint8Array, plutusScriptVersion: PlutusScriptVersion, description: string = "" ): ScriptJsonFormat
+
+export function scriptToJsonFormat(
+    compiledScript: Uint8Array, 
+    plutusScriptVersion: PlutusScriptType = "PlutusScriptV2", 
+    description: string = ""
+): PlutusScriptJsonFormat
 {
     return {
         type: plutusScriptVersion,

@@ -5,7 +5,6 @@ import { TxMetadata } from "../metadata/TxMetadata";
 import { CborString, CanBeCborString, forceCborString } from "../../../cbor/CborString";
 import { ToCbor } from "../../../cbor/interfaces/CBORSerializable";
 import { blake2b_256 } from "../../../crypto";
-import { PlutusScriptVersion, ScriptJsonFormat } from "../../../onchain/pluts/Script";
 import { Cbor } from "../../../cbor/Cbor";
 import { CborObj } from "../../../cbor/CborObj";
 import { CborArray } from "../../../cbor/CborObj/CborArray";
@@ -17,13 +16,13 @@ import { InvalidCborFormatError } from "../../../errors/InvalidCborFormatError";
 import { ToJson } from "../../../utils/ts/ToJson";
 import { AuxiliaryDataHash } from "../../hashes/Hash32/AuxiliaryDataHash";
 import { NativeScript, nativeScriptFromCborObj } from "../../script/NativeScript";
-import { Script, ScriptType } from "../../script/Script";
+import { PlutusScriptJsonFormat, Script, ScriptType } from "../../script/Script";
 
 export interface IAuxiliaryData {
     metadata?: TxMetadata;
     nativeScripts?: (NativeScript | Script<ScriptType.NativeScript>)[];
-    plutusV1Scripts?: (ScriptJsonFormat<PlutusScriptVersion.V1> | Script<ScriptType.PlutusV1>)[];
-    plutusV2Scripts?: (ScriptJsonFormat<PlutusScriptVersion.V2> | Script<ScriptType.PlutusV2>)[];
+    plutusV1Scripts?: (PlutusScriptJsonFormat<ScriptType.PlutusV1 | "PlutusScriptV1"> | Script<ScriptType.PlutusV1>)[];
+    plutusV2Scripts?: (PlutusScriptJsonFormat<ScriptType.PlutusV2 | "PlutusScriptV2"> | Script<ScriptType.PlutusV2>)[];
 }
 
 function scriptArrToCbor( scripts: Script[] ): CborArray

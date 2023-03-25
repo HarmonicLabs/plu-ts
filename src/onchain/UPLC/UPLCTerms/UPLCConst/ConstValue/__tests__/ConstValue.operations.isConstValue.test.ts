@@ -15,10 +15,10 @@ describe("ConstValue :: isConstValue, simple values", () => {
 
     it("is true for strict Integer instances", () => {
 
-        expect( isConstValue( new Integer( 2 ) ) ).toBe( true );
-        expect( isConstValue( new Integer( -2 ) ) ).toBe( true );
+        expect( isConstValue( 2 ) ).toBe( true );
+        expect( isConstValue( -2 ) ).toBe( true );
 
-        expect( isConstValue( new UInteger( 2 ).toSigned() ) ).toBe( true );
+        expect( isConstValue( 2 ) ).toBe( true );
 
     })
 
@@ -52,17 +52,17 @@ describe("ConstValue :: isConstValue, simple values", () => {
 
         const arrValues: ConstValue[][] = [
             [],
-            [new Integer( 2 )],
-            [new Integer( 2 ), new Integer( 3 )],
+            [ 2 ],
+            [ 2, 3 ],
 
             [
-                [new Integer( 2 ), new Integer( 3 )],
+                [ 2, 3 ],
                 []
             ],
 
             [
                 [],
-                [new Integer( 2 ), new Integer( 3 )]
+                [ 2, 3 ]
             ],
 
         ];
@@ -74,7 +74,7 @@ describe("ConstValue :: isConstValue, simple values", () => {
 
         // not true for simple values
         expect( isConstValue( "str" ) ).not.toBe( isConstValueList( "str" ) );
-        expect( isConstValue( new Integer( 2 ) ) ).not.toBe( isConstValueList( new Integer( 2 ) ) );
+        expect( isConstValue( 2 ) ).not.toBe( isConstValueList( 2 ) );
 
     })
 
@@ -85,11 +85,11 @@ describe("ConstValue :: isConstValue, simple values", () => {
         ).toBe( true );
 
         expect( 
-            isConstValue( new Pair( new Integer( 2 ) , undefined ) )
+            isConstValue( new Pair( 2 , undefined ) )
         ).toBe( true );
 
         expect( 
-            isConstValue( new Pair( new Integer( 2 ) , new Integer( 42 ) ) )
+            isConstValue( new Pair( 2 , 42 ) )
         ).toBe( true );
 
         expect( 
@@ -101,7 +101,7 @@ describe("ConstValue :: isConstValue, simple values", () => {
     it("is false for Pairs that do contain non ConstValue values", () => {
 
         expect( 
-            isConstValue( new Pair( new Integer( 2 ) , 42 ) )
+            isConstValue( new Pair( 2 , {} ) )
         ).toBe( false );
 
     })
@@ -123,7 +123,7 @@ describe("ConstValue :: isConstValueList", () => {
         ).toBe(true);
         
         expect(
-            isConstValueList([ new Integer(2) ])
+            isConstValueList([ 2 ])
         ).toBe(true);
         
         expect(
@@ -139,7 +139,7 @@ describe("ConstValue :: isConstValueList", () => {
     it("simple values not in arrays are not list values", () => {
 
         expect(
-            isConstValueList( new Integer(2) )
+            isConstValueList( 2 )
         ).toBe(false);
         
         expect(
@@ -155,7 +155,7 @@ describe("ConstValue :: isConstValueList", () => {
     it("lists with incongruent elements are false", () => {
 
         expect(
-            isConstValueList([ new Integer(2), "str" ])
+            isConstValueList([ 2, "str" ])
         ).toBe(false);
         
         expect(
@@ -190,14 +190,14 @@ describe("ConstValue :: isConstValueList", () => {
 
         expect(
             isConstValueList([
-                [], [new Integer( 1 )], [], []
+                [], [1], [], []
             ])
         ).toBe( true );
 
         expect(
             isConstValueList([
-                [new Integer( 2 )], // list int
-                [new Integer( 1 )], // ok
+                [2], // list int
+                [1], // ok
                 [ undefined ], // incongruent; list unit
                 []
             ])
@@ -206,7 +206,7 @@ describe("ConstValue :: isConstValueList", () => {
         expect(
             isConstValueList([
                 [], // any list 
-                [new Integer( 1 )], // list int
+                [1], // list int
                 [ undefined ], // incongurent
                 []
             ])

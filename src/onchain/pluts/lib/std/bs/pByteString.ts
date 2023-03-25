@@ -1,5 +1,5 @@
 import { ByteString } from "../../../../../types/HexString/ByteString";
-import { UPLCConst } from "../../../../UPLC/UPLCTerms/UPLCConst";
+import { IRConst } from "../../../../IR/IRNodes/IRConst";
 import { Term } from "../../../Term";
 import { bs } from "../../../type_system/types";
 import { TermBS, addPByteStringMethods } from "../UtilityTerms/TermBS";
@@ -10,7 +10,7 @@ export function pByteString( _bs: ByteString | string | Uint8Array ): TermBS
     return addPByteStringMethods(
         new Term(
             bs,
-            _dbn => UPLCConst.byteString( _bs_ ),
+            _dbn => IRConst.byteString( _bs_ ),
             true, // isConstant
         )
     );

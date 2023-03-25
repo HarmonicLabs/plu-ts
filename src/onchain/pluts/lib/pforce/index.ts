@@ -1,5 +1,5 @@
-import { Delay } from "../../../UPLC/UPLCTerms/Delay";
-import { Force } from "../../../UPLC/UPLCTerms/Force";
+import { IRDelayed } from "../../../IR/IRNodes/IRDelayed";
+import { IRForced } from "../../../IR/IRNodes/IRForced";
 import { PType } from "../../PType";
 import { PDelayed } from "../../PTypes";
 import { Term } from "../../Term";
@@ -15,18 +15,18 @@ export function pforce<PInstance extends PType >
         new Term(
             outType as any,
             (dbn) => {
-                const toForceUPLC = toForce.toUPLC( dbn );
+                const toForceUPLC = toForce.toIR( dbn );
 
                 // if directly applying to Delay UPLC just remove the delay
                 // example:
                 // (force (delay (con int 11))) === (con int 11)
-                if( toForceUPLC instanceof Delay )
+                if( toForceUPLC instanceof IRDelayed )
                 {
-                    return toForceUPLC.delayedTerm;
+                    return toForceUPLC.delayed;
                 }
 
                 // any other case
-                return new Force(
+                return new IRForced(
                     toForceUPLC
                 );
             }

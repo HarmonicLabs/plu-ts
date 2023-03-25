@@ -1,7 +1,7 @@
-import { Builtin } from "../../../UPLC/UPLCTerms/Builtin";
+import { IRNative } from "../../../IR/IRNodes/IRNative";
 import type { TermFn, PString } from "../../PTypes";
 import { Term } from "../../Term";
-import { TermType, ToPType, tyVar, fn, str, bool, delayed } from "../../type_system";
+import { TermType, ToPType, fn, str, bool, delayed } from "../../type_system";
 import { pdelay } from "../pdelay";
 import { perror } from "../perror";
 import { pfn } from "../pfn";
@@ -19,7 +19,7 @@ export function ptrace<ReturnT extends TermType>( returnT: ReturnT )
     return addApplications<[ PString, ToPType<ReturnT> ], ToPType<ReturnT>>(
         new Term(
             fn([ str, returnT ], returnT )  as any,
-            _dbn => Builtin.trace
+            _dbn => IRNative.trace
         )
     );
 }

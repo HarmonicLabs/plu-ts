@@ -1,21 +1,20 @@
 import  { encodeBech32, byte, decodeBech32, isBech32, sha2_512, sha3, blake2b, sha2_256, blake2b_224, blake2b_256 } from "..";
 import blake2 from "blake2";
-import { Tx } from "../../offchain/tx"
-import * as uint8Array from "@harmoniclabs/uint8array-utils";
+import * as uint8array from "@harmoniclabs/uint8array-utils";
 
 function textToBytes( text: string ): byte[]
 {
-    return Array.from<byte>( uint8Array.fromUtf8( text ) as any );
+    return Array.from<byte>( uint8array.fromUtf8( text ) as any );
 }
 
 function hexToBytes( hex: string ): byte[]
 {
-    return Array.from<byte>( uint8Array.fromHex( hex ) as any );
+    return Array.from<byte>( uint8array.fromHex( hex ) as any );
 }
 
 function bytesToHex( bytes: byte[] ): string
 {
-    return uint8Array.toHex( new Uint8Array( bytes ) );
+    return uint8array.toHex( new Uint8Array( bytes ) );
 }
 
 describe("src/crypto", () => {
@@ -149,24 +148,24 @@ describe("src/crypto", () => {
 
     describe("blake2b", () => {
 
-        test('bytesToHex( blake2b([], 28) ) => 836cc68931c2e4e3e838602eca1902591d216837bafddfe6f0c8cb07', () => {
+        test('uint8array.toHex( blake2b([], 28) ) => 836cc68931c2e4e3e838602eca1902591d216837bafddfe6f0c8cb07', () => {
             expect(
-                bytesToHex( blake2b([], 28) )
+                uint8array.toHex( blake2b([], 28) )
             ).toEqual("836cc68931c2e4e3e838602eca1902591d216837bafddfe6f0c8cb07")
         });
 
-        test('bytesToHex(blake2b([0, 1])) => "01cf79da4945c370c68b265ef70641aaa65eaa8f5953e3900d97724c2c5aa095"', () => {
+        test('uint8array.toHex(blake2b([0, 1])) => "01cf79da4945c370c68b265ef70641aaa65eaa8f5953e3900d97724c2c5aa095"', () => {
 
             expect(
-                bytesToHex( blake2b([0, 1]) )
+                uint8array.toHex( blake2b([0, 1]) )
             ).toEqual("01cf79da4945c370c68b265ef70641aaa65eaa8f5953e3900d97724c2c5aa095");
 
         });
 
-        test('bytesToHex(blake2b(textToBytes("abc"), 64)) => "ba80a53f981c4d0d6a2797b69f12f6e94c212f14685ac4b74b12bb6fdbffa2d17d87c5392aab792dc252d5de4533cc9518d38aa8dbf1925ab92386edd4009923"', () => {
+        test('uint8array.toHex(blake2b(textToBytes("abc"), 64)) => "ba80a53f981c4d0d6a2797b69f12f6e94c212f14685ac4b74b12bb6fdbffa2d17d87c5392aab792dc252d5de4533cc9518d38aa8dbf1925ab92386edd4009923"', () => {
 
             expect(
-                bytesToHex( blake2b( textToBytes("abc"), 64 ) )
+                uint8array.toHex( blake2b( textToBytes("abc"), 64 ) )
             ).toEqual("ba80a53f981c4d0d6a2797b69f12f6e94c212f14685ac4b74b12bb6fdbffa2d17d87c5392aab792dc252d5de4533cc9518d38aa8dbf1925ab92386edd4009923");
 
         });
@@ -176,7 +175,7 @@ describe("src/crypto", () => {
             const expected = blake2.createHash('blake2b',{digestLength:28})
                 .update(Buffer.from(data)) // node; this is fine
                 .digest("hex");
-            const received = bytesToHex( blake2b_224( data ) );
+            const received = uint8array.toHex( blake2b_224( data ) );
 
             if( received !== expected )
             throw bytesToHex( data );
@@ -195,7 +194,7 @@ describe("src/crypto", () => {
             const expected = blake2.createHash('blake2b',{digestLength:32})
                 .update(Buffer.from(data)) // node; this is fine
                 .digest("hex");
-            const received = bytesToHex( blake2b_256( data ) );
+            const received = uint8array.toHex( blake2b_256( data ) );
 
             if( received !== expected )
             throw bytesToHex( data );
@@ -245,8 +244,5 @@ describe("src/crypto", () => {
                 ""
             )
         )
-
-        const tx = Tx.fromCbor("84a60081825820da6aa14802dfef98bdcbe2094a22b1ba5291e287e397b81dcd3e61381fa64bcb000d81825820da6aa14802dfef98bdcbe2094a22b1ba5291e287e397b81dcd3e61381fa64bcb000187a20058390001ccbbfb625b1584c99afd5af0a04cc9b081a53278428c798ca02be94d9e1cd32066e4d74e688896587d57a35d80065bcbab917a2b41018d011b000000459c92a286a20058390001ccbbfb625b1584c99afd5af0a04cc9b081a53278428c798ca02be94d9e1cd32066e4d74e688896587d57a35d80065bcbab917a2b41018d01821a00989680a2581c0462de27174c88689ec9fe0e13777e1ed52285510300796e16b88acfa141591b000000e8d4a51000581c919d4c2c9455016289341b1a14dedf697687af31751170d56a31466ea141581b000000e8d4a51000a20058390001ccbbfb625b1584c99afd5af0a04cc9b081a53278428c798ca02be94d9e1cd32066e4d74e688896587d57a35d80065bcbab917a2b41018d011a05f5e100a20058390001ccbbfb625b1584c99afd5af0a04cc9b081a53278428c798ca02be94d9e1cd32066e4d74e688896587d57a35d80065bcbab917a2b41018d011a05f5e100a20058390001ccbbfb625b1584c99afd5af0a04cc9b081a53278428c798ca02be94d9e1cd32066e4d74e688896587d57a35d80065bcbab917a2b41018d011a05f5e100a20058390001ccbbfb625b1584c99afd5af0a04cc9b081a53278428c798ca02be94d9e1cd32066e4d74e688896587d57a35d80065bcbab917a2b41018d011a05f5e100a20058390001ccbbfb625b1584c99afd5af0a04cc9b081a53278428c798ca02be94d9e1cd32066e4d74e688896587d57a35d80065bcbab917a2b41018d011a05f5e100021a00030f3d09a2581c0462de27174c88689ec9fe0e13777e1ed52285510300796e16b88acfa141591b000000e8d4a51000581c919d4c2c9455016289341b1a14dedf697687af31751170d56a31466ea141581b000000e8d4a510000b582080e9ce284c230423ba0e7ce0956f00caca401ca14581fd2072fae78d65b220f9a30081825820cc200d2faa06ae00ae4748b6a18c7bb3b0641f01dd35be3a045e47712426cd9b5840b76b9fcf83b20988dc9595c0ce17d6d84db935f54d5f67e3a96c1a883959f42dadcb90832dafabb121780b1322b677998a997028a3a7bc02ba7df4f201939206068248470100002248008147460100002249810582840100d87980821903201a0002754c840101d87980821903201a0002754cf5f6")
     })
-
 });

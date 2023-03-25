@@ -27,7 +27,7 @@ export function dataToCborObj( data: Data ): CborObj
 
     if( data instanceof DataConstr )
     {
-        const constrNum = data.constr.asBigInt;
+        const constrNum = data.constr;
 
         const tag = constrNumberToCborTag( constrNum );
 
@@ -74,7 +74,7 @@ export function dataToCborObj( data: Data ): CborObj
     }
     if( data instanceof DataI )
     {
-        const n = data.int.asBigInt;
+        const n = data.int;
 
         return (
             n < 0 ?

@@ -1,7 +1,7 @@
+import { IRConst } from "../../../IR/IRNodes/IRConst"
 import { Application } from "../../../UPLC/UPLCTerms/Application"
 import { Builtin } from "../../../UPLC/UPLCTerms/Builtin"
 import { Lambda } from "../../../UPLC/UPLCTerms/Lambda"
-import { UPLCConst } from "../../../UPLC/UPLCTerms/UPLCConst"
 import { UPLCVar } from "../../../UPLC/UPLCTerms/UPLCVar"
 import { PBool } from "../../PTypes/PBool"
 import { PInt } from "../../PTypes/PInt"
@@ -20,7 +20,7 @@ describe("pfn", () => {
         
         expect(
             () => pfn([ unit ], int )(
-                () => new Term( int, _dbn => UPLCConst.int( 2 ) )
+                () => new Term( int, _dbn => IRConst.int( 2 ) )
             )
         ).toThrow();
 
@@ -29,10 +29,10 @@ describe("pfn", () => {
     test("single input functions as plam", () => {
 
         const withPFn = pfn([unit], int )(
-            ( unit: Term<PUnit> ) => new Term( int, _dbn => UPLCConst.int( 2 ) )
+            ( unit: Term<PUnit> ) => new Term( int, _dbn => IRConst.int( 2 ) )
         );
         const withPLam = plam( unit, int )(
-            ( unit: Term<PUnit> ) => new Term<PInt>( int, _dbn => UPLCConst.int( 2 ) )
+            ( unit: Term<PUnit> ) => new Term<PInt>( int, _dbn => IRConst.int( 2 ) )
         );
         
         expect(
@@ -41,7 +41,7 @@ describe("pfn", () => {
             withPLam.toUPLC( 0 )
         )
 
-        const termUnit = new Term<PUnit>( unit, _dbn => UPLCConst.unit );
+        const termUnit = new Term<PUnit>( unit, _dbn => IRConst.unit );
 
         expect(
             withPFn.$( termUnit ).toUPLC( 0 )
@@ -86,9 +86,9 @@ describe("pfn", () => {
                             )
                         )
                     ),
-                    UPLCConst.int( 2 )
+                    IRConst.int( 2 )
                 ),
-                UPLCConst.int( 3 )
+                IRConst.int( 3 )
             );
 
         

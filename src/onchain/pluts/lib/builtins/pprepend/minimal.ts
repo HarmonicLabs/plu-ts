@@ -1,4 +1,4 @@
-import { Builtin } from "../../../../UPLC/UPLCTerms/Builtin";
+import { IRNative } from "../../../../IR/IRNodes/IRNative";
 import { PList, PLam } from "../../../PTypes";
 import { Term } from "../../../Term";
 import { TermType, ToPType, fn, list } from "../../../type_system";
@@ -10,6 +10,6 @@ export function _pprepend<ListElemT extends TermType>( listElemType: ListElemT )
 
     return new Term(
         fn([ listElemT, list( listElemT ) ], list( listElemT ) ) as any,
-        _dbn => Builtin.mkCons
+        _dbn => IRNative.mkCons
     ) as any;
 }

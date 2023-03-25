@@ -7,7 +7,7 @@ import { CborUInt } from "../../../cbor/CborObj/CborUInt";
 import { CborPositiveRational } from "../../../cbor/extra/CborRational";
 import { InvalidCborFormatError } from "../../../errors/InvalidCborFormatError";
 import { ExBudget, ExBudgetJson } from "../../../onchain/CEK/Machine/ExBudget";
-import { canBeUInteger, CanBeUInteger, forceBigUInt, forceUInteger } from "../../../types/ints/Integer";
+import { canBeUInteger, CanBeUInteger, forceBigUInt } from "../../../types/ints/Integer";
 import { CostModels, costModelsFromCborObj, costModelsToCborObj, costModelsToJson, defaultV1Costs, defaultV2Costs, isCostModels } from "../CostModels";
 import type { Epoch } from "../Epoch";
 import type { Coin } from "../Coin";
@@ -239,7 +239,7 @@ function mapUIntEntryOrUndefined( tag: number, a: CanBeUInteger | undefined ): {
 {
     return a === undefined ? undefined : {
         k: new CborUInt( tag ),
-        v: new CborUInt( forceUInteger( a ).asBigInt )
+        v: new CborUInt( forceBigUInt( a ) )
     };
 }
 

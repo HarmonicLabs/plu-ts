@@ -48,7 +48,7 @@ export function eqData( a: Data, b: Data ): boolean
     {
         try {
             return (
-                (a as DataConstr).constr.asBigInt === (b as DataConstr).constr.asBigInt &&
+                (a as DataConstr).constr === (b as DataConstr).constr &&
                 (a as DataConstr).fields.length === (b as DataConstr).fields.length &&
                 (a as DataConstr).fields.every(
                     (aField, idx) => eqData( aField, (b as DataConstr).fields[ idx ] ) 
@@ -87,7 +87,7 @@ export function eqData( a: Data, b: Data ): boolean
     if( aProto === DataI.prototype )
     {
         return (
-            (a as DataI).int.asBigInt === (b as DataI).int.asBigInt
+            (a as DataI).int === (b as DataI).int
         );
     }
     if( aProto === DataB.prototype )

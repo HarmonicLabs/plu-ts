@@ -1,15 +1,14 @@
 import ObjectUtils from "../../../../../utils/ObjectUtils";
-import { Application } from "../../../../UPLC/UPLCTerms/Application";
-import { Builtin } from "../../../../UPLC/UPLCTerms/Builtin";
-import { HoistedUPLC } from "../../../../UPLC/UPLCTerms/HoistedUPLC";
-import { genHoistedSourceUID } from "../../../../UPLC/UPLCTerms/HoistedUPLC/HoistedSourceUID/genHoistedSourceUID";
+import { IRApp } from "../../../../IR/IRNodes/IRApp";
+import { IRHoisted } from "../../../../IR/IRNodes/IRHoisted";
+import { IRNative } from "../../../../IR/IRNodes/IRNative";
 import { PLam, PInt, PBool } from "../../../PTypes";
 import { Term } from "../../../Term";
 import { fn, int, bool } from "../../../type_system";
 import { papp } from "../../papp";
 import { PappArg } from "../../pappArg";
 import { TermBool, addPBoolMethods } from "../../std/UtilityTerms/TermBool";
-import { _pflipUPLC } from "../_pflipUPLC";
+import { _pflipIR } from "../_pflipIR";
 import { addApplications } from "../addApplications";
 
 export type IntBinOPToBool = Term<PLam<PInt, PLam<PInt, PInt>>>
@@ -22,7 +21,7 @@ export type IntBinOPToBool = Term<PLam<PInt, PLam<PInt, PInt>>>
         }
 }
 
-function intBinOpToBool( builtin: Builtin )
+function intBinOpToBool( builtin: IRNative )
     : IntBinOPToBool
 {
     const op = new Term<PLam<PInt, PLam<PInt, PBool>>>(
@@ -49,37 +48,30 @@ function intBinOpToBool( builtin: Builtin )
 }
 
 
-export const peqInt     = intBinOpToBool( Builtin.equalsInteger );
-export const plessInt   = intBinOpToBool( Builtin.lessThanInteger );
-export const plessEqInt = intBinOpToBool( Builtin.lessThanEqualInteger );
-
-
-const pgreaterIntUID = genHoistedSourceUID();
+export const peqInt     = intBinOpToBool( IRNative.equalsInteger );
+export const plessInt   = intBinOpToBool( IRNative.lessThanInteger );
+export const plessEqInt = intBinOpToBool( IRNative.lessThanEqualInteger );
 
 export const pgreaterInt = addApplications<[ PInt, PInt ], PBool>( 
         new Term<PLam<PInt, PLam<PInt, PBool>>>(
         fn([ int, int ], bool ),
-        _dbn => new HoistedUPLC(
-            new Application(
-                _pflipUPLC.clone(),
-                plessInt.toUPLC( 0 )
-            ),
-            pgreaterIntUID
+        _dbn => new IRHoisted(
+            new IRApp(
+                _pflipIR.clone(),
+                plessInt.toIR( 0 )
+            )
         )
     )
 );
 
-const pgreaterEqIntUID = genHoistedSourceUID();
-
 export const pgreaterEqInt = addApplications<[ PInt, PInt ], PBool>( 
     new Term<PLam<PInt, PLam<PInt, PBool>>>(
     fn([ int, int ], bool ),
-    _dbn => new HoistedUPLC(
-        new Application(
-            _pflipUPLC,
-            plessEqInt.toUPLC( 0 )
-        ),
-        pgreaterEqIntUID
+    _dbn => new IRHoisted(
+        new IRApp(
+            _pflipIR,
+            plessEqInt.toIR( 0 )
+        )
     )
 )
 );

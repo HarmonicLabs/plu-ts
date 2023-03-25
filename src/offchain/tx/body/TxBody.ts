@@ -1,7 +1,6 @@
 import JsRuntime from "../../../utils/JsRuntime";
 import ObjectUtils from "../../../utils/ObjectUtils";
 
-import { UInteger } from "../../../types/ints/Integer";
 import { ToCbor } from "../../../cbor/interfaces/CBORSerializable";
 import { CborMap, CborMapEntry } from "../../../cbor/CborObj/CborMap";
 import { Certificate, AnyCertificate, certificatesToDepositLovelaces } from "../../ledger/certs/Certificate";
@@ -190,8 +189,7 @@ export class TxBody
         // -------------------------------------- fee -------------------------------------- //
         JsRuntime.assert(
             (typeof fee === "number" && fee === Math.round( Math.abs( fee ) ) ) ||
-            (typeof fee === "bigint" && fee >= BigInt( 0 ) ) ||
-            (fee instanceof UInteger),
+            (typeof fee === "bigint" && fee >= BigInt( 0 ) ),
             "invald 'fee' field"
         );
         let _fee = forceBigUInt( fee );

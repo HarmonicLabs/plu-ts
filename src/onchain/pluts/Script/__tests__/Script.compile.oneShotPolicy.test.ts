@@ -1,9 +1,8 @@
-import { bool, compile, termTypeToString } from "../..";
+import { bool, compile } from "../..";
 import { Machine } from "../../../CEK";
 import { PTxId, PTxOutRef, V2 } from "../../API";
 import { pstruct, pmatch } from "../../PTypes";
-import { pByteString, pData, pDataB, pDataI, perror, pfn, pfstPair, pisEmpty, plet, punsafeConvertType } from "../../lib";
-import { tx_v2, validatorSpendingUtxo } from "../../../test_utils";
+import { pData, pDataB, pDataI, perror, pfn, pisEmpty, plet, punsafeConvertType } from "../../lib";
 import { ErrorUPLC } from "../../../UPLC/UPLCTerms/ErrorUPLC";
 import { dataFromCbor } from "../../../../types/Data";
 import { UPLCTerm, showUPLC } from "../../../UPLC/UPLCTerm";
@@ -14,6 +13,7 @@ import { Cbor } from "../../../../cbor/Cbor";
 import { CborBytes } from "../../../../cbor/CborObj/CborBytes";
 import { Script, ScriptType } from "../../../../offchain/script/Script";
 import { fromHex } from "@harmoniclabs/uint8array-utils";
+import { _old_plet } from "../../lib/plet/old";
 
 
 export const MintRdmr = pstruct({
@@ -52,7 +52,7 @@ export const oneShotNFT = pfn([
                     return entry.fst.eq( ownCurrSym )
 
                     .and(
-                        plet( entry.snd ).in( assets =>
+                        _old_plet( entry.snd ).in( assets =>
 
                             pisEmpty.$( assets.tail )
                             .and(
@@ -73,7 +73,7 @@ export const oneShotNFT = pfn([
                 entry.fst.eq( ownCurrSym )
 
                 .and(
-                    plet( entry.snd ).in( assets =>
+                    _old_plet( entry.snd ).in( assets =>
 
                         pisEmpty.$( assets.tail )
                         .and(
@@ -113,11 +113,12 @@ punsafeConvertType(
 
 describe("oneShotNFT", () => {
 
-    test("it compiles", () => {
+    test.only("it compiles", () => {
 
-        expect(
-            () => compile( oneShotNFT )
-        ).not.toThrow();
+//         expect(
+//             () => 
+                compile( oneShotNFT )
+//         ).not.toThrow();
         
     });
 

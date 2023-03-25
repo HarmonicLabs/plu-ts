@@ -1,4 +1,4 @@
-import { UPLCConst } from "../../../../UPLC/UPLCTerms/UPLCConst";
+import { IRConst } from "../../../../IR/IRNodes/IRConst";
 import type { PBool } from "../../../PTypes/PBool";
 import { Term } from "../../../Term";
 import { bool } from "../../../type_system";
@@ -9,7 +9,7 @@ export function pBool( b: boolean ): TermBool
     return addPBoolMethods(
         new Term<PBool>(
             bool,
-            _dbn => UPLCConst.bool( b ),
+            _dbn => IRConst.bool( b ),
             true
         )
     );

@@ -8,7 +8,7 @@ import { CborMap, CborMapEntry } from "../../cbor/CborObj/CborMap";
 import { CborUInt } from "../../cbor/CborObj/CborUInt";
 import { CanBeCborString, CborString, forceCborString } from "../../cbor/CborString";
 import { BasePlutsError } from "../../errors/BasePlutsError";
-import { canBeUInteger, CanBeUInteger, forceBigUInt, forceUInteger } from "../../types/ints/Integer";
+import { canBeUInteger, CanBeUInteger, forceBigUInt } from "../../types/ints/Integer";
 
 export type AnyV1CostModel = CostModelPlutusV1 | CostModelPlutusV1Array;
 
@@ -462,12 +462,12 @@ export function costModelsToCborObj( costmdls: CostModels ): CborMap
         PlutusScriptV1 === undefined ? undefined :
         {
             k: new CborUInt( 0 ),
-            v: new CborArray( toCostModelArrV1( PlutusScriptV1 ).map( n => new CborUInt( forceUInteger( n ).asBigInt ) ) )
+            v: new CborArray( toCostModelArrV1( PlutusScriptV1 ).map( n => new CborUInt( forceBigUInt( n ) ) ) )
         },
         PlutusScriptV2 === undefined ? undefined :
         {
             k: new CborUInt( 1 ),
-            v: new CborArray( toCostModelArrV2( PlutusScriptV2 ).map( n => new CborUInt( forceUInteger( n ).asBigInt ) ) )
+            v: new CborArray( toCostModelArrV2( PlutusScriptV2 ).map( n => new CborUInt( forceBigUInt( n ) ) ) )
         }
     ].filter( elem => elem !== undefined ) as CborMapEntry[])
 }
@@ -773,7 +773,7 @@ export function toCostModelV1( v1: AnyV1CostModel ): CostModelPlutusV1
     
     for( let i = 0; i < costModelV1Keys.length; i++ )
     {
-        val = forceUInteger( v1[i] ).asBigInt;
+        val = forceBigUInt( v1[i] );
         if(  val === undefined )
         {
             throw new BasePlutsError(

@@ -1,4 +1,5 @@
 import ObjectUtils from "../../../../utils/ObjectUtils";
+import { IRNative } from "../../../IR/IRNodes/IRNative";
 import { Lambda } from "../../../UPLC/UPLCTerms/Lambda";
 import { UPLCVar } from "../../../UPLC/UPLCTerms/UPLCVar";
 import { TermFn, PLam } from "../../PTypes";
@@ -13,7 +14,7 @@ export function pid<TermT extends TermType>( termT: TermT ): TermFn<[ ToPType<Te
 {
     const idTerm = new Term<PLam<ToPType<TermT>,ToPType<TermT>>>(
         lam( termT, termT ) as any,
-        _dbn => new Lambda( new UPLCVar(0) )
+        _dbn => IRNative._id
     );
     return phoist(
         ObjectUtils.defineReadOnlyProperty(

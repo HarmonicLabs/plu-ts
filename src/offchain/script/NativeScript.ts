@@ -1,6 +1,6 @@
 import JsRuntime from "../../utils/JsRuntime";
 
-import { CanBeUInteger, forceUInteger } from "../../types/ints/Integer";
+import { CanBeUInteger, forceBigUInt } from "../../types/ints/Integer";
 import { Cbor } from "../../cbor/Cbor";
 import { CborObj } from "../../cbor/CborObj";
 import { CborArray } from "../../cbor/CborObj/CborArray";
@@ -50,21 +50,6 @@ export interface ScriptBefore {
     slot: CanBeUInteger
 }
 
-const hello: NativeScript = {
-    type: "all",
-    scripts:
-    [
-      {
-        type: "after",
-        slot: 22
-      },
-      {
-        type: "sig",
-        keyHash: "966e394a544f242081e41d1965137b1bb412ac230d40ed5407821c37"
-      }
-    ]
-};
-
 export function nativeScriptToCborObj( nativeScript: NativeScript ): CborArray
 {
     const type = nativeScript.type;
@@ -80,7 +65,7 @@ export function nativeScriptToCborObj( nativeScript: NativeScript ): CborArray
                     keyHash instanceof Hash28 ?
                         keyHash :
                         new Hash28( keyHash )
-                ).asBytes
+                ).toBuffer()
             )
         ]);
     }
@@ -94,7 +79,7 @@ export function nativeScriptToCborObj( nativeScript: NativeScript ): CborArray
     if( type === "atLeast" )
         return new CborArray([
             new CborUInt( 3 ),
-            new CborUInt( forceUInteger( nativeScript.required ).asBigInt ),
+            new CborUInt( forceBigUInt( nativeScript.required ) ),
             new CborArray(
                 nativeScript.scripts.map( nativeScriptToCborObj )
             )
@@ -102,7 +87,7 @@ export function nativeScriptToCborObj( nativeScript: NativeScript ): CborArray
     if( type === "after" || type === "before" )
         return new CborArray([
             new CborUInt( type === "after" ? 4 : 5 ),
-            new CborUInt( forceUInteger( nativeScript.slot ).asBigInt ),
+            new CborUInt( forceBigUInt( nativeScript.slot ) ),
         ]);
 
     throw JsRuntime.makeNotSupposedToHappenError(

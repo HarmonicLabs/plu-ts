@@ -1,33 +1,36 @@
-import { BasePlutsError } from "../../../errors/BasePlutsError";
 import JsRuntime from "../../../utils/JsRuntime";
 import ObjectUtils from "../../../utils/ObjectUtils";
-import { UPLCTerm } from "../../UPLC/UPLCTerm";
-import { Application } from "../../UPLC/UPLCTerms/Application";
-import { ErrorUPLC } from "../../UPLC/UPLCTerms/ErrorUPLC";
-import { HoistedUPLC } from "../../UPLC/UPLCTerms/HoistedUPLC";
-import { Lambda } from "../../UPLC/UPLCTerms/Lambda";
-import { UPLCVar } from "../../UPLC/UPLCTerms/UPLCVar";
+import { IRApp } from "../../IR/IRNodes/IRApp";
+import { IRError } from "../../IR/IRNodes/IRError";
+import { IRFunc } from "../../IR/IRNodes/IRFunc";
+import { IRHoisted } from "../../IR/IRNodes/IRHoisted";
+import { IRNative } from "../../IR/IRNodes/IRNative";
+import { IRNativeTag } from "../../IR/IRNodes/IRNative/IRNativeTag";
+import { IRVar } from "../../IR/IRNodes/IRVar";
+import { IRTerm } from "../../IR/IRTerm";
+import { isIRTerm } from "../../IR/utils/isIRTerm";
 import { PType } from "../PType";
 import { PLam } from "../PTypes";
 import { Term } from "../Term";
 import { includesDynamicPairs } from "../type_system/includesDynamicPairs";
 import { typeExtends } from "../type_system/typeExtends";
-import { PrimType, TermType, data, list, pair } from "../type_system/types";
+import { PrimType, TermType, data } from "../type_system/types";
 import { termTypeToString } from "../type_system/utils";
 import { type UtilityTermOf, addUtilityForType } from "./addUtilityForType";
 import { PappArg, pappArgToTerm } from "./pappArg";
-import { fromData_minimal } from "./std/data/conversion/fromData_minimal";
+import { _fromData } from "./std/data/conversion/fromData_minimal";
 import { _papp } from "./std/data/conversion/minimal_common";
 
 
-function isIdentityUPLC( uplc: UPLCTerm ): boolean
+function isIdentityIR( ir: IRTerm ): boolean
 {
     return (
-        ( uplc instanceof HoistedUPLC && isIdentityUPLC( uplc.UPLC ) ) || 
+        ( ir instanceof IRHoisted && isIdentityIR( ir.hoisted ) ) ||
+        ( ir instanceof IRNative && ir.tag === IRNativeTag._id ) ||
         (
-            uplc instanceof Lambda && 
-            uplc.body instanceof UPLCVar &&
-            uplc.body.deBruijn.asBigInt === BigInt( 0 )
+            ir instanceof IRFunc && 
+            ir.body instanceof IRVar &&
+            ir.body.dbn === 0
         )
     );
 }
@@ -49,7 +52,7 @@ function unwrapDataIfNeeded( input: Term<PType>, expectedInputTy: TermType ): Te
         !typeExtends( expectedInputTy, data )
     ) ?
     // transform to the value
-    fromData_minimal( input.type[1] as any )( input as any ) :
+    _fromData( input.type[1] as any )( input as any ) :
     // keep the data
     input;
 
@@ -95,12 +98,14 @@ export function papp<Input extends PType, Output extends PType>( a: Term<PLam<In
 
     const outputType = lambdaType[2]; // applyLambdaType( lambdaType, _b.type );
 
+    const e_stack = Error().stack;
+
     const outputTerm = addUtilityForType( outputType )(
         new Term(
             outputType,
             dbn => {
 
-                let funcUPLC;
+                let funcIR: IRTerm;
 
                 if((_b as any).__isDynamicPair || (includesDynamicPairs( _b.type ) && !includesDynamicPairs( lambdaType[1] )))
                 {
@@ -117,26 +122,31 @@ or you can join Harmonic Labs' discord and ask for help on your specific issue (
                             "color:yellow"
                         )
                         //*/
-                        funcUPLC = a.toUPLC(dbn)
+                        funcIR = a.toIR(dbn)
                     }
-                    else funcUPLC = (a as any).unsafeWithInputOfType( _b.type ).toUPLC(dbn)
+                    else funcIR = (a as any).unsafeWithInputOfType( _b.type ).toIR(dbn)
                 }
                 else
                 {
-                    funcUPLC = a.toUPLC(dbn)
+                    funcIR = a.toIR(dbn)
                 }
 
-                if( funcUPLC instanceof ErrorUPLC ) return funcUPLC;
+                if( funcIR instanceof IRError ) return funcIR;
                 
-                const argUPLC  = _b.toUPLC( dbn );
-                if( argUPLC instanceof ErrorUPLC ) return argUPLC;
+                const argIR  = _b.toIR( dbn );
+                if( argIR instanceof IRError ) return argIR;
 
                 // omit id function
-                if( isIdentityUPLC( funcUPLC ) ) return argUPLC;
+                if( isIdentityIR( funcIR ) ) return argIR;
 
-                const app = new Application(
-                    funcUPLC,
-                    argUPLC
+                if(!isIRTerm( funcIR ))
+                {
+                    console.log( e_stack );
+                }
+
+                const app = new IRApp(
+                    funcIR,
+                    argIR
                 );
 
                 return app; 

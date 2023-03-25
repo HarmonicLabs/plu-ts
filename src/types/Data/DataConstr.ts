@@ -2,14 +2,14 @@ import JsRuntime from "../../utils/JsRuntime";
 import { Data, isData } from "./Data";
 import { ToJson } from "../../utils/ts/ToJson";
 import { Cloneable } from "../interfaces/Cloneable";
-import { UInteger, CanBeUInteger, forceUInteger } from "../ints/Integer";
+import { CanBeUInteger, forceBigUInt } from "../ints/Integer";
 
 
 export class DataConstr
     implements Cloneable<DataConstr>, ToJson
 {
-    private _constr: UInteger;
-    get constr(): UInteger { return this._constr.clone() };
+    private _constr: bigint;
+    get constr(): bigint { return this._constr };
 
     private _fields: Data[]
     get fields(): Data[] { return this._fields.map( dataElem => Object.freeze( dataElem ) as any ) };
@@ -21,14 +21,14 @@ export class DataConstr
             "invalid fields passed to constructor"
         );
 
-        this._constr = forceUInteger( constr ).clone();
+        this._constr = forceBigUInt( constr );
         this._fields = fields.map( dataElem =>  dataElem.clone() );
     }
 
     clone(): DataConstr
     {
         return new DataConstr(
-            this._constr.clone(),
+            this._constr,
             this._fields
             //.map( dataElem => dataElem.clone() ) as Data[]
             // the constructor clones the fields
@@ -38,7 +38,7 @@ export class DataConstr
     toJson(): any
     {
         return {
-            constr: Number( this._constr.asBigInt ),
+            constr: Number( this._constr ),
             fields: this._fields.map( f => f.toJson() )
         }
     }

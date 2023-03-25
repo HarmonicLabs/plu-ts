@@ -1,5 +1,5 @@
 import ObjectUtils from "../../../../../utils/ObjectUtils";
-import { Builtin } from "../../../../UPLC/UPLCTerms/Builtin";
+import { IRNative } from "../../../../IR/IRNodes/IRNative";
 import { TermFn, PPair, PLam } from "../../../PTypes";
 import { Term } from "../../../Term";
 import { TermType, ToPType, lam, pair } from "../../../type_system";
@@ -17,7 +17,7 @@ export function psndPairNoUnwrap<A extends TermType, B extends TermType>( fstTyp
 
     const bnTerm = new Term<PLam<PPair<ToPType<A>, ToPType<B>>, ToPType<B>>>(
         lam( pair( a, b ), outT ) as any,
-        _dbn =>  Builtin.sndPair
+        _dbn =>  IRNative.sndPair
     );
 
     ObjectUtils.defineReadOnlyProperty(

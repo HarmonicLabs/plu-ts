@@ -15,7 +15,7 @@ describe("ConstValue :: inferConstTypeFromConstValue", () => {
         );
 
         expect(
-            inferConstTypeFromConstValue( new Integer( 2 ) )
+            inferConstTypeFromConstValue( 2 )
         ).toEqual(
             constT.int
         );
@@ -45,21 +45,21 @@ describe("ConstValue :: inferConstTypeFromConstValue", () => {
     it("infers list types when elements are congruent", () => {
         
         expect(
-            inferConstTypeFromConstValue([ new Integer( 2 ) ])
+            inferConstTypeFromConstValue([ 2 ])
         ).toEqual(
             constT.listOf( constT.int )
         )
 
         expect(
-            inferConstTypeFromConstValue([ new Integer( 2 ), new Integer( 3 ) ])
+            inferConstTypeFromConstValue([ 2, 3 ])
         ).toEqual(
             constT.listOf( constT.int )
         )
 
         expect(
             inferConstTypeFromConstValue([
-                [ new Integer( 1 ), new Integer( 42 ) ], 
-                [ new Integer( 2 ) ]
+                [ 1, 42 ], 
+                [ 2 ]
             ])
         ).toEqual(
             constT.listOf( 
@@ -68,7 +68,7 @@ describe("ConstValue :: inferConstTypeFromConstValue", () => {
         )
 
         expect(
-            inferConstTypeFromConstValue([ [], [ new Integer( 2 ) ] ])
+            inferConstTypeFromConstValue([ [], [ 2 ] ])
         ).toEqual(
             constT.listOf( 
                 constT.listOf( constT.int ) 
@@ -80,11 +80,11 @@ describe("ConstValue :: inferConstTypeFromConstValue", () => {
     it("throws if a list with incongruent values is provvided", () => {
         
         expect( () =>
-            inferConstTypeFromConstValue([ new Integer( 2 ), undefined ] as any )
+            inferConstTypeFromConstValue([ 2, undefined ] as any )
         ).toThrow()
 
         expect( () =>
-            inferConstTypeFromConstValue([ new Integer( 2 ), "str" ] as any )
+            inferConstTypeFromConstValue([ 2, "str" ] as any )
         ).toThrow()
 
     })
