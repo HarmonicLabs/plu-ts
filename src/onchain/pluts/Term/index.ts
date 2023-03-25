@@ -1,10 +1,10 @@
 import JsRuntime from "../../../utils/JsRuntime";
 import ObjectUtils from "../../../utils/ObjectUtils";
 
-import { UPLCTerm } from "../../UPLC/UPLCTerm";
+import { UPLCTerm, showUPLC } from "../../UPLC/UPLCTerm";
 import type { PType } from "../PType";
 
-import { Cloneable, isCloneable } from "../../../types/interfaces/Cloneable";
+import { isCloneable } from "../../../types/interfaces/Cloneable";
 import { Machine } from "../../CEK";
 import { FromPType, ToPType } from "../type_system/ts-pluts-conversion";
 import { isWellFormedGenericType } from "../type_system/kinds/isWellFormedType";
@@ -23,7 +23,7 @@ import { showIR } from "../../IR/utils/showIR";
 export type UnTerm<T extends Term<PType>> = T extends Term<infer PT extends PType > ? PT : never;
 
 export class Term<A extends PType>
-    implements ToUPLC, ToIR, Cloneable<Term<A>>
+    implements ToUPLC, ToIR
 {
     /**
      * in most cases it will never be used
@@ -39,8 +39,6 @@ export class Term<A extends PType>
             this._pInstance.clone() : 
             this._pInstance;
     }
-
-    clone!: () => Term<A>
 
     // typescript being silly here
     readonly type!: FromPType<A> | TermType;
@@ -138,8 +136,6 @@ export class Term<A extends PType>
             configurable: false
         });
 
-
-        let wasEverHoisted: boolean = false;
         ObjectUtils.defineReadOnlyHiddenProperty(
             this,
             "hoist",
@@ -165,40 +161,6 @@ export class Term<A extends PType>
         );
         // calls the `set` function of the descriptor above;
         (this as any).isConstant = isConstant;
-
-
-        Object.defineProperty(
-            this, "clone",
-            {
-                value: () => {
-                    const cloned = new Term(
-                        this.type,
-                        _toIR_,
-                        Boolean((this as any).isConstant) // isConstant
-                    ) as any;
-                
-                    Object.keys( this ).forEach( k => {
-                
-                        if( k === "_type" || k === "_toIR_" ) return;
-                        
-                        Object.defineProperty(
-                            cloned,
-                            k,
-                            Object.getOwnPropertyDescriptor(
-                                this,
-                                k
-                            ) ?? {}
-                        )
-                
-                    });
-
-                    return cloned;
-                },
-                writable: false,
-                enumerable: false,
-                configurable: false
-            }
-        )
         
     }
     
