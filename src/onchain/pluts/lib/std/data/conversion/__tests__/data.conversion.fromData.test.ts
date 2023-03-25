@@ -24,11 +24,11 @@ describe("fromData", () => {
         // console.log( showIR( plistInt.toIR() ) );
         // console.log( prettyUPLC( plistInt.toUPLC() ) );
 
-        console.log(
-            Machine.evalSimple(
-                plistInt
-            )
-        );
+        // console.log(
+        //     Machine.evalSimple(
+        //         plistInt
+        //     )
+        // );
 
         expect(
             Machine.evalSimple(

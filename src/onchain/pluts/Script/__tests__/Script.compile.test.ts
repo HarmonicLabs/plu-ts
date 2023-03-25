@@ -88,12 +88,12 @@ describe.skip("scriptToJsonFormat", () => {
 
                 return pByteString( correctBS ).eq( redeemerBS )
                     .and(
-                        ctx.extract("purpose","txInfo").in( ({purpose,txInfo}) =>
+                        ctx.extract("purpose","tx").in( ({purpose,tx}) =>
 
                         // @ts-ignore
-                            plet( pownHash.$( txInfo ).$( purpose ) ).in( ownHash =>
+                            plet( pownHash.$( tx ).$( purpose ) ).in( ownHash =>
 
-                                txInfo.extract("outputs","inputs").in( ({ outputs }) =>
+                                tx.extract("outputs","inputs").in( ({ outputs }) =>
 
                                     pevery( PTxOut.type )
                                     .$( plam( PTxOut.type, bool )(
@@ -208,7 +208,7 @@ describe.skip("scriptToJsonFormat", () => {
                 pBSToData.$(pByteString( correctBS ))
             ) as any,
             PScriptContext.PScriptContext({
-                txInfo: PTxInfo.PTxInfo({
+                tx: PTxInfo.PTxInfo({
                     datums: pList( pair( PDatumHash.type, data ) )([]),
                     dCertificates: pList( PDCert.type )([]),
                     fee: emptyValue,
@@ -260,7 +260,7 @@ describe.skip("scriptToJsonFormat", () => {
         ))
         .$( pByteString( correctBS ) )
         .$( PScriptContext.PScriptContext({
-            txInfo: PTxInfo.PTxInfo({
+            tx: PTxInfo.PTxInfo({
                 datums: pList( pair( PDatumHash.type, data ) )([]),
                 dCertificates: pList( PDCert.type )([]),
                 fee: emptyValue,

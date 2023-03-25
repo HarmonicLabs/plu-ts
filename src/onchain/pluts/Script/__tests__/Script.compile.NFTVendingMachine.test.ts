@@ -34,12 +34,12 @@ describe("NFTVendingMachine", () => {
 
         ],  bool)
         (( ownerPkh, counterValId, priceOracleId, _rdmr, _ctx ) =>
-            _ctx.extract("txInfo","purpose").in( ctx =>
+            _ctx.extract("tx","purpose").in( ctx =>
             
             pmatch( ctx.purpose )
             .onMinting( _ => _.extract("currencySym").in( ({ currencySym: ownCurrSym }) =>
 
-            ctx.txInfo.extract("inputs","outputs","mint","refInputs").in( tx =>
+            ctx.tx.extract("inputs","outputs","mint","refInputs").in( tx =>
                 
                 tx.inputs.some( _txIn =>
                     _txIn.extract("resolved").in( ({ resolved }) =>

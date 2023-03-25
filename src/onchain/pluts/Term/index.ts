@@ -72,8 +72,6 @@ export class Term<A extends PType>
         let _toIR_ = _toIR.bind( this );
         let shouldHoist = false;
 
-        const e_stack = Error().stack;
-
         Object.defineProperty(
             this, "toIR",
             {
@@ -176,7 +174,7 @@ export class Term<A extends PType>
 
                     Object.keys( this ).forEach( k => {
 
-                        if( k === "_type" || k === "_toIR_" ) return;
+                        if( k === "_type" || k === "toUPLC" || k === "toIR" ) return;
 
                         Object.defineProperty(
                             cloned,
@@ -185,9 +183,14 @@ export class Term<A extends PType>
                                 this,
                                 k
                             ) ?? {}
-                        )
+                        );
 
                     });
+
+                    if( shouldHoist )
+                    {
+                        cloned.hoist();
+                    }
 
                     return cloned;
                 },

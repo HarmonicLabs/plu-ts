@@ -175,8 +175,6 @@ function defineExtract<CtorDef extends StructCtorDef>
     ) as any;
 }
 
-
-
 type CtorCallback<SDef extends StructDefinition> = ( rawFields: RawFields<SDef[keyof SDef & string]> ) => Term<PType>;
 
 type EmptyObject = { [x: string | number | symbol ]: never };

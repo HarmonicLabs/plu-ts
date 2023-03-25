@@ -283,10 +283,10 @@ describe("TxBuilder.build", () => {
     ],  bool)
     (( _rdmr, ctx ) => {
 
-        ctx.txInfo.inputs.length.gtEq( 2 )
+        ctx.tx.inputs.length.gtEq( 2 )
 
-        return ctx.extract("txInfo").in(({ txInfo }) => 
-        txInfo.extract("inputs").in(({ inputs }) => 
+        return ctx.extract("tx").in(({ tx }) => 
+        tx.extract("inputs").in(({ inputs }) => 
             inputs.length.gtEq(2) 
         ))
     });

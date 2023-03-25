@@ -1,5 +1,7 @@
 import type { byte } from "./types";
 
+
+export type SupportedDigestSize = 16 | 28 | 32 | 64;
 /**
  * 64-bit unsigned addition
  * Sets v[a,a+1] += v[b,b+1]
@@ -197,11 +199,11 @@ type Blake2bCtx = {
     h: Uint32Array;
     t: number;
     c: number;
-    digestSize: 28 | 32 | 64;
+    digestSize: SupportedDigestSize;
 }
 
 
-function blake2bInit( digestSize: 28 | 32 | 64 ): Blake2bCtx
+function blake2bInit( digestSize: SupportedDigestSize ): Blake2bCtx
 {
     // state, 'param block'
     const ctx = {
@@ -265,12 +267,17 @@ function blake2bFinal( ctx: Blake2bCtx )
 }
 
 
-export function blake2b( data: byte[] | Uint8Array | Uint8Array, digestSize: 28 | 32 | 64 = 32 ): Uint8Array
+export function blake2b( data: byte[] | Uint8Array | Uint8Array, digestSize: SupportedDigestSize = 32 ): Uint8Array
 {
     data = new Uint8Array(data);
     const ctx = blake2bInit(digestSize)
     blake2bUpdate(ctx, data)
     return blake2bFinal(ctx);
+}
+
+export function blake2b_128( data: byte[] | Uint8Array ): Uint8Array
+{
+    return blake2b( data, 16 );
 }
 
 export function blake2b_224( data: byte[] | Uint8Array ): Uint8Array

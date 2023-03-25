@@ -4,7 +4,7 @@ import { PTxInfo } from "./PTxInfo/PTxInfo";
 
 export const PScriptContext = pstruct({
     PScriptContext: {
-        txInfo: PTxInfo.type,
+        tx: PTxInfo.type,
         purpose: V1.PScriptPurpose.type
     }
 });

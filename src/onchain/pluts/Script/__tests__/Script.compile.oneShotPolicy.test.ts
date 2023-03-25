@@ -30,8 +30,8 @@ export const oneShotNFT = pfn([
 ],  bool)
 (( utxo, rdmr, ctx ) =>
     
-    ctx.extract("txInfo","purpose").in( ({ txInfo, purpose }) =>
-    txInfo.extract("inputs","mint").in( tx =>
+    ctx.extract("tx","purpose").in( ({ tx, purpose }) =>
+    tx.extract("inputs","mint").in( tx =>
 
         plet(
             pmatch( purpose )

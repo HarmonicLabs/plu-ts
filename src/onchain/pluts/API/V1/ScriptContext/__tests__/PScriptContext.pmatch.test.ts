@@ -38,13 +38,13 @@ afterAll(() => {
 
 describe("pmatch( <PScriptContext> )", () => {
 
-    test("extract txInfo", () => {
+    test("extract tx", () => {
 
         expect(
             Machine.evalSimple(
                 pmatch( ctx )
                 .onPScriptContext(
-                    rawCtxFields => rawCtxFields.extract("txInfo").in( ({txInfo}) => txInfo )
+                    rawCtxFields => rawCtxFields.extract("tx").in( ({tx}) => tx )
                 )
             )
         ).toEqual(
@@ -55,13 +55,13 @@ describe("pmatch( <PScriptContext> )", () => {
 
     });
 
-    test("extract txInfo and purpose", () => {
+    test("extract tx and purpose", () => {
 
         expect(
             Machine.evalSimple(
                 pmatch( ctx )
                 .onPScriptContext(
-                    rawCtxFields => rawCtxFields.extract("txInfo","purpose").in( ({txInfo}) => txInfo )
+                    rawCtxFields => rawCtxFields.extract("tx","purpose").in( ({tx}) => tx )
                 )
             )
         ).toEqual(
@@ -74,7 +74,7 @@ describe("pmatch( <PScriptContext> )", () => {
             Machine.evalSimple(
                 pmatch( ctx )
                 .onPScriptContext(
-                    rawCtxFields => rawCtxFields.extract("purpose","txInfo").in( ({txInfo}) => txInfo )
+                    rawCtxFields => rawCtxFields.extract("purpose","tx").in( ({tx}) => tx )
                 )
             )
         ).toEqual(
@@ -87,7 +87,7 @@ describe("pmatch( <PScriptContext> )", () => {
             Machine.evalSimple(
                 pmatch( ctx )
                 .onPScriptContext(
-                    rawCtxFields => rawCtxFields.extract("txInfo","purpose").in( ({purpose}) => purpose )
+                    rawCtxFields => rawCtxFields.extract("tx","purpose").in( ({purpose}) => purpose )
                 )
             )
         ).toEqual(
@@ -100,7 +100,7 @@ describe("pmatch( <PScriptContext> )", () => {
             Machine.evalSimple(
                 pmatch( ctx )
                 .onPScriptContext(
-                    rawCtxFields => rawCtxFields.extract("purpose","txInfo").in( ({purpose}) => purpose )
+                    rawCtxFields => rawCtxFields.extract("purpose","tx").in( ({purpose}) => purpose )
                 )
             )
         ).toEqual(
@@ -117,8 +117,8 @@ describe("pmatch( <PScriptContext> )", () => {
             expect(
                 Machine.evalSimple(
                     pmatch( ctx )
-                    .onPScriptContext( _ => _.extract("txInfo").in( ({ txInfo }) =>
-                    txInfo.extract("inputs").in( ({ inputs }) => pisEmpty.$( inputs.tail ) )
+                    .onPScriptContext( _ => _.extract("tx").in( ({ tx }) =>
+                    tx.extract("inputs").in( ({ inputs }) => pisEmpty.$( inputs.tail ) )
                     ))
                 )
             ).toEqual(
@@ -131,8 +131,8 @@ describe("pmatch( <PScriptContext> )", () => {
         test("outputs extracted", () => {
 
             let term = pmatch( ctx )
-            .onPScriptContext( _ => _.extract("txInfo").in( ({ txInfo }) =>
-            txInfo.extract("outputs").in( ({ outputs }) => pisEmpty.$( outputs ) )
+            .onPScriptContext( _ => _.extract("tx").in( ({ tx }) =>
+            tx.extract("outputs").in( ({ outputs }) => pisEmpty.$( outputs ) )
             ));
 
             expect(
@@ -152,8 +152,8 @@ describe("pmatch( <PScriptContext> )", () => {
             expect(
                 Machine.evalSimple(
                     pmatch( ctx )
-                    .onPScriptContext( _ => _.extract("txInfo").in( ({ txInfo }) =>
-                    txInfo.extract("interval").in( ({ interval }) =>
+                    .onPScriptContext( _ => _.extract("tx").in( ({ tx }) =>
+                    tx.extract("interval").in( ({ interval }) =>
                     interval.extract("from").in( ({ from }) =>
                     from.extract("bound").in( ({ bound }) => 
 
@@ -174,9 +174,9 @@ describe("pmatch( <PScriptContext> )", () => {
             expect(
                 Machine.evalSimple(
                     pmatch( ctx )
-                    .onPScriptContext( _ => _.extract("txInfo").in( ({ txInfo }) =>
+                    .onPScriptContext( _ => _.extract("tx").in( ({ tx }) =>
 
-                        txInfo.extract("inputs").in( ({ inputs }) =>
+                        tx.extract("inputs").in( ({ inputs }) =>
 
                         inputs.head.extract("resolved").in( ({ resolved: input }) => 
 
@@ -191,10 +191,10 @@ describe("pmatch( <PScriptContext> )", () => {
             )
         })
 
-        test.only("extract txInfo only", () => {
+        test.only("extract tx only", () => {
 
             const term = pmatch( ctx )
-                .onPScriptContext( _ => _.extract("txInfo").in( ({ txInfo }) => txInfo ));
+                .onPScriptContext( _ => _.extract("tx").in( ({ tx }) => tx ));
             const uplc = term.toUPLC(0);
             let result = Machine.evalSimple(
                 uplc

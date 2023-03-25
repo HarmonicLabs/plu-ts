@@ -166,7 +166,7 @@ export const _purp = PScriptPurpose.Spending({
 });
 
 export const ctx = V1.PScriptContext.PScriptContext({
-    txInfo: toData( V1.PTxInfo.type )( txInfo_v1 ),
+    tx: toData( V1.PTxInfo.type )( txInfo_v1 ),
     purpose: toData( PScriptPurpose.type )( _purp )
 });
 
