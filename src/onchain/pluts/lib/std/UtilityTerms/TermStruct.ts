@@ -22,6 +22,7 @@ import { plet } from "../../plet";
 import { IRApp } from "../../../../IR/IRNodes/IRApp";
 import { IRNative } from "../../../../IR/IRNodes/IRNative";
 import { UtilityTermOf } from "../../addUtilityForType";
+import { punsafeConvertType } from "../../punsafeConvertType";
 
 
 export type TermStruct<SDef extends StructDefinition> = Term<PStruct<SDef>> & {
@@ -76,7 +77,7 @@ export function addPStructMethods<SDef extends StructDefinition>( struct: Term<P
                 return {
                     in: ( expr ) =>
                         pmatch( struct )
-                        [( "on" + capitalize( ctorName ) ) as any]( rawFields => rawFields.extract( ...fields ).in( expr ) ) as any
+                        [( "on" + capitalize( ctorName ) ) as any]( rawFields => (rawFields as any).extract( ...fields ).in( expr ) ) as any
                 }
             }
         );
@@ -105,10 +106,13 @@ export function addPStructMethods<SDef extends StructDefinition>( struct: Term<P
             ) && Object.defineProperty(
                 struct, thisFieldName,
                 {
-                    value: plet(
-                        _fromData( thisFieldType )(
-                            getElemAtTerm( i ).$( letted_fieldsListData )
-                        )
+                    value: punsafeConvertType(
+                        plet(
+                            _fromData( thisFieldType )(
+                                getElemAtTerm( i ).$( letted_fieldsListData )
+                            )
+                        ),
+                        thisFieldType
                     ),
                     writable: false,
                     enumerable: true,

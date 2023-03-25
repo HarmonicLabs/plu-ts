@@ -1,7 +1,7 @@
 import JsRuntime from "../../../../../utils/JsRuntime";
 import ObjectUtils from "../../../../../utils/ObjectUtils";
 
-import { RestrictedStructInstance, PStruct } from "../pstruct";
+import { PStruct, StructInstance } from "../pstruct";
 import { termTypeToString } from "../../../type_system/utils";
 import { BasePlutsError } from "../../../../../errors/BasePlutsError";
 import { PType } from "../../../PType";
@@ -13,13 +13,12 @@ import { matchSingleCtorStruct } from "../matchSingleCtorStruct";
 import { capitalize } from "../../../../../utils/ts/capitalize";
 import { DataI } from "../../../../../types/Data/DataI";
 import { papp } from "../../../lib/papp";
-import { UtilityTermOf } from "../../../lib/addUtilityForType";
-import { punsafeConvertType } from "../../../lib/punsafeConvertType";
+import { UtilityTermOf, addUtilityForType } from "../../../lib/addUtilityForType";
 import { TermList } from "../../../lib/std/UtilityTerms/TermList";
 import { plam } from "../../../lib/plam";
 import { TermFn } from "../../PFn";
 import { LamT, PrimType, StructCtorDef, StructDefinition, TermType, data, fn, lam, list } from "../../../type_system/types";
-import { isStructDefinition, withAllPairElemsAsData } from "../../../type_system";
+import { isStructDefinition } from "../../../type_system";
 import { phead } from "../../../lib/builtins/list";
 import { _fromData } from "../../../lib/std/data/conversion/fromData_minimal";
 import { IRApp } from "../../../../IR/IRNodes/IRApp";
@@ -33,6 +32,7 @@ import { IRFunc } from "../../../../IR/IRNodes/IRFunc";
 import { IRError } from "../../../../IR/IRNodes/IRError";
 import { IRForced } from "../../../../IR/IRNodes/IRForced";
 import { _old_plet } from "../../../lib/plet/old";
+import { _plet } from "../../../lib/plet/minimal";
 
 
 const elemAtCache: { [n: number]: TermFn<[ PList<PData> ], PData > } = {};
@@ -81,101 +81,38 @@ export function getElemAtTerm( n: number ): TermFn<[ PList<PData> ], PData >
     return term as any;
 }
 
+function getStructInstance<CtorDef extends StructCtorDef>
+    ( fieldsList: Term<PList<PData>>, ctorDef: CtorDef ): StructInstance<CtorDef>
+{
+    const instance: StructInstance<CtorDef> = {} as any;
+    const fieldNames = Object.keys( ctorDef );
 
-export type RawFields<CtorDef extends StructCtorDef> = 
-    Term<PList<PData>> &
+    for( let i = 0; i < fieldNames.length; i++ )
     {
-        extract: <Fields extends (keyof CtorDef)[]>( ...fields: Fields ) => {
-            in: <PExprResult extends PType>( expr: ( extracted: RestrictedStructInstance<CtorDef,Fields> ) => Term<PExprResult> ) => UtilityTermOf<PExprResult>
-        }
+        const fieldName = fieldNames[i];
+        Object.defineProperty(
+            instance, fieldName,
+            {
+                value: addUtilityForType( ctorDef[ fieldName ] )(
+                    _plet( 
+                        _fromData( ctorDef[ fieldName ] )(
+                            getElemAtTerm( i ).$( fieldsList )
+                        )
+                    )
+                ),
+                writable: false,
+                enumerable: true,
+                configurable: false
+            }
+        );
     }
 
-function getExtractedFieldsExpr<CtorDef extends StructCtorDef, Fields extends (keyof CtorDef)[], PExprResult extends PType>(
-    fieldsData: Term<PList<PData>>,
-    ctorDef: CtorDef,
-    allFIndexes: number[],
-    expr: ( extracted: RestrictedStructInstance<CtorDef,Fields> ) => Term<PExprResult> ,
-    partialExtracted: object
-): Term<PExprResult>
-{
-    const allFieldsNames = Object.keys( ctorDef );
-
-    if( allFIndexes.length === 0 )
-    {
-        return expr( partialExtracted as any );
-    }
-
-    const idx = allFIndexes[0];
-    const fieldType = ctorDef[ allFieldsNames[ idx ] ];
-
-    return _old_plet(
-        // needs to be minimal
-        // it MUST not add the fieldType utilities
-        // it will add the `withAllPairElemsAsData` version utilities
-        _fromData( fieldType )(
-            getElemAtTerm( idx ).$( fieldsData )
-        )
-    ).in( value => {
-
-        ObjectUtils.defineNormalProperty(
-            partialExtracted,
-            allFieldsNames[ idx ],
-            punsafeConvertType( value, withAllPairElemsAsData( fieldType ) )
-        );
-
-        return getExtractedFieldsExpr(
-            fieldsData,
-            ctorDef,
-            allFIndexes.slice(1),
-            expr,
-            partialExtracted
-        );
-    });
+    return instance;
 }
 
-function defineExtract<CtorDef extends StructCtorDef>
-    ( fieldsList: Term<PList<PData>>, ctorDef: CtorDef ): RawFields<CtorDef>
-{
-    const fieldsNames = Object.keys( ctorDef );
-    // basically cloning;
-    const _fieldsList = fieldsList;
+type RawCtorCallback = ( rawFields: Term<PList<PData>> ) => Term<PType>;
 
-    return ObjectUtils.defineReadOnlyProperty(
-        _fieldsList,
-        "extract",
-        <Fields extends (keyof CtorDef)[]>( ...fields: Fields ): {
-            in: <PExprResult extends PType>( expr: ( extracted: RestrictedStructInstance<CtorDef,Fields> ) => Term<PExprResult> ) => Term<PExprResult>
-        } => {
-
-            const fieldsIndicies = fields
-                .map( f => fieldsNames.findIndex( fName => fName === f ) )
-                // ignore fields not present in the definion or duplicates
-                .filter( ( idx, i, thisArr ) => idx >= 0 && thisArr.indexOf( idx ) === i )
-                .sort( ( a,b ) => a < b ? -1 : ( a === b ? 0 : 1 ) );
-
-            return ObjectUtils.defineReadOnlyProperty(
-                {},
-                "in",
-                <PExprResult extends PType>( expr: ( extracted: RestrictedStructInstance<CtorDef,Fields> ) => Term<PExprResult> ): Term<PExprResult> => {
-
-                    if( fieldsIndicies.length === 0 ) return expr({} as any);
-
-                    const res = getExtractedFieldsExpr(
-                        _fieldsList,
-                        ctorDef,
-                        fieldsIndicies,
-                        expr,
-                        {}
-                    );
-
-                    return res;
-                }
-            )
-        }
-    ) as any;
-}
-
-type CtorCallback<SDef extends StructDefinition> = ( rawFields: RawFields<SDef[keyof SDef & string]> ) => Term<PType>;
+type CtorCallback<SDef extends StructDefinition> = ( instance: StructInstance<SDef[keyof SDef & string]> ) => Term<PType>;
 
 type EmptyObject = { [x: string | number | symbol ]: never };
 
@@ -185,7 +122,7 @@ type MatchRest<PReturnT extends PType> = {
 
 type TypedPMatchOptions<SDef extends StructDefinition, PReturnT extends PType> = {
     [Ctor in keyof SDef as `on${Capitalize<string & Ctor>}`]
-        : ( cb: ( rawFields: RawFields<SDef[Ctor]> ) => Term<PReturnT> )
+        : ( cb: ( rawFields: StructInstance<SDef[Ctor]> ) => Term<PReturnT> )
             =>  Omit<SDef,Ctor> extends EmptyObject ?
                 UtilityTermOf<PReturnT> :
                 TypedPMatchOptions<Omit<SDef,Ctor>, PReturnT>
@@ -194,7 +131,7 @@ type TypedPMatchOptions<SDef extends StructDefinition, PReturnT extends PType> =
 
 export type PMatchOptions<SDef extends StructDefinition> = {
     [Ctor in keyof SDef as `on${Capitalize<string & Ctor>}`]
-        : <PReturnT extends PType>( cb: ( rawFields: RawFields<SDef[Ctor]> ) => Term<PReturnT> )
+        : <PReturnT extends PType>( cb: ( rawFields: StructInstance<SDef[Ctor]> ) => Term<PReturnT> )
             =>  Omit<SDef,Ctor> extends EmptyObject ?
                 UtilityTermOf<PReturnT> :
                 TypedPMatchOptions<Omit<SDef,Ctor>, PReturnT>
@@ -307,13 +244,12 @@ export function matchNCtorsIdxs( _n: number, returnT: TermType )
     );
 }
 
-function getReturnTypeFromContinuation<SDef extends StructDefinition>(
-    cont: CtorCallback<SDef>,
+function getReturnTypeFromContinuation(
+    cont: RawCtorCallback,
     ctorDef: StructCtorDef
 ): TermType
 {
     return cont( 
-        defineExtract(
             // mock the fields
             // we are not really interested in the result here; only in the type
             new Term(
@@ -323,9 +259,7 @@ function getReturnTypeFromContinuation<SDef extends StructDefinition>(
                         (new Array( Object.keys( ctorDef ).length ))
                         .fill( new DataI( 0 ) )
                     )
-            ), 
-            ctorDef as SDef[string]
-        ) 
+            )
     ).type;
 }
 
@@ -340,9 +274,8 @@ function getReturnTypeFromContinuation<SDef extends StructDefinition>(
 function hoistedMatchCtors<SDef extends StructDefinition>(
     structData: Term<PStruct<SDef>>,
     sDef: SDef,
-    ctorCbs: (CtorCallback<SDef> | Term<PLam<PList<PData>, PType>>)[],
-)
-    : Term<PType>
+    ctorCbs: (RawCtorCallback | Term<PLam<PList<PData>, PType>>)[],
+) : Term<PType>
 {
     const length = ctorCbs.length;
 
@@ -374,23 +307,15 @@ function hoistedMatchCtors<SDef extends StructDefinition>(
             );
         }
 
-        const thisCtor = sDef[ ctors[0] ] as SDef[string];
-        const returnT = getReturnTypeFromContinuation( cont, thisCtor );
+        const thisCtorDef = sDef[ ctors[0] ] as SDef[string];
+        const returnT = getReturnTypeFromContinuation( cont, thisCtorDef );
 
         return papp(
             papp(
                 matchSingleCtorStruct( returnT ),
                 structData as any
             ),
-            plam( list(data), returnT )
-            ( fieldsListData => 
-                cont( 
-                    defineExtract( 
-                        fieldsListData, 
-                        thisCtor
-                    ) 
-                )
-            )
+            plam( list(data), returnT )( cont )
         );
     }
 
@@ -406,12 +331,12 @@ function hoistedMatchCtors<SDef extends StructDefinition>(
             return false;
         }) ?? ctorCbs[ 0 ];
 
-    const thisCtor = sDef[ Object.keys( sDef )[ ctorIdx ] ] as SDef[string];
+    const thisCtorDef = sDef[ Object.keys( sDef )[ ctorIdx ] ] as SDef[string];
 
     let returnT: TermType | undefined = 
         cont instanceof Term ?
-        cont.type[2] as TermType :
-        getReturnTypeFromContinuation( cont, thisCtor )
+            cont.type[2] as TermType :
+            getReturnTypeFromContinuation( cont, thisCtorDef )
     
     let result = papp(
         matchNCtorsIdxs( ctors.length, returnT ) as any,
@@ -421,20 +346,12 @@ function hoistedMatchCtors<SDef extends StructDefinition>(
     for( let i = ctors.length - 1; i >= 0 ; i-- )
     {
         const thisCont = ctorCbs[i];
-        const thisCtor = sDef[ ctors[i] ] as SDef[string];
+        const thisCtorDef = sDef[ ctors[i] ] as SDef[string];
         result = papp(
             result as any,
-            thisCont instanceof Term ?
-            thisCont : 
-            plam( list(data), returnT ?? getReturnTypeFromContinuation( thisCont, thisCtor ) )
-            ( fieldsListData => 
-                thisCont( 
-                    defineExtract( 
-                        fieldsListData,
-                        thisCtor
-                    ) 
-                )
-            ) as any
+            thisCont instanceof Term ? thisCont : 
+            plam( list(data), returnT ?? getReturnTypeFromContinuation( thisCont, thisCtorDef ) )
+            ( thisCont )
         );
     }
 
@@ -455,7 +372,7 @@ export function pmatch<SDef extends StructDefinition>( struct: Term<PStruct<SDef
     }
 
     const ctors = Object.keys( sDef );
-    const ctorCbs: CtorCallback<SDef>[] = ctors.map( _ => undefined ) as any;
+    const ctorCbs: RawCtorCallback[] = ctors.map( _ => undefined ) as any;
 
     function indexOfCtor( ctor: string ): number
     {
@@ -474,21 +391,52 @@ export function pmatch<SDef extends StructDefinition>( struct: Term<PStruct<SDef
     {
         if( missingCtors.length <= 0 ) return {};
 
-        // last permutation reurns the expression
+        // last permutation
+        // returns the final expression
         if( missingCtors.length === 1 )
         {
             const ctor = missingCtors[0] as keyof SDef & string;
             const idx = indexOfCtor( ctor );
 
             const matcher = "on" + capitalize( ctor );
-            let result = {};
-            result = ObjectUtils.defineReadOnlyProperty(
+            const result = {};
+            ObjectUtils.defineReadOnlyProperty(
                 result,
                 matcher,
-                ( cb: ( rawFields: RawFields<SDef[typeof ctor]> ) => Term<PType> ): Term<PType> => {
+                ( cb: ( instance: StructInstance<SDef[typeof ctor]> ) => Term<PType> ): Term<PType> => {
+
+                    // build the `StructInstance` input from the struct fields
+                    const callback = ( rawFields: Term<PList<PData>> ): Term<PType> => {
+
+                        const instance: StructInstance<SDef[keyof SDef & string]> = {} as any;
+                        const ctorDef = sDef[ctor];
+                        const fieldNames = Object.keys( ctorDef );
+
+                        for( let i = 0; i < fieldNames.length; i++ )
+                        {
+                            const fieldName = fieldNames[i];
+                            Object.defineProperty(
+                                instance, fieldName,
+                                {
+                                    value: addUtilityForType( ctorDef[ fieldName ] )(
+                                        _plet( 
+                                            _fromData( ctorDef[ fieldName ] )(
+                                                getElemAtTerm( i ).$( rawFields )
+                                            )
+                                        )
+                                    ),
+                                    writable: false,
+                                    enumerable: true,
+                                    configurable: false
+                                }
+                            );
+                        }
+
+                        return cb( instance )
+                    };
 
                     // same stuff of previous ctors
-                    ctorCbs[idx] = cb;
+                    ctorCbs[idx] = callback;
 
                     return hoistedMatchCtors(
                         struct as any,
@@ -498,6 +446,7 @@ export function pmatch<SDef extends StructDefinition>( struct: Term<PStruct<SDef
 
                 }
             );
+
             return ObjectUtils.defineReadOnlyProperty(
                 result,
                 "_",
@@ -515,8 +464,8 @@ export function pmatch<SDef extends StructDefinition>( struct: Term<PStruct<SDef
             ObjectUtils.defineReadOnlyProperty(
                 remainingCtorsObj,
                 "on" + capitalize( ctor ),
-                ( cb: ( rawFields: object ) => Term<PType> ) => {
-                    ctorCbs[idx] = cb;
+                ( cb: ( instance: StructInstance<StructCtorDef> ) => Term<PType> ) => {
+                    ctorCbs[idx] = ( fieldsList ) => cb( getStructInstance( fieldsList, sDef[ctor] ) );
 
                     return permutations( missingCtors.filter( c => c !== ctor ) )
                 }
@@ -526,7 +475,7 @@ export function pmatch<SDef extends StructDefinition>( struct: Term<PStruct<SDef
         return ObjectUtils.defineReadOnlyProperty(
             remainingCtorsObj,
             "_",
-            ( cb: ( rawFields: Term<PList<PData>> ) => Term<PType> ) => {
+            ( cb: ( _: never ) => Term<PType> ) => {
 
                 const maxLengthFound = 
                     ctors
@@ -555,9 +504,13 @@ export function pmatch<SDef extends StructDefinition>( struct: Term<PStruct<SDef
                     }
 
                     const res = hoistedMatchCtors(
+                        /*
+                         Argument of type 'Term<PStruct<SDef>>' is not assignable to parameter of type 'Term<PStruct<StructDefinition>>'.
+                            Type 'PStruct<SDef>' is not assignable to type 'PStruct<StructDefinition>'.
+                        */
                         struct as any,
                         sDef,
-                        ctorCbs as any
+                        ctorCbs
                     );
 
                     return res;

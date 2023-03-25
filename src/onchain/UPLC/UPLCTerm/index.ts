@@ -37,7 +37,7 @@ export type UPLCTerm
  * @param {UPLCTerm} t ```UPLCTerm``` to check 
  * @returns {boolean} ```true``` if the argument is instance of any of the ```UPLCTerm``` constructors, ```false``` otherwise
  */
-export function isUPLCTerm( t: any ): t is UPLCTerm
+export function isUPLCTerm( t: object ): t is UPLCTerm
 {
     const proto = Object.getPrototypeOf( t );
 

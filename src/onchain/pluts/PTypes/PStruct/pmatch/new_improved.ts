@@ -1,7 +1,7 @@
 import JsRuntime from "../../../../../utils/JsRuntime";
 import ObjectUtils from "../../../../../utils/ObjectUtils";
 
-import { RestrictedStructInstance, PStruct, StructInstance } from "../pstruct";
+import { PStruct, StructInstance } from "../pstruct";
 import { termTypeToString } from "../../../type_system/utils";
 import { BasePlutsError } from "../../../../../errors/BasePlutsError";
 import { PType } from "../../../PType";
@@ -14,12 +14,11 @@ import { capitalize } from "../../../../../utils/ts/capitalize";
 import { DataI } from "../../../../../types/Data/DataI";
 import { papp } from "../../../lib/papp";
 import { UtilityTermOf, addUtilityForType } from "../../../lib/addUtilityForType";
-import { punsafeConvertType } from "../../../lib/punsafeConvertType";
 import { TermList } from "../../../lib/std/UtilityTerms/TermList";
 import { plam } from "../../../lib/plam";
 import { TermFn } from "../../PFn";
 import { LamT, PrimType, StructCtorDef, StructDefinition, TermType, data, fn, lam, list } from "../../../type_system/types";
-import { isStructDefinition, withAllPairElemsAsData } from "../../../type_system";
+import { isStructDefinition } from "../../../type_system";
 import { phead } from "../../../lib/builtins/list";
 import { _fromData } from "../../../lib/std/data/conversion/fromData_minimal";
 import { IRApp } from "../../../../IR/IRNodes/IRApp";

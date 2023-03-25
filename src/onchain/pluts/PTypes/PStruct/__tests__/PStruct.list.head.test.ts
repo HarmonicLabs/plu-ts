@@ -50,36 +50,35 @@ const myOtherStruct = MyOtherStruct.There({ hello: toData( list( MyStruct.type )
 
 describe("struct.listField.head", () => {
 
-    test("type", () => {
+    test.only("type", () => {
 
-        const _42 = myOtherStruct.extract("hello").in( ({ hello }) => {
+        const hello = myOtherStruct.hello;
 
-            expect(
-                hello.type
-            ).toEqual(
-                list( MyStruct.type )
-            )
+        expect(
+            hello.type
+        ).toEqual(
+            list( MyStruct.type )
+        )
 
-            expect(
-                hello.type[1]
-            ).toEqual(
-                MyStruct.type
-            );
+        expect(
+            hello.type[1]
+        ).toEqual(
+            MyStruct.type
+        );
 
-            expect(
-                getElemsT( hello.type )
-            ).toEqual(
-                MyStruct.type
-            )
+        expect(
+            getElemsT( hello.type )
+        ).toEqual(
+            MyStruct.type
+        )
 
-            expect(
-                hello.head.type
-            ).toEqual(
-                MyStruct.type
-            );
+        expect(
+            hello.head.type
+        ).toEqual(
+            MyStruct.type
+        );
 
-            return hello.head.extract("there").in( ({ there }) => there )
-        });
+        const _42 = hello.head.there
 
         expect(
             Machine.evalSimple(

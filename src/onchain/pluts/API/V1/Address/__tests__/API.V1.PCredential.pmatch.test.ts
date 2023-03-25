@@ -14,12 +14,7 @@ describe("pmatch( PCredentials )", () => {
                     pkh: toData( PPubKeyHash.type )( PPubKeyHash.from("ff".repeat(28)) )
                 })
             )
-            .onPPubKeyCredential( _ => 
-                _.extract("pkh")
-                .in(
-                    ({ pkh }) => pkh
-                )
-            )
+            .onPPubKeyCredential( ({ pkh }) => pkh )
             .onPScriptCredential( _ => perror( PPubKeyHash.type ) as any )
         );
 
