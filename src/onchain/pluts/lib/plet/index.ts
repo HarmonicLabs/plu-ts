@@ -7,7 +7,6 @@ import { Term } from "../../Term";
 import { PrimType } from "../../type_system/types";
 import { UtilityTermOf, addUtilityForType } from "../addUtilityForType";
 import { _fromData } from "../std/data/conversion/fromData_minimal";
-import { showIR } from "../../../IR/utils/showIR";
 
 export type LettedTerm<PVarT extends PType> = UtilityTermOf<PVarT> & {
     /**

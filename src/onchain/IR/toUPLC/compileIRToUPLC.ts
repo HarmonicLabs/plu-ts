@@ -7,7 +7,6 @@ import { handleLetted } from "./subRoutines/handleLetted";
 import { handleHoistedAndReturnRoot } from "./subRoutines/handleHoistedAndReturnRoot";
 import { replaceNativesAndReturnRoot } from "./subRoutines/replaceNatives";
 import { IRLetted } from "../IRNodes/IRLetted";
-import { showIR } from "../utils/showIR";
 import { IRHoisted } from "../IRNodes/IRHoisted";
 import { replaceClosedLettedWithHoisted } from "./subRoutines/replaceClosedLettedWithHoisted";
 
