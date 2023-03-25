@@ -501,7 +501,7 @@ function initTxBuild(
                 index: idx,
                 rdmrTag: tag,
                 script: {
-                    type: script.type,
+                    type: script.type as any,
                     bytes: script.bytes.slice(),
                     hash: script.hash.toString()
                 },

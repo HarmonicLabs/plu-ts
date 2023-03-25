@@ -2,7 +2,6 @@ import JsRuntime from "../../utils/JsRuntime";
 import ObjectUtils from "../../utils/ObjectUtils";
 
 import { blake2b_224, byte } from "../../crypto";
-import { ScriptJsonFormat } from "../../onchain/pluts/Script";
 import { NativeScript, nativeScriptFromCbor, nativeScriptToCbor } from "./NativeScript";
 import { Cloneable } from "../../types/interfaces/Cloneable";
 import { Hash28 } from "../hashes/Hash28/Hash28";
@@ -23,20 +22,28 @@ export const enum ScriptType {
     PlutusV2 = "PlutusScriptV2"
 }
 
-function parseCborBytes( cbor: Uint8Array ): Uint8Array
-{
-    return ( Cbor.parse( cbor ) as CborBytes ).buffer
+export type PlutusScriptType = ScriptType.PlutusV1 | ScriptType.PlutusV2 | "PlutusScriptV1" | "PlutusScriptV2"
+
+export type LitteralScriptType = ScriptType | "NativeScript" | "PlutusScriptV1" | "PlutusScriptV2"
+
+export interface PlutusScriptJsonFormat<T extends PlutusScriptType = PlutusScriptType> {
+    type: PlutusScriptType,
+    description?: string,
+    cborHex: string
 }
 
-export class Script<T extends ScriptType = ScriptType>
+export class Script<T extends LitteralScriptType = LitteralScriptType>
     implements Cloneable<Script<T>>, ToJson, ToCbor
 {
     readonly type!: T;
     readonly bytes!: Uint8Array;
-    readonly cbor!: CborString;
+    /**
+     * format expected by `cardano-cli`
+    **/
+    readonly cbor!: T extends ScriptType.NativeScript ? never : CborString;
     readonly hash!: Hash28;
 
-    constructor( scriptType: T, bytes: Uint8Array | (T extends ScriptType.NativeScript ? NativeScript : ScriptJsonFormat) )
+    constructor( scriptType: T, bytes: Uint8Array | (T extends ScriptType.NativeScript ? NativeScript : PlutusScriptJsonFormat) )
     {
         JsRuntime.assert(
             scriptType === ScriptType.NativeScript  ||
@@ -58,7 +65,7 @@ export class Script<T extends ScriptType = ScriptType>
                 (bytes.type as any) === ScriptType.PlutusV2
             )
             {
-                bytes = fromHex( (bytes as ScriptJsonFormat).cborHex );
+                bytes = fromHex( (bytes as PlutusScriptJsonFormat).cborHex );
             }
             else
             {
@@ -200,10 +207,16 @@ export class Script<T extends ScriptType = ScriptType>
         );
     }
 
+    /**
+     * format specified in the ledger CDDL
+    **/
     toCbor(): CborString
     {
         return Cbor.encode( this.toCborObj() );
     }
+    /**
+     * format specified in the ledger CDDL
+    **/
     toCborObj(): CborObj
     {
         if( this.type === ScriptType.NativeScript )
