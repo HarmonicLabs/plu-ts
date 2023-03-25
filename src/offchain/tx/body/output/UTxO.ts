@@ -12,6 +12,7 @@ import { TxOut, ITxOut, isITxOut } from "./TxOut";
 import { TxOutRef, ITxOutRef, isITxOutRef } from "./TxOutRef";
 import { CborArray } from "../../../../cbor/CborObj/CborArray";
 import { InvalidCborFormatError } from "../../../../errors/InvalidCborFormatError";
+import { Cloneable } from "../../../../types/interfaces/Cloneable";
 
 export interface IUTxO {
     utxoRef: ITxOutRef,
@@ -28,7 +29,7 @@ export function isIUTxO( stuff: any ): stuff is IUTxO
 }
 
 export class UTxO
-    implements IUTxO, ToData, ToJson, ToCbor
+    implements IUTxO, ToData, ToJson, ToCbor, Cloneable<UTxO>
 {
     readonly utxoRef!: TxOutRef
     readonly resolved!: TxOut
@@ -46,6 +47,11 @@ export class UTxO
             "resolved",
             resolved instanceof TxOut ? resolved : new TxOut( resolved )
         );
+    }
+
+    clone(): UTxO
+    {
+        return new UTxO( this );
     }
 
     toData( version: "v1" | "v2" = "v2" ): Data

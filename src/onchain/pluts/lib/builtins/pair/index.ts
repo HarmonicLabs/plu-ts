@@ -1,19 +1,15 @@
 import { BasePlutsError } from "../../../../../errors/BasePlutsError";
 import ObjectUtils from "../../../../../utils/ObjectUtils";
-import { Application } from "../../../../UPLC/UPLCTerms/Application";
-import { Builtin } from "../../../../UPLC/UPLCTerms/Builtin";
-import { Lambda } from "../../../../UPLC/UPLCTerms/Lambda";
-import { UPLCVar } from "../../../../UPLC/UPLCTerms/UPLCVar";
+import { Builtin } from "../../../../UPLC/UPLCTerms/Builtin";;
 import { TermFn, PPair, PLam } from "../../../PTypes";
 import { Term } from "../../../Term";
-import { PrimType, TermType, ToPType, data, isWellFormedType, lam, pair } from "../../../type_system";
+import { PrimType, TermType, ToPType, data, lam, pair } from "../../../type_system";
 import { unwrapAsData } from "../../../type_system/tyArgs";
-import { UtilityTermOf, addUtilityForType } from "../../addUtilityForType";
+import { UtilityTermOf } from "../../addUtilityForType";
 import { papp } from "../../papp";
 import { punsafeConvertType } from "../../punsafeConvertType";
 import { fromData } from "../../std";
 import { _pfromData } from "../../std/data/conversion/fromData_minimal";
-import { addApplications } from "../addApplications";
 
 
 export function pfstPair<A extends TermType, B extends TermType>( fstType: A, sndType: B )

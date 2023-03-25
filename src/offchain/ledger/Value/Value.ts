@@ -23,13 +23,20 @@ import { CborArray } from "../../../cbor/CborObj/CborArray";
 import { ByteString } from "../../../types/HexString/ByteString";
 import { IValueAssets } from "./IValue";
 import { hex } from "../../../types/HexString";
-import { fromAscii, isUint8Array, lexCompare, toAscii, toHex } from "@harmoniclabs/uint8array-utils";
+import { fromAscii, fromUtf8, isUint8Array, lexCompare, toAscii, toHex } from "@harmoniclabs/uint8array-utils";
 
 const enum Ord {
     LT = -1,
     EQ = 0,
     GT = 1
 }
+
+export type ValueUnitEntry = {
+    unit: string;
+    quantity: bigint;
+};
+
+export type ValueUnits = ValueUnitEntry[]
 
 export class Value
     implements ToCbor, Cloneable<Value>, ToData, ToJson
@@ -87,17 +94,25 @@ export class Value
             "map",
             Object.freeze( map )
         );
-    }
 
-    get lovelaces(): bigint
-    {
-        return BigInt(
-            this.map
-            .find( ({ policy }) => policy === "" )
-            ?.assets[""] 
-            ?? 0 
+        Object.defineProperty(
+            this, "lovelaces",
+            {
+                get: (): bigint => BigInt(
+                    this.map
+                    .find( ({ policy }) => policy === "" )
+                    ?.assets[""] 
+                    ?? 0 
+                ),
+                set: () => {},
+                writable: false,
+                enumerable: true,
+                configurable: false
+            }
         );
     }
+
+    readonly lovelaces!: bigint;
 
     get( policy: Hash28 | Uint8Array | string , assetName: Uint8Array | string ): bigint
     {
@@ -119,6 +134,21 @@ export class Value
             )?.assets[assetName] 
             ?? 0 
         );
+    }
+
+    toUnits(): ValueUnits
+    {
+        return this.map.flatMap(({ policy, assets }) => {
+            if( policy === "" )
+            {
+                return { unit: 'lovelace', quantity: BigInt( assets[''] ) }
+            }
+            return Object.keys( assets ).map(( assetName ) => ({
+                    unit: `${policy.toString()}${toHex( fromUtf8( assetName ) )}`,
+                    quantity: BigInt( assets[assetName] )
+                })
+            );
+        });
     }
 
     static get zero(): Value

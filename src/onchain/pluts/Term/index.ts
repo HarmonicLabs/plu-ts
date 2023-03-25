@@ -4,7 +4,7 @@ import ObjectUtils from "../../../utils/ObjectUtils";
 import { UPLCTerm } from "../../UPLC/UPLCTerm";
 import type { PType } from "../PType";
 
-import { isCloneable } from "../../../types/interfaces/Cloneable";
+import { Cloneable, isCloneable } from "../../../types/interfaces/Cloneable";
 import { HoistedUPLC } from "../../UPLC/UPLCTerms/HoistedUPLC";
 import { Machine } from "../../CEK";
 import { FromPType, ToPType } from "../type_system/ts-pluts-conversion";
@@ -16,6 +16,7 @@ import { genHoistedSourceUID } from "../../UPLC/UPLCTerms/HoistedUPLC/HoistedSou
 export type UnTerm<T extends Term<PType>> = T extends Term<infer PT extends PType > ? PT : never;
 
 export class Term<A extends PType>
+    implements Cloneable<Term<A>>
 {
     /**
      * in most cases it will never be used
@@ -38,6 +39,8 @@ export class Term<A extends PType>
     {
         return this._type
     };
+
+    clone!: () => Term<A>
 
     protected _toUPLC!: ( deBruijnLevel: bigint ) => UPLCTerm
     get toUPLC(): ( deBruijnLevel: bigint | number ) => UPLCTerm
@@ -147,6 +150,40 @@ export class Term<A extends PType>
         );
         // calls the `set` function of the descriptor above;
         (this as any).isConstant = isConstant;
+
+
+        Object.defineProperty(
+            this, "clone",
+            {
+                value: () => {
+                    const cloned = new Term(
+                        this.type,
+                        _toUPLC,
+                        Boolean((this as any).isConstant) // isConstant
+                    ) as any;
+                
+                    Object.keys( this ).forEach( k => {
+                
+                        if( k === "_type" || k === "_toUPLC" ) return;
+                        
+                        Object.defineProperty(
+                            cloned,
+                            k,
+                            Object.getOwnPropertyDescriptor(
+                                this,
+                                k
+                            ) ?? {}
+                        )
+                
+                    });
+
+                    return cloned;
+                },
+                writable: false,
+                enumerable: false,
+                configurable: false
+            }
+        )
         
     }
     

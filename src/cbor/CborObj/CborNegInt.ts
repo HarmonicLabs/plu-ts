@@ -1,3 +1,4 @@
+import { Cloneable } from "../../types/interfaces/Cloneable";
 import JsRuntime from "../../utils/JsRuntime";
 import { ToRawObj } from "./interfaces/ToRawObj";
 
@@ -20,7 +21,7 @@ export function isRawCborNegative( neg: RawCborNegInt ): boolean
 }
 
 export class CborNegInt
-    implements ToRawObj
+    implements ToRawObj, Cloneable<CborNegInt>
 {
     private _neg : bigint;
     get num(): bigint { return this._neg }
@@ -46,5 +47,10 @@ export class CborNegInt
         return {
             neg: this.num
         };
+    }
+
+    clone(): CborNegInt
+    {
+        return new CborNegInt( this.num );
     }
 }

@@ -1,6 +1,7 @@
 import { isUint8Array } from "@harmoniclabs/uint8array-utils";
 import JsRuntime from "../../utils/JsRuntime";
 import { ToRawObj } from "./interfaces/ToRawObj";
+import { Cloneable } from "../../types/interfaces/Cloneable";
 
 export type RawCborBytes = {
     bytes: Uint8Array
@@ -20,7 +21,7 @@ export function isRawCborBytes( b: RawCborBytes ): boolean
 }
 
 export class CborBytes
-    implements ToRawObj
+    implements ToRawObj, Cloneable<CborBytes>
 {
     private _buff : Uint8Array;
     get buffer(): Uint8Array { return this._buff.slice() }
@@ -40,5 +41,10 @@ export class CborBytes
         return {
             bytes: this.buffer
         };
+    }
+
+    clone(): CborBytes
+    {
+        return new CborBytes( this._buff.slice() );
     }
 }

@@ -1,3 +1,4 @@
+import { Cloneable } from "../../types/interfaces/Cloneable";
 import JsRuntime from "../../utils/JsRuntime";
 import { ToRawObj } from "./interfaces/ToRawObj";
 
@@ -35,7 +36,7 @@ export function isRawCborSimple( s: RawCborSimple ): boolean
 }
 
 export class CborSimple
-    implements ToRawObj
+    implements ToRawObj, Cloneable<CborSimple>
 {
     private _simple: SimpleValue;
     get simple(): SimpleValue { return this._simple; };
@@ -74,5 +75,10 @@ export class CborSimple
         return {
             simple: this._simple
         };
+    }
+
+    clone(): CborSimple
+    {
+        return new CborSimple( this.simple, this.numAs );
     }
 }

@@ -1,3 +1,4 @@
+import { Cloneable } from "../../types/interfaces/Cloneable";
 import JsRuntime from "../../utils/JsRuntime";
 import { ToRawObj } from "./interfaces/ToRawObj";
 
@@ -20,7 +21,7 @@ export function isRawCborUnsigned( unsign: RawCborUInt ): boolean
 }
 
 export class CborUInt
-    implements ToRawObj
+    implements ToRawObj, Cloneable<CborUInt>
 {
     private _unsigned : bigint;
     get num(): bigint { return this._unsigned }
@@ -46,5 +47,10 @@ export class CborUInt
         return {
             uint: this.num
         };
+    }
+
+    clone(): CborUInt
+    {
+        return new CborUInt( this.num )
     }
 }

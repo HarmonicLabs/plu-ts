@@ -1,3 +1,4 @@
+import { Cloneable } from "../../types/interfaces/Cloneable";
 import JsRuntime from "../../utils/JsRuntime";
 import { ToRawObj } from "./interfaces/ToRawObj";
 
@@ -19,7 +20,7 @@ export function isRawCborText( t: RawCborText ): boolean
 }
 
 export class CborText
-    implements ToRawObj
+    implements ToRawObj, Cloneable<CborText>
 {
     private _text : string;
     get text(): string { return this._text }
@@ -39,5 +40,10 @@ export class CborText
         return {
             text: this.text
         };
+    }
+
+    clone(): CborText
+    {
+        return new CborText( this._text );
     }
 }

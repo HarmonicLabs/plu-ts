@@ -1,4 +1,5 @@
 import { CborObj, cborObjFromRaw, isCborObj, isRawCborObj, RawCborObj } from ".";
+import { Cloneable } from "../../types/interfaces/Cloneable";
 import JsRuntime from "../../utils/JsRuntime";
 import ObjectUtils from "../../utils/ObjectUtils";
 import { ToRawObj } from "./interfaces/ToRawObj";
@@ -31,7 +32,7 @@ const defaultOpts: Required<CborArrayOptions> = {
 }
 
 export class CborArray
-    implements ToRawObj
+    implements ToRawObj, Cloneable<CborArray>
 {
     private _array : CborObj[];
     public get array() : CborObj[]
@@ -76,5 +77,15 @@ export class CborArray
                 indefinite: this.indefinite
             }
         };
+    }
+
+    clone(): CborArray
+    {
+        return new CborArray(
+            this.array,
+            {
+                indefinite: this.indefinite
+            }
+        );
     }
 }

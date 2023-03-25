@@ -1,4 +1,5 @@
 import { CborObj, cborObjFromRaw, isCborObj, isRawCborObj, RawCborObj } from "."
+import { Cloneable } from "../../types/interfaces/Cloneable"
 import { canBeUInteger } from "../../types/ints/Integer"
 import JsRuntime from "../../utils/JsRuntime"
 import { ToRawObj } from "./interfaces/ToRawObj"
@@ -24,7 +25,7 @@ export function isRawCborTag( t: RawCborTag ): boolean
 }
 
 export class CborTag
-    implements ToRawObj
+    implements ToRawObj, Cloneable<CborTag>
 {
     private _tag: bigint
     get tag(): bigint { return this._tag }
@@ -55,5 +56,10 @@ export class CborTag
             tag: this.tag,
             data: this.data.toRawObj(),
         }
+    }
+
+    clone(): CborTag
+    {
+        return new CborTag( this.tag, this.data.clone() )
     }
 }

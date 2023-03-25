@@ -1,4 +1,5 @@
 import { CborObj, cborObjFromRaw, isRawCborObj, RawCborObj } from ".";
+import { Cloneable } from "../../types/interfaces/Cloneable";
 import { ToRawObj } from "./interfaces/ToRawObj";
 
 export type RawCborMapEntry = {
@@ -42,7 +43,7 @@ export type CborMapEntry = {
 };
 
 export class CborMap
-    implements ToRawObj
+    implements ToRawObj, Cloneable<CborMap>
 {
     private _map : CborMapEntry[];
     public get map() : CborMapEntry[]
@@ -72,5 +73,10 @@ export class CborMap
                     };
                 })
         };
+    }
+
+    clone(): CborMap
+    {
+        return new CborMap( this.map );
     }
 }
