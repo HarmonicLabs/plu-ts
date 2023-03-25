@@ -14,6 +14,7 @@ import { Machine, machineVersionV1, machineVersionV2 } from "../../../onchain/CE
 import { CanBeData, canBeData, forceData } from "../../../types/Data/CanBeData";
 import { ITxBuildArgs } from "./txBuild/ITxBuildArgs";
 import { ITxBuildOptions, ITxBuildSyncOptions } from "./txBuild/ITxBuildOptions";
+import { ITxBuildInput } from "./txBuild/ITxBuildInput";
 import { TxIn } from "../body/TxIn";
 import { TxOut } from "../body/output/TxOut";
 import { Value } from "../../ledger/Value/Value";
@@ -402,6 +403,122 @@ export class TxBuilder
         }
 
         return tx;
+    }
+
+    private keepRelevant(
+        requestedOutputSet: Map<string, bigint>,
+        initialUTxOSet: ITxBuildInput[],
+        minimumLovelaceRequired = 5_000_000,
+    ): ITxBuildInput[] {
+        const requestedLovelace = requestedOutputSet.has('lovelace')
+            ? requestedOutputSet.get('lovelace')! + BigInt(minimumLovelaceRequired)
+            : BigInt(minimumLovelaceRequired);
+
+        const multiAsset = initialUTxOSet.filter((input) =>
+            fromValue(input.utxo.resolved.value)
+                .filter((asset) => asset.unit !== 'lovelace')
+                .some((asset) => requestedOutputSet.has(asset.unit))
+        );
+
+        const selectedLovelace = this.selectedLovelaceQuantity(multiAsset);
+
+        const lovelace = selectedLovelace < requestedLovelace
+            ? this.remainingLovelace(
+                requestedLovelace - selectedLovelace,
+                initialUTxOSet.filter((iu) => {
+                    return !multiAsset.map((su) => su.utxo.utxoRef.id).includes(iu.utxo.utxoRef.id);
+                }))
+            : [];
+
+        return [
+            ...lovelace,
+            ...multiAsset,
+        ];
+    }
+
+    private selectedLovelaceQuantity(multiAsset: ITxBuildInput[]) {
+        return multiAsset.reduce((sum, input) => {
+            return sum + input.utxo.resolved.value.lovelaces;
+        }, BigInt(0));
+    };
+
+    private remainingLovelace(quantity: bigint, initialUTxOSet: ITxBuildInput[]): ITxBuildInput[] {
+        const sortedUTxOs = initialUTxOSet.sort(
+            (a, b) => parseInt(
+                BigInt(
+                    a.utxo.resolved.value.lovelaces - b.utxo.resolved.value.lovelaces
+                ).toString()
+            )
+        );
+
+        const requestedOutputSet = new Map<string, bigint>([
+            ['lovelace', quantity],
+        ]);
+
+        const selection = this.selectValue(
+            sortedUTxOs, requestedOutputSet,
+        );
+
+        return selection;
+    }
+
+    private enoughValueHasBeenSelected(
+        selection: ITxBuildInput[], assets: Map<string, bigint>,
+    ): boolean {
+        return Array
+            .from(
+                assets, (asset) => ({ unit: asset[0], quantity: asset[1] }),
+            )
+            .every((asset) => {
+                return selection
+                    .filter((utxo) => {
+                        return fromValue(utxo.utxo.resolved.value)
+                            .find((a) => a.unit === asset.unit) !== undefined;
+                    })
+                    .reduce((selectedQuantity, utxo) => {
+                        const utxoQuantity = fromValue(utxo.utxo.resolved.value)
+                            .reduce(
+                                (quantity, a) => quantity + asset.unit === a.unit ? BigInt(a.quantity) : BigInt(0),
+                                BigInt(0),
+                            );
+
+                        return selectedQuantity + utxoQuantity;
+                    }, BigInt(0)) < asset.quantity === false;
+            });
+    }
+
+    private selectValue(
+        inputUTxO: ITxBuildInput[],
+        outputSet: Map<string, bigint>,
+        selection: ITxBuildInput[] = [],
+    ): ITxBuildInput[] {
+        if (
+            inputUTxO.length === 0
+            || this.enoughValueHasBeenSelected(selection, outputSet)
+        ) {
+            return selection;
+        }
+
+        if (this.valueCanBeSelected(inputUTxO[0], outputSet)) {
+            return this.selectValue(
+                inputUTxO.slice(1), outputSet,
+                [...selection, inputUTxO[0]],
+            );
+        }
+
+        return this.selectValue(
+            inputUTxO.slice(1),
+            outputSet, selection,
+        );
+    }
+
+    private valueCanBeSelected(
+        input: ITxBuildInput, assets: Map<string, bigint>,
+    ): boolean {
+        return Array.from(assets.keys()).some((unit) => {
+            return fromValue(input.utxo.resolved.value)
+                .find((asset) => asset.unit === unit) !== undefined;
+        });
     }
 }
 
@@ -1040,6 +1157,28 @@ function onEvaluationResult(
 
     return _isScriptValid;
 };
+
+function fromBytes(bytes: Uint8Array) {
+    return Buffer.from(bytes).toString('hex');
+}
+
+function fromUTF8(utf8: string) {
+    if (utf8.length % 2 === 0 && /^[0-9A-F]*$/i.test(utf8))
+        return utf8;
+
+    return fromBytes(Buffer.from(utf8, 'utf-8'));
+}
+
+function fromValue(value: Value) {
+    return value.map.flatMap(({ policy, assets }) => {
+        return policy === ''
+            ? { unit: 'lovelace', quantity: assets[''].toString() }
+            : Object.keys(assets).map((assetName) => ({
+                unit: `${policy.toString()}${fromUTF8(assetName)}`,
+                quantity: assets[assetName].toString()
+            }));
+    });
+}
 
 export function getScriptDataHash( rdmrs: TxRedeemer[], datumsScriptData: number[], languageViews: Uint8Array ): ScriptDataHash | undefined
 {
