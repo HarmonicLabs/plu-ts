@@ -1,9 +1,5 @@
 import ObjectUtils from "../../../../../utils/ObjectUtils";
-<<<<<<< HEAD
-import { Builtin } from "../../../../UPLC/UPLCTerms/Builtin";;
-=======
 import { IRNative } from "../../../../IR/IRNodes/IRNative";
->>>>>>> v0.3.0
 import { TermFn, PPair, PLam } from "../../../PTypes";
 import { Term } from "../../../Term";
 import { PrimType, TermType, ToPType, data, lam, pair } from "../../../type_system";

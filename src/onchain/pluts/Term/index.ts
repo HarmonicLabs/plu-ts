@@ -1,15 +1,10 @@
 import JsRuntime from "../../../utils/JsRuntime";
 import ObjectUtils from "../../../utils/ObjectUtils";
 
-import { UPLCTerm, showUPLC } from "../../UPLC/UPLCTerm";
+import { UPLCTerm } from "../../UPLC/UPLCTerm";
 import type { PType } from "../PType";
 
-<<<<<<< HEAD
 import { Cloneable, isCloneable } from "../../../types/interfaces/Cloneable";
-import { HoistedUPLC } from "../../UPLC/UPLCTerms/HoistedUPLC";
-=======
-import { isCloneable } from "../../../types/interfaces/Cloneable";
->>>>>>> v0.3.0
 import { Machine } from "../../CEK";
 import { FromPType, ToPType } from "../type_system/ts-pluts-conversion";
 import { isWellFormedGenericType } from "../type_system/kinds/isWellFormedType";
@@ -28,11 +23,7 @@ import { showIR } from "../../IR/utils/showIR";
 export type UnTerm<T extends Term<PType>> = T extends Term<infer PT extends PType > ? PT : never;
 
 export class Term<A extends PType>
-<<<<<<< HEAD
-    implements Cloneable<Term<A>>
-=======
-    implements ToUPLC, ToIR
->>>>>>> v0.3.0
+    implements ToUPLC, ToIR, Cloneable<Term<A>>
 {
     /**
      * in most cases it will never be used
@@ -49,41 +40,12 @@ export class Term<A extends PType>
             this._pInstance;
     }
 
-    // typescript being silly here
-<<<<<<< HEAD
-    _type!: FromPType<A> | TermType;
-    get type(): FromPType<A> | TermType
-    {
-        return this._type
-    };
-
     clone!: () => Term<A>
 
-    protected _toUPLC!: ( deBruijnLevel: bigint ) => UPLCTerm
-    get toUPLC(): ( deBruijnLevel: bigint | number ) => UPLCTerm
-    {
-        return ( deBruijnLevel: bigint | number ) =>
-        {
-            if( typeof deBruijnLevel !== "bigint" ) deBruijnLevel = BigInt( deBruijnLevel );
-
-            let uplc = this._toUPLC( deBruijnLevel );
-            if( 
-                !(uplc instanceof HoistedUPLC) &&
-                (this as any).isConstant
-            )
-            {
-                // console.log("evaluating:\n\n", showUPLC( uplc ) );
-
-                // !!! IMPORTANT !!!
-                // pair creation assumes this evaluation is happening here
-                // if for whatever reason this is removed please adapt the rest of the codebas
-                uplc = Machine.evalSimple( uplc )
-            }
-=======
+    // typescript being silly here
     readonly type!: FromPType<A> | TermType;
     
     readonly toUPLC!: ( deBruijnLevel?: bigint | number ) => UPLCTerm
->>>>>>> v0.3.0
 
     readonly toIR!: ( deBruijnLevel?: bigint | number ) => IRTerm
 
@@ -211,13 +173,13 @@ export class Term<A extends PType>
                 value: () => {
                     const cloned = new Term(
                         this.type,
-                        _toUPLC,
+                        _toIR_,
                         Boolean((this as any).isConstant) // isConstant
                     ) as any;
                 
                     Object.keys( this ).forEach( k => {
                 
-                        if( k === "_type" || k === "_toUPLC" ) return;
+                        if( k === "_type" || k === "_toIR_" ) return;
                         
                         Object.defineProperty(
                             cloned,
