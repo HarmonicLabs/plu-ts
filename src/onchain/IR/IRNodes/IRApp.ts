@@ -1,5 +1,5 @@
 import { toHex } from "@harmoniclabs/uint8array-utils";
-import { blake2b_224 } from "../../../crypto";
+import { blake2b_128 } from "../../../crypto";
 import { Cloneable } from "../../../types/interfaces/Cloneable";
 import { IRTerm } from "../IRTerm";
 import { IHash } from "../interfaces/IHash";
@@ -50,7 +50,7 @@ export class IRApp
                     if(!( hash instanceof Uint8Array ))
                     {
                         // basically a merkle tree
-                        hash = blake2b_224( concatUint8Arr( IRApp.tag, fn.hash, arg.hash ) );
+                        hash = blake2b_128( concatUint8Arr( IRApp.tag, fn.hash, arg.hash ) );
                     }
                     // return a copy
                     return hash.slice()

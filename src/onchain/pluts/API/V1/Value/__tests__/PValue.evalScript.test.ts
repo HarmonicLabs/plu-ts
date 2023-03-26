@@ -105,7 +105,9 @@ const pvalueOf = phoist(
                 entry.fst.eq( currSym )
             )
         )
-        .onJust( _ => _.extract("val").in( ({ val: policyEntry }) => {
+        .onJust( just => {
+
+            const policyEntry = just.val;
 
             return pmatch(
                     policyEntry.snd.find( assetEntry => 
@@ -114,11 +116,9 @@ const pvalueOf = phoist(
                         }
                     )
                 )
-                .onJust( _ => _.extract("val").in(({ val: entry }) =>
-                    entry.snd 
-                ))
+                .onJust( just => just.val.snd )
                 .onNothing( _ => pInt( 0 ) );
-        }))
+        })
         .onNothing( _ => pInt( 0 ) )
             
     )

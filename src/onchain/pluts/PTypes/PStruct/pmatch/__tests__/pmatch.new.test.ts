@@ -1,10 +1,8 @@
-import { pmatch } from "../new_improved";
 import { int } from "../../../../type_system";
 import { pstruct } from "../../pstruct";
-import { Machine, Term, pDataI, pInt, padd } from "../../../../..";
-import { showIR } from "../../../../../IR/utils/showIR";
+import { Machine, Term, pDataI, pInt, padd, pmatch } from "../../../../..";
 import { compileIRToUPLC } from "../../../../../IR/toUPLC/compileIRToUPLC";
-import { prettyUPLC, showUPLC } from "../../../../../UPLC/UPLCTerm";
+import { showUPLC } from "../../../../../UPLC/UPLCTerm";
 
 
 const Nums = pstruct({

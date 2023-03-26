@@ -1,4 +1,4 @@
-import { blake2b_224 } from "../../../crypto";
+import { blake2b_128 } from "../../../crypto";
 import { BasePlutsError } from "../../../errors/BasePlutsError";
 import { Cloneable } from "../../../types/interfaces/Cloneable";
 import ObjectUtils from "../../../utils/ObjectUtils";
@@ -48,7 +48,7 @@ export class IRFunc
                 get: () => {
                     if(!( hash instanceof Uint8Array ))
                     {
-                        hash = blake2b_224(
+                        hash = blake2b_128(
                             concatUint8Arr(
                                 IRFunc.tag,
                                 positiveIntAsBytes( this.arity ),

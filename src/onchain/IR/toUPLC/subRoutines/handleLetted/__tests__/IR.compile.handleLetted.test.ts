@@ -452,7 +452,7 @@ describe("handleLetted", () => {
             toHex(
                 theLetted.hash
             )
-        ).toEqual( "a2e4577837a81482df776f3af7d3aa5a0d7c9f6bdeed63ee2cff9237" );
+        ).toEqual( "b10af49d9972df4e111157e429de5d67" );
 
         const sndListHoisted = new IRHoisted(
             new IRFunc( 1,

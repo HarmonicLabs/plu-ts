@@ -12,7 +12,7 @@ import { getDebruijnInTerm } from "../../_internal/getDebruijnInTerm";
 import { iterTree } from "../../_internal/iterTree";
 import { groupByScope } from "./groupByScope";
 import { IRCompilationError } from "../../../../../errors/PlutsIRError/IRCompilationError";
-import { showIR } from "../../../utils/showIR";
+import { prettyIR, prettyIRJsonStr, showIR } from "../../../utils/showIR";
 import { fn } from "../../../../pluts";
 import { IRDelayed } from "../../../IRNodes/IRDelayed";
 import { IRForced } from "../../../IRNodes/IRForced";
@@ -140,7 +140,7 @@ export function handleLetted( term: IRTerm ): void
                 }
                 if( t instanceof IRLetted )
                 {
-                    if( // the letted has is one of the ones to be inlined
+                    if( // the letted hash is one of the ones to be inlined
                         toInlineHashes.some( h => uint8ArrayEq( h, t.hash ) )
                     )
                     {
@@ -229,6 +229,13 @@ export function handleLetted( term: IRTerm ): void
             // now we inline
             const clonedLettedVal = letted.value.clone();
 
+            console.log(
+                toHex( letted.hash ),
+                prettyIRJsonStr( letted.value ),
+            );
+            console.log( showIR( maxScope ) );
+            console.log( diffDbn );
+
             // if there is any actual difference between the letted term
             // and the position where it will be finally placed
             // the value needs to be modified accoridingly
@@ -238,6 +245,7 @@ export function handleLetted( term: IRTerm ): void
                 iterTree( clonedLettedVal, (elem) => {
                     if( elem instanceof IRVar || elem instanceof IRLetted )
                     {
+                        console.log( showIR( elem.parent! ) )
                         elem.dbn -= diffDbn
                     }
                 });

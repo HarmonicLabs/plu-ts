@@ -238,7 +238,7 @@ export function prettyUPLC( term: UPLCTerm, _indent: number = 2 ): string
         if( t instanceof Delay ) return `${indent}(delay ${ loop( t.delayedTerm, dbn, depth + 1 ) }${indent})`;
         if( t instanceof Lambda ) 
         {
-            return `\n${indentStr.repeat(depth)}(lam ${getVarNameForDbn( dbn )} ${ loop( t.body, dbn + 1, depth + 1 ) }${indent})`;
+            return `${indent}(lam ${getVarNameForDbn( dbn )} ${ loop( t.body, dbn + 1, depth + 1 ) }${indent})`;
         }
         if( t instanceof Application ) return `${indent}[${ loop( t.funcTerm, dbn, depth + 1 ) } ${ loop( t.argTerm, dbn, depth + 1 ) }${indent}]`;
         if( t instanceof UPLCConst ) return `${indent}(con ${showConstType(t.type)} ${ showUPLCConstValue( t.value ) })`;

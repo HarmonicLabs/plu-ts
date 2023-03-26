@@ -1,6 +1,7 @@
 import { pstruct } from "..";
 import { BitStream } from "../../../../../types/bits/BitStream";
 import { Machine } from "../../../../CEK/Machine";
+import { prettyIR, prettyIRJsonStr, showIR } from "../../../../IR/utils/showIR";
 import { HoistedUPLC } from "../../../../UPLC/UPLCTerms/HoistedUPLC";
 import { pDataI, pInt, phead, phoist, plam, pmakeUnit, toData } from "../../../lib"
 import { data, list, unit, int } from "../../../type_system";
@@ -114,15 +115,23 @@ describe("getElemAtTerm", () => {
         }) as any
     })
 
-    test("extract nested", () => {
+    test.only("extract nested", () => {
+
+        const theTerm = pmatch( stuff )
+        .onStruct3( _ => _.extract("m").in( ({ m }) =>
+        m.extract("i").in( ({ i }) =>
+        i.extract("e").in( ({ e }) => e )
+        )));
+
+        console.log( 
+            prettyIRJsonStr(
+                theTerm.toIR()
+            )
+        );
 
         expect(
             Machine.evalSimple(
-                pmatch( stuff )
-                .onStruct3( _ => _.extract("m").in( ({ m }) =>
-                m.extract("i").in( ({ i }) =>
-                i.extract("e").in( ({ e }) => e )
-                )))
+                theTerm
             )
         ).toEqual(
             Machine.evalSimple(

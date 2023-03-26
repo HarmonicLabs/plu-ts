@@ -65,23 +65,6 @@ export function addPStructMethods<SDef extends StructDefinition>( struct: Term<P
         const ctorName = ctors[0];
         const ctor = sDef[ ctorName ];
 
-        /**
-         * @deprecated
-         */
-        ObjectUtils.defineReadOnlyProperty(
-            struct,
-            "extract",
-            <Fields extends (keyof SDef[keyof SDef])[]>( ...fields: Fields ): {
-                in: <PExprResult extends PType>( expr: ( extracted: RestrictedStructInstance<SDef[keyof SDef],Fields> ) => Term<PExprResult> ) => Term<PExprResult>
-            } => {
-                return {
-                    in: ( expr ) =>
-                        pmatch( struct )
-                        [( "on" + capitalize( ctorName ) ) as any]( rawFields => (rawFields as any).extract( ...fields ).in( expr ) ) as any
-                }
-            }
-        );
-
         const fieldsNames = Object.keys( ctor );
         const nFields = fieldsNames.length
 
@@ -121,6 +104,21 @@ export function addPStructMethods<SDef extends StructDefinition>( struct: Term<P
             );
 
         }
+
+        /**
+         * @deprecated
+         */
+        ObjectUtils.defineReadOnlyProperty(
+            struct,
+            "extract",
+            <Fields extends (keyof SDef[keyof SDef])[]>( ...fields: Fields ): {
+                in: <PExprResult extends PType>( expr: ( extracted: RestrictedStructInstance<SDef[keyof SDef],Fields> ) => Term<PExprResult> ) => Term<PExprResult>
+            } => {
+                return {
+                    in: ( expr ) => expr( struct as any )
+                }
+            }
+        );
     }
 
     ObjectUtils.definePropertyIfNotPresent(

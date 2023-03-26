@@ -1,5 +1,5 @@
 import { toHex, uint8ArrayEq } from "@harmoniclabs/uint8array-utils";
-import { blake2b_224 } from "../../../crypto";
+import { blake2b_128 } from "../../../crypto";
 import { Cloneable } from "../../../types/interfaces/Cloneable";
 import ObjectUtils from "../../../utils/ObjectUtils";
 import { IRTerm } from "../IRTerm";
@@ -69,7 +69,7 @@ export class IRHoisted
                 get: () => {
                     if(!( hash instanceof Uint8Array ))
                     {
-                        hash = blake2b_224(
+                        hash = blake2b_128(
                             concatUint8Arr(
                                 IRHoisted.tag,
                                 hoisted.hash

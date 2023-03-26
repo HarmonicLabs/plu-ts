@@ -1,4 +1,4 @@
-import { blake2b_224 } from "../../../crypto";
+import { blake2b_128 } from "../../../crypto";
 import { BasePlutsError } from "../../../errors/BasePlutsError";
 import { UnexpectedMarkHashInvalidCall } from "../../../errors/PlutsIRError/UnexpectedMarkHashInvalidCall";
 import { Cloneable } from "../../../types/interfaces/Cloneable";
@@ -70,9 +70,11 @@ export class IRVar
                 set: ( newDbn: number ) => {
                     if(!(
                         Number.isSafeInteger( newDbn ) && newDbn >= 0 
-                    )) throw new BasePlutsError(
-                        "invalid index for an `IRVar` instance"
-                    );
+                    )){
+                        throw new BasePlutsError(
+                            "invalid index for an `IRVar` instance; new DeBruijn was: " + newDbn
+                        );
+                    }
 
                     if( newDbn === _dbn ) return; // everything ok
 
@@ -132,7 +134,7 @@ function getVarHashAtDbn( dbn: number )
     while( (bdnVarHashCache.length - 1) < dbn )
     {
         bdnVarHashCache.push(
-            blake2b_224(
+            blake2b_128(
                 concatUint8Arr(
                     IRVar.tag,
                     positiveIntAsBytes( bdnVarHashCache.length )

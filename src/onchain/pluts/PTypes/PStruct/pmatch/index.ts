@@ -87,6 +87,7 @@ function getStructInstance<CtorDef extends StructCtorDef>
     const instance: StructInstance<CtorDef> = {} as any;
     const fieldNames = Object.keys( ctorDef );
 
+    
     for( let i = 0; i < fieldNames.length; i++ )
     {
         const fieldName = fieldNames[i];
@@ -107,36 +108,68 @@ function getStructInstance<CtorDef extends StructCtorDef>
         );
     }
 
+    /**
+     * to remove in 1.0.0
+     * @deprecated
+     */
+    Object.defineProperty(
+        instance, "extract",
+        {
+            value: ( ..._fields: any[] ) => {
+
+                return  {
+                    in: ( cb: ( instance: StructInstance<CtorDef> ) => Term<PType> ): Term<PType> => cb( instance )
+                }
+            },
+            writable: false,
+            enumerable: true,
+            configurable: false
+        }
+    );
+
+
     return instance;
 }
 
-type RawCtorCallback = ( rawFields: Term<PList<PData>> ) => Term<PType>;
+type RawCtorCallback = ( mathcedCtorsFields: Term<PList<PData>> ) => Term<PType>;
 
 type CtorCallback<SDef extends StructDefinition> = ( instance: StructInstance<SDef[keyof SDef & string]> ) => Term<PType>;
 
 type EmptyObject = { [x: string | number | symbol ]: never };
 
 type MatchRest<PReturnT extends PType> = {
-    _: ( continuation: ( rawFields: TermList<PData> ) => Term<PReturnT> ) => UtilityTermOf<PReturnT>
+    _: ( continuation: ( mathcedCtorsFields: TermList<PData> ) => Term<PReturnT> ) => UtilityTermOf<PReturnT>
 }
 
 type TypedPMatchOptions<SDef extends StructDefinition, PReturnT extends PType> = {
     [Ctor in keyof SDef as `on${Capitalize<string & Ctor>}`]
-        : ( cb: ( rawFields: StructInstance<SDef[Ctor]> ) => Term<PReturnT> )
+        : ( cb: ( mathcedCtorsFields: StructInstance<SDef[Ctor]> ) => Term<PReturnT> )
             =>  Omit<SDef,Ctor> extends EmptyObject ?
                 UtilityTermOf<PReturnT> :
                 TypedPMatchOptions<Omit<SDef,Ctor>, PReturnT>
 } & MatchRest<PReturnT>
 
+type MathcedCtorsFields<SCtorDef extends StructCtorDef> = StructInstance<SCtorDef> & {
+    /**
+     * @deprecated
+     * you can use simple dot notation instead
+    **/
+    extract: ( ...fields: (keyof SCtorDef)[] ) => {
+        /**
+         * @deprecated
+        **/
+        in: ( cb: ( mathcedCtorsFields: StructInstance<SCtorDef> ) => Term<PType> ) => Term<PType> 
+    }
+}
 
 export type PMatchOptions<SDef extends StructDefinition> = {
     [Ctor in keyof SDef as `on${Capitalize<string & Ctor>}`]
-        : <PReturnT extends PType>( cb: ( rawFields: StructInstance<SDef[Ctor]> ) => Term<PReturnT> )
+        : <PReturnT extends PType>( cb: ( mathcedCtorsFields: MathcedCtorsFields<SDef[Ctor]> ) => Term<PReturnT> )
             =>  Omit<SDef,Ctor> extends EmptyObject ?
                 UtilityTermOf<PReturnT> :
                 TypedPMatchOptions<Omit<SDef,Ctor>, PReturnT>
 } & {
-    _: <PReturnT extends PType>( continuation: ( rawFields: TermList<PData> ) => Term<PReturnT> ) => UtilityTermOf<PReturnT>
+    _: <PReturnT extends PType>( continuation: ( mathcedCtorsFields: TermList<PData> ) => Term<PReturnT> ) => UtilityTermOf<PReturnT>
 }
 
 const matchNCtorsIdxsCache: { [n: number]: Term<any> } = {};
@@ -406,33 +439,9 @@ export function pmatch<SDef extends StructDefinition>( struct: Term<PStruct<SDef
                 ( cb: ( instance: StructInstance<SDef[typeof ctor]> ) => Term<PType> ): Term<PType> => {
 
                     // build the `StructInstance` input from the struct fields
-                    const callback = ( rawFields: Term<PList<PData>> ): Term<PType> => {
+                    const callback = ( mathcedCtorsFields: Term<PList<PData>> ): Term<PType> => {
 
-                        const instance: StructInstance<SDef[keyof SDef & string]> = {} as any;
-                        const ctorDef = sDef[ctor];
-                        const fieldNames = Object.keys( ctorDef );
-
-                        for( let i = 0; i < fieldNames.length; i++ )
-                        {
-                            const fieldName = fieldNames[i];
-                            Object.defineProperty(
-                                instance, fieldName,
-                                {
-                                    value: addUtilityForType( ctorDef[ fieldName ] )(
-                                        _plet( 
-                                            _fromData( ctorDef[ fieldName ] )(
-                                                getElemAtTerm( i ).$( rawFields )
-                                            )
-                                        )
-                                    ),
-                                    writable: false,
-                                    enumerable: true,
-                                    configurable: false
-                                }
-                            );
-                        }
-
-                        return cb( instance )
+                        return cb( getStructInstance( mathcedCtorsFields, sDef[ctor] ) as any )
                     };
 
                     // same stuff of previous ctors

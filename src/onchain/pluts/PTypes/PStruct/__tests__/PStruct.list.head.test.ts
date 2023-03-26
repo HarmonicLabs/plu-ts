@@ -50,7 +50,7 @@ const myOtherStruct = MyOtherStruct.There({ hello: toData( list( MyStruct.type )
 
 describe("struct.listField.head", () => {
 
-    test.only("type", () => {
+    test("type", () => {
 
         const hello = myOtherStruct.hello;
 

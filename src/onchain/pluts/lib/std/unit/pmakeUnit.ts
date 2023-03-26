@@ -5,5 +5,6 @@ import { unit } from "../../../type_system/types";
 
 export const pmakeUnit = () => new Term<PUnit>(
     unit,
-    _dbn => IRConst.unit
+    _dbn => IRConst.unit,
+    true // isConstant
 );

@@ -1,6 +1,6 @@
-import { bool, compile } from "../..";
+import { UtilityTermOf, bool, compile } from "../..";
 import { Machine } from "../../../CEK";
-import { PTxId, PTxOutRef, V2 } from "../../API";
+import { PCurrencySymbol, PTxId, PTxOutRef, V2 } from "../../API";
 import { pstruct, pmatch } from "../../PTypes";
 import { pData, pDataB, pDataI, perror, pfn, pisEmpty, plet, punsafeConvertType } from "../../lib";
 import { ErrorUPLC } from "../../../UPLC/UPLCTerms/ErrorUPLC";
@@ -14,6 +14,7 @@ import { CborBytes } from "../../../../cbor/CborObj/CborBytes";
 import { Script, ScriptType } from "../../../../offchain/script/Script";
 import { fromHex } from "@harmoniclabs/uint8array-utils";
 import { _old_plet } from "../../lib/plet/old";
+import { showIR } from "../../../IR/utils/showIR";
 
 
 export const MintRdmr = pstruct({
@@ -35,16 +36,18 @@ export const oneShotNFT = pfn([
 
         plet(
             pmatch( purpose )
-            .onMinting( _ => _.extract("currencySym").in( ({ currencySym }) => currencySym ))
-            ._( _ => perror( V2.PCurrencySymbol.type ) as any )
+            .onMinting( mint => mint.currencySym )
+            ._( _ => perror( V2.PCurrencySymbol.type ) as any ) as UtilityTermOf<typeof PCurrencySymbol>
         ).in( ownCurrSym => 
 
         pmatch( rdmr )
         .onMint( _ =>
 
-            tx.inputs.some( input =>
-                input.extract("utxoRef").in( ({ utxoRef }) => utxoRef.eq( utxo ) )
-            )
+            tx.inputs.some( input => {
+
+                return input.extract("utxoRef").in( ({ utxoRef }) => utxoRef.eq( utxo )  )
+
+            })
             .and(
     
                 tx.mint.some( entry => {
@@ -114,6 +117,12 @@ punsafeConvertType(
 describe("oneShotNFT", () => {
 
     test.only("it compiles", () => {
+
+        console.log(
+            showIR(
+                oneShotNFT.toIR()
+            )
+        );
 
 //         expect(
 //             () => 

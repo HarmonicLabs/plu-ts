@@ -1,5 +1,5 @@
 import { toHex, uint8ArrayEq } from "@harmoniclabs/uint8array-utils";
-import { blake2b_224 } from "../../../crypto";
+import { blake2b_128 } from "../../../crypto";
 import { Cloneable } from "../../../types/interfaces/Cloneable";
 import ObjectUtils from "../../../utils/ObjectUtils";
 import { IRTerm } from "../IRTerm";
@@ -112,7 +112,7 @@ export class IRLetted
                             // aka. there is nothing to normalize
                             // just use the value regardless of the
                             // `IRLetted` dbn instantiation
-                            hash = blake2b_224(
+                            hash = blake2b_128(
                                 concatUint8Arr(
                                     IRLetted.tag,
                                     _value.hash
@@ -121,7 +121,7 @@ export class IRLetted
                         }
                         else
                         {
-                            hash = blake2b_224(
+                            hash = blake2b_128(
                                 concatUint8Arr(
                                     IRLetted.tag,
                                     positiveIntAsBytes( normalized[0] ),
@@ -309,47 +309,42 @@ export function getLettedTerms( irTerm: IRTerm ): LettedSetEntry[]
 {
     const lettedTerms: LettedSetEntry[] = [];
 
-    function searchIn( term: IRTerm ): void
+    const stack: IRTerm[] = [ irTerm ];
+
+    while( stack.length > 0 )
     {
-        if( term instanceof IRLetted )
+        const t = stack.pop() as IRTerm;
+
+        if( t instanceof IRLetted )
         {
-            lettedTerms.push({ letted: term, nReferences: 1 });
-            return;
+            lettedTerms.push({ letted: t, nReferences: 1 });
+            continue;
         }
 
-        if( term instanceof IRApp )
+        if( t instanceof IRApp )
         {
-            searchIn( term.fn );
-            searchIn( term.arg );
-            return;
+            stack.push( t.fn, t.arg );
+            continue;
         }
 
-        if( term instanceof IRFunc )
+        if( t instanceof IRFunc )
         {
-            searchIn( term.body );
-            return;
+            stack.push( t.body );
+            continue;
         }
 
-        if( term instanceof IRForced )
+        if( t instanceof IRForced )
         {
-            searchIn( term.forced );
-            return;
+            stack.push( t.forced );
+            continue;
         }
 
-        if( term instanceof IRDelayed )
+        if( t instanceof IRDelayed )
         {
-            searchIn( term.delayed );
-            return;
+            stack.push( t.delayed );
+            continue;
         }
-
-        // if( term instanceof IRHoisted ) return; // hoisted terms are closed
-        // if( term instanceof IRNative ) return;
-        // if( term instanceof IRVar ) return;
-        // if( term instanceof IRConst ) return;
-        // if( term instanceof IRError ) return;
     }
-
-    searchIn( irTerm );
 
     return lettedTerms;
 }

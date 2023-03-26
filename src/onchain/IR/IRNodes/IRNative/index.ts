@@ -1,8 +1,6 @@
-import { blake2b_224 } from "../../../../crypto";
-import { PlutsIRError } from "../../../../errors/PlutsIRError";
+import { blake2b_128 } from "../../../../crypto";
 import { IllegalIRToUPLC } from "../../../../errors/PlutsIRError/IRCompilationError/IllegalIRToUPLC";
 import { UnexpectedMarkHashInvalidCall } from "../../../../errors/PlutsIRError/UnexpectedMarkHashInvalidCall";
-import { BitStream } from "../../../../types/bits/BitStream";
 import { Cloneable } from "../../../../types/interfaces/Cloneable";
 import UPLCFlatUtils from "../../../../utils/UPLCFlatUtils";
 import { ToJson } from "../../../../utils/ts/ToJson";
@@ -13,7 +11,7 @@ import { IHash } from "../../interfaces/IHash";
 import { IIRParent } from "../../interfaces/IIRParent";
 import { concatUint8Arr } from "../../utils/concatUint8Arr";
 import { isIRTerm } from "../../utils/isIRTerm";
-import { positiveBigIntAsBytes, positiveIntAsBytes } from "../../utils/positiveIntAsBytes";
+import { positiveBigIntAsBytes } from "../../utils/positiveIntAsBytes";
 import { IRNativeTag, nativeTagToString } from "./IRNativeTag";
 
 /**
@@ -70,7 +68,7 @@ export class IRNative
                 get: () => {
                     if(nativeHashesCache[this.tag] === undefined)
                     {
-                        nativeHashesCache[this.tag] = blake2b_224( 
+                        nativeHashesCache[this.tag] = blake2b_128( 
                             concatUint8Arr( 
                                 IRNative.tag, 
                                 positiveBigIntAsBytes(

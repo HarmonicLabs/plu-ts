@@ -1,4 +1,4 @@
-import { blake2b_224 } from "../../../crypto";
+import { blake2b_128 } from "../../../crypto";
 import { UnexpectedMarkHashInvalidCall } from "../../../errors/PlutsIRError/UnexpectedMarkHashInvalidCall";
 import { BitStream } from "../../../types/bits/BitStream";
 import { Cloneable } from "../../../types/interfaces/Cloneable";
@@ -10,7 +10,7 @@ import { IIRParent } from "../interfaces/IIRParent";
 import { isIRTerm } from "../utils/isIRTerm";
 
 const irErrorBitTag = new Uint8Array([ 0b0000_0111 ]);
-const errorHash = blake2b_224( irErrorBitTag.slice() )
+const errorHash = blake2b_128( irErrorBitTag.slice() )
 
 export class IRError
     implements Cloneable<IRError>, IHash, IIRParent, ToJson

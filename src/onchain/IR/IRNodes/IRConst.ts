@@ -1,5 +1,5 @@
 import { fromUtf8, toHex } from "@harmoniclabs/uint8array-utils";
-import { blake2b_224 } from "../../../crypto/blake2b";
+import { blake2b_128 } from "../../../crypto/blake2b";
 import { BasePlutsError } from "../../../errors/BasePlutsError";
 import { Data, dataToCbor, isData } from "../../../types/Data";
 import { ByteString } from "../../../types/HexString/ByteString";
@@ -104,7 +104,7 @@ export class IRConst
                 get: () => {
                     if(!( hash instanceof Uint8Array ))
                     {
-                        hash = blake2b_224(
+                        hash = blake2b_128(
                             concatUint8Arr(
                                 IRConst.tag,
                                 new Uint8Array( termTyToConstTy( this.type ) ),
