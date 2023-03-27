@@ -9,7 +9,7 @@ import { Term } from "../../../Term";
 import { PData } from "../../PData/PData";
 import { PLam } from "../../PFn/PLam";
 import { PList } from "../../PList";
-import { matchSingleCtorStruct } from "../matchSingleCtorStruct";
+import { getFields } from "../matchSingleCtorStruct";
 import { capitalize } from "../../../../../utils/ts/capitalize";
 import { DataI } from "../../../../../types/Data/DataI";
 import { papp } from "../../../lib/papp";
@@ -332,11 +332,11 @@ function hoistedMatchCtors<SDef extends StructDefinition>(
             }
 
             return papp(
+                cont,
                 papp(
-                    matchSingleCtorStruct( cont.type[2] ),
-                    structData as any
-                ),
-                cont
+                    getFields,
+                    structData as any as Term<PData>
+                )
             );
         }
 
@@ -344,11 +344,11 @@ function hoistedMatchCtors<SDef extends StructDefinition>(
         const returnT = getReturnTypeFromContinuation( cont, thisCtorDef );
 
         return papp(
+            plam( list(data), returnT )( cont ),
             papp(
-                matchSingleCtorStruct( returnT ),
-                structData as any
-            ),
-            plam( list(data), returnT )( cont )
+                getFields,
+                structData as any as Term<PData>
+            )
         );
     }
 

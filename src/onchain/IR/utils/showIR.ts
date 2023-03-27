@@ -32,7 +32,7 @@ export function showIRText( _ir: IRTerm ): string
         if( ir instanceof IRLetted )
         {
             // addLetted( ir );
-            return `(letted ${toHex( ir.hash )})`;
+            return `(letted ${ir.dbn} ${toHex( ir.hash )})`;
         }
         if( ir instanceof IRHoisted )
         {
@@ -129,7 +129,7 @@ export function showIR( _ir: IRTerm )
         if( ir instanceof IRLetted )
         {
             addLetted( ir );
-            return `(letted ${toHex( ir.hash )})`;
+            return `(letted ${ir.dbn} ${toHex( ir.hash )})`;
         }
         if( ir instanceof IRHoisted )
         {
@@ -178,7 +178,7 @@ export function prettyIRText( _ir: IRTerm, _indent = 2 )
         if( ir instanceof IRLetted )
         {
             // addLetted( ir );
-            return `${indent}(letted ${toHex( ir.hash )})`;
+            return `${indent}(letted ${ir.dbn} ${toHex( ir.hash )})`;
         }
         if( ir instanceof IRHoisted )
         {
@@ -281,7 +281,7 @@ export function prettyIR( _ir: IRTerm, _indent = 2 )
         if( ir instanceof IRLetted )
         {
             addLetted( ir );
-            return `${indent}(letted ${toHex( ir.hash )})`;
+            return `${indent}(letted ${ir.dbn} ${toHex( ir.hash )})`;
         }
         if( ir instanceof IRHoisted )
         {

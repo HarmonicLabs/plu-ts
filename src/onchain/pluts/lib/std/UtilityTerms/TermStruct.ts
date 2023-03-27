@@ -23,6 +23,9 @@ import { IRApp } from "../../../../IR/IRNodes/IRApp";
 import { IRNative } from "../../../../IR/IRNodes/IRNative";
 import { UtilityTermOf } from "../../addUtilityForType";
 import { punsafeConvertType } from "../../punsafeConvertType";
+import { IRHoisted } from "../../../../IR/IRNodes/IRHoisted";
+import { IRFunc } from "../../../../IR/IRNodes/IRFunc";
+import { IRVar } from "../../../../IR/IRNodes/IRVar";
 
 
 export type TermStruct<SDef extends StructDefinition> = Term<PStruct<SDef>> & {
@@ -38,6 +41,9 @@ export type TermStruct<SDef extends StructDefinition> = Term<PStruct<SDef>> & {
              * @deprecated
              */
             extract: <Fields extends (keyof SDef[keyof SDef])[]>( ...fields: Fields ) => {
+                /**
+                 * @deprecated
+                 */
                 in: <PExprResult extends PType>( expr: ( extracted: RestrictedStructInstance<SDef[keyof SDef],Fields> ) => Term<PExprResult> ) => UtilityTermOf<PExprResult>
             }
         } : {}
@@ -48,6 +54,18 @@ const getterOnly = {
     configurable: false,
     enumerable: true
 };
+
+const hoisted_getFields = new IRHoisted(
+    new IRFunc( 1, // struct
+        new IRApp(
+            IRNative.sndPair,
+            new IRApp(
+                IRNative.unConstrData,
+                new IRVar( 0 )
+            )
+        )
+    )
+);
 
 export function addPStructMethods<SDef extends StructDefinition>( struct: Term<PStruct<SDef>> ): TermStruct<SDef>
 {
@@ -73,8 +91,8 @@ export function addPStructMethods<SDef extends StructDefinition>( struct: Term<P
             dbn => new IRLetted(
                 Number(dbn),
                 new IRApp(
-                    IRNative.sndPair,
-                    punConstrData.$( struct as any ).toIR( dbn )
+                    hoisted_getFields.clone(),
+                    struct.toIR( dbn )
                 )
             )
         );

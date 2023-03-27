@@ -115,19 +115,13 @@ describe("getElemAtTerm", () => {
         }) as any
     })
 
-    test.only("extract nested", () => {
+    test("extract nested", () => {
 
         const theTerm = pmatch( stuff )
         .onStruct3( _ => _.extract("m").in( ({ m }) =>
         m.extract("i").in( ({ i }) =>
         i.extract("e").in( ({ e }) => e )
         )));
-
-        console.log( 
-            prettyIRJsonStr(
-                theTerm.toIR()
-            )
-        );
 
         expect(
             Machine.evalSimple(

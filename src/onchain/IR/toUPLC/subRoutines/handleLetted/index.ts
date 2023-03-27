@@ -1,5 +1,4 @@
 import { toHex, uint8ArrayEq } from "@harmoniclabs/uint8array-utils";
-import { IRLettedMissingLCA } from "../../../../../errors/PlutsIRError/IRCompilationError/IRLettedMissingLCA";
 import { IRApp } from "../../../IRNodes/IRApp";
 import { IRFunc } from "../../../IRNodes/IRFunc";
 import { getSortedLettedSet, getLettedTerms, IRLetted, jsonLettedSetEntry } from "../../../IRNodes/IRLetted";
@@ -9,11 +8,9 @@ import { _addDepth } from "../../_internal/_addDepth";
 import { _modifyChildFromTo } from "../../_internal/_modifyChildFromTo";
 import { findAll } from "../../_internal/findAll";
 import { getDebruijnInTerm } from "../../_internal/getDebruijnInTerm";
-import { iterTree } from "../../_internal/iterTree";
 import { groupByScope } from "./groupByScope";
 import { IRCompilationError } from "../../../../../errors/PlutsIRError/IRCompilationError";
-import { prettyIR, prettyIRJsonStr, showIR } from "../../../utils/showIR";
-import { fn } from "../../../../pluts";
+import { prettyIRJsonStr, prettyIRText, showIR } from "../../../utils/showIR";
 import { IRDelayed } from "../../../IRNodes/IRDelayed";
 import { IRForced } from "../../../IRNodes/IRForced";
 
@@ -40,26 +37,27 @@ export function handleLetted( term: IRTerm ): void
         }
 
         const lettedSet = getSortedLettedSet( group );
-        let n = lettedSet.length;
+        const n = lettedSet.length;
         let a = 0;
         let b = 0;
         const toLet: IRLetted[] = new Array( n );
         const toInline: IRLetted[] = new Array( n );
 
-        // console.log( lettedSet.map( jsonLettedSetEntry ) );
-        // console.log( lettedSet.map( letted => letted.letted.dependencies ) );
-        
         // filter out terms with single reference
         for( let i = 0; i < n; i++ )
         {
             const thisLettedEntry = lettedSet[i];
-            // console.log( thisHoistedEntry.nReferences, thisHoistedEntry.letted.parent )
             if(
-                thisLettedEntry.nReferences === 1 &&
-                thisLettedEntry.letted.parent
+                // inline
+                // - terms used once (with single reference)
+                // - letted varibles (also used multiple times)
+                (
+                    thisLettedEntry.nReferences === 1 &&
+                    thisLettedEntry.letted.parent
+                ) ||
+                thisLettedEntry.letted.value instanceof IRVar
             )
             {
-                // inline with single reference
                 toInline[ b++ ] = thisLettedEntry.letted
             }
             else toLet[ a++ ] = thisLettedEntry.letted;
@@ -69,14 +67,28 @@ export function handleLetted( term: IRTerm ): void
         toLet.length = a;
         toInline.length = b;
 
+        /**
+         * temp varible to hold reference to the letted term we are operating with
+         */
+        let letted: IRLetted;
+
         const toInlineHashes = toInline.map( termToInline => termToInline.hash );
 
-        let letted: IRLetted;
+        // !!! IMPORTANT !!!
+        // the `toInline` array might include cloned instances
+        // that are not part of the tree
+        // we must collect the instances directly from the tree
+        const toInlineRefsInTree = findAll(
+            maxScope,
+            node =>
+                node instanceof IRLetted && 
+                toInlineHashes.some( h => uint8ArrayEq( h, node.hash ) )
+        );
         // inline single references from last to first
         // needs to be from last to first so that hashes will not change
-        for( let i = toInline.length - 1; i >= 0 ; i-- )
+        for( let i = toInlineRefsInTree.length - 1; i >= 0 ; i-- )
         {
-            letted = toInline[i] as IRLetted;
+            letted = toInlineRefsInTree[i] as IRLetted;
             _modifyChildFromTo(
                 letted.parent,
                 letted,
@@ -84,6 +96,9 @@ export function handleLetted( term: IRTerm ): void
             );
         }
 
+        // increase the debruijn index to account for newly introduced (and applied) `IRFunc`
+        // needs to be from last to first so that hashes will not change
+        // (aka. we replace dependents before dependecies)
         for( let i = toLet.length - 1; i >= 0; i-- )
         {
             // one of the many to be letted
@@ -93,10 +108,8 @@ export function handleLetted( term: IRTerm ): void
              * all the letted corresponding to this value
              * 
              * @type {IRLetted[]}
-             * we know is an `IRLetted` array
-             * an not a generic `IRTerm` array
-             * because that's what the 
-             * filter funciton checks for
+             * we know is an `IRLetted` array an not a generic `IRTerm` array
+             * because that's what the filter funciton checks for
              */
             const refs: IRLetted[] = findAll(
                 maxScope,
@@ -105,27 +118,9 @@ export function handleLetted( term: IRTerm ): void
                     uint8ArrayEq( elem.hash, letted.hash )
             ) as any;
 
-            // if letting a plain varible
-            // just inline the variable as it is more efficient
-            // and then continue with next group
-            if( letted.value instanceof IRVar )
-            {
-                // inline directly the refereces
-                for( const ref of refs )
-                {
-                    _modifyChildFromTo(
-                        ref?.parent,
-                        ref as any,
-                        ref.value
-                    )
-                }
-                continue;
-            }
-
             // add 1 to every var's DeBruijn that accesses stuff outside the max scope
-            // maxScope node is non inclusive since the new function is added insite the node 
+            // maxScope node is non inclusive since the new function is added inside the node 
             const stack: { term: IRTerm, dbn: number }[] = [{ term: maxScope.body, dbn: 0 }];
-
             while( stack.length > 0 )
             {
                 const { term: t, dbn } = stack.pop() as { term: IRTerm, dbn: number };
@@ -137,6 +132,7 @@ export function handleLetted( term: IRTerm ): void
                 {
                     // there's a new variable in scope
                     t.dbn++;
+                    continue;
                 }
                 if( t instanceof IRLetted )
                 {
@@ -154,12 +150,13 @@ export function handleLetted( term: IRTerm ): void
                     else
                     {
                         // `IRLambdas` DeBruijn are tracking the level of instantiation
-                        // since a new var has been introduced above
-                        // we must increment regardless
-                        t.dbn++
+                        // we add a new variable so the dbn of instantiation increments
+                        t.dbn++;
+                        // increment also dbns of the letted value
+                        stack.push({ term: t.value, dbn });
                     }
+                    continue;
                 }
-
                 
                 if( t instanceof IRApp )
                 {
@@ -169,7 +166,6 @@ export function handleLetted( term: IRTerm ): void
                     );
                     continue;
                 }
-
                 if( t instanceof IRDelayed )
                 {
                     stack.push({ term: t.delayed, dbn })
@@ -181,32 +177,12 @@ export function handleLetted( term: IRTerm ): void
                     stack.push({ term: t.forced, dbn });
                     continue;
                 }
-
                 if( t instanceof IRFunc )
                 {
                     stack.push({ term: t.body, dbn: dbn + t.arity });
                     continue;
                 }
-                
-                // skip hoisted and letted
-                // we only want to modify the current body
-
-                // if( t instanceof IRHoisted )
-                // {
-                //     // 0 because hoisted are closed
-                //     // for hoisted we keep track of the depth inside the term
-                //     stack.push({ term: t.hoisted, dbn });
-                //     continue;
-                // }
-
-                // if( t instanceof IRLetted )
-                // {
-                //     // same stuff as the hoisted terms
-                //     // the only difference is that depth is then incremented
-                //     // once the letted term reaches its final position
-                //     stack.push({ term: t.value, dbn });
-                //     continue;
-                // }
+                // skip hoisted since closed
             }
 
             // get the difference in DeBruijn
@@ -229,26 +205,54 @@ export function handleLetted( term: IRTerm ): void
             // now we inline
             const clonedLettedVal = letted.value.clone();
 
-            console.log(
-                toHex( letted.hash ),
-                prettyIRJsonStr( letted.value ),
-            );
-            console.log( showIR( maxScope ) );
-            console.log( diffDbn );
-
             // if there is any actual difference between the letted term
             // and the position where it will be finally placed
             // the value needs to be modified accoridingly
             if( diffDbn > 0 )
             {
-                // adapt the variables in the term to be instantiated
-                iterTree( clonedLettedVal, (elem) => {
-                    if( elem instanceof IRVar || elem instanceof IRLetted )
+                const stack: { term: IRTerm, dbn: number }[] = [{ term: clonedLettedVal, dbn: 0 }];
+
+                while( stack.length > 0 )
+                {
+                    const { term: t, dbn } = stack.pop() as { term: IRTerm, dbn: number };
+
+                    if( t instanceof IRVar || t instanceof IRLetted )
                     {
-                        console.log( showIR( elem.parent! ) )
-                        elem.dbn -= diffDbn
+                        t.dbn -= diffDbn;
+
+                        // reduce dbn in letted value too
+                        if( t instanceof IRLetted )
+                        {
+                            stack.push({ term: t.value, dbn });
+                        }
+                        continue;
                     }
-                });
+                    
+                    if( t instanceof IRApp )
+                    {
+                        stack.push(
+                            { term: t.fn, dbn  },
+                            { term: t.arg, dbn }
+                        );
+                        continue;
+                    }
+                    if( t instanceof IRDelayed )
+                    {
+                        stack.push({ term: t.delayed, dbn })
+                        continue;
+                    }
+                    if( t instanceof IRForced )
+                    {
+                        stack.push({ term: t.forced, dbn });
+                        continue;
+                    }
+                    if( t instanceof IRFunc )
+                    {
+                        stack.push({ term: t.body, dbn: dbn + t.arity });
+                        continue;
+                    }
+                    // no hoisted
+                }
             }
 
             // save parent so when replacing we don't create a circular refs
