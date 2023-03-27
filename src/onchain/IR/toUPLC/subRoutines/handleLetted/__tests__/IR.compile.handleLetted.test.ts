@@ -470,7 +470,7 @@ describe("handleLetted", () => {
             toHex(
                 sndListHoisted.hash
             )
-        ).toEqual( "d4d3ebaae980c36d7cad0395ca28e9174c7dc20bfcdca93d38c65c71" );
+        ).toEqual("be17b4da0ec7040993ba0f252c778052");
 
         const theOtherLetted = new IRLetted(
             1,
@@ -487,7 +487,7 @@ describe("handleLetted", () => {
             toHex(
                 theOtherLetted.hash
             )
-        ).toEqual( "fab075af17acb983912d80bf27dfbe21f711c12ba624db648b8882df" );
+        ).toEqual("ae90f0c6c803c113073c04addcbd7020");
 
         const edgeCase = new IRFunc( 1,
             _ir_apps(

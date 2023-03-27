@@ -40,7 +40,7 @@ export type StructInstance<SCtorDef extends StructCtorDef> = {
 }
 
 export type StructInstanceAsData<SCtorDef extends StructCtorDef> = {
-    [Field in keyof SCtorDef]: Term<PAsData<ToPType<SCtorDef[Field]>>>
+    [Field in keyof SCtorDef]: Term<PAsData<ToPType<SCtorDef[Field]>>> | Term<PStruct<any>> | Term<PData>
 }
 
 export type PStruct<SDef extends StructDefinition> = {

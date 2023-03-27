@@ -2,7 +2,8 @@ import { int } from "../../../../type_system";
 import { pstruct } from "../../pstruct";
 import { Machine, Term, pDataI, pInt, padd, pmatch } from "../../../../..";
 import { compileIRToUPLC } from "../../../../../IR/toUPLC/compileIRToUPLC";
-import { showUPLC } from "../../../../../UPLC/UPLCTerm";
+import { prettyUPLC, showUPLC } from "../../../../../UPLC/UPLCTerm";
+import { prettyIRJsonStr } from "../../../../../IR/utils/showIR";
 
 
 const Nums = pstruct({
@@ -80,6 +81,8 @@ describe("pmatch", () => {
         );
 
         const ir = term.toIR();
+
+        // console.log( prettyIRJsonStr( ir ) )
 
         // console.log( showIR( ir ) );
         const uplc = compileIRToUPLC( ir );

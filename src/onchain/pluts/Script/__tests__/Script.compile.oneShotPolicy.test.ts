@@ -118,11 +118,11 @@ describe("oneShotNFT", () => {
 
     test.only("it compiles", () => {
 
-        console.log(
-            showIR(
-                oneShotNFT.toIR()
-            )
-        );
+        // console.log(
+        //     showIR(
+        //         oneShotNFT.toIR()
+        //     )
+        // );
 
 //         expect(
 //             () => 

@@ -24,7 +24,7 @@ import { PTxOut } from "../../API/V1/Tx/PTxOut"
 import { PAddress } from "../../API/V1/Address/PAddress"
 import { PCredential } from "../../API/V1/Address/PCredential"
 import { PValidatorHash } from "../../API/V1/ScriptsHashes/PValidatorHash"
-import { pfn, pif, punBData, perror, plet, pevery, plam, pfilter, peqBs, PMaybe, papp, pBSToData, pBool, pByteString, pInt, pList, pmakeUnit } from "../../lib"
+import { pfn, pif, punBData, perror, plet, pevery, plam, pfilter, peqBs, PMaybe, papp, pBSToData, pBool, pByteString, pInt, pList, pmakeUnit, fromData, toData } from "../../lib"
 import { bool, bs, data, fn, int, pair, unit } from "../../type_system"
 import { Term, PPOSIXTimeRange, PValueEntryT } from "../.."
 
@@ -172,6 +172,7 @@ describe.skip("scriptToJsonFormat", () => {
         console.time(dataCreationTimeTag);
         //*
         const unitDatumHash = PDatumHash.from( pByteString("923918e403bf43c34b4ef6b48eb2ee04babed17320d8d1b9ff9ad086e86f44ec") );
+        const unitDatumHashAsData = toData( PDatumHash.type )( unitDatumHash );
         const justUnitDatumHash = PMaybe( PDatumHash.type ).Just({ val: unitDatumHashAsData });
         const emptyValue = PValue.from( pList( PValueEntryT )([]) as any );
 

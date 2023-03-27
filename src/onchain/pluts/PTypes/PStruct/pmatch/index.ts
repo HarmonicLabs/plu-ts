@@ -158,7 +158,7 @@ type MathcedCtorsFields<SCtorDef extends StructCtorDef> = StructInstance<SCtorDe
         /**
          * @deprecated
         **/
-        in: ( cb: ( mathcedCtorsFields: StructInstance<SCtorDef> ) => Term<PType> ) => Term<PType> 
+        in: <PExprReturn extends PType>( cb: ( mathcedCtorsFields: StructInstance<SCtorDef> ) => Term<PExprReturn> ) => Term<PExprReturn> 
     }
 }
 

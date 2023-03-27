@@ -288,7 +288,7 @@ export function prettyIR( _ir: IRTerm, _indent = 2 )
             addHoisted( ir );
             return `${indent}(hoisted ${toHex( ir.hash )})`;
         }
-        if( ir instanceof IRVar ) return getVarNameForDbn( dbn - 1 - ir.dbn );
+        if( ir instanceof IRVar ) return indent + getVarNameForDbn( dbn - 1 - ir.dbn );
         if( ir instanceof IRConst ) return `${indent}(const ${termTypeToString(ir.type)} ${showUPLCConstValue(ir.value as any)})`;
         if( ir instanceof IRDelayed ) return `${indent}(delay ${_internal( ir.delayed, dbn, depth + 1 )}${indent})`;
         if( ir instanceof IRForced ) return `${indent}(force ${_internal( ir.forced, dbn, depth + 1 )}${indent})`;

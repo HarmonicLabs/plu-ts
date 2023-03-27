@@ -13,6 +13,7 @@ import { IRCompilationError } from "../../../../../errors/PlutsIRError/IRCompila
 import { prettyIRJsonStr, prettyIRText, showIR } from "../../../utils/showIR";
 import { IRDelayed } from "../../../IRNodes/IRDelayed";
 import { IRForced } from "../../../IRNodes/IRForced";
+import { getRoot } from "../../../tree_utils/getRoot";
 
 export function handleLetted( term: IRTerm ): void
 {
@@ -74,38 +75,21 @@ export function handleLetted( term: IRTerm ): void
 
         const toInlineHashes = toInline.map( termToInline => termToInline.hash );
 
-        // !!! IMPORTANT !!!
-        // the `toInline` array might include cloned instances
-        // that are not part of the tree
-        // we must collect the instances directly from the tree
-        const toInlineRefsInTree = findAll(
-            maxScope,
-            node =>
-                node instanceof IRLetted && 
-                toInlineHashes.some( h => uint8ArrayEq( h, node.hash ) )
-        );
-        // inline single references from last to first
-        // needs to be from last to first so that hashes will not change
-        for( let i = toInlineRefsInTree.length - 1; i >= 0 ; i-- )
-        {
-            letted = toInlineRefsInTree[i] as IRLetted;
-            _modifyChildFromTo(
-                letted.parent,
-                letted,
-                letted.value
-            );
-        }
-
         // increase the debruijn index to account for newly introduced (and applied) `IRFunc`
         // needs to be from last to first so that hashes will not change
         // (aka. we replace dependents before dependecies)
-        for( let i = toLet.length - 1; i >= 0; i-- )
+        for( let i = lettedSet.length - 1; i >= 0; i-- )
         {
             // one of the many to be letted
-            letted = toLet[i];
+            letted = lettedSet[i].letted;
 
             /**
              * all the letted corresponding to this value
+             * 
+             * !!! IMPORTANT !!!
+             * the `toInline` and `toLet` arrays might include cloned instances
+             * that are not part of the tree
+             * we must collect the instances directly from the tree
              * 
              * @type {IRLetted[]}
              * we know is an `IRLetted` array an not a generic `IRTerm` array
@@ -117,6 +101,25 @@ export function handleLetted( term: IRTerm ): void
                     elem instanceof IRLetted &&
                     uint8ArrayEq( elem.hash, letted.hash )
             ) as any;
+
+            if(
+                // the letted hash is one of the ones to be inlined
+                toInlineHashes.some( h => uint8ArrayEq( h, letted.hash ) )
+            )
+            {
+                // inline single references from last to first
+                // needs to be from last to first so that hashes will not change
+                for( let i = refs.length - 1; i >= 0 ; i-- )
+                {
+                    letted = refs[i] as IRLetted;
+                    _modifyChildFromTo(
+                        letted.parent,
+                        letted,
+                        letted.value
+                    );
+                }
+                continue; // go to next letted
+            }
 
             // add 1 to every var's DeBruijn that accesses stuff outside the max scope
             // maxScope node is non inclusive since the new function is added inside the node 
@@ -152,8 +155,10 @@ export function handleLetted( term: IRTerm ): void
                         // `IRLambdas` DeBruijn are tracking the level of instantiation
                         // we add a new variable so the dbn of instantiation increments
                         t.dbn++;
-                        // increment also dbns of the letted value
-                        stack.push({ term: t.value, dbn });
+                        // DO NOT increment also dbns of the letted value
+                        // that would change nothing since letted terms are normalized
+                        // relative to the letted dbn
+                        // stack.push({ term: t.value, dbn });
                     }
                     continue;
                 }
@@ -218,6 +223,11 @@ export function handleLetted( term: IRTerm ): void
 
                     if( t instanceof IRVar || t instanceof IRLetted )
                     {
+                        if( t.dbn - diffDbn < 0 )
+                        {
+                            // console.log( prettyIRJsonStr( t.parent as any ), t.dbn, diffDbn );
+                            // console.log( prettyIRJsonStr( maxScope ) );
+                        }
                         t.dbn -= diffDbn;
 
                         // reduce dbn in letted value too

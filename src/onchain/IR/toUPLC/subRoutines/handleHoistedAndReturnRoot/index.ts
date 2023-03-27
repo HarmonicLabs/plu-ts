@@ -23,7 +23,12 @@ export function handleHoistedAndReturnRoot( term: IRTerm ): IRTerm
     // unwrap;
     if( term instanceof IRHoisted )
     {
-        return handleHoistedAndReturnRoot( term.hoisted.clone() );
+        return handleHoistedAndReturnRoot(
+            // we know `handleHoistedAndReturnRoot` modifies the term
+            // so we are probably ok not cloning here
+            // top level hoisted terms should be handled in `compileIRToUPLC` anyway
+            term.hoisted // .clone()
+        );
     }
 
     const directHoisteds = getHoistedTerms( term );
@@ -35,8 +40,8 @@ export function handleHoistedAndReturnRoot( term: IRTerm ): IRTerm
 
     let a = 0;
     let b = 0;
-    const hoisteds: IRHoisted[] = new Array( n );
-    const hoistedsToInline: IRHoisted[] = new Array( n );
+    const toHoist: IRHoisted[] = new Array( n );
+    const toInline: IRHoisted[] = new Array( n );
 
     // filter out hoisted terms with single reference
     for( let i = 0; i < n; i++ )
@@ -48,18 +53,18 @@ export function handleHoistedAndReturnRoot( term: IRTerm ): IRTerm
         )
         {
             // inline hoisted with single reference
-            hoistedsToInline[ b++ ] = thisHoistedEntry.hoisted;
+            toInline[ b++ ] = thisHoistedEntry.hoisted;
         }
-        else hoisteds[ a++ ] = thisHoistedEntry.hoisted;
+        else toHoist[ a++ ] = thisHoistedEntry.hoisted;
     }
 
     // drop unused space
-    hoisteds.length = a;
-    hoistedsToInline.length = b;
-    const hoistedsToInlineHashes = hoistedsToInline.map( h => h.hash );
+    toHoist.length = a;
+    toInline.length = b;
+    const hoistedsToInlineHashes = toInline.map( h => h.hash );
 
-    // console.log( "hoisteds", hoisteds.map( h => ({ ...showIR( h.hoisted ), hash: toHex( h.hash ) }) ) );
-    // console.log( "hoistedsToInline", hoistedsToInline.map( h => ({ ...showIR( h.hoisted ), hash: toHex( h.hash ) }) ) );
+    // console.log( "toHoist", toHoist.map( h => ({ ...showIR( h.hoisted ), hash: toHex( h.hash ) }) ) );
+    // console.log( "toInline", toInline.map( h => ({ ...showIR( h.hoisted ), hash: toHex( h.hash ) }) ) );
 
     let root: IRTerm = term;
     while( root.parent !== undefined ) root = root.parent;
@@ -68,12 +73,12 @@ export function handleHoistedAndReturnRoot( term: IRTerm ): IRTerm
 
     function getIRVarForHoistedAtLevel( _hoistedHash: Uint8Array, level: number ): IRVar
     {
-        let levelOfTerm = hoisteds.findIndex( sortedH => uint8ArrayEq( sortedH.hash, _hoistedHash ) );
+        let levelOfTerm = toHoist.findIndex( sortedH => uint8ArrayEq( sortedH.hash, _hoistedHash ) );
         if( levelOfTerm < 0 )
         {
             throw new PlutsIRError(
-                `missing hoisted with hash ${toHex(_hoistedHash)} between hoisteds [\n\t${
-                    hoisteds.map( h => toHex( h.hash ) )
+                `missing hoisted with hash ${toHex(_hoistedHash)} between toHoist [\n\t${
+                    toHoist.map( h => toHex( h.hash ) )
                     .join(",\n\t")
                 }\n]; can't replace with IRVar`
             );
@@ -83,9 +88,9 @@ export function handleHoistedAndReturnRoot( term: IRTerm ): IRTerm
 
     // adds the actual terms
     // from last to first
-    for( let i = hoisteds.length - 1; i >= 0; i-- )
+    for( let i = toHoist.length - 1; i >= 0; i-- )
     {
-        const thisHoisted = hoisteds[i];
+        const thisHoisted = toHoist[i];
         prevRoot = root;
         root = new IRApp(
             new IRFunc(
@@ -103,11 +108,12 @@ export function handleHoistedAndReturnRoot( term: IRTerm ): IRTerm
         const { irTerm, dbn }  = stack.pop() as { irTerm: IRTerm, dbn: number };
 
         const irTermHash = irTerm.hash;
+        const isHoistedToinline = hoistedsToInlineHashes.some( h => uint8ArrayEq( h, irTermHash ) ); 
         if(
             // is hoiseted
             irTerm instanceof IRHoisted &&
             // is not one to be inlined
-            !hoistedsToInlineHashes.some( h => uint8ArrayEq( h, irTermHash ) )
+            !isHoistedToinline
         )
         {
             const irvar = getIRVarForHoistedAtLevel( irTermHash, dbn );
@@ -129,7 +135,7 @@ export function handleHoistedAndReturnRoot( term: IRTerm ): IRTerm
         }
         else if( irTerm instanceof IRHoisted )
         {
-            if( !hoistedsToInlineHashes.some( h => uint8ArrayEq( h, irTermHash ) ))
+            if( !isHoistedToinline )
             {
                 throw new PlutsIRError(
                     "unexpected hoisted term found with hash: " + toHex( irTermHash ) +

@@ -41,7 +41,7 @@ export function groupByScope( letteds: LettedSetEntry[] ): ScopedLettedTerms[]
         let maxScope: IRTerm | undefined = letted.parent;
         if( maxScope instanceof IRFunc )
         {
-            minUnboundDbn -= maxScope.arity
+            minUnboundDbn -= maxScope.arity;
         }
 
         while( minUnboundDbn >= 0 )
@@ -75,13 +75,12 @@ export function _getMinUnboundDbn( _term: IRTerm ): number | undefined
 
         if( term instanceof IRVar )
         {
-            if( dbn <= term.dbn ) // some val outside
+            if( term.dbn >= dbn ) // some val outside
             {
                 const outsideDbn = term.dbn - dbn;
                 minDbn = minDbn === undefined ? outsideDbn : Math.min( outsideDbn, minDbn );
             }
         }
-
 
         if( term instanceof IRApp )
         {
@@ -91,37 +90,29 @@ export function _getMinUnboundDbn( _term: IRTerm ): number | undefined
             );
             continue;
         }
-
         if( term instanceof IRDelayed )
         {
             stack.push({ term: term.delayed, dbn })
             continue;
         }
-
         if( term instanceof IRForced )
         {
             stack.push({ term: term.forced, dbn });
             continue;
         }
-
         if( term instanceof IRFunc )
         {
             stack.push({ term: term.body, dbn: dbn + term.arity });
             continue;
         }
-        
-        // closed
-        // if( term instanceof IRHoisted )
-
-        // letted do count too
+        // letted terms do count too
         if( term instanceof IRLetted )
         {
-            // same stuff as the hoisted terms
-            // the only difference is that depth is then incremented
-            // once the letted term reaches its final position
             stack.push({ term: term.value, dbn });
             continue;
         }
+        // closed
+        // if( term instanceof IRHoisted )
     }
 
     return minDbn;
