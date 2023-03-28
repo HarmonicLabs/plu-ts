@@ -263,7 +263,7 @@ export function getSortedLettedSet( lettedTerms: LettedSetEntry[] ): LettedSetEn
      *      m = number of terms passed
      *      d = number of unique dependencies among the passed terms
      */
-    function addToSet( _terms: LettedSetEntry[], deps = true ): void
+    function addToSet( _terms: LettedSetEntry[] ): void
     {
         for( let i = 0; i < _terms.length; i++ )
         {
@@ -282,7 +282,7 @@ export function getSortedLettedSet( lettedTerms: LettedSetEntry[] ): LettedSetEn
                 // don't add dependecies of dependecies since `dependecies` proerty
                 // already calls `getSortedLettedSet( getLettedTerms( _value ) )`
                 // so repeating it here would count deps twice (exponentially for deps of deps)
-                deps && addToSet( thisLettedEntry.letted.dependencies, false );
+                addToSet( getLettedTerms( thisLettedEntry.letted.value ) );
 
                 hashesSet.push( thisHash );
                 set.push({
@@ -297,7 +297,7 @@ export function getSortedLettedSet( lettedTerms: LettedSetEntry[] ): LettedSetEn
         }
     }
 
-    addToSet( lettedTerms, true );
+    addToSet( lettedTerms );
 
     return set;
 }

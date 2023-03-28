@@ -18,6 +18,8 @@ export function handleLetted( term: IRTerm ): void
 {
     const allLetteds = getLettedTerms( term );
 
+    console.log( allLetteds.map( jsonLettedSetEntry ) );
+
     const groupedLetteds = groupByScope( allLetteds );
 
     for( const { maxScope, group } of groupedLetteds )
@@ -204,7 +206,12 @@ export function handleLetted( term: IRTerm ): void
                             t.value
                         );
                     }
-                    else
+                    else if( uint8ArrayEq( t.hash, letted.hash ) )
+                    {
+                        // don't modify letted to be hoisted
+                        continue;
+                    }
+                    else // other letted to be handled in one of the next cycles
                     {
                         // `IRLambdas` DeBruijn are tracking the level of instantiation
                         // we add a new variable so the dbn of instantiation increments
