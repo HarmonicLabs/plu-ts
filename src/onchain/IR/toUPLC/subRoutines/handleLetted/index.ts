@@ -174,18 +174,7 @@ export function handleLetted( term: IRTerm ): void
                 }
                 if( t instanceof IRLetted )
                 {
-                    if( // the letted hash is one of the ones to be inlined
-                        toInlineHashes.some( h => uint8ArrayEq( h, t.hash ) )
-                    )
-                    {
-                        // inline
-                        _modifyChildFromTo(
-                            t.parent,
-                            t,
-                            t.value
-                        );
-                    }
-                    else if( uint8ArrayEq( t.hash, letted.hash ) )
+                    if( uint8ArrayEq( t.hash, letted.hash ) )
                     {
                         // don't modify letted to be hoisted
                         continue;
@@ -260,17 +249,6 @@ export function handleLetted( term: IRTerm ): void
                 while( stack.length > 0 )
                 {
                     const { term: t, dbn } = stack.pop() as { term: IRTerm, dbn: number };
-
-                    // console.log( prettyIRText( t ) );
-
-                    if( t instanceof IRVar )
-                    {
-                        console.log(
-                            "var's dbn:", t.dbn, 
-                            "dbn in term: ", dbn, 
-                            "becomes:", t.dbn > dbn ? t.dbn - diffDbn : t.dbn
-                        );
-                    }
 
                     if(
                         t instanceof IRVar &&
