@@ -12,11 +12,7 @@ import { isIRTerm } from "../utils/isIRTerm";
 import { BasePlutsError } from "../../../errors/BasePlutsError";
 import { IRForced } from "./IRForced";
 import { IRDelayed } from "./IRDelayed";
-import { ToJson, logJson } from "../../../utils/ts/ToJson";
-import { IllegalIRToUPLC } from "../../../errors/PlutsIRError/IRCompilationError/IllegalIRToUPLC";
-import { ToUPLC } from "../../UPLC/interfaces/ToUPLC";
-import { UPLCTerm } from "../../UPLC/UPLCTerm";
-import { getRoot } from "../tree_utils/getRoot";
+import { ToJson } from "../../../utils/ts/ToJson";
 import { iterTree } from "../toUPLC/_internal/iterTree";
 import { IRVar } from "./IRVar";
 import { positiveIntAsBytes } from "../utils/positiveIntAsBytes";
@@ -36,7 +32,7 @@ export function jsonLettedSetEntry( entry: LettedSetEntry )
 }
 
 export class IRLetted
-    implements Cloneable<IRLetted>, IHash, IIRParent, ToJson, ToUPLC
+    implements Cloneable<IRLetted>, IHash, IIRParent, ToJson
 {
     readonly hash!: Uint8Array;
     markHashAsInvalid!: () => void;
@@ -79,7 +75,11 @@ export class IRLetted
                         "invalid index for an `IRLetted` instance"
                     );
 
-                    if( newDbn === _dbn ) return; // everything ok
+                    if( newDbn === _dbn ){
+                        // everything ok
+                        // avoid calling `markHashAsInvalid` 
+                        return;
+                    }
 
                     this.markHashAsInvalid()
                     _dbn = newDbn;
@@ -241,12 +241,6 @@ export class IRLetted
         }
     }
     
-    toUPLC(): UPLCTerm
-    {
-        throw new IllegalIRToUPLC(
-            "Can't convert 'IRLetted' to valid UPLC"
-        );
-    }
 }
 
 /**

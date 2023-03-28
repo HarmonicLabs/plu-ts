@@ -1,6 +1,6 @@
-import { list, pstruct, unit } from "../.."
+import { list, pstruct, struct, unit } from "../.."
 import { compileIRToUPLC } from "../../../IR/toUPLC/compileIRToUPLC"
-import { prettyIRJsonStr } from "../../../IR/utils/showIR"
+import { prettyIRJsonStr, showIR } from "../../../IR/utils/showIR"
 import { prettyUPLC } from "../../../UPLC/UPLCTerm"
 import { PScriptContext } from "../../API"
 import { pBool, pfn } from "../../lib"
@@ -62,16 +62,16 @@ describe("compile", () => {
 
     test("complex list stuff", () => {
 
-        const WrappedList = pstruct({
-            WrappedList: {
-                list: list( int )
+        const TwoWrappedList = pstruct({
+            TwoWrappedList: {
+                fst: list( data ),
+                snd: list( data )
             }
         });
 
         const ComplexStuff = pstruct({
             Stuff: {
-                a: WrappedList.type,
-                b: WrappedList.type
+                a: TwoWrappedList.type
             }
         });
 
@@ -79,7 +79,7 @@ describe("compile", () => {
             data,
             ComplexStuff.type
         ],  bool)
-        ( (_, stuff) => stuff.a.list.length.eq( stuff.b.list.length ));
+        ( (_, stuff) => stuff.a.fst.length.eq( stuff.a.snd.length ));
 
         const ir = sumComplexStuff.toIR();
         const uplc = compileIRToUPLC( ir );
@@ -91,19 +91,45 @@ describe("compile", () => {
 
     });
 
-    test("two tx fields used", () => {
+    test.only("two tx fields used", () => {
 
-        const contract = pfn([
-            int,
-            PScriptContext.type
-        ],  bool)
-        (( rdmr, ctx ) => {
+        //const contract = pfn([
+        //    int,
+        //    PScriptContext.type
+        //],  bool)
+        //(( rdmr, ctx ) => {
+//
+        //    return ctx.tx.inputs.length.eq( ctx.tx.refInputs.length )
+        //});
 
-            return ctx.tx.inputs.length.eq( ctx.tx.signatories.length )
+        // const ir = contract.toIR();
+        // const uplc = compileIRToUPLC( ir );
+
+        const TwoWrappedList = pstruct({
+            TwoWrappedList: {
+                fst: struct({ Ctor: {} }),
+                snd: struct({ Ctor: {} })
+            }
         });
 
-        // console.log( prettyIRJsonStr( contract.toIR() ) );
+        const ComplexStuff = pstruct({
+            Stuff: {
+                a: TwoWrappedList.type
+            }
+        });
 
-        compile( makeRedeemerValidator( contract ) );
+        const term = pfn([
+            ComplexStuff.type
+        ],  bool)
+        ( (stuff) => stuff.a.fst.eq( stuff.a.snd ));
+
+        const ir = term.toIR();
+
+        console.log( prettyIRJsonStr( ir ) )
+
+        const uplc = compileIRToUPLC( ir );
+
+        console.log( prettyUPLC( uplc ) );
+
     })
 })

@@ -73,6 +73,8 @@ export function handleLetted( term: IRTerm ): void
          */
         let letted: IRLetted;
 
+        console.log( lettedSet.map( jsonLettedSetEntry ) );
+
         const toInlineHashes = toInline.map( termToInline => termToInline.hash );
 
         // increase the debruijn index to account for newly introduced (and applied) `IRFunc`
@@ -107,6 +109,7 @@ export function handleLetted( term: IRTerm ): void
                 toInlineHashes.some( h => uint8ArrayEq( h, letted.hash ) )
             )
             {
+                console.log( "inlining", toHex( letted.hash ) );
                 // inline single references from last to first
                 // needs to be from last to first so that hashes will not change
                 for( let i = refs.length - 1; i >= 0 ; i-- )
@@ -121,12 +124,26 @@ export function handleLetted( term: IRTerm ): void
                 continue; // go to next letted
             }
 
+            console.log( "handling", toHex( letted.hash ), prettyIRText( letted.value ) );
+            console.log( prettyIRText( maxScope ) );
+
             // add 1 to every var's DeBruijn that accesses stuff outside the max scope
             // maxScope node is non inclusive since the new function is added inside the node 
             const stack: { term: IRTerm, dbn: number }[] = [{ term: maxScope.body, dbn: 0 }];
             while( stack.length > 0 )
             {
                 const { term: t, dbn } = stack.pop() as { term: IRTerm, dbn: number };
+
+                console.log( prettyIRText( t ) );
+
+                if( t instanceof IRVar )
+                {
+                    console.log(
+                        "var's dbn:", t.dbn, 
+                        "dbn in term: ", dbn, 
+                        "becomes", t.dbn >= dbn ? t.dbn + 1 : t.dbn
+                    );
+                }
 
                 if(
                     t instanceof IRVar &&
@@ -154,11 +171,11 @@ export function handleLetted( term: IRTerm ): void
                     {
                         // `IRLambdas` DeBruijn are tracking the level of instantiation
                         // we add a new variable so the dbn of instantiation increments
-                        t.dbn++;
+                        t.dbn += 1;
                         // DO NOT increment also dbns of the letted value
                         // that would change nothing since letted terms are normalized
                         // relative to the letted dbn
-                        // stack.push({ term: t.value, dbn });
+                        stack.push({ term: t.value, dbn });
                     }
                     continue;
                 }
@@ -166,8 +183,8 @@ export function handleLetted( term: IRTerm ): void
                 if( t instanceof IRApp )
                 {
                     stack.push(
-                        { term: t.fn, dbn  },
-                        { term: t.arg, dbn }
+                        { term: t.arg, dbn },
+                        { term: t.fn, dbn  }
                     );
                     continue;
                 }
@@ -207,8 +224,12 @@ export function handleLetted( term: IRTerm ): void
                 }
             }
 
-            // now we inline
+            // now we replace
             const clonedLettedVal = letted.value.clone();
+            
+            console.log("------------------------------- replacing letted term -------------------------------");
+            console.log("------------------------------- replacing letted term -------------------------------");
+            console.log("------------------------------- replacing letted term -------------------------------");
 
             // if there is any actual difference between the letted term
             // and the position where it will be finally placed
@@ -221,20 +242,30 @@ export function handleLetted( term: IRTerm ): void
                 {
                     const { term: t, dbn } = stack.pop() as { term: IRTerm, dbn: number };
 
-                    if( t instanceof IRVar || t instanceof IRLetted )
-                    {
-                        if( t.dbn - diffDbn < 0 )
-                        {
-                            // console.log( prettyIRJsonStr( t.parent as any ), t.dbn, diffDbn );
-                            // console.log( prettyIRJsonStr( maxScope ) );
-                        }
-                        t.dbn -= diffDbn;
+                    console.log( prettyIRText( t ) );
 
+                    if( t instanceof IRVar )
+                    {
+                        console.log(
+                            "var's dbn:", t.dbn, 
+                            "dbn in term: ", dbn, 
+                            "becomes:", t.dbn > dbn ? t.dbn - diffDbn : t.dbn
+                        );
+                    }
+
+                    if(
+                        t instanceof IRVar &&
+                        t.dbn > dbn
+                    )
+                    {
+                        t.dbn -= diffDbn;
+                    }
+
+                    if( t instanceof IRLetted )
+                    {
+                        t.dbn -= diffDbn;
                         // reduce dbn in letted value too
-                        if( t instanceof IRLetted )
-                        {
-                            stack.push({ term: t.value, dbn });
-                        }
+                        stack.push({ term: t.value, dbn });
                         continue;
                     }
                     

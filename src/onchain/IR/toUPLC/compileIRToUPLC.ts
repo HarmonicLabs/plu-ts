@@ -9,6 +9,8 @@ import { replaceNativesAndReturnRoot } from "./subRoutines/replaceNatives";
 import { IRLetted } from "../IRNodes/IRLetted";
 import { IRHoisted } from "../IRNodes/IRHoisted";
 import { replaceClosedLettedWithHoisted } from "./subRoutines/replaceClosedLettedWithHoisted";
+import { prettyIRJsonStr } from "../utils/showIR";
+import { _irToUplc } from "./_internal/_irToUplc";
 
 export function compileIRToUPLC( term: IRTerm ): UPLCTerm
 {
@@ -67,6 +69,9 @@ export function compileIRToUPLC( term: IRTerm ): UPLCTerm
     replaceClosedLettedWithHoisted( term );
 
     handleLetted( term );
+    handleLetted( term );
+
+    console.log( prettyIRJsonStr( term ) );
 
     term = handleHoistedAndReturnRoot( term );
 
@@ -76,5 +81,5 @@ export function compileIRToUPLC( term: IRTerm ): UPLCTerm
     // ------------------------------------------------------------------------- //
     ///////////////////////////////////////////////////////////////////////////////
 
-    return term.toUPLC(0);
+    return _irToUplc( term );
 }

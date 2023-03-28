@@ -14,7 +14,7 @@ import { positiveIntAsBytes } from "../utils/positiveIntAsBytes";
 
 
 export class IRFunc
-    implements Cloneable<IRFunc>, IHash, IIRParent, ToJson, ToUPLC
+    implements Cloneable<IRFunc>, IHash, IIRParent, ToJson
 {
     readonly arity!: number;
 
@@ -139,19 +139,5 @@ export class IRFunc
             arity: this.arity,
             body: this.body.toJson()
         }
-    }
-
-    toUPLC(): Lambda
-    {
-        let lam: Lambda = new Lambda(
-            this.body.toUPLC()
-        );
-
-        for( let i = 1; i < this.arity; i++ )
-        {
-            lam = new Lambda( lam );
-        }
-
-        return lam;
     }
 }

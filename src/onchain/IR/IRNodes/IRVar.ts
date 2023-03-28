@@ -120,11 +120,6 @@ export class IRVar
             dbn: this.dbn
         }
     }
-
-    toUPLC( _n?: number | bigint )
-    {
-        return new UPLCVar( this.dbn );
-    }
 }
 
 const bdnVarHashCache: Uint8Array[] = []; 

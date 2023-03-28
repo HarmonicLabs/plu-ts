@@ -7,13 +7,12 @@ import { IIRParent } from "../interfaces/IIRParent";
 import { concatUint8Arr } from "../utils/concatUint8Arr";
 import { isIRTerm } from "../utils/isIRTerm";
 import { ToJson } from "../../../utils/ts/ToJson";
-import { ToUPLC } from "../../UPLC/interfaces/ToUPLC";
 import { Application } from "../../UPLC/UPLCTerms/Application";
 import { UPLCTerm } from "../../UPLC/UPLCTerm";
 import { PlutsIRError } from "../../../errors/PlutsIRError";
 
 export class IRApp
-    implements Cloneable<IRApp>, IHash, IIRParent, ToJson, ToUPLC
+    implements Cloneable<IRApp>, IHash, IIRParent, ToJson
 {
     fn!: IRTerm;
     arg!: IRTerm;
@@ -143,13 +142,5 @@ export class IRApp
             fn: this.fn.toJson(),
             arg: this.arg.toJson()
         }
-    }
-
-    toUPLC(): UPLCTerm
-    {
-        return new Application(
-            this.fn.toUPLC(),
-            this.arg.toUPLC()
-        );
     }
 }

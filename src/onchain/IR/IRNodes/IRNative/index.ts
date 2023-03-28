@@ -25,7 +25,7 @@ const nativeHashesCache: { [n: number/*IRNativeTag*/]: Uint8Array } = {} as any;
  * `IRNative` ⊇ `Builtins` + `std::fn`
 **/
 export class IRNative
-    implements Cloneable<IRNative>, IHash, IIRParent, ToJson, ToUPLC
+    implements Cloneable<IRNative>, IHash, IIRParent, ToJson
 {
     readonly tag!: IRNativeTag;
     readonly hash!: Uint8Array;
@@ -119,16 +119,6 @@ export class IRNative
             type: "IRNative",
             native: nativeTagToString( this.tag )
         };
-    }
-
-    toUPLC(): Builtin
-    {
-        if( this.tag < 0 )
-        throw new IllegalIRToUPLC(
-            "Can't translate '" + nativeTagToString( this.tag ) + "' 'IRNative' to 'UPLCBuiltin'"
-        );
-
-        return new Builtin( this.tag as any );
     }
 
     static get addInteger() { return new IRNative( IRNativeTag.addInteger ) }

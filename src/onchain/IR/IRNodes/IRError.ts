@@ -78,10 +78,5 @@ export class IRError
             type: "IRError"
         }
     }
-
-    toUPLC()
-    {
-        return new ErrorUPLC( this.msg, this.addInfos );
-    }
 };
 

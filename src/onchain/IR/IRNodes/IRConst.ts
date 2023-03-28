@@ -15,14 +15,11 @@ import { GenericTermType, PrimType, TermType, bool, bs, data, delayed, int, lam,
 import { IHash } from "../interfaces/IHash";
 import { concatUint8Arr } from "../utils/concatUint8Arr";
 import { positiveBigIntAsBytes } from "../utils/positiveIntAsBytes";
-import { serialize } from "v8";
 import { IIRParent } from "../interfaces/IIRParent";
 import { IRTerm } from "../IRTerm";
 import { isIRTerm } from "../utils/isIRTerm";
 import { UnexpectedMarkHashInvalidCall } from "../../../errors/PlutsIRError/UnexpectedMarkHashInvalidCall";
 import { ToJson } from "../../../utils/ts/ToJson";
-import { ToUPLC } from "../../UPLC/interfaces/ToUPLC";
-import { UPLCConst } from "../../UPLC/UPLCTerms/UPLCConst";
 import { typeExtends } from "../../pluts/type_system/typeExtends";
 import { termTypeToString } from "../../pluts/type_system/utils";
 import UPLCFlatUtils from "../../../utils/UPLCFlatUtils";
@@ -39,7 +36,7 @@ export type IRConstValue
 
 
 export class IRConst
-    implements Cloneable<IRConst>, IHash, IIRParent, ToJson, ToUPLC
+    implements Cloneable<IRConst>, IHash, IIRParent, ToJson
 {
     readonly hash: Uint8Array;
     markHashAsInvalid: () => void;
@@ -146,15 +143,6 @@ export class IRConst
             value: constValueToJson( this.value )
         }
     }
-
-    toUPLC()
-    {
-        return new UPLCConst(
-            termTyToConstTy( this.type ),
-            this.value as any
-        );
-    }
-    
 
     static get unit(): IRConst
     {
