@@ -18,8 +18,6 @@ export function handleLetted( term: IRTerm ): void
 {
     const allLetteds = getLettedTerms( term );
 
-    console.log( allLetteds.map( jsonLettedSetEntry ) );
-
     const groupedLetteds = groupByScope( allLetteds );
 
     for( const { maxScope, group } of groupedLetteds )
@@ -73,8 +71,6 @@ export function handleLetted( term: IRTerm ): void
          * temp varible to hold reference to the letted term we are operating with
          */
         let letted: IRLetted;
-
-        console.log( lettedSet.map( jsonLettedSetEntry ) );
 
         const toInlineHashes = toInline.map( termToInline => termToInline.hash );
 
@@ -144,7 +140,6 @@ export function handleLetted( term: IRTerm ): void
                 toInlineHashes.some( h => uint8ArrayEq( h, letted.hash ) )
             )
             {
-                console.log( "inlining", toHex( letted.hash ) );
                 // inline single references from last to first
                 // needs to be from last to first so that hashes will not change
                 for( let i = refs.length - 1; i >= 0 ; i-- )
@@ -159,12 +154,7 @@ export function handleLetted( term: IRTerm ): void
                 continue; // go to next letted
             }
 
-            console.log(
-                "handling", toHex( letted.hash ), prettyIRText( letted.value ),
-                "\nin", prettyIRJsonStr( maxScope )
-            );
-            lettedSet[i].letted = letted = refs[0];
-            toHex( letted.hash );
+            letted = refs[0];
 
             // add 1 to every var's DeBruijn that accesses stuff outside the max scope
             // maxScope node is non inclusive since the new function is added inside the node 
@@ -172,17 +162,6 @@ export function handleLetted( term: IRTerm ): void
             while( stack.length > 0 )
             {
                 const { term: t, dbn } = stack.pop() as { term: IRTerm, dbn: number };
-
-                console.log( prettyIRText( t ) );
-
-                if( t instanceof IRVar )
-                {
-                    console.log(
-                        "var's dbn:", t.dbn, 
-                        "dbn in term:", dbn, 
-                        "becomes:", t.dbn >= dbn ? t.dbn + 1 : t.dbn
-                    );
-                }
 
                 if(
                     t instanceof IRVar &&
@@ -271,12 +250,6 @@ export function handleLetted( term: IRTerm ): void
             // now we replace
             const clonedLettedVal = letted.value.clone();
             
-            console.log("------------------------------- replacing letted term -------------------------------");
-            console.log("------------------------------- replacing letted term -------------------------------");
-            console.log("------------------------------- replacing letted term -------------------------------");
-
-            console.log( prettyIRText( maxScope ) );
-
             // if there is any actual difference between the letted term
             // and the position where it will be finally placed
             // the value needs to be modified accoridingly

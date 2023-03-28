@@ -70,8 +70,6 @@ export function compileIRToUPLC( term: IRTerm ): UPLCTerm
 
     handleLetted( term );
 
-    console.log( prettyIRJsonStr( term ) );
-
     term = handleHoistedAndReturnRoot( term );
 
     ///////////////////////////////////////////////////////////////////////////////

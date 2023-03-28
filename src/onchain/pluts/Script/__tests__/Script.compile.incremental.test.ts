@@ -92,7 +92,7 @@ describe("compile", () => {
 
     });
 
-    test.only("two tx fields used", () => {
+    test("two tx fields used", () => {
 
         //const contract = pfn([
         //    int,
