@@ -1,4 +1,5 @@
 import { list, pstruct, struct, unit } from "../.."
+import { Machine } from "../../.."
 import { compileIRToUPLC } from "../../../IR/toUPLC/compileIRToUPLC"
 import { prettyIRJsonStr, showIR } from "../../../IR/utils/showIR"
 import { prettyUPLC } from "../../../UPLC/UPLCTerm"
@@ -105,6 +106,10 @@ describe("compile", () => {
         // const ir = contract.toIR();
         // const uplc = compileIRToUPLC( ir );
 
+        const JustACtor = pstruct({
+            Ctor: {}
+        })
+
         const TwoWrappedList = pstruct({
             TwoWrappedList: {
                 fst: struct({ Ctor: {} }),
@@ -123,13 +128,22 @@ describe("compile", () => {
         ],  bool)
         ( (stuff) => stuff.a.fst.eq( stuff.a.snd ));
 
-        const ir = term.toIR();
-
-        console.log( prettyIRJsonStr( ir ) )
-
-        const uplc = compileIRToUPLC( ir );
-
-        console.log( prettyUPLC( uplc ) );
+        expect(
+            Machine.evalSimple(
+                term.$(
+                    ComplexStuff.Stuff({
+                        a: TwoWrappedList.TwoWrappedList({
+                            fst: JustACtor.Ctor({}) as any,
+                            snd: JustACtor.Ctor({}) as any
+                        }) as any
+                    })
+                )
+            )
+        ).toEqual(
+            Machine.evalSimple(
+                pBool( true )
+            )
+        )
 
     })
 })
