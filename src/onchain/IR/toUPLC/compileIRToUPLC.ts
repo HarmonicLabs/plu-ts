@@ -69,7 +69,6 @@ export function compileIRToUPLC( term: IRTerm ): UPLCTerm
     replaceClosedLettedWithHoisted( term );
 
     handleLetted( term );
-    handleLetted( term );
 
     console.log( prettyIRJsonStr( term ) );
 

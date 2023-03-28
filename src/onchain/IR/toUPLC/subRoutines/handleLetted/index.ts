@@ -13,7 +13,6 @@ import { IRCompilationError } from "../../../../../errors/PlutsIRError/IRCompila
 import { prettyIRJsonStr, prettyIRText, showIR } from "../../../utils/showIR";
 import { IRDelayed } from "../../../IRNodes/IRDelayed";
 import { IRForced } from "../../../IRNodes/IRForced";
-import { getRoot } from "../../../tree_utils/getRoot";
 
 export function handleLetted( term: IRTerm ): void
 {
@@ -84,6 +83,11 @@ export function handleLetted( term: IRTerm ): void
         {
             // one of the many to be letted
             letted = lettedSet[i].letted;
+            const slicedLettedSetHashes = 
+                lettedSet.slice( 0, i + 1 )
+                .map( setEntry => setEntry.letted.hash );
+
+            const replacedLettedSetEntry = new Array( i + 1 ).fill( false );
 
             /**
              * all the letted corresponding to this value
@@ -99,9 +103,38 @@ export function handleLetted( term: IRTerm ): void
              */
             const refs: IRLetted[] = findAll(
                 maxScope,
-                elem => 
-                    elem instanceof IRLetted &&
-                    uint8ArrayEq( elem.hash, letted.hash )
+                elem => {
+                    if(!(elem instanceof IRLetted)) return false;
+
+                    const elHash = elem.hash;
+
+                    /*
+                        little side-effect here
+
+                        we update the references in the `lettedSet`
+                        with nodes actually present in the tree
+
+                        so that if (when) the letted node is updated
+                        the update is reflected in the lettedSet automaitcally
+                    */
+                    const lettedSetIdx = slicedLettedSetHashes.findIndex( h => uint8ArrayEq( elHash, h ) );
+                    if( lettedSetIdx >= 0 )
+                    {
+                        if( replacedLettedSetEntry[ lettedSetIdx ] )
+                        {
+                            if( elem.dbn < lettedSet[ lettedSetIdx ].letted.dbn )
+                            lettedSet[ lettedSetIdx ].letted = elem; 
+                        }
+                        else
+                        {
+                            lettedSet[ lettedSetIdx ].letted = elem;
+                            replacedLettedSetEntry[ lettedSetIdx ] = true;
+                        }
+                    }
+
+                    // return true if `elem` is the `letted` being handled in this turn 
+                    return uint8ArrayEq( elHash, letted.hash );
+                }
             ) as any;
 
             if(
@@ -124,8 +157,12 @@ export function handleLetted( term: IRTerm ): void
                 continue; // go to next letted
             }
 
-            console.log( "handling", toHex( letted.hash ), prettyIRText( letted.value ) );
-            console.log( prettyIRText( maxScope ) );
+            console.log(
+                "handling", toHex( letted.hash ), prettyIRText( letted.value ),
+                "\nin", prettyIRJsonStr( maxScope )
+            );
+            lettedSet[i].letted = letted = refs[0];
+            toHex( letted.hash );
 
             // add 1 to every var's DeBruijn that accesses stuff outside the max scope
             // maxScope node is non inclusive since the new function is added inside the node 
@@ -140,8 +177,8 @@ export function handleLetted( term: IRTerm ): void
                 {
                     console.log(
                         "var's dbn:", t.dbn, 
-                        "dbn in term: ", dbn, 
-                        "becomes", t.dbn >= dbn ? t.dbn + 1 : t.dbn
+                        "dbn in term:", dbn, 
+                        "becomes:", t.dbn >= dbn ? t.dbn + 1 : t.dbn
                     );
                 }
 
@@ -231,6 +268,8 @@ export function handleLetted( term: IRTerm ): void
             console.log("------------------------------- replacing letted term -------------------------------");
             console.log("------------------------------- replacing letted term -------------------------------");
 
+            console.log( prettyIRText( maxScope ) );
+
             // if there is any actual difference between the letted term
             // and the position where it will be finally placed
             // the value needs to be modified accoridingly
@@ -242,7 +281,7 @@ export function handleLetted( term: IRTerm ): void
                 {
                     const { term: t, dbn } = stack.pop() as { term: IRTerm, dbn: number };
 
-                    console.log( prettyIRText( t ) );
+                    // console.log( prettyIRText( t ) );
 
                     if( t instanceof IRVar )
                     {
