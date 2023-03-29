@@ -5,6 +5,7 @@ import { UPLCVar } from "../../../UPLC/UPLCTerms/UPLCVar";
 import { IRFunc } from "../../IRNodes/IRFunc";
 import { IRNative } from "../../IRNodes/IRNative";
 import { IRVar } from "../../IRNodes/IRVar";
+import { _irToUplc } from "../_internal/_irToUplc";
 import { compileIRToUPLC } from "../compileIRToUPLC";
 
 
@@ -13,7 +14,7 @@ describe("compileIRToUPLC", () => {
     test("IRVar", () => {
 
         const ir = new IRVar( 0 );
-        const _irUPlC = ir.toUPLC();
+        const _irUPlC = _irToUplc( ir );
 
         expect(
             _irUPlC
@@ -26,7 +27,7 @@ describe("compileIRToUPLC", () => {
 
         const idIR = new IRFunc( 1, new IRVar(0) );
 
-        const idUPLC = idIR.toUPLC();
+        const idUPLC = _irToUplc( idIR );
 
         const expected = new Lambda( new UPLCVar( 0 ) );
 

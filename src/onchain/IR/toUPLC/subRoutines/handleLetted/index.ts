@@ -10,13 +10,17 @@ import { findAll } from "../../_internal/findAll";
 import { getDebruijnInTerm } from "../../_internal/getDebruijnInTerm";
 import { groupByScope } from "./groupByScope";
 import { IRCompilationError } from "../../../../../errors/PlutsIRError/IRCompilationError";
-import { prettyIRJsonStr, prettyIRText, showIR } from "../../../utils/showIR";
+import { prettyIR, prettyIRJsonStr, prettyIRText, showIR } from "../../../utils/showIR";
 import { IRDelayed } from "../../../IRNodes/IRDelayed";
 import { IRForced } from "../../../IRNodes/IRForced";
 
 export function handleLetted( term: IRTerm ): void
 {
+    console.log( prettyIRJsonStr( term ) );
+
     const allLetteds = getLettedTerms( term );
+
+    console.log("direct letted", allLetteds.map( jsonLettedSetEntry ) );
 
     const groupedLetteds = groupByScope( allLetteds );
 
@@ -25,7 +29,7 @@ export function handleLetted( term: IRTerm ): void
         if( maxScope === undefined )
         {
             throw new IRCompilationError(
-                "found 'IRLetted' with closed value not replaced by an 'IRHoisted'\n\nclosed letted terms: " +
+                "found 'IRLetted' with closed value not replaced by an 'IRHoisted'\n\nclosed letted terms:\n\n" +
                 JSON.stringify(
                     group.map(
                         entry => showIR(entry.letted.value)
@@ -37,6 +41,9 @@ export function handleLetted( term: IRTerm ): void
         }
 
         const lettedSet = getSortedLettedSet( group );
+
+        console.log( "all group letted", lettedSet.map( jsonLettedSetEntry ) );
+
         const n = lettedSet.length;
         let a = 0;
         let b = 0;
@@ -79,13 +86,15 @@ export function handleLetted( term: IRTerm ): void
         // (aka. we replace dependents before dependecies)
         for( let i = lettedSet.length - 1; i >= 0; i-- )
         {
-            // one of the many to be letted
+            // needs to be at the start of the loop because it could be undefined at first
+            // but needs also to be below in order to make sure that the reference we have
+            // is from the tree itself (which has been possibly modified)
             letted = lettedSet[i].letted;
-            const slicedLettedSetHashes = 
-                lettedSet.slice( 0, i + 1 )
-                .map( setEntry => setEntry.letted.hash );
 
-            const replacedLettedSetEntry = new Array( i + 1 ).fill( false );
+            // one of the many to be letted
+            const lettedSetHashes = lettedSet.map( setEntry => setEntry.letted.hash );
+
+            const replacedLettedSetEntry = new Array( lettedSet.length ).fill( false );
 
             /**
              * all the letted corresponding to this value
@@ -115,18 +124,41 @@ export function handleLetted( term: IRTerm ): void
                         so that if (when) the letted node is updated
                         the update is reflected in the lettedSet automaitcally
                     */
-                    const lettedSetIdx = slicedLettedSetHashes.findIndex( h => uint8ArrayEq( elHash, h ) );
+                    const lettedSetIdx = lettedSetHashes.findIndex( h => uint8ArrayEq( elHash, h ) );
+                    const toLetIdx = toLet.findIndex( _toLet => uint8ArrayEq( _toLet.hash, elHash ) ) 
+
                     if( lettedSetIdx >= 0 )
                     {
                         if( replacedLettedSetEntry[ lettedSetIdx ] )
                         {
                             if( elem.dbn < lettedSet[ lettedSetIdx ].letted.dbn )
-                            lettedSet[ lettedSetIdx ].letted = elem; 
+                            {
+                                lettedSet[ lettedSetIdx ].letted = elem;
+
+                                if( toLetIdx >= 0 )
+                                {
+                                    toLet[ toLetIdx ] = elem;
+                                }
+                                else
+                                {
+                                    const toInlIdx = toInline.findIndex( toInl => uint8ArrayEq( toInl.hash, elHash ) ) 
+                                    toInline[ toInlIdx ] = elem
+                                }
+                            }
                         }
                         else
                         {
                             lettedSet[ lettedSetIdx ].letted = elem;
                             replacedLettedSetEntry[ lettedSetIdx ] = true;
+                            if( toLetIdx >= 0 )
+                            {
+                                toLet[ toLetIdx ] = elem;
+                            }
+                            else
+                            {
+                                const toInlIdx = toInline.findIndex( toInl => uint8ArrayEq( toInl.hash, elHash ) ) 
+                                toInline[ toInlIdx ] = elem
+                            }
                         }
                     }
 
@@ -135,11 +167,17 @@ export function handleLetted( term: IRTerm ): void
                 }
             ) as any;
 
+            // make sure the reference comes form the tree (possibly modified)
+            letted = lettedSet[i].letted;
+
             if(
                 // the letted hash is one of the ones to be inlined
                 toInlineHashes.some( h => uint8ArrayEq( h, letted.hash ) )
             )
             {
+                console.log( "inlining", toHex( letted.hash ) );
+                // console.log( prettyIRJsonStr( term ) );
+
                 // inline single references from last to first
                 // needs to be from last to first so that hashes will not change
                 for( let i = refs.length - 1; i >= 0 ; i-- )
@@ -154,7 +192,13 @@ export function handleLetted( term: IRTerm ): void
                 continue; // go to next letted
             }
 
-            letted = refs[0];
+            console.log( 
+                "replacing",
+                prettyIRJsonStr( letted ),
+                "\nin",
+                prettyIRJsonStr( maxScope ),
+            );
+            // console.log( prettyIRJsonStr( term ) );
 
             // add 1 to every var's DeBruijn that accesses stuff outside the max scope
             // maxScope node is non inclusive since the new function is added inside the node 
@@ -162,6 +206,15 @@ export function handleLetted( term: IRTerm ): void
             while( stack.length > 0 )
             {
                 const { term: t, dbn } = stack.pop() as { term: IRTerm, dbn: number };
+
+                console.log( prettyIRText( t ), "stack length:", stack.length );
+
+                if( t instanceof IRVar )
+                {
+                    console.log(
+                        `var with dbn ${t.dbn} at dbn level in scope body ${dbn} becomes ${t.dbn >= dbn ? t.dbn : t.dbn + 1}`
+                    );
+                }
 
                 if(
                     t instanceof IRVar &&
@@ -236,6 +289,8 @@ export function handleLetted( term: IRTerm ): void
                 }
             }
 
+            console.log( "-------------------- adding letted value --------------------\n".repeat(3) );
+
             // now we replace
             const clonedLettedVal = letted.value.clone();
             
@@ -249,6 +304,14 @@ export function handleLetted( term: IRTerm ): void
                 while( stack.length > 0 )
                 {
                     const { term: t, dbn } = stack.pop() as { term: IRTerm, dbn: number };
+
+                    console.log( prettyIRText( t ) );
+                    if( t instanceof IRVar )
+                    {
+                        console.log(
+                            `var with dbn ${t.dbn} at dbn level ${dbn} with diffDbn ${diffDbn} becomes ${t.dbn > dbn ? t.dbn - diffDbn : t.dbn}`
+                        );
+                    }
 
                     if(
                         t instanceof IRVar &&
@@ -269,8 +332,8 @@ export function handleLetted( term: IRTerm ): void
                     if( t instanceof IRApp )
                     {
                         stack.push(
-                            { term: t.fn, dbn  },
-                            { term: t.arg, dbn }
+                            { term: t.arg, dbn },
+                            { term: t.fn, dbn  }
                         );
                         continue;
                     }

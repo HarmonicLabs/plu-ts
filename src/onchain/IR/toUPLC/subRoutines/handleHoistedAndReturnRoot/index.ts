@@ -11,7 +11,7 @@ import { _modifyChildFromTo } from "../../_internal/_modifyChildFromTo";
 import { PlutsIRError } from "../../../../../errors/PlutsIRError";
 import { logJson } from "../../../../../utils/ts/ToJson";
 import { IHash } from "../../../interfaces/IHash";
-import { showIR } from "../../../utils/showIR";
+import { prettyIRJsonStr, showIR } from "../../../utils/showIR";
 
 function toHashArr( arr: IHash[] ): string[]
 {
@@ -23,11 +23,15 @@ export function handleHoistedAndReturnRoot( term: IRTerm ): IRTerm
     // unwrap;
     if( term instanceof IRHoisted )
     {
+        // we know `handleHoistedAndReturnRoot` modifies the term
+        // so we are probably ok not cloning here
+        // top level hoisted terms should be handled in `compileIRToUPLC` anyway
+        const theTerm = term.hoisted; // .clone()
+
+        // we still need to remove this parent otherhiwe there will be an unknown hoisted to handle
+        theTerm.parent = undefined;
         return handleHoistedAndReturnRoot(
-            // we know `handleHoistedAndReturnRoot` modifies the term
-            // so we are probably ok not cloning here
-            // top level hoisted terms should be handled in `compileIRToUPLC` anyway
-            term.hoisted // .clone()
+            theTerm
         );
     }
 

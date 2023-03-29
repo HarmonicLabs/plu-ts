@@ -1,9 +1,17 @@
 import { int } from "../../../../type_system";
 import { pstruct } from "../../pstruct";
-import { Machine, Term, pDataI, pInt, padd, pmatch } from "../../../../..";
+import { Machine, Term, pDataI, pInt, padd, pfn, plet, pmatch } from "../../../../..";
 import { compileIRToUPLC } from "../../../../../IR/toUPLC/compileIRToUPLC";
 import { prettyUPLC, showUPLC } from "../../../../../UPLC/UPLCTerm";
 import { prettyIRJsonStr } from "../../../../../IR/utils/showIR";
+import { IRTerm } from "../../../../../IR/IRTerm";
+import { IRFunc } from "../../../../../IR/IRNodes/IRFunc";
+import { IRApp } from "../../../../../IR/IRNodes/IRApp";
+import { IRLetted } from "../../../../../IR/IRNodes/IRLetted";
+import { IRVar } from "../../../../../IR/IRNodes/IRVar";
+import { _ir_apps } from "../../../../../IR/tree_utils/_ir_apps";
+import { IRNative } from "../../../../../IR/IRNodes/IRNative";
+import { IRConst } from "../../../../../IR/IRNodes/IRConst";
 
 
 const Nums = pstruct({
@@ -97,6 +105,123 @@ describe("pmatch", () => {
         
     });
 
+    describe("two multi-refs", () => {
+
+        test("no deps", () => {
+
+            const added = new IRLetted( 2,
+                _ir_apps(
+                    IRNative.addInteger,
+                    new IRVar( 0 ),
+                    new IRVar( 1 )
+                )
+            );
+
+            const multiplied = new IRLetted( 2,
+                _ir_apps(
+                    IRNative.multiplyInteger,
+                    new IRVar( 0 ),
+                    new IRVar( 1 ),
+                )
+            );
+
+            const ir = new IRFunc( 2,
+                _ir_apps(
+                    IRNative.multiplyInteger,
+                    _ir_apps(
+                        IRNative.addInteger,
+                        added.clone(),
+                        multiplied.clone()
+                    ),
+                    _ir_apps(
+                        IRNative.multiplyInteger,
+                        added.clone(),
+                        multiplied.clone()
+                    ),
+                )
+            );
+
+            // compiles
+            expect( () => compileIRToUPLC( ir.clone()) ).not.toThrow();
+
+            const x = 7;
+            const y = 13;
+
+            const _added = x + y;
+            const _multiplied = x * y;
+
+            const applied = _ir_apps(
+                ir,
+                IRConst.int( x ),
+                IRConst.int( y ),
+            );
+
+            expect(
+                Machine.evalSimple(
+                    compileIRToUPLC( applied )
+                )
+            ).toEqual(
+                Machine.evalSimple(
+                    pInt(
+                        ( _added + _multiplied ) * ( _added * _multiplied )
+                    )
+                )
+            )
+
+        });
+
+        test("shared dep", () => {
+
+            const term = pfn([ int, int ], int )
+            (( x, y ) => {
+
+                const shared = plet( x.add( x ) )
+                const a = plet( shared.add( y ) );
+                const b = plet( shared.mult( y ) );
+
+                return a.add( b )
+            });
+
+            // compiles
+            expect( () => term.toUPLC() ).not.toThrow();
+
+            // console.log( prettyIRJsonStr( term.toIR() ) )
+
+        });
+
+        test("replaced with replaced dep (single var)", () => {
+
+            const term = pfn([ int ], int )
+            (( x ) => {
+
+                const dep = plet( x.add( x ) )
+                const a = plet( dep.add( dep ) );
+
+                return a.add( a )
+            });
+
+            // compiles
+            expect( () => term.toUPLC() ).not.toThrow();
+
+        });
+
+        test("replaced with replaced dep (two vars)", () => {
+
+            const term = pfn([ int, int ], int )
+            (( x, y ) => {
+
+                const dep = plet( x.add( x ) )
+                const a = plet( dep.add( dep ) );
+
+                return a.add( a )
+            });
+
+            // compiles
+            expect( () => term.toUPLC() ).not.toThrow();
+
+        });
+
+    })
     
 
 });

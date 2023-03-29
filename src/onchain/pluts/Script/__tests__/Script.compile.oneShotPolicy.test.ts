@@ -22,7 +22,7 @@ export const MintRdmr = pstruct({
     Burn: {}
 });
 
-export const oneShotNFT = pfn([
+const oneShotNFT = pfn([
     V2.PTxOutRef.type,
 
     MintRdmr.type,
@@ -91,6 +91,60 @@ export const oneShotNFT = pfn([
     
     )))
 )
+
+const _oneShotNFT = pfn([
+    V2.PTxOutRef.type,
+
+    MintRdmr.type,
+    V2.PScriptContext.type
+
+],  bool)
+(( utxo, rdmr, ctx ) => {
+
+    const ownCurrSym = plet(
+        pmatch( ctx.purpose )
+        .onMinting( mint => mint.currencySym )
+        ._( _ => perror( V2.PCurrencySymbol.type ) as any )
+    );
+    
+    return pmatch( rdmr )
+    .onMint( _ => {
+
+        return ctx.tx.inputs.some( ({ utxoRef }) => utxoRef.eq( utxo ) )
+        .and(
+            ctx.tx.mint.some( entry => {
+
+                const assets = plet( entry.snd );
+
+                return entry.fst.eq( ownCurrSym )
+                .and(
+                    pisEmpty.$( assets.tail )
+                    .and(
+                        assets.head.snd.eq( 1 )
+                    )
+                )
+
+            })
+        );
+
+    })
+    .onBurn( _ => {
+        
+        return ctx.tx.mint.some( entry => {
+
+            const assets = plet( entry.snd );
+
+            return entry.fst.eq( ownCurrSym )
+            .and(
+                pisEmpty.$( assets.tail )
+                .and(
+                    assets.head.snd.lt( 0 )
+                )
+            )
+        });
+
+    });
+})
 
 const mustSpendUtxo =  PTxOutRef.PTxOutRef({
     // 5dafdbe833a241350d679348d03599db3d5179385f96521f89ff8fa51fd57ebf#0
