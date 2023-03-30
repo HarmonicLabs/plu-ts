@@ -9,7 +9,7 @@ export function defineDepth( term: IRTerm, depth: number ): IRTermWithDepth
             value: depth,
             writable: true,
             enumerable: true,
-            configurable:false
+            configurable: false
         }
     ) as any;
 }

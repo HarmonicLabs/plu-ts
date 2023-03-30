@@ -208,6 +208,7 @@ describe("pmatch", () => {
         test("replaced with replaced dep (two vars)", () => {
 
             const term = pfn([ int, int ], int )
+            // this y needs to be here; that's the point of the test
             (( x, y ) => {
 
                 const dep = plet( x.add( x ) )

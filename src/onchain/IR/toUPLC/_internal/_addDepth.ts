@@ -7,7 +7,7 @@ import { IRLetted } from "../../IRNodes/IRLetted";
 import { IRTerm } from "../../IRTerm";
 import { defineDepth, IRTermWithDepth } from "./depth";
 
-export function _addDepth( _term: IRTerm, initialDepth = 0 ): void
+export function _addDepths( _term: IRTerm, initialDepth = 0 ): void
 {
     const stack: IRTermWithDepth[] = [defineDepth( _term, initialDepth )];
 

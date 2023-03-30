@@ -1,7 +1,6 @@
 import { UPLCTerm, showUPLC } from "../../UPLC/UPLCTerm";
 import { IRTerm } from "../IRTerm";
 import { _modifyChildFromTo } from "./_internal/_modifyChildFromTo";
-import { _addDepth } from "./_internal/_addDepth";
 import { _makeAllNegativeNativesHoisted } from "./_internal/_makeAllNegativeNativesHoisted";
 import { handleLetted } from "./subRoutines/handleLetted";
 import { handleHoistedAndReturnRoot } from "./subRoutines/handleHoistedAndReturnRoot";

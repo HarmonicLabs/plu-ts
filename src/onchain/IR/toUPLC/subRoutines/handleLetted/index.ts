@@ -4,7 +4,7 @@ import { IRFunc } from "../../../IRNodes/IRFunc";
 import { getSortedLettedSet, getLettedTerms, IRLetted, jsonLettedSetEntry } from "../../../IRNodes/IRLetted";
 import { IRVar } from "../../../IRNodes/IRVar";
 import { IRTerm } from "../../../IRTerm";
-import { _addDepth } from "../../_internal/_addDepth";
+import { _addDepths } from "../../_internal/_addDepth";
 import { _modifyChildFromTo } from "../../_internal/_modifyChildFromTo";
 import { findAll } from "../../_internal/findAll";
 import { getDebruijnInTerm } from "../../_internal/getDebruijnInTerm";
@@ -13,14 +13,17 @@ import { IRCompilationError } from "../../../../../errors/PlutsIRError/IRCompila
 import { prettyIR, prettyIRJsonStr, prettyIRText, showIR } from "../../../utils/showIR";
 import { IRDelayed } from "../../../IRNodes/IRDelayed";
 import { IRForced } from "../../../IRNodes/IRForced";
+import { lowestCommonAncestor } from "../../_internal/lowestCommonAncestor";
+import { PlutsIRError } from "../../../../../errors/PlutsIRError";
+import { isIRTerm } from "../../../utils/isIRTerm";
 
 export function handleLetted( term: IRTerm ): void
 {
-    console.log( prettyIRJsonStr( term ) );
+    // console.log( prettyIRJsonStr( term ) );
 
     const allLetteds = getLettedTerms( term );
 
-    console.log("direct letted", allLetteds.map( jsonLettedSetEntry ) );
+    // console.log("direct letted", allLetteds.map( jsonLettedSetEntry ) );
 
     const groupedLetteds = groupByScope( allLetteds );
 
@@ -40,9 +43,11 @@ export function handleLetted( term: IRTerm ): void
             );
         }
 
+        _addDepths( maxScope );
+
         const lettedSet = getSortedLettedSet( group );
 
-        console.log( "all group letted", lettedSet.map( jsonLettedSetEntry ) );
+        // console.log( "all group letted", lettedSet.map( jsonLettedSetEntry ) );
 
         const n = lettedSet.length;
         let a = 0;
@@ -167,15 +172,20 @@ export function handleLetted( term: IRTerm ): void
                 }
             ) as any;
 
-            // make sure the reference comes form the tree (possibly modified)
+            if( refs.length === 0 ) continue;
+
+            // !!! IMPORTANT !!!
+            // !!! DO NOT REMOVE !!!
+            // makes sure the reference comes form the tree (possibly modified)
             letted = lettedSet[i].letted;
 
             if(
+                refs.length === 1 || // inline single refs always
                 // the letted hash is one of the ones to be inlined
                 toInlineHashes.some( h => uint8ArrayEq( h, letted.hash ) )
             )
             {
-                console.log( "inlining", toHex( letted.hash ) );
+                // console.log( "inlining", toHex( letted.hash ) );
                 // console.log( prettyIRJsonStr( term ) );
 
                 // inline single references from last to first
@@ -192,29 +202,46 @@ export function handleLetted( term: IRTerm ): void
                 continue; // go to next letted
             }
 
-            console.log( 
-                "replacing",
-                prettyIRJsonStr( letted ),
-                "\nin",
-                prettyIRJsonStr( maxScope ),
-            );
-            // console.log( prettyIRJsonStr( term ) );
+            _addDepths( maxScope );
 
-            // add 1 to every var's DeBruijn that accesses stuff outside the max scope
+            let lca: IRTerm | string = refs[0];
+            for( let i = 1; i < refs.length; i++ )
+            {
+                lca = lowestCommonAncestor( lca as any, refs[i] as any );
+            }
+
+            if( !isIRTerm( lca ) )
+            {
+                throw new PlutsIRError(
+                    refs.length + " letting nodes with hash " + toHex( letted.hash ) + " from different trees; error:" + lca
+                );
+            }
+
+            while(!(
+                lca instanceof IRFunc ||
+                lca instanceof IRDelayed
+            ))
+            {
+                lca = lca?.parent ?? "";
+                if( !isIRTerm( lca ) )
+                {
+                    throw new PlutsIRError(
+                        "lowest common ancestor outside the max scope"
+                    );
+                }
+            }
+
+            const parentNode: IRFunc | IRDelayed = lca;
+            const parentNodeDirectChild = parentNode instanceof IRFunc ? parentNode.body : parentNode.delayed;
+
+            // add 1 to every var's DeBruijn that accesses stuff outside the parent node
             // maxScope node is non inclusive since the new function is added inside the node 
-            const stack: { term: IRTerm, dbn: number }[] = [{ term: maxScope.body, dbn: 0 }];
+            const stack: { term: IRTerm, dbn: number }[] = [{ term: parentNodeDirectChild, dbn: 0 }];
             while( stack.length > 0 )
             {
                 const { term: t, dbn } = stack.pop() as { term: IRTerm, dbn: number };
 
-                console.log( prettyIRText( t ), "stack length:", stack.length );
-
-                if( t instanceof IRVar )
-                {
-                    console.log(
-                        `var with dbn ${t.dbn} at dbn level in scope body ${dbn} becomes ${t.dbn >= dbn ? t.dbn : t.dbn + 1}`
-                    );
-                }
+                // console.log( prettyIRText( t ), "stack length:", stack.length );
 
                 if(
                     t instanceof IRVar &&
@@ -276,12 +303,12 @@ export function handleLetted( term: IRTerm ): void
             // between the maxScope and the letted term
             let tmpNode: IRTerm = letted;
             let diffDbn = 0;
-            while( tmpNode !== maxScope )
+            while( tmpNode !== parentNode )
             {
                 tmpNode = tmpNode.parent as any;
                 if( // is an intermediate `IRFunc`
                     tmpNode instanceof IRFunc && 
-                    tmpNode !== maxScope 
+                    tmpNode !== parentNode // avoid counting parent node arity if IRFunc 
                 )
                 {
                     // increment differential in DeBruijn by n vars indroduced here
@@ -289,7 +316,7 @@ export function handleLetted( term: IRTerm ): void
                 }
             }
 
-            console.log( "-------------------- adding letted value --------------------\n".repeat(3) );
+            // console.log( "-------------------- adding letted value --------------------\n".repeat(3) );
 
             // now we replace
             const clonedLettedVal = letted.value.clone();
@@ -305,13 +332,7 @@ export function handleLetted( term: IRTerm ): void
                 {
                     const { term: t, dbn } = stack.pop() as { term: IRTerm, dbn: number };
 
-                    console.log( prettyIRText( t ) );
-                    if( t instanceof IRVar )
-                    {
-                        console.log(
-                            `var with dbn ${t.dbn} at dbn level ${dbn} with diffDbn ${diffDbn} becomes ${t.dbn > dbn ? t.dbn - diffDbn : t.dbn}`
-                        );
-                    }
+                    // console.log( prettyIRText( t ) );
 
                     if(
                         t instanceof IRVar &&
@@ -357,24 +378,24 @@ export function handleLetted( term: IRTerm ): void
             }
 
             // save parent so when replacing we don't create a circular refs
-            const parent = maxScope;
+            const parent = parentNode;
             // keep pointer to the old body
             // so we don't have to count the newly introduced `IRFunc` in `newNode`
             // while calling `getDeBruijnInTerm`
             // (subtracting 1 works too but this is an operation less)
-            const oldBody = maxScope.body
+            const oldBody = parentNodeDirectChild
 
             const newNode = new IRApp(
                 new IRFunc(
                     1,
-                    maxScope.body
+                    parentNodeDirectChild
                 ),
                 clonedLettedVal
             );
 
             _modifyChildFromTo(
                 parent,
-                maxScope.body,
+                parentNodeDirectChild, // not really used since we know parent is not `IRApp`
                 newNode
             );
 

@@ -1,12 +1,17 @@
-import { IRTerm } from "../../IRTerm";
+import type { IRTerm } from "../../IRTerm";
+import { isIRTerm } from "../../utils/isIRTerm";
 
-export function lowestCommonAncestor( n1: IRTerm | undefined, n2: IRTerm | undefined ): IRTerm | undefined
+type IRWithDept = IRTerm & { depth: number }
+
+export function lowestCommonAncestor( n1: IRWithDept | undefined, n2: IRWithDept | undefined ): IRTerm | string
 {
-    if( n1 === undefined || n2 === undefined ) return undefined;
+    if( !isIRTerm( n1 ) || !isIRTerm( n2 ) ) return "not IR" as any;
 
     let d1: number = (n1 as any).depth;
     let d2: number = (n2 as any).depth;
     let diff: number = d1 - d2;
+
+    console.log( "d1:", d1, "d2:", d2)
 
     // If node b is deeper, swap node a and node b
     if (diff < 0)
@@ -18,8 +23,8 @@ export function lowestCommonAncestor( n1: IRTerm | undefined, n2: IRTerm | undef
     }
 
     // Move n1 up until it reaches the same level as n2
-    while( diff-- > 0 && n1.parent )
-        n1 = n1.parent;
+    while( diff-- > 0 && (n1 as IRTerm).parent )
+        n1 = (n1 as IRTerm).parent as any;
     
     // Now n1 and n2 are at same levels
     while( n1 && n2 )
@@ -32,5 +37,5 @@ export function lowestCommonAncestor( n1: IRTerm | undefined, n2: IRTerm | undef
         n2 = n2.parent as any;
     }
 
-    return undefined;
+    return "no lca" as any;
 }
