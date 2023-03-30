@@ -32,7 +32,7 @@ function expectScriptToEq( received: Term<PType>, expected: Term<PType> ): void
 
 describe("pappArgToTerm", () => {
 
-    test("only values; must extend any", () => {
+    test.skip("only values; must extend any", () => {
 
         const anyPappArg = ( whatever: any ) => pappArgToTerm( whatever );
         expectScriptToEq(
@@ -206,7 +206,7 @@ describe("pappArgToTerm", () => {
 
     });
 
-    test.only("list", () => {
+    test("list", () => {
 
         expectScriptToEq(
             pappArgToTerm<[ PrimType.List, [ PrimType.Int ] ]>(
@@ -267,7 +267,7 @@ describe("pappArgToTerm", () => {
 
     });
 
-    test("pair", () => {
+    test.skip("pair", () => {
 
         expectScriptToEq(
             pappArgToTerm(

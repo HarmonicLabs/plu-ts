@@ -191,7 +191,7 @@ describe("pmatch( <PScriptContext> )", () => {
             )
         })
 
-        test.only("extract tx only", () => {
+        test("extract tx only", () => {
 
             const term = pmatch( ctx )
                 .onPScriptContext( _ => _.extract("tx").in( ({ tx }) => tx ));

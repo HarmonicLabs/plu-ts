@@ -9,7 +9,6 @@ import { IRLetted } from "../IRNodes/IRLetted";
 import { IRHoisted } from "../IRNodes/IRHoisted";
 import { replaceClosedLettedWithHoisted } from "./subRoutines/replaceClosedLettedWithHoisted";
 import { _irToUplc } from "./_internal/_irToUplc";
-import { prettyIRJsonStr } from "../utils/showIR";
 
 export function compileIRToUPLC( term: IRTerm ): UPLCTerm
 {

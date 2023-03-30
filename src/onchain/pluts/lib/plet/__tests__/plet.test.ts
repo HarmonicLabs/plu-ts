@@ -37,7 +37,7 @@ describe("plet", () => {
         expect( uplc ).toEqual( oldUPLC )
     });
 
-    test.only("let in and", () => {
+    test("let in and", () => {
 
         const fancyIsZero = pfn([ int ], bool )
         ( n => pBool( true )

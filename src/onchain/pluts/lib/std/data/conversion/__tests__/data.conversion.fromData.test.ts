@@ -17,7 +17,7 @@ const pd = pData( d );
 
 describe("fromData", () => {
 
-    test.only("just unListData", () => {
+    test("just unListData", () => {
 
         const plistInt = punListData.$( pd );
 

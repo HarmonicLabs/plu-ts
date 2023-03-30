@@ -106,7 +106,7 @@ const _oneShotNFT = pfn([
         .onMinting( mint => mint.currencySym )
         ._( _ => perror( V2.PCurrencySymbol.type ) as any )
     );
-    
+
     return pmatch( rdmr )
     .onMint( _ => {
 
@@ -170,7 +170,7 @@ punsafeConvertType(
 
 describe("oneShotNFT", () => {
 
-    test.only("it compiles", () => {
+    test("it compiles", () => {
 
         // console.log(
         //     showIR(

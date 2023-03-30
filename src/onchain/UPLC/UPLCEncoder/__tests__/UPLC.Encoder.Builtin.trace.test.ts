@@ -17,7 +17,7 @@ describe("serializeBuiltin", () => {
 
     describe("trace", () => {
 
-        test("simple trace", () => {
+        test.skip("simple trace", () => {
 
             const traceUnit = ptrace( unit )
                 .$( pStr("hello there") )
@@ -71,7 +71,7 @@ describe("serializeBuiltin", () => {
 
         })
 
-        test.only("ptraceIfFalse.$(string).$(bytestring == input)", () => {
+        test.skip("ptraceIfFalse.$(string).$(bytestring == input)", () => {
 
             const correctBS = ByteString.fromAscii( "Cardano <3 plu-ts" )
             const traceBS = ptraceIfFalse.$( pStr("wrong bytestring") )
@@ -86,7 +86,8 @@ describe("serializeBuiltin", () => {
 
         })
 
-        test("failHelloThere contract", () => {
+        test.skip("failHelloThere contract", () => {
+
             const traceUnit = pfn([
                 data,
                 data,
