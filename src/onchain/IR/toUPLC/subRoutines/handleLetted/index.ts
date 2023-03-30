@@ -43,8 +43,6 @@ export function handleLetted( term: IRTerm ): void
             );
         }
 
-        _addDepths( maxScope );
-
         const lettedSet = getSortedLettedSet( group );
 
         // console.log( "all group letted", lettedSet.map( jsonLettedSetEntry ) );
@@ -202,6 +200,8 @@ export function handleLetted( term: IRTerm ): void
                 continue; // go to next letted
             }
 
+            // subtree migh change so depth will change
+            // needs to be updated every loop
             _addDepths( maxScope );
 
             let lca: IRTerm | string = refs[0];

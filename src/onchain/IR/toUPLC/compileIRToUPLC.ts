@@ -67,9 +67,14 @@ export function compileIRToUPLC( term: IRTerm ): UPLCTerm
 
     replaceClosedLettedWithHoisted( term );
 
+    // handle letted before hoisted because the three is smaller
+    // and we also have less letted dependecies to handle
     handleLetted( term );
 
     term = handleHoistedAndReturnRoot( term );
+
+    // replaced hoisted terms might include new letted terms
+    handleLetted( term );
 
     ///////////////////////////////////////////////////////////////////////////////
     // ------------------------------------------------------------------------- //

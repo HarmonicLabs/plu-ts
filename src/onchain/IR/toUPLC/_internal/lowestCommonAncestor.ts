@@ -11,8 +11,6 @@ export function lowestCommonAncestor( n1: IRWithDept | undefined, n2: IRWithDept
     let d2: number = (n2 as any).depth;
     let diff: number = d1 - d2;
 
-    console.log( "d1:", d1, "d2:", d2)
-
     // If node b is deeper, swap node a and node b
     if (diff < 0)
     {
