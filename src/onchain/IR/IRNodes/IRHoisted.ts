@@ -15,6 +15,7 @@ import { isIRTerm } from "../utils/isIRTerm";
 import { ToJson } from "../../../utils/ts/ToJson";
 import { IRForced } from "./IRForced";
 import { IRDelayed } from "./IRDelayed";
+import { IRMetadata } from "../interfaces/IRMetadata";
 
 
 export type HoistedSetEntry = {
@@ -22,8 +23,25 @@ export type HoistedSetEntry = {
     nReferences: number
 }
 
+export interface IRHoistedMeta {
+    /**
+     * force hoisting even if only a single reference is found
+     * 
+     * useful to hoist terms used once in recursive expressions
+    **/
+    forceHoist: boolean
+}
+
+export interface IRHoistedMetadata extends IRMetadata {
+    meta: IRHoistedMeta
+}
+
+const defaultHoistedMeta: IRHoistedMeta = ObjectUtils.freezeAll({
+    forceHoist: false
+});
+
 export class IRHoisted
-    implements Cloneable<IRHoisted>, IHash, IIRParent, ToJson
+    implements Cloneable<IRHoisted>, IHash, IIRParent, ToJson, IRHoistedMetadata
 {
     readonly hash!: Uint8Array;
     markHashAsInvalid!: () => void;
@@ -37,7 +55,9 @@ export class IRHoisted
 
     clone!: () => IRHoisted;
 
-    constructor( hoisted: IRTerm )
+    readonly meta!: IRHoistedMeta
+
+    constructor( hoisted: IRTerm, metadata: Partial<IRHoistedMeta> = {} )
     {
         // unwrap
         // !!! IMPORTANT !!!
@@ -150,12 +170,25 @@ export class IRHoisted
             }
         );
         
+        Object.defineProperty(
+            this, "meta",
+            {
+                value: {
+                    ...defaultHoistedMeta,
+                    ...metadata
+                },
+                writable: false,
+                enumerable: true,
+                configurable: false
+            }
+        );
+
         ObjectUtils.defineProperty(
             this, "clone",
             () => {
                 return new IRHoisted(
-                    this.hoisted.clone()
-                    // _getDeps().slice() // as long as `dependecies` getter returns clones this is fine
+                    this.hoisted.clone(),
+                    this.meta
                 );
             }
         );
@@ -216,7 +249,11 @@ export function getSortedHoistedSet( hoistedTerms: HoistedSetEntry[] ): HoistedS
             }
             else
             {
-                set[ idxInSet ].nReferences += thisHoistedEntry.nReferences
+                const entry = set[ idxInSet ]; 
+                entry.nReferences += thisHoistedEntry.nReferences;
+                entry.hoisted.meta.forceHoist = 
+                    entry.hoisted.meta.forceHoist || 
+                    thisHoistedEntry.hoisted.meta.forceHoist;
             }
         }
     }

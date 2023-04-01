@@ -23,6 +23,7 @@ import { IRHoisted } from "../../../IR/IRNodes/IRHoisted";
 import { IRNative } from "../../../IR/IRNodes/IRNative";
 import { UPLCConst } from "../../../UPLC/UPLCTerms/UPLCConst";
 import { BasePlutsError } from "../../../../errors/BasePlutsError";
+import { PType } from "../../PType";
 
 /**
  * intermediate class useful to reconize structs form primitives
@@ -40,7 +41,7 @@ export type StructInstance<SCtorDef extends StructCtorDef> = {
 }
 
 export type StructInstanceAsData<SCtorDef extends StructCtorDef> = {
-    [Field in keyof SCtorDef]: Term<PAsData<ToPType<SCtorDef[Field]>>> | Term<PStruct<any>> | Term<PData>
+    [Field in keyof SCtorDef]: Term<PAsData<any>> | Term<PStruct<any>> | Term<PData> | Term<undefined & PType>
 }
 
 export type PStruct<SDef extends StructDefinition> = {

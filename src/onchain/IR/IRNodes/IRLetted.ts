@@ -16,6 +16,7 @@ import { ToJson } from "../../../utils/ts/ToJson";
 import { iterTree } from "../toUPLC/_internal/iterTree";
 import { IRVar } from "./IRVar";
 import { positiveIntAsBytes } from "../utils/positiveIntAsBytes";
+import { IRMetadata } from "../interfaces/IRMetadata";
 
 
 export type LettedSetEntry = {
@@ -29,10 +30,27 @@ export function jsonLettedSetEntry( entry: LettedSetEntry )
         letted: toHex(entry.letted.hash),
         nReferences: entry.nReferences
     }
+
 }
 
+export interface IRLettedMeta {
+    /**
+     * force hoisting even if only a single reference is found
+     * 
+     * useful to hoist letted terms used once in recursive expressions
+    **/
+    forceHoist: boolean
+}
+
+export interface IRLettedMetadata extends IRMetadata {
+    meta: IRLettedMeta
+}
+
+const defaultLettedMeta: IRLettedMeta = ObjectUtils.freezeAll({
+    forceHoist: false
+});
 export class IRLetted
-    implements Cloneable<IRLetted>, IHash, IIRParent, ToJson
+    implements Cloneable<IRLetted>, IHash, IIRParent, ToJson, IRLettedMetadata
 {
     readonly hash!: Uint8Array;
     markHashAsInvalid!: () => void;
@@ -55,7 +73,9 @@ export class IRLetted
 
     clone!: () => IRLetted
 
-    constructor( DeBruijn: number, toLet: IRTerm )
+    readonly meta!: IRLettedMeta
+
+    constructor( DeBruijn: number, toLet: IRTerm, metadata: Partial<IRLettedMeta> = {} )
     {
         if(!(
             Number.isSafeInteger( DeBruijn ) && DeBruijn >= 0 
@@ -217,17 +237,30 @@ export class IRLetted
             }
         );
 
+        Object.defineProperty(
+            this, "meta",
+            {
+                value: {
+                    ...defaultLettedMeta,
+                    ...metadata
+                },
+                writable: false,
+                enumerable: true,
+                configurable: false
+            }
+        );
+
         ObjectUtils.defineReadOnlyProperty(
             this, "clone",
             () => {
                 return new IRLetted(
                     this.dbn,
-                    this.value.clone()
-                    // doesn't work because dependecies need to be bounded to the cloned value
-                    // _getDeps().slice() // as long as `dependecies` getter returns clones this is fine
+                    this.value.clone(),
+                    this.meta
                 )
             }
         );
+
     }
 
     static get tag(): Uint8Array { return new Uint8Array([ 0b0000_0101 ]); }
@@ -292,7 +325,11 @@ export function getSortedLettedSet( lettedTerms: LettedSetEntry[] ): LettedSetEn
             }
             else
             {
-                set[ idxInSet ].nReferences += thisLettedEntry.nReferences;
+                const entry = set[ idxInSet ]; 
+                entry.nReferences += thisLettedEntry.nReferences;
+                entry.letted.meta.forceHoist = 
+                    entry.letted.meta.forceHoist || 
+                    thisLettedEntry.letted.meta.forceHoist;
             }
         }
     }

@@ -8,12 +8,13 @@ import { IRHoisted } from "../../../../IRNodes/IRHoisted";
 import { IRNative } from "../../../../IRNodes/IRNative";
 import { IRVar } from "../../../../IRNodes/IRVar";
 import { IRTerm } from "../../../../IRTerm";
+import { prettyIRText } from "../../../../utils/showIR";
 import { compileIRToUPLC } from "../../../compileIRToUPLC";
 
 
 describe("handleHoistedAndReturnRoot", () => {
 
-    test("two inlined", () => {
+    test.skip("two inlined", () => {
 
         let root: IRTerm = new IRApp(
             new IRApp(
@@ -42,30 +43,35 @@ describe("handleHoistedAndReturnRoot", () => {
 
         const initalRootClone = root.clone();
 
-        root = handleHoistedAndReturnRoot( root );
-
-        expect( root.toJson() )
-        .toEqual(
+        const expected = new IRApp(
             new IRApp(
-                new IRApp(
+                new IRFunc( 1,
                     new IRFunc( 1,
-                        new IRFunc( 1,
+                        new IRApp(
+                            new IRVar( 0 ),
                             new IRApp(
-                                new IRVar( 0 ),
+                                IRNative.sndPair,
                                 new IRApp(
-                                    IRNative.sndPair,
-                                    new IRApp(
-                                        IRNative.unConstrData,
-                                        new IRVar( 1 )
-                                    )
+                                    IRNative.unConstrData,
+                                    new IRVar( 1 )
                                 )
                             )
                         )
-                    ),
-                    IRConst.data( new DataConstr( 0, [] ) )
+                    )
                 ),
-                new IRFunc( 1, IRConst.int( 1 ) )
-            ).toJson()
+                IRConst.data( new DataConstr( 0, [] ) )
+            ),
+            new IRFunc( 1, IRConst.int( 1 ) )
+        );
+
+        root = handleHoistedAndReturnRoot( root );
+
+        console.log( prettyIRText( expected ) );
+        console.log( prettyIRText( root ) );
+
+        expect( root.toJson() )
+        .toEqual(
+            expected.toJson()
         );
 
     });

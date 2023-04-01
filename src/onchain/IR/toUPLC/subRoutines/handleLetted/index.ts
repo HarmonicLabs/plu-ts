@@ -16,11 +16,12 @@ import { IRForced } from "../../../IRNodes/IRForced";
 import { lowestCommonAncestor } from "../../_internal/lowestCommonAncestor";
 import { PlutsIRError } from "../../../../../errors/PlutsIRError";
 import { isIRTerm } from "../../../utils/isIRTerm";
+import { markRecursiveHoistsAsForced } from "../markRecursiveHoistsAsForced";
 
 export function handleLetted( term: IRTerm ): void
 {
-    // console.log( prettyIRJsonStr( term ) );
-
+    // TODO: should probably merge `markRecursiveHoistsAsForced` inside `getLettedTerms` to iter once
+    markRecursiveHoistsAsForced( term );
     const allLetteds = getLettedTerms( term );
 
     // console.log("direct letted", allLetteds.map( jsonLettedSetEntry ) );
@@ -57,10 +58,18 @@ export function handleLetted( term: IRTerm ): void
         for( let i = 0; i < n; i++ )
         {
             const thisLettedEntry = lettedSet[i];
+
+            if( thisLettedEntry.letted.meta.forceHoist === true )
+            {
+                toLet[ a++ ] = thisLettedEntry.letted;
+                continue;
+            }
+
+
             if(
                 // inline
                 // - terms used once (with single reference)
-                // - letted varibles (also used multiple times)
+                // - letted varibles (even if used multiple times)
                 (
                     thisLettedEntry.nReferences === 1 &&
                     thisLettedEntry.letted.parent

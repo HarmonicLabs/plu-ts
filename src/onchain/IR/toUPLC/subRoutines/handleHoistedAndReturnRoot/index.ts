@@ -12,6 +12,7 @@ import { PlutsIRError } from "../../../../../errors/PlutsIRError";
 import { logJson } from "../../../../../utils/ts/ToJson";
 import { IHash } from "../../../interfaces/IHash";
 import { prettyIRJsonStr, showIR } from "../../../utils/showIR";
+import { markRecursiveHoistsAsForced } from "../markRecursiveHoistsAsForced";
 
 function toHashArr( arr: IHash[] ): string[]
 {
@@ -35,6 +36,8 @@ export function handleHoistedAndReturnRoot( term: IRTerm ): IRTerm
         );
     }
 
+    // TODO: should probably merge `markRecursiveHoistsAsForced` inside `getHoistedTerms` to iter once
+    markRecursiveHoistsAsForced( term );
     const directHoisteds = getHoistedTerms( term );
     const allHoisteds = getSortedHoistedSet( directHoisteds );
     let n = allHoisteds.length;
@@ -51,6 +54,13 @@ export function handleHoistedAndReturnRoot( term: IRTerm ): IRTerm
     for( let i = 0; i < n; i++ )
     {
         const thisHoistedEntry = allHoisteds[i];
+        
+        if( thisHoistedEntry.hoisted.meta.forceHoist === true )
+        {
+            toHoist[ a++ ] = thisHoistedEntry.hoisted;
+            continue;
+        }
+
         if(
             thisHoistedEntry.nReferences === 1 &&
             thisHoistedEntry.hoisted.parent

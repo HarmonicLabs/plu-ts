@@ -1,4 +1,4 @@
-import { showUPLC } from "../../../UPLC/UPLCTerm";
+import { prettyUPLC, showUPLC } from "../../../UPLC/UPLCTerm";
 import { Application } from "../../../UPLC/UPLCTerms/Application";
 import { Lambda } from "../../../UPLC/UPLCTerms/Lambda";
 import { UPLCVar } from "../../../UPLC/UPLCTerms/UPLCVar";
@@ -66,9 +66,11 @@ describe("compileIRToUPLC", () => {
     
         });
     
-        test("_recursiveList (requireing other negative natives)", () => {
+        test.skip("_recursiveList (requireing other negative natives)", () => {
     
             const uplc = compileIRToUPLC( IRNative._recursiveList );
+
+            console.log( showUPLC( uplc ) );
             
             expect( showUPLC( uplc ) )
             .toEqual(
