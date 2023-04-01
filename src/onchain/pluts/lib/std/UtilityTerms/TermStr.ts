@@ -3,6 +3,7 @@ import { PString, TermFn, PBool } from "../../../PTypes"
 import { Term } from "../../../Term"
 import { pappendStr, pencodeUtf8, peqStr } from "../../builtins/str"
 import { PappArg } from "../../pappArg"
+import { plet } from "../../plet"
 import { TermBS } from "./TermBS"
 import { TermBool } from "./TermBool"
 
@@ -30,7 +31,7 @@ export function addPStringMethods( term: Term<PString> ): TermStr
         term,
         "utf8Encoded",
         {
-            get: () => pencodeUtf8.$( term ),
+            get: () => plet( pencodeUtf8.$( term ) ),
             ...getterOnly
         }
     );
@@ -39,7 +40,7 @@ export function addPStringMethods( term: Term<PString> ): TermStr
         term,
         "concatTerm",
         {
-            get: () => pappendStr.$( term ),
+            get: () => plet( pappendStr.$( term ) ),
             ...getterOnly
         }
     );
@@ -53,7 +54,7 @@ export function addPStringMethods( term: Term<PString> ): TermStr
         term,
         "eqTerm",
         {
-            get: () => peqStr.$( term ),
+            get: () => plet( peqStr.$( term ) ),
             ...getterOnly
         }
     );

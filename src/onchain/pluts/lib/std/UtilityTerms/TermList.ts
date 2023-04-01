@@ -12,6 +12,7 @@ import { phead, ptail } from "../../builtins/list";
 import { pprepend } from "../../builtins/pprepend";
 import { PappArg } from "../../pappArg";
 import { phoist } from "../../phoist";
+import { plet } from "../../plet";
 import type { PMaybeT } from "../PMaybe/PMaybe";
 import { pflip } from "../combinators";
 import { pevery } from "../list/pevery";
@@ -173,7 +174,7 @@ export function addPListMethods<PElemsT extends PType>( lst: Term<PList<PElemsT>
         "head",
         {
             get: () => {
-                return phead( elemsT ).$( _lst )
+                return plet( phead( elemsT ).$( _lst ) )
             },
             ...getterOnly
         }
@@ -182,7 +183,7 @@ export function addPListMethods<PElemsT extends PType>( lst: Term<PList<PElemsT>
         _lst,
         "tail",
         {
-            get: () => ptail( elemsT ).$( _lst ),
+            get: () => plet( ptail( elemsT ).$( _lst ) ),
             ...getterOnly
         }
     );
@@ -190,7 +191,7 @@ export function addPListMethods<PElemsT extends PType>( lst: Term<PList<PElemsT>
         _lst,
         "length",
         {
-            get: () => plength( elemsT ).$( _lst ),
+            get: () => plet( plength( elemsT ).$( _lst ) ),
             ...getterOnly
         }
     );
@@ -198,7 +199,7 @@ export function addPListMethods<PElemsT extends PType>( lst: Term<PList<PElemsT>
         _lst,
         "reversed",
         {
-            get: () => preverse( elemsT ).$( _lst ),
+            get: () => plet( preverse( elemsT ).$( _lst ) ),
             ...getterOnly
         }
     );

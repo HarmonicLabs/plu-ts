@@ -187,7 +187,7 @@ export function handleLetted( term: IRTerm ): void
             letted = lettedSet[i].letted;
 
             if(
-                refs.length === 1 || // inline single refs always
+                letted.value instanceof IRVar || // always inline vars
                 // the letted hash is one of the ones to be inlined
                 toInlineHashes.some( h => uint8ArrayEq( h, letted.hash ) )
             )

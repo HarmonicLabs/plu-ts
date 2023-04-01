@@ -8,6 +8,7 @@ import { pdecodeUtf8 } from "../../builtins/str"
 import { PappArg } from "../../pappArg"
 import { pfn } from "../../pfn"
 import { phoist } from "../../phoist"
+import { plet } from "../../plet"
 import { TermBool } from "./TermBool"
 import { TermInt } from "./TermInt"
 import { TermStr } from "./TermStr"
@@ -90,7 +91,7 @@ export function addPByteStringMethods( term: Term<PByteString> ): TermBS
         term,
         "length",
         {
-            get: () => plengthBs.$( term ),
+            get: () => plet( plengthBs.$( term ) ),
             ...getterOnly
         }
     );
@@ -98,7 +99,7 @@ export function addPByteStringMethods( term: Term<PByteString> ): TermBS
         term,
         "utf8Decoded",
         {
-            get: () => pdecodeUtf8.$( term ),
+            get: () => plet( pdecodeUtf8.$( term ) ),
             ...getterOnly
         }
     );

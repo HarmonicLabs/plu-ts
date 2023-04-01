@@ -8,6 +8,7 @@ import { getFstT, getSndT } from "../../../type_system/tyArgs";
 import { tyVar, pair, TermType, PrimType } from "../../../type_system/types";
 import { UtilityTermOf } from "../../addUtilityForType";
 import { pfstPair, psndPair } from "../../builtins";
+import { plet } from "../../plet";
 
 type UnwrapPAsData<PT extends PType> = 
     PT extends PAsData<infer PTy extends PType> ? PTy :
@@ -52,7 +53,7 @@ export function addPPairMethods<PFst extends PType, PSnd extends PType>( _pair: 
             _pair,
             "fst",
             {
-                get: () => pfstPair( fstT, sndT ).$( _pair ),
+                get: () => plet( pfstPair( fstT, sndT ).$( _pair ) ),
                 ...getterOnly
             }
         );
@@ -61,7 +62,7 @@ export function addPPairMethods<PFst extends PType, PSnd extends PType>( _pair: 
             _pair,
             "snd",
             {
-                get: () => psndPair( fstT, sndT ).$( _pair ),
+                get: () => plet( psndPair( fstT, sndT ).$( _pair ) ),
                 ...getterOnly
             }
         );
