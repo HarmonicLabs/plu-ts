@@ -6,14 +6,37 @@ import { BasePlutsError } from "../../../errors/BasePlutsError";
 import { Data, isData } from "../Data";
 import { Machine } from "../../../onchain/CEK/Machine";
 import { UPLCConst } from "../../../onchain/UPLC/UPLCTerms/UPLCConst";
-import { Term } from "../../../onchain/pluts/Term";
 import { dataFromCbor, dataFromCborObj } from "../fromCbor";
-import { PData } from "../../../onchain/pluts/PTypes/PData/PData";
-import { PStruct } from "../../../onchain/pluts/PTypes/PStruct/pstruct";
 import { data } from "../../../onchain/pluts/type_system/types";
-import { typeExtends } from "../../../onchain/pluts/type_system/typeExtends";
+import { ToUPLC } from "../../../onchain/UPLC/interfaces/ToUPLC";
+import ObjectUtils from "../../../utils/ObjectUtils";
 
-export type CanBeData = Data | Term<PData> | Term<PStruct<any>> | CborObj | CborString
+export type CanBeData = Data | ToUPLC | CborObj | CborString
+
+export function cloneCanBeData( stuff: CanBeData ): CanBeData
+{
+    if(
+        stuff instanceof CborString || 
+        isCborObj( stuff ) || 
+        isData( stuff ) 
+    ) return stuff.clone() as any;
+
+    const result = Machine.evalSimple( stuff.toUPLC() );
+    if(!( result instanceof UPLCConst ))
+    {
+        throw new BasePlutsError(
+            "`CanBeData` object that implements `ToUPLC` did not evaluated to a constant"
+        );
+    }
+    const value = result.value;
+    if( !isData( value ) )
+    {
+        throw new BasePlutsError(
+            "`CanBeData` object that implements `ToUPLC` evaluated to a constant with a non-Data value"
+        );
+    }
+    return value;
+}
 
 export function canBeData( something: any ): something is CanBeData
 {
@@ -21,15 +44,14 @@ export function canBeData( something: any ): something is CanBeData
     return (
         isData( something ) || 
         (
-            something instanceof Term &&
-            typeExtends( something.type, data )
+            typeof data === "object" &&
+            ObjectUtils.hasOwn( data, "toUPLC" ) &&
+            typeof data.toUPLC === "function"
         ) ||
         something instanceof CborString ||
         isCborObj( something )
     );
 }
-
-const data_t = data;
 
 export function forceData( data: CanBeData ): Data
 {
@@ -38,15 +60,13 @@ export function forceData( data: CanBeData ): Data
         return data;
     }
 
-    if( data instanceof Term )
+    if(
+        typeof data === "object" &&
+        ObjectUtils.hasOwn( data, "toUPLC" ) &&
+        typeof data.toUPLC === "function"
+    )
     {
-        if( !typeExtends( data.type, data_t ) )
-        {
-            throw new BasePlutsError(
-                "datum was a term of a type that doesn't extends 'data'"
-            );
-        }
-        const uplcData = Machine.evalSimple( data );
+        const uplcData = Machine.evalSimple( data.toUPLC() );
         if( !( uplcData instanceof UPLCConst ) )
         {
             throw new BasePlutsError(

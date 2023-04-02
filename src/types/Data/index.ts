@@ -9,4 +9,5 @@ export * from "./DataPair";
 export * from "./fromCbor";
 export * from "./toCbor";
 export * from "./hashData";
+export * from "./CanBeData";
 export * from "./toData/interface";

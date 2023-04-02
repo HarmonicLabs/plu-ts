@@ -14,7 +14,8 @@ export function replaceClosedLettedWithHoisted( root: IRTerm )
                 node.parent,
                 node,
                 new IRHoisted(
-                    node.value
+                    node.value,
+                    node.meta
                 )
             );
             return true;

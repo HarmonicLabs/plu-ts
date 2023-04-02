@@ -62,14 +62,14 @@ describe("fromData", () => {
         .$( punIData )
         .$( punListData.$( pd ) )
 
-        console.log( showIR( plistInt.toIR() ) );
-        console.log( prettyUPLC( plistInt.toUPLC() ) );
-
-        console.log(
-            Machine.evalSimple(
-                plistInt
-            )
-        );
+        // console.log( showIR( plistInt.toIR() ) );
+        // console.log( prettyUPLC( plistInt.toUPLC() ) );
+// 
+        // console.log(
+        //     Machine.evalSimple(
+        //         plistInt
+        //     )
+        // );
 
         expect(
             Machine.evalSimple(
@@ -101,14 +101,14 @@ describe("fromData", () => {
 
         const plistInt = fromData( list( int ) )( pd );
         
-        console.log( showIR( plistInt.toIR() ) );
-        console.log( prettyUPLC( plistInt.toUPLC() ) );
-
-        console.log(
-            Machine.evalSimple(
-                plistInt
-            )
-        );
+        // console.log( showIR( plistInt.toIR() ) );
+        // console.log( prettyUPLC( plistInt.toUPLC() ) );
+// 
+        // console.log(
+        //     Machine.evalSimple(
+        //         plistInt
+        //     )
+        // );
 
         expect(
             Machine.evalSimple(
