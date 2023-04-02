@@ -10,11 +10,14 @@ import { dataFromCbor, dataFromCborObj } from "../fromCbor";
 import { data } from "../../../onchain/pluts/type_system/types";
 import { ToUPLC } from "../../../onchain/UPLC/interfaces/ToUPLC";
 import ObjectUtils from "../../../utils/ObjectUtils";
+import { isHex } from "../../HexString";
 
-export type CanBeData = Data | ToUPLC | CborObj | CborString
+export type CanBeData = Data | ToUPLC | CborObj | CborString | string
 
 export function cloneCanBeData( stuff: CanBeData ): CanBeData
 {
+    if( typeof stuff === "string" ) return stuff;
+
     if(
         stuff instanceof CborString || 
         isCborObj( stuff ) || 
@@ -40,6 +43,10 @@ export function cloneCanBeData( stuff: CanBeData ): CanBeData
 
 export function canBeData( something: any ): something is CanBeData
 {
+    if(
+        typeof something === "string" &&
+        isHex( something )
+    ) return true;
     if( typeof something !== "object" ) return false;
     return (
         isData( something ) || 
@@ -55,6 +62,9 @@ export function canBeData( something: any ): something is CanBeData
 
 export function forceData( data: CanBeData ): Data
 {
+    if( typeof data === "string" )
+    data = dataFromCbor( data );
+    
     if( isData( data ) )
     {
         return data;
