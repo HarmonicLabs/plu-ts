@@ -26,25 +26,25 @@ export function ptrace<ReturnT extends TermType>( returnT: ReturnT )
 
 export const ptraceIfTrue = phoist(
     pfn([
-        str,
+        delayed( str ),
         bool,
     ],  bool)
     (( msg, boolean ) => 
         pif( bool ).$( boolean )
-        .then( ptrace( bool ).$( msg ).$( pBool( true ) ) )
+        .then( ptrace( bool ).$( pforce( msg ) ).$( pBool( true ) ) )
         .else( pBool( false ) )
     )
 );
 
 export const ptraceIfFalse = phoist(
     pfn([
-        str,
+        delayed( str ),
         bool,
     ],  bool)
     (( msg, boolean ) => 
         pif( bool ).$( boolean )
         .then( pBool( true ) )
-        .else( ptrace( bool ).$( msg ).$( pBool( false ) ) )
+        .else( ptrace( bool ).$( pforce( msg ) ).$( pBool( false ) ) )
     )
 );
 
