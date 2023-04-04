@@ -4,8 +4,8 @@ import { PStakingCredential } from "../Address/PStakingCredential";
 import { PPubKeyHash } from "../PubKey/PPubKeyHash";
 
 export const PDCert = pstruct({
-    KeyRegistration: { _0: PStakingCredential.type },
-    KeyDeRegistration: { _0: PStakingCredential.type },
+    KeyRegistration: { stakeKey: PStakingCredential.type },
+    KeyDeRegistration: { stakeKey: PStakingCredential.type },
     KeyDelegation: {
         delegator: PStakingCredential.type,
         poolKeyHash: PPubKeyHash.type
@@ -20,4 +20,4 @@ export const PDCert = pstruct({
     },
     Genesis: {},
     MoveInstantRewards: {}
-})
+});

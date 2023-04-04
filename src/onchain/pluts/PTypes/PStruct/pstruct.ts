@@ -179,7 +179,8 @@ function isStructInstanceOfDefinition<SCtorDef extends StructCtorDef>
 const RESERVED_STRUCT_KEYS = Object.freeze([
     "eq",
     "eqTerm",
-    "extract"
+    "extract",
+    "in"
 ]);
 
 export function pstruct<StructDef extends StructDefinition>( def: StructDef ): PStruct<StructDef>

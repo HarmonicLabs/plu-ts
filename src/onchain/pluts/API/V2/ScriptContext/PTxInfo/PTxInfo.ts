@@ -19,4 +19,4 @@ export const PTxInfo = pstruct({
         datums: list( pair( V1.PDatumHash.type, data ) ),
         id: V1.PTxId.type
     }
-})
+});

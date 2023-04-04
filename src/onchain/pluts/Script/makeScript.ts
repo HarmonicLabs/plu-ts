@@ -10,7 +10,7 @@ import type { PDataRepresentable } from "../PType/PDataRepresentable";
 import { TermFn } from "../PTypes/PFn/PFn";
 import { perror } from "../lib/perror";
 import { pmakeUnit } from "../lib/std/unit/pmakeUnit";
-import { pif, ptrace, ptraceError } from "../lib/builtins";
+import { pif, ptraceError } from "../lib/builtins";
 import { papp } from "../lib/papp";
 import { pfn } from "../lib/pfn";
 import { PrimType, bool, data, unit } from "../type_system/types";

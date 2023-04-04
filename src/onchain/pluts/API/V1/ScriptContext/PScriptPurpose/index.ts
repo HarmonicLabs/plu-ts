@@ -9,4 +9,4 @@ export const PScriptPurpose = pstruct({
     Spending: { utxoRef: PTxOutRef.type },
     Rewarding: { stakeCredential: PStakingCredential.type },
     Certifying: { dCert: PDCert.type }
-})
+});

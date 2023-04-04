@@ -9,16 +9,6 @@ import { UtilityTermOf, addUtilityForType } from "../addUtilityForType";
 import { _fromData } from "../std/data/conversion/fromData_minimal";
 
 export type LettedTerm<PVarT extends PType> = UtilityTermOf<PVarT> & {
-    /**
-     * @deprecated you can use the result of `plet` directly
-     * 
-     * @example
-     * ```ts
-     * const myTerm = plet( myValue );
-     * ```
-     * 
-     * ## the `in` method will be removed in a future version
-    **/
     in: <PExprResult extends PType>( expr: (value: UtilityTermOf<PVarT>) => Term<PExprResult> ) => Term<PExprResult>
 }
 
