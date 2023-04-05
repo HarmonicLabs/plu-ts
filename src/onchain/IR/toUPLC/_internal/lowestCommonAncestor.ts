@@ -3,9 +3,9 @@ import { isIRTerm } from "../../utils/isIRTerm";
 
 type IRWithDept = IRTerm & { depth: number }
 
-export function lowestCommonAncestor( n1: IRWithDept | undefined, n2: IRWithDept | undefined ): IRTerm | string
+export function lowestCommonAncestor( n1: IRWithDept | undefined, n2: IRWithDept | undefined ): IRTerm | undefined
 {
-    if( !isIRTerm( n1 ) || !isIRTerm( n2 ) ) return "not IR" as any;
+    if( !isIRTerm( n1 ) || !isIRTerm( n2 ) ) return undefined;
 
     let d1: number = (n1 as any).depth;
     let d2: number = (n2 as any).depth;
@@ -27,7 +27,7 @@ export function lowestCommonAncestor( n1: IRWithDept | undefined, n2: IRWithDept
     // Now n1 and n2 are at same levels
     while( n1 && n2 )
     {
-        if (n1 === n2)
+        if(n1 === n2)
             return n1;
 
         // as any because undefined will exit the loop 
@@ -35,5 +35,5 @@ export function lowestCommonAncestor( n1: IRWithDept | undefined, n2: IRWithDept
         n2 = n2.parent as any;
     }
 
-    return "no lca" as any;
+    return undefined;
 }

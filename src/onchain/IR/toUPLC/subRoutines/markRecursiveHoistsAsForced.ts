@@ -21,7 +21,7 @@ export function markRecursiveHoistsAsForced( _term: IRTerm ): void
 
     while( stack.length > 0 )
     {
-        const { term: t, isInRecursiveTerm } = stack.pop() as StackElem;
+        const { term: t, isInRecursiveTerm, isIRAppArg } = stack.pop() as StackElem;
 
         if( t instanceof IRApp )
         {
@@ -49,6 +49,29 @@ export function markRecursiveHoistsAsForced( _term: IRTerm ): void
             t instanceof IRLetted
         )
         {
+            // if it is an hoisted/letted
+            // DIRECTLY applied to something that makes it recursive
+            if(
+                isIRAppArg && 
+                t.parent instanceof IRApp && 
+                t.parent.fn instanceof IRNative &&
+                t.parent.fn.tag === IRNativeTag.z_comb
+            )
+            {
+                // then check the hoisted/letted value instead of marking as hoisted
+                if( t instanceof IRLetted )
+                {
+                    stack.push({ term: t.value, isInRecursiveTerm });
+                    continue;
+                }
+                else // if( t instanceof IRHoisted )
+                {
+                    stack.push({ term: t.hoisted, isInRecursiveTerm });
+                    continue;
+                }
+                continue;
+            }
+
             if( isInRecursiveTerm )
             {
                 t.meta.forceHoist = true;

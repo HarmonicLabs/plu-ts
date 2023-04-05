@@ -6,7 +6,7 @@ import { IRVar } from "../../../IRNodes/IRVar";
 import { IRTerm } from "../../../IRTerm";
 import { _addDepths } from "../../_internal/_addDepth";
 import { _modifyChildFromTo } from "../../_internal/_modifyChildFromTo";
-import { findAll } from "../../_internal/findAll";
+import { findAll, findAllNoHoisted } from "../../_internal/findAll";
 import { getDebruijnInTerm } from "../../_internal/getDebruijnInTerm";
 import { groupByScope } from "./groupByScope";
 import { IRCompilationError } from "../../../../../errors/PlutsIRError/IRCompilationError";
@@ -23,6 +23,11 @@ export function handleLetted( term: IRTerm ): void
     // TODO: should probably merge `markRecursiveHoistsAsForced` inside `getLettedTerms` to iter once
     markRecursiveHoistsAsForced( term );
     const allLetteds = getLettedTerms( term );
+
+    // most of the time we are just compiling small
+    // pre-execuded terms (hence constants)
+    // in these cases is likely we have no letted terms
+    if( allLetteds.length === 0 ) return;
 
     // console.log("direct letted", allLetteds.map( jsonLettedSetEntry ) );
 
@@ -120,7 +125,7 @@ export function handleLetted( term: IRTerm ): void
              * we know is an `IRLetted` array an not a generic `IRTerm` array
              * because that's what the filter funciton checks for
              */
-            const refs: IRLetted[] = findAll(
+            const refs: IRLetted[] = findAllNoHoisted(
                 maxScope,
                 elem => {
                     if(!(elem instanceof IRLetted)) return false;
@@ -145,6 +150,7 @@ export function handleLetted( term: IRTerm ): void
                         {
                             if( elem.dbn < lettedSet[ lettedSetIdx ].letted.dbn )
                             {
+                                elem.meta.forceHoist = lettedSet[ lettedSetIdx ].letted.meta.forceHoist;
                                 lettedSet[ lettedSetIdx ].letted = elem;
 
                                 if( toLetIdx >= 0 )
@@ -160,8 +166,11 @@ export function handleLetted( term: IRTerm ): void
                         }
                         else
                         {
+                            elem.meta.forceHoist = lettedSet[ lettedSetIdx ].letted.meta.forceHoist;
                             lettedSet[ lettedSetIdx ].letted = elem;
+
                             replacedLettedSetEntry[ lettedSetIdx ] = true;
+                            
                             if( toLetIdx >= 0 )
                             {
                                 toLet[ toLetIdx ] = elem;
@@ -185,6 +194,7 @@ export function handleLetted( term: IRTerm ): void
             // !!! DO NOT REMOVE !!!
             // makes sure the reference comes form the tree (possibly modified)
             letted = lettedSet[i].letted;
+            const forceHosit = letted.meta.forceHoist === true;
 
             if(
                 letted.value instanceof IRVar || // always inline vars
@@ -209,38 +219,52 @@ export function handleLetted( term: IRTerm ): void
                 continue; // go to next letted
             }
 
-            // subtree migh change so depth will change
-            // needs to be updated every loop
-            _addDepths( maxScope );
+            let lca: IRTerm | undefined = refs[0];
 
-            let lca: IRTerm | string = refs[0];
-            for( let i = 1; i < refs.length; i++ )
+            if( !forceHosit )
             {
-                lca = lowestCommonAncestor( lca as any, refs[i] as any );
-            }
-
-            if( !isIRTerm( lca ) )
-            {
-                throw new PlutsIRError(
-                    refs.length + " letting nodes with hash " + toHex( letted.hash ) + " from different trees; error:" + lca
-                );
-            }
-
-            while(!(
-                lca instanceof IRFunc ||
-                lca instanceof IRDelayed
-            ))
-            {
-                lca = lca?.parent ?? "";
+                // subtree migh change so depth will change
+                // needs to be updated every loop
+                _addDepths( maxScope );
+    
+                for( let i = 1; i < refs.length; i++ )
+                {
+                    lca = lowestCommonAncestor( lca as any, refs[i] as any );
+                    if( !isIRTerm( lca ) )
+                    {
+                        break;
+                    }
+                }
+    
                 if( !isIRTerm( lca ) )
                 {
-                    throw new PlutsIRError(
-                        "lowest common ancestor outside the max scope"
-                    );
+                    // console.log( refs.length, "\n\n", refs );
+
+                    // default to maxScope
+                    lca = maxScope;
+                    // throw new PlutsIRError(
+                    //     "letting nodes with hash " + toHex( letted.hash ) + " from different trees"
+                    // );
+                }
+                else
+                {
+                    while(!(
+                        lca instanceof IRFunc ||
+                        lca instanceof IRDelayed
+                    ))
+                    {
+                        lca = lca?.parent ?? undefined;
+                        if( !isIRTerm( lca ) )
+                        {
+                            throw new PlutsIRError(
+                                "lowest common ancestor outside the max scope"
+                            );
+                        }
+                    }
                 }
             }
 
-            const parentNode: IRFunc | IRDelayed = lca;
+            const parentNode: IRFunc | IRDelayed = forceHosit ? maxScope : lca as any;
             const parentNodeDirectChild = parentNode instanceof IRFunc ? parentNode.body : parentNode.delayed;
 
             // add 1 to every var's DeBruijn that accesses stuff outside the parent node

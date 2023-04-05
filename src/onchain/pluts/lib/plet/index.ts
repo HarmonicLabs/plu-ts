@@ -7,6 +7,8 @@ import { Term } from "../../Term";
 import { PrimType } from "../../type_system/types";
 import { UtilityTermOf, addUtilityForType } from "../addUtilityForType";
 import { _fromData } from "../std/data/conversion/fromData_minimal";
+import { isClosedIRTerm } from "../../../IR/utils/isClosedIRTerm";
+import { IRHoisted } from "../../../IR/IRNodes/IRHoisted";
 
 export type LettedTerm<PVarT extends PType> = UtilityTermOf<PVarT> & {
     in: <PExprResult extends PType>( expr: (value: UtilityTermOf<PVarT>) => Term<PExprResult> ) => Term<PExprResult>
@@ -23,10 +25,20 @@ export function plet<PVarT extends PType, SomeExtension extends object>( varValu
 
     const letted = new Term(
         type,
-        dbn => new IRLetted(
-            Number( dbn ),
-            varValue.toIR( dbn )
-        )
+        dbn => {
+
+            const ir =  varValue.toIR( dbn );
+
+            // if( isClosedIRTerm( ir ) )
+            // {
+            //     return new IRHoisted( ir );
+            // }
+
+            return new IRLetted(
+                Number( dbn ),
+                ir
+            );
+        }
     );
     
     const continuation = <PExprResult extends PType>( expr: (value: TermPVar) => Term<PExprResult> ): Term<PExprResult> => {

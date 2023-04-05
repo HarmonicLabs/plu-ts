@@ -16,6 +16,7 @@ import { ToJson } from "../../../utils/ts/ToJson";
 import { IRForced } from "./IRForced";
 import { IRDelayed } from "./IRDelayed";
 import { IRMetadata } from "../interfaces/IRMetadata";
+import { prettyIRJsonStr } from "../utils/showIR";
 
 
 export type HoistedSetEntry = {
@@ -64,9 +65,16 @@ export class IRHoisted
         while( hoisted instanceof IRHoisted ) hoisted = hoisted.hoisted;
 
         if( !isClosedIRTerm( hoisted ) )
-        throw new BasePlutsError(
-            "only closed terms can be hoisted"
-        );
+        {
+            console.log(
+                prettyIRJsonStr(
+                    hoisted
+                )
+            )
+            throw new BasePlutsError(
+                "only closed terms can be hoisted"
+            );
+        }
         
         // initialize without calling "set"
         let _hoisted: IRTerm = hoisted;
