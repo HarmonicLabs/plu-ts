@@ -238,8 +238,6 @@ export function handleLetted( term: IRTerm ): void
     
                 if( !isIRTerm( lca ) )
                 {
-                    // console.log( refs.length, "\n\n", refs );
-
                     // default to maxScope
                     lca = maxScope;
                     // throw new PlutsIRError(
