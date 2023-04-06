@@ -62,6 +62,8 @@ export class IRVar
             }
         );
 
+        const e = Error();
+
         let _dbn: number
         Object.defineProperty(
             this, "dbn",
@@ -71,6 +73,7 @@ export class IRVar
                     if(!(
                         Number.isSafeInteger( newDbn ) && newDbn >= 0 
                     )){
+                        console.log( e.stack );
                         throw new BasePlutsError(
                             "invalid index for an `IRVar` instance; new DeBruijn was: " + newDbn
                         );
