@@ -10,13 +10,15 @@ import { findAll, findAllNoHoisted } from "../../_internal/findAll";
 import { getDebruijnInTerm } from "../../_internal/getDebruijnInTerm";
 import { groupByScope } from "./groupByScope";
 import { IRCompilationError } from "../../../../../errors/PlutsIRError/IRCompilationError";
-import { prettyIR, prettyIRJsonStr, prettyIRText, showIR } from "../../../utils/showIR";
+import { prettyIR, prettyIRJsonStr, prettyIRText, showIR, showIRText } from "../../../utils/showIR";
 import { IRDelayed } from "../../../IRNodes/IRDelayed";
 import { IRForced } from "../../../IRNodes/IRForced";
 import { lowestCommonAncestor } from "../../_internal/lowestCommonAncestor";
 import { PlutsIRError } from "../../../../../errors/PlutsIRError";
 import { isIRTerm } from "../../../utils/isIRTerm";
 import { markRecursiveHoistsAsForced } from "../markRecursiveHoistsAsForced";
+import { includesNode } from "../../_internal/includesNode";
+import { getDiffDbn } from "../../_internal/getDiffDbn";
 
 export function handleLetted( term: IRTerm ): void
 {
@@ -225,11 +227,11 @@ export function handleLetted( term: IRTerm ): void
             {
                 // subtree migh change so depth will change
                 // needs to be updated every loop
-                _addDepths( maxScope );
+                // _addDepths( maxScope );
     
                 for( let i = 1; i < refs.length; i++ )
                 {
-                    lca = lowestCommonAncestor( lca as any, refs[i] as any );
+                    lca = lowestCommonAncestor( lca, refs[i], maxScope );
                     if( !isIRTerm( lca ) )
                     {
                         break;
@@ -240,12 +242,13 @@ export function handleLetted( term: IRTerm ): void
                 {
                     // default to maxScope
                     lca = maxScope;
-                    // throw new PlutsIRError(
-                    //     "letting nodes with hash " + toHex( letted.hash ) + " from different trees"
-                    // );
+                    throw new PlutsIRError(
+                        "letting nodes with hash " + toHex( letted.hash ) + " from different trees"
+                    );
                 }
                 else
                 {
+                    // point to the first func or delay node
                     while(!(
                         lca instanceof IRFunc ||
                         lca instanceof IRDelayed
@@ -330,10 +333,26 @@ export function handleLetted( term: IRTerm ): void
                 // skip hoisted since closed
             }
 
+            letted = refs[0];
+            // console.log(
+            //     `maxScope includes parentNode: ${includesNode( maxScope, parentNode )}`,
+            //     `\nparentNode includes ${toHex( letted.hash )}: ${includesNode( parentNode, letted )}`,
+            //     `\nparentNode includes ref: ${includesNode( parentNode, refs[0] )}`,
+            // );
+            
             // get the difference in DeBruijn
             // between the maxScope and the letted term
+            let diffDbn = 0; // getDiffDbn( parentNodeDirectChild, letted );
+            /*
+            if( diffDbn === undefined )
+            {
+                throw new PlutsIRError(
+                    "letted term was not part of the selected maxScope"
+                );
+            }
+            //*/
+            //*
             let tmpNode: IRTerm = letted;
-            let diffDbn = 0;
             while( tmpNode !== parentNode )
             {
                 tmpNode = tmpNode.parent as any;
@@ -346,6 +365,7 @@ export function handleLetted( term: IRTerm ): void
                     diffDbn += tmpNode.arity;
                 }
             }
+            //*/
 
             // console.log( "-------------------- adding letted value --------------------\n".repeat(3) );
 

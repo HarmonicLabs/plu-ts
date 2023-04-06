@@ -115,7 +115,7 @@ export class IRLetted
         );
 
         // initialize without calling "set"
-        let _value: IRTerm = toLet;
+        let _value: IRTerm = toLet.clone();
         _value.parent = this;
 
         // we need the has before setting dependecies

@@ -3,21 +3,15 @@ import { IRApp } from "../../../IRNodes/IRApp";
 import { IRDelayed } from "../../../IRNodes/IRDelayed";
 import { IRForced } from "../../../IRNodes/IRForced";
 import { IRFunc } from "../../../IRNodes/IRFunc";
-import { getSortedHoistedSet, getHoistedTerms, IRHoisted, cloneHoistedSetEntry } from "../../../IRNodes/IRHoisted";
+import { getSortedHoistedSet, getHoistedTerms, IRHoisted } from "../../../IRNodes/IRHoisted";
 import { IRLetted } from "../../../IRNodes/IRLetted";
 import { IRVar } from "../../../IRNodes/IRVar";
 import { IRTerm } from "../../../IRTerm";
 import { _modifyChildFromTo } from "../../_internal/_modifyChildFromTo";
 import { PlutsIRError } from "../../../../../errors/PlutsIRError";
-import { logJson } from "../../../../../utils/ts/ToJson";
-import { IHash } from "../../../interfaces/IHash";
-import { prettyIRJsonStr, showIR } from "../../../utils/showIR";
+import { showIR, showIRText } from "../../../utils/showIR";
 import { markRecursiveHoistsAsForced } from "../markRecursiveHoistsAsForced";
 
-function toHashArr( arr: IHash[] ): string[]
-{
-    return arr.map( h => toHex( h.hash ) );
-}
 
 export function handleHoistedAndReturnRoot( term: IRTerm ): IRTerm
 {
@@ -41,6 +35,12 @@ export function handleHoistedAndReturnRoot( term: IRTerm ): IRTerm
     const directHoisteds = getHoistedTerms( term );
     const allHoisteds = getSortedHoistedSet( directHoisteds );
     let n = allHoisteds.length;
+
+    // evaluating constants
+    if( n === 0 )
+    {
+        return term;
+    }
     
     // nothing to do; shortcut.
     if( n === 0 ) return term;
@@ -83,8 +83,6 @@ export function handleHoistedAndReturnRoot( term: IRTerm ): IRTerm
     let root: IRTerm = term;
     while( root.parent !== undefined ) root = root.parent;
 
-    let prevRoot: IRTerm;
-
     function getIRVarForHoistedAtLevel( _hoistedHash: Uint8Array, level: number ): IRVar
     {
         let levelOfTerm = toHoist.findIndex( sortedH => uint8ArrayEq( sortedH.hash, _hoistedHash ) );
@@ -105,7 +103,6 @@ export function handleHoistedAndReturnRoot( term: IRTerm ): IRTerm
     for( let i = toHoist.length - 1; i >= 0; i-- )
     {
         const thisHoisted = toHoist[i];
-        prevRoot = root;
         root = new IRApp(
             new IRFunc(
                 1,
@@ -137,11 +134,27 @@ export function handleHoistedAndReturnRoot( term: IRTerm ): IRTerm
                     `out of bound hoisted term; hash: ${toHex( irTerm.hash )}; var's DeBruijn: ${irvar.dbn} (starts from 0); tot hoisted in scope: ${dbn}`
                 )
             }
+
+            // console.log(
+            //     showIRText( irTerm.parent as IRTerm ),
+            //     "\n\n",
+            //     showIRText( irTerm ),
+            // )
             _modifyChildFromTo(
                 irTerm.parent as IRTerm,
                 irTerm,
                 irvar
             );
+        
+            Object.defineProperty(
+                irTerm.meta, "handled", {
+                    value: true,
+                    writable: true,
+                    enumerable: true,
+                    configurable: true
+                }
+            );
+
             // don't push anything
             // because we just replaced with a variable
             // so we know there's not a tree to explore
@@ -160,6 +173,7 @@ export function handleHoistedAndReturnRoot( term: IRTerm ): IRTerm
                     )
                 )
             }
+            
             const toInline = irTerm.hoisted;
             _modifyChildFromTo(
                 irTerm.parent as IRTerm,

@@ -29,10 +29,10 @@ export function plet<PVarT extends PType, SomeExtension extends object>( varValu
 
             const ir =  varValue.toIR( dbn );
 
-            // if( isClosedIRTerm( ir ) )
-            // {
-            //     return new IRHoisted( ir );
-            // }
+            if( isClosedIRTerm( ir ) )
+            {
+                return new IRHoisted( ir );
+            }
 
             return new IRLetted(
                 Number( dbn ),

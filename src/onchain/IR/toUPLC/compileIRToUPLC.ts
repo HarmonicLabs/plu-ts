@@ -10,6 +10,7 @@ import { IRHoisted } from "../IRNodes/IRHoisted";
 import { replaceClosedLettedWithHoisted } from "./subRoutines/replaceClosedLettedWithHoisted";
 import { _irToUplc } from "./_internal/_irToUplc";
 import { includesLettedTerms } from "./_internal/includesLettedTerms";
+import { includesNode } from "./_internal/includesNode";
 
 export function compileIRToUPLC( term: IRTerm ): UPLCTerm
 {
@@ -74,7 +75,7 @@ export function compileIRToUPLC( term: IRTerm ): UPLCTerm
     term = handleHoistedAndReturnRoot( term );
 
     // replaced hoisted terms might include new letted terms
-    while( includesLettedTerms( term ) )
+    while( includesNode( term, node => node instanceof IRLetted ) )
     {
         handleLetted( term );
     }

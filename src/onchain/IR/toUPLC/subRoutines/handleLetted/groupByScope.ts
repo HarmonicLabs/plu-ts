@@ -61,8 +61,12 @@ export function groupByScope( letteds: LettedSetEntry[] ): ScopedLettedTerms[]
 
 /**
  * 
- * @param term 
- * @returns {number | undefined} a `number` indicating the minimum debruijn `undefined` if the term is closed
+ * @param _term 
+ * @returns {number | undefined}
+ *  a `number` if the `_term` param is open; 
+ *  the number represents the debuijn an `IRVar` would have 
+ *  pointing to the smallest scope that fulfills the term;
+ *  `undefined` if the term is closed
  */
 export function _getMinUnboundDbn( _term: IRTerm ): number | undefined
 {
