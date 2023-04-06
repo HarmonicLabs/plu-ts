@@ -115,6 +115,9 @@ export class IRLetted
         );
 
         // initialize without calling "set"
+        // cloning here otherwhise breaks the tree
+        // TODO: find what is breaking the tree
+        // when solved add `this.value.clone()` to the `IRLetted.clone` method below 
         let _value: IRTerm = toLet.clone();
         _value.parent = this;
 
@@ -255,7 +258,7 @@ export class IRLetted
             () => {
                 return new IRLetted(
                     this.dbn,
-                    this.value.clone(),
+                    this.value, // .clone(), // cloned in constructor
                     this.meta
                 )
             }
