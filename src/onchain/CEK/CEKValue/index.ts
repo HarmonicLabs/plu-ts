@@ -8,7 +8,6 @@ import { Builtin } from "../../UPLC/UPLCTerms/Builtin";
 import { Delay } from "../../UPLC/UPLCTerms/Delay";
 import { ErrorUPLC } from "../../UPLC/UPLCTerms/ErrorUPLC";
 import { Force } from "../../UPLC/UPLCTerms/Force";
-import { HoistedUPLC } from "../../UPLC/UPLCTerms/HoistedUPLC";
 import { Lambda } from "../../UPLC/UPLCTerms/Lambda";
 import { UPLCConst } from "../../UPLC/UPLCTerms/UPLCConst";
 import { UPLCVar } from "../../UPLC/UPLCTerms/UPLCVar";
@@ -24,11 +23,6 @@ export function eqCEKValue( a: Readonly<CEKValue>, b: Readonly<CEKValue> ): bool
     if(!(
         Object.getPrototypeOf( a ) === Object.getPrototypeOf( b )
     )) return false;
-
-    if( a instanceof HoistedUPLC && b instanceof HoistedUPLC )
-    {
-        return BitStream.eq( a.compiled, b.compiled );
-    }
 
     if( a instanceof DelayCEK && b instanceof DelayCEK )
     {

@@ -4,8 +4,7 @@ import UPLCFlatUtils from "../../../utils/UPLCFlatUtils";
 import { ConstType, ConstTyTag, isWellFormedConstType } from "../UPLCTerms/UPLCConst/ConstType";
 import { ConstValue, isConstValue, isConstValueInt, isConstValueList } from "../UPLCTerms/UPLCConst/ConstValue";
 import { getNRequiredForces, isUPLCBuiltinTag } from "../UPLCTerms/Builtin/UPLCBuiltinTag";
-import { UPLCTerm, getHoistedTerms, isPureUPLCTerm, PureUPLCTerm, showUPLC } from "../UPLCTerm";
-import { HoistedUPLC, getSortedHoistedSet } from "../UPLCTerms/HoistedUPLC";
+import { UPLCTerm, isPureUPLCTerm, PureUPLCTerm } from "../UPLCTerm";
 import { BinaryString } from "../../../types/bits/BinaryString";
 import { BitStream } from "../../../types/bits/BitStream";
 import { ByteString } from "../../../types/HexString/ByteString";
@@ -196,109 +195,10 @@ function properlyCloneUPLC( uplc: UPLCTerm ): UPLCTerm
     if( uplc instanceof Force ) return new Force( properlyCloneUPLC( uplc.termToForce ) );
     if( uplc instanceof ErrorUPLC ) return new ErrorUPLC( uplc.msg, uplc.addInfos );
     if( uplc instanceof Builtin ) return new Builtin( uplc.tag );
-    if( uplc instanceof HoistedUPLC ) return new HoistedUPLC( uplc.UPLC, undefined );
 
     throw new BasePlutsError(
         "unknown UPLC in 'properlyCloneUPLC'"
     );
-}
-
-/**
- * ### !! Important !!
- * 
- * **_SIDE-EFFECT_**: modifies the input; in particular replaces
- * ```HoistedTerm```s with ```UPLCVar```s that are free in the term
- * 
- * @param uplc **after this call is not guaranteed the term passed is closed**
- * 
- * @returns {PureUPLCTerm} a term without HoistedUPLC, closed if the input was closed
- * 
- * exported for only for testing
- */
-export function replaceHoistedTermsInplace( uplc: UPLCTerm ): PureUPLCTerm
-{
-    /**
-     * reference to the outermost term
-    */
-    let program = uplc;
-
-    const sortedHoistedSet = getSortedHoistedSet( getHoistedTerms( uplc ) );
-
-    // adds the actual terms
-    for( let i = sortedHoistedSet.length - 1; i >= 0; i-- )
-    {
-        program = new Application(
-            new Lambda( program ),
-            sortedHoistedSet[i].UPLC
-        );
-    }
- 
-    function getUPLCVarForHoistedAtLevel( _hoisted: HoistedUPLC, level: number ): UPLCVar
-    {
-        const levelOfTerm = sortedHoistedSet.findIndex( sortedH => BitStream.eq( sortedH.compiled, _hoisted.compiled ) );
-        return new UPLCVar( level - (levelOfTerm + 1) );
-    }
-
-    /**
-     * replaces HoistedUPLC instances with UPLCVar
-     * (HoistedTerms with dependecies included)
-     */ 
-    function replaceWithUPLCVar( t: UPLCTerm, dbnLevel: number ): void
-    {
-        if( t instanceof UPLCVar ) return;
-        if( t instanceof Delay )
-        {
-            if( t.delayedTerm instanceof HoistedUPLC )
-                t.delayedTerm = getUPLCVarForHoistedAtLevel( t.delayedTerm, dbnLevel );
-            else replaceWithUPLCVar( t.delayedTerm, dbnLevel );
-            return;
-        }
-        if( t instanceof Lambda )
-        {
-            if( t.body instanceof HoistedUPLC )
-                t.body = getUPLCVarForHoistedAtLevel( t.body, dbnLevel + 1 );
-            else replaceWithUPLCVar( t.body , dbnLevel + 1 )
-            return;
-        }
-        if( t instanceof Application )
-        {
-            if( t.argTerm instanceof HoistedUPLC )
-                t.argTerm = getUPLCVarForHoistedAtLevel( t.argTerm, dbnLevel );
-            else replaceWithUPLCVar( t.argTerm, dbnLevel );
-            
-            if( t.funcTerm instanceof HoistedUPLC )
-                t.funcTerm = getUPLCVarForHoistedAtLevel( t.funcTerm, dbnLevel );
-            else replaceWithUPLCVar( t.funcTerm, dbnLevel );
-
-            return;
-        }
-        if( t instanceof UPLCConst ) return;
-        if( t instanceof Force )
-        {
-            if( t.termToForce instanceof HoistedUPLC )
-                t.termToForce = getUPLCVarForHoistedAtLevel( t.termToForce, dbnLevel );
-            else replaceWithUPLCVar( t.termToForce, dbnLevel );
-
-            return;
-        }
-        if( t instanceof ErrorUPLC ) return;
-        if( t instanceof Builtin )   return;
-        if( t instanceof HoistedUPLC )
-        {
-            throw JsRuntime.makeNotSupposedToHappenError(
-                "'replaceWithUPLCVar', local funciton in 'replaceHoistedTermsInplace';" +
-                "encountered an 'HoistedUPLC'; this was supposed to be replaced in the parent term case."
-            );
-        }
-
-        throw JsRuntime.makeNotSupposedToHappenError(
-            "'replaceWithUPLCVar', local funciton in 'replaceHoistedTermsInplace'; did not match any 'UPLCTerm' constructor"
-        )
-    }
-
-    replaceWithUPLCVar( program, 0 );
-
-    return program;
 }
 
 export class UPLCEncoder
@@ -319,13 +219,8 @@ export class UPLCEncoder
         this._ctx.updateVersion( v );
 
         const uplc = program.body;
-        
-        const progrTerm = replaceHoistedTermsInplace(
-            // HoistedUPLC relies on this clone
-            // if this ever changes make sure that `HositeUPLC` is safe
-            uplc.clone()
-        );
-        if( !isPureUPLCTerm( progrTerm ) )
+
+        if( !isPureUPLCTerm( uplc ) )
         {
             throw JsRuntime.makeNotSupposedToHappenError(
                 "'replaceHoisteTerm' did not returned a 'PureUPLCTerm'"
@@ -334,7 +229,7 @@ export class UPLCEncoder
 
         result.append(
             this.encodeTerm(
-                progrTerm
+                uplc
             )
         );
         

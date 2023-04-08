@@ -7,7 +7,6 @@ import { UPLCConst } from "../UPLCTerms/UPLCConst";
 import { Force } from "../UPLCTerms/Force";
 import { ErrorUPLC } from "../UPLCTerms/ErrorUPLC";
 import { Builtin } from "../UPLCTerms/Builtin";
-import { HoistedUPLC } from "../UPLCTerms/HoistedUPLC";
 import { ConstType, constListTypeUtils, constPairTypeUtils, constTypeToStirng, ConstTyTag } from "../UPLCTerms/UPLCConst/ConstType";
 import { builtinTagToString, getNRequiredForces } from "../UPLCTerms/Builtin/UPLCBuiltinTag";
 import { ConstValue, isConstValueInt } from "../UPLCTerms/UPLCConst/ConstValue";
@@ -15,7 +14,6 @@ import { ByteString } from "../../../types/HexString/ByteString";
 import { isData } from "../../../types/Data/Data";
 import { dataToCbor } from "../../../types/Data/toCbor";
 import { Pair } from "../../../types/structs/Pair";
-import { replaceHoistedTermsInplace } from "../UPLCEncoder";
 
 export type PureUPLCTerm 
     = UPLCVar
@@ -28,9 +26,7 @@ export type PureUPLCTerm
     | Builtin;
     
 export type UPLCTerm
-    = PureUPLCTerm
-    // not part of specification
-    | HoistedUPLC; // replaced by a UPLCVar pointing to the term hoisted
+    = PureUPLCTerm;
 
 /**
  * **_O(1)_**
@@ -50,8 +46,7 @@ export function isUPLCTerm( t: object ): t is UPLCTerm
         proto === UPLCConst.prototype      ||
         proto === Force.prototype          ||
         proto === ErrorUPLC.prototype      ||
-        proto === Builtin.prototype        ||
-        proto === HoistedUPLC.prototype
+        proto === Builtin.prototype
     );
 }
 
@@ -72,7 +67,6 @@ export function isPureUPLCTerm( t: UPLCTerm ): t is PureUPLCTerm
     if( t instanceof Force )        return isPureUPLCTerm( t.termToForce );
     if( t instanceof ErrorUPLC )    return true;
     if( t instanceof Builtin )      return true;
-    if( t instanceof HoistedUPLC )  return false;
 
     return false;
 }
@@ -116,10 +110,6 @@ export function isClosedTerm( term: UPLCTerm ): boolean
             // arguments are passed using the `Apply` Term
             // so it is the `t instanceof Apply` case job
             // to be sure the arguments are closed
-            return true;
-        else if( t instanceof HoistedUPLC )
-            // in order to hoist a trem it has to be closed;
-            // the condition is checked in the constructor (kinda mutually recursive).
             return true;
         else
             throw JsRuntime.makeNotSupposedToHappenError(
@@ -171,16 +161,15 @@ export function showConstType( t: ConstType ): string
 
 const vars = "abcdefghilmopqrstuvzwxyjkABCDEFGHILJMNOPQRSTUVZWXYJK".split('');
 
+function getVarNameForDbn( dbn: number ): string
+{
+    if( dbn < 0 ) return `(${dbn})`;
+    if( dbn < vars.length ) return vars[ dbn ];
+    return vars[ Math.floor( dbn / vars.length ) ] + getVarNameForDbn( dbn - vars.length )
+}
+
 export function showUPLC( term: UPLCTerm ): string
 {
-
-    function getVarNameForDbn( dbn: number ): string
-    {
-        if( dbn < 0 ) return `(${dbn})`;
-        if( dbn < vars.length ) return vars[ dbn ];
-        return vars[ Math.floor( dbn / vars.length ) ] + getVarNameForDbn( dbn - vars.length )
-    }
-
     function loop( t: UPLCTerm, dbn: number ): string
     {
         if( t instanceof UPLCVar )
@@ -202,16 +191,11 @@ export function showUPLC( term: UPLCTerm ): string
     
             return "(force ".repeat( nForces ) +`(builtin ${builtinTagToString( t.tag )})` + ')'.repeat( nForces )
         }
-        if( t instanceof HoistedUPLC ) return loop( t.UPLC, dbn )
         
         return "";
     }
 
-    return loop(
-        replaceHoistedTermsInplace( term.clone() ),
-        0
-    );
-
+    return loop( term, 0 );
 }
 
 
@@ -250,17 +234,11 @@ export function prettyUPLC( term: UPLCTerm, _indent: number = 2 ): string
     
             return indent + "(force ".repeat( nForces ) +`(builtin ${builtinTagToString( t.tag )})` + ')'.repeat( nForces )
         }
-        if( t instanceof HoistedUPLC ) return loop( t.UPLC, dbn, depth )
         
         return "";
     }
 
-    return loop(
-        replaceHoistedTermsInplace( term.clone() ),
-        0,
-        0
-    );
-
+    return loop( term, 0, 0 );
 }
 
 /**
@@ -285,9 +263,7 @@ export function hasAnyRefsInTerm( varDeBruijn: number | bigint, t: UPLCTerm ): b
     if( t instanceof UPLCConst )    return false;
     if( t instanceof Force )        return hasAnyRefsInTerm( dbn, t.termToForce );
     if( t instanceof ErrorUPLC )    return false;
-    if( t instanceof Builtin )      return false
-    // hoisted terms are closed, ence do not have references to external variables for sure
-    if( t instanceof HoistedUPLC )  return false;
+    if( t instanceof Builtin )      return false;
 
     throw JsRuntime.makeNotSupposedToHappenError(
         "'hasAnyRefsInTerm' did not matched any possible 'UPLCTerm' constructor"
@@ -322,8 +298,6 @@ export function hasMultipleRefsInTerm( varDeBruijn: number | bigint, t: Readonly
     if( t instanceof Force )        return hasMultipleRefsInTerm( dbn, t.termToForce )
     if( t instanceof ErrorUPLC )    return false;
     if( t instanceof Builtin )      return false;
-    // hoisted terms are closed, ence do not have references to external variables for sure
-    if( t instanceof HoistedUPLC )  return false;;
 
     throw JsRuntime.makeNotSupposedToHappenError(
         "getUPLCVarRefsInTerm did not matched any possible 'UPLCTerm' constructor"
@@ -353,8 +327,6 @@ export function getUPLCVarRefsInTerm( term: UPLCTerm, varDeBruijn: number | bigi
         if( t instanceof Force )        return _getUPLCVarRefsInTerm( dbn, t.termToForce, countedUntilNow );
         if( t instanceof ErrorUPLC )    return countedUntilNow;
         if( t instanceof Builtin )      return countedUntilNow;
-        // hoisted terms are closed, ence do not have references to external variables for sure
-        if( t instanceof HoistedUPLC )  return countedUntilNow;
 
         throw JsRuntime.makeNotSupposedToHappenError(
             "getUPLCVarRefsInTerm did not matched any possible 'UPLCTerm' constructor"
@@ -363,111 +335,3 @@ export function getUPLCVarRefsInTerm( term: UPLCTerm, varDeBruijn: number | bigi
 
     return _getUPLCVarRefsInTerm( BigInt( varDeBruijn ), term, 0 );
 }
-
-export function getHoistedTerms( t: Readonly<UPLCTerm> ): HoistedUPLC[]
-{
-    if( !isUPLCTerm( t ) ) return [];
-
-    /*
-    ```Application``` adds sub terms dependecies
-    ```HoistedUPLC``` adds itself and it's own dependecies if any
-    */
-
-    if( t instanceof UPLCVar )      return [];
-    if( t instanceof Delay )        return getHoistedTerms( t.delayedTerm );
-    if( t instanceof Lambda )       return getHoistedTerms( t.body );
-    if( t instanceof Application )  return [ ...getHoistedTerms( t.argTerm ), ...getHoistedTerms( t.funcTerm ) ];
-    if( t instanceof UPLCConst )    return [];
-    if( t instanceof Force )        return getHoistedTerms( t.termToForce );
-    if( t instanceof ErrorUPLC )    return [];
-    if( t instanceof Builtin )      return [];
-    if( t instanceof HoistedUPLC )  return [ ...t.dependencies.map( dep => dep.clone() ), t.clone() ];
-
-    return [];
-}
-
-/* experimental: getHoistedTermsAndRefs
-
-type HoistedRef = {
-    compiled: BitStream,
-    number: number
-};
-
-type HoistedRefs = HoistedRef[]
-
-function mergeRefs( a: HoistedRefs, b: HoistedRefs ): HoistedRefs
-{
-    const aCompiled = a.map( ref => ref.compiled );
-    const bCompiled = b.map( ref => ref.compiled );
-    const result: HoistedRefs = a;
-
-    for( const bComp of bCompiled )
-    {
-        if( aCompiled.some( aComp => BitStream.eq( aComp, bComp ) ) )
-        {
-            // b hoisted already present between a's ones
-            const idx = result.findIndex( href => BitStream.eq( href.compiled, bComp ) )
-            
-            // add number to exsisting ref
-            result[ idx ] = {
-                compiled: result[ idx ].compiled,
-                number: result[ idx ].number +
-                    ( b.find( bRef => BitStream.eq( bRef.compiled, bComp ) )?.number ?? 0 ) 
-            }
-        }
-        else // hoisted not present in the a refs
-        {
-            // add new entry from b;
-            result.push({
-                compiled: bComp.clone(),
-                number: b.find( bRef => BitStream.eq( bRef.compiled, bComp ) )?.number ?? 0
-            })
-        }
-    }
-
-    return result;
-}
-
-
-just like ```getHoistedTerms``` but returns also the number of references per hoisted term found
-
-@fixme ```HoistedUPLC``` currently "hides" the number of refernces of its dependecies
-
-export function getHoistedTermsAndRefs( t: UPLCTerm )
-    : {
-        terms: HoistedUPLC[],
-        refs: HoistedRefs
-    }
-{
-    const empty: {
-        terms: HoistedUPLC[],
-        refs: HoistedRefs
-    } = {
-        terms: [],
-        refs: []
-    };
-
-    if( !isUPLCTerm( t ) ) return empty;
-
-    if( t instanceof UPLCVar )
-        return empty;
-    if( t instanceof Delay )        return getHoistedTermsAndRefs( t.delayedTerm );
-    if( t instanceof Lambda )       return getHoistedTermsAndRefs( t.body );
-    if( t instanceof Application )
-    {
-        const argResult = getHoistedTermsAndRefs( t.argTerm ) ;
-        const funcResult = getHoistedTermsAndRefs( t.funcTerm ); 
-        return {
-            terms: [ ...argResult.terms , ...funcResult.terms ],
-            refs:  mergeRefs( argResult.refs, funcResult.refs )
-        };
-    }
-    if( t instanceof UPLCConst )    return empty;
-    if( t instanceof Force )        return getHoistedTermsAndRefs( t.termToForce );
-    if( t instanceof ErrorUPLC )    return empty;
-    if( t instanceof Builtin )      return empty;
-    if( t instanceof HoistedUPLC )  return [ t, ...t.dependencies ];
-
-    return empty;
-}
-// experimental: getHoistedTermsAndRefs */

@@ -14,7 +14,6 @@ import { Builtin } from "../../UPLC/UPLCTerms/Builtin";
 import { Delay } from "../../UPLC/UPLCTerms/Delay";
 import { ErrorUPLC } from "../../UPLC/UPLCTerms/ErrorUPLC";
 import { Force } from "../../UPLC/UPLCTerms/Force";
-import { HoistedUPLC } from "../../UPLC/UPLCTerms/HoistedUPLC";
 import { Lambda } from "../../UPLC/UPLCTerms/Lambda";
 import { UPLCConst } from "../../UPLC/UPLCTerms/UPLCConst";
 import { UPLCVar } from "../../UPLC/UPLCTerms/UPLCVar";
@@ -154,12 +153,6 @@ export class Machine<V extends MachineVersion = MachineVersion>
         {
             // n_compute++;
     
-            if( term instanceof HoistedUPLC )
-            {
-                // HoistedUPLC are always closed; do not need external variables
-                steps.push( new ComputeStep( term.UPLC, new CEKEnv( heap ) ) );
-                return;
-            }
             if( term instanceof ErrorUPLC )
             {
                 steps.push( new ReturnStep( term ) );
@@ -249,12 +242,6 @@ export class Machine<V extends MachineVersion = MachineVersion>
         function returnCEK( v: UPLCTerm ): void
         {
             // n_returns++;
-    
-            if( v instanceof HoistedUPLC )
-            {
-                steps.push( new ComputeStep( v.UPLC, new CEKEnv( heap ) ) );
-                return;
-            }
     
             if( v instanceof PartialBuiltin )
             {
@@ -458,13 +445,7 @@ export class Machine<V extends MachineVersion = MachineVersion>
             hasComputeStep && onComputeStep(
 
             );
-    
-            if( term instanceof HoistedUPLC )
-            {
-                // HoistedUPLC are always closed; do not need external variables
-                steps.push( new ComputeStep( term.UPLC, new CEKEnv( heap ) ) );
-                return;
-            }
+
             if( term instanceof ErrorUPLC )
             {
                 steps.push( new ReturnStep( term ) );
@@ -554,12 +535,6 @@ export class Machine<V extends MachineVersion = MachineVersion>
         function returnCEK( v: UPLCTerm ): void
         {
             // n_returns++;
-    
-            if( v instanceof HoistedUPLC )
-            {
-                steps.push( new ComputeStep( v.UPLC, new CEKEnv( heap ) ) );
-                return;
-            }
     
             if( v instanceof PartialBuiltin )
             {
