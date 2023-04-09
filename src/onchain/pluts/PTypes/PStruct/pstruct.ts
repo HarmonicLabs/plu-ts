@@ -180,7 +180,8 @@ const RESERVED_STRUCT_KEYS = Object.freeze([
     "eq",
     "eqTerm",
     "extract",
-    "in"
+    "in",
+    "raw"
 ]);
 
 export function pstruct<StructDef extends StructDefinition>( def: StructDef ): PStruct<StructDef>
