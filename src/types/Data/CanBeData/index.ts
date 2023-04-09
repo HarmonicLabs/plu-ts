@@ -7,7 +7,6 @@ import { Data, isData } from "../Data";
 import { Machine } from "../../../onchain/CEK/Machine";
 import { UPLCConst } from "../../../onchain/UPLC/UPLCTerms/UPLCConst";
 import { dataFromCbor, dataFromCborObj } from "../fromCbor";
-import { data } from "../../../onchain/pluts/type_system/types";
 import { ToUPLC } from "../../../onchain/UPLC/interfaces/ToUPLC";
 import ObjectUtils from "../../../utils/ObjectUtils";
 import { isHex } from "../../HexString";
@@ -51,9 +50,9 @@ export function canBeData( something: any ): something is CanBeData
     return (
         isData( something ) || 
         (
-            typeof data === "object" &&
-            ObjectUtils.hasOwn( data, "toUPLC" ) &&
-            typeof data.toUPLC === "function"
+            typeof something === "object" &&
+            ObjectUtils.hasOwn( something, "toUPLC" ) &&
+            typeof something.toUPLC === "function"
         ) ||
         something instanceof CborString ||
         isCborObj( something )

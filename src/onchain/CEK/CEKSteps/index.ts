@@ -1,10 +1,11 @@
-import JsRuntime from "../../../utils/JsRuntime";
+import { Cloneable } from "../../../types/interfaces/Cloneable";
 
 import { UPLCTerm } from "../../UPLC/UPLCTerm";
 import { CEKEnv } from "../CEKEnv";
 import { CEKValue } from "../CEKValue";
 
 export class ComputeStep
+    implements Cloneable<ComputeStep>
 {
     private _term: UPLCTerm;
     get term(): UPLCTerm
@@ -19,8 +20,17 @@ export class ComputeStep
         this._term = term;
         this._env = env;
     }
+
+    clone(): ComputeStep
+    {
+        return new ComputeStep(
+            this._term.clone(),
+            this._env.clone()
+        )
+    }
 }
 export class ReturnStep
+    implements Cloneable<ReturnStep>
 {
     private _value: CEKValue;
     get value(): CEKValue { return this._value; }
@@ -28,6 +38,13 @@ export class ReturnStep
     constructor( value: CEKValue )
     {
         this._value = value;
+    }
+
+    clone(): ReturnStep
+    {
+        return new ReturnStep(
+            this.value.clone()
+        )
     }
 }
 
@@ -47,7 +64,7 @@ export class CEKSteps
         this._steps.push( step );
     }
 
-    pop()
+    pop(): CEKStep | undefined
     {
         return this._steps.pop();
     }
@@ -55,7 +72,12 @@ export class CEKSteps
     top(): Readonly<CEKStep> | undefined
     {
         if( this._steps.length === 0 ) return undefined;
-        return JsRuntime.objWithUnderscoreAsPrivate( this._steps[ this._steps.length - 1 ] );
+        return Object.freeze( this._steps[ this._steps.length - 1 ] );
+    }
+
+    _unsafe_clear(): void
+    {
+        this._steps.length = 0;
     }
 
     get topIsReturn(): boolean

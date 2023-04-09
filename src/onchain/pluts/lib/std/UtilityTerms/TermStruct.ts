@@ -9,12 +9,12 @@ import { capitalize } from "../../../../../utils/ts/capitalize";
 // DO NOT change the order of imports
 // `../../../Term/Type/kinds` is also a dependecy of `pmatch`
 import { getElemAtTerm, pmatch } from "../../../PTypes/PStruct/pmatch";
-import { StructDefinition, isStructType, isStructDefinition, data, list } from "../../../type_system";
+import { StructDefinition, isStructType, isStructDefinition, data, list, int, pair } from "../../../type_system";
 import { peqData, punConstrData } from "../../builtins/data";
 import { TermFn } from "../../../PTypes/PFn/PFn";
 import { PBool } from "../../../PTypes/PBool";
 import { TermBool } from "./TermBool";
-import { PData, PList } from "../../../PTypes";
+import { PData, PInt, PList, PPair } from "../../../PTypes";
 import { IRLetted } from "../../../../IR/IRNodes/IRLetted";
 import { _plet } from "../../plet/minimal";
 import { _fromData } from "../data/conversion/fromData_minimal";
@@ -26,12 +26,21 @@ import { punsafeConvertType } from "../../punsafeConvertType";
 import { IRHoisted } from "../../../../IR/IRNodes/IRHoisted";
 import { IRFunc } from "../../../../IR/IRNodes/IRFunc";
 import { IRVar } from "../../../../IR/IRNodes/IRVar";
+import { TermInt } from "./TermInt";
+import { TermList } from "./TermList";
 
+
+export type RawStruct = {
+    readonly index: TermInt,
+    readonly fields: TermList<PData>
+}
 
 export type TermStruct<SDef extends StructDefinition> = Term<PStruct<SDef>> & {
 
     readonly eqTerm: TermFn<[PStruct<SDef>], PBool>
     readonly eq: ( other: Term<PStruct<SDef>> ) => TermBool
+
+    readonly raw: RawStruct
 
 } & 
 (
@@ -152,6 +161,47 @@ export function addPStructMethods<SDef extends StructDefinition>( struct: Term<P
     ObjectUtils.defineReadOnlyProperty(
         struct, "eq", ( other: Term<PStruct<SDef>> ) => peqData.$( struct as any ).$( other as any )
     )
+
+    const letted_unconstred = new Term<PPair<PInt,PList<PData>>>(
+        pair( int, list( data )),
+        dbn => new IRLetted(
+            Number(dbn),
+            new IRApp(
+                IRNative.unConstrData,
+                struct.toIR( dbn )
+            )
+        )
+    );
+
+    const letted_ctorIdx = new Term<PInt>(
+        int,
+        dbn => new IRLetted(
+            Number(dbn),
+            new IRApp(
+                IRNative.fstPair,
+                letted_unconstred.toIR( dbn )
+            )
+        )
+    );
+
+    const letted_rawFields = new Term<PList<PData>>(
+        list( data ),
+        dbn => new IRLetted(
+            Number(dbn),
+            new IRApp(
+                IRNative.sndPair,
+                letted_unconstred.toIR( dbn )
+            )
+        )
+    );
+
+    ObjectUtils.defineReadOnlyProperty(
+        struct, "raw",
+        Object.freeze({
+            index: letted_ctorIdx,
+            fields: letted_rawFields
+        })
+    );
 
     return struct as any;
 }

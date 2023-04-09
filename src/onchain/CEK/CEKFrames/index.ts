@@ -37,6 +37,11 @@ export class CEKFrames
     {
         return new CEKFrames( this._frames.map( frame => frame.clone() ) );
     }
+
+    _unsafe_clear(): void
+    {
+        this._frames.length = 0;
+    }
 }
 
 export function showFrames( frames: Readonly<CEKFrames> ): string

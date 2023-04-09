@@ -35,4 +35,9 @@ export class CEKHeap
         if( idx < 0 || idx >= this._heap.length || idx !== Math.round( idx ) ) return undefined;
         return this._heap[ idx ].clone();
     }
+
+    _unsafe_clear(): void
+    {
+        this._heap.length = 0;
+    }
 }

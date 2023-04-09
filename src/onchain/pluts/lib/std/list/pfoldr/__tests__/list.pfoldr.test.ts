@@ -42,10 +42,12 @@ describe("pfoldr", () => {
 
     });
 
-    test.skip("fromDataI; list data", () => {
+    test("fromDataI; list data", () => {
 
-        console.log( showIR( fromDataI.$(lst).toIR() ) );
-        console.log( prettyUPLC( fromDataI.$(lst).toUPLC() ) );
+        // console.log( showIR( fromDataI.$(lst).toIR() ) );
+        // console.log( prettyUPLC( fromDataI.$(lst).toUPLC() ) );
+
+        // console.log( toHex( compile( fromDataI.$( lst ) ) ) )
 
         expect(
             Machine.evalSimple(
@@ -60,6 +62,9 @@ describe("pfoldr", () => {
 
     });
 
+    // not a real test
+    // jsut to se what changes in the generated UPLC
+    // if everything is corect should just be the map function and the array
     test.skip("show diffs", () => {
         
         expect(
