@@ -71,8 +71,8 @@ export function pappArgToTerm<ArgT extends TermType>(
             throw new BasePlutsError(
                 "pappArgToTerm :: `arg` was a term of type " +
                 termTypeToString( (arg as Term<any>).type ) +
-                "; which doesn't extends expected " +
-                termTypeToString( mustExtend )
+                "; which doesn't extends expected `" +
+                termTypeToString( mustExtend ) + "`"
             );
         }
         return arg as any;
@@ -85,8 +85,8 @@ export function pappArgToTerm<ArgT extends TermType>(
         {
             // TODO: add proper error
             throw new BasePlutsError(
-                "pappArgToTerm :: `arg` was a possible `unit`; which doesn't extends expected type " +
-                termTypeToString( mustExtend )
+                "pappArgToTerm :: `arg` was `undefined` (a possible `unit`); which doesn't extends expected type `" +
+                termTypeToString( mustExtend ) + "`"
             );
         }
         return pmakeUnit() as any;

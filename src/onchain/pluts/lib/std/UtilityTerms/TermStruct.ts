@@ -26,8 +26,8 @@ import { punsafeConvertType } from "../../punsafeConvertType";
 import { IRHoisted } from "../../../../IR/IRNodes/IRHoisted";
 import { IRFunc } from "../../../../IR/IRNodes/IRFunc";
 import { IRVar } from "../../../../IR/IRNodes/IRVar";
-import { TermInt } from "./TermInt";
-import { TermList } from "./TermList";
+import { TermInt, addPIntMethods } from "./TermInt";
+import { TermList, addPListMethods } from "./TermList";
 
 
 export type RawStruct = {
@@ -198,8 +198,8 @@ export function addPStructMethods<SDef extends StructDefinition>( struct: Term<P
     ObjectUtils.defineReadOnlyProperty(
         struct, "raw",
         Object.freeze({
-            index: letted_ctorIdx,
-            fields: letted_rawFields
+            index:  addPIntMethods( letted_ctorIdx ),
+            fields: addPListMethods( letted_rawFields )
         })
     );
 
