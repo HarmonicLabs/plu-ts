@@ -1,8 +1,12 @@
 import { fromHex, isUint8Array } from "@harmoniclabs/uint8array-utils";
-import { sign, getPublicKey, verify, utils } from "@noble/ed25519";
-import { byte } from "./types";
+import { sign, getPublicKey, verify, utils, etc } from "@noble/ed25519";
+import { buffToByteArr, byte } from "./types";
+import { sha2_512 } from "./sha2_512";
 
 type BytesLike = Uint8Array | string | byte[];
+
+// sha512 required to `getPublicKey` to work properly
+etc.sha512Sync = ( message : Uint8Array ) => new Uint8Array( sha2_512( buffToByteArr( message ) ) )
 
 function forceUint8Array( stuff: BytesLike ): Uint8Array
 {

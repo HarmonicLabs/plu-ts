@@ -141,8 +141,8 @@ export class Tx
 
                 this.addVKeyWitness(
                     new VKeyWitness(
-                        new VKey( new Uint8Array( derivedPubKey ) ),
-                        new Signature( new Uint8Array( signature ) )
+                        new VKey( derivedPubKey ),
+                        new Signature( signature )
                     )
                 );
             }
