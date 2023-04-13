@@ -160,7 +160,7 @@ export function uint64( n: string | number | bigint | boolean ): uint64
 
 export function forceUint64( n: string | number | bigint | boolean ): uint64
 {
-    return (BigInt( n ) & BigInt( "18446744073709551615" )) as uint64;
+    return (BigInt( n ) & BigInt( "0x" + "ff".repeat(8) )) as uint64;
 }
 
 export function isUint64( n: bigint ): n is uint64
@@ -168,7 +168,7 @@ export function isUint64( n: bigint ): n is uint64
     return (
         typeof n === "bigint" &&
         n >= BigInt( 0 ) &&
-        n < BigInt( "18446744073709551616" ) // n < (1 << 64)
+        n < BigInt( "0x1" + "00".repeat(8) ) // n < (1 << 64)
     )
 }
 
