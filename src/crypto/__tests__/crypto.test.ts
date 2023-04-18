@@ -1,4 +1,4 @@
-import  { encodeBech32, byte, decodeBech32, isBech32, sha2_512, sha3, blake2b, sha2_256, blake2b_224, blake2b_256 } from "..";
+import  { encodeBech32, byte, decodeBech32, isBech32, sha2_512, sha3, blake2b, sha2_256, blake2b_224, blake2b_256, signEd25519 } from "..";
 import blake2 from "blake2";
 import * as uint8array from "@harmoniclabs/uint8array-utils";
 
@@ -244,5 +244,26 @@ describe("src/crypto", () => {
                 ""
             )
         )
-    })
+    });
+
+    describe.only("ed25519", () => {
+
+        /*
+        dazoe/ed25519 test vectors (https://github.com/dazoe/ed25519/blob/master/test/ed25519.js)
+        */
+
+        test("sign", () => {
+
+            expect(
+                uint8array.toHex(signEd25519(
+                    uint8array.fromUtf8("test"),
+                    uint8array.fromHex("af9881fe34edfd3463cf3e14e22ad95a0608967e084d3ca1fc57be023040de59")
+                )[1])
+            ).toEqual(
+                "98c8351675ade54b3aedc14f0b9c40b47569d9da191db066312ed6423d20dff8a52988f869fc3fbf4402971034b387ac7fbcfa704eb4c1e86e48e15de5e3d206"
+            );
+            
+        })
+    });
+
 });

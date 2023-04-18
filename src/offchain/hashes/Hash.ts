@@ -10,10 +10,37 @@ import { InvalidCborFormatError } from "../../errors/InvalidCborFormatError";
 import { Data } from "../../types/Data/Data";
 import { DataB } from "../../types/Data/DataB";
 import { ToData } from "../../types/Data/toData/interface";
-import { HexString } from "../../types/HexString";
+import { HexString, isHex } from "../../types/HexString";
 import { Cloneable } from "../../types/interfaces/Cloneable";
 import { fromAscii, fromHex, isUint8Array, toAscii, toHex } from "@harmoniclabs/uint8array-utils";
 
+
+export function canBeHashInstance( obj: any ): boolean
+{
+    if(typeof obj !== "object" ) return false;
+
+    const ks = Object.keys( obj );
+
+    if( !ks.includes("toBuffer") ) return false;
+
+    const toBuff = obj["toBuffer"];
+
+    if( typeof toBuff !== "function" ) return false;
+    if( toBuff.length !== 0 ) return false;
+
+    if( ks.includes("__str") )
+    {
+        const str = (obj as any)["__str"];
+        if( typeof str === "string" && isHex( str ) ) return true;
+    }
+    if( ks.includes("__bytes") )
+    {
+        const bytes = (obj as any)["__bytes"];
+        if( bytes instanceof Uint8Array ) return true;
+    }
+
+    return false;
+}
 
 export class Hash
     implements Cloneable<Hash>, ToCbor, ToData

@@ -5,7 +5,25 @@ import { CborObj } from "../../../cbor/CborObj";
 import { CborBytes } from "../../../cbor/CborObj/CborBytes";
 import { CanBeCborString, forceCborString } from "../../../cbor/CborString";
 import { InvalidCborFormatError } from "../../../errors/InvalidCborFormatError";
-import { Hash } from "../Hash";
+import { Hash, canBeHashInstance } from "../Hash";
+import { isHex } from "../../../types/HexString";
+
+export type CanBeHash32 = string | Uint8Array | Hash32;
+
+export function canBeHash32( stuff: string | Uint8Array | Hash32 ): boolean
+{
+    if( typeof stuff === "string" )
+    {
+        return stuff.length === 64 && isHex( stuff )
+    }
+
+    if( stuff instanceof Uint8Array )
+    {
+        return stuff.length === 32;
+    }
+
+    return canBeHashInstance( stuff ) && canBeHash32( stuff.toBuffer() )
+}
 
 export class Hash32 extends Hash
 {

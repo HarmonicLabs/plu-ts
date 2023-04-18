@@ -23,7 +23,8 @@ import { CborArray } from "../../../cbor/CborObj/CborArray";
 import { ByteString } from "../../../types/HexString/ByteString";
 import { IValueAssets } from "./IValue";
 import { hex } from "../../../types/HexString";
-import { fromAscii, fromUtf8, isUint8Array, lexCompare, toAscii, toHex } from "@harmoniclabs/uint8array-utils";
+import { fromAscii, fromHex, fromUtf8, isUint8Array, lexCompare, toAscii, toHex } from "@harmoniclabs/uint8array-utils";
+import { Hash32 } from "../../hashes";
 
 const enum Ord {
     LT = -1,
@@ -33,10 +34,17 @@ const enum Ord {
 
 export type ValueUnitEntry = {
     unit: string;
-    quantity: bigint;
+    quantity: bigint | number | string ;
 };
 
 export type ValueUnits = ValueUnitEntry[]
+
+export type ValueUnitEntryBI = {
+    unit: string;
+    quantity: bigint;
+};
+
+export type ValueUnitsBI = ValueUnitEntryBI[]
 
 export class Value
     implements ToCbor, Cloneable<Value>, ToData, ToJson
@@ -135,7 +143,7 @@ export class Value
         );
     }
 
-    toUnits(): ValueUnits
+    toUnits(): ValueUnitsBI
     {
         return this.map.flatMap(({ policy, assets }) => {
             if( policy === "" )
@@ -148,6 +156,29 @@ export class Value
                 })
             );
         });
+    }
+
+    static fromUnits( units: ValueUnits ): Value
+    {
+        return units.map(({ unit, quantity }): Value => {
+
+            if( unit.length === 0 || unit === "lovelace" )
+            {
+                return Value.lovelaces( BigInt( quantity ) );
+            }
+
+            const policy = new Hash28( unit.slice( 0, 56 ) );
+
+            const assetName = toAscii( fromHex( unit.slice( 56 ) ) )
+
+            return new Value([
+                {
+                    policy,
+                    assets: { [assetName]: BigInt(quantity) },
+                }
+            ]);
+        })
+        .reduce( (a, b) => Value.add( a, b ) );
     }
 
     static get zero(): Value

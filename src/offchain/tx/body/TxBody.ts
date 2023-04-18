@@ -22,7 +22,7 @@ import { CborUInt } from "../../../cbor/CborObj/CborUInt";
 import { CborArray } from "../../../cbor/CborObj/CborArray";
 import { Hash32 } from "../../hashes/Hash32/Hash32";
 import { ToJson } from "../../../utils/ts/ToJson";
-import { TxOutRef, UTxO } from "./output/UTxO";
+import { TxOutRef, UTxO, isIUTxO } from "./output/UTxO";
 import { InvalidCborFormatError } from "../../../errors/InvalidCborFormatError";
 
 export interface ITxBody {
@@ -57,7 +57,7 @@ export function isITxBody( body: Readonly<object> ): body is ITxBody
         
         ObjectUtils.hasOwn( b, "inputs" ) &&
         Array.isArray( b.inputs ) && b.inputs.length > 0 &&
-        b.inputs.every( _in => _in instanceof UTxO ) &&
+        b.inputs.every( _in => _in instanceof UTxO || isIUTxO( _in ) ) &&
         
         ObjectUtils.hasOwn( b, "outputs" ) &&
         Array.isArray( b.outputs ) && b.outputs.length > 0 &&
