@@ -9,8 +9,12 @@ import { Tx } from "../../Tx";
 import { hashData } from "../../../../types/Data/hashData";
 import { DataB } from "../../../../types/Data/DataB";
 import { TxRedeemer } from "../../TxWitnessSet/TxRedeemer";
+import { GenesisInfos } from "../TxBuilder/GenesisInfos";
 
-export function getTxInfos( transaction: Tx ): { v1: Data | undefined, v2: Data }
+export function getTxInfos(
+    transaction: Tx,
+    genesisInfos: GenesisInfos | undefined
+): { v1: Data | undefined, v2: Data }
 {
     const {
         body: tx,
@@ -29,7 +33,7 @@ export function getTxInfos( transaction: Tx ): { v1: Data | undefined, v2: Data 
     const mintData = (tx.mint ?? Value.lovelaces( 0 ) ).toData();
     const certsData = new DataList( tx.certs?.map( cert => cert.toData() ) ?? [] );
     const withdrawsData = tx.withdrawals?.toData() ?? new DataMap([]);
-    const intervalData = getTxIntervalData( tx.validityIntervalStart, tx.ttl );
+    const intervalData = getTxIntervalData( tx.validityIntervalStart, tx.ttl, genesisInfos );
     const sigsData = new DataList( tx.requiredSigners?.map( sig => sig.toData() ) ?? [] );
     const datumsData = new DataMap(
             witnesses.datums

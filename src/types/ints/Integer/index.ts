@@ -14,11 +14,22 @@ export function canBeUInteger( something: any ): something is (number | bigint)
 
 export function forceBigUInt( toForce: CanBeUInteger ): bigint
 {
-    if( toForce < 0 )
+    if( !canBeUInteger( toForce ) )
     {
         // console.error( toForce );
         throw new BasePlutsError( "trying to convert an integer to an unsigned Integer, the number was negative" );
     }
 
-    return BigInt( typeof toForce === "number" ? Math.round( toForce ) : toForce );
+    return BigInt( toForce );
 };
+
+export function unsafeForceUInt( toForce: CanBeUInteger ): number
+{
+    if( !canBeUInteger( toForce ) )
+    {
+        // console.error( toForce );
+        throw new BasePlutsError( "trying to convert an integer to an unsigned Integer, the number was negative" );
+    }
+
+    return Number( toForce ); 
+}

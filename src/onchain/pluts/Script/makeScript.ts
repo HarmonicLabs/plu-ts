@@ -42,32 +42,32 @@ export function makeValidator(
     )(( rawDatum, rawRedeemer, rawCtx ) => {
 
         const vType = typedValidator.type;
-        const err = new BasePlutsError(
+        const err = () => new BasePlutsError(
             "cannot make a validator from a term of type " + termTypeToString( vType )
         );
 
-        if( vType[0] !== PrimType.Lambda ) throw err;
+        if( vType[0] !== PrimType.Lambda ) throw err();
         
         const datumType = vType[1];
-        if( !isWellFormedType( datumType ) ) throw  err;
+        if( !isWellFormedType( datumType ) ) throw  err();
 
         const postDatum = vType[2];
 
-        if( postDatum[0] !== PrimType.Lambda ) throw err;
+        if( postDatum[0] !== PrimType.Lambda ) throw err();
 
         const redeemerType = postDatum[1];
-        if( !isWellFormedType( redeemerType ) ) throw  err;
+        if( !isWellFormedType( redeemerType ) ) throw  err();
 
         const postRedeemer = postDatum[2];
 
-        if( postRedeemer[0] !== PrimType.Lambda ) throw err;
+        if( postRedeemer[0] !== PrimType.Lambda ) throw err();
 
         const ctxType = postRedeemer[1];
-        if( !isWellFormedType( ctxType ) ) throw err;
+        if( !isWellFormedType( ctxType ) ) throw err();
 
         const expectedBool = postRedeemer[2];
 
-        if( !typeExtends( expectedBool, bool ) ) throw err;
+        if( !typeExtends( expectedBool, bool ) ) throw err();
 
         const errorTerm = errorMessage === undefined ?
             perror( unit ) : ptraceError( unit, errorMessage ).$(errorMessage);
@@ -110,25 +110,25 @@ export function makeRedeemerValidator(
     )(( rawRedeemer, rawCtx ) => {
 
         const vType = typedValidator.type;
-        const err = new BasePlutsError(
+        const err = () => new BasePlutsError(
             "cannot make a validator from a term of type " + termTypeToString( vType )
         );
 
-        if( vType[0] !== PrimType.Lambda ) throw err;
+        if( vType[0] !== PrimType.Lambda ) throw err();
 
         const redeemerType = vType[1];
-        if( !isWellFormedType( redeemerType ) ) throw  err;
+        if( !isWellFormedType( redeemerType ) ) throw err();
 
         const postRedeemer = vType[2];
 
-        if( postRedeemer[0] !== PrimType.Lambda ) throw err;
+        if( postRedeemer[0] !== PrimType.Lambda ) throw err();
 
         const ctxType = postRedeemer[1];
-        if( !isWellFormedType( ctxType ) ) throw err;
+        if( !isWellFormedType( ctxType ) ) throw err();
 
         const expectedBool = postRedeemer[2];
 
-        if( !typeExtends( expectedBool, bool ) ) throw err;
+        if( !typeExtends( expectedBool, bool ) ) throw err();
 
         const errorTerm = errorMessage === undefined ?
             perror( unit ) : ptraceError( unit, errorMessage ).$(errorMessage);

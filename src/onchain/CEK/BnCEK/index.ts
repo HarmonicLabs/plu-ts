@@ -615,7 +615,7 @@ export class BnCEK
             cpu: f.cpu.at( sa, sb )
         });
 
-        return UPLCConst.byteString(  new ByteString( _a.asString + _b.asString ) );
+        return UPLCConst.byteString(  new ByteString( _a.toString() + _b.toString() ) );
     }
     consByteString( a: UPLCTerm, b: UPLCTerm ): ConstOrErr
     {
@@ -636,7 +636,7 @@ export class BnCEK
             cpu: f.cpu.at( sa, sb )
         });
 
-        return UPLCConst.byteString(  new ByteString( _a.toString(16).padStart( 2, '0' ) + _b.asString ) );
+        return UPLCConst.byteString(  new ByteString( _a.toString(16).padStart( 2, '0' ) + _b.toString() ) );
     }
     sliceByteString( fromIdx: UPLCTerm, ofLength: UPLCTerm, bs: UPLCTerm ): ConstOrErr
     {
@@ -752,7 +752,7 @@ export class BnCEK
             cpu: f.cpu.at( sa, sb )
         });
 
-        return UPLCConst.bool( _a.asString === _b.asString );
+        return UPLCConst.bool( _a.toString() === _b.toString() );
     }
     lessThanByteString( a: UPLCTerm, b: UPLCTerm ): ConstOrErr
     {
@@ -807,7 +807,7 @@ export class BnCEK
             cpu: f.cpu.at( sa, sb )
         });
 
-        if( _a.asString === _b.asString ) return UPLCConst.bool( true );
+        if( _a.toString() === _b.toString() ) return UPLCConst.bool( true );
 
         // lessThanBytestring but with new environment for costs;
         return (new BnCEK(this.getBuiltinCostFunc,new ExBudget(0,0), [])).lessThanByteString( a, b );

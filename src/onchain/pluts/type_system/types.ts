@@ -184,11 +184,13 @@ export function asData<T extends StructT<GenericStructDefinition>>( someT: T ): 
 export function asData<T extends GenericTermType>( someT: T ): [ PrimType.AsData, T ]
 export function asData<T extends GenericTermType>( someT: T ): [ PrimType.AsData, T ] | T 
 {
+    // invalid asData type but not worth to rise an error
     if(
         someT[0] === PrimType.Lambda ||
         someT[0] === PrimType.Delayed
     ) return someT;
 
+    // already data
     if(
         someT[0] === PrimType.Struct ||
         someT[0] === PrimType.Data   ||

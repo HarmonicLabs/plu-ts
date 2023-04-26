@@ -1,31 +1,83 @@
+import { BasePlutsError } from "../../../../errors/BasePlutsError";
+import { Data } from "../../../../types/Data/Data";
 import { DataConstr } from "../../../../types/Data/DataConstr";
 import { DataI } from "../../../../types/Data/DataI";
-import { forceBigUInt } from "../../../../types/ints/Integer";
+import { forceBigUInt, unsafeForceUInt } from "../../../../types/ints/Integer";
+import { GenesisInfos, isGenesisInfos } from "../TxBuilder/GenesisInfos";
+
+export function POSIXToSlot( POSIX: number, sysStartPOSIX: number, slotLenMs: number ): number
+{
+    return Math.floor( (POSIX - sysStartPOSIX) / slotLenMs );
+}
+
+export function slotToPOSIX( slotN: number, sysStartPOSIX: number, slotLenMs: number ): number
+{
+    return sysStartPOSIX + (slotLenMs * slotN);
+}
 
 export function getTxIntervalData(
-    start: bigint | undefined,
-    ttl: bigint | undefined
+    startSlot: bigint | undefined,
+    ttlSlot: bigint | undefined,
+    geneisInfos: GenesisInfos | undefined
 ): DataConstr
 {
-    const lowerBoundData =
-        start === undefined ?
-        new DataConstr( 0, [] ) : // PNegInf
-        new DataConstr( // PExtended
-            1, // PFinite
-            [ new DataI( forceBigUInt( start ) ) ]
-        );
+    let lowerBoundData: Data | undefined = undefined;
 
-    const end = start === undefined ? undefined :
-        ttl === undefined ? undefined :
-        start + ttl;
-    
-    const upperBoundData =
-        end === undefined ?
-        new DataConstr( 2, [] ) : // PPosInf
-        new DataConstr( // PExtended
+    if( startSlot === undefined )
+    {
+        lowerBoundData = new DataConstr( 0, [] ); // PNegInf 
+    }
+    else
+    {
+        if( !isGenesisInfos( geneisInfos ) )
+        {
+            throw new BasePlutsError("missing genesis infos requried to translate slot number to posix")
+        }
+
+        lowerBoundData = new DataConstr( // PExtended
             1, // PFinite
-            [ new DataI( forceBigUInt( end ) ) ]
+            [
+                new DataI(
+                    slotToPOSIX(
+                        unsafeForceUInt( startSlot ),
+                        unsafeForceUInt( geneisInfos.systemStartPOSIX ),
+                        unsafeForceUInt( geneisInfos.slotLengthInMilliseconds )
+                    )
+                )
+            ]
         );
+    }
+
+    const endSlot = startSlot === undefined ? undefined :
+        ttlSlot === undefined ? undefined :
+        startSlot + ttlSlot;
+    
+    let upperBoundData: Data | undefined = undefined;
+
+    if( endSlot === undefined )
+    {
+        upperBoundData = new DataConstr( 2, [] ); // PPosInf 
+    }
+    else
+    {
+        if( !isGenesisInfos( geneisInfos ) )
+        {
+            throw new BasePlutsError("missing genesis infos requried to translate slot number to posix")
+        }
+
+        upperBoundData = new DataConstr( // PExtended
+            1, // PFinite
+            [
+                new DataI(
+                    slotToPOSIX(
+                        unsafeForceUInt( endSlot ),
+                        unsafeForceUInt( geneisInfos.systemStartPOSIX ),
+                        unsafeForceUInt( geneisInfos.slotLengthInMilliseconds )
+                    )
+                )
+            ]
+        );
+    }
 
     return new DataConstr(
         0, // PPosixTimeRange (PInterval) only constructor
