@@ -4,7 +4,7 @@ import ObjectUtils from "../../../../utils/ObjectUtils";
 import type { NetworkT } from "../../../ledger/Network";
 import { costModelV1ToFakeV2, costModelsToCborObj, costModelsToLanguageViewCbor, defaultV1Costs, defaultV2Costs, isCostModelsV1, isCostModelsV2, toCostModelV2 } from "../../../ledger/CostModels";
 import { txBuildOutToTxOut } from "../txBuild/ITxBuildOutput";
-import { CanBeUInteger, forceBigUInt } from "../../../../types/ints/Integer";
+import { CanBeUInteger, canBeUInteger, forceBigUInt, unsafeForceUInt } from "../../../../types/ints/Integer";
 import { Script, ScriptType } from "../../../script/Script";
 import { ProtocolParamters, isPartialProtocolParameters } from "../../../ledger/protocol/ProtocolParameters";
 import { getTxInfos } from "../toOnChain/getTxInfos";
@@ -46,6 +46,7 @@ import { keepRelevant } from "./keepRelevant";
 import { GenesisInfos, isGenesisInfos } from "./GenesisInfos";
 import { IProvider } from "./IProvider";
 import { TxBuilderRunner } from "./TxBuilderRunner";
+import { POSIXToSlot } from "../toOnChain";
 
 type ScriptLike = {
     hash: string,
@@ -94,7 +95,7 @@ export class TxBuilder
     constructor(
         network: NetworkT,
         protocolParamters: Readonly<ProtocolParamters>,
-        geneisInfos?: GenesisInfos
+        genesisInfos?: GenesisInfos
     )
     {
         let _genesisInfos: GenesisInfos | undefined = undefined;
@@ -103,14 +104,22 @@ export class TxBuilder
 
             _genesisInfos = ObjectUtils.freezeAll( genInfos );
         }
-        _setGenesisInfos( geneisInfos! );
-        Object.defineProperty(
-            this, "genesisInfos",
+        _setGenesisInfos( genesisInfos! );
+        Object.defineProperties(
+            this,
             {
-                get: () => _genesisInfos,
-                set: _setGenesisInfos,
-                enumerable: true,
-                configurable: false
+                genesisInfos: {
+                    get: () => _genesisInfos,
+                    set: _setGenesisInfos,
+                    enumerable: true,
+                    configurable: false
+                },
+                setGenesisInfos: {
+                    value: _setGenesisInfos,
+                    writable: false,
+                    enumerable: true,
+                    configurable: false
+                }
             }
         );
 
@@ -867,6 +876,22 @@ function initTxBuild(
             mustHaveV2: plutusV2ScriptsWitnesses.length > 0
         }
     ).toBuffer();
+
+    invalidBefore = invalidBefore === undef ? undef : forceBigUInt( invalidBefore );
+
+    if( invalidAfter !== undef )
+    {
+        if( invalidBefore === undef ) invalidBefore = 0;
+    }
+
+    if(
+        canBeUInteger( invalidBefore ) &&
+        canBeUInteger( invalidAfter )
+    )
+    {
+        if( invalidBefore >= invalidAfter  )
+        throw new BasePlutsError("invalid validity interval; invalidAfter: " + invalidAfter.toString() + "; was smaller (previous poin in time) than invalidBefore:" + invalidBefore.toString() );
+    }
 
     const dummyTx = new Tx({
         body: {

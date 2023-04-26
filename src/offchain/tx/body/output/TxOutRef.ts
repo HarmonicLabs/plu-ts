@@ -142,4 +142,11 @@ export class TxOutRef
         };
     }
     
+    static get fake(): TxOutRef
+    {
+        return new TxOutRef({
+            id: "ff".repeat(32),
+            index: 0
+        });
+    }
 }

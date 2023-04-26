@@ -56,6 +56,34 @@ export class Address
     readonly stakeCreds?: StakeCredentials
     readonly type!: AddressType;
 
+    static mainnet(
+        paymentCreds: PaymentCredentials,
+        stakeCreds?: StakeCredentials,
+        type?: AddressType
+    ): Address
+    {
+        return new Address(
+            "mainnet",
+            paymentCreds,
+            stakeCreds,
+            type
+        );
+    }
+
+    static testnet(
+        paymentCreds: PaymentCredentials,
+        stakeCreds?: StakeCredentials,
+        type?: AddressType
+    ): Address
+    {
+        return new Address(
+            "testnet",
+            paymentCreds,
+            stakeCreds,
+            type
+        );
+    }
+
     constructor(
         network: NetworkT,
         paymentCreds: PaymentCredentials,

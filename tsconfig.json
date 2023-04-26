@@ -73,7 +73,8 @@
     "**/*.test.ts",
     "jest_cache",
     "tsc-out",
-    "src/offchain/tx/builder/buildWorker.ts"
+    "src/offchain/tx/builder/buildWorker.ts",
+    "src/onchain/pluts/Script/blueprint"
   ],
   "tsc-alias": {
     "verbose": false,
