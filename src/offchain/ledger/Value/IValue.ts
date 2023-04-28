@@ -1,14 +1,23 @@
-import { fromAscii, toHex } from "@harmoniclabs/uint8array-utils";
+import { fromAscii, toHex, uint8ArrayEq } from "@harmoniclabs/uint8array-utils";
 import JsRuntime from "../../../utils/JsRuntime";
 import ObjectUtils from "../../../utils/ObjectUtils";
 
 import { Hash28 } from "../../hashes/Hash28/Hash28";
+import { CanBeUInteger, canBeUInteger } from "../../../types/ints/Integer";
 
 export type IValue = (IValuePolicyEntry | IValueAdaEntry)[]
 
-export type IValueAssets = {
-    [assetNameAscii: string]: number | bigint,
+export type IValueAsset = {
+    name: Uint8Array,
+    quantity: CanBeUInteger
 }
+
+export type IValueAssetBI = {
+    name: Uint8Array,
+    quantity: bigint
+}
+
+export type IValueAssets = IValueAsset[];
 
 export type IValuePolicyEntry = {
     policy: Hash28,
@@ -17,7 +26,7 @@ export type IValuePolicyEntry = {
 
 export type IValueAdaEntry = {
     policy: "",
-    assets: { "": number | bigint }
+    assets: [ IValueAsset ]
 }
 
 export function cloneIValue( ival: IValue ): IValue
@@ -27,7 +36,7 @@ export function cloneIValue( ival: IValue ): IValue
 
 function policyToString( policy: "" | Hash28 ): string
 {
-    return policy === "" ? policy : policy.asString;
+    return policy === "" ? policy : policy.toString();
 }
 
 export function IValueToJson( iVal: IValue ): object
@@ -38,12 +47,12 @@ export function IValueToJson( iVal: IValue ): object
     {
         const _assets = {};
 
-        for( const k in assets )
+        for( const { name, quantity } of assets )
         {
             ObjectUtils.defineReadOnlyProperty(
                 _assets,
-                toHex( fromAscii( k ) ),
-                (assets as any)[k].toString()
+                toHex( name ),
+                quantity.toString()
             )
         }
         
@@ -59,16 +68,7 @@ export function IValueToJson( iVal: IValue ): object
 
 function cloneIValueAssets( iValAssets: IValueAssets ): IValueAssets
 {
-    const ks = Object.keys( iValAssets );
-    const res = {};
-    for(let i = 0; i < ks.length; i++)
-    {
-        const _k = ks[i];
-        ObjectUtils.defineNormalProperty(
-            res, _k, iValAssets[_k]
-        );
-    }
-    return res;
+    return iValAssets.map(({ name, quantity }) => ({ name: name.slice(), quantity }));
 }
 
 export function cloneIValueEntry<Entry extends (IValueAdaEntry | IValuePolicyEntry)>( { policy, assets }: Entry ): Entry
@@ -91,47 +91,67 @@ function isAscii( str: string ): boolean
     )
 }
 
-function isAdaEntry( entry: object ): entry is IValueAdaEntry
+function isAdaEntry( entry: any ): entry is IValueAdaEntry
 {
-    const assets = (entry as any).assets;
+    const assets = entry?.assets;
     return (
         ObjectUtils.isObject( entry ) &&
         ObjectUtils.hasOwn( entry, "policy" ) &&
         ObjectUtils.hasOwn( entry, "assets" ) &&
         entry.policy === "" &&
-        ObjectUtils.isObject( assets ) &&
-        ObjectUtils.hasOwn( assets, "" ) && Object.keys( assets ).length === 1 &&
-        (typeof assets[""] === "number" || typeof assets[""] === "bigint") 
+        Array.isArray( assets ) && assets.length === 1 &&
+        (({ name, quantity }: IValueAsset) => {
+
+            return (
+                name instanceof Uint8Array &&
+                name.length === 0 && 
+                (
+                    typeof quantity === "bigint" ||
+                    (
+                        typeof quantity === "number" &&
+                        quantity === Math.round( quantity )
+                    )
+                )
+            );
+        })( assets[0] )
     );
 }
 
-function isIValueAssets( assets: object ): assets is IValueAssets
+function isIValueAsset( entry: any ): entry is IValueAsset
 {
-    return Object.keys( assets ).every( name => {
-
-        const amt = ((assets as any)[name]);
-
-        return (
-            isAscii( name ) &&
+    return (
+        ObjectUtils.isObject( entry ) &&
+        ObjectUtils.hasOwn( entry, "name" ) &&
+        entry.name instanceof Uint8Array &&
+        entry.name.length <= 32 &&
+        ObjectUtils.hasOwn( entry, "quantity" ) &&
+        (
+            typeof entry.quantity === "bigint" ||
             (
-                typeof amt === "bigint" || 
-                (
-                    typeof  amt === "number" &&
-                    amt === Math.round( amt )
-                )
+                typeof entry.quantity === "number" &&
+                entry.quantity === Math.round( entry.quantity )
             )
-        );
-    })
+        )
+    );
 }
 
-export function isIValue( entries: object[] ): entries is IValue
+function isIValueAssets( assets: any ): assets is IValueAssets
+{
+    return (
+        Array.isArray( assets ) &&
+        assets.every( isIValueAsset )
+    );
+}
+
+export function isIValue( entries: any[] ): entries is IValue
 {
     if(!Array.isArray( entries )) return false;
 
     const policies: string[] = [];
     let hasAdaEntry: boolean = false;
+    const len = entries.length;
 
-    for( let i = 0; i < entries.length; i++ )
+    for( let i = 0; i < len; i++ )
     {
         const entry = entries[i];
 
@@ -139,8 +159,7 @@ export function isIValue( entries: object[] ): entries is IValue
             ObjectUtils.isObject( entry ) &&
             ObjectUtils.hasOwn( entry, "policy" ) &&
             ObjectUtils.hasOwn( entry, "assets" )
-        ))
-        return false;
+        )) return false;
 
         if( entry.policy === "" )
         {
@@ -159,7 +178,7 @@ export function isIValue( entries: object[] ): entries is IValue
 
         if( !(entry.policy instanceof Hash28) ) return false;
 
-        const policyAsStr = entry.policy.asString;
+        const policyAsStr = entry.policy.toString();
 
         // duplicate entry
         if( policies.includes( policyAsStr ) ) return false;
@@ -172,6 +191,20 @@ export function isIValue( entries: object[] ): entries is IValue
     return true;
 }
 
+const empty = new Uint8Array([]);
+
+export function getNameQty( assets: IValueAssets | undefined, searchName: Uint8Array ): CanBeUInteger | undefined
+{
+    if(!(
+        Array.isArray( assets )
+    )) return undefined;
+    return assets.find( ({ name }) => uint8ArrayEq( name, searchName ) )?.quantity;
+}
+
+export function getEmptyNameQty( assets: IValueAssets | undefined ): CanBeUInteger | undefined
+{
+    return getNameQty( assets, empty );
+}
 
 export function addIValues( a: IValue, b: IValue ): IValue
 {
@@ -187,12 +220,12 @@ export function addIValues( a: IValue, b: IValue ): IValue
 
     if( aAdaAssets !== undefined || bAdaAssets !== undefined )
     {
-        let aVal: number | bigint = 0;
-        let bVal: number | bigint = 0;
+        let aVal: number | bigint | undefined = 0;
+        let bVal: number | bigint | undefined = 0;
 
         if( aAdaAssets !== undefined )
         {
-            aVal = aAdaAssets[""];
+            aVal = getEmptyNameQty( aAdaAssets );
 
             longIndiciesIncluded.push(
                 long.findIndex( entry => (entry.policy as any) === "" )
@@ -203,9 +236,10 @@ export function addIValues( a: IValue, b: IValue ): IValue
                 "ill formed Value passed to addition"
             );
         }
+
         if( bAdaAssets !== undefined )
         {
-            bVal = bAdaAssets[""];
+            bVal = getEmptyNameQty( bAdaAssets );
 
             if( bVal === undefined )
             throw JsRuntime.makeNotSupposedToHappenError(
@@ -215,7 +249,12 @@ export function addIValues( a: IValue, b: IValue ): IValue
 
         sum.push({
             policy: "",
-            assets: { "": BigInt(aVal) + BigInt(bVal) }
+            assets: [
+                {
+                    name: empty.slice(),
+                    quantity: BigInt( aVal ) + BigInt( bVal )
+                }
+            ]
         });
     }
 
@@ -225,10 +264,10 @@ export function addIValues( a: IValue, b: IValue ): IValue
 
         if( (policy as any) === "" ) continue;
 
-        const policyAsStr = policy.asString;
+        const policyAsStr = policy.toString();
         
         const { assets: lassets } = long.find( (entry, i) => {
-            if( entry.policy.asString === policyAsStr )
+            if( entry.policy.toString() === policyAsStr )
             {
                 longIndiciesIncluded.push( i );
                 return true;
@@ -264,10 +303,10 @@ function addInt( a: number | bigint, b: number | bigint ): bigint
 
 function addIValueAssets( a: IValueAssets, b: IValueAssets ): IValueAssets
 {
-    const sum: IValueAssets = {};
+    const sum: IValueAssets = [];
 
-    const aKeys = Object.keys( a );
-    const bKeys = Object.keys( b );
+    const aKeys = a.map( ({ name }) => name );
+    const bKeys = b.map( ({ name }) => name );
 
     const short = aKeys.length < bKeys.length ? a : b;
     const shortKeys = a === short ? aKeys : bKeys;
@@ -275,7 +314,7 @@ function addIValueAssets( a: IValueAssets, b: IValueAssets ): IValueAssets
     const long = aKeys.length < bKeys.length ? b : a;
     const longKeys = a === long ? aKeys : bKeys;
 
-    const included: string[] = [];
+    const included: Uint8Array[] = [];
 
     for( let i = 0; i < shortKeys.length; i++ )
     {
@@ -283,28 +322,36 @@ function addIValueAssets( a: IValueAssets, b: IValueAssets ): IValueAssets
 
         included.push( name );
 
-        if( longKeys.includes( name ) )
+        const longKeysIdx = longKeys.findIndex( k => uint8ArrayEq( k, name ) );
+
+        if( longKeysIdx >= 0 )
         {
-            ObjectUtils.defineReadOnlyProperty(
-                sum, name, addInt( short[name], long[name] )
-            );
+            sum.push({
+                name: name.slice(),
+                quantity: addInt(
+                    short[i].quantity,
+                    long[longKeysIdx].quantity
+                )
+            });
         }
         else
         {
-            ObjectUtils.defineReadOnlyProperty(
-                sum, name, short[name]
-            );
+            sum.push({
+                name: name.slice(),
+                quantity: BigInt( short[i].quantity )
+            });
         }
     }
 
     for( let i = 0; i < longKeys.length; i++ )
     {
         const name = longKeys[i];
-        if( included.includes( name ) ) continue;
+        if( included.some( k => uint8ArrayEq( k, name ) ) ) continue;
 
-        ObjectUtils.defineReadOnlyProperty(
-            sum, name, long[name]
-        );
+        sum.push({
+            name: name.slice(),
+            quantity: BigInt( long[i].quantity )
+        });
     }
 
     return sum;
@@ -328,12 +375,12 @@ export function subIValues( a: IValue, b: IValue ): IValue
 
     if( aAdaAssets !== undefined || bAdaAssets !== undefined )
     {
-        let aVal: number | bigint = 0;
-        let bVal: number | bigint = 0;
+        let aVal: number | bigint | undefined = 0;
+        let bVal: number | bigint | undefined = 0;
 
         if( aAdaAssets !== undefined )
         {
-            aVal = aAdaAssets[""];
+            aVal = getEmptyNameQty( aAdaAssets );
 
             if( aVal === undefined )
             throw JsRuntime.makeNotSupposedToHappenError(
@@ -342,7 +389,7 @@ export function subIValues( a: IValue, b: IValue ): IValue
         }
         if( bAdaAssets !== undefined )
         {
-            bVal = bAdaAssets[""];
+            bVal = getEmptyNameQty( bAdaAssets );
 
             if( bVal === undefined )
             throw JsRuntime.makeNotSupposedToHappenError(
@@ -354,7 +401,12 @@ export function subIValues( a: IValue, b: IValue ): IValue
         if( lovelaces !== BigInt(0) )
             result.push({
                 policy: "",
-                assets: { "": lovelaces }
+                assets: [
+                    {
+                        name: empty.slice(),
+                        quantity: lovelaces
+                    }
+                ]
             });
     }
 
@@ -367,10 +419,10 @@ export function subIValues( a: IValue, b: IValue ): IValue
 
         if( (policy as any) === "" ) continue;
 
-        const policyAsStr = policy.asString;
+        const policyAsStr = policy.toString();
         
         const { assets: bAssets } = _b.find( (entry, i) => {
-            if( entry.policy.asString === policyAsStr )
+            if( entry.policy.toString() === policyAsStr )
             {
                 bIndiciesIncluded.push( i );
                 return true;
@@ -385,7 +437,7 @@ export function subIValues( a: IValue, b: IValue ): IValue
                 bAssets
             );
 
-            if( Object.keys( subtractedAssets ).length !== 0 )
+            if( subtractedAssets.length !== 0 )
             {
                 result.push({
                     policy,
@@ -406,14 +458,18 @@ export function subIValues( a: IValue, b: IValue ): IValue
     {
         if( bIndiciesIncluded.includes( i ) ) continue;
 
-        const subAssets = {};
+        const subAssets: IValueAssets = [];
+
         const { policy, assets } = _b[i];
-        for(const assetName in assets)
+        
+        for(const { name, quantity } of assets)
         {
-            ObjectUtils.defineNonDeletableNormalProperty(
-                subAssets, assetName, -assets[assetName]
-            );
+            subAssets.push({
+                name: name.slice(),
+                quantity: -BigInt( quantity )
+            });
         }
+        
         result.push({
             policy: policy.clone(),
             assets: subAssets
@@ -430,44 +486,60 @@ function subInt( a: number | bigint, b: number | bigint ): bigint
 
 function subIValueAssets( a: IValueAssets, b: IValueAssets ): IValueAssets
 {
-    const result: IValueAssets = {};
+    const result: IValueAssets = [];
 
-    const aKeys = Object.keys( a );
-    const bKeys = Object.keys( b );
+    const aKeys = a.map( ({ name }) => name );
+    const bKeys = b.map( ({ name }) => name );
 
-    const includedBKeys: string [] = [];
+    const includedBKeys: Uint8Array[] = [];
 
     for( let i = 0; i < aKeys.length; i++ )
     {
         const name = aKeys[i];
 
-        if( bKeys.includes( name ) )
+        const bKeysIdx = bKeys.findIndex( k => uint8ArrayEq( k, name ) )
+
+        if( bKeysIdx >= 0 )
         {
+            const name = bKeys[ bKeysIdx ];
+
             includedBKeys.push( name );
-            const amt = subInt( a[name], b[name] );
+            
+            const amt = subInt( getNameQty( a, name ) ?? 0, getNameQty( b, name ) ?? 0 );
 
             if( amt !== BigInt(0) )
             {
-                ObjectUtils.defineReadOnlyProperty(
-                    result, name, amt
-                );
+                result.push({
+                    name: name.slice(),
+                    quantity: amt
+                });
             }
         }
         else
         {
-            ObjectUtils.defineReadOnlyProperty(
-                result, name, a[name]
-            );
+            const amt = getNameQty( a, name );
+            if( amt !== undefined )
+            {
+                result.push({
+                    name: name.slice(),
+                    quantity: amt
+                });
+            }
         }
     }
 
     for(const bKey of bKeys)
     {
-        if( includedBKeys.includes(bKey) ) continue;
+        if( includedBKeys.some( k => uint8ArrayEq( bKey, k ) ) ) continue;
         
-        ObjectUtils.defineNonDeletableNormalProperty(
-            result, bKey, -b[bKey]
-        );
+        const amt = getNameQty( b, bKey );
+        if( amt !== undefined )
+        {
+            result.push({
+                name: bKey.slice(),
+                quantity: -BigInt( amt )
+            });
+        }
     }
 
     return result;

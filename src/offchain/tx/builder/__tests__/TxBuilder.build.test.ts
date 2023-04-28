@@ -1,3 +1,4 @@
+import { fromAscii } from "@harmoniclabs/uint8array-utils"
 import { Cbor } from "../../../../cbor/Cbor"
 import { CborBytes } from "../../../../cbor/CborObj/CborBytes"
 import { Machine, PScriptContext, V2, bool, data, int, lam, list, makeRedeemerValidator, makeValidator, pInt, pfn, pif, pmakeUnit, precursive, unit } from "../../../../onchain"
@@ -386,7 +387,12 @@ describe("TxBuilder.build", () => {
                         value: new Value([
                             {
                                 policy: mintSomethingScript.hash,
-                                assets: { "hello": 2 }
+                                assets: [
+                                    {
+                                        name: fromAscii("hello"),
+                                        quantity: 2
+                                    }
+                                ]
                             }
                         ]),
                         script: {

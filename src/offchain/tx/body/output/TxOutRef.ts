@@ -83,7 +83,7 @@ export class TxOutRef
 
     toString(): TxOutRefStr
     {
-        return `${this.id.asString}#${this.index.toString()}` as any;
+        return `${this.id.toString()}#${this.index.toString()}` as any;
     }
 
     toData(): DataConstr
@@ -137,7 +137,7 @@ export class TxOutRef
     toJson(): UTxORefJson
     {
         return {
-            id: this.id.asString,
+            id: this.id.toString(),
             index: this.index
         };
     }

@@ -11,7 +11,7 @@ describe("for entry of value", () => {
         for(const { policy, assets } of value)
         {
             expect( policy ).toEqual("");
-            expect(assets).toEqual({ "": 0 });
+            expect(assets).toEqual([{ name: new Uint8Array([]), quantity: 0 }]);
             n++;
         }
 
@@ -26,7 +26,12 @@ describe("for entry of value", () => {
         for(const { policy, assets } of value)
         {
             expect( policy ).toEqual("");
-            expect(assets).toEqual({ "": 1e6 });
+            expect(assets).toEqual([
+                {
+                    name: new Uint8Array([]),
+                    quantity: 1e6
+                }
+            ]);
             n++;
         }
 
@@ -39,15 +44,30 @@ describe("for entry of value", () => {
         const value = new Value([
             {
                 policy: new Hash28("ff".repeat(28)),
-                assets: { "": 22 }
+                assets: [
+                    {
+                        name: new Uint8Array([]),
+                        quantity: 22
+                    }
+                ]
             },
             {
                 policy: new Hash28("aa".repeat(28)),
-                assets: { "": 22 }
+                assets: [
+                    {
+                        name: new Uint8Array([]),
+                        quantity: 22
+                    }
+                ]
             },
             {
                 policy: new Hash28("dd".repeat(28)),
-                assets: { "": 22 }
+                assets: [
+                    {
+                        name: new Uint8Array([]),
+                        quantity: 22
+                    }
+                ]
             },
         ]);
 
@@ -55,8 +75,7 @@ describe("for entry of value", () => {
         {
             expect( typeof policy ).toBe("string");
             expect( typeof assets ).toBe("object");
-            expect( Array.isArray( assets ) ).toBe(false);
-            expect( assets === null ).toBe(false);
+            expect( Array.isArray( assets ) ).toBe(true);
             n++;
         }
 

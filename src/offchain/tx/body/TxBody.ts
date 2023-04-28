@@ -12,7 +12,7 @@ import { canBeUInteger, CanBeUInteger, forceBigUInt } from "../../../types/ints/
 import { TxWithdrawals, ITxWithdrawals, canBeTxWithdrawals, forceTxWithdrawals } from "../../ledger/TxWithdrawals";
 import { Value } from "../../ledger/Value/Value";
 import { Coin } from "../../ledger/Coin";
-import { TxOut } from "./output/TxOut";
+import { TxOut, isITxOut } from "./output/TxOut";
 import { PubKeyHash } from "../../credentials/PubKeyHash";
 import { AuxiliaryDataHash } from "../../hashes/Hash32/AuxiliaryDataHash";
 import { ScriptDataHash } from "../../hashes/Hash32/ScriptDataHash";
@@ -61,7 +61,7 @@ export function isITxBody( body: Readonly<object> ): body is ITxBody
         
         ObjectUtils.hasOwn( b, "outputs" ) &&
         Array.isArray( b.outputs ) && b.outputs.length > 0 &&
-        b.outputs.every( _in => _in instanceof TxOut ) &&
+        b.outputs.every( out => out instanceof TxOut || isITxOut( out ) ) &&
 
         ObjectUtils.hasOwn( b, "fee" ) && canBeUInteger( b.fee ) &&
 
@@ -73,6 +73,9 @@ export function isITxBody( body: Readonly<object> ): body is ITxBody
         ( b.validityIntervalStart === undefined || canBeUInteger( b.validityIntervalStart ) ) &&
         ( b.mint === undefined || b.mint instanceof Value ) &&
         ( b.scriptDataHash === undefined || b.scriptDataHash instanceof Hash32 ) &&
+        ( b.network === undefined || b.network === "mainnet" || b.network === "testnet" ) &&
+        ( b.collateralReturn === undefined || b.collateralReturn instanceof TxOut || isITxOut( b.collateralReturn ) ) &&
+        ( b.totCollateral === undefined || canBeUInteger( b.totCollateral ) ) &&
         ( b.collateralInputs === undefined || (
             Array.isArray( b.collateralInputs ) && 
             b.collateralInputs.every( collateral => collateral instanceof UTxO )
@@ -81,15 +84,9 @@ export function isITxBody( body: Readonly<object> ): body is ITxBody
             Array.isArray( b.requiredSigners ) &&
             b.requiredSigners.every( sig => sig instanceof PubKeyHash )
         )) &&
-        ( b.network === undefined || b.network === "mainnet" || b.network === "testnet" ) &&
-        ( b.collateralReturn === undefined || (
-            Array.isArray( b.collateralReturn ) &&
-            b.collateralReturn.every( ret => ret instanceof TxOut )
-        )) &&
-        ( b.totCollateral === undefined || canBeUInteger( b.totCollateral ) ) &&
         ( b.refInputs === undefined || (
             Array.isArray( b.refInputs ) &&
-            b.refInputs.every( ref => ref instanceof UTxO )
+            b.refInputs.every( ref => ref instanceof UTxO || isIUTxO( ref ) )
         ))
     )
 }
@@ -435,7 +432,7 @@ export class TxBody
 
                     _hash = new Hash32(
                         new Uint8Array(
-                            blake2b_256( this.toCbor().asBytes )
+                            blake2b_256( this.toCbor().toBuffer() )
                         )
                     );
                     _isHashValid = true;

@@ -18,7 +18,7 @@ import { ToData } from "../../../types/Data/toData/interface";
 import { Cloneable } from "../../../types/interfaces/Cloneable";
 import { ToJson } from "../../../utils/ts/ToJson";
 import { Hash28 } from "../../hashes/Hash28/Hash28";
-import { isIValue, addIValues, subIValues, IValue, cloneIValue, IValueToJson } from "./IValue";
+import { isIValue, addIValues, subIValues, IValue, cloneIValue, IValueToJson, getEmptyNameQty, getNameQty } from "./IValue";
 import { CborArray } from "../../../cbor/CborObj/CborArray";
 import { ByteString } from "../../../types/HexString/ByteString";
 import { IValueAssets } from "./IValue";
@@ -69,9 +69,9 @@ export class Value
 
         map.forEach( entry => {
 
-            const assets = entry.assets as any;
+            const assets = entry.assets;
 
-            ObjectUtils.freezeAll( assets );
+            assets.forEach( a => Object.freeze( a ) );
             Object.freeze( entry.policy );
         });
 
@@ -80,7 +80,12 @@ export class Value
         {
             map.unshift({
                 policy: "",
-                assets: { "": 0 }
+                assets: [
+                    {
+                        name: new Uint8Array([]),
+                        quantity: 0
+                    }
+                ]
             });
         }
 
@@ -107,10 +112,11 @@ export class Value
             this, "lovelaces",
             {
                 get: (): bigint => BigInt(
-                    this.map
-                    .find( ({ policy }) => policy === "" )
-                    ?.assets[""] 
-                    ?? 0 
+                    getEmptyNameQty(
+                        this.map
+                        .find( ({ policy }) => policy === "" )
+                        ?.assets
+                    ) ?? 0 
                 ),
                 set: () => {},
                 enumerable: true,
@@ -148,11 +154,11 @@ export class Value
         return this.map.flatMap(({ policy, assets }) => {
             if( policy === "" )
             {
-                return { unit: 'lovelace', quantity: BigInt( assets[''] ) }
+                return { unit: 'lovelace', quantity: BigInt( getEmptyNameQty( assets ) ?? 0 ) }
             }
-            return Object.keys( assets ).map(( assetName ) => ({
-                    unit: `${policy.toString()}${toHex( fromUtf8( assetName ) )}`,
-                    quantity: BigInt( assets[assetName] )
+            return assets.map(({ name: assetName }) => ({
+                    unit: `${policy.toString()}${toHex( assetName )}`,
+                    quantity: BigInt( getNameQty( assets, assetName ) ?? 0 )
                 })
             );
         });
@@ -169,12 +175,17 @@ export class Value
 
             const policy = new Hash28( unit.slice( 0, 56 ) );
 
-            const assetName = toAscii( fromHex( unit.slice( 56 ) ) )
+            const assetName = fromHex( unit.slice( 56 ) );
 
             return new Value([
                 {
                     policy,
-                    assets: { [assetName]: BigInt(quantity) },
+                    assets: [
+                        {
+                            name: assetName,
+                            quantity: BigInt(quantity)
+                        }
+                    ]
                 }
             ]);
         })
@@ -191,8 +202,8 @@ export class Value
         return (
             v.map.length === 0 ||
             v.map.every(({ assets }) =>
-                Object.keys( assets ).every( name =>
-                    BigInt((assets as any)[name]) === BigInt(0) 
+                assets.every( ({ quantity }) =>
+                    quantity === BigInt(0) 
                 ) 
             )
         )
@@ -201,10 +212,8 @@ export class Value
     static isPositive( v: Value ): boolean
     {
         return v.map.every( ({ assets }) =>
-            Object.keys( assets )
-            .every( assetName => 
-                Number( (assets as any)[assetName] ?? -1 ) 
-                >= 0 
+            assets.every( ({ quantity }) => 
+                quantity >= 0 
             )
         )
     }
@@ -218,7 +227,12 @@ export class Value
     {
         return new Value([{
             policy: "",
-            assets: { "": typeof n === "number" ? Math.round( n ) : BigInt( n ) }
+            assets: [
+                {
+                    name: new Uint8Array([]),
+                    quantity: typeof n === "number" ? Math.round( n ) : BigInt( n ) 
+                }
+            ]
         }]);
     }
 
@@ -242,14 +256,14 @@ export class Value
         return new DataMap<DataB,DataMap<DataB,DataI>>(
             this.map.map( ({ policy, assets }) =>
                 new DataPair(
-                    new DataB( new ByteString( policy === "" ? "" : policy.asBytes ) ),
+                    new DataB( new ByteString( policy === "" ? "" : policy.toBuffer() ) ),
                     new DataMap(
-                        Object.keys( assets ).map( assetName =>
+                        assets.map( ({ name: assetName }) =>
                             new DataPair(
                                 new DataB(
-                                    ByteString.fromAscii( assetName )
+                                    new ByteString( assetName )
                                 ),
-                                new DataI( (assets as any)[ assetName ] )
+                                new DataI( getNameQty( assets, assetName ) ?? 0 )
                             )
                         )
                     )
@@ -276,10 +290,9 @@ export class Value
                 return {
                     k: policy === "" ? new CborBytes( new Uint8Array(0) ) : policy.toCborObj(),
                     v: new CborMap(
-                        Object.keys( assets ).map( assetNameAscii => {
-                            const amt = (assets as any)[ assetNameAscii ];
+                        assets.map( ({ name: assetName, quantity: amt }) => {
                             return {
-                                k: new CborBytes( fromAscii( assetNameAscii ) ),
+                                k: new CborBytes( assetName.slice() ),
                                 v: amt < 0 ? new CborNegInt( amt ) : new CborUInt( amt )
                             };
                         })
@@ -328,7 +341,12 @@ export class Value
 
             valueMap[0] = {
                 policy: "",
-                assets: { "": cObj.array[0].num }
+                assets: [
+                    {
+                        name: new Uint8Array([]),
+                        quantity: cObj.array[0].num
+                    }
+                ]
             };
         }
         else
@@ -338,7 +356,12 @@ export class Value
 
             valueMap[0] = {
                 policy: "",
-                assets: { "": 0 }
+                assets: [
+                    {
+                        name: new Uint8Array([]),
+                        quantity: BigInt( 0 )
+                    }
+                ]
             };
         }
         
@@ -359,7 +382,7 @@ export class Value
             const assetsMap = v.map;
             const assetsMapLen = v.map.length;
 
-            const assets = {};
+            const assets: IValueAssets = [];
 
             for( let j = 0 ; j < assetsMapLen; j++ )
             {
@@ -370,11 +393,10 @@ export class Value
                 if(!( v instanceof CborNegInt || v instanceof CborUInt ))
                 throw new InvalidCborFormatError("Value");
 
-                ObjectUtils.defineReadOnlyProperty(
-                    assets,
-                    toAscii( k.buffer ),
-                    v.num
-                );
+                assets.push({
+                    name: k.buffer,
+                    quantity: v.num
+                });
             }
 
             valueMap[i + 1] = {

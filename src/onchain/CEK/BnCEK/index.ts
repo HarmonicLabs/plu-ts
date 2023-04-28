@@ -702,7 +702,7 @@ export class BnCEK
         if( _bs === undefined ) return new ErrorUPLC("indexByteString :: not BS");
         
         const i = getInt( idx );
-        if( i === undefined || i >= _bs.toBuffer().length || i < BigInt( 0 ) ) return new ErrorUPLC("not int");
+        if( i === undefined || i >= _bs.toBuffer().length || i < BigInt( 0 ) ) return new ErrorUPLC("indexByteString :: not int");
 
         const result = _bs.toBuffer().at( Number( i ) );
         if( result === undefined ) return new ErrorUPLC("indexByteString :: out of bytestring length");
@@ -1215,7 +1215,7 @@ export class BnCEK
     constrData( idx: UPLCTerm, fields: UPLCTerm ): ConstOrErr
     {
         const i = getInt( idx );
-        if( i === undefined ) return new ErrorUPLC("not int");
+        if( i === undefined ) return new ErrorUPLC("constrData :: not int");
 
         if( !constTypeEq( (fields as any).type, constT.listOf( constT.data ) ) ) return new ErrorUPLC("constrData :: passed fields are not a list of Data");
         

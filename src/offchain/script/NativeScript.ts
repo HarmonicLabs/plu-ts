@@ -175,4 +175,4 @@ export function nativeScriptFromCborObj( cbor: CborObj ): NativeScript
 export function nativeScriptFromCbor( cbor: CborString ): NativeScript
 {
     return nativeScriptFromCborObj( Cbor.parse( cbor ) as any );
-}
+};

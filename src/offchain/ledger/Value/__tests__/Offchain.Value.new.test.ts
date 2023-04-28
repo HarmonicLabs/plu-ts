@@ -1,3 +1,4 @@
+import { fromAscii } from "@harmoniclabs/uint8array-utils";
 import { Script, ScriptType } from "../../../script/Script";
 import { Value } from "../Value";
 
@@ -17,9 +18,12 @@ describe("new Value", () => {
         new Value([
             {
                 policy: mint1.hash,
-                assets: {
-                    TOKEN: 1_000_000_000
-                }
+                assets: [
+                    {
+                        name: fromAscii("TOKEN"),
+                        quantity: 1_000_000_000
+                    }
+                ]
             }
         ]);
         

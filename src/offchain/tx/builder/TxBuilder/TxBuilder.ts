@@ -123,7 +123,6 @@ export class TxBuilder
             }
         );
 
-
         JsRuntime.assert(
             network === "testnet" ||
             network === "mainnet",

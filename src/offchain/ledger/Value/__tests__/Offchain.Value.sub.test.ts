@@ -1,3 +1,4 @@
+import { fromAscii } from "@harmoniclabs/uint8array-utils";
 import { Hash28 } from "../../../hashes/Hash28/Hash28";
 import { Value } from "../Value"
 
@@ -57,13 +58,13 @@ describe("Value.sub", () => {
                     new Value([
                         {
                             policy: new Hash28( "aa".repeat(28) ),
-                            assets: { a: 1 }
+                            assets: [{ name: fromAscii( "a" ), quantity: 1 }]
                         }
                     ]),
                     new Value([
                         {
                             policy: new Hash28( "bb".repeat(28) ),
-                            assets: { b: 1 }
+                            assets: [{ name: fromAscii( "b" ), quantity: 1 }]
                         }
                     ])
                 )
@@ -71,11 +72,11 @@ describe("Value.sub", () => {
                 new Value([
                     {
                         policy: new Hash28( "aa".repeat(28) ),
-                        assets: { a: 1 }
+                        assets: [{ name: fromAscii( "a" ), quantity: 1 }]
                     },
                     {
                         policy: new Hash28( "bb".repeat(28) ),
-                        assets: { b: -1 }
+                        assets: [{ name: fromAscii( "b" ), quantity: -1n }]
                     }
                 ])
             );
@@ -88,13 +89,13 @@ describe("Value.sub", () => {
                     new Value([
                         {
                             policy: new Hash28( "aa".repeat(28) ),
-                            assets: { a: 1 }
+                            assets: [{ name: fromAscii( "a" ), quantity: 1 }]
                         }
                     ]),
                     new Value([
                         {
                             policy: new Hash28( "aa".repeat(28) ),
-                            assets: { b: 1 }
+                            assets: [{ name: fromAscii( "b" ), quantity: 1 }]
                         }
                     ])
                 )
@@ -102,7 +103,10 @@ describe("Value.sub", () => {
                 new Value([
                     {
                         policy: new Hash28( "aa".repeat(28) ),
-                        assets: { a: 1, b: -1 }
+                        assets: [
+                            { name: fromAscii( "a" ), quantity: 1 },
+                            { name: fromAscii( "b" ), quantity: -1n }
+                        ]
                     }
                 ])
             )
@@ -121,17 +125,17 @@ describe("Value.sub", () => {
                     new Value([
                         {
                             policy: new Hash28( "aa".repeat(28) ),
-                            assets: { "a": 1 }
+                            assets: [{ name: fromAscii( "a" ), quantity: 1 }]
                         },
                         {
                             policy: new Hash28( "bb".repeat(28) ),
-                            assets: { "b": 3 }
+                            assets: [{ name: fromAscii( "b" ), quantity: 3 }]
                         }
                     ]),
                     new Value([
                         {
                             policy: new Hash28( "bb".repeat(28) ),
-                            assets: { "b": 2 }
+                            assets: [{ name: fromAscii( "b" ), quantity: 2 }]
                         }
                     ])
                 )
@@ -139,11 +143,11 @@ describe("Value.sub", () => {
                 new Value([
                     {
                         policy: new Hash28( "bb".repeat(28) ),
-                        assets: { "b": 1n }
+                        assets: [{ name: fromAscii( "b" ), quantity: 1n }]
                     },
                     {
                         policy: new Hash28( "aa".repeat(28) ),
-                        assets: { "a": 1 }
+                        assets: [{ name: fromAscii( "a" ), quantity: 1 }]
                     }
                 ])
             );
@@ -157,17 +161,17 @@ describe("Value.sub", () => {
                     new Value([
                         {
                             policy: new Hash28( "aa".repeat(28) ),
-                            assets: { "a": 1 }
+                            assets: [{ name: fromAscii( "a" ), quantity: 1 }]
                         },
                         {
                             policy: new Hash28( "bb".repeat(28) ),
-                            assets: { "a": 3 }
+                            assets: [{ name: fromAscii( "a" ), quantity: 3 }]
                         }
                     ]),
                     new Value([
                         {
                             policy: new Hash28( "bb".repeat(28) ),
-                            assets: { "b": 2 }
+                            assets: [{ name: fromAscii( "b" ), quantity: 2 }]
                         }
                     ])
                 ).toJson()
@@ -175,11 +179,14 @@ describe("Value.sub", () => {
                 new Value([
                     {
                         policy: new Hash28( "aa".repeat(28) ),
-                        assets: { "a": 1 }
+                        assets: [{ name: fromAscii( "a" ), quantity: 1 }]
                     },
                     {
                         policy: new Hash28( "bb".repeat(28) ),
-                        assets: { "a": 3, "b": -2 }
+                        assets: [
+                            { name: fromAscii( "a" ), quantity: 3 },
+                            { name: fromAscii( "b" ), quantity: -2 }
+                        ]
                     }
                 ]).toJson()
             );
