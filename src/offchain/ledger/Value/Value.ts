@@ -451,4 +451,41 @@ export class Value
     {
         return IValueToJson( this.map );
     }
+
+    /**
+     * cardano-cli format
+     */
+    toString( includeLovelaces = true ): string
+    {
+        let valueStr = "";
+        const valueMap = this.map;
+    
+        if( includeLovelaces )
+        valueStr +=`+${this.lovelaces.toString()}`;
+    
+        if( Value.isAdaOnly( this ) ) return valueStr;
+    
+        valueStr += includeLovelaces ? '+"' : '"' ;
+    
+        for(const { policy, assets } of valueMap)
+        {
+            if( policy === "" ) continue;
+    
+            for(const { name, quantity } of assets)
+            {
+                valueStr += `${
+                    quantity
+                    .toString()
+                } ${
+                    policy.toString()
+                }.${
+                    toHex( name )
+                }+`;
+            }
+        }
+    
+        valueStr = valueStr.slice( 0, valueStr.length - 1 ) + '"';
+    
+        return valueStr;
+    }
 }
