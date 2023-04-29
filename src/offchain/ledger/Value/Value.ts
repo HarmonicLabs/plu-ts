@@ -25,7 +25,7 @@ import { IValueAssets } from "./IValue";
 import { hex } from "../../../types/HexString";
 import { fromAscii, fromHex, fromUtf8, isUint8Array, lexCompare, toAscii, toHex } from "@harmoniclabs/uint8array-utils";
 import { Hash32 } from "../../hashes";
-import { CanBeUInteger } from "../../../types/ints/Integer";
+import { CanBeUInteger, forceBigUInt } from "../../../types/ints/Integer";
 import { BasePlutsError } from "../../../errors/BasePlutsError";
 
 const enum Ord {
@@ -129,7 +129,7 @@ export class Value
 
     readonly lovelaces!: bigint;
 
-    get( policy: Hash28 | Uint8Array | string , assetName: Uint8Array | string ): bigint
+    get( policy: Hash28 | Uint8Array | string , assetName: Uint8Array ): bigint
     {
         if( typeof policy === "string" )
         {
@@ -139,14 +139,11 @@ export class Value
 
         const policyStr = policy instanceof Hash28 ? policy.toString() : toHex( policy );
 
-        if( isUint8Array( assetName ) )
-        assetName = toAscii( assetName );
-
         return BigInt(
-            (
-                this.map
-                .find( ({ policy }) => policy.toString() === policyStr ) as any
-            )?.assets[assetName] 
+            getNameQty(
+                this.map.find( ({ policy }) => policy.toString() === policyStr )?.assets,
+                assetName
+            )
             ?? 0 
         );
     }
@@ -205,7 +202,7 @@ export class Value
             v.map.length === 0 ||
             v.map.every(({ assets }) =>
                 assets.every( ({ quantity }) =>
-                    quantity === BigInt(0) 
+                    forceBigUInt( quantity ) === BigInt(0) 
                 ) 
             )
         )
