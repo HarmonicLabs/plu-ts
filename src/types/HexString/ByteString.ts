@@ -1,11 +1,38 @@
-import JsRuntime from "../../utils/JsRuntime";
-
-import {Cloneable} from "../interfaces/Cloneable";
-import {HexString} from ".";
 import { fromAscii, fromHex, isUint8Array, toAscii, toHex } from "@harmoniclabs/uint8array-utils";
 
+function isHex( anyString: string ): boolean
+{
+    // always think in javasript
+    if( typeof anyString !== "string" ) return false;
+    
+    const str = anyString.toLowerCase();
+    const validHex = "987654321abcdef0";
+
+    for( let i = 0; i < str.length; i++)
+    {
+        if( !validHex.includes(str[i]) ) return false;
+    }
+
+    // if false has not been returned yet, then it must be a valid hex
+    return true;
+}
+
+function assert( condition: boolean, errorMessage: string | Error , addInfos?: any  ,...args: any[])
+{
+    if( condition ) return;
+    
+    args.length > 0 && console.error(...args);
+    addInfos && console.error(addInfos);
+
+    if( errorMessage instanceof Error )
+    {
+        throw errorMessage
+    };
+
+    throw new Error( errorMessage );
+}
+
 export class ByteString
-    implements Cloneable<ByteString>
 {
     static isStrictInstance( bs: any ): bs is ByteString
     {
@@ -14,23 +41,24 @@ export class ByteString
 
     protected _bytes: Uint8Array;
 
-    constructor( bs: string | Uint8Array )
+    constructor( bs: string | Uint8Array | ByteString )
     {
         if( typeof bs === "string" )
         {
             // remove spaces
             bs = bs.trim().split(" ").join("");
             
-            JsRuntime.assert(
-                HexString.isHex( bs ),
+            assert(
+                isHex( bs ),
                 "invalid hex input while constructing a ByteString: " + bs
             )
             // even length
-            this._bytes = fromHex( (bs.length % 2) === 1 ? "0" + bs : bs );
-            return;
+            bs = fromHex( (bs.length % 2) === 1 ? "0" + bs : bs );
         }
 
-        JsRuntime.assert(
+        if(!(bs instanceof Uint8Array)) bs = bs.toBuffer();
+
+        assert(
             isUint8Array( bs ),
             "invalid Uint8Array input while constructing a ByteString"
         );
@@ -82,7 +110,7 @@ export class ByteString
     public static isValidHexValue( str: string ): boolean
     {
         return (
-            HexString.isHex( str ) &&
+            isHex( str ) &&
             str.length % 2 === 0
         );
     }

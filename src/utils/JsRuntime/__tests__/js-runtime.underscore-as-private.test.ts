@@ -16,7 +16,6 @@ import Debug from "../../Debug";
 */
 const viewConventions = {}
 
-
 describe( "underscore seen as private fields on plain objects", () => {
 
     it( "objWithUnderscoreAsPrivate leaves empty objects untouched", () => {

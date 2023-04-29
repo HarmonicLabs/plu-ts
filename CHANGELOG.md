@@ -1,6 +1,13 @@
 # Changelog
 
-## [NEXT] v0.3.0
+## [NEXT] v0.4.0
+
+- CIP57 (Plutus blueprints) support
+- modular design
+- changed value interface (`IValue`)
+    - assets field must be an **array** of `{ name: Uint8Array, quantity: number | bigint }` (previously was an object)
+
+## v0.3.0
 
 - introudced the `IR`
 - deprecated `plet( pexpr ).in( pvar => ... )` in favor of `const pvar = plet( pexpr )`

@@ -18,13 +18,15 @@ import { ToData } from "../../../types/Data/toData/interface";
 import { Cloneable } from "../../../types/interfaces/Cloneable";
 import { ToJson } from "../../../utils/ts/ToJson";
 import { Hash28 } from "../../hashes/Hash28/Hash28";
-import { isIValue, addIValues, subIValues, IValue, cloneIValue, IValueToJson, getEmptyNameQty, getNameQty } from "./IValue";
+import { isIValue, addIValues, subIValues, IValue, cloneIValue, IValueToJson, getEmptyNameQty, getNameQty, IValueAdaEntry, IValueAsset, IValuePolicyEntry } from "./IValue";
 import { CborArray } from "../../../cbor/CborObj/CborArray";
 import { ByteString } from "../../../types/HexString/ByteString";
 import { IValueAssets } from "./IValue";
 import { hex } from "../../../types/HexString";
 import { fromAscii, fromHex, fromUtf8, isUint8Array, lexCompare, toAscii, toHex } from "@harmoniclabs/uint8array-utils";
 import { Hash32 } from "../../hashes";
+import { CanBeUInteger } from "../../../types/ints/Integer";
+import { BasePlutsError } from "../../../errors/BasePlutsError";
 
 const enum Ord {
     LT = -1,
@@ -223,9 +225,9 @@ export class Value
         return v.map.length === 1;
     }
 
-    static lovelaces( n: number | bigint ): Value
+    static lovelaceEntry( n: CanBeUInteger ): IValueAdaEntry
     {
-        return new Value([{
+        return {
             policy: "",
             assets: [
                 {
@@ -233,7 +235,47 @@ export class Value
                     quantity: typeof n === "number" ? Math.round( n ) : BigInt( n ) 
                 }
             ]
-        }]);
+        };
+    }
+
+    static lovelaces( n: number | bigint ): Value
+    {
+        return new Value([ Value.lovelaceEntry(n) ]);
+    }
+
+    static assetEntry(
+        name: Uint8Array,
+        qty: number | bigint
+    ): IValueAsset
+    {
+        if(!(
+            name instanceof Uint8Array &&
+            name.length <= 32
+        )) throw new BasePlutsError("invalid asset name; must be Uint8Array of length <= 32");
+        return {
+            name: name.slice(),
+            quantity: typeof qty === "number" ? Math.round( qty ) : BigInt( qty ) 
+        };
+    }
+
+    static singleAssetEntry(
+        policy: Hash28,
+        name: Uint8Array,
+        qty: number | bigint
+    ): IValuePolicyEntry
+    {
+        return {
+            policy,
+            assets: [ Value.assetEntry( name, qty ) ]
+        };
+    }
+
+    static entry(
+        policy: Hash28,
+        assets: IValueAssets
+    ): IValuePolicyEntry
+    {
+        return { policy, assets };
     }
 
     static add( a: Value, b: Value ): Value
