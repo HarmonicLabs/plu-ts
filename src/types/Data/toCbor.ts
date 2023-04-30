@@ -66,13 +66,19 @@ export function dataToCborObj( data: Data ): CborObj
                     k: dataToCborObj( pair.fst ),
                     v: dataToCborObj( pair.snd )
                 }
-            })
+            }),
+            {
+                indefinite: data.map.length > 0
+            }
         );
     }
     if( data instanceof DataList )
     {
         return new CborArray(
-            data.list.map( dataToCborObj )
+            data.list.map( dataToCborObj ),
+            {
+                indefinite: data.list.length > 0
+            }
         );
     }
     if( data instanceof DataI )
@@ -88,7 +94,7 @@ export function dataToCborObj( data: Data ): CborObj
     if( data instanceof DataB )
     {
         return new CborBytes(
-            data.bytes.asBytes
+            data.bytes.toBuffer()
         );
     }
 
