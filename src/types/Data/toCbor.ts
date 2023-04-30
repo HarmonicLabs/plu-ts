@@ -32,7 +32,10 @@ export function dataToCborObj( data: Data ): CborObj
         const tag = constrNumberToCborTag( constrNum );
 
         let fields = new CborArray(
-            data.fields.map( dataToCborObj )
+            data.fields.map( dataToCborObj ),
+            {
+                indefinite: data.fields.length > 0
+            }
         );
 
         if( Number( tag ) === 102 )

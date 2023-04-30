@@ -276,13 +276,20 @@ class CborEncoding
         {
             const map = cObj.map;
 
-            this.appendTypeAndLength( MajorType.map, map.length );
+            if( cObj.indefinite )
+                this.appendUInt8( 0xbf );
+            else
+                this.appendTypeAndLength( MajorType.map, map.length );
+
             for( let i = 0; i < map.length; i++ )
             {
                 this.appendCborObjEncoding( map[i].k );
                 this.appendCborObjEncoding( map[i].v );
             }
 
+            if( cObj.indefinite )
+                this.appendUInt8( 0xff );
+                
             return;
         }
 

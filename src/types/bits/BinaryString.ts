@@ -14,12 +14,12 @@ export class BinaryString
         // remove spaces
         // this makes strings like "0010 0101 0000 1111" and " 0 000 10110 0000001" valid
         // and potentially improves readability
-        binString = binString.trim().split(" ").join("").toLowerCase();
+        binString = binString.trim().split(" ").join("");
 
         // the string may contain invalid chars
         BinaryString._assertBinary( binString );
 
-        this._bin = binString.toLowerCase();
+        this._bin = binString;
     }
 
     get asString(): string
@@ -37,12 +37,11 @@ export class BinaryString
      * @param anyString assumed bin string
      * @returns true if the string can be interpreted as binadecimal value
      */
-    public static isBinary( anyString: string ): boolean
+    public static isBinary( str: string ): boolean
     {
         // always think in javasript
-        if( typeof anyString !== "string" ) return false;
+        if( typeof str !== "string" ) return false;
         
-        const str = anyString.toLowerCase();
         const validBinaryDigits = "01";
 
         for( let i = 0; i < str.length; i++)

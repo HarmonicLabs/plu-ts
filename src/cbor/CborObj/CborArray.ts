@@ -27,9 +27,9 @@ export function isRawCborArray( arr: RawCborArray ): boolean
     );
 }
 
-const defaultOpts: Required<CborArrayOptions> = {
+const defaultOpts: Required<CborArrayOptions> = Object.freeze({
     indefinite: false
-}
+})
 
 export class CborArray
     implements ToRawObj, Cloneable<CborArray>

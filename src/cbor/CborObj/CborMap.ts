@@ -1,6 +1,15 @@
 import { CborObj, cborObjFromRaw, isRawCborObj, RawCborObj } from ".";
 import { Cloneable } from "../../types/interfaces/Cloneable";
+import ObjectUtils from "../../utils/ObjectUtils";
 import { ToRawObj } from "./interfaces/ToRawObj";
+
+export interface CborMapOptions {
+    indefinite?: boolean
+}
+
+const defaultOpts: Required<CborMapOptions> = Object.freeze({
+    indefinite: false
+})
 
 export type RawCborMapEntry = {
     k: RawCborObj,
@@ -8,7 +17,8 @@ export type RawCborMapEntry = {
 };
 
 export type RawCborMap = {
-    map: RawCborMapEntry[]
+    map: RawCborMapEntry[],
+    options?: CborMapOptions
 }
 
 export function isRawCborMap( m: RawCborMap ): boolean
@@ -57,9 +67,22 @@ export class CborMap
             });
     }
     
-    constructor( map: CborMapEntry[] )
+    readonly indefinite!: boolean;
+
+    constructor( map: CborMapEntry[], options?: CborMapOptions )
     {
         this._map = map;
+
+        const {
+            indefinite
+        } = {
+            ...defaultOpts,
+            ...options
+        };
+
+        ObjectUtils.defineReadOnlyProperty(
+            this, "indefinite", Boolean( indefinite )
+        );
     }
 
     toRawObj(): RawCborMap
@@ -71,12 +94,20 @@ export class CborMap
                         k: entry.k.toRawObj(),
                         v: entry.v.toRawObj()
                     };
-                })
+                }),
+            options : {
+                indefinite: this.indefinite
+            }
         };
     }
 
     clone(): CborMap
     {
-        return new CborMap( this.map );
+        return new CborMap(
+            this.map,
+            {
+                indefinite: this.indefinite
+            }
+        );
     }
 }

@@ -1,6 +1,3 @@
-import Cbor from ".."
-import { cborObjFromRaw } from "../../CborObj"
-import CborString from "../../CborString"
 
 describe( "Cbor.parse", () => {
 

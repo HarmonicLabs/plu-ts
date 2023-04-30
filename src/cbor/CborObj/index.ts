@@ -137,7 +137,8 @@ export function cborObjFromRaw( _rawCborObj: RawCborObj ): CborObj
                         k: _cborObjFromRaw( entry.k ),
                         v: _cborObjFromRaw( entry.v )
                     }
-                })
+                }),
+                (rawCborObj as any).options
             );
 
         if( isRawCborTag( rawCborObj as RawCborTag ) )
