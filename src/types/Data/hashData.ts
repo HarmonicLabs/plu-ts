@@ -13,7 +13,7 @@ export function hashData( data: Data ): Hash32
 
     return new Hash32(
         new Uint8Array(
-            blake2b_256( dataToCbor( data ).asBytes )
+            blake2b_256( dataToCbor( data ).toBuffer() )
         )
     );
 }
