@@ -4,7 +4,7 @@ export class Pair< A, B >
 {
     get [Symbol.toStringTag](): string
     {
-        return "Pair";
+        return `Pair( ${this.fst}, ${this.snd} )`;
     }
 
     static isStrictInstance( any: any ): any is Pair<any,any>
