@@ -68,5 +68,6 @@
     "tsc-alias": "^1.7.1",
     "typescript": "^4.6.3",
     "v8-profiler-next": "^1.9.0"
-  }
+  },
+  "funding": "https://github.com/sponsors/HarmonicLabs"
 }
