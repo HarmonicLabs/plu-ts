@@ -56,6 +56,10 @@ export class TxBuilder
 
     setGenesisInfos!: ( geneisInfos: GenesisInfos ) => void;
 
+    /**
+     * @experimental
+     * @deprecated not complete in this version
+     */
     runWithProvider( provider: IProvider )
     {
         return new TxBuilderRunner( this, provider );
