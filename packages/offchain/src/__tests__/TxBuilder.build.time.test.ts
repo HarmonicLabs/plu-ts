@@ -1,11 +1,6 @@
-import { Address, Value, defaultProtocolParameters } from "../../../ledger"
-import { TxOut, TxOutRef, UTxO } from "../../body"
-import { TxBuilder } from "../TxBuilder"
-import { PScriptContext, compile, data, pfn, pmakeUnit, unit } from "../../../../onchain";
-import { Script } from "../../../script/Script";
-import { PaymentCredentials } from "../../../credentials";
-import { DataI } from "../../../../types/Data";
-
+import { defaultProtocolParameters, UTxO, TxOutRef, Address, Value, Script, PaymentCredentials } from "@harmoniclabs/cardano-ledger-ts";
+import { DataI } from "@harmoniclabs/plutus-data";
+import { TxBuilder } from "../TxBuilder";
 
 describe("build time", () => {
 
@@ -129,6 +124,8 @@ describe("build time", () => {
 
     });
 
+
+    /*
     const simpleScript = new Script(
         "PlutusScriptV2",
         compile(
@@ -236,5 +233,6 @@ describe("build time", () => {
         expect( doStuff ).not.toThrow();
 
     });
+    */
 
 })

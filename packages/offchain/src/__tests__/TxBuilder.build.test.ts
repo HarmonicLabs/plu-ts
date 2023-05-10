@@ -1,22 +1,11 @@
-import { fromAscii } from "@harmoniclabs/uint8array-utils"
-import { Cbor } from "../../../../cbor/Cbor"
-import { CborBytes } from "../../../../cbor/CborObj/CborBytes"
-import { Machine, PScriptContext, V2, bool, data, int, lam, list, makeRedeemerValidator, makeValidator, pInt, pfn, pif, pmakeUnit, precursive, unit } from "../../../../onchain"
-import { showIR } from "../../../../onchain/IR/utils/showIR"
-import { prettyUPLC } from "../../../../onchain/UPLC/UPLCTerm"
-import { compile } from "../../../../onchain/pluts/Script/compile"
-import { DataI, DataList } from "../../../../types/Data"
-import { DataConstr } from "../../../../types/Data/DataConstr"
-import { PaymentCredentials } from "../../../credentials/PaymentCredentials"
-import { PubKeyHash } from "../../../credentials/PubKeyHash"
-import { Address } from "../../../ledger/Address"
-import { Value } from "../../../ledger/Value/Value"
-import { defaultProtocolParameters } from "../../../ledger/protocol/ProtocolParameters"
-import { Script, ScriptType } from "../../../script/Script"
-import { Tx, getNSignersNeeded } from "../../Tx"
-import { UTxO } from "../../body/output/UTxO"
+import { defaultProtocolParameters, Address, PaymentCredentials, PubKeyHash, Script, ScriptType, UTxO, Value, getNSignersNeeded, Tx } from "@harmoniclabs/cardano-ledger-ts";
+import { Cbor, CborBytes } from "@harmoniclabs/cbor";
+import { DataConstr, DataList, DataI } from "@harmoniclabs/plutus-data";
+import { fromAscii } from "@harmoniclabs/uint8array-utils";
 import { TxBuilder } from "../TxBuilder"
 
+test.todo("depends on onchain");
+/*
 jest.setTimeout(2_000_000)
 
 const txBuilder = new TxBuilder(
@@ -410,3 +399,4 @@ describe("TxBuilder.build", () => {
 
     })
 })
+*/
