@@ -1,4 +1,4 @@
-import { Machine } from "../../../../CEK"
+import { Machine } from "@harmoniclabs/plutus-machine"
 import { pBool } from "../../std"
 
 describe("Machine.evalSimple( boolStatement )", () => {

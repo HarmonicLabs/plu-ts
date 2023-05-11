@@ -1,4 +1,3 @@
-import ObjectUtils from "../../../../../src/utils/ObjectUtils";
 import { PType } from "../PType";
 import type { PBool, PByteString, PInt, PList, PPair, PString, PStruct, PLam, PAlias } from "../PTypes";
 import { Term } from "../Term";
@@ -20,6 +19,7 @@ import {
     TermStr,        addPStringMethods,
     TermStruct,     addPStructMethods
 } from "./std/UtilityTerms";
+import ObjectUtils from "../../../utils/ObjectUtils";
 
 
 // given the index returns the previous number ( PrevNum[2] -> 1; etc... )

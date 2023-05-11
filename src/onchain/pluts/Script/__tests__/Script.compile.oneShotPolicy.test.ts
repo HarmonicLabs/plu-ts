@@ -1,5 +1,5 @@
 import { UtilityTermOf, bool, compile } from "../..";
-import { Machine } from "../../../CEK";
+import { Machine } from "@harmoniclabs/plutus-machine";
 import { PCurrencySymbol, PTxId, PTxOutRef, V2 } from "../../API";
 import { pstruct, pmatch } from "../../PTypes";
 import { pData, pDataB, pDataI, perror, pfn, pisEmpty, plet, punsafeConvertType } from "../../lib";

@@ -1,4 +1,4 @@
-import { Machine } from "../../../../../CEK";
+import { Machine } from "@harmoniclabs/plutus-machine";
 import { getHoistedTerms, getSortedHoistedSet } from "../../../../../IR/IRNodes/IRHoisted";
 import { compileIRToUPLC } from "../../../../../IR/toUPLC/compileIRToUPLC";
 import { UPLCEncoder } from "../../../../../UPLC/UPLCEncoder";

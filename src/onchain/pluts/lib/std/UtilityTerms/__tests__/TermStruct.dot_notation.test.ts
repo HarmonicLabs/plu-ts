@@ -1,5 +1,4 @@
-import { Machine } from "../../../../../CEK"
-import { prettyUPLC } from "../../../../../UPLC/UPLCTerm"
+import { Machine } from "@harmoniclabs/plutus-machine"
 import { pstruct } from "../../../../PTypes"
 import { bs, int } from "../../../../type_system"
 import { plet } from "../../../plet"

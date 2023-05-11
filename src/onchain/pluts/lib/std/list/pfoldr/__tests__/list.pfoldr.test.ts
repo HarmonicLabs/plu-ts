@@ -1,6 +1,6 @@
 import { toHex } from "@harmoniclabs/uint8array-utils"
 import { pfoldr } from ".."
-import { Machine } from "../../../../../../CEK"
+import { Machine } from "@harmoniclabs/plutus-machine"
 import { showIR } from "../../../../../../IR/utils/showIR"
 import { prettyUPLC, showUPLC } from "../../../../../../UPLC/UPLCTerm"
 import { compile } from "../../../../../Script"

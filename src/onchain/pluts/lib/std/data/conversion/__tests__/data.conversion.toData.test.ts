@@ -1,5 +1,5 @@
 import { DataB, DataI, DataList, DataPair } from "../../../../../../../types/Data";
-import { Machine } from "../../../../../../CEK";
+import { Machine } from "@harmoniclabs/plutus-machine";
 import { showUPLC } from "../../../../../../UPLC/UPLCTerm";
 import { ErrorUPLC } from "../../../../../../UPLC/UPLCTerms/ErrorUPLC";
 import { PAssetsEntryT, PCurrencySymbol, PScriptPurpose, PTokenName, PValue, PValueEntryT } from "../../../../../API";

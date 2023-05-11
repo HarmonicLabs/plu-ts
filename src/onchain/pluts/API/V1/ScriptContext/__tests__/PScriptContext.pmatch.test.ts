@@ -1,4 +1,4 @@
-import { Machine } from "../../../../../CEK";
+import { Machine } from "@harmoniclabs/plutus-machine";
 import { pmatch } from "../../../../PTypes/PStruct/pmatch";
 import { PValue } from "../../Value/PValue";
 import { UPLCConst } from "../../../../../UPLC/UPLCTerms/UPLCConst";
