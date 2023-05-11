@@ -6,7 +6,7 @@ import { BlueprintValidator } from "./types";
 export function toBlueprintValidator(
     litteralPurpose: LitteralPurpose,
     typedValidator: Term<PType>  
-): BlueprintValidator
+): any // BlueprintValidator
 {
 
 }
