@@ -1,8 +1,8 @@
 import { palias } from "../palias"
-import { Machine } from "../../../../CEK/Machine";
-import { UPLCConst } from "../../../../UPLC/UPLCTerms/UPLCConst";
 import { pInt } from "../../../lib/std/int/pInt";
 import { int } from "../../../type_system/types";
+import { Machine } from "@harmoniclabs/plutus-machine";
+import { UPLCConst } from "@harmoniclabs/uplc";
 
 
 describe("palias", () => {

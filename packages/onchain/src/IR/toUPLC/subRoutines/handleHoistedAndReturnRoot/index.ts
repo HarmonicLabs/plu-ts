@@ -8,8 +8,7 @@ import { IRLetted } from "../../../IRNodes/IRLetted";
 import { IRVar } from "../../../IRNodes/IRVar";
 import { IRTerm } from "../../../IRTerm";
 import { _modifyChildFromTo } from "../../_internal/_modifyChildFromTo";
-import { PlutsIRError } from "../../../../../errors/PlutsIRError";
-import { showIR, showIRText } from "../../../utils/showIR";
+import { showIR } from "../../../utils/showIR";
 import { markRecursiveHoistsAsForced } from "../markRecursiveHoistsAsForced";
 
 
@@ -88,7 +87,7 @@ export function handleHoistedAndReturnRoot( term: IRTerm ): IRTerm
         let levelOfTerm = toHoist.findIndex( sortedH => uint8ArrayEq( sortedH.hash, _hoistedHash ) );
         if( levelOfTerm < 0 )
         {
-            throw new PlutsIRError(
+            throw new Error(
                 `missing hoisted with hash ${toHex(_hoistedHash)} between toHoist [\n\t${
                     toHoist.map( h => toHex( h.hash ) )
                     .join(",\n\t")
@@ -130,7 +129,7 @@ export function handleHoistedAndReturnRoot( term: IRTerm ): IRTerm
             const irvar = getIRVarForHoistedAtLevel( irTermHash, dbn );
             if( irvar.dbn >= dbn )
             {
-                throw new PlutsIRError(
+                throw new Error(
                     `out of bound hoisted term; hash: ${toHex( irTerm.hash )}; var's DeBruijn: ${irvar.dbn} (starts from 0); tot hoisted in scope: ${dbn}`
                 )
             }
@@ -164,7 +163,7 @@ export function handleHoistedAndReturnRoot( term: IRTerm ): IRTerm
         {
             if( !isHoistedToinline )
             {
-                throw new PlutsIRError(
+                throw new Error(
                     "unexpected hoisted term found with hash: " + toHex( irTermHash ) +
                     "\n showIR of the term: " + JSON.stringify(
                         showIR( irTerm ),

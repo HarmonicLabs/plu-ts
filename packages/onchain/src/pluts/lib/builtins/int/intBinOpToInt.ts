@@ -1,5 +1,5 @@
 import { defineReadOnlyProperty } from "@harmoniclabs/obj-utils";
-import { IRTerm } from "../../../../IR";
+import { IRTerm } from "../../../../IR/IRTerm";
 import { PLam, PInt } from "../../../PTypes";
 import { Term } from "../../../Term";
 import { fn, int } from "../../../type_system";

@@ -1,7 +1,4 @@
 import { pstruct } from "../pstruct"
-import { ByteString } from "../../../../../types/HexString/ByteString";
-import { Machine } from "../../../../CEK/Machine";
-import { UPLCConst } from "../../../../UPLC/UPLCTerms/UPLCConst";
 import { Term } from "../../../Term";
 import { pmatch } from "../pmatch";
 import { PMaybe } from "../../../lib/std/PMaybe/PMaybe";
@@ -12,8 +9,10 @@ import { padd, pconsBs, pindexBs } from "../../../lib/builtins";
 import { perror } from "../../../lib/perror";
 import { TermType, bs, int, unit } from "../../../type_system/types";
 import { pDataB, pDataI, toData } from "../../../lib";
-import { showUPLC } from "../../../../UPLC/UPLCTerm";
 import { fromHex } from "@harmoniclabs/uint8array-utils";
+import { ByteString } from "@harmoniclabs/bytestring";
+import { Machine } from "@harmoniclabs/plutus-machine";
+import { UPLCConst } from "@harmoniclabs/uplc";
 
 const SingleCtor = pstruct({
     Ctor : {
@@ -173,11 +172,11 @@ describe("pmatch", () => {
                     padd.$( a ).$( b )
                 )
             ))
-            .onThreeNums( nums_ => nums_.extract("c","d","e").in( nums => 
+            .onThreeNums( nums =>
                 padd.$( nums.c ).$(
                     padd.$( nums.d ).$( nums.e )
                 )
-            ));
+            );
 
             const uplc = term.toUPLC();
 

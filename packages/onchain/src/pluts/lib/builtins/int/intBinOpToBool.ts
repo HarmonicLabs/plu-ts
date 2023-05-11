@@ -1,5 +1,4 @@
 import { defineReadOnlyProperty } from "@harmoniclabs/obj-utils";
-import { IRNative, IRHoisted, IRApp } from "../../../../IR";
 import { PLam, PInt, PBool } from "../../../PTypes";
 import { Term } from "../../../Term";
 import { fn, int, bool } from "../../../type_system";
@@ -8,6 +7,9 @@ import { PappArg } from "../../pappArg";
 import { TermBool, addPBoolMethods } from "../../std/UtilityTerms/TermBool";
 import { _pflipIR } from "../_pflipIR";
 import { addApplications } from "../addApplications";
+import { IRNative } from "../../../../IR/IRNodes/IRNative";
+import { IRApp } from "../../../../IR/IRNodes/IRApp";
+import { IRHoisted } from "../../../../IR/IRNodes/IRHoisted";
 
 export type IntBinOPToBool = Term<PLam<PInt, PLam<PInt, PInt>>>
 & {

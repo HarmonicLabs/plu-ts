@@ -1,4 +1,3 @@
-import { UPLCTerm, showUPLC } from "../../UPLC/UPLCTerm";
 import { IRTerm } from "../IRTerm";
 import { _modifyChildFromTo } from "./_internal/_modifyChildFromTo";
 import { _makeAllNegativeNativesHoisted } from "./_internal/_makeAllNegativeNativesHoisted";
@@ -9,8 +8,8 @@ import { IRLetted } from "../IRNodes/IRLetted";
 import { IRHoisted } from "../IRNodes/IRHoisted";
 import { replaceClosedLettedWithHoisted } from "./subRoutines/replaceClosedLettedWithHoisted";
 import { _irToUplc } from "./_internal/_irToUplc";
-import { includesLettedTerms } from "./_internal/includesLettedTerms";
 import { includesNode } from "./_internal/includesNode";
+import type { UPLCTerm } from "@harmoniclabs/uplc";
 
 export function compileIRToUPLC( term: IRTerm ): UPLCTerm
 {

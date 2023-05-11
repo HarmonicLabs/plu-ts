@@ -14,9 +14,10 @@ import { IRTerm } from "../../../../IRTerm";
 import { _ir_apps } from "../../../../tree_utils/_ir_apps";
 import { IRHoisted } from "../../../../IRNodes/IRHoisted";
 import { compileIRToUPLC } from "../../../compileIRToUPLC";
-import { showUPLC } from "../../../../../UPLC/UPLCTerm";
-import { DataI } from "../../../../../../types/Data";
-import { Machine, pInt } from "../../../../..";
+import { showUPLC } from "@harmoniclabs/uplc";
+import { DataI } from "@harmoniclabs/plutus-data";
+import { Machine } from "@harmoniclabs/plutus-machine";
+import { pInt } from "../../../../../pluts/lib/std/int/pInt";
 
 describe("handleLetted", () => {
 

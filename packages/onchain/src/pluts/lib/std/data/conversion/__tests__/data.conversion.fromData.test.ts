@@ -1,10 +1,11 @@
-import { Machine, pInt, pmap, punIData, punListData } from "../../../../../..";
-import { DataI, DataList } from "../../../../../../../types/Data"
-import { showIR } from "../../../../../../IR/utils/showIR";
-import { prettyUPLC } from "../../../../../../UPLC/UPLCTerm";
+import { DataI, DataList } from "@harmoniclabs/plutus-data";
 import { data, int, list } from "../../../../../type_system";
 import { pData, pDataI } from "../../pData";
 import { fromData } from "../fromData";
+import { punIData, punListData } from "../../../../builtins/data";
+import { Machine } from "@harmoniclabs/plutus-machine";
+import { pInt } from "../../../int";
+import { pmap } from "../../../list";
 
 
 const d = new DataList([

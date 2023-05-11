@@ -1,6 +1,5 @@
+import { Machine } from "@harmoniclabs/plutus-machine";
 import { pstruct } from "..";
-import { Machine } from "../../../../CEK/Machine";
-import { prettyIR, prettyIRJsonStr, showIR } from "../../../../IR/utils/showIR";
 import { pDataI, pInt, phead, phoist, plam, pmakeUnit, toData } from "../../../lib"
 import { data, list, unit, int } from "../../../type_system";
 import { getElemAtTerm, pmatch } from "../pmatch"

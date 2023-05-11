@@ -1,5 +1,5 @@
 import { ByteString } from "@harmoniclabs/bytestring";
-import { IRConst } from "../../../../IR";
+import { IRConst } from "../../../../IR/IRNodes/IRConst";
 import { Term } from "../../../Term";
 import { bs } from "../../../type_system/types";
 import { TermBS, addPByteStringMethods } from "../UtilityTerms/TermBS";

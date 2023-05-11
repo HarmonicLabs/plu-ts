@@ -8,7 +8,7 @@ import { IRHoisted } from "../IRNodes/IRHoisted";
 import { IRLetted } from "../IRNodes/IRLetted";
 import { IRNative } from "../IRNodes/IRNative";
 import { IRVar } from "../IRNodes/IRVar";
-import { IRTerm } from "../IRTerm";
+import type { IRTerm } from "../IRTerm";
 
 export function isIRTerm<T>( stuff: T ): stuff is (T extends IRTerm ? T : T & IRTerm)
 {

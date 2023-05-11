@@ -1,9 +1,8 @@
-import { Machine, pDataI, pInt } from "../../../..";
-import { compileIRToUPLC } from "../../../../IR/toUPLC/compileIRToUPLC";
-import { showIR } from "../../../../IR/utils/showIR";
-import { prettyUPLC } from "../../../../UPLC/UPLCTerm";
+import { Machine } from "@harmoniclabs/plutus-machine";
 import { int } from "../../../type_system";
 import { pstruct } from "../pstruct";
+import { pInt } from "../../../lib/std/int/pInt";
+import { pDataI } from "../../../lib/std/data/pData";
 
 
 const Child = pstruct({

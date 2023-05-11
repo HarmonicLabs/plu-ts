@@ -1,8 +1,4 @@
-import { Application } from "../../../../UPLC/UPLCTerms/Application";
-import { Builtin } from "../../../../UPLC/UPLCTerms/Builtin";
-import { Delay } from "../../../../UPLC/UPLCTerms/Delay";
-import { Force } from "../../../../UPLC/UPLCTerms/Force";
-import { UPLCConst } from "../../../../UPLC/UPLCTerms/UPLCConst";
+import { Force, Application, Builtin, UPLCConst, Delay } from "@harmoniclabs/uplc";
 import { int } from "../../../type_system/types";
 import { pif, pstrictIf } from "../../builtins";
 import { pBool } from "../bool/pBool";

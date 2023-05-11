@@ -1,6 +1,5 @@
 import { Cloneable } from "@harmoniclabs/cbor/dist/utils/Cloneable";
 import { blake2b_128 } from "@harmoniclabs/crypto";
-import ObjectUtils from "../../../.././utils/ObjectUtils";
 import { BasePlutsError } from "../../utils/BasePlutsError";
 import { ToJson } from "../../utils/ToJson";
 import { IRTerm } from "../IRTerm";
@@ -9,6 +8,7 @@ import { IIRParent } from "../interfaces/IIRParent";
 import { concatUint8Arr } from "../utils/concatUint8Arr";
 import { isIRTerm } from "../utils/isIRTerm";
 import { positiveIntAsBytes } from "../utils/positiveIntAsBytes";
+import { defineReadOnlyProperty } from "@harmoniclabs/obj-utils";
 
 
 export class IRFunc

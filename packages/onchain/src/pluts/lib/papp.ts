@@ -1,5 +1,4 @@
 import { hasOwn, defineNonDeletableNormalProperty } from "@harmoniclabs/obj-utils";
-import { IRApp, IRError, IRFunc, IRHoisted, IRNative, IRTerm, IRVar, isIRTerm } from "../../IR";
 import { IRNativeTag } from "../../IR/IRNodes/IRNative/IRNativeTag";
 import { assert } from "../../utils/assert";
 import { PType } from "../PType";
@@ -13,6 +12,14 @@ import { type UtilityTermOf, addUtilityForType } from "./addUtilityForType";
 import { PappArg, pappArgToTerm } from "./pappArg";
 import { _fromData } from "./std/data/conversion/fromData_minimal";
 import { _papp } from "./std/data/conversion/minimal_common";
+import { IRVar } from "../../IR/IRNodes/IRVar";
+import { IRFunc } from "../../IR/IRNodes/IRFunc";
+import { IRNative } from "../../IR/IRNodes/IRNative";
+import { IRHoisted } from "../../IR/IRNodes/IRHoisted";
+import { IRTerm } from "../../IR/IRTerm";
+import { IRApp } from "../../IR/IRNodes/IRApp";
+import { IRError } from "../../IR/IRNodes/IRError";
+import { isIRTerm } from "../../IR/utils/isIRTerm";
 
 
 function isIdentityIR( ir: IRTerm ): boolean

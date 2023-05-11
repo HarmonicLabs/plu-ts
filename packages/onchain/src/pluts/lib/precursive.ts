@@ -1,4 +1,5 @@
-import { IRApp, IRNative } from "../../IR";
+import { IRApp } from "../../IR/IRNodes/IRApp";
+import { IRNative } from "../../IR/IRNodes/IRNative";
 import { assert } from "../../utils/assert";
 import { PType } from "../PType";
 import { PLam, TermFn } from "../PTypes";

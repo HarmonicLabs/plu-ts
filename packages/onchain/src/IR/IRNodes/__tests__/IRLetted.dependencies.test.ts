@@ -1,4 +1,3 @@
-import { toHex } from "@harmoniclabs/uint8array-utils";
 import { int } from "../../../pluts";
 import { IRApp } from "../IRApp";
 import { IRConst } from "../IRConst";

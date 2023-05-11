@@ -1,13 +1,9 @@
-import { list, pstruct, struct, unit } from "../.."
-import { Machine } from "../../.."
-import { compileIRToUPLC } from "../../../IR/toUPLC/compileIRToUPLC"
-import { prettyIRJsonStr, showIR } from "../../../IR/utils/showIR"
-import { prettyUPLC } from "../../../UPLC/UPLCTerm"
-import { PScriptContext } from "../../API"
-import { pBool, pfn } from "../../lib"
-import { bool, bs, data, int } from "../../type_system"
+import { Machine } from "@harmoniclabs/plutus-machine";
+import { pstruct, pfn } from "../../../pluts";
+import { pBool } from "../../lib";
+import { bool, data, int, list, struct } from "../../type_system"
 import { compile } from "../compile"
-import { makeRedeemerValidator } from "../makeScript"
+import { compileIRToUPLC } from "../../../IR/toUPLC/compileIRToUPLC";
 
 describe("compile", () => {
 

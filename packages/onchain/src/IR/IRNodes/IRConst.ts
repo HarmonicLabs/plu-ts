@@ -5,7 +5,6 @@ import { Pair } from "@harmoniclabs/pair";
 import { Data, isData, dataToCbor } from "@harmoniclabs/plutus-data";
 import { fromUtf8, toHex } from "@harmoniclabs/uint8array-utils";
 import { isConstValueInt } from "@harmoniclabs/uplc";
-import { TermType, isWellFormedType, typeExtends, lam, tyVar, delayed, termTypeToString, unit, bool, bs, int, str, data, list, pair, GenericTermType, PrimType } from "../../pluts";
 import { cloneTermType } from "../../pluts/type_system/cloneTermType";
 import { termTyToConstTy } from "../../pluts/type_system/termTyToConstTy";
 import { BasePlutsError } from "../../utils/BasePlutsError";
@@ -18,6 +17,10 @@ import { concatUint8Arr } from "../utils/concatUint8Arr";
 import { isIRTerm } from "../utils/isIRTerm";
 import { positiveBigIntAsBytes } from "../utils/positiveIntAsBytes";
 import { defineReadOnlyProperty } from "@harmoniclabs/obj-utils";
+import { isWellFormedType } from "../../pluts/type_system/kinds/isWellFormedType";
+import { typeExtends } from "../../pluts/type_system/typeExtends";
+import { GenericTermType, PrimType, TermType, bool, bs, data, delayed, int, lam, list, pair, str, tyVar, unit } from "../../pluts/type_system/types";
+import { termTypeToString } from "../../pluts/type_system/utils";
 
 export type IRConstValue
     = CanBeUInteger

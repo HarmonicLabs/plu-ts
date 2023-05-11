@@ -14,13 +14,18 @@ import { PData, PInt, PList, PPair } from "../../../PTypes";
 import { _plet } from "../../plet/minimal";
 import { _fromData } from "../data/conversion/fromData_minimal";
 import { plet } from "../../plet";
-import { IRApp, IRFunc, IRHoisted, IRLetted, IRNative, IRVar } from "../../../../IR";
 import { UtilityTermOf } from "../../addUtilityForType";
 import { punsafeConvertType } from "../../punsafeConvertType";
 import { TermInt, addPIntMethods } from "./TermInt";
 import { TermList, addPListMethods } from "./TermList";
 import { hasOwn, defineReadOnlyProperty, definePropertyIfNotPresent } from "@harmoniclabs/obj-utils";
 import type { IsSingleKey } from "../../../../utils/IsSingleKey";
+import { IRHoisted } from "../../../../IR/IRNodes/IRHoisted";
+import { IRFunc } from "../../../../IR/IRNodes/IRFunc";
+import { IRApp } from "../../../../IR/IRNodes/IRApp";
+import { IRNative } from "../../../../IR/IRNodes/IRNative";
+import { IRVar } from "../../../../IR/IRNodes/IRVar";
+import { IRLetted } from "../../../../IR/IRNodes/IRLetted";
 
 export type RawStruct = {
     readonly index: TermInt,

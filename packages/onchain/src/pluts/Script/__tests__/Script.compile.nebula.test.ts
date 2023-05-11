@@ -1,5 +1,5 @@
 import { fromUtf8 } from "@harmoniclabs/uint8array-utils";
-import { Script, ScriptType } from "../../../../offchain";
+import { Script, ScriptType } from "@harmoniclabs/cardano-ledger-ts";
 import { pByteString } from "../../lib/std/bs/pByteString";
 import { pfn } from "../../lib/pfn";
 import { PAssetsEntryT, PValue, PValueEntryT } from "../../API/V1/Value/PValue";
@@ -891,7 +891,7 @@ test("compiles", () => {
     const compiledContract = compile( lowLevel_contract );
 
     const script = new Script(
-        ScriptType.PlutusV2,
+        "PlutusScriptV2",
         compiledContract
     );
 

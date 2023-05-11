@@ -1,4 +1,3 @@
-import { ByteString } from "../../../../types/HexString/ByteString";
 import { PPubKeyHash } from "../../API/V1/PubKey/PPubKeyHash";
 import { PScriptContext } from "../../API/V2/ScriptContext/PScriptContext";
 import { PCurrencySymbol } from "../../API/V1/Value/PCurrencySymbol";
@@ -8,7 +7,7 @@ import { pmatch } from "../../PTypes/PStruct/pmatch";
 import { pfn } from "../../lib/pfn";
 import { pisEmpty } from "../../lib/builtins/list";
 import { pByteString } from "../../lib/std/bs/pByteString";
-import { pintToBS } from "../../lib/std/int/pintToBS";
+import { pdigitToBS } from "../../lib/std/int/pintToBS";
 import { punIData } from "../../lib/builtins/data";
 import { perror } from "../../lib/perror";
 import { pdelay } from "../../lib/pdelay";
@@ -17,6 +16,7 @@ import { Term } from "../../Term";
 import { PBool } from "../../PTypes/PBool";
 import { plet } from "../../lib/plet";
 import { _old_plet } from "../../lib/plet/old";
+import { ByteString } from "@harmoniclabs/bytestring";
 
 describe("NFTVendingMachine", () => {
 
@@ -84,7 +84,7 @@ describe("NFTVendingMachine", () => {
                                                                         "Collection#"
                                                                     )
                                                                 ).concat(
-                                                                    pintToBS.$( punIData.$( nftCounter ) )
+                                                                    pdigitToBS.$( punIData.$( nftCounter ) )
                                                                 )
                                                             )
                                                         )

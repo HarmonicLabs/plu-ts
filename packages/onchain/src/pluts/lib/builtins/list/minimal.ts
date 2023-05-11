@@ -1,4 +1,4 @@
-import { IRNative } from "../../../../IR";
+import { IRNative } from "../../../../IR/IRNodes/IRNative";
 import { TermFn, PList } from "../../../PTypes";
 import { Term } from "../../../Term";
 import { TermType, ToPType, fn, lam, list } from "../../../type_system";

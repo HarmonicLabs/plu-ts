@@ -1,4 +1,7 @@
-import { IRApp, IRHoisted, IRFunc, IRVar } from "../../../../../IR";
+import { IRApp } from "../../../../../IR/IRNodes/IRApp";
+import { IRFunc } from "../../../../../IR/IRNodes/IRFunc";
+import { IRHoisted } from "../../../../../IR/IRNodes/IRHoisted";
+import { IRVar } from "../../../../../IR/IRNodes/IRVar";
 import { PType } from "../../../../PType"
 import { PLam } from "../../../../PTypes"
 import { Term } from "../../../../Term"

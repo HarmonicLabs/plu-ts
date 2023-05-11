@@ -1,4 +1,5 @@
-import { IRDelayed, IRForced } from "../../../IR";
+import { IRDelayed } from "../../../IR/IRNodes/IRDelayed";
+import { IRForced } from "../../../IR/IRNodes/IRForced";
 import { PType } from "../../PType";
 import { PDelayed } from "../../PTypes";
 import { Term } from "../../Term";

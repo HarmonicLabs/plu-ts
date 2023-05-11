@@ -1,4 +1,3 @@
-import { toHex } from "@harmoniclabs/uint8array-utils";
 import { IRApp } from "../../IRNodes/IRApp";
 import { IRDelayed } from "../../IRNodes/IRDelayed";
 import { IRForced } from "../../IRNodes/IRForced";

@@ -1,4 +1,4 @@
-import { builtinTagToString } from "../../../UPLC/UPLCTerms/Builtin/UPLCBuiltinTag";
+import { builtinTagToString } from "@harmoniclabs/uplc";
 
 /**
  * we use positive for natives which map to `UPLCBuiltin`

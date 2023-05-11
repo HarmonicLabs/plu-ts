@@ -16,7 +16,7 @@ import { _papp, _pcompose } from "./minimal_common";
 import { getElemsT, getFstT, getSndT } from "../../../../type_system/tyArgs";
 import { pfstPair, psndPair } from "../../../builtins";
 import { _punsafeConvertType } from "../../../punsafeConvertType/minimal";
-import { IRNative } from "../../../../../IR";
+import { IRNative } from "../../../../../IR/IRNodes/IRNative";
 import { PType } from "../../../../PType";
 import { DataConstr } from "@harmoniclabs/plutus-data";
 

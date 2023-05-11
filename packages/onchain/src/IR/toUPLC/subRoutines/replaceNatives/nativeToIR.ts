@@ -1,5 +1,4 @@
-import { PlutsIRError } from "../../../../../errors/PlutsIRError";
-import { DataConstr } from "../../../../../types/Data";
+import { DataConstr } from "@harmoniclabs/plutus-data";
 import { bool, data, int, unit } from "../../../../pluts/type_system/types";
 import { IRApp } from "../../../IRNodes/IRApp";
 import { IRConst } from "../../../IRNodes/IRConst";
@@ -627,6 +626,6 @@ export function nativeToIR( native: IRNative ): IRTerm
             return hoisted_lazyIfThenElse.clone()
         break;
 
-        default: throw new PlutsIRError("unknown (negative) native calling 'nativeToIR'")
+        default: throw new Error("unknown (negative) native calling 'nativeToIR'")
     }
 }

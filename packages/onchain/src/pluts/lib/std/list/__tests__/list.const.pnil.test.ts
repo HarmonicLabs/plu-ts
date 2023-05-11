@@ -1,7 +1,4 @@
-import { showUPLC } from "../../../../../UPLC/UPLCTerm"
-import { Application } from "../../../../../UPLC/UPLCTerms/Application"
-import { Builtin } from "../../../../../UPLC/UPLCTerms/Builtin"
-import { UPLCConst } from "../../../../../UPLC/UPLCTerms/UPLCConst"
+import { Application, Builtin, UPLCConst, showUPLC } from "@harmoniclabs/uplc";
 import { bs, data, int, pair } from "../../../../type_system"
 import { pnil } from "../const"
 

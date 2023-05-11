@@ -19,8 +19,16 @@ import { _old_plet } from "../../../lib/plet/old";
 import { _plet } from "../../../lib/plet/minimal";
 import { defineReadOnlyProperty } from "@harmoniclabs/obj-utils";
 import { DataI } from "@harmoniclabs/plutus-data";
-import { IRTerm, IRVar, IRApp, IRNative, IRHoisted, IRFunc, IRError, IRForced, IRConst, IRDelayed } from "../../../../IR";
-
+import { IRTerm } from "../../../../IR/IRTerm";
+import { IRVar } from "../../../../IR/IRNodes/IRVar";
+import { IRNative } from "../../../../IR/IRNodes/IRNative";
+import { IRApp } from "../../../../IR/IRNodes/IRApp";
+import { IRHoisted } from "../../../../IR/IRNodes/IRHoisted";
+import { IRFunc } from "../../../../IR/IRNodes/IRFunc";
+import { IRConst } from "../../../../IR/IRNodes/IRConst";
+import { IRForced } from "../../../../IR/IRNodes/IRForced";
+import { IRError } from "../../../../IR/IRNodes/IRError";
+import { IRDelayed } from "../../../../IR/IRNodes/IRDelayed";
 
 const elemAtCache: { [n: number]: TermFn<[ PList<PData> ], PData > } = {};
 

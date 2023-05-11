@@ -1,17 +1,20 @@
 import { int } from "../../../../type_system";
 import { pstruct } from "../../pstruct";
-import { Machine, Term, pDataI, pInt, padd, pfn, plet, pmatch } from "../../../../..";
 import { compileIRToUPLC } from "../../../../../IR/toUPLC/compileIRToUPLC";
-import { prettyUPLC, showUPLC } from "../../../../../UPLC/UPLCTerm";
-import { prettyIRJsonStr } from "../../../../../IR/utils/showIR";
-import { IRTerm } from "../../../../../IR/IRTerm";
 import { IRFunc } from "../../../../../IR/IRNodes/IRFunc";
-import { IRApp } from "../../../../../IR/IRNodes/IRApp";
 import { IRLetted } from "../../../../../IR/IRNodes/IRLetted";
 import { IRVar } from "../../../../../IR/IRNodes/IRVar";
 import { _ir_apps } from "../../../../../IR/tree_utils/_ir_apps";
 import { IRNative } from "../../../../../IR/IRNodes/IRNative";
 import { IRConst } from "../../../../../IR/IRNodes/IRConst";
+import { pDataI } from "../../../../lib/std/data/pData";
+import { padd } from "../../../../lib/builtins/int/padd";
+import { Machine } from "@harmoniclabs/plutus-machine";
+import { showUPLC } from "@harmoniclabs/uplc";
+import { pInt } from "../../../../lib/std/int/pInt";
+import { plet } from "../../../../lib/plet";
+import { pfn } from "../../../../lib/pfn";
+import { pmatch } from "../../pmatch";
 
 
 const Nums = pstruct({

@@ -1,9 +1,5 @@
-import { DataConstr } from "../../../../../types/Data/DataConstr";
-import { Application } from "../../../../UPLC/UPLCTerms/Application";
-import { Builtin } from "../../../../UPLC/UPLCTerms/Builtin";
-import { Delay } from "../../../../UPLC/UPLCTerms/Delay";
-import { Force } from "../../../../UPLC/UPLCTerms/Force";
-import { UPLCConst } from "../../../../UPLC/UPLCTerms/UPLCConst";
+import { DataConstr } from "@harmoniclabs/plutus-data";
+import { Force, Application, Builtin, UPLCConst, Delay } from "@harmoniclabs/uplc";
 import { int } from "../../../type_system/types";
 import { pchooseData } from "../../builtins";
 import { pData } from "../data/pData";

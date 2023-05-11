@@ -1,13 +1,8 @@
-import { showUPLC } from "../../../UPLC/UPLCTerm"
 import { compile, scriptToJsonFormat } from "../compile"
-import { ByteString } from "../../../../types/HexString/ByteString"
 import { PScriptContext } from "../../API/V1/ScriptContext/PScriptContext"
 import { pmatch } from "../../PTypes/PStruct/pmatch"
 import { PTxInInfo } from "../../API/V1/Tx/PTxInInfo"
 import { makeValidator } from "../makeScript"
-import { evalScript } from "../../../CEK"
-import { UPLCConst } from "../../../UPLC/UPLCTerms/UPLCConst"
-import { DataConstr } from "../../../../types/Data/DataConstr"
 import { PTxInfo } from "../../API/V1/ScriptContext/PTxInfo/PTxInfo"
 import { PScriptPurpose } from "../../API/V1/ScriptContext/PScriptPurpose"
 import { PTxOutRef } from "../../API/V1/Tx/PTxOutRef"
@@ -27,6 +22,10 @@ import { PValidatorHash } from "../../API/V1/ScriptsHashes/PValidatorHash"
 import { pfn, pif, punBData, perror, plet, pevery, plam, pfilter, peqBs, PMaybe, papp, pBSToData, pBool, pByteString, pInt, pList, pmakeUnit, fromData, toData } from "../../lib"
 import { bool, bs, data, fn, int, pair, unit } from "../../type_system"
 import { Term, PPOSIXTimeRange, PValueEntryT } from "../.."
+import { ByteString } from "@harmoniclabs/bytestring"
+import { DataConstr } from "@harmoniclabs/plutus-data"
+import { evalScript } from "@harmoniclabs/plutus-machine"
+import { showUPLC, UPLCConst } from "@harmoniclabs/uplc"
 
 
 describe.skip("scriptToJsonFormat", () => {
@@ -63,7 +62,7 @@ describe.skip("scriptToJsonFormat", () => {
             JSON.stringify(
                 scriptToJsonFormat(
                     compile( contract ),
-                    PlutusScriptVersion.V1
+                    "PlutusScriptV1"
                 )
             )
         );

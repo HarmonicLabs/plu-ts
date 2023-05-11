@@ -1,12 +1,8 @@
-import { Machine } from "../../../../../CEK";
+import { Machine } from "@harmoniclabs/plutus-machine";
+import { UPLCConst, UPLCTerm, ErrorUPLC } from "@harmoniclabs/uplc";
+import { pmatch } from "../../../..";
 import { getHoistedTerms, getSortedHoistedSet } from "../../../../../IR/IRNodes/IRHoisted";
 import { compileIRToUPLC } from "../../../../../IR/toUPLC/compileIRToUPLC";
-import { UPLCEncoder } from "../../../../../UPLC/UPLCEncoder";
-import { UPLCProgram } from "../../../../../UPLC/UPLCProgram";
-import { UPLCTerm, showUPLC } from "../../../../../UPLC/UPLCTerm";
-import { ErrorUPLC } from "../../../../../UPLC/UPLCTerms/ErrorUPLC";
-import { UPLCConst } from "../../../../../UPLC/UPLCTerms/UPLCConst";
-import { pmatch } from "../../../../PTypes/PStruct/pmatch";
 import { PMaybe, fromData, pBool, pByteString, pInt, pPair, pdelay, pfn, phoist, pif, plam, precursiveList, ptoData, toData } from "../../../../lib";
 import { pList } from "../../../../lib/std/list/const";
 import { termTypeToString } from "../../../../type_system";

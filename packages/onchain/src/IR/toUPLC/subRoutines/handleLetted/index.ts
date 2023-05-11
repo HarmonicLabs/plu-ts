@@ -6,19 +6,15 @@ import { IRVar } from "../../../IRNodes/IRVar";
 import { IRTerm } from "../../../IRTerm";
 import { _addDepths } from "../../_internal/_addDepth";
 import { _modifyChildFromTo } from "../../_internal/_modifyChildFromTo";
-import { findAll, findAllNoHoisted } from "../../_internal/findAll";
+import { findAllNoHoisted } from "../../_internal/findAll";
 import { getDebruijnInTerm } from "../../_internal/getDebruijnInTerm";
 import { groupByScope } from "./groupByScope";
-import { IRCompilationError } from "../../../../../errors/PlutsIRError/IRCompilationError";
-import { prettyIR, prettyIRJsonStr, prettyIRText, showIR, showIRText } from "../../../utils/showIR";
+import { showIR } from "../../../utils/showIR";
 import { IRDelayed } from "../../../IRNodes/IRDelayed";
 import { IRForced } from "../../../IRNodes/IRForced";
 import { lowestCommonAncestor } from "../../_internal/lowestCommonAncestor";
-import { PlutsIRError } from "../../../../../errors/PlutsIRError";
 import { isIRTerm } from "../../../utils/isIRTerm";
 import { markRecursiveHoistsAsForced } from "../markRecursiveHoistsAsForced";
-import { includesNode } from "../../_internal/includesNode";
-import { getDiffDbn } from "../../_internal/getDiffDbn";
 
 export function handleLetted( term: IRTerm ): void
 {
@@ -39,7 +35,7 @@ export function handleLetted( term: IRTerm ): void
     {
         if( maxScope === undefined )
         {
-            throw new IRCompilationError(
+            throw new Error(
                 "found 'IRLetted' with closed value not replaced by an 'IRHoisted'\n\nclosed letted terms:\n\n" +
                 JSON.stringify(
                     group.map(
@@ -242,7 +238,7 @@ export function handleLetted( term: IRTerm ): void
                 {
                     // default to maxScope
                     lca = maxScope;
-                    throw new PlutsIRError(
+                    throw new Error(
                         "letting nodes with hash " + toHex( letted.hash ) + " from different trees"
                     );
                 }
@@ -257,7 +253,7 @@ export function handleLetted( term: IRTerm ): void
                         lca = lca?.parent ?? undefined;
                         if( !isIRTerm( lca ) )
                         {
-                            throw new PlutsIRError(
+                            throw new Error(
                                 "lowest common ancestor outside the max scope"
                             );
                         }
@@ -346,7 +342,7 @@ export function handleLetted( term: IRTerm ): void
             /*
             if( diffDbn === undefined )
             {
-                throw new PlutsIRError(
+                throw new Error(
                     "letted term was not part of the selected maxScope"
                 );
             }

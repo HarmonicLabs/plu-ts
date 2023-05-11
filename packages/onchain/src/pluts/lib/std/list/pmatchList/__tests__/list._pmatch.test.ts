@@ -1,5 +1,5 @@
+import { Machine } from "@harmoniclabs/plutus-machine"
 import { pfn } from "../../../.."
-import { Machine } from "../../../../../../CEK"
 import { int, list } from "../../../../../type_system"
 import { pdelay } from "../../../../pdelay"
 import { pInt } from "../../../int"

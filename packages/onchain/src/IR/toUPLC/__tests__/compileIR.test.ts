@@ -1,12 +1,7 @@
-import { showUPLC } from "../../../UPLC/UPLCTerm";
-import { Application } from "../../../UPLC/UPLCTerms/Application";
-import { Lambda } from "../../../UPLC/UPLCTerms/Lambda";
-import { UPLCVar } from "../../../UPLC/UPLCTerms/UPLCVar";
+import { UPLCVar, Lambda } from "@harmoniclabs/uplc";
 import { IRFunc } from "../../IRNodes/IRFunc";
-import { IRNative } from "../../IRNodes/IRNative";
 import { IRVar } from "../../IRNodes/IRVar";
 import { _irToUplc } from "../_internal/_irToUplc";
-import { compileIRToUPLC } from "../compileIRToUPLC";
 
 
 describe("compileIRToUPLC", () => {

@@ -1,10 +1,3 @@
-import { evalScript } from "../../../CEK"
-import { Application } from "../../../UPLC/UPLCTerms/Application"
-import { ErrorUPLC } from "../../../UPLC/UPLCTerms/ErrorUPLC"
-import { HoistedUPLC } from "../../../UPLC/UPLCTerms/HoistedUPLC"
-import { Lambda } from "../../../UPLC/UPLCTerms/Lambda"
-import { UPLCConst } from "../../../UPLC/UPLCTerms/UPLCConst"
-import { UPLCVar } from "../../../UPLC/UPLCTerms/UPLCVar"
 import { PType } from "../../PType"
 import { PLam } from "../../PTypes/PFn/PLam"
 import { Term } from "../../Term"
@@ -18,6 +11,8 @@ import { IRHoisted } from "../../../IR/IRNodes/IRHoisted"
 import { IRFunc } from "../../../IR/IRNodes/IRFunc"
 import { IRApp } from "../../../IR/IRNodes/IRApp"
 import { IRVar } from "../../../IR/IRNodes/IRVar"
+import { evalScript } from "@harmoniclabs/plutus-machine"
+import { ErrorUPLC, UPLCConst } from "@harmoniclabs/uplc"
 
 
 describe("precursive", () => {

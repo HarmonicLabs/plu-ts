@@ -1,11 +1,9 @@
 import { pstruct } from "../pstruct"
-import { DataConstr } from "../../../../../types/Data/DataConstr";
-import { DataI } from "../../../../../types/Data/DataI";
-import { Machine } from "../../../../CEK/Machine";
-import { UPLCConst } from "../../../../UPLC/UPLCTerms/UPLCConst";
-import { pInt } from "../../../lib/std/int/pInt";
 import { TermType, int, str } from "../../../type_system";
 import { pDataI } from "../../../lib";
+import { DataConstr, DataI } from "@harmoniclabs/plutus-data";
+import { Machine } from "@harmoniclabs/plutus-machine";
+import { UPLCConst } from "@harmoniclabs/uplc";
 
 
 const PMaybe = <T extends TermType>( tyArg: T ) => {

@@ -1,6 +1,4 @@
 import { toHex, uint8ArrayEq } from "@harmoniclabs/uint8array-utils";
-import { BasePlutsError } from "../../../../errors/BasePlutsError";
-import { PlutsIRError } from "../../../../errors/PlutsIRError";
 import { IRApp } from "../../IRNodes/IRApp";
 import { IRDelayed } from "../../IRNodes/IRDelayed";
 import { IRForced } from "../../IRNodes/IRForced";
@@ -8,8 +6,6 @@ import { IRFunc } from "../../IRNodes/IRFunc";
 import { IRHoisted } from "../../IRNodes/IRHoisted";
 import { IRLetted } from "../../IRNodes/IRLetted";
 import { IRTerm } from "../../IRTerm";
-import { logJson } from "../../../../utils/ts/ToJson";
-
 
 /**
  * 
@@ -21,14 +17,14 @@ export function _modifyChildFromTo( parent: IRTerm | undefined, currentChild: IR
 {
     if( parent === undefined )
     {
-        throw new PlutsIRError(
+        throw new Error(
             "'_modifyChildFromTo' received an undefined parent"
         );
     }
     if( parent instanceof IRApp )
     {
         if( parent.fn === parent.arg )
-        throw new BasePlutsError(
+        throw new Error(
             "while calling '_modifyChildFromTo' on a 'IRApp' node; teh two childrens where the same"
         );
 
@@ -55,7 +51,7 @@ export function _modifyChildFromTo( parent: IRTerm | undefined, currentChild: IR
             {
                 // logJson( currentChild as any )
                 // logJson( parent.fn )
-                throw new PlutsIRError(
+                throw new Error(
                     "unknown 'IRApp' child to modify; given child to modify hash: " +
                     toHex( currChildHash ) +
                     "; function child hash: " + toHex( parent.fn.hash ) +
@@ -75,7 +71,7 @@ export function _modifyChildFromTo( parent: IRTerm | undefined, currentChild: IR
             }
             else
             {
-                throw new PlutsIRError(
+                throw new Error(
                     "unknown 'IRApp' child to modify; given child to modify hash: " +
                     toHex( currChildHash ) +
                     "; function child hash: " + toHex( parent.fn.hash ) +

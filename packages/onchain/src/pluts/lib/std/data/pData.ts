@@ -3,7 +3,7 @@ import { PAsData, PByteString, PData, PInt } from "../../../PTypes";
 import { asData, bs, data, int } from "../../../type_system/types";
 import { Data, DataB, DataI } from "@harmoniclabs/plutus-data";
 import { ByteString } from "@harmoniclabs/bytestring";
-import { IRConst } from "../../../../IR";
+import { IRConst } from "../../../../IR/IRNodes/IRConst";
 
 export function pData( dataElem: Data )
 : Term<PData>

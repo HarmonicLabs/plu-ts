@@ -1,10 +1,10 @@
-import { ByteString } from "../../../../../types/HexString/ByteString";
-import { Machine } from "../../../../CEK/Machine";
+import { ByteString } from "@harmoniclabs/bytestring";
 import { bs, int } from "../../../type_system";
 import { pconsBs } from "../../builtins";
 import { pByteString } from "../bs/pByteString";
 import { pflip } from "../combinators";
 import { pInt } from "../int/pInt";
+import { Machine } from "@harmoniclabs/plutus-machine";
 
 
 describe("pflip", () => {

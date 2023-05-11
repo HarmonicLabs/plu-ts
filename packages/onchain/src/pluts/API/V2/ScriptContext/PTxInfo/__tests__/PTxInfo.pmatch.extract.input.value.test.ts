@@ -1,9 +1,6 @@
-import { Machine } from "../../../../../../CEK";
+import { Machine } from "@harmoniclabs/plutus-machine";
 import { PValue } from "../../../../V1/Value/PValue";
 import { pBool, punMapData, toData } from "../../../../../lib";
-import { beef32, tx_v2 } from "../../../../../../test_utils";
-import { showUPLC } from "../../../../../../UPLC/UPLCTerm";
-
 
 describe("input value extraction", () => {
 

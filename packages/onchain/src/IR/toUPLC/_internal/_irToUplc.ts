@@ -1,11 +1,4 @@
 import { toHex } from "@harmoniclabs/uint8array-utils";
-import { IllegalIRToUPLC } from "../../../../errors/PlutsIRError/IRCompilationError/IllegalIRToUPLC";
-import { UPLCTerm } from "../../../UPLC/UPLCTerm";
-import { Application } from "../../../UPLC/UPLCTerms/Application";
-import { Builtin } from "../../../UPLC/UPLCTerms/Builtin";
-import { Lambda } from "../../../UPLC/UPLCTerms/Lambda";
-import { UPLCConst } from "../../../UPLC/UPLCTerms/UPLCConst";
-import { UPLCVar } from "../../../UPLC/UPLCTerms/UPLCVar";
 import { termTyToConstTy } from "../../../pluts/type_system/termTyToConstTy";
 import { IRApp } from "../../IRNodes/IRApp";
 import { IRConst } from "../../IRNodes/IRConst";
@@ -18,12 +11,9 @@ import { IRVar } from "../../IRNodes/IRVar";
 import { IRTerm } from "../../IRTerm";
 import { showIR } from "../../utils/showIR";
 import { IRError } from "../../IRNodes/IRError";
-import { ErrorUPLC } from "../../../UPLC/UPLCTerms/ErrorUPLC";
 import { IRForced } from "../../IRNodes/IRForced";
-import { Force } from "../../../UPLC/UPLCTerms/Force";
 import { IRDelayed } from "../../IRNodes/IRDelayed";
-import { Delay } from "../../../UPLC/UPLCTerms/Delay";
-import { PlutsIRError } from "../../../../errors/PlutsIRError";
+import { UPLCTerm, UPLCVar, Lambda, Application, UPLCConst, Builtin, ErrorUPLC, Force, Delay } from "@harmoniclabs/uplc";
 
 
 export function _irToUplc( ir: IRTerm ): UPLCTerm
@@ -59,7 +49,7 @@ export function _irToUplc( ir: IRTerm ): UPLCTerm
     if( ir instanceof IRNative )
     {
         if( ir.tag < 0 )
-        throw new IllegalIRToUPLC(
+        throw new Error(
             "Can't translate '" + nativeTagToString( ir.tag ) + "' 'IRNative' to 'UPLCBuiltin'"
         );
 
@@ -67,14 +57,14 @@ export function _irToUplc( ir: IRTerm ): UPLCTerm
     }
     if( ir instanceof IRLetted )
     {
-        throw new IllegalIRToUPLC(
+        throw new Error(
             "Can't convert 'IRLetted' to valid UPLC"
         );
     }
     if( ir instanceof IRHoisted )
     {
         // return this.hoisted.toUPLC();
-        throw new IllegalIRToUPLC(
+        throw new Error(
             "Can't convert 'IRHoisted' to valid UPLC;" +
             "\nhoisted hash was: " + toHex( ir.hash ) +
             "\nhoisted term was: " + showIR( ir.hoisted ).text
@@ -97,5 +87,5 @@ export function _irToUplc( ir: IRTerm ): UPLCTerm
         )
     }
 
-    throw new PlutsIRError("unknown IR term calling '_irToUplc'")
+    throw new Error("unknown IR term calling '_irToUplc'")
 }

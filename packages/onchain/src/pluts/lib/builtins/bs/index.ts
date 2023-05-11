@@ -11,8 +11,9 @@ import { addApplications } from "../addApplications";
 import { pfn } from "../../pfn";
 import { _pflipIR } from "../_pflipIR";
 import { defineReadOnlyProperty } from "@harmoniclabs/obj-utils";
-import { IRNative, IRHoisted, IRApp } from "../../../../IR";
-
+import { IRNative } from "../../../../IR/IRNodes/IRNative";
+import { IRHoisted } from "../../../../IR/IRNodes/IRHoisted";
+import { IRApp } from "../../../../IR/IRNodes/IRApp";
 
 
 export type ByteStrBinOPToBS = Term< PLam< PByteString, PLam< PByteString, PByteString>>>

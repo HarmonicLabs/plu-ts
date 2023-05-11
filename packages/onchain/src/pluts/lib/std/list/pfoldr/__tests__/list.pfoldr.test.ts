@@ -1,14 +1,13 @@
 import { toHex } from "@harmoniclabs/uint8array-utils"
 import { pfoldr } from ".."
-import { Machine } from "../../../../../../CEK"
+import { Machine } from "@harmoniclabs/plutus-machine"
 import { showIR } from "../../../../../../IR/utils/showIR"
-import { prettyUPLC, showUPLC } from "../../../../../../UPLC/UPLCTerm"
-import { compile } from "../../../../../Script"
 import { data, int, list } from "../../../../../type_system"
 import { punIData } from "../../../../builtins"
 import { pDataI } from "../../../data"
 import { pInt } from "../../../int"
 import { pList } from "../../const"
+import { showUPLC } from "@harmoniclabs/uplc"
 
 
 const add2 = pfoldr( int, list( int ) )

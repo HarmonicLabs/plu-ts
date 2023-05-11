@@ -1,6 +1,4 @@
 import { IRNative } from "..";
-import UPLCFlatUtils from "../../../../../utils/UPLCFlatUtils";
-
 
 describe("IRNative.hash", () => {
 

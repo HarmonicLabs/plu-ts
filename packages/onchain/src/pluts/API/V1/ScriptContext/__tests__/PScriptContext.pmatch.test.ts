@@ -1,14 +1,11 @@
-import { Machine } from "../../../../../CEK";
+import { Machine } from "@harmoniclabs/plutus-machine";
 import { pmatch } from "../../../../PTypes/PStruct/pmatch";
 import { PValue } from "../../Value/PValue";
-import { UPLCConst } from "../../../../../UPLC/UPLCTerms/UPLCConst";
 import { pInt } from "../../../../lib/std/int/pInt";
 import { pBool } from "../../../../lib/std/bool/pBool";
 import { fromData, perror, pisEmpty } from "../../../../lib";
-import { ErrorUPLC } from "../../../../../UPLC/UPLCTerms/ErrorUPLC";
-import { int, termTypeToString } from "../../../../type_system";
+import { int } from "../../../../type_system";
 import { _purp, beef32AsData, ctx, txInfo_v1 } from "../../../../../test_utils"
-import { showUPLC } from "../../../../../UPLC/UPLCTerm";
 
 /*
 import fs from "node:fs"

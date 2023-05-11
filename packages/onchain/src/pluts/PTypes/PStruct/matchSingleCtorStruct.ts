@@ -1,4 +1,8 @@
-import { IRHoisted, IRFunc, IRApp, IRNative, IRVar } from "../../../IR";
+import { IRApp } from "../../../IR/IRNodes/IRApp";
+import { IRFunc } from "../../../IR/IRNodes/IRFunc";
+import { IRHoisted } from "../../../IR/IRNodes/IRHoisted";
+import { IRNative } from "../../../IR/IRNodes/IRNative";
+import { IRVar } from "../../../IR/IRNodes/IRVar";
 import { Term } from "../../Term";
 import { punConstrData } from "../../lib/builtins/data";
 import { psndPairNoUnwrap } from "../../lib/builtins/pair/noUnwrap";

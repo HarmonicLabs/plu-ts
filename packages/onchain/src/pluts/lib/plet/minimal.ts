@@ -1,4 +1,7 @@
-import { IRLetted, IRHoisted, IRVar, isClosedIRTerm } from "../../../IR";
+import { IRHoisted } from "../../../IR/IRNodes/IRHoisted";
+import { IRLetted } from "../../../IR/IRNodes/IRLetted";
+import { IRVar } from "../../../IR/IRNodes/IRVar";
+import { isClosedIRTerm } from "../../../IR/utils/isClosedIRTerm";
 import type { PType } from "../../PType";
 import { Term } from "../../Term";
 

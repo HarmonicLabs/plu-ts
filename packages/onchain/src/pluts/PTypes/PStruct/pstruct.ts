@@ -17,8 +17,11 @@ import { Pair } from "@harmoniclabs/pair";
 import { DataConstr, Data, isData } from "@harmoniclabs/plutus-data";
 import { Machine } from "@harmoniclabs/plutus-machine";
 import { UPLCConst } from "@harmoniclabs/uplc";
-import { pList } from "../../..";
-import { IRHoisted, IRConst, IRApp, IRNative } from "../../../IR";
+import { IRHoisted } from "../../../IR/IRNodes/IRHoisted";
+import { IRConst } from "../../../IR/IRNodes/IRConst";
+import { pList } from "../../lib/std/list/const";
+import { IRNative } from "../../../IR/IRNodes/IRNative";
+import { IRApp } from "../../../IR/IRNodes/IRApp";
 
 /**
  * intermediate class useful to reconize structs form primitives

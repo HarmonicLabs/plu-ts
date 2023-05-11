@@ -1,6 +1,5 @@
+import { DataConstr } from "@harmoniclabs/plutus-data";
 import { handleHoistedAndReturnRoot } from "..";
-import { DataConstr } from "../../../../../../types/Data";
-import { showUPLC } from "../../../../../UPLC/UPLCTerm";
 import { IRApp } from "../../../../IRNodes/IRApp";
 import { IRConst } from "../../../../IRNodes/IRConst";
 import { IRFunc } from "../../../../IRNodes/IRFunc";
@@ -9,7 +8,6 @@ import { IRNative } from "../../../../IRNodes/IRNative";
 import { IRVar } from "../../../../IRNodes/IRVar";
 import { IRTerm } from "../../../../IRTerm";
 import { prettyIRText } from "../../../../utils/showIR";
-import { compileIRToUPLC } from "../../../compileIRToUPLC";
 
 
 describe("handleHoistedAndReturnRoot", () => {

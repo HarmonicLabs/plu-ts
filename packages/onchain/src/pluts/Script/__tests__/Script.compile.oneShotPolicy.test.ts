@@ -1,21 +1,15 @@
 import { UtilityTermOf, bool, compile } from "../..";
-import { Machine } from "../../../CEK";
 import { PCurrencySymbol, PTxId, PTxOutRef, V2 } from "../../API";
 import { pstruct, pmatch } from "../../PTypes";
 import { pData, pDataB, pDataI, perror, pfn, pisEmpty, plet, punsafeConvertType } from "../../lib";
-import { ErrorUPLC } from "../../../UPLC/UPLCTerms/ErrorUPLC";
-import { dataFromCbor } from "../../../../types/Data";
-import { UPLCTerm, showUPLC } from "../../../UPLC/UPLCTerm";
-import { UPLCDecoder } from "../../../UPLC/UPLCDecoder";
-import { UPLCEncoder } from "../../../UPLC/UPLCEncoder";
-import { UPLCProgram } from "../../../UPLC/UPLCProgram";
-import { Cbor } from "../../../../cbor/Cbor";
-import { CborBytes } from "../../../../cbor/CborObj/CborBytes";
-import { Script, ScriptType } from "../../../../offchain/script/Script";
 import { fromHex } from "@harmoniclabs/uint8array-utils";
 import { _old_plet } from "../../lib/plet/old";
-import { showIR } from "../../../IR/utils/showIR";
-
+import { Cbor, CborBytes } from "@harmoniclabs/cbor";
+import { dataFromCbor } from "@harmoniclabs/plutus-data";
+import { Machine } from "@harmoniclabs/plutus-machine";
+import { ScriptType } from "@harmoniclabs/plutus-machine/dist/utils/ScriptType";
+import { ErrorUPLC, UPLCTerm, UPLCDecoder, UPLCEncoder, UPLCProgram, showUPLC } from "@harmoniclabs/uplc";
+import { Script } from "@harmoniclabs/cardano-ledger-ts"
 
 export const MintRdmr = pstruct({
     Mint: {},

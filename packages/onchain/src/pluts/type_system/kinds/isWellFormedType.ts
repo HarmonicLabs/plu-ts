@@ -1,8 +1,8 @@
 import { isObject } from "@harmoniclabs/obj-utils";
-import { GenericStructDefinition, GenericTermType, PrimType, StructCtorDef, StructDefinition, StructT, TermType, alias, bs, lam, list } from "../types";
 import { isPrimTypeTag } from "./isPrimTypeTag";
 import { isTaggedAsAlias } from "./isTaggedAsAlias";
 import { isTypeParam } from "./isTypePAram";
+import { GenericStructDefinition, GenericTermType, PrimType, StructCtorDef, StructDefinition, StructT, TermType } from "../types";
 
 
 function getIsStructDefWithTermTypeCheck( termTypeCheck: ( t: TermType ) => boolean )

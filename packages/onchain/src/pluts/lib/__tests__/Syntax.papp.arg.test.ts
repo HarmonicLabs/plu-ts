@@ -1,7 +1,4 @@
-import { ByteString } from "../../../../types/HexString/ByteString";
-import { Pair } from "../../../../types/structs/Pair";
 import { fromAscii, fromHex } from "@harmoniclabs/uint8array-utils";
-import { evalScript } from "../../../CEK";
 import { PType } from "../../PType";
 import { Term } from "../../Term";
 import { TermInt } from "../../lib/std/UtilityTerms/TermInt";
@@ -16,6 +13,9 @@ import { pByteString } from "../std/bs/pByteString";
 import { pInt } from "../std/int/pInt";
 import { pStr } from "../std/str/pStr";
 import { pmakeUnit } from "../std/unit/pmakeUnit";
+import { evalScript } from "@harmoniclabs/plutus-machine";
+import { ByteString } from "@harmoniclabs/bytestring";
+import { Pair } from "@harmoniclabs/pair";
 
 function expectScriptToEq( received: Term<PType>, expected: Term<PType> ): void
 {

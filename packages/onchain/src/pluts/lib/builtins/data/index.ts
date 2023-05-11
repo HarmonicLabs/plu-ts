@@ -1,5 +1,4 @@
 import { defineReadOnlyProperty } from "@harmoniclabs/obj-utils";
-import { IRNative, IRHoisted, IRApp, IRConst } from "../../../../IR";
 import { PType } from "../../../PType";
 import { TermFn, PData, PLam, PInt, PList, PPair, PByteString, PBool, PAsData } from "../../../PTypes";
 import { Term } from "../../../Term";
@@ -11,6 +10,10 @@ import { pdelay } from "../../pdelay";
 import { pforce_minimal } from "../../pforce/minimal";
 import { TermBS, addPByteStringMethods } from "../../std/UtilityTerms/TermBS";
 import { addApplications } from "../addApplications";
+import { IRNative } from "../../../../IR/IRNodes/IRNative";
+import { IRHoisted } from "../../../../IR/IRNodes/IRHoisted";
+import { IRApp } from "../../../../IR/IRNodes/IRApp";
+import { IRConst } from "../../../../IR/IRNodes/IRConst";
 
 
 

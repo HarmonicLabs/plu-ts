@@ -1,4 +1,3 @@
-import { lam, tyVar } from "../../../pluts";
 import { IRFunc } from "../IRFunc";
 import { IRVar } from "../IRVar"
 
