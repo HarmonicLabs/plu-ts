@@ -5,7 +5,8 @@ import { pInt } from "../../../../lib/std/int/pInt";
 import { pBool } from "../../../../lib/std/bool/pBool";
 import { fromData, perror, pisEmpty } from "../../../../lib";
 import { int } from "../../../../type_system";
-import { _purp, beef32AsData, ctx, txInfo_v1 } from "../../../../../test_utils"
+import { _purp, beef32AsData, ctx, txInfo_v1 } from "../../../../../utils/test_utils";
+import { ErrorUPLC, UPLCConst } from "@harmoniclabs/uplc";
 
 /*
 import fs from "node:fs"

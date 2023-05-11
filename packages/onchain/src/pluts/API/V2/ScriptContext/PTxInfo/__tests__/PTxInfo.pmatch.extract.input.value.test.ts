@@ -1,6 +1,7 @@
 import { Machine } from "@harmoniclabs/plutus-machine";
 import { PValue } from "../../../../V1/Value/PValue";
 import { pBool, punMapData, toData } from "../../../../../lib";
+import { tx_v2, beef32 } from "../../../../../../utils/test_utils";
 
 describe("input value extraction", () => {
 

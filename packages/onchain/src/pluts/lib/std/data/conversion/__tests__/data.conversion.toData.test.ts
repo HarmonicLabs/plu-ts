@@ -1,7 +1,4 @@
-import { DataB, DataI, DataList, DataPair } from "../../../../../../../types/Data";
 import { Machine } from "@harmoniclabs/plutus-machine";
-import { showUPLC } from "../../../../../../UPLC/UPLCTerm";
-import { ErrorUPLC } from "../../../../../../UPLC/UPLCTerms/ErrorUPLC";
 import { PAssetsEntryT, PCurrencySymbol, PScriptPurpose, PTokenName, PValue, PValueEntryT } from "../../../../../API";
 import { pair, data, asData, typeExtends, list, termTypeToString, int, bs } from "../../../../../type_system";
 import { pByteString } from "../../../bs";
@@ -9,9 +6,10 @@ import { pInt } from "../../../int";
 import { pList } from "../../../list";
 import { pPair } from "../../../pair";
 import { pData, pDataI } from "../../pData";
-import { fromData } from "../fromData";
 import { toData } from "../toData";
 import { _toData } from "../toData_minimal"
+import { DataList, DataB, DataI } from "@harmoniclabs/plutus-data";
+import { ErrorUPLC } from "@harmoniclabs/uplc";
 
 
 describe("_toData", () => {
