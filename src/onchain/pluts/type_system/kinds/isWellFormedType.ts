@@ -1,4 +1,4 @@
-import ObjectUtils from "../../../../utils/ObjectUtils";
+import ObjectUtils from "../../../../../../src/utils/ObjectUtils";
 import { typeExtends } from "../typeExtends";
 import { GenericStructDefinition, GenericTermType, PrimType, StructCtorDef, StructDefinition, StructT, TermType, alias, bs, lam, list } from "../types";
 import { termTypeToString } from "../utils";

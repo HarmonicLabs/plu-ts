@@ -1,4 +1,4 @@
-import { Cloneable, isCloneable } from "../../../../types/interfaces/Cloneable";
+import { Cloneable, isCloneable } from "../../../../../../src/types/interfaces/Cloneable";
 import { PType } from "../../PType"
 
 export class PLam<A extends PType, B extends PType > extends PType

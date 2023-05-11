@@ -1,6 +1,6 @@
-import { BasePlutsError } from "../../../errors/BasePlutsError";
-import JsRuntime from "../../../utils/JsRuntime";
-import { CurriedFn, curry } from "../../../utils/ts/combinators";
+import { BasePlutsError } from "../../../../../src/errors/BasePlutsError";
+import JsRuntime from "../../../../../src/utils/JsRuntime";
+import { CurriedFn, curry } from "../../../../../src/utils/ts/combinators";
 import { PType } from "../PType";
 import { PLam } from "../PTypes";
 import { Term, ToTermArrNonEmpty } from "../Term";

@@ -1,5 +1,5 @@
-import JsRuntime from "../../../../utils/JsRuntime";
-import ObjectUtils from "../../../../utils/ObjectUtils";
+import JsRuntime from "../../../../../../src/utils/JsRuntime";
+import ObjectUtils from "../../../../../../src/utils/ObjectUtils";
 
 import type { TermFn } from "../PFn";
 import { PAsData, PData } from "../PData/PData";
@@ -7,22 +7,22 @@ import { PDataRepresentable } from "../../PType/PDataRepresentable";
 import { UtilityTermOf, addUtilityForType } from "../../lib/addUtilityForType";
 
 import { structDefToString, termTypeToString } from "../../type_system/utils";
-import { Pair } from "../../../../types/structs/Pair";
-import { Machine } from "../../../CEK";
+import { Pair } from "../../../../../../src/types/structs/Pair";
+import { Machine } from "../../../../../../src/onchain/CEK";
 import { pList } from "../../lib/std/list/const";
-import { Data, DataConstr, isData } from "../../../../types/Data";
+import { Data, DataConstr, isData } from "../../../../../../src/types/Data";
 import { AliasT, GenericStructCtorDef, GenericStructDefinition, GenericTermType, PrimType, StructCtorDef, StructDefinition, StructT, TermType, alias, asData, data, int, struct, tyVar, unit } from "../../type_system/types";
 import { ToPType } from "../../type_system/ts-pluts-conversion";
 import { typeExtends, isStructDefinition, isStructType, isTaggedAsAlias } from "../../type_system";
 import { Term } from "../../Term";
 import { punsafeConvertType } from "../../lib/punsafeConvertType";
 import { TermStruct } from "../../lib/std/UtilityTerms/TermStruct";
-import { IRApp } from "../../../IR/IRNodes/IRApp";
-import { IRConst } from "../../../IR/IRNodes/IRConst";
-import { IRHoisted } from "../../../IR/IRNodes/IRHoisted";
-import { IRNative } from "../../../IR/IRNodes/IRNative";
-import { UPLCConst } from "../../../UPLC/UPLCTerms/UPLCConst";
-import { BasePlutsError } from "../../../../errors/BasePlutsError";
+import { IRApp } from "../../../../../../src/onchain/IR/IRNodes/IRApp";
+import { IRConst } from "../../../../../../src/onchain/IR/IRNodes/IRConst";
+import { IRHoisted } from "../../../../../../src/onchain/IR/IRNodes/IRHoisted";
+import { IRNative } from "../../../../../../src/onchain/IR/IRNodes/IRNative";
+import { UPLCConst } from "../../../../../../src/onchain/UPLC/UPLCTerms/UPLCConst";
+import { BasePlutsError } from "../../../../../../src/errors/BasePlutsError";
 import { PType } from "../../PType";
 
 /**

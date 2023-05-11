@@ -1,4 +1,4 @@
-import { IRConst } from "../../../../IR/IRNodes/IRConst";
+import { IRConst } from "../../../../../../../src/onchain/IR/IRNodes/IRConst";
 import type { PUnit } from "../../../PTypes/PUnit";
 import { Term } from "../../../Term";
 import { unit } from "../../../type_system/types";

@@ -1,14 +1,14 @@
-import JsRuntime from "../../../utils/JsRuntime";
-import ObjectUtils from "../../../utils/ObjectUtils";
+import JsRuntime from "../../../../../src/utils/JsRuntime";
+import ObjectUtils from "../../../../../src/utils/ObjectUtils";
 
 import type { PType } from "../PType";
 import type { PLam, PInt, PBool, PByteString, PString, PUnit, PPair, PList } from "../PTypes";
 
-import { CborString } from "../../../cbor/CborString";
-import { BasePlutsError } from "../../../errors/BasePlutsError";
-import { HexString } from "../../../types/HexString";
-import { ByteString } from "../../../types/HexString/ByteString";
-import { Pair } from "../../../types/structs/Pair";
+import { CborString } from "../../../../../src/cbor/CborString";
+import { BasePlutsError } from "../../../../../src/errors/BasePlutsError";
+import { HexString } from "../../../../../src/types/HexString";
+import { ByteString } from "../../../../../src/types/HexString/ByteString";
+import { Pair } from "../../../../../src/types/structs/Pair";
 import { termTypeToString, getNRequiredLambdaArgs } from "../type_system/utils";
 import { UtilityTermOf } from "./addUtilityForType";
 import { pfn } from "./pfn";

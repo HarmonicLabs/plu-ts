@@ -2,7 +2,7 @@ import type { PType } from "../../PType";
 import type { TermType } from "../../type_system/types";
 import type { ToPType } from "../../type_system/ts-pluts-conversion";
 import { type UtilityTermOf, addUtilityForType } from "../addUtilityForType";
-import { BasePlutsError } from "../../../../errors/BasePlutsError";
+import { BasePlutsError } from "../../../../../../src/errors/BasePlutsError";
 import { isWellFormedType } from "../../type_system/kinds/isWellFormedType";
 import { Term } from "../../Term";
 

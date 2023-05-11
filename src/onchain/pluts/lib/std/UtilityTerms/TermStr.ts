@@ -1,4 +1,4 @@
-import ObjectUtils from "../../../../../utils/ObjectUtils"
+import ObjectUtils from "../../../../../../../src/utils/ObjectUtils"
 import { PString, TermFn, PBool } from "../../../PTypes"
 import { Term } from "../../../Term"
 import { pappendStr, pencodeUtf8, peqStr } from "../../builtins/str"

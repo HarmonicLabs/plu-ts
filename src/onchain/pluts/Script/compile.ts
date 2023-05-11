@@ -1,9 +1,9 @@
-import { Cbor } from "../../../cbor/Cbor";
-import { CborBytes } from "../../../cbor/CborObj/CborBytes";
-import { PlutusScriptJsonFormat, PlutusScriptType } from "../../../offchain";
-import { UPLCEncoder } from "../../UPLC/UPLCEncoder";
-import { UPLCProgram } from "../../UPLC/UPLCProgram";
-import { UPLCVersion } from "../../UPLC/UPLCProgram/UPLCVersion";
+import { Cbor } from "../../../../../src/cbor/Cbor";
+import { CborBytes } from "../../../../../src/cbor/CborObj/CborBytes";
+import { PlutusScriptJsonFormat, PlutusScriptType } from "../../../../../src/offchain";
+import { UPLCEncoder } from "../../../../../src/onchain/UPLC/UPLCEncoder";
+import { UPLCProgram } from "../../../../../src/onchain/UPLC/UPLCProgram";
+import { UPLCVersion } from "../../../../../src/onchain/UPLC/UPLCProgram/UPLCVersion";
 import { PType } from "../PType";
 import { Term } from "../Term";
 import { defaultVersion, getValidVersion } from "./getValidVersion";

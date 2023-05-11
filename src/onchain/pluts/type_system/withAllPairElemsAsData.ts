@@ -1,4 +1,4 @@
-import ObjectUtils from "../../../utils/ObjectUtils";
+import ObjectUtils from "../../../../../src/utils/ObjectUtils";
 import { getFstT, getSndT, unwrapAlias } from "./tyArgs";
 import { PrimType, TermType, alias, asData, lam, list, pair } from "./types";
 

@@ -1,4 +1,4 @@
 import { intBinOpToInt } from "./intBinOpToInt";
-import { IRNative } from "../../../../IR/IRNodes/IRNative";
+import { IRNative } from "../../../../../../../src/onchain/IR/IRNodes/IRNative";
 
 export const padd = intBinOpToInt( IRNative.addInteger );

@@ -1,5 +1,5 @@
-import ObjectUtils from "../../../../../utils/ObjectUtils";
-import { IRNative } from "../../../../IR/IRNodes/IRNative";
+import ObjectUtils from "../../../../../../../src/utils/ObjectUtils";
+import { IRNative } from "../../../../../../../src/onchain/IR/IRNodes/IRNative";
 import { PType } from "../../../PType";
 import { TermFn, PList, PLam, PBool } from "../../../PTypes";
 import { Term } from "../../../Term";

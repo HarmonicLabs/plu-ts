@@ -1,4 +1,4 @@
-import { DataConstr } from "../../../../../../types/Data";
+import { DataConstr } from "../../../../../../../../src/types/Data";
 import { PType } from "../../../../PType";
 import { PAsData, PByteString, PData, PInt, PLam, PList, PPair, PString } from "../../../../PTypes";
 import { TermFn } from "../../../../PTypes/PFn/PFn";
@@ -19,7 +19,7 @@ import { _papp, _pcompose } from "./minimal_common";
 import { getElemsT, getFstT, getSndT, unwrapAsData } from "../../../../type_system/tyArgs";
 import { pfstPair, psndPair } from "../../../builtins";
 import { _punsafeConvertType } from "../../../punsafeConvertType/minimal";
-import { IRNative } from "../../../../../IR/IRNodes/IRNative";
+import { IRNative } from "../../../../../../../../src/onchain/IR/IRNodes/IRNative";
 
 const pIntToData  =new Term<PLam<PInt, PAsData<PInt>>>(
     lam( int, asData( int ) ) as any,

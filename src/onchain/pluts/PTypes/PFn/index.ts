@@ -2,7 +2,7 @@
 export * from "./PLam";
 
 import type { Term } from "../../Term";
-import type { Tail } from "../../../../utils/ts";
+import type { Tail } from "../../../../../../src/utils/ts";
 import type { PType } from "../../PType"
 import type { PLam } from "./PLam"
 import { PappArg, UtilityTermOf } from "../../lib";

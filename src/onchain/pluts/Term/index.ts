@@ -1,24 +1,24 @@
-import JsRuntime from "../../../utils/JsRuntime";
-import ObjectUtils from "../../../utils/ObjectUtils";
+import JsRuntime from "../../../../../src/utils/JsRuntime";
+import ObjectUtils from "../../../../../src/utils/ObjectUtils";
 
-import { UPLCTerm, showUPLC } from "../../UPLC/UPLCTerm";
+import { UPLCTerm, showUPLC } from "../../../../../src/onchain/UPLC/UPLCTerm";
 import type { PType } from "../PType";
 
-import { Cloneable, isCloneable } from "../../../types/interfaces/Cloneable";
-import { Machine } from "../../CEK";
+import { Cloneable, isCloneable } from "../../../../../src/types/interfaces/Cloneable";
+import { Machine } from "../../../../../src/onchain/CEK";
 import { FromPType, ToPType } from "../type_system/ts-pluts-conversion";
 import { isWellFormedGenericType } from "../type_system/kinds/isWellFormedType";
 import { TermType } from "../type_system/types";
 import { cloneTermType } from "../type_system/cloneTermType";
-import { ToUPLC } from "../../UPLC/interfaces/ToUPLC";
-import { ToIR } from "../../IR/interfaces/ToIR";
-import { IRTerm } from "../../IR/IRTerm";
-import { compileIRToUPLC } from "../../IR/toUPLC/compileIRToUPLC";
-import { UPLCConst } from "../../UPLC/UPLCTerms/UPLCConst";
-import { IRConst } from "../../IR/IRNodes/IRConst";
-import { IRError } from "../../IR/IRNodes/IRError";
-import { IRHoisted } from "../../IR/IRNodes/IRHoisted";
-import { showIR } from "../../IR/utils/showIR";
+import { ToUPLC } from "../../../../../src/onchain/UPLC/interfaces/ToUPLC";
+import { ToIR } from "../../../../../src/onchain/IR/interfaces/ToIR";
+import { IRTerm } from "../../../../../src/onchain/IR/IRTerm";
+import { compileIRToUPLC } from "../../../../../src/onchain/IR/toUPLC/compileIRToUPLC";
+import { UPLCConst } from "../../../../../src/onchain/UPLC/UPLCTerms/UPLCConst";
+import { IRConst } from "../../../../../src/onchain/IR/IRNodes/IRConst";
+import { IRError } from "../../../../../src/onchain/IR/IRNodes/IRError";
+import { IRHoisted } from "../../../../../src/onchain/IR/IRNodes/IRHoisted";
+import { showIR } from "../../../../../src/onchain/IR/utils/showIR";
 
 export type UnTerm<T extends Term<PType>> = T extends Term<infer PT extends PType > ? PT : never;
 

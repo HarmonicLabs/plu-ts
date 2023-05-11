@@ -1,4 +1,4 @@
-import { IRConst } from "../../../../IR/IRNodes/IRConst";
+import { IRConst } from "../../../../../../../src/onchain/IR/IRNodes/IRConst";
 import { PInt } from "../../../PTypes";
 import { Term } from "../../../Term";
 import { int } from "../../../type_system/types";

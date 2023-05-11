@@ -1,8 +1,8 @@
-import { IRApp } from "../../../IR/IRNodes/IRApp";
-import { IRFunc } from "../../../IR/IRNodes/IRFunc";
-import { IRHoisted } from "../../../IR/IRNodes/IRHoisted";
-import { IRNative } from "../../../IR/IRNodes/IRNative";
-import { IRVar } from "../../../IR/IRNodes/IRVar";
+import { IRApp } from "../../../../../../src/onchain/IR/IRNodes/IRApp";
+import { IRFunc } from "../../../../../../src/onchain/IR/IRNodes/IRFunc";
+import { IRHoisted } from "../../../../../../src/onchain/IR/IRNodes/IRHoisted";
+import { IRNative } from "../../../../../../src/onchain/IR/IRNodes/IRNative";
+import { IRVar } from "../../../../../../src/onchain/IR/IRNodes/IRVar";
 import { Term } from "../../Term";
 import { punConstrData } from "../../lib/builtins/data";
 import { psndPairNoUnwrap } from "../../lib/builtins/pair/noUnwrap";

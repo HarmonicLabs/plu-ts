@@ -1,4 +1,4 @@
-import ObjectUtils from "../../../../../utils/ObjectUtils"
+import ObjectUtils from "../../../../../../../src/utils/ObjectUtils"
 import { PByteString, TermFn, PInt, PBool } from "../../../PTypes"
 import { Term } from "../../../Term"
 import { bs, int } from "../../../type_system/types"

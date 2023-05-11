@@ -16,7 +16,7 @@ import { CborUInt } from "../../cbor/CborObj/CborUInt";
 import { InvalidCborFormatError } from "../../errors/InvalidCborFormatError";
 import { fromHex, isUint8Array } from "@harmoniclabs/uint8array-utils";
 
-export const enum ScriptType {
+export enum ScriptType {
     NativeScript = "NativeScript",
     PlutusV1 = "PlutusScriptV1",
     PlutusV2 = "PlutusScriptV2"

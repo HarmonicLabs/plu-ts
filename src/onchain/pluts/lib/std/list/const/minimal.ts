@@ -1,5 +1,5 @@
 import { assertValidListType } from ".";
-import { IRConst } from "../../../../../IR/IRNodes/IRConst";
+import { IRConst } from "../../../../../../../../src/onchain/IR/IRNodes/IRConst";
 import { PList } from "../../../../PTypes";
 import { Term } from "../../../../Term";
 import { TermType, ToPType, typeExtends, pair, data, list } from "../../../../type_system";

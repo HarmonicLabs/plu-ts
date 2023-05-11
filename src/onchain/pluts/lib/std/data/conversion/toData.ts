@@ -1,4 +1,4 @@
-import ObjectUtils from "../../../../../../utils/ObjectUtils";
+import ObjectUtils from "../../../../../../../../src/utils/ObjectUtils";
 import { PAsData } from "../../../../PTypes";
 import { TermFn } from "../../../../PTypes/PFn/PFn";
 import { Term } from "../../../../Term";

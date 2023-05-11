@@ -1,4 +1,4 @@
-import ObjectUtils from "../../../../../utils/ObjectUtils"
+import ObjectUtils from "../../../../../../../src/utils/ObjectUtils"
 import type { PType } from "../../../PType"
 import type { PBool, TermFn, PDelayed } from "../../../PTypes"
 import type { PappArg } from "../../pappArg"
@@ -6,7 +6,7 @@ import { Term } from "../../../Term"
 import { pBool } from "../bool/pBool"
 import { por, pstrictOr, pand, pstrictAnd } from "../../builtins/bool"
 import { delayed } from "../../../type_system/types"
-import { IRDelayed } from "../../../../IR/IRNodes/IRDelayed"
+import { IRDelayed } from "../../../../../../../src/onchain/IR/IRNodes/IRDelayed"
 
 
 export type TermBool = Term<PBool> & {

@@ -2,10 +2,10 @@ import { PType } from "../../../../PType"
 import { PLam } from "../../../../PTypes"
 import { Term } from "../../../../Term"
 import { TermType, fn, lam } from "../../../../type_system"
-import { IRFunc } from "../../../../../IR/IRNodes/IRFunc"
-import { IRApp } from "../../../../../IR/IRNodes/IRApp"
-import { IRHoisted } from "../../../../../IR/IRNodes/IRHoisted"
-import { IRVar } from "../../../../../IR/IRNodes/IRVar"
+import { IRFunc } from "../../../../../../../../src/onchain/IR/IRNodes/IRFunc"
+import { IRApp } from "../../../../../../../../src/onchain/IR/IRNodes/IRApp"
+import { IRHoisted } from "../../../../../../../../src/onchain/IR/IRNodes/IRHoisted"
+import { IRVar } from "../../../../../../../../src/onchain/IR/IRNodes/IRVar"
 
 
 export function _papp<Input extends PType, Output extends PType>( a: Term<PLam<Input,Output>>, b: Term<Input> ): Term<Output>

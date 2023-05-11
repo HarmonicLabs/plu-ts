@@ -1,4 +1,4 @@
-import { Cloneable } from "../../../types/interfaces/Cloneable";
+import { Cloneable } from "../../../../../src/types/interfaces/Cloneable";
 import { PDataRepresentable } from "../PType/PDataRepresentable";
 
 export class PString extends PDataRepresentable

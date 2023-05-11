@@ -1,6 +1,6 @@
-import ObjectUtils from "../../../../../utils/ObjectUtils";
-import { IRTerm } from "../../../../IR/IRTerm";
-import { Builtin } from "../../../../UPLC/UPLCTerms/Builtin";
+import ObjectUtils from "../../../../../../../src/utils/ObjectUtils";
+import { IRTerm } from "../../../../../../../src/onchain/IR/IRTerm";
+import { Builtin } from "../../../../../../../src/onchain/UPLC/UPLCTerms/Builtin";
 import { PLam, PInt } from "../../../PTypes";
 import { Term } from "../../../Term";
 import { fn, int } from "../../../type_system";

@@ -1,4 +1,4 @@
-import { IRNative } from "../../../IR/IRNodes/IRNative";
+import { IRNative } from "../../../../../../src/onchain/IR/IRNodes/IRNative";
 import { TermFn, PUnit } from "../../PTypes";
 import { Term } from "../../Term";
 import { TermType, ToPType, fn, unit } from "../../type_system";

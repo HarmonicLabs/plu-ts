@@ -1,5 +1,5 @@
-import { BasePlutsError } from "../../../errors/BasePlutsError";
-import { ConstType, constT } from "../../UPLC/UPLCTerms/UPLCConst/ConstType";
+import { BasePlutsError } from "../../../../../src/errors/BasePlutsError";
+import { ConstType, constT } from "../../../../../src/onchain/UPLC/UPLCTerms/UPLCConst/ConstType";
 import { PrimType, TermType } from "./types";
 import { unwrapAlias } from "./tyArgs/unwrapAlias";
 

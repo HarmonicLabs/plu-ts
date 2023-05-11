@@ -1,18 +1,18 @@
-import JsRuntime from "../../../../../utils/JsRuntime";
+import JsRuntime from "../../../../../../../src/utils/JsRuntime";
 // !!! IMPORTANT !!!
 // `isWellFormedType` is used both here and by `addPPairMethods`
 // DO NOT change the order of the two imports
 import { TermType, ToPType, typeExtends, pair, isWellFormedType, asData, data } from "../../../type_system";
-import { TermPair, addPPairMethods } from "../../std/UtilityTerms/TermPair";
+import { TermPair, addPPairMethods } from "../UtilityTerms/TermPair";
 import { PPair } from "../../../PTypes";
 import { Term } from "../../../Term";
-import { Machine } from "../../../../CEK/Machine";
+import { Machine } from "../../../../../../../src/onchain/CEK/Machine";
 import { _toData } from "../data/conversion/toData_minimal";
 import { punsafeConvertType } from "../../punsafeConvertType";
 import { ppairData } from "../../builtins/ppairData";
 import { PappArg, pappArgToTerm } from "../../pappArg";
 import { unwrapAsData } from "../../../type_system/tyArgs/unwrapAsData";
-import { IRConst } from "../../../../IR/IRNodes/IRConst";
+import { IRConst } from "../../../../../../../src/onchain/IR/IRNodes/IRConst";
 
 
 export function pPair<FstT extends TermType, SndT extends TermType>(

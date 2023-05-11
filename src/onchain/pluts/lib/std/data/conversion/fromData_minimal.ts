@@ -17,7 +17,7 @@ import { _papp, _pcompose } from "./minimal_common";
 import { getElemsT, getFstT, getSndT } from "../../../../type_system/tyArgs";
 import { _pmap } from "../../list/pmap/minimal";
 import { _punsafeConvertType } from "../../../punsafeConvertType/minimal";
-import { IRNative } from "../../../../../IR/IRNodes/IRNative";
+import { IRNative } from "../../../../../../../../src/onchain/IR/IRNodes/IRNative";
 
 const punBData = new Term<PLam<PData, PByteString>>(
     lam( data, bs ),

@@ -1,4 +1,4 @@
-import ObjectUtils from "../../../../../utils/ObjectUtils";
+import ObjectUtils from "../../../../../../../src/utils/ObjectUtils";
 import { PLam, PByteString, PBool, PInt, PFn, TermFn } from "../../../PTypes";
 import { Term } from "../../../Term";
 import { fn, bs, bool, int, lam } from "../../../type_system";
@@ -10,9 +10,9 @@ import { TermBool, addPBoolMethods } from "../../std/UtilityTerms/TermBool";
 import { TermInt, addPIntMethods } from "../../std/UtilityTerms/TermInt";
 import { addApplications } from "../addApplications";
 import { pfn } from "../../pfn";
-import { IRNative } from "../../../../IR/IRNodes/IRNative";
-import { IRApp } from "../../../../IR/IRNodes/IRApp";
-import { IRHoisted } from "../../../../IR/IRNodes/IRHoisted";
+import { IRNative } from "../../../../../../../src/onchain/IR/IRNodes/IRNative";
+import { IRApp } from "../../../../../../../src/onchain/IR/IRNodes/IRApp";
+import { IRHoisted } from "../../../../../../../src/onchain/IR/IRNodes/IRHoisted";
 import { _pflipIR } from "../_pflipIR";
 
 

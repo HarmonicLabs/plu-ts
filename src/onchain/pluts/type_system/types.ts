@@ -1,5 +1,5 @@
-import JsRuntime from "../../../utils/JsRuntime";
-import ObjectUtils from "../../../utils/ObjectUtils";
+import JsRuntime from "../../../../../src/utils/JsRuntime";
+import ObjectUtils from "../../../../../src/utils/ObjectUtils";
 import { getElemsT } from "./tyArgs";
 
 export const enum PrimType {

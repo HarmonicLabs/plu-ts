@@ -1,4 +1,4 @@
-import { BasePlutsError } from "../../../errors/BasePlutsError";
+import { BasePlutsError } from "../../../../../src/errors/BasePlutsError";
 import type { PBool } from "../PTypes/PBool";
 import type { PData } from "../PTypes/PData/PData";
 import type { PLam } from "../PTypes/PFn/PLam";

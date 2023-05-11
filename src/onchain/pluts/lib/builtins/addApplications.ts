@@ -1,5 +1,5 @@
-import ObjectUtils from "../../../../utils/ObjectUtils";
-import { Head, Tail } from "../../../../utils/ts/TyLists";
+import ObjectUtils from "../../../../../../src/utils/ObjectUtils";
+import { Head, Tail } from "../../../../../../src/utils/ts/TyLists";
 
 import type { PType } from "../../PType";
 import type { PFn, TermFn } from "../../PTypes/PFn/PFn";

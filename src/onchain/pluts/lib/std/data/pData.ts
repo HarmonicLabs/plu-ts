@@ -1,11 +1,11 @@
-import { Data } from "../../../../../types/Data/Data";
+import { Data } from "../../../../../../../src/types/Data/Data";
 import { Term } from "../../../Term";
 import { PAsData, PByteString, PData, PInt } from "../../../PTypes";
 import { asData, bs, data, int } from "../../../type_system/types";
-import { ByteString } from "../../../../../types/HexString/ByteString";
-import { DataI } from "../../../../../types/Data/DataI";
-import { DataB } from "../../../../../types/Data/DataB";
-import { IRConst } from "../../../../IR/IRNodes/IRConst";
+import { ByteString } from "../../../../../../../src/types/HexString/ByteString";
+import { DataI } from "../../../../../../../src/types/Data/DataI";
+import { DataB } from "../../../../../../../src/types/Data/DataB";
+import { IRConst } from "../../../../../../../src/onchain/IR/IRNodes/IRConst";
 
 export function pData( dataElem: Data )
 : Term<PData>

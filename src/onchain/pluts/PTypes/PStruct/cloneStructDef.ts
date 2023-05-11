@@ -1,4 +1,4 @@
-import ObjectUtils from "../../../../utils/ObjectUtils";
+import ObjectUtils from "../../../../../../src/utils/ObjectUtils";
 import { StructCtorDef, StructDefinition } from "../../type_system";
 
 

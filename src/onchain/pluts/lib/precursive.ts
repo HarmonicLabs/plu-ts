@@ -1,6 +1,6 @@
-import JsRuntime from "../../../utils/JsRuntime";
-import { IRApp } from "../../IR/IRNodes/IRApp";
-import { IRNative } from "../../IR/IRNodes/IRNative";
+import JsRuntime from "../../../../../src/utils/JsRuntime";
+import { IRApp } from "../../../../../src/onchain/IR/IRNodes/IRApp";
+import { IRNative } from "../../../../../src/onchain/IR/IRNodes/IRNative";
 import { PType } from "../PType";
 import { PLam, TermFn } from "../PTypes";
 import { Term } from "../Term";

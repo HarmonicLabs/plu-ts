@@ -1,10 +1,10 @@
-import ObjectUtils from "../../../../../utils/ObjectUtils";
+import ObjectUtils from "../../../../../../../src/utils/ObjectUtils";
 import { Term } from "../../../Term";
 import type { PStruct, RestrictedStructInstance, StructInstance } from "../../../PTypes/PStruct/pstruct";
 import type { PType } from "../../../PType";
-import type { IsSingleKey } from "../../../../../utils/ts/SingleKeyObj";
+import type { IsSingleKey } from "../../../../../../../src/utils/ts/SingleKeyObj";
 
-import { capitalize } from "../../../../../utils/ts/capitalize";
+import { capitalize } from "../../../../../../../src/utils/ts/capitalize";
 // !!! IMPORTANT !!!
 // DO NOT change the order of imports
 // `../../../Term/Type/kinds` is also a dependecy of `pmatch`
@@ -15,17 +15,17 @@ import { TermFn } from "../../../PTypes/PFn/PFn";
 import { PBool } from "../../../PTypes/PBool";
 import { TermBool } from "./TermBool";
 import { PData, PInt, PList, PPair } from "../../../PTypes";
-import { IRLetted } from "../../../../IR/IRNodes/IRLetted";
+import { IRLetted } from "../../../../../../../src/onchain/IR/IRNodes/IRLetted";
 import { _plet } from "../../plet/minimal";
 import { _fromData } from "../data/conversion/fromData_minimal";
 import { plet } from "../../plet";
-import { IRApp } from "../../../../IR/IRNodes/IRApp";
-import { IRNative } from "../../../../IR/IRNodes/IRNative";
+import { IRApp } from "../../../../../../../src/onchain/IR/IRNodes/IRApp";
+import { IRNative } from "../../../../../../../src/onchain/IR/IRNodes/IRNative";
 import { UtilityTermOf } from "../../addUtilityForType";
 import { punsafeConvertType } from "../../punsafeConvertType";
-import { IRHoisted } from "../../../../IR/IRNodes/IRHoisted";
-import { IRFunc } from "../../../../IR/IRNodes/IRFunc";
-import { IRVar } from "../../../../IR/IRNodes/IRVar";
+import { IRHoisted } from "../../../../../../../src/onchain/IR/IRNodes/IRHoisted";
+import { IRFunc } from "../../../../../../../src/onchain/IR/IRNodes/IRFunc";
+import { IRVar } from "../../../../../../../src/onchain/IR/IRNodes/IRVar";
 import { TermInt, addPIntMethods } from "./TermInt";
 import { TermList, addPListMethods } from "./TermList";
 

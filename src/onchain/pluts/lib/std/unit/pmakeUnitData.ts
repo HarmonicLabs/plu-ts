@@ -1,6 +1,6 @@
-import { DataConstr } from "../../../../../types/Data/DataConstr";
-import { IRConst } from "../../../../IR/IRNodes/IRConst";
-import { IRHoisted } from "../../../../IR/IRNodes/IRHoisted";
+import { DataConstr } from "../../../../../../../src/types/Data/DataConstr";
+import { IRConst } from "../../../../../../../src/onchain/IR/IRNodes/IRConst";
+import { IRHoisted } from "../../../../../../../src/onchain/IR/IRNodes/IRHoisted";
 import type { PData } from "../../../PTypes";
 import { Term } from "../../../Term";
 import { data } from "../../../type_system/types";

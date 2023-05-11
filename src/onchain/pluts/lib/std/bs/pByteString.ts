@@ -1,5 +1,5 @@
-import { ByteString } from "../../../../../types/HexString/ByteString";
-import { IRConst } from "../../../../IR/IRNodes/IRConst";
+import { ByteString } from "../../../../../../../src/types/HexString/ByteString";
+import { IRConst } from "../../../../../../../src/onchain/IR/IRNodes/IRConst";
 import { Term } from "../../../Term";
 import { bs } from "../../../type_system/types";
 import { TermBS, addPByteStringMethods } from "../UtilityTerms/TermBS";

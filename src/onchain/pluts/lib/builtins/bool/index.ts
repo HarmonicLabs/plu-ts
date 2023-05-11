@@ -1,6 +1,6 @@
-import ObjectUtils from "../../../../../utils/ObjectUtils";
-import { IRNative } from "../../../../IR/IRNodes/IRNative";
-import { Builtin } from "../../../../UPLC/UPLCTerms/Builtin";
+import ObjectUtils from "../../../../../../../src/utils/ObjectUtils";
+import { IRNative } from "../../../../../../../src/onchain/IR/IRNodes/IRNative";
+import { Builtin } from "../../../../../../../src/onchain/UPLC/UPLCTerms/Builtin";
 import { TermFn, PBool, PLam, PDelayed } from "../../../PTypes";
 import { Term } from "../../../Term";
 import { TermType, ToPType, tyVar, fn, bool, delayed, lam } from "../../../type_system";

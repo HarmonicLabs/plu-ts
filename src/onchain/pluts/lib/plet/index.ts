@@ -1,14 +1,14 @@
 import type { PType } from "../../PType";
-import { IRApp } from "../../../IR/IRNodes/IRApp";
-import { IRFunc } from "../../../IR/IRNodes/IRFunc";
-import { IRLetted } from "../../../IR/IRNodes/IRLetted";
-import { IRVar } from "../../../IR/IRNodes/IRVar";
+import { IRApp } from "../../../../../../src/onchain/IR/IRNodes/IRApp";
+import { IRFunc } from "../../../../../../src/onchain/IR/IRNodes/IRFunc";
+import { IRLetted } from "../../../../../../src/onchain/IR/IRNodes/IRLetted";
+import { IRVar } from "../../../../../../src/onchain/IR/IRNodes/IRVar";
 import { Term } from "../../Term";
 import { PrimType } from "../../type_system/types";
 import { UtilityTermOf, addUtilityForType } from "../addUtilityForType";
 import { _fromData } from "../std/data/conversion/fromData_minimal";
-import { isClosedIRTerm } from "../../../IR/utils/isClosedIRTerm";
-import { IRHoisted } from "../../../IR/IRNodes/IRHoisted";
+import { isClosedIRTerm } from "../../../../../../src/onchain/IR/utils/isClosedIRTerm";
+import { IRHoisted } from "../../../../../../src/onchain/IR/IRNodes/IRHoisted";
 
 export type LettedTerm<PVarT extends PType> = UtilityTermOf<PVarT> & {
     in: <PExprResult extends PType>( expr: (value: UtilityTermOf<PVarT>) => Term<PExprResult> ) => Term<PExprResult>

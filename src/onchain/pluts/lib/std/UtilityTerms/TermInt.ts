@@ -1,7 +1,7 @@
-import ObjectUtils from "../../../../../utils/ObjectUtils";
+import ObjectUtils from "../../../../../../../src/utils/ObjectUtils";
 import { PInt, TermFn, PBool } from "../../../PTypes";
 import { Term } from "../../../Term";
-import { psub, pmult, pdiv, pquot, prem, pmod } from "../../builtins/int/";
+import { psub, pmult, pdiv, pquot, prem, pmod } from "../../builtins/int";
 import { peqInt, pgreaterEqInt, pgreaterInt, plessEqInt, plessInt } from "../../builtins/int/intBinOpToBool";
 import { padd } from "../../builtins/int/padd";
 import { PappArg } from "../../pappArg";

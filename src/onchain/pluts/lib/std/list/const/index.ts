@@ -1,9 +1,9 @@
-import { Data, isData } from "../../../../../../types/Data/Data";
-import JsRuntime from "../../../../../../utils/JsRuntime";
-import { Machine } from "../../../../../CEK";
-import { IRConst } from "../../../../../IR/IRNodes/IRConst";
-import { UPLCTerm, showUPLC } from "../../../../../UPLC/UPLCTerm";
-import { UPLCConst } from "../../../../../UPLC/UPLCTerms/UPLCConst";
+import { Data, isData } from "../../../../../../../../src/types/Data/Data";
+import JsRuntime from "../../../../../../../../src/utils/JsRuntime";
+import { Machine } from "../../../../../../../../src/onchain/CEK";
+import { IRConst } from "../../../../../../../../src/onchain/IR/IRNodes/IRConst";
+import { UPLCTerm, showUPLC } from "../../../../../../../../src/onchain/UPLC/UPLCTerm";
+import { UPLCConst } from "../../../../../../../../src/onchain/UPLC/UPLCTerms/UPLCConst";
 import { PList, PData } from "../../../../PTypes";
 import { Term } from "../../../../Term";
 import { ToPType, isWellFormedType } from "../../../../type_system";

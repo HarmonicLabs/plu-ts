@@ -1,4 +1,4 @@
-import type { ByteString } from "../../../types/HexString/ByteString";
+import type { ByteString } from "../../../../../src/types/HexString/ByteString";
 import { PDataRepresentable } from "../PType/PDataRepresentable";
 
 export class PByteString extends PDataRepresentable

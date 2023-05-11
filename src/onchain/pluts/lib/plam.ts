@@ -1,6 +1,6 @@
-import ObjectUtils from "../../../utils/ObjectUtils";
-import { IRFunc } from "../../IR/IRNodes/IRFunc";
-import { IRVar } from "../../IR/IRNodes/IRVar";
+import ObjectUtils from "../../../../../src/utils/ObjectUtils";
+import { IRFunc } from "../../../../../src/onchain/IR/IRNodes/IRFunc";
+import { IRVar } from "../../../../../src/onchain/IR/IRNodes/IRVar";
 import { PLam } from "../PTypes";
 import { Term } from "../Term";
 import { includesDynamicPairs } from "../type_system/includesDynamicPairs";

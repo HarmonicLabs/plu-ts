@@ -1,4 +1,4 @@
-import { Cloneable, isCloneable } from "../../../types/interfaces/Cloneable";
+import { Cloneable, isCloneable } from "../../../../../src/types/interfaces/Cloneable";
 import { PType } from "../PType";
 
 export class PDelayed< DelayedPType extends PType > extends PType

@@ -1,5 +1,5 @@
 
-import type { UPLCTerm } from "../../UPLC/UPLCTerm";
+import type { UPLCTerm } from "../../../../../src/onchain/UPLC/UPLCTerm";
 import { TermType, tyVar } from "../type_system/types";
 
 /**

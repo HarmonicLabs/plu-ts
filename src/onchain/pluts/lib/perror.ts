@@ -1,4 +1,4 @@
-import { IRError } from "../../IR/IRNodes/IRError";
+import { IRError } from "../../../../../src/onchain/IR/IRNodes/IRError";
 import { Term } from "../Term";
 import { TermType, ToPType } from "../type_system";
 

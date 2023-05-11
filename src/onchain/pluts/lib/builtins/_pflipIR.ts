@@ -1,7 +1,7 @@
-import { IRApp } from "../../../IR/IRNodes/IRApp";
-import { IRFunc } from "../../../IR/IRNodes/IRFunc";
-import { IRHoisted } from "../../../IR/IRNodes/IRHoisted";
-import { IRVar } from "../../../IR/IRNodes/IRVar";
+import { IRApp } from "../../../../../../src/onchain/IR/IRNodes/IRApp";
+import { IRFunc } from "../../../../../../src/onchain/IR/IRNodes/IRFunc";
+import { IRHoisted } from "../../../../../../src/onchain/IR/IRNodes/IRHoisted";
+import { IRVar } from "../../../../../../src/onchain/IR/IRNodes/IRVar";
 
 // identicall to `pflip` just at UPLC level to avoid using `papp`
 export const _pflipIR = new IRHoisted(

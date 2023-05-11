@@ -1,5 +1,5 @@
-import { Data } from "../../../../types/Data/Data";
-import { DataConstr } from "../../../../types/Data/DataConstr";
+import { Data } from "../../../../../../src/types/Data/Data";
+import { DataConstr } from "../../../../../../src/types/Data/DataConstr";
 import { PType } from "../../PType";
 
 export class PData extends PType

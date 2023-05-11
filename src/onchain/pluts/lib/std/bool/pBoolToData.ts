@@ -1,4 +1,4 @@
-import { DataConstr } from "../../../../../types/Data/DataConstr";
+import { DataConstr } from "../../../../../../../src/types/Data/DataConstr";
 import { asData, bool } from "../../../type_system/types";
 import { pif } from "../../builtins";
 import { phoist } from "../../phoist";

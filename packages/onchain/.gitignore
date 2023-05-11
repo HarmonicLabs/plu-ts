@@ -1,0 +1,20 @@
+# dependecies can be retreived via ```npm install``` as long ```package.json``` is present
+node_modules/
+# can be retreived by running tests
+coverage/
+
+.vscode*
+
+.npmrc*
+
+# npm pack
+*.tgz
+
+# output of build
+dist
+
+src/offchain/tx/builder/__tests__/TxBuilder.contracts.test.ts
+
+# workers compilation
+tsc-out/
+src/offchain/tx/builder/rollup-out/

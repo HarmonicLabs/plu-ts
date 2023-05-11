@@ -1,7 +1,7 @@
 import type { PType } from "../../PType";
 import type { PLam } from "./PLam";
 import type { Term } from "../..";
-import type { Tail } from "../../../../utils/ts";
+import type { Tail } from "../../../../../../src/utils/ts";
 import { PappArg, UtilityTermOf } from "../../lib";
 
 

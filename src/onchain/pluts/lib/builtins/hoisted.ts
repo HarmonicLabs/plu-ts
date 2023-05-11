@@ -1,7 +1,7 @@
-import ObjectUtils from "../../../../utils/ObjectUtils";
-import { IRNative } from "../../../IR/IRNodes/IRNative";
-import { Lambda } from "../../../UPLC/UPLCTerms/Lambda";
-import { UPLCVar } from "../../../UPLC/UPLCTerms/UPLCVar";
+import ObjectUtils from "../../../../../../src/utils/ObjectUtils";
+import { IRNative } from "../../../../../../src/onchain/IR/IRNodes/IRNative";
+import { Lambda } from "../../../../../../src/onchain/UPLC/UPLCTerms/Lambda";
+import { UPLCVar } from "../../../../../../src/onchain/UPLC/UPLCTerms/UPLCVar";
 import { TermFn, PLam } from "../../PTypes";
 import { Term } from "../../Term";
 import { TermType, ToPType, lam } from "../../type_system";

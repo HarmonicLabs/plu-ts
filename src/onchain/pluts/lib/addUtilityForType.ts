@@ -1,4 +1,4 @@
-import ObjectUtils from "../../../utils/ObjectUtils";
+import ObjectUtils from "../../../../../src/utils/ObjectUtils";
 import { PType } from "../PType";
 import type { PBool, PByteString, PInt, PList, PPair, PString, PStruct, PLam, PAlias } from "../PTypes";
 import { Term } from "../Term";

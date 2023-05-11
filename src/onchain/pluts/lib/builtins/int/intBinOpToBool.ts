@@ -1,7 +1,7 @@
-import ObjectUtils from "../../../../../utils/ObjectUtils";
-import { IRApp } from "../../../../IR/IRNodes/IRApp";
-import { IRHoisted } from "../../../../IR/IRNodes/IRHoisted";
-import { IRNative } from "../../../../IR/IRNodes/IRNative";
+import ObjectUtils from "../../../../../../../src/utils/ObjectUtils";
+import { IRApp } from "../../../../../../../src/onchain/IR/IRNodes/IRApp";
+import { IRHoisted } from "../../../../../../../src/onchain/IR/IRNodes/IRHoisted";
+import { IRNative } from "../../../../../../../src/onchain/IR/IRNodes/IRNative";
 import { PLam, PInt, PBool } from "../../../PTypes";
 import { Term } from "../../../Term";
 import { fn, int, bool } from "../../../type_system";

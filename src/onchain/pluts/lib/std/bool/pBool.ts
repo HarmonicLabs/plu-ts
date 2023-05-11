@@ -1,4 +1,4 @@
-import { IRConst } from "../../../../IR/IRNodes/IRConst";
+import { IRConst } from "../../../../../../../src/onchain/IR/IRNodes/IRConst";
 import type { PBool } from "../../../PTypes/PBool";
 import { Term } from "../../../Term";
 import { bool } from "../../../type_system";

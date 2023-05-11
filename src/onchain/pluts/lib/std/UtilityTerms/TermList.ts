@@ -1,5 +1,5 @@
-import { BasePlutsError } from "../../../../../errors/BasePlutsError";
-import ObjectUtils from "../../../../../utils/ObjectUtils";
+import { BasePlutsError } from "../../../../../../../src/errors/BasePlutsError";
+import ObjectUtils from "../../../../../../../src/utils/ObjectUtils";
 import { PType } from "../../../PType";
 import { PDataRepresentable } from "../../../PType/PDataRepresentable";
 import type { PList, TermFn, PInt, PLam, PBool } from "../../../PTypes";

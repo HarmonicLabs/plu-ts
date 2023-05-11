@@ -1,8 +1,8 @@
-import ObjectUtils from "../../../../../utils/ObjectUtils";
-import { IRApp } from "../../../../IR/IRNodes/IRApp";
-import { IRConst } from "../../../../IR/IRNodes/IRConst";
-import { IRHoisted } from "../../../../IR/IRNodes/IRHoisted";
-import { IRNative } from "../../../../IR/IRNodes/IRNative";
+import ObjectUtils from "../../../../../../../src/utils/ObjectUtils";
+import { IRApp } from "../../../../../../../src/onchain/IR/IRNodes/IRApp";
+import { IRConst } from "../../../../../../../src/onchain/IR/IRNodes/IRConst";
+import { IRHoisted } from "../../../../../../../src/onchain/IR/IRNodes/IRHoisted";
+import { IRNative } from "../../../../../../../src/onchain/IR/IRNodes/IRNative";
 import { PType } from "../../../PType";
 import { TermFn, PData, PLam, PInt, PList, PPair, PByteString, PBool, PAsData } from "../../../PTypes";
 import { Term } from "../../../Term";
