@@ -2,7 +2,7 @@ import { fromUtf8, isUint8Array, lexCompare, toHex } from "@harmoniclabs/uint8ar
 import { keepRelevant } from "./keepRelevant";
 import { GenesisInfos, isGenesisInfos } from "./GenesisInfos";
 import { isCostModelsV2, isCostModelsV1, defaultV2Costs, defaultV1Costs, costModelsToLanguageViewCbor } from "@harmoniclabs/cardano-costmodels-ts";
-import { NetworkT, ProtocolParamters, isPartialProtocolParameters, Tx, Value, ValueUnits, TxOut, TxRedeemerTag, txRdmrTagToString, ScriptType, UTxO, VKeyWitness, Script, BootstrapWitness, TxRedeemer, Hash32, TxIn, Hash28, AuxiliaryData, TxWitnessSet, getNSignersNeeded, txRedeemerTagToString, ScriptDataHash } from "@harmoniclabs/cardano-ledger-ts";
+import { NetworkT, ProtocolParamters, isPartialProtocolParameters, Tx, Value, ValueUnits, TxOut, TxRedeemerTag, txRdmrTagToString, ScriptType, UTxO, VKeyWitness, Script, BootstrapWitness, TxRedeemer, Hash32, TxIn, Hash28, AuxiliaryData, TxWitnessSet, getNSignersNeeded, txRedeemerTagToString, ScriptDataHash, Address, AddressStr } from "@harmoniclabs/cardano-ledger-ts";
 import { CborString, CborPositiveRational, Cbor, CborArray } from "@harmoniclabs/cbor";
 import { byte, blake2b_256 } from "@harmoniclabs/crypto";
 import { Data, dataToCborObj, DataConstr, dataToCbor } from "@harmoniclabs/plutus-data";
@@ -50,7 +50,6 @@ function getScriptLikeUplc( scriptLike: ScriptLike ): UPLCTerm
 
 export class TxBuilder
 {
-    readonly network!: NetworkT
     readonly protocolParamters!: ProtocolParamters
     readonly genesisInfos?: GenesisInfos
 
@@ -66,7 +65,6 @@ export class TxBuilder
     }
     
     constructor(
-        network: NetworkT,
         protocolParamters: Readonly<ProtocolParamters>,
         genesisInfos?: GenesisInfos
     )
@@ -94,17 +92,6 @@ export class TxBuilder
                     configurable: false
                 }
             }
-        );
-
-        assert(
-            network === "testnet" ||
-            network === "mainnet",
-            "invlaid 'network' argument while constructing a 'TxBuilder' instance"
-        );
-        defineReadOnlyProperty(
-            this,
-            "network",
-            network
         );
 
         assert(
@@ -461,6 +448,15 @@ type ScriptToExecEntry = {
     datum?: Data
 };
 
+function resolveNetwork( addr: Address | AddressStr ): NetworkT
+{
+    if ( typeof addr === "string" ) {
+        return addr.startsWith( "addr_test" ) ? "testnet" : "mainnet";
+    }
+
+    return addr.network;
+}
+
 /**
  * extracts the important data from the input
  * and returns it in an easier way to opearte with
@@ -497,6 +493,7 @@ function initTxBuild(
     outs: TxOut[]
 }
 {
+    const network = resolveNetwork(changeAddress);
 
     let totInputValue = mints?.reduce( ( prev, curr ) => Value.add( prev, curr.value ), Value.zero ) ?? Value.zero;
     const refIns: UTxO[] = readonlyRefInputs?.slice() ?? [];
@@ -925,7 +922,7 @@ function initTxBuild(
                 forceBigUInt( invalidAfter ) - forceBigUInt( invalidBefore ),
             auxDataHash: auxData?.hash,
             scriptDataHash: getScriptDataHash( redeemers, datumsScriptData, languageViews ),
-            network: this.network
+            network
         },
         witnesses: dummyTxWitnesses,
         auxiliaryData: auxData,
