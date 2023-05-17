@@ -4,7 +4,6 @@ import { DataConstr } from "@harmoniclabs/plutus-data";
 import { TxBuilder } from "../TxBuilder"
 
 const txBuilder = new TxBuilder(
-    "testnet",
     defaultProtocolParameters
 )
 

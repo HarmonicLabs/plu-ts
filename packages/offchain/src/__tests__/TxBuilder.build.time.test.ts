@@ -5,12 +5,10 @@ import { TxBuilder } from "../TxBuilder";
 describe("build time", () => {
 
     const txBuilder = new TxBuilder(
-        "mainnet",
         defaultProtocolParameters
     );
 
     const txBuilderWithGenesis = new TxBuilder(
-        "mainnet",
         defaultProtocolParameters,
         {
             slotLengthInMilliseconds: 1000,
