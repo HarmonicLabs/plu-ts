@@ -3,6 +3,19 @@ import { ITxOutRef, IUTxO, TxOutRef, TxOutRefStr, UTxO, isITxOutRef, isIUTxO } f
 
 export type CanResolveToUTxO = IUTxO | ITxOutRef | TxOutRefStr;
 
+export function forceTxOutRefStr( canResolve: CanResolveToUTxO ): TxOutRefStr
+{
+    if( typeof canResolve === "string" ) return canResolve;
+    
+    if( isIUTxO( canResolve ) ) canResolve = canResolve.utxoRef;
+
+    if( canResolve instanceof TxOutRef ) return canResolve.toString();
+    if( isITxOutRef( canResolve ) ) return `${canResolve.id.toString()}#${canResolve.index}`;
+
+    console.error( canResolve );
+    throw new Error('"forceTxOutRefStr" expects a "CanResolveToUTxO"');
+}
+
 function isTxOutRefStr( stuff: any ): stuff is TxOutRefStr
 {
     if( typeof stuff !== "string" ) return false;

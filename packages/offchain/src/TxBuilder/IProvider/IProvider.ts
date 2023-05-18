@@ -1,9 +1,9 @@
+import { UTxO } from "@harmoniclabs/cardano-ledger-ts";
+import { CanResolveToUTxO } from "../CanResolveToUTxO/CanResolveToUTxO";
 import { GenesisInfos } from "../GenesisInfos";
 
-/**
- * @experimental
- * @deprecated not complete in this version
- */
+
 export interface IProvider {
-    fetchGenesisInfos: () => Promise<GenesisInfos>
+    getGenesisInfos: () => Promise<GenesisInfos>
+    resolveUtxos: ( utxos: CanResolveToUTxO[] ) => Promise<UTxO[]>
 }

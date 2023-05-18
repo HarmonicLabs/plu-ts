@@ -2,15 +2,16 @@ import { defineReadOnlyProperty } from "@harmoniclabs/obj-utils";
 import type { IProvider } from "../IProvider";
 import type { TxBuilder } from "../TxBuilder";
 import { ITxBuildArgs, cloneITxBuildArgs } from "../../txBuild";
-import { Address, AddressStr, AnyCertificate, Certificate, CertificateType, Hash28, ITxOutRef, IValuePolicyEntry, PlutusScriptType, PoolKeyHash, PoolParams, PubKeyHash, Script, StakeAddress, StakeAddressBech32, StakeCredentials, StakeValidatorHash, Tx, TxIn, TxMetadata, TxMetadatum, TxOutRefStr, TxWithdrawalsEntry, UTxO, isIUTxO } from "@harmoniclabs/cardano-ledger-ts";
+import { Address, AddressStr, AnyCertificate, Certificate, CertificateType, Hash28, ITxOutRef, IUTxO, IValuePolicyEntry, PlutusScriptType, PoolKeyHash, PoolParams, PubKeyHash, Script, ScriptType, StakeAddress, StakeAddressBech32, StakeCredentials, StakeValidatorHash, Tx, TxIn, TxMetadata, TxMetadatum, TxOutRefStr, TxWithdrawalsEntry, UTxO, Value, isIUTxO } from "@harmoniclabs/cardano-ledger-ts";
 import { CanBeUInteger, forceBigUInt } from "../../utils/ints";
 import { CanBeData } from "../../utils/CanBeData";
-import { CanResolveToUTxO, cloneCanResolveToUTxO, shouldResolveToUTxO } from "../CanResolveToUTxO/CanResolveToUTxO";
+import { CanResolveToUTxO, cloneCanResolveToUTxO, forceTxOutRefStr, shouldResolveToUTxO } from "../CanResolveToUTxO/CanResolveToUTxO";
 import { jsonToMetadata } from "./jsonToMetadata";
 import { isGenesisInfos } from "../GenesisInfos";
 import { decodeBech32 } from "@harmoniclabs/crypto";
 import { fromHex } from "@harmoniclabs/uint8array-utils";
-import { Data } from "@harmoniclabs/plutus-data";
+import { isData } from "@harmoniclabs/plutus-data";
+import { canBeData, canBeUInteger, forceData } from "@harmoniclabs/plu-ts-offchain";
 
 // /** sync */
 // interface TxBuilderStep {
@@ -32,33 +33,38 @@ type SimpleScriptInfos = {
     redeemer: CanBeData;
 };
 
-type TxBuilderPromiseTaskKind
-    = "validFromPOSIX"
-    | "validToPOSIX"
-    | "delegateTo"
-    | "deregisterStake"
-    | "withdraw";
+const enum TxBuilderTaskKind {
+    ResolveUTxO = 0,
+    ResolveTxIn = 1,
+    ValidFromPOSIX = 2,
+    ValidToPOSIX = 3,
+    DelegateTo = 4,
+    DeregisterStake = 5,
+    Withdraw = 6
+}
 
-type TxBuilderTaskKind
-    = TxBuilderPromiseTaskKind
-    | "resolveUTxO"
-    | "resolveTxIn";
+type TxBuilderPromiseTaskKind
+    = TxBuilderTaskKind.ValidFromPOSIX
+    | TxBuilderTaskKind.ValidToPOSIX
+    | TxBuilderTaskKind.DelegateTo
+    | TxBuilderTaskKind.DeregisterStake
+    | TxBuilderTaskKind.Withdraw;
 
 /** async */
 interface TxBuilderPromiseTask {
     kind: TxBuilderTaskKind
-    getPromise: () => Promise<any>
+    getPromise: () => Promise<void>
 }
 
 interface TxBuilderResolveUTxOTask {
-    kind: "resolveUTxO",
-    arg: ITxOutRef | TxOutRefStr,
+    kind: TxBuilderTaskKind.ResolveUTxO,
+    arg: ITxOutRef | TxOutRefStr | IUTxO,
     onResolved: ( utxo: UTxO ) => void 
 }
 
 interface TxBuilderResolveTxInTask {
-    kind: "resolveTxIn",
-    arg: ITxOutRef | TxOutRefStr,
+    kind: TxBuilderTaskKind.ResolveTxIn,
+    arg: ITxOutRef | TxOutRefStr | IUTxO,
     onResolved: ( utxo: TxIn ) => void 
 }
 
@@ -69,7 +75,7 @@ type TxBuilderTask
 
 function cloneTask( task: TxBuilderTask ): TxBuilderTask
 {
-    if( task.kind === "resolveUTxO" || task.kind === "resolveTxIn" )
+    if( task.kind === TxBuilderTaskKind.ResolveUTxO || task.kind === TxBuilderTaskKind.ResolveTxIn )
     {
         const {
             kind,
@@ -95,13 +101,9 @@ const readonlyValueDescriptor = Object.freeze({
     configurable: false
 });
 
-/**
- * @experimental
- * @deprecated not complete in this version
- */
 export class TxBuilderRunner
 {
-    readonly build:() => Promise<Tx>
+    readonly build!:() => Promise<Tx>
 
     readonly reset!: () => TxBuilderRunner;
     
@@ -138,9 +140,16 @@ export class TxBuilderRunner
     /**
      * @deprecated `collectFrom` is unclear; use `addInputs` instead.
      */
-    readonly collectFrom: ( utxos: CanResolveToUTxO[], redeemer?: CanBeData ) => TxBuilderRunner
-    readonly addInputs: ( utxos: CanResolveToUTxO[], redeemer?: CanBeData ) => TxBuilderRunner
+    readonly collectFrom!: ( utxos: CanResolveToUTxO[], redeemer?: CanBeData ) => TxBuilderRunner
+    readonly addInputs!: ( utxos: CanResolveToUTxO[], redeemer?: CanBeData, script_or_ref?: UTxO | Script<PlutusScriptType> ) => TxBuilderRunner
     
+    readonly payTo: (
+        address: Address | AddressStr,
+        amount: CanBeUInteger | Value,
+        datum?: CanBeData,
+        refScript?: Script<ScriptType.PlutusV2> 
+    ) => TxBuilderRunner
+
     // readonly compose: ( other: Tx ) => TxBuilderRunner
     
     readonly delegateTo!:(
@@ -205,7 +214,6 @@ export class TxBuilderRunner
     
     /**
      * @experimental
-     * @deprecated not complete in this version
      */
     constructor(
         txBuilder: TxBuilder,
@@ -241,7 +249,7 @@ export class TxBuilderRunner
                 return;
             }
             tasks.push({
-                kind: "resolveUTxO",
+                kind: TxBuilderTaskKind.ResolveUTxO,
                 arg: u,
                 onResolved: ( utxo ) => refUtxos.push( utxo )
             });
@@ -373,19 +381,19 @@ export class TxBuilderRunner
 
         function _validFromSlot( slot: CanBeUInteger ): TxBuilderRunner
         {
-            tasks = tasks.filter( ({ kind }) => kind !== "validFromPOSIX" );
+            tasks = tasks.filter( ({ kind }) => kind !== TxBuilderTaskKind.ValidFromPOSIX );
             buildArgs.invalidBefore = forceBigUInt( slot );
             return self;
         }
         function _validFromPOSIX( POSIX: CanBeUInteger ): TxBuilderRunner
         {
             tasks.push({
-                kind: "validFromPOSIX",
+                kind: TxBuilderTaskKind.ValidFromPOSIX,
                 getPromise: async () => {
                     if( !isGenesisInfos( txBuilder.genesisInfos ) )
                     {
                         txBuilder.setGenesisInfos(
-                            await provider.fetchGenesisInfos()
+                            await provider.getGenesisInfos()
                         )
                     }
                     buildArgs.invalidBefore = forceBigUInt( txBuilder.posixToSlot( POSIX ) );
@@ -396,19 +404,19 @@ export class TxBuilderRunner
 
         function _validToSlot( slot: CanBeUInteger ): TxBuilderRunner
         {
-            tasks = tasks.filter( ({ kind }) => kind !== "validToPOSIX" );
+            tasks = tasks.filter( ({ kind }) => kind !== TxBuilderTaskKind.ValidToPOSIX );
             buildArgs.invalidAfter = forceBigUInt( slot );
             return self;
         }
         function _validToPOSIX( POSIX: CanBeUInteger ): TxBuilderRunner
         {
             tasks.push({
-                kind: "validToPOSIX",
+                kind: TxBuilderTaskKind.ValidToPOSIX,
                 getPromise: async () => {
                     if( !isGenesisInfos( txBuilder.genesisInfos ) )
                     {
                         txBuilder.setGenesisInfos(
-                            await provider.fetchGenesisInfos()
+                            await provider.getGenesisInfos()
                         )
                     }
                     buildArgs.invalidAfter = forceBigUInt( txBuilder.posixToSlot( POSIX ) );
@@ -479,17 +487,29 @@ export class TxBuilderRunner
             }
         }
 
+        function _tryGetRefScript( scriptHashStr: string ): UTxO | undefined
+        {
+            const theRef = refUtxos.find( ref => ref.resolved.refScript?.hash?.toString() === scriptHashStr );
+            
+            if( theRef === undefined ) return undefined;
+            return theRef;
+        }
+
+        function _tryGetScript( scriptHashStr: string ): Script<PlutusScriptType> | undefined
+        {
+            const theScript = scripts.find( scr => scr.hash.toString() === scriptHashStr );
+            
+            if( theScript === undefined ) return undefined;
+            return theScript as Script<PlutusScriptType>;
+        }
+
         function _tryGetRefStakeScript( stakeCreds: StakeCredentials ): UTxO | undefined
         {
             const scriptHash = stakeCreds.hash;
 
             if( Array.isArray( scriptHash ) ) return undefined
             
-            const scriptHashStr = scriptHash.toString();
-            const theRef = refUtxos.find( ref => ref.resolved.refScript?.hash?.toString() === scriptHashStr );
-            
-            if( theRef === undefined ) return undefined;
-            return theRef;
+            return _tryGetRefScript( scriptHash.toString() );
         }
 
         function _tryGetStakeScript( stakeCreds: StakeCredentials ): Script<PlutusScriptType> | undefined
@@ -498,11 +518,7 @@ export class TxBuilderRunner
 
             if( Array.isArray( scriptHash ) ) return undefined;
             
-            const scriptHashStr = scriptHash.toString();
-            const theScript = scripts.find( scr => scr.hash.toString() === scriptHashStr );
-            
-            if( theScript === undefined ) return undefined;
-            return theScript as Script<PlutusScriptType>;
+            return _tryGetScript( scriptHash.toString() );
         }
 
         function _ensureStakeScript(
@@ -588,7 +604,7 @@ export class TxBuilderRunner
                 if( shouldResolveToUTxO( script_or_ref ) )
                 {
                     tasks.push({
-                        kind: "resolveUTxO",
+                        kind: TxBuilderTaskKind.ResolveUTxO,
                         arg: script_or_ref,
                         onResolved: (utxo) => {
                             script_or_ref = utxo;
@@ -602,7 +618,7 @@ export class TxBuilderRunner
             }
             
             tasks.push({
-                kind: "delegateTo",
+                kind: TxBuilderTaskKind.DelegateTo,
                 getPromise: async () => {
 
                     script = _ensureStakeScript(
@@ -660,7 +676,7 @@ export class TxBuilderRunner
                 if( shouldResolveToUTxO( script_or_ref ) )
                 {
                     tasks.push({
-                        kind: "resolveUTxO",
+                        kind: TxBuilderTaskKind.ResolveUTxO,
                         arg: script_or_ref,
                         onResolved: (utxo) => {
                             script_or_ref = utxo;
@@ -674,7 +690,7 @@ export class TxBuilderRunner
             }
             
             tasks.push({
-                kind: "deregisterStake",
+                kind: TxBuilderTaskKind.DeregisterStake,
                 getPromise: async () => {
 
                     script = _ensureStakeScript(
@@ -732,7 +748,7 @@ export class TxBuilderRunner
                 if( shouldResolveToUTxO( script_or_ref ) )
                 {
                     tasks.push({
-                        kind: "resolveUTxO",
+                        kind: TxBuilderTaskKind.ResolveUTxO,
                         arg: script_or_ref,
                         onResolved: (utxo) => {
                             script_or_ref = utxo;
@@ -746,7 +762,7 @@ export class TxBuilderRunner
             }
             
             tasks.push({
-                kind: "withdraw",
+                kind: TxBuilderTaskKind.Withdraw,
                 getPromise: async () => {
 
                     script = _ensureStakeScript(
@@ -774,50 +790,293 @@ export class TxBuilderRunner
             return self;
         }
 
-        function _addInput(
-            utxos: UTxO[],
-            redeemer?: Data,
-            script_or_ref?: UTxO | Script<PlutusScriptType>
+        function _pushInput(
+            utxo: UTxO,
+            redeemer?: CanBeData,
+            script_or_ref?: IUTxO | Script<PlutusScriptType>,
+            datum?: CanBeData
         ): void
         {
-
-        }
-
-        function _addInputs(
-            utxos: CanResolveToUTxO[],
-            redeemer?: CanBeData,
-            script_or_ref?: CanResolveToUTxO | Script<PlutusScriptType>
-        ): TxBuilderRunner
-        {
-            if( shouldResolveToUTxO( script_or_ref ) )
+            const paymentCreds = utxo.resolved.address.paymentCreds;
+            if( paymentCreds.type === "script" )
             {
-                tasks.push({
-                    kind: "resolveUTxO",
-                    arg: script_or_ref,
-                    onResolved: ( ref ) => {
-                        
-                    }
-                })
-            }
-            for( const _utxo of utxos )
-            {
-                if( isIUTxO( _utxo ) )
+                if( !canBeData( redeemer ) ) throw new Error("script input " + utxo.utxoRef.toString() + " is missing a redeemer");
+                else redeemer = forceData( redeemer );
+
+                if( !isIUTxO( script_or_ref ) || !( script_or_ref instanceof Script ) )
+                throw new Error("script input " + utxo.utxoRef.toString() + " is missing the script source");
+
+                if( !Array.isArray( buildArgs.inputs ) )
                 {
-
+                    buildArgs.inputs = [] as any;
                 }
-                else
-                {
-                    tasks.push({
-                        kind: "resolveTxIn",
-                        arg: _utxo,
-                        onResolved: (txIn: TxIn) => {
 
+                const isInlineDatum = isData( utxo.resolved.datum );
+                if( !isInlineDatum && !canBeData( datum ) )
+                throw new Error("missing datum for script input " + + utxo.utxoRef.toString());
+                
+                if( isIUTxO( script_or_ref )  )
+                {
+                    const ref = script_or_ref instanceof UTxO ? script_or_ref : new UTxO( script_or_ref ); 
+
+                    buildArgs.inputs.push({
+                        utxo,
+                        referenceScriptV2: {
+                            refUtxo: ref,
+                            redeemer,
+                            datum: isInlineDatum ? "inline" : datum as CanBeData
                         }
                     })
                 }
-            }    
-            return self
+                return;
+            }
+            
+            // not script
+            if( !Array.isArray( buildArgs.inputs ) )
+            {
+                buildArgs.inputs = [{ utxo }]
+            }
+            else
+            {
+                buildArgs.inputs.push({ utxo });
+            }
         }
+
+        function _addInput(
+            utxo: IUTxO,
+            redeemer: CanBeData | undefined,
+            script_or_ref: IUTxO | Script<PlutusScriptType> | undefined,
+            datum: CanBeData | undefined
+        ): void
+        {
+            utxo = utxo instanceof UTxO ? utxo : new UTxO( utxo );
+            const paymentCreds = (utxo as UTxO).resolved.address.paymentCreds;
+            if( paymentCreds.type === "script" )
+            {
+                const hashStr = paymentCreds.hash.toString();
+                
+                if( !isIUTxO( script_or_ref ) ) script_or_ref = _tryGetRefScript( hashStr ) ?? script_or_ref;
+                if( !script_or_ref ) script_or_ref = _tryGetScript( hashStr );
+                if( !script_or_ref ) throw new Error("missing script for utxo: " + (utxo as UTxO).utxoRef.toString() );
+
+                if( isIUTxO( script_or_ref ) ) script_or_ref = new UTxO( script_or_ref );
+            }
+
+            _pushInput( utxo as UTxO, redeemer, script_or_ref, datum );
+        }
+
+        function __addInptus(
+            utxos: CanResolveToUTxO[],
+            redeemer?: CanBeData,
+            script_or_ref?: IUTxO | Script<PlutusScriptType>,
+            datum?: CanBeData
+            ): TxBuilderRunner
+        {
+            for( const _utxo of utxos )
+            {
+                tasks.push({
+                    kind: TxBuilderTaskKind.ResolveTxIn,
+                    arg: _utxo,
+                    onResolved: ( txIn ) => {
+                        _addInput( txIn, redeemer, script_or_ref, datum );
+                    }
+                });
+            }    
+            return self;
+        }
+        function _addInputs(
+            utxos: CanResolveToUTxO[],
+            datum?: CanBeData | "inline",
+            redeemer?: CanBeData,
+            script_or_ref?: CanResolveToUTxO | Script<PlutusScriptType>,
+        ): TxBuilderRunner
+        {
+            datum = datum === "inline" ? undefined : datum;
+            if( shouldResolveToUTxO( script_or_ref ) )
+            {
+                tasks.push({
+                    kind: TxBuilderTaskKind.ResolveUTxO,
+                    arg: script_or_ref,
+                    onResolved: ( ref ) => {
+                        __addInptus( utxos, redeemer, ref, datum );
+                    }
+                });
+                
+                return self;
+            }
+            return __addInptus( utxos, redeemer, script_or_ref, datum );
+        }
+
+        function _payTo(
+            address: Address | AddressStr,
+            amount: CanBeUInteger | Value,
+            datum?: CanBeData,
+            refScript?: Script<ScriptType.PlutusV2> 
+        ): TxBuilderRunner
+        {
+            if( !Array.isArray( buildArgs.outputs ) )
+            {
+                buildArgs.outputs = [];
+            }
+
+            buildArgs.outputs.push({
+                address: typeof address === "string" ? Address.fromString( address ) : address,
+                value: canBeUInteger( amount ) ? Value.lovelaces( amount ) : amount,
+                datum: datum !== undefined && canBeData( datum ) ? forceData( datum ) : undefined,
+                refScript
+            });
+
+            return self;
+        }
+
+        async function _build(): Promise<Tx>
+        {
+            const otherTasks: TxBuilderPromiseTask[] = new Array( tasks.length );
+            let oLen = 0;
+            const utxoTasks: TxBuilderResolveUTxOTask[] = new Array( tasks.length );
+            let uLen = 0;
+            const insTasks: TxBuilderResolveTxInTask[] = new Array( tasks.length );
+            let iLen = 0;
+
+            // collect tasks first time
+            for(const task of tasks)
+            {
+                switch( task.kind )
+                {
+                    case TxBuilderTaskKind.ResolveUTxO:
+                        utxoTasks[ uLen++ ] = task as TxBuilderResolveUTxOTask;
+                        break;
+                    case TxBuilderTaskKind.ResolveTxIn:
+                        insTasks[ iLen++ ] = task as TxBuilderResolveTxInTask;
+                        break;
+                    default:
+                        otherTasks[ oLen++ ] = task;
+                        break;
+                }
+            }
+            tasks.length = 0;
+            utxoTasks.length = uLen;
+            insTasks.length = iLen;
+            otherTasks.length = oLen;
+
+            async function resolveUtxos( _tasks: TxBuilderResolveUTxOTask[] | TxBuilderResolveTxInTask[] ): Promise<void>
+            {
+                const utxosToFind = new Array( _tasks.length ) as CanResolveToUTxO[];
+                let uLen = 0;
+                const resolvedUtxos = new Array( _tasks.length ) as UTxO[];
+                let iLen = 0;
+    
+                for( const { arg } of _tasks )
+                {
+                    if( arg instanceof UTxO ) resolvedUtxos[ iLen++ ] = arg;
+                    else if( isIUTxO( arg ) ) resolvedUtxos[ iLen++ ] = new UTxO( arg );
+                    else utxosToFind[ uLen++ ] = arg;
+                }
+                utxosToFind.length = uLen;
+                resolvedUtxos.length = iLen;
+    
+                if( uLen > 0 )
+                {
+                    resolvedUtxos.push( ...(await provider.resolveUtxos( utxosToFind )) );
+                }
+    
+                for( const u of resolvedUtxos )
+                {
+                    const resolvedIdx = _tasks.findIndex( t => forceTxOutRefStr( t.arg ) === u.utxoRef.toString() );
+                    if( resolvedIdx < 0 )
+                    {
+                        continue; // ??? // extra utxo?
+                    }
+                    let task: TxBuilderResolveUTxOTask | TxBuilderResolveTxInTask
+                    if( resolvedIdx === 0 )
+                    {
+                        task = _tasks.shift()!;
+                    }
+                    else
+                    {
+                        task = _tasks[ resolvedIdx ];
+                        // remove in-place
+                        void _tasks.splice( resolvedIdx, 1 );
+                    }
+    
+                    task.onResolved( u );
+                }
+
+                // should already be 0 but just to be sure;
+                _tasks.length = 0;
+            }
+
+            await resolveUtxos( utxoTasks );
+
+            let hasUTxOTasks = utxoTasks.length > 0;
+            do {
+                // collect any other thasks
+                for(const task of tasks)
+                {
+                    switch( task.kind )
+                    {
+                        case TxBuilderTaskKind.ResolveUTxO:
+                            utxoTasks.push( task as TxBuilderResolveUTxOTask );
+                            break;
+                        case TxBuilderTaskKind.ResolveTxIn:
+                            insTasks.push( task as TxBuilderResolveTxInTask );
+                            break;
+                        default:
+                            otherTasks.push( task );
+                            break;
+                    }
+                }
+                // clear all tasks
+                tasks.length = 0;
+
+                hasUTxOTasks = utxoTasks.length > 0;
+                hasUTxOTasks && await resolveUtxos( utxoTasks );
+            } while ( hasUTxOTasks )
+
+            insTasks.length > 0 && await resolveUtxos( insTasks );
+
+            while( otherTasks.length > 0 )
+            {
+                const { kind, getPromise } = otherTasks.pop()!
+                if(
+                    ( kind === TxBuilderTaskKind.ValidFromPOSIX || kind === TxBuilderTaskKind.ValidToPOSIX ) &&
+                    !isGenesisInfos( txBuilder.genesisInfos )
+                )
+                {
+                    txBuilder.setGenesisInfos(
+                        await provider.getGenesisInfos()
+                    );
+                }
+
+                await getPromise();
+            };
+
+            if( !buildArgs.changeAddress )
+            {
+                if(
+                    !Array.isArray( buildArgs.inputs ) ||
+                    buildArgs.inputs.length === 0
+                )
+                {
+                    throw new Error("can't deduce change Address; missing inputs")    
+                }
+
+                buildArgs.changeAddress = buildArgs.inputs
+                ?.find( _in => _in.utxo.resolved.address.paymentCreds.type === "pubKey" )
+                ?.utxo.resolved.address!;
+
+                if( !buildArgs.changeAddress )
+                {
+                    throw new Error("can't deduce change Address; only script inputs");
+                }
+            }
+
+            const tx = await txBuilder.build( buildArgs );
+            
+            self.reset();
+
+            return tx;
+        };
 
         Object.defineProperties(
             this, {
@@ -917,6 +1176,22 @@ export class TxBuilderRunner
                     value: _referenceUTxOs,
                     ...readonlyValueDescriptor
                 },
+                collectFrom: {
+                    value: _addInputs,
+                    ...readonlyValueDescriptor
+                },
+                addInputs: {
+                    value: _addInputs,
+                    ...readonlyValueDescriptor
+                },
+                payTo: {
+                    value: _payTo,
+                    ...readonlyValueDescriptor
+                },
+                build: {
+                    value: _build,
+                    ...readonlyValueDescriptor
+                }
             }
         );
     }

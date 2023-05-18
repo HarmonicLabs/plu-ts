@@ -57,7 +57,6 @@ export class TxBuilder
 
     /**
      * @experimental
-     * @deprecated not complete in this version
      */
     runWithProvider( provider: IProvider )
     {
@@ -493,7 +492,7 @@ function initTxBuild(
     outs: TxOut[]
 }
 {
-    const network = resolveNetwork(changeAddress);
+    const network = resolveNetwork( changeAddress );
 
     let totInputValue = mints?.reduce( ( prev, curr ) => Value.add( prev, curr.value ), Value.zero ) ?? Value.zero;
     const refIns: UTxO[] = readonlyRefInputs?.slice() ?? [];
