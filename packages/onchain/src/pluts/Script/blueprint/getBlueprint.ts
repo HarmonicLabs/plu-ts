@@ -5,13 +5,15 @@ export function getBlueprint(
     $id: string,
     _preamble: BlueprintPreamble,
     _validators: BlueprintValidator[],
-    _definitions: DataSchema[]
+    _definitions: DataSchema[] = []
 )
 {
     if(!Array.isArray(_validators) || _validators.every( v => typeof v === "object" ))
     {
         throw new Error("unexpected validator descriptor")
     }
+
+    if( !Array.isArray(_definitions) ) _definitions = [];
 
     return {
         $schema: "https://cips.cardano.org/cips/cip57/schemas/plutus-blueprint.json",
@@ -34,10 +36,12 @@ export function getBlueprint(
             plutusVersion: _preamble.plutusVersion === undefined ? undefined :
                 _preamble.plutusVersion === "PlutusScriptV1" ? "v1" :
                 _preamble.plutusVersion === "PlutusScriptV2" ? "v2" :
-                undefined
+                undefined,
+            license: typeof _preamble.license === "string" ? _preamble.license : undefined
         },
 
-        // validators
+        validators: _validators,
 
+        definitions: _definitions.length > 0 ? _definitions : undefined
     };
 }

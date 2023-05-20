@@ -1,10 +1,11 @@
-import { Address, UTxO, Value, defaultProtocolParameters, isIUTxO } from "@harmoniclabs/cardano-ledger-ts";
-import { IProvider } from "../../IProvider";
+import { Address, Hash32, UTxO, Value, defaultProtocolParameters, isIUTxO } from "@harmoniclabs/cardano-ledger-ts";
+import { ITxRunnerProvider } from "../../IProvider";
 import { TxBuilder } from "../../TxBuilder";
+import { DataConstr } from "@harmoniclabs/plutus-data";
 
 const SYS_START = 1506203091000; // Date.parse("2017-09-23T21:44:51Z"); // mainnet start
 
-const fakeProvider: IProvider = {
+const fakeProvider: ITxRunnerProvider = {
     async getGenesisInfos()
     {
         return {
@@ -36,7 +37,9 @@ const fakeProvider: IProvider = {
                 }
             });
         })
-    }
+    },
+    async resolveDatumHashes( hashes: Hash32[] ) { return [ new DataConstr( 0, [] ) ] }
+    // async getProtocolParameters() { return defaultProtocolParameters }
 }
 
 const txBuilder = new TxBuilder( defaultProtocolParameters );

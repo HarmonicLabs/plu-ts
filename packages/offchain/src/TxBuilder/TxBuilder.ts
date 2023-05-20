@@ -15,7 +15,7 @@ import { CanBeUInteger, forceBigUInt, canBeUInteger, unsafeForceUInt } from "../
 import { freezeAll, defineReadOnlyProperty, definePropertyIfNotPresent, hasOwn } from "@harmoniclabs/obj-utils";
 import { assert } from "../utils/assert";
 import { TxBuilderRunner } from "./TxBuilderRunner";
-import { IProvider } from "./IProvider";
+import { IProvider, ITxRunnerProvider } from "./IProvider";
 
 type ScriptLike = {
     hash: string,
@@ -58,7 +58,7 @@ export class TxBuilder
     /**
      * @experimental
      */
-    runWithProvider( provider: IProvider )
+    runWithProvider( provider: Partial<ITxRunnerProvider> )
     {
         return new TxBuilderRunner( this, provider );
     }

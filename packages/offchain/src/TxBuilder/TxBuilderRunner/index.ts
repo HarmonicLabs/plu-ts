@@ -1,17 +1,18 @@
-import { defineReadOnlyProperty } from "@harmoniclabs/obj-utils";
-import type { IProvider } from "../IProvider";
+import { defineReadOnlyProperty, isObject } from "@harmoniclabs/obj-utils";
+import type { ITxRunnerProvider } from "../IProvider";
 import type { TxBuilder } from "../TxBuilder";
-import { ITxBuildArgs, cloneITxBuildArgs } from "../../txBuild";
-import { Address, AddressStr, AnyCertificate, Certificate, CertificateType, Hash28, ITxOutRef, IUTxO, IValuePolicyEntry, PlutusScriptType, PoolKeyHash, PoolParams, PubKeyHash, Script, ScriptType, StakeAddress, StakeAddressBech32, StakeCredentials, StakeValidatorHash, Tx, TxIn, TxMetadata, TxMetadatum, TxOutRefStr, TxWithdrawalsEntry, UTxO, Value, isIUTxO } from "@harmoniclabs/cardano-ledger-ts";
+import { ITxBuildArgs, ITxBuildOutput, cloneITxBuildArgs } from "../../txBuild";
+import { Address, AddressStr, AnyCertificate, Certificate, CertificateType, Hash28, Hash32, ITxOut, ITxOutRef, IUTxO, IValuePolicyEntry, PlutusScriptType, PoolKeyHash, PoolParams, PubKeyHash, Script, ScriptType, StakeAddress, StakeAddressBech32, StakeCredentials, StakeValidatorHash, Tx, TxIn, TxMetadata, TxMetadatum, TxOutRefStr, TxWithdrawalsEntry, UTxO, Value, isITxOut, isIUTxO } from "@harmoniclabs/cardano-ledger-ts";
 import { CanBeUInteger, forceBigUInt } from "../../utils/ints";
 import { CanBeData } from "../../utils/CanBeData";
 import { CanResolveToUTxO, cloneCanResolveToUTxO, forceTxOutRefStr, shouldResolveToUTxO } from "../CanResolveToUTxO/CanResolveToUTxO";
 import { jsonToMetadata } from "./jsonToMetadata";
 import { isGenesisInfos } from "../GenesisInfos";
-import { decodeBech32 } from "@harmoniclabs/crypto";
-import { fromHex } from "@harmoniclabs/uint8array-utils";
-import { isData } from "@harmoniclabs/plutus-data";
+import { decodeBech32, sha2_256 } from "@harmoniclabs/crypto";
+import { fromHex, toHex } from "@harmoniclabs/uint8array-utils";
+import { Data, cloneData, dataToCbor, isData } from "@harmoniclabs/plutus-data";
 import { canBeData, canBeUInteger, forceData } from "@harmoniclabs/plu-ts-offchain";
+import { ByteString } from "@harmoniclabs/bytestring";
 
 // /** sync */
 // interface TxBuilderStep {
@@ -101,6 +102,35 @@ const readonlyValueDescriptor = Object.freeze({
     configurable: false
 });
 
+const _datumsCache: { [hash: string]: Data } = {};
+const _datumsHashes: string[] = [];
+
+function _saveResolvedDatum( datum: Data, hash?: string ): void
+{
+    const theData = cloneData( datum );
+    const actualHash = toHex( new Uint8Array( sha2_256( dataToCbor( datum ).toBuffer() ) ) );
+    const actualHashIdx = _datumsHashes.lastIndexOf( actualHash );
+    if( actualHashIdx < 0 )
+    {
+        _datumsHashes.push( actualHash );
+        _datumsCache[ actualHash ] = theData;
+    }
+    if( hash )
+    {
+        const hashIdx = _datumsHashes.lastIndexOf( hash );
+        if( hashIdx < 0 )
+        {
+            _datumsHashes.push( hash );
+            _datumsCache[ hash ] = theData;
+        }
+    }
+}
+
+function _getResolvedDatum( hash: string ): Data | undefined
+{
+    return _datumsCache[ hash ];
+}
+
 export class TxBuilderRunner
 {
     readonly build!:() => Promise<Tx>
@@ -131,17 +161,39 @@ export class TxBuilderRunner
     readonly attachValidator!: ( validator: Script<PlutusScriptType> ) => TxBuilderRunner
     
     readonly attachMetadata!: ( label: CanBeUInteger, metadata: TxMetadatum ) => TxBuilderRunner
+    /** alias for `attachMetadata` */
+    readonly setMetadata!: ( label: CanBeUInteger, metadata: TxMetadatum ) => TxBuilderRunner
     readonly attachMetadataJson!: ( label: CanBeUInteger, metadataJson: any ) => TxBuilderRunner
     /** like `attachMetadataJson` but if a strings starts with `0x` is treated as an hexadecimal byte string */
     readonly attachMetadataJsonWithConversion!: ( label: CanBeUInteger, metadataJson: any ) => TxBuilderRunner
     
     readonly setChangeAddress!: ( changeAddr: Address | AddressStr ) => TxBuilderRunner
+
+    /**
+     * explicitly sets the collateral
+     * 
+     * if missing and the collateral is needed the tx builder will try to
+     * use one of the tx inputs as collateral
+     */
+    readonly setCollateral!: (
+        collateral: CanResolveToUTxO,
+        collateralOutput?: ITxOut 
+    ) => TxBuilderRunner
+
+    /**
+     * if no collateral is explicitly set (using `setCollateral`)
+     * 
+     * the tx builder will try to use one of the inputs as collateral
+     * in that case is possible to modify the collateral amount
+    **/
+    readonly setCollateralAmount!: ( lovelaces: CanBeUInteger ) => TxBuilderRunner
     
     /**
      * @deprecated `collectFrom` is unclear; use `addInputs` instead.
      */
     readonly collectFrom!: ( utxos: CanResolveToUTxO[], redeemer?: CanBeData ) => TxBuilderRunner
     readonly addInputs!: ( utxos: CanResolveToUTxO[], redeemer?: CanBeData, script_or_ref?: UTxO | Script<PlutusScriptType> ) => TxBuilderRunner
+    readonly addInput!: ( utxos: CanResolveToUTxO, redeemer?: CanBeData, script_or_ref?: UTxO | Script<PlutusScriptType> ) => TxBuilderRunner
     
     readonly payTo: (
         address: Address | AddressStr,
@@ -170,8 +222,8 @@ export class TxBuilderRunner
     ) => TxBuilderRunner
     // readonly spendUtxo: (
     //     utxo: CanResolveToUTxO,
+    //     redeemer?: CanBeData,
     //     script_or_refScript?: Script | CanResolveToUTxO,
-    //     redeemer?: CanBeData
     // ) => TxBuilderRunner
     readonly withdraw!: (
         stakeAddress: CanBeStakeCreds,
@@ -180,15 +232,14 @@ export class TxBuilderRunner
         script_or_ref?: Script | CanResolveToUTxO
     ) => TxBuilderRunner
 
+    // TODO
     // readonly registerPool: (
     //     params: PoolParams,
     //     redeemer?: CanBeData,
     //     script_or_ref?: Script | CanResolveToUTxO
     // ) => TxBuilderRunner
     
-    // /**
-    //  * @deprecated `registerStake` is unclear; use `registerStakeAddress` instead
-    //  */
+    // /** alias for `registerStakeAddress` */
     // readonly registerStake: ( stakeAddr: StakeAddress | StakeAddressBech32 ) => TxBuilderRunner
     // readonly registerStakeAddress: ( stakeAddr: StakeAddress | StakeAddressBech32 ) => TxBuilderRunner
 
@@ -217,9 +268,11 @@ export class TxBuilderRunner
      */
     constructor(
         txBuilder: TxBuilder,
-        provider: IProvider
+        provider: Partial<ITxRunnerProvider>
     )
     {
+        if( !isObject( provider ) ) provider = {};
+
         const self = this;
         let tasks: TxBuilderTask[] = [];
         // let steps: TxBuilderStep[] = [];
@@ -227,6 +280,9 @@ export class TxBuilderRunner
         const scripts: Script[] = [];
         const scriptHashesStr: string[] = [];
         const refUtxos: UTxO[] = [];
+
+        let _collateralAmount: CanBeUInteger = 5_000_000;
+        let _setCollateralTask: TxBuilderResolveUTxOTask | undefined = undefined;
 
         defineReadOnlyProperty(
             this, "reset",
@@ -237,6 +293,8 @@ export class TxBuilderRunner
                 scripts.length = 0;
                 scriptHashesStr.length = 0;
                 refUtxos.length = 0;
+                _collateralAmount = 5_000_000;
+                _setCollateralTask = undefined;
                 return self;
             }
         );
@@ -392,6 +450,12 @@ export class TxBuilderRunner
                 getPromise: async () => {
                     if( !isGenesisInfos( txBuilder.genesisInfos ) )
                     {
+                        if( typeof provider.getGenesisInfos !== "function" )
+                        {
+                            throw new Error(
+                                "validFromPOSIX requires either a tx builder with genesis infos or a provider that can fetch them; but none is present"
+                            );
+                        }
                         txBuilder.setGenesisInfos(
                             await provider.getGenesisInfos()
                         )
@@ -415,6 +479,12 @@ export class TxBuilderRunner
                 getPromise: async () => {
                     if( !isGenesisInfos( txBuilder.genesisInfos ) )
                     {
+                        if( typeof provider.getGenesisInfos !== "function" )
+                        {
+                            throw new Error(
+                                "validToPOSIX requires either a tx builder with genesis infos or a provider that can fetch them; but none is present"
+                            );
+                        }
                         txBuilder.setGenesisInfos(
                             await provider.getGenesisInfos()
                         )
@@ -793,8 +863,7 @@ export class TxBuilderRunner
         function _pushInput(
             utxo: UTxO,
             redeemer?: CanBeData,
-            script_or_ref?: IUTxO | Script<PlutusScriptType>,
-            datum?: CanBeData
+            script_or_ref?: IUTxO | Script<PlutusScriptType>
         ): void
         {
             const paymentCreds = utxo.resolved.address.paymentCreds;
@@ -812,7 +881,14 @@ export class TxBuilderRunner
                 }
 
                 const isInlineDatum = isData( utxo.resolved.datum );
-                if( !isInlineDatum && !canBeData( datum ) )
+
+                const datumHashStr = utxo.resolved.datum?.toString() ?? "undefined"; 
+                const datum = 
+                    ByteString.isValidHexValue( datumHashStr ) && 
+                    datumHashStr.length === 64 ? 
+                    _getResolvedDatum( datumHashStr ) : undefined;
+
+                if( !isInlineDatum && !isData( datum ) )
                 throw new Error("missing datum for script input " + + utxo.utxoRef.toString());
                 
                 if( isIUTxO( script_or_ref )  )
@@ -824,10 +900,22 @@ export class TxBuilderRunner
                         referenceScriptV2: {
                             refUtxo: ref,
                             redeemer,
-                            datum: isInlineDatum ? "inline" : datum as CanBeData
+                            datum: isInlineDatum ? "inline" : datum as Data
                         }
-                    })
+                    });
                 }
+                else
+                {
+                    buildArgs.inputs.push({
+                        utxo,
+                        inputScript: {
+                            script: script_or_ref as Script,
+                            redeemer,
+                            datum: isInlineDatum ? "inline" : datum as Data
+                        }
+                    });
+                }
+
                 return;
             }
             
@@ -846,9 +934,11 @@ export class TxBuilderRunner
             utxo: IUTxO,
             redeemer: CanBeData | undefined,
             script_or_ref: IUTxO | Script<PlutusScriptType> | undefined,
-            datum: CanBeData | undefined
+            datum?: CanBeData | undefined
         ): void
         {
+            if( canBeData( datum ) ) _saveResolvedDatum( forceData( datum ) );
+
             utxo = utxo instanceof UTxO ? utxo : new UTxO( utxo );
             const paymentCreds = (utxo as UTxO).resolved.address.paymentCreds;
             if( paymentCreds.type === "script" )
@@ -862,7 +952,7 @@ export class TxBuilderRunner
                 if( isIUTxO( script_or_ref ) ) script_or_ref = new UTxO( script_or_ref );
             }
 
-            _pushInput( utxo as UTxO, redeemer, script_or_ref, datum );
+            _pushInput( utxo as UTxO, redeemer, script_or_ref );
         }
 
         function __addInptus(
@@ -870,15 +960,18 @@ export class TxBuilderRunner
             redeemer?: CanBeData,
             script_or_ref?: IUTxO | Script<PlutusScriptType>,
             datum?: CanBeData
-            ): TxBuilderRunner
+        ): TxBuilderRunner
         {
+            // save datum before resolving utxo
+            if( canBeData( datum ) ) _saveResolvedDatum( forceData( datum ) );
+
             for( const _utxo of utxos )
             {
                 tasks.push({
                     kind: TxBuilderTaskKind.ResolveTxIn,
                     arg: _utxo,
                     onResolved: ( txIn ) => {
-                        _addInput( txIn, redeemer, script_or_ref, datum );
+                        _addInput( txIn, redeemer, script_or_ref );
                     }
                 });
             }    
@@ -886,25 +979,43 @@ export class TxBuilderRunner
         }
         function _addInputs(
             utxos: CanResolveToUTxO[],
-            datum?: CanBeData | "inline",
             redeemer?: CanBeData,
             script_or_ref?: CanResolveToUTxO | Script<PlutusScriptType>,
+            datum?: CanBeData | "inline",
         ): TxBuilderRunner
         {
             datum = datum === "inline" ? undefined : datum;
             if( shouldResolveToUTxO( script_or_ref ) )
             {
+                // save datum before resolving utxo
+                if( canBeData( datum ) ) _saveResolvedDatum( forceData( datum ) );
+
                 tasks.push({
                     kind: TxBuilderTaskKind.ResolveUTxO,
                     arg: script_or_ref,
                     onResolved: ( ref ) => {
-                        __addInptus( utxos, redeemer, ref, datum );
+                        __addInptus( utxos, redeemer, ref );
                     }
                 });
                 
                 return self;
             }
             return __addInptus( utxos, redeemer, script_or_ref, datum );
+        }
+
+        function _addSingleInput(
+            utxo: CanResolveToUTxO,
+            redeemer?: CanBeData,
+            script_or_ref?: CanResolveToUTxO | Script<PlutusScriptType>,
+            datum?: CanBeData | "inline",
+        ): TxBuilderRunner
+        {
+            return _addInputs(
+                [ utxo ],
+                redeemer,
+                script_or_ref,
+                datum
+            )
         }
 
         function _payTo(
@@ -926,6 +1037,46 @@ export class TxBuilderRunner
                 refScript
             });
 
+            return self;
+        }
+
+        function _setCollateral(
+            collateral: CanResolveToUTxO,
+            collateralOutput?: ITxOut
+        ): TxBuilderRunner
+        {
+            _setCollateralTask = {
+                kind: TxBuilderTaskKind.ResolveUTxO,
+                arg: collateral,
+                onResolved: utxo => {
+
+                    if( !Value.isAdaOnly( utxo.resolved.value ) && !isITxOut( collateralOutput ) )
+                    {
+                        collateralOutput = {
+                            address: utxo.resolved.address,
+                            value: Value.sub(
+                                utxo.resolved.value,
+                                Value.lovelaces( forceBigUInt( _collateralAmount ) )
+                            )
+                        };
+                    }
+
+                    buildArgs.collaterals = [ utxo ];
+                    if( isITxOut( collateralOutput ) )
+                    {
+                        if( typeof collateralOutput.address === "string" ) 
+                        collateralOutput.address = Address.fromString( collateralOutput.address );
+                        
+                        buildArgs.collateralReturn = collateralOutput as ITxBuildOutput;
+                    }
+                }
+            }
+            return self;
+        }
+
+        function _setCollateralAmount( amount: CanBeUInteger ): TxBuilderRunner
+        {
+            if( canBeUInteger( amount ) ) _collateralAmount = amount;
             return self;
         }
 
@@ -959,6 +1110,8 @@ export class TxBuilderRunner
             insTasks.length = iLen;
             otherTasks.length = oLen;
 
+            _setCollateralTask && utxoTasks.push( _setCollateralTask );
+
             async function resolveUtxos( _tasks: TxBuilderResolveUTxOTask[] | TxBuilderResolveTxInTask[] ): Promise<void>
             {
                 const utxosToFind = new Array( _tasks.length ) as CanResolveToUTxO[];
@@ -977,7 +1130,36 @@ export class TxBuilderRunner
     
                 if( uLen > 0 )
                 {
+                    if( typeof provider.resolveUtxos !== "function" )
+                    {
+                        throw new Error(
+                            "some unresolved utxos where used and the provider is missing the 'resolveUtxos' method to resolve them"
+                        );
+                    }
                     resolvedUtxos.push( ...(await provider.resolveUtxos( utxosToFind )) );
+                }
+
+                const datumHashesToResolve = resolvedUtxos.filter( u => {
+                    const dat = u.resolved.datum?.toString() ?? "undefined";
+                    return (
+                        ByteString.isValidHexValue( dat ) &&
+                        dat.length === 64 && // 32 * 2
+                        !_datumsHashes.includes( dat )
+                    );
+                })
+                .map( u => u.resolved.datum as Hash32 );
+
+                if( datumHashesToResolve.length >= 0 )
+                {
+                    if( typeof provider.resolveDatumHashes !== "function" )
+                    {
+                        throw new Error("provider is missing 'resolveDatumHashes' function but some unresolved datum hashes where found")
+                    }
+                    const resolvedDatums = await provider.resolveDatumHashes( datumHashesToResolve );
+                    for( const { hash, datum } of resolvedDatums )
+                    {
+                        _saveResolvedDatum( forceData( datum ), hash );
+                    }
                 }
     
                 for( const u of resolvedUtxos )
@@ -1038,11 +1220,18 @@ export class TxBuilderRunner
             while( otherTasks.length > 0 )
             {
                 const { kind, getPromise } = otherTasks.pop()!
+                
                 if(
                     ( kind === TxBuilderTaskKind.ValidFromPOSIX || kind === TxBuilderTaskKind.ValidToPOSIX ) &&
                     !isGenesisInfos( txBuilder.genesisInfos )
                 )
                 {
+                    if( typeof provider.getGenesisInfos !== "function" )
+                    {
+                        throw new Error(
+                            "POSIX operatoins do require either a tx builder with genesis infos or a provider that can fetch them; but none is present"
+                        );
+                    }
                     txBuilder.setGenesisInfos(
                         await provider.getGenesisInfos()
                     );
@@ -1053,22 +1242,38 @@ export class TxBuilderRunner
 
             if( !buildArgs.changeAddress )
             {
-                if(
-                    !Array.isArray( buildArgs.inputs ) ||
-                    buildArgs.inputs.length === 0
-                )
+                if( typeof provider.getChangeAddress === "function" )
                 {
-                    throw new Error("can't deduce change Address; missing inputs")    
+                    buildArgs.changeAddress = await provider.getChangeAddress();
                 }
-
-                buildArgs.changeAddress = buildArgs.inputs
-                ?.find( _in => _in.utxo.resolved.address.paymentCreds.type === "pubKey" )
-                ?.utxo.resolved.address!;
-
-                if( !buildArgs.changeAddress )
+                else
                 {
-                    throw new Error("can't deduce change Address; only script inputs");
+                    if(
+                        !Array.isArray( buildArgs.inputs ) ||
+                        buildArgs.inputs.length === 0
+                    )
+                    {
+                        throw new Error("can't deduce change Address; missing inputs")    
+                    }
+    
+                    buildArgs.changeAddress = buildArgs.inputs
+                    ?.find( _in => _in.utxo.resolved.address.paymentCreds.type === "pubKey" )
+                    ?.utxo.resolved.address!;
+    
+                    if( !buildArgs.changeAddress )
+                    {
+                        throw new Error("can't deduce change Address; only script inputs");
+                    }
                 }
+            }
+
+            if( refUtxos.length > 0 )
+            {
+                if( !Array.isArray( buildArgs.readonlyRefInputs ) )
+                {
+                    buildArgs.readonlyRefInputs = [];
+                }
+                void buildArgs.readonlyRefInputs.push( ...refUtxos );
             }
 
             const tx = await txBuilder.build( buildArgs );
@@ -1097,6 +1302,10 @@ export class TxBuilderRunner
                     ...readonlyValueDescriptor
                 },
                 attachMetadata: {
+                    value: _attachMetadata,
+                    ...readonlyValueDescriptor
+                },
+                setMetadata: {
                     value: _attachMetadata,
                     ...readonlyValueDescriptor
                 },
@@ -1184,8 +1393,20 @@ export class TxBuilderRunner
                     value: _addInputs,
                     ...readonlyValueDescriptor
                 },
+                addInput: {
+                    value: _addSingleInput,
+                    ...readonlyValueDescriptor
+                },
                 payTo: {
                     value: _payTo,
+                    ...readonlyValueDescriptor
+                },
+                setCollateral: {
+                    value: _setCollateral,
+                    ...readonlyValueDescriptor
+                },
+                setCollateralAmount: {
+                    value: _setCollateralAmount,
                     ...readonlyValueDescriptor
                 },
                 build: {

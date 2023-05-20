@@ -1,160 +1,301 @@
 import { PType } from "../../PType";
 import { Term } from "../../Term";
 import { LitteralPurpose, isLitteralPurpose } from "../LitteralPurpose";
-import { defaultVersion, getValidVersion } from "../getValidVersion";
-import { compile } from "../compile";
-import { PrimType, data, typeExtends, unit, fn, TermType, asData, ToPType } from "../../type_system";
+import { PrimType, TermType, data, fn, isTaggedAsAlias, termTypeFromJson, termTypeToJson, termTypeToString, typeExtends, unwrapAlias } from "../../type_system";
 import { getFnTypes } from "./getFnTypes";
-import { makeRedeemerValidator, makeValidator } from "../makeScript";
+import { Application, Builtin, Delay, ErrorUPLC, Force, Lambda, UPLCConst, UPLCDecoder, UPLCEncoder, UPLCProgram, UPLCTerm, UPLCVar, constTypeEq } from "@harmoniclabs/uplc";
+import { Machine } from "@harmoniclabs/plutus-machine";
+import { ptoData } from "../../lib/std/data/conversion";
+import { cloneTermType } from "../../type_system/cloneTermType";
+import { fromHex, toHex } from "@harmoniclabs/uint8array-utils";
+import { isObject } from "@harmoniclabs/obj-utils";
 
-export class Precompiled<Purp extends LitteralPurpose, T extends TermType>
+export class Precompiled<Purp extends LitteralPurpose = LitteralPurpose>
 {
     readonly purpose: Purp
 
-    /**
-     * @deprecated use `precompileParametrized` instead
-    **/
+    readonly apply: ( ...args: Term<PType>[] ) => Uint8Array
+
+    readonly params: TermType[]
+
+    readonly validatorType: TermType;
+
+    readonly outputType: TermType
+
+    readonly precompiled: Uint8Array
+
     constructor(
         purpose: Purp, 
-        precompiled: Uint8Array, 
-        fullType: T,
-        version: [ number, number, number] 
+        fullType: TermType,
+        precompiled: Uint8Array
     )
     {
         if( !isLitteralPurpose( purpose ) )
-        {
-            throw new Error("invalid purpose passed to Precompiled constructor")
-        }
+        throw new Error("invalid purpose passed to Precompiled constructor")
+
+        const tys = getFnTypes( fullType );
+
+        const outT = tys[ tys.length - 1 ][0];
+
+        if(!(
+            outT === PrimType.Bool ||
+            outT === PrimType.Unit
+        )) throw new Error("invalid return type for typed or untyped validator");
+
+        if( (purpose === "spend" && tys.length < 4) || tys.length < 3 ) throw new Error("invalid term to precompile");
+
+        const paramsTys = purpose === "spend" ? tys.slice( 0, tys.length - 4 ) : tys.slice( 0, tys.length - 3 );
+
+        const validatorArgs = purpose === "spend" ? tys.slice( tys.length - 4, tys.length - 1 ) : tys.slice( tys.length - 3, tys.length - 1 );
+
+        const validatorType = fn( validatorArgs as any, [ outT ]);
+
+        Object.defineProperties(
+            this, {
+                params: {
+                    get: () => paramsTys.map( cloneTermType ),
+                    set: () => {},
+                    enumerable: true,
+                    configurable: false
+                },
+                validatorType: {
+                    get: () => cloneTermType( validatorType ),
+                    set: () => {},
+                    enumerable: true,
+                    configurable: false
+                },
+                outputType: {
+                    get: () => [ outT ],
+                    set: () => {},
+                    enumerable: true,
+                    configurable: false
+                },
+                precompiled: {
+                    get: () => precompiled.slice(),
+                    set: () => {},
+                    enumerable: true,
+                    configurable: false
+                },
+                purpose: {
+                    value: purpose,
+                    writable: false,
+                    enumerable: true,
+                    configurable: false
+                }
+            }
+        );
+
         Object.defineProperty(
-            this, "purpose", {
-                value: purpose,
+            this, "apply", {
+                value: ( ...args: Term<PType>[] ): Uint8Array =>
+                {
+                    if( paramsTys.length === 0 ) return precompiled;
+            
+                    if( args.length < paramsTys.length )
+                    throw new Error(
+                        `required ${paramsTys.length} arguments in order to instantiate a precompiled script, but only ${args.length} where passed`
+                    );
+            
+                    const wrongTypeIdx = paramsTys.findIndex(( t, i ) => !typeExtends( args[i].type, t ) );
+            
+                    if( wrongTypeIdx >= 0 )
+                    throw new Error(
+                        `parameter at position ${wrongTypeIdx} was expected to be of type: "${
+                            termTypeToString( paramsTys[ wrongTypeIdx ] )
+                        }" but was instead of type "${
+                            termTypeToString( args[ wrongTypeIdx ].type )
+                        }"`
+                    );
+            
+                    let { version, body } = UPLCDecoder.parse( precompiled );
+            
+                    for( let i = paramsTys.length - 1; i >= 0; i-- )
+                    {
+                        const theArg = args[ i ];
+                        let theParamT = paramsTys[ i ];
+                        while( isTaggedAsAlias( theParamT ) ) theParamT = unwrapAlias( theParamT );
+            
+                        let uplcArg: UPLCTerm;
+                        
+                        if(
+                            theParamT[0] === PrimType.Lambda  ||
+                            theParamT[0] === PrimType.Delayed
+                        )
+                        {
+                            uplcArg = theArg.toUPLC();
+                        }
+                        else
+                        {
+                            uplcArg = Machine.evalSimple( theArg );
+            
+                            if( !( uplcArg instanceof UPLCConst ) )
+                            throw new Error("applied parameter did not evaluate to a constant");
+                        }
+            
+                        body = new Application(
+                            body,
+                            uplcArg
+                        );
+                    }
+            
+                    if( outT === PrimType.Unit ) // already untyped
+                    {
+                        return UPLCEncoder.compile(
+                            new UPLCProgram(
+                                version,
+                                body
+                            )
+                        ).toBuffer().buffer;
+                    }
+                    // else typed validator
+            
+                    if( purpose === "spend" )
+                    {
+                        const [ datumType, redeemerType, ctxType ] = tys.slice( tys.length - 4, tys.length - 1 );
+            
+                        const datumUplc = typeExtends( datumType, data ) ?
+                        new UPLCVar( 2 ) :
+                        new Application(
+                            ptoData( datumType ).toUPLC(),
+                            new UPLCVar( 2 )
+                        );
+            
+                        const redeemerUplc = typeExtends( redeemerType, data ) ?
+                        new UPLCVar( 1 ) :
+                        new Application(
+                            ptoData( redeemerType ).toUPLC(),
+                            new UPLCVar( 1 )
+                        );
+            
+                        const ctxUplc = typeExtends( ctxType, data ) ?
+                        new UPLCVar( 0 ) :
+                        new Application(
+                            ptoData( ctxType ).toUPLC(),
+                            new UPLCVar( 0 )
+                        );
+            
+                        body = 
+                        new Lambda( // datum
+                            new Lambda( //redeemer
+                                new Lambda( // ctx
+                                    new Force(
+                                        new Application(
+                                            new Application(
+                                                new Application(
+                                                    Builtin.ifThenElse,
+                                                    new Application(
+                                                        new Application(
+                                                            new Application(
+                                                                body,
+                                                                datumUplc
+                                                            ),
+                                                            redeemerUplc
+                                                        ),
+                                                        ctxUplc
+                                                    )
+                                                ),
+                                                new Delay( UPLCConst.unit )
+                                            ),
+                                            new Delay( new ErrorUPLC )
+                                        )
+                                    )
+                                )
+                            )
+                        )
+            
+                        return UPLCEncoder.compile(
+                            new UPLCProgram(
+                                version,
+                                body
+                            )
+                        ).toBuffer().buffer;
+                    }
+                    // else redeemer validator
+            
+                    const [ redeemerType, ctxType ] = tys.slice( tys.length - 3, tys.length - 1 );
+            
+                    const redeemerUplc = typeExtends( redeemerType, data ) ?
+                    new UPLCVar( 1 ) :
+                    new Application(
+                        ptoData( redeemerType ).toUPLC(),
+                        new UPLCVar( 1 )
+                    );
+            
+                    const ctxUplc = typeExtends( ctxType, data ) ?
+                    new UPLCVar( 0 ) :
+                    new Application(
+                        ptoData( ctxType ).toUPLC(),
+                        new UPLCVar( 0 )
+                    );
+            
+                    body = 
+                    new Lambda( //redeemer
+                        new Lambda( // ctx
+                            new Force(
+                                new Application(
+                                    new Application(
+                                        new Application(
+                                            Builtin.ifThenElse,
+                                            new Application(
+                                                new Application(
+                                                    body,
+                                                    redeemerUplc
+                                                ),
+                                                ctxUplc
+                                            )
+                                        ),
+                                        new Delay( UPLCConst.unit )
+                                    ),
+                                    new Delay( new ErrorUPLC )
+                                )
+                            )
+                        )
+                    )
+            
+                    return UPLCEncoder.compile(
+                        new UPLCProgram(
+                            version,
+                            body
+                        )
+                    ).toBuffer().buffer;
+                },
                 writable: false,
                 enumerable: true,
                 configurable: false
             }
+        )
+    }
+
+    toJson()
+    {
+        return {
+            purpose: this.purpose,
+            params: this.params.map( termTypeToJson ),
+            validatorType: termTypeToJson( this.validatorType ),
+            precompiledHex: toHex( this.precompiled )
+        }
+    }
+
+    static fromJson( json: any ): Precompiled
+    {
+        if( !isObject( json ) ) throw new Error("'Precompiled.formJson' espects an object as argument");
+        
+        const params = json["params"].map( termTypeFromJson );
+        const validatroType = termTypeFromJson( json["validatorType"] );
+        
+        const validatorTypes = getFnTypes( validatroType );
+        const outT = validatorTypes[ validatorTypes.length - 1 ];
+        const validatorArgs = validatorTypes.slice( 0, validatorTypes.length - 1 );
+        const fullType = fn([
+            ...params,
+            ...validatorArgs
+        ] as any, outT) as TermType;
+
+        return new Precompiled(
+            json["purpose"] as LitteralPurpose,
+            fullType,
+            fromHex( json["precompiledHex"] )
         );
-
-        version = getValidVersion( version );
-
     }
 
-    // static fromBlueprint( blueprint: object ): P
-
-}
-
-function getCompiledBody( term: Term<PType> ): Uint8Array
-{
-    // `.subarray(3)` to ignore the version.
-    return compile( term, [1,0,0] ).subarray(3)
-}
-
-export function precompileParametrized<Purp extends LitteralPurpose, T extends TermType>
-(
-    purpose: Purp,
-    term: Term<ToPType<T>>, 
-    version: [number, number, number] = defaultVersion
-): Precompiled<Purp, T>
-{
-    if( !isLitteralPurpose( purpose ) )
-    {
-        throw new Error("invalid purpose passed to precompileParametrized");
-    }
-
-    const type = term.type;
-
-    const tys = getFnTypes( type );
-
-    if( tys.length < 3 ) throw new Error("invalid term to precompile");
-
-    const outT = tys[ tys.length - 1 ];
-
-    if(!(
-        outT[0] == PrimType.Bool ||
-        outT[0] === PrimType.Unit
-    )) throw new Error("invalid return type for typed or untyped validator");
-
-    const primOutT = outT[0]
-
-    if( tys.length === 3 ) // must be redeemer validator without params
-    {
-        if( purpose === "spend" ) throw new Error("invalid term for spending validator");
-
-        if( primOutT === PrimType.Unit )
-        {
-            if(!(
-                typeExtends( tys[0], data ) &&
-                typeExtends( tys[1], data )
-            )) throw new Error("untyped non-parametrized contract was typed");
-
-            return new Precompiled(
-                purpose,
-                getCompiledBody( term ),
-                type as any,
-                version
-            ) as any;
-        }
-
-        if( primOutT === PrimType.Bool )
-        {
-            return new Precompiled(
-                purpose,
-                getCompiledBody( makeRedeemerValidator( term as any ) ),
-                fn([ toDataReprType( tys[0] ), toDataReprType( tys[1] ) ], unit ) as any,
-                version
-            );
-        }
-    }
-
-    if( tys.length === 4 ) // either spend validator with no params or single params for rest
-    {
-        if( purpose === "spend" )
-        {
-            if( primOutT === PrimType.Unit )
-            {
-                if(!(
-                    typeExtends( tys[0], data ) &&
-                    typeExtends( tys[1], data ) &&
-                    typeExtends( tys[2], data )
-                )) throw new Error("untyped non-parametrized spend contract was typed");
-
-                return new Precompiled(
-                    purpose,
-                    getCompiledBody( term ),
-                    type as any,
-                    version
-                ) as any;
-            }
-
-            if( primOutT === PrimType.Bool )
-            {
-                return new Precompiled(
-                    purpose,
-                    getCompiledBody( makeValidator( term as any ) ),
-                    fn([ toDataReprType( tys[0] ), toDataReprType( tys[1] ), toDataReprType( tys[2] ) ], unit ) as any,
-                    version
-                );
-            }
-        }
-
-        // must be single param redeemer validator
-    }
-
-    return new Precompiled(
-        purpose,
-        getCompiledBody( term ),
-        type as any,
-        version
-    ) as any;
-}
-
-function toDataReprType( t: TermType ): TermType
-{
-    if( typeExtends( t, data ) ) return t;
-
-    if(
-        t[0] === PrimType.Lambda ||
-        t[0] === PrimType.Delayed
-    ) throw new Error("lambda or delayed non representable by data");
-
-    return asData( t );
 }
