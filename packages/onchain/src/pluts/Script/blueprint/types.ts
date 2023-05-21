@@ -51,7 +51,7 @@ export interface DataSchemaInts extends BaseDataSchema {
 }
 
 export interface DataSchemaList extends BaseDataSchema {
-    dataType: "list",
+    dataType: "list" | "#list",
     items?: DataSchema | DataSchema[],
     maxItems?: number, 
     minItems?: number,
@@ -91,19 +91,20 @@ export interface ScriptArg {
     schema: DataSchema
 }
 
-type MinimalBlueprintValidator = {
+export type MinimalBlueprintValidator = {
     title: string
     description?: string
     redeemer: ScriptArg
     datum?: ScriptArg
     parameters?: ScriptArg[]
+    hash?: string
+}
+
+export type CompiledBlueprintValidator = MinimalBlueprintValidator & {
+    compiledCode: string
+    hash: string
 }
 
 export type BlueprintValidator
     = MinimalBlueprintValidator
-    | MinimalBlueprintValidator & {
-        compiledCode: Uint8Array
-    }
-    | MinimalBlueprintValidator & {
-        compiledCodeCbor: CanBeCborString
-    }
+    | CompiledBlueprintValidator

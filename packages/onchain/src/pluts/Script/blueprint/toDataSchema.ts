@@ -1,21 +1,23 @@
 import { DataSchema, DataSchemaConstr, DataSchemaList, DataSchemaMap } from "./types";
-import { PrimType, TermType, bs, data, int, isTaggedAsAlias, list, map, typeExtends, unwrapAlias } from "../../type_system";
+import { PrimType, TermType, bs, data, int, isTaggedAsAlias, list, map, termTypeToString, typeExtends, unwrapAlias } from "../../type_system";
 import { getElemsT, getFstT, unwrapAsData } from "../../type_system/tyArgs";
 import { tyVar } from "@harmoniclabs/plu-ts-onchain";
 
-export function toDataSchema( t: TermType ): DataSchema
+export function toDataSchema( t: TermType, title?: string ): DataSchema
 {
     while( isTaggedAsAlias( t ) ) t = unwrapAlias( t );
 
+    title = typeof title === "string" ? title : undefined;
+
     if( t[0] === PrimType.AsData && typeExtends( t[1], int ) )
-    return { dataType: "integer" }
+    return { title, dataType: "integer" }
     if( typeExtends( t, int ) )
-    return { dataType: "#integer" };
+    return { title, dataType: "#integer" };
 
     if( t[0] === PrimType.AsData && typeExtends( t[1], bs ) )
-    return { dataType: "bytes" }
+    return { title, dataType: "bytes" }
     if(typeExtends( t, bs ) )
-    return { dataType: "#bytes" };
+    return { title, dataType: "#bytes" };
 
     if(
         t[0] === PrimType.AsData &&
@@ -40,17 +42,47 @@ export function toDataSchema( t: TermType ): DataSchema
     }
     if( typeExtends( t, map( data, data ) ) )
     {
-        throw new Error("unsupported #list( #pair( ... , ... ) ); only lists as data please");
+        throw new Error("unsupported #list( #pair( ... , ... ) ); only lists as data please; term type was: " + termTypeToString( t ) );
     }
 
     if(
         t[0] === PrimType.AsData &&
-        t[1][0] === PrimType.List &&
-        typeExtends( t[1][1], data )
-    ) return { dataType: "list" }
+        t[1][0] === PrimType.List
+    )
+    {
+        const schema: DataSchemaList = { title, dataType: "list" };
+        const itemsSchema = toDataSchemaAsData( getElemsT( t ) );
+        if( itemsSchema.dataType )
+        {
+            schema.items = itemsSchema;
+        }
+        return schema;
+    } 
     if( typeExtends( t, list( data )) )
-    return { dataType: "#list" };
+    {
+        const schema: DataSchemaList = { title, dataType: "#list" };
+        const itemsSchema = toDataSchemaAsData( getElemsT( t ) );
+        if( itemsSchema.dataType )
+        {
+            schema.items = itemsSchema;
+        }
+        return schema;
+    }
 
+    if(
+        t[0] === PrimType.Struct ||
+        (
+            t[0] === PrimType.AsData &&
+            t[1][0] === PrimType.Struct
+        )
+    )
+    {
+        return toDataSchemaAsData( t, title );
+    }
+
+    throw new Error(
+        "can't represent type as DataSchema; term type was: " + termTypeToString( t )
+    );
 }
 
 export function toDataSchemaAsData( t: TermType, title?: string | undefined ): DataSchema
@@ -129,8 +161,10 @@ export function toDataSchemaAsData( t: TermType, title?: string | undefined ): D
         }
 
         return {
-            anyOf: alternatives,
-            title
+            title,
+            anyOf: alternatives
         }
     }
+
+    return title ? {} : { title }; // opaque data
 }

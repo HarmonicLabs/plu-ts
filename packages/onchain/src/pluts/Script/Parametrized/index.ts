@@ -9,6 +9,10 @@ import { ptoData } from "../../lib/std/data/conversion";
 import { cloneTermType } from "../../type_system/cloneTermType";
 import { fromHex, toHex } from "@harmoniclabs/uint8array-utils";
 import { isObject } from "@harmoniclabs/obj-utils";
+import { Hash28 } from "@harmoniclabs/cardano-ledger-ts";
+import { blake2b_224 } from "@harmoniclabs/crypto";
+import { PlutusScriptType } from "../../../utils/PlutusScriptType";
+import { Cbor, CborBytes } from "@harmoniclabs/cbor";
 
 export class Precompiled<Purp extends LitteralPurpose = LitteralPurpose>
 {
@@ -16,18 +20,21 @@ export class Precompiled<Purp extends LitteralPurpose = LitteralPurpose>
 
     readonly apply: ( ...args: Term<PType>[] ) => Uint8Array
 
-    readonly params: TermType[]
+    readonly params!: TermType[]
 
-    readonly validatorType: TermType;
+    readonly validatorType!: TermType;
 
-    readonly outputType: TermType
+    readonly outputType!: TermType;
 
-    readonly precompiled: Uint8Array
+    readonly precompiled!: Uint8Array;
+
+    readonly hash!: Hash28;
 
     constructor(
         purpose: Purp, 
         fullType: TermType,
-        precompiled: Uint8Array
+        precompiled: Uint8Array,
+        pulutsVersion: PlutusScriptType = "PlutusScriptV2"
     )
     {
         if( !isLitteralPurpose( purpose ) )
@@ -50,6 +57,22 @@ export class Precompiled<Purp extends LitteralPurpose = LitteralPurpose>
 
         const validatorType = fn( validatorArgs as any, [ outT ]);
 
+        let _hash: Hash28 | undefined = undefined;
+        const _getHash = (): Hash28 => {
+            if( !( _hash instanceof Hash28 ) )
+            _hash = new Hash28(
+                blake2b_224(
+                    new Uint8Array([
+                        pulutsVersion === "PlutusScriptV2" ? 0x02 : 0x01,
+                        ...Cbor.encode(
+                            new CborBytes( precompiled )
+                        ).toBuffer()
+                    ])
+                )
+            );
+
+            return _hash.clone();
+        };
         Object.defineProperties(
             this, {
                 params: {
@@ -79,6 +102,12 @@ export class Precompiled<Purp extends LitteralPurpose = LitteralPurpose>
                 purpose: {
                     value: purpose,
                     writable: false,
+                    enumerable: true,
+                    configurable: false
+                },
+                hash: {
+                    get: _getHash,
+                    set: () => {},
                     enumerable: true,
                     configurable: false
                 }

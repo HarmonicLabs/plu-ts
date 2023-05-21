@@ -299,7 +299,6 @@ export class TxBuilderRunner
     readonly invalidAfterSlot!: ( slot: CanBeUInteger ) => TxBuilderRunner
 
     readonly tasks!: TxBuilderTask[];
-    // readonly steps!: TxBuilderStep[];
     readonly buildArgs!: ITxBuildArgs;
     
     /**
@@ -314,7 +313,6 @@ export class TxBuilderRunner
 
         const self = this;
         let tasks: TxBuilderTask[] = [];
-        // let steps: TxBuilderStep[] = [];
         let buildArgs: ITxBuildArgs = {} as any;
         const scripts: Script[] = [];
         const scriptHashesStr: string[] = [];
