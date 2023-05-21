@@ -42,7 +42,7 @@ const enum TxBuilderTaskKind {
     DelegateTo = 4,
     DeregisterStake = 5,
     Withdraw = 6,
-    RegisterStake = 7
+    RegisterStake = 7,
 }
 
 type TxBuilderPromiseTaskKind
@@ -163,6 +163,10 @@ export class TxBuilderRunner
     /** like `attachMetadataJson` but if a strings starts with `0x` is treated as an hexadecimal byte string */
     readonly attachMetadataJsonWithConversion!: ( label: CanBeUInteger, metadataJson: any ) => TxBuilderRunner
     
+    /**
+     * explicitly set the change address;
+     * if missing the first input's address with `PubKeyHash` credentials (not script) will be used
+     */
     readonly setChangeAddress!: ( changeAddr: Address | AddressStr ) => TxBuilderRunner
 
     /**
@@ -267,15 +271,8 @@ export class TxBuilderRunner
         script_or_ref?: Script | CanResolveToUTxO
     ) => TxBuilderRunner
 
-    // TODO
-    // readonly registerPool: (
-    //     params: PoolParams,
-    //     redeemer?: CanBeData,
-    //     script_or_ref?: Script | CanResolveToUTxO,
-    //     datum?: CanBeData
-    // ) => TxBuilderRunner
-    // readonly retirePool: ( poolId: Hash28, epoch: CanBeUInteger ) => TxBuilderRunner
-    // readonly updatePool: ( poolParams: PoolParams ) => TxBuilderRunner
+    readonly registerPool!: ( params: PoolParams ) => TxBuilderRunner
+    readonly retirePool!: ( poolId: Hash28, epoch: CanBeUInteger ) => TxBuilderRunner
 
     readonly registerStake!: (
         delegator: CanBeStakeCreds,
@@ -287,7 +284,6 @@ export class TxBuilderRunner
         redeemer?: CanBeData,
         script_or_ref?: Script<PlutusScriptType> | CanResolveToUTxO
     ) => TxBuilderRunner
-
     
     /**
      * @deprecated `readFrom` is an ugly name; use `referenceUtxos` instead
@@ -873,6 +869,29 @@ export class TxBuilderRunner
             return self;
         }
 
+        function _registerPool( poolParams: PoolParams ): TxBuilderRunner
+        {
+            _addCertificate(
+                new Certificate(
+                    3 as CertificateType.PoolRegistration,
+                    poolParams
+                )
+            );
+            return self;
+        }
+
+        function _retirePool( poolId: Hash28, epoch: CanBeUInteger ): TxBuilderRunner
+        {
+            _addCertificate(
+                new Certificate(
+                    4 as CertificateType.PoolRetirement,
+                    new PoolKeyHash( poolId ),
+                    epoch
+                )
+            );
+            return self;
+        }
+
         function _withdraw(
             stakeAddress: CanBeStakeCreds,
             amount: CanBeUInteger,
@@ -942,16 +961,6 @@ export class TxBuilderRunner
             });
 
             return self;
-        }
-
-        function _registerPool(
-            params: PoolParams,
-            redeemer?: CanBeData,
-            script_or_ref?: Script | CanResolveToUTxO
-        ): TxBuilderRunner
-        {
-
-            
         }
 
         function _pushInput(
@@ -1453,6 +1462,14 @@ export class TxBuilderRunner
                 },
                 registerStakeAddress: {
                     value: _registerStake,
+                    ...readonlyValueDescriptor
+                },
+                registerPool: {
+                    value: _registerPool,
+                    ...readonlyValueDescriptor
+                },
+                retirePool: {
+                    value: _retirePool,
                     ...readonlyValueDescriptor
                 },
                 withdraw: {
