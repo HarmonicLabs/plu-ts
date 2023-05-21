@@ -83,7 +83,7 @@ describe("TxBuilderRunner", () => {
         
     });
 
-    test.only("script", async () => {
+    test("script", async () => {
 
         const okScript = new Script(
             "PlutusScriptV2",
@@ -116,14 +116,6 @@ describe("TxBuilderRunner", () => {
         .attachValidator( okScript )
         .payTo( Address.fake, 5_000_000 )
         .build();
-
-        console.log(
-            JSON.stringify(
-                tx.toJson(),
-                undefined,
-                4
-            )
-        );
-
+        
     })
 })
