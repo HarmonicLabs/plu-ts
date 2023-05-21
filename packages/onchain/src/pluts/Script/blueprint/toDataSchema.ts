@@ -166,5 +166,5 @@ export function toDataSchemaAsData( t: TermType, title?: string | undefined ): D
         }
     }
 
-    return title ? {} : { title }; // opaque data
+    return { title }; // opaque data
 }
