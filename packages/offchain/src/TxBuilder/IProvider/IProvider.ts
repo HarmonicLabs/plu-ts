@@ -38,7 +38,7 @@ export interface ISignTx {
 }
 
 export interface IGetChangeAddress {
-    getChangeAddress: () => Promise<AddressStr>
+    getChangeAddress: () => Promise<AddressStr | Address>
 }
 
 export interface ITxRunnerProvider extends

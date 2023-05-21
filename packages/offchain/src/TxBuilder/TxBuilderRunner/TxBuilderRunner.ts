@@ -350,7 +350,7 @@ export class TxBuilderRunner
             });
         }
 
-        function _addAviableScript( scrpt: Script ): void
+        function _addAviableScript( scrpt: Script ): TxBuilderRunner
         {
             const hStr = scrpt.hash.toString();
 
@@ -359,6 +359,8 @@ export class TxBuilderRunner
                 scripts.push( scrpt );
                 scriptHashesStr.push( hStr );
             }
+
+            return self;
         }
 
         Object.defineProperties(
@@ -972,8 +974,26 @@ export class TxBuilderRunner
                 if( !canBeData( redeemer ) ) throw new Error("script input " + utxo.utxoRef.toString() + " is missing a redeemer");
                 else redeemer = forceData( redeemer );
 
+                if( isIUTxO( script_or_ref ) )
+                {
+                    refUtxos.push( new UTxO( script_or_ref ) );
+                }
+
+                if( script_or_ref instanceof Script )
+                {
+                    _addAviableScript( script_or_ref )
+                }
+
                 if( !isIUTxO( script_or_ref ) || !( script_or_ref instanceof Script ) )
-                throw new Error("script input " + utxo.utxoRef.toString() + " is missing the script source");
+                {
+                    const scriptHash = paymentCreds.hash.toString();
+                    script_or_ref = _tryGetRefScript( scriptHash ) ?? _tryGetScript( scriptHash );
+
+                    if( !!isIUTxO( script_or_ref ) || !( script_or_ref instanceof Script ) )
+                    {
+                        throw new Error("script input " + utxo.utxoRef.toString() + " is missing the script source");
+                    }
+                }
 
                 if( !Array.isArray( buildArgs.inputs ) )
                 {
@@ -1362,7 +1382,20 @@ export class TxBuilderRunner
     
                     if( !buildArgs.changeAddress )
                     {
-                        throw new Error("can't deduce change Address; only script inputs");
+                        console.log( buildArgs.outputs );
+                        console.log( Array.isArray( buildArgs.outputs ) );
+                        if( Array.isArray( buildArgs.outputs ) )
+                        {
+                            buildArgs.changeAddress = buildArgs.outputs
+                            ?.find( out => out.address.paymentCreds.type === "pubKey" )
+                            ?.address!
+                        }
+                        else throw new Error("can't deduce change Address; only script inputs");
+
+                        if( !buildArgs.changeAddress )
+                        {
+                            throw new Error("can't deduce change Address; only script inputs and scripts outputs");
+                        }
                     }
                 }
             }

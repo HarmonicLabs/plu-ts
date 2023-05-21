@@ -10,12 +10,12 @@ import { machineVersionV2, machineVersionV1, Machine, ExBudget } from "@harmonic
 import { UPLCTerm, UPLCDecoder, Application, UPLCConst, ErrorUPLC } from "@harmoniclabs/uplc";
 import { POSIXToSlot, getTxInfos, slotToPOSIX } from "../toOnChain";
 import { ITxBuildArgs, ITxBuildOptions, ITxBuildInput, ITxBuildSyncOptions, txBuildOutToTxOut } from "../txBuild";
-import { CanBeData, canBeData, forceData } from "../utils/CanBeData";
 import { CanBeUInteger, forceBigUInt, canBeUInteger, unsafeForceUInt } from "../utils/ints";
 import { freezeAll, defineReadOnlyProperty, definePropertyIfNotPresent, hasOwn } from "@harmoniclabs/obj-utils";
 import { assert } from "../utils/assert";
 import { TxBuilderRunner } from "./TxBuilderRunner/TxBuilderRunner";
-import { IProvider, ITxRunnerProvider } from "./IProvider";
+import { ITxRunnerProvider } from "./IProvider";
+import { CanBeData, canBeData, forceData } from "../utils/CanBeData";
 
 type ScriptLike = {
     hash: string,
@@ -539,9 +539,9 @@ function initTxBuild(
     {
         const t = script.type;
         
-        if( t === ScriptType.NativeScript  )     nativeScriptsWitnesses  .push( script as any );
-        else if( t === ScriptType.PlutusV1 )     plutusV1ScriptsWitnesses.push( script as any );
-        else if( t === ScriptType.PlutusV2 )     plutusV2ScriptsWitnesses.push( script as any );
+        if( t === "NativeScript"  )     nativeScriptsWitnesses  .push( script as any );
+        else if( t === "PlutusScriptV1" )     plutusV1ScriptsWitnesses.push( script as any );
+        else if( t === "PlutusScriptV2" )     plutusV2ScriptsWitnesses.push( script as any );
     }
 
     /**
