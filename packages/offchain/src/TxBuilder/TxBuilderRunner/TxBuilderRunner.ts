@@ -3,16 +3,15 @@ import type { ITxRunnerProvider } from "../IProvider";
 import type { TxBuilder } from "../TxBuilder";
 import { ITxBuildArgs, ITxBuildOutput, cloneITxBuildArgs } from "../../txBuild";
 import { Address, AddressStr, AnyCertificate, Certificate, CertificateType, Hash28, Hash32, ITxOut, ITxOutRef, IUTxO, IValuePolicyEntry, PlutusScriptType, PoolKeyHash, PoolParams, PubKeyHash, Script, ScriptType, StakeAddress, StakeAddressBech32, StakeCredentials, StakeValidatorHash, Tx, TxIn, TxMetadata, TxMetadatum, TxOutRefStr, TxWithdrawalsEntry, UTxO, Value, isITxOut, isIUTxO } from "@harmoniclabs/cardano-ledger-ts";
-import { CanBeUInteger, forceBigUInt } from "../../utils/ints";
-import { CanBeData } from "../../utils/CanBeData";
+import { CanBeUInteger, canBeUInteger, forceBigUInt } from "../../utils/ints";
 import { CanResolveToUTxO, cloneCanResolveToUTxO, forceTxOutRefStr, shouldResolveToUTxO } from "../CanResolveToUTxO/CanResolveToUTxO";
 import { jsonToMetadata } from "./jsonToMetadata";
 import { isGenesisInfos } from "../GenesisInfos";
 import { decodeBech32, sha2_256 } from "@harmoniclabs/crypto";
 import { fromHex, toHex } from "@harmoniclabs/uint8array-utils";
 import { Data, cloneData, dataToCbor, isData } from "@harmoniclabs/plutus-data";
-import { canBeData, canBeUInteger, forceData } from "@harmoniclabs/plu-ts-offchain";
 import { ByteString } from "@harmoniclabs/bytestring";
+import { CanBeData, canBeData, forceData } from "../../utils/CanBeData";
 
 // /** sync */
 // interface TxBuilderStep {
@@ -1250,7 +1249,7 @@ export class TxBuilderRunner
                 })
                 .map( u => u.resolved.datum as Hash32 );
 
-                if( datumHashesToResolve.length >= 0 )
+                if( datumHashesToResolve.length > 0 )
                 {
                     if( typeof provider.resolveDatumHashes !== "function" )
                     {

@@ -38,7 +38,7 @@ const fakeProvider: ITxRunnerProvider = {
             });
         })
     },
-    async resolveDatumHashes( hashes: Hash32[] ) { return [ new DataConstr( 0, [] ) ] }
+    async resolveDatumHashes( hashes: Hash32[] ) { return [ { hash: "00".repeat(32), datum: new DataConstr( 0, [] )} ] }
     // async getProtocolParameters() { return defaultProtocolParameters }
 }
 
