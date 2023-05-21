@@ -1,3 +1,3 @@
 export * from "./TxBuilder";
-export * from "./TxBuilderRunner";
+export * from "./TxBuilderRunner/TxBuilderRunner";
 export * from "./GenesisInfos";

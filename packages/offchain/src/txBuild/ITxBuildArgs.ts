@@ -7,7 +7,7 @@ import { cloneITxBuildWithdrawal, type ITxBuildWithdrawal } from "./ITxBuildWith
 import { CanBeUInteger, forceBigUInt } from "../utils/ints";
 
 export interface ITxBuildArgs {
-    inputs: [ ITxBuildInput, ...ITxBuildInput[] ],
+    inputs: ITxBuildInput[],
     changeAddress: Address | AddressStr,
     outputs?: ITxBuildOutput[],
     // era?: Era // latest
@@ -27,8 +27,8 @@ export interface ITxBuildArgs {
 export function cloneITxBuildArgs( args: Partial<ITxBuildArgs> ): ITxBuildArgs
 {
     return {
-        inputs: args?.inputs?.map( cloneITxBuildInput ) as any,
-        changeAddress: args.changeAddress === undefined ? undefined as any :
+        inputs: args?.inputs?.map( cloneITxBuildInput ) as ITxBuildInput[],
+        changeAddress: args.changeAddress === undefined ? undefined as any as Address :
             args.changeAddress instanceof Address ? args.changeAddress.clone() :
             Address.fromString( args.changeAddress.toString() ),
         outputs: args.outputs?.map( cloneITxBuildOutput ),

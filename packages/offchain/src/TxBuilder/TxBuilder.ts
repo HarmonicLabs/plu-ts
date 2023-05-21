@@ -14,7 +14,7 @@ import { CanBeData, canBeData, forceData } from "../utils/CanBeData";
 import { CanBeUInteger, forceBigUInt, canBeUInteger, unsafeForceUInt } from "../utils/ints";
 import { freezeAll, defineReadOnlyProperty, definePropertyIfNotPresent, hasOwn } from "@harmoniclabs/obj-utils";
 import { assert } from "../utils/assert";
-import { TxBuilderRunner } from "./TxBuilderRunner";
+import { TxBuilderRunner } from "./TxBuilderRunner/TxBuilderRunner";
 import { IProvider, ITxRunnerProvider } from "./IProvider";
 
 type ScriptLike = {

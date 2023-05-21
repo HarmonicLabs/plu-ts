@@ -1,5 +1,5 @@
 import { Address, AddressStr, Value, Script, ScriptType } from "@harmoniclabs/cardano-ledger-ts";
-import { TxBuilderRunner } from ".";
+import { TxBuilderRunner } from "./TxBuilderRunner";
 import { ITxRunnerProvider } from "../IProvider";
 import { CanBeUInteger } from "../../utils/ints";
 import { CanBeData } from "../../utils/CanBeData";
@@ -50,7 +50,7 @@ export abstract class Transaction
     abstract burnAsset(): any;
     // got it
     abstract setInputs(): any;
-    // TODO
+    // got it
     abstract setCollateral(): any;
     // got it
     abstract setRequiredSigners(): any;
@@ -60,7 +60,7 @@ export abstract class Transaction
     abstract delegateTo(): any;
     // got it
     abstract withdrawRewards(): any;
-    // TODO
+    // got it
     abstract registerStake(): any;
     // got it
     abstract deregisterStake(): any;
