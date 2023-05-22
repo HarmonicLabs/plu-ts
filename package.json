@@ -1,6 +1,6 @@
 {
   "name": "@harmoniclabs/plu-ts",
-  "version": "0.2.0",
+  "version": "0.4.0",
   "description": "An embedded DSL for Cardano smart contracts creation coupled with a library for Cardano transactions, all in Typescript",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -16,7 +16,10 @@
     "clear-jest": "jest --clearCache",
     "test-watch": "jest --watchman",
     "test-coverage": "jest --coverage",
-    "build": "tsc --project ./tsconfig.json && tsc-alias -p ./tsconfig.json",
+    "build": "rm -rf ./dist && tsc --project ./tsconfig.json && tsc-alias -p ./tsconfig.json",
+    "build:light": "tsc --project ./tsconfig.json && tsc-alias -p ./tsconfig.json",
+    "buidl": "npm run build",
+    "ci": "npm run test && npm run build",
     "start": "npm-run-all --parallel build:watch run:watch"
   },
   "publishConfig": {
@@ -52,6 +55,18 @@
   "dependencies": {
     "@harmoniclabs/uint8array-utils": "^1.0.0"
   },
+  "peerDependencies": {
+    "@harmoniclabs/pair": "^1.0.0",
+    "@harmoniclabs/bytestring": "^1.0.0",
+    "@harmoniclabs/cbor": "^1.1.1",
+    "@harmoniclabs/plutus-data": "^1.0.0",
+    "@harmoniclabs/cardano-costmodels-ts": "^1.0.0",
+    "@harmoniclabs/plutus-machine": "^1.0.0",
+    "@harmoniclabs/uplc": "^1.0.0",
+    "@harmoniclabs/cardano-ledger-ts": "^0.1.0",
+    "@harmoniclabs/plu-ts-onchain": "^0.1.0",
+    "@harmoniclabs/plu-ts-offchain": "^0.1.0"
+  },
   "devDependencies": {
     "@babel/preset-env": "^7.18.6",
     "@babel/preset-typescript": "^7.18.6",
@@ -65,5 +80,6 @@
     "tsc-alias": "^1.7.1",
     "typescript": "^4.6.3",
     "v8-profiler-next": "^1.9.0"
-  }
+  },
+  "funding": "https://github.com/sponsors/HarmonicLabs"
 }

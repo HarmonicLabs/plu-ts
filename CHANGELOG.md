@@ -1,5 +1,24 @@
 # Changelog
 
+## [NEXT] v0.4.0
+
+- CIP57 (Plutus blueprints) support
+- modular design
+- changed value interface (`IValue`)
+    - assets field must be an **array** of `{ name: Uint8Array, quantity: number | bigint }` (previously was an object)
+
+## v0.3.0
+
+- introudced the `IR`
+- deprecated `plet( pexpr ).in( pvar => ... )` in favor of `const pvar = plet( pexpr )`
+- deprecated `struct.extract( ...fields ).in( structInstance => ... )` in favor of plain dot notation ( eg. `structInstance.field` )
+
+## v0.2.1 - v0.2.3
+
+- introduced the `src/offchain` folder exporting
+    - all the Ledger types
+    - the `TxBuilder` class
+
 ## v0.1.10
 
 - fixed some `plu-ts` level types bugs
