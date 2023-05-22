@@ -16,12 +16,12 @@
 
 ## what is plu-ts?
 
-```plu-ts``` wants to be a library to allow Cardano-related software to be written entirely in [typescript](https://www.typescriptlang.org/), in support for a wider developer ecosystem adoption and easier integration.
+`plu-ts` is to be a library to allow Cardano-related software to be written entirely in [typescript](https://www.typescriptlang.org/), in support for a wider developer ecosystem adoption and easier integration.
 
 the project is be composed mainly of two parts: on-chain and off-chain;
 
-the on-chain part takes care of smart contracts creation
-the off-chain one allows for transaction creation
+the on-chain exports all the necessary for you to build your smart contract as an eDSL (_embedded_ Domain Specific Language)
+the off-chain one allows you to build transactions 
 
 ## Install
 
@@ -33,6 +33,10 @@ or, equivalently, you can install directly form this repository
 ```
 npm install https://github.com/HarmonicLabs/plu-ts
 ```
+
+## Get started
+
+Have a look at the [`plu-ts` documentation](https://pluts.harmoniclabs.tech/docs/intro) where you can find some [example projects](https://pluts.harmoniclabs.tech/docs/examples/Hello%20World) to help you get started.
 
 ## Sponsors ❤️
 
