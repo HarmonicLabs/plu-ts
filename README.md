@@ -16,7 +16,7 @@
 
 ## what is plu-ts?
 
-`plu-ts` is to be a library to allow Cardano-related software to be written entirely in [typescript](https://www.typescriptlang.org/), in support for a wider developer ecosystem adoption and easier integration.
+`plu-ts` is a library to allow Cardano-related software to be written entirely in [typescript](https://www.typescriptlang.org/), in support for a wider developer ecosystem adoption and easier integration.
 
 the project is be composed mainly of two parts: on-chain and off-chain;
 
