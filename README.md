@@ -14,18 +14,25 @@
   </p>
 </p>
 
-## why plu-ts?
-
-there is the need for decentralized applications, however the tools to build a [**truly** decentralized](https://en.wikipedia.org/wiki/Decentralization) application are missing or limited to server side compilation.
-
 ## what is plu-ts?
 
 ```plu-ts``` wants to be a library to allow Cardano-related software to be written entirely in [typescript](https://www.typescriptlang.org/), in support for a wider developer ecosystem adoption and easier integration.
 
-the project will be composed mainly of two parts: on-chain and off-chain;
+the project is be composed mainly of two parts: on-chain and off-chain;
 
-the on-chain part will take care of smart contracts creation
-the off-chain one will allow for transaction creation (so will take care of smart contracts interaction, among all the off-chain stuff)
+the on-chain part takes care of smart contracts creation
+the off-chain one allows for transaction creation
+
+## Install
+
+You can start playing with `plu-ts` by running the following command in your project root directory
+```
+npm install @harmoniclabs/plu-ts
+```
+or, equivalently, you can install directly form this repository
+```
+npm install https://github.com/HarmonicLabs/plu-ts
+```
 
 ## Sponsors ❤️
 
@@ -36,17 +43,6 @@ Everyone of them is special and is contribuitng in making this software aviable 
 ### Special thanks for their support goes to:
 
 [VledicFranco](https://github.com/VledicFranco) by [Drunken Dragon Entertainment](https://twitter.com/DrunkenDragnEnt)
-
-## Get Started
-
-You can start playing with `plu-ts` by running the following command in your project root directory
-```
-npm install @harmoniclabs/plu-ts
-```
-or, equivalently, you can install directly form this repository
-```
-npm install https://github.com/HarmonicLabs/plu-ts
-```
 
 Consider having a look at the [documentation](https://www.harmoniclabs.tech/plu-ts-docs/index.html) even if it is currently being written; feel free to contribute to the [`plu-ts-docs` repository](https://github.com/HarmonicLabs/plu-ts-docs)
 
