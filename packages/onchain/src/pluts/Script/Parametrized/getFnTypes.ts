@@ -10,5 +10,7 @@ export function getFnTypes( fnT: TermType ): TermType[]
         fnT = fnT[2];
     }
 
+    result.push( fnT );
+
     return result;
 }
