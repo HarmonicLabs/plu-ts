@@ -9,7 +9,7 @@ import { Data, dataToCborObj, DataConstr, dataToCbor } from "@harmoniclabs/plutu
 import { machineVersionV2, machineVersionV1, Machine, ExBudget } from "@harmoniclabs/plutus-machine";
 import { UPLCTerm, UPLCDecoder, Application, UPLCConst, ErrorUPLC } from "@harmoniclabs/uplc";
 import { POSIXToSlot, getTxInfos, slotToPOSIX } from "../toOnChain";
-import { ITxBuildArgs, ITxBuildOptions, ITxBuildInput, ITxBuildSyncOptions, txBuildOutToTxOut } from "../txBuild";
+import { ITxBuildArgs, ITxBuildOptions, ITxBuildInput, ITxBuildSyncOptions, txBuildOutToTxOut, ChangeInfos } from "../txBuild";
 import { CanBeUInteger, forceBigUInt, canBeUInteger, unsafeForceUInt } from "../utils/ints";
 import { freezeAll, defineReadOnlyProperty, definePropertyIfNotPresent, hasOwn } from "@harmoniclabs/obj-utils";
 import { assert } from "../utils/assert";
@@ -224,7 +224,8 @@ export class TxBuilder
             languageViews,
             totInputValue,
             requiredOutputValue,
-            outs
+            outs,
+            change
         } = initTxBuild.bind( this )( buildArgs );
 
         const txOuts: TxOut[] = new Array( outs.length + 1 );
@@ -402,14 +403,20 @@ export class TxBuilder
             outs.forEach( (txO, i) => txOuts[i] = txO.clone() );
             txOuts[ txOuts.length - 1 ] = (
                 new TxOut({
-                    address: buildArgs.changeAddress,
+                    address: change.address,
                     value: Value.sub(
                         totInputValue,
                         Value.add(
                             requiredOutputValue,
                             Value.lovelaces( fee )
                         )
-                    )
+                    ),
+                    datum: change.datum ? (
+                        change.datum instanceof Hash32 ?
+                        change.datum :
+                        forceData( change.datum )
+                    ): undefined,
+                    refScript: change.refScript
                 })
             );
 
@@ -467,6 +474,7 @@ function initTxBuild(
     this: TxBuilder,
     {
         inputs,
+        change,
         changeAddress,
         outputs,
         readonlyRefInputs,
@@ -489,9 +497,25 @@ function initTxBuild(
     languageViews: Uint8Array,
     totInputValue: Value,
     requiredOutputValue: Value,
-    outs: TxOut[]
+    outs: TxOut[],
+    change: ChangeInfos
 }
 {
+    if( change )
+    {
+        changeAddress = change.address;
+    }
+
+    if( !changeAddress )
+    {
+        throw new Error("missing changAddress and change entry while constructing a transaciton; unable to balance inputs and outpus");
+    }
+
+    if( !change )
+    {
+        change = { address: changeAddress };
+    };
+
     const network = resolveNetwork( changeAddress );
 
     let totInputValue = mints?.reduce( ( prev, curr ) => Value.add( prev, curr.value ), Value.zero ) ?? Value.zero;
@@ -712,7 +736,7 @@ function initTxBuild(
     // add dummy change address output
     dummyOuts.push(
         new TxOut({
-            address: changeAddress,
+            address: change.address,
             value: Value.sub(
                 totInputValue,
                 Value.add(
@@ -723,7 +747,13 @@ function initTxBuild(
                         )
                     )
                 )
-            )
+            ),
+            datum: change.datum ? (
+                change.datum instanceof Hash32 ?
+                change.datum :
+                forceData( change.datum )
+            ): undef,
+            refScript: change.refScript
         })
     );
 
@@ -945,14 +975,20 @@ function initTxBuild(
     outs.forEach( (txO,i) => txOuts[i] = txO.clone() );
     txOuts[txOuts.length - 1] = (
         new TxOut({
-            address: changeAddress,
+            address: change.address,
             value: Value.sub(
                 totInputValue,
                 Value.add(
                     requiredOutputValue,
                     Value.lovelaces( minFee )
                 )
-            )
+            ),
+            datum: change.datum ? (
+                change.datum instanceof Hash32 ?
+                change.datum :
+                forceData( change.datum )
+            ): undef,
+            refScript: change.refScript
         })
     );
 
@@ -973,7 +1009,8 @@ function initTxBuild(
         languageViews,
         totInputValue,
         requiredOutputValue,
-        outs
+        outs,
+        change
     };
 }
 
