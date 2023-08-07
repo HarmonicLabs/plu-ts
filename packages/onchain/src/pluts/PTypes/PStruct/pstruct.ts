@@ -4,7 +4,7 @@ import { PDataRepresentable } from "../../PType/PDataRepresentable";
 import { UtilityTermOf, addUtilityForType } from "../../lib/addUtilityForType";
 
 import { structDefToString, termTypeToString } from "../../type_system/utils";
-import { AliasT, GenericStructCtorDef, GenericStructDefinition, GenericTermType, PrimType, StructCtorDef, StructDefinition, StructT, TermType, alias, asData, data, int, struct, tyVar, unit } from "../../type_system/types";
+import { AliasT, GenericStructCtorDef, GenericStructDefinition, GenericTermType, Methods, PrimType, StructCtorDef, StructDefinition, StructT, TermType, alias, asData, data, int, struct, tyVar, unit } from "../../type_system/types";
 import { ToPType } from "../../type_system/ts-pluts-conversion";
 import { typeExtends, isStructDefinition, isStructType, isTaggedAsAlias } from "../../type_system";
 import { Term } from "../../Term";
@@ -39,10 +39,10 @@ export type StructInstance<SCtorDef extends StructCtorDef> = {
 }
 
 export type StructInstanceAsData<SCtorDef extends StructCtorDef> = {
-    [Field in keyof SCtorDef]: Term<PAsData<any>> | Term<PStruct<any>> | Term<PData> | Term<undefined & PType>
+    [Field in keyof SCtorDef]: Term<PAsData<any>> | Term<PStruct<any, any>> | Term<PData> | Term<undefined & PType>
 }
 
-export type PStruct<SDef extends StructDefinition> = {
+export type PStruct<SDef extends StructDefinition, SMethods extends Methods> = {
     new(): _PStruct
 
     /**
@@ -51,15 +51,15 @@ export type PStruct<SDef extends StructDefinition> = {
     readonly termType: StructT<SDef>;
     readonly type: StructT<SDef>;
 
-    readonly fromDataTerm: TermFn<[PData],PStruct<SDef>>
-    fromData: ( data: Term<PData> ) => Term<PStruct<SDef>>;
+    readonly fromDataTerm: TermFn<[PData],PStruct<SDef, any>>
+    fromData: ( data: Term<PData> ) => Term<PStruct<SDef, any>>;
 
-    readonly toDataTerm: TermFn<[PStruct<SDef>],PData>
-    toData: ( data: Term<PStruct<SDef>> ) => Term<PData>;
+    readonly toDataTerm: TermFn<[PStruct<SDef, any>],PData>
+    toData: ( data: Term<PStruct<SDef, any>> ) => Term<PData>;
 
 } & PDataRepresentable & {
     [Ctor in keyof SDef]:
-        ( ctorFields: StructInstanceAsData<SDef[Ctor]> ) => TermStruct<SDef>
+        ( ctorFields: StructInstanceAsData<SDef[Ctor]> ) => TermStruct<SDef, SMethods>
 }
 
 type Includes<As extends any[], Elem extends any> =
@@ -182,12 +182,20 @@ const RESERVED_STRUCT_KEYS = Object.freeze([
     "raw"
 ]);
 
-export function pstruct<StructDef extends StructDefinition>( def: StructDef ): PStruct<StructDef>
+export function pstruct<
+    StructDef extends StructDefinition, 
+    SMethods extends Methods
+>( 
+    def: StructDef, 
+    getMethods?: ( self_t: StructT<StructDef, {}> ) => SMethods
+): PStruct<StructDef, SMethods>
 {
     assert(
         isStructDefinition( def ),
         "cannot construct 'PStruct' type; struct definition is not constant: " + structDefToString( def ) 
     );
+
+    getMethods = typeof getMethods === "function" ? getMethods : _self_t => { return {} as SMethods; };
 
     class PStructExt extends _PStruct
     {
@@ -200,13 +208,17 @@ export function pstruct<StructDef extends StructDefinition>( def: StructDef ): P
             super();
         }
 
-        static termType: [ PrimType.Struct, StructDef ];
-        static type: [ PrimType.Struct, StructDef ];
+        static termType: [ PrimType.Struct, StructDef, SMethods ];
+        static type: [ PrimType.Struct, StructDef, SMethods ];
         static fromData: <Ext extends PStructExt = PStructExt>( data: Term<PData> ) => Term<Ext>
         static toData:   <Ext extends PStructExt>( data: Term<Ext> ) => Term<PData>;
     }
 
-    const thisStructType = struct( def );
+    const noMethodsType = struct( def );
+
+    const methods = getMethods( noMethodsType );
+
+    const thisStructType = struct( def, methods );
 
     defineReadOnlyProperty(
         PStructExt,
@@ -389,7 +401,6 @@ export function pstruct<StructDef extends StructDefinition>( def: StructDef ): P
             (PStructExt.prototype as any)[ctorName]
         );
     }
-    
 
     /*
     Type 'typeof PStructExt' is not assignable to type 'PStruct<StructDef>'
@@ -442,8 +453,8 @@ function replaceAliasesWith(
 
 export function typeofGenericStruct(
     genStruct: ( ...tyArgs: TermType[] )
-        => PStruct<StructDefinition>
-): StructT<GenericStructDefinition>
+        => PStruct<StructDefinition, Methods>
+): StructT<GenericStructDefinition, Methods>
 {
     const nArgs = genStruct.length;
     const aliases: AliasT<[PrimType.Int]>[] = Array( nArgs );
@@ -482,9 +493,9 @@ export function typeofGenericStruct(
  */
 export function pgenericStruct<ConstStructDef extends StructDefinition, TypeArgs extends [ TermType, ...TermType[] ]>
     (
-        getDescriptor: ( ...tyArgs: TypeArgs ) => PStruct<ConstStructDef>
+        getDescriptor: ( ...tyArgs: TypeArgs ) => PStruct<ConstStructDef, Methods>
     ): (
-        (<TyArgs extends TypeArgs>( ...tyArgs: TyArgs ) => PStruct<ConstStructDef>) &
+        (<TyArgs extends TypeArgs>( ...tyArgs: TyArgs ) => PStruct<ConstStructDef, Methods>) &
         { type: [ PrimType.Struct, GenericStructDefinition ] }
     )
 {
@@ -501,10 +512,10 @@ export function pgenericStruct<ConstStructDef extends StructDefinition, TypeArgs
     for **every** generic structure;
     */
     return (() => {
-        const tyArgsCache: Pair<string, PStruct<ConstStructDef>>[] = []
+        const tyArgsCache: Pair<string, PStruct<ConstStructDef, Methods>>[] = []
 
         return defineReadOnlyProperty(
-            ( ...tyArgs: TypeArgs ): PStruct<ConstStructDef> => {
+            ( ...tyArgs: TypeArgs ): PStruct<ConstStructDef, Methods> => {
 
                 const thisTyArgsKey = tyArgs.map( termTypeToString ).join('|');
                 const keys = tyArgsCache.map( pair => pair.fst );
@@ -528,7 +539,7 @@ export function pgenericStruct<ConstStructDef extends StructDefinition, TypeArgs
 
                 if( !( result instanceof PDataRepresentable ) ) result = pstruct(result);
 
-                tyArgsCache.push( new Pair<string, PStruct<ConstStructDef>>( thisTyArgsKey, result ) );
+                tyArgsCache.push( new Pair<string, PStruct<ConstStructDef, Methods>>( thisTyArgsKey, result ) );
 
                 return result;
             },

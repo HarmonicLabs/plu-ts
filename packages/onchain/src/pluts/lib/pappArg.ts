@@ -1,5 +1,5 @@
 import type { PType } from "../PType";
-import type { PLam, PInt, PBool, PByteString, PString, PUnit, PPair, PList } from "../PTypes";
+import type { PLam, PInt, PBool, PByteString, PString, PUnit, PPair, PList, PAlias } from "../PTypes";
 
 import { termTypeToString, getNRequiredLambdaArgs } from "../type_system/utils";
 import { UtilityTermOf } from "./addUtilityForType";
@@ -33,6 +33,8 @@ export type TsFunctionSatisfying<PIn extends PType, POut extends PType> =
     _TsFunctionSatisfying<[ UtilityTermOf<PIn> ], POut>
 
 export type PappArg<PIn extends PType> =
+    PIn extends PAlias<infer PAliased extends PType, infer _> ?
+    PappArg<PAliased> :
     (
         PIn extends PInt ? bigint | number :
         PIn extends PBool ? boolean :
@@ -41,10 +43,14 @@ export type PappArg<PIn extends PType> =
         PIn extends PUnit ? undefined | null :
         PIn extends PPair<infer PFst extends PType, infer PSnd extends PType> ?
            Pair<PappArg<PFst>, PappArg<PSnd>> | { fst: PappArg<PFst>, snd: PappArg<PSnd> } | [ PappArg<PFst>, PappArg<PSnd> ] :
-        PIn extends PList<infer PElemsT extends PType> ? PappArg<PElemsT>[] :
+        // PIn extends PList<infer PElemsT extends PType> ? PappArg<PElemsT>[] :
         PIn extends PLam<infer PIn extends PType, infer POut extends PType> ? TsFunctionSatisfying<PIn,POut> :
         Term<PIn>
-    ) | Term<PIn>
+    ) | Term<PIn> | 
+    // also the alias of the type is good 
+    // (only works because we know `PIn` is not an alias if we are here)
+    // because of the initial chec
+    Term<PAlias<PIn, any>> 
 
 export function pappArgToTerm<ArgT extends TermType>(
     arg: PappArg<ToPType<ArgT>>,

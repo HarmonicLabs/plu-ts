@@ -1,6 +1,9 @@
 import { defineReadOnlyProperty } from "@harmoniclabs/obj-utils";
 import { assert } from "../../utils/assert";
 import { getElemsT } from "./tyArgs";
+import { PLam } from "../PTypes";
+import { PType } from "../PType";
+import { Term } from "../Term";
 
 export const enum PrimType {
     Int  = "int",
@@ -26,15 +29,17 @@ type BaseT
     | PrimType.Bool
     | PrimType.Data
 
+export type Methods = { [method: string]: Term<PLam<PType,PType>> }
+
 export type ListT<T extends GenericTermType> = [ PrimType.List, T ];
 
 export type DelayedT<T extends GenericTermType> = [ PrimType.Delayed, T ];
 
 export type PairT<FstT extends GenericTermType, SndT extends GenericTermType> = [ PrimType.Pair , FstT, SndT ];
 
-export type StructT<GSDef extends GenericStructDefinition> = [ PrimType.Struct, GSDef ];
+export type StructT<GSDef extends GenericStructDefinition, SMethods extends Methods = {}> = [ PrimType.Struct, GSDef, SMethods ];
 
-export type AliasT<T extends GenericTermType> = T[0] extends PrimType.Alias ? T : [ PrimType.Alias, T ];
+export type AliasT<T extends GenericTermType, AMethods extends Methods = {}> = T[0] extends PrimType.Alias ? T : [ PrimType.Alias, T, AMethods ];
 
 export type AsDataT<T extends GenericTermType> = T[0] extends PrimType.AsData ? T : [ PrimType.AsData, T ];
 
@@ -57,7 +62,7 @@ type NonStructTag
     | PrimType.Pair
     | PrimType.Delayed
     | PrimType.Lambda
-    | PrimType.Alias
+    // | PrimType.Alias
     | PrimType.AsData;
 
 /*
@@ -65,18 +70,21 @@ type NonStructTag
 
 export type TermType
     = readonly [ BaseT ]
-    | readonly [ PrimType.Struct, StructDefinition ]
+    | readonly [ PrimType.Struct, StructDefinition, Methods ]
     | readonly [ PrimType.List, TermType ]
     | readonly [ PrimType.Delayed, TermType ]
     | readonly [ PrimType.Pair , TermType, TermType ]
     | readonly [ PrimType.Lambda , TermType, TermType ]
-    | readonly [ PrimType.Alias, TermType ]
+    | readonly [ PrimType.Alias, TermType, Methods ]
     | readonly [ PrimType.AsData, TermType ]
 //*/
 //*
 export type TermType
-    = [ NonStructTag, ...TermType[] ] | [ PrimType.Struct, StructDefinition ]
+    = [ NonStructTag, ...TermType[] ] | [ PrimType.Struct, StructDefinition, Methods ] | [ PrimType.Alias, TermType, Methods ]
 //*/
+
+export type NonAliasTermType
+    = [ NonStructTag, ...TermType[] ] | [ PrimType.Struct, StructDefinition, Methods ]
 
 export type StructCtorDef = {
     [field: string | number]: TermType
@@ -164,19 +172,21 @@ export const delayed    =
     <T extends GenericTermType>( toDelay: T ): [ PrimType.Delayed, T ] => 
         Object.freeze([ PrimType.Delayed, toDelay ]) as any;
 
-export const struct     = <GSDef extends GenericStructDefinition>( def: GSDef ): StructT<GSDef> =>
+export const struct     = <GSDef extends GenericStructDefinition, SMethods extends Methods>( def: GSDef, methods?: SMethods ): StructT<GSDef, SMethods> =>
         Object.freeze([ 
             PrimType.Struct,
-            Object.freeze( cloneStructDef( def ) )
+            Object.freeze( cloneStructDef( def ) ),
+            Object.freeze( methods ?? {} )
         ]) as any;
 
 export function alias<T extends AliasT<TermType>>( toAlias: T ): T
-export function alias<T extends GenericTermType>( toAlias: T ): [ PrimType.Alias, T ]
-export function alias<T extends GenericTermType>( toAlias: T ): [ PrimType.Alias, T ]
+export function alias<T extends GenericTermType, AMethods extends Methods>( toAlias: T ): [ PrimType.Alias, T, {} ]
+export function alias<T extends GenericTermType, AMethods extends Methods>( toAlias: T, methods: AMethods ): [ PrimType.Alias, T, AMethods ]
+export function alias<T extends GenericTermType, AMethods extends Methods>( toAlias: T, methods?: AMethods ): [ PrimType.Alias, T, AMethods ]
 {
     if( toAlias[0] === PrimType.Alias ) return toAlias as any;
 
-    return Object.freeze([ PrimType.Alias, toAlias ]) as any;
+    return Object.freeze([ PrimType.Alias, toAlias, Object.freeze( methods ?? {} ) ]) as any;
 } 
 
 export function asData( someT: [PrimType.Data] ): [ PrimType.Data ]
@@ -245,10 +255,11 @@ export const tyVar      = ( ( description?: any ) => Object.freeze([ Symbol( des
 export type GenericTermType
 = TermType
 | [ TyParam ]
-| [ PrimType.Struct, GenericStructDefinition ]
-| [ PrimType.List, GenericTermType ]
-| [ PrimType.Delayed, GenericTermType ]
-| [ PrimType.Pair , GenericTermType, GenericTermType ]
-| [ PrimType.Lambda , GenericTermType, GenericTermType ]
-| [ PrimType.Alias, GenericTermType ]
-| [ PrimType.AsData, GenericTermType ]
+| [ NonStructTag, ...GenericTermType[] ]
+| [ PrimType.Struct, GenericStructDefinition, Methods ]
+| [ PrimType.Alias, GenericTermType, Methods ]
+// | [ PrimType.List, GenericTermType ]
+// | [ PrimType.Delayed, GenericTermType ]
+// | [ PrimType.Pair , GenericTermType, GenericTermType ]
+// | [ PrimType.Lambda , GenericTermType, GenericTermType ]
+// | [ PrimType.AsData, GenericTermType ]

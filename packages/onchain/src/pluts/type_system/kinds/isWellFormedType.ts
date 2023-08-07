@@ -2,7 +2,7 @@ import { isObject } from "@harmoniclabs/obj-utils";
 import { isPrimTypeTag } from "./isPrimTypeTag";
 import { isTaggedAsAlias } from "./isTaggedAsAlias";
 import { isTypeParam } from "./isTypePAram";
-import { GenericStructDefinition, GenericTermType, PrimType, StructCtorDef, StructDefinition, StructT, TermType } from "../types";
+import { GenericStructDefinition, GenericTermType, type Methods, PrimType, StructCtorDef, StructDefinition, StructT, TermType } from "../types";
 
 
 function getIsStructDefWithTermTypeCheck( termTypeCheck: ( t: TermType ) => boolean )
@@ -54,7 +54,7 @@ export const isGenericStructDefinition = getIsStructDefWithTermTypeCheck(
 ) as  ( def: object ) => def is GenericStructDefinition;
 
 
-export function isStructType( t: GenericTermType ): t is StructT<StructDefinition>
+export function isStructType( t: GenericTermType ): t is StructT<StructDefinition, Methods>
 {
     return (
         Array.isArray( t ) &&
@@ -98,11 +98,11 @@ export function isWellFormedType( t: GenericTermType ): t is TermType
         t[0] === PrimType.List      ||
         // ??
         t[0] === PrimType.Alias
-    ) return t.length === 2 && isWellFormedType( t[1] as any );
+    ) return t.length >= 2 && isWellFormedType( t[1] as any );
 
     if( t[0] === PrimType.Struct )
     {
-        return t.length === 2 && isStructDefinition( t[1] );
+        return t.length >= 2 && isStructDefinition( t[1] );
     }
 
     if(
@@ -141,11 +141,11 @@ export function isWellFormedGenericType( t: GenericTermType ): boolean
         t[0] === PrimType.List      ||
         // ??
         t[0] === PrimType.Alias
-    ) return t.length === 2 && isWellFormedGenericType( t[1] as any );
+    ) return t.length >= 2 && isWellFormedGenericType( t[1] as any );
 
     if( t[0] === PrimType.Struct )
     {
-        return t.length === 2 && isGenericStructDefinition( t[1] );
+        return t.length >= 2 && isGenericStructDefinition( t[1] );
     }
 
     if(

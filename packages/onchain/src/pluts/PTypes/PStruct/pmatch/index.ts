@@ -306,7 +306,7 @@ function getReturnTypeFromContinuation(
  * @returns the term that matches the ctor 
  */
 function hoistedMatchCtors<SDef extends StructDefinition>(
-    structData: Term<PStruct<SDef>>,
+    structData: Term<PStruct<SDef, any>>,
     sDef: SDef,
     ctorCbs: (RawCtorCallback | Term<PLam<PList<PData>, PType>>)[],
 ) : Term<PType>
@@ -392,7 +392,7 @@ function hoistedMatchCtors<SDef extends StructDefinition>(
     return result;
 }
 
-export function pmatch<SDef extends StructDefinition>( struct: Term<PStruct<SDef>> ): PMatchOptions<SDef>
+export function pmatch<SDef extends StructDefinition>( struct: Term<PStruct<SDef, any>> ): PMatchOptions<SDef>
 {
     const sDef = struct.type[1] as StructDefinition;
     if( !isStructDefinition( sDef ) )
