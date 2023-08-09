@@ -29,6 +29,7 @@ import { IRConst } from "../../../../IR/IRNodes/IRConst";
 import { IRForced } from "../../../../IR/IRNodes/IRForced";
 import { IRError } from "../../../../IR/IRNodes/IRError";
 import { IRDelayed } from "../../../../IR/IRNodes/IRDelayed";
+import { _punsafeConvertType } from "../../../lib/punsafeConvertType/minimal";
 
 const elemAtCache: { [n: number]: TermFn<[ PList<PData> ], PData > } = {};
 
@@ -86,14 +87,19 @@ function getStructInstance<CtorDef extends StructCtorDef>
     for( let i = 0; i < fieldNames.length; i++ )
     {
         const fieldName = fieldNames[i];
+        const fieldType = ctorDef[fieldName];
+
         Object.defineProperty(
             instance, fieldName,
             {
-                value: addUtilityForType( ctorDef[ fieldName ] )(
-                    _plet( 
-                        _fromData( ctorDef[ fieldName ] )(
-                            getElemAtTerm( i ).$( fieldsList )
-                        )
+                value: addUtilityForType( fieldType )(
+                    _punsafeConvertType(
+                        _plet( 
+                            _fromData( fieldType )(
+                                getElemAtTerm( i ).$( fieldsList )
+                            )
+                        ),
+                        fieldType
                     )
                 ),
                 writable: false,
@@ -392,7 +398,7 @@ function hoistedMatchCtors<SDef extends StructDefinition>(
     return result;
 }
 
-export function pmatch<SDef extends StructDefinition>( struct: Term<PStruct<SDef, any>> ): PMatchOptions<SDef>
+export function pmatch<SDef extends StructDefinition>( struct: Term<PStruct<SDef, {}>> ): PMatchOptions<SDef>
 {
     const sDef = struct.type[1] as StructDefinition;
     if( !isStructDefinition( sDef ) )

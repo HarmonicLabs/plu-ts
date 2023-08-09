@@ -4,13 +4,16 @@ import type { ToPType } from "../../type_system/ts-pluts-conversion";
 import { type UtilityTermOf, addUtilityForType } from "../addUtilityForType";
 import { isWellFormedType } from "../../type_system/kinds/isWellFormedType";
 import { Term } from "../../Term";
+import { termTypeToString } from "../../type_system";
 
 
 export function punsafeConvertType<FromPInstance extends PType, ToTermType extends TermType>
 ( someTerm: Term<FromPInstance>, toType: ToTermType ): UtilityTermOf<ToPType<ToTermType>>
 {
     if( !isWellFormedType( toType ) )
-    throw new Error("`punsafeConvertType` called with invalid type");
+    {
+        throw new Error("`punsafeConvertType` called with invalid type");
+    }
 
     const converted = new Term(
         toType,

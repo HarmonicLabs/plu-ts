@@ -40,8 +40,8 @@ export type RawStruct = {
 
 export type TermStruct<SDef extends StructDefinition, SMethods extends Methods> = Term<PStruct<SDef,SMethods>> & {
 
-    readonly eqTerm: TermFn<[PStruct<SDef, any>], PBool>
-    readonly eq: ( other: Term<PStruct<SDef, any>> ) => TermBool
+    readonly eqTerm: TermFn<[PStruct<SDef, {}>], PBool>
+    readonly eq: ( other: Term<PStruct<SDef, {}>> ) => TermBool
 
     readonly raw: RawStruct
 

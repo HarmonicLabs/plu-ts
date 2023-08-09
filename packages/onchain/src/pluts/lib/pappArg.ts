@@ -33,9 +33,8 @@ export type TsFunctionSatisfying<PIn extends PType, POut extends PType> =
     _TsFunctionSatisfying<[ UtilityTermOf<PIn> ], POut>
 
 export type PappArg<PIn extends PType> =
-    PIn extends PAlias<infer PAliased extends PType, infer _> ?
-    PappArg<PAliased> :
     (
+        PIn extends PAlias<infer PAliased extends PType, infer _> ? PappArg<PAliased> :
         PIn extends PInt ? bigint | number :
         PIn extends PBool ? boolean :
         PIn extends PByteString ? ByteString | Uint8Array | string :
@@ -46,11 +45,11 @@ export type PappArg<PIn extends PType> =
         // PIn extends PList<infer PElemsT extends PType> ? PappArg<PElemsT>[] :
         PIn extends PLam<infer PIn extends PType, infer POut extends PType> ? TsFunctionSatisfying<PIn,POut> :
         Term<PIn>
-    ) | Term<PIn> | 
+    ) | Term<PIn>
     // also the alias of the type is good 
     // (only works because we know `PIn` is not an alias if we are here)
     // because of the initial chec
-    Term<PAlias<PIn, any>> 
+    | Term<PAlias<PIn, any>> 
 
 export function pappArgToTerm<ArgT extends TermType>(
     arg: PappArg<ToPType<ArgT>>,
@@ -298,6 +297,10 @@ export function pappArgToTerm<ArgT extends TermType>(
     
             const fstT = isWellFormedType( mustExtend[1] ) ? mustExtend[1] : tryGetConstantableType( fst );
             const sndT = isWellFormedType( mustExtend[2] ) ? mustExtend[2] : tryGetConstantableType( snd );
+
+            console.log( mustExtend );
+            console.log( fstT );
+            console.log( sndT );
 
             return pPair( fstT, sndT )(
                 pappArgToTerm( fst, fstT ),

@@ -1,6 +1,6 @@
 import { Machine } from "@harmoniclabs/plutus-machine";
 import { UPLCConst, UPLCTerm, ErrorUPLC } from "@harmoniclabs/uplc";
-import { Term, pmatch } from "../../../..";
+import { Term, pmatch, termTypeToString, typeExtends } from "../../../..";
 import { compileIRToUPLC } from "../../../../../IR/toUPLC/compileIRToUPLC";
 import { PMaybe, fromData, pBool, pByteString, pInt, pPair, pdelay, pfn, phoist, pif, plam, precursiveList, ptoData, toData } from "../../../../lib";
 import { pList } from "../../../../lib/std/list/const";
@@ -8,21 +8,27 @@ import { bool, bs, fn, int, list } from "../../../../type_system/types";
 import { PCurrencySymbol } from "../PCurrencySymbol";
 import { PTokenName } from "../PTokenName";
 import { PAssetsEntry, PValue, PValueEntry } from "../PValue";
+import { getFstT, getSndT } from "../../../../type_system/tyArgs";
 
 const currSym = PCurrencySymbol.from( pByteString("ff".repeat(28)) );
 const tn = PTokenName.from( pByteString("") );
 
 const oneEntryValue = PValue.from( 
     pList( PValueEntry.type )([
-        PValueEntry.from([
-            currSym,
-            pList( PAssetsEntry.type )([
-                PAssetsEntry.from([
-                    tn,
-                    pInt(1_000_000)
+        PValueEntry.from(
+            pPair( PValueEntry.type[1][1], PValueEntry.type[1][2] )
+            (
+                currSym,
+                pList( PAssetsEntry.type )([
+                    PAssetsEntry.from(
+                        pPair( getFstT( PAssetsEntry.type[1] ), getSndT( PAssetsEntry.type[1] ) )(
+                            tn,
+                            pInt(1_000_000)
+                        )
+                    )
                 ])
-            ])
-        ])
+            )
+        )
     ])
 );
 
@@ -91,8 +97,9 @@ const pvalueOf = phoist(
         bs,
         bs
     ],  int)
-    (( value, currSym, tokenName ) =>
-        pmatch(
+    (( value, currSym, tokenName ) => {
+
+        return pmatch(
             value.find( entry => 
                 entry.fst.eq( currSym )
             )
@@ -111,9 +118,8 @@ const pvalueOf = phoist(
                 .onJust( just => just.val.snd )
                 .onNothing( _ => pInt( 0 ) );
         })
-        .onNothing( _ => pInt( 0 ) )
-            
-    )
+        .onNothing( _ => pInt( 0 ) );       
+    })
 );
 
 const pvalueOfBetter = phoist(
@@ -131,28 +137,31 @@ const pvalueOfBetter = phoist(
                 PValueEntry.type,
                 list( PValueEntry.type )
             ],  int)
-            ((self, head, tail ) =>
-            pif( int ).$( head.fst.eq( currSym ) )
-            .then(
+            ((self, head, tail ) => {
 
-                precursiveList( int, PAssetsEntry.type )
-                .$( _self => pdelay( pInt(0) ) )
-                .$(
-                    pfn([
-                        fn([ list(PAssetsEntry.type) ], int ),
-                        PAssetsEntry.type,
-                        list( PAssetsEntry.type )
-                    ],  int)
-                    (
-                        (self, head, tail) =>
-                        pif( int ).$( head.fst.eq( tokenName ) )
-                        .then( head.snd )
-                        .else( self.$( tail ) )
+                return pif( int ).$( head.fst.eq( currSym ) )
+                .then(
+    
+                    precursiveList( int, PAssetsEntry.type )
+                    .$( _self => pdelay( pInt(0) ) )
+                    .$(
+                        pfn([
+                            fn([ list(PAssetsEntry.type) ], int ),
+                            PAssetsEntry.type,
+                            list( PAssetsEntry.type )
+                        ],  int)
+                        (
+                            (self, head, tail) =>
+                            pif( int ).$( head.fst.eq( tokenName ) )
+                            .then( head.snd )
+                            .else( self.$( tail ) )
+                        )
                     )
+                    .$( head.snd )
                 )
-                .$( head.snd )
+                .else( self.$( tail ) )
+            }
             )
-            .else( self.$( tail ) ))
         )
         .$( value )
     )
@@ -279,7 +288,7 @@ describe("pvalueOf", () => {
 
         })
 
-        test("token present", () => {
+        test.only("token present", () => {
 
             const term = pvalueOf.$( dynamicOneEntryValue ).$( currSym as any ).$( tn as any );
 

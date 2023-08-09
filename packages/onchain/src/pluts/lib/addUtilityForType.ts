@@ -5,7 +5,7 @@ import { isTaggedAsAlias } from "../type_system/kinds/isTaggedAsAlias";
 import { isStructType } from "../type_system/kinds/isWellFormedType";
 import { ToPType } from "../type_system/ts-pluts-conversion";
 import { typeExtends } from "../type_system/typeExtends";
-import { Methods, StructDefinition, TermType, bool, bs, int, lam, list, pair, str, tyVar } from "../type_system/types";
+import { Methods, PrimType, StructDefinition, TermType, bool, bs, int, lam, list, pair, str, tyVar } from "../type_system/types";
 import { unwrapAlias } from "../type_system/tyArgs/unwrapAlias";
 import type { PappArg } from "./pappArg";
 import { papp } from "./papp";
@@ -21,6 +21,8 @@ import {
 } from "./std/UtilityTerms";
 import { defineNonDeletableNormalProperty } from "@harmoniclabs/obj-utils";
 import { addUserMethods } from "./std/UtilityTerms/userMethods/addUserMethods";
+import { _punsafeConvertType } from "./punsafeConvertType/minimal";
+import { termTypeToString } from "../type_system/utils";
 
 
 // given the index returns the previous number ( PrevNum[2] -> 1; etc... )
@@ -53,8 +55,9 @@ export type UtilityTermOf<PElem extends PType> =
 export function addUtilityForType<T extends TermType>( t: T )
     : ( term: Term<ToPType<T>> ) => UtilityTermOf<ToPType<T>>
 {
-    // console.log("adding utility to ", termTypeToString( t ) );
-    if( isTaggedAsAlias( t ) ) return addPAliasMethods as any;
+    if( isTaggedAsAlias( t ) ){
+        return addPAliasMethods as any
+    };
 
     if( typeExtends( t , bool ) ) return addPBoolMethods as any;
     if( typeExtends( t , bs   ) ) return addPByteStringMethods as any;
@@ -91,10 +94,25 @@ export function addPAliasMethods<
     aliasTerm: Term<PAlias<PAliased,AMethods>>
 ): TermAlias<PAliased, AMethods>
 {
-    const actualType = unwrapAlias( aliasTerm.type );
-    const addActualTypeUtility = addUtilityForType( actualType );
+    const originalType = aliasTerm.type;
 
-    aliasTerm = addActualTypeUtility( aliasTerm ) as any;
+    if( originalType[0] !== PrimType.Alias )
+    {
+        console.error( originalType );
+        try {
+            console.error( termTypeToString( originalType ) )
+        }
+        catch {}
+
+        throw new Error("addPAliasMethods used on non-alias type");
+    }
+
+    const aliasedType = unwrapAlias( originalType );
+    
+    aliasTerm = addUtilityForType( aliasedType )( aliasTerm ) as any;
+
+    aliasTerm = _punsafeConvertType( aliasTerm, originalType ) as any;
+
     aliasTerm = addUserMethods( aliasTerm, aliasTerm.type[2] as AMethods );
 
     return aliasTerm as any;

@@ -164,7 +164,7 @@ punsafeConvertType(
 
 describe("oneShotNFT", () => {
 
-    test("it compiles", () => {
+    test.only("it compiles", () => {
 
         // console.log(
         //     showIR(

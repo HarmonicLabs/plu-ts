@@ -1,14 +1,14 @@
 import { IRApp } from "../../../IR/IRNodes/IRApp";
 import { IRFunc } from "../../../IR/IRNodes/IRFunc";
-import { IRHoisted } from "../../../IR/IRNodes/IRHoisted";
 import { IRLetted } from "../../../IR/IRNodes/IRLetted";
 import { IRVar } from "../../../IR/IRNodes/IRVar";
-import { isClosedIRTerm } from "../../../IR/utils/isClosedIRTerm";
 import type { PType } from "../../PType";
 import { Term } from "../../Term";
 import { PrimType } from "../../type_system/types";
 import { UtilityTermOf, addUtilityForType } from "../addUtilityForType";
 import { _fromData } from "../std/data/conversion/fromData_minimal";
+import { IRHoisted } from "../../../IR/IRNodes/IRHoisted";
+import { isClosedIRTerm } from "../../../IR/utils/isClosedIRTerm";
 
 export type LettedTerm<PVarT extends PType> = UtilityTermOf<PVarT> & {
     in: <PExprResult extends PType>( expr: (value: UtilityTermOf<PVarT>) => Term<PExprResult> ) => Term<PExprResult>

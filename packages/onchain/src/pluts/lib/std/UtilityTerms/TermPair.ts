@@ -2,7 +2,7 @@ import { definePropertyIfNotPresent } from "@harmoniclabs/obj-utils";
 import { PType } from "../../../PType";
 import { PAsData, PPair } from "../../../PTypes";
 import { Term } from "../../../Term";
-import { isWellFormedType, typeExtends } from "../../../type_system";
+import { isWellFormedType, typeExtends, unwrapAlias } from "../../../type_system";
 import { tyVar, pair, TermType, PrimType } from "../../../type_system/types";
 import { UtilityTermOf } from "../../addUtilityForType";
 import { pfstPair, psndPair } from "../../builtins";
@@ -28,7 +28,7 @@ const getterOnly = {
 
 export function addPPairMethods<PFst extends PType, PSnd extends PType>( _pair: Term<PPair<PFst,PSnd>>)
 {
-    const pairT = _pair.type;
+    const pairT = unwrapAlias( _pair.type );
 
     if( !typeExtends( pairT, pair( tyVar(), tyVar() ) ) )
     {
@@ -38,10 +38,12 @@ export function addPPairMethods<PFst extends PType, PSnd extends PType>( _pair: 
     };
 
     // MUST NOT unwrap `asData`
+    // (needed by pfst and psnd to understand if the result should be transformed)
     let fstT: TermType = pairT[1] as TermType;
     while( fstT[0] === PrimType.Alias ) fstT = fstT[1];
 
-    // MUST NOT unwrap `asData`    
+    // MUST NOT unwrap `asData`
+    // (needed by pfst and psnd to understand if the result should be transformed) 
     let sndT: TermType = pairT[2] as TermType;
     while( sndT[0] === PrimType.Alias ) sndT = sndT[1];
 

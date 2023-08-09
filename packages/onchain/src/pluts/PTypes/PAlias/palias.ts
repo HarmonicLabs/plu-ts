@@ -63,7 +63,8 @@ export function palias<
     getMethods = typeof getMethods === "function" ? getMethods : _self_t => { return {} as AMethods };
 
     type ThisAliasT = AliasT<T>;
-    type ThisAliasTerm = Term<PAlias<ToPType<T>, AMethods>>;
+    type PT = ToPType<T>;
+    type ThisAliasTerm = Term<PAlias<PT, AMethods>>;
 
     //@ts-ignore
     class PAliasExtension extends _PAlias
@@ -82,7 +83,7 @@ export function palias<
         static fromData: ( data: Term<PData> ) => ThisAliasTerm;
         static toData: ( data: ThisAliasTerm ) => Term<PData>;
 
-        static from: ( toAlias: Term<ToPType<T>> ) => ThisAliasTerm;
+        static from: ( toAlias: Term<PT> ) => ThisAliasTerm;
     };
 
     const thisTypeNoMethods = alias( type );
@@ -150,9 +151,10 @@ export function palias<
     defineReadOnlyProperty(
         PAliasExtension,
         "from",
-        ( toAlias: PappArg<ToPType<T>> ): ThisAliasTerm =>
-            punsafeConvertType( pappArgToTerm( toAlias, type ), thisType ) as any
+        ( toAlias: PappArg<PT> ): ThisAliasTerm => {
+            return punsafeConvertType( pappArgToTerm( toAlias, type ), thisType ) as any
+        }
     );
 
-    return PAliasExtension as unknown as PAlias<ToPType<T>, AMethods>;
+    return PAliasExtension as unknown as PAlias<PT, AMethods>;
 }

@@ -1,10 +1,9 @@
-import { TermFn, PLam, PBool, PList } from "../../../PTypes";
+import type { TermFn, PLam, PBool, PList } from "../../../PTypes";
 import { TermType, ToPType, lam, bool, list, asData } from "../../../type_system";
-import { pif, pisEmpty, phead, ptail } from "../../builtins";
+import { pif, pisEmpty, ptail } from "../../builtins";
 import { papp } from "../../papp";
 import { pfn } from "../../pfn";
 import { phoist } from "../../phoist";
-import { plet } from "../../plet";
 import { precursive } from "../../precursive";
 import { PMaybeT, PMaybe } from "../PMaybe/PMaybe";
 import { _ptoData } from "../data/conversion/toData_minimal";
@@ -41,20 +40,16 @@ export function pfind<ElemsT extends TermType, PElemsT extends ToPType<ElemsT> =
                         )
                         .else(
 
-                            plet( phead( elemsT ).$( _list ) ).in( head => 
-
-                                pif( PMaybeElem.type ).$( papp( predicate, head ) )
-                                .then(
-                                    PMaybeElem.Just({ 
-                                        // "as any" because of 
-                                        // "Type 'Term<PAsData<ToPType<ElemsT>>>' is not assignable to type 'Term<PAsData<ToPType<FromPType<PElemsT>>>>'"
-                                        val: papp( elemToData, head ) as any
-                                    })
-                                )
-                                .else(
-                                    papp( self, ptail( elemsT ).$( _list ) )
-                                )
-
+                            pif( PMaybeElem.type ).$( papp( predicate, _list.head ) )
+                            .then(
+                                PMaybeElem.Just({ 
+                                    // "as any" because of 
+                                    // "Type 'Term<PAsData<ToPType<ElemsT>>>' is not assignable to type 'Term<PAsData<ToPType<FromPType<PElemsT>>>>'"
+                                    val: papp( elemToData, _list.head ) as any
+                                })
+                            )
+                            .else(
+                                papp( self, ptail( elemsT ).$( _list ) )
                             )
 
                         )

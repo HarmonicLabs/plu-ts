@@ -211,10 +211,10 @@ export function asData<T extends GenericTermType>( someT: T ): [ PrimType.AsData
 
     // if the type is an alias temporarely unwrap;
     // this to prevent blocking the mapping of `asData`
-    let wasAlias = false;
+    let exAliasMethods: Methods | undefined = undefined;
     if( someT[0] === PrimType.Alias )
     {
-        wasAlias = true;
+        exAliasMethods = someT[2];
         someT = someT[1] as any;
     }
 
@@ -226,6 +226,14 @@ export function asData<T extends GenericTermType>( someT: T ): [ PrimType.AsData
         {
             someT = list( pair( asData( elemsT[1] as any ), asData( elemsT[2] as any ) ) ) as any;
         }
+        else if(
+            elemsT[0] === PrimType.Alias &&
+            elemsT[1][0] === PrimType.Pair
+        )
+        {
+            someT = list( pair( asData( elemsT[1][1] ), asData( elemsT[1][2] ) ) ) as any;
+            someT = alias( someT, elemsT[2] ) as any;
+        }
         else
         {
             someT = list( asData( elemsT ) ) as any
@@ -234,7 +242,7 @@ export function asData<T extends GenericTermType>( someT: T ): [ PrimType.AsData
 
     // re-wrap in alias if it was infact an alias
     // before finally wrapping everything in `asData`
-    if( wasAlias ) someT = alias( someT ) as any;
+    if( typeof exAliasMethods !== "undefined" ) someT = alias( someT, exAliasMethods ) as any;
 
     return Object.freeze([ PrimType.AsData, someT ]) as any;
 }

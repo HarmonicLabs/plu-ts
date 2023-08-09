@@ -140,6 +140,7 @@ export function _fromData<T extends TermType>( t: T ): ( term: Term<PData> ) => 
         const elemsT = getElemsT( t ) as PairT<TermType,TermType>;
         const fstT = getFstT( elemsT );
         const sndT = getSndT( elemsT );
+        console.log( sndT, elemsT );
         return (
             ( term: Term<any> ) => {
 

@@ -3,6 +3,7 @@ import { isGenericStructType, isStructType, isWellFormedGenericType, isWellForme
 import { getFstT, getSndT } from "./tyArgs";
 import { unwrapAlias } from "./tyArgs/unwrapAlias";
 import { GenericStructCtorDef, GenericStructDefinition, GenericTermType, PrimType, StructCtorDef, StructDefinition, TermType, data } from "./types";
+import { termTypeToString } from "./utils";
 
 
 /**

@@ -7,7 +7,7 @@ import { Term } from "../../Term";
 
 
 export function _punsafeConvertType<FromPInstance extends PType, ToTermType extends TermType>
-( someTerm: Term<FromPInstance>, toType: ToTermType ): UtilityTermOf<ToPType<ToTermType>>
+( someTerm: Term<FromPInstance>, toType: ToTermType ): Term<ToPType<ToTermType>>
 {
     if( !isWellFormedType( toType ) )
     throw new Error("");

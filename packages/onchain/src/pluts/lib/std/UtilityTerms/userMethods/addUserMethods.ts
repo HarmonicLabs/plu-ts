@@ -15,10 +15,13 @@ function getMethodsWithFirstInputOfType( methods: Methods, type: TermType ): Met
 
     let method: Term<PLam<PType,PType>>;
 
-    for( const methodName in methods )
+    const methodNames = Object.keys( methods );
+    
+    for( const methodName of methodNames )
     {
         method = methods[methodName];
-        
+
+
         if( method.type[0] !== PrimType.Lambda )
         throw new Error("user defined method is expected to be a funciton");
 
@@ -57,19 +60,22 @@ export function addUserMethods<
 
         const fnTypes = getFnTypes( method.type );
 
+        // don't add terms that do not accept `self_t` as first argument as methods
+        if( !typeExtends( fnTypes[0], t ) ) continue;
+
         // -1 (term application)
         // -1 (the output type)
         const missingArgsAfterApplication = fnTypes.length - 2;
         
         const appliedTerm = plet( papp( method, term ) );
 
-        // if( missingArgsAfterApplication === 0 )
-        // {
-        //     defineReadOnlyProperty(
-        //         term, methodName, appliedTerm
-        //     );
-        //     continue;
-        // }
+        if( missingArgsAfterApplication === 0 )
+        {
+            defineReadOnlyProperty(
+                term, methodName, appliedTerm
+            );
+            continue;
+        }
         
         defineReadOnlyProperty(
             term, "p" + methodName, appliedTerm
