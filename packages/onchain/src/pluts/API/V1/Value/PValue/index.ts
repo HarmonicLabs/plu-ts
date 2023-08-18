@@ -38,15 +38,13 @@ export const PValueEntry = palias(
     }
 )
 
-const PValueEntryT = PValueEntry.type;
-
 export const PValue = palias(
     list( PValueEntry.type ),
-    ( value_t ) => {
+    ( self_t ) => {
 
         const pvalueOf = phoist(
             pfn([
-                value_t,
+                self_t,
                 PCurrencySymbol.type,
                 PTokenName.type
             ],  int)
@@ -87,7 +85,14 @@ export const PValue = palias(
         );
 
         return {
-            amountOf: pvalueOf
+            amountOf: pvalueOf,
+            lovelaces:
+                pfn([ self_t ], int)
+                ( value => 
+                    pvalueOf.$( value ).$("").$("") 
+                )
         }
     }
 );
+
+

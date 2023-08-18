@@ -1,19 +1,17 @@
 import { Term } from "../../../Term";
 import type { PStruct, RestrictedStructInstance, StructInstance } from "../../../PTypes/PStruct/pstruct";
 import type { PType } from "../../../PType";
+import type { TermFn } from "../../../PTypes/PFn/PFn";
 // !!! IMPORTANT !!!
 // DO NOT change the order of imports
 // `../../../Term/Type/kinds` is also a dependecy of `pmatch`
-import { getElemAtTerm, pmatch } from "../../../PTypes/PStruct/pmatch";
+import { getElemAtTerm } from "../../../PTypes/PStruct/pmatch";
 import { StructDefinition, isStructType, isStructDefinition, data, list, int, pair, Methods } from "../../../type_system";
-import { peqData, punConstrData } from "../../builtins/data";
-import { PFn, TermFn } from "../../../PTypes/PFn/PFn";
+import { peqData,  } from "../../builtins/data";
 import { PBool } from "../../../PTypes/PBool";
 import { TermBool } from "./TermBool";
-import { _plet } from "../../plet/minimal";
 import { _fromData } from "../data/conversion/fromData_minimal";
-import { plet } from "../../plet";
-import { UtilityTermOf } from "../../addUtilityForType";
+import { UtilityTermOf } from "./addUtilityForType";
 import { punsafeConvertType } from "../../punsafeConvertType";
 import { TermInt, addPIntMethods } from "./TermInt";
 import { TermList, addPListMethods } from "./TermList";
@@ -26,12 +24,12 @@ import { IRNative } from "../../../../IR/IRNodes/IRNative";
 import { IRVar } from "../../../../IR/IRNodes/IRVar";
 import { IRLetted } from "../../../../IR/IRNodes/IRLetted";
 import type { PData } from "../../../PTypes/PData";
-import type { PLam } from "../../../PTypes/PFn/PLam";
 import type { PList } from "../../../PTypes/PList";
 import type { PPair } from "../../../PTypes/PPair";
 import type { PInt } from "../../../PTypes/PInt";
 import { FilterMethodsByInput, LiftMethods, MethodsAsTerms } from "./userMethods/methodsTypes";
 import { addUserMethods } from "./userMethods/addUserMethods";
+import { plet } from "../../plet";
 
 export type RawStruct = {
     readonly index: TermInt,
@@ -66,12 +64,6 @@ LiftMethods<
 MethodsAsTerms<
     FilterMethodsByInput<SMethods,PStruct<SDef, any>>
 >
-
-const getterOnly = {
-    set: () => {},
-    configurable: false,
-    enumerable: true
-};
 
 const hoisted_getFields = new IRHoisted(
     new IRFunc( 1, // struct

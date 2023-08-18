@@ -1,9 +1,8 @@
-import { type } from "os"
 import type { PType } from "../../../PType"
 import type { PAlias } from "../../../PTypes"
 import type { Term } from "../../../Term"
 import type { Methods } from "../../../type_system"
-import type { UtilityTermOf } from "../../addUtilityForType"
+import type { UtilityTermOf } from "./addUtilityForType"
 import type { FilterMethodsByInput, LiftMethods, MethodsAsTerms } from "./userMethods/methodsTypes"
 
 

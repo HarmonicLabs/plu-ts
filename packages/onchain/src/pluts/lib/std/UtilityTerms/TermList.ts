@@ -6,10 +6,10 @@ import { Term } from "../../../Term";
 import { ToPType, TermType, isWellFormedGenericType, PrimType, bool, lam, list, struct, typeExtends, tyVar } from "../../../type_system";
 import { getElemsT } from "../../../type_system/tyArgs";
 import { termTypeToString } from "../../../type_system/utils";
-import { UtilityTermOf } from "../../addUtilityForType";
+import { UtilityTermOf } from "./addUtilityForType";
 import { phead, ptail } from "../../builtins/list";
 import { pprepend } from "../../builtins/pprepend";
-import { PappArg } from "../../pappArg";
+import { PappArg, pappArgToTerm } from "../../pappArg";
 import { phoist } from "../../phoist";
 import { plet } from "../../plet";
 import type { PMaybeT } from "../PMaybe/PMaybe";
@@ -150,120 +150,128 @@ const getterOnly = {
     enumerable: true
 };
 
-export function addPListMethods<PElemsT extends PType>( lst: Term<PList<PElemsT>> )
-    : TermList<PElemsT>
+export function addPListMethods<PElemsT extends PType>( _lst: Term<PList<PElemsT>> ) : TermList<PElemsT>
 {
-    const elemsT = getElemsT( lst.type );
-    const _lst = new Term(
+    const elemsT = getElemsT( _lst.type );
+
+    const lst = new Term(
         list( elemsT ),
         // needs to be wrapped to prevent the garbage collector to collect garbage (lst)
-        dbn => lst.toIR( dbn ),
-        (lst as any).isConstant
+        dbn => _lst.toIR( dbn ),
+        (_lst as any).isConstant
     ) as any;
 
     if(!isWellFormedGenericType( elemsT as any ))
     {
         throw new Error(
-            "`addPListMethods` can only be used on lists with concrete types; the type of the _lst was: " + termTypeToString( _lst.type )
+            "`addPListMethods` can only be used on lists with concrete types; the type of the lst was: " + termTypeToString( lst.type )
         );
     }
 
+    _definePListMethods( lst, elemsT );
+    _definePListMethods( _lst, elemsT );
+    
+    return lst as any;
+}
+
+function _definePListMethods<PElemsT extends PType>( lst: Term<PList<PElemsT>>, elemsT: TermType ): void
+{
     definePropertyIfNotPresent(
-        _lst,
+        lst,
         "head",
         {
             get: () => {
-                return plet( phead( elemsT ).$( _lst ) )
+                return plet( phead( elemsT ).$( lst ) )
             },
             ...getterOnly
         }
     );
     definePropertyIfNotPresent(
-        _lst,
+        lst,
         "tail",
         {
-            get: () => plet( ptail( elemsT ).$( _lst ) ),
+            get: () => plet( ptail( elemsT ).$( lst ) ),
             ...getterOnly
         }
     );
     definePropertyIfNotPresent(
-        _lst,
+        lst,
         "length",
         {
-            get: () => plet( plength( elemsT ).$( _lst ) ),
+            get: () => plet( plength( elemsT ).$( lst ) ),
             ...getterOnly
         }
     );
     definePropertyIfNotPresent(
-        _lst,
+        lst,
         "reversed",
         {
-            get: () => plet( preverse( elemsT ).$( _lst ) ),
+            get: () => plet( preverse( elemsT ).$( lst ) ),
             ...getterOnly
         }
     );
 
 
     definePropertyIfNotPresent(
-        _lst,
+        lst,
         "atTerm",
         {
-            get: () => pindexList( elemsT ).$( _lst ),
+            get: () => pindexList( elemsT ).$( lst ),
             ...getterOnly
         }
     );
     defineReadOnlyProperty(
-        _lst,
+        lst,
         "at",
-        ( index: PappArg<PInt> ): UtilityTermOf<PElemsT> => pindexList( elemsT ).$( _lst ).$( index ) as any
+        ( index: PappArg<PInt> ): UtilityTermOf<PElemsT> => pindexList( elemsT ).$( lst ).$( index ) as any
     );
 
     definePropertyIfNotPresent(
-        _lst,
+        lst,
         "findTerm",
         {
-            get: () => flippedFind( elemsT ).$( _lst ),
+            get: () => flippedFind( elemsT ).$( lst ),
             ...getterOnly
         }
     );
     defineReadOnlyProperty(
-        _lst,
+        lst,
         "find",
         ( predicate: PappArg<PLam<PElemsT,PBool>> ): Term<PMaybeT<PElemsT>> => 
-            pfind( elemsT ).$( predicate ).$( _lst ) as any
+            pfind( elemsT ).$( predicate ).$( lst ) as any
     );
 
     definePropertyIfNotPresent(
-        _lst,
+        lst,
         "filterTerm",
         {
-            get: () => flippedFilter( elemsT ).$( _lst ),
+            get: () => flippedFilter( elemsT ).$( lst ),
             ...getterOnly
         }
     );
     defineReadOnlyProperty(
-        _lst,
+        lst,
         "filter",
         ( predicate: PappArg<PLam<PElemsT,PBool>> ): TermList<PElemsT> =>
-            pfilter( elemsT ).$( predicate as any ).$( _lst ) as any
+            pfilter( elemsT ).$( predicate as any ).$( lst ) as any
     );
 
     definePropertyIfNotPresent(
-        _lst,
+        lst,
         "prependTerm",
         {
-            get: () => flippedPrepend( elemsT ).$( _lst ),
+            get: () => flippedPrepend( elemsT ).$( lst ),
             ...getterOnly
         }
     );
     defineReadOnlyProperty(
-        _lst,
+        lst,
         "prepend",
-        ( elem: PappArg<PElemsT> ): TermList<PElemsT> => pprepend( elemsT ).$( elem ).$( _lst ) as any
+        ( elem: PappArg<PElemsT> ): TermList<PElemsT> => pprepend( elemsT ).$( elem ).$( lst ) as any
     );
 
     defineReadOnlyProperty(
-        _lst,
+        lst,
         "mapTerm",
         ( toType: TermType ) => 
             phoist(
@@ -273,56 +281,58 @@ export function addPListMethods<PElemsT extends PType>( lst: Term<PList<PElemsT>
                     list( toType )
                 ).$( pmap( elemsT, toType ) )
             )
-            .$( _lst )
+            .$( lst )
     );
     defineReadOnlyProperty(
-        _lst,
+        lst,
         "map",
-        <PReturnElemT extends PType>( f: Term<PLam<PElemsT,PReturnElemT>> ) => {
+        <PReturnElemT extends PType>( f: PappArg<PLam<PElemsT,PReturnElemT>> ) => {
+
+            f = pappArgToTerm( f as any, lam( elemsT, tyVar() ) ) as Term<PLam<PElemsT,PReturnElemT>>;
+            
             const predicateTy = f.type;
+
             if(!(
                 predicateTy[0] === PrimType.Lambda &&
                 isWellFormedGenericType( predicateTy[2] )
             ))
             throw new Error(
-                `can't map plu-ts fuction of type "${predicateTy}" over a _lst of type "_lst(${termTypeToString(elemsT)})"`
+                `can't map plu-ts fuction of type "${predicateTy}" over a lst of type "lst(${termTypeToString(elemsT)})"`
             );
 
-            return pmap( elemsT, predicateTy[2] ).$( f as any ).$( _lst );
+            return pmap( elemsT, predicateTy[2] ).$( f as any ).$( lst );
         }
     );
 
     definePropertyIfNotPresent(
-        _lst,
+        lst,
         "everyTerm",
         {
             get: () => flippedEvery( elemsT )
-            .$( _lst ),
+            .$( lst ),
             ...getterOnly
         }
     );
     defineReadOnlyProperty(
-        _lst,
+        lst,
         "every",
-        ( predicate: PappArg<PLam<PElemsT, PBool>> ): TermBool => pevery( elemsT ).$( predicate as any ).$( _lst )
+        ( predicate: PappArg<PLam<PElemsT, PBool>> ): TermBool => pevery( elemsT ).$( predicate as any ).$( lst )
     );
 
     definePropertyIfNotPresent(
-        _lst,
+        lst,
         "someTerm",
         {
             get: () => flippedSome( elemsT )
-            .$( _lst ),
+            .$( lst ),
             ...getterOnly
         }
         
     );
     defineReadOnlyProperty(
-        _lst,
+        lst,
         "some",
-        ( predicate: PappArg<PLam<PElemsT, PBool>> ): TermBool => psome( elemsT ).$( predicate as any ).$( _lst )
+        ( predicate: PappArg<PLam<PElemsT, PBool>> ): TermBool => psome( elemsT ).$( predicate as any ).$( lst )
     );
-    
-    return _lst as any;
 }
 

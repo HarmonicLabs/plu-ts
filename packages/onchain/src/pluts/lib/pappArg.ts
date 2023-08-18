@@ -2,7 +2,7 @@ import type { PType } from "../PType";
 import type { PLam, PInt, PBool, PByteString, PString, PUnit, PPair, PList, PAlias } from "../PTypes";
 
 import { termTypeToString, getNRequiredLambdaArgs } from "../type_system/utils";
-import { UtilityTermOf } from "./addUtilityForType";
+import { UtilityTermOf } from "./std/UtilityTerms/addUtilityForType";
 import { pfn } from "./pfn";
 import { pList } from "./std/list/const";
 import { pPair } from "./std/pair/pPair";
@@ -19,6 +19,7 @@ import { CborString } from "@harmoniclabs/cbor";
 import { has_n_determined_keys } from "@harmoniclabs/obj-utils";
 import { Pair } from "@harmoniclabs/pair";
 import { assert } from "../../utils/assert";
+import { clearAsData } from "../type_system/tyArgs/clearAsData";
 
 
 type _TsFunctionSatisfying<KnownArgs extends Term<PType>[], POut extends PType> =
@@ -295,12 +296,12 @@ export function pappArgToTerm<ArgT extends TermType>(
 
             const [ fst, snd ] = arg as PappArg<PType>[];
     
-            const fstT = isWellFormedType( mustExtend[1] ) ? mustExtend[1] : tryGetConstantableType( fst );
-            const sndT = isWellFormedType( mustExtend[2] ) ? mustExtend[2] : tryGetConstantableType( snd );
+            let fstT = isWellFormedType( mustExtend[1] ) ? mustExtend[1] : tryGetConstantableType( fst );
+            let sndT = isWellFormedType( mustExtend[2] ) ? mustExtend[2] : tryGetConstantableType( snd );
 
-            console.log( mustExtend );
-            console.log( fstT );
-            console.log( sndT );
+            // maybe ???? 
+            fstT = clearAsData( fstT );
+            sndT = clearAsData( sndT );
 
             return pPair( fstT, sndT )(
                 pappArgToTerm( fst, fstT ),
@@ -349,6 +350,7 @@ export function pappArgToTerm<ArgT extends TermType>(
         }
     }
 
+    console.error( arg, arg.type );
     throw new Error(
         "pappArgToTerm :: it was not possible to transform `arg` to a plu-ts value" +
         "; `arg` was " + arg +

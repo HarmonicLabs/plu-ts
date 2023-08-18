@@ -1,7 +1,7 @@
 import type { TermFn } from "../PFn";
 import { PAsData, PData } from "../PData/PData";
 import { PDataRepresentable } from "../../PType/PDataRepresentable";
-import { UtilityTermOf, addUtilityForType } from "../../lib/addUtilityForType";
+import { UtilityTermOf, addUtilityForType } from "../../lib/std/UtilityTerms/addUtilityForType";
 
 import { structDefToString, termTypeToString } from "../../type_system/utils";
 import { AliasT, GenericStructCtorDef, GenericStructDefinition, GenericTermType, Methods, PrimType, StructCtorDef, StructDefinition, StructT, TermType, alias, asData, data, int, struct, tyVar, unit } from "../../type_system/types";

@@ -3,7 +3,7 @@ import { IRNative } from "../../../../IR/IRNodes/IRNative";
 import { TermFn, PPair, PLam } from "../../../PTypes";
 import { Term } from "../../../Term";
 import { TermType, ToPType, lam, pair } from "../../../type_system";
-import { UtilityTermOf } from "../../addUtilityForType";
+import { UtilityTermOf } from "../../std/UtilityTerms/addUtilityForType";
 import { papp } from "../../papp";
 
 

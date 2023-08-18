@@ -1,7 +1,5 @@
-import { UtilityTermOf, bool, compile } from "../..";
 import { PCurrencySymbol, PTxId, PTxOutRef, V2 } from "../../API";
 import { pstruct, pmatch } from "../../PTypes";
-import { pData, pDataB, pDataI, perror, pfn, pisEmpty, plet, punsafeConvertType } from "../../lib";
 import { fromHex } from "@harmoniclabs/uint8array-utils";
 import { _old_plet } from "../../lib/plet/old";
 import { Cbor, CborBytes } from "@harmoniclabs/cbor";
@@ -10,6 +8,15 @@ import { Machine } from "@harmoniclabs/plutus-machine";
 import { ScriptType } from "@harmoniclabs/plutus-machine/dist/utils/ScriptType";
 import { ErrorUPLC, UPLCTerm, UPLCDecoder, UPLCEncoder, UPLCProgram, showUPLC } from "@harmoniclabs/uplc";
 import { Script } from "@harmoniclabs/cardano-ledger-ts"
+import { pfn } from "../../lib/pfn";
+import { bool } from "../../type_system/types";
+import { plet } from "../../lib/plet";
+import { perror } from "../../lib/perror";
+import type { UtilityTermOf } from "../../lib/std/UtilityTerms/addUtilityForType";
+import { pisEmpty } from "../../lib/builtins/list";
+import { pData, pDataB, pDataI } from "../../lib/std/data/pData";
+import { punsafeConvertType } from "../../lib/punsafeConvertType";
+import { compile } from "../compile";
 
 export const MintRdmr = pstruct({
     Mint: {},

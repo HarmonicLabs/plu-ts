@@ -2,7 +2,7 @@ import { fromUtf8 } from "@harmoniclabs/uint8array-utils";
 import { Script, ScriptType } from "@harmoniclabs/cardano-ledger-ts";
 import { pByteString } from "../../lib/std/bs/pByteString";
 import { pfn } from "../../lib/pfn";
-import { PAssetsEntryT, PValue, PValueEntryT } from "../../API/V1/Value/PValue";
+import { PAssetsEntry, PValue, PValueEntry } from "../../API/V1/Value/PValue";
 import { bool, bs, data, fn, int, lam, list, map, unit } from "../../type_system/types";
 import { plet } from "../../lib/plet";
 import { phoist } from "../../lib/phoist";
@@ -31,7 +31,6 @@ import { pList } from "../../lib/std/list/const";
 import { pBool } from "../../lib/std/bool/pBool";
 import { PTxInInfo } from "../../API/V2/Tx/PTxInInfo";
 import { pforce } from "../../lib/pforce";
-import { addUtilityForType } from "../../lib/addUtilityForType";
 import { punsafeConvertType } from "../../lib/punsafeConvertType";
 import { PTxOut } from "../../API/V2/Tx/PTxOut";
 import { precursive } from "../../lib/precursive";
@@ -40,6 +39,7 @@ import { pchooseList, pisEmpty } from "../../lib/builtins/list";
 import { ptraceError } from "../../lib/builtins/ptrace";
 import { peqBs } from "../../lib/builtins/bs";
 import { pmakeUnit } from "../../lib/std/unit/pmakeUnit";
+import { addUtilityForType } from "../../lib/std/UtilityTerms/addUtilityForType";
 
 const pvalueOf = phoist(
     pfn([
@@ -50,13 +50,13 @@ const pvalueOf = phoist(
         
         // search currency symbol
         // 0 if not found
-        precursiveList( int, PValueEntryT )
+        precursiveList( int, PValueEntry.type )
         .$( _self => pdelay( pInt(0) ) )
         .$( 
             pfn([
-                fn([ list(PValueEntryT) ], int ),
-                PValueEntryT,
-                list( PValueEntryT )
+                fn([ list(PValueEntry.type) ], int ),
+                PValueEntry.type,
+                list( PValueEntry.type )
             ],  int)
 
             ((self, head, tail ) =>
@@ -65,13 +65,13 @@ const pvalueOf = phoist(
 
                     // search token name
                     // 0 if not found
-                    precursiveList( int, PAssetsEntryT )
+                    precursiveList( int, PAssetsEntry.type )
                     .$( _self => pdelay( pInt(0) ) )
                     .$(
                         pfn([
-                            fn([ list(PAssetsEntryT) ], int ),
-                            PAssetsEntryT,
-                            list( PAssetsEntryT )
+                            fn([ list(PAssetsEntry.type) ], int ),
+                            PAssetsEntry.type,
+                            list( PAssetsEntry.type )
                         ],  int)
 
                         ((self, head, tail) =>
@@ -582,7 +582,7 @@ const contract = ( params: ContractParams ) => pfn([
         });
 });
 
-const untypedValidator = ( params: ContractParams ) => makeValidator( contract( params ) );
+const untypedValidator = ( params: ContractParams ) => makeValidator( contract( params ) as any );
 
 const compiledContract = ( params: ContractParams ) => compile( untypedValidator( params ) );
 

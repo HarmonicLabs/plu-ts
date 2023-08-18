@@ -1,7 +1,7 @@
 import type { PType } from "../../PType";
 import type { TermType } from "../../type_system/types";
 import type { ToPType } from "../../type_system/ts-pluts-conversion";
-import { type UtilityTermOf, addUtilityForType } from "../addUtilityForType";
+import { type UtilityTermOf, addUtilityForType } from "../std/UtilityTerms/addUtilityForType";
 import { isWellFormedType } from "../../type_system/kinds/isWellFormedType";
 import { Term } from "../../Term";
 import { termTypeToString } from "../../type_system";
@@ -24,7 +24,11 @@ export function punsafeConvertType<FromPInstance extends PType, ToTermType exten
     Object.keys( someTerm ).forEach( k => {
 
         // do not overwrite `type` and `toUPLC` properties
-        if( k === "type" || k === "toUPLC" || k === "toIR" ) return;
+        if(
+            k === "type" || 
+            k === "toUPLC" || 
+            k === "toIR"
+        ) return;
         
         Object.defineProperty(
             converted,

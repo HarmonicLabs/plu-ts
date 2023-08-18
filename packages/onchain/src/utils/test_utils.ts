@@ -65,7 +65,6 @@ export const beef32 = PValue.from(
                 PAssetsEntry.from([
                     PTokenName.from( pByteString("beef") ),
                     pInt( 32 )
-
                 ])
             ])
         ])

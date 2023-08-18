@@ -3,7 +3,7 @@ import { PAlias, PBool, PInt, PStruct } from "../../../../PTypes";
 import type { PLam } from "../../../../PTypes/PFn/PLam";
 import type { Term } from "../../../../Term";
 import type { Methods, StructDefinition } from "../../../../type_system/types";
-import type { UtilityTermOf } from "../../../addUtilityForType";
+import type { UtilityTermOf } from "../addUtilityForType";
 
 export type LiftPMethod<PT extends PType, PrevPIns extends Term<PType>[] = []>
     = PT extends PLam<infer PIn extends PType, infer POut extends PType> ?

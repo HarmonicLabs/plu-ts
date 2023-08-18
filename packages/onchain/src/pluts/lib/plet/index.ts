@@ -5,10 +5,11 @@ import { IRVar } from "../../../IR/IRNodes/IRVar";
 import type { PType } from "../../PType";
 import { Term } from "../../Term";
 import { PrimType } from "../../type_system/types";
-import { UtilityTermOf, addUtilityForType } from "../addUtilityForType";
 import { _fromData } from "../std/data/conversion/fromData_minimal";
 import { IRHoisted } from "../../../IR/IRNodes/IRHoisted";
 import { isClosedIRTerm } from "../../../IR/utils/isClosedIRTerm";
+import { UtilityTermOf, addUtilityForType } from "../std/UtilityTerms/addUtilityForType";
+import { makeMockUtilityTerm } from "../std/UtilityTerms/mockUtilityTerms/makeMockUtilityTerm";
 
 export type LettedTerm<PVarT extends PType> = UtilityTermOf<PVarT> & {
     in: <PExprResult extends PType>( expr: (value: UtilityTermOf<PVarT>) => Term<PExprResult> ) => Term<PExprResult>
@@ -54,21 +55,16 @@ export function plet<PVarT extends PType, SomeExtension extends object>( varValu
     
     const continuation = <PExprResult extends PType>( expr: (value: TermPVar) => Term<PExprResult> ): Term<PExprResult> => {
 
-        const withUtility = addUtilityForType( varValue.type );
         // only to extracts the type; never compiled
-        const outType = expr(
-            withUtility(
-                new Term(
-                    varValue.type,
-                    _varAccessDbn => new IRVar( 0 ) // mock variable
-                ) as any
-            ) as any
-        ).type;
+        const outType = expr( makeMockUtilityTerm( varValue.type ) as any ).type;
 
         // return papp( plam( varValue.type, outType )( expr as any ), varValue as any ) as any;
         const term = new Term(
             outType,
             dbn => {
+
+                const withUtility = addUtilityForType( varValue.type );
+
                 const arg = varValue.toIR( dbn );
 
                 if(

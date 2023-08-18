@@ -8,6 +8,7 @@ export function getElemsT( t: GenericTermType ): GenericTermType
 export function getElemsT( t: GenericTermType ): GenericTermType
 {
     // get to the first list type
+    // aka, skips `alias` `asData` etc.
     while( t[0] !== PrimType.List ) t = t[1] as any;
 
     return t[1] as any;

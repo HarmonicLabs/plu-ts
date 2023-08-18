@@ -8,7 +8,7 @@ export * from "./papp";
 export * from "./plam";
 export * from "./pfn";
 export * from "./precursive";
-export * from "./addUtilityForType";
+export * from "./std/UtilityTerms/addUtilityForType";
 export * from "./builtins";
 export * from "./builtins/ptrace";
 export * from "./plet";

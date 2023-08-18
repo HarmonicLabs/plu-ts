@@ -288,7 +288,7 @@ describe("pvalueOf", () => {
 
         })
 
-        test.only("token present", () => {
+        test("token present", () => {
 
             const term = pvalueOf.$( dynamicOneEntryValue ).$( currSym as any ).$( tn as any );
 

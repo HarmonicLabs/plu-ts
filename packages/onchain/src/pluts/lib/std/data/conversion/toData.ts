@@ -4,7 +4,7 @@ import { TermFn } from "../../../../PTypes/PFn/PFn";
 import { Term } from "../../../../Term";
 import { TermType } from "../../../../type_system";
 import { ToPType } from "../../../../type_system/ts-pluts-conversion";
-import { UtilityTermOf, addUtilityForType } from "../../../addUtilityForType";
+import { UtilityTermOf, addUtilityForType } from "../../UtilityTerms/addUtilityForType";
 import { papp } from "../../../papp";
 import { _ptoData, _toData } from "./toData_minimal";
 

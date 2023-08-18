@@ -7,7 +7,7 @@ import { PLam } from "../../PFn/PLam";
 import { PList } from "../../PList";
 import { getFields } from "../matchSingleCtorStruct";
 import { papp } from "../../../lib/papp";
-import { UtilityTermOf, addUtilityForType } from "../../../lib/addUtilityForType";
+import { UtilityTermOf, addUtilityForType } from "../../../lib/std/UtilityTerms/addUtilityForType";
 import { TermList } from "../../../lib/std/UtilityTerms/TermList";
 import { plam } from "../../../lib/plam";
 import { TermFn } from "../../PFn";

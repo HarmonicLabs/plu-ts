@@ -8,7 +8,7 @@ import { includesDynamicPairs } from "../type_system/includesDynamicPairs";
 import { typeExtends } from "../type_system/typeExtends";
 import { PrimType, TermType, data } from "../type_system/types";
 import { termTypeToString } from "../type_system/utils";
-import { type UtilityTermOf, addUtilityForType } from "./addUtilityForType";
+import { type UtilityTermOf, addUtilityForType } from "./std/UtilityTerms/addUtilityForType";
 import { PappArg, pappArgToTerm } from "./pappArg";
 import { _fromData } from "./std/data/conversion/fromData_minimal";
 import { _papp } from "./std/data/conversion/minimal_common";

@@ -1,24 +1,12 @@
 import { definePropertyIfNotPresent } from "@harmoniclabs/obj-utils";
-import { PType } from "../../../PType";
-import { PAsData, PPair } from "../../../PTypes";
-import { Term } from "../../../Term";
-import { isWellFormedType, typeExtends, unwrapAlias } from "../../../type_system";
-import { tyVar, pair, TermType, PrimType } from "../../../type_system/types";
-import { UtilityTermOf } from "./addUtilityForType";
-import { pfstPair, psndPair } from "../../builtins";
-import { plet } from "../../plet";
+import { PType } from "../../../../PType";
+import { PPair } from "../../../../PTypes/PPair";
+import { Term } from "../../../../Term";
+import { PrimType, TermType, isWellFormedType, pair, tyVar, typeExtends, unwrapAlias } from "../../../../type_system";
+import { TermPair } from "../TermPair";
+import { makeMockUtilityTerm } from "./makeMockUtilityTerm";
+import { unwrapAsData } from "../../../../type_system/tyArgs/unwrapAsData";
 
-type UnwrapPAsData<PT extends PType> = 
-    PT extends PAsData<infer PTy extends PType> ? PTy :
-    PT
-
-export type TermPair<PFst extends PType, PSnd extends PType> = Term<PPair<PFst,PSnd>> & {
-
-    readonly fst: UtilityTermOf<UnwrapPAsData<PFst>>
-
-    readonly snd: UtilityTermOf<UnwrapPAsData<PSnd>>
-    
-}
 
 const getterOnly = {
     set: () => {},
@@ -26,7 +14,7 @@ const getterOnly = {
     enumerable: true
 };
 
-export function addPPairMethods<PFst extends PType, PSnd extends PType>( _pair: Term<PPair<PFst,PSnd>>): TermPair<PFst,PSnd>
+export function mockPPairMethods<PFst extends PType, PSnd extends PType>( _pair: Term<PPair<PFst,PSnd>>): TermPair<PFst,PSnd>
 {
     const pairT = unwrapAlias( _pair.type );
 
@@ -53,7 +41,12 @@ export function addPPairMethods<PFst extends PType, PSnd extends PType>( _pair: 
             _pair,
             "fst",
             {
-                get: () => plet( pfstPair( fstT, sndT ).$( _pair ) ),
+                get: () => makeMockUtilityTerm(
+                    // pfst automatically unwraps data
+                    fstT[0] === PrimType.AsData ? 
+                    unwrapAsData( fstT ) : 
+                    fstT 
+                ),
                 ...getterOnly
             }
         );
@@ -62,7 +55,12 @@ export function addPPairMethods<PFst extends PType, PSnd extends PType>( _pair: 
             _pair,
             "snd",
             {
-                get: () => plet( psndPair( fstT, sndT ).$( _pair ) ),
+                get: () => makeMockUtilityTerm(
+                    // psnd automatically unwraps data
+                    sndT[0] === PrimType.AsData ? 
+                    unwrapAsData( sndT ) : 
+                    sndT 
+                ),
                 ...getterOnly
             }
         );

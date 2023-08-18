@@ -5,7 +5,7 @@ import { PLam } from "../PTypes";
 import { Term, ToTermArrNonEmpty } from "../Term";
 import { ToPType } from "../type_system/ts-pluts-conversion";
 import { TermType, fn } from "../type_system/types";
-import { UtilityTermOf } from "./addUtilityForType";
+import { UtilityTermOf } from "./std/UtilityTerms/addUtilityForType";
 import { PappArg } from "./pappArg";
 import { plam } from "./plam";
 import { CurriedFn, curry } from "../../utils/combinators";

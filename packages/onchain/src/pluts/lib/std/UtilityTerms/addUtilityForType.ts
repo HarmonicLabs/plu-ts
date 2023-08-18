@@ -1,28 +1,29 @@
-import { PType } from "../PType";
-import type { PBool, PByteString, PInt, PList, PPair, PString, PStruct, PLam, PAlias } from "../PTypes";
-import { Term } from "../Term";
-import { isTaggedAsAlias } from "../type_system/kinds/isTaggedAsAlias";
-import { isStructType } from "../type_system/kinds/isWellFormedType";
-import { ToPType } from "../type_system/ts-pluts-conversion";
-import { typeExtends } from "../type_system/typeExtends";
-import { Methods, PrimType, StructDefinition, TermType, bool, bs, int, lam, list, pair, str, tyVar } from "../type_system/types";
-import { unwrapAlias } from "../type_system/tyArgs/unwrapAlias";
-import type { PappArg } from "./pappArg";
-import { papp } from "./papp";
+import { PType } from "../../../PType";
+import type { PBool, PByteString, PInt, PList, PPair, PString, PStruct, PLam, PAlias } from "../../../PTypes";
+import { Term } from "../../../Term";
+import { isTaggedAsAlias } from "../../../type_system/kinds/isTaggedAsAlias";
+import { isStructType } from "../../../type_system/kinds/isWellFormedType";
+import { ToPType } from "../../../type_system/ts-pluts-conversion";
+import { typeExtends } from "../../../type_system/typeExtends";
+import { Methods, PrimType, StructDefinition, TermType, bool, bs, int, lam, list, pair, str, tyVar } from "../../../type_system/types";
+import { unwrapAlias } from "../../../type_system/tyArgs/unwrapAlias";
+import type { PappArg } from "../../pappArg";
+import { papp } from "../../papp";
 import {
-    TermAlias,
-    TermBool,       addPBoolMethods,
-    TermBS,         addPByteStringMethods,
-    TermInt,        addPIntMethods,
-    TermList,       addPListMethods,
-    TermPair,       addPPairMethods,
-    TermStr,        addPStringMethods,
-    TermStruct,     addPStructMethods
-} from "./std/UtilityTerms";
+    type TermAlias,
+    type TermBool,       addPBoolMethods,
+    type TermBS,         addPByteStringMethods,
+    type TermInt,        addPIntMethods,
+    type TermList,       addPListMethods,
+    type TermPair,       addPPairMethods,
+    type TermStr,        addPStringMethods,
+    type TermStruct,     addPStructMethods
+} from ".";
 import { defineNonDeletableNormalProperty } from "@harmoniclabs/obj-utils";
-import { addUserMethods } from "./std/UtilityTerms/userMethods/addUserMethods";
-import { _punsafeConvertType } from "./punsafeConvertType/minimal";
-import { termTypeToString } from "../type_system/utils";
+import { termTypeToString } from "../../../type_system/utils";
+import { addUserMethods } from "./userMethods/addUserMethods";
+import { punsafeConvertType } from "@harmoniclabs/plu-ts-onchain";
+import { _punsafeConvertType } from "../../punsafeConvertType/minimal";
 
 
 // given the index returns the previous number ( PrevNum[2] -> 1; etc... )
@@ -56,7 +57,8 @@ export function addUtilityForType<T extends TermType>( t: T )
     : ( term: Term<ToPType<T>> ) => UtilityTermOf<ToPType<T>>
 {
     if( isTaggedAsAlias( t ) ){
-        return addPAliasMethods as any
+        return addPAliasMethods as any;
+        // return addUtilityForType( unwrapAlias( t ) ) as any;
     };
 
     if( typeExtends( t , bool ) ) return addPBoolMethods as any;
@@ -111,9 +113,7 @@ export function addPAliasMethods<
     
     aliasTerm = addUtilityForType( aliasedType )( aliasTerm ) as any;
 
-    aliasTerm = _punsafeConvertType( aliasTerm, originalType ) as any;
-
-    aliasTerm = addUserMethods( aliasTerm, aliasTerm.type[2] as AMethods );
+    aliasTerm = addUserMethods( aliasTerm, originalType[2] as AMethods );
 
     return aliasTerm as any;
 }
