@@ -542,10 +542,30 @@ function initTxBuild(
 
     const scriptsToExec: ScriptToExecEntry[] = [];
 
+    /**
+     * needed in `getScriptDataHash` to understand whoich cost model to transform in language view
+     */
+    let _hasV1Scripts = false;
+    /**
+     * needed in `getScriptDataHash` to understand whoich cost model to transform in language view
+     */
+    let _hasV2Scripts = false;
+
     function pushScriptToExec( idx: number, tag: TxRedeemerTag, script: Script, datum?: Data )
     {
         if( script.type !== ScriptType.NativeScript )
         {
+
+            // keep track of exsisting csript versions
+            if( !_hasV1Scripts && script.type === "PlutusScriptV1" )
+            {
+                _hasV1Scripts = true;
+            }
+            if( !_hasV2Scripts && script.type === "PlutusScriptV2" )
+            {
+                _hasV2Scripts = true;
+            }
+
             scriptsToExec.push({
                 index: idx,
                 rdmrTag: tag,
@@ -558,7 +578,6 @@ function initTxBuild(
             })
         }
     }
-
     function pushWitScript( script : Script ): void
     {
         const t = script.type;
@@ -900,8 +919,8 @@ function initTxBuild(
     const languageViews = costModelsToLanguageViewCbor(
         this.protocolParamters.costModels,
         {
-            mustHaveV1: plutusV1ScriptsWitnesses.length > 0,
-            mustHaveV2: plutusV2ScriptsWitnesses.length > 0
+            mustHaveV1: _hasV1Scripts,
+            mustHaveV2: _hasV2Scripts
         }
     ).toBuffer();
 
