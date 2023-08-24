@@ -182,6 +182,61 @@ const RESERVED_STRUCT_KEYS = Object.freeze([
     "raw"
 ]);
 
+/**
+ * 
+ * @param {StructDef} def data-type definition of the struct
+ * 
+ *  each property of the object is a possible constructor for the struct;
+ * 
+ *  each constructor is defined by specifiying the fields that constructor expects and relative types
+ * 
+ * @example
+ * ```ts
+ * const Shape = pstruct({
+ *      Circle: {
+ *          radius: int
+ *      },
+ *      Rectangle: {
+ *          fstSide: int,
+ *          sndSide: int
+ *      }
+ * });
+ * ```
+ * 
+ * @param {( self_t: StructT<StructDef,{}> ) => Methods} getMethods (optional) function to implement arbitrary methods on a given struct.
+ * 
+ * the function takes as first argument the type of this same struct and expects an object with various methods to be implemented on a struct instance
+ * 
+ * @example
+ * ```ts
+ * const Shape = pstruct({
+ *      Circle: {
+ *          radius: int
+ *      },
+ *      Rectangle: {
+ *          fstSide: int,
+ *          sndSide: int
+ *      }
+ * }, ( self_t ) => {
+ * 
+ *      return {
+ *          largestSide: pfn([ self_t ], int )
+ *              ( self => 
+ *                  pmatch( self )
+ *                  .onCircle(({ radius }) => radius )
+ *                  .onRectangle({ fstSide, sndSide } =>
+ *                      pif( int ).$( fstSide.gt( sndSide ) )
+ *                      .then( fstSide )
+ *                      .else( sndSide ) 
+ *                  )
+ *              )
+ *      };
+ * });
+ * 
+ * const isLargeShape = pfn([ Shape.type ], int )
+ * ( shape => shape.largestSide.gtEq( 100 ) )
+ * ```
+ */
 export function pstruct<
     StructDef extends StructDefinition, 
     SMethods extends Methods

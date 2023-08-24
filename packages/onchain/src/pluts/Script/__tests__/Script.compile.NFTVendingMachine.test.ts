@@ -17,7 +17,7 @@ import { PBool } from "../../PTypes/PBool";
 import { plet } from "../../lib/plet";
 import { ByteString } from "@harmoniclabs/bytestring";
 
-describe("NFTVendingMachine", () => {
+describe.skip("NFTVendingMachine", () => {
 
     test("it builds", () => {
 

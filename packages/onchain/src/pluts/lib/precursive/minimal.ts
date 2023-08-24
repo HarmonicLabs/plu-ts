@@ -1,11 +1,10 @@
-import { IRApp } from "../../IR/IRNodes/IRApp";
-import { IRNative } from "../../IR/IRNodes/IRNative";
-import { assert } from "../../utils/assert";
-import { PType } from "../PType";
-import { PLam, TermFn } from "../PTypes";
-import { Term } from "../Term";
-import { TermType, lam, tyVar, typeExtends } from "../type_system";
-import { addUtilityForType } from "./std/UtilityTerms/addUtilityForType";
+import { IRApp } from "../../../IR/IRNodes/IRApp";
+import { IRNative } from "../../../IR/IRNodes/IRNative";
+import { assert } from "../../../utils/assert";
+import { PType } from "../../PType";
+import { PFn, PLam } from "../../PTypes";
+import { Term } from "../../Term";
+import { TermType, lam, tyVar, typeExtends } from "../../type_system";
 
 
 /**
@@ -27,13 +26,13 @@ import { addUtilityForType } from "./std/UtilityTerms/addUtilityForType";
  * self => value => result
  * ```
  */
-export function precursive<A extends PType, B extends PType>
+export function _precursive<A extends PType, B extends PType>
 ( fnBody:
     Term<PLam<
         PLam<A,B>,  // self
         PLam<A,B>>  // the actual function 
     >
-): TermFn<[ A ], B >
+): Term<PFn<[ A ], B>>
 {
     const a = tyVar("recursive_fn_a");
     const b = tyVar("recursive_fn_b");
@@ -58,5 +57,5 @@ export function precursive<A extends PType, B extends PType>
         )
     )
 
-    return addUtilityForType( fnBody.type[2] as TermType )( recursiveFn ) as any;
+    return ( recursiveFn ) as any;
 }

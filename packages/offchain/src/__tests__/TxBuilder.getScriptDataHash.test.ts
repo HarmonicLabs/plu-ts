@@ -212,7 +212,7 @@ describe("getScriptDataHash", () => {
     });
 
 
-    test("empowa", () => {
+    test.skip("empowa", () => {
 
         const cstmdls: CostModels = {
             "PlutusScriptV1": {

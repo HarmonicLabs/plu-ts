@@ -5,10 +5,12 @@ import { pdelay } from "../../../../lib/pdelay";
 import { pfn } from "../../../../lib/pfn";
 import { phoist } from "../../../../lib/phoist";
 import { pInt } from "../../../../lib/std/int/pInt";
-import { precursiveList } from "../../../../lib/std/list/precursiveList";
-import { fn, int, list, pair } from "../../../../type_system/types";
+import { _precursiveList } from "../../../../lib/std/list/precursiveList/minimal";
+import { delayed, fn, int, list, pair } from "../../../../type_system/types";
 import { PCurrencySymbol } from "../PCurrencySymbol";
 import { PTokenName } from "../PTokenName";
+import { _papp } from "../../../../lib/std/data/conversion/minimal_common";
+import { plam } from "../../../../lib/plam";
 
 export const PAssetsEntry = palias(
     pair(
@@ -49,38 +51,48 @@ export const PValue = palias(
                 PTokenName.type
             ],  int)
             (( value, currSym, tokenName ) =>
-                precursiveList( int, PValueEntry.type )
-                .$( _self => pdelay( pInt(0) ) )
-                .$( 
-                    pfn([
-                        fn([ list(PValueEntry.type) ], int ),
-                        PValueEntry.type,
-                        list( PValueEntry.type )
-                    ],  int)
-                    ((self, head, tail ) =>
-                    pif( int ).$( head.policy.eq( currSym ) )
-                    .then(
 
-                        precursiveList( int, PAssetsEntry.type )
-                        .$( _self => pdelay( pInt(0) ) )
-                        .$(
-                            pfn([
-                                fn([ list(PAssetsEntry.type) ], int ),
-                                PAssetsEntry.type,
-                                list( PAssetsEntry.type )
-                            ],  int)
-                            (
-                                (self, head, tail) =>
-                                pif( int ).$( head.fst.eq( tokenName ) )
-                                .then( head.snd )
-                                .else( self.$( tail ) as any )
+                _papp(
+                    _papp(
+                        _papp(
+                            _precursiveList( int, PValueEntry.type ),
+                            plam( fn([ list(PValueEntry.type) ], int ), delayed( int ) )( _self => pdelay( pInt(0) ) )
+                        ),
+                        pfn([
+                            fn([ list(PValueEntry.type) ], int ),
+                            PValueEntry.type,
+                            list( PValueEntry.type )
+                        ],  int)
+                        ((self, head, tail ) =>
+                        pif( int ).$( head.policy.eq( currSym ) )
+                        .then(
+    
+                            _papp(
+                                _papp(
+                                    _papp(
+                                        _precursiveList( int, PAssetsEntry.type ),
+                                        plam( fn([ list(PAssetsEntry.type) ], int ), delayed( int ) )
+                                        ( _self => pdelay( pInt(0) ) )
+                                    ),
+                                    pfn([
+                                        fn([ list(PAssetsEntry.type) ], int ),
+                                        PAssetsEntry.type,
+                                        list( PAssetsEntry.type )
+                                    ],  int)
+                                    (
+                                        (self, head, tail) =>
+                                        pif( int ).$( head.fst.eq( tokenName ) )
+                                        .then( head.snd )
+                                        .else( self.$( tail ) as any )
+                                    )
+                                ),
+                                head.snd
                             )
                         )
-                        .$( head.snd )
-                    )
-                    .else( self.$( tail ) as any ))
+                        .else( self.$( tail ) as any ))
+                    ),
+                    value
                 )
-                .$( value )
             )
         );
 

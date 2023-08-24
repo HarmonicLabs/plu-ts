@@ -4,10 +4,12 @@ import type { PLam } from "../../../../PTypes/PFn/PLam";
 import type { Term } from "../../../../Term";
 import { typeExtends } from "../../../../type_system/typeExtends";
 import { PrimType, type Methods, type TermType } from "../../../../type_system/types";
-import type { FilterMethodsByInput, LiftMethods, MethodsAsTerms } from "./methodsTypes";
+import type { FilterMethodsByInput, FilterOutSingleInputMethods, LiftMethods, MethodsAsTerms } from "./methodsTypes";
 import { papp } from "../../../papp";
-import { plet } from "../../../plet";
 import { getFnTypes } from "../../../../Script/Parametrized/getFnTypes";
+import { _plet } from "../../../plet/minimal";
+import { addUtilityForType } from "../addUtilityForType";
+import { isWellFormedMethods } from "./assertWellFormedMethods";
 
 function getMethodsWithFirstInputOfType( methods: Methods, type: TermType ): Methods
 {
@@ -45,9 +47,19 @@ export function addUserMethods<
         FilterMethodsByInput<M, PT>
     > & 
     MethodsAsTerms<
-        FilterMethodsByInput<M, PT>
+        FilterOutSingleInputMethods<
+            FilterMethodsByInput<M, PT>
+        >
     >
 {
+    if( !isWellFormedMethods( methods ) )
+    {
+        throw new Error(
+            "user-specified methods are not well formed, definition contains methods with ambigous names:  " +
+            JSON.stringify( Object.keys( methods ), undefined, 2 ) 
+        );
+    }
+
     const t = term.type;
 
     const filtered = getMethodsWithFirstInputOfType( methods, t );
@@ -67,7 +79,8 @@ export function addUserMethods<
         // -1 (the output type)
         const missingArgsAfterApplication = fnTypes.length - 2;
         
-        const appliedTerm = plet( papp( method, term ) );
+        const _appliedTerm = papp( method, term );
+        const appliedTerm = addUtilityForType( _appliedTerm.type )( _plet( _appliedTerm ) );
 
         if( missingArgsAfterApplication === 0 )
         {

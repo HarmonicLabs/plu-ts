@@ -22,7 +22,6 @@ import {
 import { defineNonDeletableNormalProperty } from "@harmoniclabs/obj-utils";
 import { termTypeToString } from "../../../type_system/utils";
 import { addUserMethods } from "./userMethods/addUserMethods";
-import { punsafeConvertType } from "@harmoniclabs/plu-ts-onchain";
 import { _punsafeConvertType } from "../../punsafeConvertType/minimal";
 
 

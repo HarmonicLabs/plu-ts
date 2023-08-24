@@ -1,5 +1,6 @@
 import type { PType } from "../../../../PType";
 import { PAlias, PBool, PInt, PStruct } from "../../../../PTypes";
+import { PFn } from "../../../../PTypes/PFn/PFn";
 import type { PLam } from "../../../../PTypes/PFn/PLam";
 import type { Term } from "../../../../Term";
 import type { Methods, StructDefinition } from "../../../../type_system/types";
@@ -100,7 +101,7 @@ export type FilterMethodsByInput<Ms extends Methods, InputFilter extends PType> 
                 )
             )
         ) : never
-} & Methods
+} & Methods;
 
 type test_4 = FilterMethodsByInput<{
     foo: Term<PLam<PInt, PBool>>
@@ -119,3 +120,17 @@ type test_8 = FilterMethodsByInput<{
     baz: Term<PLam<PInt, PBool>>
     moo: Term<PLam<PBool, PBool>>
 }, PAlias<PInt, any>>
+
+/**
+ * keeps only the methods that are a `PLam` AND take AT LEAST 2 INPUTS
+ */
+export type FilterOutSingleInputMethods<Ms extends Methods> = {
+    [ M in keyof Ms ]:
+        Ms[M] extends Term<PLam<PType, PLam<PType,PType>>> ?
+        Ms[M] : never
+} & Methods;
+
+type test_9 = FilterOutSingleInputMethods<{
+    foo: Term<PLam<PInt, PBool>>,
+    bar: Term<PFn<[ PInt, PInt ], PBool>>
+}>
