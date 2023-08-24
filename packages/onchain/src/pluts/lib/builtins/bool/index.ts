@@ -150,11 +150,9 @@ export const pnot
     phoist(
         plam( bool, bool )
         ( b => 
-            addPBoolMethods(
-                pstrictIf( bool ).$( b )
-                .$( pBool( false ) )
-                .$( pBool( true  ) )
-            )
+            pstrictIf( bool ).$( b )
+            .$( pBool( false ) )
+            .$( pBool( true  ) )
         )
     ) as any;
 
@@ -242,3 +240,20 @@ export const por
         ))
     ) as any;
 
+export const peqBool: Term<PLam<PBool, PLam<PBool, PBool>>>
+& {
+    $: ( bool: PappArg<PBool> ) =>
+        Term<PLam<PBool, PBool>>
+        & {
+            $: ( bool: PappArg<PBool> ) => TermBool
+        }
+}
+= phoist(
+    plam(
+        bool, lam( bool, bool )
+    )( a => plam( bool, bool )
+        ( b => pstrictIf( bool ).$( a )
+            .$( b )
+            .$( pnot.$( b ) )
+    ))
+) as any;

@@ -3,7 +3,7 @@ import type { PBool, TermFn, PDelayed } from "../../../PTypes"
 import type { PappArg } from "../../pappArg"
 import { Term } from "../../../Term"
 import { pBool } from "../bool/pBool"
-import { por, pstrictOr, pand, pstrictAnd } from "../../builtins/bool"
+import { por, pstrictOr, pand, pstrictAnd, peqBool } from "../../builtins/bool"
 import { delayed } from "../../../type_system/types"
 import { IRDelayed } from "../../../../IR/IRNodes/IRDelayed"
 import { definePropertyIfNotPresent, defineReadOnlyProperty } from "@harmoniclabs/obj-utils"
@@ -23,6 +23,8 @@ export type TermBool = Term<PBool> & {
     readonly pstrictAnd:     TermFn<[ PBool ], PBool>
     readonly strictAnd:         ( other: PappArg<PBool> ) => TermBool
 
+    readonly peq:     TermFn<[ PBool ], PBool>
+    readonly eq:         ( other: PappArg<PBool> ) => TermBool
 }
 
 // avoid circular dependency
@@ -114,6 +116,20 @@ export function addPBoolMethods( term: Term<PBool> ): TermBool
         term,
         "strictAnd",
         ( other: PappArg<PBool> ): TermBool => pstrictAnd.$( term ).$( other )
+    );
+
+    definePropertyIfNotPresent(
+        term,
+        "peq",
+        {
+            get: () => peqBool.$( term ),
+            ...getterOnly
+        }
+    );
+    defineReadOnlyProperty(
+        term,
+        "eq",
+        ( other: PappArg<PBool> ): TermBool => peqBool.$( term ).$( other )
     );
 
     return term as any;

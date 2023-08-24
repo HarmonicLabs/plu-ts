@@ -25,22 +25,26 @@ export function precursiveList<ReturnT  extends TermType, ElemtsT extends TermTy
     ToPType<ReturnT> // result
 >
 {
-    const finalType = lam( list( elemsT ), returnT );
+    const finalSelfType = lam( list( elemsT ), returnT );
+
+    const matchNil_t = lam( finalSelfType, delayed( returnT ) );
+
+    const matchCons_t = fn([ finalSelfType, elemsT, list( elemsT ) ], returnT );
+
+    const originalSelf_t = fn([
+        matchNil_t,
+        matchCons_t,
+        list( elemsT )
+    ],  returnT);
 
     return phoist(
         precursive(
             pfn([
-                    fn([
-                        lam( finalType, delayed( returnT ) ),
-                        fn([ finalType, elemsT, list( elemsT ) ], returnT ),
-                        list( elemsT )
-                    ],  returnT ),
-                    lam( finalType, delayed( returnT ) ),
-                    fn([ finalType, elemsT, list( elemsT ) ], returnT ),
-                    list( elemsT )
-                ], 
-                returnT
-            )
+                originalSelf_t,
+                matchNil_t,
+                matchCons_t,
+                list( elemsT )
+            ],  returnT )
             ( ( self, matchNil, matchCons, lst ) => 
                 plet(
                     papp(
