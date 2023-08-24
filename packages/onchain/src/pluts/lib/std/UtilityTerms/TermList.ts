@@ -76,32 +76,32 @@ export type TermList<PElemsT extends PDataRepresentable> = Term<PList<PElemsT>> 
     readonly reversed: TermList<PElemsT>
 
     // indexing / query
-    readonly atTerm:    TermFn<[PInt], PElemsT>
+    readonly pat:    TermFn<[PInt], PElemsT>
     readonly at:        ( index: PappArg<PInt> ) => UtilityTermOf<PElemsT> 
     
-    readonly findTerm:  TermFn<[PLam<PElemsT,PBool>], PMaybeT<PElemsT>>
+    readonly pfind:  TermFn<[PLam<PElemsT,PBool>], PMaybeT<PElemsT>>
     readonly find:      ( predicate: PappArg<PLam<PElemsT,PBool>> ) => Term<PMaybeT<PElemsT>>
 
     // readonly includes: TermFn<[PElemsT], PBool>
     // readonly findIndex: TermFn<[PLam<PElemsT,PBool>], PInt>
-    readonly filterTerm:    TermFn<[PLam<PElemsT,PBool>], PList<PElemsT>>
+    readonly pfilter:    TermFn<[PLam<PElemsT,PBool>], PList<PElemsT>>
     readonly filter:        ( predicate: PappArg<PLam<PElemsT,PBool>> ) => TermList<PElemsT>
 
     // list creation
-    readonly prependTerm:  TermFn<[PElemsT], PList<PElemsT>>
+    readonly pprepend:  TermFn<[PElemsT], PList<PElemsT>>
     readonly prepend:      ( elem: PappArg<PElemsT> ) => TermList<PElemsT>
     // readonly concat: TermFn<[PList<PElemsT>], PList<PElemsT>>
     
     // transform
-    readonly mapTerm: <ResultT extends TermType>( resultT: ResultT ) => TermFn<[PLam<PElemsT, ToPType<ResultT>>], PList<ToPType<ResultT>>>
+    readonly pmap: <ResultT extends TermType>( resultT: ResultT ) => TermFn<[PLam<PElemsT, ToPType<ResultT>>], PList<ToPType<ResultT>>>
     readonly map:     <PResultElemT extends PType>( f: PappArg<PLam<PElemsT,PResultElemT>> ) => TermList<PResultElemT>
     // readonly reduce: <ResultT extends TermType>( resultT: ResultT ) => TermFn<[PLam<ToPType<ResultT>, PLam<PList<PElemsT>, ToPType<ResultT>>>], ToPType<ResultT>> 
 
     // predicates
-    readonly everyTerm: TermFn<[PLam<PElemsT, PBool>], PBool>
+    readonly pevery: TermFn<[PLam<PElemsT, PBool>], PBool>
     readonly every:     ( predicate: PappArg<PLam<PElemsT, PBool>> ) => TermBool
     
-    readonly someTerm:  TermFn<[PLam<PElemsT, PBool>], PBool>
+    readonly psome:  TermFn<[PLam<PElemsT, PBool>], PBool>
     readonly some:      ( predicate: PappArg<PLam<PElemsT, PBool>> ) => TermBool
 };
 
@@ -214,7 +214,7 @@ function _definePListMethods<PElemsT extends PType>( lst: Term<PList<PElemsT>>, 
 
     definePropertyIfNotPresent(
         lst,
-        "atTerm",
+        "pat",
         {
             get: () => pindexList( elemsT ).$( lst ),
             ...getterOnly
@@ -228,7 +228,7 @@ function _definePListMethods<PElemsT extends PType>( lst: Term<PList<PElemsT>>, 
 
     definePropertyIfNotPresent(
         lst,
-        "findTerm",
+        "pfind",
         {
             get: () => flippedFind( elemsT ).$( lst ),
             ...getterOnly
@@ -243,7 +243,7 @@ function _definePListMethods<PElemsT extends PType>( lst: Term<PList<PElemsT>>, 
 
     definePropertyIfNotPresent(
         lst,
-        "filterTerm",
+        "pfilter",
         {
             get: () => flippedFilter( elemsT ).$( lst ),
             ...getterOnly
@@ -258,7 +258,7 @@ function _definePListMethods<PElemsT extends PType>( lst: Term<PList<PElemsT>>, 
 
     definePropertyIfNotPresent(
         lst,
-        "prependTerm",
+        "pprepend",
         {
             get: () => flippedPrepend( elemsT ).$( lst ),
             ...getterOnly
@@ -272,7 +272,7 @@ function _definePListMethods<PElemsT extends PType>( lst: Term<PList<PElemsT>>, 
 
     defineReadOnlyProperty(
         lst,
-        "mapTerm",
+        "pmap",
         ( toType: TermType ) => 
             phoist(
                 pflip(
@@ -306,7 +306,7 @@ function _definePListMethods<PElemsT extends PType>( lst: Term<PList<PElemsT>>, 
 
     definePropertyIfNotPresent(
         lst,
-        "everyTerm",
+        "pevery",
         {
             get: () => flippedEvery( elemsT )
             .$( lst ),
@@ -321,7 +321,7 @@ function _definePListMethods<PElemsT extends PType>( lst: Term<PList<PElemsT>>, 
 
     definePropertyIfNotPresent(
         lst,
-        "someTerm",
+        "psome",
         {
             get: () => flippedSome( elemsT )
             .$( lst ),

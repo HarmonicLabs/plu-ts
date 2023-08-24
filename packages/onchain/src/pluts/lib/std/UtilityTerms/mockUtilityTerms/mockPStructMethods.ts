@@ -75,7 +75,7 @@ export function mockPStructMethods<
     }
 
     definePropertyIfNotPresent(
-        struct, "eqTerm",
+        struct, "peq",
         {
             get: () => makeMockUtilityTerm( lam( data, bool ) ),
             set: () => {},

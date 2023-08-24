@@ -269,7 +269,7 @@ const checkRoyalty = pfn([
             // inlined
             const hasPaid = ( (fee: TermInt) => {
 
-                const isAddrToPay = plet( toPay.addr.eqTerm );
+                const isAddrToPay = plet( toPay.addr.peq );
 
                 const isCorrectDatum = plet( peqData.$( paymentDatum ) );
 
@@ -474,13 +474,13 @@ const contract = ( params: ContractParams ) => pfn([
                                                     pmatch( metadata.find( entry => entry.fst.eq( fromUtf8("traits") )  ) )
                                                     .onJust( just => punListData.$( just.val.snd ) .map( punBData ) )
                                                     .onNothing( _ => perror( list( bs ) ) )
-                                                    .someTerm
+                                                    .psome
                                                 ).in( someTrait =>
                                                     traits.every( _trait =>
                                                         pmatch(  punsafeConvertType( _trait, TraitOption.type ) )
-                                                        .onMustHave(({ trait }) => someTrait.$( trait.eqTerm ) )
+                                                        .onMustHave(({ trait }) => someTrait.$( trait.peq ) )
                                                         .onMustNotHave(({ trait }) =>
-                                                            pnot.$( someTrait.$( trait.eqTerm )) )
+                                                            pnot.$( someTrait.$( trait.peq )) )
                                                     )
                                                 )
                                             );
@@ -527,7 +527,7 @@ const contract = ( params: ContractParams ) => pfn([
                     .onJust( ({ val: owner }) =>
     
                         pmatch( owner.credential )
-                        .onPPubKeyCredential( ({ pkh }) => tx.signatories.some( pkh.eqTerm as any ) )
+                        .onPPubKeyCredential( ({ pkh }) => tx.signatories.some( pkh.peq as any ) )
                         .onPScriptCredential( _ => txSignedByNebulaValidator.$( tx.mint ).$( ownInputValue as any ) )
     
                     )
@@ -576,7 +576,7 @@ const contract = ( params: ContractParams ) => pfn([
 
             return pmatch( owner.credential )
             .onPPubKeyCredential(({ pkh }) =>
-                tx.signatories.some( pkh.eqTerm as any )
+                tx.signatories.some( pkh.peq as any )
             )
             .onPScriptCredential( _ => txSignedByNebulaValidator.$( tx.mint ).$( ownInputValue as any ) ) 
         });
@@ -788,13 +788,13 @@ test("compiles", () => {
                                                         pmatch( metadata.find( entry => entry.fst.eq( fromUtf8("traits") )  ) )
                                                         .onJust( just => punListData.$( just.val.snd ) .map( punBData ) )
                                                         .onNothing( _ => perror( list( bs ) ) )
-                                                        .someTerm
+                                                        .psome
                                                     ).in( someTrait =>
                                                         traits.every( _trait =>
                                                             pmatch(  punsafeConvertType( _trait, TraitOption.type ) )
-                                                            .onMustHave(({ trait }) => someTrait.$( trait.eqTerm ) )
+                                                            .onMustHave(({ trait }) => someTrait.$( trait.peq ) )
                                                             .onMustNotHave(({ trait }) =>
-                                                                pnot.$( someTrait.$( trait.eqTerm )) )
+                                                                pnot.$( someTrait.$( trait.peq )) )
                                                         )
                                                     )
                                                 );
@@ -834,7 +834,7 @@ test("compiles", () => {
                         .onJust( ({ val: owner }) =>
         
                             pmatch( owner.credential )
-                            .onPPubKeyCredential( ({ pkh }) => tx.signatories.some( pkh.eqTerm as any ) )
+                            .onPPubKeyCredential( ({ pkh }) => tx.signatories.some( pkh.peq as any ) )
                             .onPScriptCredential( _ => txSignedByNebulaValidator.$( tx.mint ).$( ownInputValue as any ) )
         
                         )
@@ -877,7 +877,7 @@ test("compiles", () => {
 
                 return pmatch( owner.credential )
                 .onPPubKeyCredential(({ pkh }) =>
-                    tx.signatories.some( pkh.eqTerm as any )
+                    tx.signatories.some( pkh.peq as any )
                 )
                 .onPScriptCredential( _ => txSignedByNebulaValidator.$( tx.mint ).$( ownInputValue as any ) ) 
             })

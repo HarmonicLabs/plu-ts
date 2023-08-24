@@ -6,18 +6,18 @@ import { Term } from "../../Term";
 
 
 export function _punsafeConvertType<FromPInstance extends PType, ToTermType extends TermType>
-( someTerm: Term<FromPInstance>, toType: ToTermType ): Term<ToPType<ToTermType>>
+( psome: Term<FromPInstance>, toType: ToTermType ): Term<ToPType<ToTermType>>
 {
     if( !isWellFormedType( toType ) )
     throw new Error("");
 
     const converted = new Term(
         toType,
-        someTerm.toIR,
-        Boolean((someTerm as any).isConstant) // isConstant
+        psome.toIR,
+        Boolean((psome as any).isConstant) // isConstant
     ) as any;
 
-    Object.keys( someTerm ).forEach( k => {
+    Object.keys( psome ).forEach( k => {
 
         // do not overwrite `type` and `toUPLC` properties
         if(
@@ -30,7 +30,7 @@ export function _punsafeConvertType<FromPInstance extends PType, ToTermType exte
             converted,
             k,
             Object.getOwnPropertyDescriptor(
-                someTerm,
+                psome,
                 k
             ) ?? {}
         )

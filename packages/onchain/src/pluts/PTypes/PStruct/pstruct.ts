@@ -176,7 +176,7 @@ function isStructInstanceOfDefinition<SCtorDef extends StructCtorDef>
 
 const RESERVED_STRUCT_KEYS = Object.freeze([
     "eq",
-    "eqTerm",
+    "peq",
     "extract",
     "in",
     "raw"

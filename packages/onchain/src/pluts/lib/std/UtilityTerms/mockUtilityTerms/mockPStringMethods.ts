@@ -33,7 +33,7 @@ export function mockPStringMethods( term: Term<PString> ): TermStr
 
     definePropertyIfNotPresent(
         term,
-        "concatTerm",
+        "pconcat",
         {
             get: () => makeMockUtilityTerm( lam( str, str ) ),
             ...getterOnly
@@ -47,7 +47,7 @@ export function mockPStringMethods( term: Term<PString> ): TermStr
 
     definePropertyIfNotPresent(
         term,
-        "eqTerm",
+        "peq",
         {
             get: () => makeMockUtilityTerm( lam( str, bool ) ),
             ...getterOnly

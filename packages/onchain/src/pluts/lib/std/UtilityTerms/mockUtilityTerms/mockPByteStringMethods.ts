@@ -40,7 +40,7 @@ export function mockPByteStringMethods( term: Term<PByteString> ): TermBS
 
     definePropertyIfNotPresent(
         term,
-        "concatTerm",
+        "pconcat",
         {
             get: () => makeMockUtilityTerm( lam( bs, bs ) ),
             ...getterOnly
@@ -54,7 +54,7 @@ export function mockPByteStringMethods( term: Term<PByteString> ): TermBS
 
     definePropertyIfNotPresent(
         term,
-        "prependTerm",
+        "pprepend",
         {
             get: () => makeMockUtilityTerm( lam( int, bs ) ), 
             ...getterOnly
@@ -68,7 +68,7 @@ export function mockPByteStringMethods( term: Term<PByteString> ): TermBS
 
     definePropertyIfNotPresent(
         term,
-        "subByteStringTerm",
+        "psubByteString",
         {
             get: () => makeMockUtilityTerm( lam( int, lam( int, bs ) ) ),
             ...getterOnly
@@ -82,7 +82,7 @@ export function mockPByteStringMethods( term: Term<PByteString> ): TermBS
 
     definePropertyIfNotPresent(
         term,
-        "sliceTerm",
+        "pslice",
         {
             get: () => makeMockUtilityTerm( lam( int, lam( int, bs ) ) ),
             ...getterOnly
@@ -96,7 +96,7 @@ export function mockPByteStringMethods( term: Term<PByteString> ): TermBS
 
     definePropertyIfNotPresent(
         term,
-        "atTerm",
+        "pat",
         {
             get: () => makeMockUtilityTerm( lam( int, bs ) ),
             ...getterOnly
@@ -110,7 +110,7 @@ export function mockPByteStringMethods( term: Term<PByteString> ): TermBS
 
     definePropertyIfNotPresent(
         term,
-        "eqTerm",
+        "peq",
         {
             get: () => makeMockUtilityTerm( lam( bs, bool ) ),
             ...getterOnly
@@ -124,7 +124,7 @@ export function mockPByteStringMethods( term: Term<PByteString> ): TermBS
 
     definePropertyIfNotPresent(
         term,
-        "ltTerm",
+        "plt",
         {
             get: () => makeMockUtilityTerm( lam( bs, bool ) ),
             ...getterOnly
@@ -138,7 +138,7 @@ export function mockPByteStringMethods( term: Term<PByteString> ): TermBS
 
     definePropertyIfNotPresent(
         term,
-        "ltEqTerm",
+        "pltEq",
         {
             get: () => makeMockUtilityTerm( lam( bs, bool ) ),
             ...getterOnly
@@ -152,7 +152,7 @@ export function mockPByteStringMethods( term: Term<PByteString> ): TermBS
 
     definePropertyIfNotPresent(
         term,
-        "gtTerm",
+        "pgt",
         {
             get: () => makeMockUtilityTerm( lam( bs, bool ) ),
             ...getterOnly
@@ -166,7 +166,7 @@ export function mockPByteStringMethods( term: Term<PByteString> ): TermBS
 
     definePropertyIfNotPresent(
         term,
-        "gtEqTerm",
+        "pgtEq",
         {
             get: () => makeMockUtilityTerm( lam( bs, bool ) ),
             ...getterOnly

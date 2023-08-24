@@ -38,7 +38,7 @@ export type RawStruct = {
 
 export type TermStruct<SDef extends StructDefinition, SMethods extends Methods> = Term<PStruct<SDef,SMethods>> & {
 
-    readonly eqTerm: TermFn<[PStruct<SDef, {}>], PBool>
+    readonly peq: TermFn<[PStruct<SDef, {}>], PBool>
     readonly eq: ( other: Term<PStruct<SDef, {}>> ) => TermBool
 
     readonly raw: RawStruct
@@ -155,7 +155,7 @@ export function addPStructMethods<
     }
 
     definePropertyIfNotPresent(
-        struct, "eqTerm",
+        struct, "peq",
         {
             get: () => plet( peqData.$( struct as any ) ),
             set: () => {},

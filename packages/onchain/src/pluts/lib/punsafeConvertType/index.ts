@@ -8,7 +8,7 @@ import { termTypeToString } from "../../type_system";
 
 
 export function punsafeConvertType<FromPInstance extends PType, ToTermType extends TermType>
-( someTerm: Term<FromPInstance>, toType: ToTermType ): UtilityTermOf<ToPType<ToTermType>>
+( psome: Term<FromPInstance>, toType: ToTermType ): UtilityTermOf<ToPType<ToTermType>>
 {
     if( !isWellFormedType( toType ) )
     {
@@ -17,11 +17,11 @@ export function punsafeConvertType<FromPInstance extends PType, ToTermType exten
 
     const converted = new Term(
         toType,
-        someTerm.toIR,
-        Boolean((someTerm as any).isConstant) // isConstant
+        psome.toIR,
+        Boolean((psome as any).isConstant) // isConstant
     ) as any;
 
-    Object.keys( someTerm ).forEach( k => {
+    Object.keys( psome ).forEach( k => {
 
         // do not overwrite `type` and `toUPLC` properties
         if(
@@ -34,7 +34,7 @@ export function punsafeConvertType<FromPInstance extends PType, ToTermType exten
             converted,
             k,
             Object.getOwnPropertyDescriptor(
-                someTerm,
+                psome,
                 k
             ) ?? {}
         )

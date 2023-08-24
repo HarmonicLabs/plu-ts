@@ -23,7 +23,7 @@ export function mockPIntMethods( term: Term<PInt> ): TermInt
 {
     definePropertyIfNotPresent(
         term,
-        "addTerm",
+        "padd",
         {
             get: () => makeMockUtilityTerm( lam( int, int ) ),
             ...getterOnly
@@ -37,7 +37,7 @@ export function mockPIntMethods( term: Term<PInt> ): TermInt
 
     definePropertyIfNotPresent(
         term,
-        "subTerm",
+        "psub",
         {
             get: () => makeMockUtilityTerm( lam( int, int ) ),
             ...getterOnly
@@ -51,7 +51,7 @@ export function mockPIntMethods( term: Term<PInt> ): TermInt
 
     definePropertyIfNotPresent(
         term,
-        "multTerm",
+        "pmult",
         {
             get: () => makeMockUtilityTerm( lam( int, int ) ),
             ...getterOnly
@@ -65,7 +65,7 @@ export function mockPIntMethods( term: Term<PInt> ): TermInt
 
     definePropertyIfNotPresent(
         term,
-        "divTerm",
+        "pdiv",
         {
             get: () => makeMockUtilityTerm( lam( int, int ) ),
             ...getterOnly
@@ -79,7 +79,7 @@ export function mockPIntMethods( term: Term<PInt> ): TermInt
 
     definePropertyIfNotPresent(
         term,
-        "quotTerm",
+        "pquot",
         {
             get: () => makeMockUtilityTerm( lam( int, int ) ),
             ...getterOnly
@@ -93,7 +93,7 @@ export function mockPIntMethods( term: Term<PInt> ): TermInt
 
     definePropertyIfNotPresent(
         term,
-        "remainderTerm",
+        "premainder",
         {
             get: () => makeMockUtilityTerm( lam( int, int ) ),
             ...getterOnly
@@ -107,7 +107,7 @@ export function mockPIntMethods( term: Term<PInt> ): TermInt
 
     definePropertyIfNotPresent(
         term,
-        "modTerm",
+        "pmod",
         {
             get: () => makeMockUtilityTerm( lam( int, int ) ),
             ...getterOnly
@@ -122,7 +122,7 @@ export function mockPIntMethods( term: Term<PInt> ): TermInt
 
     definePropertyIfNotPresent(
         term,
-        "eqTerm",
+        "peq",
         {
             get: () => makeMockUtilityTerm( lam( int, bool ) ),
             ...getterOnly
@@ -136,7 +136,7 @@ export function mockPIntMethods( term: Term<PInt> ): TermInt
 
     definePropertyIfNotPresent(
         term,
-        "ltTerm",
+        "plt",
         {
             get: () => makeMockUtilityTerm( lam( int, bool ) ),
             ...getterOnly
@@ -150,7 +150,7 @@ export function mockPIntMethods( term: Term<PInt> ): TermInt
 
     definePropertyIfNotPresent(
         term,
-        "ltEqTerm",
+        "pltEq",
         {
             get: () => makeMockUtilityTerm( lam( int, bool ) ),
             ...getterOnly
@@ -164,7 +164,7 @@ export function mockPIntMethods( term: Term<PInt> ): TermInt
 
     definePropertyIfNotPresent(
         term,
-        "gtTerm",
+        "pgt",
         {
             get: () => makeMockUtilityTerm( lam( int, bool ) ),
             ...getterOnly
@@ -178,7 +178,7 @@ export function mockPIntMethods( term: Term<PInt> ): TermInt
 
     definePropertyIfNotPresent(
         term,
-        "gtEqTerm",
+        "pgtEq",
         {
             get: () => makeMockUtilityTerm( lam( int, bool ) ),
             ...getterOnly

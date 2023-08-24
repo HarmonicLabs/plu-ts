@@ -73,7 +73,7 @@ export function mockPListMethods<PElemsT extends PType>( lst: Term<PList<PElemsT
 
     definePropertyIfNotPresent(
         _lst,
-        "atTerm",
+        "pat",
         {
             get: () => makeMockUtilityTerm( lam( int, elemsT ) ),
             ...getterOnly
@@ -87,7 +87,7 @@ export function mockPListMethods<PElemsT extends PType>( lst: Term<PList<PElemsT
 
     definePropertyIfNotPresent(
         _lst,
-        "findTerm",
+        "pfind",
         {
             get: () => makeMockUtilityTerm( lam( lam( elemsT, bool ), PMaybe( elemsT ).type ) ),
             ...getterOnly
@@ -101,7 +101,7 @@ export function mockPListMethods<PElemsT extends PType>( lst: Term<PList<PElemsT
 
     definePropertyIfNotPresent(
         _lst,
-        "filterTerm",
+        "pfilter",
         {
             get: () => makeMockUtilityTerm( lam( lam( elemsT, bool ), list( elemsT ) ) ),
             ...getterOnly
@@ -115,7 +115,7 @@ export function mockPListMethods<PElemsT extends PType>( lst: Term<PList<PElemsT
 
     definePropertyIfNotPresent(
         _lst,
-        "prependTerm",
+        "pprepend",
         {
             get: () => makeMockUtilityTerm( lam( elemsT, list( elemsT ) ) ),
             ...getterOnly
@@ -129,7 +129,7 @@ export function mockPListMethods<PElemsT extends PType>( lst: Term<PList<PElemsT
 
     defineReadOnlyProperty(
         _lst,
-        "mapTerm",
+        "pmap",
         ( toType: TermType ) => makeMockUtilityTerm( lam( lam( elemsT, toType ), list( toType ) ) )
     );
     defineReadOnlyProperty(
@@ -153,7 +153,7 @@ export function mockPListMethods<PElemsT extends PType>( lst: Term<PList<PElemsT
 
     definePropertyIfNotPresent(
         _lst,
-        "everyTerm",
+        "pevery",
         {
             get: () => makeMockUtilityTerm( lam( lam( elemsT, bool ), bool ) )
             .$( _lst ),
@@ -168,7 +168,7 @@ export function mockPListMethods<PElemsT extends PType>( lst: Term<PList<PElemsT
 
     definePropertyIfNotPresent(
         _lst,
-        "someTerm",
+        "psome",
         {
             get: () => makeMockUtilityTerm( lam( lam( elemsT, bool ), bool ) )
             .$( _lst ),

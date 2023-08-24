@@ -8,16 +8,16 @@ import { bool, delayed, lam } from "../../../../type_system/types";
 
 // export type TermBool = Term<PBool> & {
 // 
-//     readonly orTerm:            TermFn<[ PDelayed<PBool> ], PBool>
+//     readonly por:            TermFn<[ PDelayed<PBool> ], PBool>
 //     readonly or:                ( other: PappArg<PBool> ) => TermBool
 // 
-//     readonly strictOrTerm:      TermFn<[ PBool ], PBool>
+//     readonly pstrictOr:      TermFn<[ PBool ], PBool>
 //     readonly strictOr:          ( other: PappArg<PBool> ) => TermBool
 // 
-//     readonly andTerm:           TermFn<[ PDelayed<PBool> ], PBool>
+//     readonly pand:           TermFn<[ PDelayed<PBool> ], PBool>
 //     readonly and:               ( other: PappArg<PBool> ) => TermBool
 // 
-//     readonly strictAndTerm:     TermFn<[ PBool ], PBool>
+//     readonly pstrictAnd:     TermFn<[ PBool ], PBool>
 //     readonly strictAnd:         ( other: PappArg<PBool> ) => TermBool
 // 
 // }
@@ -37,7 +37,7 @@ export function mockPBoolMethods( term: Term<PBool> ): TermBool
 {
     definePropertyIfNotPresent(
         term,
-        "orTerm",
+        "por",
         {
             get: () => makeMockTerm( lam( delayed( bool ), bool ) ),
             ...getterOnly
@@ -51,7 +51,7 @@ export function mockPBoolMethods( term: Term<PBool> ): TermBool
 
     definePropertyIfNotPresent(
         term,
-        "strictOrTerm",
+        "pstrictOr",
         {
             get: () => makeMockTerm( lam( bool, bool ) ),
             ...getterOnly
@@ -66,7 +66,7 @@ export function mockPBoolMethods( term: Term<PBool> ): TermBool
 
     definePropertyIfNotPresent(
         term,
-        "andTerm",
+        "pand",
         {
             get: () => makeMockTerm( lam( delayed( bool ), bool ) ),
             ...getterOnly
@@ -80,7 +80,7 @@ export function mockPBoolMethods( term: Term<PBool> ): TermBool
 
     definePropertyIfNotPresent(
         term,
-        "strictAndTerm",
+        "pstrictAnd",
         {
             get: () => makeMockTerm( lam( bool, bool ) ),
             ...getterOnly
