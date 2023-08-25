@@ -1,10 +1,6 @@
 {
     "name": "@harmoniclabs/plu-ts-onchain",
-<<<<<<< HEAD
-    "version": "0.1.2",
-=======
     "version": "0.2.0",
->>>>>>> v0.5
     "description": "An embedded DSL for Cardano smart contracts creation coupled with a library for Cardano transactions, all in Typescript",
     "main": "./dist/index.js",
     "types": "./dist/index.d.ts",
