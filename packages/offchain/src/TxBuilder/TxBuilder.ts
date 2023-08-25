@@ -551,15 +551,6 @@ function initTxBuild(
      */
     let _hasV2Scripts = false;
 
-    /**
-     * needed in `getScriptDataHash` to understand whoich cost model to transform in language view
-     */
-    let _hasV1Scripts = false;
-    /**
-     * needed in `getScriptDataHash` to understand whoich cost model to transform in language view
-     */
-    let _hasV2Scripts = false;
-
     function pushScriptToExec( idx: number, tag: TxRedeemerTag, script: Script, datum?: Data )
     {
         if( script.type !== ScriptType.NativeScript )
