@@ -62,7 +62,7 @@
     "@harmoniclabs/plutus-machine": "^1.0.2",
     "@harmoniclabs/uplc": "^1.1.0",
     "@harmoniclabs/cardano-ledger-ts": "^0.1.2",
-    "@harmoniclabs/plu-ts-onchain": "^0.1.2",
+    "@harmoniclabs/plu-ts-onchain": "^0.2.0",
     "@harmoniclabs/plu-ts-offchain": "^0.1.5"
   },
   "devDependencies": {
