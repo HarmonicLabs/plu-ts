@@ -48,6 +48,10 @@ export type UtilityTermOf<PElem extends PType> =
             Term<PElem> & {
                 $: ( input: PappArg<PInput> ) => UtilityTermOf<POutput>
             } :
+        // PElem extends PLam<PType,PType> ?
+        //     Term<PElem> & {
+        //         $: ( input: Term<PType> ) => Term<PType>
+        //     } :
         PElem extends PAlias<infer PT extends PType, infer AMethods extends Methods> ? FiniteTermAlias<PT, AMethods> :
         Term<PElem>
     ) & Term<PElem> // needed because sometime typescript doesn't understands that the term is the same just extended

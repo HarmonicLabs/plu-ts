@@ -1,10 +1,10 @@
 import { definePropertyIfNotPresent, defineReadOnlyProperty } from "@harmoniclabs/obj-utils";
 import { PType } from "../../../PType";
 import { PDataRepresentable } from "../../../PType/PDataRepresentable";
-import type { PList, TermFn, PInt, PLam, PBool } from "../../../PTypes";
+import type { PList, TermFn, PInt, PLam, PBool, PPair } from "../../../PTypes";
 import { Term } from "../../../Term";
-import { ToPType, TermType, isWellFormedGenericType, PrimType, bool, lam, list, struct, typeExtends, tyVar } from "../../../type_system";
-import { getElemsT } from "../../../type_system/tyArgs";
+import { ToPType, TermType, isWellFormedGenericType, PrimType, bool, lam, list, struct, typeExtends, tyVar, pair } from "../../../type_system";
+import { getElemsT, getFstT, getSndT } from "../../../type_system/tyArgs";
 import { termTypeToString } from "../../../type_system/utils";
 import { UtilityTermOf } from "./addUtilityForType";
 import { phead, ptail } from "../../builtins/list";
@@ -12,7 +12,7 @@ import { pprepend } from "../../builtins/pprepend";
 import { PappArg, pappArgToTerm } from "../../pappArg";
 import { phoist } from "../../phoist";
 import { plet } from "../../plet";
-import type { PMaybeT } from "../PMaybe/PMaybe";
+import { PMaybe, type PMaybeT } from "../PMaybe/PMaybe";
 import { pflip } from "../combinators";
 import { pevery } from "../list/pevery";
 import { pfilter } from "../list/pfilter";
@@ -24,6 +24,7 @@ import { preverse } from "../list/preverse";
 import { psome } from "../list/psome";
 import { TermBool } from "./TermBool";
 import { TermInt } from "./TermInt";
+import { peqList, pincludes, plookup } from "../list";
 
 export type TermList<PElemsT extends PDataRepresentable> = Term<PList<PElemsT>> & {
 
@@ -103,7 +104,28 @@ export type TermList<PElemsT extends PDataRepresentable> = Term<PList<PElemsT>> 
     
     readonly psome:  TermFn<[PLam<PElemsT, PBool>], PBool>
     readonly some:      ( predicate: PappArg<PLam<PElemsT, PBool>> ) => TermBool
-};
+
+    /** @since v0.5.0 */
+    readonly pincludes: TermFn<[ PElemsT ], PBool>
+    /** @since v0.5.0 */
+    readonly includes:  ( elem: PappArg<PElemsT> ) => TermBool
+    
+    /** @since v0.5.0 */
+    readonly peq: TermFn<[ PList<PElemsT> ], PBool>
+    /** @since v0.5.0 */
+    readonly eq:  ( other: PappArg<PList<PElemsT>> ) => TermBool
+
+} & (
+    PElemsT extends PPair<infer PK extends PType, infer PV extends PType> ?
+    {
+
+        /** @since v0.5.0 */
+        readonly plookup:     TermFn<[ PK ], PMaybeT<PV>>
+        /** @since v0.5.0 */
+        readonly lookup:      ( predicate: PappArg<PK> ) => UtilityTermOf<PMaybeT<PV>>
+
+    } : {}
+);
 
 const flippedPrepend = ( t: TermType ) => phoist(
         pflip( 
@@ -334,5 +356,60 @@ function _definePListMethods<PElemsT extends PType>( lst: Term<PList<PElemsT>>, 
         "some",
         ( predicate: PappArg<PLam<PElemsT, PBool>> ): TermBool => psome( elemsT ).$( predicate as any ).$( lst )
     );
-}
 
+    definePropertyIfNotPresent(
+        lst,
+        "pincludes",
+        {
+            get: () => pincludes( elemsT ).$( lst ),
+            ...getterOnly
+        }
+        
+    );
+    defineReadOnlyProperty(
+        lst,
+        "includes",
+        ( elem: PappArg<PElemsT> ): TermBool => pincludes( elemsT ).$( lst ).$( elem )
+    );
+
+    definePropertyIfNotPresent(
+        lst,
+        "peq",
+        {
+            get: () => peqList( elemsT ).$( lst ),
+            ...getterOnly
+        }
+        
+    );
+    defineReadOnlyProperty(
+        lst,
+        "eq",
+        ( other: PappArg<PList<PElemsT>> ): TermBool => peqList( elemsT ).$( lst ).$( other )
+    );
+
+    if( typeExtends( elemsT, pair( tyVar(), tyVar() ) ) )
+    {
+
+        const kT = getFstT( elemsT );
+        const vT = getSndT( elemsT );
+
+        const PMaybeVal = PMaybe( vT );
+
+        definePropertyIfNotPresent(
+            lst,
+            "plookup",
+            {
+                get: () => pflip( list(elemsT), kT, PMaybeVal.type ).$( plookup( kT, vT ) ).$( lst ),
+                ...getterOnly
+            }
+            
+        );
+        defineReadOnlyProperty(
+            lst,
+            "lookup",
+            ( key: any ) => plookup( kT, vT ).$( key ).$( lst as any )
+        );
+    }
+
+    return lst as any;
+}

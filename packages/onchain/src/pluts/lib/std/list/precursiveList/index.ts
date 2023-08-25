@@ -9,7 +9,13 @@ import { _papp } from "../../data/conversion/minimal_common";
 import { pmatchList } from "../pmatchList";
 
 
-export function precursiveList<ReturnT  extends TermType, ElemtsT extends TermType>( returnT: ReturnT, elemsT: ElemtsT )
+export function precursiveList<
+    ReturnT  extends TermType, 
+    ElemtsT extends TermType
+>( 
+    returnT: ReturnT, 
+    elemsT: ElemtsT 
+)
 : TermFn<
     [
         PLam< // caseNil
@@ -45,7 +51,7 @@ export function precursiveList<ReturnT  extends TermType, ElemtsT extends TermTy
                 matchCons_t,
                 list( elemsT )
             ],  returnT )
-            ( ( self, matchNil, matchCons, lst ) => 
+            (( self, matchNil, matchCons, lst ) => 
                 plet(
                     papp(
                         papp(
