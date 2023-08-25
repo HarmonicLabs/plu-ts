@@ -4,7 +4,7 @@ import { PType } from "../../PType";
 import { PDelayed } from "../../PTypes";
 import { Term } from "../../Term";
 import { PrimType } from "../../type_system";
-import { UtilityTermOf, addUtilityForType } from "../addUtilityForType";
+import { UtilityTermOf, addUtilityForType } from "../std/UtilityTerms/addUtilityForType";
 
 export function pforce<PInstance extends PType >( toForce: Term<PDelayed<PInstance>> ): UtilityTermOf<PInstance>
 export function pforce<PInstance extends PType >( toForce: Term<PInstance> ): UtilityTermOf<PInstance>

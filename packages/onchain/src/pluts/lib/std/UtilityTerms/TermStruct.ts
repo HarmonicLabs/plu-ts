@@ -1,20 +1,17 @@
 import { Term } from "../../../Term";
 import type { PStruct, RestrictedStructInstance, StructInstance } from "../../../PTypes/PStruct/pstruct";
 import type { PType } from "../../../PType";
+import type { TermFn } from "../../../PTypes/PFn/PFn";
 // !!! IMPORTANT !!!
 // DO NOT change the order of imports
 // `../../../Term/Type/kinds` is also a dependecy of `pmatch`
-import { getElemAtTerm, pmatch } from "../../../PTypes/PStruct/pmatch";
-import { StructDefinition, isStructType, isStructDefinition, data, list, int, pair } from "../../../type_system";
-import { peqData, punConstrData } from "../../builtins/data";
-import { TermFn } from "../../../PTypes/PFn/PFn";
+import { getElemAtTerm } from "../../../PTypes/PStruct/pmatch";
+import { StructDefinition, isStructType, isStructDefinition, data, list, int, pair, Methods } from "../../../type_system";
+import { peqData,  } from "../../builtins/data";
 import { PBool } from "../../../PTypes/PBool";
 import { TermBool } from "./TermBool";
-import { PData, PInt, PList, PPair } from "../../../PTypes";
-import { _plet } from "../../plet/minimal";
 import { _fromData } from "../data/conversion/fromData_minimal";
-import { plet } from "../../plet";
-import { UtilityTermOf } from "../../addUtilityForType";
+import { UtilityTermOf } from "./addUtilityForType";
 import { punsafeConvertType } from "../../punsafeConvertType";
 import { TermInt, addPIntMethods } from "./TermInt";
 import { TermList, addPListMethods } from "./TermList";
@@ -26,16 +23,23 @@ import { IRApp } from "../../../../IR/IRNodes/IRApp";
 import { IRNative } from "../../../../IR/IRNodes/IRNative";
 import { IRVar } from "../../../../IR/IRNodes/IRVar";
 import { IRLetted } from "../../../../IR/IRNodes/IRLetted";
+import type { PData } from "../../../PTypes/PData";
+import type { PList } from "../../../PTypes/PList";
+import type { PPair } from "../../../PTypes/PPair";
+import type { PInt } from "../../../PTypes/PInt";
+import { FilterMethodsByInput, LiftMethods, MethodsAsTerms } from "./userMethods/methodsTypes";
+import { addUserMethods } from "./userMethods/addUserMethods";
+import { plet } from "../../plet";
 
 export type RawStruct = {
     readonly index: TermInt,
     readonly fields: TermList<PData>
 }
 
-export type TermStruct<SDef extends StructDefinition> = Term<PStruct<SDef>> & {
+export type TermStruct<SDef extends StructDefinition, SMethods extends Methods> = Term<PStruct<SDef,SMethods>> & {
 
-    readonly eqTerm: TermFn<[PStruct<SDef>], PBool>
-    readonly eq: ( other: Term<PStruct<SDef>> ) => TermBool
+    readonly peq: TermFn<[PStruct<SDef, {}>], PBool>
+    readonly eq: ( other: Term<PStruct<SDef, {}>> ) => TermBool
 
     readonly raw: RawStruct
 
@@ -53,13 +57,13 @@ export type TermStruct<SDef extends StructDefinition> = Term<PStruct<SDef>> & {
                 in: <PExprResult extends PType>( expr: ( extracted: RestrictedStructInstance<SDef[keyof SDef],Fields> ) => Term<PExprResult> ) => UtilityTermOf<PExprResult>
             }
         } : {}
-);
-
-const getterOnly = {
-    set: () => {},
-    configurable: false,
-    enumerable: true
-};
+) &
+LiftMethods<
+    FilterMethodsByInput<SMethods,PStruct<SDef, any>>
+> & 
+MethodsAsTerms<
+    FilterMethodsByInput<SMethods,PStruct<SDef, any>>
+>
 
 const hoisted_getFields = new IRHoisted(
     new IRFunc( 1, // struct
@@ -73,7 +77,12 @@ const hoisted_getFields = new IRHoisted(
     )
 );
 
-export function addPStructMethods<SDef extends StructDefinition>( struct: Term<PStruct<SDef>> ): TermStruct<SDef>
+export function addPStructMethods<
+    SDef extends StructDefinition, 
+    SMethods extends Methods
+>( 
+    struct: Term<PStruct<SDef, SMethods>> 
+): TermStruct<SDef, SMethods>
 {
     const t = struct.type;
     if( !isStructType(t) ) return struct as any;
@@ -146,7 +155,7 @@ export function addPStructMethods<SDef extends StructDefinition>( struct: Term<P
     }
 
     definePropertyIfNotPresent(
-        struct, "eqTerm",
+        struct, "peq",
         {
             get: () => plet( peqData.$( struct as any ) ),
             set: () => {},
@@ -156,7 +165,7 @@ export function addPStructMethods<SDef extends StructDefinition>( struct: Term<P
     )
 
     defineReadOnlyProperty(
-        struct, "eq", ( other: Term<PStruct<SDef>> ) => peqData.$( struct as any ).$( other as any )
+        struct, "eq", ( other: Term<PStruct<SDef, SMethods>> ) => peqData.$( struct as any ).$( other as any )
     )
 
     const letted_unconstred = new Term<PPair<PInt,PList<PData>>>(
@@ -199,6 +208,8 @@ export function addPStructMethods<SDef extends StructDefinition>( struct: Term<P
             fields: addPListMethods( letted_rawFields )
         })
     );
+
+    struct = addUserMethods( struct, t[2] )
 
     return struct as any;
 }

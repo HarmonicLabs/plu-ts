@@ -10,7 +10,7 @@ export type MaybeT<T extends TermType> = StructT<{
 export type PMaybeT<PTy extends PDataRepresentable> = PStruct<{
     Just: { val: FromPType<PTy> },
     Nothing: {}
-}>
+}, any>
 
 export function PMaybe<T extends TermType>(tyArg: T)
 {

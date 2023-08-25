@@ -11,3 +11,6 @@ export * from "./pevery";
 export * from "./psome";
 export * from "./preverse";
 export * from "./const";
+export * from "./peqList";
+export * from "./plookup";
+export * from "./pincludes";

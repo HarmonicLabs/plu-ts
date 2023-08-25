@@ -22,37 +22,37 @@ export type TermBS = Term<PByteString> & {
     readonly utf8Decoded: TermStr
     
     // pappendBs
-    readonly concatTerm: TermFn<[PByteString], PByteString>
+    readonly pconcat: TermFn<[PByteString], PByteString>
     readonly concat: ( other: PappArg<PByteString>) => TermBS
 
     // pconsBs
-    readonly prependTerm: TermFn<[PInt], PByteString>
+    readonly pprepend: TermFn<[PInt], PByteString>
     readonly prepend: ( byte: PappArg<PInt> ) => TermBS
 
     // psliceBs
-    readonly subByteStringTerm: TermFn<[PInt, PInt], PByteString>
+    readonly psubByteString: TermFn<[PInt, PInt], PByteString>
     readonly subByteString: ( fromInclusive: PappArg<PInt>, ofLength: PappArg<PInt> ) => TermBS
     
-    readonly sliceTerm: TermFn<[PInt, PInt], PByteString>
+    readonly pslice: TermFn<[PInt, PInt], PByteString>
     readonly slice:     ( fromInclusive: PappArg<PInt>, toExclusive: PappArg<PInt> ) => TermBS
     
     // pindexBs
-    readonly atTerm:    TermFn<[PInt], PInt>
+    readonly pat:    TermFn<[PInt], PInt>
     readonly at:        ( index: PappArg<PInt> ) => TermInt
 
-    readonly eqTerm:    TermFn<[PByteString], PBool>
+    readonly peq:    TermFn<[PByteString], PBool>
     readonly eq:        ( other: PappArg<PByteString> ) => TermBool
 
-    readonly ltTerm:    TermFn<[PByteString], PBool>
+    readonly plt:    TermFn<[PByteString], PBool>
     readonly lt:        ( other: PappArg<PByteString> ) => TermBool
 
-    readonly ltEqTerm:  TermFn<[PByteString], PBool>
+    readonly pltEq:  TermFn<[PByteString], PBool>
     readonly ltEq:      ( other: PappArg<PByteString> ) => TermBool
 
-    readonly gtTerm:    TermFn<[PByteString], PBool>
+    readonly pgt:    TermFn<[PByteString], PBool>
     readonly gt:        ( other: PappArg<PByteString> ) => TermBool
 
-    readonly gtEqTerm:  TermFn<[PByteString], PBool>
+    readonly pgtEq:  TermFn<[PByteString], PBool>
     readonly gtEq:      ( other: PappArg<PByteString> ) => TermBool
 
 }
@@ -106,7 +106,7 @@ export function addPByteStringMethods( term: Term<PByteString> ): TermBS
 
     definePropertyIfNotPresent(
         term,
-        "concatTerm",
+        "pconcat",
         {
             get: () => pappendBs.$( term ),
             ...getterOnly
@@ -120,7 +120,7 @@ export function addPByteStringMethods( term: Term<PByteString> ): TermBS
 
     definePropertyIfNotPresent(
         term,
-        "prependTerm",
+        "pprepend",
         {
             get: () => flippedCons.$( term ), 
             ...getterOnly
@@ -134,7 +134,7 @@ export function addPByteStringMethods( term: Term<PByteString> ): TermBS
 
     definePropertyIfNotPresent(
         term,
-        "subByteStringTerm",
+        "psubByteString",
         {
             get: () => subByteString.$( term ),
             ...getterOnly
@@ -148,7 +148,7 @@ export function addPByteStringMethods( term: Term<PByteString> ): TermBS
 
     definePropertyIfNotPresent(
         term,
-        "sliceTerm",
+        "pslice",
         {
             get: () => jsLikeSlice.$( term ),
             ...getterOnly
@@ -162,7 +162,7 @@ export function addPByteStringMethods( term: Term<PByteString> ): TermBS
 
     definePropertyIfNotPresent(
         term,
-        "atTerm",
+        "pat",
         {
             get: () => pindexBs.$( term ),
             ...getterOnly
@@ -176,7 +176,7 @@ export function addPByteStringMethods( term: Term<PByteString> ): TermBS
 
     definePropertyIfNotPresent(
         term,
-        "eqTerm",
+        "peq",
         {
             get: () => peqBs.$( term ),
             ...getterOnly
@@ -190,7 +190,7 @@ export function addPByteStringMethods( term: Term<PByteString> ): TermBS
 
     definePropertyIfNotPresent(
         term,
-        "ltTerm",
+        "plt",
         {
             get: () => plessBs.$( term ),
             ...getterOnly
@@ -204,7 +204,7 @@ export function addPByteStringMethods( term: Term<PByteString> ): TermBS
 
     definePropertyIfNotPresent(
         term,
-        "ltEqTerm",
+        "pltEq",
         {
             get: () => plessEqBs.$( term ),
             ...getterOnly
@@ -218,7 +218,7 @@ export function addPByteStringMethods( term: Term<PByteString> ): TermBS
 
     definePropertyIfNotPresent(
         term,
-        "gtTerm",
+        "pgt",
         {
             get: () => pgreaterBS.$( term ),
             ...getterOnly
@@ -232,7 +232,7 @@ export function addPByteStringMethods( term: Term<PByteString> ): TermBS
 
     definePropertyIfNotPresent(
         term,
-        "gtEqTerm",
+        "pgtEq",
         {
             get: () => pgreaterEqBS.$( term ),
             ...getterOnly

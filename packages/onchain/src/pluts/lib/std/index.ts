@@ -6,6 +6,7 @@ export * from "./bool";
 export * from "./data";
 export * from "./list";
 export * from "./pair";
+export * from "./stdEq";
 export * from "./PMaybe";
 export * from "./combinators";
 export * from "./UtilityTerms";

@@ -1,15 +1,19 @@
 import type { Term } from "../../Term";
 
 import { punsafeConvertType } from "../../lib/punsafeConvertType";
-import { AliasT, PrimType, TermType, alias, data } from "../../type_system/types";
+import { AliasT, Methods, PrimType, TermType, alias, data } from "../../type_system/types";
 import { PDataRepresentable } from "../../PType/PDataRepresentable";
 import { PData } from "../PData/PData";
-import { ToPType } from "../../type_system/ts-pluts-conversion";
+import { FromPType, ToPType } from "../../type_system/ts-pluts-conversion";
 import { isWellFormedType } from "../../type_system/kinds/isWellFormedType";
 import { typeExtends } from "../../type_system/typeExtends";
-import { PappArg, fromData, pappArgToTerm, toData } from "../../lib";
 import { assert } from "../../../utils/assert";
 import { defineReadOnlyProperty } from "@harmoniclabs/obj-utils";
+import { PType } from "../../PType";
+import { PappArg, pappArgToTerm } from "../../lib/pappArg";
+import { TermAlias } from "../../lib/std/UtilityTerms/TermAlias";
+import { fromData } from "../../lib/std/data/conversion/fromData";
+import { toData } from "../../lib/std/data/conversion/toData";
 
 
 /**
@@ -25,35 +29,42 @@ class _PAlias extends PDataRepresentable
     }
 }
 
-export type PAlias<T extends TermType, PClass extends _PAlias = _PAlias> =
+export type PAlias<PT extends PType, AMethods extends Methods> =
 {
-    new(): PClass
+    new(): _PAlias
 
     /**
      * @deprecated
-     */
-    readonly termType: AliasT<T>;
-    readonly type: AliasT<T>;
-    readonly fromData: ( data: Term<PData> ) => Term<PClass>;
-    readonly toData: ( data: Term<PClass> ) => Term<PData>;
-
-    readonly from: ( toAlias: PappArg<ToPType<T>> ) => Term<PAlias<T, PClass>>
+    */
+   readonly termType: AliasT<FromPType<PT>, AMethods>;
+   readonly type: AliasT<FromPType<PT>, AMethods>;
+   readonly fromData: ( data: Term<PData> ) => Term<PAlias<PT, AMethods>>;
+   readonly toData: ( data: Term<PAlias<PT, any>> ) => Term<PData>;
+   
+    readonly from: ( toAlias: PappArg<PT> ) => TermAlias<PT, AMethods>
 
 } & PDataRepresentable
 
 
-export function palias<T extends TermType>(
+export function palias<
+    T extends TermType,
+    AMethods extends Methods
+>(
     type: T,
+    getMethods?: ( self_t: AliasT<T, any> ) => AMethods,
     fromDataConstraint: (( term: Term<ToPType<T>> ) => Term<ToPType<T>>) | undefined = undefined
-)
+): PAlias<ToPType<T>, AMethods>
 {
     assert(
         isWellFormedType( type ),
         "cannot construct 'PAlias' type; the type cannot be converted to an UPLC constant"
     );
 
+    getMethods = typeof getMethods === "function" ? getMethods : _self_t => { return {} as AMethods };
+
     type ThisAliasT = AliasT<T>;
-    type ThisAliasTerm = Term<PAlias<T>>;
+    type PT = ToPType<T>;
+    type ThisAliasTerm = Term<PAlias<PT, AMethods>>;
 
     //@ts-ignore
     class PAliasExtension extends _PAlias
@@ -72,10 +83,14 @@ export function palias<T extends TermType>(
         static fromData: ( data: Term<PData> ) => ThisAliasTerm;
         static toData: ( data: ThisAliasTerm ) => Term<PData>;
 
-        static from: ( toAlias: Term<ToPType<T>> ) => ThisAliasTerm;
+        static from: ( toAlias: Term<PT> ) => ThisAliasTerm;
     };
 
-    const thisType: ThisAliasT = alias( type ) as any;
+    const thisTypeNoMethods = alias( type );
+
+    const methods = getMethods( thisTypeNoMethods as any );
+
+    const thisType: ThisAliasT = alias( type, methods ) as any;
 
     defineReadOnlyProperty(
         PAliasExtension,
@@ -136,9 +151,10 @@ export function palias<T extends TermType>(
     defineReadOnlyProperty(
         PAliasExtension,
         "from",
-        ( toAlias: PappArg<ToPType<T>> ): ThisAliasTerm =>
-            punsafeConvertType( pappArgToTerm( toAlias, type ), thisType ) as any
+        ( toAlias: PappArg<PT> ): ThisAliasTerm => {
+            return punsafeConvertType( pappArgToTerm( toAlias, type ), thisType ) as any
+        }
     );
 
-    return PAliasExtension as unknown as PAlias<T, PAliasExtension>;
+    return PAliasExtension as unknown as PAlias<PT, AMethods>;
 }

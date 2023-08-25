@@ -5,7 +5,7 @@ import { PLam } from "../PTypes";
 import { Term, ToTermArrNonEmpty } from "../Term";
 import { ToPType } from "../type_system/ts-pluts-conversion";
 import { TermType, fn } from "../type_system/types";
-import { UtilityTermOf } from "./addUtilityForType";
+import { UtilityTermOf } from "./std/UtilityTerms/addUtilityForType";
 import { PappArg } from "./pappArg";
 import { plam } from "./plam";
 import { CurriedFn, curry } from "../../utils/combinators";
@@ -26,17 +26,22 @@ type TermFnFromTypes<Ins extends [ TermType, ...TermType[] ], Out extends TermTy
         & { $: ( input: PappArg<ToPType<T>> ) => TermFnFromTypes< RestIns, Out > } :
     never
 
+/*
 type TsTermFuncArg<PTy extends PType> =
-    ( PTy extends PLam<infer PIn extends PType, infer POut extends PTy> ?
+    PTy extends PLam<infer PIn extends PType, infer POut extends PTy> ?
         Term<PLam<PIn,POut>> & {
             $: ( input: Term<PIn> ) => UtilityTermOf<POut>
         }:
-    UtilityTermOf<PTy> ) extends infer PRes ? PRes & Term<PTy> : never
+        UtilityTermOf<PTy>
+//*/
 
 type TsTermFunctionArgs<InputsTypes extends [ TermType, ...TermType[] ]> =
     InputsTypes extends [] ? never :
-    InputsTypes extends [ infer T extends TermType ] ? [ TsTermFuncArg<ToPType<T>> ] :
-    InputsTypes extends [ infer T extends TermType, ...infer RestTs extends [ TermType, ...TermType[] ] ] ? [ TsTermFuncArg<ToPType<T>>, ...TsTermFunctionArgs<RestTs> ] :
+    InputsTypes extends [ infer T extends TermType ] ? [ UtilityTermOf<ToPType<T>> ] :
+    InputsTypes extends [ 
+        infer T extends TermType, 
+        ...infer RestTs extends [ TermType, ...TermType[] ] 
+    ] ? [ UtilityTermOf<ToPType<T>>, ...TsTermFunctionArgs<RestTs> ] :
     never;
 
 export type TsTermFunction<InputsTypes extends [ TermType, ...TermType[] ], OutputType extends TermType> = 

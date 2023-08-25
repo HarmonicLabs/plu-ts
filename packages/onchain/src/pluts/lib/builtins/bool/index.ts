@@ -3,11 +3,10 @@ import { IRNative } from "../../../../IR/IRNodes/IRNative";
 import { TermFn, PBool, PLam, PDelayed } from "../../../PTypes";
 import { Term } from "../../../Term";
 import { TermType, ToPType, tyVar, fn, bool, delayed, lam } from "../../../type_system";
-import { UtilityTermOf } from "../../addUtilityForType";
+import { UtilityTermOf } from "../../std/UtilityTerms/addUtilityForType";
 import { papp } from "../../papp";
 import { PappArg, pappArgToTerm } from "../../pappArg";
 import { pdelay } from "../../pdelay";
-import { pfn } from "../../pfn";
 import { pforce } from "../../pforce";
 import { phoist } from "../../phoist";
 import { plam } from "../../plam";
@@ -151,11 +150,9 @@ export const pnot
     phoist(
         plam( bool, bool )
         ( b => 
-            addPBoolMethods(
-                pstrictIf( bool ).$( b )
-                .$( pBool( false ) )
-                .$( pBool( true  ) )
-            )
+            pstrictIf( bool ).$( b )
+            .$( pBool( false ) )
+            .$( pBool( true  ) )
         )
     ) as any;
 
@@ -243,3 +240,20 @@ export const por
         ))
     ) as any;
 
+export const peqBool: Term<PLam<PBool, PLam<PBool, PBool>>>
+& {
+    $: ( bool: PappArg<PBool> ) =>
+        Term<PLam<PBool, PBool>>
+        & {
+            $: ( bool: PappArg<PBool> ) => TermBool
+        }
+}
+= phoist(
+    plam(
+        bool, lam( bool, bool )
+    )( a => plam( bool, bool )
+        ( b => pstrictIf( bool ).$( a )
+            .$( b )
+            .$( pnot.$( b ) )
+    ))
+) as any;

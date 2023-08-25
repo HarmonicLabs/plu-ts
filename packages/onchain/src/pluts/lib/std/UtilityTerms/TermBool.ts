@@ -3,7 +3,7 @@ import type { PBool, TermFn, PDelayed } from "../../../PTypes"
 import type { PappArg } from "../../pappArg"
 import { Term } from "../../../Term"
 import { pBool } from "../bool/pBool"
-import { por, pstrictOr, pand, pstrictAnd } from "../../builtins/bool"
+import { por, pstrictOr, pand, pstrictAnd, peqBool } from "../../builtins/bool"
 import { delayed } from "../../../type_system/types"
 import { IRDelayed } from "../../../../IR/IRNodes/IRDelayed"
 import { definePropertyIfNotPresent, defineReadOnlyProperty } from "@harmoniclabs/obj-utils"
@@ -11,18 +11,20 @@ import { definePropertyIfNotPresent, defineReadOnlyProperty } from "@harmoniclab
 
 export type TermBool = Term<PBool> & {
 
-    readonly orTerm:            TermFn<[ PDelayed<PBool> ], PBool>
+    readonly por:            TermFn<[ PDelayed<PBool> ], PBool>
     readonly or:                ( other: PappArg<PBool> ) => TermBool
 
-    readonly strictOrTerm:      TermFn<[ PBool ], PBool>
+    readonly pstrictOr:      TermFn<[ PBool ], PBool>
     readonly strictOr:          ( other: PappArg<PBool> ) => TermBool
 
-    readonly andTerm:           TermFn<[ PDelayed<PBool> ], PBool>
+    readonly pand:           TermFn<[ PDelayed<PBool> ], PBool>
     readonly and:               ( other: PappArg<PBool> ) => TermBool
 
-    readonly strictAndTerm:     TermFn<[ PBool ], PBool>
+    readonly pstrictAnd:     TermFn<[ PBool ], PBool>
     readonly strictAnd:         ( other: PappArg<PBool> ) => TermBool
 
+    readonly peq:     TermFn<[ PBool ], PBool>
+    readonly eq:         ( other: PappArg<PBool> ) => TermBool
 }
 
 // avoid circular dependency
@@ -49,7 +51,7 @@ export function addPBoolMethods( term: Term<PBool> ): TermBool
 {
     definePropertyIfNotPresent(
         term,
-        "orTerm",
+        "por",
         {
             get: () => por.$( term ),
             ...getterOnly
@@ -69,7 +71,7 @@ export function addPBoolMethods( term: Term<PBool> ): TermBool
 
     definePropertyIfNotPresent(
         term,
-        "strictOrTerm",
+        "pstrictOr",
         {
             get: () => pstrictOr.$( term ),
             ...getterOnly
@@ -84,7 +86,7 @@ export function addPBoolMethods( term: Term<PBool> ): TermBool
 
     definePropertyIfNotPresent(
         term,
-        "andTerm",
+        "pand",
         {
             get: () => pand.$( term ),
             ...getterOnly
@@ -104,7 +106,7 @@ export function addPBoolMethods( term: Term<PBool> ): TermBool
 
     definePropertyIfNotPresent(
         term,
-        "strictAndTerm",
+        "pstrictAnd",
         {
             get: () => pstrictAnd.$( term ),
             ...getterOnly
@@ -114,6 +116,20 @@ export function addPBoolMethods( term: Term<PBool> ): TermBool
         term,
         "strictAnd",
         ( other: PappArg<PBool> ): TermBool => pstrictAnd.$( term ).$( other )
+    );
+
+    definePropertyIfNotPresent(
+        term,
+        "peq",
+        {
+            get: () => peqBool.$( term ),
+            ...getterOnly
+        }
+    );
+    defineReadOnlyProperty(
+        term,
+        "eq",
+        ( other: PappArg<PBool> ): TermBool => peqBool.$( term ).$( other )
     );
 
     return term as any;

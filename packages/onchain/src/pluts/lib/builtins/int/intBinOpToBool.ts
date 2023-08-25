@@ -11,7 +11,7 @@ import { IRNative } from "../../../../IR/IRNodes/IRNative";
 import { IRApp } from "../../../../IR/IRNodes/IRApp";
 import { IRHoisted } from "../../../../IR/IRNodes/IRHoisted";
 
-export type IntBinOPToBool = Term<PLam<PInt, PLam<PInt, PInt>>>
+export type IntBinOPToBool = Term<PLam<PInt, PLam<PInt, PBool>>>
 & {
     $: ( input: PappArg<PInt> ) => 
         Term<PLam<PInt,PBool>>

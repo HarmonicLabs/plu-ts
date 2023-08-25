@@ -7,7 +7,7 @@ import { IRTerm } from "../../IR/IRTerm";
 import { ToIR } from "../../IR/interfaces/ToIR";
 import { compileIRToUPLC } from "../../IR/toUPLC/compileIRToUPLC";
 import { PType } from "../PType";
-import { FromPType, TermType, ToPType, isWellFormedGenericType } from "../type_system";
+import { FromPType, TermType, ToPType, isWellFormedGenericType, termTypeToString } from "../type_system";
 import { cloneTermType } from "../type_system/cloneTermType";
 import { defineReadOnlyHiddenProperty } from "@harmoniclabs/obj-utils";
 import { Cloneable, isCloneable } from "../../utils/Cloneable";
@@ -46,7 +46,7 @@ export class Term<A extends PType>
     {
         assert(
             isWellFormedGenericType( type ) ||
-            Boolean(void console.log( type )),
+            Boolean(void console.log( termTypeToString( type ) )),
             "invalid type while constructing Term"
         );
 

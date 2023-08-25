@@ -1,5 +1,5 @@
 import { Machine } from "@harmoniclabs/plutus-machine";
-import { PAssetsEntryT, PCurrencySymbol, PScriptPurpose, PTokenName, PValue, PValueEntryT } from "../../../../../API";
+import { PAssetsEntry, PCurrencySymbol, PScriptPurpose, PTokenName, PValue, PValueEntry } from "../../../../../API";
 import { pair, data, asData, typeExtends, list, termTypeToString, int, bs } from "../../../../../type_system";
 import { pByteString } from "../../../bs";
 import { pInt } from "../../../int";
@@ -98,19 +98,16 @@ describe("_toData", () => {
 
     test("_toData( PValue.type )( beef32 )", () => {
         const beef32 = PValue.from(
-            pList( PValueEntryT )([
-                pPair( PCurrencySymbol.type,
-            list( PAssetsEntryT ) )
-                (
+            pList( PValueEntry.type )([
+                PValueEntry.from([
                     PCurrencySymbol.from( pByteString("deadbeef") ),
-                    pList( PAssetsEntryT )([
-                        pPair( PTokenName.type, int )
-                        (
+                    pList( PAssetsEntry.type )([
+                        PAssetsEntry.from([
                             PTokenName.from( pByteString("beef") ),
                             pInt( 32 )
-                        )
+                        ])
                     ])
-                )
+                ])
             ])
         );
         

@@ -1,15 +1,15 @@
-import { TermFn, PLam, PList, PDelayed } from "../../../../PTypes";
+import { PLam, PList, PDelayed, PFn } from "../../../../PTypes";
 import { TermType, ToPType, lam, list, fn, delayed } from "../../../../type_system";
 import { pfn } from "../../../pfn";
 import { phoist } from "../../../phoist";
-import { plet } from "../../../plet";
-import { precursive } from "../../../precursive";
 import { _papp } from "../../data/conversion/minimal_common";
 import { _pmatchList } from "../pmatchList/minimal";
+import { Term } from "../../../../Term";
+import { _precursive } from "../../../precursive/minimal";
 
 
 export function _precursiveList<ReturnT  extends TermType, ElemtsT extends TermType>( returnT: ReturnT, elemsT: ElemtsT )
-: TermFn<
+: Term<PFn<
     [
         PLam< // caseNil
             PLam<PList<ToPType<ElemtsT>>, ToPType<ReturnT>>, // self
@@ -22,12 +22,12 @@ export function _precursiveList<ReturnT  extends TermType, ElemtsT extends TermT
         PList<ToPType<ElemtsT>> // list
     ],
     ToPType<ReturnT> // result
->
+>>
 {
     const finalType = lam( list( elemsT ), returnT );
 
     return phoist(
-        precursive(
+        _precursive(
             pfn([
                     fn([
                         lam( finalType, delayed( returnT ) ),
@@ -40,16 +40,18 @@ export function _precursiveList<ReturnT  extends TermType, ElemtsT extends TermT
                 ], 
                 returnT
             )
-            ( ( self, matchNil, matchCons, lst ) => 
-                plet(
+            ( ( self, matchNil, matchCons, lst ) => {
+
+                const finalSelfTerm = _papp(
                     _papp(
-                        _papp(
-                            self,
-                            matchNil
-                        ),
-                        matchCons
-                    )
-                ).in( finalSelf =>
+                        self,
+                        matchNil
+                    ),
+                    matchCons
+                );
+
+                const exprTerm = pfn([ finalSelfTerm.type ], returnT )
+                ( finalSelf =>
                     _papp(
                         _papp(
                             _papp(
@@ -67,7 +69,9 @@ export function _precursiveList<ReturnT  extends TermType, ElemtsT extends TermT
                         lst
                     ) as any
                 ) as any
-            )
+
+                return _papp( exprTerm, finalSelfTerm );
+            })
         )
     ) as any;
 }

@@ -1,9 +1,12 @@
-import { TermType, bs, fn, int, lam } from "../../types"
+import { TermType, alias, bool, bs, fn, int, lam } from "../../types"
 import { isWellFormedType, isWellFormedGenericType } from "../../kinds";
 import { termTypeToString } from "../../utils";
+import { pBool } from "../../../lib/std/bool/pBool";
+import { pfn } from "../../../lib/pfn";
 
+const fakeTerm = pfn([ int ], bool )(( n ) => pBool( true ));
 
-describe("isWellFormedGenericType", () => {
+describe("isWellFormedType", () => {
 
     function yes( t: TermType )
     {
@@ -20,4 +23,9 @@ describe("isWellFormedGenericType", () => {
 
     yes( lam( bs, int ) );
     yes( fn([ bs, int ], int) );
+    
+    yes( alias( int ) );
+    yes( alias( int, {} ) );
+    yes( alias( int, { foo: fakeTerm } ) );
+
 })

@@ -3,7 +3,7 @@ import { int } from "../../../../type_system/types";
 import { pInt } from "../../int";
 import { pList } from "../../list";
 
-describe("prependTerm", () => {
+describe("pprepend", () => {
 
     test("prepend something", () => {
 
@@ -21,10 +21,10 @@ describe("prependTerm", () => {
 
     });
 
-    test("prependTerm", () => {
+    test("pprepend", () => {
 
         expect(
-            () => pList(int)([ pInt(2) ]).prependTerm
+            () => pList(int)([ pInt(2) ]).pprepend
         ).not.toThrow()
         
     })

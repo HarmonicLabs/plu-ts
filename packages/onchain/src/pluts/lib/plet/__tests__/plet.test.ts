@@ -1,6 +1,5 @@
 import { pBool, pfn, plet } from "../.."
 import { compileIRToUPLC } from "../../../../IR/toUPLC/compileIRToUPLC";
-import { showUPLC } from "../../../../UPLC/UPLCTerm";
 import { bool, int } from "../../../type_system"
 
 
