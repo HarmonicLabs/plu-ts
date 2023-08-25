@@ -241,7 +241,7 @@ function pid<T extends TermType, TT extends TermType>( fromT: T, toT: TT ): Term
 
 export function _ptoData<T extends TermType>( t: T ): Term<PLam<ToPType<T>, PAsData<ToPType<T>>>>
 {
-    if( isTaggedAsAlias( t ) ) return _ptoData( unwrapAlias( t as any ) );
+    if( isTaggedAsAlias( t ) ) return _ptoData( unwrapAlias( t as any ) ) as any;
     if( typeExtends( t, data ) ) 
         return pid( t, asData( t ) );
 

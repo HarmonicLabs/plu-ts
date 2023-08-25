@@ -12,10 +12,10 @@ export type TermStr = Term<PString> & {
     readonly utf8Encoded: TermBS
     
     // pappendStr
-    readonly concatTerm:    TermFn<[ PString ], PString>
+    readonly pconcat:    TermFn<[ PString ], PString>
     readonly concat:        ( other: PappArg<PString> ) => TermStr
 
-    readonly eqTerm:    TermFn<[ PString ], PBool >
+    readonly peq:    TermFn<[ PString ], PBool >
     readonly eq:        ( other: PappArg<PString> ) => TermBool
 }
 
@@ -38,7 +38,7 @@ export function addPStringMethods( term: Term<PString> ): TermStr
 
     definePropertyIfNotPresent(
         term,
-        "concatTerm",
+        "pconcat",
         {
             get: () => plet( pappendStr.$( term ) ),
             ...getterOnly
@@ -52,7 +52,7 @@ export function addPStringMethods( term: Term<PString> ): TermStr
 
     definePropertyIfNotPresent(
         term,
-        "eqTerm",
+        "peq",
         {
             get: () => plet( peqStr.$( term ) ),
             ...getterOnly

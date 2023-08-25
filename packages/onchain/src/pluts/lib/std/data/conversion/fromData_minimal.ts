@@ -78,7 +78,7 @@ const pPairFromData =
                 )
             )
             .$(
-                _papp( punListData as any, assumedList )
+                _papp( punListData as any, assumedList ) as any
             )
         )
     );
@@ -140,6 +140,7 @@ export function _fromData<T extends TermType>( t: T ): ( term: Term<PData> ) => 
         const elemsT = getElemsT( t ) as PairT<TermType,TermType>;
         const fstT = getFstT( elemsT );
         const sndT = getSndT( elemsT );
+        console.log( sndT, elemsT );
         return (
             ( term: Term<any> ) => {
 
@@ -188,7 +189,7 @@ export function _fromData<T extends TermType>( t: T ): ( term: Term<PData> ) => 
                         _papp(
                             punListData as any,
                             term
-                        )
+                        ) as any
                     );
 
                 (theTerm as any).isConstant = (term as any).isConstant;

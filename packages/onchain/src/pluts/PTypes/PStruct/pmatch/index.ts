@@ -7,7 +7,7 @@ import { PLam } from "../../PFn/PLam";
 import { PList } from "../../PList";
 import { getFields } from "../matchSingleCtorStruct";
 import { papp } from "../../../lib/papp";
-import { UtilityTermOf, addUtilityForType } from "../../../lib/addUtilityForType";
+import { UtilityTermOf, addUtilityForType } from "../../../lib/std/UtilityTerms/addUtilityForType";
 import { TermList } from "../../../lib/std/UtilityTerms/TermList";
 import { plam } from "../../../lib/plam";
 import { TermFn } from "../../PFn";
@@ -29,6 +29,7 @@ import { IRConst } from "../../../../IR/IRNodes/IRConst";
 import { IRForced } from "../../../../IR/IRNodes/IRForced";
 import { IRError } from "../../../../IR/IRNodes/IRError";
 import { IRDelayed } from "../../../../IR/IRNodes/IRDelayed";
+import { _punsafeConvertType } from "../../../lib/punsafeConvertType/minimal";
 
 const elemAtCache: { [n: number]: TermFn<[ PList<PData> ], PData > } = {};
 
@@ -86,14 +87,19 @@ function getStructInstance<CtorDef extends StructCtorDef>
     for( let i = 0; i < fieldNames.length; i++ )
     {
         const fieldName = fieldNames[i];
+        const fieldType = ctorDef[fieldName];
+
         Object.defineProperty(
             instance, fieldName,
             {
-                value: addUtilityForType( ctorDef[ fieldName ] )(
-                    _plet( 
-                        _fromData( ctorDef[ fieldName ] )(
-                            getElemAtTerm( i ).$( fieldsList )
-                        )
+                value: addUtilityForType( fieldType )(
+                    _punsafeConvertType(
+                        _plet( 
+                            _fromData( fieldType )(
+                                getElemAtTerm( i ).$( fieldsList )
+                            )
+                        ),
+                        fieldType
                     )
                 ),
                 writable: false,
@@ -306,7 +312,7 @@ function getReturnTypeFromContinuation(
  * @returns the term that matches the ctor 
  */
 function hoistedMatchCtors<SDef extends StructDefinition>(
-    structData: Term<PStruct<SDef>>,
+    structData: Term<PStruct<SDef, any>>,
     sDef: SDef,
     ctorCbs: (RawCtorCallback | Term<PLam<PList<PData>, PType>>)[],
 ) : Term<PType>
@@ -392,7 +398,7 @@ function hoistedMatchCtors<SDef extends StructDefinition>(
     return result;
 }
 
-export function pmatch<SDef extends StructDefinition>( struct: Term<PStruct<SDef>> ): PMatchOptions<SDef>
+export function pmatch<SDef extends StructDefinition>( struct: Term<PStruct<SDef, {}>> ): PMatchOptions<SDef>
 {
     const sDef = struct.type[1] as StructDefinition;
     if( !isStructDefinition( sDef ) )

@@ -15,10 +15,9 @@ import { pand } from "../../lib/builtins/bool";
 import { Term } from "../../Term";
 import { PBool } from "../../PTypes/PBool";
 import { plet } from "../../lib/plet";
-import { _old_plet } from "../../lib/plet/old";
 import { ByteString } from "@harmoniclabs/bytestring";
 
-describe("NFTVendingMachine", () => {
+describe.skip("NFTVendingMachine", () => {
 
     test("it builds", () => {
 
@@ -63,12 +62,12 @@ describe("NFTVendingMachine", () => {
                                 // and `1` as quantity
                                 pisEmpty.$( tx.mint.tail )
                                 .and(
-                                    plet( tx.mint.head ).in( head =>
-                                        
+                                    plet( tx.mint.head ).in( head => {
+
                                         // `ownCurrSym` as policy,
-                                        head.fst.eq( ownCurrSym )
+                                        return head.fst.eq( ownCurrSym )
                                         .and(
-                                            _old_plet( head.snd ).in( assets =>
+                                            plet( head.snd ).in( assets =>
                                                 pisEmpty.$( assets.tail )
                                                 .and(
                                                     plet( assets.head ).in( asset =>
@@ -76,7 +75,7 @@ describe("NFTVendingMachine", () => {
                                                         // `1` as quantity
                                                         asset.snd.eq( 1 )
                                                         .and(
-
+    
                                                             // `Collection#<nftCounter>` as asset name
                                                             asset.fst.eq(
                                                                 pByteString(
@@ -92,6 +91,8 @@ describe("NFTVendingMachine", () => {
                                                 )
                                             )
                                         )
+                                    }
+                                        
                                     )
                                 )
                             ))

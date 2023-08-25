@@ -1,31 +1,33 @@
 import { Machine } from "@harmoniclabs/plutus-machine";
 import { UPLCConst, UPLCTerm, ErrorUPLC } from "@harmoniclabs/uplc";
-import { pmatch } from "../../../..";
-import { getHoistedTerms, getSortedHoistedSet } from "../../../../../IR/IRNodes/IRHoisted";
+import { Term, pmatch, termTypeToString, typeExtends } from "../../../..";
 import { compileIRToUPLC } from "../../../../../IR/toUPLC/compileIRToUPLC";
 import { PMaybe, fromData, pBool, pByteString, pInt, pPair, pdelay, pfn, phoist, pif, plam, precursiveList, ptoData, toData } from "../../../../lib";
 import { pList } from "../../../../lib/std/list/const";
-import { termTypeToString } from "../../../../type_system";
 import { bool, bs, fn, int, list } from "../../../../type_system/types";
 import { PCurrencySymbol } from "../PCurrencySymbol";
 import { PTokenName } from "../PTokenName";
-import { PAssetsEntryT, PValue, PValueEntryT } from "../PValue";
+import { PAssetsEntry, PValue, PValueEntry } from "../PValue";
+import { getFstT, getSndT } from "../../../../type_system/tyArgs";
 
 const currSym = PCurrencySymbol.from( pByteString("ff".repeat(28)) );
 const tn = PTokenName.from( pByteString("") );
 
 const oneEntryValue = PValue.from( 
-    pList( PValueEntryT )([
-        pPair( PValueEntryT[1], PValueEntryT[2] )
-        (
-            currSym,
-            pList( PAssetsEntryT )([
-                pPair( PAssetsEntryT[1], PAssetsEntryT[2] )
-                ( 
-                    tn,
-                    pInt(1_000_000)
-                )
-            ])
+    pList( PValueEntry.type )([
+        PValueEntry.from(
+            pPair( PValueEntry.type[1][1], PValueEntry.type[1][2] )
+            (
+                currSym,
+                pList( PAssetsEntry.type )([
+                    PAssetsEntry.from(
+                        pPair( getFstT( PAssetsEntry.type[1] ), getSndT( PAssetsEntry.type[1] ) )(
+                            tn,
+                            pInt(1_000_000)
+                        )
+                    )
+                ])
+            )
         )
     ])
 );
@@ -41,7 +43,7 @@ describe("Machine.evalSimple( PValue )", () => {
     test("empty value constructed correctly", () => {
         expect(
             Machine.evalSimple(
-                PValue.from( pList( PValueEntryT )([]) as any )
+                PValue.from( pList( PValueEntry.type )([]) as any )
             ) instanceof UPLCConst
         ).toBe( true )
         
@@ -95,8 +97,9 @@ const pvalueOf = phoist(
         bs,
         bs
     ],  int)
-    (( value, currSym, tokenName ) =>
-        pmatch(
+    (( value, currSym, tokenName ) => {
+
+        return pmatch(
             value.find( entry => 
                 entry.fst.eq( currSym )
             )
@@ -115,9 +118,8 @@ const pvalueOf = phoist(
                 .onJust( just => just.val.snd )
                 .onNothing( _ => pInt( 0 ) );
         })
-        .onNothing( _ => pInt( 0 ) )
-            
-    )
+        .onNothing( _ => pInt( 0 ) );       
+    })
 );
 
 const pvalueOfBetter = phoist(
@@ -127,36 +129,39 @@ const pvalueOfBetter = phoist(
         PTokenName.type
     ],  int)
     (( value, currSym, tokenName ) =>
-        precursiveList( int, PValueEntryT )
+        precursiveList( int, PValueEntry.type )
         .$( _self => pdelay( pInt(0) ) )
         .$( 
             pfn([
-                fn([ list(PValueEntryT) ], int ),
-                PValueEntryT,
-                list( PValueEntryT )
+                fn([ list(PValueEntry.type) ], int ),
+                PValueEntry.type,
+                list( PValueEntry.type )
             ],  int)
-            ((self, head, tail ) =>
-            pif( int ).$( head.fst.eq( currSym ) )
-            .then(
+            ((self, head, tail ) => {
 
-                precursiveList( int, PAssetsEntryT )
-                .$( _self => pdelay( pInt(0) ) )
-                .$(
-                    pfn([
-                        fn([ list(PAssetsEntryT) ], int ),
-                        PAssetsEntryT,
-                        list( PAssetsEntryT )
-                    ],  int)
-                    (
-                        (self, head, tail) =>
-                        pif( int ).$( head.fst.eq( tokenName ) )
-                        .then( head.snd )
-                        .else( self.$( tail ) )
+                return pif( int ).$( head.fst.eq( currSym ) )
+                .then(
+    
+                    precursiveList( int, PAssetsEntry.type )
+                    .$( _self => pdelay( pInt(0) ) )
+                    .$(
+                        pfn([
+                            fn([ list(PAssetsEntry.type) ], int ),
+                            PAssetsEntry.type,
+                            list( PAssetsEntry.type )
+                        ],  int)
+                        (
+                            (self, head, tail) =>
+                            pif( int ).$( head.fst.eq( tokenName ) )
+                            .then( head.snd )
+                            .else( self.$( tail ) )
+                        )
                     )
+                    .$( head.snd )
                 )
-                .$( head.snd )
+                .else( self.$( tail ) )
+            }
             )
-            .else( self.$( tail ) ))
         )
         .$( value )
     )
@@ -189,6 +194,10 @@ describe("pvalueOf", () => {
      * example of bad UPLC
      */
     test("policy present but not token", () => {
+
+        oneEntryValue.amountOf( currSym, tn );
+
+        oneEntryValue.pamountOf.$( currSym ).$( tn )
 
         const expected = Machine.evalSimple( pInt(0) );
         let received !: UPLCTerm;

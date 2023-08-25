@@ -3,7 +3,7 @@ import { PType } from "../../../PType";
 import { TermFn, PData, PLam, PInt, PList, PPair, PByteString, PBool, PAsData } from "../../../PTypes";
 import { Term } from "../../../Term";
 import { TermType, ToPType, fn, data, delayed, int, list, lam, pair, asData, bs, bool, _pair } from "../../../type_system";
-import { UtilityTermOf } from "../../addUtilityForType";
+import { UtilityTermOf } from "../../std/UtilityTerms/addUtilityForType";
 import { papp } from "../../papp";
 import { PappArg } from "../../pappArg";
 import { pdelay } from "../../pdelay";

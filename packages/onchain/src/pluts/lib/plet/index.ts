@@ -1,20 +1,26 @@
+import type { PType } from "../../PType";
+import type { PAlias } from "../../PTypes/PAlias/palias";
+import type { TermAlias } from "../std/UtilityTerms/TermAlias";
 import { IRApp } from "../../../IR/IRNodes/IRApp";
 import { IRFunc } from "../../../IR/IRNodes/IRFunc";
-import { IRHoisted } from "../../../IR/IRNodes/IRHoisted";
 import { IRLetted } from "../../../IR/IRNodes/IRLetted";
 import { IRVar } from "../../../IR/IRNodes/IRVar";
-import { isClosedIRTerm } from "../../../IR/utils/isClosedIRTerm";
-import type { PType } from "../../PType";
 import { Term } from "../../Term";
 import { PrimType } from "../../type_system/types";
-import { UtilityTermOf, addUtilityForType } from "../addUtilityForType";
 import { _fromData } from "../std/data/conversion/fromData_minimal";
+import { IRHoisted } from "../../../IR/IRNodes/IRHoisted";
+import { isClosedIRTerm } from "../../../IR/utils/isClosedIRTerm";
+import { UtilityTermOf, addUtilityForType } from "../std/UtilityTerms/addUtilityForType";
+import { makeMockUtilityTerm } from "../std/UtilityTerms/mockUtilityTerms/makeMockUtilityTerm";
 
-export type LettedTerm<PVarT extends PType> = UtilityTermOf<PVarT> & {
-    in: <PExprResult extends PType>( expr: (value: UtilityTermOf<PVarT>) => Term<PExprResult> ) => Term<PExprResult>
+export type LettedTerm<PVarT extends PType, SomeExtension extends object> = UtilityTermOf<PVarT> & {
+    in: 
+        Term<PVarT> & SomeExtension extends Term<PAlias<PVarT, {}>> ?
+            <PExprResult extends PType>( expr: (value: TermAlias<PVarT, {}> & SomeExtension) => Term<PExprResult> ) => Term<PExprResult>
+        : <PExprResult extends PType>( expr: (value: UtilityTermOf<PVarT>) => Term<PExprResult> ) => Term<PExprResult>
 }
 
-export function plet<PVarT extends PType, SomeExtension extends object>( varValue: Term<PVarT> & SomeExtension ): LettedTerm<PVarT>
+export function plet<PVarT extends PType, SomeExtension extends object>( varValue: Term<PVarT> & SomeExtension ): LettedTerm<PVarT, SomeExtension>
 {
     type TermPVar = Term<PVarT> & SomeExtension;
 
@@ -54,21 +60,16 @@ export function plet<PVarT extends PType, SomeExtension extends object>( varValu
     
     const continuation = <PExprResult extends PType>( expr: (value: TermPVar) => Term<PExprResult> ): Term<PExprResult> => {
 
-        const withUtility = addUtilityForType( varValue.type );
         // only to extracts the type; never compiled
-        const outType = expr(
-            withUtility(
-                new Term(
-                    varValue.type,
-                    _varAccessDbn => new IRVar( 0 ) // mock variable
-                ) as any
-            ) as any
-        ).type;
+        const outType = expr( makeMockUtilityTerm( varValue.type ) as any ).type;
 
         // return papp( plam( varValue.type, outType )( expr as any ), varValue as any ) as any;
         const term = new Term(
             outType,
             dbn => {
+
+                const withUtility = addUtilityForType( varValue.type );
+
                 const arg = varValue.toIR( dbn );
 
                 if(
@@ -99,8 +100,10 @@ export function plet<PVarT extends PType, SomeExtension extends object>( varValu
         return term;
     }
     
+    const lettedUtility = addUtilityForType( type )( letted );
+
     Object.defineProperty(
-        letted, "in", {
+        lettedUtility, "in", {
             value: continuation,
             writable: false,
             enumerable: false,
@@ -108,5 +111,5 @@ export function plet<PVarT extends PType, SomeExtension extends object>( varValu
         }
     );
 
-    return addUtilityForType( type )( letted ) as any;
+    return lettedUtility as any;
 }

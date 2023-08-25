@@ -1,12 +1,15 @@
-import { definePropertyIfNotPresent } from "@harmoniclabs/obj-utils";
+import { definePropertyIfNotPresent, defineReadOnlyProperty } from "@harmoniclabs/obj-utils";
 import { PType } from "../../../PType";
-import { PAsData, PPair } from "../../../PTypes";
+import { PAsData, PBool, PPair, TermFn } from "../../../PTypes";
 import { Term } from "../../../Term";
-import { isWellFormedType, typeExtends } from "../../../type_system";
-import { tyVar, pair, TermType, PrimType } from "../../../type_system/types";
-import { UtilityTermOf } from "../../addUtilityForType";
+import { FromPType, isWellFormedType, typeExtends, unwrapAlias } from "../../../type_system";
+import { tyVar, pair, TermType, PrimType, PairT } from "../../../type_system/types";
+import { UtilityTermOf } from "./addUtilityForType";
 import { pfstPair, psndPair } from "../../builtins";
 import { plet } from "../../plet";
+import { PappArg } from "../../pappArg";
+import { TermBool } from "./TermBool";
+import { peqPair } from "../pair";
 
 type UnwrapPAsData<PT extends PType> = 
     PT extends PAsData<infer PTy extends PType> ? PTy :
@@ -17,7 +20,9 @@ export type TermPair<PFst extends PType, PSnd extends PType> = Term<PPair<PFst,P
     readonly fst: UtilityTermOf<UnwrapPAsData<PFst>>
 
     readonly snd: UtilityTermOf<UnwrapPAsData<PSnd>>
-    
+
+    readonly peq: TermFn<[ PPair<PFst,PSnd> ], PBool>
+    readonly eq:  ( other: PappArg<PPair<PFst,PSnd>> ) => TermBool
 }
 
 const getterOnly = {
@@ -26,9 +31,9 @@ const getterOnly = {
     enumerable: true
 };
 
-export function addPPairMethods<PFst extends PType, PSnd extends PType>( _pair: Term<PPair<PFst,PSnd>>)
+export function addPPairMethods<PFst extends PType, PSnd extends PType>( _pair: Term<PPair<PFst,PSnd>>): TermPair<PFst,PSnd>
 {
-    const pairT = _pair.type;
+    const pairT = unwrapAlias( _pair.type ) as PairT<FromPType<PFst>,FromPType<PSnd>>;
 
     if( !typeExtends( pairT, pair( tyVar(), tyVar() ) ) )
     {
@@ -38,10 +43,12 @@ export function addPPairMethods<PFst extends PType, PSnd extends PType>( _pair: 
     };
 
     // MUST NOT unwrap `asData`
+    // (needed by pfst and psnd to understand if the result should be transformed)
     let fstT: TermType = pairT[1] as TermType;
     while( fstT[0] === PrimType.Alias ) fstT = fstT[1];
 
-    // MUST NOT unwrap `asData`    
+    // MUST NOT unwrap `asData`
+    // (needed by pfst and psnd to understand if the result should be transformed) 
     let sndT: TermType = pairT[2] as TermType;
     while( sndT[0] === PrimType.Alias ) sndT = sndT[1];
 
@@ -64,6 +71,22 @@ export function addPPairMethods<PFst extends PType, PSnd extends PType>( _pair: 
                 ...getterOnly
             }
         );
+
+    definePropertyIfNotPresent(
+        _pair,
+        "peq",
+        {
+            get: () => peqPair( pairT ).$( _pair as any ),
+            set: () => {},
+            enumerable: true,
+            configurable: false
+        }
+    );
+    defineReadOnlyProperty(
+        _pair,
+        "eq",
+        ( other: any ): TermBool => peqPair( pairT ).$( _pair as any ).$( other )
+    );
 
     return _pair as any;
 }

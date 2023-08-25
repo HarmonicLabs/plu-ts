@@ -541,6 +541,15 @@ function initTxBuild(
     const withdrawRedeemers: TxRedeemer[] = [];
 
     const scriptsToExec: ScriptToExecEntry[] = [];
+    
+    /**
+     * needed in `getScriptDataHash` to understand whoich cost model to transform in language view
+     */
+    let _hasV1Scripts = false;
+    /**
+     * needed in `getScriptDataHash` to understand whoich cost model to transform in language view
+     */
+    let _hasV2Scripts = false;
 
     /**
      * needed in `getScriptDataHash` to understand whoich cost model to transform in language view
@@ -712,7 +721,6 @@ function initTxBuild(
             }));
 
             pushScriptToExec( i, TxRedeemerTag.Spend, refScript, dat );
-            
         }
         if( inputScript !== undefined )
         {
@@ -739,7 +747,6 @@ function initTxBuild(
             }));
             
             pushScriptToExec( i, TxRedeemerTag.Spend, script, dat );
-
         }
 
         return new TxIn( utxo )

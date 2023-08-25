@@ -3,7 +3,6 @@ import {
     pByteString,
     PValue,
     pList,
-    PValueEntryT,
     toData,
     PTxOutRef,
     PTxId,
@@ -12,7 +11,6 @@ import {
     pPair,
     PCurrencySymbol,
     list,
-    PAssetsEntryT,
     PTokenName,
     int,
     pInt,
@@ -39,10 +37,12 @@ import {
     PTxOut,
     addUtilityForType,
     V2,
+    PValueEntry,
+    PAssetsEntry
 } from "../pluts";
 
 export const unitDatumHash = PDatumHash.from( pByteString("923918e403bf43c34b4ef6b48eb2ee04babed17320d8d1b9ff9ad086e86f44ec") );
-export const emptyValue = PValue.from( pList( PValueEntryT )([]) as any );
+export const emptyValue = PValue.from( pList( PValueEntry.type )([]) as any );
 
 export const emptyValueAsData = toData( PValue.type )( emptyValue );
 
@@ -58,19 +58,16 @@ export const validatorSpendingUtxo = PTxOutRef.PTxOutRef({
 export const validatorSpendingUtxoAsData = toData( PTxOutRef.type )( validatorSpendingUtxo );
 
 export const beef32 = PValue.from(
-    pList( PValueEntryT )([
-        pPair( PCurrencySymbol.type,
-    list( PAssetsEntryT ) )
-        (
+    pList( PValueEntry.type )([
+        PValueEntry.from([
             PCurrencySymbol.from( pByteString("deadbeef") ),
-            pList( PAssetsEntryT )([
-                pPair( PTokenName.type, int )
-                (
+            pList( PAssetsEntry.type )([
+                PAssetsEntry.from([
                     PTokenName.from( pByteString("beef") ),
                     pInt( 32 )
-                )
+                ])
             ])
-        )
+        ])
     ])
 );
 

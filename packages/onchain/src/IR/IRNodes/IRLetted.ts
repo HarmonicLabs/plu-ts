@@ -74,8 +74,9 @@ export class IRLetted
 
     readonly meta!: IRLettedMeta
 
-    constructor( DeBruijn: number, toLet: IRTerm, metadata: Partial<IRLettedMeta> = {} )
+    constructor( DeBruijn: number | bigint, toLet: IRTerm, metadata: Partial<IRLettedMeta> = {} )
     {
+        DeBruijn = typeof DeBruijn === "bigint" ? Number( DeBruijn ) : DeBruijn; 
         if(!(
             Number.isSafeInteger( DeBruijn ) && DeBruijn >= 0 
         )) throw new BasePlutsError(

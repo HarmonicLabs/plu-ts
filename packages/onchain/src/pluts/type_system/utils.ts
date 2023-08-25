@@ -57,34 +57,43 @@ export function termTypeToString( t: GenericTermType ): string
     }
     if( isTaggedAsAlias( t ) )
     {
-        return "alias(" + (
-            termTypeToString( unwrapAlias( t as any ) )
-        ) + ")";
+        const aliased = termTypeToString( unwrapAlias( t as any ) );
+        return "alias(" + aliased + ")";
     }
     if( tag === PrimType.AsData )
     {
         return "asData(" + (
-            termTypeToString( t[1] as any )
+            termTypeToString( t[1] )
         ) + ")";
     }
     if( tag === PrimType.List )
     {
         return "list(" + (
-            termTypeToString( t[1] as any )
+            termTypeToString( t[1] )
         ) + ")";
     }
     if( tag === PrimType.Pair )
     {
         return "pair(" + (
-            termTypeToString( t[1] as any )
+            termTypeToString( t[1] )
         ) + "," + (
-            termTypeToString( t[2] as any )
+            termTypeToString( t[2] )
         ) + ")";
     }
 
-    if( typeof t[0] === "symbol" ) return "tyParam("+ ((t[0] as any).description ?? "") +")";
+    if( tag === PrimType.Lambda )
+    {
+        return termTypeToString( t[1] ) + " -> " + termTypeToString( t[2] );
+    }
+
+    if( typeof t[0] === "symbol" ) return "tyParam("+ ((t[0] ).description ?? "") +")";
+
+    if( !t.slice ) {
+        console.log( t );
+        // return "";
+    }
     const tyArgs = t.slice(1) as TermType[];
-    return ( t[0] + (tyArgs.length > 0 ? ',': "") + tyArgs.map( termTypeToString ).toString() );
+    return ( t[0] + (tyArgs.length > 0 ? ',': "") + tyArgs.map( t => termTypeToString( t ) ).toString() );
 }
 
 export interface CtorDefJson {

@@ -13,6 +13,7 @@ import { unwrapAsData } from "../../../type_system/tyArgs/unwrapAsData";
 import { assert } from "../../../../utils/assert";
 import { IRConst } from "../../../../IR/IRNodes/IRConst";
 import { Machine } from "@harmoniclabs/plutus-machine";
+import { clearAsData } from "../../../type_system/tyArgs/clearAsData";
 
 
 export function pPair<FstT extends TermType, SndT extends TermType>(
@@ -44,7 +45,7 @@ export function pPair<FstT extends TermType, SndT extends TermType>(
             fst instanceof Term &&
             (
                 typeExtends( fst.type, fstT ) ||
-                typeExtends( fst.type, unwrapAsData( fstT as any ) ) ||
+                typeExtends( fst.type, clearAsData( fstT as any ) ) ||
                 typeExtends( fst.type, data )
             ),
             "first element of a constant pair was not a constant"
@@ -53,14 +54,14 @@ export function pPair<FstT extends TermType, SndT extends TermType>(
             snd instanceof Term &&
             (
                 typeExtends( snd.type, sndT ) ||
-                typeExtends( snd.type, unwrapAsData( sndT as any) ) ||
+                typeExtends( snd.type, clearAsData( sndT as any ) ) ||
                 typeExtends( snd.type, data )
             ),
             "second element of a constant pair was not a constant"
         );
 
-        let _fst_ = _toData( unwrapAsData( fstT as any ) )( fst );
-        let _snd_ = _toData( unwrapAsData( sndT as any ) )( snd );
+        let _fst_ = _toData( clearAsData( fstT as any ) )( fst );
+        let _snd_ = _toData( clearAsData( sndT as any ) )( snd );
 
         if(
             !(fst as any).isConstant ||

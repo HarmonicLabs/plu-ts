@@ -10,41 +10,41 @@ import { TermBool } from "./TermBool";
 
 export type TermInt = Term<PInt> & {
     
-    readonly addTerm:       TermFn<[PInt], PInt>
+    readonly padd:       TermFn<[PInt], PInt>
     readonly add:           ( other: PappArg<PInt> ) => TermInt
 
-    readonly subTerm:       TermFn<[PInt], PInt>
+    readonly psub:       TermFn<[PInt], PInt>
     readonly sub:           ( other: PappArg<PInt> ) => TermInt
 
-    readonly multTerm:      TermFn<[PInt], PInt>
+    readonly pmult:      TermFn<[PInt], PInt>
     readonly mult:          ( other: PappArg<PInt> ) => TermInt
 
-    readonly divTerm:       TermFn<[PInt], PInt>
+    readonly pdiv:       TermFn<[PInt], PInt>
     readonly div:           ( other: PappArg<PInt> ) => TermInt
 
-    readonly quotTerm:      TermFn<[PInt], PInt>
+    readonly pquot:      TermFn<[PInt], PInt>
     readonly quot:          ( other: PappArg<PInt> ) => TermInt
 
-    readonly remainderTerm: TermFn<[PInt], PInt>
+    readonly premainder: TermFn<[PInt], PInt>
     readonly remainder:     ( other: PappArg<PInt> ) => TermInt
 
-    readonly modTerm:       TermFn<[PInt], PInt>
+    readonly pmod:       TermFn<[PInt], PInt>
     readonly mod:           ( other: PappArg<PInt> ) => TermInt
 
     
-    readonly eqTerm:    TermFn<[PInt], PBool>
+    readonly peq:    TermFn<[PInt], PBool>
     readonly eq:        ( other: PappArg<PInt> ) => TermBool
         
-    readonly ltTerm:    TermFn<[PInt], PBool>
+    readonly plt:    TermFn<[PInt], PBool>
     readonly lt:        ( other: PappArg<PInt> ) => TermBool
         
-    readonly ltEqTerm:  TermFn<[PInt], PBool>
+    readonly pltEq:  TermFn<[PInt], PBool>
     readonly ltEq:      ( other: PappArg<PInt> ) => TermBool
         
-    readonly gtTerm:    TermFn<[PInt], PBool>
+    readonly pgt:    TermFn<[PInt], PBool>
     readonly gt:        ( other: PappArg<PInt> ) => TermBool
         
-    readonly gtEqTerm:  TermFn<[PInt], PBool>
+    readonly pgtEq:  TermFn<[PInt], PBool>
     readonly gtEq:      ( other: PappArg<PInt> ) => TermBool
         
 };
@@ -60,7 +60,7 @@ export function addPIntMethods( term: Term<PInt> )
 {
     definePropertyIfNotPresent(
         term,
-        "addTerm",
+        "padd",
         {
             get: () => padd.$( term ),
             ...getterOnly
@@ -74,7 +74,7 @@ export function addPIntMethods( term: Term<PInt> )
 
     definePropertyIfNotPresent(
         term,
-        "subTerm",
+        "psub",
         {
             get: () => psub.$( term ),
             ...getterOnly
@@ -88,7 +88,7 @@ export function addPIntMethods( term: Term<PInt> )
 
     definePropertyIfNotPresent(
         term,
-        "multTerm",
+        "pmult",
         {
             get: () => pmult.$( term ),
             ...getterOnly
@@ -102,7 +102,7 @@ export function addPIntMethods( term: Term<PInt> )
 
     definePropertyIfNotPresent(
         term,
-        "divTerm",
+        "pdiv",
         {
             get: () => pdiv.$( term ),
             ...getterOnly
@@ -116,7 +116,7 @@ export function addPIntMethods( term: Term<PInt> )
 
     definePropertyIfNotPresent(
         term,
-        "quotTerm",
+        "pquot",
         {
             get: () => pquot.$( term ),
             ...getterOnly
@@ -130,7 +130,7 @@ export function addPIntMethods( term: Term<PInt> )
 
     definePropertyIfNotPresent(
         term,
-        "remainderTerm",
+        "premainder",
         {
             get: () => prem.$( term ),
             ...getterOnly
@@ -144,7 +144,7 @@ export function addPIntMethods( term: Term<PInt> )
 
     definePropertyIfNotPresent(
         term,
-        "modTerm",
+        "pmod",
         {
             get: () => pmod.$( term ),
             ...getterOnly
@@ -159,7 +159,7 @@ export function addPIntMethods( term: Term<PInt> )
 
     definePropertyIfNotPresent(
         term,
-        "eqTerm",
+        "peq",
         {
             get: () => peqInt.$( term ),
             ...getterOnly
@@ -173,7 +173,7 @@ export function addPIntMethods( term: Term<PInt> )
 
     definePropertyIfNotPresent(
         term,
-        "ltTerm",
+        "plt",
         {
             get: () => plessInt.$( term ),
             ...getterOnly
@@ -187,7 +187,7 @@ export function addPIntMethods( term: Term<PInt> )
 
     definePropertyIfNotPresent(
         term,
-        "ltEqTerm",
+        "pltEq",
         {
             get: () => plessEqInt.$( term ),
             ...getterOnly
@@ -201,7 +201,7 @@ export function addPIntMethods( term: Term<PInt> )
 
     definePropertyIfNotPresent(
         term,
-        "gtTerm",
+        "pgt",
         {
             get: () => pgreaterInt.$( term ),
             ...getterOnly
@@ -215,7 +215,7 @@ export function addPIntMethods( term: Term<PInt> )
 
     definePropertyIfNotPresent(
         term,
-        "gtEqTerm",
+        "pgtEq",
         {
             get: () => pgreaterEqInt.$( term ),
             ...getterOnly

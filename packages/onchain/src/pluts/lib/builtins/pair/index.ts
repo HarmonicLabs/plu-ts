@@ -4,7 +4,7 @@ import { TermFn, PPair, PLam } from "../../../PTypes";
 import { Term } from "../../../Term";
 import { PrimType, TermType, ToPType, data, lam, pair } from "../../../type_system";
 import { unwrapAsData } from "../../../type_system/tyArgs";
-import { UtilityTermOf } from "../../addUtilityForType";
+import { UtilityTermOf } from "../../std/UtilityTerms/addUtilityForType";
 import { papp } from "../../papp";
 import { punsafeConvertType } from "../../punsafeConvertType";
 import { fromData } from "../../std";
