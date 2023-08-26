@@ -1,8 +1,8 @@
-import { Methods, Term, int, lam, pInt, padd, pfn } from "../../../../..";
+import { showUPLC } from "@harmoniclabs/uplc";
+import { Methods, Term, bool, bs, data, int, lam, map, pBool, pInt, padd, palias, perror, pfn, phoist, pmatch, punBData } from "../../../../..";
 import { addUserMethods } from "../addUserMethods";
 
 describe("addUserMethod result", () => {
-
 
     test("int", () => {
 
@@ -47,5 +47,56 @@ describe("addUserMethod result", () => {
             addUserMethods( baseTerm, methods );
         }).toThrow();
 
-    })
+    });
+
+    describe("cip 68 nft metadata", () => {
+
+        const plookupBsInMetadata = phoist(
+            pfn([
+                bs,
+                map( bs, data )
+            ],  bs)
+            (( key, metadata ) =>
+                pmatch( metadata.lookup( key ) )
+                .onJust(({ val }) => punBData.$( val ))
+                .onNothing( _ => perror(bs) ) 
+            )
+        );
+        
+        const PNftMetadata = palias(
+            map( bs, data ),
+            self_t => {
+
+                return {
+                    name: plookupBsInMetadata.$("name"),
+                    image: plookupBsInMetadata.$("image")
+                }
+            }
+        );
+
+        test("has name and image", () => {
+
+            const someTerm = pfn([
+                PNftMetadata.type
+            ], bool)
+            ( metadata => {
+
+                const keys = Object.keys( metadata );
+
+                expect( keys.includes("name") ).toBe( true );
+                expect( keys.includes("image") ).toBe( true );
+                
+                expect( keys.includes("pname") ).toBe( false );
+                expect( keys.includes("pimage") ).toBe( false );
+
+                expect( metadata.name.type ).toEqual( bs );
+                expect( metadata.image.type ).toEqual( bs );
+
+                return metadata.name.eq("hello");
+            });
+
+            const uplc = someTerm.toUPLC();
+        })
+
+    });
 })

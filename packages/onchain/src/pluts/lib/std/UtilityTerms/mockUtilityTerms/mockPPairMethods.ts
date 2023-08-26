@@ -1,11 +1,13 @@
-import { definePropertyIfNotPresent } from "@harmoniclabs/obj-utils";
+import { definePropertyIfNotPresent, defineReadOnlyProperty } from "@harmoniclabs/obj-utils";
 import { PType } from "../../../../PType";
 import { PPair } from "../../../../PTypes/PPair";
 import { Term } from "../../../../Term";
-import { PrimType, TermType, isWellFormedType, pair, tyVar, typeExtends, unwrapAlias } from "../../../../type_system";
+import { PrimType, TermType, bool, isWellFormedType, lam, pair, tyVar, typeExtends, unwrapAlias } from "../../../../type_system";
 import { TermPair } from "../TermPair";
 import { makeMockUtilityTerm } from "./makeMockUtilityTerm";
 import { unwrapAsData } from "../../../../type_system/tyArgs/unwrapAsData";
+import { makeMockTerm } from "./makeMockTerm";
+import { makeMockTermBool } from "./mockPBoolMethods";
 
 
 const getterOnly = {
@@ -64,6 +66,22 @@ export function mockPPairMethods<PFst extends PType, PSnd extends PType>( _pair:
                 ...getterOnly
             }
         );
+
+    definePropertyIfNotPresent(
+        _pair,
+        "peq",
+        {
+            get: () => makeMockTerm( lam( pairT, bool )),
+            set: () => {},
+            enumerable: true,
+            configurable: false
+        }
+    );
+    defineReadOnlyProperty(
+        _pair,
+        "eq",
+        ( other: any ) => makeMockTermBool()
+    );
 
     return _pair as any;
 }

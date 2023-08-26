@@ -88,7 +88,7 @@ export function mockPStructMethods<
         struct, "eq", ( other: Term<PStruct<SDef, SMethods>> ) => makeMockTermBool()
     )
 
-    const letted_unconstred = makeMockTerm( pair( int, list( data ) ) );
+    // const letted_unconstred = makeMockTerm( pair( int, list( data ) ) );
 
     const letted_ctorIdx = makeMockTerm( int );
 

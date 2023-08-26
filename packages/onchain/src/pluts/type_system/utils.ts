@@ -18,6 +18,8 @@ export function ctorDefToString( ctorDef: StructCtorDef ): string
 {
     const fields = Object.keys( ctorDef );
 
+    if( fields.length === 0 ) return "{}";
+
     let str = "{";
 
     for( const fieldName of fields )
@@ -69,6 +71,12 @@ export function termTypeToString( t: GenericTermType ): string
     if( tag === PrimType.List )
     {
         return "list(" + (
+            termTypeToString( t[1] )
+        ) + ")";
+    }
+    if( tag === PrimType.Delayed )
+    {
+        return "delayed(" + (
             termTypeToString( t[1] )
         ) + ")";
     }

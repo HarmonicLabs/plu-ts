@@ -1,5 +1,6 @@
 import { PList, PPair, TermFn } from "../../../../PTypes";
 import { TermType, ToPType, asData, bool, data, lam, list, pair, typeExtends } from "../../../../type_system";
+import { unwrapAsData } from "../../../../type_system/tyArgs";
 import { getDirectFstT } from "../../../../type_system/tyArgs/getDirectFstT";
 import { getDirectSndT } from "../../../../type_system/tyArgs/getDirectSndT";
 import { pif } from "../../../builtins/bool";
@@ -13,7 +14,6 @@ import { plet } from "../../../plet";
 import { punsafeConvertType } from "../../../punsafeConvertType";
 import { PMaybe, PMaybeT } from "../../PMaybe";
 import { toData } from "../../data";
-import { pstdEq } from "../../stdEq";
 import { precursiveList } from "../precursiveList";
 
 export function plookup<
@@ -27,6 +27,9 @@ export function plookup<
     PList<PPair<ToPType<KT>,ToPType<VT>>>
 ],  PMaybeT<ToPType<VT>>>
 {
+    kT = unwrapAsData( kT );
+    vT = unwrapAsData( vT );
+
     const PMaybeVal = PMaybe( vT );
 
     const elems_t = pair( kT, vT );
