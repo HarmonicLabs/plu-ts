@@ -15,3 +15,5 @@ export function pByteString( _bs: ByteString | string | Uint8Array ): TermBS
         )
     );
 }
+
+export const pBs = pByteString;
