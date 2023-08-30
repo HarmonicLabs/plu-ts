@@ -16,6 +16,7 @@ import { IRApp } from "./IRApp";
 import { IRDelayed } from "./IRDelayed";
 import { IRForced } from "./IRForced";
 import { IRFunc } from "./IRFunc";
+import { IRHoisted } from "./IRHoisted";
 
 
 export type LettedSetEntry = {
@@ -381,6 +382,15 @@ export function getLettedTerms( irTerm: IRTerm ): LettedSetEntry[]
             stack.push( t.delayed );
             continue;
         }
+        
+        // DO NOT search for hoisted terms in letted ones
+        // because letted terms are not closed
+
+        // if( t instanceof IRHoisted )
+        // {
+        //     stack.push( t.hoisted );
+        //     continue;
+        // }
     }
 
     return lettedTerms;

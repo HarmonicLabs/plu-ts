@@ -16,6 +16,7 @@ import { IRApp } from "./IRApp";
 import { IRForced } from "./IRForced";
 import { IRFunc } from "./IRFunc";
 import { IRLetted } from "./IRLetted";
+import { handleLetted } from "../toUPLC/subRoutines/handleLetted";
 
 
 export type HoistedSetEntry = {
@@ -300,8 +301,12 @@ export function getHoistedTerms( irTerm: IRTerm ): HoistedSetEntry[]
         {
             // useless
             // term.dependencies.forEach( searchIn )
-            // dependecies are still in the body anyway
+            // dependecies are still in the body anyway (hoisted are closed)
 
+            // experiment to remove new letted;
+            // no good so far
+            // handleLetted( term );
+            
             searchIn( term.value );
             return;
         }

@@ -13,12 +13,14 @@ import { isClosedIRTerm } from "../../../IR/utils/isClosedIRTerm";
 import { UtilityTermOf, addUtilityForType } from "../std/UtilityTerms/addUtilityForType";
 import { makeMockUtilityTerm } from "../std/UtilityTerms/mockUtilityTerms/makeMockUtilityTerm";
 
-export type LettedTerm<PVarT extends PType, SomeExtension extends object> = UtilityTermOf<PVarT> & {
-    in: 
-        Term<PVarT> & SomeExtension extends Term<PAlias<PVarT, {}>> ?
-            <PExprResult extends PType>( expr: (value: TermAlias<PVarT, {}> & SomeExtension) => Term<PExprResult> ) => Term<PExprResult>
-        : <PExprResult extends PType>( expr: (value: UtilityTermOf<PVarT>) => Term<PExprResult> ) => Term<PExprResult>
-}
+export type LettedTerm<PVarT extends PType, SomeExtension extends object> =
+    Term<PVarT> & SomeExtension extends Term<PAlias<PVarT, {}>> ?
+        TermAlias<PVarT, {}> & SomeExtension & {
+            in: <PExprResult extends PType>( expr: (value: TermAlias<PVarT, {}> & SomeExtension) => Term<PExprResult> ) => Term<PExprResult>
+        } :
+        UtilityTermOf<PVarT> & {
+            in: <PExprResult extends PType>( expr: (value: UtilityTermOf<PVarT>) => Term<PExprResult> ) => Term<PExprResult>
+        }
 
 export function plet<PVarT extends PType, SomeExtension extends object>( varValue: Term<PVarT> & SomeExtension ): LettedTerm<PVarT, SomeExtension>
 {

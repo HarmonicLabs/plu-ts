@@ -22,6 +22,7 @@ import { IRConst } from "../../../IR/IRNodes/IRConst";
 import { pList } from "../../lib/std/list/const";
 import { IRNative } from "../../../IR/IRNodes/IRNative";
 import { IRApp } from "../../../IR/IRNodes/IRApp";
+import { PappArg, pappArgToTerm } from "../../lib/pappArg";
 
 /**
  * intermediate class useful to reconize structs form primitives
@@ -290,7 +291,9 @@ export function pstruct<
     defineReadOnlyProperty(
         PStructExt,
         "fromData",
-        ( dataTerm: Term<PData> ): Term<PStructExt> => {
+        ( dataTerm: Term<PData> /* | PappArg<PData> */ ): Term<PStructExt> => {
+
+            // dataTerm = dataTerm instanceof Term ? dataTerm : pappArgToTerm( dataTerm, data ) as Term<PData>;
 
             assert(
                 typeExtends( dataTerm.type, data ),

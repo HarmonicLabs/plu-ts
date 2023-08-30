@@ -67,16 +67,24 @@ export function compileIRToUPLC( term: IRTerm ): UPLCTerm
 
     replaceClosedLettedWithHoisted( term );
 
-    // handle letted before hoisted because the three is smaller
+    // handle letted before hoisted because the tree is smaller
     // and we also have less letted dependecies to handle
     handleLetted( term );
 
     term = handleHoistedAndReturnRoot( term );
 
     // replaced hoisted terms might include new letted terms
-    while( includesNode( term, node => node instanceof IRLetted ) )
+    while(
+        includesNode(
+        term,
+        node => 
+            node instanceof IRLetted || 
+            node instanceof IRHoisted
+        )
+    )
     {
         handleLetted( term );
+        term = handleHoistedAndReturnRoot( term );
     }
 
     ///////////////////////////////////////////////////////////////////////////////

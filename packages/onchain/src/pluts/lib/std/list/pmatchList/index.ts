@@ -23,10 +23,8 @@ return phoist(
     )
     ( ( matchNil, matchCons, lst ) =>
         pforce(
-            pstrictChooseList( data, delayed( returnT ) )
-            .$(
-                _punsafeConvertType( lst, list( data ) ) as any
-            )
+            pstrictChooseList( elemsT, delayed( returnT ) )
+            .$( lst )
             .$( matchNil ) // caseNil
             .$(
                 pdelay(

@@ -82,7 +82,6 @@ function getStructInstance<CtorDef extends StructCtorDef>
 {
     const instance: StructInstance<CtorDef> = {} as any;
     const fieldNames = Object.keys( ctorDef );
-
     
     for( let i = 0; i < fieldNames.length; i++ )
     {
