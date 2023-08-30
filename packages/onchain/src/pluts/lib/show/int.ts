@@ -2,7 +2,6 @@ import { fromAscii } from "@harmoniclabs/uint8array-utils";
 import { pif } from "../builtins/bool";
 import { bs, int, lam } from "../../type_system/types";
 import { phoist } from "../phoist";
-import { ptrace } from "../builtins";
 import { pfn } from "../pfn";
 import { plam } from "../plam";
 import { precursive } from "../precursive";
@@ -47,6 +46,3 @@ export const pshowInt = phoist(
         ) 
     )
 );
-
-export const ptraceInt = plam( int, int )
-( n => ptrace( int ).$( pshowInt.$( n ).utf8Decoded ).$( n ) )

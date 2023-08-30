@@ -6,7 +6,7 @@ import { pshowBs } from "./bs";
 import { pshowData } from "./data";
 import { pshowInt } from "./int";
 import { pshowPair } from "./pair";
-import { pshowList } from "./show";
+import { pshowList } from "./list";
 import { pshowStr } from "./str";
 import { pshowUnit } from "./unit";
 

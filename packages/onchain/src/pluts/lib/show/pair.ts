@@ -1,6 +1,5 @@
 import { fromAscii } from "@harmoniclabs/uint8array-utils";
 import { PByteString } from "../../PTypes";
-import { PBool } from "../../PTypes/PBool";
 import { TermFn } from "../../PTypes/PFn/PFn";
 import { ToPType } from "../../type_system/ts-pluts-conversion";
 import { clearAsData } from "../../type_system/tyArgs/clearAsData";
