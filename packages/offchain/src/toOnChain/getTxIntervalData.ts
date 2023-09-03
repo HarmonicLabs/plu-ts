@@ -59,9 +59,7 @@ export function getTxIntervalData(
         );
     }
 
-    const endSlot = startSlot === undefined ? undefined :
-        ttlSlot === undefined ? undefined :
-        startSlot + ttlSlot;
+    const endSlot = ttlSlot;
     
     let upperBoundData: Data | undefined = undefined;
 
@@ -110,7 +108,7 @@ export function getTxIntervalData(
                     // bound
                     upperBoundData,
                     // inclusive
-                    new DataConstr( 1, [] ) // PDataBool; False
+                    new DataConstr( 0, [] ) // PDataBool; True
                 ]
             ),
         ]
