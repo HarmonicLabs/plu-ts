@@ -113,6 +113,18 @@ describe("TxBuilderRunner", () => {
             }),
             new DataI( 0 )
         )
+        .setCollateral(
+            new UTxO({
+                utxoRef: {
+                    id: "33".repeat( 32 ),
+                    index: 0
+                },
+                resolved: {
+                    address: Address.fake,
+                    value: Value.lovelaces( 10_000_000 )
+                }
+            })
+        )
         .attachValidator( okScript )
         .payTo( Address.fake, 5_000_000 )
         .build();

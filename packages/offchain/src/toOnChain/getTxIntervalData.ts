@@ -2,11 +2,25 @@ import { Data, DataConstr, DataI } from "@harmoniclabs/plutus-data";
 import { GenesisInfos, isGenesisInfos } from "../TxBuilder/GenesisInfos";
 import { unsafeForceUInt } from "../utils/ints";
 
+/**
+ * 
+ * @param POSIX POSIX time in milliseconds
+ * @param sysStartPOSIX blockchain start POSIX time in milliseconds
+ * @param slotLenMs milliseconds per slot
+ * @returns 
+ */
 export function POSIXToSlot( POSIX: number, sysStartPOSIX: number, slotLenMs: number ): number
 {
     return Math.floor( (POSIX - sysStartPOSIX) / slotLenMs );
 }
 
+/**
+ * 
+ * @param slotN number of the slot
+ * @param sysStartPOSIX blockchain start POSIX time in milliseconds
+ * @param slotLenMs milliseconds per slot
+ * @returns 
+ */
 export function slotToPOSIX( slotN: number, sysStartPOSIX: number, slotLenMs: number ): number
 {
     return sysStartPOSIX + (slotLenMs * slotN);

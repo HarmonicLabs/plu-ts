@@ -1,9 +1,9 @@
-import { fromUtf8, isUint8Array, lexCompare, toHex } from "@harmoniclabs/uint8array-utils";
+import { fromHex, fromUtf8, isUint8Array, lexCompare, toHex } from "@harmoniclabs/uint8array-utils";
 import { keepRelevant } from "./keepRelevant";
 import { GenesisInfos, isGenesisInfos } from "./GenesisInfos";
 import { isCostModelsV2, isCostModelsV1, defaultV2Costs, defaultV1Costs, costModelsToLanguageViewCbor } from "@harmoniclabs/cardano-costmodels-ts";
 import { NetworkT, ProtocolParamters, isPartialProtocolParameters, Tx, Value, ValueUnits, TxOut, TxRedeemerTag, txRdmrTagToString, ScriptType, UTxO, VKeyWitness, Script, BootstrapWitness, TxRedeemer, Hash32, TxIn, Hash28, AuxiliaryData, TxWitnessSet, getNSignersNeeded, txRedeemerTagToString, ScriptDataHash, Address, AddressStr } from "@harmoniclabs/cardano-ledger-ts";
-import { CborString, CborPositiveRational, Cbor, CborArray } from "@harmoniclabs/cbor";
+import { CborString, CborPositiveRational, Cbor, CborArray, CanBeCborString } from "@harmoniclabs/cbor";
 import { byte, blake2b_256 } from "@harmoniclabs/crypto";
 import { Data, dataToCborObj, DataConstr, dataToCbor } from "@harmoniclabs/plutus-data";
 import { machineVersionV2, machineVersionV1, Machine, ExBudget } from "@harmoniclabs/plutus-machine";
@@ -11,7 +11,7 @@ import { UPLCTerm, UPLCDecoder, Application, UPLCConst, ErrorUPLC } from "@harmo
 import { POSIXToSlot, getTxInfos, slotToPOSIX } from "../toOnChain";
 import { ITxBuildArgs, ITxBuildOptions, ITxBuildInput, ITxBuildSyncOptions, txBuildOutToTxOut, ChangeInfos } from "../txBuild";
 import { CanBeUInteger, forceBigUInt, canBeUInteger, unsafeForceUInt } from "../utils/ints";
-import { freezeAll, defineReadOnlyProperty, definePropertyIfNotPresent, hasOwn } from "@harmoniclabs/obj-utils";
+import { freezeAll, defineReadOnlyProperty, definePropertyIfNotPresent, hasOwn, isObject } from "@harmoniclabs/obj-utils";
 import { assert } from "../utils/assert";
 import { TxBuilderRunner } from "./TxBuilderRunner/TxBuilderRunner";
 import { ITxRunnerProvider } from "./IProvider";
@@ -69,7 +69,7 @@ export class TxBuilder
     )
     {
         let _genesisInfos: GenesisInfos | undefined = undefined;
-        const _setGenesisInfos = ( genInfos: GenesisInfos ) => {
+        const _setGenesisInfos = ( genInfos: GenesisInfos ): void => {
             if( !isGenesisInfos( genInfos ) ) return;
 
             _genesisInfos = freezeAll( genInfos );
@@ -169,6 +169,29 @@ export class TxBuilder
         );
     }
 
+    getMinimumOutputLovelaces( tx_out: TxOut | CanBeCborString ): bigint
+    {
+        if( tx_out instanceof TxOut ) tx_out = tx_out.toCbor().toBuffer();
+        if(!(tx_out instanceof Uint8Array))
+        {
+            if(
+                isObject( tx_out ) &&
+                hasOwn( tx_out, "toBuffer" ) && 
+                typeof tx_out.toBuffer === "function"
+            )
+            tx_out = tx_out.toBuffer();
+
+            if(!(tx_out instanceof Uint8Array)) tx_out = fromHex( tx_out.toString() );
+        }
+        const size = BigInt( tx_out.length );
+        return BigInt( this.protocolParamters.utxoCostPerByte ) * size;
+    }
+
+    /**
+     * 
+     * @param slotN number of the slot
+     * @returns POSIX time in **milliseconds**
+     */
     slotToPOSIX( slot: CanBeUInteger ): number
     {
         const gInfos = this.genesisInfos;
@@ -184,6 +207,10 @@ export class TxBuilder
         )
     }
 
+    /**
+     * 
+     * @param POSIX POSIX time in milliseconds
+     */
     posixToSlot( POSIX: CanBeUInteger ): number
     {
         const gInfos = this.genesisInfos;
@@ -228,12 +255,15 @@ export class TxBuilder
             change
         } = initTxBuild.bind( this )( buildArgs );
 
-        const txOuts: TxOut[] = new Array( outs.length + 1 );
-
         const rdmrs = tx.witnesses.redeemers ?? [];
         const nRdmrs = rdmrs.length;
 
-        if( nRdmrs === 0 ) return tx;
+        if( nRdmrs === 0 ){
+            this.assertMinOutLovelaces( tx.body.outputs );
+            return tx
+        };
+
+        const txOuts: TxOut[] = new Array( outs.length + 1 );
 
         const cek: Machine = (this as any).cek;
         
@@ -439,7 +469,28 @@ export class TxBuilder
             totExBudget = new ExBudget({ mem: 0, cpu: 0 })
         }
 
+        this.assertMinOutLovelaces( tx.body.outputs );
+
         return tx;
+    }
+
+    assertMinOutLovelaces( txOuts: TxOut[] ): void
+    {
+        for(let i = 0; i < txOuts.length; i++)
+        {
+            const out = txOuts[i];
+            const minLovelaces = this.getMinimumOutputLovelaces( out );
+
+            if( out.value.lovelaces < minLovelaces )
+            throw new Error(
+                `tx output at index ${i} did not have enough lovelaces to meet the minimum allowed by protocol parameters.\n` +
+                `output size: ${out.toCbor().toBuffer().length} bytes\n` +
+                `protocol paramters "utxoCostPerByte": ${this.protocolParamters.utxoCostPerByte}\n` +
+                `minimum lovelaces required: ${minLovelaces.toString()}\n` +
+                `output lovelaces          : ${out.value.lovelaces.toString()}\n` +
+                `tx output: ${JSON.stringify( out.toJson(), undefined, 2 )}`
+            );
+        }
     }
 }
 
@@ -924,10 +975,10 @@ function initTxBuild(
 
     invalidBefore = invalidBefore === undef ? undef : forceBigUInt( invalidBefore );
 
-    if( invalidAfter !== undef )
-    {
-        if( invalidBefore === undef ) invalidBefore = 0;
-    }
+    // if( invalidAfter !== undef )
+    // {
+    //     if( invalidBefore === undef ) invalidBefore = 0;
+    // }
 
     if(
         canBeUInteger( invalidBefore ) &&
@@ -935,7 +986,47 @@ function initTxBuild(
     )
     {
         if( invalidBefore >= invalidAfter  )
-        throw new Error("invalid validity interval; invalidAfter: " + invalidAfter.toString() + "; was smaller (previous poin in time) than invalidBefore:" + invalidBefore.toString() );
+        throw new Error(
+            "invalid validity interval; invalidAfter: "
+            + invalidAfter.toString() +
+            "; was smaller (previous point in time) than invalidBefore:"
+            + invalidBefore.toString()
+        );
+    }
+
+    // assert collateral is present if needed
+    if( scriptsToExec.filter( s => s.script.type !== "NativeScript" ).length > 0 )
+    {
+        if(
+            !Array.isArray( collaterals ) ||
+            collaterals.length <= 0
+        )
+        throw new Error("tx includes plutus scripts to execute but no collateral input was provided");
+
+        const collateralValue = collaterals.reduce<Value>(
+            (accum, collateral) => Value.add( accum, collateral.resolved.value ),
+            Value.zero
+        );
+
+        if( !Value.isAdaOnly( collateralValue ) )
+        {
+            if( !collateralReturn )
+            throw new Error(
+                `total collateral input value was including non-ADA value; no collateral return was specified\n` +
+                `total collateral input value was: ${JSON.stringify( collateralValue.toJson(), undef, 2 )}`
+            );
+
+            const realCollValue = Value.sub(
+                collateralValue,
+                collateralReturn.value
+            );
+
+            if( !Value.isAdaOnly( realCollValue ) )
+            throw new Error(
+                `total collateral value was including non-ADA value;\n` +
+                `total collateral value was: ${JSON.stringify( realCollValue.toJson(), undef, 2 )}`
+            );
+        }
     }
 
     const dummyTx = new Tx({
@@ -960,12 +1051,9 @@ function initTxBuild(
                 undef :
                 forceBigUInt( invalidBefore ),
             ttl:
-                (
-                    invalidBefore === undef ||
-                    invalidAfter === undef
-                ) ?
+                invalidAfter === undef ?
                 undef :
-                forceBigUInt( invalidAfter ) - forceBigUInt( invalidBefore ),
+                forceBigUInt( invalidAfter ),
             auxDataHash: auxData?.hash,
             scriptDataHash: getScriptDataHash( redeemers, datumsScriptData, languageViews ),
             network

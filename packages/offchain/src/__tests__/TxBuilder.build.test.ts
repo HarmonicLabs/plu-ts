@@ -1,11 +1,75 @@
-import { defaultProtocolParameters, Address, PaymentCredentials, PubKeyHash, Script, ScriptType, UTxO, Value, getNSignersNeeded, Tx } from "@harmoniclabs/cardano-ledger-ts";
-import { Cbor, CborBytes } from "@harmoniclabs/cbor";
-import { DataConstr, DataList, DataI } from "@harmoniclabs/plutus-data";
-import { fromAscii } from "@harmoniclabs/uint8array-utils";
+import { defaultProtocolParameters, Address, UTxO, Value, TxOutRef, TxOut } from "@harmoniclabs/cardano-ledger-ts";
 import { TxBuilder } from "../TxBuilder"
 
-test.todo("depends on onchain");
 
+describe("build time", () => {
+
+    const txBuilder = new TxBuilder(
+        defaultProtocolParameters
+    );
+
+    const txBuilderWithGenesis = new TxBuilder(
+        defaultProtocolParameters,
+        {
+            slotLengthInMilliseconds: 1000,
+            systemStartPOSIX: (Math.round( Date.now() / 1e3 ) * 1e3) - 1e6
+        }
+    );
+
+    test("assert min out lovelaces", () => {
+
+        expect(
+            () => {
+                txBuilder.buildSync({
+                    inputs: [
+                        {
+                            utxo: new UTxO({
+                                utxoRef: TxOutRef.fake,
+                                resolved: new TxOut({
+                                    address: Address.fake,
+                                    value: Value.lovelaces( 10_000_000 )
+                                })
+                            })
+                        }
+                    ],
+                    outputs: [
+                        {
+                            address: Address.fake,
+                            value: Value.zero
+                        }
+                    ],
+                    changeAddress: Address.fake
+                });
+            }
+        ).toThrow()
+
+        expect(
+            () => {
+                txBuilder.buildSync({
+                    inputs: [
+                        {
+                            utxo: new UTxO({
+                                utxoRef: TxOutRef.fake,
+                                resolved: new TxOut({
+                                    address: Address.fake,
+                                    value: Value.lovelaces( 10_000_000 )
+                                })
+                            })
+                        }
+                    ],
+                    outputs: [
+                        {
+                            address: Address.fake,
+                            value: Value.lovelaces( 1_500_000 )
+                        }
+                    ],
+                    changeAddress: Address.fake
+                });
+            }
+        ).not.toThrow()
+    })
+
+})
 
 /*
 jest.setTimeout(2_000_000)
