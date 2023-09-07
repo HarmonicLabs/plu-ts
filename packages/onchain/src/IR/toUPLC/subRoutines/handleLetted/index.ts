@@ -1,7 +1,7 @@
 import { toHex, uint8ArrayEq } from "@harmoniclabs/uint8array-utils";
 import { IRApp } from "../../../IRNodes/IRApp";
 import { IRFunc } from "../../../IRNodes/IRFunc";
-import { getSortedLettedSet, getLettedTerms, IRLetted, jsonLettedSetEntry } from "../../../IRNodes/IRLetted";
+import { getSortedLettedSet, getLettedTerms, IRLetted, jsonLettedSetEntry, expandedJsonLettedSetEntry } from "../../../IRNodes/IRLetted";
 import { IRVar } from "../../../IRNodes/IRVar";
 import { IRTerm } from "../../../IRTerm";
 import { _addDepths } from "../../_internal/_addDepth";
@@ -9,27 +9,31 @@ import { _modifyChildFromTo } from "../../_internal/_modifyChildFromTo";
 import { findAllNoHoisted } from "../../_internal/findAll";
 import { getDebruijnInTerm } from "../../_internal/getDebruijnInTerm";
 import { groupByScope } from "./groupByScope";
-import { showIR } from "../../../utils/showIR";
+import { prettyIR, prettyIRJsonStr, showIR } from "../../../utils/showIR";
 import { IRDelayed } from "../../../IRNodes/IRDelayed";
 import { IRForced } from "../../../IRNodes/IRForced";
 import { lowestCommonAncestor } from "../../_internal/lowestCommonAncestor";
 import { isIRTerm } from "../../../utils/isIRTerm";
 import { markRecursiveHoistsAsForced } from "../markRecursiveHoistsAsForced";
+import { IRConst } from "../../../IRNodes/IRConst";
 
 export function handleLetted( term: IRTerm ): void
 {
-    // TODO: should probably merge `markRecursiveHoistsAsForced` inside `getLettedTerms` to iter once
-    markRecursiveHoistsAsForced( term );
-    const allLetteds = getLettedTerms( term );
-
     // most of the time we are just compiling small
     // pre-execuded terms (hence constants)
-    // in these cases is likely we have no letted terms
+    if( term instanceof IRConst ) return;
+    
+    // TODO: should probably merge `markRecursiveHoistsAsForced` inside `getLettedTerms` to iter once
+    markRecursiveHoistsAsForced( term );
+
+    const allLetteds = getLettedTerms( term );
+
+    // in case there are no letted terms there is no work to do
     if( allLetteds.length === 0 ) return;
 
     // console.log("direct letted", allLetteds.map( jsonLettedSetEntry ) );
 
-    const groupedLetteds = groupByScope( allLetteds );
+    const groupedLetteds = groupByScope( getSortedLettedSet( allLetteds ) );
 
     for( const { maxScope, group } of groupedLetteds )
     {
@@ -68,7 +72,6 @@ export function handleLetted( term: IRTerm ): void
                 continue;
             }
 
-
             if(
                 // inline
                 // - terms used once (with single reference)
@@ -80,9 +83,13 @@ export function handleLetted( term: IRTerm ): void
                 thisLettedEntry.letted.value instanceof IRVar
             )
             {
+                // console.log("inlining: ", expandedJsonLettedSetEntry( thisLettedEntry ));
                 toInline[ b++ ] = thisLettedEntry.letted
             }
-            else toLet[ a++ ] = thisLettedEntry.letted;
+            else {
+                // console.log("letting: ", expandedJsonLettedSetEntry( thisLettedEntry ));
+                toLet[ a++ ] = thisLettedEntry.letted;
+            }
         }
 
         // drop unused space
@@ -190,7 +197,7 @@ export function handleLetted( term: IRTerm ): void
 
             // !!! IMPORTANT !!!
             // !!! DO NOT REMOVE !!!
-            // makes sure the reference comes form the tree (possibly modified)
+            // makes sure the reference comes form the tree (which has possibly been modified)
             letted = lettedSet[i].letted;
             const forceHosit = letted.meta.forceHoist === true;
 
@@ -200,7 +207,6 @@ export function handleLetted( term: IRTerm ): void
                 toInlineHashes.some( h => uint8ArrayEq( h, letted.hash ) )
             )
             {
-                // console.log( "inlining", toHex( letted.hash ) );
                 // console.log( prettyIRJsonStr( term ) );
 
                 // inline single references from last to first
@@ -216,6 +222,11 @@ export function handleLetted( term: IRTerm ): void
                 }
                 continue; // go to next letted
             }
+
+            // if( toHex( letted.hash ) === "5db9cf58869f324e861e6077f1f19588" )
+            // {
+            //     console.log( prettyIRJsonStr( letted ) );
+            // }
 
             let lca: IRTerm | undefined = refs[0];
 
@@ -457,6 +468,5 @@ export function handleLetted( term: IRTerm ): void
             }
             
         }
-        
     }
 }

@@ -10,6 +10,7 @@ import { replaceClosedLettedWithHoisted } from "./subRoutines/replaceClosedLette
 import { _irToUplc } from "./_internal/_irToUplc";
 import { includesNode } from "./_internal/includesNode";
 import type { UPLCTerm } from "@harmoniclabs/uplc";
+import { prettyIRJsonStr } from "../utils/showIR";
 
 export function compileIRToUPLC( term: IRTerm ): UPLCTerm
 {
@@ -70,9 +71,9 @@ export function compileIRToUPLC( term: IRTerm ): UPLCTerm
     // handle letted before hoisted because the tree is smaller
     // and we also have less letted dependecies to handle
     handleLetted( term );
-
+    
     term = handleHoistedAndReturnRoot( term );
-
+    
     // replaced hoisted terms might include new letted terms
     while(
         includesNode(

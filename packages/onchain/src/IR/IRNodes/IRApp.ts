@@ -59,9 +59,9 @@ export class IRApp
         Object.defineProperty(
             this, "markHashAsInvalid",
             {
-                value: () => { 
+                value: () => {
                     hash = undefined;
-                    this.parent?.markHashAsInvalid()
+                    this.parent?.markHashAsInvalid();
                 },
                 writable: false,
                 enumerable:  false,

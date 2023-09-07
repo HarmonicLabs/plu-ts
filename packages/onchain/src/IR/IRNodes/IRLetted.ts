@@ -17,6 +17,7 @@ import { IRDelayed } from "./IRDelayed";
 import { IRForced } from "./IRForced";
 import { IRFunc } from "./IRFunc";
 import { IRHoisted } from "./IRHoisted";
+import { prettyIR, prettyIRJsonStr } from "../utils";
 
 
 export type LettedSetEntry = {
@@ -31,6 +32,15 @@ export function jsonLettedSetEntry( entry: LettedSetEntry )
         nReferences: entry.nReferences
     }
 
+}
+
+export function expandedJsonLettedSetEntry( entry: LettedSetEntry )
+{
+    return {
+        letted: toHex( entry.letted.hash ),
+        letted_value: prettyIR( entry.letted.value ).text.split("\n"),
+        nReferences: entry.nReferences
+    }
 }
 
 export interface IRLettedMeta {
@@ -102,7 +112,7 @@ export class IRLetted
                         return;
                     }
 
-                    this.markHashAsInvalid()
+                    this.markHashAsInvalid();
                     _dbn = newDbn;
                 },
                 enumerable: true,
@@ -168,7 +178,7 @@ export class IRLetted
                     hash = undefined;
                     // tree changed; possibly dependencies too
                     _deps = undefined;
-                    this.parent?.markHashAsInvalid()
+                    this.parent?.markHashAsInvalid();
                 },
                 writable: false,
                 enumerable:  false,
@@ -343,6 +353,18 @@ export function getSortedLettedSet( lettedTerms: LettedSetEntry[] ): LettedSetEn
     return set;
 }
 
+export interface GetLettedTermsOptions {
+    all: boolean
+}
+
+export const default_getLettedTermsOptions: GetLettedTermsOptions = {
+    all: false
+}
+/**
+ * 
+ * @param {IRTerm} irTerm term to search in
+ * @returns direct letted terms (no possible dependencies)
+ */
 export function getLettedTerms( irTerm: IRTerm ): LettedSetEntry[]
 {
     const lettedTerms: LettedSetEntry[] = [];

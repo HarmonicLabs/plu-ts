@@ -64,7 +64,7 @@
       "@harmoniclabs/cbor": "^1.1.1",
       "@harmoniclabs/plutus-data": "^1.0.0",
       "@harmoniclabs/cardano-costmodels-ts": "^1.0.0",
-      "@harmoniclabs/plutus-machine": "^1.0.2",
+      "@harmoniclabs/plutus-machine": "^1.0.3",
       "@harmoniclabs/uplc": "^1.1.0",
       "@harmoniclabs/cardano-ledger-ts": "^0.1.2"
     },

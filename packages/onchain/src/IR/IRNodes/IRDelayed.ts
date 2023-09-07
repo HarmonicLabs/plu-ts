@@ -43,7 +43,7 @@ export class IRDelayed
             {
                 value: () => { 
                     hash = undefined;
-                    this.parent?.markHashAsInvalid()
+                    this.parent?.markHashAsInvalid();
                 },
                 writable: false,
                 enumerable:  false,

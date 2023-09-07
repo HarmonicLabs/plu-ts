@@ -114,7 +114,7 @@ export class IRHoisted
                     hash = undefined;
                     // tree changed; possibly dependencies too
                     _deps = undefined;
-                    this.parent?.markHashAsInvalid()
+                    this.parent?.markHashAsInvalid();
                 },
                 writable: false,
                 enumerable:  false,

@@ -66,7 +66,7 @@ export class IRFunc
             {
                 value: () => {
                     hash = undefined;
-                    this.parent?.markHashAsInvalid()
+                    this.parent?.markHashAsInvalid();
                 },
                 writable: false,
                 enumerable:  false,

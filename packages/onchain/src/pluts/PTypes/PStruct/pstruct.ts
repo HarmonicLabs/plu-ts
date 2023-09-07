@@ -40,7 +40,7 @@ export type StructInstance<SCtorDef extends StructCtorDef> = {
 }
 
 export type StructInstanceAsData<SCtorDef extends StructCtorDef> = {
-    [Field in keyof SCtorDef]: Term<PAsData<any>> | Term<PStruct<any, any>> | Term<PData> | Term<undefined & PType>
+    [Field in keyof SCtorDef]: Term<PAsData<PType>> | Term<PStruct<StructDefinition, Methods>> | Term<PData>
 }
 
 export type PStruct<SDef extends StructDefinition, SMethods extends Methods> = {
@@ -52,11 +52,11 @@ export type PStruct<SDef extends StructDefinition, SMethods extends Methods> = {
     readonly termType: StructT<SDef>;
     readonly type: StructT<SDef>;
 
-    readonly fromDataTerm: TermFn<[PData],PStruct<SDef, any>>
-    fromData: ( data: Term<PData> ) => Term<PStruct<SDef, any>>;
+    readonly fromDataTerm: TermFn<[PData],PStruct<SDef, SMethods>>
+    fromData: ( data: Term<PData> ) => Term<PStruct<SDef, SMethods>>;
 
-    readonly toDataTerm: TermFn<[PStruct<SDef, any>],PData>
-    toData: ( data: Term<PStruct<SDef, any>> ) => Term<PData>;
+    readonly toDataTerm: TermFn<[PStruct<SDef, {}>],PData>
+    toData: ( data: Term<PStruct<SDef, {}>> ) => Term<PData>;
 
 } & PDataRepresentable & {
     [Ctor in keyof SDef]:

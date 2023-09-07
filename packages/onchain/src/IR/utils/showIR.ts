@@ -205,12 +205,13 @@ export function prettyIRText( _ir: IRTerm, _indent = 2 )
     return _internal( _ir, 0, 0 );
 }
 
-export function prettyIR( _ir: IRTerm, _indent = 2 )
-: { 
-    text: string, 
-    letted: { [hash: string]: string }, 
-    hoisted: { [hash: string]: string } 
+export type PrettiedIR = {
+    text: string,
+    letted: { [hash: string ]: string },
+    hoisted: { [hash: string ]: string }
 }
+
+export function prettyIR( _ir: IRTerm, _indent = 2 ) : PrettiedIR
 {
     if( !Number.isSafeInteger( _indent ) || _indent < 1 ) return showIR( _ir );
 
