@@ -18,6 +18,7 @@ import { IRForced } from "./IRForced";
 import { IRFunc } from "./IRFunc";
 import { IRHoisted } from "./IRHoisted";
 import { prettyIR, prettyIRJsonStr } from "../utils";
+import { IRParentTerm, isIRParentTerm } from "../utils/isIRParentTerm";
 
 
 export type LettedSetEntry = {
@@ -79,9 +80,11 @@ export class IRLetted
 
     readonly dependencies!: LettedSetEntry[]
 
-    parent: IRTerm | undefined;
+    parent: IRParentTerm | undefined;
 
     clone!: () => IRLetted
+
+    removeChild!: ( child: IRTerm ) => void 
 
     readonly meta!: IRLettedMeta
 
@@ -207,6 +210,10 @@ export class IRLetted
                     );
                     this.markHashAsInvalid();
                     _deps = undefined;
+                    if( _value )
+                    {
+                        _value.parent = undefined;
+                    }
                     _value = newVal;
                     _value.parent = this
                 },
@@ -233,19 +240,38 @@ export class IRLetted
             }
         )
 
-        let _parent: IRTerm | undefined = undefined;
+        let _parent: IRParentTerm | undefined = undefined;
         Object.defineProperty(
             this, "parent",
             {
                 get: () => _parent,
-                set: ( newParent: IRTerm | undefined ) => {
+                set: ( newParent: IRParentTerm | undefined ) => {
 
-                    if( newParent === undefined || isIRTerm( newParent ) )
+                    if(
+                        (
+                            newParent === undefined || 
+                            isIRParentTerm( newParent )
+                        ) &&
+                        _parent !== newParent
+                    )
                     {
+                        _parent?.removeChild( this );
                         _parent = newParent;
                     }
 
                 },
+                enumerable: true,
+                configurable: false
+            }
+        );
+
+        Object.defineProperty(
+            this, "removeChild",
+            {
+                value: ( child: any ) => {
+                    if( _value === child ) _value = undefined as any;
+                },
+                writable: false,
                 enumerable: false,
                 configurable: false
             }
@@ -354,19 +380,29 @@ export function getSortedLettedSet( lettedTerms: LettedSetEntry[] ): LettedSetEn
 }
 
 export interface GetLettedTermsOptions {
-    all: boolean
+    all: boolean,
+    includeHoisted: boolean
 }
 
 export const default_getLettedTermsOptions: GetLettedTermsOptions = {
-    all: false
+    all: false,
+    includeHoisted: false
 }
 /**
  * 
  * @param {IRTerm} irTerm term to search in
  * @returns direct letted terms (no possible dependencies)
  */
-export function getLettedTerms( irTerm: IRTerm ): LettedSetEntry[]
+export function getLettedTerms( irTerm: IRTerm, options?: Partial<GetLettedTermsOptions> ): LettedSetEntry[]
 {
+    const {
+        all,
+        includeHoisted
+    } = {
+        ...default_getLettedTermsOptions,
+        ...options
+    };
+
     const lettedTerms: LettedSetEntry[] = [];
 
     const stack: IRTerm[] = [ irTerm ];
@@ -378,6 +414,10 @@ export function getLettedTerms( irTerm: IRTerm ): LettedSetEntry[]
         if( t instanceof IRLetted )
         {
             lettedTerms.push({ letted: t, nReferences: 1 });
+            if( all )
+            {
+                stack.push( t.value );
+            }
             continue;
         }
 
@@ -404,15 +444,15 @@ export function getLettedTerms( irTerm: IRTerm ): LettedSetEntry[]
             stack.push( t.delayed );
             continue;
         }
-        
-        // DO NOT search for hoisted terms in letted ones
-        // because letted terms are not closed
 
-        // if( t instanceof IRHoisted )
-        // {
-        //     stack.push( t.hoisted );
-        //     continue;
-        // }
+        if( includeHoisted )
+        {
+            if( t instanceof IRHoisted )
+            {
+                stack.push( t.hoisted );
+                continue;
+            }
+        }
     }
 
     return lettedTerms;

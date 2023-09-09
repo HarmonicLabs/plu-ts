@@ -17,6 +17,7 @@ import { IRForced } from "./IRForced";
 import { IRFunc } from "./IRFunc";
 import { IRLetted } from "./IRLetted";
 import { handleLetted } from "../toUPLC/subRoutines/handleLetted";
+import { IRParentTerm, isIRParentTerm } from "../utils/isIRParentTerm";
 
 
 export type HoistedSetEntry = {
@@ -52,9 +53,10 @@ export class IRHoisted
     // `IRHoisted` can have only other `IRHoisted` as deps
     readonly dependencies!: HoistedSetEntry[];
 
-    parent: IRTerm | undefined;
+    parent: IRParentTerm | undefined;
 
     clone!: () => IRHoisted;
+    removeChild!: ( child: IRTerm ) => void 
 
     readonly meta!: IRHoistedMeta
 
@@ -133,6 +135,10 @@ export class IRHoisted
                     );
                     this.markHashAsInvalid();
                     _deps = undefined;
+                    if( _hoisted )
+                    {
+                        _hoisted.parent = undefined;
+                    }
                     _hoisted = newHoisted;
                     _hoisted.parent = this
                 }
@@ -160,15 +166,22 @@ export class IRHoisted
             }
         );
 
-        let _parent: IRTerm | undefined = undefined;
+        let _parent: IRParentTerm | undefined = undefined;
         Object.defineProperty(
             this, "parent",
             {
                 get: () => _parent,
-                set: ( newParent: IRTerm | undefined ) => {
+                set: ( newParent: IRParentTerm | undefined ) => {
 
-                    if( newParent === undefined || isIRTerm( newParent ) )
+                    if(
+                        (
+                            newParent === undefined || 
+                            isIRParentTerm( newParent )
+                        ) &&
+                        _parent !== newParent
+                    )
                     {
+                        _parent?.removeChild( this );
                         _parent = newParent;
                     }
 
@@ -178,6 +191,18 @@ export class IRHoisted
             }
         );
         
+        Object.defineProperty(
+            this, "removeChild",
+            {
+                value: ( child: any ) => {
+                    if( _hoisted === child ) _hoisted = undefined as any;
+                },
+                writable: false,
+                enumerable: false,
+                configurable: false
+            }
+        );
+
         Object.defineProperty(
             this, "meta",
             {

@@ -14,7 +14,7 @@ describe("compileIRToUPLC", () => {
 
     describe("letted", () => {
 
-        test.only("keeps scope", () => {
+        test("keeps different scope", () => {
 
             let irTree: IRTerm = new IRForced(
                 new IRDelayed(
@@ -22,24 +22,25 @@ describe("compileIRToUPLC", () => {
                         new IRFunc(1,
                             new IRLetted(
                                 1,
-                                new IRVar(0)
+                                new IRDelayed(
+                                    new IRVar(0)
+                                )
                             )
                         ),
                         new IRFunc( 1,
                             new IRLetted(
                                 1,
-                                new IRVar( 0 )
+                                new IRDelayed(
+                                    new IRVar(0)
+                                )
                             )
                         )
                     )
                 )
             );
 
-            const beforeTree = prettyIRJsonStr( irTree );
+            // const beforeTree = prettyIRJsonStr( irTree );
             handleLetted( irTree );
-            const afterTree = prettyIRJsonStr( irTree );
-
-            // expect( beforeTree ).toEqual( afterTree );
 
             expect(
                 irTree.toJson()
@@ -48,10 +49,14 @@ describe("compileIRToUPLC", () => {
                     new IRDelayed(
                         new IRApp(
                             new IRFunc(1,
-                                new IRVar(0)
+                                new IRDelayed(
+                                    new IRVar(0)
+                                )
                             ),
                             new IRFunc( 1,
-                                new IRVar(0)
+                                new IRDelayed(
+                                    new IRVar(0)
+                                )
                             )
                         )
                     )

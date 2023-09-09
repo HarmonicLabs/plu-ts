@@ -5,6 +5,7 @@ import { IRForced } from "../../IRNodes/IRForced";
 import { IRFunc } from "../../IRNodes/IRFunc";
 import { IRLetted } from "../../IRNodes/IRLetted";
 import { IRTerm } from "../../IRTerm";
+import { prettyIRJsonStr } from "../../utils";
 
 
 export function getDebruijnInTerm( root: IRTerm, termToFind: IRTerm ): number
@@ -16,7 +17,7 @@ export function getDebruijnInTerm( root: IRTerm, termToFind: IRTerm ): number
     {
         const { term, dbn } = stack.pop() as { term: IRTerm, dbn: number };
 
-        if( uint8ArrayEq( term.hash, termTofindHash ) ) return dbn;
+        if( term === termToFind || uint8ArrayEq( term.hash, termTofindHash ) ) return dbn;
 
         if( term instanceof IRApp )
         {

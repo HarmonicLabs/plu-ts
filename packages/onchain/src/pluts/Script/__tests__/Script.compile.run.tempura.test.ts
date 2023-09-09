@@ -711,12 +711,12 @@ const tempura
 
                 const lower_range = pgetFinite.$( interval.from.bound );
 
-                const time_diff = plet(
+                const time_diff =
+                // plet(
                     psub
                     .$( upper_range )
                     .$( lower_range )
-
-                );
+                // );
 
                 // inlined
                 // Spend(1) requirement: Time range span is 3 minutes or less and inclusive
@@ -894,10 +894,10 @@ const tempura
                     // Spend(11) requirement: Output current hash is the target hash
                     // Spend(12) requirement: Check output extra field is within a certain size
                     // Spend(13) requirement: Check output interlink is correct
-                    singleOutToSelf // OK
-                    // pBool( true )
-                    // .and( timerangeIn3Mins ) // OK
-                    .and( meetsDifficulty )  // OK
+                    // singleOutToSelf // OK
+                    pBool( true )
+                    .and( timerangeIn3Mins ) // OK
+                    // .and( meetsDifficulty )  // OK
                     // .and( inputHasMasterToken ) // OK
                     // .and( singleMintEntry )
                     // .and( correctMint )
@@ -961,6 +961,8 @@ describe("run tempura", () => {
             lam( data, unit )
         )
         .$( pData( ctxData ) );
+
+        console.log( prettyIRJsonStr( term.toIR() ) );
 
         // const ir = term.toIR();
         console.time("uplc compilation");

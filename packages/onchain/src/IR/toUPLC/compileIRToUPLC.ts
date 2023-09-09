@@ -11,9 +11,14 @@ import { _irToUplc } from "./_internal/_irToUplc";
 import { includesNode } from "./_internal/includesNode";
 import type { UPLCTerm } from "@harmoniclabs/uplc";
 import { prettyIRJsonStr } from "../utils/showIR";
+import { IRConst } from "../IRNodes/IRConst";
 
 export function compileIRToUPLC( term: IRTerm ): UPLCTerm
 {
+    // most of the time we are just compiling small
+    // pre-execuded terms (hence constants)
+    if( term instanceof IRConst ) return _irToUplc( term );
+    
     ///////////////////////////////////////////////////////////////////////////////
     // ------------------------------------------------------------------------- //
     // --------------------------------- init  --------------------------------- //

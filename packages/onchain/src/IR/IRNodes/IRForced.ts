@@ -7,6 +7,7 @@ import { IHash } from "../interfaces/IHash";
 import { IIRParent } from "../interfaces/IIRParent";
 import { concatUint8Arr } from "../utils/concatUint8Arr";
 import { isIRTerm } from "../utils/isIRTerm";
+import { IRParentTerm, isIRParentTerm } from "../utils/isIRParentTerm";
 
 export class IRForced
     implements Cloneable<IRForced>, IHash, IIRParent, ToJson
@@ -15,7 +16,9 @@ export class IRForced
     readonly hash!: Uint8Array
     markHashAsInvalid!: () => void;
 
-    parent: IRTerm | undefined;
+    removeChild!: ( child: IRTerm ) => void;
+
+    parent: IRParentTerm | undefined;
 
     constructor( forced: IRTerm )
     {
@@ -63,6 +66,10 @@ export class IRForced
                         );
                     }
                     this.markHashAsInvalid();
+                    if( _forced )
+                    {
+                        _forced.parent = undefined;
+                    }
                     _forced = newForced;
                     _forced.parent = this;
                 },
@@ -72,20 +79,39 @@ export class IRForced
         );
         this.forced = forced;
 
-        let _parent: IRTerm | undefined = undefined;
+        let _parent: IRParentTerm | undefined = undefined;
         Object.defineProperty(
             this, "parent",
             {
                 get: () => _parent,
-                set: ( newParent: IRTerm | undefined ) => {
+                set: ( newParent: IRParentTerm | undefined ) => {
 
-                    if( newParent === undefined || isIRTerm( newParent ) )
+                    if(
+                        (
+                            newParent === undefined || 
+                            isIRParentTerm( newParent )
+                        ) &&
+                        _parent !== newParent
+                    )
                     {
+                        _parent?.removeChild( this );
                         _parent = newParent;
                     }
 
                 },
                 enumerable: true,
+                configurable: false
+            }
+        );
+
+        Object.defineProperty(
+            this, "removeChild",
+            {
+                value: ( child: any ) => {
+                    if( _forced === child ) _forced = undefined as any;
+                },
+                writable: false,
+                enumerable: false,
                 configurable: false
             }
         );

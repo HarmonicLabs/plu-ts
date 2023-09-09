@@ -9,6 +9,7 @@ import { concatUint8Arr } from "../utils/concatUint8Arr";
 import { isIRTerm } from "../utils/isIRTerm";
 import { positiveIntAsBytes } from "../utils/positiveIntAsBytes";
 import { defineReadOnlyProperty } from "@harmoniclabs/obj-utils";
+import { IRParentTerm, isIRParentTerm } from "../utils/isIRParentTerm";
 
 
 export class IRFunc
@@ -24,6 +25,8 @@ export class IRFunc
     parent: IRTerm | undefined;
 
     clone!: () => IRFunc;
+
+    removeChild!: ( child: IRTerm ) => void;
 
     constructor(
         arity: number,
@@ -85,7 +88,14 @@ export class IRFunc
                         );
                     }
                     this.markHashAsInvalid();
+                    if( _body )
+                    {
+                        // remove pointer from old body;
+                        _body.parent = undefined;
+                    }
+                    // update body
                     _body = newBody;
+                    // update new body pointer
                     _body.parent = this;
                 },
                 enumerable: true,
@@ -94,20 +104,39 @@ export class IRFunc
         );
         this.body = body;
         
-        let _parent: IRTerm | undefined = undefined;
+        let _parent: IRParentTerm | undefined = undefined;
         Object.defineProperty(
             this, "parent",
             {
                 get: () => _parent,
-                set: ( newParent: IRTerm | undefined ) => {
+                set: ( newParent: IRParentTerm | undefined ) => {
 
-                    if( newParent === undefined || isIRTerm( newParent ) )
+                    if(
+                        (
+                            newParent === undefined || 
+                            isIRParentTerm( newParent )
+                        ) &&
+                        _parent !== newParent
+                    )
                     {
+                        _parent?.removeChild( this );
                         _parent = newParent;
                     }
 
                 },
                 enumerable: true,
+                configurable: false
+            }
+        );
+
+        Object.defineProperty(
+            this, "removeChild",
+            {
+                value: ( child: any ) => {
+                    if( _body === child ) _body = undefined as any;
+                },
+                writable: false,
+                enumerable: false,
                 configurable: false
             }
         );

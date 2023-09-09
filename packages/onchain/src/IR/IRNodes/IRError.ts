@@ -5,6 +5,7 @@ import { IRTerm } from "../IRTerm";
 import { IHash } from "../interfaces/IHash";
 import { IIRParent } from "../interfaces/IIRParent";
 import { isIRTerm } from "../utils/isIRTerm";
+import { IRParentTerm, isIRParentTerm } from "../utils/isIRParentTerm";
 
 const irErrorBitTag = new Uint8Array([ 0b0000_0111 ]);
 const errorHash = blake2b_128( irErrorBitTag.slice() )
@@ -15,7 +16,7 @@ export class IRError
     readonly hash!: Uint8Array;
     markHashAsInvalid!: () => void;
 
-    parent: IRTerm | undefined;
+    parent: IRParentTerm | undefined;
 
     msg?: string
     addInfos?: any
@@ -25,15 +26,22 @@ export class IRError
         this.msg = msg;
         this.addInfos = addInfos;
 
-        let _parent: IRTerm | undefined = undefined;
+        let _parent: IRParentTerm | undefined = undefined;
         Object.defineProperty(
             this, "parent",
             {
                 get: () => _parent,
-                set: ( newParent: IRTerm | undefined ) => {
+                set: ( newParent: IRParentTerm | undefined ) => {
 
-                    if( newParent === undefined || isIRTerm( newParent ) )
+                    if(
+                        (
+                            newParent === undefined || 
+                            isIRParentTerm( newParent )
+                        ) &&
+                        _parent !== newParent
+                    )
                     {
+                        _parent?.removeChild( this );
                         _parent = newParent;
                     }
 
@@ -42,7 +50,7 @@ export class IRError
                 configurable: false
             }
         );
-
+        
         Object.defineProperty(
             this, "hash", {
                 get: () => errorHash.slice(),

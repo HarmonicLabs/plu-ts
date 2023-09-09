@@ -7,6 +7,7 @@ import { IHash } from "../interfaces/IHash";
 import { IIRParent } from "../interfaces/IIRParent";
 import { concatUint8Arr } from "../utils/concatUint8Arr";
 import { isIRTerm } from "../utils/isIRTerm";
+import { IRParentTerm, isIRParentTerm } from "../utils/isIRParentTerm";
 
 export class IRDelayed
     implements Cloneable<IRDelayed>, IHash, IIRParent, ToJson
@@ -15,7 +16,9 @@ export class IRDelayed
     readonly hash!: Uint8Array
     markHashAsInvalid!: () => void;
 
-    parent: IRTerm | undefined;
+    removeChild!: ( child: IRTerm ) => void;
+
+    parent: IRParentTerm | undefined;
 
     constructor( delayed: IRTerm )
     {
@@ -64,6 +67,10 @@ export class IRDelayed
                         );
                     }
                     this.markHashAsInvalid();
+                    if( _delayed )
+                    {
+                        _delayed.parent = undefined;
+                    }
                     _delayed = newDelayed;
                     _delayed.parent = this;
                 },
@@ -73,15 +80,22 @@ export class IRDelayed
         );
         this.delayed = delayed;
 
-        let _parent: IRTerm | undefined = undefined;
+        let _parent: IRParentTerm | undefined = undefined;
         Object.defineProperty(
             this, "parent",
             {
                 get: () => _parent,
-                set: ( newParent: IRTerm | undefined ) => {
+                set: ( newParent: IRParentTerm | undefined ) => {
 
-                    if( newParent === undefined || isIRTerm( newParent ) )
+                    if(
+                        (
+                            newParent === undefined || 
+                            isIRParentTerm( newParent )
+                        ) &&
+                        _parent !== newParent
+                    )
                     {
+                        _parent?.removeChild( this );
                         _parent = newParent;
                     }
 
@@ -90,7 +104,18 @@ export class IRDelayed
                 configurable: false
             }
         );
-
+        
+        Object.defineProperty(
+            this, "removeChild",
+            {
+                value: ( child: any ) => {
+                    if( _delayed === child ) _delayed = undefined as any;
+                },
+                writable: false,
+                enumerable: false,
+                configurable: false
+            }
+        );
     }
 
     static get tag(): Uint8Array

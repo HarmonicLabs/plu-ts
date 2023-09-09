@@ -21,6 +21,7 @@ import { isWellFormedType } from "../../pluts/type_system/kinds/isWellFormedType
 import { typeExtends } from "../../pluts/type_system/typeExtends";
 import { GenericTermType, PrimType, TermType, bool, bs, data, delayed, int, lam, list, pair, str, tyVar, unit } from "../../pluts/type_system/types";
 import { termTypeToString } from "../../pluts/type_system/utils";
+import { IRParentTerm, isIRParentTerm } from "../utils/isIRParentTerm";
 
 export type IRConstValue
     = CanBeUInteger
@@ -42,7 +43,7 @@ export class IRConst
     readonly type!: TermType
     readonly value!: IRConstValue
 
-    parent: IRTerm | undefined;
+    parent: IRParentTerm | undefined;
 
     constructor( t: TermType, v: IRConstValue )
     {
@@ -75,15 +76,22 @@ export class IRConst
             this, "value", v
         );
 
-        let _parent: IRTerm | undefined = undefined;
+        let _parent: IRParentTerm | undefined = undefined;
         Object.defineProperty(
             this, "parent",
             {
                 get: () => _parent,
-                set: ( newParent: IRTerm | undefined ) => {
+                set: ( newParent: IRParentTerm | undefined ) => {
 
-                    if( newParent === undefined || isIRTerm( newParent ) )
+                    if(
+                        (
+                            newParent === undefined || 
+                            isIRParentTerm( newParent )
+                        ) &&
+                        _parent !== newParent
+                    )
                     {
+                        _parent?.removeChild( this );
                         _parent = newParent;
                     }
 

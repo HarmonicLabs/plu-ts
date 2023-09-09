@@ -6,6 +6,7 @@ import { isIRTerm } from "../utils/isIRTerm";
 import { ToJson } from "../../utils/ToJson";
 import { Cloneable } from "@harmoniclabs/cbor/dist/utils/Cloneable";
 import { blake2b_128 } from "@harmoniclabs/crypto";
+import { IRParentTerm, isIRParentTerm } from "../utils/isIRParentTerm";
 
 export class IRApp
     implements Cloneable<IRApp>, IHash, IIRParent, ToJson
@@ -16,7 +17,9 @@ export class IRApp
     readonly hash!: Uint8Array;
     markHashAsInvalid!: () => void;
 
-    parent: IRTerm | undefined;
+    removeChild!: ( child: IRTerm ) => void;
+
+    parent: IRParentTerm | undefined;
 
     constructor( _fn_: IRTerm, _arg_: IRTerm )
     {
@@ -76,6 +79,10 @@ export class IRApp
                     if( !isIRTerm( newFn ) ) return;
                     
                     this.markHashAsInvalid();
+                    if( fn )
+                    {
+                        fn.parent = undefined;
+                    }
                     fn = newFn;
                     fn.parent = this;
                 },
@@ -92,6 +99,10 @@ export class IRApp
                     if( !isIRTerm( newArg ) ) return;
 
                     this.markHashAsInvalid();
+                    if( arg )
+                    {
+                        arg.parent = undefined;
+                    }
                     arg = newArg;
                     arg.parent = this;
                 },
@@ -101,15 +112,22 @@ export class IRApp
         );
         this.arg = _arg_;
 
-        let _parent: IRTerm | undefined = undefined;
+        let _parent: IRParentTerm | undefined = undefined;
         Object.defineProperty(
             this, "parent",
             {
                 get: () => _parent,
-                set: ( newParent: IRTerm | undefined ) => {
+                set: ( newParent: IRParentTerm | undefined ) => {
 
-                    if( newParent === undefined || isIRTerm( newParent ) )
+                    if(
+                        (
+                            newParent === undefined || 
+                            isIRParentTerm( newParent )
+                        ) &&
+                        _parent !== newParent
+                    )
                     {
+                        _parent?.removeChild( this );
                         _parent = newParent;
                     }
 
@@ -118,7 +136,18 @@ export class IRApp
                 configurable: false
             }
         );
-
+        Object.defineProperty(
+            this, "removeChild",
+            {
+                value: ( child: any ) => {
+                    if( fn === child ) fn = undefined as any;
+                    if( arg === child ) arg = undefined as any;
+                },
+                writable: false,
+                enumerable: false,
+                configurable: false
+            }
+        );
     }
 
     static get tag(): Uint8Array { return new Uint8Array([ 0b0000_0010 ]); }

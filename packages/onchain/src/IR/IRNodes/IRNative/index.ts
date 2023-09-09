@@ -9,6 +9,7 @@ import { isIRTerm } from "../../utils/isIRTerm";
 import { positiveBigIntAsBytes } from "../../utils/positiveIntAsBytes";
 import { IRNativeTag, nativeTagToString } from "./IRNativeTag";
 import UPLCFlatUtils from "../../../utils/UPLCFlatUtils";
+import { IRParentTerm, isIRParentTerm } from "../../utils/isIRParentTerm";
 
 /**
  * we might not need all the hashes
@@ -27,7 +28,7 @@ export class IRNative
     readonly hash!: Uint8Array;
     markHashAsInvalid!: () => void;
 
-    parent: IRTerm | undefined;
+    parent: IRParentTerm | undefined;
 
     constructor( tag: IRNativeTag )
     {
@@ -40,15 +41,22 @@ export class IRNative
             }
         );
 
-        let _parent: IRTerm | undefined = undefined;
+        let _parent: IRParentTerm | undefined = undefined;
         Object.defineProperty(
             this, "parent",
             {
                 get: () => _parent,
-                set: ( newParent: IRTerm | undefined ) => {
+                set: ( newParent: IRParentTerm | undefined ) => {
 
-                    if( newParent === undefined || isIRTerm( newParent ) )
+                    if(
+                        (
+                            newParent === undefined || 
+                            isIRParentTerm( newParent )
+                        ) &&
+                        _parent !== newParent
+                    )
                     {
+                        _parent?.removeChild( this );
                         _parent = newParent;
                     }
 
