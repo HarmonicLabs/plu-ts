@@ -894,38 +894,38 @@ const tempura
                     // Spend(11) requirement: Output current hash is the target hash
                     // Spend(12) requirement: Check output extra field is within a certain size
                     // Spend(13) requirement: Check output interlink is correct
-                    // singleOutToSelf // OK
-                    pBool( true )
+                    singleOutToSelf // OK
+                    // pBool( true )
                     .and( timerangeIn3Mins ) // OK
-                    // .and( meetsDifficulty )  // OK
-                    // .and( inputHasMasterToken ) // OK
+                    .and( meetsDifficulty ) // OK
+                    .and( inputHasMasterToken ) // OK
                     // .and( singleMintEntry )
                     // .and( correctMint )
                     // .and( checkMiningMintedValue.$( mint ).$( own_validator_hash ).$( block_number )  )
-                    // .and( outHasOnlyMaster )
+                    .and( outHasOnlyMaster ) // OK
                     // .and( correctOutDatum )
-                    // .and( out_current_posix_time.eq( averaged_current_time ) ) // OK
-                    // .and( out_block_number.eq( block_number.add( 1 ) ) ) // OK
-                    // .and( out_current_hash.eq( found_bytearray ) ) // OK
-                    // .and( pserialiseData.$( extra ).length.ltEq( 512 ) ) // OK
-                    // .and( // OK
-                    //     peqData
-                    //     .$(
-                    //         // out_interlink
-                    //         accessConstIdx( state.raw.fields, 7 )
-                    //     )
-                    //     .$(
-                    //         pListToData.$(
-                    //             calculate_interlink
-                    //             .$( interlink )
-                    //             .$( pBSToData.$( found_bytearray ) )
-                    //             .$( found_leading_zeros )
-                    //             .$( found_difficulty_num )
-                    //             .$( difficulty_number )
-                    //             .$( leading_zeros )
-                    //         )
-                    //     )
-                    // ) // OK
+                    .and( out_current_posix_time.eq( averaged_current_time ) ) // OK
+                    .and( out_block_number.eq( block_number.add( 1 ) ) ) // OK
+                    .and( out_current_hash.eq( found_bytearray ) ) // OK
+                    .and( pserialiseData.$( extra ).length.ltEq( 512 ) ) // OK
+                    .and( // OK
+                        peqData
+                        .$(
+                            // out_interlink
+                            accessConstIdx( state.raw.fields, 7 )
+                        )
+                        .$(
+                            pListToData.$(
+                                calculate_interlink
+                                .$( interlink )
+                                .$( pBSToData.$( found_bytearray ) )
+                                .$( found_leading_zeros )
+                                .$( found_difficulty_num )
+                                .$( difficulty_number )
+                                .$( leading_zeros )
+                            )
+                        )
+                    ) // OK
                 );
             }),
             unit
@@ -962,7 +962,7 @@ describe("run tempura", () => {
         )
         .$( pData( ctxData ) );
 
-        console.log( prettyIRJsonStr( term.toIR() ) );
+        // console.log( prettyIRJsonStr( term.toIR() ) );
 
         // const ir = term.toIR();
         console.time("uplc compilation");

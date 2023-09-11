@@ -9,6 +9,7 @@ import { concatUint8Arr } from "../utils/concatUint8Arr";
 import { isIRTerm } from "../utils/isIRTerm";
 import { positiveIntAsBytes } from "../utils/positiveIntAsBytes";
 import { IRParentTerm, isIRParentTerm } from "../utils/isIRParentTerm";
+import { _modifyChildFromTo } from "../toUPLC/_internal/_modifyChildFromTo";
 
 
 export class IRVar
@@ -94,7 +95,6 @@ export class IRVar
             {
                 get: () => _parent,
                 set: ( newParent: IRParentTerm | undefined ) => {
-
                     if(
                         (
                             newParent === undefined || 
@@ -103,10 +103,13 @@ export class IRVar
                         _parent !== newParent
                     )
                     {
-                        _parent?.removeChild( this );
+                        if( isIRParentTerm( _parent ) ) _modifyChildFromTo(
+                            _parent,
+                            this,
+                            this.clone()
+                        );
                         _parent = newParent;
                     }
-
                 },
                 enumerable: true,
                 configurable: false

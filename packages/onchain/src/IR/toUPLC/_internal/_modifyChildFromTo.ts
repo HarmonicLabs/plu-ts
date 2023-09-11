@@ -6,6 +6,7 @@ import { IRFunc } from "../../IRNodes/IRFunc";
 import { IRHoisted } from "../../IRNodes/IRHoisted";
 import { IRLetted } from "../../IRNodes/IRLetted";
 import { IRTerm } from "../../IRTerm";
+import { IRParentTerm } from "../../utils/isIRParentTerm";
 
 /**
  * 
@@ -13,7 +14,7 @@ import { IRTerm } from "../../IRTerm";
  * @param currentChild mainly passed to distinguish in case of `IRApp`
  * @param newChild new node's child
  */
-export function _modifyChildFromTo( parent: IRTerm | undefined, currentChild: IRTerm | Uint8Array, newChild: IRTerm ): void
+export function _modifyChildFromTo( parent: IRParentTerm | undefined, currentChild: IRTerm | Uint8Array, newChild: IRTerm ): void
 {
     if( parent === undefined )
     {

@@ -10,7 +10,7 @@ import { IRVar } from "../IRNodes/IRVar";
 import { IRForced } from "../IRNodes/IRForced";
 import { IRDelayed } from "../IRNodes/IRDelayed";
 
-function _isClosedIRTerm( term: IRTerm, dbn: number ): boolean
+function _isClosedIRTerm( term: IRTerm, dbn: number, parent?: IRTerm ): boolean
 {
     if( term instanceof IRVar )
     {
@@ -19,12 +19,12 @@ function _isClosedIRTerm( term: IRTerm, dbn: number ): boolean
 
     if( term instanceof IRFunc )
     {
-        return _isClosedIRTerm( term.body, dbn + term.arity );
+        return _isClosedIRTerm( term.body, dbn + term.arity, term );
     }
 
     if( term instanceof IRApp )
     {
-        return _isClosedIRTerm( term.fn, dbn ) && _isClosedIRTerm( term.arg, dbn );
+        return _isClosedIRTerm( term.fn, dbn, term ) && _isClosedIRTerm( term.arg, dbn, term);
     }
     
     if( term instanceof IRConst ) return true;
@@ -32,13 +32,16 @@ function _isClosedIRTerm( term: IRTerm, dbn: number ): boolean
     if( term instanceof IRNative ) return true;
     if( term instanceof IRHoisted ) return true;
     
-    if( term instanceof IRLetted ) return _isClosedIRTerm( term.value, dbn );
+    if( term instanceof IRLetted ) return _isClosedIRTerm( term.value, dbn, term );
 
-    if( term instanceof IRForced ) return _isClosedIRTerm( term.forced, dbn );
-    if( term instanceof IRDelayed ) return _isClosedIRTerm( term.delayed, dbn );
+    if( term instanceof IRForced ) return _isClosedIRTerm( term.forced, dbn, term );
+    if( term instanceof IRDelayed ) return _isClosedIRTerm( term.delayed, dbn, term );
 
     // not even an IRTerm
-    return false;
+    console.log( parent )
+    throw new Error(
+        "`isClosedIRTerm` called on non-IR argument"
+    );
 }
 
 export function isClosedIRTerm( term: IRTerm ): boolean

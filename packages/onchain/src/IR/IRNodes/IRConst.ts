@@ -22,6 +22,7 @@ import { typeExtends } from "../../pluts/type_system/typeExtends";
 import { GenericTermType, PrimType, TermType, bool, bs, data, delayed, int, lam, list, pair, str, tyVar, unit } from "../../pluts/type_system/types";
 import { termTypeToString } from "../../pluts/type_system/utils";
 import { IRParentTerm, isIRParentTerm } from "../utils/isIRParentTerm";
+import { _modifyChildFromTo } from "../toUPLC/_internal/_modifyChildFromTo";
 
 export type IRConstValue
     = CanBeUInteger
@@ -82,7 +83,6 @@ export class IRConst
             {
                 get: () => _parent,
                 set: ( newParent: IRParentTerm | undefined ) => {
-
                     if(
                         (
                             newParent === undefined || 
@@ -91,10 +91,13 @@ export class IRConst
                         _parent !== newParent
                     )
                     {
-                        _parent?.removeChild( this );
+                        if( isIRParentTerm( _parent ) ) _modifyChildFromTo(
+                            _parent,
+                            this,
+                            this.clone()
+                        );
                         _parent = newParent;
                     }
-
                 },
                 enumerable: true,
                 configurable: false

@@ -18,6 +18,7 @@ import { IRFunc } from "./IRFunc";
 import { IRLetted } from "./IRLetted";
 import { handleLetted } from "../toUPLC/subRoutines/handleLetted";
 import { IRParentTerm, isIRParentTerm } from "../utils/isIRParentTerm";
+import { _modifyChildFromTo } from "../toUPLC/_internal/_modifyChildFromTo";
 
 
 export type HoistedSetEntry = {
@@ -56,7 +57,6 @@ export class IRHoisted
     parent: IRParentTerm | undefined;
 
     clone!: () => IRHoisted;
-    removeChild!: ( child: IRTerm ) => void 
 
     readonly meta!: IRHoistedMeta
 
@@ -81,6 +81,7 @@ export class IRHoisted
         // initialize without calling "set"
         let _hoisted: IRTerm = hoisted;
         _hoisted.parent = this;
+        
         let _deps: HoistedSetEntry[] | undefined = undefined;
         function _getDeps(): HoistedSetEntry[]
         {
@@ -135,10 +136,6 @@ export class IRHoisted
                     );
                     this.markHashAsInvalid();
                     _deps = undefined;
-                    if( _hoisted )
-                    {
-                        _hoisted.parent = undefined;
-                    }
                     _hoisted = newHoisted;
                     _hoisted.parent = this
                 }
@@ -150,15 +147,19 @@ export class IRHoisted
             {
                 get: (): HoistedSetEntry[] => {
 
-                    return _getDeps().map( dep => {
+                    return _getDeps()
+                    /*
+                    .map( dep => {
 
-                        const hoisted = dep.hoisted.clone();
-                        hoisted.parent = dep.hoisted.parent;
+                        // const hoisted = dep.hoisted.clone();
+                        // hoisted.parent = dep.hoisted.parent;
                         return {
-                            hoisted,
+                            hoisted: dep.hoisted,
                             nReferences: dep.nReferences
                         };
-                    });
+                    })
+                    //*/
+                    ;
                 }, // MUST return clones
                 set: () => {},
                 enumerable: true,
@@ -172,7 +173,6 @@ export class IRHoisted
             {
                 get: () => _parent,
                 set: ( newParent: IRParentTerm | undefined ) => {
-
                     if(
                         (
                             newParent === undefined || 
@@ -181,24 +181,15 @@ export class IRHoisted
                         _parent !== newParent
                     )
                     {
-                        _parent?.removeChild( this );
+                        if( isIRParentTerm( _parent ) ) _modifyChildFromTo(
+                            _parent,
+                            this,
+                            this.clone()
+                        );
                         _parent = newParent;
                     }
-
                 },
                 enumerable: true,
-                configurable: false
-            }
-        );
-        
-        Object.defineProperty(
-            this, "removeChild",
-            {
-                value: ( child: any ) => {
-                    if( _hoisted === child ) _hoisted = undefined as any;
-                },
-                writable: false,
-                enumerable: false,
                 configurable: false
             }
         );

@@ -10,6 +10,7 @@ import { isIRTerm } from "../utils/isIRTerm";
 import { positiveIntAsBytes } from "../utils/positiveIntAsBytes";
 import { defineReadOnlyProperty } from "@harmoniclabs/obj-utils";
 import { IRParentTerm, isIRParentTerm } from "../utils/isIRParentTerm";
+import { _modifyChildFromTo } from "../toUPLC/_internal/_modifyChildFromTo";
 
 
 export class IRFunc
@@ -26,8 +27,6 @@ export class IRFunc
 
     clone!: () => IRFunc;
 
-    removeChild!: ( child: IRTerm ) => void;
-
     constructor(
         arity: number,
         body: IRTerm
@@ -35,14 +34,19 @@ export class IRFunc
     {
         if( !Number.isSafeInteger( arity ) && arity >= 1 )
         throw new BasePlutsError(
-            "invalid arity for 'IRfunc'"
+            "invalid arity for 'IRFunc'"
         )
 
         defineReadOnlyProperty(
             this, "arity", arity
         );
 
-        let _body: IRTerm;
+        if( !isIRTerm( body ) )
+        throw new Error("IRFunc body argument was not an IRTerm");
+
+        let _body: IRTerm = body;
+        _body.parent = this;
+
         let hash: Uint8Array | undefined = undefined;
         Object.defineProperty(
             this, "hash", {
@@ -64,6 +68,7 @@ export class IRFunc
                 configurable: false
             }
         );
+
         Object.defineProperty(
             this, "markHashAsInvalid",
             {
@@ -87,22 +92,15 @@ export class IRFunc
                             "invalid IRTerm to be a function body"
                         );
                     }
+                    
                     this.markHashAsInvalid();
-                    if( _body )
-                    {
-                        // remove pointer from old body;
-                        _body.parent = undefined;
-                    }
-                    // update body
                     _body = newBody;
-                    // update new body pointer
                     _body.parent = this;
                 },
                 enumerable: true,
                 configurable: false
             }
         );
-        this.body = body;
         
         let _parent: IRParentTerm | undefined = undefined;
         Object.defineProperty(
@@ -110,7 +108,6 @@ export class IRFunc
             {
                 get: () => _parent,
                 set: ( newParent: IRParentTerm | undefined ) => {
-
                     if(
                         (
                             newParent === undefined || 
@@ -119,24 +116,15 @@ export class IRFunc
                         _parent !== newParent
                     )
                     {
-                        _parent?.removeChild( this );
+                        if( isIRParentTerm( _parent ) ) _modifyChildFromTo(
+                            _parent,
+                            this,
+                            this.clone()
+                        );
                         _parent = newParent;
                     }
-
                 },
                 enumerable: true,
-                configurable: false
-            }
-        );
-
-        Object.defineProperty(
-            this, "removeChild",
-            {
-                value: ( child: any ) => {
-                    if( _body === child ) _body = undefined as any;
-                },
-                writable: false,
-                enumerable: false,
                 configurable: false
             }
         );

@@ -8,6 +8,7 @@ import { IIRParent } from "../interfaces/IIRParent";
 import { concatUint8Arr } from "../utils/concatUint8Arr";
 import { isIRTerm } from "../utils/isIRTerm";
 import { IRParentTerm, isIRParentTerm } from "../utils/isIRParentTerm";
+import { _modifyChildFromTo } from "../toUPLC/_internal/_modifyChildFromTo";
 
 export class IRDelayed
     implements Cloneable<IRDelayed>, IHash, IIRParent, ToJson
@@ -15,8 +16,6 @@ export class IRDelayed
     delayed!: IRTerm
     readonly hash!: Uint8Array
     markHashAsInvalid!: () => void;
-
-    removeChild!: ( child: IRTerm ) => void;
 
     parent: IRParentTerm | undefined;
 
@@ -54,7 +53,12 @@ export class IRDelayed
             }
         );
 
-        let _delayed: IRTerm;
+        if( !isIRTerm( delayed ) )
+        throw new Error("IRDelayed argument was not an IRTerm");
+
+        let _delayed: IRTerm = delayed;
+        _delayed.parent = this;
+        
         Object.defineProperty(
             this, "delayed",
             {
@@ -67,10 +71,6 @@ export class IRDelayed
                         );
                     }
                     this.markHashAsInvalid();
-                    if( _delayed )
-                    {
-                        _delayed.parent = undefined;
-                    }
                     _delayed = newDelayed;
                     _delayed.parent = this;
                 },
@@ -78,7 +78,6 @@ export class IRDelayed
                 configurable: false
             }
         );
-        this.delayed = delayed;
 
         let _parent: IRParentTerm | undefined = undefined;
         Object.defineProperty(
@@ -86,7 +85,6 @@ export class IRDelayed
             {
                 get: () => _parent,
                 set: ( newParent: IRParentTerm | undefined ) => {
-
                     if(
                         (
                             newParent === undefined || 
@@ -95,24 +93,15 @@ export class IRDelayed
                         _parent !== newParent
                     )
                     {
-                        _parent?.removeChild( this );
+                        if( isIRParentTerm( _parent ) ) _modifyChildFromTo(
+                            _parent,
+                            this,
+                            this.clone()
+                        );
                         _parent = newParent;
                     }
-
                 },
                 enumerable: true,
-                configurable: false
-            }
-        );
-        
-        Object.defineProperty(
-            this, "removeChild",
-            {
-                value: ( child: any ) => {
-                    if( _delayed === child ) _delayed = undefined as any;
-                },
-                writable: false,
-                enumerable: false,
                 configurable: false
             }
         );

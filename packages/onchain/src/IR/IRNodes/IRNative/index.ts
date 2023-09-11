@@ -10,6 +10,7 @@ import { positiveBigIntAsBytes } from "../../utils/positiveIntAsBytes";
 import { IRNativeTag, nativeTagToString } from "./IRNativeTag";
 import UPLCFlatUtils from "../../../utils/UPLCFlatUtils";
 import { IRParentTerm, isIRParentTerm } from "../../utils/isIRParentTerm";
+import { _modifyChildFromTo } from "../../toUPLC/_internal/_modifyChildFromTo";
 
 /**
  * we might not need all the hashes
@@ -47,7 +48,6 @@ export class IRNative
             {
                 get: () => _parent,
                 set: ( newParent: IRParentTerm | undefined ) => {
-
                     if(
                         (
                             newParent === undefined || 
@@ -56,10 +56,13 @@ export class IRNative
                         _parent !== newParent
                     )
                     {
-                        _parent?.removeChild( this );
+                        if( isIRParentTerm( _parent ) ) _modifyChildFromTo(
+                            _parent,
+                            this,
+                            this.clone()
+                        );
                         _parent = newParent;
                     }
-
                 },
                 enumerable: true,
                 configurable: false

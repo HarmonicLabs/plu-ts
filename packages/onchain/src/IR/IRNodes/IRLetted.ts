@@ -19,6 +19,7 @@ import { IRFunc } from "./IRFunc";
 import { IRHoisted } from "./IRHoisted";
 import { prettyIR, prettyIRJsonStr } from "../utils";
 import { IRParentTerm, isIRParentTerm } from "../utils/isIRParentTerm";
+import { _modifyChildFromTo } from "../toUPLC/_internal/_modifyChildFromTo";
 
 
 export type LettedSetEntry = {
@@ -83,8 +84,6 @@ export class IRLetted
     parent: IRParentTerm | undefined;
 
     clone!: () => IRLetted
-
-    removeChild!: ( child: IRTerm ) => void 
 
     readonly meta!: IRLettedMeta
 
@@ -205,15 +204,10 @@ export class IRLetted
                 get: () => _value,
                 set: ( newVal: IRTerm ) => {
                     if( !isIRTerm( newVal ) )
-                    throw new BasePlutsError(
-                        "only closed terms can be hoisted"
-                    );
+                    throw new BasePlutsError("letted term was not IRTerm");
+                
                     this.markHashAsInvalid();
                     _deps = undefined;
-                    if( _value )
-                    {
-                        _value.parent = undefined;
-                    }
                     _value = newVal;
                     _value.parent = this
                 },
@@ -225,15 +219,20 @@ export class IRLetted
         Object.defineProperty(
             this, "dependencies",
             {
-                get: (): LettedSetEntry[] => _getDeps().map( dep => {
+                get: (): LettedSetEntry[] => _getDeps()
+                /*
+                .map( dep => {
 
-                    const clone = dep.letted.clone();
-                    clone.parent = dep.letted.parent; 
+                    // const clone = dep.letted.clone();
+                    // clone.parent = dep.letted.parent; 
                     return {
-                        letted: clone,
+                        letted: dep.letted,
                         nReferences: dep.nReferences
                     }
-                }), // MUST return clones
+                }
+                ), // MUST return clones
+                //*/
+                ,
                 set: () => {},
                 enumerable: true,
                 configurable: false
@@ -246,7 +245,6 @@ export class IRLetted
             {
                 get: () => _parent,
                 set: ( newParent: IRParentTerm | undefined ) => {
-
                     if(
                         (
                             newParent === undefined || 
@@ -255,24 +253,15 @@ export class IRLetted
                         _parent !== newParent
                     )
                     {
-                        _parent?.removeChild( this );
+                        if( isIRParentTerm( _parent ) ) _modifyChildFromTo(
+                            _parent,
+                            this,
+                            this.clone()
+                        );
                         _parent = newParent;
                     }
-
                 },
                 enumerable: true,
-                configurable: false
-            }
-        );
-
-        Object.defineProperty(
-            this, "removeChild",
-            {
-                value: ( child: any ) => {
-                    if( _value === child ) _value = undefined as any;
-                },
-                writable: false,
-                enumerable: false,
                 configurable: false
             }
         );
@@ -380,7 +369,15 @@ export function getSortedLettedSet( lettedTerms: LettedSetEntry[] ): LettedSetEn
 }
 
 export interface GetLettedTermsOptions {
+    /**
+     * looks for letted terms inside other letted terms
+     * 
+     * (unnecessary if called only to later pass the result to `getSortedLettedSet`)
+     */
     all: boolean,
+    /**
+     * look for letted terms inside hoisted terms (always closed)
+     */
     includeHoisted: boolean
 }
 

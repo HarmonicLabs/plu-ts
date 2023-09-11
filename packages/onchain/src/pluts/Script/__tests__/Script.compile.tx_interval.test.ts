@@ -1,8 +1,7 @@
-import { UPLCConst, prettyUPLC } from "@harmoniclabs/uplc";
+import { UPLCConst } from "@harmoniclabs/uplc";
 import { PExtended, PInterval, PLowerBound, PScriptContext, PUpperBound, bool, int, pData, pDataI, peqInt, perror, pfn, phoist, plet, pmatch, pstruct, psub, punsafeConvertType } from "../..";
 import { Machine } from "@harmoniclabs/plutus-machine";
 import { DataConstr, dataFromCbor } from "@harmoniclabs/plutus-data";
-import { prettyIRJsonStr } from "../../../IR/utils/showIR";
 
 /*
 const getFinite = phoist(
@@ -19,7 +18,7 @@ const getFinite = phoist(
 
 describe("tx interval", () => {
     
-    test.only("eq bounds", () => {
+    test("eq bounds", () => {
     
         const thing = pfn([
             PInterval.type
@@ -126,12 +125,12 @@ describe("tx interval", () => {
         
             const { result } = Machine.eval( uplc );
         
-            console.log( result );
-            console.log(
-                (result as any)?.addInfos?.data ??
-                (result as any)?.addInfos?.list ??
-                (result as any)?.addInfos
-            );
+            // console.log( result );
+            // console.log(
+            //     (result as any)?.addInfos?.data ??
+            //     (result as any)?.addInfos?.list ??
+            //     (result as any)?.addInfos
+            // );
         
             expect( result instanceof UPLCConst ).toBe( true );
         });

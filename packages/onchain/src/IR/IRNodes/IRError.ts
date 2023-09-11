@@ -6,6 +6,7 @@ import { IHash } from "../interfaces/IHash";
 import { IIRParent } from "../interfaces/IIRParent";
 import { isIRTerm } from "../utils/isIRTerm";
 import { IRParentTerm, isIRParentTerm } from "../utils/isIRParentTerm";
+import { _modifyChildFromTo } from "../toUPLC/_internal/_modifyChildFromTo";
 
 const irErrorBitTag = new Uint8Array([ 0b0000_0111 ]);
 const errorHash = blake2b_128( irErrorBitTag.slice() )
@@ -32,7 +33,6 @@ export class IRError
             {
                 get: () => _parent,
                 set: ( newParent: IRParentTerm | undefined ) => {
-
                     if(
                         (
                             newParent === undefined || 
@@ -41,10 +41,13 @@ export class IRError
                         _parent !== newParent
                     )
                     {
-                        _parent?.removeChild( this );
+                        if( isIRParentTerm( _parent ) ) _modifyChildFromTo(
+                            _parent,
+                            this,
+                            this.clone()
+                        );
                         _parent = newParent;
                     }
-
                 },
                 enumerable: true,
                 configurable: false

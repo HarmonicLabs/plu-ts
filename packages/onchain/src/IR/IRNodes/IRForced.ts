@@ -8,6 +8,7 @@ import { IIRParent } from "../interfaces/IIRParent";
 import { concatUint8Arr } from "../utils/concatUint8Arr";
 import { isIRTerm } from "../utils/isIRTerm";
 import { IRParentTerm, isIRParentTerm } from "../utils/isIRParentTerm";
+import { _modifyChildFromTo } from "../toUPLC/_internal/_modifyChildFromTo";
 
 export class IRForced
     implements Cloneable<IRForced>, IHash, IIRParent, ToJson
@@ -15,8 +16,6 @@ export class IRForced
     forced!: IRTerm
     readonly hash!: Uint8Array
     markHashAsInvalid!: () => void;
-
-    removeChild!: ( child: IRTerm ) => void;
 
     parent: IRParentTerm | undefined;
 
@@ -53,7 +52,12 @@ export class IRForced
             }
         );
         
-        let _forced: IRTerm;
+        if( !isIRTerm( forced ) )
+        throw new Error("IRForced argument was not an IRTerm");
+
+        let _forced: IRTerm = forced;
+        _forced.parent = this;
+        
         Object.defineProperty(
             this, "forced",
             {
@@ -66,10 +70,6 @@ export class IRForced
                         );
                     }
                     this.markHashAsInvalid();
-                    if( _forced )
-                    {
-                        _forced.parent = undefined;
-                    }
                     _forced = newForced;
                     _forced.parent = this;
                 },
@@ -77,7 +77,6 @@ export class IRForced
                 configurable: false
             }
         );
-        this.forced = forced;
 
         let _parent: IRParentTerm | undefined = undefined;
         Object.defineProperty(
@@ -85,7 +84,6 @@ export class IRForced
             {
                 get: () => _parent,
                 set: ( newParent: IRParentTerm | undefined ) => {
-
                     if(
                         (
                             newParent === undefined || 
@@ -94,24 +92,15 @@ export class IRForced
                         _parent !== newParent
                     )
                     {
-                        _parent?.removeChild( this );
+                        if( isIRParentTerm( _parent ) ) _modifyChildFromTo(
+                            _parent,
+                            this,
+                            this.clone()
+                        );
                         _parent = newParent;
                     }
-
                 },
                 enumerable: true,
-                configurable: false
-            }
-        );
-
-        Object.defineProperty(
-            this, "removeChild",
-            {
-                value: ( child: any ) => {
-                    if( _forced === child ) _forced = undefined as any;
-                },
-                writable: false,
-                enumerable: false,
                 configurable: false
             }
         );

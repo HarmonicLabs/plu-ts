@@ -74,7 +74,6 @@
       "@types/blake2": "^4.0.1",
       "@types/jest": "^28.1.4",
       "@types/node": "^18.14.6",
-      "blake2": "^4.1.1",
       "jest": "^29.4.3",
       "jest-environment-jsdom": "^29.4.3",
       "rollup": "^3.18.0",
