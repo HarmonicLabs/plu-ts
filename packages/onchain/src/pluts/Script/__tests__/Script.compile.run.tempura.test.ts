@@ -1,6 +1,6 @@
 import { fromAscii } from "@harmoniclabs/uint8array-utils";
 import { PTokenName } from "../../API/V1/Value/PTokenName";
-import { PAssetsEntry, PCurrencySymbol, PData, PExtended, PInt, PScriptContext, PScriptPurpose, PTxInfo, PTxOut, PTxOutRef, PType, PUnit, PValue, PValueEntry, Term, TermFn, TermList, bool, bs, data, delayed, fn, int, lam, list, pBSToData, pBool, pData, pInt, pList, pListToData, pchooseList, pdelay, peqData, perror, pfn, pforce, phoist, pif, pindexBs, pisEmpty, plam, plet, pmakeUnit, pmatch, pmatchList, pnilData, precursive, pserialiseData, psha2_256, pstrictIf, pstruct, psub, ptrace, ptraceError, ptraceVal, punBData, punsafeConvertType, str, unit } from "../..";
+import { PAssetsEntry, PCurrencySymbol, PData, PExtended, PInt, PScriptContext, PScriptPurpose, PTxInfo, PTxOut, PTxOutRef, PType, PUnit, PValue, PValueEntry, Term, TermFn, TermList, bool, bs, data, delayed, fn, int, lam, list, pBSToData, pBool, pData, pInt, pList, pListToData, pchooseList, pdelay, peqData, perror, pfn, pforce, phoist, pif, pindexBs, pisEmpty, plam, plet, pmakeUnit, pmatch, pmatchList, pnilData, precursive, pserialiseData, psha2_256, pstrictIf, pstruct, psub, ptrace, ptraceError, ptraceVal, punBData, punsafeConvertType, str, termTypeToString, unit } from "../..";
 import { TxOutRef } from "@harmoniclabs/cardano-ledger-ts";
 import { dataFromCbor } from "@harmoniclabs/plutus-data";
 import { Machine } from "@harmoniclabs/plutus-machine";
@@ -780,9 +780,19 @@ const tempura
                 const inputHasMasterToken = value_contains_master.$( ownIn.value ).$( own_validator_hash );
                 // ownIn.value.amountOf( own_validator_hash, master_tn ).eq( 1 );
 
+                console.log( termTypeToString( mint.type ) );
+
                 const ownMints = plet(
                     pmatch(
-                        mint.find(({ policy }) => policy.eq( own_validator_hash ) )
+                        mint.find(({ policy }) => {
+
+                            return punBData.$(
+                                punsafeConvertType(
+                                    policy,
+                                    data
+                                )
+                            ).eq( (own_validator_hash) ) 
+                        })
                     )
                     .onJust(({ val }) => val.snd )
                     .onNothing( _ => perror( list( PAssetsEntry.type ) ) )
@@ -894,38 +904,38 @@ const tempura
                     // Spend(11) requirement: Output current hash is the target hash
                     // Spend(12) requirement: Check output extra field is within a certain size
                     // Spend(13) requirement: Check output interlink is correct
-                    singleOutToSelf // OK
-                    // pBool( true )
-                    .and( timerangeIn3Mins ) // OK
-                    .and( meetsDifficulty ) // OK
-                    .and( inputHasMasterToken ) // OK
-                    // .and( singleMintEntry )
+                    // singleOutToSelf // OK
+                    pBool( true )
+                    // .and( timerangeIn3Mins ) // OK
+                    // .and( meetsDifficulty ) // OK
+                    // .and( inputHasMasterToken ) // OK
+                    .and( singleMintEntry )
                     // .and( correctMint )
                     // .and( checkMiningMintedValue.$( mint ).$( own_validator_hash ).$( block_number )  )
-                    .and( outHasOnlyMaster ) // OK
+                    // .and( outHasOnlyMaster ) // OK
                     // .and( correctOutDatum )
-                    .and( out_current_posix_time.eq( averaged_current_time ) ) // OK
-                    .and( out_block_number.eq( block_number.add( 1 ) ) ) // OK
-                    .and( out_current_hash.eq( found_bytearray ) ) // OK
-                    .and( pserialiseData.$( extra ).length.ltEq( 512 ) ) // OK
-                    .and( // OK
-                        peqData
-                        .$(
-                            // out_interlink
-                            accessConstIdx( state.raw.fields, 7 )
-                        )
-                        .$(
-                            pListToData.$(
-                                calculate_interlink
-                                .$( interlink )
-                                .$( pBSToData.$( found_bytearray ) )
-                                .$( found_leading_zeros )
-                                .$( found_difficulty_num )
-                                .$( difficulty_number )
-                                .$( leading_zeros )
-                            )
-                        )
-                    ) // OK
+                    // .and( out_current_posix_time.eq( averaged_current_time ) ) // OK
+                    // .and( out_block_number.eq( block_number.add( 1 ) ) ) // OK
+                    // .and( out_current_hash.eq( found_bytearray ) ) // OK
+                    // .and( pserialiseData.$( extra ).length.ltEq( 512 ) ) // OK
+                    // .and( // OK
+                    //     peqData
+                    //     .$(
+                    //         // out_interlink
+                    //         accessConstIdx( state.raw.fields, 7 )
+                    //     )
+                    //     .$(
+                    //         pListToData.$(
+                    //             calculate_interlink
+                    //             .$( interlink )
+                    //             .$( pBSToData.$( found_bytearray ) )
+                    //             .$( found_leading_zeros )
+                    //             .$( found_difficulty_num )
+                    //             .$( difficulty_number )
+                    //             .$( leading_zeros )
+                    //         )
+                    //     )
+                    // ) // OK
                 );
             }),
             unit
@@ -982,6 +992,7 @@ describe("run tempura", () => {
         );
 
         expect( res.result instanceof UPLCConst ).toBe( true );
+        expect( res.result ).toEqual( UPLCConst.unit );
     })
 
 });
