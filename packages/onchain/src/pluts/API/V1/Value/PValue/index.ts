@@ -6,22 +6,24 @@ import { pfn } from "../../../../lib/pfn";
 import { phoist } from "../../../../lib/phoist";
 import { pInt } from "../../../../lib/std/int/pInt";
 import { _precursiveList } from "../../../../lib/std/list/precursiveList/minimal";
-import { delayed, fn, int, list, pair } from "../../../../type_system/types";
+import { asData, delayed, fn, int, lam, list, pair } from "../../../../type_system/types";
 import { PCurrencySymbol } from "../PCurrencySymbol";
 import { PTokenName } from "../PTokenName";
 import { _papp } from "../../../../lib/std/data/conversion/minimal_common";
 import { plam } from "../../../../lib/plam";
+import { unwrapAlias } from "../../../../type_system";
+import { makeMockTerm } from "../../../../lib/std/UtilityTerms/mockUtilityTerms/makeMockTerm";
 
 export const PAssetsEntry = palias(
     pair(
         PTokenName.type,
         int
     ),
-    ( _self_t ) => {
+    ( self_t ) => {
 
         return {
-            tokenName: pfstPair( PTokenName.type, int ),
-            quantity:  psndPair( PTokenName.type, int ),
+            tokenName: plam( self_t, PTokenName.type )( self => self.fst ),
+            quantity:  plam( self_t, int )( self => self.snd ),
         }
     }
 );
@@ -31,12 +33,12 @@ export const PValueEntry = palias(
         PCurrencySymbol.type,
         list( PAssetsEntry.type )
     ),
-    ( _self_t ) => {
+    ( self_t ) => {
 
         return {
-            policy: pfstPair( PCurrencySymbol.type, list( PAssetsEntry.type ) ),
-            assets: psndPair( PCurrencySymbol.type, list( PAssetsEntry.type ) )
-        }
+            policy: plam( self_t, PCurrencySymbol.type )( self => self.fst ),
+            assets: plam( self_t, list( PAssetsEntry.type ) )( self => self.snd )
+        };
     }
 )
 

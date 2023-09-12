@@ -1,6 +1,6 @@
 import { fromAscii } from "@harmoniclabs/uint8array-utils";
 import { PTokenName } from "../../API/V1/Value/PTokenName";
-import { PAssetsEntry, PCurrencySymbol, PData, PExtended, PInt, PScriptContext, PScriptPurpose, PTxInfo, PTxOut, PTxOutRef, PType, PUnit, PValue, PValueEntry, Term, TermFn, TermList, bool, bs, data, delayed, fn, int, lam, list, pBSToData, pBool, pData, pInt, pList, pListToData, pchooseList, pdelay, peqData, perror, pfn, pforce, phoist, pif, pindexBs, pisEmpty, plam, plet, pmakeUnit, pmatch, pmatchList, pnilData, precursive, pserialiseData, psha2_256, pstrictIf, pstruct, psub, ptrace, ptraceError, ptraceVal, punBData, punsafeConvertType, str, termTypeToString, unit } from "../..";
+import { PAssetsEntry, PCurrencySymbol, PData, PExtended, PInt, PScriptContext, PScriptPurpose, PTxInfo, PTxOut, PTxOutRef, PType, PUnit, PValue, PValueEntry, Term, TermFn, TermList, bool, bs, data, delayed, fn, int, lam, list, pBSToData, pBool, pData, pInt, pList, pListToData, pchooseList, pdelay, peqData, perror, pfn, pforce, phoist, pif, pindexBs, pisEmpty, plam, plet, pmakeUnit, pmatch, pmatchList, pnilData, precursive, pserialiseData, psha2_256, pstrictIf, pstruct, psub, ptrace, ptraceError, ptraceVal, punBData, punIData, punsafeConvertType, str, termTypeToString, unit } from "../..";
 import { TxOutRef } from "@harmoniclabs/cardano-ledger-ts";
 import { dataFromCbor } from "@harmoniclabs/plutus-data";
 import { Machine } from "@harmoniclabs/plutus-machine";
@@ -780,19 +780,40 @@ const tempura
                 const inputHasMasterToken = value_contains_master.$( ownIn.value ).$( own_validator_hash );
                 // ownIn.value.amountOf( own_validator_hash, master_tn ).eq( 1 );
 
-                console.log( termTypeToString( mint.type ) );
+                const correctMint = plet(
+                    pmatch(
+                        mint.find(({ fst: policy }) => policy.eq( own_validator_hash ))
+                    )
+                    .onJust(({ val }) => val.snd )
+                    .onNothing( _ => perror( list( PAssetsEntry.type ) ) )
+                ).in( ownMints => {
+
+                    // // inlined
+                    // // Spend(4) requirement: Only one type of token minted under the validator policy
+                    // const singleMintEntry = pisEmpty.$( ownMints.tail );
+
+                    const { fst: ownMint_tn, snd: ownMint_qty } = ownMints.head;
+
+                    const halving_exponent = plet( block_number.div( halving_number ) );
+
+                    // inlined
+                    const expected_quantity =
+                        pif( int ).$( halving_exponent.gt( 29 ) )
+                        .then( 0 )
+                        .else(
+                            initial_payout.div( exp2.$( halving_exponent ) )
+                        );
+
+                    // inlined
+                    // Spend(5) requirement: Minted token is the correct name and amount
+                    const _correctMint = ownMint_tn.eq( tn ).and( ownMint_qty.eq( expected_quantity ) );
+
+                    return ownMint_tn.eq( tn ).and( ownMint_qty.eq( expected_quantity ) );
+                })
 
                 const ownMints = plet(
                     pmatch(
-                        mint.find(({ policy }) => {
-
-                            return punBData.$(
-                                punsafeConvertType(
-                                    policy,
-                                    data
-                                )
-                            ).eq( (own_validator_hash) ) 
-                        })
+                        mint.find(({ fst: policy }) => policy.eq( own_validator_hash ))
                     )
                     .onJust(({ val }) => val.snd )
                     .onNothing( _ => perror( list( PAssetsEntry.type ) ) )
@@ -802,21 +823,21 @@ const tempura
                 // Spend(4) requirement: Only one type of token minted under the validator policy
                 const singleMintEntry = pisEmpty.$( ownMints.tail );
 
-                const { fst: ownMint_tn, snd: ownMint_qty } = ownMints.head;
+                // const { fst: ownMint_tn, snd: ownMint_qty } = ownMints.head;
 
-                const halving_exponent = plet( block_number.div( halving_number ) );
+                // const halving_exponent = plet( block_number.div( halving_number ) );
 
-                // inlined
-                const expected_quantity =
-                    pif( int ).$( halving_exponent.gt( 29 ) )
-                    .then( 0 )
-                    .else(
-                        initial_payout.div( exp2.$( halving_exponent ) )
-                    );
-
-                // inlined
-                // Spend(5) requirement: Minted token is the correct name and amount
-                const correctMint = ownMint_tn.eq( tn ).and( ownMint_qty.eq( expected_quantity ) )
+                // // inlined
+                // const expected_quantity =
+                //     pif( int ).$( halving_exponent.gt( 29 ) )
+                //     .then( 0 )
+                //     .else(
+                //         initial_payout.div( exp2.$( halving_exponent ) )
+                //     );
+                
+                // // inlined
+                // // Spend(5) requirement: Minted token is the correct name and amount
+                // const _correctMint = ownMint_tn.eq( tn ).and( ownMint_qty.eq( expected_quantity ) )
 
                 // inlined
                 // Spend(6) requirement: Output has only master token and ada
@@ -826,7 +847,7 @@ const tempura
                 // Check for every divisible by 2016 block: 
                 // - Epoch time resets
                 // - leading zeros is adjusted based on percent of hardcoded target time for 2016 blocks vs epoch time
-                const out_datum = plet(
+                const out_state = plet(
                     pmatch( ownOut.datum )
                     .onInlineDatum(({ datum }) => punsafeConvertType( datum, SpendingState.type) )
                     ._( _ => perror( SpendingState.type ) )
@@ -843,7 +864,7 @@ const tempura
                     // interlink: out_interlink,
                     extra,
                     difficulty_number: out_difficulty_number
-                } = out_datum;
+                } = out_state;
 
                 // inlined
                 const tot_epoch_time =
@@ -858,36 +879,63 @@ const tempura
                 const adjustment_num = diff_adjustment.head;
                 const adjustment_den = diff_adjustment.tail.head;
 
-                const new_diff = plet(
+                // const new_diff = plet(
+                //     get_new_difficulty
+                //     .$( difficulty_number )
+                //     .$( leading_zeros )
+                //     .$( adjustment_num )
+                //     .$( adjustment_den )
+                // );
+// 
+                // const new_difficulty    = new_diff.head;
+                // const new_leading_zeros = new_diff.tail.head;
+// 
+                // // inlined
+                // const new_epoch_time = epoch_time.add( averaged_current_time ).sub( current_posix_time );
+
+                // inlined
+                // Spend(8) requirement: Check output has correct difficulty number, leading zeros, and epoch time
+                const correctOutDatum = plet(
                     get_new_difficulty
                     .$( difficulty_number )
                     .$( leading_zeros )
                     .$( adjustment_num )
                     .$( adjustment_den )
-                );
+                ).in( new_diff => {
 
-                const new_difficulty    = new_diff.head;
-                const new_leading_zeros = new_diff.tail.head;
+                    const new_difficulty    = new_diff.head;
+                    const new_leading_zeros = new_diff.tail.head;
 
-                // inlined
-                const new_epoch_time = epoch_time.add( averaged_current_time ).sub( current_posix_time );
+                    // inlined
+                    const new_epoch_time = epoch_time.add( averaged_current_time ).sub( current_posix_time );
 
-                // inlined
-                // Spend(8) requirement: Check output has correct difficulty number, leading zeros, and epoch time
-                const correctOutDatum = 
-                new_leading_zeros.eq( out_leading_zeros )
-                .and( new_difficulty.eq( out_difficulty_number ) )
-                .and(
-                    out_epoch_time.eq(
-                        pif( int ).$(
-                            block_number.mod( epoch_number ).eq( 0 )
-                            .and( block_number.gt( 0 ) )
-                        )
-                        .then( 0 )
-                        .else( new_epoch_time )
-                    )
-                );
-                
+                    return plet( out_state.raw.fields ).in( outStateFields => {
+
+                        const out_leading_zeros = punIData.$(
+                            accessConstIdx( outStateFields, 2 )
+                        );
+                        const out_difficulty_number = punIData.$(
+                            accessConstIdx( outStateFields, 3 )
+                        );
+                        const out_epoch_time = punIData.$(
+                            accessConstIdx( outStateFields, 4 )
+                        );
+
+                        return new_leading_zeros.eq( out_leading_zeros )
+                        .and( new_difficulty.eq( out_difficulty_number ) )
+                        .and(
+                            out_epoch_time.eq(
+                                pif( int ).$(
+                                    block_number.mod( epoch_number ).eq( 0 )
+                                    .and( block_number.gt( 0 ) )
+                                )
+                                .then( 0 )
+                                .else( new_epoch_time )
+                            )
+                        );
+                    });
+                });
+
                 return passert.$(
                     // Spend(0) requirement: Contract has only one output going back to itself
                     // Spend(1) requirement: Time range span is 3 minutes or less and inclusive
@@ -904,38 +952,37 @@ const tempura
                     // Spend(11) requirement: Output current hash is the target hash
                     // Spend(12) requirement: Check output extra field is within a certain size
                     // Spend(13) requirement: Check output interlink is correct
-                    // singleOutToSelf // OK
-                    pBool( true )
-                    // .and( timerangeIn3Mins ) // OK
-                    // .and( meetsDifficulty ) // OK
-                    // .and( inputHasMasterToken ) // OK
-                    .and( singleMintEntry )
-                    // .and( correctMint )
-                    // .and( checkMiningMintedValue.$( mint ).$( own_validator_hash ).$( block_number )  )
-                    // .and( outHasOnlyMaster ) // OK
-                    // .and( correctOutDatum )
-                    // .and( out_current_posix_time.eq( averaged_current_time ) ) // OK
-                    // .and( out_block_number.eq( block_number.add( 1 ) ) ) // OK
-                    // .and( out_current_hash.eq( found_bytearray ) ) // OK
-                    // .and( pserialiseData.$( extra ).length.ltEq( 512 ) ) // OK
-                    // .and( // OK
-                    //     peqData
-                    //     .$(
-                    //         // out_interlink
-                    //         accessConstIdx( state.raw.fields, 7 )
-                    //     )
-                    //     .$(
-                    //         pListToData.$(
-                    //             calculate_interlink
-                    //             .$( interlink )
-                    //             .$( pBSToData.$( found_bytearray ) )
-                    //             .$( found_leading_zeros )
-                    //             .$( found_difficulty_num )
-                    //             .$( difficulty_number )
-                    //             .$( leading_zeros )
-                    //         )
-                    //     )
-                    // ) // OK
+                    singleOutToSelf // OK
+                    // pBool( true )
+                    .and( timerangeIn3Mins ) // OK
+                    .and( meetsDifficulty ) // OK
+                    .and( inputHasMasterToken ) // OK
+                    .and( singleMintEntry ) // OK (but not both)
+                    .and( correctMint )
+                    .and( outHasOnlyMaster ) // OK
+                    .and( correctOutDatum )
+                    .and( out_current_posix_time.eq( averaged_current_time ) ) // OK
+                    .and( out_block_number.eq( block_number.add( 1 ) ) ) // OK
+                    .and( out_current_hash.eq( found_bytearray ) ) // OK
+                    .and( pserialiseData.$( extra ).length.ltEq( 512 ) ) // OK
+                    .and( // OK
+                        peqData
+                        .$(
+                            // out_interlink
+                            accessConstIdx( state.raw.fields, 7 )
+                        )
+                        .$(
+                            pListToData.$(
+                                calculate_interlink
+                                .$( interlink )
+                                .$( pBSToData.$( found_bytearray ) )
+                                .$( found_leading_zeros )
+                                .$( found_difficulty_num )
+                                .$( difficulty_number )
+                                .$( leading_zeros )
+                            )
+                        )
+                    ) // OK
                 );
             }),
             unit
@@ -961,7 +1008,7 @@ describe("run tempura", () => {
         const datumData = dataFromCbor("d8799f00582071eb1a4896739027745df976a065ded7ffd4e6371a2a9256999f59371b50b36a0519ffff001b0000018a5b512a340080ff");
         const rdmrData  = dataFromCbor("d87a9f50842b09bb0f88bf1232901043701534ceff");
         const ctxData   = dataFromCbor(
-            "d8799fd8799f9fd8799fd8799fd8799f582012cc3906a43731477e63522a24cbb5eaf74046bf7b44f600d8f062ecac331b71ff00ffd8799fd8799fd87a9f581cc9981006c4abf1eab96a0c87b0ee3d40b8007cd4c9b3d0dea357c278ffd87a80ffbf40bf401a001898f4ff581cc9981006c4abf1eab96a0c87b0ee3d40b8007cd4c9b3d0dea357c278bf466974616d616501ffffd87b9fd8799f00582071eb1a4896739027745df976a065ded7ffd4e6371a2a9256999f59371b50b36a0519ffff001b0000018a5b512a340080ffffd87a80ffffd8799fd8799fd8799f5820fbbce31d47e45af499baff9446c99ccbc2e80db613467dbc5ffea2f3bb10a8a2ff01ffd8799fd8799fd8799f581c13867b04db054caa9655378fe37fedee7029924fbe1243887dc35fd8ffd87a80ffbf40bf401b000000024efc84ffffffd87980d87a80ffffff9fd8799fd8799fd8799f5820fbbce31d47e45af499baff9446c99ccbc2e80db613467dbc5ffea2f3bb10a8a2ff00ffd8799fd8799fd87a9f581cc9981006c4abf1eab96a0c87b0ee3d40b8007cd4c9b3d0dea357c278ffd87a80ffbf40bf401a0128cce6ffffd87b9f00ffd8799f581cc9981006c4abf1eab96a0c87b0ee3d40b8007cd4c9b3d0dea357c278ffffffd8799fd8799fd8799f5820fbbce31d47e45af499baff9446c99ccbc2e80db613467dbc5ffea2f3bb10a8a2ff00ffd8799fd8799fd87a9f581cc9981006c4abf1eab96a0c87b0ee3d40b8007cd4c9b3d0dea357c278ffd87a80ffbf40bf401a0128cce6ffffd87b9f00ffd8799f581cc9981006c4abf1eab96a0c87b0ee3d40b8007cd4c9b3d0dea357c278ffffffff9fd8799fd8799fd87a9f581cc9981006c4abf1eab96a0c87b0ee3d40b8007cd4c9b3d0dea357c278ffd87a80ffbf40bf401a001898f4ff581cc9981006c4abf1eab96a0c87b0ee3d40b8007cd4c9b3d0dea357c278bf466974616d616501ffffd87b9fd8799f01582000000f3b69e1436d48366f34c2e217cf598dc2f886d7dc5bb56688b8365a748b0519ffff1a000a75bc1b0000018a5b5b9ff00080ffffd87a80ffd8799fd8799fd8799f581c13867b04db054caa9655378fe37fedee7029924fbe1243887dc35fd8ffd87a80ffbf40bf401b000000024ef9ac02ff581cc9981006c4abf1eab96a0c87b0ee3d40b8007cd4c9b3d0dea357c278bf4754454d505552411b000000012a05f200ffffd87980d87a80ffffbf40bf401a0002d8fdffffbf40bf4000ff581cc9981006c4abf1eab96a0c87b0ee3d40b8007cd4c9b3d0dea357c278bf4754454d505552411b000000012a05f200ffff80a0d8799fd8799fd87a9f1b0000018a5b5a4060ffd87980ffd8799fd87a9f1b0000018a5b5cff80ffd87980ffff80bfd87a9fd8799fd8799f582012cc3906a43731477e63522a24cbb5eaf74046bf7b44f600d8f062ecac331b71ff00ffffd87a9f50842b09bb0f88bf1232901043701534ceffd8799f581cc9981006c4abf1eab96a0c87b0ee3d40b8007cd4c9b3d0dea357c278ffd87980ffa05820198ca261bc2c0f39e64132c19cd2b2e38dffc4f5594ec195d8750013f73f1b7bffd87a9fd8799fd8799f582012cc3906a43731477e63522a24cbb5eaf74046bf7b44f600d8f062ecac331b71ff00ffffff"
+            "D87982D8798C82D87982D87982D87981582012CC3906A43731477E63522A24CBB5EAF74046BF7B44F600D8F062ECAC331B7100D87984D87982D87A81581CC9981006C4ABF1EAB96A0C87B0EE3D40B8007CD4C9B3D0DEA357C278D87A80A240A1401A001898F4581CC9981006C4ABF1EAB96A0C87B0EE3D40B8007CD4C9B3D0DEA357C278A1466974616D616501D87B81D8798800582071EB1A4896739027745DF976A065DED7FFD4E6371A2A9256999F59371B50B36A05193FFF001B0000018A5B512A340080D87A80D87982D87982D879815820FBBCE31D47E45AF499BAFF9446C99CCBC2E80DB613467DBC5FFEA2F3BB10A8A201D87984D87982D87981581C13867B04DB054CAA9655378FE37FEDEE7029924FBE1243887DC35FD8D87A80A140A1401B000000024EFC84FFD87980D87A8082D87982D87982D879815820FBBCE31D47E45AF499BAFF9446C99CCBC2E80DB613467DBC5FFEA2F3BB10A8A200D87984D87982D87A81581CC9981006C4ABF1EAB96A0C87B0EE3D40B8007CD4C9B3D0DEA357C278D87A80A140A1401A0128CCE6D87B8100D87981581CC9981006C4ABF1EAB96A0C87B0EE3D40B8007CD4C9B3D0DEA357C278D87982D87982D879815820FBBCE31D47E45AF499BAFF9446C99CCBC2E80DB613467DBC5FFEA2F3BB10A8A200D87984D87982D87A81581CC9981006C4ABF1EAB96A0C87B0EE3D40B8007CD4C9B3D0DEA357C278D87A80A140A1401A0128CCE6D87B8100D87981581CC9981006C4ABF1EAB96A0C87B0EE3D40B8007CD4C9B3D0DEA357C27882D87984D87982D87A81581CC9981006C4ABF1EAB96A0C87B0EE3D40B8007CD4C9B3D0DEA357C278D87A80A240A1401A001898F4581CC9981006C4ABF1EAB96A0C87B0EE3D40B8007CD4C9B3D0DEA357C278A1466974616D616501D87B81D8798801582000000F3B69E1436D48366F34C2E217CF598DC2F886D7DC5BB56688B8365A748B05193FFF1A000A75BC1B0000018A5B5B9FF00080D87A80D87984D87982D87981581C13867B04DB054CAA9655378FE37FEDEE7029924FBE1243887DC35FD8D87A80A240A1401B000000024EF9AC02581CC9981006C4ABF1EAB96A0C87B0EE3D40B8007CD4C9B3D0DEA357C278A14754454D505552411B000000012A05F200D87980D87A80A140A1401A0002D8FDA240A14000581CC9981006C4ABF1EAB96A0C87B0EE3D40B8007CD4C9B3D0DEA357C278A14754454D505552411B000000012A05F20080A0D87982D87982D87A811B0000018A5B5A4060D87980D87982D87A811B0000018A5B5CFF80D8798080A2D87A81D87982D87981582012CC3906A43731477E63522A24CBB5EAF74046BF7B44F600D8F062ECAC331B7100D87A8150842B09BB0F88BF1232901043701534CED87981581CC9981006C4ABF1EAB96A0C87B0EE3D40B8007CD4C9B3D0DEA357C278D87980A05820198CA261BC2C0F39E64132C19CD2B2E38DFFC4F5594EC195D8750013F73F1B7BD87A81D87982D87981582012CC3906A43731477E63522A24CBB5EAF74046BF7B44F600D8F062ECAC331B7100"
         );
 
         const term = punsafeConvertType(
@@ -975,21 +1022,21 @@ describe("run tempura", () => {
         // console.log( prettyIRJsonStr( term.toIR() ) );
 
         // const ir = term.toIR();
-        console.time("uplc compilation");
+        // console.time("uplc compilation");
         const uplc = term.toUPLC();
-        console.timeEnd("uplc compilation");
+        // console.timeEnd("uplc compilation");
 
         // console.log( prettyUPLC( uplc ) );
 
         const res = Machine.eval( uplc );
 
-        console.log( res );
-        console.log(
-            (res as any)?.result?.addInfos?.list?.value ??
-            (res as any)?.result?.addInfos?.data ??
-            (res as any)?.result?.addInfos ??
-            (res as any)?.result
-        );
+        // console.log( res );
+        // console.log(
+        //     (res as any)?.result?.addInfos?.list?.value ??
+        //     (res as any)?.result?.addInfos?.data ??
+        //     (res as any)?.result?.addInfos ??
+        //     (res as any)?.result
+        // );
 
         expect( res.result instanceof UPLCConst ).toBe( true );
         expect( res.result ).toEqual( UPLCConst.unit );

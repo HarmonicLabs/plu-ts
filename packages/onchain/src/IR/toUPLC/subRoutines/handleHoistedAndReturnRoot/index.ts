@@ -11,7 +11,6 @@ import { _modifyChildFromTo } from "../../_internal/_modifyChildFromTo";
 import { showIR } from "../../../utils/showIR";
 import { markRecursiveHoistsAsForced } from "../markRecursiveHoistsAsForced";
 
-
 export function handleHoistedAndReturnRoot( term: IRTerm ): IRTerm
 {
     // unwrap;
@@ -140,7 +139,7 @@ export function handleHoistedAndReturnRoot( term: IRTerm ): IRTerm
             //     showIRText( irTerm ),
             // )
             _modifyChildFromTo(
-                irTerm.parent as IRTerm,
+                irTerm.parent,
                 irTerm,
                 irvar
             );
@@ -175,7 +174,7 @@ export function handleHoistedAndReturnRoot( term: IRTerm ): IRTerm
             
             const toInline = irTerm.hoisted;
             _modifyChildFromTo(
-                irTerm.parent as IRTerm,
+                irTerm.parent,
                 irTerm,
                 toInline
             );

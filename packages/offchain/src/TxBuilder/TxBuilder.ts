@@ -243,8 +243,10 @@ export class TxBuilder
         }: ITxBuildSyncOptions = {}
     ): Tx
     {
-        let {
-            tx,
+        const _initBuild = initTxBuild.bind( this )( buildArgs );
+
+        const {
+            // tx,
             scriptsToExec,
             minFee,
             datumsScriptData,
@@ -253,7 +255,9 @@ export class TxBuilder
             requiredOutputValue,
             outs,
             change
-        } = initTxBuild.bind( this )( buildArgs );
+        } = _initBuild;
+
+        let tx = _initBuild.tx;
 
         const rdmrs = tx.witnesses.redeemers ?? [];
         const nRdmrs = rdmrs.length;
@@ -420,7 +424,7 @@ export class TxBuilder
                 ((totExBudget.mem * memRational.num) / memRational.den) +
                 ((totExBudget.cpu * cpuRational.num) / cpuRational.den) +
                 // bigint division truncates always towards 0;
-                // we don't like that so we add 1n for both divisions ( + 2n )
+                // we don't like that so we add `1n` for both divisions ( + 2n )
                 BigInt(2);
 
             if( fee === prevFee ) break; // return last transaciton

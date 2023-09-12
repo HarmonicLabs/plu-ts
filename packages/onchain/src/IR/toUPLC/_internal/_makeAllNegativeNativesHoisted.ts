@@ -10,7 +10,7 @@ export function _makeAllNegativeNativesHoisted( term: IRTerm ): void
         if( elem instanceof IRNative && !(elem.parent instanceof IRHoisted) )
         {
             _modifyChildFromTo(
-                elem.parent as IRTerm,
+                elem.parent,
                 elem,
                 new IRHoisted( elem )
             );
