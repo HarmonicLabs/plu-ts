@@ -44,6 +44,8 @@ export function getElemAtTerm( n: number ): TermFn<[ PList<PData> ], PData >
 
     if( n === 0 ) return phead( data );
 
+    const funcName = "elem_at_" + n.toString();
+
     let uplc: IRTerm = new IRVar(0);
 
     const initialN = n;
@@ -54,11 +56,13 @@ export function getElemAtTerm( n: number ): TermFn<[ PList<PData> ], PData >
     }
 
     uplc = new IRHoisted(
-        new IRFunc( 1,
+        new IRFunc(
+            1,
             new IRApp(
                 IRNative.headList,
                 uplc
-            )
+            ),
+            funcName
         )
     );
 

@@ -9,7 +9,7 @@ describe("compileIRToUPLC", () => {
     test("IRVar", () => {
 
         const ir = new IRVar( 0 );
-        const _irUPlC = _irToUplc( ir );
+        const _irUPlC = _irToUplc( ir ).term;
 
         expect(
             _irUPlC
@@ -22,7 +22,7 @@ describe("compileIRToUPLC", () => {
 
         const idIR = new IRFunc( 1, new IRVar(0) );
 
-        const idUPLC = _irToUplc( idIR );
+        const idUPLC = _irToUplc( idIR ).term;
 
         const expected = new Lambda( new UPLCVar( 0 ) );
 

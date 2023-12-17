@@ -20,6 +20,7 @@ import { IRHoisted } from "./IRHoisted";
 import { prettyIR, prettyIRJsonStr } from "../utils";
 import { IRParentTerm, isIRParentTerm } from "../utils/isIRParentTerm";
 import { _modifyChildFromTo } from "../toUPLC/_internal/_modifyChildFromTo";
+import { BaseIRMetadata } from "./BaseIRMetadata";
 
 
 export type LettedSetEntry = {
@@ -45,13 +46,14 @@ export function expandedJsonLettedSetEntry( entry: LettedSetEntry )
     }
 }
 
-export interface IRLettedMeta {
+export interface IRLettedMeta extends BaseIRMetadata {
     /**
      * force hoisting even if only a single reference is found
      * 
      * useful to hoist letted terms used once in recursive expressions
     **/
-    forceHoist: boolean
+    forceHoist: boolean,
+    __src__?: string | undefined
 }
 
 export interface IRLettedMetadata extends IRMetadata {
@@ -61,6 +63,7 @@ export interface IRLettedMetadata extends IRMetadata {
 const defaultLettedMeta: IRLettedMeta = freezeAll({
     forceHoist: false
 });
+
 export class IRLetted
     implements Cloneable<IRLetted>, IHash, IIRParent, ToJson, IRLettedMetadata
 {
@@ -285,7 +288,7 @@ export class IRLetted
                 return new IRLetted(
                     this.dbn,
                     this.value, // .clone(), // cloned in constructor
-                    this.meta
+                    { ...this.meta }
                 )
             }
         );
@@ -463,12 +466,19 @@ export function getNormalizedLettedArgs( dbn: number, value: IRTerm ): [ normali
 
     if( minDbn === undefined ) return undefined;
     
-    iterTree( normalized_value, (node) => {
-        if( node instanceof IRVar || node instanceof IRLetted )
-        {
-            node.dbn -= minDbn
-        }
-    });
+    iterTree( normalized_value,
+        (node) => {
+            if( node instanceof IRVar || node instanceof IRLetted )
+            {
+                node.dbn -= minDbn
+            }
+        },
+        // shouldSkipNode ?
+        // hoisted terms are not really here
+        // will be substituted to variables when the time comes
+        // however now are here and we need to skip them
+        node => node instanceof IRHoisted
+    );
     return [ dbn - minDbn, normalized_value ];
 }
 
@@ -476,12 +486,19 @@ function getMinVarDbnIn( term: IRTerm ): number | undefined
 {
     let min: number | undefined = undefined;
 
-    iterTree( term, (node) => {
-        if( node instanceof IRVar )
-        {
-            min = typeof min === "number" ? Math.min( min, node.dbn ) : node.dbn
-        }
-    });
+    iterTree( term,
+        (node) => {
+            if( node instanceof IRVar )
+            {
+                min = typeof min === "number" ? Math.min( min, node.dbn ) : node.dbn
+            }
+        },
+        // shouldSkipNode ?
+        // hoisted terms are not really here
+        // will be substituted to variables when the time comes
+        // however now are here and we need to skip them
+        node => node instanceof IRHoisted // skip if hoisted
+    );
 
     return min;
 }

@@ -6,13 +6,21 @@ import { IRHoisted } from "../../IRNodes/IRHoisted";
 import { IRLetted } from "../../IRNodes/IRLetted";
 import { IRTerm } from "../../IRTerm";
 
-export function iterTree( _term: IRTerm, fn: ( elem: IRTerm, dbn: number ) => (boolean | undefined | void) ): void
+export function iterTree(
+    _term: IRTerm,
+    fn: ( elem: IRTerm, dbn: number ) => (boolean | undefined | void),
+    // necessary for letted hash calculation (exclude hoisted)
+    shouldSkipNode?: ( elem: IRTerm, dbn: number ) => boolean
+): void
 {
+    const has_shouldSkipNode = typeof shouldSkipNode === "function";
     const stack: { term: IRTerm, dbn: number, isIRAppArg?: boolean }[] = [{ term: _term, dbn: 0 }];
 
     while( stack.length > 0 )
     {
         const { term: t, dbn } = stack.pop() as { term: IRTerm, dbn: number };
+
+        if( has_shouldSkipNode && shouldSkipNode( t, dbn ) )  continue;
 
         const termParent = t.parent;
         const negDbn = t instanceof IRFunc ? t.arity : 0;

@@ -21,7 +21,7 @@ return phoist(
         ], 
         returnT 
     )
-    ( ( matchNil, matchCons, lst ) =>
+    (( matchNil, matchCons, lst ) =>
         pforce(
             pstrictChooseList( elemsT, delayed( returnT ) )
             .$( lst )
@@ -43,7 +43,8 @@ return phoist(
                     )
                 )
             )
-        )
+        ),
+        "pmatchList"
     )
 ) as any;
 }

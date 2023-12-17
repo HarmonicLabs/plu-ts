@@ -53,6 +53,6 @@ export function pfoldr<ElemsT extends TermType, ResultT extends TermType>( elems
                     )
                 )
             ) as any
-        })
+        }, "pfoldr")
     ) as any;
 }

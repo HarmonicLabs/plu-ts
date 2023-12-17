@@ -195,8 +195,9 @@ export const pand
                     pstrictIf( delayed( bool ) ).$( a )
                     .$( b )
                     .$( pdelay( pBool( false ) ) )
-                ) 
-        ))
+                ),
+            "pand"
+        ), "pand")
     ) as any;
 
 export const pstrictOr

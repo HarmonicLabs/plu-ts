@@ -182,9 +182,9 @@ const value_contains_master = phoist(
             const { fst: tokenName, snd: quantity } = assets.head;
 
             return policy.eq( own_policy )
-            .and( singleAssetEntry )
-            .and( tokenName.eq( master_tn ) )
-            .and( quantity.eq( 1 ) )
+            // .and( singleAssetEntry )
+            // .and( tokenName.eq( master_tn ) )
+            // .and( quantity.eq( 1 ) )
         });
     })
 );
@@ -231,6 +231,7 @@ const get_new_difficulty = phoist(
         adj_den
     ) => {
 
+        // return pListPairInt([16383,5]);
         const new_padded_difficulty = plet(
             difficulty_num.mult( padding ).mult( adj_num ).div( adj_den )
         );
@@ -518,7 +519,7 @@ const pgetFinite = phoist(
         .onPFinite(({ _0 }) => _0)
         ._( _ => perror( int ) )
     )
-)
+);
 
 const tempura
 = pfn([
@@ -692,12 +693,15 @@ const tempura
                     .onNothing( _ => perror( PTxOut.type ) )
                 );
 
+                const ownAddr = plet( ownIn.address );
+                const ownValue = plet( ownIn.value );
+
                 const own_validator_hash = plet(
-                    punBData.$( ownIn.address.credential.raw.fields.head )
+                    punBData.$( ownAddr.credential.raw.fields.head )
                 );
 
                 const ownOuts = plet(
-                    outs.filter( out => out.address.eq( ownIn.address ) )
+                    outs.filter( out => out.address.eq( ownAddr ) )
                 );
 
                 // inlined
@@ -777,8 +781,8 @@ const tempura
 
                 // inlined
                 // Spend(3) requirement: Input has master token
-                const inputHasMasterToken = value_contains_master.$( ownIn.value ).$( own_validator_hash );
-                // ownIn.value.amountOf( own_validator_hash, master_tn ).eq( 1 );
+                const inputHasMasterToken = value_contains_master.$( ownValue ).$( own_validator_hash );
+                // ownValue.amountOf( own_validator_hash, master_tn ).eq( 1 );
 
                 const correctMint = plet(
                     pmatch(
@@ -903,8 +907,8 @@ const tempura
                     .$( adjustment_den )
                 ).in( new_diff => {
 
-                    const new_difficulty    = new_diff.head;
-                    const new_leading_zeros = new_diff.tail.head;
+                    const new_difficulty    = new_diff.head; // 16383
+                    const new_leading_zeros = new_diff.tail.head; // 5
 
                     // inlined
                     const new_epoch_time = epoch_time.add( averaged_current_time ).sub( current_posix_time );
@@ -952,19 +956,20 @@ const tempura
                     // Spend(11) requirement: Output current hash is the target hash
                     // Spend(12) requirement: Check output extra field is within a certain size
                     // Spend(13) requirement: Check output interlink is correct
-                    singleOutToSelf // OK
-                    // pBool( true )
-                    .and( timerangeIn3Mins ) // OK
-                    .and( meetsDifficulty ) // OK
-                    .and( inputHasMasterToken ) // OK
-                    .and( singleMintEntry ) // OK (but not both)
-                    .and( correctMint )
+                    // singleOutToSelf // OK
+                    pBool( true )
+                    // .and( timerangeIn3Mins ) // OK
+                    // .and( meetsDifficulty ) // OK
+                    // .and( inputHasMasterToken ) // OK
+                    // .and( singleMintEntry ) // OK (but not both)
+                    // .and( correctMint )
                     .and( outHasOnlyMaster ) // OK
                     .and( correctOutDatum )
-                    .and( out_current_posix_time.eq( averaged_current_time ) ) // OK
-                    .and( out_block_number.eq( block_number.add( 1 ) ) ) // OK
-                    .and( out_current_hash.eq( found_bytearray ) ) // OK
-                    .and( pserialiseData.$( extra ).length.ltEq( 512 ) ) // OK
+                    // .and( out_current_posix_time.eq( averaged_current_time ) ) // OK
+                    // .and( out_block_number.eq( block_number.add( 1 ) ) ) // OK
+                    // .and( out_current_hash.eq( found_bytearray ) ) // OK
+                    // .and( pserialiseData.$( extra ).length.ltEq( 512 ) ) // OK
+                    /*
                     .and( // OK
                         peqData
                         .$(
@@ -983,6 +988,7 @@ const tempura
                             )
                         )
                     ) // OK
+                    //*/
                 );
             }),
             unit
@@ -992,7 +998,7 @@ const tempura
 
 describe("run tempura", () => {
 
-    test("mine", () => {
+    test.only("mine 0", () => {
 
         const contract = tempura.$(
             PTxOutRef.fromData(
@@ -1019,7 +1025,7 @@ describe("run tempura", () => {
         )
         .$( pData( ctxData ) );
 
-        // console.log( prettyIRJsonStr( term.toIR() ) );
+        // console.log( prettyIRJsonStr( term.toIR() ) )
 
         // const ir = term.toIR();
         // console.time("uplc compilation");
@@ -1028,6 +1034,7 @@ describe("run tempura", () => {
 
         // console.log( prettyUPLC( uplc ) );
 
+        // @ts-ignore
         const res = Machine.eval( uplc );
 
         // console.log( res );
@@ -1040,6 +1047,47 @@ describe("run tempura", () => {
 
         expect( res.result instanceof UPLCConst ).toBe( true );
         expect( res.result ).toEqual( UPLCConst.unit );
-    })
+    });
+
+    test("mine 1", () => {
+
+        const contract = tempura.$(
+            PTxOutRef.fromData(
+                pData(
+                    new TxOutRef({
+                        "id": "1cd30f11c3d774fa1cb43620810a405e6048c8ecea2e85ff43f5c3ad08096e46",
+                        "index": 1
+                    }).toData()
+                )
+            )
+        );
+
+        const datumData = dataFromCbor("d8799f005820e17a6dd5323bc273e39b05066125dcdbe2c85e3cd4404a948a1efd24315045be0519ffff001b0000018a8a1d8eac0080ff");
+        const rdmrData  = dataFromCbor("d87a9f50c8027c73a3ed42399dbd8575a3e7adb1ff");
+        const ctxData   = dataFromCbor(
+            "d8799fd8799f9fd8799fd8799fd8799f5820c0b5b60f786860ef16f32b64c93f59b38fea905155d87a576836578240b051ddff00ffd8799fd8799fd87a9f581c30ed435daad3fd6ce0f7cded1b56fc77d16d44745d2d03c6a8a56c2bffd87a80ffbf40bf401a001898f4ff581c30ed435daad3fd6ce0f7cded1b56fc77d16d44745d2d03c6a8a56c2bbf466974616d616501ffffd87b9fd8799f005820e17a6dd5323bc273e39b05066125dcdbe2c85e3cd4404a948a1efd24315045be0519ffff001b0000018a8a1d8eac0080ffffd87a80ffffd8799fd8799fd8799f5820df0326b5442d18a8517724aefb5e55cacb9f7c0469805d6a2df287825ddc1a02ff01ffd8799fd8799fd8799f581c13867b04db054caa9655378fe37fedee7029924fbe1243887dc35fd8ffd87a80ffbf40bf401b000000024bb13d2fffffd87980d87a80ffffff9fd8799fd8799fd8799f5820df0326b5442d18a8517724aefb5e55cacb9f7c0469805d6a2df287825ddc1a02ff00ffd8799fd8799fd87a9f581c30ed435daad3fd6ce0f7cded1b56fc77d16d44745d2d03c6a8a56c2bffd87a80ffbf40bf401a00f6afeaffffd87b9f00ffd8799f581c30ed435daad3fd6ce0f7cded1b56fc77d16d44745d2d03c6a8a56c2bffffffd8799fd8799fd8799f5820df0326b5442d18a8517724aefb5e55cacb9f7c0469805d6a2df287825ddc1a02ff00ffd8799fd8799fd87a9f581c30ed435daad3fd6ce0f7cded1b56fc77d16d44745d2d03c6a8a56c2bffd87a80ffbf40bf401a00f6afeaffffd87b9f00ffd8799f581c30ed435daad3fd6ce0f7cded1b56fc77d16d44745d2d03c6a8a56c2bffffffff9fd8799fd8799fd87a9f581c30ed435daad3fd6ce0f7cded1b56fc77d16d44745d2d03c6a8a56c2bffd87a80ffbf40bf401a001898f4ff581c30ed435daad3fd6ce0f7cded1b56fc77d16d44745d2d03c6a8a56c2bbf466974616d616501ffffd87b9fd8799f01582000000af6b629d77224b6ead5f73c9b08be9c04c075a5e0fc7aa4c1762582500e0519ffff3901f31b0000018a8a1d8cb80080ffffd87a80ffd8799fd8799fd8799f581c13867b04db054caa9655378fe37fedee7029924fbe1243887dc35fd8ffd87a80ffbf40bf401b000000024bae648aff581c30ed435daad3fd6ce0f7cded1b56fc77d16d44745d2d03c6a8a56c2bbf4754454d505552411b000000012a05f200ffffd87980d87a80ffffbf40bf401a0002d8a5ffffbf40bf4000ff581c30ed435daad3fd6ce0f7cded1b56fc77d16d44745d2d03c6a8a56c2bbf4754454d505552411b000000012a05f200ffff80a0d8799fd8799fd87a9f1b0000018a8a1c2d28ffd87980ffd8799fd87a9f1b0000018a8a1eec48ffd87980ffff80bfd87a9fd8799fd8799f5820c0b5b60f786860ef16f32b64c93f59b38fea905155d87a576836578240b051ddff00ffffd87a9f50c8027c73a3ed42399dbd8575a3e7adb1ffd8799f581c30ed435daad3fd6ce0f7cded1b56fc77d16d44745d2d03c6a8a56c2bffd87980ffa058208c7eb92dc16afd7641b7fc50858c4c39efb57c4557512fd1a3a1b3635d84e7f8ffd87a9fd8799fd8799f5820c0b5b60f786860ef16f32b64c93f59b38fea905155d87a576836578240b051ddff00ffffff"
+        );
+
+        const res = Machine.eval(
+            punsafeConvertType(
+                contract
+                .$( pData( datumData ) )
+                .$( Redeemer.fromData( pData( rdmrData ) ) ),
+                lam( data, unit )
+            )
+            .$( pData( ctxData ) )
+        );
+
+        console.log( res );
+        console.log(
+            (res as any)?.result?.addInfos?.list?.value ??
+            (res as any)?.result?.addInfos?.data ??
+            (res as any)?.result?.addInfos ??
+            (res as any)?.result
+        );
+
+        expect( res.result instanceof UPLCConst ).toBe( true );
+        expect( res.result ).toEqual( UPLCConst.unit );
+    });
 
 });

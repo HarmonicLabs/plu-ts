@@ -11,6 +11,7 @@ import { IRNativeTag, nativeTagToString } from "./IRNativeTag";
 import UPLCFlatUtils from "../../../utils/UPLCFlatUtils";
 import { IRParentTerm, isIRParentTerm } from "../../utils/isIRParentTerm";
 import { _modifyChildFromTo } from "../../toUPLC/_internal/_modifyChildFromTo";
+import { BaseIRMetadata } from "../BaseIRMetadata";
 
 /**
  * we might not need all the hashes
@@ -18,6 +19,8 @@ import { _modifyChildFromTo } from "../../toUPLC/_internal/_modifyChildFromTo";
  * but one we get one for a specific tag is not worth it re calclualte it
  */
 const nativeHashesCache: { [n: number/*IRNativeTag*/]: Uint8Array } = {} as any;
+
+export interface IRNativeMetadata extends BaseIRMetadata {}
 
 /**
  * `IRNative` ⊇ `Builtins` + `std::fn`
@@ -29,6 +32,8 @@ export class IRNative
     readonly hash!: Uint8Array;
     markHashAsInvalid!: () => void;
 
+    readonly meta: IRNativeMetadata
+
     parent: IRParentTerm | undefined;
 
     constructor( tag: IRNativeTag )
@@ -36,6 +41,15 @@ export class IRNative
         Object.defineProperty(
             this, "tag", {
                 value: tag,
+                writable: false,
+                enumerable: true,
+                configurable: false
+            }
+        );
+
+        Object.defineProperty(
+            this, "meta", {
+                value: {},
                 writable: false,
                 enumerable: true,
                 configurable: false

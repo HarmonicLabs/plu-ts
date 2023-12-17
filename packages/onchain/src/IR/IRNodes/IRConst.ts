@@ -23,6 +23,7 @@ import { GenericTermType, PrimType, TermType, bool, bs, data, delayed, int, lam,
 import { termTypeToString } from "../../pluts/type_system/utils";
 import { IRParentTerm, isIRParentTerm } from "../utils/isIRParentTerm";
 import { _modifyChildFromTo } from "../toUPLC/_internal/_modifyChildFromTo";
+import { BaseIRMetadata } from "./BaseIRMetadata";
 
 export type IRConstValue
     = CanBeUInteger
@@ -34,12 +35,15 @@ export type IRConstValue
     | Data
     | undefined;
 
+export interface IRConstMetadata extends BaseIRMetadata {}
 
 export class IRConst
     implements Cloneable<IRConst>, IHash, IIRParent, ToJson
 {
     readonly hash: Uint8Array;
     markHashAsInvalid: () => void;
+
+    readonly meta: IRConstMetadata
 
     readonly type!: TermType
     readonly value!: IRConstValue
@@ -58,6 +62,15 @@ export class IRConst
                 "invalid type for IR constant"
             );
         }
+
+        Object.defineProperty(
+            this, "meta", {
+                value: {},
+                writable: false,
+                enumerable: true,
+                configurable: false
+            }
+        );
 
         defineReadOnlyProperty(
             this, "type", cloneTermType( t )

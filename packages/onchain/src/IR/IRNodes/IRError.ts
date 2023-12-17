@@ -7,15 +7,20 @@ import { IIRParent } from "../interfaces/IIRParent";
 import { isIRTerm } from "../utils/isIRTerm";
 import { IRParentTerm, isIRParentTerm } from "../utils/isIRParentTerm";
 import { _modifyChildFromTo } from "../toUPLC/_internal/_modifyChildFromTo";
+import { BaseIRMetadata } from "./BaseIRMetadata";
 
 const irErrorBitTag = new Uint8Array([ 0b0000_0111 ]);
 const errorHash = blake2b_128( irErrorBitTag.slice() )
+
+export interface IRErrorMetadata extends BaseIRMetadata {}
 
 export class IRError
     implements Cloneable<IRError>, IHash, IIRParent, ToJson
 {
     readonly hash!: Uint8Array;
     markHashAsInvalid!: () => void;
+
+    readonly meta: IRErrorMetadata
 
     parent: IRParentTerm | undefined;
 
@@ -25,7 +30,16 @@ export class IRError
     constructor( msg?: string, addInfos?: any )
     {
         this.msg = msg;
-        this.addInfos = addInfos;
+        this.addInfos = addInfos ?? {};
+
+        Object.defineProperty(
+            this, "meta", {
+                value: {},
+                writable: false,
+                enumerable: true,
+                configurable: false
+            }
+        );
 
         let _parent: IRParentTerm | undefined = undefined;
         Object.defineProperty(

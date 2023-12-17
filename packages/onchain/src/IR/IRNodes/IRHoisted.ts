@@ -32,7 +32,8 @@ export interface IRHoistedMeta {
      * 
      * useful to hoist terms used once in recursive expressions
     **/
-    forceHoist: boolean
+    forceHoist?: boolean,
+    name?: string | undefined
 }
 
 export interface IRHoistedMetadata extends IRMetadata {
@@ -60,7 +61,10 @@ export class IRHoisted
 
     readonly meta!: IRHoistedMeta
 
-    constructor( hoisted: IRTerm, metadata: Partial<IRHoistedMeta> = {} )
+    constructor(
+        hoisted: IRTerm, 
+        metadata: Partial<IRHoistedMeta> = {}
+    )
     {
         // unwrap
         // !!! IMPORTANT !!!
@@ -199,7 +203,8 @@ export class IRHoisted
             {
                 value: {
                     ...defaultHoistedMeta,
-                    ...metadata
+                    ...metadata,
+                    name: _hoisted.meta.name ?? metadata.name
                 },
                 writable: false,
                 enumerable: true,
@@ -212,7 +217,7 @@ export class IRHoisted
             () => {
                 return new IRHoisted(
                     this.hoisted.clone(),
-                    this.meta
+                    { ...this.meta }
                 );
             }
         );

@@ -51,7 +51,7 @@ export function pmap<FromT extends TermType, ToT extends TermType>( fromT: FromT
                 pnil( toT )
             )
             // .$( _list )
-        })
+        }, "pmap")
     ) as any;
 }
 

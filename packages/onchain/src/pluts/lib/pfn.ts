@@ -9,6 +9,7 @@ import { UtilityTermOf } from "./std/UtilityTerms/addUtilityForType";
 import { PappArg } from "./pappArg";
 import { plam } from "./plam";
 import { CurriedFn, curry } from "../../utils/combinators";
+import { getCallStackAt } from "../../utils/getCallStackAt";
 
 
 // type PFn<Inputs extends [ PType, ...PType[] ], Output extends PType > = 
@@ -51,6 +52,66 @@ export type TsTermFunction<InputsTypes extends [ TermType, ...TermType[] ], Outp
         => Term<ToPType<OutputType>>
 
 export function pfn<InputsTypes extends [ TermType, ...TermType[] ], OutputType extends TermType>( inputsTypes: InputsTypes, outputType: OutputType )
+    : ( termFunction: TsTermFunction<InputsTypes,OutputType>, funcName?: string | undefined ) => 
+        TermFnFromTypes<InputsTypes, OutputType>
+{
+    function plamNCurried(
+        curriedFn:
+            CurriedFn<
+                ToTermArrNonEmpty<InputsTypes>,
+                Term<ToPType<OutputType>>
+            >,
+        nMissingArgs: number,
+        func_name: string | undefined
+    ): TermFnFromTypes<InputsTypes, OutputType>
+    {
+        if( nMissingArgs === 1 ) 
+        return plam( inputsTypes[ inputsTypes.length - 1 ], outputType )
+            ( curriedFn as any, func_name ) as any;
+
+        const currentInputIndex = inputsTypes.length - nMissingArgs;
+
+        return plam(
+            inputsTypes[ currentInputIndex ],
+            fn( inputsTypes.slice( currentInputIndex + 1 ) as [ TermType, ...TermType[] ], outputType ) as any
+        )(
+            ( someInput: Term<PType> ) => plamNCurried( curriedFn( someInput ) as any , nMissingArgs - 1, func_name ),
+            func_name ?? "curried_lam"
+        ) as any;
+    }
+
+    return ((
+        termFunction: ( ...args: ToTermArrNonEmpty<InputsTypes> ) => Term<ToPType<OutputType>>,
+        funcName?: string
+    ) =>
+    {
+        if( termFunction.length <= 0 )
+            throw new BasePlutsError("'(void) => any' cannot be translated to a Pluts function");
+
+        assert(
+            termFunction.length === inputsTypes.length,
+            "number of inputs of the function doesn't match the number of types specified for the input"
+        );
+
+        let func_name: string | undefined = undefined; 
+        func_name = 
+            typeof funcName === "string" ? funcName :
+            termFunction.name !== "" ? termFunction.name :
+            getCallStackAt( 3, { 
+                tryGetNameAsync: true,
+                onNameInferred: inferred => func_name = inferred 
+            })?.inferredName;
+
+        return plamNCurried(
+            curry( termFunction ),
+            termFunction.length,
+            func_name
+        );
+    }) as any;
+}
+
+/*
+export function pfn<InputsTypes extends [ TermType, ...TermType[] ], OutputType extends TermType>( inputsTypes: InputsTypes, outputType: OutputType )
     : ( termFunction: TsTermFunction<InputsTypes,OutputType> ) => 
         TermFnFromTypes<InputsTypes, OutputType>
 {
@@ -77,7 +138,10 @@ export function pfn<InputsTypes extends [ TermType, ...TermType[] ], OutputType 
         ) as any;
     }
 
-    return (( termFunction: ( ...args: ToTermArrNonEmpty<InputsTypes> ) => Term<ToPType<OutputType>> ) =>
+    return ((
+        termFunction: ( ...args: ToTermArrNonEmpty<InputsTypes> ) => Term<ToPType<OutputType>>,
+        funcName?: string
+    ) =>
     {
         if( termFunction.length <= 0 )
             throw new BasePlutsError("'(void) => any' cannot be translated to a Pluts function");
@@ -87,9 +151,82 @@ export function pfn<InputsTypes extends [ TermType, ...TermType[] ], OutputType 
             "number of inputs of the function doesn't match the number of types specified for the input"
         );
 
-        return plamNCurried(
-            curry( termFunction ),
-            termFunction.length
+        let func_name: string | undefined = undefined; 
+        func_name = 
+            typeof funcName === "string" ? funcName :
+            termFunction.name !== "" ? termFunction.name :
+            getCallStackAt( 3, { 
+                tryGetNameAsync: true,
+                onNameInferred: inferred => func_name = inferred 
+            })?.inferredName;
+
+        const lambdaTerm  = new Term<PLam<PType,PType>>(
+            fn( inputsTypes, outputType ) as any,
+            dbn => {
+                const thisLambdaPtr = dbn + BigInt( 1 );
+
+                const boundVars = inputsTypes.map( inT => {
+
+                    const boundVar = new Term<PType>(
+                        inT,
+                        dbnAccessLevel => new IRVar( dbnAccessLevel - thisLambdaPtr )
+                    );
+
+                    return addUtilityForType( inT )( boundVar ); 
+                });
+
+                const body = termFunction( ...boundVars as any );
+
+                // here the debruijn level is incremented
+                return new IRFunc( termFunction.length, body.toIR( thisLambdaPtr ), func_name );
+            }
         );
+
+        defineReadOnlyHiddenProperty(
+            lambdaTerm, "unsafeWithInputOfType",
+            ( inT: TermType ) => {
+
+                const newInsTys = inputsTypes.map( cloneTermType );
+                newInsTys[0] = inT;
+
+                return new Term<PLam<PType,PType>>(
+                    fn( newInsTys as any, outputType ) as any,
+                    dbn => {
+                        const thisLambdaPtr = dbn + BigInt( 1 );
+
+                        const boundVars = inputsTypes.map( inT => {
+
+                            const boundVar = new Term<PType>(
+                                inT,
+                                dbnAccessLevel => new IRVar( dbnAccessLevel - thisLambdaPtr )
+                            );
+
+                            defineReadOnlyHiddenProperty(
+                                boundVar,
+                                "__isDynamicPair",
+                                includesDynamicPairs( inT )
+                            );
+
+                            return addUtilityForType( inT )( boundVar ); 
+                        });
+
+                        const body = termFunction( ...boundVars as any );
+
+                        // here the debruijn level is incremented
+                        return new IRFunc( termFunction.length, body.toIR( thisLambdaPtr ), func_name );
+                    }
+                );
+            }
+        )
+
+        // allows ```lambdaTerm.$( input )``` syntax
+        // rather than ```papp( lambdaTerm, input )```
+        // preserving Term Type
+        return defineReadOnlyProperty(
+            lambdaTerm,
+            "$",
+            ( input: Term<PType> ) => papp( lambdaTerm, input )
+        ) as any;
     }) as any;
 }
+//*/

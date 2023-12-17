@@ -9,7 +9,7 @@ import { _modifyChildFromTo } from "../../_internal/_modifyChildFromTo";
 import { findAll, findAllNoHoisted } from "../../_internal/findAll";
 import { getDebruijnInTerm } from "../../_internal/getDebruijnInTerm";
 import { _getMinUnboundDbn, groupByScope } from "./groupByScope";
-import { prettyIR, prettyIRJsonStr, showIR } from "../../../utils/showIR";
+import { lettedToStr, prettyIR, prettyIRJsonStr, prettyIRText, showIR } from "../../../utils/showIR";
 import { IRDelayed } from "../../../IRNodes/IRDelayed";
 import { IRForced } from "../../../IRNodes/IRForced";
 import { lowestCommonAncestor } from "../../_internal/lowestCommonAncestor";
@@ -295,12 +295,6 @@ export function _handleLetted( term: IRTerm ): void
 
         for( const ref of sameLettedRefs )
         {
-            // console.log( "isChildOf( ref, parentNodeDirectChild )", isChildOf( ref, parentNodeDirectChild ) );
-            // console.log( "hasChild( parentNodeDirectChild , ref )", hasChild( parentNodeDirectChild , ref ) );
-            // console.log( "isChildOf( ref, maxScope )", isChildOf( ref, maxScope ) );
-            // console.log( "hasChild( maxScope , ref )", hasChild( maxScope , ref ) );
-            // console.log( "isChildOf( ref, newNode )", isChildOf( ref, newNode ) );
-            // console.log( "hasChild( newNode , ref )", hasChild( newNode , ref ) );
             if( isChildOf( ref, parentNodeDirectChild ) )
             {
                 _modifyChildFromTo(
@@ -315,6 +309,8 @@ export function _handleLetted( term: IRTerm ): void
 
 export function handleLetted( term: IRTerm ): void
 {
+    // console.log(" ------------------------------------------- handleLetted ------------------------------------------- ");
+    // console.log( prettyIRJsonStr( term ))
     // most of the time we are just compiling small
     // pre-execuded terms (hence constants)
     if( term instanceof IRConst ) return;
@@ -325,6 +321,8 @@ export function handleLetted( term: IRTerm ): void
     while( true )
     {
         const allDirectLetted = getLettedTerms( term, { all: false, includeHoisted: false });
+
+        // console.log("found ", allDirectLetted.length, "letted terms");
     
         // in case there are no letted terms there is no work to do
         if( allDirectLetted.length === 0 ) return;
@@ -336,8 +334,11 @@ export function handleLetted( term: IRTerm ): void
             nReferences
         } = sortedLettedSet.pop()!;
 
+        // console.log(` ------------------ working with ${lettedToStr(letted)} ------------------ `);
+
         if( nReferences === 1 )
         {
+            // console.log("inlining letted (single reference) with value", prettyIRText( letted.value ) )
             _modifyChildFromTo(
                 letted.parent,
                 letted,
@@ -356,9 +357,12 @@ export function handleLetted( term: IRTerm ): void
                 uint8ArrayEq( node.hash, lettedHash )
         ) as IRLetted[];
 
+        // console.log("found ", sameLettedRefs.length, "references of the letted terms");
+
         // just in case
         if( sameLettedRefs.length === 1 )
         {
+            // console.log("inlining letted (single reference pedantic) with value", prettyIRText( letted.value ) )
             _modifyChildFromTo(
                 letted.parent,
                 letted,
@@ -370,6 +374,7 @@ export function handleLetted( term: IRTerm ): void
         // always inline letted vars
         if( letted.value instanceof IRVar )
         {
+            // console.log("inlining letted (value is var) with value", prettyIRText( letted.value ) )
             for( const elem of sameLettedRefs )
             {
                 // inline
@@ -435,7 +440,7 @@ export function handleLetted( term: IRTerm ): void
         // is added inside the `parentNode` node
         incrementUnboundDbns(
             parentNodeDirectChild,
-            // shouldNotModifyLetted
+            // `shouldNotModifyLetted` arg (given the hash returns `true` if it should NOT modify the term)
             ({ hash }) => uint8ArrayEq( hash, lettedHash )
         );
         
@@ -520,21 +525,17 @@ export function handleLetted( term: IRTerm ): void
                 1,
                 parentNodeDirectChild
             ),
-            lettedValue
+            lettedValue,
+            { __src__ : letted.meta.__src__ }
         );
 
         // replace child with new node
         if( parentNode instanceof IRFunc ) parentNode.body = newNode;
         else parentNode.delayed = newNode;
 
+        // console.log("replacing letted with value", prettyIRText( letted.value ) )
         for( const ref of sameLettedRefs )
         {
-            // console.log( "isChildOf( ref, parentNodeDirectChild )", isChildOf( ref, parentNodeDirectChild ) );
-            // console.log( "hasChild( parentNodeDirectChild , ref )", hasChild( parentNodeDirectChild , ref ) );
-            // console.log( "isChildOf( ref, maxScope )", isChildOf( ref, maxScope ) );
-            // console.log( "hasChild( maxScope , ref )", hasChild( maxScope , ref ) );
-            // console.log( "isChildOf( ref, newNode )", isChildOf( ref, newNode ) );
-            // console.log( "hasChild( newNode , ref )", hasChild( newNode , ref ) );
             _modifyChildFromTo(
                 ref.parent,
                 ref,
@@ -542,6 +543,13 @@ export function handleLetted( term: IRTerm ): void
             );
         }
 
+        const delayed = parentNode instanceof IRDelayed;
+        let finalMaxScope: IRFunc = parentNode as any;
+        while(!( finalMaxScope instanceof IRFunc ))
+        {
+            finalMaxScope = (finalMaxScope as any).parent as any
+        }
+        // console.log("final max scope (delayed: " + delayed + ")" , prettyIRJsonStr( finalMaxScope ) )
     }
 }
 

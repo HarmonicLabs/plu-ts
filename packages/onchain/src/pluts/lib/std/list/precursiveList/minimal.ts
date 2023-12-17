@@ -71,7 +71,7 @@ export function _precursiveList<ReturnT  extends TermType, ElemtsT extends TermT
                 ) as any
 
                 return _papp( exprTerm, finalSelfTerm );
-            })
+            }, "_precursiveList")
         )
     ) as any;
 }

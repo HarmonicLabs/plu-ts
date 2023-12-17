@@ -68,7 +68,7 @@ function _mockPListMethods<PElemsT extends PType>( _lst: Term<PList<PElemsT>> )
         _lst,
         "length",
         {
-            get: () => makeMockTermInt,
+            get: () => makeMockTermInt(),
             ...getterOnly
         }
     );

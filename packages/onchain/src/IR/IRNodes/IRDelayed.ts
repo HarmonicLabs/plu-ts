@@ -9,6 +9,9 @@ import { concatUint8Arr } from "../utils/concatUint8Arr";
 import { isIRTerm } from "../utils/isIRTerm";
 import { IRParentTerm, isIRParentTerm } from "../utils/isIRParentTerm";
 import { _modifyChildFromTo } from "../toUPLC/_internal/_modifyChildFromTo";
+import { BaseIRMetadata } from "./BaseIRMetadata";
+
+export interface IRDelayedMetadata extends BaseIRMetadata {}
 
 export class IRDelayed
     implements Cloneable<IRDelayed>, IHash, IIRParent, ToJson
@@ -17,10 +20,21 @@ export class IRDelayed
     readonly hash!: Uint8Array
     markHashAsInvalid!: () => void;
 
+    readonly meta: IRDelayedMetadata
+
     parent: IRParentTerm | undefined;
 
     constructor( delayed: IRTerm )
     {
+        Object.defineProperty(
+            this, "meta", {
+                value: {},
+                writable: false,
+                enumerable: true,
+                configurable: false
+            }
+        );
+
         let hash: Uint8Array | undefined = undefined
         Object.defineProperty(
             this, "hash",

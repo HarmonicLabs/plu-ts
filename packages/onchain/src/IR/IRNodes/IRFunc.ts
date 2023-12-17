@@ -11,7 +11,9 @@ import { positiveIntAsBytes } from "../utils/positiveIntAsBytes";
 import { defineReadOnlyProperty } from "@harmoniclabs/obj-utils";
 import { IRParentTerm, isIRParentTerm } from "../utils/isIRParentTerm";
 import { _modifyChildFromTo } from "../toUPLC/_internal/_modifyChildFromTo";
+import { BaseIRMetadata } from "./BaseIRMetadata";
 
+export interface IRFuncMetadata extends BaseIRMetadata {}
 
 export class IRFunc
     implements Cloneable<IRFunc>, IHash, IIRParent, ToJson
@@ -21,6 +23,10 @@ export class IRFunc
     readonly hash!: Uint8Array;
     markHashAsInvalid!: () => void;
 
+    readonly meta: IRFuncMetadata
+
+    get name(): string | undefined { return this.meta.name };
+
     body!: IRTerm
 
     parent: IRTerm | undefined;
@@ -29,7 +35,8 @@ export class IRFunc
 
     constructor(
         arity: number,
-        body: IRTerm
+        body: IRTerm,
+        func_name?: string | undefined
     )
     {
         if( !Number.isSafeInteger( arity ) && arity >= 1 )
@@ -37,12 +44,27 @@ export class IRFunc
             "invalid arity for 'IRFunc'"
         )
 
-        defineReadOnlyProperty(
-            this, "arity", arity
-        );
-
         if( !isIRTerm( body ) )
         throw new Error("IRFunc body argument was not an IRTerm");
+
+        Object.defineProperties(
+            this, {
+                arity: {
+                    value: arity,
+                    writable: false,
+                    enumerable: true,
+                    configurable: false
+                },
+                meta: {
+                    value: {
+                        name: typeof func_name === "string" ? func_name : (void 0)
+                    },
+                    writable: true,
+                    enumerable: true,
+                    configurable: false
+                }
+            }
+        );
 
         let _body: IRTerm = body;
         _body.parent = this;

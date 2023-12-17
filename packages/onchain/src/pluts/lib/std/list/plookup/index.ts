@@ -1,5 +1,5 @@
 import { PList, PPair, TermFn } from "../../../../PTypes";
-import { TermType, ToPType, asData, bool, data, lam, list, pair, typeExtends } from "../../../../type_system";
+import { TermType, ToPType, asData, bool, data, lam, list, pair, termTypeToString, typeExtends } from "../../../../type_system";
 import { unwrapAsData } from "../../../../type_system/tyArgs";
 import { getDirectFstT } from "../../../../type_system/tyArgs/getDirectFstT";
 import { getDirectSndT } from "../../../../type_system/tyArgs/getDirectSndT";
@@ -64,7 +64,8 @@ export function plookup<
                     )
                     .else( self.$( rest ) )
                 )
-            )
+            ),
+            "plookup"
         )
     );
 
@@ -78,7 +79,8 @@ export function plookup<
             kT
         ],  lam( list( elems_t ) ,PMaybeVal.type) )
         (( searchElem ) =>
-            hoistedBody.$( toData( kT )( searchElem ) )
+            hoistedBody.$( toData( kT )( searchElem ) ),
+            "plookup::" + termTypeToString(kT)
         )
     ) as any;
 

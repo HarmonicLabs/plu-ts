@@ -73,7 +73,8 @@ const hoisted_getFields = new IRHoisted(
                 IRNative.unConstrData,
                 new IRVar( 0 )
             )
-        )
+        ),
+        "hoisted_getFields"
     )
 );
 
@@ -126,7 +127,8 @@ export function addPStructMethods<
                         plet(
                             _fromData( thisFieldType )(
                                 getElemAtTerm( i ).$( letted_fieldsListData )
-                            )
+                            ),
+                            ctorName + "::" + thisFieldName
                         ),
                         thisFieldType
                     ),

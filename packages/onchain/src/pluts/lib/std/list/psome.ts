@@ -50,6 +50,6 @@ return phoist(
             ) as Term<PLam<PLam<PList<ToPType<ElemsT>>, PBool>, PLam<ToPType<ElemsT>, PLam<PList<ToPType<ElemsT>>, PBool>>>>
         )
         // .$( _list )
-    })
+    }, "psome")
 ) as any;
 }

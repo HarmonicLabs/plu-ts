@@ -10,7 +10,9 @@ import { isIRTerm } from "../utils/isIRTerm";
 import { positiveIntAsBytes } from "../utils/positiveIntAsBytes";
 import { IRParentTerm, isIRParentTerm } from "../utils/isIRParentTerm";
 import { _modifyChildFromTo } from "../toUPLC/_internal/_modifyChildFromTo";
+import { BaseIRMetadata } from "./BaseIRMetadata";
 
+export interface IRVarMetadata extends BaseIRMetadata {}
 
 export class IRVar
     implements Cloneable<IRVar>, IHash, IIRParent, ToJson
@@ -27,11 +29,22 @@ export class IRVar
     **/
     dbn!: number;
 
+    readonly meta: IRVarMetadata
+
     parent: IRParentTerm | undefined;
 
     constructor( DeBruijn: number | bigint )
     {
         DeBruijn = typeof DeBruijn === "number" ? DeBruijn : Number( DeBruijn );
+
+        Object.defineProperty(
+            this, "meta", {
+                value: {},
+                writable: false,
+                enumerable: true,
+                configurable: false
+            }
+        );
         
         let hash: Uint8Array | undefined = undefined;
         Object.defineProperty(

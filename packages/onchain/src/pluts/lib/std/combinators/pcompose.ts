@@ -28,6 +28,6 @@ Term<PFn<[
     ],  c)
     (( bToC, aToB, _a ) => {
         return papp( bToC, papp( aToB, _a ) ) as any;
-    })
+    }, "pcompose")
 )) as any
 

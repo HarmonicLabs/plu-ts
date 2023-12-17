@@ -15,36 +15,66 @@ import { IRForced } from "../../IRNodes/IRForced";
 import { IRDelayed } from "../../IRNodes/IRDelayed";
 import { UPLCTerm, UPLCVar, Lambda, Application, UPLCConst, Builtin, ErrorUPLC, Force, Delay } from "@harmoniclabs/uplc";
 
+export type RawSrcMap = { [node_index: number]: string };
 
-export function _irToUplc( ir: IRTerm ): UPLCTerm
+export function _irToUplc(
+    ir: IRTerm, 
+    srcmap: RawSrcMap | undefined = undefined, 
+    node_index: number = 0
+)
+: { 
+    term: UPLCTerm, 
+    max_idx: number
+}
 {
-    if( ir instanceof IRVar ) return new UPLCVar( ir.dbn );
+    if( ir instanceof IRVar ) return {
+        term: new UPLCVar( ir.dbn ),
+        max_idx: node_index
+    };
+
     if( ir instanceof IRFunc )
     {
-        let lam: Lambda = new Lambda(
-            _irToUplc( ir.body )
-        );
+        const { term: body, max_idx } = _irToUplc( ir.body, srcmap, node_index );
+
+        let lam: Lambda = new Lambda( body );
 
         for( let i = 1; i < ir.arity; i++ )
         {
             lam = new Lambda( lam );
         }
 
-        return lam;
+        return {
+            term: lam,
+            max_idx
+        };
     }
+
     if( ir instanceof IRApp )
     {
-        return new Application(
-            _irToUplc( ir.fn ),
-            _irToUplc( ir.arg )
-        );
+        const { term: fn, max_idx: fn_max_idx } =   _irToUplc( ir.fn , srcmap, node_index + 1 );
+        const { term: arg, max_idx: arg_max_idx } = _irToUplc( ir.arg, srcmap, fn_max_idx + 1 );
+
+        let src = ir.meta.__src__;
+        if( srcmap && typeof src === "string" )
+        {
+            srcmap[node_index] = adaptSrcString( src );
+        }
+
+        return {
+            term: new Application( fn, arg ),
+            max_idx: arg_max_idx
+        };
     }
+
     if( ir instanceof IRConst )
     {
-        return new UPLCConst(
-            termTyToConstTy( ir.type ),
-            ir.value as any
-        );
+        return {
+            term: new UPLCConst(
+                termTyToConstTy( ir.type ),
+                ir.value as any
+            ),
+            max_idx: node_index
+        };
     }
     if( ir instanceof IRNative )
     {
@@ -53,7 +83,10 @@ export function _irToUplc( ir: IRTerm ): UPLCTerm
             "Can't translate '" + nativeTagToString( ir.tag ) + "' 'IRNative' to 'UPLCBuiltin'"
         );
 
-        return new Builtin( ir.tag as any );
+        return {
+            term: new Builtin( ir.tag as any ),
+            max_idx: node_index
+        };
     }
     if( ir instanceof IRLetted )
     {
@@ -72,20 +105,44 @@ export function _irToUplc( ir: IRTerm ): UPLCTerm
     }
     if( ir instanceof IRError )
     {
-        return new ErrorUPLC( ir.msg, ir.addInfos );
+        if( typeof ir.addInfos.__src__ === "string" && srcmap )
+        {
+            srcmap[node_index] = adaptSrcString( ir.addInfos.__src__ );
+        }
+        return {
+            term: new ErrorUPLC( ir.msg, ir.addInfos ),
+            max_idx: node_index
+        };
     }
     if( ir instanceof IRForced )
     {
-        return new Force(
-            _irToUplc( ir.forced )
-        )
+        const { term: toForce, max_idx } = _irToUplc( ir.forced, srcmap, node_index ); 
+        return {
+            term: new Force( toForce ),
+            max_idx
+        };
     }
     if( ir instanceof IRDelayed )
     {
-        return new Delay(
-            _irToUplc( ir.delayed )
-        )
+        const { term: toDelay, max_idx } = _irToUplc( ir.delayed, srcmap, node_index );
+        return {
+            term: new Delay( toDelay ),
+            max_idx
+        };
     }
 
     throw new Error("unknown IR term calling '_irToUplc'")
+}
+
+function adaptSrcString( src: string ): string
+{
+    // "   at $ (some/path/to/src.ts:line:column)" -> "some/path/to/src.ts:line:column"
+    let idx = src.indexOf("(");
+    src = idx >= 0 ? src.slice( idx + 1, src.length - 1 ) : src;
+
+    // "   at some/path/to/src.ts:line:column" -> "some/path/to/src.ts:line:column"
+    idx = src.indexOf("at ");
+    src = idx >= 0 ? src.slice( idx + 3 ) : src;
+
+    return src;
 }

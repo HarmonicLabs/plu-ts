@@ -25,23 +25,23 @@ function getVarNameForDbn( dbn: number ): string
 
 export function showIRText( _ir: IRTerm ): string
 {
-    function _internal( ir: IRTerm, dbn: number ): string
+    function _loop( ir: IRTerm, dbn: number ): string
     {
-        if( ir instanceof IRApp ) return `[${_internal(ir.fn, dbn)} ${_internal(ir.arg, dbn)}]`;
+        if( ir instanceof IRApp ) return `[${_loop(ir.fn, dbn)} ${_loop(ir.arg, dbn)}]`;
         if( ir instanceof IRNative ) return `(native ${nativeTagToString(ir.tag)})`;
         if( ir instanceof IRLetted )
         {
             // addLetted( ir );
-            return `(letted ${ir.dbn} ${toHex( ir.hash )})`;
+            return lettedToStr(ir);
         }
         if( ir instanceof IRHoisted )
         {
-            return `(hoisted ${toHex( ir.hash )})`;
+            return hoistedToStr(ir);
         }
         if( ir instanceof IRVar ) return getVarNameForDbn( dbn - 1 - ir.dbn );
-        if( ir instanceof IRConst ) return `(const ${termTypeToString(ir.type)} ${showUPLCConstValue(ir.value as any)})`;
-        if( ir instanceof IRDelayed ) return `(delay ${_internal( ir.delayed, dbn )})`;
-        if( ir instanceof IRForced ) return `(force ${_internal( ir.forced, dbn )})`;
+        if( ir instanceof IRConst ) return constToString(ir);
+        if( ir instanceof IRDelayed ) return `(delay ${_loop( ir.delayed, dbn )})`;
+        if( ir instanceof IRForced ) return `(force ${_loop( ir.forced, dbn )})`;
         if( ir instanceof IRError ) return "(error)"
         if( ir instanceof IRFunc )
         {
@@ -50,13 +50,13 @@ export function showIRText( _ir: IRTerm ): string
             {
                 vars[i] = getVarNameForDbn( dbn++ );
             }
-            return `(func ${vars.join(" ")} ${_internal( ir.body, dbn )})`
+            return `(func ${typeof ir.name === "string" ? "{"+ir.name+"}" : ""} ${vars.join(" ")} ${_loop( ir.body, dbn )})`
         }
 
         return "";
     }
 
-    return _internal( _ir, 0 );
+    return _loop( _ir, 0 );
 }
 
 export function showIR( _ir: IRTerm )
@@ -122,24 +122,24 @@ export function showIR( _ir: IRTerm )
         }
     }
 
-    function _internal( ir: IRTerm, dbn: number ): string
+    function _loop( ir: IRTerm, dbn: number ): string
     {
-        if( ir instanceof IRApp ) return `[${_internal(ir.fn, dbn)} ${_internal(ir.arg, dbn)}]`;
+        if( ir instanceof IRApp ) return `[${_loop(ir.fn, dbn)} ${_loop(ir.arg, dbn)}]`;
         if( ir instanceof IRNative ) return `(native ${nativeTagToString(ir.tag)})`;
         if( ir instanceof IRLetted )
         {
             addLetted( ir );
-            return `(letted ${ir.dbn} ${toHex( ir.hash )})`;
+            return lettedToStr(ir);
         }
         if( ir instanceof IRHoisted )
         {
             addHoisted( ir );
-            return `(hoisted ${toHex( ir.hash )})`;
+            return hoistedToStr(ir);
         }
         if( ir instanceof IRVar ) return getVarNameForDbn( dbn - 1 - ir.dbn );
-        if( ir instanceof IRConst ) return `(const ${termTypeToString(ir.type)} ${showUPLCConstValue(ir.value as any)})`;
-        if( ir instanceof IRDelayed ) return `(delay ${_internal( ir.delayed, dbn )})`;
-        if( ir instanceof IRForced ) return `(force ${_internal( ir.forced, dbn )})`;
+        if( ir instanceof IRConst ) return constToString(ir);
+        if( ir instanceof IRDelayed ) return `(delay ${_loop( ir.delayed, dbn )})`;
+        if( ir instanceof IRForced ) return `(force ${_loop( ir.forced, dbn )})`;
         if( ir instanceof IRError ) return "(error)"
         if( ir instanceof IRFunc )
         {
@@ -148,13 +148,13 @@ export function showIR( _ir: IRTerm )
             {
                 vars[i] = getVarNameForDbn( dbn++ );
             }
-            return `(func ${vars.join(" ")} ${_internal( ir.body, dbn )})`
+            return `(func ${typeof ir.name === "string" ? "{"+ir.name+"}" : ""} ${vars.join(" ")} ${_loop( ir.body, dbn )})`
         }
 
         return "";
     }
 
-    const text = _internal( _ir, 0 );
+    const text = _loop( _ir, 0 );
 
     return {
         text,
@@ -169,25 +169,25 @@ export function prettyIRText( _ir: IRTerm, _indent = 2 )
 
     const indentStr = " ".repeat(_indent);
 
-    function _internal( ir: IRTerm, dbn: number, depth: number ): string
+    function _loop( ir: IRTerm, dbn: number, depth: number ): string
     {
         const indent = `\n${indentStr.repeat( depth )}`;
 
-        if( ir instanceof IRApp ) return `${indent}[${_internal(ir.fn, dbn, depth + 1 )} ${_internal(ir.arg, dbn, depth + 1)}${indent}]`;
+        if( ir instanceof IRApp ) return `${indent}[${_loop(ir.fn, dbn, depth + 1 )} ${_loop(ir.arg, dbn, depth + 1)}${indent}]`;
         if( ir instanceof IRNative ) return `${indent}(native ${nativeTagToString(ir.tag)})`;
         if( ir instanceof IRLetted )
         {
             // addLetted( ir );
-            return `${indent}(letted ${ir.dbn} ${toHex( ir.hash )})`;
+            return `${indent}${lettedToStr(ir)}`;
         }
         if( ir instanceof IRHoisted )
         {
-            return `${indent}(hoisted ${toHex( ir.hash )})`;
+            return `${indent}${hoistedToStr(ir)}`;
         }
         if( ir instanceof IRVar ) return indent + getVarNameForDbn( dbn - 1 - ir.dbn );
-        if( ir instanceof IRConst ) return `${indent}(const ${termTypeToString(ir.type)} ${showUPLCConstValue(ir.value as any)})`;
-        if( ir instanceof IRDelayed ) return `${indent}(delay ${_internal( ir.delayed, dbn, depth + 1 )}${indent})`;
-        if( ir instanceof IRForced ) return `${indent}(force ${_internal( ir.forced, dbn, depth + 1 )}${indent})`;
+        if( ir instanceof IRConst ) return `${indent}${constToString(ir)}`;
+        if( ir instanceof IRDelayed ) return `${indent}(delay ${_loop( ir.delayed, dbn, depth + 1 )}${indent})`;
+        if( ir instanceof IRForced ) return `${indent}(force ${_loop( ir.forced, dbn, depth + 1 )}${indent})`;
         if( ir instanceof IRError ) return "(error)"
         if( ir instanceof IRFunc )
         {
@@ -196,13 +196,13 @@ export function prettyIRText( _ir: IRTerm, _indent = 2 )
             {
                 vars[i] = getVarNameForDbn( dbn++ );
             }
-            return `${indent}(func ${vars.join(" ")} ${_internal( ir.body, dbn, depth + 1 )}${indent})`
+            return `${indent}(func ${typeof ir.name === "string" ? "{"+ir.name+"}" : ""} ${vars.join(" ")} ${_loop( ir.body, dbn, depth + 1 )}${indent})`
         }
 
         return "";
     }
 
-    return _internal( _ir, 0, 0 );
+    return _loop( _ir, 0, 0 );
 }
 
 export type PrettiedIR = {
@@ -232,13 +232,11 @@ export function prettyIR( _ir: IRTerm, _indent = 2 ) : PrettiedIR
             }
 
             hoistedHashes.push( hash.slice() );
+            const hashStr = toHex( hash );
             Object.defineProperty(
-                hoisted, toHex( hash ), {
-                    value: prettyIRText( h.hoisted, _indent ),
-                    writable: false,
-                    enumerable: true,
-                    configurable: false
-                }
+                hoisted,
+                hashStr, 
+                { value: prettyIRText( h.hoisted, _indent ), writable: true, enumerable: true }
             );
         }
     }
@@ -262,37 +260,37 @@ export function prettyIR( _ir: IRTerm, _indent = 2 ) : PrettiedIR
             
             getHoistedTerms( l.value.clone() ).forEach( ({ hoisted }) => addHoisted( hoisted ) );
 
+            const hashStr = toHex( hash );
             Object.defineProperty(
-                letted, toHex( hash ), {
+                letted, hashStr, {
                     value: prettyIRText( l.value, _indent ),
-                    writable: false,
-                    enumerable: true,
-                    configurable: false
+                    writable: true,
+                    enumerable: true
                 }
             );
         }
     }
 
-    function _internal( ir: IRTerm, dbn: number, depth: number ): string
+    function _loop( ir: IRTerm, dbn: number, depth: number ): string
     {
         const indent = `\n${indentStr.repeat( depth )}`;
 
-        if( ir instanceof IRApp ) return `${indent}[${_internal( ir.fn, dbn, depth + 1 )} ${_internal( ir.arg, dbn, depth + 1 )}${indent}]`;
+        if( ir instanceof IRApp ) return `${indent}[${_loop( ir.fn, dbn, depth + 1 )} ${_loop( ir.arg, dbn, depth + 1 )}${indent}]`;
         if( ir instanceof IRNative ) return `${indent}(native ${nativeTagToString( ir.tag )})`;
         if( ir instanceof IRLetted )
         {
             addLetted( ir );
-            return `${indent}(letted ${ir.dbn} ${toHex( ir.hash )})`;
+            return `${indent}${lettedToStr(ir)})`;
         }
         if( ir instanceof IRHoisted )
         {
-            addHoisted( ir );
-            return `${indent}(hoisted ${toHex( ir.hash )})`;
+            addHoisted( ir )
+            return `${indent}${hoistedToStr(ir)}`;
         }
         if( ir instanceof IRVar ) return indent + getVarNameForDbn( dbn - 1 - ir.dbn );
-        if( ir instanceof IRConst ) return `${indent}(const ${termTypeToString(ir.type)} ${showUPLCConstValue(ir.value as any)})`;
-        if( ir instanceof IRDelayed ) return `${indent}(delay ${_internal( ir.delayed, dbn, depth + 1 )}${indent})`;
-        if( ir instanceof IRForced ) return `${indent}(force ${_internal( ir.forced, dbn, depth + 1 )}${indent})`;
+        if( ir instanceof IRConst ) return `${indent}${constToString(ir)}`;
+        if( ir instanceof IRDelayed ) return `${indent}(delay ${_loop( ir.delayed, dbn, depth + 1 )}${indent})`;
+        if( ir instanceof IRForced ) return `${indent}(force ${_loop( ir.forced, dbn, depth + 1 )}${indent})`;
         if( ir instanceof IRError ) return "(error)"
         if( ir instanceof IRFunc )
         {
@@ -301,19 +299,19 @@ export function prettyIR( _ir: IRTerm, _indent = 2 ) : PrettiedIR
             {
                 vars[i] = getVarNameForDbn( dbn++ );
             }
-            return `${indent}(func ${vars.join(" ")} ${_internal( ir.body, dbn, depth + 1 )}${indent})`
+            return `${indent}(func ${typeof ir.name === "string" ? "{"+ir.name+"}" : ""} ${vars.join(" ")} ${_loop( ir.body, dbn, depth + 1 )}${indent})`
         }
 
         return "";
     }
 
-    const text = _internal( _ir, 0, 0 );
+    const text = _loop( _ir, 0, 0 );
 
     return {
         text,
         letted,
         hoisted
-    }
+    };
 }
 
 export function prettyIRJsonStr( ir: IRTerm, indent = 2 )
@@ -330,4 +328,19 @@ export function prettyIRJsonStr( ir: IRTerm, indent = 2 )
         },
         indent
     );
+}
+
+export function hoistedToStr( ir: IRHoisted ): string
+{
+    return `(hoisted${(ir.meta.name ? " {"+ir.meta.name+"}" : "")} ${toHex( ir.hash )})`;
+}
+
+export function lettedToStr( ir: IRLetted ): string
+{
+    return `(letted${(ir.meta.name ? " {"+ir.meta.name+"}" : "")} ${ir.dbn} ${toHex( ir.hash )})`;
+}
+
+export function constToString( ir: IRConst ): string
+{
+    return `(const ${termTypeToString(ir.type, 2)} ${showUPLCConstValue(ir.value as any)})`;
 }

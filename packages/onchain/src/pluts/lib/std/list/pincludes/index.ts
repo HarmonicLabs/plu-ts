@@ -17,7 +17,7 @@ export function pincludes<
                 list( elems_t ),
                 elems_t
             ],  bool)
-            (( eqFn, lst, elem ) => lst.some( papp( eqFn, elem ) ))
+            (( eqFn, lst, elem ) => lst.some( papp( eqFn, elem ) ), "mk_pincludes")
         ).$(
             pstdEq( elems_t )
         )

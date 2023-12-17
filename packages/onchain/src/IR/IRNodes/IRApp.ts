@@ -7,9 +7,12 @@ import { ToJson } from "../../utils/ToJson";
 import { Cloneable } from "@harmoniclabs/cbor/dist/utils/Cloneable";
 import { blake2b_128 } from "@harmoniclabs/crypto";
 import { IRParentTerm, isIRParentTerm } from "../utils/isIRParentTerm";
-import { prettyIRJsonStr } from "../utils";
-import { IRFunc } from "./IRFunc";
 import { _modifyChildFromTo } from "../toUPLC/_internal/_modifyChildFromTo";
+import { BaseIRMetadata } from "./BaseIRMetadata";
+
+export interface IRAppMeta extends BaseIRMetadata {
+    __src__?: string | undefined
+}
 
 export class IRApp
     implements Cloneable<IRApp>, IHash, IIRParent, ToJson
@@ -22,7 +25,9 @@ export class IRApp
 
     parent: IRParentTerm | undefined;
 
-    constructor( _fn_: IRTerm, _arg_: IRTerm )
+    readonly meta: IRAppMeta
+
+    constructor( _fn_: IRTerm, _arg_: IRTerm, meta: IRAppMeta = {} )
     {
         if( !isIRTerm( _fn_ ) )
         {
@@ -38,6 +43,14 @@ export class IRApp
             );
         }
 
+        Object.defineProperty(
+            this, "meta", {
+                value: { ...meta },
+                writable: false,
+                enumerable: true,
+                configurable: false
+            }
+        );
 
         let fn: IRTerm = _fn_;
         let arg: IRTerm = _arg_;
@@ -139,7 +152,8 @@ export class IRApp
     {
         return new IRApp(
             this.fn.clone(),
-            this.arg.clone()
+            this.arg.clone(),
+            { ...this.meta }
         );
     }
 
