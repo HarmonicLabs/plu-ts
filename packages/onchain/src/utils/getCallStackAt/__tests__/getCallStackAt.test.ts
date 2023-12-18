@@ -2,7 +2,12 @@ import { CallStackSiteInfos, getCallStackAt } from "..";
 
 describe("getCallStackAt", function () {
 
-    if( process.platform !== "linux" ) return;
+    if( process.platform !== "linux" )
+    {
+        // mock test
+        test("mock", () => {expect(1).toEqual(1)} );
+        return;
+    }
 
     test("no eq before", async function () {
         // little trick to assign without equal sign
