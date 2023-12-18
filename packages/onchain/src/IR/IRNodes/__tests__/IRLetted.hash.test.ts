@@ -53,7 +53,7 @@ describe("IRLetted.hash", () => {
 
     });
 
-    test.only("tempura ownHash", () => {
+    test("tempura ownHash", () => {
         function elem_at_( n: number ): IRTerm
         {
             if( n < 0 || n !== Math.round(n) )
@@ -159,8 +159,8 @@ describe("IRLetted.hash", () => {
             { name: "PTxOut::address" }
         );
 
-        console.log( toHex(ctxAt1.hash) );
-        console.log( getNormalizedLettedArgs( dbnLevel, ctxAt1 ) )
+        expect( toHex(ctxAt1.hash) ).toEqual("6c0e2d4ec0722f2d7eb61a795cb2cb37");
+        expect( getNormalizedLettedArgs( dbnLevel, ctxAt1 )?.[0] ).toEqual( 4 ) 
     });
     
 })

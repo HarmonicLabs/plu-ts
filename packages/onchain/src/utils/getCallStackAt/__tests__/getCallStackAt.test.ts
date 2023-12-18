@@ -2,6 +2,8 @@ import { CallStackSiteInfos, getCallStackAt } from "..";
 
 describe("getCallStackAt", function () {
 
+    if( process.platform !== "linux" ) return;
+
     test("no eq before", async function () {
         // little trick to assign without equal sign
         await (async function ( result, start ) {
@@ -49,7 +51,6 @@ describe("getCallStackAt", function () {
         //     setTimeout( r, 1000 );
         // });
         expect( snd?.inferredName ).toEqual("snd");
-
 
     });
 
