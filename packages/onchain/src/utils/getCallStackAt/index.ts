@@ -201,6 +201,13 @@ const cache = {
     }
 }
 
+const hasGlobalWindow = (function () {
+    try {
+        const notUndef = typeof window !== "undefined";
+        return notUndef;
+    } catch { return false; }
+})()
+
 /**
  * tries to get synchronously as far as possible
  */
@@ -210,7 +217,7 @@ function tryGetName( result: CallStackSiteInfos ): void
     const { column, line } = result;
     if( typeof column !== "number" || typeof line !== "number" ) return;
 
-    const base = typeof window?.location?.href === "string" ? window.location.href : ""
+    const base = hasGlobalWindow && typeof window?.location?.href === "string" ? window.location.href : ""
     const path = base + result.path;
     
     const file = cache.has( path ) ? cache.get( path ) : tryGetFileSync( path );

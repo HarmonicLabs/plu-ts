@@ -61,7 +61,7 @@
     "@harmoniclabs/cbor": "^1.1.2",
     "@harmoniclabs/pair": "^1.0.0",
     "@harmoniclabs/plu-ts-offchain": "^0.1.8",
-    "@harmoniclabs/plu-ts-onchain": "^0.2.5-dev0",
+    "@harmoniclabs/plu-ts-onchain": "^0.2.5-dev1",
     "@harmoniclabs/plutus-data": "^1.0.0",
     "@harmoniclabs/plutus-machine": "^1.0.3",
     "@harmoniclabs/uint8array-utils": "^1.0.0",
