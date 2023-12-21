@@ -182,9 +182,9 @@ const value_contains_master = phoist(
             const { fst: tokenName, snd: quantity } = assets.head;
 
             return policy.eq( own_policy )
-            // .and( singleAssetEntry )
-            // .and( tokenName.eq( master_tn ) )
-            // .and( quantity.eq( 1 ) )
+            .and( singleAssetEntry )
+            .and( tokenName.eq( master_tn ) )
+            .and( quantity.eq( 1 ) )
         });
     })
 );
@@ -961,10 +961,10 @@ const tempura
                     // .and( timerangeIn3Mins ) // OK
                     // .and( meetsDifficulty ) // OK
                     // .and( inputHasMasterToken ) // OK
-                    // .and( singleMintEntry ) // OK (but not both)
+                    .and( singleMintEntry ) // OK (but not both)
                     // .and( correctMint )
                     .and( outHasOnlyMaster ) // OK
-                    .and( correctOutDatum )
+                    // .and( correctOutDatum )
                     // .and( out_current_posix_time.eq( averaged_current_time ) ) // OK
                     // .and( out_block_number.eq( block_number.add( 1 ) ) ) // OK
                     // .and( out_current_hash.eq( found_bytearray ) ) // OK
@@ -1034,16 +1034,17 @@ describe("run tempura", () => {
 
         // console.log( prettyUPLC( uplc ) );
 
-        // @ts-ignore
         const res = Machine.eval( uplc );
 
-        // console.log( res );
-        // console.log(
-        //     (res as any)?.result?.addInfos?.list?.value ??
-        //     (res as any)?.result?.addInfos?.data ??
-        //     (res as any)?.result?.addInfos ??
-        //     (res as any)?.result
-        // );
+        /*
+        console.log( res );
+        console.log(
+            (res as any)?.result?.addInfos?.list?.value ??
+            (res as any)?.result?.addInfos?.data ??
+            (res as any)?.result?.addInfos ??
+            (res as any)?.result
+        );
+        //*/
 
         expect( res.result instanceof UPLCConst ).toBe( true );
         expect( res.result ).toEqual( UPLCConst.unit );

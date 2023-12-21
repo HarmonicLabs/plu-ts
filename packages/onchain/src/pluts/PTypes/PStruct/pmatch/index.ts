@@ -273,7 +273,8 @@ export function matchNCtorsIdxs( _n: number, returnT: TermType )
     body = new IRHoisted(
         new IRFunc( 1, // structData
             body
-        )
+        ),
+        { name: "match_" + n + "_ctors" }
     );
 
     type ContinuationT = LamT<[PrimType.List, [PrimType.Data]], TermType>

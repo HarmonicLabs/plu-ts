@@ -5,7 +5,20 @@ import { IRTerm } from "../../IRTerm";
 import { IRConst } from "../IRConst";
 import { IRLetted, getNormalizedLettedArgs } from "../IRLetted";
 import { IRVar } from "../IRVar"
+import { prettyIRJsonStr } from "../../utils";
 
+const hoisted_getFields = new IRHoisted(
+    new IRFunc( 1, // struct
+        new IRApp(
+            IRNative.sndPair,
+            new IRApp(
+                IRNative.unConstrData,
+                new IRVar( 0 )
+            )
+        ),
+        "hoisted_getFields"
+    )
+);
 
 describe("IRLetted.hash", () => {
 
@@ -35,18 +48,23 @@ describe("IRLetted.hash", () => {
 
     test("different vars; proportilonally different letted dbn => same hash", () => {
 
-        const a = new IRLetted( 4, new IRVar( 1 ) );
-        const b = new IRLetted( 6, new IRVar( 3 ) );
+        const a = new IRLetted( 4, new IRVar( 1 ) ); // points at 3rd (4 - 1) var in scope
+        const b = new IRLetted( 6, new IRVar( 3 ) ); // points at 3rd (6 - 3) var in scope
 
         expect( a.value.hash ).not.toEqual( b.value.hash );
         expect( a.hash ).toEqual( b.hash );
 
     });
 
-    test("different vars; un-proportilonally different letted dbn => different hash", () => {
+    test("different vars values; un-proportilonally different letted dbn => different hash", () => {
 
-        const a = new IRLetted( 4, new IRVar( 1 ) );
-        const b = new IRLetted( 7, new IRVar( 3 ) );
+        const a = new IRLetted( 4, new IRVar( 1 ) ); // points at 3rd (4 - 1) var in scope
+        const normalized_a = getNormalizedLettedArgs( 4, a.value )!;
+        const b = new IRLetted( 7, new IRVar( 3 ) ); // points at 4th (7 - 3) var in scope
+        const normalized_b = getNormalizedLettedArgs( 7, b.value )!;
+
+        // console.log( normalized_a[0], prettyIRJsonStr( normalized_a[1] ) );
+        // console.log( normalized_b[0], prettyIRJsonStr( normalized_b[1] ) );
 
         expect( a.value.hash ).not.toEqual( b.value.hash );
         expect( a.hash ).not.toEqual( b.hash );
@@ -87,19 +105,6 @@ describe("IRLetted.hash", () => {
 
             return uplc as any;
         }
-
-        const hoisted_getFields = new IRHoisted(
-            new IRFunc( 1, // struct
-                new IRApp(
-                    IRNative.sndPair,
-                    new IRApp(
-                        IRNative.unConstrData,
-                        new IRVar( 0 )
-                    )
-                ),
-                "hoisted_getFields"
-            )
-        );
 
         const dbnLevel = 5;
         const varDbn = 1;
@@ -159,8 +164,21 @@ describe("IRLetted.hash", () => {
             { name: "PTxOut::address" }
         );
 
-        expect( toHex(ctxAt1.hash) ).toEqual("6c0e2d4ec0722f2d7eb61a795cb2cb37");
         expect( getNormalizedLettedArgs( dbnLevel, ctxAt1 )?.[0] ).toEqual( 4 ) 
     });
-    
+
+    test("head of -1", () => {
+
+        function getTerm( dbn: number, varDbn: number )
+        {
+            return new IRLetted( dbn, new IRApp( IRNative.headList, new IRVar(varDbn) ) );
+        }
+
+        const _50 = getTerm( 5, 0 );
+        const _61 = getTerm( 6, 1 );
+        const _60 = getTerm( 6, 0 );
+
+        expect( _50.hash ).toEqual( _61.hash );
+        expect( _50.hash ).not.toEqual( _60.hash );
+    })
 })

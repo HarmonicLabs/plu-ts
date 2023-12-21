@@ -25,7 +25,7 @@ export function iterTree(
         const termParent = t.parent;
         const negDbn = t instanceof IRFunc ? t.arity : 0;
 
-        const modifiedParent = Boolean( fn( t, dbn ) );
+        const modifiedParent = fn( t, dbn ) === true;
 
         if( modifiedParent && termParent !== undefined )
         {

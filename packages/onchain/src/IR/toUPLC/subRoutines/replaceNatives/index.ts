@@ -12,14 +12,14 @@ export function replaceNativesAndReturnRoot( tree: IRTerm ): IRTerm
     }
 
     iterTree( tree, elem => {
-        if( elem instanceof IRNative )
+        if( elem instanceof IRNative && elem.tag < 0 )
         {
             _modifyChildFromTo(
                 elem.parent,
                 elem,
                 nativeToIR( elem )
             );
-            return elem.tag < 0;
+            return true;
         }
     });
     return tree;

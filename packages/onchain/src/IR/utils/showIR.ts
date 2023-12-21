@@ -314,10 +314,32 @@ export function prettyIR( _ir: IRTerm, _indent = 2 ) : PrettiedIR
     };
 }
 
-export function prettyIRJsonStr( ir: IRTerm, indent = 2 )
+export interface PrettyIRJsonStrOpts {
+    text: boolean,
+    letted: boolean,
+    hoisted: boolean,
+}
+
+const defaultPrettyIRJsonStrOpts: PrettyIRJsonStrOpts = {
+    text: true,
+    letted: true,
+    hoisted: true
+}
+
+export function prettyIRJsonStr( ir: IRTerm, indent = 2, opts: Partial<PrettyIRJsonStrOpts> = {})
 {
+    const _opts: PrettyIRJsonStrOpts = {
+        ...defaultPrettyIRJsonStrOpts,
+        ...opts
+    };
+
+    const toJson: any = prettyIR( ir, indent );
+    if( !_opts.text ) toJson.text = undefined;
+    if( !_opts.letted ) toJson.letted = undefined;
+    if( !_opts.hoisted ) toJson.hoisted = undefined;
+
     return JSON.stringify(
-        prettyIR( ir, indent ),
+        toJson,
         ( k, v ) => {
 
             if( (k === "text" || (typeof k === "string" && k.length === 32)) && typeof v === "string")

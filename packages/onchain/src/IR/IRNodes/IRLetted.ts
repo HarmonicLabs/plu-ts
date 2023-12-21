@@ -21,6 +21,7 @@ import { prettyIR, prettyIRJsonStr } from "../utils";
 import { IRParentTerm, isIRParentTerm } from "../utils/isIRParentTerm";
 import { _modifyChildFromTo } from "../toUPLC/_internal/_modifyChildFromTo";
 import { BaseIRMetadata } from "./BaseIRMetadata";
+import { _getMinUnboundDbn } from "../toUPLC/subRoutines/handleLetted/groupByScope";
 
 
 export type LettedSetEntry = {
@@ -82,6 +83,8 @@ export class IRLetted
      */
     dbn: number
 
+    isClosedAtDbn: ( dbn: number ) => boolean
+
     readonly dependencies!: LettedSetEntry[]
 
     parent: IRParentTerm | undefined;
@@ -90,7 +93,12 @@ export class IRLetted
 
     readonly meta!: IRLettedMeta
 
-    constructor( DeBruijn: number | bigint, toLet: IRTerm, metadata: Partial<IRLettedMeta> = {} )
+    constructor(
+        DeBruijn: number | bigint,
+        toLet: IRTerm,
+        metadata: Partial<IRLettedMeta> = {},
+        unsafe_hash: Uint8Array | undefined = undefined
+    )
     {
         DeBruijn = typeof DeBruijn === "bigint" ? Number( DeBruijn ) : DeBruijn; 
         if(!(
@@ -138,7 +146,7 @@ export class IRLetted
         _value.parent = this;
 
         // we need the has before setting dependecies
-        let hash: Uint8Array | undefined = undefined;
+        let hash: Uint8Array | undefined = unsafe_hash instanceof Uint8Array ? new Uint8Array( unsafe_hash ) : undefined;
         Object.defineProperty(
             this, "hash", {
                 get: () => {
@@ -167,6 +175,20 @@ export class IRLetted
                                     normalized[1].hash
                                 )
                             );
+                            // const [ normalized_dbn, normalized_value] = normalized;
+                            // if( toHex( hash ) === "ee84fb036ed2726e01b0415109246927" )
+                            // {
+                            //     const original_value = _value.clone();
+                            //     const minDbn = getMinVarDbn( original_value );
+                            //     const minUnb = _getMinUnboundDbn( original_value );
+                            //     console.log(
+                            //         "_ee84fb036ed2726e01b0415109246927_",
+                            //         "\noriginal value:", prettyIRJsonStr( original_value, 2, { hoisted: false } ),
+                            //         "\nmin dbn:", minDbn,
+                            //         "\nmin unbound:", minUnb,
+                            //         "\nnormalized dbn:", normalized_dbn,
+                            //     );
+                            // }
                         }
                     }
                     return hash.slice();
@@ -218,6 +240,20 @@ export class IRLetted
                 configurable: false
             }
         );
+
+        Object.defineProperty(
+            this, "isClosedAtDbn", {
+                value: ( dbn: number ) => {
+                    if( !Number.isSafeInteger( dbn ) ) throw new Error("unexpected unsafe dbn integer")
+                    const minUnbound = _getMinUnboundDbn( _value );
+                    if( minUnbound === undefined ) return true;
+                    return minUnbound < dbn;
+                },
+                writable: false,
+                enumerable: true,
+                configurable: false
+            }
+        )
 
         Object.defineProperty(
             this, "dependencies",
@@ -288,7 +324,8 @@ export class IRLetted
                 return new IRLetted(
                     this.dbn,
                     this.value, // .clone(), // cloned in constructor
-                    { ...this.meta }
+                    { ...this.meta },
+                    hash instanceof Uint8Array ? Uint8Array.prototype.slice.call( hash ) : undefined
                 )
             }
         );
@@ -459,38 +496,117 @@ export function getLettedTerms( irTerm: IRTerm, options?: Partial<GetLettedTerms
 }
 
 
-export function getNormalizedLettedArgs( dbn: number, value: IRTerm ): [ normalized_dbn: number, noramlized_value: IRTerm ] | undefined
+export function getNormalizedLettedArgs( lettedDbn: number, value: IRTerm ): [ normalized_dbn: number, noramlized_value: IRTerm ] | undefined
 {
     const normalized_value = value.clone();
-    const minDbn = getMinVarDbnIn( normalized_value );
+    const minDbn = getMinVarDbn( normalized_value );
 
     if( minDbn === undefined ) return undefined;
-    
+
     iterTree( normalized_value,
-        (node) => {
-            if( node instanceof IRVar || node instanceof IRLetted )
+        (node, relativeDbn) => {
+            if( node instanceof IRVar )
             {
                 node.dbn -= minDbn
+            }
+            else if( node instanceof IRLetted )
+            {
+                const max = getMaxVarDbn( node.value );
+                if(
+                    // no vars
+                    typeof max !== "number" ||
+                    // defined outside of letted
+                    max >= relativeDbn
+                )
+                {
+                    node.dbn -= minDbn;
+                }
+                else // if depends on vars in this letted
+                {
+                    // TODO: fix double checking already inlined values
+                    //
+                    // this is currently a workaround
+                    //
+                    // the real problem is that sometimes (when?)
+                    // `iterTree` goes back checking some value that was already modified
+                    // in the case of `IRApp` as parent, throwing an error
+                    // because we don't know which value we should modify
+                    if( node.parent instanceof IRApp )
+                    {
+                        const parent = node.parent;
+                        const currentChild = node;
+                        if( // parent is actually pointing to child
+                            currentChild === parent.arg ||
+                            currentChild === parent.fn ||
+                            uint8ArrayEq( parent.arg.hash, currentChild.hash ) ||
+                            uint8ArrayEq( parent.fn.hash, currentChild.hash )
+                        )
+                        {
+                            // inline
+                            _modifyChildFromTo(
+                                node.parent,
+                                node,
+                                node.value
+                            );
+                            return true; // modified parent
+                        }
+                        else return false; // modified parent
+                    }
+                    else {
+                        // inline
+                        _modifyChildFromTo(
+                            node.parent,
+                            node,
+                            node.value
+                        );
+                        return true; // modified parent
+                    }
+                }
             }
         },
         // shouldSkipNode ?
         // hoisted terms are not really here
         // will be substituted to variables when the time comes
         // however now are here and we need to skip them
-        node => node instanceof IRHoisted
+        //
+        // !!! WARNING !! removing this causes strange uplc compilation BUGS
+        (node, dbn) => node instanceof IRHoisted
     );
-    return [ dbn - minDbn, normalized_value ];
+
+    // !!! IMPORTANT !!! _getMinUnboundDbn( value ) MUST be called on the original value; NOT the **modified** `normalized_value`
+    return [ lettedDbn - (_getMinUnboundDbn( value ) ??  minDbn), normalized_value ];
 }
 
-function getMinVarDbnIn( term: IRTerm ): number | undefined
+/**
+ * 
+ * @param term the ir term to iter to search for vars
+ * @returns {number | undefined} 
+ * 
+ * @example
+ * ```ts
+ * let minDbn = getMinVarDbn( new IRVar(0) ); // 0
+ * minDbn = getMinVarDbn( IRConst.unit ); // undefined
+ * minDbn = getMinVarDbn( new IRFunc( 1, new IRVar( 0 ) ) ); // 0
+ * ```
+ */
+export function getMinVarDbn( term: IRTerm ): number | undefined
 {
     let min: number | undefined = undefined;
+    let foundAny: boolean = false;
 
     iterTree( term,
         (node) => {
             if( node instanceof IRVar )
             {
-                min = typeof min === "number" ? Math.min( min, node.dbn ) : node.dbn
+                if( foundAny )
+                {
+                    min = Math.min( min as number, node.dbn );
+                }
+                else
+                {
+                    foundAny = true;
+                    min = node.dbn;
+                }
             }
         },
         // shouldSkipNode ?
@@ -501,4 +617,40 @@ function getMinVarDbnIn( term: IRTerm ): number | undefined
     );
 
     return min;
+}
+
+
+/**
+ * 
+ * @param term the ir term to iter to search for vars
+ * @returns {number | undefined} 
+ */
+function getMaxVarDbn( term: IRTerm ): number | undefined
+{
+    let max: number | undefined = undefined;
+    let foundAny: boolean = false;
+
+    iterTree( term,
+        (node) => {
+            if( node instanceof IRVar )
+            {
+                if( foundAny )
+                {
+                    max = Math.max( max as number, node.dbn );
+                }
+                else
+                {
+                    foundAny = true;
+                    max = node.dbn;
+                }
+            }
+        },
+        // shouldSkipNode ?
+        // hoisted terms are not really here
+        // will be substituted to variables when the time comes
+        // however now are here and we need to skip them
+        node => node instanceof IRHoisted // skip if hoisted
+    );
+
+    return max;
 }

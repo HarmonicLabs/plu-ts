@@ -13,6 +13,7 @@ import { isClosedIRTerm } from "../../../IR/utils/isClosedIRTerm";
 import { UtilityTermOf, addUtilityForType } from "../std/UtilityTerms/addUtilityForType";
 import { makeMockUtilityTerm } from "../std/UtilityTerms/mockUtilityTerms/makeMockUtilityTerm";
 import { getCallStackAt } from "../../../utils/getCallStackAt";
+import { IRTerm } from "../../../IR/IRTerm";
 
 export type LettedTerm<PVarT extends PType, SomeExtension extends object> =
     Term<PVarT> & SomeExtension extends Term<PAlias<PVarT, {}>> ?
@@ -23,7 +24,10 @@ export type LettedTerm<PVarT extends PType, SomeExtension extends object> =
             in: <PExprResult extends PType>( expr: (value: UtilityTermOf<PVarT>) => Term<PExprResult> ) => Term<PExprResult>
         }
 
-export function plet<PVarT extends PType, SomeExtension extends object>( varValue: Term<PVarT> & SomeExtension, value_name?: string | undefined ): LettedTerm<PVarT, SomeExtension>
+export function plet<PVarT extends PType, SomeExtension extends object>(
+    varValue: Term<PVarT> & SomeExtension,
+    value_name?: string | undefined
+): LettedTerm<PVarT, SomeExtension>
 {
     type TermPVar = Term<PVarT> & SomeExtension;
 
@@ -47,7 +51,6 @@ export function plet<PVarT extends PType, SomeExtension extends object>( varValu
     const letted = new Term(
         type,
         dbn => {
-
             const ir =  varValue.toIR( dbn );
 
             // `compileIRToUPLC` can handle it even if this check is not present
@@ -66,11 +69,13 @@ export function plet<PVarT extends PType, SomeExtension extends object>( varValu
                 return new IRHoisted( ir );
             }
 
-            return new IRLetted(
+            const res = new IRLetted(
                 Number( dbn ),
                 ir,
                 { __src__, name: value_name }
-            );
+            ); 
+
+            return res;
         }
     );
     

@@ -22,7 +22,7 @@ import { IRFunc } from "../../../../IR/IRNodes/IRFunc";
 import { IRApp } from "../../../../IR/IRNodes/IRApp";
 import { IRNative } from "../../../../IR/IRNodes/IRNative";
 import { IRVar } from "../../../../IR/IRNodes/IRVar";
-import { IRLetted } from "../../../../IR/IRNodes/IRLetted";
+import { IRLetted, getMinVarDbn, getNormalizedLettedArgs } from "../../../../IR/IRNodes/IRLetted";
 import type { PData } from "../../../PTypes/PData";
 import type { PList } from "../../../PTypes/PList";
 import type { PPair } from "../../../PTypes/PPair";
@@ -30,6 +30,9 @@ import type { PInt } from "../../../PTypes/PInt";
 import { FilterMethodsByInput, LiftMethods, MethodsAsTerms } from "./userMethods/methodsTypes";
 import { addUserMethods } from "./userMethods/addUserMethods";
 import { plet } from "../../plet";
+import { prettyIRJsonStr } from "../../../../IR/utils/showIR";
+import { toHex } from "@harmoniclabs/uint8array-utils";
+import { _getMinUnboundDbn } from "../../../../IR/toUPLC/subRoutines/handleLetted/groupByScope";
 
 export type RawStruct = {
     readonly index: TermInt,
@@ -129,6 +132,17 @@ export function addPStructMethods<
                                 getElemAtTerm( i ).$( letted_fieldsListData )
                             ),
                             ctorName + "::" + thisFieldName
+                            // (dbn, ir) => {
+                            //     if(ctorName + "::" + thisFieldName !== "PScriptContext::purpose") return;
+                            // 
+                            //     const [ _dbn, term ] = getNormalizedLettedArgs( ir.dbn, ir.value ) ?? [ 0, new IRVar( 0 )] ;
+                            //     console.log(
+                            //         "PScriptContext::purpose at dbn:", dbn, 
+                            //         "\nnormalized value:", prettyIRJsonStr( term, 2, { hoisted: false } ),
+                            //         "\nnormalized value hash:", toHex( term.hash ),
+                            //         "\nnormalized dbn:", _dbn,
+                            //     );
+                            // }
                         ),
                         thisFieldType
                     ),
