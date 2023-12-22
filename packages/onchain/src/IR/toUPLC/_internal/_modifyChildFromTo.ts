@@ -24,8 +24,19 @@ export function _modifyChildFromTo( parent: IRParentTerm | undefined, currentChi
             "'_modifyChildFromTo' received an undefined parent"
         );
     }
-    if( currentChild !== newChild && isIRTerm( currentChild ) && currentChild.parent === parent )
+    if(
+        // currentChild has parent property
+        isIRTerm( currentChild ) &&
+        // and is not (already) undefined
+        currentChild.parent !== undefined &&
+        // and the `parent` passed to the function is the parent of the `currentChild`
+        currentChild.parent === parent &&
+        // and child to be modified is not the same object
+        currentChild !== newChild
+    )
     {
+        // we are modifying the child
+        // so we remove the reference
         currentChild.parent = undefined;
     }
     if( parent instanceof IRApp )

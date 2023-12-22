@@ -1,6 +1,6 @@
 {
   "name": "@harmoniclabs/plu-ts",
-  "version": "0.6.0-dev3",
+  "version": "0.6.0-dev4",
   "description": "An embedded DSL for Cardano smart contracts creation coupled with a library for Cardano transactions, all in Typescript",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -22,7 +22,15 @@
     "build:light": "tsc --project ./tsconfig.json && tsc-alias -p ./tsconfig.json",
     "buidl": "npm run build",
     "ci": "npm run test && npm run build",
-    "start": "npm-run-all --parallel build:watch run:watch"
+    "start": "npm-run-all --parallel build:watch run:watch",
+    "pub": "npm run ci && npm pub",
+
+    "test:onchain": "cd ./packages/onchain && npm run test",
+    "build:onchain": "cd ./packages/onchain && npm run build",
+    "buidl:onchain": "cd ./packages/onchain && npm run buidl",
+    "ci:onchain": "cd ./packages/onchain && npm run ci",
+    "pub:onchain": "cd ./packages/onchain && npm run ci && npm pub"
+
   },
   "publishConfig": {
     "registry": "https://registry.npmjs.org"
@@ -61,7 +69,7 @@
     "@harmoniclabs/cbor": "^1.1.2",
     "@harmoniclabs/pair": "^1.0.0",
     "@harmoniclabs/plu-ts-offchain": "^0.1.8",
-    "@harmoniclabs/plu-ts-onchain": "^0.2.5-dev3",
+    "@harmoniclabs/plu-ts-onchain": "^0.2.5-dev4",
     "@harmoniclabs/plutus-data": "^1.0.0",
     "@harmoniclabs/plutus-machine": "^1.0.4",
     "@harmoniclabs/uint8array-utils": "^1.0.0",

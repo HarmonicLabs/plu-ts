@@ -62,20 +62,29 @@ export class IRNative
             {
                 get: () => _parent,
                 set: ( newParent: IRParentTerm | undefined ) => {
-                    if(
-                        (
+                    if(!( // assert
+                        // new parent value is different than current
+                        _parent !== newParent && (
+                            // and the new parent value is valid
                             newParent === undefined || 
                             isIRParentTerm( newParent )
-                        ) &&
-                        _parent !== newParent
-                    )
+                        )
+                    )) return;
+                    
+                    // keep reference
+                    const oldParent = _parent;
+                    // change parent
+                    _parent = newParent;
+
+                    // if has old parent
+                    if( oldParent !== undefined && isIRParentTerm( oldParent ) )
                     {
-                        if( isIRParentTerm( _parent ) ) _modifyChildFromTo(
-                            _parent,
+                        // change reference to a clone for safety
+                        _modifyChildFromTo(
+                            oldParent,
                             this,
                             this.clone()
                         );
-                        _parent = newParent;
                     }
                 },
                 enumerable: true,
