@@ -223,7 +223,7 @@ describe("pmatch", () => {
                 nums: toData( Nums.type )( nums ),
                 bss: toData( BSs.type )( bss )
             }))
-            .onBoth( rawFields => rawFields.extract("nums", "bss").in( continuation ))
+            .onBoth( rawFields => rawFields.extract("nums", "bss").in( continuation as any ))
             .onBSsOnly( _ =>  perror( outTy ) )
             .onNumsOnly( _ => perror( outTy ) )
 

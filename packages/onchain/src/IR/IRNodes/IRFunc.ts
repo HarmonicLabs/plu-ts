@@ -9,7 +9,11 @@ import { concatUint8Arr } from "../utils/concatUint8Arr";
 import { isIRTerm } from "../utils/isIRTerm";
 import { positiveIntAsBytes } from "../utils/positiveIntAsBytes";
 import { defineReadOnlyProperty } from "@harmoniclabs/obj-utils";
+import { IRParentTerm, isIRParentTerm } from "../utils/isIRParentTerm";
+import { _modifyChildFromTo } from "../toUPLC/_internal/_modifyChildFromTo";
+import { BaseIRMetadata } from "./BaseIRMetadata";
 
+export interface IRFuncMetadata extends BaseIRMetadata {}
 
 export class IRFunc
     implements Cloneable<IRFunc>, IHash, IIRParent, ToJson
@@ -19,6 +23,10 @@ export class IRFunc
     readonly hash!: Uint8Array;
     markHashAsInvalid!: () => void;
 
+    readonly meta: IRFuncMetadata
+
+    get name(): string | undefined { return this.meta.name };
+
     body!: IRTerm
 
     parent: IRTerm | undefined;
@@ -27,19 +35,40 @@ export class IRFunc
 
     constructor(
         arity: number,
-        body: IRTerm
+        body: IRTerm,
+        func_name?: string | undefined
     )
     {
         if( !Number.isSafeInteger( arity ) && arity >= 1 )
         throw new BasePlutsError(
-            "invalid arity for 'IRfunc'"
+            "invalid arity for 'IRFunc'"
         )
 
-        defineReadOnlyProperty(
-            this, "arity", arity
+        if( !isIRTerm( body ) )
+        throw new Error("IRFunc body argument was not an IRTerm");
+
+        Object.defineProperties(
+            this, {
+                arity: {
+                    value: arity,
+                    writable: false,
+                    enumerable: true,
+                    configurable: false
+                },
+                meta: {
+                    value: {
+                        name: typeof func_name === "string" ? func_name : (void 0)
+                    },
+                    writable: true,
+                    enumerable: true,
+                    configurable: false
+                }
+            }
         );
 
-        let _body: IRTerm;
+        let _body: IRTerm = body;
+        _body.parent = this;
+
         let hash: Uint8Array | undefined = undefined;
         Object.defineProperty(
             this, "hash", {
@@ -61,12 +90,13 @@ export class IRFunc
                 configurable: false
             }
         );
+
         Object.defineProperty(
             this, "markHashAsInvalid",
             {
                 value: () => {
                     hash = undefined;
-                    this.parent?.markHashAsInvalid()
+                    this.parent?.markHashAsInvalid();
                 },
                 writable: false,
                 enumerable:  false,
@@ -84,6 +114,7 @@ export class IRFunc
                             "invalid IRTerm to be a function body"
                         );
                     }
+                    
                     this.markHashAsInvalid();
                     _body = newBody;
                     _body.parent = this;
@@ -92,20 +123,37 @@ export class IRFunc
                 configurable: false
             }
         );
-        this.body = body;
         
-        let _parent: IRTerm | undefined = undefined;
+        let _parent: IRParentTerm | undefined = undefined;
         Object.defineProperty(
             this, "parent",
             {
                 get: () => _parent,
-                set: ( newParent: IRTerm | undefined ) => {
+                set: ( newParent: IRParentTerm | undefined ) => {
+                    if(!( // assert
+                        // new parent value is different than current
+                        _parent !== newParent && (
+                            // and the new parent value is valid
+                            newParent === undefined || 
+                            isIRParentTerm( newParent )
+                        )
+                    )) return;
+                    
+                    // keep reference
+                    const oldParent = _parent;
+                    // change parent
+                    _parent = newParent;
 
-                    if( newParent === undefined || isIRTerm( newParent ) )
+                    // if has old parent
+                    if( oldParent !== undefined && isIRParentTerm( oldParent ) )
                     {
-                        _parent = newParent;
+                        // change reference to a clone for safety
+                        _modifyChildFromTo(
+                            oldParent,
+                            this,
+                            this.clone()
+                        );
                     }
-
                 },
                 enumerable: true,
                 configurable: false

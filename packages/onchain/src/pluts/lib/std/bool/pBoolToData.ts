@@ -25,6 +25,7 @@ export const pBoolToData = phoist(
                 ),
                 asData( bool )
             )
-        )
+        ),
+        "pBoolToData"
     )
 );

@@ -13,3 +13,4 @@ export * from "./builtins";
 export * from "./builtins/ptrace";
 export * from "./plet";
 export * from "./std";
+export * from "./show";

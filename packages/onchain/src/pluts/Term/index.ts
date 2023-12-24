@@ -65,17 +65,23 @@ export class Term<A extends PType>
         let _toIR_ = _toIR.bind( this );
         let shouldHoist = false;
 
+        let _IR_cache : { [dbn: string]: IRTerm } = {};
         Object.defineProperty(
             this, "toIR",
             {
                 value: ( deBruijnLevel: bigint | number = 0 ) =>
                 {
+                    const dbnStr = deBruijnLevel.toString();
+                    const _cacheHit = _IR_cache[ shouldHoist ? "hoisted" : dbnStr ];
+                    if( _cacheHit ) return _cacheHit.clone();
+
                     if( typeof deBruijnLevel !== "bigint" ) deBruijnLevel = BigInt( deBruijnLevel );
 
                     let ir = _toIR_( deBruijnLevel );
                     if( shouldHoist )
                     {
                         const res = new IRHoisted( ir );
+                        _IR_cache["hoisted"] = res.clone();
                         return res;
                     }
                     
@@ -110,6 +116,7 @@ export class Term<A extends PType>
                         }
                     }
 
+                    _IR_cache[dbnStr] = ir.clone();
                     return ir;
                 },
                 writable: false,
@@ -117,12 +124,18 @@ export class Term<A extends PType>
                 configurable: false
             });
 
+        let _UPLC_cache : { [dbn: string]: UPLCTerm } = {};
         Object.defineProperty(
         this, "toUPLC",
         {
             value: ( deBruijnLevel: bigint | number = 0 ) =>
             {
-                return compileIRToUPLC( this.toIR( deBruijnLevel ) )
+                const key = shouldHoist ? "hoisted" : deBruijnLevel.toString();
+                const _cacheHit = _UPLC_cache[key];
+                if( _cacheHit ) return _cacheHit.clone()
+                const res = compileIRToUPLC( this.toIR( deBruijnLevel ) );
+                _UPLC_cache[key] = res.clone();
+                return res;
             },
             writable: false,
             enumerable: true,

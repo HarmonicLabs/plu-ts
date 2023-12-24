@@ -14,15 +14,19 @@ export function getNRequiredLambdaArgs( type: GenericTermType ): number
  */
 export const getNRequiredArgs = getNRequiredLambdaArgs;
 
-export function ctorDefToString( ctorDef: StructCtorDef ): string
+export function ctorDefToString( ctorDef: StructCtorDef, limit: number = Infinity ): string
 {
+    if( limit <= 0 ) return "{ ... }";
+
     const fields = Object.keys( ctorDef );
+
+    if( fields.length === 0 ) return "{}";
 
     let str = "{";
 
     for( const fieldName of fields )
     {
-        str += ' ' + fieldName + ": " + termTypeToString( ctorDef[ fieldName ] );
+        str += ' ' + fieldName + ": " + termTypeToString( ctorDef[ fieldName ], limit - 1 );
     }
 
     str += " }";
@@ -30,7 +34,7 @@ export function ctorDefToString( ctorDef: StructCtorDef ): string
     return str;
 }
 
-export function structDefToString( def: StructDefinition ): string
+export function structDefToString( def: StructDefinition, limit: number = Infinity ): string
 {
     const ctors = Object.keys( def );
 
@@ -38,7 +42,7 @@ export function structDefToString( def: StructDefinition ): string
 
     for( const ctor of ctors )
     {
-        str += ' ' + ctor + ": " + ctorDefToString( def[ctor] ) + " },"
+        str += ' ' + ctor + ": " + ctorDefToString( def[ctor], limit ) + " },"
     }
 
     str = str.slice( 0, str.length - 1 ) + " }";
@@ -46,44 +50,51 @@ export function structDefToString( def: StructDefinition ): string
     return  str
 }
 
-export function termTypeToString( t: GenericTermType ): string
+export function termTypeToString( t: GenericTermType, limit: number = Infinity ): string
 {
+    if( limit <= 0 ) return "...";
     const tag = t[0];
     if( tag === PrimType.Struct )
     {
         return "struct(" + (
-            structDefToString( t[1] as StructDefinition )
+            structDefToString( t[1] as StructDefinition, limit - 1 )
         ) + ")";
     }
     if( isTaggedAsAlias( t ) )
     {
-        const aliased = termTypeToString( unwrapAlias( t as any ) );
+        const aliased = termTypeToString( unwrapAlias( t as any ), limit - 1 );
         return "alias(" + aliased + ")";
     }
     if( tag === PrimType.AsData )
     {
         return "asData(" + (
-            termTypeToString( t[1] )
+            termTypeToString( t[1], limit - 1 )
         ) + ")";
     }
     if( tag === PrimType.List )
     {
         return "list(" + (
-            termTypeToString( t[1] )
+            termTypeToString( t[1], limit - 1 )
+        ) + ")";
+    }
+    if( tag === PrimType.Delayed )
+    {
+        return "delayed(" + (
+            termTypeToString( t[1], limit - 1 )
         ) + ")";
     }
     if( tag === PrimType.Pair )
     {
         return "pair(" + (
-            termTypeToString( t[1] )
+            termTypeToString( t[1], limit - 1 )
         ) + "," + (
-            termTypeToString( t[2] )
+            termTypeToString( t[2], limit - 1 )
         ) + ")";
     }
 
     if( tag === PrimType.Lambda )
     {
-        return termTypeToString( t[1] ) + " -> " + termTypeToString( t[2] );
+        return termTypeToString( t[1], limit - 1 ) + " -> " + termTypeToString( t[2], limit - 1 );
     }
 
     if( typeof t[0] === "symbol" ) return "tyParam("+ ((t[0] ).description ?? "") +")";
@@ -93,7 +104,7 @@ export function termTypeToString( t: GenericTermType ): string
         // return "";
     }
     const tyArgs = t.slice(1) as TermType[];
-    return ( t[0] + (tyArgs.length > 0 ? ',': "") + tyArgs.map( t => termTypeToString( t ) ).toString() );
+    return ( t[0] + (tyArgs.length > 0 ? ',': "") + tyArgs.map( t => termTypeToString( t, limit - 1 ) ).toString() );
 }
 
 export interface CtorDefJson {

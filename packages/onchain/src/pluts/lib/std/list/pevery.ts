@@ -45,6 +45,6 @@ export function pevery<ElemsT extends TermType>( elemsT: ElemsT )
                 )
             )
             // .$( _list )
-        })
+        }, "pevery")
     ) as any;
 }

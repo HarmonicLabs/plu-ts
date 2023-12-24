@@ -16,6 +16,12 @@ import { IRApp } from "./IRApp";
 import { IRDelayed } from "./IRDelayed";
 import { IRForced } from "./IRForced";
 import { IRFunc } from "./IRFunc";
+import { IRHoisted } from "./IRHoisted";
+import { prettyIR, prettyIRJsonStr } from "../utils";
+import { IRParentTerm, isIRParentTerm } from "../utils/isIRParentTerm";
+import { _modifyChildFromTo } from "../toUPLC/_internal/_modifyChildFromTo";
+import { BaseIRMetadata } from "./BaseIRMetadata";
+import { _getMinUnboundDbn } from "../toUPLC/subRoutines/handleLetted/groupByScope";
 
 
 export type LettedSetEntry = {
@@ -32,13 +38,23 @@ export function jsonLettedSetEntry( entry: LettedSetEntry )
 
 }
 
-export interface IRLettedMeta {
+export function expandedJsonLettedSetEntry( entry: LettedSetEntry )
+{
+    return {
+        letted: toHex( entry.letted.hash ),
+        letted_value: prettyIR( entry.letted.value ).text.split("\n"),
+        nReferences: entry.nReferences
+    }
+}
+
+export interface IRLettedMeta extends BaseIRMetadata {
     /**
      * force hoisting even if only a single reference is found
      * 
      * useful to hoist letted terms used once in recursive expressions
     **/
-    forceHoist: boolean
+    forceHoist: boolean,
+    __src__?: string | undefined
 }
 
 export interface IRLettedMetadata extends IRMetadata {
@@ -48,6 +64,7 @@ export interface IRLettedMetadata extends IRMetadata {
 const defaultLettedMeta: IRLettedMeta = freezeAll({
     forceHoist: false
 });
+
 export class IRLetted
     implements Cloneable<IRLetted>, IHash, IIRParent, ToJson, IRLettedMetadata
 {
@@ -66,15 +83,22 @@ export class IRLetted
      */
     dbn: number
 
+    isClosedAtDbn: ( dbn: number ) => boolean
+
     readonly dependencies!: LettedSetEntry[]
 
-    parent: IRTerm | undefined;
+    parent: IRParentTerm | undefined;
 
     clone!: () => IRLetted
 
     readonly meta!: IRLettedMeta
 
-    constructor( DeBruijn: number | bigint, toLet: IRTerm, metadata: Partial<IRLettedMeta> = {} )
+    constructor(
+        DeBruijn: number | bigint,
+        toLet: IRTerm,
+        metadata: Partial<IRLettedMeta> = {},
+        unsafe_hash: Uint8Array | undefined = undefined
+    )
     {
         DeBruijn = typeof DeBruijn === "bigint" ? Number( DeBruijn ) : DeBruijn; 
         if(!(
@@ -101,7 +125,7 @@ export class IRLetted
                         return;
                     }
 
-                    this.markHashAsInvalid()
+                    this.markHashAsInvalid();
                     _dbn = newDbn;
                 },
                 enumerable: true,
@@ -122,7 +146,7 @@ export class IRLetted
         _value.parent = this;
 
         // we need the has before setting dependecies
-        let hash: Uint8Array | undefined = undefined;
+        let hash: Uint8Array | undefined = unsafe_hash instanceof Uint8Array ? new Uint8Array( unsafe_hash ) : undefined;
         Object.defineProperty(
             this, "hash", {
                 get: () => {
@@ -151,6 +175,20 @@ export class IRLetted
                                     normalized[1].hash
                                 )
                             );
+                            // const [ normalized_dbn, normalized_value] = normalized;
+                            // if( toHex( hash ) === "ee84fb036ed2726e01b0415109246927" )
+                            // {
+                            //     const original_value = _value.clone();
+                            //     const minDbn = getMinVarDbn( original_value );
+                            //     const minUnb = _getMinUnboundDbn( original_value );
+                            //     console.log(
+                            //         "_ee84fb036ed2726e01b0415109246927_",
+                            //         "\noriginal value:", prettyIRJsonStr( original_value, 2, { hoisted: false } ),
+                            //         "\nmin dbn:", minDbn,
+                            //         "\nmin unbound:", minUnb,
+                            //         "\nnormalized dbn:", normalized_dbn,
+                            //     );
+                            // }
                         }
                     }
                     return hash.slice();
@@ -167,7 +205,7 @@ export class IRLetted
                     hash = undefined;
                     // tree changed; possibly dependencies too
                     _deps = undefined;
-                    this.parent?.markHashAsInvalid()
+                    this.parent?.markHashAsInvalid();
                 },
                 writable: false,
                 enumerable:  false,
@@ -191,9 +229,8 @@ export class IRLetted
                 get: () => _value,
                 set: ( newVal: IRTerm ) => {
                     if( !isIRTerm( newVal ) )
-                    throw new BasePlutsError(
-                        "only closed terms can be hoisted"
-                    );
+                    throw new BasePlutsError("letted term was not IRTerm");
+                
                     this.markHashAsInvalid();
                     _deps = undefined;
                     _value = newVal;
@@ -205,37 +242,74 @@ export class IRLetted
         );
 
         Object.defineProperty(
+            this, "isClosedAtDbn", {
+                value: ( dbn: number ) => {
+                    if( !Number.isSafeInteger( dbn ) ) throw new Error("unexpected unsafe dbn integer")
+                    const minUnbound = _getMinUnboundDbn( _value );
+                    if( minUnbound === undefined ) return true;
+                    return minUnbound < dbn;
+                },
+                writable: false,
+                enumerable: true,
+                configurable: false
+            }
+        )
+
+        Object.defineProperty(
             this, "dependencies",
             {
-                get: (): LettedSetEntry[] => _getDeps().map( dep => {
+                get: (): LettedSetEntry[] => _getDeps()
+                /*
+                .map( dep => {
 
-                    const clone = dep.letted.clone();
-                    clone.parent = dep.letted.parent; 
+                    // const clone = dep.letted.clone();
+                    // clone.parent = dep.letted.parent; 
                     return {
-                        letted: clone,
+                        letted: dep.letted,
                         nReferences: dep.nReferences
                     }
-                }), // MUST return clones
+                }
+                ), // MUST return clones
+                //*/
+                ,
                 set: () => {},
                 enumerable: true,
                 configurable: false
             }
         )
 
-        let _parent: IRTerm | undefined = undefined;
+        let _parent: IRParentTerm | undefined = undefined;
         Object.defineProperty(
             this, "parent",
             {
                 get: () => _parent,
-                set: ( newParent: IRTerm | undefined ) => {
+                set: ( newParent: IRParentTerm | undefined ) => {
+                    if(!( // assert
+                        // new parent value is different than current
+                        _parent !== newParent && (
+                            // and the new parent value is valid
+                            newParent === undefined || 
+                            isIRParentTerm( newParent )
+                        )
+                    )) return;
+                    
+                    // keep reference
+                    const oldParent = _parent;
+                    // change parent
+                    _parent = newParent;
 
-                    if( newParent === undefined || isIRTerm( newParent ) )
+                    // if has old parent
+                    if( oldParent !== undefined && isIRParentTerm( oldParent ) )
                     {
-                        _parent = newParent;
+                        // change reference to a clone for safety
+                        _modifyChildFromTo(
+                            oldParent,
+                            this,
+                            this.clone()
+                        );
                     }
-
                 },
-                enumerable: false,
+                enumerable: true,
                 configurable: false
             }
         );
@@ -259,7 +333,8 @@ export class IRLetted
                 return new IRLetted(
                     this.dbn,
                     this.value, // .clone(), // cloned in constructor
-                    this.meta
+                    { ...this.meta },
+                    hash instanceof Uint8Array ? Uint8Array.prototype.slice.call( hash ) : undefined
                 )
             }
         );
@@ -342,8 +417,38 @@ export function getSortedLettedSet( lettedTerms: LettedSetEntry[] ): LettedSetEn
     return set;
 }
 
-export function getLettedTerms( irTerm: IRTerm ): LettedSetEntry[]
+export interface GetLettedTermsOptions {
+    /**
+     * looks for letted terms inside other letted terms
+     * 
+     * (unnecessary if called only to later pass the result to `getSortedLettedSet`)
+     */
+    all: boolean,
+    /**
+     * look for letted terms inside hoisted terms (always closed)
+     */
+    includeHoisted: boolean
+}
+
+export const default_getLettedTermsOptions: GetLettedTermsOptions = {
+    all: false,
+    includeHoisted: false
+}
+/**
+ * 
+ * @param {IRTerm} irTerm term to search in
+ * @returns direct letted terms (no possible dependencies)
+ */
+export function getLettedTerms( irTerm: IRTerm, options?: Partial<GetLettedTermsOptions> ): LettedSetEntry[]
 {
+    const {
+        all,
+        includeHoisted
+    } = {
+        ...default_getLettedTermsOptions,
+        ...options
+    };
+
     const lettedTerms: LettedSetEntry[] = [];
 
     const stack: IRTerm[] = [ irTerm ];
@@ -355,6 +460,10 @@ export function getLettedTerms( irTerm: IRTerm ): LettedSetEntry[]
         if( t instanceof IRLetted )
         {
             lettedTerms.push({ letted: t, nReferences: 1 });
+            if( all )
+            {
+                stack.push( t.value );
+            }
             continue;
         }
 
@@ -381,38 +490,176 @@ export function getLettedTerms( irTerm: IRTerm ): LettedSetEntry[]
             stack.push( t.delayed );
             continue;
         }
+
+        if( includeHoisted )
+        {
+            if( t instanceof IRHoisted )
+            {
+                stack.push( t.hoisted );
+                continue;
+            }
+        }
     }
 
     return lettedTerms;
 }
 
 
-export function getNormalizedLettedArgs( dbn: number, value: IRTerm ): [ normalized_dbn: number, noramlized_value: IRTerm ] | undefined
+export function getNormalizedLettedArgs( lettedDbn: number, value: IRTerm ): [ normalized_dbn: number, noramlized_value: IRTerm ] | undefined
 {
     const normalized_value = value.clone();
-    const minDbn = getMinVarDbnIn( normalized_value );
+    const minDbn = getMinVarDbn( normalized_value );
 
     if( minDbn === undefined ) return undefined;
-    
-    iterTree( normalized_value, (node) => {
-        if( node instanceof IRVar || node instanceof IRLetted )
-        {
-            node.dbn -= minDbn
-        }
-    });
-    return [ dbn - minDbn, normalized_value ];
+
+    iterTree( normalized_value,
+        (node, relativeDbn) => {
+            if( node instanceof IRVar )
+            {
+                node.dbn -= minDbn
+            }
+            else if( node instanceof IRLetted )
+            {
+                const max = getMaxVarDbn( node.value );
+                if(
+                    // no vars
+                    typeof max !== "number" ||
+                    // defined outside of letted
+                    max >= relativeDbn
+                )
+                {
+                    node.dbn -= minDbn;
+                }
+                else // if depends on vars in this letted
+                {
+                    // TODO: fix double checking already inlined values
+                    //
+                    // this is currently a workaround
+                    //
+                    // the real problem is that sometimes (when?)
+                    // `iterTree` goes back checking some value that was already modified
+                    // in the case of `IRApp` as parent, throwing an error
+                    // because we don't know which value we should modify
+                    if( node.parent instanceof IRApp )
+                    {
+                        const parent = node.parent;
+                        const currentChild = node;
+                        if( // parent is actually pointing to child
+                            currentChild === parent.arg ||
+                            currentChild === parent.fn ||
+                            uint8ArrayEq( parent.arg.hash, currentChild.hash ) ||
+                            uint8ArrayEq( parent.fn.hash, currentChild.hash )
+                        )
+                        {
+                            // inline
+                            _modifyChildFromTo(
+                                node.parent,
+                                node,
+                                node.value
+                            );
+                            return true; // modified parent
+                        }
+                        else return false; // modified parent
+                    }
+                    else {
+                        // inline
+                        _modifyChildFromTo(
+                            node.parent,
+                            node,
+                            node.value
+                        );
+                        return true; // modified parent
+                    }
+                }
+            }
+        },
+        // shouldSkipNode ?
+        // hoisted terms are not really here
+        // will be substituted to variables when the time comes
+        // however now are here and we need to skip them
+        //
+        // !!! WARNING !! removing this causes strange uplc compilation BUGS
+        (node, dbn) => node instanceof IRHoisted
+    );
+
+    // !!! IMPORTANT !!! _getMinUnboundDbn( value ) MUST be called on the original value; NOT the **modified** `normalized_value`
+    return [ lettedDbn - (_getMinUnboundDbn( value ) ??  minDbn), normalized_value ];
 }
 
-function getMinVarDbnIn( term: IRTerm ): number | undefined
+/**
+ * 
+ * @param term the ir term to iter to search for vars
+ * @returns {number | undefined} 
+ * 
+ * @example
+ * ```ts
+ * let minDbn = getMinVarDbn( new IRVar(0) ); // 0
+ * minDbn = getMinVarDbn( IRConst.unit ); // undefined
+ * minDbn = getMinVarDbn( new IRFunc( 1, new IRVar( 0 ) ) ); // 0
+ * ```
+ */
+export function getMinVarDbn( term: IRTerm ): number | undefined
 {
     let min: number | undefined = undefined;
+    let foundAny: boolean = false;
 
-    iterTree( term, (node) => {
-        if( node instanceof IRVar )
-        {
-            min = typeof min === "number" ? Math.min( min, node.dbn ) : node.dbn
-        }
-    });
+    iterTree( term,
+        (node) => {
+            if( node instanceof IRVar )
+            {
+                if( foundAny )
+                {
+                    min = Math.min( min as number, node.dbn );
+                }
+                else
+                {
+                    foundAny = true;
+                    min = node.dbn;
+                }
+            }
+        },
+        // shouldSkipNode ?
+        // hoisted terms are not really here
+        // will be substituted to variables when the time comes
+        // however now are here and we need to skip them
+        node => node instanceof IRHoisted // skip if hoisted
+    );
 
     return min;
+}
+
+
+/**
+ * 
+ * @param term the ir term to iter to search for vars
+ * @returns {number | undefined} 
+ */
+function getMaxVarDbn( term: IRTerm ): number | undefined
+{
+    let max: number | undefined = undefined;
+    let foundAny: boolean = false;
+
+    iterTree( term,
+        (node) => {
+            if( node instanceof IRVar )
+            {
+                if( foundAny )
+                {
+                    max = Math.max( max as number, node.dbn );
+                }
+                else
+                {
+                    foundAny = true;
+                    max = node.dbn;
+                }
+            }
+        },
+        // shouldSkipNode ?
+        // hoisted terms are not really here
+        // will be substituted to variables when the time comes
+        // however now are here and we need to skip them
+        node => node instanceof IRHoisted // skip if hoisted
+    );
+
+    return max;
 }

@@ -2,8 +2,8 @@ import { definePropertyIfNotPresent, defineReadOnlyProperty } from "@harmoniclab
 import { PType } from "../../../../PType";
 import type { PList, TermFn, PInt, PLam, PBool } from "../../../../PTypes";
 import { Term } from "../../../../Term";
-import { ToPType, TermType, isWellFormedGenericType, PrimType, bool, lam, list, struct, typeExtends, tyVar, int } from "../../../../type_system";
-import { getElemsT } from "../../../../type_system/tyArgs";
+import { ToPType, TermType, isWellFormedGenericType, PrimType, bool, lam, list, struct, typeExtends, tyVar, int, pair } from "../../../../type_system";
+import { getElemsT, getFstT, getSndT, unwrapAsData } from "../../../../type_system/tyArgs";
 import { termTypeToString } from "../../../../type_system/utils";
 import { UtilityTermOf } from "../addUtilityForType";
 import { PMaybe, type PMaybeT } from "../../PMaybe/PMaybe";
@@ -37,6 +37,17 @@ export function mockPListMethods<PElemsT extends PType>( lst: Term<PList<PElemsT
         );
     }
 
+    _mockPListMethods( lst );
+    _mockPListMethods( _lst );
+
+    return _lst;
+}
+
+function _mockPListMethods<PElemsT extends PType>( _lst: Term<PList<PElemsT>> )
+    : TermList<PElemsT>
+{
+    const elemsT = getElemsT( _lst.type );
+
     definePropertyIfNotPresent(
         _lst,
         "head",
@@ -57,7 +68,7 @@ export function mockPListMethods<PElemsT extends PType>( lst: Term<PList<PElemsT
         _lst,
         "length",
         {
-            get: () => makeMockTermInt,
+            get: () => makeMockTermInt(),
             ...getterOnly
         }
     );
@@ -155,8 +166,7 @@ export function mockPListMethods<PElemsT extends PType>( lst: Term<PList<PElemsT
         _lst,
         "pevery",
         {
-            get: () => makeMockUtilityTerm( lam( lam( elemsT, bool ), bool ) )
-            .$( _lst ),
+            get: () => makeMockUtilityTerm( lam( lam( elemsT, bool ), bool ) ),
             ...getterOnly
         }
     );
@@ -170,8 +180,7 @@ export function mockPListMethods<PElemsT extends PType>( lst: Term<PList<PElemsT
         _lst,
         "psome",
         {
-            get: () => makeMockUtilityTerm( lam( lam( elemsT, bool ), bool ) )
-            .$( _lst ),
+            get: () => makeMockUtilityTerm( lam( lam( elemsT, bool ), bool ) ),
             ...getterOnly
         }
         
@@ -181,6 +190,61 @@ export function mockPListMethods<PElemsT extends PType>( lst: Term<PList<PElemsT
         "some",
         ( predicate: Term<PLam<PElemsT, PBool>> ): TermBool => makeMockTermBool()
     );
+
+
+    definePropertyIfNotPresent(
+        _lst,
+        "pincludes",
+        {
+            get: () => makeMockUtilityTerm( lam( elemsT, bool ) ),
+            ...getterOnly
+        }
+        
+    );
+    defineReadOnlyProperty(
+        _lst,
+        "includes",
+        ( elem: any ): TermBool => makeMockTermBool()
+    );
+
+    definePropertyIfNotPresent(
+        _lst,
+        "peq",
+        {
+            get: () => makeMockUtilityTerm( lam( list( elemsT ), bool ) ),
+            ...getterOnly
+        }
+        
+    );
+    defineReadOnlyProperty(
+        _lst,
+        "eq",
+        ( other: any ): TermBool => makeMockTermBool()
+    );
+
+    if( typeExtends( elemsT, pair( tyVar(), tyVar() ) ) )
+    {
+
+        const kT = unwrapAsData( getFstT( elemsT ) );
+        const vT = unwrapAsData( getSndT( elemsT ) );
+
+        const PMaybeVal = PMaybe( vT );
+
+        definePropertyIfNotPresent(
+            _lst,
+            "plookup",
+            {
+                get: () => makeMockUtilityTerm( lam( kT, PMaybeVal.type ) ),
+                ...getterOnly
+            }
+            
+        );
+        defineReadOnlyProperty(
+            _lst,
+            "lookup",
+            ( key: any ) => makeMockUtilityTerm( PMaybeVal.type )
+        );
+    }
     
     return _lst as any;
 }

@@ -4,14 +4,15 @@ import { PFn } from "../../../../PTypes/PFn/PFn";
 import type { PLam } from "../../../../PTypes/PFn/PLam";
 import type { Term } from "../../../../Term";
 import type { Methods, StructDefinition } from "../../../../type_system/types";
+import { PappArg } from "../../../pappArg";
 import type { UtilityTermOf } from "../addUtilityForType";
 
 export type LiftPMethod<PT extends PType, PrevPIns extends Term<PType>[] = []>
     = PT extends PLam<infer PIn extends PType, infer POut extends PType> ?
     (
         POut extends PLam<PType, PType> ?
-        LiftPMethod<POut, [ ...PrevPIns, Term<PIn> ]> :
-        ( ...args: [ ...PrevPIns, Term<PIn> ] ) => UtilityTermOf<POut>
+        LiftPMethod<POut, [ ...PrevPIns, PappArg<PIn> ]> :
+        ( ...args: [ ...PrevPIns, PappArg<PIn> ] ) => UtilityTermOf<POut>
     ) : UtilityTermOf<PT>
 
 // type test_0 = LiftPMethod<PLam<PInt, PData>>

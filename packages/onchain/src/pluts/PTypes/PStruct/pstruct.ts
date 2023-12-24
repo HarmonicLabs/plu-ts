@@ -22,6 +22,7 @@ import { IRConst } from "../../../IR/IRNodes/IRConst";
 import { pList } from "../../lib/std/list/const";
 import { IRNative } from "../../../IR/IRNodes/IRNative";
 import { IRApp } from "../../../IR/IRNodes/IRApp";
+import { PappArg, pappArgToTerm } from "../../lib/pappArg";
 
 /**
  * intermediate class useful to reconize structs form primitives
@@ -39,7 +40,7 @@ export type StructInstance<SCtorDef extends StructCtorDef> = {
 }
 
 export type StructInstanceAsData<SCtorDef extends StructCtorDef> = {
-    [Field in keyof SCtorDef]: Term<PAsData<any>> | Term<PStruct<any, any>> | Term<PData> | Term<undefined & PType>
+    [Field in keyof SCtorDef]: Term<PAsData<PType>> | Term<PStruct<StructDefinition, Methods>> | Term<PData>
 }
 
 export type PStruct<SDef extends StructDefinition, SMethods extends Methods> = {
@@ -51,11 +52,11 @@ export type PStruct<SDef extends StructDefinition, SMethods extends Methods> = {
     readonly termType: StructT<SDef>;
     readonly type: StructT<SDef>;
 
-    readonly fromDataTerm: TermFn<[PData],PStruct<SDef, any>>
-    fromData: ( data: Term<PData> ) => Term<PStruct<SDef, any>>;
+    readonly fromDataTerm: TermFn<[PData],PStruct<SDef, SMethods>>
+    fromData: ( data: Term<PData> ) => Term<PStruct<SDef, SMethods>>;
 
-    readonly toDataTerm: TermFn<[PStruct<SDef, any>],PData>
-    toData: ( data: Term<PStruct<SDef, any>> ) => Term<PData>;
+    readonly toDataTerm: TermFn<[PStruct<SDef, {}>],PData>
+    toData: ( data: Term<PStruct<SDef, {}>> ) => Term<PData>;
 
 } & PDataRepresentable & {
     [Ctor in keyof SDef]:
@@ -290,7 +291,9 @@ export function pstruct<
     defineReadOnlyProperty(
         PStructExt,
         "fromData",
-        ( dataTerm: Term<PData> ): Term<PStructExt> => {
+        ( dataTerm: Term<PData> /* | PappArg<PData> */ ): Term<PStructExt> => {
+
+            // dataTerm = dataTerm instanceof Term ? dataTerm : pappArgToTerm( dataTerm, data ) as Term<PData>;
 
             assert(
                 typeExtends( dataTerm.type, data ),

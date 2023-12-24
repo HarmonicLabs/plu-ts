@@ -203,7 +203,7 @@ function _definePListMethods<PElemsT extends PType>( lst: Term<PList<PElemsT>>, 
         "head",
         {
             get: () => {
-                return plet( phead( elemsT ).$( lst ) )
+                return plet( phead( elemsT ).$( lst ), "list::head" )
             },
             ...getterOnly
         }
@@ -212,7 +212,7 @@ function _definePListMethods<PElemsT extends PType>( lst: Term<PList<PElemsT>>, 
         lst,
         "tail",
         {
-            get: () => plet( ptail( elemsT ).$( lst ) ),
+            get: () => plet( ptail( elemsT ).$( lst ), "list::tail" ),
             ...getterOnly
         }
     );
@@ -220,7 +220,7 @@ function _definePListMethods<PElemsT extends PType>( lst: Term<PList<PElemsT>>, 
         lst,
         "length",
         {
-            get: () => plet( plength( elemsT ).$( lst ) ),
+            get: () => plet( plength( elemsT ).$( lst ), "list::length" ),
             ...getterOnly
         }
     );
@@ -228,7 +228,7 @@ function _definePListMethods<PElemsT extends PType>( lst: Term<PList<PElemsT>>, 
         lst,
         "reversed",
         {
-            get: () => plet( preverse( elemsT ).$( lst ) ),
+            get: () => plet( preverse( elemsT ).$( lst ), "list::reversed" ),
             ...getterOnly
         }
     );

@@ -94,7 +94,7 @@ export function addUserMethods<
             term, "p" + methodName, appliedTerm
         );
         defineReadOnlyProperty(
-            term, methodName, ( ...other_terms: any[] ) => {
+            term, methodName, ( ...other_terms: any[] /* PappArg<PType>[] */ ) => {
                 let result: any = appliedTerm;
 
                 if( other_terms.length < missingArgsAfterApplication )
@@ -102,7 +102,11 @@ export function addUserMethods<
                 
                 for( let i = 0 ; i < missingArgsAfterApplication; i++ )
                 {
-                    result = papp( result, other_terms[i] );
+                    result = papp(
+                        result,
+                        // PappArg<PType>
+                        other_terms[i]
+                    );
                 }
 
                 return result;

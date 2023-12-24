@@ -23,7 +23,7 @@ export function pfind<ElemsT extends TermType, PElemsT extends ToPType<ElemsT> =
                 list( elemsT ),
                 PMaybeElem.type
             ))
-            ( (elemToData, predicate) => 
+            (( elemToData, predicate ) => 
 
                 precursive(
                     pfn([
@@ -54,7 +54,8 @@ export function pfind<ElemsT extends TermType, PElemsT extends ToPType<ElemsT> =
 
                         )
                     )
-                )
+                ),
+                "make_pfind"
             )
 
         ).$( _ptoData( elemsT ) ) as any

@@ -7,6 +7,11 @@ import { IHash } from "../interfaces/IHash";
 import { IIRParent } from "../interfaces/IIRParent";
 import { concatUint8Arr } from "../utils/concatUint8Arr";
 import { isIRTerm } from "../utils/isIRTerm";
+import { IRParentTerm, isIRParentTerm } from "../utils/isIRParentTerm";
+import { _modifyChildFromTo } from "../toUPLC/_internal/_modifyChildFromTo";
+import { BaseIRMetadata } from "./BaseIRMetadata";
+
+export interface IRForcedMetadata extends BaseIRMetadata {}
 
 export class IRForced
     implements Cloneable<IRForced>, IHash, IIRParent, ToJson
@@ -15,10 +20,21 @@ export class IRForced
     readonly hash!: Uint8Array
     markHashAsInvalid!: () => void;
 
-    parent: IRTerm | undefined;
+    readonly meta: IRForcedMetadata
+
+    parent: IRParentTerm | undefined;
 
     constructor( forced: IRTerm )
     {
+        Object.defineProperty(
+            this, "meta", {
+                value: {},
+                writable: false,
+                enumerable: true,
+                configurable: false
+            }
+        );
+
         let hash: Uint8Array | undefined = undefined
         Object.defineProperty(
             this, "hash",
@@ -42,7 +58,7 @@ export class IRForced
             {
                 value: () => { 
                     hash = undefined;
-                    this.parent?.markHashAsInvalid()
+                    this.parent?.markHashAsInvalid();
                 },
                 writable: false,
                 enumerable:  false,
@@ -50,7 +66,12 @@ export class IRForced
             }
         );
         
-        let _forced: IRTerm;
+        if( !isIRTerm( forced ) )
+        throw new Error("IRForced argument was not an IRTerm");
+
+        let _forced: IRTerm = forced;
+        _forced.parent = this;
+        
         Object.defineProperty(
             this, "forced",
             {
@@ -70,20 +91,37 @@ export class IRForced
                 configurable: false
             }
         );
-        this.forced = forced;
 
-        let _parent: IRTerm | undefined = undefined;
+        let _parent: IRParentTerm | undefined = undefined;
         Object.defineProperty(
             this, "parent",
             {
                 get: () => _parent,
-                set: ( newParent: IRTerm | undefined ) => {
+                set: ( newParent: IRParentTerm | undefined ) => {
+                    if(!( // assert
+                        // new parent value is different than current
+                        _parent !== newParent && (
+                            // and the new parent value is valid
+                            newParent === undefined || 
+                            isIRParentTerm( newParent )
+                        )
+                    )) return;
+                    
+                    // keep reference
+                    const oldParent = _parent;
+                    // change parent
+                    _parent = newParent;
 
-                    if( newParent === undefined || isIRTerm( newParent ) )
+                    // if has old parent
+                    if( oldParent !== undefined && isIRParentTerm( oldParent ) )
                     {
-                        _parent = newParent;
+                        // change reference to a clone for safety
+                        _modifyChildFromTo(
+                            oldParent,
+                            this,
+                            this.clone()
+                        );
                     }
-
                 },
                 enumerable: true,
                 configurable: false

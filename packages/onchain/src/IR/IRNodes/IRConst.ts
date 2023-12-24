@@ -21,6 +21,9 @@ import { isWellFormedType } from "../../pluts/type_system/kinds/isWellFormedType
 import { typeExtends } from "../../pluts/type_system/typeExtends";
 import { GenericTermType, PrimType, TermType, bool, bs, data, delayed, int, lam, list, pair, str, tyVar, unit } from "../../pluts/type_system/types";
 import { termTypeToString } from "../../pluts/type_system/utils";
+import { IRParentTerm, isIRParentTerm } from "../utils/isIRParentTerm";
+import { _modifyChildFromTo } from "../toUPLC/_internal/_modifyChildFromTo";
+import { BaseIRMetadata } from "./BaseIRMetadata";
 
 export type IRConstValue
     = CanBeUInteger
@@ -32,6 +35,7 @@ export type IRConstValue
     | Data
     | undefined;
 
+export interface IRConstMetadata extends BaseIRMetadata {}
 
 export class IRConst
     implements Cloneable<IRConst>, IHash, IIRParent, ToJson
@@ -39,10 +43,12 @@ export class IRConst
     readonly hash: Uint8Array;
     markHashAsInvalid: () => void;
 
+    readonly meta: IRConstMetadata
+
     readonly type!: TermType
     readonly value!: IRConstValue
 
-    parent: IRTerm | undefined;
+    parent: IRParentTerm | undefined;
 
     constructor( t: TermType, v: IRConstValue )
     {
@@ -56,6 +62,15 @@ export class IRConst
                 "invalid type for IR constant"
             );
         }
+
+        Object.defineProperty(
+            this, "meta", {
+                value: {},
+                writable: false,
+                enumerable: true,
+                configurable: false
+            }
+        );
 
         defineReadOnlyProperty(
             this, "type", cloneTermType( t )
@@ -75,18 +90,36 @@ export class IRConst
             this, "value", v
         );
 
-        let _parent: IRTerm | undefined = undefined;
+        let _parent: IRParentTerm | undefined = undefined;
         Object.defineProperty(
             this, "parent",
             {
                 get: () => _parent,
-                set: ( newParent: IRTerm | undefined ) => {
+                set: ( newParent: IRParentTerm | undefined ) => {
+                    if(!( // assert
+                        // new parent value is different than current
+                        _parent !== newParent && (
+                            // and the new parent value is valid
+                            newParent === undefined || 
+                            isIRParentTerm( newParent )
+                        )
+                    )) return;
+                    
+                    // keep reference
+                    const oldParent = _parent;
+                    // change parent
+                    _parent = newParent;
 
-                    if( newParent === undefined || isIRTerm( newParent ) )
+                    // if has old parent
+                    if( oldParent !== undefined && isIRParentTerm( oldParent ) )
                     {
-                        _parent = newParent;
+                        // change reference to a clone for safety
+                        _modifyChildFromTo(
+                            oldParent,
+                            this,
+                            this.clone()
+                        );
                     }
-
                 },
                 enumerable: true,
                 configurable: false

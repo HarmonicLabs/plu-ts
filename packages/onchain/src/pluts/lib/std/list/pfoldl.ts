@@ -60,7 +60,8 @@ export function pfoldl<ElemsT extends TermType, ResultT extends TermType>( elems
                     ) as any
                     // .$( lst )
                 )
-            ) as any
+            ) as any,
+            "pfoldl"
 
         )
     ) as any;

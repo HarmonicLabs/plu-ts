@@ -8,7 +8,11 @@ import { IIRParent } from "../interfaces/IIRParent";
 import { concatUint8Arr } from "../utils/concatUint8Arr";
 import { isIRTerm } from "../utils/isIRTerm";
 import { positiveIntAsBytes } from "../utils/positiveIntAsBytes";
+import { IRParentTerm, isIRParentTerm } from "../utils/isIRParentTerm";
+import { _modifyChildFromTo } from "../toUPLC/_internal/_modifyChildFromTo";
+import { BaseIRMetadata } from "./BaseIRMetadata";
 
+export interface IRVarMetadata extends BaseIRMetadata {}
 
 export class IRVar
     implements Cloneable<IRVar>, IHash, IIRParent, ToJson
@@ -25,11 +29,22 @@ export class IRVar
     **/
     dbn!: number;
 
-    parent: IRTerm | undefined;
+    readonly meta: IRVarMetadata
+
+    parent: IRParentTerm | undefined;
 
     constructor( DeBruijn: number | bigint )
     {
         DeBruijn = typeof DeBruijn === "number" ? DeBruijn : Number( DeBruijn );
+
+        Object.defineProperty(
+            this, "meta", {
+                value: {},
+                writable: false,
+                enumerable: true,
+                configurable: false
+            }
+        );
         
         let hash: Uint8Array | undefined = undefined;
         Object.defineProperty(
@@ -70,7 +85,7 @@ export class IRVar
                     if(!(
                         Number.isSafeInteger( newDbn ) && newDbn >= 0 
                     )){
-                        console.log( e.stack );
+                        // console.log( e.stack );
                         throw new BasePlutsError(
                             "invalid index for an `IRVar` instance; new DeBruijn was: " + newDbn
                         );
@@ -87,20 +102,38 @@ export class IRVar
         );
         this.dbn = DeBruijn; // call set
         
-        let _parent: IRTerm | undefined = undefined;
+        let _parent: IRParentTerm | undefined = undefined;
         Object.defineProperty(
             this, "parent",
             {
                 get: () => _parent,
-                set: ( newParent: IRTerm | undefined ) => {
+                set: ( newParent: IRParentTerm | undefined ) => {
+                    if(!( // assert
+                        // new parent value is different than current
+                        _parent !== newParent && (
+                            // and the new parent value is valid
+                            newParent === undefined || 
+                            isIRParentTerm( newParent )
+                        )
+                    )) return;
+                    
+                    // keep reference
+                    const oldParent = _parent;
+                    // change parent
+                    _parent = newParent;
 
-                    if( newParent === undefined || isIRTerm( newParent ) )
+                    // if has old parent
+                    if( oldParent !== undefined && isIRParentTerm( oldParent ) )
                     {
-                        _parent = newParent;
+                        // change reference to a clone for safety
+                        _modifyChildFromTo(
+                            oldParent,
+                            this,
+                            this.clone()
+                        );
                     }
-
                 },
-                enumerable: false,
+                enumerable: true,
                 configurable: false
             }
         );

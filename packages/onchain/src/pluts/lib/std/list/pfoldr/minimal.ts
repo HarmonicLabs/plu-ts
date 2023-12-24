@@ -54,6 +54,6 @@ export function _pfoldr<ElemsT extends TermType, ResultT extends TermType>( elem
                     )
                 )
             ) as any;
-        })
+        }, "_pfoldr")
     ) as any;
 }

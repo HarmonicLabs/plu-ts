@@ -20,6 +20,6 @@ export function pflip<A extends TermType, B extends TermType, C extends TermType
         ],  c)
         (( toFlip, _b, _a ) =>
             papp( papp( toFlip, _a ), _b )
-        )
+        , "pflip")
     ) as any
 }

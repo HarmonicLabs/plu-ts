@@ -18,7 +18,7 @@ describe("pmatch", () => {
                     pfn([ int, list( int ) ], int )
                     (( head, _tail ) => head )
                 )
-                .$([])
+                .$([] as any)
             )
         ).toEqual(
             Machine.evalSimple(
@@ -38,7 +38,7 @@ describe("pmatch", () => {
                     pfn([ int, list( int ) ], int )
                     (( head, _tail ) => head )
                 )
-                .$([pInt( 42 )])
+                .$([pInt( 42 )] as any)
             )
         ).toEqual(
             Machine.evalSimple(

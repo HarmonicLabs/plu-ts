@@ -5,5 +5,8 @@ import { plam } from "../../plam";
 
 export const pBoolFromData = phoist(
     plam( data, bool )
-    ( d => punConstrData.$( d ).fst.eq( 0 ) )
+    (
+        d => punConstrData.$( d ).fst.eq( 0 ),
+        "pBoolFromData"
+    )
 )

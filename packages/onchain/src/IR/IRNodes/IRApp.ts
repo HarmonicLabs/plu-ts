@@ -6,6 +6,13 @@ import { isIRTerm } from "../utils/isIRTerm";
 import { ToJson } from "../../utils/ToJson";
 import { Cloneable } from "@harmoniclabs/cbor/dist/utils/Cloneable";
 import { blake2b_128 } from "@harmoniclabs/crypto";
+import { IRParentTerm, isIRParentTerm } from "../utils/isIRParentTerm";
+import { _modifyChildFromTo } from "../toUPLC/_internal/_modifyChildFromTo";
+import { BaseIRMetadata } from "./BaseIRMetadata";
+
+export interface IRAppMeta extends BaseIRMetadata {
+    __src__?: string | undefined
+}
 
 export class IRApp
     implements Cloneable<IRApp>, IHash, IIRParent, ToJson
@@ -16,9 +23,11 @@ export class IRApp
     readonly hash!: Uint8Array;
     markHashAsInvalid!: () => void;
 
-    parent: IRTerm | undefined;
+    parent: IRParentTerm | undefined;
 
-    constructor( _fn_: IRTerm, _arg_: IRTerm )
+    readonly meta: IRAppMeta
+
+    constructor( _fn_: IRTerm, _arg_: IRTerm, meta: IRAppMeta = {} )
     {
         if( !isIRTerm( _fn_ ) )
         {
@@ -34,8 +43,19 @@ export class IRApp
             );
         }
 
-        let fn: IRTerm;
-        let arg: IRTerm;
+        Object.defineProperty(
+            this, "meta", {
+                value: { ...meta },
+                writable: false,
+                enumerable: true,
+                configurable: false
+            }
+        );
+
+        let fn: IRTerm = _fn_;
+        let arg: IRTerm = _arg_;
+        fn.parent = this;
+        arg.parent = this;
 
         let hash: Uint8Array | undefined = undefined;
         Object.defineProperty(
@@ -59,9 +79,9 @@ export class IRApp
         Object.defineProperty(
             this, "markHashAsInvalid",
             {
-                value: () => { 
+                value: () => {
                     hash = undefined;
-                    this.parent?.markHashAsInvalid()
+                    this.parent?.markHashAsInvalid();
                 },
                 writable: false,
                 enumerable:  false,
@@ -83,8 +103,6 @@ export class IRApp
                 configurable: false
             }
         );
-        this.fn = _fn_;
-
         Object.defineProperty(
             this, "arg", {
                 get: () => arg,
@@ -99,26 +117,42 @@ export class IRApp
                 configurable: false
             }
         );
-        this.arg = _arg_;
 
-        let _parent: IRTerm | undefined = undefined;
+        let _parent: IRParentTerm | undefined = undefined;
         Object.defineProperty(
             this, "parent",
             {
                 get: () => _parent,
-                set: ( newParent: IRTerm | undefined ) => {
+                set: ( newParent: IRParentTerm | undefined ) => {
+                    if(!( // assert
+                        // new parent value is different than current
+                        _parent !== newParent && (
+                            // and the new parent value is valid
+                            newParent === undefined || 
+                            isIRParentTerm( newParent )
+                        )
+                    )) return;
+                    
+                    // keep reference
+                    const oldParent = _parent;
+                    // change parent
+                    _parent = newParent;
 
-                    if( newParent === undefined || isIRTerm( newParent ) )
+                    // if has old parent
+                    if( oldParent !== undefined && isIRParentTerm( oldParent ) )
                     {
-                        _parent = newParent;
+                        // change reference to a clone for safety
+                        _modifyChildFromTo(
+                            oldParent,
+                            this,
+                            this.clone()
+                        );
                     }
-
                 },
                 enumerable: true,
                 configurable: false
             }
         );
-
     }
 
     static get tag(): Uint8Array { return new Uint8Array([ 0b0000_0010 ]); }
@@ -127,7 +161,8 @@ export class IRApp
     {
         return new IRApp(
             this.fn.clone(),
-            this.arg.clone()
+            this.arg.clone(),
+            { ...this.meta }
         );
     }
 

@@ -44,6 +44,8 @@ export function getElemAtTerm( n: number ): TermFn<[ PList<PData> ], PData >
 
     if( n === 0 ) return phead( data );
 
+    const funcName = "elem_at_" + n.toString();
+
     let uplc: IRTerm = new IRVar(0);
 
     const initialN = n;
@@ -54,11 +56,13 @@ export function getElemAtTerm( n: number ): TermFn<[ PList<PData> ], PData >
     }
 
     uplc = new IRHoisted(
-        new IRFunc( 1,
+        new IRFunc(
+            1,
             new IRApp(
                 IRNative.headList,
                 uplc
-            )
+            ),
+            funcName
         )
     );
 
@@ -82,7 +86,6 @@ function getStructInstance<CtorDef extends StructCtorDef>
 {
     const instance: StructInstance<CtorDef> = {} as any;
     const fieldNames = Object.keys( ctorDef );
-
     
     for( let i = 0; i < fieldNames.length; i++ )
     {
@@ -270,7 +273,8 @@ export function matchNCtorsIdxs( _n: number, returnT: TermType )
     body = new IRHoisted(
         new IRFunc( 1, // structData
             body
-        )
+        ),
+        { name: "match_" + n + "_ctors" }
     );
 
     type ContinuationT = LamT<[PrimType.List, [PrimType.Data]], TermType>

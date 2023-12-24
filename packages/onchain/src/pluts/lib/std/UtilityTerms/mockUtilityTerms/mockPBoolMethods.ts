@@ -4,6 +4,7 @@ import { TermBool } from "../TermBool";
 import { Term } from "../../../../Term";
 import { PBool } from "../../../../PTypes/PBool";
 import { bool, delayed, lam } from "../../../../type_system/types";
+import { makeMockUtilityTerm } from "./makeMockUtilityTerm";
 
 
 // export type TermBool = Term<PBool> & {
@@ -90,6 +91,20 @@ export function mockPBoolMethods( term: Term<PBool> ): TermBool
         term,
         "strictAnd",
         ( other: any ): TermBool => mockPBoolMethods( makeMockTerm( bool ) )
+    );
+
+    definePropertyIfNotPresent(
+        term,
+        "peq",
+        {
+            get: () => makeMockUtilityTerm( lam( bool, bool ) ),
+            ...getterOnly
+        }
+    );
+    defineReadOnlyProperty(
+        term,
+        "eq",
+        ( other: any ): TermBool => makeMockTermBool()
     );
 
     return term as any;

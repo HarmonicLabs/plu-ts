@@ -9,6 +9,9 @@ import { isIRTerm } from "../../utils/isIRTerm";
 import { positiveBigIntAsBytes } from "../../utils/positiveIntAsBytes";
 import { IRNativeTag, nativeTagToString } from "./IRNativeTag";
 import UPLCFlatUtils from "../../../utils/UPLCFlatUtils";
+import { IRParentTerm, isIRParentTerm } from "../../utils/isIRParentTerm";
+import { _modifyChildFromTo } from "../../toUPLC/_internal/_modifyChildFromTo";
+import { BaseIRMetadata } from "../BaseIRMetadata";
 
 /**
  * we might not need all the hashes
@@ -16,6 +19,8 @@ import UPLCFlatUtils from "../../../utils/UPLCFlatUtils";
  * but one we get one for a specific tag is not worth it re calclualte it
  */
 const nativeHashesCache: { [n: number/*IRNativeTag*/]: Uint8Array } = {} as any;
+
+export interface IRNativeMetadata extends BaseIRMetadata {}
 
 /**
  * `IRNative` ⊇ `Builtins` + `std::fn`
@@ -27,7 +32,9 @@ export class IRNative
     readonly hash!: Uint8Array;
     markHashAsInvalid!: () => void;
 
-    parent: IRTerm | undefined;
+    readonly meta: IRNativeMetadata
+
+    parent: IRParentTerm | undefined;
 
     constructor( tag: IRNativeTag )
     {
@@ -40,18 +47,45 @@ export class IRNative
             }
         );
 
-        let _parent: IRTerm | undefined = undefined;
+        Object.defineProperty(
+            this, "meta", {
+                value: {},
+                writable: false,
+                enumerable: true,
+                configurable: false
+            }
+        );
+
+        let _parent: IRParentTerm | undefined = undefined;
         Object.defineProperty(
             this, "parent",
             {
                 get: () => _parent,
-                set: ( newParent: IRTerm | undefined ) => {
+                set: ( newParent: IRParentTerm | undefined ) => {
+                    if(!( // assert
+                        // new parent value is different than current
+                        _parent !== newParent && (
+                            // and the new parent value is valid
+                            newParent === undefined || 
+                            isIRParentTerm( newParent )
+                        )
+                    )) return;
+                    
+                    // keep reference
+                    const oldParent = _parent;
+                    // change parent
+                    _parent = newParent;
 
-                    if( newParent === undefined || isIRTerm( newParent ) )
+                    // if has old parent
+                    if( oldParent !== undefined && isIRParentTerm( oldParent ) )
                     {
-                        _parent = newParent;
+                        // change reference to a clone for safety
+                        _modifyChildFromTo(
+                            oldParent,
+                            this,
+                            this.clone()
+                        );
                     }
-
                 },
                 enumerable: true,
                 configurable: false

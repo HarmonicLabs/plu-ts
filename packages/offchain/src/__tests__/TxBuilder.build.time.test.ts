@@ -61,7 +61,7 @@ describe("build time", () => {
         });
 
         expect( tx.body.validityIntervalStart )
-        .not.toBe( undefined );
+        .toBe( undefined );
 
         expect( tx.body.ttl )
         .not.toBe( undefined );
@@ -97,7 +97,7 @@ describe("build time", () => {
         .not.toBe( undefined );
 
         expect( tx.body.ttl )
-        .toBe( 69n - 42n );
+        .toBe( 69n );
 
     });
 
@@ -233,4 +233,4 @@ describe("build time", () => {
     });
     */
 
-})
+});

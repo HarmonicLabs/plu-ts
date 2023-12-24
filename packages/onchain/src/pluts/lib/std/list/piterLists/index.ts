@@ -167,7 +167,8 @@ export function piterLists<
                     )
                     .$( fstList ) as any
                 )
-            ) as any
+            ) as any,
+            "piterLists"
         )
     ) as any;
 }

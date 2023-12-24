@@ -98,7 +98,14 @@ export function papp<Input extends PType, Output extends PType>( a: Term<PLam<In
 
     const outputType = lambdaType[2]; // applyLambdaType( lambdaType, _b.type );
 
-    const e_stack = Error().stack;
+    const e_stack = Error().stack?.split("\n");
+
+    let n = 2;
+    let src = e_stack ? 
+        e_stack[2].includes("$ ") ? 
+            e_stack[n = 3] : 
+            e_stack[2] 
+        : undefined;
 
     const outputTerm = addUtilityForType( outputType )(
         new Term(
@@ -111,17 +118,6 @@ export function papp<Input extends PType, Output extends PType>( a: Term<PLam<In
                 {
                     if(!hasOwn( a, "unsafeWithInputOfType" ))
                     {
-                        /*
-                        console.warn(
-`%c WARNING: %ctrying to apply a function that takes pairs as inputs but it doesn't have an equivalent version
-that handles pairs built with 'asData' elements (pairs built dynamically).
-It is possible that this will generate invalid UPLC and this is a known issue which will be fixed in a future verson of plu-ts
-Meanwhile you can either open an issue (https://github.com/HarmonicLabs/plu-ts/issues)
-or you can join Harmonic Labs' discord and ask for help on your specific issue (https://discord.gg/CGKNcG7ade)\n`,
-                            "color: black; background-color: yellow",
-                            "color:yellow"
-                        )
-                        //*/
                         funcIR = a.toIR(dbn)
                     }
                     else funcIR = (a as any).unsafeWithInputOfType( _b.type ).toIR(dbn)
@@ -139,14 +135,10 @@ or you can join Harmonic Labs' discord and ask for help on your specific issue (
                 // omit id function
                 if( isIdentityIR( funcIR ) ) return argIR;
 
-                if(!isIRTerm( funcIR ))
-                {
-                    console.log( e_stack );
-                }
-
                 const app = new IRApp(
                     funcIR,
-                    argIR
+                    argIR,
+                    { __src__: src }
                 );
 
                 return app; 

@@ -7,6 +7,11 @@ import { IHash } from "../interfaces/IHash";
 import { IIRParent } from "../interfaces/IIRParent";
 import { concatUint8Arr } from "../utils/concatUint8Arr";
 import { isIRTerm } from "../utils/isIRTerm";
+import { IRParentTerm, isIRParentTerm } from "../utils/isIRParentTerm";
+import { _modifyChildFromTo } from "../toUPLC/_internal/_modifyChildFromTo";
+import { BaseIRMetadata } from "./BaseIRMetadata";
+
+export interface IRDelayedMetadata extends BaseIRMetadata {}
 
 export class IRDelayed
     implements Cloneable<IRDelayed>, IHash, IIRParent, ToJson
@@ -15,10 +20,21 @@ export class IRDelayed
     readonly hash!: Uint8Array
     markHashAsInvalid!: () => void;
 
-    parent: IRTerm | undefined;
+    readonly meta: IRDelayedMetadata
+
+    parent: IRParentTerm | undefined;
 
     constructor( delayed: IRTerm )
     {
+        Object.defineProperty(
+            this, "meta", {
+                value: {},
+                writable: false,
+                enumerable: true,
+                configurable: false
+            }
+        );
+
         let hash: Uint8Array | undefined = undefined
         Object.defineProperty(
             this, "hash",
@@ -43,7 +59,7 @@ export class IRDelayed
             {
                 value: () => { 
                     hash = undefined;
-                    this.parent?.markHashAsInvalid()
+                    this.parent?.markHashAsInvalid();
                 },
                 writable: false,
                 enumerable:  false,
@@ -51,7 +67,12 @@ export class IRDelayed
             }
         );
 
-        let _delayed: IRTerm;
+        if( !isIRTerm( delayed ) )
+        throw new Error("IRDelayed argument was not an IRTerm");
+
+        let _delayed: IRTerm = delayed;
+        _delayed.parent = this;
+        
         Object.defineProperty(
             this, "delayed",
             {
@@ -71,26 +92,42 @@ export class IRDelayed
                 configurable: false
             }
         );
-        this.delayed = delayed;
 
-        let _parent: IRTerm | undefined = undefined;
+        let _parent: IRParentTerm | undefined = undefined;
         Object.defineProperty(
             this, "parent",
             {
                 get: () => _parent,
-                set: ( newParent: IRTerm | undefined ) => {
+                set: ( newParent: IRParentTerm | undefined ) => {
+                    if(!( // assert
+                        // new parent value is different than current
+                        _parent !== newParent && (
+                            // and the new parent value is valid
+                            newParent === undefined || 
+                            isIRParentTerm( newParent )
+                        )
+                    )) return;
+                    
+                    // keep reference
+                    const oldParent = _parent;
+                    // change parent
+                    _parent = newParent;
 
-                    if( newParent === undefined || isIRTerm( newParent ) )
+                    // if has old parent
+                    if( oldParent !== undefined && isIRParentTerm( oldParent ) )
                     {
-                        _parent = newParent;
+                        // change reference to a clone for safety
+                        _modifyChildFromTo(
+                            oldParent,
+                            this,
+                            this.clone()
+                        );
                     }
-
                 },
                 enumerable: true,
                 configurable: false
             }
         );
-
     }
 
     static get tag(): Uint8Array

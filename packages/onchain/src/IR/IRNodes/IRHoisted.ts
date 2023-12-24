@@ -16,6 +16,9 @@ import { IRApp } from "./IRApp";
 import { IRForced } from "./IRForced";
 import { IRFunc } from "./IRFunc";
 import { IRLetted } from "./IRLetted";
+import { handleLetted } from "../toUPLC/subRoutines/handleLetted";
+import { IRParentTerm, isIRParentTerm } from "../utils/isIRParentTerm";
+import { _modifyChildFromTo } from "../toUPLC/_internal/_modifyChildFromTo";
 
 
 export type HoistedSetEntry = {
@@ -29,7 +32,8 @@ export interface IRHoistedMeta {
      * 
      * useful to hoist terms used once in recursive expressions
     **/
-    forceHoist: boolean
+    forceHoist?: boolean,
+    name?: string | undefined
 }
 
 export interface IRHoistedMetadata extends IRMetadata {
@@ -51,13 +55,16 @@ export class IRHoisted
     // `IRHoisted` can have only other `IRHoisted` as deps
     readonly dependencies!: HoistedSetEntry[];
 
-    parent: IRTerm | undefined;
+    parent: IRParentTerm | undefined;
 
     clone!: () => IRHoisted;
 
     readonly meta!: IRHoistedMeta
 
-    constructor( hoisted: IRTerm, metadata: Partial<IRHoistedMeta> = {} )
+    constructor(
+        hoisted: IRTerm, 
+        metadata: Partial<IRHoistedMeta> = {}
+    )
     {
         // unwrap
         // !!! IMPORTANT !!!
@@ -78,6 +85,7 @@ export class IRHoisted
         // initialize without calling "set"
         let _hoisted: IRTerm = hoisted;
         _hoisted.parent = this;
+        
         let _deps: HoistedSetEntry[] | undefined = undefined;
         function _getDeps(): HoistedSetEntry[]
         {
@@ -113,7 +121,7 @@ export class IRHoisted
                     hash = undefined;
                     // tree changed; possibly dependencies too
                     _deps = undefined;
-                    this.parent?.markHashAsInvalid()
+                    this.parent?.markHashAsInvalid();
                 },
                 writable: false,
                 enumerable:  false,
@@ -143,15 +151,19 @@ export class IRHoisted
             {
                 get: (): HoistedSetEntry[] => {
 
-                    return _getDeps().map( dep => {
+                    return _getDeps()
+                    /*
+                    .map( dep => {
 
-                        const hoisted = dep.hoisted.clone();
-                        hoisted.parent = dep.hoisted.parent;
+                        // const hoisted = dep.hoisted.clone();
+                        // hoisted.parent = dep.hoisted.parent;
                         return {
-                            hoisted,
+                            hoisted: dep.hoisted,
                             nReferences: dep.nReferences
                         };
-                    });
+                    })
+                    //*/
+                    ;
                 }, // MUST return clones
                 set: () => {},
                 enumerable: true,
@@ -159,30 +171,49 @@ export class IRHoisted
             }
         );
 
-        let _parent: IRTerm | undefined = undefined;
+        let _parent: IRParentTerm | undefined = undefined;
         Object.defineProperty(
             this, "parent",
             {
                 get: () => _parent,
-                set: ( newParent: IRTerm | undefined ) => {
+                set: ( newParent: IRParentTerm | undefined ) => {
+                    if(!( // assert
+                        // new parent value is different than current
+                        _parent !== newParent && (
+                            // and the new parent value is valid
+                            newParent === undefined || 
+                            isIRParentTerm( newParent )
+                        )
+                    )) return;
+                    
+                    // keep reference
+                    const oldParent = _parent;
+                    // change parent
+                    _parent = newParent;
 
-                    if( newParent === undefined || isIRTerm( newParent ) )
+                    // if has old parent
+                    if( oldParent !== undefined && isIRParentTerm( oldParent ) )
                     {
-                        _parent = newParent;
+                        // change reference to a clone for safety
+                        _modifyChildFromTo(
+                            oldParent,
+                            this,
+                            this.clone()
+                        );
                     }
-
                 },
                 enumerable: true,
                 configurable: false
             }
         );
-        
+
         Object.defineProperty(
             this, "meta",
             {
                 value: {
                     ...defaultHoistedMeta,
-                    ...metadata
+                    ...metadata,
+                    name: _hoisted.meta.name ?? metadata.name
                 },
                 writable: false,
                 enumerable: true,
@@ -195,7 +226,7 @@ export class IRHoisted
             () => {
                 return new IRHoisted(
                     this.hoisted.clone(),
-                    this.meta
+                    { ...this.meta }
                 );
             }
         );
@@ -300,8 +331,12 @@ export function getHoistedTerms( irTerm: IRTerm ): HoistedSetEntry[]
         {
             // useless
             // term.dependencies.forEach( searchIn )
-            // dependecies are still in the body anyway
+            // dependecies are still in the body anyway (hoisted are closed)
 
+            // experiment to remove new letted;
+            // no good so far
+            // handleLetted( term );
+            
             searchIn( term.value );
             return;
         }

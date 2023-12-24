@@ -12,15 +12,22 @@ import { IRHoisted } from "../../../IR/IRNodes/IRHoisted";
 import { isClosedIRTerm } from "../../../IR/utils/isClosedIRTerm";
 import { UtilityTermOf, addUtilityForType } from "../std/UtilityTerms/addUtilityForType";
 import { makeMockUtilityTerm } from "../std/UtilityTerms/mockUtilityTerms/makeMockUtilityTerm";
+import { getCallStackAt } from "../../../utils/getCallStackAt";
+import { IRTerm } from "../../../IR/IRTerm";
 
-export type LettedTerm<PVarT extends PType, SomeExtension extends object> = UtilityTermOf<PVarT> & {
-    in: 
-        Term<PVarT> & SomeExtension extends Term<PAlias<PVarT, {}>> ?
-            <PExprResult extends PType>( expr: (value: TermAlias<PVarT, {}> & SomeExtension) => Term<PExprResult> ) => Term<PExprResult>
-        : <PExprResult extends PType>( expr: (value: UtilityTermOf<PVarT>) => Term<PExprResult> ) => Term<PExprResult>
-}
+export type LettedTerm<PVarT extends PType, SomeExtension extends object> =
+    Term<PVarT> & SomeExtension extends Term<PAlias<PVarT, {}>> ?
+        TermAlias<PVarT, {}> & SomeExtension & {
+            in: <PExprResult extends PType>( expr: (value: TermAlias<PVarT, {}> & SomeExtension) => Term<PExprResult> ) => Term<PExprResult>
+        } :
+        UtilityTermOf<PVarT> & {
+            in: <PExprResult extends PType>( expr: (value: UtilityTermOf<PVarT>) => Term<PExprResult> ) => Term<PExprResult>
+        }
 
-export function plet<PVarT extends PType, SomeExtension extends object>( varValue: Term<PVarT> & SomeExtension ): LettedTerm<PVarT, SomeExtension>
+export function plet<PVarT extends PType, SomeExtension extends object>(
+    varValue: Term<PVarT> & SomeExtension,
+    value_name?: string | undefined
+): LettedTerm<PVarT, SomeExtension>
 {
     type TermPVar = Term<PVarT> & SomeExtension;
 
@@ -29,10 +36,21 @@ export function plet<PVarT extends PType, SomeExtension extends object>( varValu
 
     const type = varValue.type;
 
+    const valueNameIsPresent = typeof value_name === "string";
+    value_name = valueNameIsPresent ? value_name : undefined;
+
+    const callStackSite = getCallStackAt( 3, {
+        tryGetNameAsync: valueNameIsPresent,
+        onNameInferred: valueNameIsPresent ? void 0 : inferred => value_name = inferred
+    });
+
+    let __src__ = callStackSite?.__line__;
+
+    value_name = value_name ?? callStackSite?.inferredName;
+
     const letted = new Term(
         type,
         dbn => {
-
             const ir =  varValue.toIR( dbn );
 
             // `compileIRToUPLC` can handle it even if this check is not present
@@ -51,10 +69,13 @@ export function plet<PVarT extends PType, SomeExtension extends object>( varValu
                 return new IRHoisted( ir );
             }
 
-            return new IRLetted(
+            const res = new IRLetted(
                 Number( dbn ),
-                ir
-            );
+                ir,
+                { __src__, name: value_name }
+            ); 
+
+            return res;
         }
     );
     
@@ -80,6 +101,14 @@ export function plet<PVarT extends PType, SomeExtension extends object>( varValu
                     return expr( withUtility( varValue as any ) as any ).toIR( dbn );
                 }
 
+                // if(
+                //     // inline letted terms; no need to add an application since already letted
+                //     arg instanceof IRLetted
+                // )
+                // {
+                //     return expr( withUtility( varValue as any ) as any ).toIR( dbn );
+                // }
+
                 return new IRApp(
                     new IRFunc(
                         1,
@@ -92,7 +121,8 @@ export function plet<PVarT extends PType, SomeExtension extends object>( varValu
                             ) as any
                         ).toIR( ( dbn + BigInt(1) ) )
                     ),
-                    arg
+                    arg,
+                    { __src__ }
                 )
             }
         );

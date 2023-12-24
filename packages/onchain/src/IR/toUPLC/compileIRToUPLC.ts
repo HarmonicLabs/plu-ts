@@ -1,18 +1,23 @@
-import { IRTerm } from "../IRTerm";
+import type { UPLCTerm } from "@harmoniclabs/uplc";
+import type { IRTerm } from "../IRTerm";
+import { IRLetted } from "../IRNodes/IRLetted";
+import { IRHoisted } from "../IRNodes/IRHoisted";
+import { IRConst } from "../IRNodes/IRConst";
 import { _modifyChildFromTo } from "./_internal/_modifyChildFromTo";
 import { _makeAllNegativeNativesHoisted } from "./_internal/_makeAllNegativeNativesHoisted";
+import { _irToUplc } from "./_internal/_irToUplc";
+import { includesNode } from "./_internal/includesNode";
 import { handleLetted } from "./subRoutines/handleLetted";
 import { handleHoistedAndReturnRoot } from "./subRoutines/handleHoistedAndReturnRoot";
 import { replaceNativesAndReturnRoot } from "./subRoutines/replaceNatives";
-import { IRLetted } from "../IRNodes/IRLetted";
-import { IRHoisted } from "../IRNodes/IRHoisted";
 import { replaceClosedLettedWithHoisted } from "./subRoutines/replaceClosedLettedWithHoisted";
-import { _irToUplc } from "./_internal/_irToUplc";
-import { includesNode } from "./_internal/includesNode";
-import type { UPLCTerm } from "@harmoniclabs/uplc";
 
 export function compileIRToUPLC( term: IRTerm ): UPLCTerm
 {
+    // most of the time we are just compiling small
+    // pre-execuded terms (hence constants)
+    if( term instanceof IRConst ) return _irToUplc( term ).term;
+    
     ///////////////////////////////////////////////////////////////////////////////
     // ------------------------------------------------------------------------- //
     // --------------------------------- init  --------------------------------- //
@@ -67,16 +72,24 @@ export function compileIRToUPLC( term: IRTerm ): UPLCTerm
 
     replaceClosedLettedWithHoisted( term );
 
-    // handle letted before hoisted because the three is smaller
+    // handle letted before hoisted because the tree is smaller
     // and we also have less letted dependecies to handle
     handleLetted( term );
-
+    
     term = handleHoistedAndReturnRoot( term );
-
+    
     // replaced hoisted terms might include new letted terms
-    while( includesNode( term, node => node instanceof IRLetted ) )
+    while(
+        includesNode(
+        term,
+        node => 
+            node instanceof IRLetted || 
+            node instanceof IRHoisted
+        )
+    )
     {
         handleLetted( term );
+        term = handleHoistedAndReturnRoot( term );
     }
 
     ///////////////////////////////////////////////////////////////////////////////
@@ -85,5 +98,10 @@ export function compileIRToUPLC( term: IRTerm ): UPLCTerm
     // ------------------------------------------------------------------------- //
     ///////////////////////////////////////////////////////////////////////////////
 
-    return _irToUplc( term );
+    const srcmap = {};
+    const { term: uplc } = _irToUplc( term, srcmap );
+
+    // console.log( "srcmap", srcmap );
+
+    return uplc;
 }

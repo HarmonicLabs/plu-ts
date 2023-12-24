@@ -45,7 +45,8 @@ export function pindexList<ElemsT extends TermType>( elemsT: ElemsT )
                         ) as Term<ToPType<ElemsT>>
                     )
 
-                )
+                ),
+                "pindexList"
             )
 
         )

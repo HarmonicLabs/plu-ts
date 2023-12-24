@@ -8,16 +8,29 @@ import { UtilityTermOf, addUtilityForType } from "./std/UtilityTerms/addUtilityF
 import { PappResult, papp } from "./papp";
 import { IRVar } from "../../IR/IRNodes/IRVar";
 import { IRFunc } from "../../IR/IRNodes/IRFunc";
+import { getCallStackAt } from "../../utils/getCallStackAt";
 
 
 export function plam<A extends TermType, B extends TermType >( inputType: A, outputType: B )
-: ( termFunc : 
-    ( input:  UtilityTermOf<ToPType<A>>
-    ) => Term<ToPType<B>> 
+: ( 
+    termFunc : ( input:  UtilityTermOf<ToPType<A>> ) => Term<ToPType<B>> ,
+    funcName?: string | undefined
 ) => PappResult<PLam<ToPType<A>,ToPType<B>>>
 {
-return ( termFunc: ( input: UtilityTermOf<ToPType<A>> ) => Term<ToPType<B>> ): PappResult<PLam<ToPType<A>,ToPType<B>>> =>
+return ( 
+    termFunc: ( input: UtilityTermOf<ToPType<A>> ) => Term<ToPType<B>>,
+    funcName?: string | undefined
+): PappResult<PLam<ToPType<A>,ToPType<B>>> =>
 {
+    let func_name: string | undefined = undefined; 
+    func_name = 
+        typeof funcName === "string" ? funcName :
+        termFunc.name !== "" ? termFunc.name :
+        getCallStackAt( 3, { 
+            tryGetNameAsync: true,
+            onNameInferred: inferred => func_name = inferred 
+        })?.inferredName;
+
     const lambdaTerm  = new Term<PLam<ToPType<A>,ToPType<B>>>(
         lam( inputType, outputType ) as any,
         dbn => {
@@ -31,7 +44,7 @@ return ( termFunc: ( input: UtilityTermOf<ToPType<A>> ) => Term<ToPType<B>> ): P
             const body = termFunc( addUtilityForType( inputType )( boundVar ) as any);
 
             // here the debruijn level is incremented
-            return new IRFunc( 1, body.toIR( thisLambdaPtr ) );
+            return new IRFunc( 1, body.toIR( thisLambdaPtr ), func_name );
         }
     );
 
