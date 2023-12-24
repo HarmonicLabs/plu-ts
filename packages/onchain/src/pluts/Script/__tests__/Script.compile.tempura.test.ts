@@ -712,7 +712,7 @@ const tempura
 
                 // inlined
                 // Spend(1) requirement: Time range span is 3 minutes or less and inclusive
-                const timerangeIn3Mins = time_diff.lt( 180_000 );
+                const timerangeIn3Mins = time_diff.ltEq( 180_000 );
 
                 // inlined
                 const averaged_current_time = time_diff.div( 2 ).add( lower_range );
