@@ -58,6 +58,9 @@ export type PStruct<SDef extends StructDefinition, SMethods extends Methods> = {
     readonly toDataTerm: TermFn<[PStruct<SDef, {}>],PData>
     toData: ( data: Term<PStruct<SDef, {}>> ) => Term<PData>;
 
+    // needed for any extension of `PStruct` to be assignable
+    // just typescript stuff here
+    [ prop: string ]: any
 } & PDataRepresentable & {
     [Ctor in keyof SDef]:
         ( ctorFields: StructInstanceAsData<SDef[Ctor]> ) => TermStruct<SDef, SMethods>
@@ -163,15 +166,16 @@ function isStructInstanceOfDefinition<SCtorDef extends StructCtorDef>
     return (
         jsStructFieldsNames.length === defKeys.length &&
         defKeys.every( defFieldName => jsStructFieldsNames.includes( defFieldName ) ) &&
-        jsStructFieldsNames.every( fieldKey =>
-            definition[fieldKey] !== undefined &&
+        jsStructFieldsNames.every( fieldKey => {
+            
+            return definition[fieldKey] !== undefined &&
             // every field's value is a Term
             structInstance[fieldKey] instanceof Term /*thisCtorDef[fieldKey]*/ &&
             typeExtends(
                 structInstance[fieldKey].type,
                 asData( definition[fieldKey] )
-            )
-        )
+            );
+        })
     );
 }
 
@@ -319,7 +323,7 @@ export function pstruct<
                 "trying to conver a struct using the wrong 'toData', perhaps you ment to call the 'toData' method of an other struct?"
             );
 
-            return punsafeConvertType( struct, data )
+            return punsafeConvertType( struct, asData( struct.type ) )
         }
     );
 
