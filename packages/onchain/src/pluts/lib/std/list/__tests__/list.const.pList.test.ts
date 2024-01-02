@@ -6,7 +6,7 @@ import { pStr } from "../../str";
 import { pList, pnil } from "../const"
 
 /*/
-import * as fs from "node:fs";
+import * as fs from "fs";
 
 import v8Profiler from 'v8-profiler-next';
 v8Profiler.setGenerateType(1);

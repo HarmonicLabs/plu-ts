@@ -9,7 +9,7 @@ import { _purp, beef32AsData, ctx, txInfo_v1 } from "../../../../../utils/test_u
 import { ErrorUPLC, UPLCConst } from "@harmoniclabs/uplc";
 
 /*
-import fs from "node:fs"
+import fs from "fs"
 
 import v8Profiler from 'v8-profiler-next';
 import { PAsData } from "../../../../PTypes";

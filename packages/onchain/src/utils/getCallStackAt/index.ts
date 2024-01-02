@@ -1,5 +1,3 @@
-import * as nodeFs from "node:fs";
-
 /**
  * `Error#captureStackTrace` is not standard;
  * 
@@ -233,11 +231,6 @@ function tryGetName( result: CallStackSiteInfos ): void
     inferNameWithFile( result, file );
 }
 
-let canUseNodeFs: boolean | undefined = typeof nodeFs === "object" && nodeFs !== null && Object.keys(nodeFs).length > 0;
-function hasNodeFs(): boolean
-{
-    return typeof canUseNodeFs === "boolean" && canUseNodeFs && typeof nodeFs !== "undefined";
-}
 const isBrowser = (function () {
     try {
         return globalThis === window && !globalThis.process;
@@ -246,8 +239,18 @@ const isBrowser = (function () {
     }
 })();
 
+// let nodeFs: typeof import("fs") | undefined = undefined;
+function hasNodeFs(): boolean
+{
+    return false;
+    // return typeof nodeFs === "object" && Object.keys( nodeFs ).length > 0;
+}
+
+
 function tryGetFileSync( path: string ): string[] | undefined
 {
+    return undefined;
+    /*
     if( isBrowser ) return undefined;
     if( !hasNodeFs() ) return undefined;
 
@@ -255,6 +258,7 @@ function tryGetFileSync( path: string ): string[] | undefined
     const text = nodeFs.readFileSync( path, { encoding: "utf8" });
 
     return text.split(/\r?\n/);
+    //*/
 }
 
 /**
@@ -272,19 +276,32 @@ function tryGetNameAsync( result: CallStackSiteInfos ): void
     }
     else
     {
-        if( typeof canUseNodeFs !== "boolean" )
+        /*
+        if( typeof nodeFs !== "object" )
         {
             try {
-                // nodeFs = await import("node:fs");
-                canUseNodeFs = true;
+                import("fs").then( mod => {
+                    nodeFs = mod;
+                    
+                    if( !nodeFs?.existsSync( path ) ) return undefined;
+                    fileText = nodeFs.readFileSync( path, { encoding: "utf8" });
+
+                    if( fileText === "" ) return;
+                    const file = fileText.split(/\r?\n/);
+
+                    cache.add( path, file );
+                    inferNameWithFile( result, file );
+                });
+                return;
             } catch {
-                canUseNodeFs = false;
                 return;
             }
         }
-
+        
         if( !nodeFs?.existsSync( path ) ) return undefined;
         fileText = nodeFs.readFileSync( path, { encoding: "utf8" });
+        //*/
+        return undefined;
     }
 
     if( fileText === "" ) return;
