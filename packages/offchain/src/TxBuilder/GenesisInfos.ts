@@ -14,6 +14,11 @@ export interface GenesisInfos {
     readonly slotLengthInMilliseconds: CanBeUInteger
 }
 
+export const defaultPreviewGenesisInfos: GenesisInfos = Object.freeze({
+    systemStartPOSIX: 1666656000_000,
+    slotLengthInMilliseconds: 1000
+} as GenesisInfos);
+
 export function isGenesisInfos( stuff: any ): stuff is GenesisInfos
 {
     return (

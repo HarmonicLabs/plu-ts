@@ -1,6 +1,6 @@
 import { fromAscii, fromHex } from "@harmoniclabs/uint8array-utils";
-import { Address, Hash28, TxOut, TxOutRef, UTxO, Value, defaultProtocolParameters } from "@harmoniclabs/cardano-ledger-ts";
-import { dataFromCbor } from "@harmoniclabs/plutus-data";
+import { Address, Hash28, Script, TxOut, TxOutRef, UTxO, Value, defaultProtocolParameters } from "@harmoniclabs/cardano-ledger-ts";
+import { DataConstr, DataI, dataFromCbor } from "@harmoniclabs/plutus-data";
 import { PTokenName, PAssetsEntry, PCredential, PCurrencySymbol, PData, PExtended, PInt, PScriptContext, PScriptPurpose, PTxInfo, PTxOut, PTxOutRef, PType, PUnit, PValue, PValueEntry, Term, TermFn, TermList, bool, bs, data, delayed, fn, int, lam, list, pBSToData, pBool, pData, pDataI, pInt, pIntToData, pList, pListToData, pchooseList, pdelay, peqData, perror, pfn, pforce, phoist, pif, pindexBs, pisEmpty, plam, plet, pmakeUnit, pmatch, pmatchList, pnilData, precursive, pserialiseData, psha2_256, pstrictIf, pstruct, psub, ptrace, ptraceError, ptraceVal, punBData, punIData, punsafeConvertType, str, termTypeToString, unit } from "../../../onchain/src/pluts";
 import { TxBuilder } from "..";
 
@@ -1011,53 +1011,118 @@ describe("fee calculation", () => {
 
     describe("with script", () => {
 
-        test.skip("tempura genesis", () => {
+        test("tempura mint", () => {
 
             const txBuilder = new TxBuilder(
                 defaultProtocolParameters,
                 {
-                    systemStartPOSIX: 16000000000,
+                    systemStartPOSIX: 1666656000_000,
                     slotLengthInMilliseconds: 1000
                 }
             );
 
-            const refIn = UTxO.fromCbor("D87982D87982D879815820FBBCE31D47E45AF499BAFF9446C99CCBC2E80DB613467DBC5FFEA2F3BB10A8A200D87984D87982D87A81581CC9981006C4ABF1EAB96A0C87B0EE3D40B8007CD4C9B3D0DEA357C278D87A80A140A1401A0128CCE6D87B8100D87981581CC9981006C4ABF1EAB96A0C87B0EE3D40B8007CD4C9B3D0DEA357C278");
+            const parametrizedContractBytes = fromHex("590b06010000323232323232323232323232323232323232323232323232323232322233301e0012232323232323232323232323232323232323232323232323232332253335734002293099299ab9c00116002491046661696c0033038330383303833038330383303833038330383303833038330383303833573892010f73696e676c654f7574546f53656c6600357466ae880384cd5ce2491074696d6572616e6765496e334d696e73003371266e04c0d8048c0d804520c0fc1513357389210f6d65657473446966666963756c747900330353371000200826607066e1c0100044cdc4001801099ab9c49113696e7075744861734d6173746572546f6b656e00330303756605e02e02a266ae7124010f73696e676c654d696e74456e74727900357466ae880504c8cd5ce2490b636f72726563744d696e7400330393371e6eb8d55ce800a4410754454d50555241001323370e6eb4d55cf0012999ab9a33710901d0008a4000266e0d2080c8afa02533036225333573466e25200a001133704600466e04005200a481004cc0e0894ccd5cd19b890014800052002133704600466e04005200248010004004cdc180824141a2326ae840504cd5ce2481106f75744861734f6e6c794d617374657200330303756605e01a02a264646466ae7124010f636f72726563744f7574446174756d00323232323303f3303f3370e6ae84d5d10021bad35742004266e1cc0ccdd69aba1357440026066a666ae68cc0fccdc399b86016483007d2000133710900000b0a4000266e04cdc000399b803370666e04c0f4064c0f40612004303d01800613370e6ae84010dd69aba1001357440026ae88d5d10009aab9e3754020666605c00a0086ae84004d5d09aba200132533357346607666e25200833706904050644084800899b8848000cdc32410141910212002297ac10284054ccd5cd1981d99b8948020cdc1800a410141910212266e2120003370c0029040506440848a5eb042204133574000297ac180a0c8810919b813370000466e00cdc199b813038014303801348010c0e004c004dd698158089bad302901013357389201166f75745f63757272656e745f706f7369785f74696d65003370e6eb4c0a802ccdc019b8333702606c024606c0229002181b008899ab9c4901106f75745f626c6f636b5f6e756d626572003370e6eb4d5d080599b8000f480084cd5ce249106f75745f63757272656e745f68617368003371e6eb8c0bc02c0144cd5ce2490e7073657269616c6973654461746100337126e34dd9991aba1357446ae88d5d11aba2357446ae8800402d20800813375e6ae84d5d11aba23574400c6e9cccccccc0d08888888c8c8c94ccd5cd1981f99b880010071330423370e00e002266e200180084cd5d000419aba000833333300a53335573e0122064264a666aae7c00440cc4d5d10009aba20090080070060020011333333303e2222222323232533357346609266e2000401c4cc130cdc3803800899b88006002133574001066666601466608e20784400201201000e00c00400220126ae84d5d10011aba1001333303c002001480092004009008007006005004357426ae88008d5d08009999819001000a400490041bac3027010375200a0080060040026eb4c09403cdd6991aba1357446ae88d5d10008071aba13021002357426ae88c080004dc91b92376666e9520003357406ae84d55cf1baa0173357406ae84014cd5d01aba10043357406ae8400ccd5d01aba10023357406ae8400408cd5d10009aba2001357440026ae88004d55cf1baa013301800132333302c301b0022357420020020024c602c6ae84004cc0508cdd79aba13016001009375860300146eb4d5d080098098069aba13012357420046ae84c044c074004c040c050014ccc094ccc88c088894ccd5cd1aba30011011132533357346008002266e952000335740600a002032260066ae88008d5d080091ba73357406aae74004cd5d01aab9e00101523371e6eb8d55ce8008011bab301500426237566aae78c8c8cdd81aba1001357426ae88004dd60009aba1001375c6ae84d55cf1baa35742601c0026ae84004c030ccc088ccc88c07c894ccd5cd1aba3001100e132533357346008002266e952000335740600a00202c260066ae88008d5d08009000919baf35742601a0026466666016603400800200246ae8400400498dd61aba10012623019300d3574200260166ae84004c0280048c8c8c8ccc0880188c8c8c8c8c8c038cc09ccc09ccc09ccc09ccc09ccdc4001a4181f82a266040466ebcd5d0980980080700409aba33574400426603e6eacc06002401c4cc07cdd5980f000803899baf3374a900019aba04c10100003357406ea4dc91b92376601a66ae81300101050033574098010319ffff0033574098010100003357406ea0cdc019b8300348010010cd5d02610100003357406e9c05c05cc8cccc09cc0580088d5d08008008009318089aba1001323301023375e6ae84c048d5d098090008011bac30140083374a900119aba0375200a02a66e04c088d5d09807980d80100098109aba1300e35742002601a6022008460126466038466ebcd5d098079aba1300f301b300f0010020043374a900119aba037520040246466666012603000800200200246eb8d5d0800931bac3574200260126ae8400530012bd8799fd8799f5820d7b41d88a7a42a6aeac933ff47ed253919ca339374dc1ff8961dc42ed56762e8ff01ff002533357340022930b11111191992999ab9a300148000400c54ccd5cd1800a400420082a666ae68c005200410051533357346002900308030b1b8735573a0026aae78004dd5002a6103d87a800023322330132100222233005002300300122533357346006004266ae80008004400401c8d55cf1baa00123232335740a666ae68cdc399b8600248011200013370066e08cdc7001800a41000866e3800ccdc0000a4004266e00cdc019b823371c00600290402019b823371c00666e00005200248080cdc199b8e0033370000290022404066ae800092f58066e0c0052004300200123301022325333573466e1c0052000133700600666e000092002480104ccd5cd19b8800148081200248000cdc7001800a400046ae84d5d11aba20012357426ae88d5d11aba2357446ae88d5d11aba200137629311aba1357446ae88d5d11aba20012357426ae88d5d11aba2357446ae880048888c94ccd5cd19b873370600290404004240002a666ae68cdc4a40f8008297ac18040be04cd5d000099aba033700008900125eb004c94ccd5cd19b8848000cdc1800a410100102a666ae68cdc4802a4008297ac1feff078204cd5d019b8300148080cd5d019b81005480092f580266ae80004cd5d0002a5eb00cdc1800a404066e0ccdc119b82004480800080048cd5ce1b99325333573466e25200000113003001133714911012d0030033370290000008008009803912999ab9a33712900a000899b8a300233706002900a180199b86001480504c00c0048cdc599b8000148181221002357426ae8800488cc00c8c8c8cc034cc034cc034cdc79bae35573a00600826ae8cd5d1001099b8f375c6aae74005221066974616d61650013370e6eb4d55cf000a40046ae84004dd59aab9e001002233002214a044466010600800426006002600444446466600c6008002600600200466008006004444a666aae7c00400c4cc008d5d08009aba2001232300223300200200123002233002002001225333573400429440048c8cccc00c0080048dd69aba100100126222232332533357346002900008018a999ab9a300148008401054ccd5cd1800a4008200a2c6e1cd55ce8009aab9e001375400844a666ae68008004528111191992999ab9a300148000400c54ccd5cd1800a400420082c6e1cd55ce8009aab9e00137540061");
 
+            const contract = new Script(
+                "PlutusScriptV2",
+                parametrizedContractBytes
+            );
+
+            const validatorHash = contract.hash;
+
+            const tokenName = fromAscii("TEMPURA");
+            
+            const deployedScriptRefUtxo = new UTxO({
+                utxoRef: {
+                    id: "d30c9aa98b37dfe1f8d6430baa2913326b914b9318f6986a73c0d1ffae4aec29",
+                    index: 0
+                },
+                resolved: {
+                    address: Address.fromString("addr_test1wrszeg0tfacvayjqc8e0erhxyszvpa7kxcgeuy6kr8elqscytkx4j"),
+                    value: Value.lovelaces( 13_438_660 ),
+                    datum: new DataI(0),
+                    refScript: contract
+                }
+            });
+            
+            const minerAddr  = Address.fromString("addr_test1vqfcv7cymvz5e25k25mclcmlahh8q2vjf7lpysug0hp4lkqg65nup");
+            const minerInput = new UTxO({
+                utxoRef: {
+                    id: "d30c9aa98b37dfe1f8d6430baa2913326b914b9318f6986a73c0d1ffae4aec29",
+                    index: 1
+                },
+                resolved: {
+                    address: minerAddr,
+                    value: Value.lovelaces( 9_767_890_771 )
+                }
+            });
+
+            const nonce_redeemer = dataFromCbor("d87a9f50a41bf9f630b6910247112d2193cc4ed5ff");
+
+            const validatorAddr = Address.fromString("addr_test1wrszeg0tfacvayjqc8e0erhxyszvpa7kxcgeuy6kr8elqscytkx4j");
+            
+            const validatorMasterUtxo = new UTxO({
+                utxoRef: {
+                    id: "a2dcbaf2decc9bccc44fccef89b7357528796e136285f8c4672aff61fa09fcf0",
+                    index: 0
+                },
+                resolved: {
+                    address: validatorAddr,
+                    value: new Value([
+                        Value.lovelaceEntry( 1_612_020 ),
+                        Value.singleAssetEntry( validatorHash, fromAscii("itamae"), 1 )
+                    ]),
+                    datum: dataFromCbor("d8799f0058203ef7ea8cb0917a8c9fde4ab8e74e84016dffa045ba9e431cec92a49cf25c8a340519ffff001b0000018ca82752640080ff")
+                }
+            });
+
+            const invalidAfterSlot = 36972363;
+
+            const invalidBeforeSlot = txBuilder.posixToSlot( txBuilder.slotToPOSIX( invalidAfterSlot ) - 180_000 );
+
+            // const tx = txBuilder.buildSync({
+            //     invalidBefore: txBuilder.posixToSlot( 1693749756000 ),
+            //     invalidAfter:  txBuilder.posixToSlot( 1693749936000 )
+            // });
             const tx = txBuilder.buildSync({
-                inputs:  [
+                inputs: [
                     {
-                        utxo: UTxO.fromCbor("D87982D87982D87981582012CC3906A43731477E63522A24CBB5EAF74046BF7B44F600D8F062ECAC331B7100D87984D87982D87A81581CC9981006C4ABF1EAB96A0C87B0EE3D40B8007CD4C9B3D0DEA357C278D87A80A240A1401A001898F4581CC9981006C4ABF1EAB96A0C87B0EE3D40B8007CD4C9B3D0DEA357C278A1466974616D616501D87B81D8798800582071EB1A4896739027745DF976A065DED7FFD4E6371A2A9256999F59371B50B36A05193FFF001B0000018A5B512A340080D87A")
+                        utxo: validatorMasterUtxo,
+                        referenceScriptV2: {
+                            refUtxo: deployedScriptRefUtxo,
+                            datum: "inline",
+                            redeemer: nonce_redeemer
+                        }
                     },
-                    {
-                        utxo: UTxO.fromCbor("D87982D87982D879815820FBBCE31D47E45AF499BAFF9446C99CCBC2E80DB613467DBC5FFEA2F3BB10A8A201D87984D87982D87981581C13867B04DB054CAA9655378FE37FEDEE7029924FBE1243887DC35FD8D87A80A140A1401B000000024EFC84FFD87980D87A80")
-                    },
+                    { utxo: minerInput }
                 ],
-                readonlyRefInputs: [
-                    refIn
-                ],
-                outputs: [
-                    TxOut.fromCbor("D87984D87982D87A81581CC9981006C4ABF1EAB96A0C87B0EE3D40B8007CD4C9B3D0DEA357C278D87A80A240A1401A001898F4581CC9981006C4ABF1EAB96A0C87B0EE3D40B8007CD4C9B3D0DEA357C278A1466974616D616501D87B81D8798801582000000F3B69E1436D48366F34C2E217CF598DC2F886D7DC5BB56688B8365A748B05193FFF1A000A75BC1B0000018A5B5B9FF00080D87A80"),
-                    TxOut.fromCbor("D87984D87982D87981581C13867B04DB054CAA9655378FE37FEDEE7029924FBE1243887DC35FD8D87A80A240A1401B000000024EF9AC02581CC9981006C4ABF1EAB96A0C87B0EE3D40B8007CD4C9B3D0DEA357C278A14754454D505552411B000000012A05F200D87980D87A"),
-                ],
+                collaterals: [ minerInput ],
                 mints: [
                     {
-                        value: Value.singleAsset( new Hash28("C9981006C4ABF1EAB96A0C87B0EE3D40B8007CD4C9B3D0DEA357C278"), fromHex("54454D50555241"), 5_000_000_000 ),
+                        value: Value.singleAsset( validatorHash, tokenName, 5_000_000_000 ),
                         script: {
-                            ref: refIn.clone(),
-                            policyId: new Hash28("C9981006C4ABF1EAB96A0C87B0EE3D40B8007CD4C9B3D0DEA357C278"),
-                            redeemer: MintingState.Mine({})
+                            ref: deployedScriptRefUtxo,
+                            policyId: validatorHash,
+                            redeemer: new DataConstr( 0, [] )
                         }
                     }
                 ],
-                invalidBefore: txBuilder.posixToSlot( 1693749756000 ),
-                invalidAfter:  txBuilder.posixToSlot( 1693749936000 )
+                outputs: [
+                    {
+                        address: validatorAddr,
+                        value: new Value([
+                            Value.lovelaceEntry( 5034372 ),
+                            Value.singleAssetEntry( validatorHash, fromAscii("itamae"), 1 )
+                        ]),
+                        datum: dataFromCbor("d8799f01582000000c18082d40cefb61d5a131852882cfe1271ace25c226ecf6c627865c80da05193fff1a000123041b0000018ca82875680080ff")
+                    }
+                ],
+                invalidBefore: invalidBeforeSlot,
+                invalidAfter: invalidAfterSlot,
+                changeAddress: minerAddr
             });
 
-            console.log(
-                JSON.stringify(
-                    tx.toJson(), undefined, 2
-                )
-            );
+            expect( Number(tx.body.fee) ).toBeLessThan( 10_000_000 );
 
         });
         
