@@ -280,9 +280,10 @@ export class TxBuilder
         const executionUnitPrices = this.protocolParamters.executionUnitPrices;
         const [ memRational, cpuRational ] = Array.isArray( executionUnitPrices ) ?
             executionUnitPrices :
+            // fixed in 0.1.9 ( memory in first place )
             [
+                CborPositiveRational.fromNumber( executionUnitPrices.priceMemory ),
                 CborPositiveRational.fromNumber( executionUnitPrices.priceSteps  ),
-                CborPositiveRational.fromNumber( executionUnitPrices.priceMemory )
             ];
 
         const spendScriptsToExec =      scriptsToExec.filter( elem => elem.rdmrTag === TxRedeemerTag.Spend );

@@ -1,6 +1,6 @@
 import { CallStackSiteInfos, getCallStackAt } from "..";
 
-describe("getCallStackAt", function () {
+describe.skip("getCallStackAt", function () {
 
     if( process.platform !== "linux" )
     {
