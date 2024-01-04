@@ -19,6 +19,16 @@ export const defaultPreviewGenesisInfos: GenesisInfos = Object.freeze({
     slotLengthInMilliseconds: 1000
 } as GenesisInfos);
 
+export const defaultPreprodGenesisInfos: GenesisInfos = Object.freeze({
+    systemStartPOSIX: 1666656000_000,
+    slotLengthInMilliseconds: 1000
+} as GenesisInfos);
+
+export const defaultMainnetGenesisInfos: GenesisInfos = Object.freeze({
+    systemStartPOSIX: 1506203091_000,
+    slotLengthInMilliseconds: 1000
+} as GenesisInfos);
+
 export function isGenesisInfos( stuff: any ): stuff is GenesisInfos
 {
     return (
