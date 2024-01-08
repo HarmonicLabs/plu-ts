@@ -519,6 +519,14 @@ function resolveNetwork( addr: Address | AddressStr ): NetworkT
     return addr.network;
 }
 
+function eqUTxOByRef( a: UTxO, b: UTxO ): boolean
+{
+    return a === b || a.utxoRef === b.utxoRef || (
+        a.utxoRef.index === b.utxoRef.index &&
+        a.utxoRef.id.toString() === b.utxoRef.id.toString()
+    );
+}
+
 /**
  * extracts the important data from the input
  * and returns it in an easier way to opearte with
@@ -574,13 +582,33 @@ function initTxBuild(
 
     const network = resolveNetwork( changeAddress );
 
+    const undef: undefined = void 0;
+
+    // filter inputs so that are unique
+    inputs = inputs.reduce((accum, input) => {
+        const samePresent = accum.find(({ utxo: accumUtxo }) => eqUTxOByRef( accumUtxo, input.utxo ) );
+        if( samePresent === undef )
+        {
+            accum.push( input )
+        }
+        return accum;
+    }, [] as ITxBuildInput[]);
+
+    // filter refIns so that are unique
+    readonlyRefInputs = readonlyRefInputs?.reduce(( accum, utxo ) => {
+        const samePresent = accum.find(( accumUtxo ) => eqUTxOByRef( accumUtxo, utxo ) );
+        if( samePresent === undef )
+        {
+            accum.push( utxo )
+        }
+        return accum;
+    }, [] as UTxO[])
+
     let totInputValue = mints?.reduce( ( prev, curr ) => Value.add( prev, curr.value ), Value.zero ) ?? Value.zero;
     const refIns: UTxO[] = readonlyRefInputs?.slice() ?? [];
 
     const outs = outputs?.map( txBuildOutToTxOut ) ?? [];
     const requiredOutputValue = outs.reduce( (acc, out) => Value.add( acc, out.value ), Value.zero );
-
-    const undef: undefined = void 0;
 
     const vkeyWitnesses: VKeyWitness[] = [];
     const nativeScriptsWitnesses: Script<ScriptType.NativeScript>[] = [];
@@ -674,7 +702,11 @@ function initTxBuild(
                 "but the provided utxo is missing any attached script"
             );
 
-            refIns.push( script.ref );
+            const sameRefPresent = refIns.find( u => eqUTxOByRef( u, script.ref ));
+            if( sameRefPresent === undef )
+            {
+                refIns.push( script.ref );
+            } 
             return refScript;
         }
 
@@ -717,6 +749,8 @@ function initTxBuild(
 
     let isScriptValid: boolean = true;
 
+    let nthScriptInput = 0;
+    
     const _inputs = inputs.map( ({
         utxo,
         referenceScriptV2,
@@ -756,18 +790,24 @@ function initTxBuild(
                 "reference utxo specified (" + refUtxo.toString() + ") is missing an attached reference Script"
             )
 
-            refIns.push( refUtxo );
+            const sameRefPresent = refIns.find( u => eqUTxOByRef( u, refUtxo ) )
+            if( sameRefPresent === undef )
+            {
+                refIns.push( refUtxo );
+            }
 
             const dat = pushWitDatum( datum, utxo.resolved.datum );
 
             spendRedeemers.push(new TxRedeemer({
                 data: forceData( redeemer ),
-                index: i,
+                index: nthScriptInput,
                 execUnits: dummyExecBudget.clone(),
                 tag: TxRedeemerTag.Spend
             }));
 
-            pushScriptToExec( i, TxRedeemerTag.Spend, refScript, dat );
+            pushScriptToExec( nthScriptInput, TxRedeemerTag.Spend, refScript, dat );
+
+            nthScriptInput++;
         }
         if( inputScript !== undefined )
         {
@@ -788,12 +828,14 @@ function initTxBuild(
 
             spendRedeemers.push(new TxRedeemer({
                 data: forceData( redeemer ),
-                index: i,
+                index: nthScriptInput,
                 execUnits: dummyExecBudget.clone(),
                 tag: TxRedeemerTag.Spend
             }));
             
-            pushScriptToExec( i, TxRedeemerTag.Spend, script, dat );
+            pushScriptToExec( nthScriptInput, TxRedeemerTag.Spend, script, dat );
+
+            nthScriptInput++;
         }
 
         return new TxIn( utxo )
