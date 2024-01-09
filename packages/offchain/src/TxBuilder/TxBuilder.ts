@@ -16,6 +16,7 @@ import { assert } from "../utils/assert";
 import { TxBuilderRunner } from "./TxBuilderRunner/TxBuilderRunner";
 import { ITxRunnerProvider } from "./IProvider";
 import { CanBeData, canBeData, forceData } from "../utils/CanBeData";
+import { getSpendingPurposeData } from "../toOnChain/getSpendingPurposeData";
 
 type ScriptLike = {
     hash: string,
@@ -311,7 +312,7 @@ export class TxBuilder
                 const { tag, data: rdmrData, index: rdmr_idx } = rdmr;
                 // "+ 1" because we keep track of lovelaces even if in mint values these are 0
                 const index = rdmr_idx + (tag === TxRedeemerTag.Mint ? 1 : 0);
-                const spendingPurpose = rdmr.toSpendingPurposeData( tx.body );
+                const spendingPurpose = getSpendingPurposeData( rdmr, tx.body );
 
                 const onlyRedeemerArg = ( purposeScriptsToExec: ScriptToExecEntry[] ) =>
                 {

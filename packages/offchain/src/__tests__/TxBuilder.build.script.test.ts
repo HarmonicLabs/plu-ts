@@ -2,6 +2,7 @@ import { Address, PaymentCredentials, Script, TxBody, TxOutRef, TxRedeemer, UTxO
 import { UPLCEncoder, UPLCProgram, parseUPLC, parseUPLCText } from "@harmoniclabs/uplc"
 import { ITxBuildInput, TxBuilder, defaultMainnetGenesisInfos } from "..";
 import { DataConstr, dataToCbor } from "@harmoniclabs/plutus-data";
+import { getSpendingPurposeData } from "../toOnChain/getSpendingPurposeData";
 
 
 describe("tx with script", () => {
@@ -76,6 +77,14 @@ describe("tx with script", () => {
 
         expect( tx.witnesses.redeemers![0]?.index ).toEqual( 0 );
 
+        expect( getSpendingPurposeData( tx.witnesses.redeemers![0], tx.body ) )
+        .toEqual(
+            new DataConstr(
+                1, // Purpose.Spending
+                [ tx.body.inputs[0].utxoRef.toData() ]
+            )
+        )
+
     });
 
     test("snd input", () => {
@@ -98,6 +107,13 @@ describe("tx with script", () => {
 
         expect( tx.witnesses.redeemers![0]?.index ).toEqual( 0 );
 
+        expect( getSpendingPurposeData( tx.witnesses.redeemers![0], tx.body ) )
+        .toEqual(
+            new DataConstr(
+                1, // Purpose.Spending
+                [ tx.body.inputs[1].utxoRef.toData() ]
+            )
+        )
     });
 
     describe("two script in", () => {
@@ -142,6 +158,21 @@ describe("tx with script", () => {
     
             expect( findConstr0Rdmr( tx.witnesses.redeemers )?.index ).toEqual( 0 );
             expect( findConstr1Rdmr( tx.witnesses.redeemers )?.index ).toEqual( 1 );
+
+            expect( getSpendingPurposeData( tx.witnesses.redeemers![0], tx.body ) )
+            .toEqual(
+                new DataConstr(
+                    1, // Purpose.Spending
+                    [ tx.body.inputs[0].utxoRef.toData() ]
+                )
+            )
+            expect( getSpendingPurposeData( tx.witnesses.redeemers![1], tx.body ) )
+            .toEqual(
+                new DataConstr(
+                    1, // Purpose.Spending
+                    [ tx.body.inputs[1].utxoRef.toData() ]
+                )
+            )
         });
 
         test("fst, other, snd", () => {
@@ -157,6 +188,21 @@ describe("tx with script", () => {
     
             expect( findConstr0Rdmr( tx.witnesses.redeemers )?.index ).toEqual( 0 );
             expect( findConstr1Rdmr( tx.witnesses.redeemers )?.index ).toEqual( 1 );
+
+            expect( getSpendingPurposeData( tx.witnesses.redeemers![0], tx.body ) )
+            .toEqual(
+                new DataConstr(
+                    1, // Purpose.Spending
+                    [ tx.body.inputs[0].utxoRef.toData() ]
+                )
+            )
+            expect( getSpendingPurposeData( tx.witnesses.redeemers![1], tx.body ) )
+            .toEqual(
+                new DataConstr(
+                    1, // Purpose.Spending
+                    [ tx.body.inputs[2].utxoRef.toData() ]
+                )
+            )
         });
 
         test("snd, fst", () => {
@@ -171,6 +217,21 @@ describe("tx with script", () => {
     
             expect( findConstr1Rdmr( tx.witnesses.redeemers )?.index ).toEqual( 0 );
             expect( findConstr0Rdmr( tx.witnesses.redeemers )?.index ).toEqual( 1 );
+
+            expect( getSpendingPurposeData( tx.witnesses.redeemers![0], tx.body ) )
+            .toEqual(
+                new DataConstr(
+                    1, // Purpose.Spending
+                    [ tx.body.inputs[0].utxoRef.toData() ]
+                )
+            )
+            expect( getSpendingPurposeData( tx.witnesses.redeemers![1], tx.body ) )
+            .toEqual(
+                new DataConstr(
+                    1, // Purpose.Spending
+                    [ tx.body.inputs[1].utxoRef.toData() ]
+                )
+            )
         });
     })
 })

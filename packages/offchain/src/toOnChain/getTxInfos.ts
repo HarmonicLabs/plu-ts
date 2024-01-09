@@ -2,6 +2,7 @@ import { getTxIntervalData } from "./getTxIntervalData";
 import { GenesisInfos } from "../TxBuilder/GenesisInfos";
 import { Data, DataB, DataConstr, DataList, DataMap, DataPair, hashData } from "@harmoniclabs/plutus-data";
 import { Tx, TxRedeemer, Value } from "@harmoniclabs/cardano-ledger-ts";
+import { getSpendingPurposeData } from "./getSpendingPurposeData";
 
 export function getTxInfos(
     transaction: Tx,
@@ -16,7 +17,7 @@ export function getTxInfos(
     function redeemerToDataPair( rdmr: TxRedeemer ): DataPair<DataConstr, Data>
     {
         return new DataPair(
-            rdmr.toSpendingPurposeData( tx ),
+            getSpendingPurposeData( rdmr, tx ),
             rdmr.data.clone()
         )
     }
@@ -80,7 +81,7 @@ export function getTxInfos(
         [
             // inputs
             new DataList( tx.inputs.map( input => input.toData("v2") ) ),
-            // refInouts
+            // refInputs
             new DataList( tx.refInputs?.map( refIn => refIn.toData("v2") ) ?? [] ),
             // outputs
             new DataList( tx.outputs.map( out => out.toData("v2") ) ),
