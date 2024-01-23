@@ -21,7 +21,7 @@
       "build": "rm -rf ./dist && tsc --project ./tsconfig.json && tsc-alias -p ./tsconfig.json",
       "build:light": "tsc --project ./tsconfig.json && tsc-alias -p ./tsconfig.json",
       "buidl": "npm run build",
-      "ci": "npm run test && npm run build",
+      "ci": "npm i && npm run test && npm run build",
       "start": "npm-run-all --parallel build:watch run:watch"
     },
     "publishConfig": {
