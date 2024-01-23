@@ -24,10 +24,11 @@ export function getSpendingPurposeData( rdmr: TxRedeemer, tx: TxBody ): DataCons
     else if( tag === TxRedeemerTag.Spend )
     {
         ctorIdx = 1;
-        const utxoRef = tx.inputs.filter( input => input.resolved.address.paymentCreds.type === "script" )[ rdmr.index ].utxoRef;
+        const utxoRef = tx.inputs[ rdmr.index ]?.utxoRef;
         if( utxoRef === undefined )
         throw new Error(
-            "invalid utxo for spending redeemer " + rdmr.index.toString()
+            "invalid 'Spend' redeemer index: " + rdmr.index.toString() +
+            "; tx.inputs.length is: " + tx.inputs.length.toString()
         );
         purposeArgData = utxoRef.toData();
     }

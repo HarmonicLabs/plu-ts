@@ -2,7 +2,7 @@ import { fromHex, fromUtf8, isUint8Array, lexCompare, toHex } from "@harmoniclab
 import { keepRelevant } from "./keepRelevant";
 import { GenesisInfos, isGenesisInfos } from "./GenesisInfos";
 import { isCostModelsV2, isCostModelsV1, defaultV2Costs, defaultV1Costs, costModelsToLanguageViewCbor } from "@harmoniclabs/cardano-costmodels-ts";
-import { NetworkT, ProtocolParamters, isPartialProtocolParameters, Tx, Value, ValueUnits, TxOut, TxRedeemerTag, txRdmrTagToString, ScriptType, UTxO, VKeyWitness, Script, BootstrapWitness, TxRedeemer, Hash32, TxIn, Hash28, AuxiliaryData, TxWitnessSet, getNSignersNeeded, txRedeemerTagToString, ScriptDataHash, Address, AddressStr } from "@harmoniclabs/cardano-ledger-ts";
+import { NetworkT, ProtocolParamters, isPartialProtocolParameters, Tx, Value, ValueUnits, TxOut, TxRedeemerTag, txRdmrTagToString, ScriptType, UTxO, VKeyWitness, Script, BootstrapWitness, TxRedeemer, Hash32, TxIn, Hash28, AuxiliaryData, TxWitnessSet, getNSignersNeeded, txRedeemerTagToString, ScriptDataHash, Address, AddressStr, TxBody } from "@harmoniclabs/cardano-ledger-ts";
 import { CborString, CborPositiveRational, Cbor, CborArray, CanBeCborString } from "@harmoniclabs/cbor";
 import { byte, blake2b_256 } from "@harmoniclabs/crypto";
 import { Data, dataToCborObj, DataConstr, dataToCbor } from "@harmoniclabs/plutus-data";
@@ -458,16 +458,16 @@ export class TxBuilder
 
             tx = new Tx({
                 ...tx,
-                body: {
+                body: new TxBody({
                     ...tx.body,
                     outputs: txOuts,
                     fee: fee,
                     scriptDataHash: getScriptDataHash( rdmrs, datumsScriptData, languageViews )
-                },
-                witnesses: {
+                }),
+                witnesses: new TxWitnessSet({
                     ...tx.witnesses,
                     redeemers: rdmrs,
-                },
+                }),
                 isScriptValid: _isScriptValid
             });
 
@@ -750,8 +750,6 @@ function initTxBuild(
 
     let isScriptValid: boolean = true;
 
-    let nthScriptInput = 0;
-    
     const _inputs = inputs.map( ({
         utxo,
         referenceScriptV2,
@@ -801,14 +799,12 @@ function initTxBuild(
 
             spendRedeemers.push(new TxRedeemer({
                 data: forceData( redeemer ),
-                index: nthScriptInput,
+                index: i,
                 execUnits: dummyExecBudget.clone(),
                 tag: TxRedeemerTag.Spend
             }));
 
-            pushScriptToExec( nthScriptInput, TxRedeemerTag.Spend, refScript, dat );
-
-            nthScriptInput++;
+            pushScriptToExec( i, TxRedeemerTag.Spend, refScript, dat );
         }
         if( inputScript !== undefined )
         {
@@ -829,14 +825,12 @@ function initTxBuild(
 
             spendRedeemers.push(new TxRedeemer({
                 data: forceData( redeemer ),
-                index: nthScriptInput,
+                index: i,
                 execUnits: dummyExecBudget.clone(),
                 tag: TxRedeemerTag.Spend
             }));
             
-            pushScriptToExec( nthScriptInput, TxRedeemerTag.Spend, script, dat );
-
-            nthScriptInput++;
+            pushScriptToExec( i, TxRedeemerTag.Spend, script, dat );
         }
 
         return new TxIn( utxo )
@@ -1078,7 +1072,7 @@ function initTxBuild(
     }
 
     const dummyTx = new Tx({
-        body: {
+        body: new TxBody({
             inputs: _inputs,
             outputs: dummyOuts,
             fee: dummyFee,
@@ -1105,7 +1099,7 @@ function initTxBuild(
             auxDataHash: auxData?.hash,
             scriptDataHash: getScriptDataHash( redeemers, datumsScriptData, languageViews ),
             network
-        },
+        }),
         witnesses: dummyTxWitnesses,
         auxiliaryData: auxData,
         isScriptValid
@@ -1147,11 +1141,11 @@ function initTxBuild(
 
     let tx = new Tx({
         ...dummyTx,
-        body: {
+        body: new TxBody({
             ...dummyTx.body,
             outputs: txOuts,
             fee: minFee
-        }
+        })
     });
 
     return {

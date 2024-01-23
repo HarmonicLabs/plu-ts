@@ -105,7 +105,7 @@ describe("tx with script", () => {
             changeAddress: Address.fake
         });
 
-        expect( tx.witnesses.redeemers![0]?.index ).toEqual( 0 );
+        expect( tx.witnesses.redeemers![0]?.index ).toEqual( 1 );
 
         expect( getSpendingPurposeData( tx.witnesses.redeemers![0], tx.body ) )
         .toEqual(
@@ -187,7 +187,7 @@ describe("tx with script", () => {
             });
     
             expect( findConstr0Rdmr( tx.witnesses.redeemers )?.index ).toEqual( 0 );
-            expect( findConstr1Rdmr( tx.witnesses.redeemers )?.index ).toEqual( 1 );
+            expect( findConstr1Rdmr( tx.witnesses.redeemers )?.index ).toEqual( 2 );
 
             expect( getSpendingPurposeData( tx.witnesses.redeemers![0], tx.body ) )
             .toEqual(
