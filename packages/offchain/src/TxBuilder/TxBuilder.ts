@@ -528,6 +528,15 @@ function eqUTxOByRef( a: UTxO, b: UTxO ): boolean
     );
 }
 
+function pushUniqueScript<T extends ScriptType>( arr: Script<T>[], toPush: Script<T> ): void
+{
+    if(
+        !arr.some( script => 
+            script.hash.toString() === toPush.hash.toString() 
+        )
+    ) arr.push( toPush );
+}
+
 /**
  * extracts the important data from the input
  * and returns it in an easier way to opearte with
@@ -667,9 +676,9 @@ function initTxBuild(
     {
         const t = script.type;
         
-        if( t === "NativeScript"  )     nativeScriptsWitnesses  .push( script as any );
-        else if( t === "PlutusScriptV1" )     plutusV1ScriptsWitnesses.push( script as any );
-        else if( t === "PlutusScriptV2" )     plutusV2ScriptsWitnesses.push( script as any );
+        if( t === "NativeScript"  )         pushUniqueScript( nativeScriptsWitnesses  , script as any );
+        else if( t === "PlutusScriptV1" )   pushUniqueScript( plutusV1ScriptsWitnesses, script as any );
+        else if( t === "PlutusScriptV2" )   pushUniqueScript( plutusV2ScriptsWitnesses, script as any );
     }
 
     /**
