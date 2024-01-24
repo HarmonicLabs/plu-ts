@@ -759,12 +759,23 @@ function initTxBuild(
 
     let isScriptValid: boolean = true;
 
-    const _inputs = inputs.map( ({
-        utxo,
-        referenceScriptV2,
-        inputScript
-    }, i) => {
-        
+    // `sort` mutates the array; so we `slice` (clone) first
+    const sortedIns = inputs.slice().sort((a,b) => {
+        const ord = lexCompare( a.utxo.utxoRef.id.toBuffer(), b.utxo.utxoRef.id.toBuffer() );
+        // if equal tx id order based on tx output index
+        if( ord === 0 ) return a.utxo.utxoRef.index - b.utxo.utxoRef.index;
+        // else order by tx id
+        return ord;
+    });
+
+    const _inputs = inputs.map( (input) =>
+    {
+        const {
+            utxo,
+            referenceScriptV2,
+            inputScript
+        } = input;
+
         const addr = utxo.resolved.address;
 
         totInputValue =  Value.add( totInputValue, utxo.resolved.value );
@@ -806,6 +817,9 @@ function initTxBuild(
 
             const dat = pushWitDatum( datum, utxo.resolved.datum );
 
+            const i = sortedIns.indexOf( input );
+            if( i < 0 ) throw new Error("input missing in sorted");
+
             spendRedeemers.push(new TxRedeemer({
                 data: forceData( redeemer ),
                 index: i,
@@ -831,6 +845,9 @@ function initTxBuild(
             pushWitScript( script );
 
             const dat = pushWitDatum( datum, utxo.resolved.datum ); 
+
+            const i = sortedIns.indexOf( input );
+            if( i < 0 ) throw new Error("input missing in sorted");
 
             spendRedeemers.push(new TxRedeemer({
                 data: forceData( redeemer ),

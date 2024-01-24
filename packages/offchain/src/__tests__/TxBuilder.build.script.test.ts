@@ -3,6 +3,7 @@ import { UPLCEncoder, UPLCProgram, parseUPLC, parseUPLCText } from "@harmoniclab
 import { ITxBuildInput, TxBuilder, defaultMainnetGenesisInfos } from "..";
 import { DataConstr, dataToCbor } from "@harmoniclabs/plutus-data";
 import { getSpendingPurposeData } from "../toOnChain/getSpendingPurposeData";
+import { lexCompare } from "@harmoniclabs/uint8array-utils";
 
 
 describe("tx with script", () => {
@@ -56,6 +57,30 @@ describe("tx with script", () => {
             value: Value.lovelaces( 2_000_000 )
         }
     });
+    
+    /*
+    // sorted order is always
+    // 0) otherUtxo
+    // 1) fstUtxo
+    // 2) sndUtxo
+    console.log(
+        JSON.stringify(
+            [ fstUtxo, sndUtxo, otherUtxo ].sort((a,b) => {
+                const ord = lexCompare( a.utxoRef.id.toBuffer(), b.utxoRef.id.toBuffer() );
+                // if equal tx id order based on tx output index
+                if( ord === 0 ) return a.utxoRef.index - b.utxoRef.index;
+                // else order by tx id
+                return ord;
+            }).map(  u => u.utxoRef.toJson() ),
+            undefined,
+            2
+        )
+    );
+    */
+
+    const expectedOtherSortedIdx = 0;
+    const expectedFstSortedIdx = 1;
+    const expectedSndSortedIdx = 2;
 
     test("fst input", () => {
 
@@ -75,7 +100,7 @@ describe("tx with script", () => {
             changeAddress: Address.fake
         });
 
-        expect( tx.witnesses.redeemers![0]?.index ).toEqual( 0 );
+        expect( tx.witnesses.redeemers![0]?.index ).toEqual( expectedFstSortedIdx );
 
         expect( getSpendingPurposeData( tx.witnesses.redeemers![0], tx.body ) )
         .toEqual(
@@ -105,7 +130,7 @@ describe("tx with script", () => {
             changeAddress: Address.fake
         });
 
-        expect( tx.witnesses.redeemers![0]?.index ).toEqual( 1 );
+        expect( tx.witnesses.redeemers![0]?.index ).toEqual( expectedFstSortedIdx );
 
         expect( getSpendingPurposeData( tx.witnesses.redeemers![0], tx.body ) )
         .toEqual(
@@ -156,8 +181,8 @@ describe("tx with script", () => {
                 changeAddress: Address.fake
             });
     
-            expect( findConstr0Rdmr( tx.witnesses.redeemers )?.index ).toEqual( 0 );
-            expect( findConstr1Rdmr( tx.witnesses.redeemers )?.index ).toEqual( 1 );
+            expect( findConstr0Rdmr( tx.witnesses.redeemers )?.index ).toEqual( expectedFstSortedIdx - 1 );
+            expect( findConstr1Rdmr( tx.witnesses.redeemers )?.index ).toEqual( expectedSndSortedIdx - 1 );
 
             expect( getSpendingPurposeData( tx.witnesses.redeemers![0], tx.body ) )
             .toEqual(
@@ -186,8 +211,8 @@ describe("tx with script", () => {
                 changeAddress: Address.fake
             });
     
-            expect( findConstr0Rdmr( tx.witnesses.redeemers )?.index ).toEqual( 0 );
-            expect( findConstr1Rdmr( tx.witnesses.redeemers )?.index ).toEqual( 2 );
+            expect( findConstr0Rdmr( tx.witnesses.redeemers )?.index ).toEqual( expectedFstSortedIdx );
+            expect( findConstr1Rdmr( tx.witnesses.redeemers )?.index ).toEqual( expectedSndSortedIdx );
 
             expect( getSpendingPurposeData( tx.witnesses.redeemers![0], tx.body ) )
             .toEqual(
@@ -215,8 +240,8 @@ describe("tx with script", () => {
                 changeAddress: Address.fake
             });
     
-            expect( findConstr1Rdmr( tx.witnesses.redeemers )?.index ).toEqual( 0 );
-            expect( findConstr0Rdmr( tx.witnesses.redeemers )?.index ).toEqual( 1 );
+            expect( findConstr1Rdmr( tx.witnesses.redeemers )?.index ).toEqual( expectedSndSortedIdx - 1 );
+            expect( findConstr0Rdmr( tx.witnesses.redeemers )?.index ).toEqual( expectedFstSortedIdx - 1 );
 
             expect( getSpendingPurposeData( tx.witnesses.redeemers![0], tx.body ) )
             .toEqual(
