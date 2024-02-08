@@ -236,6 +236,53 @@ export class TxBuilder
      */
     build!: (args: ITxBuildArgs, opts?: ITxBuildOptions) => Promise<Tx>
 
+    /**
+     * replaces the redeemers and clears vkeyWitnesses in the witness set
+     * and re-computes the `scriptDataHash` in the body
+     * 
+     * the input transaction is readonly and is not modified
+     * 
+     * **A NEW TRANSACTION IS CREATED** with vkey witness set empty
+     * (the new transaction is unsigned)
+     * 
+     * to summarize, the new transaction differs in:
+     * 1) `tx.body.scriptDataHash`
+     * 2) `tx.witnesses.redeemers`
+     * 3) `tx.witnesses.vkeyWitnesses` (empty)
+     */
+    overrideTxRedeemers( tx: Tx, newRedeemers: TxRedeemer[] ): Tx
+    {
+        // datums passed by hash
+        const datums = tx.witnesses.datums ?? [];
+        return new Tx({
+            ...tx,
+            body: new TxBody({
+                ...tx.body,
+                scriptDataHash: getScriptDataHash(
+                    newRedeemers,
+                    datums.length > 0 ?
+                        Array.from(
+                            Cbor.encode(
+                                new CborArray(
+                                    datums.map( dataToCborObj )
+                                )
+                            ).toBuffer()
+                        ) 
+                    : [],
+                    costModelsToLanguageViewCbor(
+                        this.protocolParamters.costModels,
+                        { mustHaveV2: true, mustHaveV1: false }
+                    ).toBuffer()
+                )
+            }),
+            witnesses: new TxWitnessSet({
+                ...tx.witnesses,
+                vkeyWitnesses: [],
+                redeemers: newRedeemers
+            })
+        });
+    }
+
     buildSync(
         buildArgs: ITxBuildArgs,
         {
