@@ -1,8 +1,17 @@
 import { getTxIntervalData } from "./getTxIntervalData";
 import { GenesisInfos } from "../TxBuilder/GenesisInfos";
 import { Data, DataB, DataConstr, DataList, DataMap, DataPair, hashData } from "@harmoniclabs/plutus-data";
-import { Tx, TxRedeemer, Value } from "@harmoniclabs/cardano-ledger-ts";
+import { Tx, TxRedeemer, UTxO, Value } from "@harmoniclabs/cardano-ledger-ts";
 import { getSpendingPurposeData } from "./getSpendingPurposeData";
+import { lexCompare } from "@harmoniclabs/uint8array-utils";
+
+function sortUTxO( a: UTxO, b: UTxO ): number {
+    const ord = lexCompare( a.utxoRef.id.toBuffer(), b.utxoRef.id.toBuffer() );
+    // if equal tx id order based on tx output index
+    if( ord === 0 ) return a.utxoRef.index - b.utxoRef.index;
+    // else order by tx id
+    return ord;
+}
 
 export function getTxInfos(
     transaction: Tx,
@@ -21,6 +30,9 @@ export function getTxInfos(
             rdmr.data.clone()
         )
     }
+
+    const sortedInputs = tx.inputs.slice().sort( sortUTxO );
+    const sortedRefInputs = tx.refInputs?.slice().sort( sortUTxO );
 
     const feeData = Value.lovelaces( tx.fee ).toData();
     const mintData = (tx.mint ?? Value.lovelaces( 0 ) ).toData();
@@ -49,7 +61,7 @@ export function getTxInfos(
             0, // PTxInfo; only costructor
             [
                 // inputs
-                new DataList( tx.inputs.map( input => input.toData("v1") ) ),
+                new DataList( sortedInputs.map( input => input.toData("v1") ) ),
                 // outputs
                 new DataList( tx.outputs.map( out => out.toData("v1") ) ),
                 // fee
@@ -80,9 +92,9 @@ export function getTxInfos(
         0, // PTxInfo; only costructor
         [
             // inputs
-            new DataList( tx.inputs.map( input => input.toData("v2") ) ),
+            new DataList( sortedInputs.map( input => input.toData("v2") ) ),
             // refInputs
-            new DataList( tx.refInputs?.map( refIn => refIn.toData("v2") ) ?? [] ),
+            new DataList( sortedRefInputs?.map( refIn => refIn.toData("v2") ) ?? [] ),
             // outputs
             new DataList( tx.outputs.map( out => out.toData("v2") ) ),
             // fee
