@@ -62,10 +62,10 @@ export type TermStruct<SDef extends StructDefinition, SMethods extends Methods> 
         } : {}
 ) &
 LiftMethods<
-    FilterMethodsByInput<SMethods,PStruct<SDef, any>>
+    FilterMethodsByInput<SMethods,PStruct<SDef, {}>>
 > & 
 MethodsAsTerms<
-    FilterMethodsByInput<SMethods,PStruct<SDef, any>>
+    FilterMethodsByInput<SMethods,PStruct<SDef, {}>>
 >
 
 const hoisted_getFields = new IRHoisted(

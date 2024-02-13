@@ -49,8 +49,8 @@ export type PStruct<SDef extends StructDefinition, SMethods extends Methods> = {
     /**
      * @deprecated
      */
-    readonly termType: StructT<SDef>;
-    readonly type: StructT<SDef>;
+    readonly termType: StructT<SDef,SMethods>;
+    readonly type: StructT<SDef,SMethods>;
 
     readonly fromDataTerm: TermFn<[PData],PStruct<SDef, SMethods>>
     fromData: ( data: Term<PData> ) => Term<PStruct<SDef, SMethods>>;
