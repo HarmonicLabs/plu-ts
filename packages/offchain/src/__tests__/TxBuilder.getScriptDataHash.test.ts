@@ -496,13 +496,13 @@ describe("getScriptDataHash", () => {
             }),
         ];
 
-        console.log(
-            getScriptDataHash(
-                rdmrs,
-                [],
-                costModelsToLanguageViewCbor( costModels, { mustHaveV2: true, mustHaveV1: false } ).toBuffer()
-            )?.toString()
-        );
+        // console.log(
+        //     getScriptDataHash(
+        //         rdmrs,
+        //         [],
+        //         costModelsToLanguageViewCbor( costModels, { mustHaveV2: true, mustHaveV1: false } ).toBuffer()
+        //     )?.toString()
+        // );
     })
 
     test.skip("csl case", () => {
