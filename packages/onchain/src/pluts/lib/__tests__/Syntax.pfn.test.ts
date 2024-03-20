@@ -10,7 +10,6 @@ import { pfn } from "../pfn"
 import { plam } from "../plam"
 import { pInt } from "../std/int/pInt"
 
-
 describe("pfn", () => {
 
     test("throws on void input function", () => {

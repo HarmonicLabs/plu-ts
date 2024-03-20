@@ -9,7 +9,7 @@ import { jsonToMetadata } from "./jsonToMetadata";
 import { isGenesisInfos } from "../GenesisInfos";
 import { decodeBech32, sha2_256 } from "@harmoniclabs/crypto";
 import { fromHex, toHex } from "@harmoniclabs/uint8array-utils";
-import { Data, cloneData, dataToCbor, isData } from "@harmoniclabs/plutus-data";
+import { Data, DataI, cloneData, dataToCbor, isData } from "@harmoniclabs/plutus-data";
 import { ByteString } from "@harmoniclabs/bytestring";
 import { CanBeData, canBeData, forceData } from "../../utils/CanBeData";
 
@@ -134,45 +134,145 @@ function _getResolvedDatum( hash: string ): Data | undefined
 
 export class TxBuilderRunner
 {
+    /**
+     *  if any unresolved data was passed it is resolved via the provider passed;
+     * 
+     *  if the method needed are not present on the provider throws an `Error`;
+     * 
+     *  finalizes the `TxBuilderRunner` instance,
+     *  so that it can be re-used for other transactions,
+     *  
+     *  @returns {Promise<Tx>} a `Tx` instance
+     */
     readonly build!:() => Promise<Tx>
 
+    /**
+     * clears the `TxBuilderRunner` instance,
+     * so that it can be re-used for other transactions,
+     * making sure no other action where specified
+     *
+     * @returns a reference to the same `TxBuilderRunner`.
+     */
     readonly reset!: () => TxBuilderRunner;
     
     /**
      * @deprecated use `addRequiredSigner` instead
      */
     readonly addSigner!: ( signer: Address | StakeAddress | AddressStr | StakeAddressBech32 ) => TxBuilderRunner
+    /**
+     * adds the **all** credentials of the address to the `requiredSigners`
+     * field of a `Tx` instance.
+     * 
+     * only the signers included in that field are passed to a contract's `ScriptContext`.
+     * 
+     * that includes payment credentials and, if present, stake credentials.
+     * 
+     * if you have an address with both payment and stake credentials,
+     * but wish only to include one of them,
+     * consider using  the `addRequiredSignerKey` method
+     * 
+     * @returns a reference to the same `TxBuilderRunner`.
+     */
     readonly addRequiredSigner!: ( signer: Address | StakeAddress | AddressStr | StakeAddressBech32 ) => TxBuilderRunner
     /**
      * @deprecated use `addRequiredSignerKey` instead
      */
     readonly addSignerKey!: ( signerKey: Hash28 ) => TxBuilderRunner
+    /**
+     * adds the given key hash to the `requiredSigners` field of a `Tx` instance.
+     * 
+     * only the signers included in that field are passed to a contract's `ScriptContext`.
+     * 
+     * @returns a reference to the same `TxBuilderRunner`.
+     */
     readonly addRequiredSignerKey!: ( signerKey: Hash28 ) => TxBuilderRunner
     
+    /** alias for `attachValidator` */
     readonly attachCertificateValidator!: ( validator: Script<PlutusScriptType> ) => TxBuilderRunner
+    /** alias for `attachValidator` */
     readonly attachMintingValidator!: ( validator: Script<PlutusScriptType> ) => TxBuilderRunner
+    /** alias for `attachValidator` */
     readonly attachSpendingValidator!: ( validator: Script<PlutusScriptType> ) => TxBuilderRunner
+    /** alias for `attachValidator` */
     readonly attachWithdrawalValidator!: ( validator: Script<PlutusScriptType> ) => TxBuilderRunner
+    /**
+     * includes the script in the witnessSet field of the resulting `Tx`
+     * 
+     * @returns a reference to the same `TxBuilderRunner`.
+     */
     readonly attachValidator!: ( validator: Script<PlutusScriptType> ) => TxBuilderRunner
     
+    /**
+     * adds a metadata entry for the given `label`,
+     * or overrides if the same `label` was already present.
+     * 
+     * @returns a reference to the same `TxBuilderRunner`.
+     */
     readonly attachMetadata!: ( label: CanBeUInteger, metadata: TxMetadatum ) => TxBuilderRunner
-    /** alias for `attachMetadata` */
+    /**
+     * alias for `attachMetadata`
+     * 
+     * adds a metadata entry for the given `label`,
+     * or overrides if the same `label` was already present.
+     * 
+     * @returns a reference to the same `TxBuilderRunner`.
+     */
     readonly setMetadata!: ( label: CanBeUInteger, metadata: TxMetadatum ) => TxBuilderRunner
+    /**
+     * like [`attachMetadata`](./attachMetadata),
+     * adds a metadata entry for the given `label`,
+     * or overrides if the same `label` was already present.
+     * 
+     * `metadataJson` is a jsavascript value converted as follows
+     * 
+     * - `object` -> `TxMetadatumMap`
+     * - `array` -> `TxMetadatumList`
+     * - `string` -> `TxMetadatumText`
+     * (use `attachMetadataJsonWithConversion`
+     * for explicit conversion to `TxMetadatumBytes`
+     * or consider using `attachMetadata`)
+     * - `number` -> `TxMetadatumInt`
+     * - `bigint` -> `TxMetadatumInt`
+     * 
+     * @returns a reference to the same [`TxBuilderRunner`](./TxBuilderRunner).
+     */
     readonly attachMetadataJson!: ( label: CanBeUInteger, metadataJson: any ) => TxBuilderRunner
-    /** like `attachMetadataJson` but if a strings starts with `0x` is treated as an hexadecimal byte string */
+    /** like `attachMetadataJson` but if a string starts with `0x` is treated as an hexadecimal byte string */
     readonly attachMetadataJsonWithConversion!: ( label: CanBeUInteger, metadataJson: any ) => TxBuilderRunner
     
     /**
-     * explicitly set the change address;
-     * if missing the first input's address with `PubKeyHash` credentials (not script) will be used
+     * explicitly sets the change address;
+     * 
+     * if missing, an attempt to call the `ITxRunnerProvider` `getChangeAddress` method is done
+     * 
+     * if still missing the first input's address with `PubKeyHash`
+     * payment credentials (not script) will be used
+     * 
+     * if all the above fail, a call to the `build` method will throw an `Error`.
+     * 
+     * @returns a reference to the same `TxBuilderRunner`.
      */
     readonly setChangeAddress!: ( changeAddr: Address | AddressStr ) => TxBuilderRunner
 
     /**
-     * explicitly sets the collateral
+     * Sets the collateral input, and optionally output, for a transaction.
      * 
-     * if missing and the collateral is needed the tx builder will try to
-     * use one of the tx inputs as collateral
+     * If this method is not used,
+     * but the transaction needs collateral due to the presence of a plutus script,
+     * the `TxBuilderRunner` instance will try to use one of the normal inputs as collateral,
+     * see `setCollateralAmount`./setCollateralAmount for more infos.
+     * 
+     * `collateral` can either be a resolved `UTxO`
+     * or an unresolved `ITxOutRef`
+     * 
+     * in case it is an unresolved `ITxOutRef`
+     * a call to the `ITxRunnerProvider` `resolveUtxos` method
+     * is done in the `build` method;
+     * if `resolveUtxos` is missing on the provider the `build` method will throw an `Error`.
+     * 
+     * an additional `collateralOutput` may be specified.
+     * 
+     * @returns a reference to the same `TxBuilderRunner`.
      */
     readonly setCollateral!: (
         collateral: CanResolveToUTxO,
@@ -180,10 +280,15 @@ export class TxBuilderRunner
     ) => TxBuilderRunner
 
     /**
-     * if no collateral is explicitly set (using `setCollateral`)
+     * Sets the collateral amount for a transaction.
      * 
-     * the tx builder will try to use one of the inputs as collateral
-     * in that case is possible to modify the collateral amount
+     * If `setCollateral` is not used, 
+     * but the transaction needs collateral due to the presence of a plutus script,
+     * the `TxBuilderRunner` instance will try to use one of the normal inputs as collateral.
+     * 
+     * In case this happens, it is possible to limit the amount of the collateral using this method.
+     * 
+     * @returns a reference to the same `TxBuilderRunner`.
     **/
     readonly setCollateralAmount!: ( lovelaces: CanBeUInteger ) => TxBuilderRunner
     
@@ -192,51 +297,65 @@ export class TxBuilderRunner
      */
     readonly collectFrom!: ( utxos: CanResolveToUTxO[], redeemer?: CanBeData ) => TxBuilderRunner
     /**
-     * @param {CanResolveToUTxO[]} utxos
-     * utxo (or utxo references to be resolved) to use as inputs
-     * @param {CanBeData | undefined} redeemer
-     * data used as redeemer in the event the utxo is locked in a script 
-     * @param {UTxO | Script | undefined} script_or_ref
-     * optional script source; either by reference script (`UTxO`) or inline (`Script`)
-     * if none is provided the tx builder will try to get the matching to the UTxO associated address
-     * from scripts aviable trough any of the `addValidator` functions or any of the tef UTxOs aviable trough `referenceUtxos` 
-     * @param {CanBeData | undefined} datum
-     * optional datum to be used in the event the spending utxo has datum setted as an hash
-     * if missing the provider `resolveDatumHashes` function will be used
+     * adds the given `utxos` to the transaction inputs;
+     * the elements of the array that don't satisfy the `IUTxO` interface
+     * will be resolved using the provider `resolveUtxos` method.
+     * 
+     * this method does not allow to specify plutus realated arguments.
+     * 
+     * for inputs that need redeemers, scripts and datums use `addInput`.
+     * 
+     * @returns a reference to the same `TxBuilderRunner`.
     **/
     readonly addInputs!: (
-        utxos: CanResolveToUTxO[],
-        redeemer?: CanBeData,
-        script_or_ref?: UTxO | Script<PlutusScriptType>,
-        datum?: CanBeData
+        utxos: CanResolveToUTxO[]
+        // redeemer?: CanBeData,
+        // script_or_ref?: CanResolveToUTxO | Script<PlutusScriptType>,
+        // datum?: CanBeData
     ) => TxBuilderRunner
     /**
-     * @param {CanResolveToUTxO} utxos
-     * utxo (or utxo references to be resolved) to use as inputs
-     * @param {CanBeData | undefined} redeemer
-     * data used as redeemer in the event the utxo is locked in a script 
-     * @param {UTxO | Script | undefined} script_or_ref
-     * optional script source; either by reference script (`UTxO`) or inline (`Script`)
-     * if none is provided the tx builder will try to get the matching to the UTxO associated address
-     * from scripts aviable trough any of the `addValidator` functions or any of the tef UTxOs aviable trough `referenceUtxos` 
-     * @param {CanBeData | undefined} datum
-     * optional datum to be used in the event the spending utxo has datum setted as an hash
-     * if missing the provider `resolveDatumHashes` function will be used
+     * adds the given `utxo` to the transaction inputs;
+     * if`utxo` doesn't satisfy the `IUTxO` interface
+     * it will be resolved using the provider `resolveUtxos` method.
+     * 
+     * `redeemer` and `script_or_ref` must be specified together;
+     * if `datum` is missing defaults to `"inline"`.
+     * 
+     * if `script_or_ref` is a `Script`
+     * it will be included in the `witnesses`
+     * field of the resulting `Tx`;
+     * 
+     * if `script_or_ref` satisfies the `IUTxO` interface
+     * it will be used as reference input to provide the attached reference script
+     * (`build` fails if missing)
+     * 
+     * if `script_or_ref` satisfies the `ITxOutRef` interface
+     * or the `TxOutRefStr` type alias
+     * it will be resolved using the provider `resolveUtxos` method and
+     * it will be used as reference input to provide the attached reference script
+     * (`build` fails if missing)
+     * 
+     * @returns a reference to the same `TxBuilderRunner`.
     **/
     readonly addInput!: (
         utxos: CanResolveToUTxO,
         redeemer?: CanBeData,
-        script_or_ref?: UTxO | Script<PlutusScriptType>,
-        datum?: CanBeData
+        script_or_ref?: CanResolveToUTxO | Script<PlutusScriptType>,
+        datum?: CanBeData | "inline"
     ) => TxBuilderRunner
     
     /**
-     * adds an output to the transaction
+     * adds a transaction output.
+     * 
+     * if `amount` is `number` or `bigint` it is intended to be lovelaces only.
+     * 
+     * if `datum` is present is always added as inline datum.
      * 
      * @param address receiver address
      * @param amount Value to sent
      * @param datum optional inline datum to attach
      * @param refScript optional reference script to attach
+     * @returns a reference to the same `TxBuilderRunner`.
      */
     readonly payTo: (
         address: Address | AddressStr,
@@ -260,8 +379,8 @@ export class TxBuilderRunner
     ) => TxBuilderRunner
     readonly mintAssets: (
         assets: IValuePolicyEntry,
+        script_or_ref: Script | CanResolveToUTxO,
         redeemer?: CanBeData,
-        script_or_ref?: Script | CanResolveToUTxO
     ) => TxBuilderRunner
     readonly withdraw!: (
         stakeAddress: CanBeStakeCreds,
@@ -300,9 +419,6 @@ export class TxBuilderRunner
     readonly tasks!: TxBuilderTask[];
     readonly buildArgs!: ITxBuildArgs;
     
-    /**
-     * @experimental
-     */
     constructor(
         txBuilder: TxBuilder,
         provider: Partial<ITxRunnerProvider>
@@ -1200,6 +1316,61 @@ export class TxBuilderRunner
             return self;
         }
 
+        function __mintAssets(
+            assets: IValuePolicyEntry,
+            script_or_ref: Script | IUTxO,
+            redeemer?: CanBeData,
+        ): TxBuilderRunner
+        {
+            redeemer = redeemer === undefined ? new DataI( 0 ) : forceData( redeemer );
+
+            if( !Array.isArray( buildArgs.mints ) )
+            {
+                buildArgs.mints = [];
+            }
+
+            buildArgs.mints.push({
+                value: new Value(
+                    assets.assets.map(({ name, quantity }) => 
+                        Value.singleAssetEntry( assets.policy, name, quantity )
+                    )
+                ),
+                script: isIUTxO( script_or_ref ) ?
+                {
+                    ref: new UTxO( script_or_ref ),
+                    policyId: assets.policy,
+                    redeemer
+                } : {
+                    inline: script_or_ref as Script,
+                    policyId: assets.policy,
+                    redeemer
+                }
+            });
+
+            return self;
+        }
+
+        function _mintAssets(
+            assets: IValuePolicyEntry,
+            script_or_ref: Script | CanResolveToUTxO,
+            redeemer?: CanBeData,
+        ): TxBuilderRunner
+        {
+            if( shouldResolveToUTxO( script_or_ref ) )
+            {
+                tasks.push({
+                    kind: TxBuilderTaskKind.ResolveUTxO,
+                    arg: script_or_ref,
+                    onResolved: ( ref ) => {
+                        __mintAssets( assets, ref, redeemer )
+                    }
+                });
+                
+                return self;
+            }
+            else return __mintAssets( assets, script_or_ref, redeemer );
+        }
+
         async function _build(): Promise<Tx>
         {
             const otherTasks: TxBuilderPromiseTask[] = new Array( tasks.length );
@@ -1486,6 +1657,10 @@ export class TxBuilderRunner
                     value: _deregisterStake,
                     ...readonlyValueDescriptor
                 },
+                mintAssets: {
+                    value: _mintAssets,
+                    ...readonlyValueDescriptor
+                },
                 registerStake: {
                     value: _registerStake,
                     ...readonlyValueDescriptor
@@ -1584,7 +1759,7 @@ function forceStakeCreds( creds: CanBeStakeCreds ): StakeCredentials
 
     if( creds instanceof StakeAddress )
     {
-        return creds.toStakeCredentials()
+        return creds.toStakeCredentials();
     }
 
     if( creds instanceof Script )

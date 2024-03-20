@@ -5,7 +5,7 @@ import { Data, isData, dataFromCbor, dataFromCborObj } from "@harmoniclabs/plutu
 import { Machine } from "@harmoniclabs/plutus-machine";
 import { ToUPLC, UPLCConst } from "@harmoniclabs/uplc";
 
-export type CanBeData = Data | ToUPLC | CborObj | CborString | string
+export type CanBeData = Data | ToUPLC | CborObj | CborString | string;
 
 export function cloneCanBeData( stuff: CanBeData ): CanBeData
 {

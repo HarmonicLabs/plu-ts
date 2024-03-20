@@ -56,10 +56,7 @@ export class TxBuilder
 
     setGenesisInfos!: ( geneisInfos: GenesisInfos ) => void;
 
-    /**
-     * @experimental
-     */
-    runWithProvider( provider: Partial<ITxRunnerProvider> )
+    runWithProvider( provider: Partial<ITxRunnerProvider> ): TxBuilderRunner
     {
         return new TxBuilderRunner( this, provider );
     }
