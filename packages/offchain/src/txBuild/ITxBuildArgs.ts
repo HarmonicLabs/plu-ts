@@ -1,36 +1,16 @@
-import { Address, AddressStr, Hash32, ProtocolUpdateProposal, PubKeyHash, Script, TxMetadata, UTxO, protocolUpdateProposalFromCborObj, protocolUpdateProposalToCborObj } from "@harmoniclabs/cardano-ledger-ts";
-import { cloneITxBuildCert, type ITxBuildCert } from "./ITxBuildCert";
-import { cloneITxBuildInput, type ITxBuildInput } from "./ITxBuildInput";
-import { cloneITxBuildMint, type ITxBuildMint } from "./ITxBuildMint";
-import { cloneITxBuildOutput, type ITxBuildOutput } from "./ITxBuildOutput";
-import { cloneITxBuildWithdrawal, type ITxBuildWithdrawal } from "./ITxBuildWithdrawal";
-import { CanBeUInteger, forceBigUInt } from "../utils/ints";
-import { CanBeData, canBeData, cloneCanBeData, forceData } from "../utils/CanBeData";
-
-export interface ChangeInfos {
-    address: Address | AddressStr,
-    datum?: Hash32 | CanBeData
-    refScript?: Script
-}
-
-export function cloneChangeInfos( change: ChangeInfos ): ChangeInfos
-{
-    return {
-        address: change.address.toString() as AddressStr,
-        datum: change.datum ? (
-            change.datum instanceof Hash32 ?
-            change.datum.clone() :
-            cloneCanBeData( change.datum )
-        ):
-        undefined,
-        refScript: change.refScript ? change.refScript.clone() : undefined
-    };
-}
+import { Address, AddressStr, CanBeHash28, Hash32, IUTxO, PubKeyHash, Script, TxMetadata, TxOut, UTxO, isIUTxO } from "@harmoniclabs/cardano-ledger-ts";
+import { cloneITxBuildCert, NormalizedITxBuildCert, type ITxBuildCert, normalizeITxBuildCert } from "./ITxBuildCert";
+import { cloneITxBuildInput, NormalizedITxBuildInput, type ITxBuildInput, normalizeITxBuildInput } from "./ITxBuildInput/ITxBuildInput";
+import { cloneITxBuildMint, NormalizedITxBuildMint, type ITxBuildMint, normalizeITxBuildMint } from "./ITxBuildMint";
+import { cloneITxBuildOutput, txBuildOutToTxOut, type ITxBuildOutput } from "./ITxBuildOutput";
+import { cloneITxBuildWithdrawal, NormalizedITxBuildWithdrawal, type ITxBuildWithdrawal, normalizeITxBuildWithdrawal } from "./ITxBuildWithdrawal";
+import { CanBeUInteger } from "../utils/ints";
+import { ChangeInfos, NormalizedChangeInfos, normalizeChangeInfos } from "./ChangeInfos/ChangeInfos";
 
 export interface ITxBuildArgs {
-    inputs: ITxBuildInput[],
+    inputs: (ITxBuildInput | IUTxO)[],
     /**
-     * same as
+     * same as `changeAddress` but allows to specify datums and ref scripts
      * @example
      * ```ts
      * txBuilder.build({
@@ -41,10 +21,9 @@ export interface ITxBuildArgs {
     changeAddress?: Address | AddressStr,
     change?: ChangeInfos;
     outputs?: ITxBuildOutput[],
-    // era?: Era // latest
-    readonlyRefInputs?: UTxO[],
-    requiredSigners?: PubKeyHash[],
-    collaterals?: UTxO[],
+    readonlyRefInputs?: IUTxO[],
+    requiredSigners?: CanBeHash28[], // PubKeyHash[],
+    collaterals?: IUTxO[],
     collateralReturn?: ITxBuildOutput,
     mints?: ITxBuildMint[],
     invalidBefore?: CanBeUInteger,
@@ -52,34 +31,83 @@ export interface ITxBuildArgs {
     certificates?: ITxBuildCert[],
     withdrawals?: ITxBuildWithdrawal[],
     metadata?: TxMetadata,
-    protocolUpdateProposal?: ProtocolUpdateProposal
 }
 
-export function cloneITxBuildArgs( args: Partial<ITxBuildArgs> ): ITxBuildArgs
+export interface NormalizedITxBuildArgs extends ITxBuildArgs {
+    inputs: NormalizedITxBuildInput[],
+    changeAddress?: Address,
+    change?: NormalizedChangeInfos;
+    outputs?: TxOut[],
+    // era?: Era // latest
+    readonlyRefInputs?: UTxO[],
+    requiredSigners?: PubKeyHash[],
+    collaterals?: UTxO[],
+    collateralReturn?: TxOut,
+    mints?: NormalizedITxBuildMint[],
+    invalidBefore?: CanBeUInteger,
+    invalidAfter?: CanBeUInteger,
+    certificates?: NormalizedITxBuildCert[],
+    withdrawals?: NormalizedITxBuildWithdrawal[],
+    metadata?: TxMetadata,
+}
+
+export function normalizeITxBuildArgs({
+    inputs,
+    change,
+    changeAddress,
+    outputs,
+    readonlyRefInputs,
+    requiredSigners,
+    collaterals,
+    collateralReturn,
+    mints,
+    invalidBefore,
+    invalidAfter,
+    certificates,
+    withdrawals,
+    metadata
+}: ITxBuildArgs ): NormalizedITxBuildArgs
 {
     return {
-        inputs: args?.inputs?.map( cloneITxBuildInput ) as ITxBuildInput[],
-        changeAddress: args.changeAddress === undefined ? undefined as any as Address :
-            args.changeAddress instanceof Address ? args.changeAddress.clone() :
-            Address.fromString( args.changeAddress.toString() ),
-        change: args.change ? cloneChangeInfos( args.change ) : undefined,
-        outputs: args.outputs?.map( cloneITxBuildOutput ),
-        // era: Era // latest
-        readonlyRefInputs: args.readonlyRefInputs?.map( u => u.clone() ),
-        requiredSigners: args.requiredSigners?.map( sig => sig.clone() ),
-        collaterals: args.collaterals?.map( u => u.clone() ),
-        collateralReturn: args.collateralReturn ? cloneITxBuildOutput( args.collateralReturn ) : undefined,
-        mints: args.mints?.map( cloneITxBuildMint ),
-        invalidBefore: args.invalidBefore,
-        invalidAfter: args.invalidAfter,
-        certificates: args.certificates?.map( cloneITxBuildCert ),
-        withdrawals: args.withdrawals?.map( cloneITxBuildWithdrawal ),
-        metadata: args.metadata ? TxMetadata.fromCborObj( args.metadata.toCborObj() ) : undefined,
-        protocolUpdateProposal: args.protocolUpdateProposal === undefined ? undefined :
-            protocolUpdateProposalFromCborObj(
-                protocolUpdateProposalToCborObj(
-                    args.protocolUpdateProposal
-                )
-            )
-    }
+        inputs: inputs.map( normalizeITxBuildArgsInputs ),
+        change: change ? normalizeChangeInfos( change ) : undefined,
+        changeAddress: changeAddress ? (
+            typeof changeAddress === "string" ?
+                Address.fromString( changeAddress ):
+                changeAddress
+        ) : undefined,
+        outputs: outputs?.map( txBuildOutToTxOut ),
+        readonlyRefInputs: readonlyRefInputs?.map( toUTxONoClone ),
+        requiredSigners: requiredSigners?.map( toPubKeyHash ),
+        collaterals: collaterals?.map( toUTxONoClone ),
+        collateralReturn: collateralReturn ? txBuildOutToTxOut( collateralReturn ) : undefined,
+        mints: mints?.map( normalizeITxBuildMint ),
+        invalidBefore: invalidBefore === undefined ? undefined : BigInt( invalidBefore ),
+        invalidAfter: invalidAfter === undefined ? undefined : BigInt( invalidAfter ),
+        certificates: certificates?.map( normalizeITxBuildCert ),
+        withdrawals: withdrawals?.map( normalizeITxBuildWithdrawal ),
+        metadata
+    };
+}
+
+function normalizeITxBuildArgsInputs( input: ITxBuildInput | IUTxO ): NormalizedITxBuildInput
+{
+    if( isIUTxO( input ) ) return { utxo: new UTxO( input ) };
+    return normalizeITxBuildInput( input );
+}
+
+function toUTxONoClone( utxo: IUTxO ): UTxO
+{
+    return utxo instanceof UTxO ? utxo : new UTxO( utxo );
+}
+
+function toPubKeyHash( hash: CanBeHash28 ): PubKeyHash
+{
+    return new PubKeyHash( hash );
+}
+
+/** @deprecated use `normalizeITxBuildArgs` instead */
+export function cloneITxBuildArgs( args: ITxBuildArgs ): ITxBuildArgs
+{
+    return normalizeITxBuildArgs( args );
 }

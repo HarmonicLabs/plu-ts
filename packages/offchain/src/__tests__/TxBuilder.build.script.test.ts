@@ -1,4 +1,4 @@
-import { Address, PaymentCredentials, Script, TxBody, TxOutRef, TxRedeemer, UTxO, Value, defaultProtocolParameters } from "@harmoniclabs/cardano-ledger-ts";
+import { Address, Credential, Script, TxBody, TxOutRef, TxRedeemer, UTxO, Value, defaultProtocolParameters } from "@harmoniclabs/cardano-ledger-ts";
 import { UPLCEncoder, UPLCProgram, parseUPLC, parseUPLCText } from "@harmoniclabs/uplc"
 import { ITxBuildInput, TxBuilder, defaultMainnetGenesisInfos } from "..";
 import { DataConstr, dataToCbor } from "@harmoniclabs/plutus-data";
@@ -19,7 +19,7 @@ describe("tx with script", () => {
         bytes
     );
 
-    const scriptAddr = Address.mainnet( PaymentCredentials.script( script.hash ) );
+    const scriptAddr = Address.mainnet( Credential.script( script.hash ) );
 
     const txBuilder = new TxBuilder(
         defaultProtocolParameters,

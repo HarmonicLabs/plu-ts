@@ -1,12 +1,11 @@
-import { Address, Value, Hash32, Script, TxOut } from "@harmoniclabs/cardano-ledger-ts"
+import { Address, Value, Hash32, Script, TxOut, CanBeHash32, canBeHash32, AddressStr, IValue } from "@harmoniclabs/cardano-ledger-ts"
 import { CanBeData, canBeData, forceData } from "../utils/CanBeData"
-import { cloneData, isData } from "@harmoniclabs/plutus-data"
 
 
 export interface ITxBuildOutput {
-    address: Address,
-    value: Value,
-    datum?: Hash32 | CanBeData
+    address: Address | AddressStr,
+    value: Value | IValue,
+    datum?: CanBeHash32 | CanBeData
     refScript?: Script
 }
 
@@ -18,9 +17,10 @@ export function txBuildOutToTxOut( {
 }: ITxBuildOutput ): TxOut
 {
     return new TxOut({
-        address: address.clone(),
-        value: value.clone(),
-        datum: canBeData( datum ) ? forceData( datum ) : datum,
+        address: typeof address === "string" ? Address.fromString( address ) : address.clone(),
+        value: value instanceof Value ? value.clone(): new Value( value ),
+        datum: canBeData( datum ) ? forceData( datum ) :
+        ( canBeHash32( datum ) ? new Hash32( datum ) : undefined ),
         refScript 
     })
 }
@@ -34,11 +34,10 @@ export function cloneITxBuildOutput({
 }: ITxBuildOutput ): ITxBuildOutput
 {
     return {
-        address: address.clone(),
-        value: value.clone(),
-        datum: canBeData( datum ) ?
-            ( isData( datum ) ? cloneData( datum ) : forceData( datum ) ) 
-            : datum,
+        address: typeof address === "string" ? Address.fromString( address ) : address.clone(),
+        value: value instanceof Value ? value.clone(): new Value( value ),
+        datum: canBeData( datum ) ? forceData( datum ) :
+            ( canBeHash32( datum ) ? new Hash32( datum ) : undefined ),
         refScript: refScript === undefined ? undefined : refScript.clone()
     };
 }

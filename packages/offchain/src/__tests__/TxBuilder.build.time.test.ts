@@ -1,4 +1,4 @@
-import { defaultProtocolParameters, UTxO, TxOutRef, Address, Value, Script, PaymentCredentials } from "@harmoniclabs/cardano-ledger-ts";
+import { defaultProtocolParameters, UTxO, TxOutRef, Address, Value, Script, Credential } from "@harmoniclabs/cardano-ledger-ts";
 import { DataI } from "@harmoniclabs/plutus-data";
 import { TxBuilder } from "../TxBuilder";
 
@@ -132,7 +132,7 @@ describe("build time", () => {
     );
     
     const simpleScriptAddress = Address.mainnet(
-        PaymentCredentials.script( 
+        Credential.script( 
             simpleScript.hash
         )
     );

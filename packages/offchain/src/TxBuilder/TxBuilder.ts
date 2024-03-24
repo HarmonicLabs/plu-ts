@@ -1,15 +1,15 @@
 import { fromHex, fromUtf8, isUint8Array, lexCompare, toHex } from "@harmoniclabs/uint8array-utils";
 import { keepRelevant } from "./keepRelevant";
 import { GenesisInfos, isGenesisInfos } from "./GenesisInfos";
-import { isCostModelsV2, isCostModelsV1, defaultV2Costs, defaultV1Costs, costModelsToLanguageViewCbor } from "@harmoniclabs/cardano-costmodels-ts";
-import { NetworkT, ProtocolParamters, isPartialProtocolParameters, Tx, Value, ValueUnits, TxOut, TxRedeemerTag, txRdmrTagToString, ScriptType, UTxO, VKeyWitness, Script, BootstrapWitness, TxRedeemer, Hash32, TxIn, Hash28, AuxiliaryData, TxWitnessSet, getNSignersNeeded, txRedeemerTagToString, ScriptDataHash, Address, AddressStr, TxBody } from "@harmoniclabs/cardano-ledger-ts";
+import { isCostModelsV2, isCostModelsV1, defaultV2Costs, defaultV1Costs, costModelsToLanguageViewCbor, isCostModelsV3, defaultV3Costs } from "@harmoniclabs/cardano-costmodels-ts";
+import { NetworkT, ProtocolParameters, isPartialProtocolParameters, Tx, Value, ValueUnits, TxOut, TxRedeemerTag, txRdmrTagToString, ScriptType, UTxO, VKeyWitness, Script, BootstrapWitness, TxRedeemer, Hash32, TxIn, Hash28, AuxiliaryData, TxWitnessSet, getNSignersNeeded, txRedeemerTagToString, ScriptDataHash, Address, AddressStr, TxBody, CredentialType, canBeHash32 } from "@harmoniclabs/cardano-ledger-ts";
 import { CborString, CborPositiveRational, Cbor, CborArray, CanBeCborString } from "@harmoniclabs/cbor";
 import { byte, blake2b_256 } from "@harmoniclabs/crypto";
 import { Data, dataToCborObj, DataConstr, dataToCbor } from "@harmoniclabs/plutus-data";
-import { machineVersionV2, machineVersionV1, Machine, ExBudget } from "@harmoniclabs/plutus-machine";
+import { Machine, ExBudget } from "@harmoniclabs/plutus-machine";
 import { UPLCTerm, UPLCDecoder, Application, UPLCConst, ErrorUPLC } from "@harmoniclabs/uplc";
 import { POSIXToSlot, getTxInfos, slotToPOSIX } from "../toOnChain";
-import { ITxBuildArgs, ITxBuildOptions, ITxBuildInput, ITxBuildSyncOptions, txBuildOutToTxOut, ChangeInfos } from "../txBuild";
+import { ITxBuildArgs, ITxBuildOptions, ITxBuildInput, ITxBuildSyncOptions, txBuildOutToTxOut, normalizeITxBuildArgs, NormalizedITxBuildInput } from "../txBuild";
 import { CanBeUInteger, forceBigUInt, canBeUInteger, unsafeForceUInt } from "../utils/ints";
 import { freezeAll, defineReadOnlyProperty, definePropertyIfNotPresent, hasOwn, isObject } from "@harmoniclabs/obj-utils";
 import { assert } from "../utils/assert";
@@ -17,6 +17,8 @@ import { TxBuilderRunner } from "./TxBuilderRunner/TxBuilderRunner";
 import { ITxRunnerProvider } from "./IProvider";
 import { CanBeData, canBeData, forceData } from "../utils/CanBeData";
 import { getSpendingPurposeData } from "../toOnChain/getSpendingPurposeData";
+import { TxBuilderProtocolParams, ValidatedTxBuilderProtocolParams, completeTxBuilderProtocolParams } from "./TxBuilderProtocolParams";
+import { ChangeInfos } from "../txBuild/ChangeInfos/ChangeInfos";
 
 type ScriptLike = {
     hash: string,
@@ -51,7 +53,7 @@ function getScriptLikeUplc( scriptLike: ScriptLike ): UPLCTerm
 
 export class TxBuilder
 {
-    readonly protocolParamters!: ProtocolParamters
+    readonly protocolParamters!: ValidatedTxBuilderProtocolParams
     readonly genesisInfos?: GenesisInfos
 
     setGenesisInfos!: ( geneisInfos: GenesisInfos ) => void;
@@ -62,7 +64,7 @@ export class TxBuilder
     }
     
     constructor(
-        protocolParamters: Readonly<ProtocolParamters>,
+        protocolParamters?: Readonly<TxBuilderProtocolParams>,
         genesisInfos?: GenesisInfos
     )
     {
@@ -91,58 +93,32 @@ export class TxBuilder
             }
         );
 
-        assert(
-            isPartialProtocolParameters( protocolParamters ),
-            "invlaid 'protocolParamters' argument while constructing a 'TxBuilder' instance"
-        );
+        const pp = completeTxBuilderProtocolParams( protocolParamters );
+        
         defineReadOnlyProperty(
             this,
             "protocolParamters",
             freezeAll( protocolParamters )
         );
 
-        const costmdls = protocolParamters.costModels;
-        const cekVersion =
-            isCostModelsV2( costmdls.PlutusScriptV2 ) ? machineVersionV2 :
-            isCostModelsV1( costmdls.PlutusScriptV1 ) ? machineVersionV1 : "none";
-        const costs = cekVersion === machineVersionV2 ?
-            costmdls.PlutusScriptV2 ?? defaultV2Costs :
-            costmdls.PlutusScriptV1 ?? defaultV1Costs;
+        const costmdls = pp.costModels;
+        const costs = isCostModelsV3( costmdls.PlutusScriptV3 ) ? costmdls.PlutusScriptV3 :
+            isCostModelsV2( costmdls.PlutusScriptV2 ) ? costmdls.PlutusScriptV2 :
+            isCostModelsV1( costmdls.PlutusScriptV1 ) ? costmdls.PlutusScriptV1 :
+            defaultV3Costs;
 
-        if( cekVersion !== "none" )
         definePropertyIfNotPresent(
             this,
             "cek",
             {
                 // define as getter so that it can be reused without messing around things
-                get: () => new Machine(
-                    cekVersion,
-                    costs
-                ),
+                get: () => new Machine({ ...costs }),
                 // set does nothing ( aka. readonly )
-                set: ( ..._whatever: any[] ) => {},
+                set: () => {},
                 enumerable: false,
                 configurable: false
             }
         );
-
-        ///////////////////////////////////////////////////////////////////////////////////////
-        // --------------------------------  private stuff  -------------------------------- //
-        // -------------------------------- AND things that -------------------------------- //
-        // -------------------------------- needs to access -------------------------------- //
-        // --------------------------------  private stuff  -------------------------------- //
-        ///////////////////////////////////////////////////////////////////////////////////////
-
-        defineReadOnlyProperty(
-            this, "build",
-            async (
-                buildArgs: ITxBuildArgs,
-                buildOpts: ITxBuildOptions = {}
-            ): Promise<Tx> => {
-
-                return this.buildSync( buildArgs, buildOpts )
-            }
-        )
     }
 
     keepRelevant(
@@ -169,8 +145,11 @@ export class TxBuilder
 
     getMinimumOutputLovelaces( tx_out: TxOut | CanBeCborString ): bigint
     {
+        let size = BigInt( 0 );
         if( tx_out instanceof TxOut ) tx_out = tx_out.toCbor().toBuffer();
-        if(!(tx_out instanceof Uint8Array))
+        
+        if( typeof tx_out === "string" ) size = BigInt( Math.ceil( tx_out.length / 2 ) );
+        else if(!(tx_out instanceof Uint8Array))
         {
             if(
                 isObject( tx_out ) &&
@@ -181,7 +160,9 @@ export class TxBuilder
 
             if(!(tx_out instanceof Uint8Array)) tx_out = fromHex( tx_out.toString() );
         }
-        const size = BigInt( tx_out.length );
+
+        if( tx_out instanceof Uint8Array ) size = BigInt( tx_out.length );
+        
         return BigInt( this.protocolParamters.utxoCostPerByte ) * size;
     }
 
@@ -231,7 +212,13 @@ export class TxBuilder
      * 
      * In future this method might implement multi-threading using `Worker`s
      */
-    build!: (args: ITxBuildArgs, opts?: ITxBuildOptions) => Promise<Tx>
+    async build(
+        buildArgs: ITxBuildArgs,
+        buildOpts: ITxBuildOptions = {}
+    ): Promise<Tx>
+    {
+        return this.buildSync( buildArgs, buildOpts );
+    }
 
     /**
      * replaces the redeemers and clears vkeyWitnesses in the witness set
@@ -288,7 +275,7 @@ export class TxBuilder
         }: ITxBuildSyncOptions = {}
     ): Tx
     {
-        const _initBuild = initTxBuild.bind( this )( buildArgs );
+        const _initBuild = this.initTxBuild( buildArgs );
 
         const {
             // tx,
@@ -323,13 +310,7 @@ export class TxBuilder
         )
 
         const executionUnitPrices = this.protocolParamters.executionUnitPrices;
-        const [ memRational, cpuRational ] = Array.isArray( executionUnitPrices ) ?
-            executionUnitPrices :
-            // fixed in 0.1.9 ( memory in first place )
-            [
-                CborPositiveRational.fromNumber( executionUnitPrices.priceMemory ),
-                CborPositiveRational.fromNumber( executionUnitPrices.priceSteps  ),
-            ];
+        const [ memRational, cpuRational ] = executionUnitPrices;
 
         const spendScriptsToExec =      scriptsToExec.filter( elem => elem.rdmrTag === TxRedeemerTag.Spend );
         const mintScriptsToExec =       scriptsToExec.filter( elem => elem.rdmrTag === TxRedeemerTag.Mint );
@@ -492,13 +473,23 @@ export class TxBuilder
                         )
                     ),
                     datum: change.datum ? (
-                        change.datum instanceof Hash32 ?
-                        change.datum :
+                        canBeHash32( change.datum ) ?
+                        new Hash32( change.datum ) :
                         forceData( change.datum )
                     ): undefined,
                     refScript: change.refScript
                 })
             );
+            console.log(
+                txOuts[ txOuts.length - 1 ].value.toJson(),
+                totInputValue.toJson(),
+                requiredOutputValue.toJson(),
+                fee,
+                minFee,
+                totExBudget.toJson(),
+                memRational.toNumber(),
+                cpuRational.toNumber()
+            )
 
             tx = new Tx({
                 ...tx,
@@ -542,6 +533,660 @@ export class TxBuilder
             );
         }
     }
+
+    /**
+     * extracts the important data from the input
+     * and returns it in an easier way to opearte with
+     * 
+     * if the transaction is simple enough (aka. it doesn't include plutus scripts)
+     * this is all that either `build` or `buildSync` needs to do
+    **/
+    protected initTxBuild(
+        buildArgs: ITxBuildArgs
+    ) : {
+        tx: Tx,
+        scriptsToExec: ScriptToExecEntry[],
+        minFee: bigint,
+        datumsScriptData: number[],
+        languageViews: Uint8Array,
+        totInputValue: Value,
+        requiredOutputValue: Value,
+        outs: TxOut[],
+        change: ChangeInfos
+    }
+    {
+        const {
+            outputs,
+            requiredSigners,
+            collaterals,
+            collateralReturn,
+            mints,
+            invalidAfter,
+            certificates,
+            withdrawals,
+            metadata,
+            ...args
+        } = normalizeITxBuildArgs( buildArgs );
+
+        // mutable args
+        let {
+            inputs,
+            changeAddress,
+            change,
+            invalidBefore,
+            readonlyRefInputs
+        } = args;
+
+        if( change ) changeAddress = change.address;
+
+        if( !changeAddress )
+        {
+            throw new Error("missing changAddress and change entry while constructing a transaciton; unable to balance inputs and outpus");
+        }
+
+        if( !change ) change = { address: changeAddress };
+
+        const network = changeAddress.network;
+        const undef: undefined = void 0;
+
+        // filter inputs so that are unique
+        inputs = inputs.reduce((accum, input) => {
+            const samePresent = accum.some(({ utxo: accumUtxo }) => eqUTxOByRef( accumUtxo, input.utxo ) );
+            if( !samePresent ) accum.push( input )
+            return accum;
+        }, [] as NormalizedITxBuildInput[]);
+
+        // filter refIns so that are unique
+        readonlyRefInputs = readonlyRefInputs?.reduce(( accum, utxo ) => {
+            const samePresent = accum.some(( accumUtxo ) => eqUTxOByRef( accumUtxo, utxo ) );
+            if( !samePresent ) accum.push( utxo )
+            return accum;
+        }, [] as UTxO[])
+
+        let totInputValue = Value.zero;
+        const refIns: UTxO[] = readonlyRefInputs ?? [];
+
+        const outs = outputs ?? [];
+        const requiredOutputValue = outs.reduce((acc, out) => Value.add( acc, out.value ), Value.zero );
+
+        const vkeyWitnesses: VKeyWitness[] = [];
+        const nativeScriptsWitnesses: Script<ScriptType.NativeScript>[] = [];
+        const bootstrapWitnesses: BootstrapWitness[] = [];
+        const plutusV1ScriptsWitnesses: Script<ScriptType.PlutusV1>[] = [];
+        const datums: Data[] = []
+        const plutusV2ScriptsWitnesses: Script<ScriptType.PlutusV2>[] = [];
+        
+        const dummyExecBudget = ExBudget.maxCborSize;
+
+        const spendRedeemers: TxRedeemer[] = [];
+        const mintRedeemers: TxRedeemer[] = [];
+        const certRedeemers: TxRedeemer[] = [];
+        const withdrawRedeemers: TxRedeemer[] = [];
+
+        const scriptsToExec: ScriptToExecEntry[] = [];
+        
+        /**
+         * needed in `getScriptDataHash` to understand whoich cost model to transform in language view
+         */
+        let _hasV1Scripts = false;
+        /**
+         * needed in `getScriptDataHash` to understand whoich cost model to transform in language view
+         */
+        let _hasV2Scripts = false;
+
+        function pushScriptToExec( idx: number, tag: TxRedeemerTag, script: Script, datum?: Data )
+        {
+            if( script.type !== ScriptType.NativeScript )
+            {
+
+                // keep track of exsisting csript versions
+                if( !_hasV1Scripts && script.type === "PlutusScriptV1" )
+                {
+                    _hasV1Scripts = true;
+                }
+                if( !_hasV2Scripts && script.type === "PlutusScriptV2" )
+                {
+                    _hasV2Scripts = true;
+                }
+
+                scriptsToExec.push({
+                    index: idx,
+                    rdmrTag: tag,
+                    script: {
+                        type: script.type as any,
+                        bytes: script.bytes.slice(),
+                        hash: script.hash.toString()
+                    },
+                    datum
+                })
+            }
+        }
+        function pushWitScript( script : Script ): void
+        {
+            const t = script.type;
+            
+            if( t === "NativeScript"  )         pushUniqueScript( nativeScriptsWitnesses  , script as any );
+            else if( t === "PlutusScriptV1" )   pushUniqueScript( plutusV1ScriptsWitnesses, script as any );
+            else if( t === "PlutusScriptV2" )   pushUniqueScript( plutusV2ScriptsWitnesses, script as any );
+        }
+
+        /**
+         * @returns `Script` to execute
+         */
+        function checkScriptAndPushIfInline( script: { inline: Script } | { ref: UTxO } ): Script
+        {
+            if( hasOwn( script, "inline" ) )
+            {
+                if( hasOwn( script, "ref" ) )
+                throw new Error(
+                    "multiple scripts specified"
+                );
+
+                pushWitScript( script.inline );
+
+                return script.inline;
+            }
+            if( hasOwn( script, "ref" ) )
+            {
+                if( hasOwn( script, "inline" ) )
+                throw new Error(
+                    "multiple scripts specified"
+                );
+
+                const refScript = (script.ref as UTxO).resolved.refScript;
+
+                if( refScript === (void 0) )
+                throw new Error(
+                    "script was specified to be a reference script " +
+                    "but the provided utxo is missing any attached script"
+                );
+
+                const sameRefPresent = refIns.find( u => eqUTxOByRef( u, script.ref ));
+                if( sameRefPresent === undef )
+                {
+                    refIns.push( script.ref );
+                } 
+                return refScript;
+            }
+
+            throw "unexpected execution flow 'checkScriptAndPushIfInline' in TxBuilder"
+        }
+
+        /**
+         * 
+         * @param datum 
+         * @param inlineDatum 
+         * @returns the `Data` of the datum
+         */
+        function pushWitDatum(
+            datum: CanBeData | "inline",
+            inlineDatum: CanBeData | Hash32 | undefined
+        ): Data
+        {
+            if( datum === "inline" )
+            {
+                if( !canBeData( inlineDatum ) )
+                throw new Error(
+                    "datum was specified to be inline; but inline datum is missing"
+                );
+
+                // no need to push to witnesses
+
+                return forceData( inlineDatum );
+            }
+            else
+            {
+                const dat = forceData( datum );
+
+                // add datum to witnesses
+                // the node finds it trough the datum hash (on the utxo)
+                datums.push( dat );
+
+                return dat;
+            }
+        }
+
+        let isScriptValid: boolean = true;
+
+        // `sort` mutates the array; so we `slice` (clone) first
+        const sortedIns = inputs.slice().sort((a,b) => {
+            const ord = lexCompare( a.utxo.utxoRef.id.toBuffer(), b.utxo.utxoRef.id.toBuffer() );
+            // if equal tx id order based on tx output index
+            if( ord === 0 ) return a.utxo.utxoRef.index - b.utxo.utxoRef.index;
+            // else order by tx id
+            return ord;
+        });
+
+        const _inputs = inputs.map( (input) =>
+        {
+            const {
+                utxo,
+                referenceScriptV2,
+                inputScript
+            } = input;
+
+            const addr = utxo.resolved.address;
+
+            totInputValue =  Value.add( totInputValue, utxo.resolved.value );
+
+            if(
+                addr.paymentCreds.type === CredentialType.Script &&
+                referenceScriptV2 === undef &&
+                inputScript === undef
+            )
+            throw new Error(
+                "spending script utxo \"" + utxo.utxoRef.toString() + "\" without script source"
+            );
+
+            if( referenceScriptV2 !== undef )
+            {
+                if( inputScript !== undef )
+                throw new Error(
+                    "invalid input; multiple scripts specified"
+                );
+
+                const {
+                    datum,
+                    redeemer,
+                    refUtxo
+                } = referenceScriptV2;
+
+                const refScript = refUtxo.resolved.refScript;
+
+                if( refScript === undefined )
+                throw new Error(
+                    "reference utxo specified (" + refUtxo.toString() + ") is missing an attached reference Script"
+                )
+
+                const sameRefPresent = refIns.find( u => eqUTxOByRef( u, refUtxo ) )
+                if( sameRefPresent === undef )
+                {
+                    refIns.push( refUtxo );
+                }
+
+                const dat = pushWitDatum( datum, utxo.resolved.datum );
+
+                const i = sortedIns.indexOf( input );
+                if( i < 0 ) throw new Error("input missing in sorted");
+
+                spendRedeemers.push(new TxRedeemer({
+                    data: forceData( redeemer ),
+                    index: i,
+                    execUnits: dummyExecBudget.clone(),
+                    tag: TxRedeemerTag.Spend
+                }));
+
+                pushScriptToExec( i, TxRedeemerTag.Spend, refScript, dat );
+            }
+            if( inputScript !== undefined )
+            {
+                if( referenceScriptV2 !== undefined )
+                throw new Error(
+                    "invalid input; multiple scripts specified"
+                );
+
+                const {
+                    datum,
+                    redeemer,
+                    script
+                } = inputScript;
+
+                pushWitScript( script );
+
+                const dat = pushWitDatum( datum, utxo.resolved.datum ); 
+
+                const i = sortedIns.indexOf( input );
+                if( i < 0 ) throw new Error("input missing in sorted");
+
+                spendRedeemers.push(new TxRedeemer({
+                    data: forceData( redeemer ),
+                    index: i,
+                    execUnits: dummyExecBudget.clone(),
+                    tag: TxRedeemerTag.Spend
+                }));
+                
+                pushScriptToExec( i, TxRedeemerTag.Spend, script, dat );
+            }
+
+            return new TxIn( utxo )
+        }) as [TxIn, ...TxIn[]];
+        
+        // good luck spending more than 4294.967295 ADA in fees
+        // also 16.777215 ADA (3 bytes) is a lot; but CBOR only uses 2 or 4 bytes integers
+        // and 2 are ~0.06 ADA (too low) so go for 4;
+        const dummyFee = BigInt( "0xffffffff" );
+
+        const dummyOuts = outs.map( txO => txO.clone() )
+
+        // add dummy change address output
+        dummyOuts.push(
+            new TxOut({
+                address: change.address,
+                value: Value.sub(
+                    totInputValue,
+                    Value.add(
+                        requiredOutputValue,
+                        Value.lovelaces(
+                            forceBigUInt(
+                                this.protocolParamters.txFeePerByte 
+                            )
+                        )
+                    )
+                ),
+                datum: change.datum ? (
+                    change.datum instanceof Hash32 ?
+                    change.datum :
+                    forceData( change.datum )
+                ): undef,
+                refScript: change.refScript
+            })
+        );
+
+        // index to be modified
+        const dummyMintRedeemers: [ Hash32, Script, TxRedeemer ][] = [];
+
+        const _mint: Value | undefined = mints?.reduce( (accum, {
+                script,
+                value
+            }, i ) => {
+
+                const redeemer = script.redeemer;
+                const policyId = value.policy;
+
+                const toExec = checkScriptAndPushIfInline( script );
+
+                dummyMintRedeemers.push([
+                    policyId,
+                    toExec,
+                    new TxRedeemer({
+                        data: forceData( redeemer ),
+                        index: i, // to be modified as `indexOfPolicy( policyId )`
+                        execUnits: dummyExecBudget.clone(),
+                        tag: TxRedeemerTag.Mint
+                    })
+                ]);
+
+                return Value.add( accum, new Value([ value ]) );   
+            },
+            Value.zero
+        );
+
+        totInputValue = _mint instanceof Value ? Value.add( totInputValue, _mint ) : totInputValue; 
+
+        function indexOfPolicy( policy: Hash32 ): number
+        {
+            const policyStr = policy.toString();
+            return _mint?.map.findIndex( entry => entry.policy.toString() === policyStr ) ?? -1;
+        }
+
+        dummyMintRedeemers.forEach( ([ policy, toExec, dummyRdmr ]) => {
+
+            const i = indexOfPolicy( policy );
+
+            mintRedeemers.push(new TxRedeemer({
+                data: dummyRdmr.data,
+                index: i - 1, // "- 1" because final value will exclude lovelaces (can't mint or burn ADA)
+                execUnits: dummyRdmr.execUnits,
+                tag: TxRedeemerTag.Mint
+            }));
+
+            pushScriptToExec( i, TxRedeemerTag.Mint, toExec );
+
+        })
+
+        const _certs = certificates?.map( ({
+            cert,
+            script
+        }, i) => {
+            if( script !== undef )
+            {
+                certRedeemers.push(new TxRedeemer({
+                    data: forceData( script.redeemer ),
+                    index: i,
+                    execUnits: dummyExecBudget.clone(),
+                    tag: TxRedeemerTag.Cert
+                }));
+
+                const toExec = checkScriptAndPushIfInline( script );
+
+                pushScriptToExec( i, TxRedeemerTag.Cert, toExec );
+
+            }
+            return cert;
+        })
+
+        const _wits = withdrawals
+        ?.sort( ({ withdrawal: fst }, { withdrawal: snd }) =>
+            lexCompare(
+                fst.rewardAccount instanceof Hash28 ?
+                    fst.rewardAccount.toBuffer() :
+                    fst.rewardAccount.credentials.toBuffer(),
+                snd.rewardAccount instanceof Hash28 ?
+                    snd.rewardAccount.toBuffer() :
+                    snd.rewardAccount.credentials.toBuffer()
+            )
+        )
+        .map( ({
+            withdrawal,
+            script
+        },i) => {
+
+            if( script !== undef )
+            {
+                withdrawRedeemers.push(new TxRedeemer({
+                    data: forceData( script.redeemer ),
+                    index: i,
+                    execUnits: dummyExecBudget.clone(),
+                    tag: TxRedeemerTag.Withdraw
+                }));
+
+                const toExec = checkScriptAndPushIfInline( script );
+
+                pushScriptToExec( i, TxRedeemerTag.Withdraw, toExec );
+            }
+
+            return withdrawal; 
+        })
+
+        const auxData = metadata !== undefined? new AuxiliaryData({ metadata }) : undefined;
+
+        const redeemers =
+            spendRedeemers
+            .concat( mintRedeemers )
+            .concat( withdrawRedeemers )
+            .concat( certRedeemers );
+        
+        const dummyTxWitnesses = new TxWitnessSet({
+            vkeyWitnesses,
+            bootstrapWitnesses,
+            datums,
+            redeemers,
+            nativeScripts: nativeScriptsWitnesses,
+            plutusV1Scripts: plutusV1ScriptsWitnesses,
+            plutusV2Scripts: plutusV2ScriptsWitnesses
+        });
+
+        const datumsScriptData =
+            datums.length > 0 ?
+                Array.from(
+                    Cbor.encode(
+
+                        new CborArray(
+                            datums.map( dataToCborObj )
+                        )
+                        
+                    ).toBuffer()
+                ) 
+            : [];
+
+        const languageViews = costModelsToLanguageViewCbor(
+            this.protocolParamters.costModels,
+            {
+                mustHaveV1: _hasV1Scripts,
+                mustHaveV2: _hasV2Scripts
+            }
+        ).toBuffer();
+
+        invalidBefore = invalidBefore === undef ? undef : forceBigUInt( invalidBefore );
+
+        // if( invalidAfter !== undef )
+        // {
+        //     if( invalidBefore === undef ) invalidBefore = 0;
+        // }
+
+        if(
+            canBeUInteger( invalidBefore ) &&
+            canBeUInteger( invalidAfter )
+        )
+        {
+            if( invalidBefore >= invalidAfter  )
+            throw new Error(
+                "invalid validity interval; invalidAfter: "
+                + invalidAfter.toString() +
+                "; was smaller (previous point in time) than invalidBefore:"
+                + invalidBefore.toString()
+            );
+        }
+
+        // assert collateral is present if needed
+        if( scriptsToExec.filter( s => s.script.type !== "NativeScript" ).length > 0 )
+        {
+            if(
+                !Array.isArray( collaterals ) ||
+                collaterals.length <= 0
+            )
+            throw new Error("tx includes plutus scripts to execute but no collateral input was provided");
+
+            const collateralValue = collaterals.reduce<Value>(
+                (accum, collateral) => Value.add( accum, collateral.resolved.value ),
+                Value.zero
+            );
+
+            if( !Value.isAdaOnly( collateralValue ) )
+            {
+                if( !collateralReturn )
+                throw new Error(
+                    `total collateral input value was including non-ADA value; no collateral return was specified\n` +
+                    `total collateral input value was: ${JSON.stringify( collateralValue.toJson(), undef, 2 )}`
+                );
+
+                const realCollValue = Value.sub(
+                    collateralValue,
+                    collateralReturn.value
+                );
+
+                if( !Value.isAdaOnly( realCollValue ) )
+                throw new Error(
+                    `total collateral value was including non-ADA value;\n` +
+                    `total collateral value was: ${JSON.stringify( realCollValue.toJson(), undef, 2 )}`
+                );
+            }
+        }
+
+        const dummyTx = new Tx({
+            body: new TxBody({
+                inputs: _inputs,
+                outputs: dummyOuts,
+                fee: dummyFee,
+                mint: _mint,
+                certs: _certs,
+                withdrawals: _wits,
+                refInputs: refIns.length === 0 ? undef : refIns.map( refIn => refIn instanceof TxIn ? refIn : new TxIn( refIn ) ),
+                // protocolUpdate: protocolUpdateProposal,
+                requiredSigners,
+                collateralInputs: collaterals,
+                collateralReturn:
+                    collateralReturn === undef ? 
+                    undef : 
+                    txBuildOutToTxOut( collateralReturn ),
+                totCollateral: undef,
+                validityIntervalStart:
+                    invalidBefore === undef ?
+                    undef :
+                    forceBigUInt( invalidBefore ),
+                ttl:
+                    invalidAfter === undef ?
+                    undef :
+                    forceBigUInt( invalidAfter ),
+                auxDataHash: auxData?.hash,
+                scriptDataHash: getScriptDataHash( redeemers, datumsScriptData, languageViews ),
+                network
+            }),
+            witnesses: dummyTxWitnesses,
+            auxiliaryData: auxData,
+            isScriptValid
+        });
+
+        const minFeeMultiplier = forceBigUInt( this.protocolParamters.txFeePerByte );
+
+        const nVkeyWits = BigInt( getNSignersNeeded( dummyTx.body ) );
+
+        const minFee = this.calcLinearFee( dummyTx ) +
+            // consider also vkeys witnesses to be added
+            // each vkey witness has fixed size of 102 cbor bytes
+            // (1 bytes cbor array tag (length 2)) + (34 cbor bytes of length 32) + (67 cbor bytes of length 64)
+            // for a fixed length of 102
+            BigInt( 102 ) * nVkeyWits * minFeeMultiplier +
+            // we add some more bytes for the array tag
+            BigInt( nVkeyWits < 24 ? 1 : (nVkeyWits < 256 ? 2 : 3) ) * minFeeMultiplier;
+
+        const txOuts: TxOut[] = new Array( outs.length + 1 ); 
+        outs.forEach( (txO,i) => txOuts[i] = txO.clone() );
+        txOuts[txOuts.length - 1] = (
+            new TxOut({
+                address: change.address,
+                value: Value.sub(
+                    totInputValue,
+                    Value.add(
+                        requiredOutputValue,
+                        Value.lovelaces( minFee )
+                    )
+                ),
+                datum: change.datum ? (
+                    change.datum instanceof Hash32 ?
+                    change.datum :
+                    forceData( change.datum )
+                ): undef,
+                refScript: change.refScript
+            })
+        );
+
+        let tx = new Tx({
+            ...dummyTx,
+            body: new TxBody({
+                ...dummyTx.body,
+                outputs: txOuts,
+                fee: minFee
+            })
+        });
+
+        console.log(
+            JSON.stringify(
+                tx.body.outputs.map( o => o.toJson() ),
+                undef,
+                2
+            )
+        );
+        console.log(
+            JSON.stringify(
+                tx.body.toJson(),
+                undef,
+                2
+            )
+        );
+
+        return {
+            tx,
+            scriptsToExec,
+            minFee,
+            datumsScriptData,
+            languageViews,
+            totInputValue,
+            requiredOutputValue,
+            outs,
+            change
+        };
+    }
 }
 
 type ScriptToExecEntry = {
@@ -554,15 +1199,6 @@ type ScriptToExecEntry = {
     },
     datum?: Data
 };
-
-function resolveNetwork( addr: Address | AddressStr ): NetworkT
-{
-    if ( typeof addr === "string" ) {
-        return addr.startsWith( "addr_test" ) ? "testnet" : "mainnet";
-    }
-
-    return addr.network;
-}
 
 function eqUTxOByRef( a: UTxO, b: UTxO ): boolean
 {
@@ -579,656 +1215,6 @@ function pushUniqueScript<T extends ScriptType>( arr: Script<T>[], toPush: Scrip
             script.hash.toString() === toPush.hash.toString() 
         )
     ) arr.push( toPush );
-}
-
-/**
- * extracts the important data from the input
- * and returns it in an easier way to opearte with
- * 
- * it the transaction is simple enough (aka. it doesn't include plutus scripts)
- * this is all that either `build` or `buildSync` needs to do
-**/
-function initTxBuild(
-    this: TxBuilder,
-    {
-        inputs,
-        change,
-        changeAddress,
-        outputs,
-        readonlyRefInputs,
-        requiredSigners,
-        collaterals,
-        collateralReturn,
-        mints,
-        invalidBefore,
-        invalidAfter,
-        certificates,
-        withdrawals,
-        metadata,
-        protocolUpdateProposal
-    }: ITxBuildArgs
-) : {
-    tx: Tx,
-    scriptsToExec: ScriptToExecEntry[],
-    minFee: bigint,
-    datumsScriptData: number[],
-    languageViews: Uint8Array,
-    totInputValue: Value,
-    requiredOutputValue: Value,
-    outs: TxOut[],
-    change: ChangeInfos
-}
-{
-    if( change )
-    {
-        changeAddress = change.address;
-    }
-
-    if( !changeAddress )
-    {
-        throw new Error("missing changAddress and change entry while constructing a transaciton; unable to balance inputs and outpus");
-    }
-
-    if( !change )
-    {
-        change = { address: changeAddress };
-    };
-
-    const network = resolveNetwork( changeAddress );
-
-    const undef: undefined = void 0;
-
-    // filter inputs so that are unique
-    inputs = inputs.reduce((accum, input) => {
-        const samePresent = accum.find(({ utxo: accumUtxo }) => eqUTxOByRef( accumUtxo, input.utxo ) );
-        if( samePresent === undef )
-        {
-            accum.push( input )
-        }
-        return accum;
-    }, [] as ITxBuildInput[]);
-
-    // filter refIns so that are unique
-    readonlyRefInputs = readonlyRefInputs?.reduce(( accum, utxo ) => {
-        const samePresent = accum.find(( accumUtxo ) => eqUTxOByRef( accumUtxo, utxo ) );
-        if( samePresent === undef )
-        {
-            accum.push( utxo )
-        }
-        return accum;
-    }, [] as UTxO[])
-
-    let totInputValue = mints?.reduce( ( prev, curr ) => Value.add( prev, curr.value ), Value.zero ) ?? Value.zero;
-    const refIns: UTxO[] = readonlyRefInputs?.slice() ?? [];
-
-    const outs = outputs?.map( txBuildOutToTxOut ) ?? [];
-    const requiredOutputValue = outs.reduce( (acc, out) => Value.add( acc, out.value ), Value.zero );
-
-    const vkeyWitnesses: VKeyWitness[] = [];
-    const nativeScriptsWitnesses: Script<ScriptType.NativeScript>[] = [];
-    const bootstrapWitnesses: BootstrapWitness[] = [];
-    const plutusV1ScriptsWitnesses: Script<ScriptType.PlutusV1>[] = [];
-    const datums: Data[] = []
-    const plutusV2ScriptsWitnesses: Script<ScriptType.PlutusV2>[] = [];
-    
-    const dummyExecBudget = ExBudget.maxCborSize;
-
-    const spendRedeemers: TxRedeemer[] = [];
-    const mintRedeemers: TxRedeemer[] = [];
-    const certRedeemers: TxRedeemer[] = [];
-    const withdrawRedeemers: TxRedeemer[] = [];
-
-    const scriptsToExec: ScriptToExecEntry[] = [];
-    
-    /**
-     * needed in `getScriptDataHash` to understand whoich cost model to transform in language view
-     */
-    let _hasV1Scripts = false;
-    /**
-     * needed in `getScriptDataHash` to understand whoich cost model to transform in language view
-     */
-    let _hasV2Scripts = false;
-
-    function pushScriptToExec( idx: number, tag: TxRedeemerTag, script: Script, datum?: Data )
-    {
-        if( script.type !== ScriptType.NativeScript )
-        {
-
-            // keep track of exsisting csript versions
-            if( !_hasV1Scripts && script.type === "PlutusScriptV1" )
-            {
-                _hasV1Scripts = true;
-            }
-            if( !_hasV2Scripts && script.type === "PlutusScriptV2" )
-            {
-                _hasV2Scripts = true;
-            }
-
-            scriptsToExec.push({
-                index: idx,
-                rdmrTag: tag,
-                script: {
-                    type: script.type as any,
-                    bytes: script.bytes.slice(),
-                    hash: script.hash.toString()
-                },
-                datum
-            })
-        }
-    }
-    function pushWitScript( script : Script ): void
-    {
-        const t = script.type;
-        
-        if( t === "NativeScript"  )         pushUniqueScript( nativeScriptsWitnesses  , script as any );
-        else if( t === "PlutusScriptV1" )   pushUniqueScript( plutusV1ScriptsWitnesses, script as any );
-        else if( t === "PlutusScriptV2" )   pushUniqueScript( plutusV2ScriptsWitnesses, script as any );
-    }
-
-    /**
-     * @returns `Script` to execute
-     */
-    function checkScriptAndPushIfInline( script: { inline: Script } | { ref: UTxO } ): Script
-    {
-        if( hasOwn( script, "inline" ) )
-        {
-            if( hasOwn( script, "ref" ) )
-            throw new Error(
-                "multiple scripts specified"
-            );
-
-            pushWitScript( script.inline );
-
-            return script.inline;
-        }
-        if( hasOwn( script, "ref" ) )
-        {
-            if( hasOwn( script, "inline" ) )
-            throw new Error(
-                "multiple scripts specified"
-            );
-
-            const refScript = (script.ref as UTxO).resolved.refScript;
-
-            if( refScript === (void 0) )
-            throw new Error(
-                "script was specified to be a reference script " +
-                "but the provided utxo is missing any attached script"
-            );
-
-            const sameRefPresent = refIns.find( u => eqUTxOByRef( u, script.ref ));
-            if( sameRefPresent === undef )
-            {
-                refIns.push( script.ref );
-            } 
-            return refScript;
-        }
-
-        throw "unexpected execution flow 'checkScriptAndPushIfInline' in TxBuilder"
-    }
-
-    /**
-     * 
-     * @param datum 
-     * @param inlineDatum 
-     * @returns the `Data` of the datum
-     */
-    function pushWitDatum(
-        datum: CanBeData | "inline",
-        inlineDatum: CanBeData | Hash32 | undefined
-    ): Data
-    {
-        if( datum === "inline" )
-        {
-            if( !canBeData( inlineDatum ) )
-            throw new Error(
-                "datum was specified to be inline; but inline datum is missing"
-            );
-
-            // no need to push to witnesses
-
-            return forceData( inlineDatum );
-        }
-        else
-        {
-            const dat = forceData( datum );
-
-            // add datum to witnesses
-            // the node finds it trough the datum hash (on the utxo)
-            datums.push( dat );
-
-            return dat;
-        }
-    }
-
-    let isScriptValid: boolean = true;
-
-    // `sort` mutates the array; so we `slice` (clone) first
-    const sortedIns = inputs.slice().sort((a,b) => {
-        const ord = lexCompare( a.utxo.utxoRef.id.toBuffer(), b.utxo.utxoRef.id.toBuffer() );
-        // if equal tx id order based on tx output index
-        if( ord === 0 ) return a.utxo.utxoRef.index - b.utxo.utxoRef.index;
-        // else order by tx id
-        return ord;
-    });
-
-    const _inputs = inputs.map( (input) =>
-    {
-        const {
-            utxo,
-            referenceScriptV2,
-            inputScript
-        } = input;
-
-        const addr = utxo.resolved.address;
-
-        totInputValue =  Value.add( totInputValue, utxo.resolved.value );
-
-        if(
-            addr.paymentCreds.type === "script" &&
-            referenceScriptV2 === undef &&
-            inputScript === undef
-        )
-        throw new Error(
-            "spending script utxo \"" + utxo.utxoRef.toString() + "\" without script source"
-        );
-
-        if( referenceScriptV2 !== undef )
-        {
-            if( inputScript !== undef )
-            throw new Error(
-                "invalid input; multiple scripts specified"
-            );
-
-            const {
-                datum,
-                redeemer,
-                refUtxo
-            } = referenceScriptV2;
-
-            const refScript = refUtxo.resolved.refScript;
-
-            if( refScript === undefined )
-            throw new Error(
-                "reference utxo specified (" + refUtxo.toString() + ") is missing an attached reference Script"
-            )
-
-            const sameRefPresent = refIns.find( u => eqUTxOByRef( u, refUtxo ) )
-            if( sameRefPresent === undef )
-            {
-                refIns.push( refUtxo );
-            }
-
-            const dat = pushWitDatum( datum, utxo.resolved.datum );
-
-            const i = sortedIns.indexOf( input );
-            if( i < 0 ) throw new Error("input missing in sorted");
-
-            spendRedeemers.push(new TxRedeemer({
-                data: forceData( redeemer ),
-                index: i,
-                execUnits: dummyExecBudget.clone(),
-                tag: TxRedeemerTag.Spend
-            }));
-
-            pushScriptToExec( i, TxRedeemerTag.Spend, refScript, dat );
-        }
-        if( inputScript !== undefined )
-        {
-            if( referenceScriptV2 !== undefined )
-            throw new Error(
-                "invalid input; multiple scripts specified"
-            );
-
-            const {
-                datum,
-                redeemer,
-                script
-            } = inputScript;
-
-            pushWitScript( script );
-
-            const dat = pushWitDatum( datum, utxo.resolved.datum ); 
-
-            const i = sortedIns.indexOf( input );
-            if( i < 0 ) throw new Error("input missing in sorted");
-
-            spendRedeemers.push(new TxRedeemer({
-                data: forceData( redeemer ),
-                index: i,
-                execUnits: dummyExecBudget.clone(),
-                tag: TxRedeemerTag.Spend
-            }));
-            
-            pushScriptToExec( i, TxRedeemerTag.Spend, script, dat );
-        }
-
-        return new TxIn( utxo )
-    }) as [TxIn, ...TxIn[]];
-    
-    // good luck spending more than 4294.967295 ADA in fees
-    // also 16.777215 ADA (3 bytes) is a lot; but CBOR only uses 2 or 4 bytes integers
-    // and 2 are ~0.06 ADA (too low) so go for 4;
-    const dummyFee = BigInt( "0xffffffff" );
-
-    const dummyOuts = outs.map( txO => txO.clone() )
-
-    // add dummy change address output
-    dummyOuts.push(
-        new TxOut({
-            address: change.address,
-            value: Value.sub(
-                totInputValue,
-                Value.add(
-                    requiredOutputValue,
-                    Value.lovelaces(
-                        forceBigUInt(
-                            this.protocolParamters.txFeePerByte 
-                        )
-                    )
-                )
-            ),
-            datum: change.datum ? (
-                change.datum instanceof Hash32 ?
-                change.datum :
-                forceData( change.datum )
-            ): undef,
-            refScript: change.refScript
-        })
-    );
-
-    // index to be modified
-    const dummyMintRedeemers: [ Hash32, Script, TxRedeemer ][] = [];
-
-    const _mint: Value | undefined = mints?.reduce( (accum, {
-            script,
-            value
-        }, i ) => {
-
-            const redeemer = script.redeemer;
-            const policyId = script.policyId;
-
-            const toExec = checkScriptAndPushIfInline( script );
-
-            dummyMintRedeemers.push([
-                policyId,
-                toExec,
-                new TxRedeemer({
-                    data: forceData( redeemer ),
-                    index: i, // to be modified as `indexOfPolicy( policyId )`
-                    execUnits: dummyExecBudget.clone(),
-                    tag: TxRedeemerTag.Mint
-                })
-            ]);
-
-            if( !(value.lovelaces === BigInt(0)) )
-            {
-                throw new Error("mint value containing non-zero ADA; lovelaces can't be minted or burned")
-            }
-
-            return Value.add( accum, value )   
-        },
-        Value.zero
-    );
-
-    function indexOfPolicy( policy: Hash32 ): number
-    {
-        const policyStr = policy.toString();
-        return _mint?.map.findIndex( entry => entry.policy.toString() === policyStr ) ?? -1;
-    }
-
-    dummyMintRedeemers.forEach( ([ policy, toExec, dummyRdmr ]) => {
-
-        const i = indexOfPolicy( policy );
-
-        mintRedeemers.push(new TxRedeemer({
-            data: dummyRdmr.data,
-            index: i - 1, // "- 1" because final value will exclude lovelaces (can't mint or burn ADA)
-            execUnits: dummyRdmr.execUnits,
-            tag: TxRedeemerTag.Mint
-        }));
-
-        pushScriptToExec( i, TxRedeemerTag.Mint, toExec );
-
-    })
-
-    const _certs = certificates?.map( ({
-        cert,
-        script
-    }, i) => {
-        if( script !== undef )
-        {
-            certRedeemers.push(new TxRedeemer({
-                data: forceData( script.redeemer ),
-                index: i,
-                execUnits: dummyExecBudget.clone(),
-                tag: TxRedeemerTag.Cert
-            }));
-
-            const toExec = checkScriptAndPushIfInline( script );
-
-            pushScriptToExec( i, TxRedeemerTag.Cert, toExec );
-
-        }
-        return cert;
-    })
-
-    const _wits = withdrawals
-    ?.sort( ({ withdrawal: fst }, { withdrawal: snd }) =>
-        lexCompare(
-            fst.rewardAccount instanceof Hash28 ?
-                fst.rewardAccount.toBuffer() :
-                fst.rewardAccount.credentials.toBuffer(),
-            snd.rewardAccount instanceof Hash28 ?
-                snd.rewardAccount.toBuffer() :
-                snd.rewardAccount.credentials.toBuffer()
-        )
-    )
-    .map( ({
-        withdrawal,
-        script
-    },i) => {
-
-        if( script !== undef )
-        {
-            withdrawRedeemers.push(new TxRedeemer({
-                data: forceData( script.redeemer ),
-                index: i,
-                execUnits: dummyExecBudget.clone(),
-                tag: TxRedeemerTag.Withdraw
-            }));
-
-            const toExec = checkScriptAndPushIfInline( script );
-
-            pushScriptToExec( i, TxRedeemerTag.Withdraw, toExec );
-        }
-
-        return withdrawal; 
-    })
-
-    const auxData = metadata !== undefined? new AuxiliaryData({ metadata }) : undefined;
-
-    const redeemers =
-        spendRedeemers
-        .concat( mintRedeemers )
-        .concat( withdrawRedeemers )
-        .concat( certRedeemers );
-    
-    const dummyTxWitnesses = new TxWitnessSet({
-        vkeyWitnesses,
-        bootstrapWitnesses,
-        datums,
-        redeemers,
-        nativeScripts: nativeScriptsWitnesses,
-        plutusV1Scripts: plutusV1ScriptsWitnesses,
-        plutusV2Scripts: plutusV2ScriptsWitnesses
-    });
-
-    const datumsScriptData =
-        datums.length > 0 ?
-            Array.from(
-                Cbor.encode(
-
-                    new CborArray(
-                        datums.map( dataToCborObj )
-                    )
-                    
-                ).toBuffer()
-            ) 
-        : [];
-
-    const languageViews = costModelsToLanguageViewCbor(
-        this.protocolParamters.costModels,
-        {
-            mustHaveV1: _hasV1Scripts,
-            mustHaveV2: _hasV2Scripts
-        }
-    ).toBuffer();
-
-    invalidBefore = invalidBefore === undef ? undef : forceBigUInt( invalidBefore );
-
-    // if( invalidAfter !== undef )
-    // {
-    //     if( invalidBefore === undef ) invalidBefore = 0;
-    // }
-
-    if(
-        canBeUInteger( invalidBefore ) &&
-        canBeUInteger( invalidAfter )
-    )
-    {
-        if( invalidBefore >= invalidAfter  )
-        throw new Error(
-            "invalid validity interval; invalidAfter: "
-            + invalidAfter.toString() +
-            "; was smaller (previous point in time) than invalidBefore:"
-            + invalidBefore.toString()
-        );
-    }
-
-    // assert collateral is present if needed
-    if( scriptsToExec.filter( s => s.script.type !== "NativeScript" ).length > 0 )
-    {
-        if(
-            !Array.isArray( collaterals ) ||
-            collaterals.length <= 0
-        )
-        throw new Error("tx includes plutus scripts to execute but no collateral input was provided");
-
-        const collateralValue = collaterals.reduce<Value>(
-            (accum, collateral) => Value.add( accum, collateral.resolved.value ),
-            Value.zero
-        );
-
-        if( !Value.isAdaOnly( collateralValue ) )
-        {
-            if( !collateralReturn )
-            throw new Error(
-                `total collateral input value was including non-ADA value; no collateral return was specified\n` +
-                `total collateral input value was: ${JSON.stringify( collateralValue.toJson(), undef, 2 )}`
-            );
-
-            const realCollValue = Value.sub(
-                collateralValue,
-                collateralReturn.value
-            );
-
-            if( !Value.isAdaOnly( realCollValue ) )
-            throw new Error(
-                `total collateral value was including non-ADA value;\n` +
-                `total collateral value was: ${JSON.stringify( realCollValue.toJson(), undef, 2 )}`
-            );
-        }
-    }
-
-    const dummyTx = new Tx({
-        body: new TxBody({
-            inputs: _inputs,
-            outputs: dummyOuts,
-            fee: dummyFee,
-            mint: _mint,
-            certs: _certs,
-            withdrawals: _wits,
-            refInputs: refIns.length === 0 ? undef : refIns.map( refIn => refIn instanceof TxIn ? refIn : new TxIn( refIn ) ),
-            protocolUpdate: protocolUpdateProposal,
-            requiredSigners,
-            collateralInputs: collaterals,
-            collateralReturn:
-                collateralReturn === undef ? 
-                undef : 
-                txBuildOutToTxOut( collateralReturn ),
-            totCollateral: undef,
-            validityIntervalStart:
-                invalidBefore === undef ?
-                undef :
-                forceBigUInt( invalidBefore ),
-            ttl:
-                invalidAfter === undef ?
-                undef :
-                forceBigUInt( invalidAfter ),
-            auxDataHash: auxData?.hash,
-            scriptDataHash: getScriptDataHash( redeemers, datumsScriptData, languageViews ),
-            network
-        }),
-        witnesses: dummyTxWitnesses,
-        auxiliaryData: auxData,
-        isScriptValid
-    });
-
-    const minFeeMultiplier = forceBigUInt( this.protocolParamters.txFeePerByte );
-
-    const nVkeyWits = BigInt( getNSignersNeeded( dummyTx.body ) );
-
-    const minFee = this.calcLinearFee( dummyTx ) +
-        // consider also vkeys witnesses to be added
-        // each vkey witness has fixed size of 102 cbor bytes
-        // (1 bytes cbor array tag (length 2)) + (34 cbor bytes of length 32) + (67 cbor bytes of length 64)
-        // for a fixed length of 102
-        BigInt( 102 ) * nVkeyWits * minFeeMultiplier +
-        // we add some more bytes for the array tag
-        BigInt( nVkeyWits < 24 ? 1 : (nVkeyWits < 256 ? 2 : 3) ) * minFeeMultiplier;
-
-    const txOuts: TxOut[] = new Array( outs.length + 1 ); 
-    outs.forEach( (txO,i) => txOuts[i] = txO.clone() );
-    txOuts[txOuts.length - 1] = (
-        new TxOut({
-            address: change.address,
-            value: Value.sub(
-                totInputValue,
-                Value.add(
-                    requiredOutputValue,
-                    Value.lovelaces( minFee )
-                )
-            ),
-            datum: change.datum ? (
-                change.datum instanceof Hash32 ?
-                change.datum :
-                forceData( change.datum )
-            ): undef,
-            refScript: change.refScript
-        })
-    );
-
-    let tx = new Tx({
-        ...dummyTx,
-        body: new TxBody({
-            ...dummyTx.body,
-            outputs: txOuts,
-            fee: minFee
-        })
-    });
-
-    return {
-        tx,
-        scriptsToExec,
-        minFee,
-        datumsScriptData,
-        languageViews,
-        totInputValue,
-        requiredOutputValue,
-        outs,
-        change
-    };
 }
 
 function getCtx(

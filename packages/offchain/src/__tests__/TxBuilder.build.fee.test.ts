@@ -1011,7 +1011,7 @@ describe("fee calculation", () => {
 
     describe("with script", () => {
 
-        test("tempura mint", () => {
+        test.only("tempura mint", () => {
 
             const txBuilder = new TxBuilder(
                 defaultProtocolParameters,

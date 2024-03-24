@@ -2,7 +2,7 @@ import { defineReadOnlyProperty, isObject } from "@harmoniclabs/obj-utils";
 import type { ITxRunnerProvider } from "../IProvider";
 import type { TxBuilder } from "../TxBuilder";
 import { ITxBuildArgs, ITxBuildOutput, cloneITxBuildArgs } from "../../txBuild";
-import { Address, AddressStr, AnyCertificate, Certificate, CertificateType, Hash28, Hash32, ITxOut, ITxOutRef, IUTxO, IValuePolicyEntry, PlutusScriptType, PoolKeyHash, PoolParams, PubKeyHash, Script, ScriptType, StakeAddress, StakeAddressBech32, StakeCredentials, StakeValidatorHash, Tx, TxIn, TxMetadata, TxMetadatum, TxOutRefStr, TxWithdrawalsEntry, UTxO, Value, forceTxOutRefStr, isITxOut, isIUTxO } from "@harmoniclabs/cardano-ledger-ts";
+import { Address, AddressStr, CertStakeDelegation, Certificate, Hash28, Hash32, ITxOut, ITxOutRef, IUTxO, IValuePolicyEntry, PlutusScriptType, PoolKeyHash, PoolParams, PubKeyHash, Script, ScriptType, StakeAddress, StakeAddressBech32, Credential, StakeValidatorHash, Tx, TxIn, TxMetadata, TxMetadatum, TxOutRefStr, UTxO, Value, forceTxOutRefStr, isITxOut, isIUTxO, CredentialType, CertStakeDeRegistration, CertStakeRegistration, CertPoolRegistration, IPoolParams, CanBeHash28, CertPoolRetirement, StakeCredentials, ITxWithdrawalsEntry } from "@harmoniclabs/cardano-ledger-ts";
 import { CanBeUInteger, canBeUInteger, forceBigUInt } from "../../utils/ints";
 import { CanResolveToUTxO, cloneCanResolveToUTxO, shouldResolveToUTxO } from "../CanResolveToUTxO/CanResolveToUTxO";
 import { jsonToMetadata } from "./jsonToMetadata";
@@ -389,7 +389,7 @@ export class TxBuilderRunner
         script_or_ref?: Script | CanResolveToUTxO
     ) => TxBuilderRunner
 
-    readonly registerPool!: ( params: PoolParams ) => TxBuilderRunner
+    readonly registerPool!: ( params: IPoolParams ) => TxBuilderRunner
     readonly retirePool!: ( poolId: Hash28, epoch: CanBeUInteger ) => TxBuilderRunner
 
     readonly registerStake!: (
@@ -655,7 +655,7 @@ export class TxBuilderRunner
         }
 
         function _addCertificate(
-            cert: AnyCertificate, 
+            cert: Certificate, 
             script?: SimpleScriptInfos
         ): void
         {
@@ -677,7 +677,7 @@ export class TxBuilderRunner
         }
 
         function _addWithdraw(
-            withdrawal: TxWithdrawalsEntry,
+            withdrawal: ITxWithdrawalsEntry,
             script?: SimpleScriptInfos
         ): void
         {
@@ -714,7 +714,7 @@ export class TxBuilderRunner
             return theScript as Script<PlutusScriptType>;
         }
 
-        function _tryGetRefStakeScript( stakeCreds: StakeCredentials ): UTxO | undefined
+        function _tryGetRefStakeScript( stakeCreds: Credential ): UTxO | undefined
         {
             const scriptHash = stakeCreds.hash;
 
@@ -723,7 +723,7 @@ export class TxBuilderRunner
             return _tryGetRefScript( scriptHash.toString() );
         }
 
-        function _tryGetStakeScript( stakeCreds: StakeCredentials ): Script<PlutusScriptType> | undefined
+        function _tryGetStakeScript( stakeCreds: Credential ): Script<PlutusScriptType> | undefined
         {
             const scriptHash = stakeCreds.hash;
 
@@ -733,13 +733,13 @@ export class TxBuilderRunner
         }
 
         function _ensureStakeScript(
-            stakeCreds: StakeCredentials,
+            stakeCreds: Credential,
             script_or_ref: CanResolveToUTxO | Script<PlutusScriptType> | undefined,
             redeemer: CanBeData | undefined,
             script: SimpleScriptInfos | undefined
         ): SimpleScriptInfos 
         {
-            if( stakeCreds.type === "script" )
+            if( stakeCreds.type === CredentialType.Script )
             {
                 if( redeemer === undefined )
                 {
@@ -792,7 +792,7 @@ export class TxBuilderRunner
             script_or_ref?: Script<PlutusScriptType> | CanResolveToUTxO
         ): TxBuilderRunner
         {
-            const stakeCreds: StakeCredentials = forceStakeCreds( delegator );
+            const stakeCreds: Credential = forceStakeCreds( delegator );
             const poolKeyHash: PoolKeyHash = forcePoolKeyHash( poolId );
 
             let script: undefined | SimpleScriptInfos = undefined;
@@ -805,7 +805,7 @@ export class TxBuilderRunner
                 script_or_ref = delegator
             }
 
-            if( stakeCreds.type === "script" )
+            if( stakeCreds.type === CredentialType.Script )
             {
                 if( redeemer === undefined )
                 {
@@ -841,11 +841,10 @@ export class TxBuilderRunner
                     );
 
                     _addCertificate(
-                        new Certificate(
-                            2 as CertificateType.StakeDelegation,
-                            stakeCreds,
+                        new CertStakeDelegation({
+                            stakeCredential: stakeCreds,
                             poolKeyHash
-                        ),
+                        }),
                         script
                     );
                 }
@@ -860,7 +859,7 @@ export class TxBuilderRunner
             script_or_ref?: Script<PlutusScriptType> | CanResolveToUTxO
         ): TxBuilderRunner
         {
-            const stakeCreds: StakeCredentials = forceStakeCreds( delegator );
+            const stakeCreds: Credential = forceStakeCreds( delegator );
 
             let script: undefined | SimpleScriptInfos = undefined;
 
@@ -872,7 +871,7 @@ export class TxBuilderRunner
                 script_or_ref = delegator
             }
 
-            if( stakeCreds.type === "script" )
+            if( stakeCreds.type === CredentialType.Script )
             {
                 if( redeemer === undefined )
                 {
@@ -907,10 +906,9 @@ export class TxBuilderRunner
                     );
 
                     _addCertificate(
-                        new Certificate(
-                            1 as CertificateType.StakeDeRegistration,
-                            stakeCreds
-                        ),
+                        new CertStakeDeRegistration({
+                            stakeCredential: stakeCreds,
+                        }),
                         script
                     );
                 }
@@ -925,7 +923,7 @@ export class TxBuilderRunner
             script_or_ref?: Script<PlutusScriptType> | CanResolveToUTxO
         ): TxBuilderRunner
         {
-            const stakeCreds: StakeCredentials = forceStakeCreds( delegator );
+            const stakeCreds: Credential = forceStakeCreds( delegator );
 
             let script: undefined | SimpleScriptInfos = undefined;
 
@@ -937,7 +935,7 @@ export class TxBuilderRunner
                 script_or_ref = delegator
             }
 
-            if( stakeCreds.type === "script" )
+            if( stakeCreds.type === CredentialType.Script )
             {
                 if( redeemer === undefined )
                 {
@@ -972,10 +970,9 @@ export class TxBuilderRunner
                     );
 
                     _addCertificate(
-                        new Certificate(
-                            0 as CertificateType.StakeRegistration,
-                            stakeCreds
-                        ),
+                        new CertStakeRegistration({
+                            stakeCredential: stakeCreds,
+                        }),
                         script
                     );
                 }
@@ -984,25 +981,23 @@ export class TxBuilderRunner
             return self;
         }
 
-        function _registerPool( poolParams: PoolParams ): TxBuilderRunner
+        function _registerPool( poolParams: IPoolParams | PoolParams ): TxBuilderRunner
         {
             _addCertificate(
-                new Certificate(
-                    3 as CertificateType.PoolRegistration,
-                    poolParams
-                )
+                new CertPoolRegistration({
+                    poolParams: new PoolParams( poolParams )
+                })
             );
             return self;
         }
 
-        function _retirePool( poolId: Hash28, epoch: CanBeUInteger ): TxBuilderRunner
+        function _retirePool( poolId: CanBeHash28, epoch: CanBeUInteger ): TxBuilderRunner
         {
             _addCertificate(
-                new Certificate(
-                    4 as CertificateType.PoolRetirement,
-                    new PoolKeyHash( poolId ),
-                    epoch
-                )
+                new CertPoolRetirement( {
+                    poolHash: new PoolKeyHash( poolId ),
+                    epoch 
+                })
             );
             return self;
         }
@@ -1014,7 +1009,7 @@ export class TxBuilderRunner
             script_or_ref?: Script<PlutusScriptType> | CanResolveToUTxO
         ): TxBuilderRunner
         {
-            const stakeCreds: StakeCredentials = forceStakeCreds( stakeAddress );
+            const stakeCreds: Credential = forceStakeCreds( stakeAddress );
 
             let script: undefined | SimpleScriptInfos = undefined;
 
@@ -1026,7 +1021,7 @@ export class TxBuilderRunner
                 script_or_ref = stakeAddress
             }
 
-            if( stakeCreds.type === "script" )
+            if( stakeCreds.type === CredentialType.Script )
             {
                 if( redeemer === undefined )
                 {
@@ -1085,7 +1080,7 @@ export class TxBuilderRunner
         ): void
         {
             const paymentCreds = utxo.resolved.address.paymentCreds;
-            if( paymentCreds.type === "script" )
+            if( paymentCreds.type === CredentialType.Script )
             {
                 if( !canBeData( redeemer ) ) throw new Error("script input " + utxo.utxoRef.toString() + " is missing a redeemer");
                 else redeemer = forceData( redeemer );
@@ -1177,7 +1172,7 @@ export class TxBuilderRunner
 
             utxo = utxo instanceof UTxO ? utxo : new UTxO( utxo );
             const paymentCreds = (utxo as UTxO).resolved.address.paymentCreds;
-            if( paymentCreds.type === "script" )
+            if( paymentCreds.type === CredentialType.Script )
             {
                 const hashStr = paymentCreds.hash.toString();
                 
@@ -1330,19 +1325,15 @@ export class TxBuilderRunner
             }
 
             buildArgs.mints.push({
-                value: new Value(
-                    assets.assets.map(({ name, quantity }) => 
-                        Value.singleAssetEntry( assets.policy, name, quantity )
-                    )
-                ),
+                value: assets,
                 script: isIUTxO( script_or_ref ) ?
                 {
                     ref: new UTxO( script_or_ref ),
-                    policyId: assets.policy,
+                    // policyId: assets.policy,
                     redeemer
                 } : {
                     inline: script_or_ref as Script,
-                    policyId: assets.policy,
+                    // policyId: assets.policy,
                     redeemer
                 }
             });
@@ -1547,9 +1538,21 @@ export class TxBuilderRunner
                         throw new Error("can't deduce change Address; missing inputs")    
                     }
     
-                    buildArgs.changeAddress = buildArgs.inputs
-                    ?.find( _in => _in.utxo.resolved.address.paymentCreds.type === "pubKey" )
-                    ?.utxo.resolved.address!;
+                    const _changeInput = buildArgs.inputs
+                    ?.find( _in => {
+                        const addr = ( isIUTxO( _in ) ? _in : _in.utxo ).resolved.address;
+                        return (
+                            addr instanceof Address ?
+                            addr : Address.fromString( addr )
+                        ).paymentCreds.type === CredentialType.KeyHash
+                    })
+
+                    buildArgs.changeAddress =
+                    (
+                        isIUTxO( _changeInput ) ?
+                        _changeInput :
+                        _changeInput?.utxo
+                    )?.resolved.address;
     
                     if( !buildArgs.changeAddress )
                     {
@@ -1558,7 +1561,7 @@ export class TxBuilderRunner
                         if( Array.isArray( buildArgs.outputs ) )
                         {
                             buildArgs.changeAddress = buildArgs.outputs
-                            ?.find( out => out.address.paymentCreds.type === "pubKey" )
+                            ?.find( out => forceAddr(out.address).paymentCreds.type === CredentialType.KeyHash )
                             ?.address!
                         }
                         else throw new Error("can't deduce change Address; only script inputs");
@@ -1744,10 +1747,17 @@ export class TxBuilderRunner
 
 // ------------------------------------ utils ------------------------------------- //
 
-export type CanBeStakeCreds = StakeAddress | StakeAddressBech32 | StakeCredentials | Script<PlutusScriptType>
+export type CanBeStakeCreds
+    = StakeAddress
+    | StakeAddressBech32
+    | StakeCredentials
+    | Script<PlutusScriptType>
+    | Credential;
 
-function forceStakeCreds( creds: CanBeStakeCreds ): StakeCredentials
+function forceStakeCreds( creds: CanBeStakeCreds ): Credential
 {
+    if( creds instanceof Credential ) return creds;
+
     if( typeof creds === "string" )
     {
         if( !creds.startsWith("stake") )
@@ -1756,16 +1766,14 @@ function forceStakeCreds( creds: CanBeStakeCreds ): StakeCredentials
         }
         creds = StakeAddress.fromString( creds );
     }
-
     if( creds instanceof StakeAddress )
     {
-        return creds.toStakeCredentials();
+        return creds.toCredential();
     }
 
     if( creds instanceof Script )
     {
-        return new StakeCredentials(
-            "script",
+        return Credential.script(
             new StakeValidatorHash( creds.hash )
         );
     }
@@ -1775,7 +1783,10 @@ function forceStakeCreds( creds: CanBeStakeCreds ): StakeCredentials
         throw new Error("pointer stake credentials not supported");
     }
 
-    return creds;
+    return new Credential(
+        creds.type === "script" ? CredentialType.Script : CredentialType.KeyHash,
+        creds.hash as Hash28
+    );
 }
 
 export type CanBePoolKeyHash = Hash28 | `pool1${string}` | `pool_test1${string}` | string /* hex */ | Uint8Array;
@@ -1793,4 +1804,9 @@ function forcePoolKeyHash( canBe: CanBePoolKeyHash ): PoolKeyHash
         return new PoolKeyHash( fromHex( canBe ) );
     }
     return new PoolKeyHash( canBe );
+}
+
+function forceAddr( addr: Address | AddressStr ): Address
+{
+    return addr instanceof Address ? addr : Address.fromString( addr );
 }

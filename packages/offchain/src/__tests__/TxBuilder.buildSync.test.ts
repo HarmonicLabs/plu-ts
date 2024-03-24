@@ -1,4 +1,4 @@
-import { defaultProtocolParameters, Address, PaymentCredentials, PubKeyHash, Script, ScriptType, UTxO, Value, getNSignersNeeded } from "@harmoniclabs/cardano-ledger-ts";
+import { defaultProtocolParameters, Address, Credential, PubKeyHash, Script, ScriptType, UTxO, Value, getNSignersNeeded, CredentialType } from "@harmoniclabs/cardano-ledger-ts";
 import { Cbor, CborBytes } from "@harmoniclabs/cbor";
 import { DataConstr } from "@harmoniclabs/plutus-data";
 import { TxBuilder } from "../TxBuilder"
@@ -9,8 +9,8 @@ const txBuilder = new TxBuilder(
 
 const pkAddr = new Address(
     "testnet",
-    new PaymentCredentials(
-        "pubKey",
+    new Credential(
+        CredentialType.KeyHash,
         new PubKeyHash( "1b372f69".repeat(7) )
     )
 )
@@ -42,7 +42,7 @@ const succeedScript = new Script(
 
 const succeedScriptAddr = new Address(
     "testnet",
-    new PaymentCredentials(
+    new Credential(
         "script",
         succeedScript.hash
     )

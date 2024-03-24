@@ -81,7 +81,7 @@ const txBuilder = new TxBuilder(
 
 const pkAddr = new Address(
     "testnet",
-    new PaymentCredentials(
+    new Credential(
         "pubKey",
         new PubKeyHash( "1b372f69".repeat(7) )
     )
@@ -111,7 +111,7 @@ const succeedScript = new Script(
 
 const succeedScriptAddr = new Address(
     "testnet",
-    new PaymentCredentials(
+    new Credential(
         "script",
         succeedScript.hash
     )
@@ -359,7 +359,7 @@ describe("TxBuilder.build", () => {
 
     const onlyBigThirdAddr = new Address(
         "mainnet",
-        new PaymentCredentials(
+        new Credential(
             "script",
             onlyBigThirdScript.hash
         )

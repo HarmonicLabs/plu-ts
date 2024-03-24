@@ -1,37 +1,56 @@
-import { TxWithdrawalsEntry, Script, UTxO } from "@harmoniclabs/cardano-ledger-ts"
+import { Hash28, ITxWithdrawalsEntry, ITxWithdrawalsEntryBigInt, IUTxO, Script, StakeAddress, UTxO, canBeHash28 } from "@harmoniclabs/cardano-ledger-ts"
 import { CanBeData, forceData } from "../utils/CanBeData"
 import { hasOwn } from "@harmoniclabs/obj-utils"
-import { isData, cloneData } from "@harmoniclabs/plutus-data"
-
+import { isData, cloneData, Data } from "@harmoniclabs/plutus-data"
 
 export interface ITxBuildWithdrawal {
-    withdrawal: TxWithdrawalsEntry
+    withdrawal: ITxWithdrawalsEntry
     script?: {
         inline: Script
         redeemer: CanBeData
     } | {
-        ref: UTxO
+        ref: IUTxO
         redeemer: CanBeData
     }
 };
 
-export function cloneITxBuildWithdrawal( stuff: ITxBuildWithdrawal ): ITxBuildWithdrawal
+export interface NormalizedITxBuildWithdrawal extends ITxBuildWithdrawal {
+    withdrawal: ITxWithdrawalsEntryBigInt | {
+        rewardAccount: Hash28;
+        amount: bigint;
+    }
+    script?: {
+        inline: Script
+        redeemer: Data
+    } | {
+        ref: UTxO
+        redeemer: Data
+    }
+};
+
+export function normalizeITxBuildWithdrawal({ withdrawal, script }: ITxBuildWithdrawal ): NormalizedITxBuildWithdrawal
 {
-    const script = stuff.script === undefined ? undefined: hasOwn( stuff.script, "inline" ) ?
+    script = script === undefined ? undefined: hasOwn( script, "ref" ) ?
     {
-        inline: stuff.script.inline.clone(),
-        redeemer: isData( stuff.script.redeemer ) ? cloneData( stuff.script.redeemer ) : forceData( stuff.script.redeemer )
+        ref: script.ref.clone(),
+        redeemer: isData( script.redeemer ) ? cloneData( script.redeemer ) : forceData( script.redeemer )
     } :
     {
-        ref: stuff.script.ref.clone(),
-        redeemer: isData( stuff.script.redeemer ) ? cloneData( stuff.script.redeemer ) : forceData( stuff.script.redeemer )
+        inline: script.inline.clone(),
+        redeemer: isData( script.redeemer ) ? cloneData( script.redeemer ) : forceData( script.redeemer )
     };
     
     return {
         withdrawal: {
-            rewardAccount: stuff.withdrawal.rewardAccount.clone(),
-            amount: stuff.withdrawal.amount
-        },
-        script
+            rewardAccount: canBeHash28( withdrawal.rewardAccount ) ? new Hash28( withdrawal.rewardAccount ) : withdrawal.rewardAccount,
+            amount: BigInt( withdrawal.amount )
+        } as any,
+        script: script as any
     };
+}
+
+/** @deprecated use `normalizeITxBuildWithdrawal` instead */
+export function cloneITxBuildWithdrawal( stuff: ITxBuildWithdrawal ): ITxBuildWithdrawal
+{
+    return normalizeITxBuildWithdrawal( stuff );
 }
