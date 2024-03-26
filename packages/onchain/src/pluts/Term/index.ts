@@ -12,6 +12,7 @@ import { cloneTermType } from "../type_system/cloneTermType";
 import { defineReadOnlyHiddenProperty } from "@harmoniclabs/obj-utils";
 import { Cloneable, isCloneable } from "../../utils/Cloneable";
 import { assert } from "../../utils/assert";
+import { CEKConst } from "@harmoniclabs/plutus-machine/dist/CEKValue/CEKConst";
 
 export type UnTerm<T extends Term<PType>> = T extends Term<infer PT extends PType > ? PT : never;
 
@@ -106,7 +107,7 @@ export class Term<A extends PType>
                         // if for whatever reason this is removed please adapt the rest of the codebas
                         uplc = Machine.evalSimple( uplc );
 
-                        if( uplc instanceof UPLCConst )
+                        if( uplc instanceof CEKConst )
                         {
                             ir = new IRConst( this.type, uplc.value );
                         }

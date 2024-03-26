@@ -2,27 +2,16 @@ import { Certificate, CertificateLike, ICert, IUTxO, Script, UTxO, certificateFr
 import { CanBeData, canBeData, forceData } from "../utils/CanBeData"
 import { hasOwn, isObject } from "@harmoniclabs/obj-utils"
 import { isData, cloneData, Data } from "@harmoniclabs/plutus-data"
+import { IScriptWithRedeemer, ScriptWithRedeemer } from "./ScriptWithRedeemer"
 
 export interface ITxBuildCert {
     cert: CertificateLike
-    script?: {
-        inline: Script
-        redeemer: CanBeData
-    } | {
-        ref: IUTxO
-        redeemer: CanBeData
-    }
+    script?: IScriptWithRedeemer
 };
 
 export interface NormalizedITxBuildCert extends ITxBuildCert {
     cert: Certificate
-    script?: {
-        inline: Script
-        redeemer: Data
-    } | {
-        ref: UTxO
-        redeemer: Data
-    }
+    script?: ScriptWithRedeemer
 };
 
 export function normalizeITxBuildCert({ cert, script }: ITxBuildCert ): NormalizedITxBuildCert

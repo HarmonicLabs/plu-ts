@@ -1,4 +1,4 @@
-import { Address, AddressStr, CanBeHash28, Hash32, IUTxO, PubKeyHash, Script, TxMetadata, TxOut, UTxO, isIUTxO } from "@harmoniclabs/cardano-ledger-ts";
+import { Address, AddressStr, CanBeHash28, Hash32, IUTxO, IVotingProcedures, PubKeyHash, Script, TxMetadata, TxOut, UTxO, VotingProcedures, isIUTxO } from "@harmoniclabs/cardano-ledger-ts";
 import { cloneITxBuildCert, NormalizedITxBuildCert, type ITxBuildCert, normalizeITxBuildCert } from "./ITxBuildCert";
 import { cloneITxBuildInput, NormalizedITxBuildInput, type ITxBuildInput, normalizeITxBuildInput } from "./ITxBuildInput/ITxBuildInput";
 import { cloneITxBuildMint, NormalizedITxBuildMint, type ITxBuildMint, normalizeITxBuildMint } from "./ITxBuildMint";
@@ -6,6 +6,10 @@ import { cloneITxBuildOutput, txBuildOutToTxOut, type ITxBuildOutput } from "./I
 import { cloneITxBuildWithdrawal, NormalizedITxBuildWithdrawal, type ITxBuildWithdrawal, normalizeITxBuildWithdrawal } from "./ITxBuildWithdrawal";
 import { CanBeUInteger } from "../utils/ints";
 import { ChangeInfos, NormalizedChangeInfos, normalizeChangeInfos } from "./ChangeInfos/ChangeInfos";
+import { IVotingProcedure, VotingProcedure } from "@harmoniclabs/cardano-ledger-ts/dist/governance/VotingProcedure";
+import { IProposalProcedure, ProposalProcedure } from "@harmoniclabs/cardano-ledger-ts/dist/governance/ProposalProcedure";
+import { ITxBuildVotingProcedures, NormalizedITxBuildVotingProcedures } from "./ITxBuildVotingProcedures";
+import { ITxBuildProposalProcedure, NormalizedITxBuildProposalProcedure } from "./ITxBuildProposalProcedure";
 
 export interface ITxBuildArgs {
     inputs: (ITxBuildInput | IUTxO)[],
@@ -31,6 +35,11 @@ export interface ITxBuildArgs {
     certificates?: ITxBuildCert[],
     withdrawals?: ITxBuildWithdrawal[],
     metadata?: TxMetadata,
+    // conway
+    votingProcedures?: ITxBuildVotingProcedures[],
+    proposalProcedures?: ITxBuildProposalProcedure[],
+    currentTreasuryValue?: CanBeUInteger,
+    paymentToTreasury?: CanBeUInteger
 }
 
 export interface NormalizedITxBuildArgs extends ITxBuildArgs {
@@ -49,6 +58,11 @@ export interface NormalizedITxBuildArgs extends ITxBuildArgs {
     certificates?: NormalizedITxBuildCert[],
     withdrawals?: NormalizedITxBuildWithdrawal[],
     metadata?: TxMetadata,
+    // conway
+    votingProcedures?: NormalizedITxBuildVotingProcedures[],
+    proposalProcedures: NormalizedITxBuildProposalProcedure[],
+    currentTreasuryValue: bigint,
+    paymentToTreasury: bigint
 }
 
 export function normalizeITxBuildArgs({

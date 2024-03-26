@@ -480,16 +480,6 @@ export class TxBuilder
                     refScript: change.refScript
                 })
             );
-            console.log(
-                txOuts[ txOuts.length - 1 ].value.toJson(),
-                totInputValue.toJson(),
-                requiredOutputValue.toJson(),
-                fee,
-                minFee,
-                totExBudget.toJson(),
-                memRational.toNumber(),
-                cpuRational.toNumber()
-            )
 
             tx = new Tx({
                 ...tx,
@@ -1110,7 +1100,7 @@ export class TxBuilder
                     forceBigUInt( invalidAfter ),
                 auxDataHash: auxData?.hash,
                 scriptDataHash: getScriptDataHash( redeemers, datumsScriptData, languageViews ),
-                network
+                network,
             }),
             witnesses: dummyTxWitnesses,
             auxiliaryData: auxData,
@@ -1159,21 +1149,6 @@ export class TxBuilder
                 fee: minFee
             })
         });
-
-        console.log(
-            JSON.stringify(
-                tx.body.outputs.map( o => o.toJson() ),
-                undef,
-                2
-            )
-        );
-        console.log(
-            JSON.stringify(
-                tx.body.toJson(),
-                undef,
-                2
-            )
-        );
 
         return {
             tx,
