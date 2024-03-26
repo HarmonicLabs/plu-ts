@@ -1,6 +1,7 @@
-import { IUTxO, Script, UTxO } from "@harmoniclabs/cardano-ledger-ts";
+import { IUTxO, Script, UTxO, isIUTxO } from "@harmoniclabs/cardano-ledger-ts";
 import { Data } from "@harmoniclabs/plutus-data";
 import { CanBeData } from "../utils/CanBeData";
+import { forceData } from "@harmoniclabs/plu-ts-offchain";
 
 export type ScriptWithRedeemer = {
     inline: Script
@@ -17,3 +18,15 @@ export type IScriptWithRedeemer = {
     ref: IUTxO
     redeemer: CanBeData
 };
+
+export function normalizeIScriptWithRedeemer( script: IScriptWithRedeemer ): ScriptWithRedeemer
+{
+    const redeemer = forceData( script.redeemer );
+    return isIUTxO( (script as any).ref ) ? {
+        ref: new UTxO( (script as any).ref ),
+        redeemer
+    } : {
+        inline: ((script as any).inline as Script).clone(),
+        redeemer
+    };
+}

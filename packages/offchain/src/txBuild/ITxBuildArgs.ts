@@ -1,15 +1,13 @@
 import { Address, AddressStr, CanBeHash28, Hash32, IUTxO, IVotingProcedures, PubKeyHash, Script, TxMetadata, TxOut, UTxO, VotingProcedures, isIUTxO } from "@harmoniclabs/cardano-ledger-ts";
-import { cloneITxBuildCert, NormalizedITxBuildCert, type ITxBuildCert, normalizeITxBuildCert } from "./ITxBuildCert";
-import { cloneITxBuildInput, NormalizedITxBuildInput, type ITxBuildInput, normalizeITxBuildInput } from "./ITxBuildInput/ITxBuildInput";
-import { cloneITxBuildMint, NormalizedITxBuildMint, type ITxBuildMint, normalizeITxBuildMint } from "./ITxBuildMint";
-import { cloneITxBuildOutput, txBuildOutToTxOut, type ITxBuildOutput } from "./ITxBuildOutput";
-import { cloneITxBuildWithdrawal, NormalizedITxBuildWithdrawal, type ITxBuildWithdrawal, normalizeITxBuildWithdrawal } from "./ITxBuildWithdrawal";
+import { NormalizedITxBuildCert, type ITxBuildCert, normalizeITxBuildCert } from "./ITxBuildCert";
+import { NormalizedITxBuildInput, type ITxBuildInput, normalizeITxBuildInput } from "./ITxBuildInput/ITxBuildInput";
+import { NormalizedITxBuildMint, type ITxBuildMint, normalizeITxBuildMint } from "./ITxBuildMint";
+import { txBuildOutToTxOut, type ITxBuildOutput } from "./ITxBuildOutput";
+import { NormalizedITxBuildWithdrawal, type ITxBuildWithdrawal, normalizeITxBuildWithdrawal } from "./ITxBuildWithdrawal";
 import { CanBeUInteger } from "../utils/ints";
 import { ChangeInfos, NormalizedChangeInfos, normalizeChangeInfos } from "./ChangeInfos/ChangeInfos";
-import { IVotingProcedure, VotingProcedure } from "@harmoniclabs/cardano-ledger-ts/dist/governance/VotingProcedure";
-import { IProposalProcedure, ProposalProcedure } from "@harmoniclabs/cardano-ledger-ts/dist/governance/ProposalProcedure";
-import { ITxBuildVotingProcedures, NormalizedITxBuildVotingProcedures } from "./ITxBuildVotingProcedures";
-import { ITxBuildProposalProcedure, NormalizedITxBuildProposalProcedure } from "./ITxBuildProposalProcedure";
+import { ITxBuildVotingProcedure, NormalizedITxBuildVotingProcedure, normalizeITxBuildVotingProcedure } from "./ITxBuildVotingProcedure";
+import { ITxBuildProposalProcedure, NormalizedITxBuildProposalProcedure, normalizeITxBuildProposalProcedure } from "./ITxBuildProposalProcedure";
 
 export interface ITxBuildArgs {
     inputs: (ITxBuildInput | IUTxO)[],
@@ -36,7 +34,7 @@ export interface ITxBuildArgs {
     withdrawals?: ITxBuildWithdrawal[],
     metadata?: TxMetadata,
     // conway
-    votingProcedures?: ITxBuildVotingProcedures[],
+    votingProcedures?: ITxBuildVotingProcedure[],
     proposalProcedures?: ITxBuildProposalProcedure[],
     currentTreasuryValue?: CanBeUInteger,
     paymentToTreasury?: CanBeUInteger
@@ -59,10 +57,10 @@ export interface NormalizedITxBuildArgs extends ITxBuildArgs {
     withdrawals?: NormalizedITxBuildWithdrawal[],
     metadata?: TxMetadata,
     // conway
-    votingProcedures?: NormalizedITxBuildVotingProcedures[],
-    proposalProcedures: NormalizedITxBuildProposalProcedure[],
-    currentTreasuryValue: bigint,
-    paymentToTreasury: bigint
+    votingProcedures?: NormalizedITxBuildVotingProcedure[],
+    proposalProcedures?: NormalizedITxBuildProposalProcedure[],
+    currentTreasuryValue?: bigint,
+    paymentToTreasury?: bigint
 }
 
 export function normalizeITxBuildArgs({
@@ -79,7 +77,11 @@ export function normalizeITxBuildArgs({
     invalidAfter,
     certificates,
     withdrawals,
-    metadata
+    metadata,
+    votingProcedures,
+    proposalProcedures,
+    currentTreasuryValue,
+    paymentToTreasury
 }: ITxBuildArgs ): NormalizedITxBuildArgs
 {
     return {
@@ -100,7 +102,11 @@ export function normalizeITxBuildArgs({
         invalidAfter: invalidAfter === undefined ? undefined : BigInt( invalidAfter ),
         certificates: certificates?.map( normalizeITxBuildCert ),
         withdrawals: withdrawals?.map( normalizeITxBuildWithdrawal ),
-        metadata
+        metadata,
+        votingProcedures: Array.isArray( votingProcedures ) ? votingProcedures.map( normalizeITxBuildVotingProcedure ) : undefined,
+        proposalProcedures: Array.isArray( proposalProcedures ) ? proposalProcedures.map( normalizeITxBuildProposalProcedure ) : undefined,
+        currentTreasuryValue: currentTreasuryValue === undefined ? undefined : BigInt( currentTreasuryValue ),
+        paymentToTreasury: paymentToTreasury === undefined ? undefined : BigInt( paymentToTreasury ),
     };
 }
 

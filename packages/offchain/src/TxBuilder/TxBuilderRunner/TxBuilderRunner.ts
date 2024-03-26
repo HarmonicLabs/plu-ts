@@ -15,9 +15,9 @@ import { CanBeData, canBeData, forceData } from "../../utils/CanBeData";
 import { CanBePoolKeyHash, forcePoolKeyHash } from "./CanBePoolKeyHash";
 import { CanBeStakeCreds, forceStakeCreds } from "./CanBeStakeCreds";
 import { forceAddr } from "./forceAddr";
-import { eqIVoter } from "../../txBuild/ITxBuildVotingProcedures";
 import { IProtocolVerision } from "@harmoniclabs/cardano-ledger-ts/dist/ledger/protocol/protocolVersion";
 import { Rational } from "../../utils/Rational";
+import { eqIVoter } from "../../txBuild/ITxBuildVotingProcedure";
 
 // /** sync */
 // interface TxBuilderStep {
