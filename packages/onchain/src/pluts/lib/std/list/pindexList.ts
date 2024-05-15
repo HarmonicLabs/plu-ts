@@ -22,6 +22,7 @@ export function pindexList<ElemsT extends TermType>( elemsT: ElemsT )
                 int
             ],elemsT)
             (( self, list, idx ) => 
+                // TODO this "pif" is useless
                 pif( elemsT ).$(
 
                     pisEmpty.$( list )

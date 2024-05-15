@@ -12,7 +12,7 @@ export const PDCert = pstruct({
     },
     PoolRegistration: {
         poolId: PPubKeyHash.type,
-        poolVFR: PPubKeyHash.type,
+        poolVRF: PPubKeyHash.type,
     },
     PoolRetire: {
         poolId: PPubKeyHash.type,

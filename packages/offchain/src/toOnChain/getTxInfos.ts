@@ -4,6 +4,7 @@ import { Data, DataB, DataConstr, DataList, DataMap, DataPair, hashData } from "
 import { Tx, TxRedeemer, UTxO, Value } from "@harmoniclabs/cardano-ledger-ts";
 import { getSpendingPurposeData } from "./getSpendingPurposeData";
 import { lexCompare } from "@harmoniclabs/uint8array-utils";
+import type { ToDataVersion } from "@harmoniclabs/cardano-ledger-ts/dist/toData/defaultToDataVersion";
 
 function sortUTxO( a: UTxO, b: UTxO ): number {
     const ord = lexCompare( a.utxoRef.id.toBuffer(), b.utxoRef.id.toBuffer() );
@@ -16,19 +17,19 @@ function sortUTxO( a: UTxO, b: UTxO ): number {
 export function getTxInfos(
     transaction: Tx,
     genesisInfos: GenesisInfos | undefined
-): { v1: Data | undefined, v2: Data }
+): { v1: Data | undefined, v2: Data | undefined, v3: Data }
 {
     const {
         body: tx,
         witnesses
     } = transaction;
 
-    function redeemerToDataPair( rdmr: TxRedeemer ): DataPair<DataConstr, Data>
+    function redeemerToDataPair( rdmr: TxRedeemer, version: ToDataVersion ): DataPair<DataConstr, Data>
     {
         return new DataPair(
-            getSpendingPurposeData( rdmr, tx ),
+            getSpendingPurposeData( rdmr, tx, version ),
             rdmr.data.clone()
-        )
+        );
     }
 
     const sortedInputs = tx.inputs.slice().sort( sortUTxO );
@@ -36,8 +37,6 @@ export function getTxInfos(
 
     const feeData = Value.lovelaces( tx.fee ).toData();
     const mintData = (tx.mint ?? Value.lovelaces( 0 ) ).toData();
-    const certsData = new DataList( tx.certs?.map( cert => cert.toData() ) ?? [] );
-    const withdrawsData = tx.withdrawals?.toData() ?? new DataMap([]);
     const intervalData = getTxIntervalData( tx.validityIntervalStart, tx.ttl, genesisInfos );
     const sigsData = new DataList( tx.requiredSigners?.map( sig => sig.toData() ) ?? [] );
     const datumsData = new DataMap(
@@ -69,9 +68,9 @@ export function getTxInfos(
                 // mint
                 mintData.clone(),
                 // dCertificates
-                certsData.clone(),
+                new DataList( tx.certs?.map( cert => cert.toData("v1") ) ?? [] ),
                 // withderawals
-                withdrawsData.clone(),
+                tx.withdrawals?.toData( "v1" ) ?? new DataMap([]),
                 // interval
                 intervalData.clone(),
                 // signatories
@@ -88,30 +87,69 @@ export function getTxInfos(
         v1 = undefined;
     }
 
-    const v2 = new DataConstr(
+    let v2: DataConstr | undefined = undefined;
+    try {
+        v2 = new DataConstr(
+            0, // PTxInfo; only costructor
+            [
+                // inputs
+                new DataList( sortedInputs.map( input => input.toData("v2") ) ),
+                // refInputs
+                new DataList( sortedRefInputs?.map( refIn => refIn.toData("v2") ) ?? [] ),
+                // outputs
+                new DataList( tx.outputs.map( out => out.toData("v2") ) ),
+                // fee
+                feeData,
+                // mint
+                mintData,
+                // dCertificates
+                new DataList( tx.certs?.map( cert => cert.toData("v2") ) ?? [] ),
+                // withderawals
+                tx.withdrawals?.toData( "v2" ) ?? new DataMap([]),
+                // interval
+                intervalData,
+                // signatories
+                sigsData,
+                // redeemers
+                new DataMap(
+                    witnesses.redeemers?.map( rdmr => redeemerToDataPair( rdmr, "v2" ) ) ?? []
+                ),
+                // datums
+                datumsData,
+                // id
+                txIdData
+            ]
+        );
+    }
+    catch
+    {
+        v2 = undefined;
+    }
+
+    const v3 = new DataConstr(
         0, // PTxInfo; only costructor
         [
             // inputs
-            new DataList( sortedInputs.map( input => input.toData("v2") ) ),
+            new DataList( sortedInputs.map( input => input.toData("v3") ) ),
             // refInputs
-            new DataList( sortedRefInputs?.map( refIn => refIn.toData("v2") ) ?? [] ),
+            new DataList( sortedRefInputs?.map( refIn => refIn.toData("v3") ) ?? [] ),
             // outputs
-            new DataList( tx.outputs.map( out => out.toData("v2") ) ),
+            new DataList( tx.outputs.map( out => out.toData("v3") ) ),
             // fee
             feeData,
             // mint
             mintData,
             // dCertificates
-            certsData,
+            new DataList( tx.certs?.map( cert => cert.toData("v3") ) ?? [] ),
             // withderawals
-            withdrawsData,
+            tx.withdrawals?.toData( "v3" ) ?? new DataMap([]),
             // interval
             intervalData,
             // signatories
             sigsData,
             // redeemers
             new DataMap(
-                witnesses.redeemers?.map( redeemerToDataPair ) ?? []
+                witnesses.redeemers?.map( rdmr => redeemerToDataPair( rdmr, "v3" ) ) ?? []
             ),
             // datums
             datumsData,
@@ -120,5 +158,5 @@ export function getTxInfos(
         ]
     );
 
-    return { v1, v2 };
+    return { v1, v2, v3 };
 }

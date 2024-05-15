@@ -144,7 +144,7 @@ describe("TxBuilder.buildSync", () => {
                                 datum: new DataConstr( 0, [] )
                             }
                         }),
-                        referenceScriptV2: {
+                        referenceScript: {
                             datum: "inline",
                             redeemer: new DataConstr( 0, [] ),
                             refUtxo: new UTxO({
@@ -211,7 +211,7 @@ describe("TxBuilder.buildSync", () => {
                                     // datum: new DataConstr( 0, [] )
                                 }
                             }),
-                            referenceScriptV2: {
+                            referenceScript: {
                                 datum: "inline",
                                 redeemer: new DataConstr( 0, [] ),
                                 refUtxo: new UTxO({

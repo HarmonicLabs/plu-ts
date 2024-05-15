@@ -1088,7 +1088,7 @@ describe("fee calculation", () => {
                 inputs: [
                     {
                         utxo: validatorMasterUtxo,
-                        referenceScriptV2: {
+                        referenceScript: {
                             refUtxo: deployedScriptRefUtxo,
                             datum: "inline",
                             redeemer: nonce_redeemer

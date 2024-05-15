@@ -1,12 +1,14 @@
 import { Hash28, StakeCredentials, StakeValidatorHash, Tx, TxBody, TxRedeemer, TxRedeemerTag } from "@harmoniclabs/cardano-ledger-ts";
-import { Data, DataB, DataConstr } from "@harmoniclabs/plutus-data";
+import type { ToDataVersion } from "@harmoniclabs/cardano-ledger-ts/dist/toData/defaultToDataVersion";
+import { Data, DataB, DataConstr, DataList } from "@harmoniclabs/plutus-data";
 import { lexCompare } from "@harmoniclabs/uint8array-utils";
 
-export function getSpendingPurposeData( rdmr: TxRedeemer, tx: TxBody ): DataConstr
+export function getSpendingPurposeData( rdmr: TxRedeemer, tx: TxBody, version: ToDataVersion ): DataConstr
 {
+    version = version ?? "v2";
     const tag = rdmr.tag;
 
-    let ctorIdx: 0 | 1 | 2 | 3;
+    let ctorIdx: 0 | 1 | 2 | 3 | 4 | 5;
     let purposeArgData: Data;
 
     if( tag === TxRedeemerTag.Mint )
@@ -38,7 +40,8 @@ export function getSpendingPurposeData( rdmr: TxRedeemer, tx: TxBody ): DataCons
             "invalid 'Spend' redeemer index: " + rdmr.index.toString() +
             "; tx.inputs.length is: " + tx.inputs.length.toString()
         );
-        purposeArgData = utxoRef.toData();
+        // @ts-ignore Expected 0 arguments, but got 1.t
+        purposeArgData = utxoRef.toData( version );
     }
     else if( tag === TxRedeemerTag.Withdraw )
     {
@@ -51,7 +54,9 @@ export function getSpendingPurposeData( rdmr: TxRedeemer, tx: TxBody ): DataCons
         purposeArgData = new StakeCredentials(
             "script",
             new StakeValidatorHash( stakeAddr.credentials )
-        ).toData();
+        )
+        // @ts-ignore Expected 0 arguments, but got 1.t
+        .toData( version );
     }
     else if( tag === TxRedeemerTag.Cert )
     {
@@ -61,7 +66,16 @@ export function getSpendingPurposeData( rdmr: TxRedeemer, tx: TxBody ): DataCons
         throw new Error(
             "invalid certificate for certifyng redeemer " + rdmr.index.toString()
         );
-        purposeArgData = cert.toData();
+        let tmp: Data;
+
+        tmp = cert.toData( version );
+
+        while( tmp instanceof DataList )
+        {
+            tmp = tmp.list[0]; 
+        }
+
+        purposeArgData = tmp;
     }
     else throw new Error(
         "invalid redeemer tag"

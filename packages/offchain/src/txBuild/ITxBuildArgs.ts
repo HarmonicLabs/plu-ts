@@ -1,4 +1,4 @@
-import { Address, AddressStr, CanBeHash28, Hash32, IUTxO, IVotingProcedures, PubKeyHash, Script, TxMetadata, TxOut, UTxO, VotingProcedures, isIUTxO } from "@harmoniclabs/cardano-ledger-ts";
+import { Address, AddressStr, CanBeHash28, Hash32, IProposalProcedure, IUTxO, IVotingProcedures, IVotingProceduresEntry, PubKeyHash, Script, TxMetadata, TxOut, UTxO, VotingProcedures, isIProposalProcedure, isIUTxO, isIVotingProceduresEntry } from "@harmoniclabs/cardano-ledger-ts";
 import { NormalizedITxBuildCert, type ITxBuildCert, normalizeITxBuildCert } from "./ITxBuildCert";
 import { NormalizedITxBuildInput, type ITxBuildInput, normalizeITxBuildInput } from "./ITxBuildInput/ITxBuildInput";
 import { NormalizedITxBuildMint, type ITxBuildMint, normalizeITxBuildMint } from "./ITxBuildMint";
@@ -34,8 +34,8 @@ export interface ITxBuildArgs {
     withdrawals?: ITxBuildWithdrawal[],
     metadata?: TxMetadata,
     // conway
-    votingProcedures?: ITxBuildVotingProcedure[],
-    proposalProcedures?: ITxBuildProposalProcedure[],
+    votingProcedures?: (IVotingProceduresEntry | ITxBuildVotingProcedure)[],
+    proposalProcedures?: (IProposalProcedure | ITxBuildProposalProcedure)[],
     currentTreasuryValue?: CanBeUInteger,
     paymentToTreasury?: CanBeUInteger
 }
@@ -103,8 +103,26 @@ export function normalizeITxBuildArgs({
         certificates: certificates?.map( normalizeITxBuildCert ),
         withdrawals: withdrawals?.map( normalizeITxBuildWithdrawal ),
         metadata,
-        votingProcedures: Array.isArray( votingProcedures ) ? votingProcedures.map( normalizeITxBuildVotingProcedure ) : undefined,
-        proposalProcedures: Array.isArray( proposalProcedures ) ? proposalProcedures.map( normalizeITxBuildProposalProcedure ) : undefined,
+        votingProcedures:
+            Array.isArray( votingProcedures ) ?
+                votingProcedures.map( entry => {
+                    if( isIVotingProceduresEntry( entry ) )
+                    entry = {
+                        votingProcedure: entry,
+                        script: undefined // for js shape optimization
+                    };
+                    return normalizeITxBuildVotingProcedure( entry );
+                }) : undefined,
+        proposalProcedures:
+            Array.isArray( proposalProcedures ) ?
+                proposalProcedures.map(entry => {
+                    if( isIProposalProcedure( entry ) )
+                    entry = {
+                        proposalProcedure: entry,
+                        script: undefined
+                    }
+                    return normalizeITxBuildProposalProcedure( entry );
+                }) : undefined,
         currentTreasuryValue: currentTreasuryValue === undefined ? undefined : BigInt( currentTreasuryValue ),
         paymentToTreasury: paymentToTreasury === undefined ? undefined : BigInt( paymentToTreasury ),
     };

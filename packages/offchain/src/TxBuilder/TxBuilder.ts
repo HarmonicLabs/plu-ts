@@ -2,7 +2,7 @@ import { fromHex, fromUtf8, isUint8Array, lexCompare, toHex } from "@harmoniclab
 import { keepRelevant } from "./keepRelevant";
 import { GenesisInfos, isGenesisInfos } from "./GenesisInfos";
 import { isCostModelsV2, isCostModelsV1, defaultV2Costs, defaultV1Costs, costModelsToLanguageViewCbor, isCostModelsV3, defaultV3Costs } from "@harmoniclabs/cardano-costmodels-ts";
-import { NetworkT, ProtocolParameters, isPartialProtocolParameters, Tx, Value, ValueUnits, TxOut, TxRedeemerTag, txRdmrTagToString, ScriptType, UTxO, VKeyWitness, Script, BootstrapWitness, TxRedeemer, Hash32, TxIn, Hash28, AuxiliaryData, TxWitnessSet, getNSignersNeeded, txRedeemerTagToString, ScriptDataHash, Address, AddressStr, TxBody, CredentialType, canBeHash32 } from "@harmoniclabs/cardano-ledger-ts";
+import { NetworkT, ProtocolParameters, isPartialProtocolParameters, Tx, Value, ValueUnits, TxOut, TxRedeemerTag, txRdmrTagToString, ScriptType, UTxO, VKeyWitness, Script, BootstrapWitness, TxRedeemer, Hash32, TxIn, Hash28, AuxiliaryData, TxWitnessSet, getNSignersNeeded, txRedeemerTagToString, ScriptDataHash, Address, AddressStr, TxBody, CredentialType, canBeHash32, VotingProcedures, ProposalProcedure } from "@harmoniclabs/cardano-ledger-ts";
 import { CborString, CborPositiveRational, Cbor, CborArray, CanBeCborString } from "@harmoniclabs/cbor";
 import { byte, blake2b_256 } from "@harmoniclabs/crypto";
 import { Data, dataToCborObj, DataConstr, dataToCbor } from "@harmoniclabs/plutus-data";
@@ -19,6 +19,7 @@ import { CanBeData, canBeData, forceData } from "../utils/CanBeData";
 import { getSpendingPurposeData } from "../toOnChain/getSpendingPurposeData";
 import { TxBuilderProtocolParams, ValidatedTxBuilderProtocolParams, completeTxBuilderProtocolParams } from "./TxBuilderProtocolParams";
 import { ChangeInfos } from "../txBuild/ChangeInfos/ChangeInfos";
+import { scriptTypeToDataVersion } from "./utils";
 
 type ScriptLike = {
     hash: string,
@@ -312,10 +313,13 @@ export class TxBuilder
         const executionUnitPrices = this.protocolParamters.executionUnitPrices;
         const [ memRational, cpuRational ] = executionUnitPrices;
 
+        // group by purpose so we can use the redeemer index to find the script
         const spendScriptsToExec =      scriptsToExec.filter( elem => elem.rdmrTag === TxRedeemerTag.Spend );
         const mintScriptsToExec =       scriptsToExec.filter( elem => elem.rdmrTag === TxRedeemerTag.Mint );
         const certScriptsToExec =       scriptsToExec.filter( elem => elem.rdmrTag === TxRedeemerTag.Cert );
         const withdrawScriptsToExec =   scriptsToExec.filter( elem => elem.rdmrTag === TxRedeemerTag.Withdraw );
+        const voteScriptsToExec =       scriptsToExec.filter( elem => elem.rdmrTag === TxRedeemerTag.Voting );
+        const proposeScriptsToExec =    scriptsToExec.filter( elem => elem.rdmrTag === TxRedeemerTag.Proposing );
 
         const maxRound = 3;
 
@@ -327,7 +331,7 @@ export class TxBuilder
         {
             prevFee = fee;
 
-            const { v1: txInfosV1, v2: txInfosV2 } = getTxInfos( tx, this.genesisInfos );
+            const { v1: txInfosV1, v2: txInfosV2, v3: txInfosV3 } = getTxInfos( tx, this.genesisInfos );
 
             let totExBudget = new ExBudget({ mem: 0, cpu: 0 });
 
@@ -337,7 +341,7 @@ export class TxBuilder
                 const { tag, data: rdmrData, index: rdmr_idx } = rdmr;
                 // "+ 1" because we keep track of lovelaces even if in mint values these are 0
                 const index = rdmr_idx + (tag === TxRedeemerTag.Mint ? 1 : 0);
-                const spendingPurpose = getSpendingPurposeData( rdmr, tx.body );
+                // const spendingPurpose = getSpendingPurposeData( rdmr, tx.body );
 
                 const onlyRedeemerArg = ( purposeScriptsToExec: ScriptToExecEntry[] ) =>
                 {
@@ -345,14 +349,20 @@ export class TxBuilder
 
                     if( script === undefined )
                     throw new Error(
-                        "missing script for " + txRdmrTagToString(tag) + " redeemer " + (index - 1)
+                        "missing script for " + txRedeemerTagToString(tag) + " redeemer " + (index - 1)
                     );
+
+                    const expectedVersion = scriptTypeToDataVersion( script.type );
+
+                    if( typeof expectedVersion !== "string" )
+                    throw new Error("unexpected redeemer for native script");
 
                     const ctxData = getCtx(
                         script.type,
-                        spendingPurpose,
+                        getSpendingPurposeData( rdmr, tx.body, expectedVersion ),
                         txInfosV1,
-                        txInfosV2
+                        txInfosV2,
+                        txInfosV3,
                     );
 
                     const { result, budgetSpent, logs } = cek.eval(
@@ -400,11 +410,17 @@ export class TxBuilder
                         "missing datum for spend redeemer " + index
                     );
 
+                    const expectedVersion = scriptTypeToDataVersion( script.type );
+
+                    if( typeof expectedVersion !== "string" )
+                    throw new Error("unexpected redeemer for native script");
+
                     const ctxData = getCtx(
                         script.type,
-                        spendingPurpose,
+                        getSpendingPurposeData( rdmr, tx.body, expectedVersion ),
                         txInfosV1,
-                        txInfosV2
+                        txInfosV2,
+                        txInfosV3
                     );
 
                     const { result, budgetSpent, logs } = cek.eval(
@@ -442,6 +458,8 @@ export class TxBuilder
                 else if( tag === TxRedeemerTag.Mint )       onlyRedeemerArg( mintScriptsToExec )
                 else if( tag === TxRedeemerTag.Cert )       onlyRedeemerArg( certScriptsToExec )
                 else if( tag === TxRedeemerTag.Withdraw )   onlyRedeemerArg( withdrawScriptsToExec )
+                else if( tag === TxRedeemerTag.Voting )     onlyRedeemerArg( voteScriptsToExec )
+                else if( tag === TxRedeemerTag.Proposing )  onlyRedeemerArg( proposeScriptsToExec )
                 else throw new Error(
                     "unrecoignized redeemer tag " + tag
                 )
@@ -555,6 +573,10 @@ export class TxBuilder
             certificates,
             withdrawals,
             metadata,
+            votingProcedures,
+            proposalProcedures,
+            currentTreasuryValue,
+            paymentToTreasury,
             ...args
         } = normalizeITxBuildArgs( buildArgs );
 
@@ -570,9 +592,9 @@ export class TxBuilder
         if( change ) changeAddress = change.address;
 
         if( !changeAddress )
-        {
-            throw new Error("missing changAddress and change entry while constructing a transaciton; unable to balance inputs and outpus");
-        }
+        throw new Error(
+            "missing changAddress and change entry while constructing a transaciton; unable to balance inputs and outpus"
+        );
 
         if( !change ) change = { address: changeAddress };
 
@@ -605,6 +627,7 @@ export class TxBuilder
         const plutusV1ScriptsWitnesses: Script<ScriptType.PlutusV1>[] = [];
         const datums: Data[] = []
         const plutusV2ScriptsWitnesses: Script<ScriptType.PlutusV2>[] = [];
+        const plutusV3ScriptsWitnesses: Script<ScriptType.PlutusV3>[] = [];
         
         const dummyExecBudget = ExBudget.maxCborSize;
 
@@ -612,6 +635,8 @@ export class TxBuilder
         const mintRedeemers: TxRedeemer[] = [];
         const certRedeemers: TxRedeemer[] = [];
         const withdrawRedeemers: TxRedeemer[] = [];
+        const voteRedeemers: TxRedeemer[] = [];
+        const proposeRedeemers: TxRedeemer[] = [];
 
         const scriptsToExec: ScriptToExecEntry[] = [];
         
@@ -623,33 +648,39 @@ export class TxBuilder
          * needed in `getScriptDataHash` to understand whoich cost model to transform in language view
          */
         let _hasV2Scripts = false;
+        /**
+         * needed in `getScriptDataHash` to understand whoich cost model to transform in language view
+         */
+        let _hasV3Scripts = false;
 
         function pushScriptToExec( idx: number, tag: TxRedeemerTag, script: Script, datum?: Data )
         {
-            if( script.type !== ScriptType.NativeScript )
+            if( script.type == ScriptType.NativeScript ) return;
+
+            // keep track of exsisting csript versions
+            if( !_hasV1Scripts && script.type === "PlutusScriptV1" )
             {
-
-                // keep track of exsisting csript versions
-                if( !_hasV1Scripts && script.type === "PlutusScriptV1" )
-                {
-                    _hasV1Scripts = true;
-                }
-                if( !_hasV2Scripts && script.type === "PlutusScriptV2" )
-                {
-                    _hasV2Scripts = true;
-                }
-
-                scriptsToExec.push({
-                    index: idx,
-                    rdmrTag: tag,
-                    script: {
-                        type: script.type as any,
-                        bytes: script.bytes.slice(),
-                        hash: script.hash.toString()
-                    },
-                    datum
-                })
+                _hasV1Scripts = true;
             }
+            else if( !_hasV2Scripts && script.type === "PlutusScriptV2" )
+            {
+                _hasV2Scripts = true;
+            }
+            else if( !_hasV3Scripts && script.type === "PlutusScriptV3" )
+            {
+                _hasV3Scripts = true;
+            }
+
+            scriptsToExec.push({
+                index: idx,
+                rdmrTag: tag,
+                script: {
+                    type: script.type as any,
+                    bytes: script.bytes,
+                    hash: script.hash.toString()
+                },
+                datum
+            });
         }
         function pushWitScript( script : Script ): void
         {
@@ -658,6 +689,7 @@ export class TxBuilder
             if( t === "NativeScript"  )         pushUniqueScript( nativeScriptsWitnesses  , script as any );
             else if( t === "PlutusScriptV1" )   pushUniqueScript( plutusV1ScriptsWitnesses, script as any );
             else if( t === "PlutusScriptV2" )   pushUniqueScript( plutusV2ScriptsWitnesses, script as any );
+            else if( t === "PlutusScriptV3" )   pushUniqueScript( plutusV3ScriptsWitnesses, script as any );
         }
 
         /**
@@ -683,7 +715,7 @@ export class TxBuilder
                     "multiple scripts specified"
                 );
 
-                const refScript = (script.ref as UTxO).resolved.refScript;
+                const refScript = (script.ref as UTxO)?.resolved?.refScript;
 
                 if( refScript === (void 0) )
                 throw new Error(
@@ -691,15 +723,14 @@ export class TxBuilder
                     "but the provided utxo is missing any attached script"
                 );
 
-                const sameRefPresent = refIns.find( u => eqUTxOByRef( u, script.ref ));
-                if( sameRefPresent === undef )
+                if( !refIns.some( u => eqUTxOByRef( u, script.ref )) )
                 {
                     refIns.push( script.ref );
                 } 
                 return refScript;
             }
 
-            throw "unexpected execution flow 'checkScriptAndPushIfInline' in TxBuilder"
+            throw new Error("unexpected execution flow 'checkScriptAndPushIfInline' in TxBuilder");
         }
 
         /**
@@ -751,7 +782,7 @@ export class TxBuilder
         {
             const {
                 utxo,
-                referenceScriptV2,
+                referenceScript,
                 inputScript
             } = input;
 
@@ -761,14 +792,14 @@ export class TxBuilder
 
             if(
                 addr.paymentCreds.type === CredentialType.Script &&
-                referenceScriptV2 === undef &&
+                referenceScript === undef &&
                 inputScript === undef
             )
             throw new Error(
                 "spending script utxo \"" + utxo.utxoRef.toString() + "\" without script source"
             );
 
-            if( referenceScriptV2 !== undef )
+            if( referenceScript !== undef )
             {
                 if( inputScript !== undef )
                 throw new Error(
@@ -779,7 +810,7 @@ export class TxBuilder
                     datum,
                     redeemer,
                     refUtxo
-                } = referenceScriptV2;
+                } = referenceScript;
 
                 const refScript = refUtxo.resolved.refScript;
 
@@ -810,7 +841,7 @@ export class TxBuilder
             }
             if( inputScript !== undefined )
             {
-                if( referenceScriptV2 !== undefined )
+                if( referenceScript !== undefined )
                 throw new Error(
                     "invalid input; multiple scripts specified"
                 );
@@ -976,7 +1007,54 @@ export class TxBuilder
             }
 
             return withdrawal; 
-        })
+        });
+
+        const _votingProcedures = Array.isArray( votingProcedures ) ?
+        new VotingProcedures(
+            votingProcedures?.map(({ votingProcedure, script }, i) => {
+
+                if( script !== undef )
+                {
+                    voteRedeemers.push(
+                        new TxRedeemer({
+                            data: forceData( script.redeemer ),
+                            index: i,
+                            execUnits: dummyExecBudget.clone(),
+                            tag: TxRedeemerTag.Voting
+                        })
+                    );
+
+                    const toExec = checkScriptAndPushIfInline( script );
+
+                    pushScriptToExec( i, TxRedeemerTag.Voting, toExec );
+                }
+
+                return votingProcedure;
+            })
+        ) : undef;
+
+        // TODO
+        const _proposalProcedures = Array.isArray( proposalProcedures ) ? 
+        proposalProcedures.map(({ proposalProcedure, script }, i) => {
+
+            if( script !== undef )
+            {
+                voteRedeemers.push(
+                    new TxRedeemer({
+                        data: forceData( script.redeemer ),
+                        index: i,
+                        execUnits: dummyExecBudget.clone(),
+                        tag: TxRedeemerTag.Proposing
+                    })
+                );
+
+                const toExec = checkScriptAndPushIfInline( script );
+
+                pushScriptToExec( i, TxRedeemerTag.Proposing, toExec );
+            }
+
+            return new ProposalProcedure( proposalProcedure );
+        }) : undef;
 
         const auxData = metadata !== undefined? new AuxiliaryData({ metadata }) : undefined;
 
@@ -984,7 +1062,9 @@ export class TxBuilder
             spendRedeemers
             .concat( mintRedeemers )
             .concat( withdrawRedeemers )
-            .concat( certRedeemers );
+            .concat( certRedeemers )
+            .concat( voteRedeemers )
+            .concat( proposeRedeemers );
         
         const dummyTxWitnesses = new TxWitnessSet({
             vkeyWitnesses,
@@ -993,7 +1073,8 @@ export class TxBuilder
             redeemers,
             nativeScripts: nativeScriptsWitnesses,
             plutusV1Scripts: plutusV1ScriptsWitnesses,
-            plutusV2Scripts: plutusV2ScriptsWitnesses
+            plutusV2Scripts: plutusV2ScriptsWitnesses,
+            plutusV3Scripts: plutusV3ScriptsWitnesses
         });
 
         const datumsScriptData =
@@ -1101,6 +1182,10 @@ export class TxBuilder
                 auxDataHash: auxData?.hash,
                 scriptDataHash: getScriptDataHash( redeemers, datumsScriptData, languageViews ),
                 network,
+                votingProcedures: _votingProcedures,
+                proposalProcedures: _proposalProcedures,
+                currentTreasuryValue: currentTreasuryValue,
+                donation: paymentToTreasury,
             }),
             witnesses: dummyTxWitnesses,
             auxiliaryData: auxData,
@@ -1185,10 +1270,9 @@ function eqUTxOByRef( a: UTxO, b: UTxO ): boolean
 
 function pushUniqueScript<T extends ScriptType>( arr: Script<T>[], toPush: Script<T> ): void
 {
+    const hashToPush = toPush.hash.toString();
     if(
-        !arr.some( script => 
-            script.hash.toString() === toPush.hash.toString() 
-        )
+        !arr.some( script => script.hash.toString() === hashToPush )
     ) arr.push( toPush );
 }
 
@@ -1196,14 +1280,28 @@ function getCtx(
     scriptType: ScriptType,
     spendingPurpose: DataConstr,
     txInfosV1: Data | undefined,
-    txInfosV2: Data
+    txInfosV2: Data | undefined,
+    txInfosV3: Data
 ): DataConstr
 {
-    if( scriptType === ScriptType.PlutusV2 )
+    if( scriptType === ScriptType.PlutusV3 )
     {
         return new DataConstr(
-            0,
-            [
+            0, [
+                txInfosV3,
+                spendingPurpose
+            ]
+        )
+    }
+    else if( scriptType === ScriptType.PlutusV2 )
+    {
+        if( txInfosV2 === undefined )
+        throw new Error(
+            "plutus script v1 included in a v2 transaction"
+        );
+        
+        return new DataConstr(
+            0, [
                 txInfosV2,
                 spendingPurpose
             ]
@@ -1213,7 +1311,7 @@ function getCtx(
     {
         if( txInfosV1 === undefined )
         throw new Error(
-            "plutus script v1 included in a v2 transaction"
+            "plutus script v1 included in a v2 or v3 transaction"
         );
 
         return new DataConstr(

@@ -32,10 +32,7 @@ export function eqIVoter( a: IVoter, b: IVoter ): boolean
 export function normalizeITxBuildVotingProcedure({ votingProcedure, script }: ITxBuildVotingProcedure): NormalizedITxBuildVotingProcedure
 {
     return {
-        votingProcedure: {
-            voter: new Voter( votingProcedure.voter ),
-            votes: votingProcedure.votes.map( normalizeVotesEntry )
-        },
+        votingProcedure: normalizeVotingProcedureEntry( votingProcedure ),
         script: script === undefined ? undefined : normalizeIScriptWithRedeemer( script )
     };
 }
@@ -54,5 +51,13 @@ function normalizeVotesEntry({
     return {
         govActionId: forceTxOutRef( govActionId ),
         vote: new VotingProcedure( vote )
+    };
+}
+
+export function normalizeVotingProcedureEntry( votingProcedure: IVotingProceduresEntry ): ITypedVotingProceduresEntry
+{
+    return {
+        voter: new Voter( votingProcedure.voter ),
+        votes: votingProcedure.votes.map( normalizeVotesEntry )
     };
 }

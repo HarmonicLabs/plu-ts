@@ -12,7 +12,7 @@ import { IRVar } from "../../../IRNodes/IRVar";
 import { IRTerm } from "../../../IRTerm";
 import { _ir_apps } from "../../../tree_utils/_ir_apps";
 
-const innerZ = new IRFunc( 1,
+const innerZ = new IRFunc( 1, // f
     new IRApp(
         new IRVar( 1 ), // Z
         new IRFunc( 1,
@@ -28,7 +28,7 @@ const innerZ = new IRFunc( 1,
 );
 
 const hoisted_z_comb = new IRHoisted(
-    new IRFunc( 1,
+    new IRFunc( 1, // Z
         new IRApp(
             innerZ.clone(),
             innerZ.clone()

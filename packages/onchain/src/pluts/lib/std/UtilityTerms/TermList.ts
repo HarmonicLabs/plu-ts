@@ -26,7 +26,26 @@ import { TermBool } from "./TermBool";
 import { TermInt } from "./TermInt";
 import { peqList, pincludes, plookup } from "../list";
 
+function* fixedLengthIter<PT extends PDataRepresentable>(
+    list: TermList<PT>,
+    maxLength: number
+): Generator<UtilityTermOf<PT>, void, unknown>
+{
+    if( !Number.isSafeInteger( maxLength ) )
+    throw new Error("max length for 'fixedLengthIterable' is not an integer");
+
+    if( maxLength < 0 ) maxLength = -maxLength;
+
+    for( let i = 0; i < maxLength; i++ )
+    {
+        yield list.head;
+        list = list.tail;
+    }
+}
+
 export type TermList<PElemsT extends PDataRepresentable> = Term<PList<PElemsT>> & {
+
+    fixedLengthIterable: ( maxLength: number ) => Generator<UtilityTermOf<PElemsT>, void, unknown>
 
     /**
      * **O(1)**
@@ -198,6 +217,15 @@ export function addPListMethods<PElemsT extends PType>( _lst: Term<PList<PElemsT
 
 function _definePListMethods<PElemsT extends PType>( lst: Term<PList<PElemsT>>, elemsT: TermType ): void
 {
+    defineReadOnlyProperty(
+        lst,
+        "fixedLengthIterable",
+        // as type conversion is fine because this is a funciton
+        // and will only always be accessed after this function has
+        // defined the necessary methods for "TermList" to be satisfied
+        ( max: number ) => fixedLengthIter( lst as TermList<PElemsT>, max )
+    );
+    
     definePropertyIfNotPresent(
         lst,
         "head",

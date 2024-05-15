@@ -1230,7 +1230,7 @@ export class TxBuilderRunner
 
                     buildArgs.inputs.push({
                         utxo,
-                        referenceScriptV2: {
+                        referenceScript: {
                             refUtxo: ref,
                             redeemer,
                             datum: isInlineDatum ? "inline" : datum as Data

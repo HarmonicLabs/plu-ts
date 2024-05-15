@@ -78,7 +78,7 @@
     "@harmoniclabs/cardano-costmodels-ts": "^1.1.0",
     "@harmoniclabs/plutus-machine": "^1.1.0",
     "@harmoniclabs/uplc": "^1.2.3",
-    "@harmoniclabs/cardano-ledger-ts": "^0.2.0-dev0",
+    "@harmoniclabs/cardano-ledger-ts": "^0.2.0-dev4",
     "@harmoniclabs/plu-ts-offchain": "^0.1.13",
     "@harmoniclabs/plu-ts-onchain": "^0.2.8"
   },

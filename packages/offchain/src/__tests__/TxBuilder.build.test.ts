@@ -215,7 +215,7 @@ describe("TxBuilder.build", () => {
                                 datum: new DataConstr( 0, [] )
                             }
                         }),
-                        referenceScriptV2: {
+                        referenceScript: {
                             datum: "inline",
                             redeemer: new DataConstr( 0, [] ),
                             refUtxo: new UTxO({
@@ -284,7 +284,7 @@ describe("TxBuilder.build", () => {
                                 // datum: new DataConstr( 0, [] )
                             }
                         }),
-                        referenceScriptV2: {
+                        referenceScript: {
                             datum: "inline",
                             redeemer: new DataConstr( 0, [] ),
                             refUtxo: new UTxO({

@@ -7,23 +7,29 @@ import { ITxBuildInputInlineScript, NormalizedITxBuildInputInlineScript, normali
 
 export interface ITxBuildInput {
     utxo: IUTxO,
+    /** @deprecated use `referenceScript` instead */
     referenceScriptV2?: ITxBuildInputRefScript
+    referenceScript?: ITxBuildInputRefScript
     inputScript?: ITxBuildInputInlineScript
 }
 
 export interface NormalizedITxBuildInput extends ITxBuildInput {
     utxo: UTxO,
-    referenceScriptV2?: NormalizedITxBuildInputRefScript
+    referenceScript?: NormalizedITxBuildInputRefScript
     inputScript?: NormalizedITxBuildInputInlineScript
 }
 
 export function normalizeITxBuildInput( input: ITxBuildInput ): NormalizedITxBuildInput
 {
+    input = { ...input }; // do not modify input object.
     const result: NormalizedITxBuildInput = {} as any;
 
+    if( !input.referenceScript && input.referenceScriptV2 )
+    input.referenceScript = input.referenceScriptV2; // support deprecated name, but do not override
+
     result.utxo = input.utxo instanceof UTxO ? input.utxo.clone() : new UTxO( input.utxo );
-    result.referenceScriptV2 = input.referenceScriptV2 ?
-        normalizeITxBuildInputRefScript( input.referenceScriptV2 ) :
+    result.referenceScript = input.referenceScript ?
+        normalizeITxBuildInputRefScript( input.referenceScript ) :
         undefined;
     result.inputScript = input.inputScript ? 
         normalizeITxBuildInputInlineScript( input.inputScript ) :
@@ -38,11 +44,11 @@ export function normalizeITxBuildInput( input: ITxBuildInput ): NormalizedITxBui
  */
 export function cloneITxBuildInput({
     utxo,
-    referenceScriptV2: ref,
+    referenceScript: ref,
     inputScript: inScript
 }: ITxBuildInput ): ITxBuildInput
 {
-    const referenceScriptV2: ITxBuildInputRefScript | undefined = ref === undefined ? undefined :
+    const referenceScript: ITxBuildInputRefScript | undefined = ref === undefined ? undefined :
     {
         refUtxo: new UTxO( ref.refUtxo ),
         datum: ref.datum === "inline" ? "inline" : cloneCanBeData( ref.datum ),
@@ -58,7 +64,7 @@ export function cloneITxBuildInput({
 
     return {
         utxo: new UTxO( utxo ),
-        referenceScriptV2,
+        referenceScript,
         inputScript
     }
 }
