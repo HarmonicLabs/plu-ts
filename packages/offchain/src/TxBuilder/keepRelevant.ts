@@ -1,4 +1,4 @@
-import { ValueUnits, Value } from "@harmoniclabs/cardano-ledger-ts";
+import { ValueUnits, Value, UTxO } from "@harmoniclabs/cardano-ledger-ts";
 import { ITxBuildInput, cloneITxBuildInput } from "../txBuild";
 import { CanBeUInteger, forceBigUInt } from "../utils/ints";
 
@@ -21,7 +21,7 @@ export function keepRelevant(
         : forceBigUInt( minimumLovelaceRequired );
 
     const multiAssetIns = initialUTxOSet.filter((input) =>
-        input.utxo.resolved.value.toUnits()
+        new UTxO( input.utxo ).resolved.value.toUnits()
             .filter(( asset ) => asset.unit !== "lovelace")
             .some(( asset ) => reqOutputKeys.includes( asset.unit ))
     );
@@ -51,7 +51,7 @@ export function keepRelevant(
 function getTotLovelaces(multiAsset: ITxBuildInput[])
 {
     return multiAsset.reduce(
-        (sum, input) => sum + input.utxo.resolved.value.lovelaces, 
+        (sum, input) => sum + new UTxO(input.utxo).resolved.value.lovelaces, 
         BigInt(0)
     );
 };
@@ -61,7 +61,7 @@ function remainingLovelace(quantity: bigint, initialUTxOSet: ITxBuildInput[]): I
     const sortedUTxOs = initialUTxOSet.sort(
         (a, b) => parseInt(
             BigInt(
-                a.utxo.resolved.value.lovelaces - b.utxo.resolved.value.lovelaces
+                new UTxO(a.utxo).resolved.value.lovelaces - new UTxO(b.utxo).resolved.value.lovelaces
             ).toString()
         )
     );
@@ -85,12 +85,12 @@ function enoughValueHasBeenSelected(
 
             return selection
                 .filter(( input ) => {
-                    return input.utxo.resolved.value.toUnits()
+                    return new UTxO(input.utxo).resolved.value.toUnits()
                         .some((a) => a.unit === unit );
                 })
                 .reduce(
                     (selectedQuantity, input) => {
-                        const utxoQuantity = input.utxo.resolved.value.toUnits()
+                        const utxoQuantity = new UTxO(input.utxo).resolved.value.toUnits()
                             .reduce(
                                 (quantity, a) => quantity + unit === a.unit ? BigInt( a.quantity ) : BigInt(0),
                                 BigInt(0),
@@ -136,7 +136,7 @@ function canValueBeSelected(
 ): boolean
 {
     return Object.keys( assets ).some(( unit ) => {
-        return input.utxo.resolved.value.toUnits()
+        return new UTxO(input.utxo).resolved.value.toUnits()
             .some(( asset ) => asset.unit === unit );
     });
 }

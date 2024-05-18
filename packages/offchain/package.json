@@ -1,6 +1,6 @@
 {
     "name": "@harmoniclabs/plu-ts-offchain",
-    "version": "0.1.13",
+    "version": "0.1.13-dev2",
     "description": "An embedded DSL for Cardano smart contracts creation coupled with a library for Cardano transactions, all in Typescript",
     "main": "./dist/index.js",
     "types": "./dist/index.d.ts",
@@ -64,9 +64,9 @@
         "@harmoniclabs/cbor": "^1.3.0",
         "@harmoniclabs/plutus-data": "^1.2.4",
         "@harmoniclabs/cardano-costmodels-ts": "^1.1.0",
-        "@harmoniclabs/plutus-machine": "^1.1.2",
+        "@harmoniclabs/plutus-machine": "^2.0.0-dev2",
         "@harmoniclabs/uplc": "^1.2.3",
-        "@harmoniclabs/cardano-ledger-ts": "^0.2.0-dev5"
+        "@harmoniclabs/cardano-ledger-ts": "^0.2.0-dev6"
     },
     "devDependencies": {
         "@babel/preset-env": "^7.18.6",

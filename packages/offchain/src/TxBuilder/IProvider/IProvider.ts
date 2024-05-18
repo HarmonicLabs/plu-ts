@@ -1,4 +1,4 @@
-import { Address, AddressStr, Hash32, ProtocolParamters, UTxO } from "@harmoniclabs/cardano-ledger-ts";
+import { Address, AddressStr, Hash32, ProtocolParameters, UTxO } from "@harmoniclabs/cardano-ledger-ts";
 import { CanResolveToUTxO } from "../CanResolveToUTxO/CanResolveToUTxO";
 import { GenesisInfos } from "../GenesisInfos";
 import { CanBeData } from "../../utils/CanBeData";
@@ -8,7 +8,7 @@ export interface IGetGenesisInfos {
 }
 
 export interface IGetProtocolParameters {
-    getProtocolParameters: () => Promise<ProtocolParamters>
+    getProtocolParameters: () => Promise<ProtocolParameters>
 }
 
 export interface IResolveUTxOs {

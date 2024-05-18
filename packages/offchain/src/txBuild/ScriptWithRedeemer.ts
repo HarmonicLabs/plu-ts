@@ -1,7 +1,6 @@
 import { IUTxO, Script, UTxO, isIUTxO } from "@harmoniclabs/cardano-ledger-ts";
 import { Data } from "@harmoniclabs/plutus-data";
-import { CanBeData } from "../utils/CanBeData";
-import { forceData } from "@harmoniclabs/plu-ts-offchain";
+import { CanBeData, forceData } from "../utils/CanBeData";
 
 export type ScriptWithRedeemer = {
     inline: Script

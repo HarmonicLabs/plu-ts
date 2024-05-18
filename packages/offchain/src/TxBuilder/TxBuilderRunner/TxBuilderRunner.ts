@@ -2,7 +2,7 @@ import { defineReadOnlyProperty, isObject } from "@harmoniclabs/obj-utils";
 import type { ITxRunnerProvider } from "../IProvider";
 import type { TxBuilder } from "../TxBuilder";
 import { ITxBuildArgs, ITxBuildOutput, NormalizedITxBuildArgs, cloneITxBuildArgs, normalizeITxBuildArgs } from "../../txBuild";
-import { Address, AddressStr, CertStakeDelegation, Certificate, Hash28, Hash32, ITxOut, ITxOutRef, IUTxO, IValuePolicyEntry, PlutusScriptType, PoolKeyHash, PoolParams, PubKeyHash, Script, ScriptType, StakeAddress, StakeAddressBech32, Credential, StakeValidatorHash, Tx, TxIn, TxMetadata, TxMetadatum, TxOutRefStr, UTxO, Value, forceTxOutRefStr, isITxOut, isIUTxO, CredentialType, CertStakeDeRegistration, CertStakeRegistration, CertPoolRegistration, IPoolParams, CanBeHash28, CertPoolRetirement, StakeCredentials, ITxWithdrawalsEntry, Vote, IAnchor, IVoter, ProtocolParameters, IProposalProcedure, ITxWithdrawals, TxWithdrawals, INewCommitteeEntry, IConstitution, VotingProcedure, VotingProcedures, forceTxOutRef, IVotingProceduresEntry, TxOutRef, VoterKind, GovActionType } from "@harmoniclabs/cardano-ledger-ts";
+import { Address, AddressStr, CertStakeDelegation, Certificate, Hash28, Hash32, ITxOut, ITxOutRef, IUTxO, IValuePolicyEntry, PlutusScriptType, PoolKeyHash, PoolParams, PubKeyHash, Script, ScriptType, StakeAddress, StakeAddressBech32, Credential, StakeValidatorHash, Tx, TxIn, TxMetadata, TxMetadatum, TxOutRefStr, UTxO, Value, forceTxOutRefStr, isITxOut, isIUTxO, CredentialType, CertStakeDeRegistration, CertStakeRegistration, CertPoolRegistration, IPoolParams, CanBeHash28, CertPoolRetirement, StakeCredentials, ITxWithdrawalsEntry, Vote, IAnchor, IVoter, ProtocolParameters, IProposalProcedure, ITxWithdrawals, TxWithdrawals, INewCommitteeEntry, IConstitution, VotingProcedure, VotingProcedures, forceTxOutRef, IVotingProceduresEntry, TxOutRef, VoterKind, GovActionType, isIVotingProceduresEntry, isIProposalProcedure, eqITxOutRef } from "@harmoniclabs/cardano-ledger-ts";
 import { CanBeUInteger, canBeUInteger, forceBigUInt } from "../../utils/ints";
 import { CanResolveToUTxO, cloneCanResolveToUTxO, shouldResolveToUTxO } from "../CanResolveToUTxO/CanResolveToUTxO";
 import { jsonToMetadata } from "./jsonToMetadata";
@@ -1490,7 +1490,10 @@ export class TxBuilderRunner
                 votes: [ govActionVote ]
             };
 
-            const entry = buildArgs.votingProcedures.find(({ votingProcedure: { voter: entryVoter } }) => eqIVoter( entryVoter, voter ));
+            const entry = buildArgs.votingProcedures.find( elem => {
+                const votingProcedure = isIVotingProceduresEntry( elem ) ? elem : elem.votingProcedure;
+                return eqIVoter( voter, votingProcedure.voter );
+            });
             if( !entry )
             {
                 buildArgs.votingProcedures.push({
@@ -1509,7 +1512,8 @@ export class TxBuilderRunner
             }
             else
             {
-                const govActionEntry = entry.votingProcedure.votes.find(({ govActionId: entryGovActionId }) => 
+                const votingProcedure = isIVotingProceduresEntry( entry ) ? entry : entry.votingProcedure;
+                const govActionEntry = votingProcedure.votes.find(({ govActionId: entryGovActionId }) => 
                     eqITxOutRef(
                         govActionId as ITxOutRef,
                         entryGovActionId
@@ -1517,7 +1521,7 @@ export class TxBuilderRunner
                 );
                 if( !govActionEntry )
                 {
-                    entry.votingProcedure.votes.push( govActionVote )
+                    votingProcedure.votes.push( govActionVote )
                 }
                 else
                 {
@@ -1688,9 +1692,10 @@ export class TxBuilderRunner
                 )
             })
 
-            const govActionRef = 
-            buildArgs.proposalProcedures[ buildArgs.proposalProcedures.length - 1 ]
-            .proposalProcedure.govAction;
+            const _proposalProcedure = buildArgs.proposalProcedures[ buildArgs.proposalProcedures.length - 1 ];
+            const govActionRef = isIProposalProcedure( _proposalProcedure ) ?
+                _proposalProcedure.govAction :
+                _proposalProcedure.proposalProcedure.govAction;
 
             if(
                 (
@@ -2321,22 +2326,5 @@ export class TxBuilderRunner
                 }
             }
         );
-    }
-}
-
-
-export function eqITxOutRef( a: ITxOutRef, b: ITxOutRef ): boolean
-{
-    if( !isObject( a ) ) return false;
-    if( !isObject( b ) ) return false;
-
-    try {
-        return (
-            new Hash32( a.id ).toString() === new Hash32( b.id ).toString() &&
-            typeof a.index === "number" &&
-            a.index === b.index
-        );
-    } catch {
-        return false;
     }
 }
