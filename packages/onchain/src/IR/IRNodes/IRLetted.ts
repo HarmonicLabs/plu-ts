@@ -562,13 +562,17 @@ export function getNormalizedLettedArgs( lettedDbn: number, value: IRTerm ): [ n
                         else return false; // modified parent
                     }
                     else {
-                        // inline
-                        _modifyChildFromTo(
-                            node.parent,
-                            node,
-                            node.value
-                        );
-                        return true; // modified parent
+                        if( node.parent ) // only modify if not root
+                        {
+                            // inline
+                            _modifyChildFromTo(
+                                node.parent,
+                                node,
+                                node.value
+                            );
+                            return true; // modified parent
+                        }
+                        else return false;
                     }
                 }
             }
