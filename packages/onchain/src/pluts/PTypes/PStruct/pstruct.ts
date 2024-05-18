@@ -16,13 +16,12 @@ import { assert } from "../../../utils/assert";
 import { Pair } from "@harmoniclabs/pair";
 import { DataConstr, Data, isData } from "@harmoniclabs/plutus-data";
 import { Machine } from "@harmoniclabs/plutus-machine";
-import { UPLCConst } from "@harmoniclabs/uplc";
 import { IRHoisted } from "../../../IR/IRNodes/IRHoisted";
 import { IRConst } from "../../../IR/IRNodes/IRConst";
 import { pList } from "../../lib/std/list/const";
 import { IRNative } from "../../../IR/IRNodes/IRNative";
 import { IRApp } from "../../../IR/IRNodes/IRApp";
-import { PappArg, pappArgToTerm } from "../../lib/pappArg";
+import { CEKConst } from "@harmoniclabs/plutus-machine/dist/CEKValue/CEKConst";
 
 /**
  * intermediate class useful to reconize structs form primitives
@@ -409,7 +408,7 @@ export function pstruct<
                                                 _term
                                             ));
 
-                                            if(!(res instanceof UPLCConst && isData( res.value ) ))
+                                            if(!(res instanceof CEKConst && isData( res.value ) ))
                                             {
                                                 console.log("--------------------------------");
                                                 console.log( ctorDefFieldsNames );

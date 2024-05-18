@@ -1,6 +1,5 @@
-import { UPLCConst, showUPLC } from "@harmoniclabs/uplc";
 import { data, int, pBool, pInt, pList, pPair, pair, plookup, pmatch } from "../../../../.."
-import { Machine } from "@harmoniclabs/plutus-machine";
+import { Machine, CEKConst } from "@harmoniclabs/plutus-machine";
 
 function pMapInts( entries: [ number, number ][] )
 {
@@ -10,8 +9,8 @@ function pMapInts( entries: [ number, number ][] )
     ))
 }
 
-const trueUplc = UPLCConst.bool( true );
-const falseUplc = UPLCConst.bool( false );
+const trueUplc = CEKConst.bool( true );
+const falseUplc = CEKConst.bool( false );
 
 const intsLookup = plookup( int, int );
 const dataLookup = plookup( data, data );

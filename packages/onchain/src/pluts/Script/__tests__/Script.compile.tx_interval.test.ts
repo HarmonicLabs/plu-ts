@@ -1,6 +1,5 @@
-import { UPLCConst } from "@harmoniclabs/uplc";
 import { PExtended, PInterval, PLowerBound, PScriptContext, PUpperBound, bool, int, pData, pDataI, peqInt, perror, pfn, phoist, plet, pmatch, pstruct, psub, punsafeConvertType } from "../..";
-import { Machine } from "@harmoniclabs/plutus-machine";
+import { Machine, CEKConst } from "@harmoniclabs/plutus-machine";
 import { DataConstr, dataFromCbor } from "@harmoniclabs/plutus-data";
 
 /*
@@ -75,7 +74,7 @@ describe("tx interval", () => {
         //     (result as any)?.addInfos
         // );
     
-        expect( result instanceof UPLCConst ).toBe( true );
+        expect( result instanceof CEKConst ).toBe( true );
     });
 
     describe("from ctx", () => {
@@ -132,7 +131,7 @@ describe("tx interval", () => {
             //     (result as any)?.addInfos
             // );
         
-            expect( result instanceof UPLCConst ).toBe( true );
+            expect( result instanceof CEKConst ).toBe( true );
         });
 
     })

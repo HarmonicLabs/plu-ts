@@ -11,8 +11,7 @@ import { TermType, bs, int, unit } from "../../../type_system/types";
 import { pDataB, pDataI, toData } from "../../../lib";
 import { fromHex } from "@harmoniclabs/uint8array-utils";
 import { ByteString } from "@harmoniclabs/bytestring";
-import { Machine } from "@harmoniclabs/plutus-machine";
-import { UPLCConst } from "@harmoniclabs/uplc";
+import { CEKConst, Machine } from "@harmoniclabs/plutus-machine";
 
 const SingleCtor = pstruct({
     Ctor : {
@@ -55,7 +54,7 @@ describe("pmatch", () => {
                 .onCtor( rawFields => rawFields.extract("num").in( ({ num }) => num ) ) 
             )
         ).toEqual(
-            UPLCConst.int( 42 )
+            CEKConst.int( 42 )
         );
 
     })
@@ -69,7 +68,7 @@ describe("pmatch", () => {
                 .onNothing( _ => pInt( 0 ) )
             )
         ).toEqual(
-            UPLCConst.int( 2 )
+            CEKConst.int( 2 )
         );
 
     });
@@ -112,7 +111,7 @@ describe("pmatch", () => {
                 .onJust( rawFields => pInt( 0 ) )
                 .toUPLC(0)
             )
-        ).toEqual( pInt(1).toUPLC(0) )
+        ).toEqual( Machine.evalSimple( pInt(1) ) )
 
     });
 
@@ -132,7 +131,7 @@ describe("pmatch", () => {
                     .onNothing( _ => pInt( 0 ) )
                 )
             ).toEqual(
-                UPLCConst.int( 42 )
+                CEKConst.int( 42 )
             );
     
             expect(
@@ -147,7 +146,7 @@ describe("pmatch", () => {
                     .onNothing( _ => pInt( 0 ) )
                 )
             ).toEqual(
-                UPLCConst.int( 0 )
+                CEKConst.int( 0 )
             );
     
         });
@@ -185,7 +184,7 @@ describe("pmatch", () => {
                    uplc
                 )
             ).toEqual(
-                UPLCConst.int( 2 + 2 + 3 )
+                CEKConst.int( 2 + 2 + 3 )
             );
 
         });

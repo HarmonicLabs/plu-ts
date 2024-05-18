@@ -1,8 +1,7 @@
 import { palias } from "../palias"
 import { pInt } from "../../../lib/std/int/pInt";
 import { int } from "../../../type_system/types";
-import { Machine } from "@harmoniclabs/plutus-machine";
-import { UPLCConst } from "@harmoniclabs/uplc";
+import { CEKConst, Machine } from "@harmoniclabs/plutus-machine";
 
 
 describe("palias", () => {
@@ -16,7 +15,7 @@ describe("palias", () => {
             Machine.evalSimple(
                 fancy69
             )
-        ).toEqual( UPLCConst.int( 69 ) )
+        ).toEqual( CEKConst.int( 69 ) )
 
     });
 
@@ -26,7 +25,7 @@ describe("palias", () => {
             Machine.evalSimple(
                 pInt(1).add( fancy69 as any )
             )
-        ).toEqual( UPLCConst.int( 69 + 1 ) )
+        ).toEqual( CEKConst.int( 69 + 1 ) )
 
     });
 

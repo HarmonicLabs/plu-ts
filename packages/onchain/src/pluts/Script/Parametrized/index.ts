@@ -4,7 +4,7 @@ import { LitteralPurpose, isLitteralPurpose } from "../LitteralPurpose";
 import { PrimType, TermType, data, fn, isTaggedAsAlias, termTypeFromJson, termTypeToJson, termTypeToString, typeExtends, unwrapAlias } from "../../type_system";
 import { getFnTypes } from "./getFnTypes";
 import { Application, Builtin, Delay, ErrorUPLC, Force, Lambda, UPLCConst, UPLCDecoder, UPLCEncoder, UPLCProgram, UPLCTerm, UPLCVar, constTypeEq } from "@harmoniclabs/uplc";
-import { Machine } from "@harmoniclabs/plutus-machine";
+import { CEKConst, Machine } from "@harmoniclabs/plutus-machine";
 import { ptoData } from "../../lib/std/data/conversion";
 import { cloneTermType } from "../../type_system/cloneTermType";
 import { fromHex, toHex } from "@harmoniclabs/uint8array-utils";
@@ -157,8 +157,10 @@ export class Precompiled<Purp extends LitteralPurpose = LitteralPurpose>
                         {
                             uplcArg = Machine.evalSimple( theArg );
             
-                            if( !( uplcArg instanceof UPLCConst ) )
+                            if( !( uplcArg instanceof CEKConst ) )
                             throw new Error("applied parameter did not evaluate to a constant");
+
+                            uplcArg = new UPLCConst( uplcArg.type, uplcArg.value as any );
                         }
             
                         body = new Application(

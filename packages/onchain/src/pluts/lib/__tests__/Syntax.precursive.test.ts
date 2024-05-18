@@ -11,7 +11,7 @@ import { IRHoisted } from "../../../IR/IRNodes/IRHoisted"
 import { IRFunc } from "../../../IR/IRNodes/IRFunc"
 import { IRApp } from "../../../IR/IRNodes/IRApp"
 import { IRVar } from "../../../IR/IRNodes/IRVar"
-import { evalScript } from "@harmoniclabs/plutus-machine"
+import { CEKConst, evalScript } from "@harmoniclabs/plutus-machine"
 import { ErrorUPLC, UPLCConst } from "@harmoniclabs/uplc"
 
 
@@ -119,7 +119,7 @@ describe("precursive", () => {
                     .toUPLC( 0 )
                 )
             ).toEqual(
-                UPLCConst.int( res )
+                CEKConst.int( res )
             )
         };
         
@@ -140,7 +140,7 @@ describe("precursive", () => {
                     .toUPLC( 0 )
                 )
             ).toEqual(
-                UPLCConst.int( res )
+                CEKConst.int( res )
             );
 
         };

@@ -26,7 +26,7 @@ import { TermBool } from "./TermBool";
 import { TermInt } from "./TermInt";
 import { peqList, pincludes, plookup } from "../list";
 
-function* fixedLengthIter<PT extends PDataRepresentable>(
+export function* fixedLengthIter<PT extends PDataRepresentable>(
     list: TermList<PT>,
     maxLength: number
 ): Generator<UtilityTermOf<PT>, void, unknown>

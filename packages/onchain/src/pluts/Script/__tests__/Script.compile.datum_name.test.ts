@@ -1,8 +1,6 @@
 import { PAddress, PAssetsEntry, PDCert, PDatumHash, PMaybe, POutputDatum, PScriptContext, PScriptHash, PScriptPurpose, PStakingCredential, PTxId, PTxInInfo, PTxInfo, PTxOut, PTxOutRef, PValueEntry, asData, bool, bs, data, int, list, pData, pDataB, pDataI, pDataList, pList, pair, perror, pfn, phoist, pif, plet, pmakeUnit, pmatch, pstruct, ptoData, ptraceError, punsafeConvertType, unit } from "../..";
 import { Address } from "@harmoniclabs/cardano-ledger-ts";
-import { DataConstr } from "@harmoniclabs/plutus-data";
-import { Machine } from "@harmoniclabs/plutus-machine";
-import { UPLCConst } from "@harmoniclabs/uplc";
+import { Machine, CEKConst } from "@harmoniclabs/plutus-machine";
 
 export const TestDatum = pstruct({
     TestDatum: {
@@ -158,7 +156,7 @@ describe("same name", () => {
 
         // console.log( res );
 
-        expect( res.result instanceof UPLCConst ).toBe( true );
-        expect( res.result ).toEqual( UPLCConst.bool( true ) );
+        expect( res.result instanceof CEKConst ).toBe( true );
+        expect( res.result ).toEqual( CEKConst.bool( true ) );
     });
 })

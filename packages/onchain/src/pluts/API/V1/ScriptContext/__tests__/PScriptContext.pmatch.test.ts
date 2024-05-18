@@ -1,4 +1,4 @@
-import { Machine } from "@harmoniclabs/plutus-machine";
+import { CEKConst, Machine } from "@harmoniclabs/plutus-machine";
 import { pmatch } from "../../../../PTypes/PStruct/pmatch";
 import { PValue } from "../../Value/PValue";
 import { pInt } from "../../../../lib/std/int/pInt";
@@ -6,7 +6,7 @@ import { pBool } from "../../../../lib/std/bool/pBool";
 import { fromData, perror, pisEmpty } from "../../../../lib";
 import { int } from "../../../../type_system";
 import { _purp, beef32AsData, ctx, txInfo_v1 } from "../../../../../utils/test_utils";
-import { ErrorUPLC, UPLCConst } from "@harmoniclabs/uplc";
+import { ErrorUPLC } from "@harmoniclabs/uplc";
 
 /*
 import fs from "fs"
@@ -226,7 +226,7 @@ describe("pmatch( <PScriptContext> )", () => {
                     .onCertifying( _ => pInt( 4 ) )
                 )
             ).toEqual(
-                UPLCConst.int( 2 )
+                CEKConst.int( 2 )
             )
 
         })
@@ -240,7 +240,7 @@ describe("pmatch( <PScriptContext> )", () => {
                     ._( _ => pInt( 2 ) )
                 )
             ).toEqual(
-                UPLCConst.int( 2 )
+                CEKConst.int( 2 )
             );
 
         })
@@ -254,7 +254,7 @@ describe("pmatch( <PScriptContext> )", () => {
                     ._( _ => pInt( 2 ) )
                 )
             ).toEqual(
-                UPLCConst.int( 1 )
+                CEKConst.int( 1 )
             );
 
         })

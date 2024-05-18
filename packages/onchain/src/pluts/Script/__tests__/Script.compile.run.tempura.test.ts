@@ -3,9 +3,7 @@ import { PTokenName } from "../../API/V1/Value/PTokenName";
 import { PAssetsEntry, PCredential, PCurrencySymbol, PData, PExtended, PInt, PScriptContext, PScriptPurpose, PTxInfo, PTxOut, PTxOutRef, PType, PUnit, PValue, PValueEntry, Term, TermFn, TermList, bool, bs, data, delayed, fn, int, lam, list, pBSToData, pBool, pData, pDataI, pInt, pIntToData, pList, pListToData, pchooseList, pdelay, peqData, perror, pfn, pforce, phoist, pif, pindexBs, pisEmpty, plam, plet, pmakeUnit, pmatch, pmatchList, pnilData, precursive, pserialiseData, psha2_256, pstrictIf, pstruct, psub, ptrace, ptraceError, ptraceVal, punBData, punIData, punsafeConvertType, str, termTypeToString, unit } from "../..";
 import { TxOutRef } from "@harmoniclabs/cardano-ledger-ts";
 import { dataFromCbor } from "@harmoniclabs/plutus-data";
-import { Machine } from "@harmoniclabs/plutus-machine";
-import { UPLCConst, prettyUPLC } from "@harmoniclabs/uplc";
-import { prettyIR, prettyIRJsonStr } from "../../../IR/utils/showIR";
+import { CEKConst, Machine } from "@harmoniclabs/plutus-machine";
 
 const master_tn = PTokenName.from( fromAscii("itamae") );
 
@@ -1043,8 +1041,8 @@ describe("run tempura", () => {
         );
         //*/
 
-        expect( res.result instanceof UPLCConst ).toBe( true );
-        expect( res.result ).toEqual( UPLCConst.unit );
+        expect( res.result instanceof CEKConst ).toBe( true );
+        expect( res.result ).toEqual( CEKConst.unit );
     });
 
     // fails because of context;
@@ -1086,8 +1084,8 @@ describe("run tempura", () => {
             (res as any)?.result
         );
 
-        expect( res.result instanceof UPLCConst ).toBe( true );
-        expect( res.result ).toEqual( UPLCConst.unit );
+        expect( res.result instanceof CEKConst ).toBe( true );
+        expect( res.result ).toEqual( CEKConst.unit );
     });
 
 });

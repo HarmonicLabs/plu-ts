@@ -7,8 +7,7 @@ import { IRHoisted } from "../../IRNodes/IRHoisted";
 import { IRLetted } from "../../IRNodes/IRLetted";
 import { IRTerm } from "../../IRTerm";
 import { IRParentTerm } from "../../utils/isIRParentTerm";
-import { isIRTerm } from "@harmoniclabs/plu-ts-onchain";
-import { prettyIRJsonStr } from "../../utils";
+import { isIRTerm, prettyIRJsonStr } from "../../utils";
 
 /**
  * 

@@ -1,5 +1,5 @@
-import { Machine } from "@harmoniclabs/plutus-machine";
-import { ToUPLC, UPLCTerm, UPLCConst } from "@harmoniclabs/uplc";
+import { CEKConst, Machine } from "@harmoniclabs/plutus-machine";
+import { ToUPLC, UPLCTerm } from "@harmoniclabs/uplc";
 import { IRConst } from "../../IR/IRNodes/IRConst";
 import { IRError } from "../../IR/IRNodes/IRError";
 import { IRHoisted } from "../../IR/IRNodes/IRHoisted";
@@ -12,7 +12,6 @@ import { cloneTermType } from "../type_system/cloneTermType";
 import { defineReadOnlyHiddenProperty } from "@harmoniclabs/obj-utils";
 import { Cloneable, isCloneable } from "../../utils/Cloneable";
 import { assert } from "../../utils/assert";
-import { CEKConst } from "@harmoniclabs/plutus-machine/dist/CEKValue/CEKConst";
 
 export type UnTerm<T extends Term<PType>> = T extends Term<infer PT extends PType > ? PT : never;
 
@@ -109,7 +108,7 @@ export class Term<A extends PType>
 
                         if( uplc instanceof CEKConst )
                         {
-                            ir = new IRConst( this.type, uplc.value );
+                            ir = new IRConst( this.type, uplc.value as any );
                         }
                         else
                         {

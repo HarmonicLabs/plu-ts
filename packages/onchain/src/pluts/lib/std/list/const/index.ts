@@ -12,7 +12,8 @@ import { punsafeConvertType } from "../../../punsafeConvertType";
 import { TermList, addPListMethods } from "../../UtilityTerms";
 import { _papp } from "../../data/conversion/minimal_common";
 import { Data, isData } from "@harmoniclabs/plutus-data";
-import { UPLCTerm, UPLCConst, showUPLC } from "@harmoniclabs/uplc";
+import { UPLCTerm, showUPLC } from "@harmoniclabs/uplc";
+import { CEKConst } from "@harmoniclabs/plutus-machine";
 
 
 export function assertValidListType( elemsT: TermType ): void
@@ -81,12 +82,12 @@ export function pconstList<ElemsT extends TermType>( elemsT: ElemsT ): ( elems: 
                                     el.toUPLC(dbn)
                                 ));
 
-                                if(!(res instanceof UPLCConst))
+                                if(!(res instanceof CEKConst))
                                 {
                                     console.log("------------------- pconstList -------------------");
                                     console.log( res )
                                     console.log( showUPLC( el.toUPLC( dbn ) ) )
-                                    throw res
+                                    throw res;
                                 }
 
                                 return res.value as Data

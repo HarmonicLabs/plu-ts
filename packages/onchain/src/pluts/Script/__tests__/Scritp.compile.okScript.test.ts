@@ -1,5 +1,5 @@
 import { Lambda, UPLCConst } from "@harmoniclabs/uplc";
-import { data, pfn, pmakeUnit, unit } from "../../../.."
+import { data, pfn, pmakeUnit, unit } from "../..";
 
 test("okScript", () => {
 
@@ -7,7 +7,7 @@ test("okScript", () => {
     (( d, r, c ) => pmakeUnit());
 
     expect(
-        okScript.toUPLC()
+        okScript.toUPLC(0)
     ).toEqual(
         new Lambda(
             new Lambda(
@@ -16,6 +16,6 @@ test("okScript", () => {
                 )
             )
         )
-    )
+    );
 
 })
