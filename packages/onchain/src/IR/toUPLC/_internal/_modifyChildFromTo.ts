@@ -19,7 +19,9 @@ export function _modifyChildFromTo( parent: IRParentTerm | undefined, currentChi
 {
     if( parent === undefined )
     {
-        throw new Error(
+        if( isIRTerm( currentChild ) )
+            parent = currentChild.parent as IRParentTerm;
+        else throw new Error(
             "'_modifyChildFromTo' received an undefined parent"
         );
     }
