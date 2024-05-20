@@ -1,4 +1,5 @@
 import { IRApp } from "../IRNodes/IRApp";
+import { IRCase } from "../IRNodes/IRCase";
 import { IRConstr } from "../IRNodes/IRConstr";
 import { IRDelayed } from "../IRNodes/IRDelayed";
 import { IRForced } from "../IRNodes/IRForced";

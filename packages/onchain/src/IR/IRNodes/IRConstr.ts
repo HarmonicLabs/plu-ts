@@ -107,7 +107,6 @@ export class IRConstr
                 configurable: false
             }
         );
-
         Object.defineProperty(
             this, "isHashPresent", {
                 value: () => hash instanceof Uint8Array,
@@ -116,7 +115,6 @@ export class IRConstr
                 configurable: false
             }
         );
-
         Object.defineProperty(
             this, "markHashAsInvalid",
             {

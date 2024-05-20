@@ -31,6 +31,7 @@ export class IRNative
     readonly tag!: IRNativeTag;
     readonly hash!: Uint8Array;
     markHashAsInvalid!: () => void;
+    isHashPresent: () => boolean;
 
     readonly meta: IRNativeMetadata
 
@@ -123,7 +124,14 @@ export class IRNative
                 configurable: false
             }
         );
-
+        Object.defineProperty(
+            this, "isHashPresent", {
+                value: () => true,
+                writable: false,
+                enumerable: true,
+                configurable: false
+            }
+        );
         Object.defineProperty(
             this, "markHashAsInvalid",
             {

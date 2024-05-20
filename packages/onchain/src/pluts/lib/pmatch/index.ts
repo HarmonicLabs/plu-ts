@@ -1,35 +1,36 @@
-
-import { PStruct, StructInstance } from "../pstruct";
-import { PType } from "../../../PType";
-import { Term } from "../../../Term";
-import { PData } from "../../PData/PData";
-import { PLam } from "../../PFn/PLam";
-import { PList } from "../../PList";
-import { getFields } from "./matchSingleCtorStruct";
-import { papp } from "../../../lib/papp";
-import { UtilityTermOf, addUtilityForType } from "../../../lib/std/UtilityTerms/addUtilityForType";
-import { TermList } from "../../../lib/std/UtilityTerms/TermList";
-import { plam } from "../../../lib/plam";
-import { TermFn } from "../../PFn";
-import { LamT, PrimType, StructCtorDef, StructDefinition, TermType, data, fn, lam, list } from "../../../type_system/types";
-import { isStructDefinition, termTypeToString } from "../../../type_system";
-import { phead } from "../../../lib/builtins/list";
-import { _fromData } from "../../../lib/std/data/conversion/fromData_minimal";
-import { _old_plet } from "../../../lib/plet/old";
-import { _plet } from "../../../lib/plet/minimal";
 import { defineReadOnlyProperty } from "@harmoniclabs/obj-utils";
 import { DataI } from "@harmoniclabs/plutus-data";
-import { IRTerm } from "../../../../IR/IRTerm";
-import { IRVar } from "../../../../IR/IRNodes/IRVar";
-import { IRNative } from "../../../../IR/IRNodes/IRNative";
-import { IRApp } from "../../../../IR/IRNodes/IRApp";
-import { IRHoisted } from "../../../../IR/IRNodes/IRHoisted";
-import { IRFunc } from "../../../../IR/IRNodes/IRFunc";
-import { IRConst } from "../../../../IR/IRNodes/IRConst";
-import { IRForced } from "../../../../IR/IRNodes/IRForced";
-import { IRError } from "../../../../IR/IRNodes/IRError";
-import { IRDelayed } from "../../../../IR/IRNodes/IRDelayed";
-import { _punsafeConvertType } from "../../../lib/punsafeConvertType/minimal";
+import { PData } from "../../PTypes/PData/PData";
+import { TermFn } from "../../PTypes/PFn/PFn";
+import { PList } from "../../PTypes/PList";
+import { LamT, PrimType, StructCtorDef, StructDefinition, TermType, data, fn, lam, list } from "../../type_system/types";
+import { phead } from "../builtins/list";
+import { _plet } from "../plet/minimal";
+import { _old_plet } from "../plet/old";
+import { _punsafeConvertType } from "../punsafeConvertType/minimal";
+import { TermList } from "../std";
+import { _fromData } from "../std/data/conversion/fromData_minimal";
+import { getFields } from "./matchSingleCtorStruct";
+import { IRVar } from "../../../IR/IRNodes/IRVar";
+import { IRTerm } from "../../../IR/IRTerm";
+import { IRApp } from "../../../IR/IRNodes/IRApp";
+import { Term } from "../../Term";
+import { IRNative } from "../../../IR/IRNodes/IRNative";
+import { IRHoisted } from "../../../IR/IRNodes/IRHoisted";
+import { IRFunc } from "../../../IR/IRNodes/IRFunc";
+import { PStruct, StructInstance } from "../../PTypes/PStruct/pstruct";
+import { PType } from "../../PType";
+import { IRForced } from "../../../IR/IRNodes/IRForced";
+import { IRError } from "../../../IR/IRNodes/IRError";
+import { IRDelayed } from "../../../IR/IRNodes/IRDelayed";
+import { IRConst } from "../../../IR/IRNodes/IRConst";
+import { PLam } from "../../PTypes/PFn/PLam";
+import { termTypeToString } from "../../type_system/utils";
+import { isStructDefinition } from "../../type_system/kinds/isWellFormedType";
+import { UtilityTermOf, addUtilityForType } from "../std/UtilityTerms/addUtilityForType";
+import { papp } from "../papp";
+import { plam } from "../plam";
+
 
 const elemAtCache: { [n: number]: TermFn<[ PList<PData> ], PData > } = {};
 
@@ -159,18 +160,7 @@ type TypedPMatchOptions<SDef extends StructDefinition, PReturnT extends PType> =
                 TypedPMatchOptions<Omit<SDef,Ctor>, PReturnT>
 } & MatchRest<PReturnT>
 
-type MathcedCtorsFields<SCtorDef extends StructCtorDef> = StructInstance<SCtorDef> & {
-    /**
-     * @deprecated
-     * you can use simple dot notation instead
-    **/
-    extract: ( ...fields: (keyof SCtorDef)[] ) => {
-        /**
-         * @deprecated
-        **/
-        in: <PExprReturn extends PType>( cb: ( mathcedCtorsFields: StructInstance<SCtorDef> ) => Term<PExprReturn> ) => Term<PExprReturn> 
-    }
-}
+type MathcedCtorsFields<SCtorDef extends StructCtorDef> = StructInstance<SCtorDef> 
 
 export type PMatchOptions<SDef extends StructDefinition> = {
     [Ctor in keyof SDef as `on${Capitalize<string & Ctor>}`]

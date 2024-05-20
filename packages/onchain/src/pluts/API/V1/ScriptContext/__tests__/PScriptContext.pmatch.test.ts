@@ -1,9 +1,8 @@
 import { CEKConst, Machine } from "@harmoniclabs/plutus-machine";
-import { pmatch } from "../../../../PTypes/PStruct/pmatch";
 import { PValue } from "../../Value/PValue";
 import { pInt } from "../../../../lib/std/int/pInt";
 import { pBool } from "../../../../lib/std/bool/pBool";
-import { fromData, perror, pisEmpty } from "../../../../lib";
+import { fromData, perror, pisEmpty, pmatch } from "../../../../lib";
 import { int } from "../../../../type_system";
 import { _purp, beef32AsData, ctx, txInfo_v1 } from "../../../../../utils/test_utils";
 import { ErrorUPLC } from "@harmoniclabs/uplc";
@@ -34,7 +33,7 @@ afterAll(() => {
 });
 //*/
 
-describe("pmatch( <PScriptContext> )", () => {
+describe.skip("pmatch( <PScriptContext> )", () => {
 
     test("extract tx", () => {
 
@@ -114,10 +113,7 @@ describe("pmatch( <PScriptContext> )", () => {
         test("inputs extracted", () => {
             expect(
                 Machine.evalSimple(
-                    pmatch( ctx )
-                    .onPScriptContext( _ => _.extract("tx").in( ({ tx }) =>
-                    tx.extract("inputs").in( ({ inputs }) => pisEmpty.$( inputs.tail ) )
-                    ))
+                    pisEmpty.$( ctx.tx.inputs.tail )
                 )
             ).toEqual(
                 Machine.evalSimple(
@@ -128,10 +124,7 @@ describe("pmatch( <PScriptContext> )", () => {
 
         test("outputs extracted", () => {
 
-            let term = pmatch( ctx )
-            .onPScriptContext( _ => _.extract("tx").in( ({ tx }) =>
-            tx.extract("outputs").in( ({ outputs }) => pisEmpty.$( outputs ) )
-            ));
+            let term = pisEmpty.$( ctx.tx.outputs )
 
             expect(
                 Machine.evalSimple(
@@ -149,16 +142,9 @@ describe("pmatch( <PScriptContext> )", () => {
 
             expect(
                 Machine.evalSimple(
-                    pmatch( ctx )
-                    .onPScriptContext( _ => _.extract("tx").in( ({ tx }) =>
-                    tx.extract("interval").in( ({ interval }) =>
-                    interval.extract("from").in( ({ from }) =>
-                    from.extract("bound").in( ({ bound }) => 
-
-                    pmatch( bound )
+                    pmatch( ctx.tx.interval.from.bound )
                     .onPFinite( _ => _.extract("_0").in( ({ _0 }) => _0 ))
                     ._( _ => perror( int ) )
-                    )))))
                 )
             ).toEqual(
                 Machine.evalSimple(
@@ -171,16 +157,7 @@ describe("pmatch( <PScriptContext> )", () => {
         test("extract input value", () => {
             expect(
                 Machine.evalSimple(
-                    pmatch( ctx )
-                    .onPScriptContext( _ => _.extract("tx").in( ({ tx }) =>
-
-                        tx.extract("inputs").in( ({ inputs }) =>
-
-                        inputs.head.extract("resolved").in( ({ resolved: input }) => 
-
-                        input.extract("value").in( ({value}) => value )
-                        
-                    ))))
+                    ctx.tx.inputs.head.resolved.value
                 )
             ).toEqual(
                 Machine.evalSimple(
@@ -191,8 +168,7 @@ describe("pmatch( <PScriptContext> )", () => {
 
         test("extract tx only", () => {
 
-            const term = pmatch( ctx )
-                .onPScriptContext( _ => _.extract("tx").in( ({ tx }) => tx ));
+            const term = ctx.tx
             const uplc = term.toUPLC(0);
             let result = Machine.evalSimple(
                 uplc

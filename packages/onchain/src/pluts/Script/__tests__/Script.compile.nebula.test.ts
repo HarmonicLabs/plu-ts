@@ -21,7 +21,6 @@ import { PScriptContext } from "../../API/V2/ScriptContext/PScriptContext";
 import { PTokenName } from "../../API/V1/Value/PTokenName";
 import { PPubKeyHash } from "../../API/V1/PubKey/PPubKeyHash";
 import { PAddress } from "../../API/V1/Address/PAddress";
-import { pmatch } from "../../PTypes/PStruct/pmatch";
 import { perror } from "../../lib/perror";
 import { PTxOutRef } from "../../API/V1/Tx/PTxOutRef";
 import { palias } from "../../PTypes/PAlias/palias";
@@ -40,6 +39,7 @@ import { ptraceError } from "../../lib/builtins/ptrace";
 import { peqBs } from "../../lib/builtins/bs";
 import { pmakeUnit } from "../../lib/std/unit/pmakeUnit";
 import { addUtilityForType } from "../../lib/std/UtilityTerms/addUtilityForType";
+import { pmatch } from "../../lib/pmatch";
 
 const pvalueOf = phoist(
     pfn([

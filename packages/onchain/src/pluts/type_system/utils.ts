@@ -180,6 +180,7 @@ export type TermTypeJson
     | TermTypeJsonLambda
     | TermTypeJsonTyParam
     | TermTypeJsonStruct
+    | TermTypeJsonSop
     | PrimType.Int | PrimType.BS | PrimType.Str | PrimType.Unit | PrimType.Bool | PrimType.Data;
 
 export interface TermTypeJsonAlias { alias: TermTypeJson }
@@ -190,6 +191,7 @@ export interface TermTypeJsonPair { pair: { fst: TermTypeJson, snd: TermTypeJson
 export interface TermTypeJsonLambda { lambda: { input: TermTypeJson, output: TermTypeJson } }
 export interface TermTypeJsonTyParam { tyParam: null }
 export interface TermTypeJsonStruct { struct: StructDefJson }
+export interface TermTypeJsonSop { sop: StructDefJson }
 
 export function termTypeToJson( t: GenericTermType ): TermTypeJson
 {
@@ -207,7 +209,13 @@ export function termTypeToJson( t: GenericTermType ): TermTypeJson
     if( tag === PrimType.Struct )
     {
         return {
-            struct: structDefToJson( t[1] )
+            struct: structDefToJson( t[1] as any )
+        };
+    }
+    if( tag === PrimType.Sop )
+    {
+        return {
+            sop: structDefToJson( t[1] as any )
         };
     }
     if( tag === PrimType.AsData )

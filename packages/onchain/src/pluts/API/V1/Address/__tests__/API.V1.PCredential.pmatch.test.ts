@@ -1,5 +1,4 @@
-import { pmatch } from "../../../../PTypes"
-import { pByteString, perror, toData } from "../../../../lib"
+import { perror, pmatch, toData } from "../../../../lib"
 import { PPubKeyHash } from "../../PubKey/PPubKeyHash"
 import { PCredential } from "../PCredential"
 

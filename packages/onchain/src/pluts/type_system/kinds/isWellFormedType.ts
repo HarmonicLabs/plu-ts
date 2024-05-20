@@ -194,9 +194,13 @@ export function isWellFormedDataRepType( t: GenericTermType ): t is DataRepTermT
         return t.length >= 2 && isStructDefinition( t[1] );
     }
 
+    if( primTypeTag === PrimType.Pair )
+    {
+        return true; // ??????????????? TODO ??????????????????????
+    }
+
     if(
-        primTypeTag === PrimType.Lambda ||
-        primTypeTag === PrimType.Pair
+        primTypeTag === PrimType.Lambda 
     ) return false;
 
     return false;

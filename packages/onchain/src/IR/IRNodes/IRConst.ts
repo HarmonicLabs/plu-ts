@@ -148,7 +148,14 @@ export class IRConst
                 configurable: false
             }
         );
-
+        Object.defineProperty(
+            this, "isHashPresent", {
+                value: () => hash instanceof Uint8Array,
+                writable: false,
+                enumerable: true,
+                configurable: false
+            }
+        );
         Object.defineProperty(
             this, "markHashAsInvalid",
             {

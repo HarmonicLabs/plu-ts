@@ -288,7 +288,7 @@ function _definePListMethods<PElemsT extends PType>( lst: Term<PList<PElemsT>>, 
         lst,
         "find",
         ( predicate: PappArg<PLam<PElemsT,PBool>> ): Term<PMaybeT<PElemsT>> => 
-            pfind( elemsT ).$( predicate ).$( lst ) as any
+            pfind( elemsT ).$( predicate as any ).$( lst ) as any
     );
 
     definePropertyIfNotPresent(
@@ -317,7 +317,7 @@ function _definePListMethods<PElemsT extends PType>( lst: Term<PList<PElemsT>>, 
     defineReadOnlyProperty(
         lst,
         "prepend",
-        ( elem: PappArg<PElemsT> ): TermList<PElemsT> => pprepend( elemsT ).$( elem ).$( lst ) as any
+        ( elem: PappArg<PElemsT> ): TermList<PElemsT> => pprepend( elemsT ).$( elem as any ).$( lst ) as any
     );
 
     defineReadOnlyProperty(

@@ -1,6 +1,5 @@
 import { compile, scriptToJsonFormat } from "../compile"
 import { PScriptContext } from "../../API/V1/ScriptContext/PScriptContext"
-import { pmatch } from "../../PTypes/PStruct/pmatch"
 import { PTxInInfo } from "../../API/V1/Tx/PTxInInfo"
 import { makeValidator } from "../makeScript"
 import { PTxInfo } from "../../API/V1/ScriptContext/PTxInfo/PTxInfo"

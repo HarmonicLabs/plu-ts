@@ -160,7 +160,8 @@ export function pstruct<
 {
     assert(
         isStructDefinition( def ),
-        "cannot construct 'PStruct' type; struct definition is not constant: " + structDefToString( def ) 
+        "cannot construct 'PStruct' type; struct definition is not constant: " +
+        structDefToString( def ) 
     );
 
     getMethods = typeof getMethods === "function" ? getMethods : _self_t => { return {} as SMethods; };
