@@ -20,6 +20,7 @@ export function termTyToConstTy( t: TermType ): ConstType
 
         case PrimType.Delayed:
         case PrimType.Lambda:
+        case PrimType.Sop:
         default:
             throw new Error("unable to convert term type to uplc constant type")
     }

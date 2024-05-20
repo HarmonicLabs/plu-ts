@@ -1,4 +1,5 @@
 import { IRApp } from "../IRNodes/IRApp";
+import { IRConstr } from "../IRNodes/IRConstr";
 import { IRDelayed } from "../IRNodes/IRDelayed";
 import { IRForced } from "../IRNodes/IRForced";
 import { IRFunc } from "../IRNodes/IRFunc";
@@ -16,7 +17,9 @@ export type IRParentTerm
     | IRHoisted
     // | IRError
     | IRForced
-    | IRDelayed;
+    | IRDelayed
+    | IRConstr
+    | IRCase;
 
 export function isIRParentTerm<T extends IRTerm>( stuff: T | undefined ): stuff is (T & IRParentTerm)
 {
@@ -30,6 +33,8 @@ export function isIRParentTerm<T extends IRTerm>( stuff: T | undefined ): stuff 
         stuff instanceof IRHoisted  ||
         // stuff instanceof IRError    ||
         stuff instanceof IRForced   ||
-        stuff instanceof IRDelayed
+        stuff instanceof IRDelayed  ||
+        stuff instanceof IRConstr   ||
+        stuff instanceof IRCase
     );
 }

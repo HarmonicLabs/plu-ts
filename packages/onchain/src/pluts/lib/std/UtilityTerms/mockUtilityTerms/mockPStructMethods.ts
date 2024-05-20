@@ -1,5 +1,5 @@
 import { definePropertyIfNotPresent, defineReadOnlyProperty, hasOwn } from "@harmoniclabs/obj-utils";
-import { PStruct, RestrictedStructInstance } from "../../../../PTypes/PStruct/pstruct";
+import { PStruct } from "../../../../PTypes/PStruct/pstruct";
 import { Term } from "../../../../Term";
 import { isStructDefinition, isStructType } from "../../../../type_system/kinds/isWellFormedType";
 import { Methods, StructDefinition, bool, data, int, lam, list, pair } from "../../../../type_system/types";
@@ -57,21 +57,6 @@ export function mockPStructMethods<
             );
 
         }
-
-        /**
-         * @deprecated
-         */
-        defineReadOnlyProperty(
-            struct,
-            "extract",
-            <Fields extends (keyof SDef[keyof SDef])[]>( ...fields: Fields ): {
-                in: <PExprResult extends PType>( expr: ( extracted: RestrictedStructInstance<SDef[keyof SDef],Fields> ) => Term<PExprResult> ) => Term<PExprResult>
-            } => {
-                return {
-                    in: ( expr ) => expr( struct as any )
-                }
-            }
-        );
     }
 
     definePropertyIfNotPresent(

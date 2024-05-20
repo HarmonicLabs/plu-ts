@@ -19,12 +19,13 @@ export class IRDelayed
     delayed!: IRTerm
     readonly hash!: Uint8Array
     markHashAsInvalid!: () => void;
+    isHashPresent: () => boolean;
 
     readonly meta: IRDelayedMetadata
 
     parent: IRParentTerm | undefined;
 
-    constructor( delayed: IRTerm )
+    constructor( delayed: IRTerm, _unsafeHash?: Uint8Array )
     {
         Object.defineProperty(
             this, "meta", {
@@ -35,7 +36,7 @@ export class IRDelayed
             }
         );
 
-        let hash: Uint8Array | undefined = undefined
+        let hash: Uint8Array | undefined = _unsafeHash;
         Object.defineProperty(
             this, "hash",
             {
@@ -53,7 +54,14 @@ export class IRDelayed
                 }
             }
         );
-
+        Object.defineProperty(
+            this, "isHashPresent", {
+                value: () => hash instanceof Uint8Array,
+                writable: false,
+                enumerable: true,
+                configurable: false
+            }
+        );
         Object.defineProperty(
             this, "markHashAsInvalid",
             {
@@ -137,7 +145,10 @@ export class IRDelayed
 
     clone(): IRDelayed
     {
-        return new IRDelayed( this.delayed.clone() )
+        return new IRDelayed(
+            this.delayed.clone(),
+            this.isHashPresent() ? this.hash : undefined
+        )
     }
 
     toJson(): any

@@ -22,6 +22,7 @@ export class IRFunc
 
     readonly hash!: Uint8Array;
     markHashAsInvalid!: () => void;
+    isHashPresent: () => boolean;
 
     readonly meta: IRFuncMetadata
 
@@ -31,12 +32,11 @@ export class IRFunc
 
     parent: IRTerm | undefined;
 
-    clone!: () => IRFunc;
-
     constructor(
         arity: number,
         body: IRTerm,
-        func_name?: string | undefined
+        func_name?: string | undefined,
+        _unsafeHash?: Uint8Array
     )
     {
         if( !Number.isSafeInteger( arity ) && arity >= 1 )
@@ -69,7 +69,7 @@ export class IRFunc
         let _body: IRTerm = body;
         _body.parent = this;
 
-        let hash: Uint8Array | undefined = undefined;
+        let hash: Uint8Array | undefined = _unsafeHash;
         Object.defineProperty(
             this, "hash", {
                 get: () => {
@@ -90,7 +90,14 @@ export class IRFunc
                 configurable: false
             }
         );
-
+        Object.defineProperty(
+            this, "isHashPresent", {
+                value: () => hash instanceof Uint8Array,
+                writable: false,
+                enumerable: true,
+                configurable: false
+            }
+        );
         Object.defineProperty(
             this, "markHashAsInvalid",
             {
@@ -160,23 +167,19 @@ export class IRFunc
             }
         );
 
-        Object.defineProperty(
-            this, "clone",
-            {
-                value: () => {
-                    return new IRFunc(
-                        this.arity,
-                        body.clone()
-                    )
-                },
-                writable: false,
-                enumerable: true,
-                configurable: false
-            }
-        );
     }
 
     static get tag(): Uint8Array { return new Uint8Array([ 0b0000_00001 ]); }
+
+    clone(): IRFunc
+    {
+        return new IRFunc(
+            this.arity,
+            this.body.clone(),
+            this.meta.name,
+            this.isHashPresent() ? this.hash : undefined
+        )
+    }
 
     toJson(): any
     {

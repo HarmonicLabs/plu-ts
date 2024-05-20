@@ -42,6 +42,7 @@ export class IRConst
 {
     readonly hash: Uint8Array;
     markHashAsInvalid: () => void;
+    isHashPresent: () => boolean;
 
     readonly meta: IRConstMetadata
 
@@ -50,7 +51,7 @@ export class IRConst
 
     parent: IRParentTerm | undefined;
 
-    constructor( t: TermType, v: IRConstValue )
+    constructor( t: TermType, v: IRConstValue, _unsafeHash?: Uint8Array )
     {
         if(
             !isWellFormedType( t ) ||
@@ -126,7 +127,7 @@ export class IRConst
             }
         );
 
-        let hash: Uint8Array | undefined = undefined;
+        let hash: Uint8Array | undefined = _unsafeHash;
         Object.defineProperty(
             this, "hash", {
                 get: () => {
@@ -163,7 +164,11 @@ export class IRConst
 
     clone(): IRConst
     {
-        return new IRConst( this.type, this.value );
+        return new IRConst(
+            this.type,
+            this.value,
+            this.isHashPresent() ? this.hash : undefined
+        );
     }
 
     toJson(): any

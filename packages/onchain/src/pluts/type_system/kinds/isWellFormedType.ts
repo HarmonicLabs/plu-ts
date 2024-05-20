@@ -1,9 +1,10 @@
 import { isObject } from "@harmoniclabs/obj-utils";
-import { isPrimTypeTag } from "./isPrimTypeTag";
+import { isBasePrimType, isPrimTypeTag } from "./isPrimTypeTag";
 import { isTaggedAsAlias } from "./isTaggedAsAlias";
 import { isTypeParam } from "./isTypePAram";
-import { GenericStructDefinition, GenericTermType, type Methods, PrimType, StructCtorDef, StructDefinition, StructT, TermType } from "../types";
+import { GenericTermType, type Methods, PrimType, StructCtorDef, StructDefinition, StructT, TermType, DataRepTermType, GenericStructDefinition, SopDefinition, SopT } from "../types";
 import { termTypeToString } from "../utils";
+import { unwrapAlias } from "../tyArgs";
 
 
 function getIsStructDefWithTermTypeCheck( termTypeCheck: ( t: TermType ) => boolean )
@@ -46,14 +47,28 @@ function getIsStructDefWithTermTypeCheck( termTypeCheck: ( t: TermType ) => bool
     }
 }
 
-export const isStructDefinition = getIsStructDefWithTermTypeCheck(
+export const isSopDefinition = getIsStructDefWithTermTypeCheck(
     isWellFormedType
+) as ( def: object ) => def is SopDefinition;
+
+export const isStructDefinition = getIsStructDefWithTermTypeCheck(
+    isWellFormedDataRepType
 ) as ( def: object ) => def is StructDefinition;
 
 export const isGenericStructDefinition = getIsStructDefWithTermTypeCheck(
     isWellFormedGenericType
 ) as  ( def: object ) => def is GenericStructDefinition;
 
+
+export function isSopType( t: GenericTermType ): t is SopT<SopDefinition, Methods>
+{
+    return (
+        Array.isArray( t ) &&
+        t.length >= 2 &&
+        t[0] === PrimType.Sop &&
+        isSopDefinition( t[1] )
+    )
+}
 
 export function isStructType( t: GenericTermType ): t is StructT<StructDefinition, Methods>
 {
@@ -86,34 +101,103 @@ export function isWellFormedType( t: GenericTermType ): t is TermType
 
     if( isTypeParam( t ) ) return false;
 
+    const primTypeTag = t[0];
+
     if(!(
-        isPrimTypeTag( t[0] )
+        isPrimTypeTag( primTypeTag )
     )) return false;
 
     // just base type
-    if( t.length === 1 ) return true;
+    if( t.length === 1 ) return isBasePrimType( primTypeTag );
 
     if(
-        t[0] === PrimType.Delayed   ||
-        t[0] === PrimType.AsData    ||
-        t[0] === PrimType.List      ||
+        primTypeTag === PrimType.Delayed   ||
+        primTypeTag === PrimType.AsData    ||
+        primTypeTag === PrimType.List      ||
         // ??
-        t[0] === PrimType.Alias
+        primTypeTag === PrimType.Alias
     ) return t.length >= 2 && isWellFormedType( t[1] as any );
 
-    if( t[0] === PrimType.Struct )
+    if( primTypeTag === PrimType.Struct )
     {
         return t.length >= 2 && isStructDefinition( t[1] );
     }
 
+    if( primTypeTag === PrimType.Sop )
+    {
+        return t.length >= 2 && isSopDefinition( t[1] );
+    }
+
     if(
-        t[0] === PrimType.Lambda ||
-        t[0] === PrimType.Pair
+        primTypeTag === PrimType.Lambda ||
+        primTypeTag === PrimType.Pair
     ) return (
         t.length === 3 && 
         isWellFormedType( t[1] as any ) &&
         isWellFormedType( t[2] as any )
     );
+
+    return false;
+}
+
+export function isWellFormedDataRepType( t: GenericTermType ): t is DataRepTermType
+{
+    if( isTaggedAsAlias( t ) ) return isWellFormedDataRepType( t[1] as any );
+
+    if(!( 
+        Array.isArray( t ) &&
+        t.length > 0
+    )) return false;
+
+    if( isTypeParam( t ) ) return false;
+
+    const primTypeTag = t[0];
+
+    if(!(
+        isPrimTypeTag( primTypeTag )
+    )) return false;
+
+    // just base type
+    if( t.length === 1 ) return isBasePrimType( primTypeTag );
+
+    if( primTypeTag === PrimType.Delayed ) return false;
+
+    if(
+        primTypeTag === PrimType.List
+    )
+    {
+        if( t.length < 2 ) return false;
+
+        const elemsT = isTaggedAsAlias( t[1] ) ? unwrapAlias( t[1] ) : t[1];
+
+        if( elemsT[0] === PrimType.Pair )
+        {
+            return (
+                isWellFormedDataRepType( elemsT[1] ) &&
+                isWellFormedDataRepType( elemsT[2] )
+            )
+        }
+        else return isWellFormedDataRepType( elemsT )
+    }
+
+    if(
+        primTypeTag === PrimType.AsData    ||
+        // primTypeTag === PrimType.List      ||
+        primTypeTag === PrimType.Alias
+    ) return t.length >= 2 && isWellFormedDataRepType( t[1] as any );
+
+    if(
+        primTypeTag === PrimType.Struct ||
+        primTypeTag === PrimType.Sop
+    )
+    {
+        return t.length >= 2 && isStructDefinition( t[1] );
+    }
+
+    if(
+        primTypeTag === PrimType.Lambda ||
+        primTypeTag === PrimType.Pair
+    ) return false;
 
     return false;
 }
@@ -129,29 +213,36 @@ export function isWellFormedGenericType( t: GenericTermType ): boolean
 
     if( isTypeParam( t ) ) return true;
 
+    const primTypeTag = t[0];
+
     if(!(
-        isPrimTypeTag( t[0] )
+        isPrimTypeTag( primTypeTag )
     )) return false;
     
     // just base type
     if( t.length === 1 ) return true;
 
     if(
-        t[0] === PrimType.Delayed   ||
-        t[0] === PrimType.AsData    ||
-        t[0] === PrimType.List      ||
+        primTypeTag === PrimType.Delayed   ||
+        primTypeTag === PrimType.AsData    ||
+        primTypeTag === PrimType.List      ||
         // ??
-        t[0] === PrimType.Alias
+        primTypeTag === PrimType.Alias
     ) return t.length >= 2 && isWellFormedGenericType( t[1] );
 
-    if( t[0] === PrimType.Struct )
+    if( primTypeTag === PrimType.Struct )
     {
         return t.length >= 2 && isGenericStructDefinition( t[1] );
     }
 
+    if( primTypeTag === PrimType.Sop )
+    {
+        return t.length >= 2 && isSopDefinition( t[1] );
+    }
+
     if(
-        t[0] === PrimType.Lambda ||
-        t[0] === PrimType.Pair
+        primTypeTag === PrimType.Lambda ||
+        primTypeTag === PrimType.Pair
     )
     {
         const fst = isWellFormedGenericType( t[1] );

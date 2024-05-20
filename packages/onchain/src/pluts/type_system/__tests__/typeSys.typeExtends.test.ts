@@ -2,7 +2,7 @@ import { PValue } from "../../API";
 import { PScriptPurpose } from "../../API/V1/ScriptContext/PScriptPurpose";
 import { pList } from "../../lib/std/list/const";
 import { typeExtends } from "../typeExtends";
-import { alias, asData, bs, data, delayed, int, lam, list, map, pair, str, struct, tyVar, unit } from "../types";
+import { alias, asData, bs, data, delayed, int, lam, list, map, pair, sop, str, struct, tyVar, unit } from "../types";
 import { withAllPairElemsAsData } from "../withAllPairElemsAsData";
 
 describe("typeExtends", () => {
@@ -113,6 +113,71 @@ describe("typeExtends", () => {
         ).toBe( true )
 
     });
+
+    test("SoP", () => {
+
+        expect(
+            typeExtends(
+                sop({ H: { h: int } }),
+                sop({ H: { h: int } })
+            )
+        ).toBe( true )
+
+        expect(
+            typeExtends(
+                sop({ H: { h: bs } }),
+                sop({ H: { h: int } })
+            )
+        ).toBe( false )
+
+        expect(
+            typeExtends(
+                sop({ H: { f: int } }),
+                sop({ H: { h: int } })
+            )
+        ).toBe( false )
+
+        expect(
+            typeExtends(
+                sop({ F: { h: int } }),
+                sop({ H: { h: int } })
+            )
+        ).toBe( false )
+
+        expect(
+            typeExtends(
+                data,
+                sop({ H: { h: int } })
+            )
+        ).toBe( false )
+
+        expect(
+            () => typeExtends(
+                asData(
+                    sop({ H: { h: int } })
+                ),
+                sop({ H: { h: int } })
+            )
+        ).toThrow()
+
+        expect(
+            () => typeExtends(
+                asData(
+                    sop({ F: { h: int } })
+                ),
+                sop({ H: { h: int } })
+            )
+        ).toThrow()
+
+        expect(
+            typeExtends(
+                sop({ H: { h: int } }),
+                data
+            )
+        ).toBe( false )
+
+    });
+
 
     describe("extends generic", () => {
 

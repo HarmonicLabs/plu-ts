@@ -5,7 +5,7 @@ import { Term } from "../../../Term";
 import { PData } from "../../PData/PData";
 import { PLam } from "../../PFn/PLam";
 import { PList } from "../../PList";
-import { getFields } from "../matchSingleCtorStruct";
+import { getFields } from "./matchSingleCtorStruct";
 import { papp } from "../../../lib/papp";
 import { UtilityTermOf, addUtilityForType } from "../../../lib/std/UtilityTerms/addUtilityForType";
 import { TermList } from "../../../lib/std/UtilityTerms/TermList";

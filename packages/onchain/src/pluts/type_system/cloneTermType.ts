@@ -1,4 +1,4 @@
-import { cloneStructDef } from "../PTypes/PStruct/cloneStructDef";
+import { cloneSopDef, cloneStructDef } from "../PTypes/PStruct/cloneStructDef";
 import { GenericTermType, PrimType, lam, struct, pair, list, delayed, asData, alias } from "./types";
 
 export function cloneTermType<T extends GenericTermType>( t: T ): T

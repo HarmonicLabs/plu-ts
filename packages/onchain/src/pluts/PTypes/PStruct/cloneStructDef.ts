@@ -1,8 +1,8 @@
 import { defineReadOnlyProperty } from "@harmoniclabs/obj-utils";
-import { StructCtorDef, StructDefinition } from "../../type_system";
+import { GenericStructDefinition, SopCtorDef, SopDefinition, StructCtorDef, StructDefinition } from "../../type_system";
 
 
-export function cloneStructCtorDef<CtorDef extends StructCtorDef>( ctorDef: Readonly<CtorDef> ): CtorDef
+export function cloneSopCtorDef<CtorDef extends SopCtorDef>( ctorDef: Readonly<CtorDef> ): CtorDef
 {
     const clone: CtorDef = {} as any;
 
@@ -14,7 +14,9 @@ export function cloneStructCtorDef<CtorDef extends StructCtorDef>( ctorDef: Read
     return clone;
 }
 
-export function cloneStructDef<SDef extends StructDefinition>( def: Readonly<SDef> ): SDef
+export const cloneStructCtorDef = cloneSopCtorDef as <CtorDef extends StructCtorDef>( ctorDef: Readonly<CtorDef> ) => CtorDef
+
+export function cloneSopDef<SDef extends SopDefinition>( def: Readonly<SDef> ): SDef
 {
     const clone: SDef = {} as SDef;
     const ctors = Object.keys( def );
@@ -24,9 +26,11 @@ export function cloneStructDef<SDef extends StructDefinition>( def: Readonly<SDe
         defineReadOnlyProperty(
             clone,
             ctors[ i ],
-            cloneStructCtorDef( def[ ctors[i] ] )
+            cloneSopCtorDef( def[ ctors[i] ] )
         );
     }
 
     return clone;
 }
+
+export const cloneStructDef = cloneSopDef as <SDef extends GenericStructDefinition>( def: Readonly<SDef> ) => SDef

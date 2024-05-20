@@ -4,27 +4,25 @@ import { PDataRepresentable } from "../../PType/PDataRepresentable";
 import { UtilityTermOf, addUtilityForType } from "../../lib/std/UtilityTerms/addUtilityForType";
 
 import { structDefToString, termTypeToString } from "../../type_system/utils";
-import { AliasT, GenericStructCtorDef, GenericStructDefinition, GenericTermType, Methods, PrimType, StructCtorDef, StructDefinition, StructT, TermType, alias, asData, data, int, struct, tyVar, unit } from "../../type_system/types";
+import { Methods, PrimType, StructCtorDef, StructDefinition, StructT, asData, data, struct } from "../../type_system/types";
 import { ToPType } from "../../type_system/ts-pluts-conversion";
-import { typeExtends, isStructDefinition, isStructType, isTaggedAsAlias } from "../../type_system";
+import { typeExtends, isStructDefinition } from "../../type_system";
 import { Term } from "../../Term";
 import { punsafeConvertType } from "../../lib/punsafeConvertType";
 import { TermStruct } from "../../lib/std/UtilityTerms/TermStruct";
 import { PType } from "../../PType";
 import { defineReadOnlyProperty, isObject } from "@harmoniclabs/obj-utils";
 import { assert } from "../../../utils/assert";
-import { Pair } from "@harmoniclabs/pair";
 import { DataConstr, Data, isData } from "@harmoniclabs/plutus-data";
-import { Machine } from "@harmoniclabs/plutus-machine";
+import { CEKConst, Machine } from "@harmoniclabs/plutus-machine";
 import { IRHoisted } from "../../../IR/IRNodes/IRHoisted";
 import { IRConst } from "../../../IR/IRNodes/IRConst";
 import { pList } from "../../lib/std/list/const";
 import { IRNative } from "../../../IR/IRNodes/IRNative";
 import { IRApp } from "../../../IR/IRNodes/IRApp";
-import { CEKConst } from "@harmoniclabs/plutus-machine/dist/CEKValue/CEKConst";
 
 /**
- * intermediate class useful to reconize structs form primitives
+ * intermediate class useful to reconise structs form primitives
  */
 class _PStruct extends PData
 {
@@ -39,7 +37,7 @@ export type StructInstance<SCtorDef extends StructCtorDef> = {
 }
 
 export type StructInstanceAsData<SCtorDef extends StructCtorDef> = {
-    [Field in keyof SCtorDef]: Term<PAsData<PType>> | Term<PStruct<StructDefinition, Methods>> | Term<PData>
+    [Field in keyof SCtorDef]: Term<PAsData<PType>> | Term<PStruct<StructDefinition, {}>> | Term<PData>
 }
 
 export type PStruct<SDef extends StructDefinition, SMethods extends Methods> = {
@@ -64,96 +62,6 @@ export type PStruct<SDef extends StructDefinition, SMethods extends Methods> = {
 } & PDataRepresentable & {
     [Ctor in keyof SDef]:
         ( ctorFields: StructInstanceAsData<SDef[Ctor]> ) => TermStruct<SDef, SMethods>
-}
-
-type Includes<As extends any[], Elem extends any> =
-    As extends [] ? false :
-    As extends [ infer A extends any, ...infer RestAs extends any[] ] ?
-    (
-        Elem extends A ? true : Includes<RestAs,Elem>
-    ): false;
-
-export type RestrictedStructInstance<SCtorDef extends StructCtorDef, Fields extends (keyof SCtorDef)[]> = {
-    [Field in keyof SCtorDef]: Includes<Fields, Field> extends true ? UtilityTermOf<ToPType<SCtorDef[Field]>> : never
-}
-
-// this needs to be here;
-// not sure why it causes circluar dependecies when imported from "./cloneStructDef"
-// since the only dependecy needed is `ObjectUtils` and the rest are just types...
-function cloneStructCtorDef<CtorDef extends StructCtorDef>( ctorDef: Readonly<CtorDef> ): CtorDef
-{
-    const clone: CtorDef = {} as any;
-
-    for( const fieldName in ctorDef )
-    {
-        clone[ fieldName ] = ctorDef[ fieldName ];
-    }
-
-    return clone;
-}
-
-// this needs to be here;
-// not sure why it causes circluar dependecies when imported from "./cloneStructDef"
-// since the only dependecy needed is `ObjectUtils` and the rest are just types...
-function cloneStructDef<SDef extends StructDefinition>( def: Readonly<SDef> ): SDef
-{
-    const clone: SDef = {} as SDef;
-    const ctors = Object.keys( def );
-
-    for(let i = 0; i < ctors.length; i++ )
-    {
-        defineReadOnlyProperty(
-            clone,
-            ctors[ i ],
-            cloneStructCtorDef( def[ ctors[i] ] )
-        );
-    }
-
-    return clone;
-}
-
-function structCtorEq( a: StructCtorDef, b: StructCtorDef ): boolean
-{
-    if( a === b ) return true; // shallow eqality;
-
-    const aFieldsNames = Object.keys( a );
-    const bFieldsNames = Object.keys( b );
-
-    if( aFieldsNames.length !== bFieldsNames.length ) return false;
-
-    for( let i = 0; i < aFieldsNames.length; i++ )
-    {
-        if( aFieldsNames[i] !== bFieldsNames[i] ) return false;
-
-        const thisAField = a[ aFieldsNames[i] ];
-        const thisBField = b[ bFieldsNames[i] ];
-
-        if(!(
-            typeExtends( thisAField, thisBField ) &&
-            typeExtends( thisBField, thisAField )
-        )) return false;
-    }
-
-    return true;
-}
-
-export function structDefEq( a: StructDefinition, b: StructDefinition ): boolean
-{
-    if( a === b ) return true; // shallow eqality;
-
-    const aCtors = Object.keys( a );
-    const bCtors = Object.keys( b );
-
-    if( aCtors.length !== bCtors.length ) return false;
-    
-    for( let i = 0; i < aCtors.length; i++ )
-    {
-        if( aCtors[i] !== bCtors[i] ) return false;
-        
-        if( !structCtorEq( a[ aCtors[i] ], b[ bCtors[i] ] ) ) return false;
-    }
-
-    return true;
 }
 
 function isStructInstanceOfDefinition<SCtorDef extends StructCtorDef>
@@ -471,142 +379,3 @@ export function pstruct<
     */
     return PStructExt as any;
 }
-
-function replaceAliasesWith(
-    aliases: AliasT<[PrimType.Int]>[],
-    replacements: (GenericTermType)[],
-    sDef: GenericStructDefinition
-): void
-{
-    const ctors = Object.keys( sDef );
-
-    for( let i = 0; i < ctors.length; i++ )
-    {
-        const thisCtor = sDef[ ctors[ i ] ] as GenericStructCtorDef;
-        const fields = Object.keys( thisCtor );
-
-        for( let j = 0; j < fields.length; j++ )
-        {
-            const thisField = fields[i];
-            const thisType = thisCtor[ thisField ] as TermType;
-
-            if( isStructType( thisType ) )
-            {
-                const thisTypeSDefClone = cloneStructDef( thisType[1] as GenericStructDefinition );
-                replaceAliasesWith(
-                    aliases,
-                    replacements,
-                    thisTypeSDefClone
-                );
-                thisCtor[ thisField ] = struct( thisTypeSDefClone );
-            }
-            else if ( isTaggedAsAlias( thisType ) )
-            {
-                const idx = aliases.findIndex(
-                    // object (pointer) equality 
-                    alias => thisType === alias
-                );
-                if( idx < 0 ) continue;
-                thisCtor[ thisField ] = replacements[ idx ];
-            }
-        }
-    }
-}
-
-export function typeofGenericStruct(
-    genStruct: ( ...tyArgs: TermType[] )
-        => PStruct<StructDefinition, Methods>
-): StructT<GenericStructDefinition, Methods>
-{
-    const nArgs = genStruct.length;
-    const aliases: AliasT<[PrimType.Int]>[] = Array( nArgs );
-    const replacements: [ symbol ][] = Array( nArgs );
-
-    for( let i = 0; i < nArgs; i++ )
-    {
-        aliases[i] = alias( int );
-        replacements[i] = tyVar();
-    };
-
-    const PStruct_ = genStruct(
-        ...aliases
-    );
-
-    const sDef = cloneStructDef(
-        PStruct_.type[1]
-    );
-
-    replaceAliasesWith(
-        aliases,
-        replacements,
-        sDef
-    );
-
-    return struct( sDef ) as any;
-}
-
-/**
- * @param getDescriptor 
- * @returns
- * 
- * @deprecated
- * 
- * use a function that reutrns a struct based on the specfied types instead
- */
-export function pgenericStruct<ConstStructDef extends StructDefinition, TypeArgs extends [ TermType, ...TermType[] ]>
-    (
-        getDescriptor: ( ...tyArgs: TypeArgs ) => PStruct<ConstStructDef, Methods>
-    ): (
-        (<TyArgs extends TypeArgs>( ...tyArgs: TyArgs ) => PStruct<ConstStructDef, Methods>) &
-        { type: [ PrimType.Struct, GenericStructDefinition ] }
-    )
-{
-    console.warn([
-        "you are using 'pgenericStruct' to create a paramterized sctruct;",
-        "this method is deprecated since v0.2.0 and might behave incorrectly",
-        "consider updating your code by defining your parametrized struct as a function that reutrns a determined struct"
-    ].join(" "))
-    /*
-    lambda called immediately
-
-    needed to allow the creation of a **new** cache per each generic struct
-    cannot create a cache directly in the ```pgenericStruct``` function because that would be global
-    for **every** generic structure;
-    */
-    return (() => {
-        const tyArgsCache: Pair<string, PStruct<ConstStructDef, Methods>>[] = []
-
-        return defineReadOnlyProperty(
-            ( ...tyArgs: TypeArgs ): PStruct<ConstStructDef, Methods> => {
-
-                const thisTyArgsKey = tyArgs.map( termTypeToString ).join('|');
-                const keys = tyArgsCache.map( pair => pair.fst );
-
-                if( keys.includes( thisTyArgsKey ) )
-                {
-                    const cachedResult = tyArgsCache.find( pair => pair.fst === thisTyArgsKey );
-                    if( cachedResult !== undefined ) return cachedResult.snd;
-                }
-                
-                let result = getDescriptor(
-                        /*
-                        Argument of type '[TermType, ...TermType[]]' is not assignable to parameter of type 'TypeArgs'.
-                            '[TermType, ...TermType[]]' is assignable to the constraint of type 'TypeArgs',
-                            but 'TypeArgs' could be instantiated with a different subtype of constraint
-                            '[TermType, ...TermType[]]'.ts(2345)
-                        */
-                        //@ts-ignore
-                        tyArgs[0], ...tyArgs.slice(1)
-                    );
-
-                if( !( result instanceof PDataRepresentable ) ) result = pstruct(result);
-
-                tyArgsCache.push( new Pair<string, PStruct<ConstStructDef, Methods>>( thisTyArgsKey, result ) );
-
-                return result;
-            },
-            "type",
-            typeofGenericStruct( getDescriptor as any )
-        ) as any;
-    })();
-};

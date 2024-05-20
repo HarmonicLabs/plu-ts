@@ -15,8 +15,8 @@ import { assert } from "../../utils/assert";
 
 export type UnTerm<T extends Term<PType>> = T extends Term<infer PT extends PType > ? PT : never;
 
-export class Term<A extends PType>
-    implements ToUPLC, ToIR, Cloneable<Term<A>>
+export class Term<PT extends PType>
+    implements ToUPLC, ToIR, Cloneable<Term<PT>>
 {
     /**
      * in most cases it will never be used
@@ -24,8 +24,8 @@ export class Term<A extends PType>
      * it's solely purpose is to allow typescript to rise errors (at type level)
      * when the type arguments don't match
      */
-    _pInstance?: A;
-    get pInstance(): A | undefined
+    _pInstance?: PT;
+    get pInstance(): PT | undefined
     {
         if( this._pInstance === undefined ) return undefined;
         return isCloneable( this._pInstance ) ? 
@@ -34,15 +34,15 @@ export class Term<A extends PType>
     }
 
     // typescript being silly here
-    readonly type!: FromPType<A> | TermType;
+    readonly type!: FromPType<PT> | TermType;
     
     readonly toUPLC!: ( deBruijnLevel?: bigint | number ) => UPLCTerm
 
     readonly toIR!: ( deBruijnLevel?: bigint | number ) => IRTerm
 
-    readonly clone!: () => Term<A>
+    readonly clone!: () => Term<PT>
 
-    constructor( type: FromPType<A> | FromPType<ToPType<TermType>> , _toIR: ( dbn: bigint ) => IRTerm, isConstant: boolean = false )
+    constructor( type: FromPType<PT> | TermType, _toIR: ( dbn: bigint ) => IRTerm, isConstant: boolean = false )
     {
         assert(
             isWellFormedGenericType( type ) ||

@@ -19,6 +19,8 @@ export class IRVar
 {
     readonly hash: Uint8Array;
     markHashAsInvalid!: () => void;
+    isHashPresent: () => boolean;
+    
     /**
      * the IR DeBruijn index is not necessarly the same of the UPLC
      * ( more ofthen than not it won't be the same )
@@ -57,6 +59,14 @@ export class IRVar
                     return hash.slice();
                 },
                 set: () => {},
+                enumerable: true,
+                configurable: false
+            }
+        );
+        Object.defineProperty(
+            this, "isHashPresent", {
+                value: () => hash instanceof Uint8Array,
+                writable: false,
                 enumerable: true,
                 configurable: false
             }

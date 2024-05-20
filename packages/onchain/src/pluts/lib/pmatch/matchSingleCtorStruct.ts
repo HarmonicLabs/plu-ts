@@ -1,18 +1,18 @@
-import { IRApp } from "../../../IR/IRNodes/IRApp";
-import { IRFunc } from "../../../IR/IRNodes/IRFunc";
-import { IRHoisted } from "../../../IR/IRNodes/IRHoisted";
-import { IRNative } from "../../../IR/IRNodes/IRNative";
-import { IRVar } from "../../../IR/IRNodes/IRVar";
-import { Term } from "../../Term";
-import { punConstrData } from "../../lib/builtins/data";
-import { psndPairNoUnwrap } from "../../lib/builtins/pair/noUnwrap";
-import { papp } from "../../lib/papp";
-import { pfn } from "../../lib/pfn";
-import { phoist } from "../../lib/phoist";
-import { data, lam, list, int, TermType } from "../../type_system";
-import { PData } from "../PData";
-import { PLam } from "../PFn";
-import { PList } from "../PList";
+import { IRApp } from "../../../../IR/IRNodes/IRApp";
+import { IRFunc } from "../../../../IR/IRNodes/IRFunc";
+import { IRHoisted } from "../../../../IR/IRNodes/IRHoisted";
+import { IRNative } from "../../../../IR/IRNodes/IRNative";
+import { IRVar } from "../../../../IR/IRNodes/IRVar";
+import { Term } from "../../../Term";
+import { punConstrData } from "../../../lib/builtins/data";
+import { psndPairNoUnwrap } from "../../../lib/builtins/pair/noUnwrap";
+import { papp } from "../../../lib/papp";
+import { pfn } from "../../../lib/pfn";
+import { phoist } from "../../../lib/phoist";
+import { data, lam, list, int, TermType } from "../../../type_system";
+import { PData } from "../../PData";
+import { PLam } from "../../PFn";
+import { PList } from "../../PList";
 
 const hoisted_getFields = new IRHoisted(
     new IRFunc( 1, // struct

@@ -70,6 +70,7 @@ export class IRLetted
 {
     readonly hash!: Uint8Array;
     markHashAsInvalid!: () => void;
+    isHashPresent: () => boolean;
 
     value!: IRTerm
 
@@ -89,15 +90,13 @@ export class IRLetted
 
     parent: IRParentTerm | undefined;
 
-    clone!: () => IRLetted
-
     readonly meta!: IRLettedMeta
 
     constructor(
         DeBruijn: number | bigint,
         toLet: IRTerm,
         metadata: Partial<IRLettedMeta> = {},
-        unsafe_hash: Uint8Array | undefined = undefined
+        _unsafeHash: Uint8Array | undefined = undefined
     )
     {
         DeBruijn = typeof DeBruijn === "bigint" ? Number( DeBruijn ) : DeBruijn; 
@@ -146,7 +145,7 @@ export class IRLetted
         _value.parent = this;
 
         // we need the has before setting dependecies
-        let hash: Uint8Array | undefined = unsafe_hash instanceof Uint8Array ? new Uint8Array( unsafe_hash ) : undefined;
+        let hash: Uint8Array | undefined = _unsafeHash instanceof Uint8Array ? new Uint8Array( _unsafeHash ) : undefined;
         Object.defineProperty(
             this, "hash", {
                 get: () => {
@@ -194,6 +193,14 @@ export class IRLetted
                     return hash.slice();
                 },
                 set: () => {},
+                enumerable: true,
+                configurable: false
+            }
+        );
+        Object.defineProperty(
+            this, "isHashPresent", {
+                value: () => hash instanceof Uint8Array,
+                writable: false,
                 enumerable: true,
                 configurable: false
             }
@@ -326,22 +333,19 @@ export class IRLetted
                 configurable: false
             }
         );
-
-        defineReadOnlyProperty(
-            this, "clone",
-            () => {
-                return new IRLetted(
-                    this.dbn,
-                    this.value, // .clone(), // cloned in constructor
-                    { ...this.meta },
-                    hash instanceof Uint8Array ? Uint8Array.prototype.slice.call( hash ) : undefined
-                )
-            }
-        );
-
     }
 
     static get tag(): Uint8Array { return new Uint8Array([ 0b0000_0101 ]); }
+
+    clone(): IRLetted
+    {
+        return new IRLetted(
+            this.dbn,
+            this.value, // cloned in constructor
+            { ...this.meta },
+            this.isHashPresent() ? this.hash : undefined
+        )
+    }
 
     toJson(): any 
     {

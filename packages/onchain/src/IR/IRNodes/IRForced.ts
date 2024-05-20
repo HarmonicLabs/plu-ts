@@ -19,12 +19,13 @@ export class IRForced
     forced!: IRTerm
     readonly hash!: Uint8Array
     markHashAsInvalid!: () => void;
+    isHashPresent: () => boolean;
 
     readonly meta: IRForcedMetadata
 
     parent: IRParentTerm | undefined;
 
-    constructor( forced: IRTerm )
+    constructor( forced: IRTerm, _unsafeHash?: Uint8Array )
     {
         Object.defineProperty(
             this, "meta", {
@@ -35,7 +36,7 @@ export class IRForced
             }
         );
 
-        let hash: Uint8Array | undefined = undefined
+        let hash: Uint8Array | undefined = _unsafeHash;
         Object.defineProperty(
             this, "hash",
             {
@@ -51,6 +52,14 @@ export class IRForced
                     }
                     return hash.slice();
                 }
+            }
+        );
+        Object.defineProperty(
+            this, "isHashPresent", {
+                value: () => hash instanceof Uint8Array,
+                writable: false,
+                enumerable: true,
+                configurable: false
             }
         );
         Object.defineProperty(
@@ -136,7 +145,10 @@ export class IRForced
 
     clone(): IRForced
     {
-        return new IRForced( this.forced.clone() )
+        return new IRForced(
+            this.forced.clone(),
+            this.isHashPresent() ? this.hash : undefined
+        );
     }
 
     toJson(): any

@@ -1,6 +1,7 @@
 import { PType } from "../PType";
 import { PInt, PByteString, PString, PUnit, PBool, PList, PPair, PDelayed, PLam, PAlias, PStruct, PData, PAsData } from "../PTypes";
-import { AliasT, GenericTermType, Methods, NonAliasTermType, PrimType, StructDefinition, TermType, data, fn } from "./types";
+import { PSop } from "../PTypes/PSoP/psop";
+import { AliasT, GenericTermType, Methods, NonAliasTermType, PrimType, SopDefinition, StructDefinition, TermType, data, fn } from "./types";
 
 export type ToPType<T extends TermType> =
 T extends [ PrimType.Alias, infer T extends NonAliasTermType, infer AMethods extends Methods ]  ? PAlias<ToPType<T>, AMethods> :
@@ -16,13 +17,14 @@ T extends [ PrimType.Delayed, infer TyArg extends TermType ]  ? PDelayed<ToPType
 T extends [ PrimType.Lambda, infer InputTyArg extends TermType, infer OutputTyArg extends TermType ] ?
     PLam<ToPType<InputTyArg>, ToPType<OutputTyArg>> :
 T extends [ PrimType.Struct, infer SDef extends StructDefinition, infer SMethods extends Methods ]  ? PStruct<SDef, SMethods> :
+T extends [ PrimType.Sop, infer SDef extends SopDefinition, infer SMethods extends Methods ]  ? PSop<SDef, SMethods> :
 // asData elements should NOT be assignable to normal elements
 T extends [ PrimType.AsData, infer ExpectedT extends TermType ] ? PAsData<ToPType<ExpectedT>> :
 T extends GenericTermType ? PType :
 // T extends FromPType<infer PT extends PType> ? PT : // !!! IMPORTANT !!! can only be present in one of the two types; breaks TypeScript LSP otherwise
 never;
 
-export type FromPType<PT extends PType | ToPType<TermType> | PStruct<any, any> | PAlias<any,any>> =
+export type FromPType<PT extends PType | ToPType<TermType> /*| PStruct<any, any> | PAlias<any,any>*/> =
 PT extends PInt         ? [ PrimType.Int ] :
 PT extends PByteString  ? [ PrimType.BS  ] :
 PT extends PString      ? [ PrimType.Str ] :
@@ -37,6 +39,7 @@ PT extends PPair<infer FstTyArg extends PType, infer SndTyArg extends PType> ?
 PT extends PDelayed<infer TyArg extends PType>  ? [ PrimType.Delayed, FromPType<TyArg> ] :
 PT extends PLam<infer FstTyArg extends PType, infer SndTyArg extends PType>     ? [ PrimType.Lambda, FromPType<FstTyArg>, FromPType<SndTyArg> ] :
 PT extends PStruct<infer SDef extends StructDefinition, infer SMethods extends Methods> ? [ PrimType.Struct, SDef, SMethods ] :
+PT extends PSop<infer SDef extends SopDefinition, infer SMethods extends Methods> ? [ PrimType.Sop, SDef, SMethods ] :
 PT extends PAlias<infer PT extends PType, infer AMethods extends Methods> ? AliasT<FromPType<PT>, AMethods> :
 PT extends ToPType<infer T extends TermType> ? T : // !!! IMPORTANT !!! can only be present in one of the two types; breaks TypeScript LSP otherwise
 PT extends PType    ? GenericTermType :

@@ -3,7 +3,7 @@ import { PType } from "../../../PType";
 import { PDataRepresentable } from "../../../PType/PDataRepresentable";
 import type { PList, TermFn, PInt, PLam, PBool, PPair } from "../../../PTypes";
 import { Term } from "../../../Term";
-import { ToPType, TermType, isWellFormedGenericType, PrimType, bool, lam, list, struct, typeExtends, tyVar, pair } from "../../../type_system";
+import { ToPType, TermType, isWellFormedGenericType, PrimType, bool, lam, list, struct, typeExtends, tyVar, pair, DataRepTermType } from "../../../type_system";
 import { getElemsT, getFstT, getSndT } from "../../../type_system/tyArgs";
 import { termTypeToString } from "../../../type_system/utils";
 import { UtilityTermOf } from "./addUtilityForType";

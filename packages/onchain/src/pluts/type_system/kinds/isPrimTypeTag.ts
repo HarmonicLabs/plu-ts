@@ -1,4 +1,4 @@
-import { PrimType } from "../types";
+import { BasePrimType, DataRepPrimType, PrimType } from "../types";
 
 export function isPrimTypeTag( t: any ): t is PrimType
 {
@@ -16,6 +16,23 @@ export function isPrimTypeTag( t: any ): t is PrimType
         case PrimType.Pair:
         case PrimType.Str:
         case PrimType.Struct:
+        case PrimType.Sop:
+        case PrimType.Unit:
+            return true;
+        default:
+            return false;
+    }
+}
+
+export function isBasePrimType( t: any ): t is BasePrimType
+{
+    switch( t as PrimType )
+    {
+        case PrimType.BS:
+        case PrimType.Bool:
+        case PrimType.Data:
+        case PrimType.Int:
+        case PrimType.Str:
         case PrimType.Unit:
             return true;
         default:

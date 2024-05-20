@@ -1,8 +1,9 @@
+import { isTypeParam } from "./kinds";
 import { isTaggedAsAlias } from "./kinds/isTaggedAsAlias";
-import { isGenericStructType, isStructType, isWellFormedGenericType, isWellFormedType } from "./kinds/isWellFormedType";
+import { isGenericStructType, isSopType, isStructType, isWellFormedGenericType, isWellFormedType } from "./kinds/isWellFormedType";
 import { getFstT, getSndT } from "./tyArgs";
 import { unwrapAlias } from "./tyArgs/unwrapAlias";
-import { GenericStructCtorDef, GenericStructDefinition, GenericTermType, PrimType, StructCtorDef, StructDefinition, TermType, data } from "./types";
+import { GenericStructCtorDef, GenericStructDefinition, GenericTermType, PrimType, SopCtorDef, SopDefinition, StructCtorDef, StructDefinition, TermType, data } from "./types";
 import { termTypeToString } from "./utils";
 
 
@@ -18,13 +19,17 @@ type TyParam = {
     tyArg: GenericTermType
 };
 
+function isSymbol( stuff: any ): stuff is Symbol
+{
+    return typeof stuff === "symbol";
+}
 /**
  * 
  * @param a extending ctor
  * @param b extended ctor
  * @returns 
  */
-function ctorDefExtends( a: StructCtorDef, b: GenericStructCtorDef, subs: TyParam[] = [] ): boolean
+function ctorDefExtends( a: SopCtorDef, b: SopCtorDef | GenericStructCtorDef, subs: TyParam[] = [] ): boolean
 {
     const aFields = Object.keys( a );
     const bFields = Object.keys( b );
@@ -43,7 +48,7 @@ function ctorDefExtends( a: StructCtorDef, b: GenericStructCtorDef, subs: TyPara
         if( aFields[i] !== bFields[i] ) return false;
         const field = aFields[i];
 
-        if( typeof( b[field][0] ) === "symbol" )
+        if( isSymbol( b[field][0] ) )
         {
             const tyVar = b[field][0] as symbol;
             const tyArg = a[field];
@@ -58,7 +63,7 @@ function ctorDefExtends( a: StructCtorDef, b: GenericStructCtorDef, subs: TyPara
                 continue;
             }
 
-            if( typeof( tyArg[0] ) === "symbol" )
+            if( isSymbol( tyArg[0] ) )
             {
                 if( tyArg[0] === thisTyParam.tyArg[0] ) continue;
                 else return false;
@@ -84,7 +89,7 @@ function ctorDefExtends( a: StructCtorDef, b: GenericStructCtorDef, subs: TyPara
     return true;
 }
 
-export function structDefExtends( extendingDef: StructDefinition, sDef: GenericStructDefinition, subs: TyParam[] = [] ): boolean
+export function sopDefExtends( extendingDef: SopDefinition, sDef: SopDefinition | GenericStructDefinition, subs: TyParam[] = [] ): boolean
 {
     const ctorNames = Object.keys( sDef );
     const extendingCtors = Object.keys( extendingDef );
@@ -127,72 +132,78 @@ export function typeExtends( extending: GenericTermType, extended: GenericTermTy
         isWellFormedGenericType( extended )
     )) return false;
 
-    function unchecked( a: TermType, b: GenericTermType ): boolean
+    return uncheckedTypeExtends( extending, extended );
+}
+
+function uncheckedTypeExtends( a: TermType, b: GenericTermType ): boolean
+{
+    if( isTaggedAsAlias( b ) ) return uncheckedTypeExtends( a, unwrapAlias( b ) );
+    if( isTaggedAsAlias( a ) ) return uncheckedTypeExtends( unwrapAlias( a ), b );
+
+    if( typeof b[0] === "symbol" ) return true;
+
+    if( b[0] === PrimType.Data )
     {
-        if( isTaggedAsAlias( b ) ) return unchecked( a, unwrapAlias( b ) );
-        if( isTaggedAsAlias( a ) ) return unchecked( unwrapAlias( a ), b );
-
-        if( typeof b[0] === "symbol" ) return true;
-
-        if( b[0] === PrimType.Data )
-        {
-            return (
-                a[0] === PrimType.Data   ||
-                a[0] === PrimType.Struct ||
-                a[0] === PrimType.AsData
-            );
-        }
-        if( b[0] === PrimType.AsData )
-        {
-            return (
-                (
-                    a[0] === PrimType.AsData &&
-                    unchecked( a[1], b[1] )
-                ) ||
-                a[0] === PrimType.Struct || 
-                a[0] === PrimType.Data
-            );
-        }
-        if( b[0] === PrimType.Pair )
-        {
-            // `getFstT` and `getSndT` unwraps `alias`es and `asData`s
-            return (
-                a[0] === PrimType.Pair &&
-                (
-                    unchecked(
-                        getFstT(a),
-                        getFstT(b)
-                    )
-                )&&
-                (
-                    unchecked(
-                        getSndT(a),
-                        getSndT(b)
-                    )
+        return (
+            a[0] === PrimType.Data   ||
+            a[0] === PrimType.Struct ||
+            a[0] === PrimType.AsData
+        );
+    }
+    if( b[0] === PrimType.AsData )
+    {
+        return (
+            (
+                a[0] === PrimType.AsData &&
+                uncheckedTypeExtends( a[1], b[1] )
+            ) ||
+            a[0] === PrimType.Struct || 
+            a[0] === PrimType.Data
+        );
+    }
+    if( b[0] === PrimType.Pair )
+    {
+        // `getFstT` and `getSndT` unwraps `alias`es and `asData`s
+        return (
+            a[0] === PrimType.Pair &&
+            (
+                uncheckedTypeExtends(
+                    getFstT(a),
+                    getFstT(b)
+                )
+            )&&
+            (
+                uncheckedTypeExtends(
+                    getSndT(a),
+                    getSndT(b)
                 )
             )
-        }
-        if( a[0] === PrimType.AsData )
-        {
-            // checked above
-            // if( b[0] === PrimType.Data ) return true;
-            // if( b[0] === PrimType.AsData ) return unchecked( a[1], b[1] );
-            return b[0] === PrimType.Struct;
-        }
-
-        if( isGenericStructType( b ) ) return isStructType( a ) && structDefExtends( a[1], b[1] );
-
-        if( isStructType( a ) ) return unchecked( b as any, data );
-
-
-        const bTyArgs = b.slice(1) as TermType[];
-        return (
-            a[0] === b[0] &&
-            (a.slice(1) as TermType[]).every( (aTyArg, idx) => {
-                return unchecked( aTyArg, bTyArgs[ idx ] )
-            })
         )
     }
+    if( a[0] === PrimType.AsData )
+    {
+        // checked above
+        // if( b[0] === PrimType.Data ) return true;
+        // if( b[0] === PrimType.AsData ) return uncheckedTypeExtends( a[1], b[1] );
+        return b[0] === PrimType.Struct;
+    }
 
-    return unchecked( extending, extended );
+    if( b[0] === PrimType.Sop ) return isSopType( a ) && sopDefExtends( a[1], b[1] );
+    if( a[0] === PrimType.Sop ) return false; // b must have been a SoP too
+
+    if( b[0] === PrimType.Struct ) return isStructType( a ) && sopDefExtends( a[1], b[1] );
+
+    // if a is a sturct but b is not
+    // make sure b extends `data` at least
+    if( isStructType( a ) ) return uncheckedTypeExtends( b as any, data );
+
+    const bTyArgs = b.slice(1) as TermType[];
+    return (
+        // any other prim type that requires parameters
+        a[0] === b[0] &&
+        // must have correct parameters following
+        (a.slice(1) as TermType[]).every( (aTyArg, idx) => {
+            return uncheckedTypeExtends( aTyArg, bTyArgs[ idx ] )
+        })
+    )
 }

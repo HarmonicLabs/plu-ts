@@ -49,6 +49,7 @@ export class IRHoisted
 {
     readonly hash!: Uint8Array;
     markHashAsInvalid!: () => void;
+    isHashPresent: () => boolean;
 
     hoisted!: IRTerm
 
@@ -57,13 +58,12 @@ export class IRHoisted
 
     parent: IRParentTerm | undefined;
 
-    clone!: () => IRHoisted;
-
     readonly meta!: IRHoistedMeta
 
     constructor(
         hoisted: IRTerm, 
-        metadata: Partial<IRHoistedMeta> = {}
+        metadata: Partial<IRHoistedMeta> = {},
+        _unsafeHash?: Uint8Array
     )
     {
         // unwrap
@@ -94,7 +94,7 @@ export class IRHoisted
             return _deps;
         }
 
-        let hash: Uint8Array | undefined = undefined;
+        let hash: Uint8Array | undefined = _unsafeHash;
         Object.defineProperty(
             this, "hash", {
                 get: () => {
@@ -110,6 +110,14 @@ export class IRHoisted
                     return hash.slice();
                 },
                 set: () => {},
+                enumerable: true,
+                configurable: false
+            }
+        );
+        Object.defineProperty(
+            this, "isHashPresent", {
+                value: () => hash instanceof Uint8Array,
+                writable: false,
                 enumerable: true,
                 configurable: false
             }
@@ -220,20 +228,19 @@ export class IRHoisted
                 configurable: false
             }
         );
-
-        defineProperty(
-            this, "clone",
-            () => {
-                return new IRHoisted(
-                    this.hoisted.clone(),
-                    { ...this.meta }
-                );
-            }
-        );
         
     }
 
     static get tag(): Uint8Array { return new Uint8Array([ 0b0000_0110 ]); }
+
+    clone(): IRHoisted
+    {
+        return new IRHoisted(
+            this.hoisted.clone(),
+            { ...this.meta },
+            this.isHashPresent() ? this.hash : undefined
+        )
+    }
 
     toJson(): any
     {

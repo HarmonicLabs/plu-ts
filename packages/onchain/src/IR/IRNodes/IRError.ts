@@ -19,6 +19,7 @@ export class IRError
 {
     readonly hash!: Uint8Array;
     markHashAsInvalid!: () => void;
+    isHashPresent: () => boolean;
 
     readonly meta: IRErrorMetadata
 
@@ -86,6 +87,14 @@ export class IRError
             }
         );
         Object.defineProperty(
+            this, "isHashPresent", {
+                value: () => true,
+                writable: false,
+                enumerable: true,
+                configurable: false
+            }
+        );
+        Object.defineProperty(
             this, "markHashAsInvalid",
             {
                 value: () => { throw new Error("IRError.markHashAsInvalid was called but error doesn't have childs") },
@@ -100,7 +109,7 @@ export class IRError
 
     clone(): IRError
     {
-        return new IRError()
+        return new IRError( this.msg, { ...this.addInfos } );
     }
 
     toJson()

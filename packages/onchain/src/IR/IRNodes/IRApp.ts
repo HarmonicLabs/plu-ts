@@ -22,24 +22,30 @@ export class IRApp
 
     readonly hash!: Uint8Array;
     markHashAsInvalid!: () => void;
+    isHashPresent: () => boolean;
 
     parent: IRParentTerm | undefined;
 
     readonly meta: IRAppMeta
 
-    constructor( _fn_: IRTerm, _arg_: IRTerm, meta: IRAppMeta = {} )
+    constructor(
+        _fn_: IRTerm,
+        _arg_: IRTerm,
+        meta: IRAppMeta = {},
+        _unsafeHash?: Uint8Array
+    )
     {
         if( !isIRTerm( _fn_ ) )
         {
             throw new Error(
-                "invalidn function node for `IRApp`"
+                "invalid function node for `IRApp`"
             );
         }
 
         if( !isIRTerm( _arg_ ) )
         {
             throw new Error(
-                "invalidn function node for `IRApp`"
+                "invalid argument node for `IRApp`"
             );
         }
 
@@ -57,7 +63,7 @@ export class IRApp
         fn.parent = this;
         arg.parent = this;
 
-        let hash: Uint8Array | undefined = undefined;
+        let hash: Uint8Array | undefined = _unsafeHash;
         Object.defineProperty(
             this, "hash",
             {
@@ -71,6 +77,15 @@ export class IRApp
                     return hash.slice()
                 },
                 set: () => {},
+                enumerable: true,
+                configurable: false
+            }
+        );
+
+        Object.defineProperty(
+            this, "isHashPresent", {
+                value: () => hash instanceof Uint8Array,
+                writable: false,
                 enumerable: true,
                 configurable: false
             }
@@ -107,7 +122,7 @@ export class IRApp
             this, "arg", {
                 get: () => arg,
                 set: ( newArg: any ) => {
-                    if( !isIRTerm( newArg ) ) return;
+                    if( !isIRTerm( newArg ) ) return newArg;
 
                     this.markHashAsInvalid();
                     arg = newArg;
@@ -162,7 +177,8 @@ export class IRApp
         return new IRApp(
             this.fn.clone(),
             this.arg.clone(),
-            { ...this.meta }
+            { ...this.meta },
+            this.isHashPresent() ? this.hash : undefined
         );
     }
 
