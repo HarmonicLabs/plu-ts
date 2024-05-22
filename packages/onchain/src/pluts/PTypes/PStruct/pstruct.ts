@@ -26,6 +26,7 @@ import { IRApp } from "../../../IR/IRNodes/IRApp";
  */
 class _PStruct extends PData
 {
+    protected _struct: never;
     protected constructor()
     {
         super();

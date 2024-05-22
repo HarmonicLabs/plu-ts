@@ -60,6 +60,12 @@ export function termTypeToString( t: GenericTermType, limit: number = Infinity )
             structDefToString( t[1] as StructDefinition, limit - 1 )
         ) + ")";
     }
+    if( tag === PrimType.Sop )
+        {
+            return "sop(" + (
+                structDefToString( t[1] as StructDefinition, limit - 1 )
+            ) + ")";
+        }
     if( isTaggedAsAlias( t ) )
     {
         const aliased = termTypeToString( unwrapAlias( t as any ), limit - 1 );

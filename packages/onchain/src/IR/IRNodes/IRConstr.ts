@@ -11,6 +11,7 @@ import { positiveIntAsBytes } from "../utils/positiveIntAsBytes";
 import { mapArrayLike } from "./utils/mapArrayLike";
 import { isIRTerm } from "../utils";
 import { makeArrayLikeProxy } from "./utils/makeArrayLikeProxy";
+import { MutArrayLike } from "../utils/MutArrayLike";
 
 export interface IRConstrMeta extends BaseIRMetadata {}
 
@@ -18,7 +19,7 @@ export class IRConstr
     implements Cloneable<IRConstr>, IHash, IIRParent, ToJson
 {
     readonly index!: bigint;
-    fields!: ArrayLike<IRTerm>;
+    fields!: MutArrayLike<IRTerm>;
 
     readonly hash!: Uint8Array;
     markHashAsInvalid!: () => void;

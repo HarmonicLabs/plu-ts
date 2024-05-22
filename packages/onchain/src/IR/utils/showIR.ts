@@ -13,6 +13,8 @@ import { IRError } from "../IRNodes/IRError";
 import { IRFunc } from "../IRNodes/IRFunc";
 import { termTypeToString } from "../../pluts/type_system/utils";
 import { showUPLCConstValue } from "@harmoniclabs/uplc";
+import { IRConstr } from "../IRNodes/IRConstr";
+import { IRCase } from "../IRNodes/IRCase";
 
 const vars = "abcdefghilmopqrstuvzwxyjkABCDEFGHILJMNOPQRSTUVZWXYJK".split('');
 
@@ -125,6 +127,8 @@ export function showIR( _ir: IRTerm )
     function _loop( ir: IRTerm, dbn: number ): string
     {
         if( ir instanceof IRApp ) return `[${_loop(ir.fn, dbn)} ${_loop(ir.arg, dbn)}]`;
+        if( ir instanceof IRConstr ) return `(constr ${ir.index} ${Array.from( ir.fields ).map( f => _loop( f, dbn )).join(" ")})`;
+        if( ir instanceof IRCase ) return `(case ${_loop( ir.constrTerm, dbn ) } ${Array.from( ir.continuations ).map( f => _loop( f, dbn )).join(" ")})`;
         if( ir instanceof IRNative ) return `(native ${nativeTagToString(ir.tag)})`;
         if( ir instanceof IRLetted )
         {

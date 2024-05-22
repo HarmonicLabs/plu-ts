@@ -17,6 +17,7 @@ import { IRConstr } from "../../../IR/IRNodes/IRConstr";
  */
 class _PSop extends PType
 {
+    protected _sop: never;
     protected constructor()
     {
         super();

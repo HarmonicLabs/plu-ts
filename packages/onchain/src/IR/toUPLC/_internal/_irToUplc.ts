@@ -13,7 +13,9 @@ import { showIR } from "../../utils/showIR";
 import { IRError } from "../../IRNodes/IRError";
 import { IRForced } from "../../IRNodes/IRForced";
 import { IRDelayed } from "../../IRNodes/IRDelayed";
-import { UPLCTerm, UPLCVar, Lambda, Application, UPLCConst, Builtin, ErrorUPLC, Force, Delay } from "@harmoniclabs/uplc";
+import { UPLCTerm, UPLCVar, Lambda, Application, UPLCConst, Builtin, ErrorUPLC, Force, Delay, Constr, Case } from "@harmoniclabs/uplc";
+import { IRConstr } from "../../IRNodes/IRConstr";
+import { IRCase } from "../../IRNodes/IRCase";
 
 export type RawSrcMap = { [node_index: number]: string };
 
@@ -130,7 +132,45 @@ export function _irToUplc(
             max_idx
         };
     }
-
+    if( ir instanceof IRConstr )
+    {
+        const fields = Array.from( ir.fields )
+        .slice( 1 )
+        .reduce(
+            ( accum, field, i ) => {
+                accum.push( _irToUplc( field, srcmap, accum[ i ].max_idx + 1 ) );
+                return accum;
+            },
+            [ _irToUplc( ir.fields[0], srcmap, node_index ) ]
+        )
+        return {
+            term: new Constr(
+                ir.index,
+                fields.map(({ term }) => term )
+            ),
+            max_idx: fields[fields.length - 1].max_idx
+        };
+    }
+    if( ir instanceof IRCase )
+    {
+        const { term: constrTerm, max_idx } = _irToUplc( ir.constrTerm, srcmap, node_index );
+        const conts = Array.from( ir.continuations )
+        .slice( 1 )
+        .reduce(
+            ( accum, cont, i ) => {
+                accum.push( _irToUplc( cont, srcmap, accum[ i ].max_idx + 1 ) );
+                return accum;
+            },
+            [ _irToUplc( ir.continuations[0], srcmap, max_idx + 1 ) ]
+        )
+        return {
+            term: new Case(
+                constrTerm,
+                conts.map(({ term }) => term )
+            ),
+            max_idx: conts[conts.length - 1].max_idx
+        };
+    }
     throw new Error("unknown IR term calling '_irToUplc'")
 }
 

@@ -8,6 +8,8 @@ import { IRLetted } from "../../IRNodes/IRLetted";
 import { IRTerm } from "../../IRTerm";
 import { IRParentTerm } from "../../utils/isIRParentTerm";
 import { isIRTerm, prettyIRJsonStr } from "../../utils";
+import { IRConstr } from "../../IRNodes/IRConstr";
+import { IRCase } from "../../IRNodes/IRCase";
 
 /**
  * 
@@ -35,9 +37,10 @@ export function _modifyChildFromTo( parent: IRParentTerm | undefined, currentChi
     )
     {
         // we are modifying the child
-        // so we remove the reference
+        // so we remove parent the reference
         currentChild.parent = undefined;
     }
+
     if( parent instanceof IRApp )
     {
         // DO NO USE **ONLY** SHALLOW EQUALITY
@@ -68,7 +71,68 @@ export function _modifyChildFromTo( parent: IRParentTerm | undefined, currentChi
             );
         }
 
-        
+        return;
+    }
+    else if( parent instanceof IRConstr )
+    {
+        let foundChild = false;
+        for( let i = 0; i < parent.fields.length; i++ )
+        {
+            const field = parent.fields[i];
+            if( field === currentChild )
+            {
+                parent.fields[i] = newChild;
+                foundChild = true;
+                break
+            }
+        }
+        if( foundChild ) return;
+        const currChildHash = currentChild instanceof Uint8Array ? currentChild : currentChild.hash;
+        for( let i = 0; i < parent.fields.length; i++ )
+        {
+            const field = parent.fields[i];
+            if( uint8ArrayEq( field.hash, currChildHash ) )
+            {
+                parent.fields[i] = newChild;
+                break
+            }
+        }
+        return;
+    }
+    else if( parent instanceof IRCase )
+    {
+        if( parent.constrTerm === currentChild )
+        {
+            parent.constrTerm = newChild;
+            return;
+        }
+        let foundChild = false;
+        for( let i = 0; i < parent.continuations.length; i++ )
+        {
+            const field = parent.continuations[i];
+            if( field === currentChild )
+            {
+                parent.continuations[i] = newChild;
+                foundChild = true;
+                break
+            }
+        }
+        if( foundChild ) return;
+        const currChildHash = currentChild instanceof Uint8Array ? currentChild : currentChild.hash;
+        if( uint8ArrayEq( currChildHash, parent.constrTerm.hash ) )
+        {
+            parent.constrTerm = newChild;
+            return;
+        }
+        for( let i = 0; i < parent.continuations.length; i++ )
+        {
+            const field = parent.continuations[i];
+            if( uint8ArrayEq( field.hash, currChildHash ) )
+            {
+                parent.continuations[i] = newChild;
+                break
+            }
+        }
         return;
     }
 

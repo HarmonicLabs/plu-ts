@@ -1,7 +1,7 @@
 import { Term } from "../../../Term";
 import type { PStruct, StructInstance } from "../../../PTypes/PStruct/pstruct";
 import type { TermFn } from "../../../PTypes/PFn/PFn";
-import { getElemAtTerm } from "../../pmatch";
+import { getElemAtTerm } from "../../pmatch/pmatch";
 import { StructDefinition, isStructType, isStructDefinition, data, list, int, pair, Methods } from "../../../type_system";
 import { peqData,  } from "../../builtins/data";
 import { PBool } from "../../../PTypes/PBool";

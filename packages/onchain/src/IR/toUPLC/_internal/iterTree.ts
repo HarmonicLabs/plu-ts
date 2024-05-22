@@ -1,4 +1,6 @@
 import { IRApp } from "../../IRNodes/IRApp";
+import { IRCase } from "../../IRNodes/IRCase";
+import { IRConstr } from "../../IRNodes/IRConstr";
 import { IRDelayed } from "../../IRNodes/IRDelayed";
 import { IRForced } from "../../IRNodes/IRForced";
 import { IRFunc } from "../../IRNodes/IRFunc";
@@ -20,7 +22,7 @@ export function iterTree(
     {
         const { term: t, dbn } = stack.pop() as { term: IRTerm, dbn: number };
 
-        if( has_shouldSkipNode && shouldSkipNode( t, dbn ) )  continue;
+        if( has_shouldSkipNode && shouldSkipNode( t, dbn ) ) continue;
 
         const termParent = t.parent;
         const negDbn = t instanceof IRFunc ? t.arity : 0;
@@ -29,7 +31,7 @@ export function iterTree(
 
         if( modifiedParent && termParent !== undefined )
         {
-            if( stack.length > 0 && stack[ stack.length - 1 ].isIRAppArg )
+            while( stack.length > 0 && stack[ stack.length - 1 ].isIRAppArg )
             {
                 // there is an extra node 
                 stack.pop();
@@ -62,6 +64,26 @@ export function iterTree(
         if( t instanceof IRFunc )
         {
             stack.push({ term: t.body, dbn: dbn + t.arity });
+            continue;
+        }
+
+        if( t instanceof IRCase )
+        {
+            stack.push(
+                { term: t.constrTerm, dbn },
+                ...Array.from( t.continuations ).map( cont => 
+                    ({ term: cont, dbn, isIRAppArg: true })
+                )
+            );
+            continue;
+        }
+        if( t instanceof IRConstr )
+        {
+            stack.push(
+                ...Array.from( t.fields ).map( f => 
+                    ({ term: f, dbn, isIRAppArg: true })
+                )
+            );
             continue;
         }
         

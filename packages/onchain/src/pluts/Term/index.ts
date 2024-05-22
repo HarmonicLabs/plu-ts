@@ -7,7 +7,7 @@ import { IRTerm } from "../../IR/IRTerm";
 import { ToIR } from "../../IR/interfaces/ToIR";
 import { compileIRToUPLC } from "../../IR/toUPLC/compileIRToUPLC";
 import { PType } from "../PType";
-import { FromPType, TermType, ToPType, isWellFormedGenericType, termTypeToString } from "../type_system";
+import { FromPType, GenericTermType, TermType, ToPType, isWellFormedGenericType, termTypeToString } from "../type_system";
 import { cloneTermType } from "../type_system/cloneTermType";
 import { defineReadOnlyHiddenProperty } from "@harmoniclabs/obj-utils";
 import { Cloneable, isCloneable } from "../../utils/Cloneable";
@@ -42,7 +42,7 @@ export class Term<PT extends PType>
 
     readonly clone!: () => Term<PT>
 
-    constructor( type: FromPType<PT> | TermType, _toIR: ( dbn: bigint ) => IRTerm, isConstant: boolean = false )
+    constructor( type: FromPType<PT> | TermType | GenericTermType, _toIR: ( dbn: bigint ) => IRTerm, isConstant: boolean = false )
     {
         assert(
             isWellFormedGenericType( type ) ||

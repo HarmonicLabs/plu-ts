@@ -9,6 +9,7 @@ import { BaseIRMetadata } from "./BaseIRMetadata";
 import { mapArrayLike } from "./utils/mapArrayLike";
 import { isIRTerm } from "../utils";
 import { makeArrayLikeProxy } from "./utils/makeArrayLikeProxy";
+import { MutArrayLike } from "../utils/MutArrayLike";
 
 export interface IRCaseMeta extends BaseIRMetadata {}
 
@@ -16,7 +17,7 @@ export class IRCase
     implements Cloneable<IRCase>, IHash, IIRParent, ToJson
 {
     constrTerm!: IRTerm;
-    continuations!: ArrayLike<IRTerm>;
+    continuations!: MutArrayLike<IRTerm>;
 
     readonly hash!: Uint8Array;
     markHashAsInvalid!: () => void;

@@ -22,6 +22,8 @@ import { IRParentTerm, isIRParentTerm } from "../utils/isIRParentTerm";
 import { _modifyChildFromTo } from "../toUPLC/_internal/_modifyChildFromTo";
 import { BaseIRMetadata } from "./BaseIRMetadata";
 import { _getMinUnboundDbn } from "../toUPLC/subRoutines/handleLetted/groupByScope";
+import { IRConstr } from "./IRConstr";
+import { IRCase } from "./IRCase";
 
 
 export type LettedSetEntry = {
@@ -474,6 +476,17 @@ export function getLettedTerms( irTerm: IRTerm, options?: Partial<GetLettedTerms
         if( t instanceof IRApp )
         {
             stack.push( t.fn, t.arg );
+            continue;
+        }
+
+        if( t instanceof IRConstr )
+        {
+            stack.push( ...Array.from( t.fields ) );
+            continue;
+        }
+        if( t instanceof IRCase )
+        {
+            stack.push( t.constrTerm, ...Array.from( t.continuations ) );
             continue;
         }
 
