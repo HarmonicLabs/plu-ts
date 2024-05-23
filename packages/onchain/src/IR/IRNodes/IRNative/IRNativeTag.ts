@@ -72,7 +72,29 @@ export const enum IRNativeTag {
     serialiseData                   = 51,
     verifyEcdsaSecp256k1Signature   = 52,
     verifySchnorrSecp256k1Signature = 53,
-
+    // Plutus V3
+    bls12_381_G1_add                = 54,
+    bls12_381_G1_neg                = 55,
+    bls12_381_G1_scalarMul          = 56,
+    bls12_381_G1_equal              = 57,
+    bls12_381_G1_hashToGroup        = 58,
+    bls12_381_G1_compress           = 59,
+    bls12_381_G1_uncompress         = 60,
+    bls12_381_G2_add                = 61,
+    bls12_381_G2_neg                = 62,
+    bls12_381_G2_scalarMul          = 63,
+    bls12_381_G2_equal              = 64,
+    bls12_381_G2_hashToGroup        = 65,
+    bls12_381_G2_compress           = 66,
+    bls12_381_G2_uncompress         = 67,
+    bls12_381_millerLoop            = 68,
+    bls12_381_mulMlResult           = 69,
+    bls12_381_finalVerify           = 70,
+    keccak_256                      = 71,
+    blake2b_224                     = 72,
+    // bitwise
+    integerToByteString             = 73,
+    byteStringToInteger             = 74,
 
     ////////////////////////////////////////////////////////////////////////////////
     // -------------------------------------------------------------------------- //

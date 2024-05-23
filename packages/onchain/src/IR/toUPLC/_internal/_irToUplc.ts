@@ -134,6 +134,14 @@ export function _irToUplc(
     }
     if( ir instanceof IRConstr )
     {
+        if( ir.fields.length === 0 )
+        {
+            return {
+                term: new Constr( ir.index, [] ),
+                max_idx: node_index + 1
+            };
+        }
+
         const fields = Array.from( ir.fields )
         .slice( 1 )
         .reduce(

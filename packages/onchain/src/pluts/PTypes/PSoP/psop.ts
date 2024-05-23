@@ -227,9 +227,7 @@ export function psop<
                     return addUtilityForType(thisSopType)(
                         new Term(
                             thisSopType,
-                            _dbn => new IRHoisted(
-                                new IRConstr( 0, [] )
-                            )
+                            _dbn => new IRConstr( 0, [] )
                         )
                     ) as any;
                 }

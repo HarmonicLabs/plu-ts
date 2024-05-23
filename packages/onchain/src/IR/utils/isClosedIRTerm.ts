@@ -9,6 +9,8 @@ import { IRLetted } from "../IRNodes/IRLetted";
 import { IRVar } from "../IRNodes/IRVar";
 import { IRForced } from "../IRNodes/IRForced";
 import { IRDelayed } from "../IRNodes/IRDelayed";
+import { IRConstr } from "../IRNodes/IRConstr";
+import { IRCase } from "../IRNodes/IRCase";
 
 function _isClosedIRTerm( term: IRTerm, dbn: number, parent?: IRTerm ): boolean
 {
@@ -36,6 +38,16 @@ function _isClosedIRTerm( term: IRTerm, dbn: number, parent?: IRTerm ): boolean
 
     if( term instanceof IRForced ) return _isClosedIRTerm( term.forced, dbn, term );
     if( term instanceof IRDelayed ) return _isClosedIRTerm( term.delayed, dbn, term );
+
+    if( term instanceof IRConstr )
+    {
+        return Array.from( term.fields ).every( f => _isClosedIRTerm( f, dbn, term ) );
+    }
+    if( term instanceof IRCase )
+    {
+        return _isClosedIRTerm( term.constrTerm, dbn, term ) &&
+        Array.from( term.continuations ).every( cont => _isClosedIRTerm( cont, dbn, term ) );
+    }
 
     // not even an IRTerm
     console.log( parent )

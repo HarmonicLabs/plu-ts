@@ -19,6 +19,8 @@ import { IRLetted } from "./IRLetted";
 import { handleLetted } from "../toUPLC/subRoutines/handleLetted";
 import { IRParentTerm, isIRParentTerm } from "../utils/isIRParentTerm";
 import { _modifyChildFromTo } from "../toUPLC/_internal/_modifyChildFromTo";
+import { IRConstr } from "./IRConstr";
+import { IRCase } from "./IRCase";
 
 
 export type HoistedSetEntry = {
@@ -326,6 +328,24 @@ export function getHoistedTerms( irTerm: IRTerm ): HoistedSetEntry[]
         {
             searchIn( term.fn );
             searchIn( term.arg );
+            return;
+        }
+
+        if( term instanceof IRConstr )
+        {
+            for( let i = 0; i < term.fields.length; i++ )
+            {
+                searchIn( term.fields[i] );
+            }
+            return;
+        }
+        if( term instanceof IRCase )
+        {
+            searchIn( term.constrTerm );
+            for( let i = 0; i < term.continuations.length; i++ )
+            {
+                searchIn( term.continuations[i] );
+            }
             return;
         }
 
