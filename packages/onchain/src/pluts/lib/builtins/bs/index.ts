@@ -14,6 +14,7 @@ import { defineReadOnlyProperty } from "@harmoniclabs/obj-utils";
 import { IRNative } from "../../../../IR/IRNodes/IRNative";
 import { IRHoisted } from "../../../../IR/IRNodes/IRHoisted";
 import { IRApp } from "../../../../IR/IRNodes/IRApp";
+import { IRConst } from "../../../../IR/IRNodes/IRConst";
 
 
 export type ByteStrBinOPToBS = Term< PLam< PByteString, PLam< PByteString, PByteString>>>
@@ -279,6 +280,22 @@ export const pblake2b_256: TermFn<[ PByteString ], PByteString> =
         )
     );
 
+export const pkeccak_256: TermFn<[ PByteString ], PByteString> =
+    addApplications<[ PByteString ], PByteString>(
+        new Term(
+            lam( bs, bs ),
+            _dbn => IRNative.keccak_256
+        )
+    );
+
+export const pblake2b_224: TermFn<[ PByteString ], PByteString> =
+    addApplications<[ PByteString ], PByteString>(
+        new Term(
+            lam( bs, bs ),
+            _dbn => IRNative.blake2b_224
+        )
+    );
+
 /**
  * performs cryptographic signature verification using the Ed25519 scheme
  * 
@@ -349,3 +366,53 @@ addApplications<[ PByteString, PByteString, PByteString ], PBool>(
         _dbn => IRNative.verifySchnorrSecp256k1Signature
     )
 );
+
+// bitwise - plutus v3
+
+export const pencodeIntBE: TermFn<[ PInt, PInt ], PByteString> =
+    addApplications<[ PInt, PInt ], PByteString>(
+        new Term(
+            fn([ int, int ], bs),
+            _dbn => new IRApp(
+                IRNative.integerToByteString,
+                IRConst.bool( true ) // big endian
+            )
+        )
+    );
+
+export const pencodeIntLE: TermFn<[ PInt, PInt ], PByteString> =
+    addApplications<[ PInt, PInt ], PByteString>(
+        new Term(
+            fn([ int, int ], bs),
+            _dbn => new IRApp(
+                IRNative.integerToByteString,
+                IRConst.bool( false ) // big endian
+            )
+        )
+    );
+
+export const pdecodeIntBE: TermFn<[ PByteString ], PInt> =
+    addApplications<[ PByteString ], PInt>(
+        new Term(
+            fn([ bs ], int),
+            _dbn => new IRHoisted(
+                new IRApp(
+                    IRNative.byteStringToInteger,
+                    IRConst.bool( true ) // big endian
+                )
+            )
+        )
+    );
+
+export const pdecodeIntLE: TermFn<[ PByteString ], PInt> =
+    addApplications<[ PByteString ], PInt>(
+        new Term(
+            fn([ bs ], int),
+            _dbn => new IRHoisted(
+                new IRApp(
+                    IRNative.byteStringToInteger,
+                    IRConst.bool( false ) // big endian
+                )
+            )
+        )
+    );

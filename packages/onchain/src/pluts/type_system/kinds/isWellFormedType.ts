@@ -1,5 +1,5 @@
 import { isObject } from "@harmoniclabs/obj-utils";
-import { isBasePrimType, isPrimTypeTag } from "./isPrimTypeTag";
+import { isBaseDataRepPrimType, isBasePrimType, isPrimTypeTag } from "./isPrimTypeTag";
 import { isTaggedAsAlias } from "./isTaggedAsAlias";
 import { isTypeParam } from "./isTypePAram";
 import { GenericTermType, type Methods, PrimType, StructCtorDef, StructDefinition, StructT, TermType, DataRepTermType, GenericStructDefinition, SopDefinition, SopT } from "../types";
@@ -158,7 +158,7 @@ export function isWellFormedDataRepType( t: GenericTermType ): t is DataRepTermT
     )) return false;
 
     // just base type
-    if( t.length === 1 ) return isBasePrimType( primTypeTag );
+    if( t.length === 1 ) return isBaseDataRepPrimType( primTypeTag );
 
     if( primTypeTag === PrimType.Delayed ) return false;
 
@@ -196,7 +196,10 @@ export function isWellFormedDataRepType( t: GenericTermType ): t is DataRepTermT
 
     if( primTypeTag === PrimType.Pair )
     {
-        return true; // ??????????????? TODO ??????????????????????
+        return (
+            isWellFormedDataRepType( t[1] ) &&
+            isWellFormedDataRepType( t[2] )
+        );
     }
 
     if(

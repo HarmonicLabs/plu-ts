@@ -198,12 +198,15 @@ function uncheckedTypeExtends( a: TermType, b: GenericTermType ): boolean
     if( isStructType( a ) ) return uncheckedTypeExtends( b as any, data );
 
     const bTyArgs = b.slice(1) as TermType[];
+    const aTyArgs = a.slice(1) as TermType[];
     return (
         // any other prim type that requires parameters
         a[0] === b[0] &&
+        // same n parameters
+        aTyArgs.length === bTyArgs.length &&
         // must have correct parameters following
-        (a.slice(1) as TermType[]).every( (aTyArg, idx) => {
+        aTyArgs.every( (aTyArg, idx) => {
             return uncheckedTypeExtends( aTyArg, bTyArgs[ idx ] )
         })
-    )
+    );
 }

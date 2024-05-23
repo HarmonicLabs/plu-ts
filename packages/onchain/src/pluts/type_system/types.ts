@@ -5,7 +5,7 @@ import { PLam } from "../PTypes";
 import { PType } from "../PType";
 import { Term } from "../Term";
 
-export const enum PrimType {
+export enum PrimType {
     Int  = "int",
     BS   = "bs",
     Str  = "str",
@@ -19,8 +19,13 @@ export const enum PrimType {
     Struct = "struct",
     Alias = "alias",
     AsData = "asData",
-    Sop = "sop"
+    Sop = "sop",
+    bls12_381_G1_element = "bls12_381_G1_element",
+    bls12_381_G2_element = "bls12_381_G2_element",
+    bls12_381_MlResult = "bls12_381_MlResult",
 }
+
+Object.freeze( PrimType );
 
 /**
  * subset of primitive types that do not require additional arguments
@@ -31,6 +36,9 @@ export const enum PrimType {
 export type BasePrimType
     = PrimType.Int
     | PrimType.BS
+    | PrimType.bls12_381_G1_element
+    | PrimType.bls12_381_G2_element
+    | PrimType.bls12_381_MlResult
     | PrimType.Str
     | PrimType.Unit
     | PrimType.Bool
@@ -42,6 +50,9 @@ type NonStructTag
     // | PrimType.Alias
     = PrimType.Int
     | PrimType.BS
+    | PrimType.bls12_381_G1_element
+    | PrimType.bls12_381_G2_element
+    | PrimType.bls12_381_MlResult
     | PrimType.Str
     | PrimType.Unit
     | PrimType.Bool
@@ -86,6 +97,14 @@ export type GenericTermType
     // | [ PrimType.Lambda , GenericTermType, GenericTermType ]
     // | [ PrimType.AsData, GenericTermType ]
 
+export type BaseDataRepPrimType
+    = PrimType.Int
+    | PrimType.BS
+    | PrimType.Str
+    | PrimType.Unit
+    | PrimType.Bool
+    | PrimType.Data
+
 export type DataRepPrimType
     // | PrimType.Struct
     // | PrimType.Sop
@@ -93,12 +112,10 @@ export type DataRepPrimType
     // | PrimType.Pair
     // | PrimType.Lambda
     // | PrimType.Delayed
-    = PrimType.Int
-    | PrimType.BS
-    | PrimType.Str
-    | PrimType.Unit
-    | PrimType.Bool
-    | PrimType.Data
+    // | PrimType.bls12_381_G1_element
+    // | PrimType.bls12_381_G2_element
+    // | PrimType.bls12_381_MlResult
+    = BaseDataRepPrimType
     | PrimType.List
     | PrimType.AsData;
 
@@ -218,6 +235,9 @@ export function cloneSopDef<SDef extends SopDefinition>( def: Readonly<SDef> ): 
 
 export const int        = Object.freeze([ PrimType.Int  ]) as [ PrimType.Int  ];
 export const bs         = Object.freeze([ PrimType.BS   ]) as [ PrimType.BS   ];
+export const blsG1      = Object.freeze([ PrimType.bls12_381_G1_element ]) as [ PrimType.bls12_381_G1_element ];
+export const blsG2      = Object.freeze([ PrimType.bls12_381_G2_element ]) as [ PrimType.bls12_381_G2_element ];
+export const blsResult  = Object.freeze([ PrimType.bls12_381_MlResult   ]) as [ PrimType.bls12_381_MlResult   ];
 export const str        = Object.freeze([ PrimType.Str  ]) as [ PrimType.Str  ];
 export const unit       = Object.freeze([ PrimType.Unit ]) as [ PrimType.Unit ];
 export const bool       = Object.freeze([ PrimType.Bool ]) as [ PrimType.Bool ];

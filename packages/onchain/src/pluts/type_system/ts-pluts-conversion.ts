@@ -1,12 +1,18 @@
 import { PType } from "../PType";
 import { PInt, PByteString, PString, PUnit, PBool, PList, PPair, PDelayed, PLam, PAlias, PStruct, PData, PAsData } from "../PTypes";
+import { PBlsG1 } from "../PTypes/PBlsG1";
+import { PBlsG2 } from "../PTypes/PBlsG2";
+import { PBlsMlRes } from "../PTypes/PBlsMlRes";
 import { PSop } from "../PTypes/PSoP/psop";
-import { AliasT, GenericTermType, Methods, NonAliasTermType, PrimType, SopDefinition, StructDefinition, TermType, data, fn } from "./types";
+import { AliasT, GenericTermType, Methods, NonAliasTermType, PrimType, SopDefinition, StructDefinition, TermType } from "./types";
 
 export type ToPType<T extends TermType> =
 T extends [ PrimType.Alias, infer T extends NonAliasTermType, infer AMethods extends Methods ]  ? PAlias<ToPType<T>, AMethods> :
 T extends [ PrimType.Int ]   ? PInt :
 T extends [ PrimType.BS ]    ? PByteString :
+T extends [ PrimType.bls12_381_G1_element  ]   ? PBlsG1     :
+T extends [ PrimType.bls12_381_G2_element  ]   ? PBlsG2     :
+T extends [ PrimType.bls12_381_MlResult    ]   ? PBlsMlRes  :
 T extends [ PrimType.Str ]   ? PString :
 T extends [ PrimType.Unit ]  ? PUnit :
 T extends [ PrimType.Bool ]  ? PBool :
@@ -27,6 +33,9 @@ never;
 export type FromPType<PT extends PType | ToPType<TermType> /*| PStruct<any, any> | PAlias<any,any>*/> =
 PT extends PInt         ? [ PrimType.Int ] :
 PT extends PByteString  ? [ PrimType.BS  ] :
+PT extends PBlsG1       ? [ PrimType.bls12_381_G1_element  ] :
+PT extends PBlsG2       ? [ PrimType.bls12_381_G2_element  ] :
+PT extends PBlsMlRes    ? [ PrimType.bls12_381_MlResult    ] :
 PT extends PString      ? [ PrimType.Str ] :
 PT extends PUnit        ? [ PrimType.Unit ] :
 PT extends PBool        ? [ PrimType.Bool ] :
