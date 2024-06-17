@@ -12,6 +12,8 @@ import { cloneTermType } from "../type_system/cloneTermType";
 import { defineReadOnlyHiddenProperty } from "@harmoniclabs/obj-utils";
 import { Cloneable, isCloneable } from "../../utils/Cloneable";
 import { assert } from "../../utils/assert";
+import { getCallStackAt } from "../../utils/getCallStackAt";
+import { IRVar } from "@harmoniclabs/plu-ts-onchain";
 
 export type UnTerm<T extends Term<PType>> = T extends Term<infer PT extends PType > ? PT : never;
 
@@ -62,7 +64,7 @@ export class Term<PT extends PType>
             }
         );
 
-        let _toIR_ = _toIR.bind( this );
+        let _toIR_ = _toIR; //.bind( this );
         let shouldHoist = false;
 
         let _IR_cache : { [dbn: string]: IRTerm } = {};
@@ -87,7 +89,8 @@ export class Term<PT extends PType>
                     
                     if( 
                         !(ir instanceof IRHoisted) &&
-                        (this as any).isConstant
+                        (this as any).isConstant &&
+                        !(ir instanceof IRConst)
                     )
                     {
                         // console.log( showIR( ir ).text );
@@ -116,7 +119,16 @@ export class Term<PT extends PType>
                         }
                     }
 
-                    _IR_cache[dbnStr] = ir.clone();
+                    if(!(
+                        // we don't cache `IRVar` since
+                        // it is likely they will be accessed at different dbn
+                        ir instanceof IRVar ||
+                        // same for `IRConst`
+                        ir instanceof IRConst
+                    ))
+                    {
+                        _IR_cache[dbnStr] = ir.clone();
+                    }
                     return ir;
                 },
                 writable: false,

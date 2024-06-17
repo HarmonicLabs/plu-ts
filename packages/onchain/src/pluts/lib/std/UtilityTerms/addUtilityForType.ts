@@ -9,16 +9,14 @@ import { Methods, PrimType, StructDefinition, TermType, bool, bs, int, lam, list
 import { unwrapAlias } from "../../../type_system/tyArgs/unwrapAlias";
 import type { PappArg } from "../../pappArg";
 import { papp } from "../../papp";
-import {
-    type TermAlias,
-    type TermBool,       addPBoolMethods,
-    type TermBS,         addPByteStringMethods,
-    type TermInt,        addPIntMethods,
-    type TermList,       addPListMethods,
-    type TermPair,       addPPairMethods,
-    type TermStr,        addPStringMethods,
-    type TermStruct,     addPStructMethods
-} from ".";
+import type { TermAlias } from "./TermAlias";
+import { type TermBool,       addPBoolMethods } from "./TermBool";
+import { type TermBS,         addPByteStringMethods } from "./TermBS";
+import { type TermInt,        addPIntMethods } from "./TermInt";
+import { type TermList,       addPListMethods } from "./TermList";
+import { type TermPair,       addPPairMethods } from "./TermPair";
+import { type TermStr,        addPStringMethods } from "./TermStr";
+import { type TermStruct,     addPStructMethods } from "./TermStruct";
 import { defineNonDeletableNormalProperty } from "@harmoniclabs/obj-utils";
 import { termTypeToString } from "../../../type_system/utils";
 import { addUserMethods } from "./userMethods/addUserMethods";

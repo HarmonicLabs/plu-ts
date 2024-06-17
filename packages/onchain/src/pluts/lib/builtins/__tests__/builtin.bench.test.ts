@@ -16,6 +16,8 @@ describe("builtin bench", () => {
 
         const machine = new Machine( defaultV3Costs );
 
+        console.log( defaultV3Costs );
+
         const _ifTerm = (
             pif( int ).$( pBool( true ) )
             .$( 1 )

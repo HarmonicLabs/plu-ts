@@ -93,7 +93,7 @@ export function papp<Input extends PType, Output extends PType>( a: Term<PLam<In
     }
     else
     {
-        _b = pappArgToTerm( b, lambdaType[1] ) as any;
+        _b = pappArgToTerm( b as any, lambdaType[1] ) as any;
     }
 
     const outputType = lambdaType[2]; // applyLambdaType( lambdaType, _b.type );

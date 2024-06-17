@@ -14,18 +14,19 @@ import { markRecursiveHoistsAsForced } from "../markRecursiveHoistsAsForced";
 export function handleHoistedAndReturnRoot( term: IRTerm ): IRTerm
 {
     // unwrap;
-    if( term instanceof IRHoisted )
+    // if( term instanceof IRHoisted )
+    while( term instanceof IRHoisted )
     {
         // we know `handleHoistedAndReturnRoot` modifies the term
         // so we are probably ok not cloning here
         // top level hoisted terms should be handled in `compileIRToUPLC` anyway
-        const theTerm = term.hoisted; // .clone()
+        term = term.hoisted; // .clone()
 
-        // we still need to remove this parent otherhiwe there will be an unknown hoisted to handle
-        theTerm.parent = undefined;
-        return handleHoistedAndReturnRoot(
-            theTerm
-        );
+        // we still need to remove this parent otherhwise there will be an unknown hoisted to handle
+        term.parent = undefined;
+        // return handleHoistedAndReturnRoot(
+        //     theTerm
+        // );
     }
 
     // TODO: should probably merge `markRecursiveHoistsAsForced` inside `getHoistedTerms` to iter once

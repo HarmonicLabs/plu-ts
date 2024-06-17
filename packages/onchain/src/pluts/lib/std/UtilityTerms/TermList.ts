@@ -25,6 +25,7 @@ import { psome } from "../list/psome";
 import { TermBool } from "./TermBool";
 import { TermInt } from "./TermInt";
 import { peqList, pincludes, plookup } from "../list";
+import { punsafeConvertType } from "../../punsafeConvertType";
 
 export function* fixedLengthIter<PT extends PDataRepresentable>(
     list: TermList<PT>,
@@ -231,7 +232,13 @@ function _definePListMethods<PElemsT extends PType>( lst: Term<PList<PElemsT>>, 
         "head",
         {
             get: () => {
-                return plet( phead( elemsT ).$( lst ), "list::head" )
+                return plet(
+                    punsafeConvertType(
+                        phead( elemsT ).$( lst ),
+                        elemsT
+                    ),
+                    "list::head"
+                )
             },
             ...getterOnly
         }
@@ -397,7 +404,7 @@ function _definePListMethods<PElemsT extends PType>( lst: Term<PList<PElemsT>>, 
     defineReadOnlyProperty(
         lst,
         "includes",
-        ( elem: PappArg<PElemsT> ): TermBool => pincludes( elemsT ).$( lst ).$( elem )
+        ( elem: PappArg<PElemsT> ): TermBool => pincludes( elemsT ).$( lst ).$( elem as any )
     );
 
     definePropertyIfNotPresent(

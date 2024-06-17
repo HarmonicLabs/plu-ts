@@ -1,7 +1,6 @@
 import { Term } from "../../../Term";
 import type { PStruct, StructInstance } from "../../../PTypes/PStruct/pstruct";
 import type { TermFn } from "../../../PTypes/PFn/PFn";
-import { getElemAtTerm } from "../../pmatch/pmatch";
 import { StructDefinition, isStructType, isStructDefinition, data, list, int, pair, Methods } from "../../../type_system";
 import { peqData,  } from "../../builtins/data";
 import { PBool } from "../../../PTypes/PBool";
@@ -26,6 +25,7 @@ import { FilterMethodsByInput, LiftMethods, MethodsAsTerms } from "./userMethods
 import { addUserMethods } from "./userMethods/addUserMethods";
 import { plet } from "../../plet";
 import { _getMinUnboundDbn } from "../../../../IR/toUPLC/subRoutines/handleLetted/groupByScope";
+import { getElemAtTerm } from "../../pmatch/getElemAtTerm";
 
 export type RawStruct = {
     readonly index: TermInt,

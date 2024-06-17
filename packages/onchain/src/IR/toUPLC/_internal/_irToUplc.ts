@@ -29,6 +29,32 @@ export function _irToUplc(
     max_idx: number
 }
 {
+    if(!(ir instanceof IRConst))
+    {
+        // console.log("_irToUplc", ir, node_index, Date.now());
+    }
+    else {
+        // if( ir.parent )
+        // {
+        //     console.log(ir.parent ? Object.getPrototypeOf( ir.parent ).constructor.name : undefined, Date.now() );
+        // }
+        // else
+        // {
+        //     console.log( Error().stack );
+        // }
+    }
+
+    if( ir instanceof IRConst )
+    {
+        return {
+            term: new UPLCConst(
+                termTyToConstTy( ir.type ),
+                ir.value as any
+            ),
+            max_idx: node_index
+        };
+    }
+
     if( ir instanceof IRVar ) return {
         term: new UPLCVar( ir.dbn ),
         max_idx: node_index
@@ -68,16 +94,6 @@ export function _irToUplc(
         };
     }
 
-    if( ir instanceof IRConst )
-    {
-        return {
-            term: new UPLCConst(
-                termTyToConstTy( ir.type ),
-                ir.value as any
-            ),
-            max_idx: node_index
-        };
-    }
     if( ir instanceof IRNative )
     {
         if( ir.tag < 0 )

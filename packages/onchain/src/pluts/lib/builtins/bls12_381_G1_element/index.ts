@@ -2,7 +2,6 @@ import { PBlsG1 } from "../../../PTypes/PBlsG1";
 import { blsG1, bool, bs, fn, int } from "../../../type_system/types";
 import { IRNative } from "../../../../IR/IRNodes/IRNative";
 import { Term } from "../../../Term";
-import { PFn } from "../../../PTypes/PFn/PFn";
 import { PInt } from "../../../PTypes/PInt";
 import type { PByteString } from "../../../PTypes/PByteString";
 import { PBool } from "../../../PTypes/PBool";

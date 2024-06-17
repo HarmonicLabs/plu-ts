@@ -3,7 +3,7 @@ import { PFn, TermFn } from "../../../../PTypes/PFn/PFn";
 import { PList } from "../../../../PTypes/PList";
 import { ToPType } from "../../../../type_system/ts-pluts-conversion";
 import { TermType, bool, fn, list } from "../../../../type_system/types";
-import { pif, pisEmpty } from "../../../builtins";
+import { pchooseList, pif, pisEmpty } from "../../../builtins";
 import { papp } from "../../../papp";
 import { pfn } from "../../../pfn";
 import { phoist } from "../../../phoist";
@@ -81,22 +81,24 @@ export function pcompareList<
                 ],  bool )
                 ((self, fstList, sndList) =>
 
-                    pif( bool ).$( pisEmpty.$( fstList ) )
-                    .then( 
+                    pchooseList( fstListElems, bool )
+                    .$( fstList )
+                    .caseNil(
                         papp(
                             matchFstNil,
                             sndList
                         )
                     )
-                    .else(
-                        pif( bool ).$( pisEmpty.$( sndList ) )
-                        .$(
+                    .caseCons(
+                        pchooseList( sndListElems, bool )
+                        .$( sndList )
+                        .caseNil(
                             papp(
                                 matchSndNil,
                                 fstList
                             )
                         )
-                        .$(
+                        .caseCons(
                             papp(
                                 papp(
                                     matchCons,

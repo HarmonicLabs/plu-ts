@@ -11,6 +11,7 @@ import { handleLetted } from "./subRoutines/handleLetted";
 import { handleHoistedAndReturnRoot } from "./subRoutines/handleHoistedAndReturnRoot";
 import { replaceNativesAndReturnRoot } from "./subRoutines/replaceNatives";
 import { replaceClosedLettedWithHoisted } from "./subRoutines/replaceClosedLettedWithHoisted";
+import { prettyIR } from "../utils";
 
 export function compileIRToUPLC( term: IRTerm ): UPLCTerm
 {
@@ -68,6 +69,10 @@ export function compileIRToUPLC( term: IRTerm ): UPLCTerm
     // ------------------------------------------------------------------------- //
     ///////////////////////////////////////////////////////////////////////////////
 
+    console.log(
+        prettyIR( term )
+    );
+
     term = replaceNativesAndReturnRoot( term );
 
     replaceClosedLettedWithHoisted( term );
@@ -77,7 +82,7 @@ export function compileIRToUPLC( term: IRTerm ): UPLCTerm
     handleLetted( term );
     
     term = handleHoistedAndReturnRoot( term );
-    
+
     // replaced hoisted terms might include new letted terms
     while(
         includesNode(
@@ -99,7 +104,7 @@ export function compileIRToUPLC( term: IRTerm ): UPLCTerm
     ///////////////////////////////////////////////////////////////////////////////
 
     const srcmap = {};
-    const { term: uplc } = _irToUplc( term, srcmap );
+    const uplc = _irToUplc( term, srcmap ).term;
 
     // console.log( "srcmap", srcmap );
 

@@ -12,7 +12,7 @@ import { pBool } from "./std/bool/pBool";
 import { pInt } from "./std/int/pInt";
 import { pmakeUnit } from "./std/unit/pmakeUnit";
 import { Term } from "../Term";
-import { TermType, ToPType, tyVar, isWellFormedType, typeExtends, int, bool, isTypeParam, bs, str, unit, fn, list, PrimType, GenericTermType, isWellFormedGenericType } from "../type_system";
+import { TermType, ToPType, tyVar, isWellFormedType, typeExtends, int, bool, isTypeParam, bs, str, unit, fn, list, PrimType, GenericTermType, isWellFormedGenericType, Methods } from "../type_system";
 import { fromHex, isUint8Array } from "@harmoniclabs/uint8array-utils";
 import { ByteString } from "@harmoniclabs/bytestring";
 import { CborString } from "@harmoniclabs/cbor";
@@ -26,12 +26,51 @@ type _TsFunctionSatisfying<KnownArgs extends Term<PType>[], POut extends PType> 
     POut extends PLam<infer POutIn extends PType, infer POutOut extends PType> ?
         (
             // ( ...args: KnownArgs ) => Term<POut> | // functions that do return `PLam` are fine too
-            _TsFunctionSatisfying<[ ...KnownArgs, UtilityTermOf<POutIn> ], POutOut>
+            _TsFunctionSatisfying<[ ...KnownArgs, UtilityTermOf<POutIn | PAlias<POutIn, Methods>> ], POutOut>
         ) :
         ( ...args: KnownArgs ) => Term<POut>
 
 export type TsFunctionSatisfying<PIn extends PType, POut extends PType> =
     _TsFunctionSatisfying<[ UtilityTermOf<PIn> ], POut>
+
+export type PAliasPermutations<PT extends PType> = (
+    PT extends PAlias<infer PReal extends PType, any> ? PAliasPermutations<PReal> :
+    PT extends PPair<infer PFst extends PType, infer PSnd extends PType> ? (
+        PAliasPermutations<PFst> extends infer PermFst extends PType ? (
+            PAliasPermutations<PSnd> extends infer PermSnd extends PType ? (
+                  PPair<PFst,PSnd>
+                | PPair<PermFst,PSnd>
+                | PPair<PFst, PermSnd>
+                | PPair<PermFst, PermSnd>
+                | PAlias<PPair<PFst,PSnd>,  Methods>
+                | PAlias<PPair<PermFst,PSnd>,  Methods>
+                | PAlias<PPair<PFst, PermSnd>,  Methods>
+                | PAlias<PPair<PermFst, PermSnd>,  Methods>
+            ) : never
+        ) : never
+    ) :
+    PT extends PList<infer PElems extends PType> ? (
+        PAliasPermutations<PElems> extends infer PermElems extends PType ? (
+            PList<PermElems> | PAlias<PermElems, Methods> 
+        ) : never
+    ) :
+    PT extends PLam<infer PFst extends PType, infer PSnd extends PType> ? (
+        PAliasPermutations<PFst> extends infer PermFst extends PType ? (
+            PAliasPermutations<PSnd> extends infer PermSnd extends PType ? (
+                  PLam<PFst,PSnd>
+                | PLam<PermFst,PSnd>
+                | PLam<PFst, PermSnd>
+                | PLam<PermFst, PermSnd>
+                | PAlias<PLam<PFst,PSnd>,  Methods>
+                | PAlias<PLam<PermFst,PSnd>,  Methods>
+                | PAlias<PLam<PFst, PermSnd>,  Methods>
+                | PAlias<PLam<PermFst, PermSnd>,  Methods>
+            ) : never
+        ) : never
+    ) :
+    (PAlias<PT, Methods> | PT)
+);
+
 
 export type PappArg<PIn extends PType> =
     (
@@ -50,7 +89,7 @@ export type PappArg<PIn extends PType> =
     // also the alias of the type is good 
     // (only works because we know `PIn` is not an alias if we are here)
     // because of the initial chec
-    | Term<PAlias<PIn, any>> 
+    | Term<PAliasPermutations<PIn>> 
 
 export function pappArgToTerm<ArgT extends TermType>(
     arg: PappArg<ToPType<ArgT>>,
@@ -284,7 +323,7 @@ export function pappArgToTerm<ArgT extends TermType>(
             // try list
             const elemsT = tryInferElemsT( arg );
 
-            return pList( elemsT )( arg.map(elem => pappArgToTerm( elem,  elemsT ) ) ) as any;
+            return pList( elemsT )( ((arg as any)).map((elem: any) => pappArgToTerm( elem,  elemsT ) ) ) as any;
         }
 
         if( mustExtend[0] === PrimType.Pair )
@@ -350,7 +389,7 @@ export function pappArgToTerm<ArgT extends TermType>(
         }
     }
 
-    console.error( arg, arg.type );
+    console.error( arg, (arg as any).type );
     throw new Error(
         "pappArgToTerm :: it was not possible to transform `arg` to a plu-ts value" +
         "; `arg` was " + arg +

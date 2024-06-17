@@ -1,6 +1,6 @@
 import { fromHex, fromUtf8, isUint8Array, lexCompare, toHex } from "@harmoniclabs/uint8array-utils";
 import { keepRelevant } from "./keepRelevant";
-import { GenesisInfos, isGenesisInfos } from "./GenesisInfos";
+import { GenesisInfos, NormalizedGenesisInfos, defaultMainnetGenesisInfos, defaultPreprodGenesisInfos, isGenesisInfos, isNormalizedGenesisInfos, normalizedGenesisInfos } from "./GenesisInfos";
 import { isCostModelsV2, isCostModelsV1, defaultV2Costs, defaultV1Costs, costModelsToLanguageViewCbor, isCostModelsV3, defaultV3Costs } from "@harmoniclabs/cardano-costmodels-ts";
 import { NetworkT, ProtocolParameters, isPartialProtocolParameters, Tx, Value, ValueUnits, TxOut, TxRedeemerTag, txRdmrTagToString, ScriptType, UTxO, VKeyWitness, Script, BootstrapWitness, TxRedeemer, Hash32, TxIn, Hash28, AuxiliaryData, TxWitnessSet, getNSignersNeeded, txRedeemerTagToString, ScriptDataHash, Address, AddressStr, TxBody, CredentialType, canBeHash32, VotingProcedures, ProposalProcedure } from "@harmoniclabs/cardano-ledger-ts";
 import { CborString, CborPositiveRational, Cbor, CborArray, CanBeCborString } from "@harmoniclabs/cbor";
@@ -55,7 +55,7 @@ function getScriptLikeUplc( scriptLike: ScriptLike ): UPLCTerm
 export class TxBuilder
 {
     readonly protocolParamters!: ValidatedTxBuilderProtocolParams
-    readonly genesisInfos?: GenesisInfos
+    readonly genesisInfos?: NormalizedGenesisInfos
 
     setGenesisInfos!: ( geneisInfos: GenesisInfos ) => void;
 
@@ -69,11 +69,11 @@ export class TxBuilder
         genesisInfos?: GenesisInfos
     )
     {
-        let _genesisInfos: GenesisInfos | undefined = undefined;
+        let _genesisInfos: NormalizedGenesisInfos | undefined = undefined;
         const _setGenesisInfos = ( genInfos: GenesisInfos ): void => {
             if( !isGenesisInfos( genInfos ) ) return;
 
-            _genesisInfos = freezeAll( genInfos );
+            _genesisInfos = freezeAll( normalizedGenesisInfos( genInfos ) );
         }
         _setGenesisInfos( genesisInfos! );
         Object.defineProperties(
@@ -172,9 +172,9 @@ export class TxBuilder
      * @param slotN number of the slot
      * @returns POSIX time in **milliseconds**
      */
-    slotToPOSIX( slot: CanBeUInteger ): number
+    slotToPOSIX( slot: CanBeUInteger, genesisInfos?: GenesisInfos ): number
     {
-        const gInfos = this.genesisInfos;
+        const gInfos = genesisInfos ? normalizedGenesisInfos( genesisInfos ) : this.genesisInfos;
         if( gInfos === undefined )
         {
             throw new Error("can't convert slot to POSIX time because genesis infos are missing");
@@ -182,18 +182,17 @@ export class TxBuilder
 
         return slotToPOSIX(
             unsafeForceUInt( slot ),
-            unsafeForceUInt( gInfos.systemStartPOSIX ),
-            unsafeForceUInt( gInfos.slotLengthInMilliseconds )
-        )
+            gInfos
+        );
     }
 
     /**
      * 
      * @param POSIX POSIX time in milliseconds
      */
-    posixToSlot( POSIX: CanBeUInteger ): number
+    posixToSlot( POSIX: CanBeUInteger, genesisInfos?: GenesisInfos  ): number
     {
-        const gInfos = this.genesisInfos;
+        const gInfos = genesisInfos ? normalizedGenesisInfos( genesisInfos ) : this.genesisInfos;
         if( gInfos === undefined )
         {
             throw new Error("can't convert POSIX to slot time because genesis infos are missing");
@@ -201,9 +200,8 @@ export class TxBuilder
 
         return POSIXToSlot(
             unsafeForceUInt( POSIX ),
-            unsafeForceUInt( gInfos.systemStartPOSIX ),
-            unsafeForceUInt( gInfos.slotLengthInMilliseconds )
-        )
+            gInfos
+        );
     }
 
     /**
@@ -599,6 +597,15 @@ export class TxBuilder
         if( !change ) change = { address: changeAddress };
 
         const network = changeAddress.network;
+        if( !isNormalizedGenesisInfos( this.genesisInfos ) )
+        {
+            this.setGenesisInfos(
+                network === "mainnet" ?
+                    defaultMainnetGenesisInfos :
+                    defaultPreprodGenesisInfos
+            );
+        }
+
         const undef: undefined = void 0;
 
         // filter inputs so that are unique

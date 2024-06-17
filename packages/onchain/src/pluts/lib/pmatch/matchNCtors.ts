@@ -3,7 +3,6 @@ import { PType } from "../../PType";
 import { Term } from "../../Term";
 import { LamT, PrimType, TermType, data, fn, lam, list } from "../../type_system/types";
 
-const matchNCtorsIdxsCache: { [n: number]: Term<any> } = {};
 
 export function matchNCtorsIdxs( _n: number, returnT: TermType ): Term<PType>
 {
@@ -11,7 +10,7 @@ export function matchNCtorsIdxs( _n: number, returnT: TermType ): Term<PType>
     const n = Math.round( _n );
     if( _n !== n ) throw new Error("number of ctors to match must be an integer");
 
-    if( matchNCtorsIdxsCache[n] !== undefined ) return matchNCtorsIdxsCache[n];
+    // if( matchNCtorsIdxsCache[n] !== undefined ) return matchNCtorsIdxsCache[n];
 
     const continuationT = lam( list(data), returnT );
 
@@ -109,7 +108,7 @@ export function matchNCtorsIdxs( _n: number, returnT: TermType ): Term<PType>
     );
 
     // save in cache
-    matchNCtorsIdxsCache[n] = term;
+    // matchNCtorsIdxsCache[n] = term;
 
     return term;
 }

@@ -67,6 +67,8 @@ const defaultLettedMeta: IRLettedMeta = freezeAll({
     forceHoist: false
 });
 
+let n_hash_access = 0;
+
 export class IRLetted
     implements Cloneable<IRLetted>, IHash, IIRParent, ToJson, IRLettedMetadata
 {
@@ -151,6 +153,7 @@ export class IRLetted
         Object.defineProperty(
             this, "hash", {
                 get: () => {
+                    ++n_hash_access > 6300 && console.log("n_hash_access", n_hash_access);
                     if(!( hash instanceof Uint8Array ))
                     {
                         const normalized = getNormalizedLettedArgs( this.dbn, _value );

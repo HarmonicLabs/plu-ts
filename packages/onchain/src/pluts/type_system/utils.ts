@@ -100,7 +100,7 @@ export function termTypeToString( t: GenericTermType, limit: number = Infinity )
 
     if( tag === PrimType.Lambda )
     {
-        return termTypeToString( t[1], limit - 1 ) + " -> " + termTypeToString( t[2], limit - 1 );
+        return "(" + termTypeToString( t[1], limit - 1 ) + " -> " + termTypeToString( t[2], limit - 1 )+")";
     }
 
     if( typeof t[0] === "symbol" ) return "tyParam("+ ((t[0] ).description ?? "") +")";
@@ -261,7 +261,7 @@ export function termTypeToJson( t: GenericTermType ): TermTypeJson
         }
     }
 
-    return tag;
+    return tag as TermTypeJson;
 }
 
 export function termTypeFromJson( json: TermTypeJson ): TermType

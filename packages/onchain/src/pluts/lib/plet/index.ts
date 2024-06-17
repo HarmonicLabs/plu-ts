@@ -78,6 +78,8 @@ export function plet<PVarT extends PType, SomeExtension extends object>(
             return res;
         }
     );
+
+    const withUtility = addUtilityForType( varValue.type );
     
     const continuation = <PExprResult extends PType>( expr: (value: TermPVar) => Term<PExprResult> ): Term<PExprResult> => {
 
@@ -89,7 +91,6 @@ export function plet<PVarT extends PType, SomeExtension extends object>(
             outType,
             dbn => {
 
-                const withUtility = addUtilityForType( varValue.type );
 
                 const arg = varValue.toIR( dbn );
 

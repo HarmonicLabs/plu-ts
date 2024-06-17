@@ -1,5 +1,5 @@
 import { Data, DataConstr, DataI } from "@harmoniclabs/plutus-data";
-import { GenesisInfos, isGenesisInfos } from "../TxBuilder/GenesisInfos";
+import { GenesisInfos, NormalizedGenesisInfos, isGenesisInfos, isNormalizedGenesisInfos, normalizedGenesisInfos } from "../TxBuilder/GenesisInfos";
 import { unsafeForceUInt } from "../utils/ints";
 
 /**
@@ -9,9 +9,11 @@ import { unsafeForceUInt } from "../utils/ints";
  * @param slotLenMs milliseconds per slot
  * @returns 
  */
-export function POSIXToSlot( POSIX: number, sysStartPOSIX: number, slotLenMs: number ): number
+export function POSIXToSlot( unixTime: number, gInfos: NormalizedGenesisInfos ): number
 {
-    return Math.floor( (POSIX - sysStartPOSIX) / slotLenMs );
+    const timePassed = unixTime - gInfos.systemStartPosixMs;
+    const slotsPassed = Math.floor(timePassed / gInfos.slotLengthMs);
+    return slotsPassed + gInfos.startSlotNo;
 }
 
 /**
@@ -21,9 +23,10 @@ export function POSIXToSlot( POSIX: number, sysStartPOSIX: number, slotLenMs: nu
  * @param slotLenMs milliseconds per slot
  * @returns 
  */
-export function slotToPOSIX( slotN: number, sysStartPOSIX: number, slotLenMs: number ): number
+export function slotToPOSIX( slot: number, gInfos: NormalizedGenesisInfos ): number
 {
-    return sysStartPOSIX + (slotLenMs * slotN);
+    const msAfterBegin = (slot - gInfos.startSlotNo) * gInfos.slotLengthMs;
+    return gInfos.systemStartPosixMs + msAfterBegin;
 }
 
 export function getTxIntervalData(
@@ -32,6 +35,7 @@ export function getTxIntervalData(
     geneisInfos: GenesisInfos | undefined
 ): DataConstr
 {
+    geneisInfos = geneisInfos ? normalizedGenesisInfos( geneisInfos ) : undefined;
     let lowerBoundData: Data | undefined = undefined;
 
     if( startSlot === undefined )
@@ -40,7 +44,7 @@ export function getTxIntervalData(
     }
     else
     {
-        if( !isGenesisInfos( geneisInfos ) )
+        if( !isNormalizedGenesisInfos( geneisInfos ) )
         {
             throw new Error("missing genesis infos requried to translate slot number to posix")
         }
@@ -51,8 +55,7 @@ export function getTxIntervalData(
                 new DataI(
                     slotToPOSIX(
                         unsafeForceUInt( startSlot ),
-                        unsafeForceUInt( geneisInfos.systemStartPOSIX ),
-                        unsafeForceUInt( geneisInfos.slotLengthInMilliseconds )
+                        geneisInfos
                     )
                 )
             ]
@@ -69,7 +72,7 @@ export function getTxIntervalData(
     }
     else
     {
-        if( !isGenesisInfos( geneisInfos ) )
+        if( !isNormalizedGenesisInfos( geneisInfos ) )
         {
             throw new Error("missing genesis infos requried to translate slot number to posix")
         }
@@ -80,8 +83,7 @@ export function getTxIntervalData(
                 new DataI(
                     slotToPOSIX(
                         unsafeForceUInt( endSlot ),
-                        unsafeForceUInt( geneisInfos.systemStartPOSIX ),
-                        unsafeForceUInt( geneisInfos.slotLengthInMilliseconds )
+                        geneisInfos
                     )
                 )
             ]

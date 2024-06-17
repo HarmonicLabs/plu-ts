@@ -46,37 +46,39 @@ export function _old_plet<PVarT extends PType, SomeExtension extends object>( va
         ).type;
 
         // return papp( plam( varValue.type, outType )( expr as any ), varValue as any ) as any;
-        const term = new Term(
-            outType,
-            dbn => {
-                const arg = varValue.toIR( dbn );
-
-                if(
-                    // inline variables; no need to add an application since already in scope
-                    arg instanceof IRVar
-                )
-                {
-                    return expr( withUtility( varValue as any ) as any ).toIR( dbn );
-                }
-
-                return new IRApp(
-                    new IRFunc(
-                        1,
-                        expr(
-                            withUtility(
-                                new Term(
-                                    varValue.type,
-                                    varAccessDbn => new IRVar( varAccessDbn - ( dbn + BigInt(1) ) ) // point to the lambda generated here
+        const term = addUtilityForType( outType )(
+            new Term(
+                outType,
+                dbn => {
+                    const arg = varValue.toIR( dbn );
+    
+                    if(
+                        // inline variables; no need to add an application since already in scope
+                        arg instanceof IRVar
+                    )
+                    {
+                        return expr( withUtility( varValue as any ) as any ).toIR( dbn );
+                    }
+    
+                    return new IRApp(
+                        new IRFunc(
+                            1,
+                            expr(
+                                withUtility(
+                                    new Term(
+                                        varValue.type,
+                                        varAccessDbn => new IRVar( varAccessDbn - ( dbn + BigInt(1) ) ) // point to the lambda generated here
+                                    ) as any
                                 ) as any
-                            ) as any
-                        ).toIR( ( dbn + BigInt(1) ) )
-                    ),
-                    arg
-                )
-            }
+                            ).toIR( ( dbn + BigInt(1) ) )
+                        ),
+                        arg
+                    )
+                }
+            )
         );
 
-        return term;
+        return term as any;
     }
     
     Object.defineProperty(

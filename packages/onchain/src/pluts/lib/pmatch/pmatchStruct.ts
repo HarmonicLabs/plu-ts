@@ -22,6 +22,9 @@ import { addUtilityForType } from "../std/UtilityTerms/addUtilityForType";
 import { getElemAtTerm } from "./getElemAtTerm";
 import { termTypeToString } from "../../type_system/utils";
 import { capitalize } from "../../../utils/capitalize";
+import { punsafeConvertType } from "../punsafeConvertType";
+import { IRVar } from "../../../IR";
+import { getCallStackAt } from "../../../utils/getCallStackAt";
 
 function getReturnTypeFromContinuation(
     cont: RawStructCtorCallback,
@@ -54,6 +57,7 @@ function hoistedMatchCtors<SDef extends StructDefinition>(
     structData: Term<PStruct<SDef, any>>,
     sDef: SDef,
     ctorCbs: (RawStructCtorCallback | Term<PLam<PList<PData>, PType>>)[],
+    cbsReturnT: TermType | undefined
 ) : Term<PType>
 {
     const length = ctorCbs.length;
@@ -87,7 +91,7 @@ function hoistedMatchCtors<SDef extends StructDefinition>(
         }
 
         const thisCtorDef = sDef[ ctors[0] ] as SDef[string];
-        const returnT = getReturnTypeFromContinuation( cont, thisCtorDef );
+        const returnT = cbsReturnT ?? getReturnTypeFromContinuation( cont, thisCtorDef );
 
         return papp(
             plam( list(data), returnT )( cont ),
@@ -113,9 +117,11 @@ function hoistedMatchCtors<SDef extends StructDefinition>(
     const thisCtorDef = sDef[ Object.keys( sDef )[ ctorIdx ] ] as SDef[string];
 
     let returnT: TermType | undefined = 
-        cont instanceof Term ?
-            cont.type[2] as TermType :
-            getReturnTypeFromContinuation( cont, thisCtorDef )
+        cbsReturnT ?? (
+            cont instanceof Term ?
+                cont.type[2] as TermType :
+                getReturnTypeFromContinuation( cont, thisCtorDef )
+        )
     
     let result = papp(
         matchNCtorsIdxs( ctors.length, returnT ) as any,
@@ -187,6 +193,12 @@ export function pmatchStruct<SDef extends StructDefinition>( struct: Term<PStruc
     const ctors = Object.keys( sDef );
     const ctorCbs: RawStructCtorCallback[] = ctors.map( _ => undefined ) as any;
 
+    // console.log("matching", ctors);
+    // if( ctors[0] === "PoolStateRef" )
+    // {
+    //     console.log( getCallStackAt( 4 )?.__line__ );
+    // }
+
     function indexOfCtor( ctor: string ): number
     {
         const res = ctors.indexOf( ctor )
@@ -224,13 +236,19 @@ export function pmatchStruct<SDef extends StructDefinition>( struct: Term<PStruc
                         return cb( getStructInstance( mathcedCtorsFields, sDef[ctor] ) as any )
                     };
 
+                    const returnT = cb( getStructInstance(
+                        new Term( list( data ), _ => new IRVar(0)),
+                        sDef[ctor]
+                    ) as any ).type;
+
                     // same stuff of previous ctors
                     ctorCbs[idx] = callback;
 
                     return hoistedMatchCtors(
                         struct as any,
                         sDef,
-                        ctorCbs as any
+                        ctorCbs as any,
+                        returnT
                     );
 
                 }
@@ -269,7 +287,12 @@ export function pmatchStruct<SDef extends StructDefinition>( struct: Term<PStruc
                 const maxLengthFound =
                     Math.max(
                         ...ctors
-                        .map( ctor => Object.keys( sDef[ ctor ] ).length )
+                        .map((ctor, i) =>
+                            // only get length if a function was specified
+                            typeof ctorCbs[i] === "function" ?
+                                Object.keys( sDef[ ctor ] ).length :
+                                -1
+                        )
                     );
                     // .reduce( (prev, curr, i ) => Math.max( prev, curr ) , 0 );
 
@@ -301,10 +324,11 @@ export function pmatchStruct<SDef extends StructDefinition>( struct: Term<PStruc
                         */
                         struct as any,
                         sDef,
-                        ctorCbs
+                        ctorCbs,
+                        returnT
                     );
 
-                    return res;
+                    return punsafeConvertType( res, returnT ) as any;
                 })
             }
         );

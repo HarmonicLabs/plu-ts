@@ -7,6 +7,9 @@ export function isPrimTypeTag( t: any ): t is PrimType
         case PrimType.Alias:
         case PrimType.AsData:
         case PrimType.BS:
+        case PrimType.bls12_381_G1_element:
+        case PrimType.bls12_381_G2_element:
+        case PrimType.bls12_381_MlResult:
         case PrimType.Bool:
         case PrimType.Data:
         case PrimType.Delayed:
