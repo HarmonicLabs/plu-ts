@@ -69,10 +69,6 @@ export function compileIRToUPLC( term: IRTerm ): UPLCTerm
     // ------------------------------------------------------------------------- //
     ///////////////////////////////////////////////////////////////////////////////
 
-    console.log(
-        prettyIR( term )
-    );
-
     term = replaceNativesAndReturnRoot( term );
 
     replaceClosedLettedWithHoisted( term );

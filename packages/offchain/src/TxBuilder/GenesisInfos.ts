@@ -102,8 +102,9 @@ export function isGenesisInfos( stuff: any ): stuff is GenesisInfos
             hasOwn( stuff, "slotLengthMs" ) &&
             canBeUInteger( stuff.slotLengthMs )
         )) && (
-            hasOwn( stuff, "startSlotNo" ) &&
-            canBeUInteger( stuff.startSlotNo )
+            hasOwn( stuff, "startSlotNo" ) ?
+            canBeUInteger( stuff.startSlotNo ) :
+            true
         )
 
     );

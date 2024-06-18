@@ -2,7 +2,7 @@ import { fromAscii, fromHex } from "@harmoniclabs/uint8array-utils";
 import { Address, Hash28, Script, TxOut, TxOutRef, UTxO, Value, defaultProtocolParameters } from "@harmoniclabs/cardano-ledger-ts";
 import { DataConstr, DataI, dataFromCbor } from "@harmoniclabs/plutus-data";
 import { PTokenName, PAssetsEntry, PCredential, PCurrencySymbol, PData, PExtended, PInt, PScriptContext, PScriptPurpose, PTxInfo, PTxOut, PTxOutRef, PType, PUnit, PValue, PValueEntry, Term, TermFn, TermList, bool, bs, data, delayed, fn, int, lam, list, pBSToData, pBool, pData, pDataI, pInt, pIntToData, pList, pListToData, pchooseList, pdelay, peqData, perror, pfn, pforce, phoist, pif, pindexBs, pisEmpty, plam, plet, pmakeUnit, pmatch, pmatchList, pnilData, precursive, pserialiseData, psha2_256, pstrictIf, pstruct, psub, ptrace, ptraceError, ptraceVal, punBData, punIData, punsafeConvertType, str, termTypeToString, unit } from "../../../onchain/src/pluts";
-import { TxBuilder } from "..";
+import { TxBuilder, defaultMainnetGenesisInfos } from "..";
 
 const master_tn = PTokenName.from( fromAscii("itamae") );
 
