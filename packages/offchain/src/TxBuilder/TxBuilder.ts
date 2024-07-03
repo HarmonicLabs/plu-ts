@@ -1,9 +1,9 @@
-import { fromHex, fromUtf8, isUint8Array, lexCompare, toHex } from "@harmoniclabs/uint8array-utils";
+import { fromHex, isUint8Array, lexCompare, toHex } from "@harmoniclabs/uint8array-utils";
 import { keepRelevant } from "./keepRelevant";
 import { GenesisInfos, NormalizedGenesisInfos, defaultMainnetGenesisInfos, defaultPreprodGenesisInfos, isGenesisInfos, isNormalizedGenesisInfos, normalizedGenesisInfos } from "./GenesisInfos";
-import { isCostModelsV2, isCostModelsV1, defaultV2Costs, defaultV1Costs, costModelsToLanguageViewCbor, isCostModelsV3, defaultV3Costs } from "@harmoniclabs/cardano-costmodels-ts";
-import { NetworkT, ProtocolParameters, isPartialProtocolParameters, Tx, Value, ValueUnits, TxOut, TxRedeemerTag, txRdmrTagToString, ScriptType, UTxO, VKeyWitness, Script, BootstrapWitness, TxRedeemer, Hash32, TxIn, Hash28, AuxiliaryData, TxWitnessSet, getNSignersNeeded, txRedeemerTagToString, ScriptDataHash, Address, AddressStr, TxBody, CredentialType, canBeHash32, VotingProcedures, ProposalProcedure } from "@harmoniclabs/cardano-ledger-ts";
-import { CborString, CborPositiveRational, Cbor, CborArray, CanBeCborString } from "@harmoniclabs/cbor";
+import { isCostModelsV2, isCostModelsV1, costModelsToLanguageViewCbor, isCostModelsV3, defaultV3Costs } from "@harmoniclabs/cardano-costmodels-ts";
+import { Tx, Value, ValueUnits, TxOut, TxRedeemerTag, ScriptType, UTxO, VKeyWitness, Script, BootstrapWitness, TxRedeemer, Hash32, TxIn, Hash28, AuxiliaryData, TxWitnessSet, getNSignersNeeded, txRedeemerTagToString, ScriptDataHash, TxBody, CredentialType, canBeHash32, VotingProcedures, ProposalProcedure } from "@harmoniclabs/cardano-ledger-ts";
+import { CborString, Cbor, CborArray, CanBeCborString, CborPositiveRational } from "@harmoniclabs/cbor";
 import { byte, blake2b_256 } from "@harmoniclabs/crypto";
 import { Data, dataToCborObj, DataConstr, dataToCbor } from "@harmoniclabs/plutus-data";
 import { Machine, ExBudget } from "@harmoniclabs/plutus-machine";
@@ -12,7 +12,6 @@ import { POSIXToSlot, getTxInfos, slotToPOSIX } from "../toOnChain";
 import { ITxBuildArgs, ITxBuildOptions, ITxBuildInput, ITxBuildSyncOptions, txBuildOutToTxOut, normalizeITxBuildArgs, NormalizedITxBuildInput } from "../txBuild";
 import { CanBeUInteger, forceBigUInt, canBeUInteger, unsafeForceUInt } from "../utils/ints";
 import { freezeAll, defineReadOnlyProperty, definePropertyIfNotPresent, hasOwn, isObject } from "@harmoniclabs/obj-utils";
-import { assert } from "../utils/assert";
 import { TxBuilderRunner } from "./TxBuilderRunner/TxBuilderRunner";
 import { ITxRunnerProvider } from "./IProvider";
 import { CanBeData, canBeData, forceData } from "../utils/CanBeData";
@@ -308,8 +307,14 @@ export class TxBuilder
             "if the protocol params are missing the script evaluation costs"
         )
 
-        const executionUnitPrices = this.protocolParamters.executionUnitPrices;
-        const [ memRational, cpuRational ] = executionUnitPrices;
+        let executionUnitPrices = this.protocolParamters.executionUnitPrices;
+        executionUnitPrices = Array.isArray( executionUnitPrices ) ? executionUnitPrices : [
+            (executionUnitPrices as any).priceMemory,
+            (executionUnitPrices as any).priceSteps,
+        ] 
+        let [ memRational, cpuRational ] = executionUnitPrices;
+        memRational = typeof memRational === "number" ? CborPositiveRational.fromNumber( memRational ) : memRational;
+        cpuRational = typeof cpuRational === "number" ? CborPositiveRational.fromNumber( cpuRational ) : cpuRational;
 
         // group by purpose so we can use the redeemer index to find the script
         const spendScriptsToExec =      scriptsToExec.filter( elem => elem.rdmrTag === TxRedeemerTag.Spend );

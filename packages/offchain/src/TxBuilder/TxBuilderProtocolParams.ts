@@ -3,7 +3,7 @@ import { CanBeUInteger, canBeUInteger } from "../utils/ints";
 import { CborPositiveRational } from "@harmoniclabs/cbor";
 import { ExBudget, ExBudgetJson } from "@harmoniclabs/plutus-machine";
 import { Rational, cborFromRational, isRational } from "../utils/Rational";
-import { CostModels, isCostModels } from "@harmoniclabs/cardano-costmodels-ts";
+import { CostModels, defaultV1Costs, defaultV2Costs, defaultV3Costs, isCostModels } from "@harmoniclabs/cardano-costmodels-ts";
 import { isObject } from "@harmoniclabs/obj-utils";
 
 export interface ValidatedTxBuilderProtocolParams {
@@ -59,18 +59,20 @@ export interface TxBuilderProtocolParams {
 }
 
 export const defaultTxBuilderProtocolParameters = Object.freeze({
-    txFeePerByte: BigInt( defaultProtocolParameters.txFeePerByte ),
-    txFeeFixed: BigInt( defaultProtocolParameters.txFeeFixed ),
-    utxoCostPerByte: BigInt( defaultProtocolParameters.utxoCostPerByte ),
-
-    maxTxSize: BigInt( defaultProtocolParameters.maxTxSize ),
-    maxTxExecutionUnits: forceExBudget( defaultProtocolParameters.maxTxExecutionUnits ),
-    maxCollateralInputs: BigInt( defaultProtocolParameters.maxCollateralInputs ),
-    collateralPercentage: BigInt( defaultProtocolParameters.collateralPercentage ),
-    minfeeRefScriptCostPerByte: cborFromRational( defaultProtocolParameters.minfeeRefScriptCostPerByte ),
-
-    executionUnitPrices: forceExecUnitPricesArray( defaultProtocolParameters.executionUnitPrices ),
-    costModels: defaultProtocolParameters.costModels
+    txFeePerByte: BigInt( defaultProtocolParameters.txFeePerByte ?? 0 ),
+    txFeeFixed: BigInt( defaultProtocolParameters.txFeeFixed ?? 0 ),
+    utxoCostPerByte: BigInt( defaultProtocolParameters.utxoCostPerByte ?? 0 ),
+    maxTxSize: BigInt( defaultProtocolParameters.maxTxSize ?? 0 ),
+    maxTxExecutionUnits: forceExBudget( defaultProtocolParameters.maxTxExecutionUnits ?? { steps: 0, memory: 0 }),
+    maxCollateralInputs: BigInt( defaultProtocolParameters.maxCollateralInputs ?? 0 ),
+    collateralPercentage: BigInt( defaultProtocolParameters.collateralPercentage ?? 0 ),
+    minfeeRefScriptCostPerByte: cborFromRational( defaultProtocolParameters.minfeeRefScriptCostPerByte ?? 0 ),
+    executionUnitPrices: forceExecUnitPricesArray( defaultProtocolParameters.executionUnitPrices ?? [ 0, 0 ]),
+    costModels: defaultProtocolParameters.costModels ?? {
+        PlutusScriptV1: defaultV1Costs,
+        PlutusScriptV2: defaultV2Costs,
+        PlutusScriptV3: defaultV3Costs
+    }
 } as ValidatedTxBuilderProtocolParams);
 
 function forceExBudget( ex: ExBudget | ExBudgetJson ): ExBudget
