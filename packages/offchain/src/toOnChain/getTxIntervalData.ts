@@ -94,7 +94,7 @@ export function getTxIntervalData(
         0, // PPosixTimeRange (PInterval) only constructor
         [
             // from
-            new DataConstr( // PLowerBound
+            new DataConstr( // PBound
                 0, // only constructor
                 [
                     // bound
@@ -104,7 +104,7 @@ export function getTxIntervalData(
                 ]
             ),
             // to
-            new DataConstr( // PUpperBound
+            new DataConstr( // PBound
                 0, // only constructor
                 [
                     // bound

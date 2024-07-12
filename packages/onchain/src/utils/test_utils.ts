@@ -20,11 +20,11 @@ import {
     pair,
     PDCert,
     PPOSIXTimeRange,
-    PLowerBound,
+    PBound,
     PExtended,
     bool,
     pBool,
-    PUpperBound,
+    PBound,
     PPubKeyHash,
     PStakingCredential,
     PAddress,
@@ -91,14 +91,14 @@ export const txId = toData( PTxId.type )(
 
 export const interval = toData( PPOSIXTimeRange.type )(
     PPOSIXTimeRange.PInterval({
-        from: toData( PLowerBound.type )(
-            PLowerBound.PLowerBound({
+        from: toData( PBound.type )(
+            PBound.PBound({
                 bound: toData( PExtended.type )( PExtended.PFinite({ _0: pDataI(1) }) ),
                 inclusive: toData( bool )( pBool( false ) )
             })
         ),
-        to: toData( PUpperBound.type )(
-            PUpperBound.PUpperBound({
+        to: toData( PBound.type )(
+            PBound.PBound({
                 bound: toData( PExtended.type )( PExtended.PPosInf({}) ),
                 inclusive: toData( bool )( pBool( false ) )
             })

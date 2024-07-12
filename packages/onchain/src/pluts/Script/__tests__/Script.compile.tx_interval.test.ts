@@ -1,4 +1,4 @@
-import { PExtended, PInterval, PLowerBound, PScriptContext, PUpperBound, bool, int, pData, pDataI, peqInt, perror, pfn, phoist, plet, pmatch, pstruct, psub, punsafeConvertType } from "../..";
+import { PExtended, PInterval, PBound, PScriptContext, PBound, bool, int, pData, pDataI, peqInt, perror, pfn, phoist, plet, pmatch, pstruct, psub, punsafeConvertType } from "../..";
 import { Machine, CEKConst } from "@harmoniclabs/plutus-machine";
 import { DataConstr, dataFromCbor } from "@harmoniclabs/plutus-data";
 
@@ -51,11 +51,11 @@ describe("tx interval", () => {
     
         const uplc = thing.$(
             PInterval.PInterval({
-                from: PLowerBound.PLowerBound({
+                from: PBound.PBound({
                     bound: PExtended.PFinite({ _0: pDataI(10) }) as any,
                     inclusive: pData( new DataConstr(0,[]) )
                 }) as any,
-                to: PUpperBound.PUpperBound({
+                to: PBound.PBound({
                     bound: PExtended.PFinite({ _0: pDataI(10) }) as any,
                     inclusive: pData( new DataConstr(0,[]) )
                 }) as any

@@ -14,6 +14,8 @@ import { Cloneable, isCloneable } from "../../utils/Cloneable";
 import { assert } from "../../utils/assert";
 import { getCallStackAt } from "../../utils/getCallStackAt";
 import { IRVar } from "@harmoniclabs/plu-ts-onchain";
+import { punsafeConvertType } from "../lib/punsafeConvertType";
+import { UtilityTermOf } from "../lib/std/UtilityTerms/addUtilityForType";
 
 export type UnTerm<T extends Term<PType>> = T extends Term<infer PT extends PType > ? PT : never;
 
@@ -43,6 +45,11 @@ export class Term<PT extends PType>
     readonly toIR!: ( deBruijnLevel?: bigint | number ) => IRTerm
 
     readonly clone!: () => Term<PT>
+
+    as<T extends TermType>( type: T ): UtilityTermOf<ToPType<T>>
+    {
+        return punsafeConvertType( this, type );
+    }
 
     constructor( type: FromPType<PT> | TermType | GenericTermType, _toIR: ( dbn: bigint ) => IRTerm, isConstant: boolean = false )
     {

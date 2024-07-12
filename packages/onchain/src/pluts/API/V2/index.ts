@@ -1,8 +1,8 @@
-export * from "./ScriptContext/PScriptContext";
-export * from "./ScriptContext/PTxInfo/PTxInfo";
+// export * from "./ScriptContext/PScriptContext";
+// export * from "./ScriptContext/PTxInfo/PTxInfo";
 export * from "./Tx/POutputDatum";
 export * from "./Tx/PTxOut";
-export * from "./Tx/PTxInInfo";
+// export * from "./Tx/PTxInInfo";
 
 import { V1 } from "../V1";
 import { PScriptContext } from "./ScriptContext/PScriptContext";

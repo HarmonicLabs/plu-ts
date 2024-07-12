@@ -9,9 +9,9 @@ import { PTxId } from "../../API/V1/Tx/PTxId"
 import { PDatumHash } from "../../API/V1/ScriptsHashes/PDatumHash"
 import { PDCert } from "../../API/V1/PDCert"
 import { PValue } from "../../API/V1/Value/PValue"
-import { PLowerBound } from "../../API/V1/Interval/PLowerBound"
+import { PBound } from "../../API/V1/Interval/PBound"
 import { PExtended } from "../../API/V1/Interval/PExtended"
-import { PUpperBound } from "../../API/V1/Interval/PUpperBound"
+import { PBound } from "../../API/V1/Interval/PBound"
 import { PPubKeyHash } from "../../API/V1/PubKey/PPubKeyHash"
 import { PStakingCredential } from "../../API/V1/Address/PStakingCredential"
 import { PTxOut } from "../../API/V1/Tx/PTxOut"
@@ -216,11 +216,11 @@ describe.skip("scriptToJsonFormat", () => {
                         txId: pByteString("deadbeef")
                     }),
                     interval: PPOSIXTimeRange.PInterval({
-                        from: PLowerBound.PLowerBound({
+                        from: PBound.PBound({
                             bound: PExtended.PNegInf({}),
                             inclusive: pBool( false )
                         }),
-                        to: PUpperBound.PUpperBound({
+                        to: PBound.PBound({
                             bound: PExtended.PPosInf({}),
                             inclusive: pBool( false )
                         })
@@ -268,11 +268,11 @@ describe.skip("scriptToJsonFormat", () => {
                     txId: pByteString("deadbeef")
                 }),
                 interval: PPOSIXTimeRange.PInterval({
-                    from: PLowerBound( PPOSIXTime.type ).PLowerBound({
+                    from: PBound( PPOSIXTime.type ).PBound({
                         bound: PExtended( PPOSIXTime.type ).PNegInf({}),
                         inclusive: pBool( false )
                     }),
-                    to: PUpperBound( PPOSIXTime.type ).PUpperBound({
+                    to: PBound( PPOSIXTime.type ).PBound({
                         bound: PExtended( PPOSIXTime.type ).PPosInf({}),
                         inclusive: pBool( false )
                     })

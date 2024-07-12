@@ -1,9 +1,9 @@
-import { pstruct } from "../../../../PTypes/PStruct/pstruct";
-import { PMaybe } from "../../../../lib/std/PMaybe/PMaybe";
-import { int } from "../../../../type_system/types";
-import { PCredential } from "../../../V1/Address/PCredential";
-import { PPubKeyHash } from "../../../V1/PubKey/PPubKeyHash";
-import { PDelegatee } from "../../PDelegatee";
+import { pstruct } from "../../../PTypes/PStruct/pstruct";
+import { PMaybe } from "../../../lib/std/PMaybe/PMaybe";
+import { int } from "../../../type_system/types";
+import { PCredential } from "../../V1/Address/PCredential";
+import { PPubKeyHash } from "../../V1/PubKey/PPubKeyHash";
+import { PDelegatee } from "./PDelegatee";
 
 const PMaybeInt = PMaybe( int );
 
@@ -42,7 +42,7 @@ export const PCertificate = pstruct({
     },
     PoolRetire: {
         poolId: PPubKeyHash.type,
-        epoch: int,                     // epoch
+        epoch: int,
     },
     CommitteeHotAuthorization: {
         cold: PCredential.type,

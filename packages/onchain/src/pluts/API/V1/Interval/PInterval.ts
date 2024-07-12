@@ -1,10 +1,9 @@
 import { pstruct } from "../../../PTypes/PStruct/pstruct";
-import { PLowerBound } from "./PLowerBound";
-import { PUpperBound } from "./PUpperBound";
+import { PBound } from "./PBound";
 
 export const PInterval = pstruct({
     PInterval: {
-        from: PLowerBound.type,
-        to: PUpperBound.type
+        from: PBound.type,
+        to: PBound.type
     }
 });
