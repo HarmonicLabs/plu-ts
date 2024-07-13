@@ -88,4 +88,8 @@ export const V1 = Object.freeze({
     PValue,
     PValueEntry,
     PAssetsEntry
+<<<<<<< HEAD
 } as const);
+=======
+});
+>>>>>>> 4b54a0a9 (updated tests)
