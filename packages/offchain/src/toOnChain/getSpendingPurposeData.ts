@@ -1,15 +1,39 @@
 import { Hash28, StakeCredentials, StakeValidatorHash, Tx, TxBody, TxRedeemer, TxRedeemerTag } from "@harmoniclabs/cardano-ledger-ts";
 import type { ToDataVersion } from "@harmoniclabs/cardano-ledger-ts/dist/toData/defaultToDataVersion";
-import { Data, DataB, DataConstr, DataList } from "@harmoniclabs/plutus-data";
+import { Data, DataB, DataConstr, DataI, DataList, isData } from "@harmoniclabs/plutus-data";
 import { lexCompare } from "@harmoniclabs/uint8array-utils";
 
 export function getSpendingPurposeData( rdmr: TxRedeemer, tx: TxBody, version: ToDataVersion ): DataConstr
 {
-    version = version ?? "v2";
+    const scriptInfos = getScriptInfoData(
+        rdmr,
+        tx,
+        version
+    );
+
+    // for all versions, purpose has never the datum,
+    // only script info has the datum
+    if( rdmr.tag === TxRedeemerTag.Spend )
+    return new DataConstr(
+        scriptInfos.constr,
+        [ scriptInfos.fields[0] ]
+    );
+
+    return scriptInfos;
+}
+
+export function getScriptInfoData(
+    rdmr: TxRedeemer,
+    tx: TxBody,
+    version: ToDataVersion,
+    datum?: Data | undefined
+): DataConstr
+{
+    version = version ?? "v3";
     const tag = rdmr.tag;
 
     let ctorIdx: 0 | 1 | 2 | 3 | 4 | 5;
-    let purposeArgData: Data;
+    let purposeArgs: Data[];
 
     if( tag === TxRedeemerTag.Mint )
     {
@@ -22,7 +46,7 @@ export function getSpendingPurposeData( rdmr: TxRedeemer, tx: TxBody, version: T
         throw new Error(
             "invalid minting policy for minting redeemer " + rdmr.index.toString()
         );
-        purposeArgData = new DataB( policy.toBuffer() );
+        purposeArgs = [ new DataB( policy.toBuffer() ) ];
     }
     else if( tag === TxRedeemerTag.Spend )
     {
@@ -34,14 +58,22 @@ export function getSpendingPurposeData( rdmr: TxRedeemer, tx: TxBody, version: T
             // else order by tx id
             return ord;
         });
+        
         const utxoRef = sortedIns[ rdmr.index ]?.utxoRef;
+        
         if( utxoRef === undefined )
         throw new Error(
             "invalid 'Spend' redeemer index: " + rdmr.index.toString() +
             "; tx.inputs.length is: " + tx.inputs.length.toString()
         );
-        // @ts-ignore Expected 0 arguments, but got 1.t
-        purposeArgData = utxoRef.toData( version );
+        
+        purposeArgs = [ utxoRef.toData( version ) ];
+        
+        if( version === "v3" ) purposeArgs.push(
+            isData( datum ) ?
+            new DataConstr( 0, [ datum ] ) : // just datum
+            new DataConstr( 1, [] ) // nothing
+        );
     }
     else if( tag === TxRedeemerTag.Withdraw )
     {
@@ -51,12 +83,13 @@ export function getSpendingPurposeData( rdmr: TxRedeemer, tx: TxBody, version: T
         throw new Error(
             "invalid stake credentials for rewarding redeemer " + rdmr.index.toString()
         );
-        purposeArgData = new StakeCredentials(
-            "script",
-            new StakeValidatorHash( stakeAddr.credentials )
-        )
-        // @ts-ignore Expected 0 arguments, but got 1.t
-        .toData( version );
+        purposeArgs = [
+            new StakeCredentials(
+                "script",
+                new StakeValidatorHash( stakeAddr.credentials )
+            )
+            .toData( version )
+        ];
     }
     else if( tag === TxRedeemerTag.Cert )
     {
@@ -75,7 +108,40 @@ export function getSpendingPurposeData( rdmr: TxRedeemer, tx: TxBody, version: T
             tmp = tmp.list[0]; 
         }
 
-        purposeArgData = tmp;
+        purposeArgs = [ tmp ];
+
+        if( version === "v3" )
+        {
+            purposeArgs.unshift( new DataI( rdmr.index ) );
+        }
+    }
+    else if( version !== "v3" )
+    {
+        throw new Error(
+            "voting and proposing script purpose only introduced in plutus v3"
+        );
+    }
+    else if( tag === TxRedeemerTag.Voting )
+    {
+        ctorIdx = 4;
+        const votingProcedure = tx.votingProcedures?.procedures[ rdmr.index ];
+
+        if( !votingProcedure )
+        {
+            throw new Error(
+                "mismatching voting redeemer, couldn't find voting procedure at index " +
+                rdmr.index.toString()
+            );
+        }
+
+        purposeArgs = [
+            votingProcedure.voter.toData( version )
+        ];
+    }
+    else if( tag === TxRedeemerTag.Proposing )
+    {
+        ctorIdx = 5;
+        
     }
     else throw new Error(
         "invalid redeemer tag"
@@ -83,6 +149,6 @@ export function getSpendingPurposeData( rdmr: TxRedeemer, tx: TxBody, version: T
 
     return new DataConstr(
         ctorIdx,
-        [ purposeArgData ]
+        purposeArgs
     );
 }

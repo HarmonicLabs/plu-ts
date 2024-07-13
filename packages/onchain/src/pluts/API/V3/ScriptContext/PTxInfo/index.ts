@@ -1,7 +1,6 @@
 import { pstruct } from "../../../../PTypes/PStruct/pstruct";
 import { list, pair, int, data, map } from "../../../../type_system";
 import { PValue } from "../../../V1/Value/PValue";
-import { PDCert } from "../../../V1/PDCert";
 import { PPOSIXTimeRange } from "../../../V1/Time";
 import { PPubKeyHash } from "../../../V1/PubKey/PPubKeyHash";
 import { PDatumHash } from "../../../V1/ScriptsHashes/PDatumHash";
@@ -15,6 +14,7 @@ import { PVote } from "../../Governance/PVote";
 import { PProposalProcedure } from "../../Governance/PProposalProcedure";
 import { PCredential } from "../../../V1/Address/PCredential";
 import { PScriptPurpose } from "../PScriptPurpose";
+import { PCertificate } from "../PCertificate";
    
 export const PTxInfo = pstruct({
     PTxInfo: {
@@ -24,7 +24,7 @@ export const PTxInfo = pstruct({
         fee:  int, // lovelaces
         /** mint has no lovelaces entry */
         mint: PValue.type,
-        certificates: list( PDCert.type ),
+        certificates: list( PCertificate.type ),
         withdrawals: map( PCredential.type, int ),
         interval: PPOSIXTimeRange.type,
         signatories: list( PPubKeyHash.type ),

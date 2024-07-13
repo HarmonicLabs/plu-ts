@@ -1,6 +1,6 @@
 import { getTxIntervalData } from "./getTxIntervalData";
 import { GenesisInfos } from "../TxBuilder/GenesisInfos";
-import { Data, DataB, DataConstr, DataList, DataMap, DataPair, hashData } from "@harmoniclabs/plutus-data";
+import { Data, DataB, DataConstr, DataI, DataList, DataMap, DataPair, hashData } from "@harmoniclabs/plutus-data";
 import { Tx, TxRedeemer, UTxO, Value } from "@harmoniclabs/cardano-ledger-ts";
 import { getSpendingPurposeData } from "./getSpendingPurposeData";
 import { lexCompare } from "@harmoniclabs/uint8array-utils";
@@ -37,6 +37,8 @@ export function getTxInfos(
 
     const feeData = Value.lovelaces( tx.fee ).toData();
     const mintData = (tx.mint ?? Value.lovelaces( 0 ) ).toData();
+    const mintDataNoLovelaces = new DataMap( mintData.map.slice( 1 ) );
+
     const intervalData = getTxIntervalData( tx.validityIntervalStart, tx.ttl, genesisInfos );
     const sigsData = new DataList( tx.requiredSigners?.map( sig => sig.toData() ) ?? [] );
     const datumsData = new DataMap(
@@ -78,7 +80,10 @@ export function getTxInfos(
                 // datums
                 datumsData.clone(),
                 // id
-                txIdData.clone()
+                new DataConstr(
+                    0,
+                    [ txIdData.clone() ]
+                )
             ]
         );
         
@@ -117,7 +122,10 @@ export function getTxInfos(
                 // datums
                 datumsData,
                 // id
-                txIdData
+                new DataConstr(
+                    0,
+                    [ txIdData.clone() ]
+                )
             ]
         );
     }
@@ -135,11 +143,11 @@ export function getTxInfos(
             new DataList( sortedRefInputs?.map( refIn => refIn.toData("v3") ) ?? [] ),
             // outputs
             new DataList( tx.outputs.map( out => out.toData("v3") ) ),
-            // fee
-            feeData,
+            // fee (only lovelaces)
+            new DataI( tx.fee ),
             // mint
-            mintData,
-            // dCertificates
+            mintDataNoLovelaces,
+            // certificates
             new DataList( tx.certs?.map( cert => cert.toData("v3") ) ?? [] ),
             // withderawals
             tx.withdrawals?.toData( "v3" ) ?? new DataMap([]),

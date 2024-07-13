@@ -569,8 +569,6 @@ export class TxBuilder
         const {
             outputs,
             requiredSigners,
-            collaterals,
-            collateralReturn,
             mints,
             invalidAfter,
             certificates,
@@ -589,7 +587,9 @@ export class TxBuilder
             changeAddress,
             change,
             invalidBefore,
-            readonlyRefInputs
+            readonlyRefInputs,
+            collaterals,
+            collateralReturn
         } = args;
 
         if( change ) changeAddress = change.address;
@@ -1045,7 +1045,6 @@ export class TxBuilder
             })
         ) : undef;
 
-        // TODO
         const _proposalProcedures = Array.isArray( proposalProcedures ) ? 
         proposalProcedures.map(({ proposalProcedure, script }, i) => {
 
@@ -1138,7 +1137,13 @@ export class TxBuilder
                 !Array.isArray( collaterals ) ||
                 collaterals.length <= 0
             )
-            throw new Error("tx includes plutus scripts to execute but no collateral input was provided");
+            {
+                collaterals = this.findCollaterals( _inputs );
+                collateralReturn = undef;
+            }
+
+            if( collaterals.length <= 0 )
+            throw new Error("collaterals missing, and no input could be used");
 
             const collateralValue = collaterals.reduce<Value>(
                 (accum, collateral) => Value.add( accum, collateral.resolved.value ),
@@ -1148,10 +1153,21 @@ export class TxBuilder
             if( !Value.isAdaOnly( collateralValue ) )
             {
                 if( !collateralReturn )
-                throw new Error(
-                    `total collateral input value was including non-ADA value; no collateral return was specified\n` +
-                    `total collateral input value was: ${JSON.stringify( collateralValue.toJson(), undef, 2 )}`
-                );
+                {
+                    const addr = collaterals[0].resolved.address;
+                    collateralReturn = new TxOut({
+                        address: addr,
+                        value: collateralValue
+                    });
+                    const minAda = this.getMinimumOutputLovelaces( collateralReturn );
+                    collateralReturn = new TxOut({
+                        address: addr,
+                        value: Value.sub(
+                            collateralValue,
+                            Value.lovelaces( collateralValue.lovelaces - minAda )
+                        )
+                    });
+                }
 
                 const realCollValue = Value.sub(
                     collateralValue,
@@ -1258,6 +1274,64 @@ export class TxBuilder
             outs,
             change
         };
+    }
+
+    findCollaterals( utxos: UTxO[], targetCollateralLovelaces: number | bigint = 10_000_000 ): UTxO[]
+    {
+        const grouped: { [pkh: string]: UTxO[] } = {};
+        const pkhs: string[] = [];
+
+        for( const u of utxos )
+        {
+            const creds = u.resolved.address.paymentCreds;
+
+            if( creds.type === CredentialType.Script ) continue;
+
+            const pkh = creds.hash.toString();
+            
+            if( !Array.isArray( grouped[pkh] ) )
+            {
+                grouped[pkh] = [];
+                pkhs.push( pkh );
+            }
+            
+            grouped[pkh].push( u );
+        }
+
+        if( pkhs.length === 0 ) return [];
+
+        for( let i = 0; i < pkhs.length; i++ )
+        {
+            const pkh = pkhs[i];
+            grouped[pkh] = grouped[pkh]
+            .sort(( a, b ) => -Number( a.resolved.value.lovelaces - b.resolved.value.lovelaces ) )
+            .slice( 0, Number( this.protocolParamters.maxCollateralInputs ?? 3 ) );
+        }
+
+        let maxPkh = pkhs.shift()!;
+        let maxLove = grouped[maxPkh].reduce(( a, b ) => a + b.resolved.value.lovelaces, BigInt(0) );
+
+        for( const pkh of pkhs )
+        {
+            const love = grouped[pkh].reduce(( a, b ) => a + b.resolved.value.lovelaces, BigInt(0) );
+
+            if( love > maxLove )
+            {
+                maxPkh = pkh;
+                maxLove = love;
+            }
+        }
+
+        const collaterals = grouped[maxPkh];
+        targetCollateralLovelaces = BigInt( targetCollateralLovelaces );
+        if( targetCollateralLovelaces < 0 ) targetCollateralLovelaces = -targetCollateralLovelaces;
+
+        const filtered = collaterals.filter( u => u.resolved.value.lovelaces >= targetCollateralLovelaces );
+
+        if( filtered.length === 0 ) return collaterals;
+
+        // try to reduce the number of utxo collaterals and collateral value.
+        return [ filtered[ filtered.length - 1 ] ];
     }
 }
 
