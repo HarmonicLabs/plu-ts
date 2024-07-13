@@ -43,7 +43,7 @@ import { PTxOut } from "./Tx/PTxOut";
 import { PTxOutRef } from "./Tx/PTxOutRef";
 import { PCurrencySymbol } from "./Value/PCurrencySymbol";
 import { PTokenName } from "./Value/PTokenName";
-import { PValue } from "./Value/PValue";
+import { PAssetsEntry, PValue, PValueEntry } from "./Value/PValue";
 import { PBound } from "./Interval/PBound";
 
 export const V1 = Object.freeze({
@@ -85,5 +85,7 @@ export const V1 = Object.freeze({
     // ./Value
     PCurrencySymbol,
     PTokenName,
-    PValue
+    PValue,
+    PValueEntry,
+    PAssetsEntry
 });

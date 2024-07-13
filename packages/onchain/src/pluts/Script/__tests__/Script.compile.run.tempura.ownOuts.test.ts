@@ -1,4 +1,4 @@
-import { PCurrencySymbol, PScriptContext, PScriptPurpose, PTxInfo, PTxOut, PTxOutRef, bool, bs, data, lam, pBool, pData, perror, pfn, phoist, pif, plam, plet, pmakeUnit, pstruct, ptraceError, punsafeConvertType, str, unit } from "../..";
+import { V2, bool, bs, data, lam, pBool, pData, perror, pfn, phoist, pif, plam, plet, pmakeUnit, pstruct, ptraceError, punsafeConvertType, str, unit } from "../..";
 import { TxOutRef } from "@harmoniclabs/cardano-ledger-ts";
 import { dataFromCbor } from "@harmoniclabs/plutus-data";
 import { Machine, CEKConst } from "@harmoniclabs/plutus-machine";
@@ -6,8 +6,8 @@ import { addPBoolMethods } from "../../lib/std/UtilityTerms/TermBool";
 
 const value_contains_master = phoist(
     pfn([
-        PTxOut.type,
-        PCurrencySymbol.type
+        V2.PTxOut.type,
+        V2.PCurrencySymbol.type
     ],  bool)
     ( ( value, own_policy ) => {
 
@@ -18,8 +18,8 @@ const value_contains_master = phoist(
 const Redeemer = pstruct({
     // must be 0
     CtxLike: {
-        tx: PTxInfo.type,
-        purpose: PScriptPurpose.type
+        tx: V2.PTxInfo.type,
+        purpose: V2.PScriptPurpose.type
     },
     InputNonce: {
         nonce: bs
@@ -46,10 +46,10 @@ const passertOrTrace = phoist(
 
 const tempura
 = pfn([
-    PTxOutRef.type,
+    V2.PTxOutRef.type,
     data,
     Redeemer.type,
-    PScriptContext.type
+    V2.PScriptContext.type
 ],  unit)
 (( _utxoParam, _state, _rdmr, { tx }) => {
 
@@ -82,7 +82,7 @@ describe("run tempura", () => {
     test.only("mine 0", () => {
 
         const contract = tempura.$(
-            PTxOutRef.fromData(
+            V2.PTxOutRef.fromData(
                 pData(
                     new TxOutRef({
                         "id": "1cd30f11c3d774fa1cb43620810a405e6048c8ecea2e85ff43f5c3ad08096e46",
@@ -139,7 +139,7 @@ describe("run tempura", () => {
     test("mine 1", () => {
 
         const contract = tempura.$(
-            PTxOutRef.fromData(
+            V2.PTxOutRef.fromData(
                 pData(
                     new TxOutRef({
                         "id": "1cd30f11c3d774fa1cb43620810a405e6048c8ecea2e85ff43f5c3ad08096e46",

@@ -327,7 +327,7 @@ describe("TxBuilder.build", () => {
     const onlyBigThirdElem = pfn([
         data,
         list( int ),
-        PScriptContext.type
+        V2.PScriptContext.type
     ],  bool)
     (( _dat, nums, _ctx ) => 
         nums.at(0).ltEq( (BigInt(1) << BigInt(64)) - BigInt(1) )
@@ -335,7 +335,7 @@ describe("TxBuilder.build", () => {
 
     const mintSomething = pfn([
         data,
-        PScriptContext.type
+        V2.PScriptContext.type
     ],  bool)
     (( _rdmr, ctx ) => {
 

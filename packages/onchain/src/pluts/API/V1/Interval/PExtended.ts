@@ -1,5 +1,6 @@
 import { palias } from "../../../PTypes/PAlias/palias";
 import { pstruct } from "../../../PTypes/PStruct/pstruct";
+import { pfn } from "../../../lib/pfn";
 import { pInt } from "../../../lib/std/int";
 import { int } from "../../../type_system";
 

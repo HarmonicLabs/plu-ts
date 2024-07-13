@@ -29,7 +29,7 @@ describe("NFTVendingMachine", () => {
             bs, // price oracle thread identifier policy
             
             data,
-            PScriptContext.type
+            V2.PScriptContext.type
 
         ],  bool)
         (( ownerPkh, counterValId, priceOracleId, _rdmr, { tx, purpose } ) =>  {

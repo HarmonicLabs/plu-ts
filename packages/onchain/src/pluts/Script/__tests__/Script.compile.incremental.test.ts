@@ -92,7 +92,7 @@ describe("compile", () => {
 
         //const contract = pfn([
         //    int,
-        //    PScriptContext.type
+        //    V2.PScriptContext.type
         //],  bool)
         //(( rdmr, ctx ) => {
 //

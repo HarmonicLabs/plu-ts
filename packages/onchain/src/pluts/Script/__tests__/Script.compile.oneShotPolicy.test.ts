@@ -141,9 +141,9 @@ const _oneShotNFT = pfn([
     });
 })
 
-const mustSpendUtxo =  PTxOutRef.PTxOutRef({
+const mustSpendUtxo = V2.PTxOutRef.PTxOutRef({
     // 5dafdbe833a241350d679348d03599db3d5179385f96521f89ff8fa51fd57ebf#0
-    id: PTxId.PTxId({
+    id: V2.PTxId.PTxId({
         txId: pDataB("5dafdbe833a241350d679348d03599db3d5179385f96521f89ff8fa51fd57ebf")
     }) as any,
     index: pDataI(0)

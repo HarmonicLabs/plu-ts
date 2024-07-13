@@ -127,7 +127,7 @@ describe("build time", () => {
     const simpleScript = new Script(
         "PlutusScriptV2",
         compile(
-            pfn([ data, data, PScriptContext.type ], unit )( ( d, r, c ) => pmakeUnit() )
+            pfn([ data, data, V2.PScriptContext.type ], unit )( ( d, r, c ) => pmakeUnit() )
         )
     );
     

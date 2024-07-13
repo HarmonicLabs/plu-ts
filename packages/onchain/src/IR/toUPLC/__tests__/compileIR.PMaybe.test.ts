@@ -1,4 +1,4 @@
-import { PMaybe, PPubKeyHash, PScriptContext, bool, bs, compile, pBool, pfn, plet, pmatch, pstruct, unit } from "../../../pluts"
+import { PMaybe, PPubKeyHash, PScriptContext, V2, bool, bs, compile, pBool, pfn, plet, pmatch, pstruct, unit } from "../../../pluts"
 
 
 describe("compile PMaybe func", () => {
@@ -40,7 +40,7 @@ describe("compile PMaybe func", () => {
             PMaybe( bs ).type,
             unit,
             unit,
-            PScriptContext.type
+            V2.PScriptContext.type
         ],  bool)
         ( (mbs, a, b, ctx ) => {
     
@@ -57,7 +57,7 @@ describe("compile PMaybe func", () => {
             PMaybe( bs ).type,
             unit,
             unit,
-            PScriptContext.type
+            V2.PScriptContext.type
         ],  bool)
         ( (mbs, a, b, ctx ) => {
     
@@ -76,7 +76,7 @@ describe("compile PMaybe func", () => {
             PMaybe( PPubKeyHash.type ).type,
             unit,
             unit,
-            PScriptContext.type
+            V2.PScriptContext.type
         ],  bool)
         ( (mbs, a, b, ctx ) => {
     
@@ -106,7 +106,7 @@ describe("compile PMaybe func", () => {
             PMaybe( PPubKeyHash.type ).type,
             FakeDat.type,
             unit,
-            PScriptContext.type
+            V2.PScriptContext.type
         ],  bool)
         ( (mbs, dat, b, ctx ) => {
     
@@ -142,7 +142,7 @@ describe("compile PMaybe func", () => {
             PMaybe( PPubKeyHash.type ).type,
             FakeDat.type,
             FakeRdmr.type,
-            PScriptContext.type
+            V2.PScriptContext.type
         ],  bool)
         ( (mbs, dat, rdmr, ctx ) => {
     

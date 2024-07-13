@@ -7,15 +7,12 @@ import { IRTerm } from "../../IR/IRTerm";
 import { ToIR } from "../../IR/interfaces/ToIR";
 import { compileIRToUPLC } from "../../IR/toUPLC/compileIRToUPLC";
 import { PType } from "../PType";
-import { FromPType, GenericTermType, TermType, ToPType, isWellFormedGenericType, termTypeToString } from "../type_system";
+import { FromPType, GenericTermType, TermType, ToPType, isWellFormedGenericType, isWellFormedType, termTypeToString } from "../type_system";
 import { cloneTermType } from "../type_system/cloneTermType";
 import { defineReadOnlyHiddenProperty } from "@harmoniclabs/obj-utils";
 import { Cloneable, isCloneable } from "../../utils/Cloneable";
 import { assert } from "../../utils/assert";
-import { getCallStackAt } from "../../utils/getCallStackAt";
-import { IRVar } from "@harmoniclabs/plu-ts-onchain";
-import { punsafeConvertType } from "../lib/punsafeConvertType";
-import { UtilityTermOf } from "../lib/std/UtilityTerms/addUtilityForType";
+import { IRVar } from "../../IR/IRNodes/IRVar";
 
 export type UnTerm<T extends Term<PType>> = T extends Term<infer PT extends PType > ? PT : never;
 
@@ -46,10 +43,43 @@ export class Term<PT extends PType>
 
     readonly clone!: () => Term<PT>
 
+    /*
     as<T extends TermType>( type: T ): UtilityTermOf<ToPType<T>>
     {
-        return punsafeConvertType( this, type );
+        if( !isWellFormedType( type ) )
+        {
+            throw new Error("`punsafeConvertType` called with invalid type");
+        }
+    
+        const converted = new Term(
+            type,
+            this.toIR,
+            Boolean((this as any).isConstant) // isConstant
+        ) as any;
+    
+        Object.keys( this ).forEach( k => {
+    
+            // do not overwrite `type` and `toUPLC` properties
+            if(
+                k === "type" || 
+                k === "toUPLC" || 
+                k === "toIR"
+            ) return;
+            
+            Object.defineProperty(
+                converted,
+                k,
+                Object.getOwnPropertyDescriptor(
+                    this,
+                    k
+                ) ?? {}
+            )
+    
+        });
+    
+        return addUtilityForType( type )( converted ) as any;
     }
+    //*/
 
     constructor( type: FromPType<PT> | TermType | GenericTermType, _toIR: ( dbn: bigint ) => IRTerm, isConstant: boolean = false )
     {

@@ -43,7 +43,7 @@ describe.skip("plet dependecies", () => {
     test("plet().in ownCurrencySymbol" , () => {
 
         const doubleOwnCurrSym = pfn([
-            PScriptContext.type
+            V2.PScriptContext.type
         ],  bs)
         (( ctx ) =>
             
@@ -65,7 +65,7 @@ describe.skip("plet dependecies", () => {
     test("(latest) ownCurrencySymbol" , () => {
 
         const doubleOwnCurrSym = pfn([
-            PScriptContext.type
+            V2.PScriptContext.type
         ],  bs)
         (( { purpose } ) => {
 
