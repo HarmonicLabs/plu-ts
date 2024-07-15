@@ -31,7 +31,7 @@ test("hello pluts", () => {
         );
     });
 
-    const compiled = compile( contract );
+    const compiled = compile( contract, [ 1, 0, 0 ] );
 
     console.log( toHex( compiled ) );
 });
