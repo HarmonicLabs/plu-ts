@@ -1,4 +1,4 @@
-import { Hash28, StakeCredentials, StakeValidatorHash, Tx, TxBody, TxRedeemer, TxRedeemerTag } from "@harmoniclabs/cardano-ledger-ts";
+import { Hash28, StakeCredentials, StakeValidatorHash, Tx, TxBody, TxRedeemer, TxRedeemerTag, VoterKind } from "@harmoniclabs/cardano-ledger-ts";
 import type { ToDataVersion } from "@harmoniclabs/cardano-ledger-ts/dist/toData/defaultToDataVersion";
 import { Data, DataB, DataConstr, DataI, DataList, isData } from "@harmoniclabs/plutus-data";
 import { lexCompare } from "@harmoniclabs/uint8array-utils";
@@ -124,7 +124,11 @@ export function getScriptInfoData(
     else if( tag === TxRedeemerTag.Voting )
     {
         ctorIdx = 4;
-        const votingProcedure = tx.votingProcedures?.procedures[ rdmr.index ];
+        const votingProcedure = tx.votingProcedures?.procedures
+        .filter( p => 
+            p.voter.kind === VoterKind.ConstitutionalCommitteScript ||
+            p.voter.kind === VoterKind.DRepScript
+        )[ rdmr.index ];
 
         if( !votingProcedure )
         {
@@ -141,7 +145,22 @@ export function getScriptInfoData(
     else if( tag === TxRedeemerTag.Proposing )
     {
         ctorIdx = 5;
-        
+        const proposalProcedure = tx.proposalProcedures?.filter(
+            p => p.rewardAccount.type === "script"
+        )[ rdmr.index ];
+
+        if( !proposalProcedure )
+        {
+            throw new Error(
+                "mismatching proposal redeemer,  couldn't find voting procedure at index " +
+                rdmr.index.toString()
+            );
+        }
+
+        purposeArgs = [
+            new DataI( rdmr.index ),
+            proposalProcedure.toData( version )
+        ];
     }
     else throw new Error(
         "invalid redeemer tag"

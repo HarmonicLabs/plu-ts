@@ -68,7 +68,7 @@
       "@harmoniclabs/cardano-costmodels-ts": "^1.1.0",
       "@harmoniclabs/plutus-machine": "^2.0.0-dev3",
       "@harmoniclabs/uplc": "^1.2.4",
-      "@harmoniclabs/cardano-ledger-ts": "^0.2.0-dev6"
+      "@harmoniclabs/cardano-ledger-ts": "^0.2.1"
     },
     "devDependencies": {
       "@babel/preset-env": "^7.18.6",

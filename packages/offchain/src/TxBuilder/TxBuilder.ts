@@ -15,7 +15,7 @@ import { freezeAll, defineReadOnlyProperty, definePropertyIfNotPresent, hasOwn, 
 import { TxBuilderRunner } from "./TxBuilderRunner/TxBuilderRunner";
 import { ITxRunnerProvider } from "./IProvider";
 import { CanBeData, canBeData, forceData } from "../utils/CanBeData";
-import { getSpendingPurposeData } from "../toOnChain/getSpendingPurposeData";
+import { getScriptInfoData, getSpendingPurposeData } from "../toOnChain/getSpendingPurposeData";
 import { TxBuilderProtocolParams, ValidatedTxBuilderProtocolParams, completeTxBuilderProtocolParams } from "./TxBuilderProtocolParams";
 import { ChangeInfos } from "../txBuild/ChangeInfos/ChangeInfos";
 import { scriptTypeToDataVersion } from "./utils";
@@ -363,12 +363,19 @@ export class TxBuilder
                     const ctxData = getCtx(
                         script.type,
                         getSpendingPurposeData( rdmr, tx.body, expectedVersion ),
+                        getScriptInfoData( rdmr, tx.body, expectedVersion ),
+                        rdmrData,
                         txInfosV1,
                         txInfosV2,
                         txInfosV3,
                     );
 
                     const { result, budgetSpent, logs } = cek.eval(
+                        script.type === ScriptType.PlutusV3 ? 
+                        new Application(
+                            getScriptLikeUplc( script ),
+                            UPLCConst.data( ctxData )
+                        ) :
                         new Application(
                             new Application(
                                 getScriptLikeUplc( script ),
@@ -408,7 +415,9 @@ export class TxBuilder
 
                     const { script, datum } = entry;
 
-                    if( datum === undefined )
+                    const isV2OrLess = script.type === ScriptType.PlutusV1 || script.type === ScriptType.PlutusV2;
+
+                    if( datum === undefined && isV2OrLess )
                     throw new Error(
                         "missing datum for spend redeemer " + index
                     );
@@ -421,23 +430,30 @@ export class TxBuilder
                     const ctxData = getCtx(
                         script.type,
                         getSpendingPurposeData( rdmr, tx.body, expectedVersion ),
+                        getScriptInfoData( rdmr, tx.body, expectedVersion, datum ),
+                        rdmrData,
                         txInfosV1,
                         txInfosV2,
                         txInfosV3
                     );
 
                     const { result, budgetSpent, logs } = cek.eval(
+                        isV2OrLess ?
                         new Application(
                             new Application(
                                 new Application(
                                     getScriptLikeUplc( script ),
-                                    UPLCConst.data( datum )
+                                    UPLCConst.data( datum! )
                                 ),
                                 UPLCConst.data( rdmrData )
                             ),
                             UPLCConst.data(
                                 ctxData
                             )
+                        ) :
+                        new Application(
+                            getScriptLikeUplc( script ),
+                            UPLCConst.data( ctxData )
                         )
                     );
 
@@ -448,11 +464,11 @@ export class TxBuilder
                         result,
                         budgetSpent,
                         logs,
-                        [
-                            datum,
+                        isV2OrLess ? [
+                            datum!,
                             rdmrData,
                             ctxData
-                        ],
+                        ] : [ ctxData ],
                         rdmrs,
                         onScriptResult,
                         onScriptInvalid
@@ -474,7 +490,7 @@ export class TxBuilder
                 // bigint division truncates always towards 0;
                 // we don't like that so we add `1n` for both divisions ( + 2n )
                 BigInt(2);
-
+            
             if( fee === prevFee ) break; // return last transaciton
 
             // reset for next loop
@@ -1021,9 +1037,10 @@ export class TxBuilder
             return withdrawal; 
         });
 
+        let i = 0;
         const _votingProcedures = Array.isArray( votingProcedures ) ?
         new VotingProcedures(
-            votingProcedures?.map(({ votingProcedure, script }, i) => {
+            votingProcedures?.map(({ votingProcedure, script }) => {
 
                 if( script !== undef )
                 {
@@ -1039,18 +1056,21 @@ export class TxBuilder
                     const toExec = checkScriptAndPushIfInline( script );
 
                     pushScriptToExec( i, TxRedeemerTag.Voting, toExec );
+
+                    i++;
                 }
 
                 return votingProcedure;
             })
         ) : undef;
 
+        i = 0;
         const _proposalProcedures = Array.isArray( proposalProcedures ) ? 
-        proposalProcedures.map(({ proposalProcedure, script }, i) => {
+        proposalProcedures.map(({ proposalProcedure, script }) => {
 
             if( script !== undef )
             {
-                voteRedeemers.push(
+                proposeRedeemers.push(
                     new TxRedeemer({
                         data: forceData( script.redeemer ),
                         index: i,
@@ -1062,10 +1082,14 @@ export class TxBuilder
                 const toExec = checkScriptAndPushIfInline( script );
 
                 pushScriptToExec( i, TxRedeemerTag.Proposing, toExec );
+
+                i++;
             }
 
             return new ProposalProcedure( proposalProcedure );
         }) : undef;
+
+        i = 0;
 
         const auxData = metadata !== undefined? new AuxiliaryData({ metadata }) : undefined;
 
@@ -1365,6 +1389,8 @@ function pushUniqueScript<T extends ScriptType>( arr: Script<T>[], toPush: Scrip
 function getCtx(
     scriptType: ScriptType,
     spendingPurpose: DataConstr,
+    scriptInfo: DataConstr,
+    redeemerData: Data,
     txInfosV1: Data | undefined,
     txInfosV2: Data | undefined,
     txInfosV3: Data
@@ -1375,7 +1401,8 @@ function getCtx(
         return new DataConstr(
             0, [
                 txInfosV3,
-                spendingPurpose
+                redeemerData,
+                scriptInfo
             ]
         )
     }
@@ -1383,7 +1410,7 @@ function getCtx(
     {
         if( txInfosV2 === undefined )
         throw new Error(
-            "plutus script v1 included in a v2 transaction"
+            "plutus script v2 included in a v3 transaction"
         );
         
         return new DataConstr(
@@ -1464,12 +1491,7 @@ function onEvaluationResult(
                 `called with data arguments:\n${
                     callArgs
                     .map( (d, i) =>
-                        (
-                            i === 0 ? ( rdmr.tag === TxRedeemerTag.Spend ? "datum" : "redeemer" ) :
-                            i === 1 ? ( rdmr.tag === TxRedeemerTag.Spend ? "redeemer" : "script context" ) :
-                            i === 2 ? ( rdmr.tag === TxRedeemerTag.Spend ? "script context" : i.toString() ) :
-                            i.toString()
-                        ) + ": " + dataToCbor( d ).toString()
+                        i.toString() + ": " + dataToCbor( d ).toString()
                     )
                     .join("\n")
                 }\n\n` +
