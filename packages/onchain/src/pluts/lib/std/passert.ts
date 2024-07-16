@@ -38,4 +38,4 @@ export const passertAndContinue = <T extends TermType>(
             .$( pdelay( perror( resultType ) ) )
         )
     ) as any
-)
+);

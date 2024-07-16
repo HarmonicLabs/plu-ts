@@ -20,4 +20,4 @@ export const V2 = Object.freeze({
     POutputDatum,
     PTxInInfo,
     PTxOut
-});
+} as const);

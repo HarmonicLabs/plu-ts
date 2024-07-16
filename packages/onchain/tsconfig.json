@@ -1,5 +1,6 @@
 {
   "compilerOptions": {
+    "disableSizeLimit": true,
     "skipLibCheck": true,
     /* Basic Options */
     // "incremental": true,                   /* Enable incremental compilation */

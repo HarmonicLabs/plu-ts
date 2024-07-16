@@ -5,6 +5,7 @@ import { StructT, TermType, FromPType, ToPType } from "../../../type_system";
 import { _fromData } from "../data/conversion/fromData_minimal";
 import { TermFn } from "../../../PTypes/PFn/PFn";
 import { pmatch } from "../../pmatch/pmatch";
+import type { Term } from "../../../Term";
 
 export type MaybeT<T extends TermType> = StructT<{
     Just: { val: T },
@@ -41,7 +42,7 @@ export function PMaybe<T extends TermType>(tyArg: T)
             (( self, defaultValue ) =>
                 pmatch( self )
                 .onJust(({ val }) => val)
-                .onNothing(_ => defaultValue )
+                .onNothing(_ => defaultValue ) as Term<ToPType<T>>
             )
         };
     });
