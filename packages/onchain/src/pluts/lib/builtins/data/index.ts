@@ -8,7 +8,7 @@ import { papp } from "../../papp";
 import { PappArg } from "../../pappArg";
 import { pdelay } from "../../pdelay";
 import { pforce_minimal } from "../../pforce/minimal";
-import { TermBS, addPByteStringMethods } from "../../std/UtilityTerms/TermBS";
+import { TermBS } from "../../std/UtilityTerms/TermBS";
 import { addApplications } from "../addApplications";
 import { IRNative } from "../../../../IR/IRNodes/IRNative";
 import { IRHoisted } from "../../../../IR/IRNodes/IRHoisted";
@@ -292,7 +292,7 @@ export const punBData: Term<PLam<PData, PByteString>>
         unBData,
         "$",
         ( dataBS: Term<PData> ): TermBS =>
-            addPByteStringMethods( papp( unBData, dataBS ) )
+            papp( unBData, dataBS )
     );
 })()
 

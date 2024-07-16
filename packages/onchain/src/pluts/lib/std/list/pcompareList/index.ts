@@ -3,7 +3,7 @@ import { PFn, TermFn } from "../../../../PTypes/PFn/PFn";
 import { PList } from "../../../../PTypes/PList";
 import { ToPType } from "../../../../type_system/ts-pluts-conversion";
 import { TermType, bool, fn, list } from "../../../../type_system/types";
-import { pchooseList, pif, pisEmpty } from "../../../builtins";
+import { pchooseList } from "../../../builtins/list";
 import { papp } from "../../../papp";
 import { pfn } from "../../../pfn";
 import { phoist } from "../../../phoist";

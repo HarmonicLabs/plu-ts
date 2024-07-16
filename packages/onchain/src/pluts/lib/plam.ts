@@ -4,11 +4,11 @@ import { Term } from "../Term";
 import { includesDynamicPairs } from "../type_system/includesDynamicPairs";
 import { ToPType } from "../type_system/ts-pluts-conversion";
 import { TermType, lam } from "../type_system/types";
-import { UtilityTermOf, addUtilityForType } from "./std/UtilityTerms/addUtilityForType";
+import { getCallStackAt } from "../../utils/getCallStackAt";
 import { PappResult, papp } from "./papp";
 import { IRVar } from "../../IR/IRNodes/IRVar";
 import { IRFunc } from "../../IR/IRNodes/IRFunc";
-import { getCallStackAt } from "../../utils/getCallStackAt";
+import { UtilityTermOf, addUtilityForType } from "./std/UtilityTerms/addUtilityForType";
 
 
 export function plam<A extends TermType, B extends TermType >( inputType: A, outputType: B )

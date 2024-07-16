@@ -5,7 +5,7 @@ import { Term } from "../../../Term";
 import { FromPType, isWellFormedType, typeExtends, unwrapAlias } from "../../../type_system";
 import { tyVar, pair, TermType, PrimType, PairT } from "../../../type_system/types";
 import { UtilityTermOf } from "./addUtilityForType";
-import { pfstPair, psndPair } from "../../builtins";
+import { pfstPair, psndPair } from "../../builtins/pair";
 import { plet } from "../../plet";
 import { PappArg } from "../../pappArg";
 import { TermBool } from "./TermBool";

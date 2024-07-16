@@ -9,7 +9,7 @@ import { PrimType, TermType, data, list, pair, tyVar } from "../../../../type_sy
 import { pnilData, pnilPairData } from "../../../builtins/data";
 import { pprepend } from "../../../builtins/pprepend";
 import { punsafeConvertType } from "../../../punsafeConvertType";
-import { TermList, addPListMethods } from "../../UtilityTerms";
+import { TermList, addPListMethods } from "../../UtilityTerms/TermList";
 import { _papp } from "../../data/conversion/minimal_common";
 import { Data, isData } from "@harmoniclabs/plutus-data";
 import { UPLCTerm, showUPLC } from "@harmoniclabs/uplc";

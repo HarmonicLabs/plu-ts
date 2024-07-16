@@ -7,8 +7,7 @@ import { unwrapAsData } from "../../../type_system/tyArgs";
 import { UtilityTermOf } from "../../std/UtilityTerms/addUtilityForType";
 import { papp } from "../../papp";
 import { punsafeConvertType } from "../../punsafeConvertType";
-import { fromData } from "../../std";
-import { _pfromData } from "../../std/data/conversion/fromData_minimal";
+import { _fromData, _pfromData } from "../../std/data/conversion/fromData_minimal";
 
 
 export function pfstPair<A extends TermType, B extends TermType>( fstType: A, sndType: B )
@@ -36,7 +35,7 @@ export function pfstPair<A extends TermType, B extends TermType>( fstType: A, sn
             )
             {
                 return punsafeConvertType(
-                    fromData( outT )(
+                    _fromData( outT )(
                         papp(
                             punsafeConvertType( bnTerm, lam( pair( data, data ), data ) ),
                             punsafeConvertType( _pair, pair( data, data ) )
@@ -78,7 +77,7 @@ export function psndPair<A extends TermType, B extends TermType>( fstType: A, sn
             )
             {
                 return punsafeConvertType(
-                    fromData( outT )(
+                    _fromData( outT )(
                         papp(
                             punsafeConvertType( bnTerm, lam( pair( data, data ), data ) ),
                             punsafeConvertType( _pair, pair( data, data ) )

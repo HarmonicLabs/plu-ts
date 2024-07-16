@@ -1,36 +1,38 @@
+import { pfn } from "../../pfn";
 import { PDataRepresentable } from "../../../PType/PDataRepresentable";
 import { PStruct, pstruct } from "../../../PTypes/PStruct/pstruct";
-import { StructT, TermType, FromPType } from "../../../type_system";
+import { StructT, TermType, FromPType, ToPType } from "../../../type_system";
 import { _fromData } from "../data/conversion/fromData_minimal";
-
-/*
-TODO:
-need to fix circular dependencies before implementing PMaybe methods
-*/
+import { TermFn } from "../../../PTypes/PFn/PFn";
+import { pmatch } from "../../pmatch/pmatch";
 
 export type MaybeT<T extends TermType> = StructT<{
     Just: { val: T },
     Nothing: {}
-}/*, {
+}, {
     unwrap: TermFn<[ PMaybeRawT<ToPType<T>> ], ToPType<T>>,
     default: TermFn<[ PMaybeRawT<ToPType<T>>, ToPType<T> ], ToPType<T>>,
-}*/>
+}>
 
+type PMaybeRawT<PTy extends PDataRepresentable> = PStruct<{
+    Just: { val: FromPType<PTy> },
+    Nothing: {}
+}, {}>
 
 export type PMaybeT<PTy extends PDataRepresentable> = PStruct<{
     Just: { val: FromPType<PTy> },
     Nothing: {}
-}, any/*{
+}, {
     unwrap: TermFn<[ PMaybeRawT<PTy> ], PTy>,
     default: TermFn<[ PMaybeRawT<PTy>, PTy ], PTy>,
-}*/>
+}>
 
 export function PMaybe<T extends TermType>(tyArg: T)
 {
     return pstruct({
         Just: { val: tyArg },
         Nothing: {}
-    }/*, self_t => {
+    }, self_t => {
 
         return {
             unwrap: pfn([ self_t ], tyArg)
@@ -42,5 +44,5 @@ export function PMaybe<T extends TermType>(tyArg: T)
                 .onNothing(_ => defaultValue )
             )
         };
-    }*/);
+    });
 }

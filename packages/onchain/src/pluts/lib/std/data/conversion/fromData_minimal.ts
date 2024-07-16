@@ -12,7 +12,7 @@ import { phoist } from "../../../phoist";
 import { plam } from "../../../plam";
 import { punsafeConvertType } from "../../../punsafeConvertType";
 import { pBoolFromData } from "../../bool/pBoolFromData";
-import { pUnitFromData } from "../../unit";
+import { pUnitFromData } from "../../unit/pUnitFromData";
 import { _papp, _pcompose } from "./minimal_common";
 import { getElemsT, getFstT, getSndT } from "../../../../type_system/tyArgs";
 import { _pmap } from "../../list/pmap/minimal";
