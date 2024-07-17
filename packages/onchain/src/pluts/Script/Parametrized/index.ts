@@ -9,7 +9,6 @@ import { ptoData } from "../../lib/std/data/conversion";
 import { cloneTermType } from "../../type_system/cloneTermType";
 import { fromHex, toHex } from "@harmoniclabs/uint8array-utils";
 import { isObject } from "@harmoniclabs/obj-utils";
-import { Hash28 } from "@harmoniclabs/cardano-ledger-ts";
 import { blake2b_224 } from "@harmoniclabs/crypto";
 import { PlutusScriptType } from "../../../utils/PlutusScriptType";
 import { Cbor, CborBytes } from "@harmoniclabs/cbor";
@@ -28,7 +27,7 @@ export class Precompiled<Purp extends LitteralPurpose = LitteralPurpose>
 
     readonly precompiled!: Uint8Array;
 
-    readonly hash!: Hash28;
+    readonly hash!: Uint8Array;
 
     constructor(
         purpose: Purp, 
@@ -57,10 +56,10 @@ export class Precompiled<Purp extends LitteralPurpose = LitteralPurpose>
 
         const validatorType = fn( validatorArgs as any, [ outT ]);
 
-        let _hash: Hash28 | undefined = undefined;
-        const _getHash = (): Hash28 => {
-            if( !( _hash instanceof Hash28 ) )
-            _hash = new Hash28(
+        let _hash: Uint8Array | undefined = undefined;
+        const _getHash = (): Uint8Array => {
+            if( !( _hash instanceof Uint8Array ) )
+            _hash = new Uint8Array(
                 blake2b_224(
                     new Uint8Array([
                         pulutsVersion === "PlutusScriptV2" ? 0x02 : 0x01,
@@ -71,7 +70,7 @@ export class Precompiled<Purp extends LitteralPurpose = LitteralPurpose>
                 )
             );
 
-            return _hash.clone();
+            return Uint8Array.prototype.slice.call( _hash );
         };
         Object.defineProperties(
             this, {

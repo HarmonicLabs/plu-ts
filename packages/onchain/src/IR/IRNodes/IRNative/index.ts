@@ -1,17 +1,15 @@
-import { ToJson } from "@harmoniclabs/cardano-ledger-ts/dist/utils/ToJson";
 import { Cloneable } from "@harmoniclabs/cbor/dist/utils/Cloneable";
 import { blake2b_128 } from "@harmoniclabs/crypto";
-import { IRTerm } from "../../IRTerm";
 import { IHash } from "../../interfaces/IHash";
 import { IIRParent } from "../../interfaces/IIRParent";
 import { concatUint8Arr } from "../../utils/concatUint8Arr";
-import { isIRTerm } from "../../utils/isIRTerm";
 import { positiveBigIntAsBytes } from "../../utils/positiveIntAsBytes";
 import { IRNativeTag, nativeTagToString } from "./IRNativeTag";
 import UPLCFlatUtils from "../../../utils/UPLCFlatUtils";
 import { IRParentTerm, isIRParentTerm } from "../../utils/isIRParentTerm";
 import { _modifyChildFromTo } from "../../toUPLC/_internal/_modifyChildFromTo";
 import { BaseIRMetadata } from "../BaseIRMetadata";
+import { ToJson } from "../../../utils/ToJson";
 
 /**
  * we might not need all the hashes
