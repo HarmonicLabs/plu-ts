@@ -18,7 +18,7 @@ import { CanBeData, canBeData, forceData } from "../utils/CanBeData";
 import { getScriptInfoData, getSpendingPurposeData } from "../toOnChain/getSpendingPurposeData";
 import { TxBuilderProtocolParams, ValidatedTxBuilderProtocolParams, completeTxBuilderProtocolParams } from "./TxBuilderProtocolParams";
 import { ChangeInfos } from "../txBuild/ChangeInfos/ChangeInfos";
-import { scriptTypeToDataVersion } from "./utils";
+import { estimateMaxSignersNeeded, scriptTypeToDataVersion } from "./utils";
 
 type ScriptLike = {
     hash: string,
@@ -1292,11 +1292,29 @@ export class TxBuilder
             isScriptValid
         });
 
+        const totRefScriptBytes = (dummyTx.body.refInputs ?? [])
+        .reduce((sum, refIn) => {
+
+            if( refIn.resolved.refScript )
+            return sum + BigInt(
+                refIn.resolved.refScript.toCbor().toBuffer().length
+                + 10 // second Cbor wrap
+            );
+             
+            return sum;
+        }, BigInt( 0 ) );
+
+        const minRefScriptFee = this.protocolParamters.minfeeRefScriptCostPerByte ? (
+            totRefScriptBytes * this.protocolParamters.minfeeRefScriptCostPerByte.num /
+            this.protocolParamters.minfeeRefScriptCostPerByte.den
+        ) : BigInt( 0 );
+
         const minFeeMultiplier = forceBigUInt( this.protocolParamters.txFeePerByte );
 
-        const nVkeyWits = BigInt( getNSignersNeeded( dummyTx.body ) );
+        const nVkeyWits = BigInt( estimateMaxSignersNeeded( dummyTx ) );
 
         const minFee = this.calcLinearFee( dummyTx ) +
+            minRefScriptFee +
             // consider also vkeys witnesses to be added
             // each vkey witness has fixed size of 102 cbor bytes
             // (1 bytes cbor array tag (length 2)) + (34 cbor bytes of length 32) + (67 cbor bytes of length 64)
