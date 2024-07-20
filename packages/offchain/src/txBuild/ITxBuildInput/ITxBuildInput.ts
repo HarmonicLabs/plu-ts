@@ -9,7 +9,9 @@ export interface ITxBuildInput {
     utxo: IUTxO,
     /** @deprecated use `referenceScript` instead */
     referenceScriptV2?: ITxBuildInputRefScript
+    /** can have undefined datum only if plutus script is v3 or higher */
     referenceScript?: ITxBuildInputRefScript
+    /** can have undefined datum only if plutus script is v3 or higher */
     inputScript?: ITxBuildInputInlineScript,
     nativeScript?: NativeScript | Script
 }
@@ -77,18 +79,10 @@ export function cloneITxBuildInput({
 }: ITxBuildInput ): ITxBuildInput
 {
     const referenceScript: ITxBuildInputRefScript | undefined = ref === undefined ? undefined :
-    {
-        refUtxo: new UTxO( ref.refUtxo ),
-        datum: ref.datum === "inline" ? "inline" : cloneCanBeData( ref.datum ),
-        redeemer: cloneCanBeData( ref.redeemer )
-    } as any
+    normalizeITxBuildInputRefScript( ref ) as any
 
     const inputScript: ITxBuildInputInlineScript | undefined = inScript === undefined ? undefined :
-    {
-        script: inScript.script.clone(),
-        datum: inScript.datum === "inline" ? "inline" : cloneCanBeData( inScript.datum ),
-        redeemer: cloneCanBeData( inScript.redeemer )
-    } as any;
+    normalizeITxBuildInputInlineScript( inScript ) as any;
 
     return {
         utxo: new UTxO( utxo ),

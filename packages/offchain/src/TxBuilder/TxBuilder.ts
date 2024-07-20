@@ -2,7 +2,7 @@ import { fromHex, isUint8Array, lexCompare, toHex } from "@harmoniclabs/uint8arr
 import { keepRelevant } from "./keepRelevant";
 import { GenesisInfos, NormalizedGenesisInfos, defaultMainnetGenesisInfos, defaultPreprodGenesisInfos, isGenesisInfos, isNormalizedGenesisInfos, normalizedGenesisInfos } from "./GenesisInfos";
 import { isCostModelsV2, isCostModelsV1, costModelsToLanguageViewCbor, isCostModelsV3, defaultV3Costs } from "@harmoniclabs/cardano-costmodels-ts";
-import { Tx, Value, ValueUnits, TxOut, TxRedeemerTag, ScriptType, UTxO, VKeyWitness, Script, BootstrapWitness, TxRedeemer, Hash32, TxIn, Hash28, AuxiliaryData, TxWitnessSet, getNSignersNeeded, txRedeemerTagToString, ScriptDataHash, TxBody, CredentialType, canBeHash32, VotingProcedures, ProposalProcedure, InstantRewardsSource } from "@harmoniclabs/cardano-ledger-ts";
+import { Tx, Value, ValueUnits, TxOut, TxRedeemerTag, ScriptType, UTxO, VKeyWitness, Script, BootstrapWitness, TxRedeemer, Hash32, TxIn, Hash28, AuxiliaryData, TxWitnessSet, getNSignersNeeded, txRedeemerTagToString, ScriptDataHash, TxBody, CredentialType, canBeHash32, VotingProcedures, ProposalProcedure, InstantRewardsSource, LitteralScriptType } from "@harmoniclabs/cardano-ledger-ts";
 import { CborString, Cbor, CborArray, CanBeCborString, CborPositiveRational } from "@harmoniclabs/cbor";
 import { byte, blake2b_256 } from "@harmoniclabs/crypto";
 import { Data, dataToCborObj, DataConstr, dataToCbor } from "@harmoniclabs/plutus-data";
@@ -768,22 +768,57 @@ export class TxBuilder
          * @returns the `Data` of the datum
          */
         function pushWitDatum(
-            datum: CanBeData | "inline",
-            inlineDatum: CanBeData | Hash32 | undefined
-        ): Data
+            datum: CanBeData | "inline" | undefined,
+            inlineDatum: CanBeData | Hash32 | undefined,
+            scriptType: LitteralScriptType
+        ): Data | undefined
         {
-            if( datum === "inline" )
+            if( scriptType === ScriptType.NativeScript ) return undef;
+
+            if( datum === "inline" ) datum = undef;
+
+            if(
+                scriptType === ScriptType.PlutusV1 ||
+                scriptType === ScriptType.PlutusV2
+            )
             {
-                if( !canBeData( inlineDatum ) )
-                throw new Error(
-                    "datum was specified to be inline; but inline datum is missing"
-                );
-
-                // no need to push to witnesses
-
-                return forceData( inlineDatum );
+                if( datum === undef )
+                {
+                    if( !canBeData( inlineDatum ) )
+                    throw new Error(
+                        "datum was specified to be inline; but inline datum is missing"
+                    );
+    
+                    // no need to push to witnesses
+    
+                    return forceData( inlineDatum );
+                }
+                else
+                {
+                    const dat = forceData( datum );
+    
+                    // add datum to witnesses
+                    // the node finds it trough the datum hash (on the utxo)
+                    datums.push( dat );
+    
+                    return dat;
+                }
             }
-            else
+
+            if( datum === undef )
+            {
+                if( canBeData( inlineDatum ) )
+                {
+                    // no need to push to witnesses
+                    return forceData( inlineDatum );
+                }
+
+                if( inlineDatum instanceof Hash32 )
+                throw new Error("datum hash specified on spending utxo, but resolved datum is missing");
+
+                return undef
+            }
+            else if( inlineDatum instanceof Hash32 )
             {
                 const dat = forceData( datum );
 
@@ -793,6 +828,8 @@ export class TxBuilder
 
                 return dat;
             }
+
+            return undef;
         }
 
         let isScriptValid: boolean = true;
@@ -855,7 +892,7 @@ export class TxBuilder
                     refIns.push( refUtxo );
                 }
 
-                const dat = pushWitDatum( datum, utxo.resolved.datum );
+                const dat = pushWitDatum( datum, utxo.resolved.datum, refScript.type );
 
                 const i = sortedIns.indexOf( input );
                 if( i < 0 ) throw new Error("input missing in sorted");
@@ -884,7 +921,7 @@ export class TxBuilder
 
                 pushWitScript( script );
 
-                const dat = pushWitDatum( datum, utxo.resolved.datum ); 
+                const dat = pushWitDatum( datum, utxo.resolved.datum, script.type ); 
 
                 const i = sortedIns.indexOf( input );
                 if( i < 0 ) throw new Error("input missing in sorted");

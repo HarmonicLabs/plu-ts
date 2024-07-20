@@ -42,7 +42,7 @@ export function PMaybe<T extends TermType>(tyArg: T)
             (( self, defaultValue ) =>
                 pmatch( self )
                 .onJust(({ val }) => val)
-                .onNothing(_ => defaultValue ) as Term<ToPType<T>>
+                .onNothing(_ => defaultValue ) as unknown as Term<ToPType<T>>
             )
         };
     });

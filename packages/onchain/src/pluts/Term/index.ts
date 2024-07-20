@@ -43,26 +43,6 @@ export class Term<PT extends PType>
 
     readonly clone!: () => Term<PT>
 
-    /**
-     * here only as fallback
-     * 
-     * usually only the utility term "as" is accessed
-     */
-    as<T extends TermType>( type: T ): Term<ToPType<T>>
-    {
-        if( !isWellFormedType( type ) )
-        {
-            throw new Error("`punsafeConvertType` called with invalid type");
-        }
-    
-        return new Term(
-            type,
-            this.toIR,
-            Boolean((this as any).isConstant) // isConstant
-        ) as any;
-    }
-    //*/
-
     constructor( type: FromPType<PT> | TermType | GenericTermType, _toIR: ( dbn: bigint ) => IRTerm, isConstant: boolean = false )
     {
         assert(
@@ -251,3 +231,31 @@ export type ToTermArrNonEmpty<Ts extends [ TermType, ...TermType[] ]> =
     Ts extends [infer T extends TermType] ? [ Term<ToPType<T>>] & [ Term<PType> ] :
     Ts extends [infer T extends TermType, ...infer RestTs extends [ TermType, ...TermType[] ] ] ? [ Term<ToPType<T>>, ...ToTermArr<RestTs> ] & [ Term<PType>, ...Term<PType>[] ] :
     never;
+
+
+Object.defineProperty(
+    Term.prototype, "as", /**
+    * here only as fallback
+    * 
+    * usually only the utility term "as" is accessed
+    */
+    {
+        value: function _as<T extends TermType>( this: Term<PType>, type: T ): Term<ToPType<T>>
+        {
+            if( !isWellFormedType( type ) )
+            {
+                throw new Error("`punsafeConvertType` called with invalid type");
+            }
+        
+            return new Term(
+                type,
+                this.toIR,
+                Boolean((this as any).isConstant) // isConstant
+            ) as any;
+        },
+        writable: false,
+        enumerable: false,
+        configurable: false
+    }
+    //*/
+)

@@ -348,7 +348,7 @@ function _definePListMethods<PElemsT extends PType>( lst: Term<PList<PElemsT>>, 
         "map",
         <PReturnElemT extends PType>( f: PappArg<PLam<PElemsT,PReturnElemT>> ) => {
 
-            f = pappArgToTerm( f as any, lam( elemsT, tyVar() ) ) as Term<PLam<PElemsT,PReturnElemT>>;
+            f = pappArgToTerm( f as any, lam( elemsT, tyVar() ) ) as unknown as Term<PLam<PElemsT,PReturnElemT>>;
             
             const predicateTy = f.type;
 

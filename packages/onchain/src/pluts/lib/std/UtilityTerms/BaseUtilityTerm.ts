@@ -15,7 +15,7 @@ export function addBaseUtilityTerm<PT extends PType>( term: Term<PT> ): Term<PT>
     if(
         !hasOwn( term, "as" ) ||
         typeof term.as !== "function" ||
-        term.as === Term.prototype.as
+        term.as === (Term.prototype as any).as
     )
     {
         defineReadOnlyProperty(
