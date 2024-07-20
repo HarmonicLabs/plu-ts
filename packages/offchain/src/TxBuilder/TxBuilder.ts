@@ -2,7 +2,7 @@ import { fromHex, isUint8Array, lexCompare, toHex } from "@harmoniclabs/uint8arr
 import { keepRelevant } from "./keepRelevant";
 import { GenesisInfos, NormalizedGenesisInfos, defaultMainnetGenesisInfos, defaultPreprodGenesisInfos, isGenesisInfos, isNormalizedGenesisInfos, normalizedGenesisInfos } from "./GenesisInfos";
 import { isCostModelsV2, isCostModelsV1, costModelsToLanguageViewCbor, isCostModelsV3, defaultV3Costs } from "@harmoniclabs/cardano-costmodels-ts";
-import { Tx, Value, ValueUnits, TxOut, TxRedeemerTag, ScriptType, UTxO, VKeyWitness, Script, BootstrapWitness, TxRedeemer, Hash32, TxIn, Hash28, AuxiliaryData, TxWitnessSet, getNSignersNeeded, txRedeemerTagToString, ScriptDataHash, TxBody, CredentialType, canBeHash32, VotingProcedures, ProposalProcedure } from "@harmoniclabs/cardano-ledger-ts";
+import { Tx, Value, ValueUnits, TxOut, TxRedeemerTag, ScriptType, UTxO, VKeyWitness, Script, BootstrapWitness, TxRedeemer, Hash32, TxIn, Hash28, AuxiliaryData, TxWitnessSet, getNSignersNeeded, txRedeemerTagToString, ScriptDataHash, TxBody, CredentialType, canBeHash32, VotingProcedures, ProposalProcedure, InstantRewardsSource } from "@harmoniclabs/cardano-ledger-ts";
 import { CborString, Cbor, CborArray, CanBeCborString, CborPositiveRational } from "@harmoniclabs/cbor";
 import { byte, blake2b_256 } from "@harmoniclabs/crypto";
 import { Data, dataToCborObj, DataConstr, dataToCbor } from "@harmoniclabs/plutus-data";
@@ -811,7 +811,8 @@ export class TxBuilder
             const {
                 utxo,
                 referenceScript,
-                inputScript
+                inputScript,
+                nativeScript
             } = input;
 
             const addr = utxo.resolved.address;
@@ -821,7 +822,8 @@ export class TxBuilder
             if(
                 addr.paymentCreds.type === CredentialType.Script &&
                 referenceScript === undef &&
-                inputScript === undef
+                inputScript === undef &&
+                nativeScript === undef
             )
             throw new Error(
                 "spending script utxo \"" + utxo.utxoRef.toString() + "\" without script source"
@@ -829,7 +831,7 @@ export class TxBuilder
 
             if( referenceScript !== undef )
             {
-                if( inputScript !== undef )
+                if( inputScript !== undef || nativeScript !== undef )
                 throw new Error(
                     "invalid input; multiple scripts specified"
                 );
@@ -869,7 +871,7 @@ export class TxBuilder
             }
             if( inputScript !== undefined )
             {
-                if( referenceScript !== undefined )
+                if( referenceScript !== undefined || nativeScript !== undef )
                 throw new Error(
                     "invalid input; multiple scripts specified"
                 );
@@ -895,6 +897,15 @@ export class TxBuilder
                 }));
                 
                 pushScriptToExec( i, TxRedeemerTag.Spend, script, dat );
+            }
+            if( nativeScript instanceof Script && nativeScript.type === ScriptType.NativeScript )
+            {
+                if( referenceScript !== undefined || inputScript !== undef )
+                throw new Error(
+                    "invalid input; multiple scripts specified"
+                );
+
+                pushWitScript( nativeScript );
             }
 
             return new TxIn( utxo )

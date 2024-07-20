@@ -26,6 +26,7 @@ import { TermBool } from "./TermBool";
 import { TermInt } from "./TermInt";
 import { peqList, pincludes, plookup } from "../list";
 import { punsafeConvertType } from "../../punsafeConvertType";
+import { BaseUtilityTermExtension, addBaseUtilityTerm } from "./BaseUtilityTerm";
 
 export function* fixedLengthIter<PT extends PDataRepresentable>(
     list: TermList<PT>,
@@ -44,7 +45,7 @@ export function* fixedLengthIter<PT extends PDataRepresentable>(
     }
 }
 
-export type TermList<PElemsT extends PDataRepresentable> = Term<PList<PElemsT>> & {
+export type TermList<PElemsT extends PDataRepresentable> = Term<PList<PElemsT>> & BaseUtilityTermExtension & {
 
     fixedLengthIterable: ( maxLength: number ) => Generator<UtilityTermOf<PElemsT>, void, unknown>
 
@@ -218,6 +219,8 @@ export function addPListMethods<PElemsT extends PType>( _lst: Term<PList<PElemsT
 
 function _definePListMethods<PElemsT extends PType>( lst: Term<PList<PElemsT>>, elemsT: TermType ): void
 {
+    lst = addBaseUtilityTerm( lst );
+
     defineReadOnlyProperty(
         lst,
         "fixedLengthIterable",

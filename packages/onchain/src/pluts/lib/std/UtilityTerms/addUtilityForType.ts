@@ -20,8 +20,7 @@ import { type TermStruct,     addPStructMethods } from "./TermStruct";
 import { defineNonDeletableNormalProperty } from "@harmoniclabs/obj-utils";
 import { termTypeToString } from "../../../type_system/utils";
 import { addUserMethods } from "./userMethods/addUserMethods";
-import { _punsafeConvertType } from "../../punsafeConvertType/minimal";
-
+import { addBaseUtilityTerm, BaseUtilityTermExtension } from "./BaseUtilityTerm";
 
 // given the index returns the previous number ( PrevNum[2] -> 1; etc... )
 type PrevNum = [ never, 0, 1, 2, 3, 4, 5, 6 ];
@@ -32,6 +31,8 @@ type FiniteTermAlias<PT extends PType, AMethods extends Methods, MaxDepth extend
     PT extends PAlias<infer ActualPT extends PType, infer ActualAMethods extends Methods > ?
         FiniteTermAlias<ActualPT, ActualAMethods & AMethods, PrevNum[MaxDepth]> :
         TermAlias<PT, AMethods>
+
+
 
 export type UtilityTermOf<PElem extends PType> = 
     (
@@ -53,6 +54,7 @@ export type UtilityTermOf<PElem extends PType> =
         PElem extends PAlias<infer PT extends PType, infer AMethods extends Methods> ? FiniteTermAlias<PT, AMethods> :
         Term<PElem>
     ) & Term<PElem> // needed because sometime typescript doesn't understands that the term is the same just extended
+    & ( PElem extends PLam<PType,PType> ? {} : BaseUtilityTermExtension)
 
 export function addUtilityForType<T extends TermType>( t: T )
     : ( term: Term<ToPType<T>> ) => UtilityTermOf<ToPType<T>>
@@ -71,12 +73,16 @@ export function addUtilityForType<T extends TermType>( t: T )
 
     if( typeExtends( t, lam( tyVar(), tyVar() )) )
     {
-        return (( term: any ) => defineNonDeletableNormalProperty(
-            term,
-            "$",
-            ( input: any ) =>
-                papp( term, input )
-        )) as any;
+        return (( term: any ) => {
+            term = addBaseUtilityTerm( term );
+
+            return defineNonDeletableNormalProperty(
+                term,
+                "$",
+                ( input: any ) =>
+                    papp( term, input )
+            ) as any;
+        }) as any;
     }
 
     if( isStructType( t ) )
@@ -85,7 +91,7 @@ export function addUtilityForType<T extends TermType>( t: T )
     }
 
     // no utility
-    return ((x: any) => x) as any;
+    return ((x: any) => addBaseUtilityTerm( x )) as any;
 }
 
 // `addPAliasMethod` is (necessarily) mutually recursive with `addUtilityForType`
@@ -97,6 +103,7 @@ export function addPAliasMethods<
     aliasTerm: Term<PAlias<PAliased,AMethods>>
 ): TermAlias<PAliased, AMethods>
 {
+    aliasTerm = addBaseUtilityTerm( aliasTerm );
     const originalType = aliasTerm.type;
 
     if( originalType[0] !== PrimType.Alias )

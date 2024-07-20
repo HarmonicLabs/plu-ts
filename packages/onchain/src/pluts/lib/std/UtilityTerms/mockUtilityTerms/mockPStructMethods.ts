@@ -11,6 +11,7 @@ import { makeMockTermBool } from "./mockPBoolMethods";
 import { mockPIntMethods } from "./mockPIntMethods";
 import { mockPListMethods } from "./mockPListMethods";
 import { mockUserMethods } from "./mockUserMethods";
+import { addBaseUtilityTerm } from "../BaseUtilityTerm";
 
 
 export function mockPStructMethods<
@@ -20,6 +21,8 @@ export function mockPStructMethods<
     struct: Term<PStruct<SDef, SMethods>> 
 ): TermStruct<SDef, SMethods>
 {
+    struct = addBaseUtilityTerm( struct );
+
     const t = struct.type;
     if( !isStructType(t) ) return struct as any;
 

@@ -19,7 +19,7 @@ import { IRHoisted } from "../../IR/IRNodes/IRHoisted";
 import { IRTerm } from "../../IR/IRTerm";
 import { IRApp } from "../../IR/IRNodes/IRApp";
 import { IRError } from "../../IR/IRNodes/IRError";
-import { isIRTerm } from "../../IR/utils/isIRTerm";
+import type { BaseUtilityTermExtension } from "./std/UtilityTerms/BaseUtilityTerm";
 
 
 function isIdentityIR( ir: IRTerm ): boolean
@@ -37,10 +37,9 @@ function isIdentityIR( ir: IRTerm ): boolean
 
 export type PappResult<Output extends PType> =
     Output extends PLam<infer OutIn extends PType, infer OutOut extends PType> ?
-        Term<PLam<OutIn,OutOut>>
-        & {
+        Term<PLam<OutIn,OutOut>> & {
             $: ( someInput: PappArg<OutIn> ) => PappResult<OutOut>
-        } :
+        } & BaseUtilityTermExtension :
     UtilityTermOf<Output>
 
 function unwrapDataIfNeeded( input: Term<PType>, expectedInputTy: TermType ): Term<any>

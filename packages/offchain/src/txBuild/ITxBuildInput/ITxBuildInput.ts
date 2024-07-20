@@ -1,4 +1,4 @@
-import { UTxO, Script, IUTxO } from "@harmoniclabs/cardano-ledger-ts";
+import { UTxO, Script, IUTxO, NativeScript, ScriptType, nativeScriptFromCbor, nativeScriptToCbor } from "@harmoniclabs/cardano-ledger-ts";
 import { CanBeData, cloneCanBeData } from "../../utils/CanBeData";
 import { Data } from "@harmoniclabs/plutus-data";
 import { ITxBuildInputRefScript, NormalizedITxBuildInputRefScript, normalizeITxBuildInputRefScript } from "./ITxBuildInputRefScript";
@@ -10,13 +10,15 @@ export interface ITxBuildInput {
     /** @deprecated use `referenceScript` instead */
     referenceScriptV2?: ITxBuildInputRefScript
     referenceScript?: ITxBuildInputRefScript
-    inputScript?: ITxBuildInputInlineScript
+    inputScript?: ITxBuildInputInlineScript,
+    nativeScript?: NativeScript | Script
 }
 
 export interface NormalizedITxBuildInput extends ITxBuildInput {
     utxo: UTxO,
     referenceScript?: NormalizedITxBuildInputRefScript
     inputScript?: NormalizedITxBuildInputInlineScript
+    nativeScript?: Script<"NativeScript"|ScriptType.NativeScript>
 }
 
 export function normalizeITxBuildInput( input: ITxBuildInput ): NormalizedITxBuildInput
@@ -34,8 +36,33 @@ export function normalizeITxBuildInput( input: ITxBuildInput ): NormalizedITxBui
     result.inputScript = input.inputScript ? 
         normalizeITxBuildInputInlineScript( input.inputScript ) :
         undefined;
+    result.nativeScript = normalizeNativeScriptEntry( input.nativeScript );
 
     return result;
+}
+
+function isNativeScript( stuff: any ): stuff is NativeScript
+{
+    try {
+        nativeScriptFromCbor( nativeScriptToCbor( stuff ) );
+        return true;
+    } catch { return false; }
+}
+
+function normalizeNativeScriptEntry( scr: NativeScript | Script | undefined ): Script<"NativeScript"> | undefined
+{
+    if( !scr ) return undefined;
+    if( isNativeScript( scr ) )
+    {
+        return new Script(
+            "NativeScript",
+            nativeScriptToCbor( scr ).toBuffer()
+        );
+    }
+    if( scr instanceof Script && scr.type === ScriptType.NativeScript )
+    return scr.clone() as Script<"NativeScript">;
+
+    return undefined;
 }
 
 /**
@@ -45,7 +72,8 @@ export function normalizeITxBuildInput( input: ITxBuildInput ): NormalizedITxBui
 export function cloneITxBuildInput({
     utxo,
     referenceScript: ref,
-    inputScript: inScript
+    inputScript: inScript,
+    nativeScript
 }: ITxBuildInput ): ITxBuildInput
 {
     const referenceScript: ITxBuildInputRefScript | undefined = ref === undefined ? undefined :
@@ -65,6 +93,7 @@ export function cloneITxBuildInput({
     return {
         utxo: new UTxO( utxo ),
         referenceScript,
-        inputScript
+        inputScript,
+        nativeScript: normalizeNativeScriptEntry( nativeScript )
     }
 }

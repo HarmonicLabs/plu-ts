@@ -12,6 +12,7 @@ import { TermList, fixedLengthIter } from "../TermList";
 import { makeMockUtilityTerm } from "./makeMockUtilityTerm";
 import { makeMockTermInt } from "./mockPIntMethods";
 import { makeMockTermBool } from "./mockPBoolMethods";
+import { addBaseUtilityTerm } from "../BaseUtilityTerm";
 
 const getterOnly = {
     set: () => {},
@@ -46,6 +47,8 @@ export function mockPListMethods<PElemsT extends PType>( lst: Term<PList<PElemsT
 function _mockPListMethods<PElemsT extends PType>( _lst: Term<PList<PElemsT>> )
     : TermList<PElemsT>
 {
+    _lst = addBaseUtilityTerm( _lst );
+
     const elemsT = getElemsT( _lst.type );
 
     defineReadOnlyProperty(

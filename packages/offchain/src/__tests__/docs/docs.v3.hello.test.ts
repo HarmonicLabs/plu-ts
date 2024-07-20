@@ -32,7 +32,7 @@ test("Hello plu-ts",() => {
         utxoRef: { id: "bb".repeat( 32 ), index: 0 },
         resolved: {
             address: myAddr,
-            value: Value.lovelaces( 5_000_000_000_000_000_000_000 ),
+            value: Value.lovelaces( 5_000_000_000 ),
         }
     })
 

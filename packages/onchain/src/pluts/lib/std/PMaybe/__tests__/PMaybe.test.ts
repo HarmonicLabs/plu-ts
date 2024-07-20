@@ -3,7 +3,6 @@ import { PMaybe } from "..";
 import { int } from "../../../../type_system/types";
 import { pDataI } from "../../data/pData";
 import { pInt } from "../../int/pInt";
-import { perror } from "../../../perror";
 
 describe("PMaybe", () => {
 

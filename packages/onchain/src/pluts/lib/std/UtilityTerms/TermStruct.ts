@@ -26,13 +26,14 @@ import { addUserMethods } from "./userMethods/addUserMethods";
 import { plet } from "../../plet";
 import { _getMinUnboundDbn } from "../../../../IR/toUPLC/subRoutines/handleLetted/groupByScope";
 import { getElemAtTerm } from "../../pmatch/getElemAtTerm";
+import { addBaseUtilityTerm, BaseUtilityTermExtension } from "./BaseUtilityTerm";
 
 export type RawStruct = {
     readonly index: TermInt,
     readonly fields: TermList<PData>
 }
 
-export type TermStruct<SDef extends StructDefinition, SMethods extends Methods> = Term<PStruct<SDef,SMethods>> & {
+export type TermStruct<SDef extends StructDefinition, SMethods extends Methods> = Term<PStruct<SDef,SMethods>> & BaseUtilityTermExtension & {
 
     readonly peq: TermFn<[PStruct<SDef, {}>], PBool>
     readonly eq: ( other: Term<PStruct<SDef, {}>> | Term<PData> ) => TermBool
@@ -71,6 +72,8 @@ export function addPStructMethods<
     struct: Term<PStruct<SDef, SMethods>> 
 ): TermStruct<SDef, SMethods>
 {
+    struct = addBaseUtilityTerm( struct );
+
     const t = struct.type;
     if( !isStructType(t) ) return struct as any;
 

@@ -6,6 +6,7 @@ import { Term } from "../../../../Term";
 import { PInt } from "../../../../PTypes/PInt";
 import { makeMockUtilityTerm } from "./makeMockUtilityTerm";
 import { makeMockTermBool } from "./mockPBoolMethods";
+import { addBaseUtilityTerm } from "../BaseUtilityTerm";
 
 
 const getterOnly = {
@@ -21,6 +22,8 @@ export function makeMockTermInt(): TermInt
 
 export function mockPIntMethods( term: Term<PInt> ): TermInt
 {
+    term = addBaseUtilityTerm( term );
+
     definePropertyIfNotPresent(
         term,
         "padd",

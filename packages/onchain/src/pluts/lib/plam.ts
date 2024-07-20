@@ -31,7 +31,7 @@ return (
             onNameInferred: inferred => func_name = inferred 
         })?.inferredName;
 
-    const lambdaTerm  = new Term<PLam<ToPType<A>,ToPType<B>>>(
+    let lambdaTerm  = new Term<PLam<ToPType<A>,ToPType<B>>>(
         lam( inputType, outputType ) as any,
         dbn => {
             const thisLambdaPtr = dbn + BigInt( 1 );
@@ -77,7 +77,9 @@ return (
                 return new IRFunc( 1, body.toIR( thisLambdaPtr ) );
             }
         )
-    )
+    );
+
+    // lambdaTerm = addBaseUtilityTerm( lambdaTerm );
 
     // allows ```lambdaTerm.$( input )``` syntax
     // rather than ```papp( lambdaTerm, input )```

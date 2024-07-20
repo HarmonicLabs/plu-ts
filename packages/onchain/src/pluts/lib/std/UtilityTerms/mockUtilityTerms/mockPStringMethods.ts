@@ -7,6 +7,7 @@ import { makeMockUtilityTerm } from "./makeMockUtilityTerm";
 import { bool, lam, str } from "../../../../type_system";
 import { makeMockTerm } from "./makeMockTerm";
 import { makeMockTermBool } from "./mockPBoolMethods";
+import { addBaseUtilityTerm } from "../BaseUtilityTerm";
 
 const getterOnly = {
     set: () => {},
@@ -22,6 +23,8 @@ export function makeMockTermStr(): TermStr
 
 export function mockPStringMethods( term: Term<PString> ): TermStr
 {
+    term = addBaseUtilityTerm( term );
+
     definePropertyIfNotPresent(
         term,
         "utf8Encoded",

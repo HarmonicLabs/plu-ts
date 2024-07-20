@@ -8,6 +8,7 @@ import { makeMockUtilityTerm } from "./makeMockUtilityTerm";
 import { unwrapAsData } from "../../../../type_system/tyArgs/unwrapAsData";
 import { makeMockTerm } from "./makeMockTerm";
 import { makeMockTermBool } from "./mockPBoolMethods";
+import { addBaseUtilityTerm } from "../BaseUtilityTerm";
 
 
 const getterOnly = {
@@ -18,6 +19,8 @@ const getterOnly = {
 
 export function mockPPairMethods<PFst extends PType, PSnd extends PType>( _pair: Term<PPair<PFst,PSnd>>): TermPair<PFst,PSnd>
 {
+    _pair = addBaseUtilityTerm( _pair );
+
     const pairT = unwrapAlias( _pair.type );
 
     if( !typeExtends( pairT, pair( tyVar(), tyVar() ) ) )

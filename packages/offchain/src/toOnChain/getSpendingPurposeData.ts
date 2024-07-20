@@ -3,7 +3,7 @@ import type { ToDataVersion } from "@harmoniclabs/cardano-ledger-ts/dist/toData/
 import { Data, DataB, DataConstr, DataI, DataList, isData } from "@harmoniclabs/plutus-data";
 import { lexCompare } from "@harmoniclabs/uint8array-utils";
 
-export function getSpendingPurposeData( rdmr: TxRedeemer, tx: TxBody, version: ToDataVersion ): DataConstr
+export function getSpendingPurposeData( rdmr: TxRedeemer, tx: TxBody, version: ToDataVersion = "v3" ): DataConstr
 {
     const scriptInfos = getScriptInfoData(
         rdmr,

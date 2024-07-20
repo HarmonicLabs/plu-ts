@@ -23,6 +23,7 @@ import { mockPListMethods } from "./mockPListMethods";
 import { mockPPairMethods } from "./mockPPairMethods";
 import { mockPStringMethods } from "./mockPStringMethods";
 import { mockPStructMethods } from "./mockPStructMethods";
+import { addBaseUtilityTerm } from "../BaseUtilityTerm";
 
 /**
  * like `addUtilityForType` but it doesn't add real terms;
@@ -48,12 +49,18 @@ export function mockUtilityForType<T extends TermType>( t: T )
 
     if( typeExtends( t, lam( tyVar(), tyVar() )) )
     {
-        return (( term: any ) => defineNonDeletableNormalProperty(
-            term,
-            "$",
-            ( input: any ) =>
-                mockPapp( term, input )
-        )) as any;
+        return (( term: any ) =>
+            {
+                term = addBaseUtilityTerm( term );
+
+                return defineNonDeletableNormalProperty(
+                    term,
+                    "$",
+                    ( input: any ) =>
+                        mockPapp( term, input )
+                );
+            }
+        ) as any;
     }
 
     if( isStructType( t ) )
@@ -62,7 +69,7 @@ export function mockUtilityForType<T extends TermType>( t: T )
     }
 
     // no utility
-    return ((x: any) => x) as any;
+    return ((x: any) => addBaseUtilityTerm( x )) as any;
 }
 
 // `mockPAliasMethod` is (necessarily) mutually recursive with `mockUtilityForType`
@@ -74,6 +81,8 @@ export function mockPAliasMethods<
     aliasTerm: Term<PAlias<PAliased,AMethods>>
 ): TermAlias<PAliased, AMethods>
 {
+    aliasTerm = addBaseUtilityTerm( aliasTerm );
+
     const originalType = aliasTerm.type;
 
     if( originalType[0] !== PrimType.Alias )

@@ -2,6 +2,7 @@ import { PType } from "../../../../PType";
 import { PLam } from "../../../../PTypes/PFn/PLam";
 import { Term } from "../../../../Term";
 import { makeMockTerm } from "./makeMockTerm";
+import { mockUtilityForType } from "./mockUtilityForType";
 
 export function mockPapp<PIn extends PType, POut extends PType>( a: Term<PLam<PIn, POut>>, b: Term<PIn> ): Term<POut>
 {
@@ -10,5 +11,7 @@ export function mockPapp<PIn extends PType, POut extends PType>( a: Term<PLam<PI
     {
         console.log( a.type );
     }
-    return makeMockTerm( outT as any ) as any;
+    return mockUtilityForType( outT as any )(
+        makeMockTerm( outT as any ) as any
+    ) as any
 } 

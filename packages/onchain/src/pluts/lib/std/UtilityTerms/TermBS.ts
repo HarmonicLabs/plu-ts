@@ -8,10 +8,11 @@ import { plet } from "../../plet"
 import { TermBool } from "./TermBool"
 import { TermInt } from "./TermInt"
 import { TermStr } from "./TermStr"
+import { addBaseUtilityTerm, BaseUtilityTermExtension } from "./BaseUtilityTerm"
 
 
 
-export type TermBS = Term<PByteString> & {
+export type TermBS = Term<PByteString> & BaseUtilityTermExtension & {
 
     readonly length: TermInt
     
@@ -61,6 +62,8 @@ const getterOnly = {
 
 export function addPByteStringMethods( term: Term<PByteString> ): TermBS
 {
+    term = addBaseUtilityTerm( term );
+
     definePropertyIfNotPresent(
         term,
         "length",
