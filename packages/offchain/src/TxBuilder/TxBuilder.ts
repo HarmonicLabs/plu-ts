@@ -3,7 +3,7 @@ import { keepRelevant } from "./keepRelevant";
 import { GenesisInfos, NormalizedGenesisInfos, defaultMainnetGenesisInfos, defaultPreprodGenesisInfos, isGenesisInfos, isNormalizedGenesisInfos, normalizedGenesisInfos } from "./GenesisInfos";
 import { isCostModelsV2, isCostModelsV1, costModelsToLanguageViewCbor, isCostModelsV3, defaultV3Costs } from "@harmoniclabs/cardano-costmodels-ts";
 import { Tx, Value, ValueUnits, TxOut, TxRedeemerTag, ScriptType, UTxO, VKeyWitness, Script, BootstrapWitness, TxRedeemer, Hash32, TxIn, Hash28, AuxiliaryData, TxWitnessSet, getNSignersNeeded, txRedeemerTagToString, ScriptDataHash, TxBody, CredentialType, canBeHash32, VotingProcedures, ProposalProcedure, InstantRewardsSource, LitteralScriptType } from "@harmoniclabs/cardano-ledger-ts";
-import { CborString, Cbor, CborArray, CanBeCborString, CborPositiveRational } from "@harmoniclabs/cbor";
+import { CborString, Cbor, CborArray, CanBeCborString, CborPositiveRational, CborMap, CborUInt } from "@harmoniclabs/cbor";
 import { byte, blake2b_256 } from "@harmoniclabs/crypto";
 import { Data, dataToCborObj, DataConstr, dataToCbor } from "@harmoniclabs/plutus-data";
 import { Machine, ExBudget } from "@harmoniclabs/plutus-machine";
@@ -241,16 +241,7 @@ export class TxBuilder
             body: new TxBody({
                 ...tx.body,
                 scriptDataHash: getScriptDataHash(
-                    newRedeemers,
-                    datums.length > 0 ?
-                        Array.from(
-                            Cbor.encode(
-                                new CborArray(
-                                    datums.map( dataToCborObj )
-                                )
-                            ).toBuffer()
-                        ) 
-                    : [],
+                    tx.witnesses,
                     costModelsToLanguageViewCbor(
                         this.protocolParamters.costModels,
                         { mustHaveV2: true, mustHaveV1: false }
@@ -518,18 +509,20 @@ export class TxBuilder
                 })
             );
 
+            const nextWitnesses = new TxWitnessSet({
+                ...tx.witnesses,
+                redeemers: rdmrs,
+            });
+
             tx = new Tx({
                 ...tx,
                 body: new TxBody({
                     ...tx.body,
                     outputs: txOuts,
                     fee: fee,
-                    scriptDataHash: getScriptDataHash( rdmrs, datumsScriptData, languageViews )
+                    scriptDataHash: getScriptDataHash( nextWitnesses, languageViews )
                 }),
-                witnesses: new TxWitnessSet({
-                    ...tx.witnesses,
-                    redeemers: rdmrs,
-                }),
+                witnesses: nextWitnesses,
                 isScriptValid: _isScriptValid
             });
 
@@ -1177,7 +1170,8 @@ export class TxBuilder
             this.protocolParamters.costModels,
             {
                 mustHaveV1: _hasV1Scripts,
-                mustHaveV2: _hasV2Scripts
+                mustHaveV2: _hasV2Scripts,
+                mustHaveV3: _hasV3Scripts
             }
         ).toBuffer();
 
@@ -1280,7 +1274,7 @@ export class TxBuilder
                     undef :
                     forceBigUInt( invalidAfter ),
                 auxDataHash: auxData?.hash,
-                scriptDataHash: getScriptDataHash( redeemers, datumsScriptData, languageViews ),
+                scriptDataHash: getScriptDataHash( dummyTxWitnesses, languageViews ),
                 network,
                 votingProcedures: _votingProcedures,
                 proposalProcedures: _proposalProcedures,
@@ -1592,48 +1586,55 @@ function onEvaluationResult(
     return _isScriptValid;
 };
 
-export function getScriptDataHash( rdmrs: TxRedeemer[], datumsScriptData: number[], languageViews: Uint8Array ): ScriptDataHash | undefined
+function findWitnessKey( map: CborMap, n: number ): CborArray | undefined
+{
+    const res = map.map.find(({ k }) => k instanceof CborUInt && Number( k.num ) === n )?.v as any;
+    if(!( res instanceof CborArray )) return undefined;
+    if( res.array.length === 0 ) return undefined;
+    return res;
+}
+
+export function getScriptDataHash( witnesses: TxWitnessSet, languageViews: Uint8Array ): ScriptDataHash | undefined
 {
     const undef = void 0;
 
-    const scriptData =
-        rdmrs.length === 0 && datumsScriptData.length === 0 ?
-        undef : 
-        rdmrs.length === 0 && datumsScriptData.length > 0 ?
-        /*
-        ; in the case that a transaction includes datums but does not
-        ; include any redeemers, the script data format becomes (in hex):
-        ; [ 80 | datums | A0 ]
-        ; corresponding to a CBOR empty list and an empty map.
-        */
-        [ 0x80, ...datumsScriptData, 0xa0 ] as byte[] :
-        /*
-        ; script data format:
-        ; [ redeemers | datums | language views ]
-        ; The redeemers are exactly the data present in the transaction witness set.
-        ; Similarly for the datums, if present. If no datums are provided, the middle
-        ; field is an empty string.
-        */
-        Array.from(
-            Cbor.encode(
-                new CborArray(
-                    rdmrs.map( r => r.toCborObj() )
-                )
-            ).toBuffer()
-        )
-        .concat(
-            datumsScriptData
-        )
-        .concat(
-            Array.from(
-                languageViews
-            )
-        ) as byte[];
+    const cbor = witnesses.toCborObj() as CborMap;
+    if(!(cbor instanceof CborMap)) return undef;
+    
+    const rdmrs = findWitnessKey( cbor, 5 );
+    const dats = findWitnessKey( cbor, 4 );
 
-    return scriptData === undef ? undef :
-        new ScriptDataHash(
-            Uint8Array.from(
-                blake2b_256( scriptData )
-            )
-        );
+    if(
+        rdmrs === undef &&
+        dats === undef
+    ) return undef;
+
+    let scriptData: Uint8Array;
+
+    if(
+        rdmrs === undef &&
+        dats !== undef
+    )
+    {
+        scriptData = new Uint8Array([
+            0x80,
+            ...Cbor.encode( dats ).toBuffer(),
+            0xa0
+        ]);
+    }
+    else
+    {
+        const rdmrsBuff = rdmrs ? Cbor.encode( rdmrs ).toBuffer() : new Uint8Array([ 0x80 ]);
+        const datsBuff = dats ? Cbor.encode( dats ).toBuffer() : new Uint8Array([]);
+        scriptData = new Uint8Array( rdmrsBuff.length + datsBuff.length + languageViews.length );
+        scriptData.set( rdmrsBuff, 0 );
+        scriptData.set( datsBuff, rdmrsBuff.length );
+        scriptData.set( languageViews, rdmrsBuff.length + datsBuff.length );
+    }
+
+    return new ScriptDataHash(
+        Uint8Array.from(
+            blake2b_256( scriptData )
+        )
+    );
 }
