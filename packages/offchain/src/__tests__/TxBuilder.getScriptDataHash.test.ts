@@ -203,12 +203,12 @@ describe("getScriptDataHash", () => {
 
         expect( defaultCosts.length ).toEqual( 251 );
 
-        console.log( expected );
-        console.log( getRdmrMapHash( defaultLangView ) );
-        console.log( getRdmrHash( defaultLangView ) );
-        console.log( getHash( defaultV3Costs )?.toString() );
-        console.log( getHash( defaultCosts )?.toString() );
-        console.log( getHash( blockfrostCosts )?.toString() );
+        // console.log( expected );
+        // console.log( getRdmrMapHash( defaultLangView ) );
+        // console.log( getRdmrHash( defaultLangView ) );
+        // console.log( getHash( defaultV3Costs )?.toString() );
+        // console.log( getHash( defaultCosts )?.toString() );
+        // console.log( getHash( blockfrostCosts )?.toString() );
     })
 
     test("erc20", () => {

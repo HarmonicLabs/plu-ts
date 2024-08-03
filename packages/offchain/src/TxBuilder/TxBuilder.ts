@@ -25,30 +25,14 @@ type ScriptLike = {
     bytes: Uint8Array
 }
 
-const scriptCache: { [x: string]: UPLCTerm } = {};
+// const scriptCache: { [x: string]: UPLCTerm } = {};
 
 function getScriptLikeUplc( scriptLike: ScriptLike ): UPLCTerm
 {
-    let script: UPLCTerm;
-    if(
-        (script = scriptCache[scriptLike.hash]) === undefined
-    )
-    {
-        script = UPLCDecoder.parse(
-            scriptLike.bytes,
-            "flat"
-        ).body;
-        Object.defineProperty(
-            scriptCache, scriptLike.hash, {
-                value: script,
-                writable: false,
-                enumerable: true,
-                configurable: false
-            }
-        )
-    }
-
-    return script;
+    return UPLCDecoder.parse(
+        scriptLike.bytes,
+        "flat"
+    ).body;
 }
 
 export class TxBuilder
@@ -361,12 +345,14 @@ export class TxBuilder
                         txInfosV3,
                     );
 
+                    const isV2OrLess = (
+                        script.type === ScriptType.PlutusV1 ||
+                        script.type === ScriptType.PlutusV2 ||
+                        script.type === ScriptType.NativeScript
+                    );
+
                     const { result, budgetSpent, logs } = cek.eval(
-                        script.type === ScriptType.PlutusV3 ? 
-                        new Application(
-                            getScriptLikeUplc( script ),
-                            UPLCConst.data( ctxData )
-                        ) :
+                        isV2OrLess ? 
                         new Application(
                             new Application(
                                 getScriptLikeUplc( script ),
@@ -375,6 +361,10 @@ export class TxBuilder
                             UPLCConst.data(
                                 ctxData
                             )
+                        ) :
+                        new Application(
+                            getScriptLikeUplc( script ),
+                            UPLCConst.data( ctxData )
                         )
                     );
 
@@ -385,10 +375,10 @@ export class TxBuilder
                         result,
                         budgetSpent,
                         logs,
-                        [
+                        isV2OrLess ? [
                             rdmrData,
                             ctxData
-                        ],
+                        ] : [ ctxData ],
                         rdmrs,
                         onScriptResult,
                         onScriptInvalid
@@ -1567,7 +1557,7 @@ function onEvaluationResult(
                             if( typeof v === "bigint" )
                             return v.toString();
 
-                            return v
+                            return v;
                         }
                     )
                 }\n` +
