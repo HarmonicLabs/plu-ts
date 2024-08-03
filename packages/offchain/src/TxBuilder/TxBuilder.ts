@@ -2,7 +2,7 @@ import { fromHex, isUint8Array, lexCompare, toHex } from "@harmoniclabs/uint8arr
 import { keepRelevant } from "./keepRelevant";
 import { GenesisInfos, NormalizedGenesisInfos, defaultMainnetGenesisInfos, defaultPreprodGenesisInfos, isGenesisInfos, isNormalizedGenesisInfos, normalizedGenesisInfos } from "./GenesisInfos";
 import { isCostModelsV2, isCostModelsV1, costModelsToLanguageViewCbor, isCostModelsV3, defaultV3Costs } from "@harmoniclabs/cardano-costmodels-ts";
-import { Tx, Value, ValueUnits, TxOut, TxRedeemerTag, ScriptType, UTxO, VKeyWitness, Script, BootstrapWitness, TxRedeemer, Hash32, TxIn, Hash28, AuxiliaryData, TxWitnessSet, getNSignersNeeded, txRedeemerTagToString, ScriptDataHash, TxBody, CredentialType, canBeHash32, VotingProcedures, ProposalProcedure, InstantRewardsSource, LitteralScriptType } from "@harmoniclabs/cardano-ledger-ts";
+import { Tx, Value, ValueUnits, TxOut, TxRedeemerTag, ScriptType, UTxO, VKeyWitness, Script, BootstrapWitness, TxRedeemer, Hash32, TxIn, Hash28, AuxiliaryData, TxWitnessSet, getNSignersNeeded, txRedeemerTagToString, ScriptDataHash, TxBody, CredentialType, canBeHash32, VotingProcedures, ProposalProcedure, InstantRewardsSource, LitteralScriptType, defaultProtocolParameters } from "@harmoniclabs/cardano-ledger-ts";
 import { CborString, Cbor, CborArray, CanBeCborString, CborPositiveRational, CborMap, CborUInt } from "@harmoniclabs/cbor";
 import { byte, blake2b_256 } from "@harmoniclabs/crypto";
 import { Data, dataToCborObj, DataConstr, dataToCbor } from "@harmoniclabs/plutus-data";
@@ -19,6 +19,7 @@ import { getScriptInfoData, getSpendingPurposeData } from "../toOnChain/getSpend
 import { TxBuilderProtocolParams, ValidatedTxBuilderProtocolParams, completeTxBuilderProtocolParams } from "./TxBuilderProtocolParams";
 import { ChangeInfos } from "../txBuild/ChangeInfos/ChangeInfos";
 import { estimateMaxSignersNeeded, scriptTypeToDataVersion } from "./utils";
+import { cborFromRational } from "../utils/Rational";
 
 type ScriptLike = {
     hash: string,
@@ -125,6 +126,46 @@ export class TxBuilder
             BigInt( (tx instanceof Tx ? tx.toCbor() : tx ).toBuffer().length ) +
             forceBigUInt( this.protocolParamters.txFeeFixed )
         );
+    }
+
+    calcMinFee( tx: Tx ): bigint
+    {
+
+        const totRefScriptBytes = (tx.body.refInputs ?? [])
+        .reduce((sum, refIn) => {
+
+            if( refIn.resolved.refScript )
+            return sum + BigInt(
+                refIn.resolved.refScript.toCbor().toBuffer().length
+                + 10 // second Cbor wrap
+            );
+             
+            return sum;
+        }, BigInt( 0 ) );
+
+        const minRefScriptFee = this.protocolParamters.minfeeRefScriptCostPerByte ? (
+            totRefScriptBytes * this.protocolParamters.minfeeRefScriptCostPerByte.num /
+            this.protocolParamters.minfeeRefScriptCostPerByte.den
+        ) : (
+            totRefScriptBytes * cborFromRational(defaultProtocolParameters.minfeeRefScriptCostPerByte).num /
+            cborFromRational(defaultProtocolParameters.minfeeRefScriptCostPerByte).den
+        );
+
+        const minFeeMultiplier = forceBigUInt( this.protocolParamters.txFeePerByte );
+
+        const nVkeyWits = BigInt( estimateMaxSignersNeeded( tx ) );
+
+        const minFee = this.calcLinearFee( tx ) +
+            minRefScriptFee +
+            // consider also vkeys witnesses to be added
+            // each vkey witness has fixed size of 102 cbor bytes
+            // (1 bytes cbor array tag (length 2)) + (34 cbor bytes of length 32) + (67 cbor bytes of length 64)
+            // for a fixed length of 102
+            BigInt( 102 ) * nVkeyWits * minFeeMultiplier +
+            // we add some more bytes for the array tag
+            BigInt( nVkeyWits < 24 ? 1 : (nVkeyWits < 256 ? 2 : 3) ) * minFeeMultiplier;
+
+         return minFee;
     }
 
     getMinimumOutputLovelaces( tx_out: TxOut | CanBeCborString ): bigint
@@ -253,7 +294,6 @@ export class TxBuilder
         const {
             // tx,
             scriptsToExec,
-            minFee,
             datumsScriptData,
             languageViews,
             totInputValue,
@@ -263,6 +303,7 @@ export class TxBuilder
         } = _initBuild;
 
         let tx = _initBuild.tx;
+        let minFee = _initBuild.minFee;
 
         const rdmrs = tx.witnesses.redeemers ?? [];
         const nRdmrs = rdmrs.length;
@@ -272,7 +313,7 @@ export class TxBuilder
             return tx
         };
 
-        const txOuts: TxOut[] = new Array( outs.length + 1 );
+        let txOuts: TxOut[] = new Array( outs.length + 1 );
 
         const cek: Machine = (this as any).cek;
         
@@ -465,13 +506,14 @@ export class TxBuilder
                 )
             }
 
+            minFee = this.calcMinFee( tx );
             fee = minFee +
                 ((totExBudget.mem * memRational.num) / memRational.den) +
                 ((totExBudget.cpu * cpuRational.num) / cpuRational.den) +
                 // bigint division truncates always towards 0;
                 // we don't like that so we add `1n` for both divisions ( + 2n )
                 BigInt(2);
-            
+
             if( fee === prevFee ) break; // return last transaciton
 
             // reset for next loop
@@ -479,7 +521,10 @@ export class TxBuilder
             // no need to reset if there's no next loop
             if( round === maxRound - 1 ) break;
 
-            outs.forEach( (txO, i) => txOuts[i] = txO.clone() );
+            for( let i = 0; i < outs.length; i++ )
+            {
+                txOuts[i] = outs[i].clone(); 
+            }
             txOuts[ txOuts.length - 1 ] = (
                 new TxOut({
                     address: change.address,
@@ -508,7 +553,7 @@ export class TxBuilder
                 ...tx,
                 body: new TxBody({
                     ...tx.body,
-                    outputs: txOuts,
+                    outputs: txOuts.slice(),
                     fee: fee,
                     scriptDataHash: getScriptDataHash( nextWitnesses, languageViews )
                 }),
@@ -1276,36 +1321,7 @@ export class TxBuilder
             isScriptValid
         });
 
-        const totRefScriptBytes = (dummyTx.body.refInputs ?? [])
-        .reduce((sum, refIn) => {
-
-            if( refIn.resolved.refScript )
-            return sum + BigInt(
-                refIn.resolved.refScript.toCbor().toBuffer().length
-                + 10 // second Cbor wrap
-            );
-             
-            return sum;
-        }, BigInt( 0 ) );
-
-        const minRefScriptFee = this.protocolParamters.minfeeRefScriptCostPerByte ? (
-            totRefScriptBytes * this.protocolParamters.minfeeRefScriptCostPerByte.num /
-            this.protocolParamters.minfeeRefScriptCostPerByte.den
-        ) : BigInt( 0 );
-
-        const minFeeMultiplier = forceBigUInt( this.protocolParamters.txFeePerByte );
-
-        const nVkeyWits = BigInt( estimateMaxSignersNeeded( dummyTx ) );
-
-        const minFee = this.calcLinearFee( dummyTx ) +
-            minRefScriptFee +
-            // consider also vkeys witnesses to be added
-            // each vkey witness has fixed size of 102 cbor bytes
-            // (1 bytes cbor array tag (length 2)) + (34 cbor bytes of length 32) + (67 cbor bytes of length 64)
-            // for a fixed length of 102
-            BigInt( 102 ) * nVkeyWits * minFeeMultiplier +
-            // we add some more bytes for the array tag
-            BigInt( nVkeyWits < 24 ? 1 : (nVkeyWits < 256 ? 2 : 3) ) * minFeeMultiplier;
+        const minFee = this.calcMinFee( dummyTx  );
 
         const txOuts: TxOut[] = new Array( outs.length + 1 ); 
         outs.forEach( (txO,i) => txOuts[i] = txO.clone() );
