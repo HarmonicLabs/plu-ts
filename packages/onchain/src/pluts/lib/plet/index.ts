@@ -14,6 +14,7 @@ import { UtilityTermOf, addUtilityForType } from "../std/UtilityTerms/addUtility
 import { makeMockUtilityTerm } from "../std/UtilityTerms/mockUtilityTerms/makeMockUtilityTerm";
 import { getCallStackAt } from "../../../utils/getCallStackAt";
 import { IRTerm } from "../../../IR/IRTerm";
+import { termTypeToString } from "../../type_system";
 
 export type LettedTerm<PVarT extends PType, SomeExtension extends object> =
     Term<PVarT> & SomeExtension extends Term<PAlias<PVarT, {}>> ?

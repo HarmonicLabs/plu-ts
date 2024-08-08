@@ -21,6 +21,7 @@ import { defineNonDeletableNormalProperty } from "@harmoniclabs/obj-utils";
 import { termTypeToString } from "../../../type_system/utils";
 import { addUserMethods } from "./userMethods/addUserMethods";
 import { addBaseUtilityTerm, BaseUtilityTermExtension } from "./BaseUtilityTerm";
+import { punsafeConvertType } from "../../punsafeConvertType";
 
 // given the index returns the previous number ( PrevNum[2] -> 1; etc... )
 type PrevNum = [ never, 0, 1, 2, 3, 4, 5, 6 ];
@@ -103,9 +104,10 @@ export function addPAliasMethods<
     aliasTerm: Term<PAlias<PAliased,AMethods>>
 ): TermAlias<PAliased, AMethods>
 {
-    aliasTerm = addBaseUtilityTerm( aliasTerm );
     const originalType = aliasTerm.type;
 
+    aliasTerm = addBaseUtilityTerm( aliasTerm );
+    
     if( originalType[0] !== PrimType.Alias )
     {
         console.error( originalType );
@@ -119,9 +121,14 @@ export function addPAliasMethods<
 
     const aliasedType = unwrapAlias( originalType );
     
-    aliasTerm = addUtilityForType( aliasedType )( aliasTerm ) as any;
-
-    aliasTerm = addUserMethods( aliasTerm, originalType[2] as AMethods );
+    // intentionally discarding the result
+    // if we are aliasing a list, adding utility clones the term
+    // so changes the type
+    // so we loose the alias and possible methods
+    // this is really a bug in `addPListMethods`
+    // but for now this is the workaround
+    void addUtilityForType( aliasedType )( aliasTerm ) as any;
+    void addUserMethods( aliasTerm, originalType[2] as AMethods );
 
     return aliasTerm as any;
 }

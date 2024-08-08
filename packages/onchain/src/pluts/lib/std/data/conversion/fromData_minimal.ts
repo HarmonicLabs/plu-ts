@@ -123,7 +123,14 @@ export const fromData_minimal = _fromData;
 
 export function _fromData<T extends TermType>( t: T ): ( term: Term<PData> ) => Term<ToPType<T>>
 {
-    if( isTaggedAsAlias( t ) ) return _fromData( unwrapAlias( t as any ) ) as any;
+    if( isTaggedAsAlias( t ) ) return (( term: any ) => {
+        term = _fromData( unwrapAlias( t as any ) )( term );
+        return new Term(
+            t,
+            term.toIR,
+            Boolean(term.isConstant)
+        ) as any;
+    }) as any;
 
     // unwrap asData before `t extends data`
     if( t[0] === PrimType.AsData ) t = t[1] as T;

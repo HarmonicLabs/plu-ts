@@ -197,6 +197,9 @@ export function addPListMethods<PElemsT extends PType>( _lst: Term<PList<PElemsT
 {
     const elemsT = getElemsT( _lst.type );
 
+    // this clone is causing problems for aliases
+    // TODO: remove clone and test
+    /** @todo remove clone and test */
     const lst = new Term(
         list( elemsT ),
         // needs to be wrapped to prevent the garbage collector to collect garbage (lst)

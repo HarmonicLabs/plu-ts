@@ -1,7 +1,7 @@
 import { Term } from "../../../Term";
 import type { PStruct, StructInstance } from "../../../PTypes/PStruct/pstruct";
 import type { TermFn } from "../../../PTypes/PFn/PFn";
-import { StructDefinition, isStructType, isStructDefinition, data, list, int, pair, Methods } from "../../../type_system";
+import { StructDefinition, isStructType, isStructDefinition, data, list, int, pair, Methods, termTypeToString } from "../../../type_system";
 import { peqData,  } from "../../builtins/data";
 import { PBool } from "../../../PTypes/PBool";
 import { TermBool } from "./TermBool";
@@ -39,7 +39,7 @@ export type TermStruct<SDef extends StructDefinition, SMethods extends Methods> 
     readonly eq: ( other: Term<PStruct<SDef, {}>> | Term<PData> ) => TermBool
 
     readonly raw: RawStruct
-
+  
 } & 
 (
     IsSingleKey<SDef> extends true ? 
@@ -118,17 +118,6 @@ export function addPStructMethods<
                                 getElemAtTerm( i ).$( letted_fieldsListData )
                             ),
                             ctorName + "::" + thisFieldName
-                            // (dbn, ir) => {
-                            //     if(ctorName + "::" + thisFieldName !== "PScriptContext::purpose") return;
-                            // 
-                            //     const [ _dbn, term ] = getNormalizedLettedArgs( ir.dbn, ir.value ) ?? [ 0, new IRVar( 0 )] ;
-                            //     console.log(
-                            //         "PScriptContext::purpose at dbn:", dbn, 
-                            //         "\nnormalized value:", prettyIRJsonStr( term, 2, { hoisted: false } ),
-                            //         "\nnormalized value hash:", toHex( term.hash ),
-                            //         "\nnormalized dbn:", _dbn,
-                            //     );
-                            // }
                         ),
                         thisFieldType
                     ),
@@ -137,7 +126,6 @@ export function addPStructMethods<
                     configurable: false
                 }
             );
-
         }
     }
 
