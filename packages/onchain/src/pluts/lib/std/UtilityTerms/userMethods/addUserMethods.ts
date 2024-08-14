@@ -55,8 +55,8 @@ export function addUserMethods<
     if( !isWellFormedMethods( methods ) )
     {
         throw new Error(
-            "user-specified methods are not well formed, definition contains methods with ambigous names:  " +
-            JSON.stringify( Object.keys( methods ), undefined, 2 ) 
+            "user-specified methods are not well formed, definition contains methods with ambigous names: " +
+            JSON.stringify( Object.keys( methods ) ) 
         );
     }
 

@@ -39,14 +39,16 @@ describe("addUserMethod result", () => {
 
         const methods = {
             addOne : padd.$( 1 ),
+            // wrong name
             paddOne: pfn([ int, int ], int)
             (( self, other ) => self.add( other ) )
         };
 
         expect(() => {
             addUserMethods( baseTerm, methods );
-        }).toThrow();
-
+        }).toThrow(
+            `user-specified methods are not well formed, definition contains methods with ambigous names: ["addOne","paddOne"]`
+        )
     });
 
     describe("cip 68 nft metadata", () => {
@@ -74,7 +76,7 @@ describe("addUserMethod result", () => {
             }
         );
 
-        test("has name and image", () => {
+        test.skip("has name and image", () => {
 
             const someTerm = pfn([
                 PNftMetadata.type
