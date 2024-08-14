@@ -4,7 +4,6 @@ import { int, lam, list } from "../../../../../type_system"
 import { pdelay } from "../../../../pdelay"
 import { pInt } from "../../../int"
 import { precursiveList } from "../index";
-import { showUPLC } from "@harmoniclabs/uplc"
 
 describe("precursiveList", () => {
 
@@ -23,8 +22,6 @@ describe("precursiveList", () => {
     )
 
     test.only("nil", () => {
-
-        console.log( showUPLC( plast.$([] as any).toUPLC() ) );
 
         expect(
             Machine.evalSimple(

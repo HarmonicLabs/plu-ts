@@ -1,0 +1,114 @@
+[
+  (lam a 
+    [
+      [
+        [
+          [
+            a 
+            (lam b 
+              (lam c 
+                (lam d 
+                  (lam e 
+                    [
+                      (lam f 
+                        [
+                          [
+                            [
+                              a 
+                              [
+                                c 
+                                f
+                              ]
+                            ] 
+                            [
+                              d 
+                              f
+                            ]
+                          ] 
+                          e
+                        ]
+                      ) 
+                      [
+                        [
+                          b 
+                          c
+                        ] 
+                        d
+                      ]
+                    ]
+                  )
+                )
+              )
+            )
+          ] 
+          (lam b 
+            (delay 
+              (con integer -1)
+            )
+          )
+        ] 
+        (lam b 
+          (lam c 
+            (lam d 
+              (force 
+                [
+                  [
+                    [
+                      (force (builtin ifThenElse)) 
+                      [
+                        (force (builtin nullList)) 
+                        d
+                      ]
+                    ] 
+                    (delay 
+                      c
+                    )
+                  ] 
+                  (delay 
+                    [
+                      b 
+                      d
+                    ]
+                  )
+                ]
+              )
+            )
+          )
+        )
+      ] 
+      (con (list integer) [])
+    ]
+  ) 
+  (lam a 
+    [
+      (lam b 
+        [
+          a 
+          (lam c 
+            [
+              [
+                b 
+                b
+              ] 
+              c
+            ]
+          )
+        ]
+      ) 
+      (lam b 
+        [
+          a 
+          (lam c 
+            [
+              [
+                b 
+                b
+              ] 
+              c
+            ]
+          )
+        ]
+      )
+    ]
+  )
+]

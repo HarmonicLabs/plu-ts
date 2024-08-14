@@ -1,0 +1,140 @@
+[
+  [
+    [
+      [
+        (lam a 
+          [
+            (lam b 
+              [
+                a 
+                (lam c 
+                  [
+                    [
+                      b 
+                      b
+                    ] 
+                    c
+                  ]
+                )
+              ]
+            ) 
+            (lam b 
+              [
+                a 
+                (lam c 
+                  [
+                    [
+                      b 
+                      b
+                    ] 
+                    c
+                  ]
+                )
+              ]
+            )
+          ]
+        ) 
+        (lam a 
+          (lam b 
+            (lam c 
+              (lam d 
+                [
+                  (lam e 
+                    [
+                      [
+                        [
+                          (lam f 
+                            (lam g 
+                              (lam h 
+                                (force 
+                                  [
+                                    [
+                                      [
+                                        (force (force (builtin chooseList))) 
+                                        h
+                                      ] 
+                                      f
+                                    ] 
+                                    (delay 
+                                      [
+                                        [
+                                          g 
+                                          [
+                                            (force (builtin headList)) 
+                                            h
+                                          ]
+                                        ] 
+                                        [
+                                          (force (builtin tailList)) 
+                                          h
+                                        ]
+                                      ]
+                                    )
+                                  ]
+                                )
+                              )
+                            )
+                          ) 
+                          [
+                            b 
+                            e
+                          ]
+                        ] 
+                        [
+                          c 
+                          e
+                        ]
+                      ] 
+                      d
+                    ]
+                  ) 
+                  [
+                    [
+                      a 
+                      b
+                    ] 
+                    c
+                  ]
+                ]
+              )
+            )
+          )
+        )
+      ] 
+      (lam a 
+        (delay 
+          (con integer -1)
+        )
+      )
+    ] 
+    (lam a 
+      (lam b 
+        (lam c 
+          (force 
+            [
+              [
+                [
+                  (force (builtin ifThenElse)) 
+                  [
+                    (force (builtin nullList)) 
+                    c
+                  ]
+                ] 
+                (delay 
+                  b
+                )
+              ] 
+              (delay 
+                [
+                  a 
+                  c
+                ]
+              )
+            ]
+          )
+        )
+      )
+    )
+  ] 
+  (con (list integer) [])
+]
