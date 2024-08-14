@@ -6,13 +6,12 @@ describe("murmur", () => {
     .fill( 0 )
     .map(( _, i ) => murmurHash( new Uint8Array( i ) ));
 
-    test("unique", () => {
+    test("unique 0s", () => {
 
         expect(
             [ ...new Set( tests ) ].length
         ).toBe( tests.length );
-
-        console.log( JSON.stringify( tests, undefined, 2 ) )
+        
     });
 
 });

@@ -17,7 +17,7 @@ export function getDebruijnInTerm( root: IRTerm, termToFind: IRTerm ): number
     {
         const { term, dbn } = stack.pop() as { term: IRTerm, dbn: number };
 
-        if( term === termToFind || uint8ArrayEq( term.hash, termTofindHash ) ) return dbn;
+        if( term === termToFind || term.hash === termTofindHash ) return dbn;
 
         if( term instanceof IRApp )
         {

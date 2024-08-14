@@ -10,6 +10,7 @@ import { IRParentTerm } from "../../utils/isIRParentTerm";
 import { isIRTerm, prettyIRJsonStr } from "../../utils";
 import { IRConstr } from "../../IRNodes/IRConstr";
 import { IRCase } from "../../IRNodes/IRCase";
+import { floatAsBytes, isMurmurHash } from "../../murmur";
 
 /**
  * 
@@ -17,7 +18,7 @@ import { IRCase } from "../../IRNodes/IRCase";
  * @param currentChild mainly passed to distinguish in case of `IRApp`
  * @param newChild new node's child
  */
-export function _modifyChildFromTo( parent: IRParentTerm | undefined, currentChild: IRTerm | Uint8Array, newChild: IRTerm ): void
+export function _modifyChildFromTo( parent: IRParentTerm | undefined, currentChild: IRTerm | number, newChild: IRTerm ): void
 {
     if( parent === undefined )
     {
@@ -45,14 +46,14 @@ export function _modifyChildFromTo( parent: IRParentTerm | undefined, currentChi
     {
         // DO NO USE **ONLY** SHALLOW EQUALITY
         // child might be cloned
-        const currChildHash = currentChild instanceof Uint8Array ? currentChild : currentChild.hash;
+        const currChildHash = isMurmurHash( currentChild ) ? currentChild : currentChild.hash;
 
         // check the argument first as it is more likely to have a smaller tree
-        if( currentChild === parent.arg || uint8ArrayEq( parent.arg.hash, currChildHash ) )
+        if( currentChild === parent.arg || parent.arg.hash === currChildHash )
         {
             parent.arg = newChild;
         }
-        else if( currentChild === parent.fn || uint8ArrayEq( parent.fn.hash, currChildHash ) )
+        else if( currentChild === parent.fn || parent.fn.hash === currChildHash )
         {
             parent.fn = newChild;
         }
@@ -65,9 +66,9 @@ export function _modifyChildFromTo( parent: IRParentTerm | undefined, currentChi
             );
             throw new Error(
                 "unknown 'IRApp' child to modify; given child to modify hash: " +
-                toHex( currChildHash ) +
-                "; function child hash: " + toHex( parent.fn.hash ) +
-                "; argument child hash: " + toHex( parent.arg.hash )
+                toHex( floatAsBytes( currChildHash ) ) +
+                "; function child hash: " + toHex( floatAsBytes( parent.fn.hash ) ) +
+                "; argument child hash: " + toHex( floatAsBytes( parent.arg.hash ) )
             );
         }
 
@@ -87,11 +88,11 @@ export function _modifyChildFromTo( parent: IRParentTerm | undefined, currentChi
             }
         }
         if( foundChild ) return;
-        const currChildHash = currentChild instanceof Uint8Array ? currentChild : currentChild.hash;
+        const currChildHash = isMurmurHash( currentChild ) ? currentChild : currentChild.hash;
         for( let i = 0; i < parent.fields.length; i++ )
         {
             const field = parent.fields[i];
-            if( uint8ArrayEq( field.hash, currChildHash ) )
+            if( field.hash === currChildHash )
             {
                 parent.fields[i] = newChild;
                 break
@@ -118,8 +119,8 @@ export function _modifyChildFromTo( parent: IRParentTerm | undefined, currentChi
             }
         }
         if( foundChild ) return;
-        const currChildHash = currentChild instanceof Uint8Array ? currentChild : currentChild.hash;
-        if( uint8ArrayEq( currChildHash, parent.constrTerm.hash ) )
+        const currChildHash = isMurmurHash( currentChild ) ? currentChild : currentChild.hash;
+        if( currChildHash === parent.constrTerm.hash )
         {
             parent.constrTerm = newChild;
             return;
@@ -127,7 +128,7 @@ export function _modifyChildFromTo( parent: IRParentTerm | undefined, currentChi
         for( let i = 0; i < parent.continuations.length; i++ )
         {
             const field = parent.continuations[i];
-            if( uint8ArrayEq( field.hash, currChildHash ) )
+            if( field.hash === currChildHash )
             {
                 parent.continuations[i] = newChild;
                 break

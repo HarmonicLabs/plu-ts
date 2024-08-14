@@ -25,7 +25,7 @@ describe("pmatch", () => {
 
         expect(
             Machine.evalSimple(
-                plast.$([])
+                plast.$([] as any)
             )
         ).toEqual(
             Machine.evalSimple(
@@ -39,7 +39,7 @@ describe("pmatch", () => {
 
         expect(
             Machine.evalSimple(
-               plast.$([pInt( 42 )])
+               plast.$([pInt( 42 )] as any)
             )
         ).toEqual(
             Machine.evalSimple(
@@ -53,7 +53,7 @@ describe("pmatch", () => {
 
         expect(
             Machine.evalSimple(
-               plast.$([pInt( 42 ), pInt(69) ])
+               plast.$([pInt( 42 ), pInt(69) ] as any)
             )
         ).toEqual(
             Machine.evalSimple(

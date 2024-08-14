@@ -10,6 +10,7 @@ import { IRTerm } from "../../../IRTerm";
 import { _modifyChildFromTo } from "../../_internal/_modifyChildFromTo";
 import { showIR } from "../../../utils/showIR";
 import { markRecursiveHoistsAsForced } from "../markRecursiveHoistsAsForced";
+import { floatAsBytes } from "../../../murmur";
 
 export function handleHoistedAndReturnRoot( term: IRTerm ): IRTerm
 {
@@ -82,14 +83,15 @@ export function handleHoistedAndReturnRoot( term: IRTerm ): IRTerm
     let root: IRTerm = term;
     while( root.parent !== undefined ) root = root.parent;
 
-    function getIRVarForHoistedAtLevel( _hoistedHash: Uint8Array, level: number ): IRVar
+    function getIRVarForHoistedAtLevel( _hoistedHash: number, level: number ): IRVar
     {
-        let levelOfTerm = toHoist.findIndex( sortedH => uint8ArrayEq( sortedH.hash, _hoistedHash ) );
+        let levelOfTerm = toHoist
+        .findIndex( sortedH => sortedH.hash === _hoistedHash );
         if( levelOfTerm < 0 )
         {
             throw new Error(
-                `missing hoisted with hash ${toHex(_hoistedHash)} between toHoist [\n\t${
-                    toHoist.map( h => toHex( h.hash ) )
+                `missing hoisted with hash ${toHex(floatAsBytes(_hoistedHash))} between toHoist [\n\t${
+                    toHoist.map( h => toHex( floatAsBytes( h.hash ) ) )
                     .join(",\n\t")
                 }\n]; can't replace with IRVar`
             );
@@ -118,7 +120,7 @@ export function handleHoistedAndReturnRoot( term: IRTerm ): IRTerm
         const { irTerm, dbn }  = stack.pop() as { irTerm: IRTerm, dbn: number };
 
         const irTermHash = irTerm.hash;
-        const isHoistedToinline = hoistedsToInlineHashes.some( h => uint8ArrayEq( h, irTermHash ) ); 
+        const isHoistedToinline = hoistedsToInlineHashes.some( h => h === irTermHash ); 
         if(
             // is hoiseted
             irTerm instanceof IRHoisted &&
@@ -130,7 +132,7 @@ export function handleHoistedAndReturnRoot( term: IRTerm ): IRTerm
             if( irvar.dbn >= dbn )
             {
                 throw new Error(
-                    `out of bound hoisted term; hash: ${toHex( irTerm.hash )}; var's DeBruijn: ${irvar.dbn} (starts from 0); tot hoisted in scope: ${dbn}`
+                    `out of bound hoisted term; hash: ${toHex( floatAsBytes( irTerm.hash) )}; var's DeBruijn: ${irvar.dbn} (starts from 0); tot hoisted in scope: ${dbn}`
                 )
             }
 
@@ -164,7 +166,7 @@ export function handleHoistedAndReturnRoot( term: IRTerm ): IRTerm
             if( !isHoistedToinline )
             {
                 throw new Error(
-                    "unexpected hoisted term found with hash: " + toHex( irTermHash ) +
+                    "unexpected hoisted term found with hash: " + toHex( floatAsBytes( irTermHash ) ) +
                     "\n showIR of the term: " + JSON.stringify(
                         showIR( irTerm ),
                         undefined,

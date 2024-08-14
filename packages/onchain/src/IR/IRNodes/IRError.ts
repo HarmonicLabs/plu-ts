@@ -8,16 +8,17 @@ import { isIRTerm } from "../utils/isIRTerm";
 import { IRParentTerm, isIRParentTerm } from "../utils/isIRParentTerm";
 import { _modifyChildFromTo } from "../toUPLC/_internal/_modifyChildFromTo";
 import { BaseIRMetadata } from "./BaseIRMetadata";
+import { murmurHash } from "../murmur";
 
 const irErrorBitTag = new Uint8Array([ 0b0000_0111 ]);
-const errorHash = blake2b_128( irErrorBitTag.slice() )
+const errorHash = murmurHash( irErrorBitTag.slice() )
 
 export interface IRErrorMetadata extends BaseIRMetadata {}
 
 export class IRError
     implements Cloneable<IRError>, IHash, IIRParent, ToJson
 {
-    readonly hash!: Uint8Array;
+    readonly hash!: number;
     markHashAsInvalid!: () => void;
     isHashPresent: () => boolean;
 
@@ -80,7 +81,7 @@ export class IRError
         
         Object.defineProperty(
             this, "hash", {
-                get: () => errorHash.slice(),
+                get: () => errorHash,
                 set: () => {},
                 enumerable: true,
                 configurable: false,

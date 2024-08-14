@@ -15,6 +15,7 @@ import { termTypeToString } from "../../pluts/type_system/utils";
 import { showUPLCConstValue } from "@harmoniclabs/uplc";
 import { IRConstr } from "../IRNodes/IRConstr";
 import { IRCase } from "../IRNodes/IRCase";
+import { floatAsBytes } from "../murmur";
 
 const vars = "abcdefghilmopqrstuvzwxyjkABCDEFGHILJMNOPQRSTUVZWXYJK".split('');
 
@@ -68,13 +69,13 @@ export function showIR( _ir: IRTerm )
     hoisted: { [hash: string]: string } 
 }
 {
-    const hoistedHashes: Uint8Array[] = [];
+    const hoistedHashes: number[] = [];
     const hoisted: { [hash: string]: string } = {};
 
     function addHoisted( h: IRHoisted )
     {
         const hash = h.hash;
-        if( !hoistedHashes.some( hoistedHash => uint8ArrayEq( hoistedHash, hash ) ) )
+        if( !hoistedHashes.some( hoistedHash => hoistedHash === hash ) )
         {
             const deps = h.dependencies;
             for(let i = 0; i < deps.length; i++)
@@ -82,9 +83,9 @@ export function showIR( _ir: IRTerm )
                 addHoisted( deps[i].hoisted );
             }
 
-            hoistedHashes.push( hash.slice() );
+            hoistedHashes.push( hash );
             Object.defineProperty(
-                hoisted, toHex( hash ), {
+                hoisted, toHex( floatAsBytes( hash ) ), {
                     value: showIRText( h.hoisted ),
                     writable: false,
                     enumerable: true,
@@ -94,13 +95,13 @@ export function showIR( _ir: IRTerm )
         }
     }
 
-    const lettedHashes: Uint8Array[] = [];
+    const lettedHashes: number[] = [];
     const letted: { [hash: string]: string } = {};
 
     function addLetted( l: IRLetted )
     {
         const hash = l.hash;
-        if( !lettedHashes.some( lettedHash => uint8ArrayEq( lettedHash, hash ) ) )
+        if( !lettedHashes.some( lettedHash => lettedHash === hash ) )
         {
             const deps = l.dependencies;
             const nDeps = deps.length;
@@ -109,12 +110,12 @@ export function showIR( _ir: IRTerm )
                 addLetted( deps[i].letted );
             }
 
-            lettedHashes.push( hash.slice() );
+            lettedHashes.push( hash );
             
             getHoistedTerms( l.value.clone() ).forEach( ({ hoisted }) => addHoisted( hoisted ) );
 
             Object.defineProperty(
-                letted, toHex( hash ), {
+                letted, toHex( floatAsBytes( hash ) ), {
                     value: showIRText( l.value ),
                     writable: false,
                     enumerable: true,
@@ -221,13 +222,13 @@ export function prettyIR( _ir: IRTerm, _indent = 2 ) : PrettiedIR
 
     const indentStr = " ".repeat(_indent)
 
-    const hoistedHashes: Uint8Array[] = [];
+    const hoistedHashes: number[] = [];
     const hoisted: { [hash: string]: string } = {};
 
     function addHoisted( h: IRHoisted )
     {
         const hash = h.hash;
-        if( !hoistedHashes.some( hoistedHash => uint8ArrayEq( hoistedHash, hash ) ) )
+        if( !hoistedHashes.some( hoistedHash => hoistedHash === hash ) )
         {
             const deps = h.dependencies;
             for(let i = 0; i < deps.length; i++)
@@ -235,8 +236,8 @@ export function prettyIR( _ir: IRTerm, _indent = 2 ) : PrettiedIR
                 addHoisted( deps[i].hoisted );
             }
 
-            hoistedHashes.push( hash.slice() );
-            const hashStr = toHex( hash );
+            hoistedHashes.push( hash );
+            const hashStr = toHex( floatAsBytes( hash ) );
             Object.defineProperty(
                 hoisted,
                 hashStr, 
@@ -245,13 +246,13 @@ export function prettyIR( _ir: IRTerm, _indent = 2 ) : PrettiedIR
         }
     }
 
-    const lettedHashes: Uint8Array[] = [];
+    const lettedHashes: number[] = [];
     const letted: { [hash: string]: string } = {};
 
     function addLetted( l: IRLetted )
     {
         const hash = l.hash;
-        if( !lettedHashes.some( lettedHash => uint8ArrayEq( lettedHash, hash ) ) )
+        if( !lettedHashes.some( lettedHash => lettedHash === hash ) )
         {
             const deps = l.dependencies;
             const nDeps = deps.length;
@@ -260,11 +261,11 @@ export function prettyIR( _ir: IRTerm, _indent = 2 ) : PrettiedIR
                 addLetted( deps[i].letted );
             }
 
-            lettedHashes.push( hash.slice() );
+            lettedHashes.push( hash );
             
             getHoistedTerms( l.value.clone() ).forEach( ({ hoisted }) => addHoisted( hoisted ) );
 
-            const hashStr = toHex( hash );
+            const hashStr = toHex( floatAsBytes( hash ) );
             Object.defineProperty(
                 letted, hashStr, {
                     value: prettyIRText( l.value, _indent ),
@@ -358,12 +359,12 @@ export function prettyIRJsonStr( ir: IRTerm, indent = 2, opts: Partial<PrettyIRJ
 
 export function hoistedToStr( ir: IRHoisted ): string
 {
-    return `(hoisted${(ir.meta.name ? " {"+ir.meta.name+"}" : "")} ${toHex( ir.hash )})`;
+    return `(hoisted${(ir.meta.name ? " {"+ir.meta.name+"}" : "")} ${toHex( floatAsBytes( ir.hash ) )})`;
 }
 
 export function lettedToStr( ir: IRLetted ): string
 {
-    return `(letted${(ir.meta.name ? " {"+ir.meta.name+"}" : "")} ${ir.dbn} ${toHex( ir.hash )})`;
+    return `(letted${(ir.meta.name ? " {"+ir.meta.name+"}" : "")} ${ir.dbn} ${toHex( floatAsBytes( ir.hash ) )})`;
 }
 
 export function constToString( ir: IRConst ): string

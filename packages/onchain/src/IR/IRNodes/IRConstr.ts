@@ -12,6 +12,7 @@ import { mapArrayLike } from "./utils/mapArrayLike";
 import { isIRTerm } from "../utils";
 import { makeArrayLikeProxy } from "./utils/makeArrayLikeProxy";
 import { MutArrayLike } from "../utils/MutArrayLike";
+import { floatAsBytes, isMurmurHash, murmurHash } from "../murmur";
 
 export interface IRConstrMeta extends BaseIRMetadata {}
 
@@ -21,7 +22,7 @@ export class IRConstr
     readonly index!: bigint;
     fields!: MutArrayLike<IRTerm>;
 
-    readonly hash!: Uint8Array;
+    readonly hash!: number;
     markHashAsInvalid!: () => void;
     isHashPresent: () => boolean;
 
@@ -35,7 +36,7 @@ export class IRConstr
         index: number | bigint,
         fields: ArrayLike<IRTerm>,
         meta: IRConstrMeta = {},
-        _unsafeHash?: Uint8Array
+        _unsafeHash?: number
     )
     {
         const self = this;
@@ -84,24 +85,24 @@ export class IRConstr
             }
         );
 
-        let hash: Uint8Array | undefined = _unsafeHash;
+        let hash: number | undefined = isMurmurHash( _unsafeHash ) ? _unsafeHash : undefined;
         Object.defineProperty(
             this, "hash",
             {
                 get: () => {
-                    if(!( hash instanceof Uint8Array ))
+                    if(!isMurmurHash( hash ))
                     {
                         // basically a merkle tree
-                        hash = blake2b_128(
+                        hash = murmurHash(
                             concatUint8Arr(
                                 IRConstr.tag,
                                 positiveIntAsBytes( this.index ),
-                                ...mapArrayLike( this.fields, f => f.hash )
+                                ...mapArrayLike( this.fields, f => floatAsBytes( f.hash ) )
                             )
                         );
                     }
                     // return a copy
-                    return hash.slice()
+                    return hash;
                 },
                 set: () => {},
                 enumerable: true,
@@ -110,7 +111,7 @@ export class IRConstr
         );
         Object.defineProperty(
             this, "isHashPresent", {
-                value: () => hash instanceof Uint8Array,
+                value: () => isMurmurHash( hash ),
                 writable: false,
                 enumerable: true,
                 configurable: false

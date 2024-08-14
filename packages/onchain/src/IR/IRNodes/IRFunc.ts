@@ -12,6 +12,7 @@ import { defineReadOnlyProperty } from "@harmoniclabs/obj-utils";
 import { IRParentTerm, isIRParentTerm } from "../utils/isIRParentTerm";
 import { _modifyChildFromTo } from "../toUPLC/_internal/_modifyChildFromTo";
 import { BaseIRMetadata } from "./BaseIRMetadata";
+import { floatAsBytes, isMurmurHash, murmurHash } from "../murmur";
 
 export interface IRFuncMetadata extends BaseIRMetadata {}
 
@@ -20,7 +21,7 @@ export class IRFunc
 {
     readonly arity!: number;
 
-    readonly hash!: Uint8Array;
+    readonly hash!: number;
     markHashAsInvalid!: () => void;
     isHashPresent: () => boolean;
 
@@ -36,7 +37,7 @@ export class IRFunc
         arity: number,
         body: IRTerm,
         func_name?: string | undefined,
-        _unsafeHash?: Uint8Array
+        _unsafeHash?: number
     )
     {
         if( !Number.isSafeInteger( arity ) && arity >= 1 )
@@ -69,21 +70,23 @@ export class IRFunc
         let _body: IRTerm = body;
         _body.parent = this;
 
-        let hash: Uint8Array | undefined = _unsafeHash;
+        let hash: number | undefined = isMurmurHash( _unsafeHash ) ? _unsafeHash : undefined;
         Object.defineProperty(
             this, "hash", {
                 get: () => {
-                    if(!( hash instanceof Uint8Array ))
+                    if( isMurmurHash( hash ) )
                     {
-                        hash = blake2b_128(
+                        hash = murmurHash(
                             concatUint8Arr(
                                 IRFunc.tag,
                                 positiveIntAsBytes( this.arity ),
-                                _body.hash
+                                floatAsBytes(
+                                    _body.hash
+                                )
                             )
                         )
                     }
-                    return hash.slice();
+                    return hash;
                 },
                 set: () => {},
                 enumerable: true,
@@ -92,7 +95,7 @@ export class IRFunc
         );
         Object.defineProperty(
             this, "isHashPresent", {
-                value: () => hash instanceof Uint8Array,
+                value: () => isMurmurHash( hash ),
                 writable: false,
                 enumerable: true,
                 configurable: false

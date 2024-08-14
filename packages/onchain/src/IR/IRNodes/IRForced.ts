@@ -10,6 +10,7 @@ import { isIRTerm } from "../utils/isIRTerm";
 import { IRParentTerm, isIRParentTerm } from "../utils/isIRParentTerm";
 import { _modifyChildFromTo } from "../toUPLC/_internal/_modifyChildFromTo";
 import { BaseIRMetadata } from "./BaseIRMetadata";
+import { floatAsBytes, isMurmurHash, murmurHash } from "../murmur";
 
 export interface IRForcedMetadata extends BaseIRMetadata {}
 
@@ -17,7 +18,7 @@ export class IRForced
     implements Cloneable<IRForced>, IHash, IIRParent, ToJson
 {
     forced!: IRTerm
-    readonly hash!: Uint8Array
+    readonly hash!: number
     markHashAsInvalid!: () => void;
     isHashPresent: () => boolean;
 
@@ -25,7 +26,7 @@ export class IRForced
 
     parent: IRParentTerm | undefined;
 
-    constructor( forced: IRTerm, _unsafeHash?: Uint8Array )
+    constructor( forced: IRTerm, _unsafeHash?: number )
     {
         Object.defineProperty(
             this, "meta", {
@@ -36,27 +37,29 @@ export class IRForced
             }
         );
 
-        let hash: Uint8Array | undefined = _unsafeHash;
+        let hash: number | undefined = isMurmurHash( _unsafeHash ) ? _unsafeHash : undefined;
         Object.defineProperty(
             this, "hash",
             {
                 get: () => {
-                    if(!(hash instanceof Uint8Array))
+                    if(!isMurmurHash( _unsafeHash ))
                     {
-                        hash = blake2b_128(
+                        hash = murmurHash(
                             concatUint8Arr(
                                 IRForced.tag,
-                                this.forced.hash
+                                floatAsBytes(
+                                    this.forced.hash
+                                )
                             )
                         );
                     }
-                    return hash.slice();
+                    return hash;
                 }
             }
         );
         Object.defineProperty(
             this, "isHashPresent", {
-                value: () => hash instanceof Uint8Array,
+                value: () => isMurmurHash( hash ),
                 writable: false,
                 enumerable: true,
                 configurable: false

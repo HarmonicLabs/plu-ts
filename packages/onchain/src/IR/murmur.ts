@@ -5,7 +5,7 @@
 
     go follow them, amazing stuff
 
-    implementation: https://github.com/bryc/code/blob/da36a3e07acfbd07f930a9212a2df9e854ff56e4/jshash/hashes/murmurhash2_64b.js
+    original implementation: https://github.com/bryc/code/blob/da36a3e07acfbd07f930a9212a2df9e854ff56e4/jshash/hashes/murmurhash2_64b.js
 */
 
 /**
@@ -64,6 +64,22 @@ export function murmurHash( data: Uint8Array ): number
 
     this preserves all 64 bits AND allows it to be a number
     BUT is slower.
+
+    # WHY THE HASH IS A NUMBER?
+
+    because with `Uint8Array` is incredibly easy to mess up
+    either because you have to remember to clone (`Uint8Array.prototype.slice.call( bytes )`)
+    or because cloning you fill up the memory
+
+    numbers are passed by value by default, so we can't mess up,
+    and they should be somewhat memory friendly for js engines
+
+    ALSO
+
+    we have builtin equality (`===`) which is without doubt
+    an important performance improvement compared to `eqUint8Arr` wich is O(n)
+
+    especially considered that the entire purpose of hashes it to compare them
     */
 
     let result = 0;
@@ -72,10 +88,24 @@ export function murmurHash( data: Uint8Array ): number
         const buff = new ArrayBuffer( 8 );
         const int = new Int32Array( buff );
         const num = new Float64Array( buff );
-        int[0] = h1;
-        int[1] = h2;
+        int[0] = h1 >>> 0;
+        int[1] = h2 >>> 0;
         result = num[0];
     }
 
     return result;
+}
+
+export function floatAsBytes( float: number ): Uint8Array & { length: 8 }
+{
+    const buff = new ArrayBuffer( 8 );
+    const bytes = new Uint8Array( buff );
+    const flt = new Float64Array( buff );
+    flt[0] = float;
+    return bytes as any;
+}
+
+export function isMurmurHash( stuff: any ): stuff is number
+{
+    return typeof stuff === "number" && Number.isFinite( stuff );
 }

@@ -11,13 +11,14 @@ import { positiveIntAsBytes } from "../utils/positiveIntAsBytes";
 import { IRParentTerm, isIRParentTerm } from "../utils/isIRParentTerm";
 import { _modifyChildFromTo } from "../toUPLC/_internal/_modifyChildFromTo";
 import { BaseIRMetadata } from "./BaseIRMetadata";
+import { isMurmurHash, murmurHash } from "../murmur";
 
 export interface IRVarMetadata extends BaseIRMetadata {}
 
 export class IRVar
     implements Cloneable<IRVar>, IHash, IIRParent, ToJson
 {
-    readonly hash: Uint8Array;
+    readonly hash: number;
     markHashAsInvalid!: () => void;
     isHashPresent: () => boolean;
     
@@ -48,15 +49,15 @@ export class IRVar
             }
         );
         
-        let hash: Uint8Array | undefined = undefined;
+        let hash: number | undefined = undefined;
         Object.defineProperty(
             this, "hash", {
                 get: () => {
-                    if(!( hash instanceof Uint8Array ))
+                    if( typeof hash !== "number" )
                     {
                         hash = getVarHashAtDbn( this.dbn );
                     }
-                    return hash.slice();
+                    return hash;
                 },
                 set: () => {},
                 enumerable: true,
@@ -65,7 +66,7 @@ export class IRVar
         );
         Object.defineProperty(
             this, "isHashPresent", {
-                value: () => hash instanceof Uint8Array,
+                value: () => isMurmurHash( hash ),
                 writable: false,
                 enumerable: true,
                 configurable: false
@@ -165,21 +166,12 @@ export class IRVar
     }
 }
 
-const bdnVarHashCache: Uint8Array[] = []; 
-
 function getVarHashAtDbn( dbn: number )
 {
-    while( (bdnVarHashCache.length - 1) < dbn )
-    {
-        bdnVarHashCache.push(
-            blake2b_128(
-                concatUint8Arr(
-                    IRVar.tag,
-                    positiveIntAsBytes( bdnVarHashCache.length )
-                )
-            )
-        );
-    }
-
-    return bdnVarHashCache[ dbn ]
+    return murmurHash(
+        concatUint8Arr(
+            IRVar.tag,
+            positiveIntAsBytes( dbn )
+        )
+    );
 }
