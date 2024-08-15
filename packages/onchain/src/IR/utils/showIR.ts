@@ -168,9 +168,9 @@ export function showIR( _ir: IRTerm )
     }
 }
 
-export function prettyIRText( _ir: IRTerm, _indent = 2 )
+export function prettyIRText( _ir: IRTerm, _indent = 2 ): string
 {
-    if( !Number.isSafeInteger( _indent ) || _indent < 1 ) return showIR( _ir );
+    if( !Number.isSafeInteger( _indent ) || _indent < 1 ) return showIR( _ir ).text;
 
     const indentStr = " ".repeat(_indent);
 
@@ -241,7 +241,7 @@ export function prettyIR( _ir: IRTerm, _indent = 2 ) : PrettiedIR
             Object.defineProperty(
                 hoisted,
                 hashStr, 
-                { value: prettyIRText( h.hoisted, _indent ), writable: true, enumerable: true }
+                { value: prettyIRText( h.hoisted, _indent ).split("\n"), writable: true, enumerable: true }
             );
         }
     }
