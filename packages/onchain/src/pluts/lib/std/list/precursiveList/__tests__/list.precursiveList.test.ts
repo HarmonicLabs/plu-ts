@@ -6,6 +6,7 @@ import { pInt } from "../../../int"
 import { precursiveList } from "../index";
 import { getHoistedTerms, getSortedHoistedSet, IRApp, IRConst, IRDelayed, IRForced, IRFunc, IRHoisted, IRNative, IRVar, prettyIRJsonStr, showIR } from "../../../../../../IR"
 import { handleHoistedAndReturnRoot } from "../../../../../../IR/toUPLC/subRoutines/handleHoistedAndReturnRoot"
+import { replaceNativesAndReturnRoot } from "../../../../../../IR/toUPLC/subRoutines/replaceNatives"
 
 
 const plast =  precursiveList( int, int )
@@ -183,8 +184,10 @@ describe("precursiveList low level", () => {
         .map(({ hoisted, nReferences }) => ({ hoisted: hoisted.toJson(), nReferences })) 
     );
 
+    let term = replaceNativesAndReturnRoot( generated.clone() );
+    term = handleHoistedAndReturnRoot( term );
     console.log(
-        prettyIRJsonStr( handleHoistedAndReturnRoot( generated.clone() ) )
+        prettyIRJsonStr( term )
     )
 });
 
