@@ -97,14 +97,14 @@ export function papp<Input extends PType, Output extends PType>( a: Term<PLam<In
 
     const outputType = lambdaType[2]; // applyLambdaType( lambdaType, _b.type );
 
-    const e_stack = Error().stack?.split("\n");
+    // const e_stack = Error().stack?.split("\n");
 
     let n = 2;
-    let src = e_stack ? 
-        e_stack[2].includes("$ ") ? 
-            e_stack[n = 3] : 
-            e_stack[2] 
-        : undefined;
+    // let src = e_stack ? 
+    //     e_stack[2].includes("$ ") ? 
+    //         e_stack[n = 3] : 
+    //         e_stack[2] 
+    //     : undefined;
 
     const outputTerm = addUtilityForType( outputType )(
         new Term(
@@ -137,7 +137,7 @@ export function papp<Input extends PType, Output extends PType>( a: Term<PLam<In
                 const app = new IRApp(
                     funcIR,
                     argIR,
-                    { __src__: src }
+                    // { __src__: src }
                 );
 
                 return app; 

@@ -105,7 +105,7 @@ export class IRHoisted
                         hash = blake2b_128(
                             concatUint8Arr(
                                 IRHoisted.tag,
-                                hoisted.hash
+                                _hoisted.hash
                             )
                         )
                     }
