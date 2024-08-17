@@ -1,4 +1,3 @@
-import { toHex, uint8ArrayEq } from "@harmoniclabs/uint8array-utils";
 import { IRApp } from "../../../IRNodes/IRApp";
 import { IRFunc } from "../../../IRNodes/IRFunc";
 import { getSortedLettedSet, getLettedTerms, IRLetted, jsonLettedSetEntry, expandedJsonLettedSetEntry, LettedSetEntry } from "../../../IRNodes/IRLetted";
@@ -18,21 +17,12 @@ import { markRecursiveHoistsAsForced } from "../markRecursiveHoistsAsForced";
 import { IRConst } from "../../../IRNodes/IRConst";
 import { incrementUnboundDbns } from "./incrementUnboundDbns";
 import { IRHoisted } from "../../../IRNodes";
+import { equalIrHash, irHashToHex } from "../../../IRHash";
 
 
 function onlyLettedTerm( setEntry: LettedSetEntry ): IRLetted
 {
     return setEntry.letted;
-}
-
-function lettedHash({ hash }: IRLetted): Uint8Array
-{
-    return hash;
-}
-
-function lettedHashHex({ hash }: IRLetted): string
-{
-    return toHex( hash );
 }
 
 export function _handleLetted( term: IRTerm ): void
@@ -59,7 +49,7 @@ export function _handleLetted( term: IRTerm ): void
     }[] = sortedLettedSet.map(({ letted }) => {
 
         const theHash = letted.hash;
-        const allSameLetted = allLettedRefs.filter(({ hash }) => uint8ArrayEq( hash, theHash ) );
+        const allSameLetted = allLettedRefs.filter(({ hash }) => equalIrHash( hash, theHash ) );
 
         const scopes = new Array<{
             maxScope: IRFunc,
@@ -153,7 +143,7 @@ export function _handleLetted( term: IRTerm ): void
                 // default to maxScope
                 lca = maxScope;
                 throw new Error(
-                    "letting nodes with hash " + toHex( setLettedHash ) + " from different trees"
+                    "letting nodes with hash " + irHashToHex( setLettedHash ) + " from different trees"
                 );
             }
             else
@@ -187,7 +177,7 @@ export function _handleLetted( term: IRTerm ): void
         incrementUnboundDbns(
             parentNodeDirectChild,
             // shouldNotModifyLetted
-            ({ hash }) => uint8ArrayEq( hash, setLettedHash )
+            ({ hash }) => equalIrHash( hash, setLettedHash )
         );
         
         // get the difference in DeBruijn
@@ -289,7 +279,7 @@ export function _handleLetted( term: IRTerm ): void
                 term instanceof IRLetted &&
                 (
                     sameLettedRefs.includes( term ) ||
-                    sameLettedRefs.some(({ hash }) => uint8ArrayEq( hash, setLettedHash ) )
+                    sameLettedRefs.some(({ hash }) => equalIrHash( hash, setLettedHash ) )
                 )
         ) as IRLetted[];
 
@@ -354,7 +344,7 @@ export function handleLetted( term: IRTerm ): void
             maxScope,
             node => 
                 node instanceof IRLetted &&
-                uint8ArrayEq( node.hash, lettedHash )
+                equalIrHash( node.hash, lettedHash )
         ) as IRLetted[];
 
         // console.log("found ", sameLettedRefs.length, "references of the letted terms");
@@ -407,7 +397,7 @@ export function handleLetted( term: IRTerm ): void
                 // default to maxScope
                 // lca = maxScope;
                 throw new Error(
-                    "letting nodes with hash " + toHex( lettedHash ) + " from different trees"
+                    "letting nodes with hash " + irHashToHex( lettedHash ) + " from different trees"
                 );
             }
             else
@@ -441,7 +431,7 @@ export function handleLetted( term: IRTerm ): void
         incrementUnboundDbns(
             parentNodeDirectChild,
             // `shouldNotModifyLetted` arg (given the hash returns `true` if it should NOT modify the term)
-            ({ hash }) => uint8ArrayEq( hash, lettedHash )
+            ({ hash }) => equalIrHash( hash, lettedHash )
         );
         
         // get the difference in DeBruijn
@@ -629,7 +619,7 @@ function findLettedMaxScope( letted: IRLetted ): IRFunc
             if( tmp instanceof IRFunc ) maxScope = tmp;
         };
         if( !maxScope ) throw new Error(
-            `could not find a max scope for letted value with hash ${toHex(letted.hash)}`
+            `could not find a max scope for letted value with hash ${irHashToHex(letted.hash)}`
         );
         return maxScope;
     }
@@ -642,7 +632,7 @@ function findLettedMaxScope( letted: IRLetted ): IRFunc
         if( !tmp.parent )
         {
             throw new Error(
-                `could not find a max scope for letted value with hash ${toHex(letted.hash)}; `+
+                `could not find a max scope for letted value with hash ${irHashToHex(letted.hash)}; `+
                 `the max parent found leaves the term open (reached root)`
             );
         }
@@ -658,7 +648,7 @@ function findLettedMaxScope( letted: IRLetted ): IRFunc
     if( !maxScope )
     {
         throw new Error(
-            `could not find a max scope for letted value with hash ${toHex(letted.hash)}; `+
+            `could not find a max scope for letted value with hash ${irHashToHex(letted.hash)}; `+
             `no IRFunc found`
         );
     }

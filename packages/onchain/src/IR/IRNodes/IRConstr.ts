@@ -1,4 +1,3 @@
-import { blake2b_128 } from "@harmoniclabs/crypto";
 import { Cloneable } from "../../utils/Cloneable";
 import { ToJson } from "../../utils/ToJson";
 import { forceBigUInt } from "../../utils/ints";
@@ -12,6 +11,7 @@ import { mapArrayLike } from "./utils/mapArrayLike";
 import { isIRTerm } from "../utils";
 import { makeArrayLikeProxy } from "./utils/makeArrayLikeProxy";
 import { MutArrayLike } from "../utils/MutArrayLike";
+import { hashIrData, IRHash, isIRHash } from "../IRHash";
 
 export interface IRConstrMeta extends BaseIRMetadata {}
 
@@ -21,7 +21,7 @@ export class IRConstr
     readonly index!: bigint;
     fields!: MutArrayLike<IRTerm>;
 
-    readonly hash!: Uint8Array;
+    readonly hash!: IRHash;
     markHashAsInvalid!: () => void;
     isHashPresent: () => boolean;
 
@@ -35,7 +35,7 @@ export class IRConstr
         index: number | bigint,
         fields: ArrayLike<IRTerm>,
         meta: IRConstrMeta = {},
-        _unsafeHash?: Uint8Array
+        _unsafeHash?: IRHash
     )
     {
         const self = this;
@@ -84,15 +84,15 @@ export class IRConstr
             }
         );
 
-        let hash: Uint8Array | undefined = _unsafeHash;
+        let hash: IRHash | undefined = isIRHash( _unsafeHash ) ? _unsafeHash : undefined;
         Object.defineProperty(
             this, "hash",
             {
                 get: () => {
-                    if(!( hash instanceof Uint8Array ))
+                    if(!isIRHash( hash ))
                     {
                         // basically a merkle tree
-                        hash = blake2b_128(
+                        hash = hashIrData(
                             concatUint8Arr(
                                 IRConstr.tag,
                                 positiveIntAsBytes( this.index ),
@@ -100,8 +100,7 @@ export class IRConstr
                             )
                         );
                     }
-                    // return a copy
-                    return hash.slice()
+                    return hash;
                 },
                 set: () => {},
                 enumerable: true,
@@ -110,7 +109,7 @@ export class IRConstr
         );
         Object.defineProperty(
             this, "isHashPresent", {
-                value: () => hash instanceof Uint8Array,
+                value: () => isIRHash( hash ),
                 writable: false,
                 enumerable: true,
                 configurable: false

@@ -1,4 +1,3 @@
-import { blake2b_128 } from "@harmoniclabs/crypto";
 import { Cloneable } from "../../utils/Cloneable";
 import { ToJson } from "../../utils/ToJson";
 import { IRTerm } from "../IRTerm";
@@ -10,6 +9,7 @@ import { mapArrayLike } from "./utils/mapArrayLike";
 import { isIRTerm } from "../utils";
 import { makeArrayLikeProxy } from "./utils/makeArrayLikeProxy";
 import { MutArrayLike } from "../utils/MutArrayLike";
+import { hashIrData, IRHash, isIRHash } from "../IRHash";
 
 export interface IRCaseMeta extends BaseIRMetadata {}
 
@@ -19,7 +19,7 @@ export class IRCase
     constrTerm!: IRTerm;
     continuations!: MutArrayLike<IRTerm>;
 
-    readonly hash!: Uint8Array;
+    readonly hash!: IRHash;
     markHashAsInvalid!: () => void;
     isHashPresent: () => boolean;
 
@@ -33,7 +33,7 @@ export class IRCase
         constrTerm: IRTerm,
         continuations: ArrayLike<IRTerm>,
         meta: IRCaseMeta = {},
-        _unsafeHash?: Uint8Array
+        _unsafeHash?: IRHash
     )
     {
         const self = this;
@@ -55,10 +55,10 @@ export class IRCase
                 set: ( next: any ) => {
                     if( isIRTerm( next ) )
                     {
-                        const cloned = next.clone();
-                        cloned.parent = self;
+                        next.parent = self;
                         self.markHashAsInvalid();
-                        constrTerm = cloned;
+                        constrTerm.parent = undefined;
+                        constrTerm = next;
                     }
                     return next;
                 },
@@ -80,8 +80,8 @@ export class IRCase
                         return newElem;
                     },
                     // modifyElem
-                    newElem => {
-                        newElem = newElem.clone();
+                    (newElem, oldElem) => {
+                        oldElem.parent = undefined;
                         newElem.parent = self;
                         self.markHashAsInvalid()
                         return newElem;
@@ -93,15 +93,15 @@ export class IRCase
             }
         );
 
-        let hash: Uint8Array | undefined = undefined;
+        let hash: IRHash | undefined = isIRHash( _unsafeHash ) ? _unsafeHash : undefined;
         Object.defineProperty(
             this, "hash",
             {
                 get: () => {
-                    if(!( hash instanceof Uint8Array ))
+                    if(!isIRHash( hash ))
                     {
                         // basically a merkle tree
-                        hash = blake2b_128(
+                        hash = hashIrData(
                             concatUint8Arr(
                                 IRCase.tag,
                                 self.constrTerm.hash,
@@ -109,8 +109,7 @@ export class IRCase
                             )
                         );
                     }
-                    // return a copy
-                    return hash.slice()
+                    return hash;
                 },
                 set: () => {},
                 enumerable: true,
@@ -119,7 +118,7 @@ export class IRCase
         );
         Object.defineProperty(
             this, "isHashPresent", {
-                value: () => hash instanceof Uint8Array,
+                value: () => isIRHash( hash ),
                 writable: false,
                 enumerable: true,
                 configurable: false

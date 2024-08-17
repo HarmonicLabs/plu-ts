@@ -1,6 +1,5 @@
 import { ByteString } from "@harmoniclabs/bytestring";
 import { Cloneable } from "@harmoniclabs/cbor/dist/utils/Cloneable";
-import { blake2b_128 } from "@harmoniclabs/crypto";
 import { Pair } from "@harmoniclabs/pair";
 import { Data, isData, dataToCbor } from "@harmoniclabs/plutus-data";
 import { fromUtf8, toHex } from "@harmoniclabs/uint8array-utils";
@@ -24,6 +23,7 @@ import { termTypeToString } from "../../pluts/type_system/utils";
 import { IRParentTerm, isIRParentTerm } from "../utils/isIRParentTerm";
 import { _modifyChildFromTo } from "../toUPLC/_internal/_modifyChildFromTo";
 import { BaseIRMetadata } from "./BaseIRMetadata";
+import { hashIrData, IRHash, isIRHash } from "../IRHash";
 
 export type IRConstValue
     = CanBeUInteger
@@ -40,7 +40,7 @@ export interface IRConstMetadata extends BaseIRMetadata {}
 export class IRConst
     implements Cloneable<IRConst>, IHash, IIRParent, ToJson
 {
-    readonly hash: Uint8Array;
+    readonly hash: IRHash;
     markHashAsInvalid: () => void;
     isHashPresent: () => boolean;
 
@@ -51,7 +51,7 @@ export class IRConst
 
     parent: IRParentTerm | undefined;
 
-    constructor( t: TermType, v: IRConstValue, _unsafeHash?: Uint8Array )
+    constructor( t: TermType, v: IRConstValue, _unsafeHash?: IRHash )
     {
         if(
             !isWellFormedType( t ) ||
@@ -127,13 +127,13 @@ export class IRConst
             }
         );
 
-        let hash: Uint8Array | undefined = _unsafeHash;
+        let hash: IRHash | undefined = isIRHash( _unsafeHash ) ? _unsafeHash : undefined;
         Object.defineProperty(
             this, "hash", {
                 get: () => {
-                    if(!( hash instanceof Uint8Array ))
+                    if(!isIRHash( hash ))
                     {
-                        hash = blake2b_128(
+                        hash = hashIrData(
                             concatUint8Arr(
                                 IRConst.tag,
                                 new Uint8Array( termTyToConstTy( this.type ) ),
@@ -141,7 +141,7 @@ export class IRConst
                             )
                         )
                     }
-                    return hash.slice();
+                    return hash;
                 },
                 set: () => {},
                 enumerable: true,
@@ -150,7 +150,7 @@ export class IRConst
         );
         Object.defineProperty(
             this, "isHashPresent", {
-                value: () => hash instanceof Uint8Array,
+                value: () => isIRHash( hash ),
                 writable: false,
                 enumerable: true,
                 configurable: false

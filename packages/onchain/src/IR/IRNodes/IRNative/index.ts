@@ -1,5 +1,4 @@
 import { Cloneable } from "@harmoniclabs/cbor/dist/utils/Cloneable";
-import { blake2b_128 } from "@harmoniclabs/crypto";
 import { IHash } from "../../interfaces/IHash";
 import { IIRParent } from "../../interfaces/IIRParent";
 import { concatUint8Arr } from "../../utils/concatUint8Arr";
@@ -10,13 +9,14 @@ import { IRParentTerm, isIRParentTerm } from "../../utils/isIRParentTerm";
 import { _modifyChildFromTo } from "../../toUPLC/_internal/_modifyChildFromTo";
 import { BaseIRMetadata } from "../BaseIRMetadata";
 import { ToJson } from "../../../utils/ToJson";
+import { hashIrData, IRHash } from "../../IRHash";
 
 /**
  * we might not need all the hashes
  * 
- * but one we get one for a specific tag is not worth it re calclualte it
+ * but one we get one for a specific tag is not worth it re calculate it
  */
-const nativeHashesCache: { [n: number/*IRNativeTag*/]: Uint8Array } = {} as any;
+const nativeHashesCache: { [n: number/*IRNativeTag*/]: IRHash } = {} as any;
 
 export interface IRNativeMetadata extends BaseIRMetadata {}
 
@@ -27,7 +27,7 @@ export class IRNative
     implements Cloneable<IRNative>, IHash, IIRParent, ToJson
 {
     readonly tag!: IRNativeTag;
-    readonly hash!: Uint8Array;
+    readonly hash!: IRHash;
     markHashAsInvalid!: () => void;
     isHashPresent: () => boolean;
 
@@ -97,18 +97,12 @@ export class IRNative
                 get: () => {
                     if(nativeHashesCache[this.tag] === undefined)
                     {
-                        nativeHashesCache[this.tag] = blake2b_128( 
+                        nativeHashesCache[this.tag] = hashIrData( 
                             concatUint8Arr( 
                                 IRNative.tag, 
                                 positiveBigIntAsBytes(
-                                    BigInt(
-                                        "0b" + 
-                                        UPLCFlatUtils.zigzagBigint(
-                                            BigInt( this.tag )
-                                        )
-                                        // builtin tag takes 7 bits
-                                        // zigzagged it becomes up to 8
-                                        .toString(2).padStart( 8, '0' )
+                                    UPLCFlatUtils.zigzagBigint(
+                                        BigInt( this.tag )
                                     )
                                 )
                             )

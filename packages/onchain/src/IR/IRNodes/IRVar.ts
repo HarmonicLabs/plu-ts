@@ -1,23 +1,21 @@
 import { Cloneable } from "@harmoniclabs/cbor/dist/utils/Cloneable";
-import { blake2b_128 } from "@harmoniclabs/crypto";
 import { BasePlutsError } from "../../utils/BasePlutsError";
 import { ToJson } from "../../utils/ToJson";
-import { IRTerm } from "../IRTerm";
 import { IHash } from "../interfaces/IHash";
 import { IIRParent } from "../interfaces/IIRParent";
 import { concatUint8Arr } from "../utils/concatUint8Arr";
-import { isIRTerm } from "../utils/isIRTerm";
 import { positiveIntAsBytes } from "../utils/positiveIntAsBytes";
 import { IRParentTerm, isIRParentTerm } from "../utils/isIRParentTerm";
 import { _modifyChildFromTo } from "../toUPLC/_internal/_modifyChildFromTo";
 import { BaseIRMetadata } from "./BaseIRMetadata";
+import { hashIrData, IRHash, isIRHash } from "../IRHash";
 
 export interface IRVarMetadata extends BaseIRMetadata {}
 
 export class IRVar
     implements Cloneable<IRVar>, IHash, IIRParent, ToJson
 {
-    readonly hash: Uint8Array;
+    readonly hash: IRHash;
     markHashAsInvalid!: () => void;
     isHashPresent: () => boolean;
     
@@ -48,15 +46,20 @@ export class IRVar
             }
         );
         
-        let hash: Uint8Array | undefined = undefined;
+        let hash: IRHash | undefined = undefined;
         Object.defineProperty(
             this, "hash", {
                 get: () => {
-                    if(!( hash instanceof Uint8Array ))
+                    if(!isIRHash( hash ))
                     {
-                        hash = getVarHashAtDbn( this.dbn );
+                        hash = hashIrData(
+                            concatUint8Arr(
+                                IRVar.tag,
+                                positiveIntAsBytes( this.dbn )
+                            )
+                        );
                     }
-                    return hash.slice();
+                    return hash;
                 },
                 set: () => {},
                 enumerable: true,
@@ -65,7 +68,7 @@ export class IRVar
         );
         Object.defineProperty(
             this, "isHashPresent", {
-                value: () => hash instanceof Uint8Array,
+                value: () => isIRHash( hash),
                 writable: false,
                 enumerable: true,
                 configurable: false
@@ -163,23 +166,4 @@ export class IRVar
             dbn: this.dbn
         }
     }
-}
-
-const bdnVarHashCache: Uint8Array[] = []; 
-
-function getVarHashAtDbn( dbn: number )
-{
-    while( (bdnVarHashCache.length - 1) < dbn )
-    {
-        bdnVarHashCache.push(
-            blake2b_128(
-                concatUint8Arr(
-                    IRVar.tag,
-                    positiveIntAsBytes( bdnVarHashCache.length )
-                )
-            )
-        );
-    }
-
-    return bdnVarHashCache[ dbn ]
 }

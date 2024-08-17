@@ -5,10 +5,10 @@ import { concatUint8Arr } from "../utils/concatUint8Arr";
 import { isIRTerm } from "../utils/isIRTerm";
 import { ToJson } from "../../utils/ToJson";
 import { Cloneable } from "@harmoniclabs/cbor/dist/utils/Cloneable";
-import { blake2b_128 } from "@harmoniclabs/crypto";
 import { IRParentTerm, isIRParentTerm } from "../utils/isIRParentTerm";
 import { _modifyChildFromTo } from "../toUPLC/_internal/_modifyChildFromTo";
 import { BaseIRMetadata } from "./BaseIRMetadata";
+import { hashIrData, IRHash, isIRHash } from "../IRHash";
 
 export interface IRAppMeta extends BaseIRMetadata {
     __src__?: string | undefined
@@ -20,7 +20,7 @@ export class IRApp
     fn!: IRTerm;
     arg!: IRTerm;
 
-    readonly hash!: Uint8Array;
+    readonly hash!: IRHash;
     markHashAsInvalid!: () => void;
     isHashPresent: () => boolean;
 
@@ -32,7 +32,7 @@ export class IRApp
         _fn_: IRTerm,
         _arg_: IRTerm,
         meta: IRAppMeta = {},
-        _unsafeHash?: Uint8Array
+        _unsafeHash?: IRHash
     )
     {
         if( !isIRTerm( _fn_ ) )
@@ -63,18 +63,17 @@ export class IRApp
         fn.parent = this;
         arg.parent = this;
 
-        let hash: Uint8Array | undefined = _unsafeHash;
+        let hash: IRHash | undefined = isIRHash( _unsafeHash ) ? _unsafeHash : undefined;
         Object.defineProperty(
             this, "hash",
             {
                 get: () => {
-                    if(!( hash instanceof Uint8Array ))
+                    if(!isIRHash( hash ))
                     {
                         // basically a merkle tree
-                        hash = blake2b_128( concatUint8Arr( IRApp.tag, fn.hash, arg.hash ) );
+                        hash = hashIrData( concatUint8Arr( IRApp.tag, fn.hash, arg.hash ) );
                     }
-                    // return a copy
-                    return hash.slice()
+                    return hash;
                 },
                 set: () => {},
                 enumerable: true,
@@ -84,7 +83,7 @@ export class IRApp
 
         Object.defineProperty(
             this, "isHashPresent", {
-                value: () => hash instanceof Uint8Array,
+                value: () => isIRHash( hash ),
                 writable: false,
                 enumerable: true,
                 configurable: false

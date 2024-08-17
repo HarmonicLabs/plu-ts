@@ -18,6 +18,7 @@ import { showUPLC } from "@harmoniclabs/uplc";
 import { DataI } from "@harmoniclabs/plutus-data";
 import { Machine } from "@harmoniclabs/plutus-machine";
 import { pInt } from "../../../../../pluts/lib/std/int/pInt";
+import { irHashToHex } from "../../../../IRHash";
 
 describe("handleLetted", () => {
 
@@ -449,7 +450,9 @@ describe("handleLetted", () => {
 
         expect(
             toHex(
-                theLetted.hash
+                new Uint8Array(
+                    theLetted.hash.buffer
+                )
             )
         ).toEqual( "b10af49d9972df4e111157e429de5d67" );
 
@@ -467,7 +470,9 @@ describe("handleLetted", () => {
 
         expect(
             toHex(
-                sndListHoisted.hash
+                new Uint8Array(
+                    sndListHoisted .hash.buffer
+                )
             )
         ).toEqual("be17b4da0ec7040993ba0f252c778052");
 
@@ -484,7 +489,9 @@ describe("handleLetted", () => {
 
         expect(
             toHex(
-                theOtherLetted.hash
+                new Uint8Array(
+                    theOtherLetted.hash.buffer
+                )
             )
         ).toEqual("ae90f0c6c803c113073c04addcbd7020");
 

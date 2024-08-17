@@ -1,23 +1,21 @@
 import { Cloneable } from "@harmoniclabs/cbor/dist/utils/Cloneable";
-import { blake2b_128 } from "@harmoniclabs/crypto";
 import { ToJson } from "../../utils/ToJson";
-import { IRTerm } from "../IRTerm";
 import { IHash } from "../interfaces/IHash";
 import { IIRParent } from "../interfaces/IIRParent";
-import { isIRTerm } from "../utils/isIRTerm";
 import { IRParentTerm, isIRParentTerm } from "../utils/isIRParentTerm";
 import { _modifyChildFromTo } from "../toUPLC/_internal/_modifyChildFromTo";
 import { BaseIRMetadata } from "./BaseIRMetadata";
+import { hashIrData, IRHash } from "../IRHash";
 
 const irErrorBitTag = new Uint8Array([ 0b0000_0111 ]);
-const errorHash = blake2b_128( irErrorBitTag.slice() )
+const errorHash = hashIrData( irErrorBitTag.slice() )
 
 export interface IRErrorMetadata extends BaseIRMetadata {}
 
 export class IRError
     implements Cloneable<IRError>, IHash, IIRParent, ToJson
 {
-    readonly hash!: Uint8Array;
+    readonly hash!: IRHash;
     markHashAsInvalid!: () => void;
     isHashPresent: () => boolean;
 

@@ -1,5 +1,4 @@
 import { Cloneable } from "@harmoniclabs/cbor/dist/utils/Cloneable";
-import { blake2b_128 } from "@harmoniclabs/crypto";
 import { BasePlutsError } from "../../utils/BasePlutsError";
 import { ToJson } from "../../utils/ToJson";
 import { IRTerm } from "../IRTerm";
@@ -10,6 +9,7 @@ import { isIRTerm } from "../utils/isIRTerm";
 import { IRParentTerm, isIRParentTerm } from "../utils/isIRParentTerm";
 import { _modifyChildFromTo } from "../toUPLC/_internal/_modifyChildFromTo";
 import { BaseIRMetadata } from "./BaseIRMetadata";
+import { hashIrData, IRHash, isIRHash } from "../IRHash";
 
 export interface IRForcedMetadata extends BaseIRMetadata {}
 
@@ -17,7 +17,7 @@ export class IRForced
     implements Cloneable<IRForced>, IHash, IIRParent, ToJson
 {
     forced!: IRTerm
-    readonly hash!: Uint8Array
+    readonly hash!: IRHash
     markHashAsInvalid!: () => void;
     isHashPresent: () => boolean;
 
@@ -25,7 +25,7 @@ export class IRForced
 
     parent: IRParentTerm | undefined;
 
-    constructor( forced: IRTerm, _unsafeHash?: Uint8Array )
+    constructor( forced: IRTerm, _unsafeHash?: IRHash )
     {
         Object.defineProperty(
             this, "meta", {
@@ -36,27 +36,27 @@ export class IRForced
             }
         );
 
-        let hash: Uint8Array | undefined = _unsafeHash;
+        let hash: IRHash | undefined = isIRHash( _unsafeHash ) ? _unsafeHash : undefined;
         Object.defineProperty(
             this, "hash",
             {
                 get: () => {
-                    if(!(hash instanceof Uint8Array))
+                    if(!isIRHash( hash ))
                     {
-                        hash = blake2b_128(
+                        hash = hashIrData(
                             concatUint8Arr(
                                 IRForced.tag,
                                 this.forced.hash
                             )
                         );
                     }
-                    return hash.slice();
+                    return hash;
                 }
             }
         );
         Object.defineProperty(
             this, "isHashPresent", {
-                value: () => hash instanceof Uint8Array,
+                value: () => isIRHash( hash ),
                 writable: false,
                 enumerable: true,
                 configurable: false

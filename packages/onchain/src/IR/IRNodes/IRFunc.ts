@@ -1,5 +1,4 @@
 import { Cloneable } from "@harmoniclabs/cbor/dist/utils/Cloneable";
-import { blake2b_128 } from "@harmoniclabs/crypto";
 import { BasePlutsError } from "../../utils/BasePlutsError";
 import { ToJson } from "../../utils/ToJson";
 import { IRTerm } from "../IRTerm";
@@ -12,6 +11,7 @@ import { defineReadOnlyProperty } from "@harmoniclabs/obj-utils";
 import { IRParentTerm, isIRParentTerm } from "../utils/isIRParentTerm";
 import { _modifyChildFromTo } from "../toUPLC/_internal/_modifyChildFromTo";
 import { BaseIRMetadata } from "./BaseIRMetadata";
+import { hashIrData, IRHash, isIRHash } from "../IRHash";
 
 export interface IRFuncMetadata extends BaseIRMetadata {}
 
@@ -20,7 +20,7 @@ export class IRFunc
 {
     readonly arity!: number;
 
-    readonly hash!: Uint8Array;
+    readonly hash!: IRHash;
     markHashAsInvalid!: () => void;
     isHashPresent: () => boolean;
 
@@ -36,7 +36,7 @@ export class IRFunc
         arity: number,
         body: IRTerm,
         func_name?: string | undefined,
-        _unsafeHash?: Uint8Array
+        _unsafeHash?: IRHash
     )
     {
         if( !Number.isSafeInteger( arity ) && arity >= 1 )
@@ -69,13 +69,13 @@ export class IRFunc
         let _body: IRTerm = body;
         _body.parent = this;
 
-        let hash: Uint8Array | undefined = _unsafeHash;
+        let hash: IRHash | undefined = isIRHash( _unsafeHash ) ? _unsafeHash : undefined;
         Object.defineProperty(
             this, "hash", {
                 get: () => {
-                    if(!( hash instanceof Uint8Array ))
+                    if(!isIRHash( hash ))
                     {
-                        hash = blake2b_128(
+                        hash = hashIrData(
                             concatUint8Arr(
                                 IRFunc.tag,
                                 positiveIntAsBytes( this.arity ),
@@ -83,7 +83,7 @@ export class IRFunc
                             )
                         )
                     }
-                    return hash.slice();
+                    return hash;
                 },
                 set: () => {},
                 enumerable: true,

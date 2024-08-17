@@ -3,9 +3,7 @@ import { IRVar } from "./IRVar";
 import { positiveIntAsBytes } from "../utils/positiveIntAsBytes";
 import { IRMetadata } from "../interfaces/IRMetadata";
 import { Cloneable } from "@harmoniclabs/cbor/dist/utils/Cloneable";
-import { blake2b_128 } from "@harmoniclabs/crypto";
 import { freezeAll, defineReadOnlyProperty } from "@harmoniclabs/obj-utils";
-import { toHex, uint8ArrayEq } from "@harmoniclabs/uint8array-utils";
 import { BasePlutsError } from "../../utils/BasePlutsError";
 import { ToJson } from "../../utils/ToJson";
 import { IRTerm } from "../IRTerm";
@@ -24,6 +22,7 @@ import { BaseIRMetadata } from "./BaseIRMetadata";
 import { _getMinUnboundDbn } from "../toUPLC/subRoutines/handleLetted/groupByScope";
 import { IRConstr } from "./IRConstr";
 import { IRCase } from "./IRCase";
+import { equalIrHash, hashIrData, IRHash, irHashToHex, isIRHash } from "../IRHash";
 
 
 export type LettedSetEntry = {
@@ -34,7 +33,7 @@ export type LettedSetEntry = {
 export function jsonLettedSetEntry( entry: LettedSetEntry )
 {
     return {
-        letted: toHex(entry.letted.hash),
+        letted: irHashToHex(entry.letted.hash),
         nReferences: entry.nReferences
     }
 
@@ -43,7 +42,7 @@ export function jsonLettedSetEntry( entry: LettedSetEntry )
 export function expandedJsonLettedSetEntry( entry: LettedSetEntry )
 {
     return {
-        letted: toHex( entry.letted.hash ),
+        letted: irHashToHex( entry.letted.hash ),
         letted_value: prettyIR( entry.letted.value ).text.split("\n"),
         nReferences: entry.nReferences
     }
@@ -72,7 +71,7 @@ let n_hash_access = 0;
 export class IRLetted
     implements Cloneable<IRLetted>, IHash, IIRParent, ToJson, IRLettedMetadata
 {
-    readonly hash!: Uint8Array;
+    readonly hash!: IRHash;
     markHashAsInvalid!: () => void;
     isHashPresent: () => boolean;
 
@@ -100,7 +99,7 @@ export class IRLetted
         DeBruijn: number | bigint,
         toLet: IRTerm,
         metadata: Partial<IRLettedMeta> = {},
-        _unsafeHash: Uint8Array | undefined = undefined
+        _unsafeHash: IRHash | undefined = undefined
     )
     {
         DeBruijn = typeof DeBruijn === "bigint" ? Number( DeBruijn ) : DeBruijn; 
@@ -149,11 +148,11 @@ export class IRLetted
         _value.parent = this;
 
         // we need the has before setting dependecies
-        let hash: Uint8Array | undefined = _unsafeHash instanceof Uint8Array ? new Uint8Array( _unsafeHash ) : undefined;
+        let hash: IRHash | undefined = isIRHash( _unsafeHash ) ? _unsafeHash : undefined;
         Object.defineProperty(
             this, "hash", {
                 get: () => {
-                    if(!( hash instanceof Uint8Array ))
+                    if(!isIRHash( hash ))
                     {
                         const normalized = getNormalizedLettedArgs( this.dbn, _value );
                         if( normalized === undefined )
@@ -162,7 +161,7 @@ export class IRLetted
                             // aka. there is nothing to normalize
                             // just use the value regardless of the
                             // `IRLetted` dbn instantiation
-                            hash = blake2b_128(
+                            hash = hashIrData(
                                 concatUint8Arr(
                                     IRLetted.tag,
                                     _value.hash
@@ -171,7 +170,7 @@ export class IRLetted
                         }
                         else
                         {
-                            hash = blake2b_128(
+                            hash = hashIrData(
                                 concatUint8Arr(
                                     IRLetted.tag,
                                     positiveIntAsBytes( normalized[0] ),
@@ -194,7 +193,7 @@ export class IRLetted
                             // }
                         }
                     }
-                    return hash.slice();
+                    return hash;
                 },
                 set: () => {},
                 enumerable: true,
@@ -203,7 +202,7 @@ export class IRLetted
         );
         Object.defineProperty(
             this, "isHashPresent", {
-                value: () => hash instanceof Uint8Array,
+                value: () => isIRHash( hash ),
                 writable: false,
                 enumerable: true,
                 configurable: false
@@ -355,7 +354,7 @@ export class IRLetted
     {
         return {
             type: "IRLetted",
-            hash: toHex( this.hash ),
+            hash: irHashToHex( this.hash ),
             value: this.value.toJson()
         }
     }
@@ -371,7 +370,7 @@ export class IRLetted
 export function getSortedLettedSet( lettedTerms: LettedSetEntry[] ): LettedSetEntry[]
 {
     const set: LettedSetEntry[] = [];
-    const hashesSet: Uint8Array[] = [];
+    const hashesSet: IRHash[] = [];
      
     /**
      * **O((n * m) * d)**
@@ -389,7 +388,7 @@ export function getSortedLettedSet( lettedTerms: LettedSetEntry[] ): LettedSetEn
             const thisLettedEntry = _terms[i]; 
             const thisHash = thisLettedEntry.letted.hash;
 
-            const idxInSet = hashesSet.findIndex( hash => uint8ArrayEq( hash, thisHash ) )
+            const idxInSet = hashesSet.findIndex( hash => equalIrHash( hash, thisHash ) )
             // if( !hashesSet.includes( hash ) )
             // "includes" uses standard equality (===)
             if( idxInSet < 0 ) // not present
@@ -566,8 +565,8 @@ export function getNormalizedLettedArgs( lettedDbn: number, value: IRTerm ): [ n
                         if( // parent is actually pointing to child
                             currentChild === parent.arg ||
                             currentChild === parent.fn ||
-                            uint8ArrayEq( parent.arg.hash, currentChild.hash ) ||
-                            uint8ArrayEq( parent.fn.hash, currentChild.hash )
+                            equalIrHash( parent.arg.hash, currentChild.hash ) ||
+                            equalIrHash( parent.fn.hash, currentChild.hash )
                         )
                         {
                             // inline

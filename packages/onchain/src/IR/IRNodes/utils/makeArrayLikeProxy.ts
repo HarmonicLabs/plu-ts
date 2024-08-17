@@ -3,7 +3,7 @@ export function makeArrayLikeProxy<T>(
     arr: ArrayLike<T>,
     isValidElem: ( elem: T ) => boolean,
     initModifyElem: ( elem: T ) => T,
-    modifyElem: ( elem: T ) => T
+    modifyElem: ( elem: T, oldElem: T ) => T
 ): ArrayLike<T>
 {
     const like = {} as ArrayLike<T>;
@@ -25,7 +25,7 @@ export function makeArrayLikeProxy<T>(
                 get: () => elem,
                 set: ( newElem: T ) => {
                     if( isValidElem( newElem ) )
-                        elem = modifyElem( newElem );
+                        elem = modifyElem( newElem, arr[i] );
                     
                     return newElem;
                 },

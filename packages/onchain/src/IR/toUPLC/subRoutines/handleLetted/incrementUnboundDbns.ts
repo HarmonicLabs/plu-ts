@@ -1,4 +1,3 @@
-import { uint8ArrayEq } from "@harmoniclabs/uint8array-utils";
 import { IRVar } from "../../../IRNodes/IRVar";
 import { IRTerm } from "../../../IRTerm";
 import { IRLetted } from "../../../IRNodes/IRLetted";

@@ -2,9 +2,7 @@ import { IRDelayed } from "./IRDelayed";
 import { IRMetadata } from "../interfaces/IRMetadata";
 import { prettyIRJsonStr } from "../utils/showIR";
 import { Cloneable } from "@harmoniclabs/cbor/dist/utils/Cloneable";
-import { blake2b_128 } from "@harmoniclabs/crypto";
 import { freezeAll, defineProperty } from "@harmoniclabs/obj-utils";
-import { toHex, uint8ArrayEq } from "@harmoniclabs/uint8array-utils";
 import { BasePlutsError } from "../../utils/BasePlutsError";
 import { ToJson } from "../../utils/ToJson";
 import { IRTerm } from "../IRTerm";
@@ -21,6 +19,7 @@ import { IRParentTerm, isIRParentTerm } from "../utils/isIRParentTerm";
 import { _modifyChildFromTo } from "../toUPLC/_internal/_modifyChildFromTo";
 import { IRConstr } from "./IRConstr";
 import { IRCase } from "./IRCase";
+import { equalIrHash, hashIrData, IRHash, irHashToHex, isIRHash } from "../IRHash";
 
 
 export type HoistedSetEntry = {
@@ -49,7 +48,7 @@ const defaultHoistedMeta: IRHoistedMeta = freezeAll({
 export class IRHoisted
     implements Cloneable<IRHoisted>, IHash, IIRParent, ToJson, IRHoistedMetadata
 {
-    readonly hash!: Uint8Array;
+    readonly hash!: IRHash;
     markHashAsInvalid!: () => void;
     isHashPresent: () => boolean;
 
@@ -65,7 +64,7 @@ export class IRHoisted
     constructor(
         hoisted: IRTerm, 
         metadata: Partial<IRHoistedMeta> = {},
-        _unsafeHash?: Uint8Array
+        _unsafeHash?: IRHash
     )
     {
         // unwrap
@@ -96,20 +95,20 @@ export class IRHoisted
             return _deps;
         }
 
-        let hash: Uint8Array | undefined = _unsafeHash;
+        let hash: IRHash | undefined = isIRHash( _unsafeHash ) ? _unsafeHash : undefined;
         Object.defineProperty(
             this, "hash", {
                 get: () => {
-                    if(!( hash instanceof Uint8Array ))
+                    if(!isIRHash( hash ))
                     {
-                        hash = blake2b_128(
+                        hash = hashIrData(
                             concatUint8Arr(
                                 IRHoisted.tag,
                                 _hoisted.hash
                             )
                         )
                     }
-                    return hash.slice();
+                    return hash;
                 },
                 set: () => {},
                 enumerable: true,
@@ -118,7 +117,7 @@ export class IRHoisted
         );
         Object.defineProperty(
             this, "isHashPresent", {
-                value: () => hash instanceof Uint8Array,
+                value: () => isIRHash( hash ),
                 writable: false,
                 enumerable: true,
                 configurable: false
@@ -248,7 +247,7 @@ export class IRHoisted
     {
         return {
             type: "IRHoisted",
-            hash: toHex( this.hash ),
+            hash: irHashToHex( this.hash ),
             hoisted: this.hoisted.toJson()
         }
     }
@@ -264,7 +263,7 @@ export class IRHoisted
 export function getSortedHoistedSet( hoistedTerms: HoistedSetEntry[] ): HoistedSetEntry[]
 {
     const set: HoistedSetEntry[] = [];
-    const hashesSet: Uint8Array[] = [];
+    const hashesSet: IRHash[] = [];
      
     /**
      * **O((n * m) * d)**
@@ -282,7 +281,7 @@ export function getSortedHoistedSet( hoistedTerms: HoistedSetEntry[] ): HoistedS
             const thisHoistedEntry = _terms[i]; 
             const thisHash = thisHoistedEntry.hoisted.hash;
 
-            const idxInSet = hashesSet.findIndex( hash => uint8ArrayEq( hash, thisHash ) )
+            const idxInSet = hashesSet.findIndex( hash => equalIrHash( hash, thisHash ) )
 
             // if( !hashesSet.includes( compiled ) )
             // "includes" uses standard equality (===)

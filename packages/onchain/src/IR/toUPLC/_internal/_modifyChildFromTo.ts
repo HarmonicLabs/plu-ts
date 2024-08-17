@@ -1,4 +1,3 @@
-import { toHex, uint8ArrayEq } from "@harmoniclabs/uint8array-utils";
 import { IRApp } from "../../IRNodes/IRApp";
 import { IRDelayed } from "../../IRNodes/IRDelayed";
 import { IRForced } from "../../IRNodes/IRForced";
@@ -10,6 +9,7 @@ import { IRParentTerm } from "../../utils/isIRParentTerm";
 import { isIRTerm, prettyIRJsonStr } from "../../utils";
 import { IRConstr } from "../../IRNodes/IRConstr";
 import { IRCase } from "../../IRNodes/IRCase";
+import { equalIrHash, IRHash, irHashToHex, isIRHash } from "../../IRHash";
 
 /**
  * 
@@ -17,7 +17,11 @@ import { IRCase } from "../../IRNodes/IRCase";
  * @param currentChild mainly passed to distinguish in case of `IRApp`
  * @param newChild new node's child
  */
-export function _modifyChildFromTo( parent: IRParentTerm | undefined, currentChild: IRTerm | Uint8Array, newChild: IRTerm ): void
+export function _modifyChildFromTo(
+    parent: IRParentTerm | undefined,
+    currentChild: IRTerm | IRHash,
+    newChild: IRTerm
+): void
 {
     if( parent === undefined )
     {
@@ -45,14 +49,14 @@ export function _modifyChildFromTo( parent: IRParentTerm | undefined, currentChi
     {
         // DO NO USE **ONLY** SHALLOW EQUALITY
         // child might be cloned
-        const currChildHash = currentChild instanceof Uint8Array ? currentChild : currentChild.hash;
+        const currChildHash = isIRHash( currentChild ) ? currentChild : currentChild.hash;
 
         // check the argument first as it is more likely to have a smaller tree
-        if( currentChild === parent.arg || uint8ArrayEq( parent.arg.hash, currChildHash ) )
+        if( currentChild === parent.arg || equalIrHash( parent.arg.hash, currChildHash ) )
         {
             parent.arg = newChild;
         }
-        else if( currentChild === parent.fn || uint8ArrayEq( parent.fn.hash, currChildHash ) )
+        else if( currentChild === parent.fn || equalIrHash( parent.fn.hash, currChildHash ) )
         {
             parent.fn = newChild;
         }
@@ -65,9 +69,9 @@ export function _modifyChildFromTo( parent: IRParentTerm | undefined, currentChi
             );
             throw new Error(
                 "unknown 'IRApp' child to modify; given child to modify hash: " +
-                toHex( currChildHash ) +
-                "; function child hash: " + toHex( parent.fn.hash ) +
-                "; argument child hash: " + toHex( parent.arg.hash )
+                irHashToHex( currChildHash ) +
+                "; function child hash: " + irHashToHex( parent.fn.hash ) +
+                "; argument child hash: " + irHashToHex( parent.arg.hash )
             );
         }
 
@@ -87,11 +91,11 @@ export function _modifyChildFromTo( parent: IRParentTerm | undefined, currentChi
             }
         }
         if( foundChild ) return;
-        const currChildHash = currentChild instanceof Uint8Array ? currentChild : currentChild.hash;
+        const currChildHash = isIRHash( currentChild ) ? currentChild : currentChild.hash;
         for( let i = 0; i < parent.fields.length; i++ )
         {
             const field = parent.fields[i];
-            if( uint8ArrayEq( field.hash, currChildHash ) )
+            if( equalIrHash( field.hash, currChildHash ) )
             {
                 parent.fields[i] = newChild;
                 break
@@ -118,8 +122,8 @@ export function _modifyChildFromTo( parent: IRParentTerm | undefined, currentChi
             }
         }
         if( foundChild ) return;
-        const currChildHash = currentChild instanceof Uint8Array ? currentChild : currentChild.hash;
-        if( uint8ArrayEq( currChildHash, parent.constrTerm.hash ) )
+        const currChildHash = isIRHash( currentChild ) ? currentChild : currentChild.hash;
+        if( equalIrHash( currChildHash, parent.constrTerm.hash ) )
         {
             parent.constrTerm = newChild;
             return;
@@ -127,7 +131,7 @@ export function _modifyChildFromTo( parent: IRParentTerm | undefined, currentChi
         for( let i = 0; i < parent.continuations.length; i++ )
         {
             const field = parent.continuations[i];
-            if( uint8ArrayEq( field.hash, currChildHash ) )
+            if( equalIrHash( field.hash, currChildHash ) )
             {
                 parent.continuations[i] = newChild;
                 break
