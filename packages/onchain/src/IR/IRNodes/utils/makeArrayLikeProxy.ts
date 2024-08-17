@@ -17,15 +17,17 @@ export function makeArrayLikeProxy<T>(
         }
     );
 
+    const clonedArr = Array.from( arr );
+
     for( let i = 0; i < arr.length; i++ )
     {
-        let elem = initModifyElem( arr[i] );
+        clonedArr[i] = initModifyElem( arr[i] );
         Object.defineProperty(
             like, i, {
-                get: () => elem,
+                get: () => clonedArr[i],
                 set: ( newElem: T ) => {
                     if( isValidElem( newElem ) )
-                        elem = modifyElem( newElem, arr[i] );
+                        clonedArr[i] = modifyElem( newElem, clonedArr[i] );
                     
                     return newElem;
                 },

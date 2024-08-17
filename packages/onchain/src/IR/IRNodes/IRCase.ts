@@ -73,6 +73,7 @@ export class IRCase
                     continuations,
                     isIRTerm,
                     // initModifyElem
+                    // function called once for each element in the array
                     newElem => {
                         // newElem = newElem.clone();
                         newElem.parent = self;
