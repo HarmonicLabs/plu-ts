@@ -26,6 +26,7 @@ const innerZ = new IRFunc( 1, // f
         )
     )
 );
+innerZ.hash;
 
 const hoisted_z_comb = new IRHoisted(
     new IRFunc( 1, // Z
@@ -35,6 +36,7 @@ const hoisted_z_comb = new IRHoisted(
         )
     )
 );
+hoisted_z_comb.hash;
 
 const hoisted_matchList = new IRHoisted(
     new IRFunc( 3,
@@ -60,6 +62,7 @@ const hoisted_matchList = new IRHoisted(
         )
     )
 );
+hoisted_matchList.hash;
 
 const hoisted_lazyIfThenElse = new IRHoisted(
     new IRFunc( 3, // condition, delayed_caseTrue, delayed_caseFalse
@@ -73,6 +76,7 @@ const hoisted_lazyIfThenElse = new IRHoisted(
         )
     )
 );
+hoisted_lazyIfThenElse.hash;
 
 const hoisted_dropList = new IRHoisted(
     new IRApp(
@@ -110,6 +114,7 @@ const hoisted_dropList = new IRHoisted(
         )
     )
 );
+hoisted_dropList.hash;
 
 const hoisted_recursiveList = new IRHoisted(
     new IRApp(
@@ -139,6 +144,7 @@ const hoisted_recursiveList = new IRHoisted(
         )
     )
 );
+hoisted_recursiveList.hash;
 
 const hoisted_lazyOr = new IRHoisted(
     new IRFunc( 2, // a, b
@@ -150,6 +156,7 @@ const hoisted_lazyOr = new IRHoisted(
         )
     )
 );
+hoisted_lazyOr.hash;
 
 const hoisted_lazyAnd = new IRHoisted(
     new IRFunc( 2, // a, b
@@ -161,6 +168,7 @@ const hoisted_lazyAnd = new IRHoisted(
         )
     )
 );
+hoisted_lazyAnd.hash;
 
 const hoisted_foldr = new IRHoisted(
     new IRFunc( 2, // reduceFunc, accmulator
@@ -186,6 +194,7 @@ const hoisted_foldr = new IRHoisted(
         )
     )
 );
+hoisted_foldr.hash;
 
 export function nativeToIR( native: IRNative ): IRTerm
 {

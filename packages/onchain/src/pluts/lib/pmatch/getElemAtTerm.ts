@@ -49,6 +49,7 @@ export function getElemAtTerm( n: number ): TermFn<[ PList<PData> ], PData >
 
     const term = new Term( lam( list(data), data ), _dbn => uplc );
 
+    uplc.hash;
     defineReadOnlyProperty(
         term, "$",
         ( lst: Term<PList<PData>>) => 

@@ -64,6 +64,7 @@ const hoisted_getFields = new IRHoisted(
         "hoisted_getFields"
     )
 );
+hoisted_getFields.hash;
 
 export function addPStructMethods<
     SDef extends StructDefinition, 

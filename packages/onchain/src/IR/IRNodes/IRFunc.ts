@@ -154,15 +154,15 @@ export class IRFunc
                     _parent = newParent;
 
                     // if has old parent
-                    if( oldParent !== undefined && isIRParentTerm( oldParent ) )
-                    {
-                        // change reference to a clone for safety
-                        _modifyChildFromTo(
-                            oldParent,
-                            this,
-                            this.clone()
-                        );
-                    }
+                    // if( oldParent !== undefined && isIRParentTerm( oldParent ) )
+                    // {
+                    //     // change reference to a clone for safety
+                    //     _modifyChildFromTo(
+                    //         oldParent,
+                    //         this,
+                    //         this.clone()
+                    //     );
+                    // }
                 },
                 enumerable: true,
                 configurable: false

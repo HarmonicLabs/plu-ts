@@ -25,6 +25,7 @@ const hoisted_getFields = new IRHoisted(
         )
     )
 );
+hoisted_getFields.hash;
 
 export const getFields = new Term<PLam<PData, PList<PData>>>(
     lam( data, list( data ) ),

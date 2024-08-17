@@ -111,7 +111,7 @@ export function showIR( _ir: IRTerm )
 
             lettedHashes.push( hash.slice() as IRHash );
             
-            getHoistedTerms( l.value.clone() ).forEach( ({ hoisted }) => addHoisted( hoisted ) );
+            getHoistedTerms( l.value ).forEach( ({ hoisted }) => addHoisted( hoisted ) );
 
             Object.defineProperty(
                 letted, irHashToHex( hash ), {
@@ -262,7 +262,7 @@ export function prettyIR( _ir: IRTerm, _indent = 2 ) : PrettiedIR
 
             lettedHashes.push( hash.slice() as IRHash );
             
-            getHoistedTerms( l.value.clone() ).forEach( ({ hoisted }) => addHoisted( hoisted ) );
+            getHoistedTerms( l.value ).forEach( ({ hoisted }) => addHoisted( hoisted ) );
 
             const hashStr = irHashToHex( hash );
             Object.defineProperty(

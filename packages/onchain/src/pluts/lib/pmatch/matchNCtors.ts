@@ -99,6 +99,7 @@ export function matchNCtorsIdxs( _n: number, returnT: TermType ): Term<PType>
 
     type ContinuationT = LamT<[PrimType.List, [PrimType.Data]], TermType>
 
+    body.hash;
     const term = new Term(
         fn([
             data,

@@ -61,7 +61,7 @@ describe("fee", () => {
         });
 
         expect( tx.body.fee ).toBeGreaterThanOrEqual( 174611 );
-        console.log( JSON.stringify( tx.toJson(), undefined, 2) )
+        // console.log( JSON.stringify( tx.toJson(), undefined, 2) )
 
     });
 })
