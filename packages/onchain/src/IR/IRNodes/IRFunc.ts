@@ -11,7 +11,7 @@ import { defineReadOnlyProperty } from "@harmoniclabs/obj-utils";
 import { IRParentTerm, isIRParentTerm } from "../utils/isIRParentTerm";
 import { _modifyChildFromTo } from "../toUPLC/_internal/_modifyChildFromTo";
 import { BaseIRMetadata } from "./BaseIRMetadata";
-import { hashIrData, IRHash, isIRHash } from "../IRHash";
+import { equalIrHash, hashIrData, IRHash, isIRHash } from "../IRHash";
 
 export interface IRFuncMetadata extends BaseIRMetadata {}
 
@@ -122,7 +122,9 @@ export class IRFunc
                         );
                     }
                     
-                    this.markHashAsInvalid();
+                    if(!equalIrHash(_body.hash, newBody.hash)) this.markHashAsInvalid();
+                    // keep the parent reference in the old child, useful for compilation
+                    // _body.parent = undefined;
                     _body = newBody;
                     _body.parent = this;
                 },

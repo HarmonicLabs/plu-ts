@@ -241,8 +241,15 @@ export class IRLetted
                     if( !isIRTerm( newVal ) )
                     throw new BasePlutsError("letted term was not IRTerm");
                 
-                    this.markHashAsInvalid();
+                    if(!equalIrHash(_value.hash, newVal.hash)) this.markHashAsInvalid();
+                    
+                    // remove deps even if the value is the same
+                    // newValue might be a clone of the current value
+                    // and so have different (new) objects
                     _deps = undefined;
+
+                    // keep the parent reference in the old child, useful for compilation
+                    // _value.parent = undefined;
                     _value = newVal;
                     _value.parent = this
                 },

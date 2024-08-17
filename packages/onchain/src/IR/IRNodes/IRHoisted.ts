@@ -147,8 +147,14 @@ export class IRHoisted
                     throw new BasePlutsError(
                         "only closed terms can be hoisted"
                     );
-                    this.markHashAsInvalid();
+                    if(!!equalIrHash( _hoisted.hash, newHoisted.hash )) this.markHashAsInvalid();
+                    
+                    // dependencies need to be updated EVEN if hash is the same
+                    // since the terms might be the same but maybe cloned
                     _deps = undefined;
+
+                    // keep the parent reference in the old child, useful for compilation
+                    // _hoisted.parent = undefined;
                     _hoisted = newHoisted;
                     _hoisted.parent = this
                 }

@@ -8,7 +8,7 @@ import { Cloneable } from "@harmoniclabs/cbor/dist/utils/Cloneable";
 import { IRParentTerm, isIRParentTerm } from "../utils/isIRParentTerm";
 import { _modifyChildFromTo } from "../toUPLC/_internal/_modifyChildFromTo";
 import { BaseIRMetadata } from "./BaseIRMetadata";
-import { hashIrData, IRHash, isIRHash } from "../IRHash";
+import { equalIrHash, hashIrData, IRHash, isIRHash } from "../IRHash";
 
 export interface IRAppMeta extends BaseIRMetadata {
     __src__?: string | undefined
@@ -109,7 +109,10 @@ export class IRApp
                 set: ( newFn: any ) => {
                     if( !isIRTerm( newFn ) ) return;
                     
-                    this.markHashAsInvalid();
+                    if(!equalIrHash( fn.hash, newFn.hash )) this.markHashAsInvalid();
+
+                    // keep the parent reference in the old child, useful for compilation
+                    // fn.parent = undefined;
                     fn = newFn;
                     fn.parent = this;
                 },
@@ -123,7 +126,10 @@ export class IRApp
                 set: ( newArg: any ) => {
                     if( !isIRTerm( newArg ) ) return newArg;
 
-                    this.markHashAsInvalid();
+                    if(!equalIrHash( arg.hash, newArg.hash )) this.markHashAsInvalid();
+
+                    // keep the parent reference in the old child, useful for compilation
+                    // arg.parent = undefined;
                     arg = newArg;
                     arg.parent = this;
                 },

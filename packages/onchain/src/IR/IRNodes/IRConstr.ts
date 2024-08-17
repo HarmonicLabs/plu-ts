@@ -11,7 +11,7 @@ import { mapArrayLike } from "./utils/mapArrayLike";
 import { isIRTerm } from "../utils";
 import { makeArrayLikeProxy } from "./utils/makeArrayLikeProxy";
 import { MutArrayLike } from "../utils/MutArrayLike";
-import { hashIrData, IRHash, isIRHash } from "../IRHash";
+import { equalIrHash, hashIrData, IRHash, isIRHash } from "../IRHash";
 
 export interface IRConstrMeta extends BaseIRMetadata {}
 
@@ -60,7 +60,7 @@ export class IRConstr
 
         Object.defineProperty(
             this, "fields", {
-                value: makeArrayLikeProxy(
+                value: makeArrayLikeProxy<IRTerm>(
                     fields,
                     isIRTerm,
                     // initModifyElem
@@ -71,10 +71,13 @@ export class IRConstr
                         return newElem;
                     },
                     // modifyElem
-                    newElem => {
-                        newElem = newElem.clone();
+                    // called before setting the new value
+                    // the return value is the value that will be set
+                    (newElem, oldElem) => {
+                        if(!equalIrHash(oldElem.hash, newElem.hash)) self.markHashAsInvalid()
+                        // keep the parent reference in the old child, useful for compilation
+                        // oldElem.parent = undefined;
                         newElem.parent = self;
-                        self.markHashAsInvalid()
                         return newElem;
                     }
                 ),

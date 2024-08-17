@@ -9,7 +9,7 @@ import { mapArrayLike } from "./utils/mapArrayLike";
 import { isIRTerm } from "../utils";
 import { makeArrayLikeProxy } from "./utils/makeArrayLikeProxy";
 import { MutArrayLike } from "../utils/MutArrayLike";
-import { hashIrData, IRHash, isIRHash } from "../IRHash";
+import { equalIrHash, hashIrData, IRHash, isIRHash } from "../IRHash";
 
 export interface IRCaseMeta extends BaseIRMetadata {}
 
@@ -55,10 +55,11 @@ export class IRCase
                 set: ( next: any ) => {
                     if( isIRTerm( next ) )
                     {
-                        next.parent = self;
-                        self.markHashAsInvalid();
-                        constrTerm.parent = undefined;
+                        if(!equalIrHash( constrTerm.hash, next.hash )) self.markHashAsInvalid();
+                        // keep the parent reference in the old child, useful for compilation
+                        // constrTerm.parent = undefined;
                         constrTerm = next;
+                        constrTerm.parent = self;
                     }
                     return next;
                 },
@@ -69,22 +70,22 @@ export class IRCase
 
         Object.defineProperty(
             this, "continuations", {
-                value: makeArrayLikeProxy(
+                value: makeArrayLikeProxy<IRTerm>(
                     continuations,
                     isIRTerm,
                     // initModifyElem
                     // function called once for each element in the array
+                    // only at element definition
                     newElem => {
-                        // newElem = newElem.clone();
                         newElem.parent = self;
-                        // self.markHashAsInvalid()
                         return newElem;
                     },
                     // modifyElem
                     (newElem, oldElem) => {
-                        oldElem.parent = undefined;
+                        // keep the parent reference in the old child, useful for compilation
+                        // oldElem.parent = undefined;
                         newElem.parent = self;
-                        self.markHashAsInvalid()
+                        if(!equalIrHash( oldElem.hash, newElem.hash )) self.markHashAsInvalid();
                         return newElem;
                     }
                 ),
