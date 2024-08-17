@@ -19,6 +19,7 @@ export class IRVar
     implements Cloneable<IRVar>, IHash, IIRParent, ToJson
 {
     readonly hash: number;
+    readonly depth!: 0;
     markHashAsInvalid!: () => void;
     isHashPresent: () => boolean;
     
@@ -49,6 +50,14 @@ export class IRVar
             }
         );
         
+        Object.defineProperty(
+            this, "depth", {
+                value: 0,
+                writable: false,
+                enumerable: true,
+                configurable: false
+            }
+        );
         let hash: number | undefined = undefined;
         Object.defineProperty(
             this, "hash", {

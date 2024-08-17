@@ -11,6 +11,7 @@ import { isIRTerm } from "../utils";
 import { makeArrayLikeProxy } from "./utils/makeArrayLikeProxy";
 import { MutArrayLike } from "../utils/MutArrayLike";
 import { floatAsBytes, isMurmurHash, murmurHash } from "../murmur";
+import { fromHex } from "@harmoniclabs/uint8array-utils";
 
 export interface IRCaseMeta extends BaseIRMetadata {}
 
@@ -21,6 +22,7 @@ export class IRCase
     continuations!: MutArrayLike<IRTerm>;
 
     readonly hash!: number;
+    readonly depth!: number;
     markHashAsInvalid!: () => void;
     isHashPresent: () => boolean;
 
@@ -94,21 +96,54 @@ export class IRCase
             }
         );
 
+        function calcDepth(): number
+        {
+            return Math.max(
+                constrTerm.depth,
+                ...mapArrayLike( self.continuations , cont => cont.depth )
+            ) + 1;
+        }
+
         let hash: number | undefined = isMurmurHash( _unsafeHash ) ? _unsafeHash : undefined;
+        let depth: number | undefined = isMurmurHash( hash ) ? calcDepth() : undefined;
+
+        Object.defineProperty(
+            this, "depth",
+            {
+                get: () => {
+                    // we shuld be able to calculate the depth
+                    // WITHOUT the hash
+                    if( typeof depth !== "number" ) depth = calcDepth();
+                    return depth;
+                },
+                set: () => {},
+                enumerable: true,
+                configurable: false
+            }
+        );
         Object.defineProperty(
             this, "hash",
             {
                 get: () => {
                     if(!isMurmurHash( hash ))
                     {
+                        // calculate hashes first
+                        // so dont need to recalculate depths implicitly
+                        const constrHash = floatAsBytes(
+                            self.constrTerm.hash
+                        );
+                        const contsHashes = mapArrayLike( self.continuations, f => floatAsBytes( f.hash ) );
+
+                        depth = calcDepth();
+                        let depthStr = depth.toString( 16 );
+                        if( depthStr.length % 2 === 1 ) depthStr = "0" + depthStr;
                         // basically a merkle tree
                         hash = murmurHash(
                             concatUint8Arr(
                                 IRCase.tag,
-                                floatAsBytes(
-                                    self.constrTerm.hash
-                                ),
-                                ...mapArrayLike( self.continuations, f => floatAsBytes( f.hash ) )
+                                fromHex( depthStr ),
+                                constrHash,
+                                ...contsHashes
                             )
                         );
                     }
@@ -133,6 +168,7 @@ export class IRCase
             {
                 value: () => {
                     hash = undefined;
+                    depth = undefined;
                     this.parent?.markHashAsInvalid();
                 },
                 writable: false,

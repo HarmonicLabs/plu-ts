@@ -8,6 +8,8 @@
     original implementation: https://github.com/bryc/code/blob/da36a3e07acfbd07f930a9212a2df9e854ff56e4/jshash/hashes/murmurhash2_64b.js
 */
 
+import { blake2b } from "@harmoniclabs/crypto";
+
 /**
  * try to workaround babel polyfill
  * 

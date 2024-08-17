@@ -4,7 +4,7 @@ import { prettyIRJsonStr } from "../utils/showIR";
 import { Cloneable } from "@harmoniclabs/cbor/dist/utils/Cloneable";
 import { blake2b_128 } from "@harmoniclabs/crypto";
 import { freezeAll, defineProperty } from "@harmoniclabs/obj-utils";
-import { toHex, uint8ArrayEq } from "@harmoniclabs/uint8array-utils";
+import { fromHex, toHex, uint8ArrayEq } from "@harmoniclabs/uint8array-utils";
 import { BasePlutsError } from "../../utils/BasePlutsError";
 import { ToJson } from "../../utils/ToJson";
 import { IRTerm } from "../IRTerm";
@@ -51,6 +51,7 @@ export class IRHoisted
     implements Cloneable<IRHoisted>, IHash, IIRParent, ToJson, IRHoistedMetadata
 {
     readonly hash!: number;
+    readonly depth!: number;
     markHashAsInvalid!: () => void;
     isHashPresent: () => boolean;
 
@@ -96,17 +97,41 @@ export class IRHoisted
             _deps = getSortedHoistedSet( getHoistedTerms( _hoisted ) );
             return _deps;
         }
+        
+
+        function calcDepth(): number
+        {
+            return 1 + _hoisted.depth;
+        }
 
         let hash: number | undefined = isMurmurHash( _unsafeHash ) ? _unsafeHash : undefined;
+        let depth: number | undefined = isMurmurHash( hash ) ? calcDepth() : undefined;
+        Object.defineProperty(
+            this, "depth",
+            {
+                get: () => {
+                    if( typeof depth !== "number" ) depth = calcDepth();
+                    return depth;
+                },
+                set: () => {},
+                enumerable: true,
+                configurable: false
+            }
+        );
         Object.defineProperty(
             this, "hash", {
                 get: () => {
                     if(!isMurmurHash( hash ))
                     {
+                        const hoistedHash = floatAsBytes( _hoisted.hash )
+                        depth = calcDepth();
+                        let depthStr = depth.toString( 16 );
+                        if( depthStr.length % 2 !== 0 ) depthStr = "0" + depthStr;
                         hash = murmurHash(
                             concatUint8Arr(
                                 IRHoisted.tag,
-                                floatAsBytes( hoisted.hash )
+                                fromHex( depthStr ),
+                                hoistedHash
                             )
                         )
                     }
@@ -130,6 +155,8 @@ export class IRHoisted
             {
                 value: () => { 
                     hash = undefined;
+                    depth = undefined;
+
                     // tree changed; possibly dependencies too
                     _deps = undefined;
                     this.parent?.markHashAsInvalid();

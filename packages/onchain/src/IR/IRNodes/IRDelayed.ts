@@ -11,6 +11,7 @@ import { IRParentTerm, isIRParentTerm } from "../utils/isIRParentTerm";
 import { _modifyChildFromTo } from "../toUPLC/_internal/_modifyChildFromTo";
 import { BaseIRMetadata } from "./BaseIRMetadata";
 import { floatAsBytes, isMurmurHash, murmurHash } from "../murmur";
+import { fromHex } from "@harmoniclabs/uint8array-utils";
 
 export interface IRDelayedMetadata extends BaseIRMetadata {}
 
@@ -19,6 +20,7 @@ export class IRDelayed
 {
     delayed!: IRTerm
     readonly hash!: number
+    readonly depth!: number
     markHashAsInvalid!: () => void;
     isHashPresent: () => boolean;
 
@@ -37,19 +39,48 @@ export class IRDelayed
             }
         );
 
+        if( !isIRTerm( delayed ) )
+        throw new Error("IRDelayed argument was not an IRTerm");
+
+        let _delayed: IRTerm = delayed;
+        _delayed.parent = this;
+
+        function calcDepth(): number
+        {
+            return 1 + _delayed.depth;
+        }
+
         let hash: number | undefined = isMurmurHash( _unsafeHash ) ? _unsafeHash : undefined;
+        let depth: number | undefined = isMurmurHash( hash ) ? calcDepth() : undefined;
+        Object.defineProperty(
+            this, "depth",
+            {
+                get: () => {
+                    if( typeof depth !== "number" ) depth = calcDepth();
+                    return depth;
+                },
+                set: () => {},
+                enumerable: true,
+                configurable: false
+            }
+        );
         Object.defineProperty(
             this, "hash",
             {
                 get: () => {
                     if(!isMurmurHash( hash ))
                     {
+                        const delayedHash = floatAsBytes(
+                            this.delayed.hash
+                        );
+                        depth = calcDepth();
+                        let depthStr = depth.toString( 16 );
+                        if( depthStr.length % 2 !== 0 ) depthStr = "0" + depthStr;
                         hash = murmurHash(
                             concatUint8Arr(
                                 IRDelayed.tag,
-                                floatAsBytes(
-                                    this.delayed.hash
-                                )
+                                fromHex( depthStr ),
+                                delayedHash
                             )
                         );
                     }
@@ -70,6 +101,8 @@ export class IRDelayed
             {
                 value: () => { 
                     hash = undefined;
+                    depth = undefined;
+
                     this.parent?.markHashAsInvalid();
                 },
                 writable: false,
@@ -77,12 +110,6 @@ export class IRDelayed
                 configurable: false
             }
         );
-
-        if( !isIRTerm( delayed ) )
-        throw new Error("IRDelayed argument was not an IRTerm");
-
-        let _delayed: IRTerm = delayed;
-        _delayed.parent = this;
         
         Object.defineProperty(
             this, "delayed",

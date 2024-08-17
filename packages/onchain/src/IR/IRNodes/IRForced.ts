@@ -11,6 +11,7 @@ import { IRParentTerm, isIRParentTerm } from "../utils/isIRParentTerm";
 import { _modifyChildFromTo } from "../toUPLC/_internal/_modifyChildFromTo";
 import { BaseIRMetadata } from "./BaseIRMetadata";
 import { floatAsBytes, isMurmurHash, murmurHash } from "../murmur";
+import { fromHex } from "@harmoniclabs/uint8array-utils";
 
 export interface IRForcedMetadata extends BaseIRMetadata {}
 
@@ -19,6 +20,7 @@ export class IRForced
 {
     forced!: IRTerm
     readonly hash!: number
+    readonly depth: number
     markHashAsInvalid!: () => void;
     isHashPresent: () => boolean;
 
@@ -37,19 +39,47 @@ export class IRForced
             }
         );
 
+        if( !isIRTerm( forced ) )
+        throw new Error("IRForced argument was not an IRTerm");
+
+        let _forced: IRTerm = forced;
+        _forced.parent = this;
+
+        function calcDepth(): number
+        {
+            return 1 + _forced.depth;
+        }
+
         let hash: number | undefined = isMurmurHash( _unsafeHash ) ? _unsafeHash : undefined;
+        let depth: number | undefined = isMurmurHash( hash ) ? calcDepth() : undefined;
+        Object.defineProperty(
+            this, "depth",
+            {
+                get: () => {
+                    if( typeof depth !== "number" ) depth = calcDepth();
+                    return depth;
+                },
+                set: () => {},
+                enumerable: true,
+                configurable: false
+            }
+        );
         Object.defineProperty(
             this, "hash",
             {
                 get: () => {
                     if(!isMurmurHash( _unsafeHash ))
                     {
+                        const forcedHash = floatAsBytes( _forced.hash );
+                        depth = calcDepth();
+                        let depthStr = depth.toString( 16 );
+                        if( depthStr.length % 2 !== 0 ) depthStr = "0" + depthStr;
+                        
                         hash = murmurHash(
                             concatUint8Arr(
                                 IRForced.tag,
-                                floatAsBytes(
-                                    this.forced.hash
-                                )
+                                fromHex( depthStr ),
+                                forcedHash
                             )
                         );
                     }
@@ -70,6 +100,8 @@ export class IRForced
             {
                 value: () => { 
                     hash = undefined;
+                    depth = undefined;
+
                     this.parent?.markHashAsInvalid();
                 },
                 writable: false,
@@ -77,12 +109,6 @@ export class IRForced
                 configurable: false
             }
         );
-        
-        if( !isIRTerm( forced ) )
-        throw new Error("IRForced argument was not an IRTerm");
-
-        let _forced: IRTerm = forced;
-        _forced.parent = this;
         
         Object.defineProperty(
             this, "forced",

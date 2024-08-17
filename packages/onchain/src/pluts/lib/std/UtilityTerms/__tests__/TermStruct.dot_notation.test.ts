@@ -1,5 +1,5 @@
 import { Machine } from "@harmoniclabs/plutus-machine"
-import { pmatch, pstruct } from "../../../../PTypes"
+import { pstruct } from "../../../../PTypes"
 import { bs, int, list, unit } from "../../../../type_system"
 import { plet } from "../../../plet"
 import { pDataB, pDataI } from "../../data"

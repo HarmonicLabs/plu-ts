@@ -19,6 +19,7 @@ export class IRError
     implements Cloneable<IRError>, IHash, IIRParent, ToJson
 {
     readonly hash!: number;
+    readonly depth!: 0;
     markHashAsInvalid!: () => void;
     isHashPresent: () => boolean;
 
@@ -78,7 +79,15 @@ export class IRError
                 configurable: false
             }
         );
-        
+
+        Object.defineProperty(
+            this, "depth", {
+                value: 0,
+                writable: false,
+                enumerable: true,
+                configurable: false
+            }
+        );
         Object.defineProperty(
             this, "hash", {
                 get: () => errorHash,

@@ -7,6 +7,9 @@ import { precursiveList } from "../index";
 import { getHoistedTerms, getSortedHoistedSet, IRApp, IRConst, IRDelayed, IRForced, IRFunc, IRHoisted, IRNative, IRVar, prettyIRJsonStr, showIR } from "../../../../../../IR"
 import { handleHoistedAndReturnRoot } from "../../../../../../IR/toUPLC/subRoutines/handleHoistedAndReturnRoot"
 import { replaceNativesAndReturnRoot } from "../../../../../../IR/toUPLC/subRoutines/replaceNatives"
+import { floatAsBytes } from "../../../../../../IR/murmur"
+import { toHex } from "@harmoniclabs/uint8array-utils"
+import { nativeToIR } from "../../../../../../IR/toUPLC/subRoutines/replaceNatives/nativeToIR"
 
 
 const plast =  precursiveList( int, int )
@@ -160,9 +163,9 @@ describe("precursiveList low level", () => {
         )
     );
 
-    const generated = plast.$([]).toIR();
+    const generated = plast.$([] as any).toIR();
 
-    test.only("correct hoisted compilation", () => {
+    test("correct hoisted compilation", () => {
         expect( prettyIRJsonStr( nil_plast ) )
         .toEqual( prettyIRJsonStr( generated ))
     });
@@ -184,22 +187,20 @@ describe("precursiveList low level", () => {
         .map(({ hoisted, nReferences }) => ({ hoisted: hoisted.toJson(), nReferences })) 
     );
 
+    // console.log( "z_comb:", toHex( floatAsBytes( nativeToIR( IRNative.z_comb ).hash ) ) );
+    // console.log( "pmatch:", toHex( floatAsBytes( hoisted_pmatchList.hash ) ) );
+
+    expect(
+        nativeToIR( IRNative.z_comb ).hash
+    ).not.toEqual( hoisted_pmatchList.hash );
+
     let term = replaceNativesAndReturnRoot( generated.clone() );
     term = handleHoistedAndReturnRoot( term );
-    console.log(
-        prettyIRJsonStr( term )
-    )
 });
 
 describe("precursiveList", () => {
 
     test("nil", () => {
-
-        console.log(
-            prettyIRJsonStr(
-                plast.$([] as any).toIR()
-            )
-        )
 
         expect(
             Machine.evalSimple(

@@ -13,6 +13,7 @@ import { isIRTerm } from "../utils";
 import { makeArrayLikeProxy } from "./utils/makeArrayLikeProxy";
 import { MutArrayLike } from "../utils/MutArrayLike";
 import { floatAsBytes, isMurmurHash, murmurHash } from "../murmur";
+import { fromHex } from "@harmoniclabs/uint8array-utils";
 
 export interface IRConstrMeta extends BaseIRMetadata {}
 
@@ -23,6 +24,7 @@ export class IRConstr
     fields!: MutArrayLike<IRTerm>;
 
     readonly hash!: number;
+    readonly depth!: number;
     markHashAsInvalid!: () => void;
     isHashPresent: () => boolean;
 
@@ -85,19 +87,49 @@ export class IRConstr
             }
         );
 
+        function calcDepth(): number
+        {
+            return Math.max(
+                ...mapArrayLike( self.fields, f => f.depth )
+            ) + 1;
+        }
+
         let hash: number | undefined = isMurmurHash( _unsafeHash ) ? _unsafeHash : undefined;
+        let depth: number | undefined = isMurmurHash( hash ) ? calcDepth() : undefined;
+
+        Object.defineProperty(
+            this, "depth",
+            {
+                get: () => {
+                    // we shuld be able to calculate the depth
+                    // WITHOUT the hash
+                    if( typeof depth !== "number" ) depth = calcDepth();
+                    return depth;
+                },
+                set: () => {},
+                enumerable: true,
+                configurable: false
+            }
+        );
         Object.defineProperty(
             this, "hash",
             {
                 get: () => {
                     if(!isMurmurHash( hash ))
                     {
+                        // calculate hases first
+                        // so we don't have to recalculate the depth implicitly
+                        const fieldsHashes = mapArrayLike( this.fields, f => floatAsBytes( f.hash ) );
+                        depth = calcDepth();
+                        let depthStr = depth.toString( 16 );
+                        if( depthStr.length % 2 === 1 ) depthStr = "0" + depthStr;
                         // basically a merkle tree
                         hash = murmurHash(
                             concatUint8Arr(
                                 IRConstr.tag,
+                                fromHex( depthStr ),
                                 positiveIntAsBytes( this.index ),
-                                ...mapArrayLike( this.fields, f => floatAsBytes( f.hash ) )
+                                ...fieldsHashes
                             )
                         );
                     }
@@ -122,6 +154,8 @@ export class IRConstr
             {
                 value: () => {
                     hash = undefined;
+                    depth = undefined;
+
                     this.parent?.markHashAsInvalid();
                 },
                 writable: false,

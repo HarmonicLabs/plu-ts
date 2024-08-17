@@ -36,9 +36,6 @@ export function handleHoistedAndReturnRoot( term: IRTerm ): IRTerm
     const allHoisteds = getSortedHoistedSet( directHoisteds );
     let n = allHoisteds.length;
 
-    console.log(directHoisteds)
-    console.log(allHoisteds)
-
     // evaluating constants
     if( n === 0 )
     {

@@ -29,6 +29,7 @@ export class IRNative
 {
     readonly tag!: IRNativeTag;
     readonly hash!: number;
+    readonly depth!: 0;
     markHashAsInvalid!: () => void;
     isHashPresent: () => boolean;
 
@@ -92,6 +93,14 @@ export class IRNative
             }
         );
 
+        Object.defineProperty(
+            this, "depth", {
+                value: 0,
+                writable: false,
+                enumerable: true,
+                configurable: false
+            }
+        );
         Object.defineProperty(
             this, "hash",
             {

@@ -5,7 +5,7 @@ import { IRMetadata } from "../interfaces/IRMetadata";
 import { Cloneable } from "@harmoniclabs/cbor/dist/utils/Cloneable";
 import { blake2b_128 } from "@harmoniclabs/crypto";
 import { freezeAll, defineReadOnlyProperty } from "@harmoniclabs/obj-utils";
-import { toHex, uint8ArrayEq } from "@harmoniclabs/uint8array-utils";
+import { fromHex, toHex, uint8ArrayEq } from "@harmoniclabs/uint8array-utils";
 import { BasePlutsError } from "../../utils/BasePlutsError";
 import { ToJson } from "../../utils/ToJson";
 import { IRTerm } from "../IRTerm";
@@ -74,6 +74,7 @@ export class IRLetted
     implements Cloneable<IRLetted>, IHash, IIRParent, ToJson, IRLettedMetadata
 {
     readonly hash!: number;
+    readonly depth!: number;
     markHashAsInvalid!: () => void;
     isHashPresent: () => boolean;
 
@@ -149,13 +150,35 @@ export class IRLetted
         let _value: IRTerm = toLet.clone();
         _value.parent = this;
 
-        // we need the has before setting dependecies
+        function calcDepth(): number
+        {
+            return 1 + _value.depth;
+        }
+
+        // we need the hash before setting dependecies
         let hash: number | undefined = isMurmurHash( _unsafeHash ) ? _unsafeHash : undefined;
+        let depth: number | undefined = isMurmurHash( hash ) ? calcDepth() : undefined;
+        Object.defineProperty(
+            this, "depth",
+            {
+                get: () => {
+                    if( typeof depth !== "number" ) depth = calcDepth();
+                    return depth;
+                },
+                set: () => {},
+                enumerable: true,
+                configurable: false
+            }
+        );
         Object.defineProperty(
             this, "hash", {
                 get: () => {
                     if(!isMurmurHash( hash ))
                     {
+                        // IRLetted is the only one we dont include depth for hash calculation
+                        // since it might mess up the hash between noraamlized and non-normalized values
+                        // depth = calcDepth();
+
                         const normalized = getNormalizedLettedArgs( this.dbn, _value );
                         if( normalized === undefined )
                         {
@@ -215,6 +238,8 @@ export class IRLetted
             {
                 value: () => { 
                     hash = undefined;
+                    depth = undefined;
+
                     // tree changed; possibly dependencies too
                     _deps = undefined;
                     this.parent?.markHashAsInvalid();

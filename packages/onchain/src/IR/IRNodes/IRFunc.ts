@@ -13,6 +13,7 @@ import { IRParentTerm, isIRParentTerm } from "../utils/isIRParentTerm";
 import { _modifyChildFromTo } from "../toUPLC/_internal/_modifyChildFromTo";
 import { BaseIRMetadata } from "./BaseIRMetadata";
 import { floatAsBytes, isMurmurHash, murmurHash } from "../murmur";
+import { fromHex } from "@harmoniclabs/uint8array-utils";
 
 export interface IRFuncMetadata extends BaseIRMetadata {}
 
@@ -22,6 +23,7 @@ export class IRFunc
     readonly arity!: number;
 
     readonly hash!: number;
+    readonly depth!: number;
     markHashAsInvalid!: () => void;
     isHashPresent: () => boolean;
 
@@ -70,19 +72,40 @@ export class IRFunc
         let _body: IRTerm = body;
         _body.parent = this;
 
+        function calcDepth(): number
+        {
+            return 1 + _body.depth;
+        }
+
         let hash: number | undefined = isMurmurHash( _unsafeHash ) ? _unsafeHash : undefined;
+        let depth: number | undefined = isMurmurHash( hash ) ? calcDepth() : undefined;
+        Object.defineProperty(
+            this, "depth",
+            {
+                get: () => {
+                    if( typeof depth !== "number" ) depth = calcDepth();
+                    return depth;
+                },
+                set: () => {},
+                enumerable: true,
+                configurable: false
+            }
+        );
         Object.defineProperty(
             this, "hash", {
                 get: () => {
                     if( isMurmurHash( hash ) )
                     {
+                        const bodyHash = floatAsBytes( _body.hash );
+                        depth = calcDepth();
+                        let depthStr = depth.toString( 16 );
+                        if( depthStr.length % 2 !== 0 ) depthStr = "0" + depthStr;
                         hash = murmurHash(
                             concatUint8Arr(
                                 IRFunc.tag,
                                 positiveIntAsBytes( this.arity ),
-                                floatAsBytes(
-                                    _body.hash
-                                )
+                                fromHex( depthStr ),
+                                bodyHash
                             )
                         )
                     }
@@ -106,6 +129,8 @@ export class IRFunc
             {
                 value: () => {
                     hash = undefined;
+                    depth = undefined;
+
                     this.parent?.markHashAsInvalid();
                 },
                 writable: false,

@@ -10,6 +10,7 @@ import { IRParentTerm, isIRParentTerm } from "../utils/isIRParentTerm";
 import { _modifyChildFromTo } from "../toUPLC/_internal/_modifyChildFromTo";
 import { BaseIRMetadata } from "./BaseIRMetadata";
 import { floatAsBytes, isMurmurHash, murmurHash } from "../murmur";
+import { fromHex } from "@harmoniclabs/uint8array-utils";
 
 export interface IRAppMeta extends BaseIRMetadata {
     __src__?: string | undefined
@@ -22,6 +23,7 @@ export class IRApp
     arg!: IRTerm;
 
     readonly hash!: number;
+    readonly depth: number;
     markHashAsInvalid!: () => void;
     isHashPresent: () => boolean;
 
@@ -64,19 +66,52 @@ export class IRApp
         fn.parent = this;
         arg.parent = this;
 
+        function calcDepth(): number
+        {
+            return Math.max(
+                fn.depth,
+                arg.depth
+            ) + 1;
+        }
+
         let hash: number | undefined = isMurmurHash( _unsafeHash ) ? _unsafeHash : undefined;
+        let depth: number | undefined = isMurmurHash( hash ) ? calcDepth() : undefined;
+
+        Object.defineProperty(
+            this, "depth",
+            {
+                get: () => {
+                    // we shuld be able to calculate the depth
+                    // WITHOUT the hash
+                    if( typeof depth !== "number" ) depth = calcDepth();
+                    return depth;
+                },
+                set: () => {},
+                enumerable: true,
+                configurable: false
+            }
+        );
         Object.defineProperty(
             this, "hash",
             {
                 get: () => {
                     if( !isMurmurHash( hash ) )
                     {
+                        // calculate hashes first
+                        // so we dont recalculate the depths implicitly
+                        const fnHash = floatAsBytes( fn.hash );
+                        const argHash = floatAsBytes( arg.hash );
+
+                        depth = calcDepth();
+                        let depthStr = depth.toString( 16 );
+                        if( depthStr.length % 2 === 1 ) depthStr = "0" + depthStr;
                         // basically a merkle tree
                         hash = murmurHash(
                             concatUint8Arr(
                                 IRApp.tag,
-                                floatAsBytes( fn.hash ),
-                                floatAsBytes( arg.hash )
+                                fromHex( depthStr ),
+                                fnHash,
+                                argHash
                             )
                         );
                     }
@@ -103,6 +138,7 @@ export class IRApp
             {
                 value: () => {
                     hash = undefined;
+                    depth = undefined;
                     this.parent?.markHashAsInvalid();
                 },
                 writable: false,
