@@ -351,7 +351,7 @@ export class IRLetted
     {
         return new IRLetted(
             this.dbn,
-            this.value.clone(), // cloned in constructor
+            this.value.clone(),
             { ...this.meta },
             this.isHashPresent() ? this.hash : undefined
         )
