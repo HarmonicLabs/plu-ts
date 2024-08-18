@@ -1,7 +1,7 @@
 import { blake2b_128 } from "@harmoniclabs/crypto";
 import { toHex } from "@harmoniclabs/uint8array-utils";
 
-export type IRHash = Uint32Array & { length: 4 };
+export type IRHash = Readonly<Uint32Array> & { length: 4 };
 
 export function hashIrData( data: Uint8Array ): IRHash
 {

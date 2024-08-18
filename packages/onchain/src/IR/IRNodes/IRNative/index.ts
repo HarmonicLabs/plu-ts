@@ -10,6 +10,7 @@ import { _modifyChildFromTo } from "../../toUPLC/_internal/_modifyChildFromTo";
 import { BaseIRMetadata } from "../BaseIRMetadata";
 import { ToJson } from "../../../utils/ToJson";
 import { hashIrData, IRHash } from "../../IRHash";
+import { isObject } from "@harmoniclabs/obj-utils";
 
 /**
  * we might not need all the hashes
@@ -27,116 +28,75 @@ export class IRNative
     implements Cloneable<IRNative>, IHash, IIRParent, ToJson
 {
     readonly tag!: IRNativeTag;
-    readonly hash!: IRHash;
-    markHashAsInvalid!: () => void;
-    isHashPresent: () => boolean;
 
-    readonly meta: IRNativeMetadata
-
-    parent: IRParentTerm | undefined;
+    static get tag(): Uint8Array { return new Uint8Array([ 0b0000_0100 ]); }
 
     constructor( tag: IRNativeTag )
     {
-        Object.defineProperty(
-            this, "tag", {
-                value: tag,
-                writable: false,
-                enumerable: true,
-                configurable: false
-            }
-        );
-
-        Object.defineProperty(
-            this, "meta", {
-                value: {},
-                writable: false,
-                enumerable: true,
-                configurable: false
-            }
-        );
-
-        let _parent: IRParentTerm | undefined = undefined;
-        Object.defineProperty(
-            this, "parent",
-            {
-                get: () => _parent,
-                set: ( newParent: IRParentTerm | undefined ) => {
-                    if(!( // assert
-                        // new parent value is different than current
-                        _parent !== newParent && (
-                            // and the new parent value is valid
-                            newParent === undefined || 
-                            isIRParentTerm( newParent )
-                        )
-                    )) return;
-                    
-                    // keep reference
-                    const oldParent = _parent;
-                    // change parent
-                    _parent = newParent;
-
-                    // if has old parent
-                    // if( oldParent !== undefined && isIRParentTerm( oldParent ) )
-                    // {
-                    //     // change reference to a clone for safety
-                    //     _modifyChildFromTo(
-                    //         oldParent,
-                    //         this,
-                    //         this.clone()
-                    //     );
-                    // }
-                },
-                enumerable: true,
-                configurable: false
-            }
-        );
-
-        Object.defineProperty(
-            this, "hash",
-            {
-                get: () => {
-                    if(nativeHashesCache[this.tag] === undefined)
-                    {
-                        nativeHashesCache[this.tag] = hashIrData( 
-                            concatUint8Arr( 
-                                IRNative.tag, 
-                                positiveBigIntAsBytes(
-                                    UPLCFlatUtils.zigzagBigint(
-                                        BigInt( this.tag )
-                                    )
-                                )
-                            )
-                        );
-                    }
-                    // return a copy
-                    return nativeHashesCache[this.tag].slice()
-                },
-                set: () => {},
-                enumerable: true,
-                configurable: false
-            }
-        );
-        Object.defineProperty(
-            this, "isHashPresent", {
-                value: () => true,
-                writable: false,
-                enumerable: true,
-                configurable: false
-            }
-        );
-        Object.defineProperty(
-            this, "markHashAsInvalid",
-            {
-                value: () => { throw new Error("IRNative should never be invalid; 'markHashAsInvalid' called"); },
-                writable: false,
-                enumerable:  true,
-                configurable: false
-            }
-        );
-        
+        this.tag = tag;
     }
 
-    static get tag(): Uint8Array { return new Uint8Array([ 0b0000_0100 ]); }
+    get hash(): IRHash
+    {
+        if(nativeHashesCache[this.tag] === undefined)
+        {
+            nativeHashesCache[this.tag] = hashIrData( 
+                concatUint8Arr( 
+                    IRNative.tag, 
+                    positiveBigIntAsBytes(
+                        UPLCFlatUtils.zigzagBigint(
+                            BigInt( this.tag )
+                        )
+                    )
+                )
+            );
+        }
+        return nativeHashesCache[this.tag];
+    }
+    markHashAsInvalid(): void 
+    { throw new Error("IRNative should never be invalid; 'markHashAsInvalid' called"); }
+    isHashPresent(): true { return true; }
+
+    private _meta: IRNativeMetadata | undefined;
+    get meta(): IRNativeMetadata
+    {
+        if( !isObject( this._meta ) ) this._meta = {};
+        return this._meta!;
+    }
+
+    private _parent: IRParentTerm | undefined = undefined;
+    get parent(): IRParentTerm | undefined
+    {
+        return this._parent;
+    }
+    set parent( newParent: IRParentTerm | undefined )
+    {
+        if(!( // assert
+            // new parent value is different than current
+            this._parent !== newParent && (
+                // and the new parent value is valid
+                newParent === undefined || 
+                isIRParentTerm( newParent )
+            )
+        )) return;
+        
+        // keep reference
+        // const oldParent = this._parent;
+        
+        // change parent
+        this._parent = newParent;
+
+        // if has old parent
+        // if( oldParent !== undefined && isIRParentTerm( oldParent ) )
+        // {
+        //     // change reference to a clone for safety
+        //     _modifyChildFromTo(
+        //         oldParent,
+        //         this,
+        //         this.clone()
+        //     );
+        // }
+    }
 
     clone(): IRNative
     {

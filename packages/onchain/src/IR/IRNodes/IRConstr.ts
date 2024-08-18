@@ -4,7 +4,7 @@ import { forceBigUInt } from "../../utils/ints";
 import { IRTerm } from "../IRTerm";
 import { IHash, IIRParent } from "../interfaces";
 import { concatUint8Arr } from "../utils/concatUint8Arr";
-import { IRParentTerm } from "../utils/isIRParentTerm";
+import { IRParentTerm, isIRParentTerm } from "../utils/isIRParentTerm";
 import { BaseIRMetadata } from "./BaseIRMetadata";
 import { positiveIntAsBytes } from "../utils/positiveIntAsBytes";
 import { mapArrayLike } from "./utils/mapArrayLike";
@@ -19,13 +19,7 @@ export class IRConstr
     implements Cloneable<IRConstr>, IHash, IIRParent, ToJson
 {
     readonly index!: bigint;
-    fields!: MutArrayLike<IRTerm>;
-
-    readonly hash!: IRHash;
-    markHashAsInvalid!: () => void;
-    isHashPresent: () => boolean;
-
-    parent: IRParentTerm | undefined;
+    readonly fields!: MutArrayLike<IRTerm>;
 
     readonly meta: IRConstrMeta
 
@@ -40,14 +34,9 @@ export class IRConstr
     {
         const self = this;
 
-        Object.defineProperty(
-            this, "meta", {
-                value: { ...meta },
-                writable: false,
-                enumerable: true,
-                configurable: false
-            }
-        );
+        this.meta = meta;
+
+        this._parent = undefined;
 
         Object.defineProperty(
             this, "index", {
@@ -87,52 +76,48 @@ export class IRConstr
             }
         );
 
-        let hash: IRHash | undefined = isIRHash( _unsafeHash ) ? _unsafeHash : undefined;
-        Object.defineProperty(
-            this, "hash",
-            {
-                get: () => {
-                    if(!isIRHash( hash ))
-                    {
-                        // basically a merkle tree
-                        hash = hashIrData(
-                            concatUint8Arr(
-                                IRConstr.tag,
-                                positiveIntAsBytes( this.index ),
-                                ...mapArrayLike( this.fields, f => f.hash )
-                            )
-                        );
-                    }
-                    return hash;
-                },
-                set: () => {},
-                enumerable: true,
-                configurable: false
-            }
-        );
-        Object.defineProperty(
-            this, "isHashPresent", {
-                value: () => isIRHash( hash ),
-                writable: false,
-                enumerable: true,
-                configurable: false
-            }
-        );
-        Object.defineProperty(
-            this, "markHashAsInvalid",
-            {
-                value: () => {
-                    hash = undefined;
-                    this.parent?.markHashAsInvalid();
-                },
-                writable: false,
-                enumerable:  false,
-                configurable: false
-            }
-        );
-
+        this._hash = isIRHash( _unsafeHash ) ? _unsafeHash : undefined;
     }
 
+    private _hash: IRHash | undefined;
+    get hash(): IRHash
+    {
+        if(!isIRHash( this._hash ))
+        {
+            // basically a merkle tree
+            this._hash = hashIrData(
+                concatUint8Arr(
+                    IRConstr.tag,
+                    positiveIntAsBytes( this.index ),
+                    ...mapArrayLike( this.fields, f => f.hash )
+                )
+            );
+        }
+        return this._hash;
+    }
+    markHashAsInvalid(): void
+    {
+        this._hash = undefined;
+        this.parent?.markHashAsInvalid();
+    }
+    isHashPresent(): boolean { return isIRHash( this._hash ); }
+
+    private _parent: IRParentTerm | undefined;
+    get parent(): IRParentTerm | undefined { return this._parent; }
+    set parent( newParent: IRParentTerm | undefined )
+    {
+        if(!( // assert
+            // new parent value is different than current
+            this._parent !== newParent && (
+                // and the new parent value is valid
+                newParent === undefined || 
+                isIRParentTerm( newParent )
+            )
+        )) return;
+
+        this._parent = newParent;
+    }
+    
     clone(): IRConstr
     {
         return new IRConstr(

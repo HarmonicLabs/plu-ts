@@ -48,17 +48,6 @@ const defaultHoistedMeta: IRHoistedMeta = freezeAll({
 export class IRHoisted
     implements Cloneable<IRHoisted>, IHash, IIRParent, ToJson, IRHoistedMetadata
 {
-    readonly hash!: IRHash;
-    markHashAsInvalid!: () => void;
-    isHashPresent: () => boolean;
-
-    hoisted!: IRTerm
-
-    // `IRHoisted` can have only other `IRHoisted` as deps
-    readonly dependencies!: HoistedSetEntry[];
-
-    parent: IRParentTerm | undefined;
-
     readonly meta!: IRHoistedMeta
 
     constructor(
@@ -84,161 +73,94 @@ export class IRHoisted
         }
         
         // initialize without calling "set"
-        let _hoisted: IRTerm = hoisted;
-        _hoisted.parent = this;
+        this._hoisted = hoisted;
+        this._hoisted.parent = this;
         
-        let _deps: HoistedSetEntry[] | undefined = undefined;
-        function _getDeps(): HoistedSetEntry[]
-        {
-            if( _deps === undefined )
-            _deps = getSortedHoistedSet( getHoistedTerms( _hoisted ) );
-            return _deps;
-        }
+        this._deps = undefined;
 
-        let hash: IRHash | undefined = isIRHash( _unsafeHash ) ? _unsafeHash : undefined;
-        Object.defineProperty(
-            this, "hash", {
-                get: () => {
-                    if(!isIRHash( hash ))
-                    {
-                        hash = hashIrData(
-                            concatUint8Arr(
-                                IRHoisted.tag,
-                                _hoisted.hash
-                            )
-                        )
-                    }
-                    return hash;
-                },
-                set: () => {},
-                enumerable: true,
-                configurable: false
-            }
-        );
-        Object.defineProperty(
-            this, "isHashPresent", {
-                value: () => isIRHash( hash ),
-                writable: false,
-                enumerable: true,
-                configurable: false
-            }
-        );
-        Object.defineProperty(
-            this, "markHashAsInvalid",
-            {
-                value: () => { 
-                    hash = undefined;
-                    // tree changed; possibly dependencies too
-                    _deps = undefined;
-                    this.parent?.markHashAsInvalid();
-                },
-                writable: false,
-                enumerable:  false,
-                configurable: false
-            }
-        );
+        this._hash = isIRHash( _unsafeHash ) ? _unsafeHash : undefined;
 
-        Object.defineProperty(
-            this, "hoisted",
-            {
-                get: () => _hoisted,
-                set: ( newHoisted: IRTerm ) => {
-                    if( !isClosedIRTerm( hoisted ) )
-                    throw new BasePlutsError(
-                        "only closed terms can be hoisted"
-                    );
-                    if(!!equalIrHash( _hoisted.hash, newHoisted.hash )) this.markHashAsInvalid();
-                    
-                    // dependencies need to be updated EVEN if hash is the same
-                    // since the terms might be the same but maybe cloned
-                    _deps = undefined;
+        this._parent = undefined;
 
-                    // keep the parent reference in the old child, useful for compilation
-                    // _hoisted.parent = undefined;
-                    _hoisted = newHoisted;
-                    _hoisted.parent = this
-                }
-            }
-        );
-
-        Object.defineProperty(
-            this, "dependencies",
-            {
-                get: (): HoistedSetEntry[] => {
-
-                    return _getDeps()
-                    /*
-                    .map( dep => {
-
-                        // const hoisted = dep.hoisted.clone();
-                        // hoisted.parent = dep.hoisted.parent;
-                        return {
-                            hoisted: dep.hoisted,
-                            nReferences: dep.nReferences
-                        };
-                    })
-                    //*/
-                    ;
-                }, // MUST return clones
-                set: () => {},
-                enumerable: true,
-                configurable: false
-            }
-        );
-
-        let _parent: IRParentTerm | undefined = undefined;
-        Object.defineProperty(
-            this, "parent",
-            {
-                get: () => _parent,
-                set: ( newParent: IRParentTerm | undefined ) => {
-                    if(!( // assert
-                        // new parent value is different than current
-                        _parent !== newParent && (
-                            // and the new parent value is valid
-                            newParent === undefined || 
-                            isIRParentTerm( newParent )
-                        )
-                    )) return;
-                    
-                    // keep reference
-                    const oldParent = _parent;
-                    // change parent
-                    _parent = newParent;
-
-                    // if has old parent
-                    // if( oldParent !== undefined && isIRParentTerm( oldParent ) )
-                    // {
-                    //     // change reference to a clone for safety
-                    //     _modifyChildFromTo(
-                    //         oldParent,
-                    //         this,
-                    //         this.clone()
-                    //     );
-                    // }
-                },
-                enumerable: true,
-                configurable: false
-            }
-        );
-
-        Object.defineProperty(
-            this, "meta",
-            {
-                value: {
-                    ...defaultHoistedMeta,
-                    ...metadata,
-                    name: _hoisted.meta.name ?? metadata.name
-                },
-                writable: false,
-                enumerable: true,
-                configurable: false
-            }
-        );
-        
+        this.meta = {
+            ...defaultHoistedMeta,
+            ...metadata,
+            name: this._hoisted.meta?.name ?? metadata.name
+        };
     }
 
     static get tag(): Uint8Array { return new Uint8Array([ 0b0000_0110 ]); }
+
+    private _hash!: IRHash | undefined;
+    get hash(): IRHash
+    {
+        if(!isIRHash( this._hash ))
+        {
+            this._hash = hashIrData(
+                concatUint8Arr(
+                    IRHoisted.tag,
+                    this.hoisted.hash
+                )
+            );
+        }
+        return this._hash;
+    }
+    markHashAsInvalid()
+    {
+        this._hash = undefined;
+        this._deps = undefined;
+        this.parent?.markHashAsInvalid();
+    }
+    isHashPresent(): boolean
+    {
+        return isIRHash( this._hash );
+    }
+
+    private _hoisted!: IRTerm;
+    get hoisted(): IRTerm { return this._hoisted; }
+    set hoisted( newHoisted: IRTerm )
+    {
+        if( !isClosedIRTerm( newHoisted ) )
+        throw new BasePlutsError(
+            "only closed terms can be hoisted"
+        );
+        if(!!equalIrHash( this._hoisted.hash, newHoisted.hash )) this.markHashAsInvalid();
+        
+        // dependencies need to be updated EVEN if hash is the same
+        // since the terms might be the same but maybe cloned
+        this._deps = undefined;
+
+        // keep the parent reference in the old child, useful for compilation
+        // _hoisted.parent = undefined;
+        this._hoisted = newHoisted;
+        this._hoisted.parent = this
+    }
+    
+    private _deps: HoistedSetEntry[] | undefined;
+    get dependencies(): HoistedSetEntry[]
+    {
+        if( this._deps === undefined )
+        this._deps = getSortedHoistedSet( getHoistedTerms( this._hoisted ) );
+        return this._deps;
+    }
+
+    private _parent: IRParentTerm | undefined;
+    get parent(): IRParentTerm | undefined { return this._parent; }
+    set parent( newParent: IRParentTerm | undefined )
+    {
+        if(!( // assert
+            // new parent value is different than current
+            this._parent !== newParent && (
+                // and the new parent value is valid
+                newParent === undefined || 
+                isIRParentTerm( newParent )
+            )
+        )) return;
+        
+        // change parent
+        this._parent = newParent;
+    }
+
 
     clone(): IRHoisted
     {

@@ -1,6 +1,6 @@
 {
   "name": "@harmoniclabs/plu-ts",
-  "version": "0.8.0-dev14",
+  "version": "0.8.0-memory0",
   "description": "An embedded DSL for Cardano smart contracts creation coupled with a library for Cardano transactions, all in Typescript",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -77,7 +77,7 @@
     "@harmoniclabs/obj-utils": "^1.0.0",
     "@harmoniclabs/pair": "^1.0.0",
     "@harmoniclabs/plu-ts-offchain": "0.1.13-dev15",
-    "@harmoniclabs/plu-ts-onchain": "^0.3.0-dev11",
+    "@harmoniclabs/plu-ts-onchain": "^0.3.0-memory0",
     "@harmoniclabs/plutus-data": "^1.2.4",
     "@harmoniclabs/plutus-machine": "^2.0.0-dev5",
     "@harmoniclabs/uint8array-utils": "^1.0.0",

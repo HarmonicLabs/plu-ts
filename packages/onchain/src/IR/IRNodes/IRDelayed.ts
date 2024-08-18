@@ -16,133 +16,78 @@ export interface IRDelayedMetadata extends BaseIRMetadata {}
 export class IRDelayed
     implements Cloneable<IRDelayed>, IHash, IIRParent, ToJson
 {
-    delayed!: IRTerm
-    readonly hash!: IRHash
-    markHashAsInvalid!: () => void;
-    isHashPresent: () => boolean;
-
-    readonly meta: IRDelayedMetadata
-
-    parent: IRParentTerm | undefined;
+    readonly meta: IRDelayedMetadata = {};
 
     constructor( delayed: IRTerm, _unsafeHash?: IRHash )
     {
-        Object.defineProperty(
-            this, "meta", {
-                value: {},
-                writable: false,
-                enumerable: true,
-                configurable: false
-            }
-        );
-
-        let hash: IRHash | undefined = isIRHash( _unsafeHash ) ? _unsafeHash : undefined;
-        Object.defineProperty(
-            this, "hash",
-            {
-                get: () => {
-                    if(!isIRHash( hash ))
-                    {
-                        hash = hashIrData(
-                            concatUint8Arr(
-                                IRDelayed.tag,
-                                this.delayed.hash
-                            )
-                        );
-                    }
-                    return hash;
-                }
-            }
-        );
-        Object.defineProperty(
-            this, "isHashPresent", {
-                value: () => isIRHash( hash ),
-                writable: false,
-                enumerable: true,
-                configurable: false
-            }
-        );
-        Object.defineProperty(
-            this, "markHashAsInvalid",
-            {
-                value: () => { 
-                    hash = undefined;
-                    this.parent?.markHashAsInvalid();
-                },
-                writable: false,
-                enumerable:  false,
-                configurable: false
-            }
-        );
-
         if( !isIRTerm( delayed ) )
         throw new Error("IRDelayed argument was not an IRTerm");
-
-        let _delayed: IRTerm = delayed;
-        _delayed.parent = this;
         
-        Object.defineProperty(
-            this, "delayed",
-            {
-                get: () => _delayed,
-                set: ( newDelayed: IRTerm | undefined ) => {
-                    if(!isIRTerm( newDelayed ))
-                    {
-                        throw new BasePlutsError(
-                            "invalid IRTerm to be delayed"
-                        );
-                    }
-                    if(!equalIrHash(_delayed.hash, newDelayed.hash)) this.markHashAsInvalid();
-                    // keep the parent reference in the old child, useful for compilation
-                    // _delayed.parent = undefined;
-                    _delayed = newDelayed;
-                    _delayed.parent = this;
-                },
-                enumerable: true,
-                configurable: false
-            }
-        );
+        this._delayed = delayed;
+        this._delayed.parent = this;
+        
+        this._hash = isIRHash( _unsafeHash ) ? _unsafeHash : undefined;
 
-        let _parent: IRParentTerm | undefined = undefined;
-        Object.defineProperty(
-            this, "parent",
-            {
-                get: () => _parent,
-                set: ( newParent: IRParentTerm | undefined ) => {
-                    if(!( // assert
-                        // new parent value is different than current
-                        _parent !== newParent && (
-                            // and the new parent value is valid
-                            newParent === undefined || 
-                            isIRParentTerm( newParent )
-                        )
-                    )) return;
-                    
-                    // keep reference
-                    const oldParent = _parent;
-                    // change parent
-                    _parent = newParent;
-
-                    // if has old parent
-                    // if( oldParent !== undefined && isIRParentTerm( oldParent ) )
-                    // {
-                    //     // change reference to a clone for safety
-                    //     _modifyChildFromTo(
-                    //         oldParent,
-                    //         this,
-                    //         this.clone()
-                    //     );
-                    // }
-                },
-                enumerable: true,
-                configurable: false
-            }
-        );
+        this._parent = undefined;
     }
 
-    static get tag(): Uint8Array
+    static get tag(): Uint8Array { return new Uint8Array([0b0000_1001]); }
+
+    private _delayed!: IRTerm
+    get delayed(): IRTerm { return this._delayed }
+    set delayed( newDelayed: IRTerm | undefined)
     {
-        return new Uint8Array([0b0000_1001]);
+        if(!isIRTerm( newDelayed ))
+        {
+            throw new BasePlutsError(
+                "invalid IRTerm to be delayed"
+            );
+        }
+        if(!equalIrHash(this._delayed.hash, newDelayed.hash)) this.markHashAsInvalid();
+        
+        // keep the parent reference in the old child, useful for compilation
+        // _delayed.parent = undefined;
+        
+        this._delayed = newDelayed;
+        this._delayed.parent = this;
+    }
+
+    private _hash: IRHash | undefined;
+    get hash(): IRHash
+    {
+        if(!isIRHash( this._hash ))
+        {
+            this._hash = hashIrData(
+                concatUint8Arr(
+                    IRDelayed.tag,
+                    this.delayed.hash
+                )
+            );
+        }
+        return this._hash;
+    }
+
+    private _parent: IRParentTerm | undefined;
+    get parent(): IRParentTerm | undefined { return this._parent }
+    set parent( newParent: IRParentTerm | undefined )
+    {
+        if(!( // assert
+            // new parent value is different than current
+            this._parent !== newParent && (
+                // and the new parent value is valid
+                newParent === undefined || 
+                isIRParentTerm( newParent )
+            )
+        )) return;
+        
+        // change parent
+        this._parent = newParent;
+    }
+    isHashPresent(): boolean { return isIRHash( this._hash ) }
+    markHashAsInvalid(): void
+    {
+        this._hash = undefined;
+        this._parent?.markHashAsInvalid();
     }
 
     clone(): IRDelayed

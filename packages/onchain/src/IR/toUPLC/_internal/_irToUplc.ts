@@ -16,6 +16,7 @@ import { IRDelayed } from "../../IRNodes/IRDelayed";
 import { UPLCTerm, UPLCVar, Lambda, Application, UPLCConst, Builtin, ErrorUPLC, Force, Delay, Constr, Case } from "@harmoniclabs/uplc";
 import { IRConstr } from "../../IRNodes/IRConstr";
 import { IRCase } from "../../IRNodes/IRCase";
+import { irHashToHex } from "../../IRHash";
 
 export type RawSrcMap = { [node_index: number]: string };
 
@@ -117,7 +118,7 @@ export function _irToUplc(
         // return this.hoisted.toUPLC();
         throw new Error(
             "Can't convert 'IRHoisted' to valid UPLC;" +
-            "\nhoisted hash was: " + toHex( ir.hash ) +
+            "\nhoisted hash was: " + irHashToHex( ir.hash ) +
             "\nhoisted term was: " + showIR( ir.hoisted ).text
         );
     }

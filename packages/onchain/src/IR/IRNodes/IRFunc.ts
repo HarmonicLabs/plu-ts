@@ -20,18 +20,6 @@ export class IRFunc
 {
     readonly arity!: number;
 
-    readonly hash!: IRHash;
-    markHashAsInvalid!: () => void;
-    isHashPresent: () => boolean;
-
-    readonly meta: IRFuncMetadata
-
-    get name(): string | undefined { return this.meta.name };
-
-    body!: IRTerm
-
-    parent: IRTerm | undefined;
-
     constructor(
         arity: number,
         body: IRTerm,
@@ -66,118 +54,81 @@ export class IRFunc
             }
         );
 
-        let _body: IRTerm = body;
-        _body.parent = this;
+        this._body = body;
+        this._body.parent = this;
 
-        let hash: IRHash | undefined = isIRHash( _unsafeHash ) ? _unsafeHash : undefined;
-        Object.defineProperty(
-            this, "hash", {
-                get: () => {
-                    if(!isIRHash( hash ))
-                    {
-                        hash = hashIrData(
-                            concatUint8Arr(
-                                IRFunc.tag,
-                                positiveIntAsBytes( this.arity ),
-                                _body.hash
-                            )
-                        )
-                    }
-                    return hash;
-                },
-                set: () => {},
-                enumerable: true,
-                configurable: false
-            }
-        );
-        Object.defineProperty(
-            this, "isHashPresent", {
-                value: () => hash instanceof Uint8Array,
-                writable: false,
-                enumerable: true,
-                configurable: false
-            }
-        );
-        Object.defineProperty(
-            this, "markHashAsInvalid",
-            {
-                value: () => {
-                    hash = undefined;
-                    this.parent?.markHashAsInvalid();
-                },
-                writable: false,
-                enumerable:  false,
-                configurable: false
-            }
-        );
-
-        Object.defineProperty(
-            this, "body", {
-                get: () => _body,
-                set: ( newBody: IRTerm ) => {
-                    if(!isIRTerm( newBody ))
-                    {
-                        throw new BasePlutsError(
-                            "invalid IRTerm to be a function body"
-                        );
-                    }
-                    
-                    if(!equalIrHash(_body.hash, newBody.hash)) this.markHashAsInvalid();
-                    // keep the parent reference in the old child, useful for compilation
-                    // _body.parent = undefined;
-                    _body = newBody;
-                    _body.parent = this;
-                },
-                enumerable: true,
-                configurable: false
-            }
-        );
+        this._hash = isIRHash( _unsafeHash ) ? _unsafeHash : undefined;
         
-        let _parent: IRParentTerm | undefined = undefined;
-        Object.defineProperty(
-            this, "parent",
-            {
-                get: () => _parent,
-                set: ( newParent: IRParentTerm | undefined ) => {
-                    if(!( // assert
-                        // new parent value is different than current
-                        _parent !== newParent && (
-                            // and the new parent value is valid
-                            newParent === undefined || 
-                            isIRParentTerm( newParent )
-                        )
-                    )) return;
-                    
-                    // keep reference
-                    const oldParent = _parent;
-                    // change parent
-                    _parent = newParent;
-
-                    // if has old parent
-                    // if( oldParent !== undefined && isIRParentTerm( oldParent ) )
-                    // {
-                    //     // change reference to a clone for safety
-                    //     _modifyChildFromTo(
-                    //         oldParent,
-                    //         this,
-                    //         this.clone()
-                    //     );
-                    // }
-                },
-                enumerable: true,
-                configurable: false
-            }
-        );
-
+        this._parent = undefined;
     }
 
     static get tag(): Uint8Array { return new Uint8Array([ 0b0000_00001 ]); }
+
+    private _body!: IRTerm
+    get body(): IRTerm { return this._body }
+    set body( newBody: IRTerm )
+    {
+        if(!isIRTerm( newBody ))
+        {
+            throw new BasePlutsError(
+                "invalid IRTerm to be a function body"
+            );
+        }
+        
+        if(!equalIrHash(this._body.hash, newBody.hash)) this.markHashAsInvalid();
+        // keep the parent reference in the old child, useful for compilation
+        // _body.parent = undefined;
+        this._body = newBody;
+        this._body.parent = this;
+    }
+
+    private _hash: IRHash | undefined;
+    get hash(): IRHash
+    {
+        if(!isIRHash( this._hash ))
+        {
+            this._hash = hashIrData(
+                concatUint8Arr(
+                    IRFunc.tag,
+                    positiveIntAsBytes( this.arity ),
+                    this._body.hash
+                )
+            );
+        }
+        return this._hash;
+    }
+    isHashPresent(): boolean { return isIRHash( this._hash ) }
+    markHashAsInvalid(): void
+    {
+        this._hash = undefined;
+        this.parent?.markHashAsInvalid();
+    }
+
+    readonly meta: IRFuncMetadata
+    get name(): string | undefined { return this.meta.name };
+
+    private _parent: IRTerm | undefined;
+    get parent(): IRTerm | undefined { return this._parent; }
+    set parent( newParent: IRTerm | undefined )
+    {
+        if(!( // assert
+            // new parent value is different than current
+            this._parent !== newParent && (
+                // and the new parent value is valid
+                newParent === undefined || 
+                isIRParentTerm( newParent )
+            )
+        )) return;
+        
+        // change parent
+        this._parent = newParent;
+    }
 
     clone(): IRFunc
     {
         return new IRFunc(
             this.arity,
-            this.body.clone(),
+            this._body.clone(),
             this.meta.name,
             this.isHashPresent() ? this.hash : undefined
         )
@@ -188,7 +139,7 @@ export class IRFunc
         return {
             type: "IRFunc",
             arity: this.arity,
-            body: this.body.toJson()
+            body: this._body.toJson()
         }
     }
 }
