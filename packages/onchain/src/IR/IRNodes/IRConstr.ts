@@ -12,6 +12,7 @@ import { isIRTerm } from "../utils";
 import { makeArrayLikeProxy } from "./utils/makeArrayLikeProxy";
 import { MutArrayLike } from "../utils/MutArrayLike";
 import { equalIrHash, hashIrData, IRHash, isIRHash } from "../IRHash";
+import { _modifyChildFromTo } from "../toUPLC/_internal/_modifyChildFromTo";
 
 export interface IRConstrMeta extends BaseIRMetadata {}
 
@@ -115,7 +116,23 @@ export class IRConstr
             )
         )) return;
 
+        // keep reference
+        const oldParent = this._parent;
+        
+        // change parent
         this._parent = newParent;
+
+        // if has old parent
+        if( oldParent !== undefined && isIRParentTerm( oldParent ) )
+        {
+            // change reference to a clone for safety
+            this.hash;
+            _modifyChildFromTo(
+                oldParent,
+                this,
+                this.clone()
+            );
+        }
     }
     
     clone(): IRConstr
