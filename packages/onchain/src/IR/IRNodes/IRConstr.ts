@@ -13,6 +13,7 @@ import { makeArrayLikeProxy } from "./utils/makeArrayLikeProxy";
 import { MutArrayLike } from "../utils/MutArrayLike";
 import { equalIrHash, hashIrData, IRHash, isIRHash } from "../IRHash";
 import { _modifyChildFromTo } from "../toUPLC/_internal/_modifyChildFromTo";
+import { shallowEqualIRTermHash } from "../utils/equalIRTerm";
 
 export interface IRConstrMeta extends BaseIRMetadata {}
 
@@ -64,9 +65,8 @@ export class IRConstr
                     // called before setting the new value
                     // the return value is the value that will be set
                     (newElem, oldElem) => {
-                        if(!equalIrHash(oldElem.hash, newElem.hash)) self.markHashAsInvalid()
-                        // keep the parent reference in the old child, useful for compilation
-                        // oldElem.parent = undefined;
+                        if(!shallowEqualIRTermHash(oldElem, newElem))
+                        self.markHashAsInvalid();
                         newElem.parent = self;
                         return newElem;
                     }

@@ -10,6 +10,7 @@ import { IRParentTerm, isIRParentTerm } from "../utils/isIRParentTerm";
 import { _modifyChildFromTo } from "../toUPLC/_internal/_modifyChildFromTo";
 import { BaseIRMetadata } from "./BaseIRMetadata";
 import { equalIrHash, hashIrData, IRHash, isIRHash } from "../IRHash";
+import { shallowEqualIRTermHash } from "../utils/equalIRTerm";
 
 export interface IRForcedMetadata extends BaseIRMetadata {}
 
@@ -44,7 +45,8 @@ export class IRForced
                 "invalid IRTerm to be forced"
             );
         }
-        if( !equalIrHash(this._forced.hash, newForced.hash) ) this.markHashAsInvalid();
+        if( !shallowEqualIRTermHash(this._forced, newForced) )
+        this.markHashAsInvalid();
         
         // keep the parent reference in the old child, useful for compilation
         // _forced.parent = undefined;

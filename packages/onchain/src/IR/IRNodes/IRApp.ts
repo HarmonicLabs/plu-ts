@@ -10,6 +10,7 @@ import { _modifyChildFromTo } from "../toUPLC/_internal/_modifyChildFromTo";
 import { BaseIRMetadata } from "./BaseIRMetadata";
 import { equalIrHash, hashIrData, IRHash, isIRHash } from "../IRHash";
 import { isObject } from "@harmoniclabs/obj-utils";
+import { shallowEqualIRTermHash } from "../utils/equalIRTerm";
 
 export interface IRAppMeta extends BaseIRMetadata {
     __src__?: string | undefined
@@ -52,7 +53,8 @@ export class IRApp
     set fn( newFn: IRTerm ) {
         if( !isIRTerm( newFn ) ) return;
                     
-        if(!equalIrHash( this._fn.hash, newFn.hash )) this.markHashAsInvalid();
+        if(!shallowEqualIRTermHash( this._fn, newFn ))
+        this.markHashAsInvalid();
 
         // keep the parent reference in the old child, useful for compilation
         // fn.parent = undefined;
@@ -66,7 +68,8 @@ export class IRApp
     {
         if( !isIRTerm( newArg ) ) return;
 
-        if(!equalIrHash( this._arg.hash, newArg.hash )) this.markHashAsInvalid();
+        if(!shallowEqualIRTermHash( this._arg, newArg ))
+        this.markHashAsInvalid();
 
         // keep the parent reference in the old child, useful for compilation
         // arg.parent = undefined;

@@ -10,6 +10,7 @@ import { IRParentTerm, isIRParentTerm } from "../utils/isIRParentTerm";
 import { _modifyChildFromTo } from "../toUPLC/_internal/_modifyChildFromTo";
 import { BaseIRMetadata } from "./BaseIRMetadata";
 import { equalIrHash, hashIrData, IRHash, isIRHash } from "../IRHash";
+import { shallowEqualIRTermHash } from "../utils/equalIRTerm";
 
 export interface IRDelayedMetadata extends BaseIRMetadata {}
 
@@ -43,7 +44,8 @@ export class IRDelayed
                 "invalid IRTerm to be delayed"
             );
         }
-        if(!equalIrHash(this._delayed.hash, newDelayed.hash)) this.markHashAsInvalid();
+        if(!shallowEqualIRTermHash(this._delayed, newDelayed))
+        this.markHashAsInvalid();
         
         // keep the parent reference in the old child, useful for compilation
         // _delayed.parent = undefined;

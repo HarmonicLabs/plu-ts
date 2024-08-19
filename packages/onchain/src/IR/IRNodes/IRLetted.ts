@@ -23,6 +23,7 @@ import { _getMinUnboundDbn } from "../toUPLC/subRoutines/handleLetted/groupBySco
 import { IRConstr } from "./IRConstr";
 import { IRCase } from "./IRCase";
 import { equalIrHash, hashIrData, IRHash, irHashToHex, isIRHash } from "../IRHash";
+import { shallowEqualIRTermHash } from "../utils/equalIRTerm";
 
 
 export type LettedSetEntry = {
@@ -133,7 +134,8 @@ export class IRLetted
         if( !isIRTerm( newVal ) )
         throw new BasePlutsError("letted term was not IRTerm");
     
-        if(!equalIrHash(this._value.hash, newVal.hash)) this.markHashAsInvalid();
+        if(!shallowEqualIRTermHash(this._value, newVal))
+        this.markHashAsInvalid();
         
         // remove deps even if the value is the same
         // newValue might be a clone of the current value

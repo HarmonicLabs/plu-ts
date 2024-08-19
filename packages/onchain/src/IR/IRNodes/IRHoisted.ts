@@ -20,6 +20,7 @@ import { _modifyChildFromTo } from "../toUPLC/_internal/_modifyChildFromTo";
 import { IRConstr } from "./IRConstr";
 import { IRCase } from "./IRCase";
 import { equalIrHash, hashIrData, IRHash, irHashToHex, isIRHash } from "../IRHash";
+import { shallowEqualIRTermHash } from "../utils/equalIRTerm";
 
 
 export type HoistedSetEntry = {
@@ -124,7 +125,8 @@ export class IRHoisted
         throw new BasePlutsError(
             "only closed terms can be hoisted"
         );
-        if(!!equalIrHash( this._hoisted.hash, newHoisted.hash )) this.markHashAsInvalid();
+        if(!shallowEqualIRTermHash( this._hoisted, newHoisted ))
+        this.markHashAsInvalid();
         
         // dependencies need to be updated EVEN if hash is the same
         // since the terms might be the same but maybe cloned
@@ -159,7 +161,6 @@ export class IRHoisted
         
         this._parent = newParent;
     }
-
 
     clone(): IRHoisted
     {

@@ -12,6 +12,7 @@ import { IRParentTerm, isIRParentTerm } from "../utils/isIRParentTerm";
 import { _modifyChildFromTo } from "../toUPLC/_internal/_modifyChildFromTo";
 import { BaseIRMetadata } from "./BaseIRMetadata";
 import { equalIrHash, hashIrData, IRHash, isIRHash } from "../IRHash";
+import { shallowEqualIRTermHash } from "../utils/equalIRTerm";
 
 export interface IRFuncMetadata extends BaseIRMetadata {}
 
@@ -75,7 +76,8 @@ export class IRFunc
             );
         }
         
-        if(!equalIrHash(this._body.hash, newBody.hash)) this.markHashAsInvalid();
+        if(!shallowEqualIRTermHash(this._body, newBody))
+        this.markHashAsInvalid();
         // keep the parent reference in the old child, useful for compilation
         // _body.parent = undefined;
         this._body = newBody;

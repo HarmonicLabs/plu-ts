@@ -11,6 +11,7 @@ import { makeArrayLikeProxy } from "./utils/makeArrayLikeProxy";
 import { MutArrayLike } from "../utils/MutArrayLike";
 import { equalIrHash, hashIrData, IRHash, isIRHash } from "../IRHash";
 import { _modifyChildFromTo } from "../toUPLC/_internal/_modifyChildFromTo";
+import { shallowEqualIRTermHash } from "../utils/equalIRTerm";
 
 export interface IRCaseMeta extends BaseIRMetadata {}
 
@@ -50,7 +51,8 @@ export class IRCase
                         // keep the parent reference in the old child, useful for compilation
                         // oldElem.parent = undefined;
                         newElem.parent = self;
-                        if(!equalIrHash( oldElem.hash, newElem.hash )) self.markHashAsInvalid();
+                        if(!shallowEqualIRTermHash( oldElem, newElem ))
+                        self.markHashAsInvalid();
                         return newElem;
                     }
                 ),
@@ -92,7 +94,8 @@ export class IRCase
     {
         if( !isIRTerm( newConstrTerm ) ) return;
 
-        if(!equalIrHash( this._constrTerm.hash, newConstrTerm.hash )) this.markHashAsInvalid();
+        if(!shallowEqualIRTermHash( this._constrTerm, newConstrTerm ))
+        this.markHashAsInvalid();
 
         // keep the parent reference in the old child, useful for compilation
         // constrTerm.parent = undefined;

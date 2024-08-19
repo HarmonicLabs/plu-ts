@@ -20,13 +20,13 @@ export function isIRHash( hash: any ): hash is IRHash
     );
 }
 
-export function equalIrHash( a: Uint32Array, b: Uint32Array ): boolean
+export function equalIrHash( a: IRHash, b: IRHash ): boolean
 {
     return (
         // a instanceof Uint32Array &&
         // b instanceof Uint32Array &&
-        a.length === 4 &&
-        b.length === 4 &&
+        // a.length === 4 &&
+        // b.length === 4 &&
         a[0] === b[0] &&
         a[1] === b[1] &&
         a[2] === b[2] &&
