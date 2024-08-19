@@ -157,23 +157,7 @@ export class IRHoisted
             )
         )) return;
         
-        // keep reference
-        const oldParent = this._parent;
-        
-        // change parent
         this._parent = newParent;
-
-        // if has old parent
-        if( oldParent !== undefined && isIRParentTerm( oldParent ) )
-        {
-            // change reference to a clone for safety
-            this.hash;
-            _modifyChildFromTo(
-                oldParent,
-                this,
-                this.clone()
-            );
-        }
     }
 
 
