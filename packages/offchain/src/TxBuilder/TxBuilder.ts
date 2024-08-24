@@ -1140,7 +1140,6 @@ export class TxBuilder
             })
         ) : undef;
 
-        i = 0;
         const _proposalProcedures = Array.isArray( proposalProcedures ) ? 
         proposalProcedures.map(({ proposalProcedure, script }) => {
 

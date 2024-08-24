@@ -124,11 +124,7 @@ export function getScriptInfoData(
     else if( tag === TxRedeemerTag.Voting )
     {
         ctorIdx = 4;
-        const votingProcedure = tx.votingProcedures?.procedures
-        .filter( p => 
-            p.voter.kind === VoterKind.ConstitutionalCommitteScript ||
-            p.voter.kind === VoterKind.DRepScript
-        )[ rdmr.index ];
+        const votingProcedure = tx.votingProcedures?.procedures[ rdmr.index ];
 
         if( !votingProcedure )
         {
@@ -145,22 +141,8 @@ export function getScriptInfoData(
     else if( tag === TxRedeemerTag.Proposing )
     {
         ctorIdx = 5;
-        const proposalProcedure = tx.proposalProcedures?.filter(
-            p => p.rewardAccount.type === "script"
-        )[ rdmr.index ];
-
-        if( !proposalProcedure )
-        {
-            throw new Error(
-                "mismatching proposal redeemer,  couldn't find voting procedure at index " +
-                rdmr.index.toString()
-            );
-        }
-
-        purposeArgs = [
-            new DataI( rdmr.index ),
-            proposalProcedure.toData( version )
-        ];
+        purposeArgs = [];
+        
     }
     else throw new Error(
         "invalid redeemer tag"
