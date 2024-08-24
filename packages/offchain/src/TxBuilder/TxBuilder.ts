@@ -1523,10 +1523,10 @@ function onEvaluationResult(
 
     // artificially add some budget to allow for small exec costs errors
     // TODO: fix `plutus-machine` evaluation
-    budgetSpent.add({
-        cpu: 100_000,
-        mem: 10_000
-    });
+    // budgetSpent.add({
+    //     cpu: 100_000,
+    //     mem: 10_000
+    // });
 
     onScriptResult && onScriptResult(
         rdmr.clone(),

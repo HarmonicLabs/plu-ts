@@ -1,9 +1,10 @@
 import { Address, Credential, Script, ScriptType, StakeCredentials, StakeKeyHash, TxBody, TxOutRef, TxRedeemer, UTxO, Value, defaultProtocolParameters, nativeScriptToCbor } from "@harmoniclabs/cardano-ledger-ts";
-import { UPLCEncoder, UPLCProgram, parseUPLC, parseUPLCText } from "@harmoniclabs/uplc"
+import { UPLCEncoder, UPLCProgram, parseUPLC, parseUPLCText, showUPLC } from "@harmoniclabs/uplc"
 import { ITxBuildInput, TxBuilder, defaultMainnetGenesisInfos } from "..";
 import { DataConstr, DataI, dataToCbor } from "@harmoniclabs/plutus-data";
 import { getSpendingPurposeData } from "../toOnChain/getSpendingPurposeData";
 import { fromHex, fromUtf8, lexCompare } from "@harmoniclabs/uint8array-utils";
+import { Machine } from "@harmoniclabs/plutus-machine";
 
 
 describe("fee", () => {
@@ -59,8 +60,21 @@ describe("fee", () => {
             ],
             changeAddress: addr0
         });
+        
+        /*
+        console.log(
+            ((txBuilder as any).cek as Machine)
+            .machineCosts.startup.toJson
+        )
+        //*/
 
-        expect( tx.body.fee ).toBeGreaterThanOrEqual( 174611 );
+        /*
+        console.log( tx.body.fee );
+        console.log( tx.witnesses.redeemers?.at(0)?.toJson() );
+        console.log( showUPLC( parseUPLC( fromHex("0101002499") ).body ) )
+        //*/
+        
+        expect( tx.body.fee ).toBeGreaterThanOrEqual( 173983/*174611*/ );
         // console.log( JSON.stringify( tx.toJson(), undefined, 2) )
 
     });
