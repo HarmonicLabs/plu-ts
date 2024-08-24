@@ -5,6 +5,7 @@ import { Term } from "../../../../Term";
 import { PBool } from "../../../../PTypes/PBool";
 import { bool, delayed, lam } from "../../../../type_system/types";
 import { makeMockUtilityTerm } from "./makeMockUtilityTerm";
+import { addBaseUtilityTerm } from "../BaseUtilityTerm";
 
 
 // export type TermBool = Term<PBool> & {
@@ -36,6 +37,8 @@ const getterOnly = {
 
 export function mockPBoolMethods( term: Term<PBool> ): TermBool
 {
+    term = addBaseUtilityTerm( term );
+
     definePropertyIfNotPresent(
         term,
         "por",

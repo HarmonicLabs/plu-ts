@@ -4,11 +4,11 @@ import { Term } from "../Term";
 import { includesDynamicPairs } from "../type_system/includesDynamicPairs";
 import { ToPType } from "../type_system/ts-pluts-conversion";
 import { TermType, lam } from "../type_system/types";
-import { UtilityTermOf, addUtilityForType } from "./std/UtilityTerms/addUtilityForType";
+import { getCallStackAt } from "../../utils/getCallStackAt";
 import { PappResult, papp } from "./papp";
 import { IRVar } from "../../IR/IRNodes/IRVar";
 import { IRFunc } from "../../IR/IRNodes/IRFunc";
-import { getCallStackAt } from "../../utils/getCallStackAt";
+import { UtilityTermOf, addUtilityForType } from "./std/UtilityTerms/addUtilityForType";
 
 
 export function plam<A extends TermType, B extends TermType >( inputType: A, outputType: B )
@@ -31,7 +31,7 @@ return (
             onNameInferred: inferred => func_name = inferred 
         })?.inferredName;
 
-    const lambdaTerm  = new Term<PLam<ToPType<A>,ToPType<B>>>(
+    let lambdaTerm  = new Term<PLam<ToPType<A>,ToPType<B>>>(
         lam( inputType, outputType ) as any,
         dbn => {
             const thisLambdaPtr = dbn + BigInt( 1 );
@@ -77,7 +77,9 @@ return (
                 return new IRFunc( 1, body.toIR( thisLambdaPtr ) );
             }
         )
-    )
+    );
+
+    // lambdaTerm = addBaseUtilityTerm( lambdaTerm );
 
     // allows ```lambdaTerm.$( input )``` syntax
     // rather than ```papp( lambdaTerm, input )```

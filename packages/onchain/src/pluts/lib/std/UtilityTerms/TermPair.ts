@@ -5,17 +5,18 @@ import { Term } from "../../../Term";
 import { FromPType, isWellFormedType, typeExtends, unwrapAlias } from "../../../type_system";
 import { tyVar, pair, TermType, PrimType, PairT } from "../../../type_system/types";
 import { UtilityTermOf } from "./addUtilityForType";
-import { pfstPair, psndPair } from "../../builtins";
+import { pfstPair, psndPair } from "../../builtins/pair";
 import { plet } from "../../plet";
 import { PappArg } from "../../pappArg";
 import { TermBool } from "./TermBool";
 import { peqPair } from "../pair";
+import { addBaseUtilityTerm, BaseUtilityTermExtension } from "./BaseUtilityTerm";
 
 type UnwrapPAsData<PT extends PType> = 
     PT extends PAsData<infer PTy extends PType> ? PTy :
     PT
 
-export type TermPair<PFst extends PType, PSnd extends PType> = Term<PPair<PFst,PSnd>> & {
+export type TermPair<PFst extends PType, PSnd extends PType> = Term<PPair<PFst,PSnd>> & BaseUtilityTermExtension & {
 
     readonly fst: UtilityTermOf<UnwrapPAsData<PFst>>
 
@@ -33,6 +34,8 @@ const getterOnly = {
 
 export function addPPairMethods<PFst extends PType, PSnd extends PType>( _pair: Term<PPair<PFst,PSnd>>): TermPair<PFst,PSnd>
 {
+    _pair = addBaseUtilityTerm( _pair );
+
     const pairT = unwrapAlias( _pair.type ) as PairT<FromPType<PFst>,FromPType<PSnd>>;
 
     if( !typeExtends( pairT, pair( tyVar(), tyVar() ) ) )

@@ -10,8 +10,9 @@ export * from "@harmoniclabs/cardano-costmodels-ts";
 
 export * from "@harmoniclabs/plutus-machine";
 
-export * from "@harmoniclabs/plu-ts-offchain";
+export * from "@harmoniclabs/bip32_ed25519";
+
 export * from "@harmoniclabs/cardano-ledger-ts";
+export * from "@harmoniclabs/plu-ts-offchain";
 
 export * from "@harmoniclabs/plu-ts-onchain";
-

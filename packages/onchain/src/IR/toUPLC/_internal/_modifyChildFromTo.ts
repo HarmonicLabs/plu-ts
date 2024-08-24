@@ -1,4 +1,3 @@
-import { toHex, uint8ArrayEq } from "@harmoniclabs/uint8array-utils";
 import { IRApp } from "../../IRNodes/IRApp";
 import { IRDelayed } from "../../IRNodes/IRDelayed";
 import { IRForced } from "../../IRNodes/IRForced";
@@ -7,8 +6,10 @@ import { IRHoisted } from "../../IRNodes/IRHoisted";
 import { IRLetted } from "../../IRNodes/IRLetted";
 import { IRTerm } from "../../IRTerm";
 import { IRParentTerm } from "../../utils/isIRParentTerm";
-import { isIRTerm } from "@harmoniclabs/plu-ts-onchain";
-import { prettyIRJsonStr } from "../../utils";
+import { isIRTerm, prettyIRJsonStr } from "../../utils";
+import { IRConstr } from "../../IRNodes/IRConstr";
+import { IRCase } from "../../IRNodes/IRCase";
+import { equalIrHash, IRHash, irHashToHex, isIRHash } from "../../IRHash";
 
 /**
  * 
@@ -16,12 +17,16 @@ import { prettyIRJsonStr } from "../../utils";
  * @param currentChild mainly passed to distinguish in case of `IRApp`
  * @param newChild new node's child
  */
-export function _modifyChildFromTo( parent: IRParentTerm | undefined, currentChild: IRTerm | Uint8Array, newChild: IRTerm ): void
+export function _modifyChildFromTo(
+    parent: IRParentTerm | undefined,
+    currentChild: IRTerm | IRHash,
+    newChild: IRTerm
+): void
 {
     if( parent === undefined )
     {
         throw new Error(
-            "'_modifyChildFromTo' received an undefined parent"
+            "'_modifyChildFromTo' received an undefined parent, possibly root"
         );
     }
     if(
@@ -36,21 +41,22 @@ export function _modifyChildFromTo( parent: IRParentTerm | undefined, currentChi
     )
     {
         // we are modifying the child
-        // so we remove the reference
+        // so we remove parent the reference
         currentChild.parent = undefined;
     }
+
     if( parent instanceof IRApp )
     {
         // DO NO USE **ONLY** SHALLOW EQUALITY
         // child might be cloned
-        const currChildHash = currentChild instanceof Uint8Array ? currentChild : currentChild.hash;
+        const currChildHash = isIRHash( currentChild ) ? currentChild : currentChild.hash;
 
         // check the argument first as it is more likely to have a smaller tree
-        if( currentChild === parent.arg || uint8ArrayEq( parent.arg.hash, currChildHash ) )
+        if( currentChild === parent.arg || equalIrHash( parent.arg.hash, currChildHash ) )
         {
             parent.arg = newChild;
         }
-        else if( currentChild === parent.fn || uint8ArrayEq( parent.fn.hash, currChildHash ) )
+        else if( currentChild === parent.fn || equalIrHash( parent.fn.hash, currChildHash ) )
         {
             parent.fn = newChild;
         }
@@ -63,13 +69,74 @@ export function _modifyChildFromTo( parent: IRParentTerm | undefined, currentChi
             );
             throw new Error(
                 "unknown 'IRApp' child to modify; given child to modify hash: " +
-                toHex( currChildHash ) +
-                "; function child hash: " + toHex( parent.fn.hash ) +
-                "; argument child hash: " + toHex( parent.arg.hash )
+                irHashToHex( currChildHash ) +
+                "; function child hash: " + irHashToHex( parent.fn.hash ) +
+                "; argument child hash: " + irHashToHex( parent.arg.hash )
             );
         }
 
-        
+        return;
+    }
+    else if( parent instanceof IRConstr )
+    {
+        let foundChild = false;
+        for( let i = 0; i < parent.fields.length; i++ )
+        {
+            const field = parent.fields[i];
+            if( field === currentChild )
+            {
+                parent.fields[i] = newChild;
+                foundChild = true;
+                break
+            }
+        }
+        if( foundChild ) return;
+        const currChildHash = isIRHash( currentChild ) ? currentChild : currentChild.hash;
+        for( let i = 0; i < parent.fields.length; i++ )
+        {
+            const field = parent.fields[i];
+            if( equalIrHash( field.hash, currChildHash ) )
+            {
+                parent.fields[i] = newChild;
+                break
+            }
+        }
+        return;
+    }
+    else if( parent instanceof IRCase )
+    {
+        if( parent.constrTerm === currentChild )
+        {
+            parent.constrTerm = newChild;
+            return;
+        }
+        let foundChild = false;
+        for( let i = 0; i < parent.continuations.length; i++ )
+        {
+            const field = parent.continuations[i];
+            if( field === currentChild )
+            {
+                parent.continuations[i] = newChild;
+                foundChild = true;
+                break
+            }
+        }
+        if( foundChild ) return;
+        const currChildHash = isIRHash( currentChild ) ? currentChild : currentChild.hash;
+        if( equalIrHash( currChildHash, parent.constrTerm.hash ) )
+        {
+            parent.constrTerm = newChild;
+            return;
+        }
+        for( let i = 0; i < parent.continuations.length; i++ )
+        {
+            const field = parent.continuations[i];
+            if( equalIrHash( field.hash, currChildHash ) )
+            {
+                parent.continuations[i] = newChild;
+                break
+            }
+        }
         return;
     }
 

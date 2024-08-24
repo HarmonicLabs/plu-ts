@@ -10,5 +10,4 @@ export class PByteString extends PDataRepresentable
         super();
         this._pbytestring = bs;
     }
-    
 }

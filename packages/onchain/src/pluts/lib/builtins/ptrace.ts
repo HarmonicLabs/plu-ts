@@ -23,38 +23,3 @@ export function ptrace<ReturnT extends TermType>( returnT: ReturnT )
         )
     );
 }
-
-export const ptraceIfTrue = phoist(
-    pfn([
-        delayed( str ),
-        bool,
-    ],  bool)
-    (( msg, boolean ) => 
-        pif( bool ).$( boolean )
-        .then( ptrace( bool ).$( pforce( msg ) ).$( pBool( true ) ) )
-        .else( pBool( false ) )
-    )
-);
-
-export const ptraceIfFalse = phoist(
-    pfn([
-        delayed( str ),
-        bool,
-    ],  bool)
-    (( msg, boolean ) => 
-        pif( bool ).$( boolean )
-        .then( pBool( true ) )
-        .else( ptrace( bool ).$( pforce( msg ) ).$( pBool( false ) ) )
-    )
-);
-
-export function ptraceError<T extends TermType>( t: T, somemsg?: string )
-    : TermFn<[ PString ], ToPType<T>>
-{
-    return phoist(
-        plam( str, t )
-        ( msg => pforce(
-            ptrace( delayed( t ) ).$( msg ).$( pdelay( perror( t, somemsg ) ) )
-        ) as any )
-    ) as any;
-}

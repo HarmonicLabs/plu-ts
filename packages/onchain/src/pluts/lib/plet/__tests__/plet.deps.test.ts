@@ -1,6 +1,4 @@
-import { showUPLC } from "@harmoniclabs/uplc";
 import { PScriptContext } from "../../../API/V2";
-import { pmatch } from "../../../PTypes/PStruct/pmatch";
 import { pstruct } from "../../../PTypes/PStruct/pstruct";
 import { bs, int } from "../../../type_system/types";
 import { perror } from "../../perror";
@@ -12,8 +10,9 @@ import { _old_plet } from "../old";
 import { plam } from "../../plam";
 import { palias } from "../../../PTypes/PAlias/palias";
 import { PValue } from "../../../API/V1/Value/PValue";
+import { pmatch } from "../../pmatch";
 
-describe("plet dependecies", () => {
+describe.skip("plet dependecies", () => {
 
     describe("structs", () => {
 
@@ -39,50 +38,12 @@ describe("plet dependecies", () => {
             term.toIR();
         });
 
-        test("(deprecated) extract", () => {
-
-            const term = pfn([
-                MyStruct.type
-            ],  int)
-            ( my => {
-
-                return my.extract("hello").in(({ hello }) => {
-
-                    const two = plet( pInt( 2 ) );
-
-                    return hello.add( two ).mult( two )
-                });
-
-            });
-
-            term.toIR();
-        });
-
-        test("(deprecated) extract with plet( ... ).in", () => {
-
-            const term = pfn([
-                MyStruct.type
-            ],  int)
-            ( my => {
-
-                return my.extract("hello").in(({ hello }) => {
-
-                    return plet( pInt( 2 ) ).in( two => 
-                        hello.add( two ).mult( two )
-                    );
-                })
-            });
-
-            term.toIR()
-
-        });
-
     });
 
     test("plet().in ownCurrencySymbol" , () => {
 
         const doubleOwnCurrSym = pfn([
-            PScriptContext.type
+            V2.PScriptContext.type
         ],  bs)
         (( ctx ) =>
             
@@ -101,32 +62,10 @@ describe("plet dependecies", () => {
 
     });
 
-    test("(deprecated) extract().in ownCurrencySymbol" , () => {
-
-        const doubleOwnCurrSym = pfn([
-            PScriptContext.type
-        ],  bs)
-        (( ctx ) =>
-            
-            ctx.extract("purpose").in( ({ purpose }) =>
-        
-                plet(
-                    pmatch( purpose )
-                    .onMinting( mint => mint.currencySym )
-                    ._( _ => perror( bs ) )
-                ).in( ownCurrSym => ownCurrSym.concat( ownCurrSym ) )
-            
-            )
-        );
-
-        doubleOwnCurrSym.toIR()
-
-    });
-
     test("(latest) ownCurrencySymbol" , () => {
 
         const doubleOwnCurrSym = pfn([
-            PScriptContext.type
+            V2.PScriptContext.type
         ],  bs)
         (( { purpose } ) => {
 

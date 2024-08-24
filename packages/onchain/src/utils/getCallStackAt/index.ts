@@ -64,7 +64,7 @@ export function getCallStackAt(
     Error.stackTraceLimit = n;
 
     let stackTrace: string | undefined = undefined;
-    if( !hasV8Suff )
+    if( hasV8Suff )
     {
         const ref = {};
         Error.captureStackTrace( ref );

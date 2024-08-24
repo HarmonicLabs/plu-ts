@@ -1,4 +1,6 @@
 import { IRApp } from "../../IRNodes/IRApp";
+import { IRCase } from "../../IRNodes/IRCase";
+import { IRConstr } from "../../IRNodes/IRConstr";
 import { IRDelayed } from "../../IRNodes/IRDelayed";
 import { IRForced } from "../../IRNodes/IRForced";
 import { IRFunc } from "../../IRNodes/IRFunc";
@@ -30,6 +32,39 @@ export function markRecursiveHoistsAsForced( _term: IRTerm ): void
             stack.push(
                 { term: t.arg, isIRAppArg: true, isInRecursiveTerm },
                 { term: t.fn, isInRecursiveTerm }
+            );
+            continue;
+        }
+        if( t instanceof IRConstr )
+        {
+            // must push the arg first and then the fucntion
+            // so that we can check if the function is the Z combinator before the arg is processed
+            stack.push(
+                ...Array.from( t.fields )
+                .map( (f, i) => ({
+                    term: f,
+                    isIRAppArg: i > 0,
+                    isInRecursiveTerm
+                }))
+            );
+            continue;
+        }
+        if( t instanceof IRCase )
+        {
+            // must push the arg first and then the fucntion
+            // so that we can check if the function is the Z combinator before the arg is processed
+            stack.push(
+                {
+                    term: t.constrTerm,
+                    isIRAppArg: false,
+                    isInRecursiveTerm
+                },
+                ...Array.from( t.continuations )
+                .map( cont => ({
+                    term: cont,
+                    isIRAppArg: true,
+                    isInRecursiveTerm
+                }))
             );
             continue;
         }
@@ -85,7 +120,7 @@ export function markRecursiveHoistsAsForced( _term: IRTerm ): void
                 stack.push({ term: t.value, isInRecursiveTerm });
                 continue;
             }
-            else // if( t instanceof IRHoisted )
+            else if( t instanceof IRHoisted )
             {
                 stack.push({ term: t.hoisted, isInRecursiveTerm });
                 continue;

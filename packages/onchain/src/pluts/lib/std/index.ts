@@ -10,3 +10,5 @@ export * from "./stdEq";
 export * from "./PMaybe";
 export * from "./combinators";
 export * from "./UtilityTerms";
+export * from "./passert";
+export * from "./traces";

@@ -1,15 +1,12 @@
 import { fromAscii } from "@harmoniclabs/uint8array-utils";
-import { PTokenName } from "../../API/V1/Value/PTokenName";
-import { PAssetsEntry, PCredential, PCurrencySymbol, PData, PExtended, PInt, PScriptContext, PScriptPurpose, PTxInfo, PTxOut, PTxOutRef, PType, PUnit, PValue, PValueEntry, Term, TermFn, TermList, bool, bs, data, delayed, fn, int, lam, list, pBSToData, pBool, pData, pDataI, pInt, pIntToData, pList, pListToData, pchooseList, pdelay, peqData, perror, pfn, pforce, phoist, pif, pindexBs, pisEmpty, plam, plet, pmakeUnit, pmatch, pmatchList, pnilData, precursive, pserialiseData, psha2_256, pstrictIf, pstruct, psub, ptrace, ptraceError, ptraceVal, punBData, punIData, punsafeConvertType, str, termTypeToString, unit } from "../..";
+import { PData, PInt,PType,Term, TermFn, TermList, V2, bool, bs, data, delayed, fn, int, lam, list, pBSToData, pBool, pData, pDataI, pInt, pIntToData, pList, pListToData, pchooseList, pdelay, peqData, perror, pfn, pforce, phoist, pif, pindexBs, pisEmpty, plam, plet, pmakeUnit, pmatch, pmatchList, pnilData, precursive, pserialiseData, psha2_256, pstrictIf, pstruct, psub, ptrace, ptraceError, ptraceVal, punBData, punIData, punsafeConvertType, str, termTypeToString, unit } from "../..";
 import { TxOutRef } from "@harmoniclabs/cardano-ledger-ts";
 import { dataFromCbor } from "@harmoniclabs/plutus-data";
-import { Machine } from "@harmoniclabs/plutus-machine";
-import { UPLCConst, prettyUPLC } from "@harmoniclabs/uplc";
-import { prettyIR, prettyIRJsonStr } from "../../../IR/utils/showIR";
+import { CEKConst, Machine } from "@harmoniclabs/plutus-machine";
 
-const master_tn = PTokenName.from( fromAscii("itamae") );
+const master_tn = V2.PTokenName.from( fromAscii("itamae") );
 
-const tn = PTokenName.from( fromAscii("TEMPURA") );
+const tn = V2.PTokenName.from( fromAscii("TEMPURA") );
 
 const halving_number = pInt( 210_000 );
 
@@ -130,8 +127,8 @@ const exp2 = phoist(
 
 const value_has_only_master_and_lovelaces = phoist(
     pfn([
-        PValue.type,
-        PCurrencySymbol.type
+       V2.PValue.type,
+       V2.PCurrencySymbol.type
     ],  bool)
     (( value, own_policy ) => {
     
@@ -142,7 +139,7 @@ const value_has_only_master_and_lovelaces = phoist(
         const sndEntry = plet( value.tail.head );
 
         const checkMasterAssets = plet(
-            plam( PValueEntry.type, bool )
+            plam(V2.PValueEntry.type, bool )
             (({ fst: policy, snd: assets }) => {
 
                 // inlined
@@ -169,8 +166,8 @@ const value_has_only_master_and_lovelaces = phoist(
 
 const value_contains_master = phoist(
     pfn([
-        PValue.type,
-        PCurrencySymbol.type
+       V2.PValue.type,
+       V2.PCurrencySymbol.type
     ],  bool)
     ( ( value, own_policy ) => {
 
@@ -465,8 +462,8 @@ const TargetState = pstruct({
 const Redeemer = pstruct({
     // must be 0
     CtxLike: {
-        tx: PTxInfo.type,
-        purpose: PScriptPurpose.type
+        tx:V2.PTxInfo.type,
+        purpose:V2.PScriptPurpose.type
     },
     InputNonce: {
         nonce: bs
@@ -512,18 +509,18 @@ function traceThing<Thing extends Term<PType>>( thing: Thing, msg: string ): Thi
 
 const pgetFinite = phoist(
     pfn([
-        PExtended.type
+       V2.PExtended.type
     ], int)
     ( extended =>
         pmatch( extended )
-        .onPFinite(({ _0 }) => _0)
+        .onPFinite(({ n }) => n)
         ._( _ => perror( int ) )
     )
 );
 
 const tempura
 = pfn([
-    PTxOutRef.type,
+   V2.PTxOutRef.type,
     data,
     Redeemer.type
 ],  unit)
@@ -549,12 +546,12 @@ const tempura
             // inlined
             const upper_range = 
                 pmatch( interval.to.bound )
-                .onPFinite(({ _0 }) => _0 )
+                .onPFinite(({ n }) => n )
                 ._ (  _ => perror( int ) )
 
             const lower_range = plet(
                 pmatch( interval.from.bound )
-                .onPFinite(({ _0 }) => _0 )
+                .onPFinite(({ n }) => n )
                 ._ (  _ => perror( int ) )
             );
 
@@ -588,7 +585,7 @@ const tempura
             const outsToSelf = plet(
                 outs.filter( out => 
                     out.address.credential.eq( 
-                        PCredential.PScriptCredential({ 
+                       V2.PCredential.PScriptCredential({ 
                             valHash: pBSToData.$( own_policy ) 
                         })
                     )
@@ -650,7 +647,7 @@ const tempura
             passert.$(
                 tx.inputs.some( i =>
                     i.resolved.address.credential.eq(
-                        PCredential.PScriptCredential({
+                       V2.PCredential.PScriptCredential({
                             valHash: pBSToData.$( own_policy )
                         })
                     )
@@ -662,7 +659,7 @@ const tempura
     .onInputNonce(({ nonce }) =>
     //*/
         punsafeConvertType(
-            plam( PScriptContext.type, unit )
+            plam( V2.PScriptContext.type, unit )
             (({ tx, purpose }) => {
                 
                 const state = punsafeConvertType( _state, SpendingState.type );
@@ -680,7 +677,7 @@ const tempura
                 const spendingUtxoRef = plet(
                     pmatch( purpose )
                     .onSpending(({ utxoRef }) => utxoRef )
-                    ._( _ => perror( PTxOutRef.type ) )
+                    ._( _ => perror(V2.PTxOutRef.type ) )
                 );
 
                 const { inputs: ins, outputs: outs, mint, interval } = tx;
@@ -690,7 +687,7 @@ const tempura
                         ins.find( i => i.utxoRef.eq( spendingUtxoRef ) )
                     )
                     .onJust(({ val }) => val.resolved )
-                    .onNothing( _ => perror( PTxOut.type ) )
+                    .onNothing( _ => perror(V2.PTxOut.type ) )
                 );
 
                 const ownAddr = plet( ownIn.address );
@@ -789,7 +786,7 @@ const tempura
                         mint.find(({ fst: policy }) => policy.eq( own_validator_hash ))
                     )
                     .onJust(({ val }) => val.snd )
-                    .onNothing( _ => perror( list( PAssetsEntry.type ) ) )
+                    .onNothing( _ => perror( list(V2.PAssetsEntry.type ) ) )
                 ).in( ownMints => {
 
                     // // inlined
@@ -820,7 +817,7 @@ const tempura
                         mint.find(({ fst: policy }) => policy.eq( own_validator_hash ))
                     )
                     .onJust(({ val }) => val.snd )
-                    .onNothing( _ => perror( list( PAssetsEntry.type ) ) )
+                    .onNothing( _ => perror( list(V2.PAssetsEntry.type ) ) )
                 );
 
                 // inlined
@@ -998,7 +995,7 @@ describe("run tempura", () => {
     test("mine 0", () => {
 
         const contract = tempura.$(
-            PTxOutRef.fromData(
+           V2.PTxOutRef.fromData(
                 pData(
                     new TxOutRef({
                         "id": "1cd30f11c3d774fa1cb43620810a405e6048c8ecea2e85ff43f5c3ad08096e46",
@@ -1043,8 +1040,8 @@ describe("run tempura", () => {
         );
         //*/
 
-        expect( res.result instanceof UPLCConst ).toBe( true );
-        expect( res.result ).toEqual( UPLCConst.unit );
+        expect( res.result instanceof CEKConst ).toBe( true );
+        expect( res.result ).toEqual( CEKConst.unit );
     });
 
     // fails because of context;
@@ -1052,7 +1049,7 @@ describe("run tempura", () => {
     test.skip("mine 1", () => {
 
         const contract = tempura.$(
-            PTxOutRef.fromData(
+           V2.PTxOutRef.fromData(
                 pData(
                     new TxOutRef({
                         "id": "1cd30f11c3d774fa1cb43620810a405e6048c8ecea2e85ff43f5c3ad08096e46",
@@ -1086,8 +1083,8 @@ describe("run tempura", () => {
             (res as any)?.result
         );
 
-        expect( res.result instanceof UPLCConst ).toBe( true );
-        expect( res.result ).toEqual( UPLCConst.unit );
+        expect( res.result instanceof CEKConst ).toBe( true );
+        expect( res.result ).toEqual( CEKConst.unit );
     });
 
 });

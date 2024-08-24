@@ -1,13 +1,12 @@
 // export * from "./ScriptContext/PScriptContext";
 // export * from "./ScriptContext/PTxInfo/PTxInfo";
-export * from "./ScriptContext/PScriptPurpose";
+// export * from "./ScriptContext/PScriptPurpose";
 export * from "./Address/PAddress";
 export * from "./Address/PCredential";
 export * from "./Address/PStakingCredential";
 export * from "./Interval/PExtended";
+export * from "./Interval/PBound";
 export * from "./Interval/PInterval";
-export * from "./Interval/PLowerBound";
-export * from "./Interval/PUpperBound";
 export * from "./PDCert";
 export * from "./PubKey/PPubKey";
 export * from "./PubKey/PPubKeyHash";
@@ -15,10 +14,10 @@ export * from "./ScriptsHashes/PDatumHash";
 export * from "./ScriptsHashes/PScriptHash";
 export * from "./ScriptsHashes/PValidatorHash";
 export * from "./Time";
-export * from "./Tx/PTxId";
+// export * from "./Tx/PTxId";
 // export * from "./Tx/PTxInInfo";
 // export * from "./Tx/PTxOut";
-export * from "./Tx/PTxOutRef";
+// export * from "./Tx/PTxOutRef";
 export * from "./Value/PCurrencySymbol";
 export * from "./Value/PTokenName";
 export * from "./Value/PValue";
@@ -31,8 +30,6 @@ import { PCredential } from "./Address/PCredential";
 import { PStakingCredential } from "./Address/PStakingCredential";
 import { PExtended } from "./Interval/PExtended";
 import { PInterval } from "./Interval/PInterval";
-import { PLowerBound } from "./Interval/PLowerBound";
-import { PUpperBound } from "./Interval/PUpperBound";
 import { PDCert } from "./PDCert";
 import { PPubKey } from "./PubKey/PPubKey";
 import { PPubKeyHash } from "./PubKey/PPubKeyHash";
@@ -46,7 +43,8 @@ import { PTxOut } from "./Tx/PTxOut";
 import { PTxOutRef } from "./Tx/PTxOutRef";
 import { PCurrencySymbol } from "./Value/PCurrencySymbol";
 import { PTokenName } from "./Value/PTokenName";
-import { PValue } from "./Value/PValue";
+import { PAssetsEntry, PValue, PValueEntry } from "./Value/PValue";
+import { PBound } from "./Interval/PBound";
 
 export const V1 = Object.freeze({
     PScriptContext,
@@ -61,8 +59,7 @@ export const V1 = Object.freeze({
     // ./Interval
     PExtended,
     PInterval,
-    PLowerBound,
-    PUpperBound,
+    PBound,
 
     // ./PDCert
     PDCert,
@@ -88,5 +85,7 @@ export const V1 = Object.freeze({
     // ./Value
     PCurrencySymbol,
     PTokenName,
-    PValue
-});
+    PValue,
+    PValueEntry,
+    PAssetsEntry
+} as const);

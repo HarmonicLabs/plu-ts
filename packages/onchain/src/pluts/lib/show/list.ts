@@ -4,7 +4,7 @@ import { pshow } from "./pshow";
 import { ToPType } from "../../type_system";
 import { phoist } from "../phoist";
 import { pfn } from "../pfn";
-import { pfoldl, pfoldr } from "../std";
+import { pfoldl } from "../std/list/pfoldl";
 import { fromAscii } from "@harmoniclabs/uint8array-utils";
 
 export function pshowList<ElemsT extends TermType>( elems_t: ElemsT )
@@ -19,7 +19,7 @@ export function pshowList<ElemsT extends TermType>( elems_t: ElemsT )
             pfoldl( elems_t, bs )
             .$(( accum, elem ) => 
                 accum
-                .concat( pshowElem.$( elem ) )
+                .concat( pshowElem.$( elem as any ) )
                 .concat( fromAscii(",") ) 
             )
             .$( fromAscii("[") )

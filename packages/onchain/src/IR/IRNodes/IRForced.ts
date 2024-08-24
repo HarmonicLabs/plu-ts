@@ -1,5 +1,4 @@
 import { Cloneable } from "@harmoniclabs/cbor/dist/utils/Cloneable";
-import { blake2b_128 } from "@harmoniclabs/crypto";
 import { BasePlutsError } from "../../utils/BasePlutsError";
 import { ToJson } from "../../utils/ToJson";
 import { IRTerm } from "../IRTerm";
@@ -10,123 +9,87 @@ import { isIRTerm } from "../utils/isIRTerm";
 import { IRParentTerm, isIRParentTerm } from "../utils/isIRParentTerm";
 import { _modifyChildFromTo } from "../toUPLC/_internal/_modifyChildFromTo";
 import { BaseIRMetadata } from "./BaseIRMetadata";
+import { equalIrHash, hashIrData, IRHash, isIRHash } from "../IRHash";
+import { shallowEqualIRTermHash } from "../utils/equalIRTerm";
 
 export interface IRForcedMetadata extends BaseIRMetadata {}
 
 export class IRForced
     implements Cloneable<IRForced>, IHash, IIRParent, ToJson
 {
-    forced!: IRTerm
-    readonly hash!: Uint8Array
-    markHashAsInvalid!: () => void;
-
     readonly meta: IRForcedMetadata
 
-    parent: IRParentTerm | undefined;
-
-    constructor( forced: IRTerm )
+    constructor( forced: IRTerm, _unsafeHash?: IRHash )
     {
-        Object.defineProperty(
-            this, "meta", {
-                value: {},
-                writable: false,
-                enumerable: true,
-                configurable: false
-            }
-        );
+        this.meta = {};
 
-        let hash: Uint8Array | undefined = undefined
-        Object.defineProperty(
-            this, "hash",
-            {
-                get: () => {
-                    if(!(hash instanceof Uint8Array))
-                    {
-                        hash = blake2b_128(
-                            concatUint8Arr(
-                                IRForced.tag,
-                                this.forced.hash
-                            )
-                        );
-                    }
-                    return hash.slice();
-                }
-            }
-        );
-        Object.defineProperty(
-            this, "markHashAsInvalid",
-            {
-                value: () => { 
-                    hash = undefined;
-                    this.parent?.markHashAsInvalid();
-                },
-                writable: false,
-                enumerable:  false,
-                configurable: false
-            }
-        );
+        this._hash = isIRHash( _unsafeHash ) ? _unsafeHash : undefined;
         
         if( !isIRTerm( forced ) )
         throw new Error("IRForced argument was not an IRTerm");
 
-        let _forced: IRTerm = forced;
-        _forced.parent = this;
+        this._forced = forced;
+        this._forced.parent = this;
+
+        this._parent = undefined;
+    }
+
+
+    private _forced!: IRTerm;
+    get forced(): IRTerm { return this._forced; }
+    set forced( newForced: IRTerm | undefined )
+    {
+        if(!isIRTerm( newForced ))
+        {
+            throw new BasePlutsError(
+                "invalid IRTerm to be forced"
+            );
+        }
+        if( !shallowEqualIRTermHash(this._forced, newForced) )
+        this.markHashAsInvalid();
         
-        Object.defineProperty(
-            this, "forced",
-            {
-                get: () => _forced,
-                set: ( newForced: IRTerm | undefined ) => {
-                    if(!isIRTerm( newForced ))
-                    {
-                        throw new BasePlutsError(
-                            "invalid IRTerm to be forced"
-                        );
-                    }
-                    this.markHashAsInvalid();
-                    _forced = newForced;
-                    _forced.parent = this;
-                },
-                enumerable: true,
-                configurable: false
-            }
-        );
+        // keep the parent reference in the old child, useful for compilation
+        // _forced.parent = undefined;
+        
+        this._forced = newForced;
+        this._forced.parent = this;
+    }
 
-        let _parent: IRParentTerm | undefined = undefined;
-        Object.defineProperty(
-            this, "parent",
-            {
-                get: () => _parent,
-                set: ( newParent: IRParentTerm | undefined ) => {
-                    if(!( // assert
-                        // new parent value is different than current
-                        _parent !== newParent && (
-                            // and the new parent value is valid
-                            newParent === undefined || 
-                            isIRParentTerm( newParent )
-                        )
-                    )) return;
-                    
-                    // keep reference
-                    const oldParent = _parent;
-                    // change parent
-                    _parent = newParent;
+    private _hash: IRHash | undefined;
+    get hash(): IRHash
+    {
+        if(!isIRHash( this._hash ))
+        {
+            this._hash = hashIrData(
+                concatUint8Arr(
+                    IRForced.tag,
+                    this._forced.hash
+                )
+            );
+        }
+        return this._hash;
+    }
+    isHashPresent(): boolean { return isIRHash( this._hash ); }
+    markHashAsInvalid(): void
+    {
+        this._hash = undefined;
+        this.parent?.markHashAsInvalid();
+    }
 
-                    // if has old parent
-                    if( oldParent !== undefined && isIRParentTerm( oldParent ) )
-                    {
-                        // change reference to a clone for safety
-                        _modifyChildFromTo(
-                            oldParent,
-                            this,
-                            this.clone()
-                        );
-                    }
-                },
-                enumerable: true,
-                configurable: false
-            }
-        );
+    private _parent: IRParentTerm | undefined;
+    get parent(): IRParentTerm | undefined { return this._parent }
+    set parent( newParent: IRParentTerm | undefined )
+    {
+        if(!( // assert
+            // new parent value is different than current
+            this._parent !== newParent && (
+                // and the new parent value is valid
+                newParent === undefined || 
+                isIRParentTerm( newParent )
+            )
+        )) return;
+        
+        this._parent = newParent;
     }
 
     static get tag(): Uint8Array
@@ -136,7 +99,10 @@ export class IRForced
 
     clone(): IRForced
     {
-        return new IRForced( this.forced.clone() )
+        return new IRForced(
+            this.forced.clone(),
+            this.isHashPresent() ? this.hash : undefined
+        );
     }
 
     toJson(): any
@@ -144,6 +110,6 @@ export class IRForced
         return {
             type: "IRForced",
             forced: this.forced.toJson()
-        }
+        };
     }
 }

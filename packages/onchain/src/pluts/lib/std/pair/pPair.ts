@@ -33,10 +33,10 @@ export function pPair<FstT extends TermType, SndT extends TermType>(
     return ( _fst: PappArg<ToPType<FstT>>, _snd: PappArg<ToPType<SndT>> ): TermPair<ToPType<FstT>,ToPType<SndT>> => {
 
         if(!( _fst instanceof Term ))
-        _fst = pappArgToTerm( _fst, fstT );
+        _fst = pappArgToTerm( _fst, fstT ) as any ;
 
         if(!( _snd instanceof Term ))
-        _snd = pappArgToTerm( _snd, sndT );
+        _snd = pappArgToTerm( _snd, sndT ) as any ;
 
         const fst = _fst as Term<ToPType<FstT>>;
         const snd = _snd as Term<ToPType<SndT>>;

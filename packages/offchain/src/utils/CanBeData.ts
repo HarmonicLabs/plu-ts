@@ -2,10 +2,10 @@ import { ByteString } from "@harmoniclabs/bytestring";
 import { CborObj, CborString, isCborObj } from "@harmoniclabs/cbor";
 import { hasOwn } from "@harmoniclabs/obj-utils";
 import { Data, isData, dataFromCbor, dataFromCborObj } from "@harmoniclabs/plutus-data";
-import { Machine } from "@harmoniclabs/plutus-machine";
-import { ToUPLC, UPLCConst } from "@harmoniclabs/uplc";
+import { CEKConst, Machine } from "@harmoniclabs/plutus-machine";
+import { ToUPLC } from "@harmoniclabs/uplc";
 
-export type CanBeData = Data | ToUPLC | CborObj | CborString | string
+export type CanBeData = Data | ToUPLC | CborObj | CborString | string;
 
 export function cloneCanBeData( stuff: CanBeData ): CanBeData
 {
@@ -18,7 +18,7 @@ export function cloneCanBeData( stuff: CanBeData ): CanBeData
     ) return stuff.clone() as any;
 
     const result = Machine.evalSimple( stuff.toUPLC() );
-    if(!( result instanceof UPLCConst ))
+    if(!( result instanceof CEKConst ))
     {
         throw new Error(
             "`CanBeData` object that implements `ToUPLC` did not evaluated to a constant"
@@ -70,7 +70,7 @@ export function forceData( data: CanBeData ): Data
     )
     {
         const uplcData = Machine.evalSimple( data.toUPLC() );
-        if( !( uplcData instanceof UPLCConst ) )
+        if( !( uplcData instanceof CEKConst ) )
         {
             throw new Error(
                 "term passed as 'datum' field evaluated to an error"

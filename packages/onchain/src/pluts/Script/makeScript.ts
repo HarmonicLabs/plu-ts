@@ -9,14 +9,25 @@ import type { PDataRepresentable } from "../PType/PDataRepresentable";
 import { TermFn } from "../PTypes/PFn/PFn";
 import { perror } from "../lib/perror";
 import { pmakeUnit } from "../lib/std/unit/pmakeUnit";
-import { pif, ptraceError } from "../lib/builtins";
+import { pif } from "../lib/builtins";
 import { papp } from "../lib/papp";
 import { pfn } from "../lib/pfn";
 import { PrimType, bool, data, unit } from "../type_system/types";
 import { isWellFormedType, typeExtends } from "../type_system";
 import { fromData } from "../lib/std/data/conversion/fromData";
+import { ptraceError } from "../lib/std/traces";
 
 
+/**
+ * @deprecated
+ * 
+ * since plutus v3, all plutus scripts take only the script context as argument
+ * and redeemer and datum can be extracted from there
+ * 
+ * it is suggested to use plutus v3 (or higher) to get the best performance out of your contract
+ * 
+ * also make sure your contract returns a `unit` and no longer a `bool`
+ */
 export function makeValidator(
     typedValidator: Term<
         PLam<
@@ -89,6 +100,16 @@ export function makeValidator(
 }
 
 
+/**
+ * @deprecated
+ * 
+ * since plutus v3, all plutus scripts take only the script context as argument
+ * and redeemer and datum can be extracted from there
+ * 
+ * it is suggested to use plutus v3 (or higher) to get the best performance out of your contract
+ * 
+ * also make sure your contract returns a `unit` and no longer a `bool`
+ */
 export function makeRedeemerValidator(
     typedValidator: Term<
         PLam<

@@ -7,9 +7,10 @@ import { por, pstrictOr, pand, pstrictAnd, peqBool } from "../../builtins/bool"
 import { delayed } from "../../../type_system/types"
 import { IRDelayed } from "../../../../IR/IRNodes/IRDelayed"
 import { definePropertyIfNotPresent, defineReadOnlyProperty } from "@harmoniclabs/obj-utils"
+import { addBaseUtilityTerm, BaseUtilityTermExtension } from "./BaseUtilityTerm"
 
 
-export type TermBool = Term<PBool> & {
+export type TermBool = Term<PBool> & BaseUtilityTermExtension & {
 
     readonly por:            TermFn<[ PDelayed<PBool> ], PBool>
     readonly or:                ( other: PappArg<PBool> ) => TermBool
@@ -49,6 +50,7 @@ const getterOnly = {
 
 export function addPBoolMethods( term: Term<PBool> ): TermBool
 {
+    term = addBaseUtilityTerm( term );
     definePropertyIfNotPresent(
         term,
         "por",

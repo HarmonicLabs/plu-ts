@@ -45,7 +45,6 @@ export type PAlias<PT extends PType, AMethods extends Methods> =
 
 } & PDataRepresentable
 
-
 export function palias<
     T extends TermType,
     AMethods extends Methods

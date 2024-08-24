@@ -3,9 +3,7 @@ import { IRVar } from "./IRVar";
 import { positiveIntAsBytes } from "../utils/positiveIntAsBytes";
 import { IRMetadata } from "../interfaces/IRMetadata";
 import { Cloneable } from "@harmoniclabs/cbor/dist/utils/Cloneable";
-import { blake2b_128 } from "@harmoniclabs/crypto";
 import { freezeAll, defineReadOnlyProperty } from "@harmoniclabs/obj-utils";
-import { toHex, uint8ArrayEq } from "@harmoniclabs/uint8array-utils";
 import { BasePlutsError } from "../../utils/BasePlutsError";
 import { ToJson } from "../../utils/ToJson";
 import { IRTerm } from "../IRTerm";
@@ -22,6 +20,10 @@ import { IRParentTerm, isIRParentTerm } from "../utils/isIRParentTerm";
 import { _modifyChildFromTo } from "../toUPLC/_internal/_modifyChildFromTo";
 import { BaseIRMetadata } from "./BaseIRMetadata";
 import { _getMinUnboundDbn } from "../toUPLC/subRoutines/handleLetted/groupByScope";
+import { IRConstr } from "./IRConstr";
+import { IRCase } from "./IRCase";
+import { equalIrHash, hashIrData, IRHash, irHashToHex, isIRHash } from "../IRHash";
+import { shallowEqualIRTermHash } from "../utils/equalIRTerm";
 
 
 export type LettedSetEntry = {
@@ -32,7 +34,7 @@ export type LettedSetEntry = {
 export function jsonLettedSetEntry( entry: LettedSetEntry )
 {
     return {
-        letted: toHex(entry.letted.hash),
+        letted: irHashToHex(entry.letted.hash),
         nReferences: entry.nReferences
     }
 
@@ -41,7 +43,7 @@ export function jsonLettedSetEntry( entry: LettedSetEntry )
 export function expandedJsonLettedSetEntry( entry: LettedSetEntry )
 {
     return {
-        letted: toHex( entry.letted.hash ),
+        letted: irHashToHex( entry.letted.hash ),
         letted_value: prettyIR( entry.letted.value ).text.split("\n"),
         nReferences: entry.nReferences
     }
@@ -65,14 +67,88 @@ const defaultLettedMeta: IRLettedMeta = freezeAll({
     forceHoist: false
 });
 
+let n_hash_access = 0;
+
 export class IRLetted
     implements Cloneable<IRLetted>, IHash, IIRParent, ToJson, IRLettedMetadata
 {
-    readonly hash!: Uint8Array;
-    markHashAsInvalid!: () => void;
+    private _hash: IRHash | undefined;
+    get hash(): IRHash
+    {
+        if(!isIRHash( this._hash ))
+        {
+            const normalized = getNormalizedLettedArgs( this.dbn, this._value );
+            if( normalized === undefined )
+            {
+                // `_value` doesn't includes any `IRVar`
+                // aka. there is nothing to normalize
+                // just use the value regardless of the
+                // `IRLetted` dbn instantiation
+                this._hash = hashIrData(
+                    concatUint8Arr(
+                        IRLetted.tag,
+                        this._value.hash
+                    )
+                );
+            }
+            else
+            {
+                this._hash = hashIrData(
+                    concatUint8Arr(
+                        IRLetted.tag,
+                        positiveIntAsBytes( normalized[0] ),
+                        normalized[1].hash
+                    )
+                );
+                // const [ normalized_dbn, normalized_value] = normalized;
+                // if( toHex( hash ) === "ee84fb036ed2726e01b0415109246927" )
+                // {
+                //     const original_value = _value.clone();
+                //     const minDbn = getMinVarDbn( original_value );
+                //     const minUnb = _getMinUnboundDbn( original_value );
+                //     console.log(
+                //         "_ee84fb036ed2726e01b0415109246927_",
+                //         "\noriginal value:", prettyIRJsonStr( original_value, 2, { hoisted: false } ),
+                //         "\nmin dbn:", minDbn,
+                //         "\nmin unbound:", minUnb,
+                //         "\nnormalized dbn:", normalized_dbn,
+                //     );
+                // }
+            }
+        }
 
-    value!: IRTerm
+        return this._hash;
+    }
+    markHashAsInvalid()
+    {
+        this._hash = undefined;
+        this._deps = undefined;
+        this.parent?.markHashAsInvalid();
+    }
+    isHashPresent(): boolean { return isIRHash( this._hash ); }
 
+    private _value!: IRTerm
+    get value(): IRTerm { return this._value; }
+    set value( newVal: IRTerm )
+    {
+        if( !isIRTerm( newVal ) )
+        throw new BasePlutsError("letted term was not IRTerm");
+    
+        if(!shallowEqualIRTermHash(this._value, newVal))
+        this.markHashAsInvalid();
+        
+        // remove deps even if the value is the same
+        // newValue might be a clone of the current value
+        // and so have different (new) objects
+        this._deps = undefined;
+
+        // keep the parent reference in the old child, useful for compilation
+        // _value.parent = undefined;
+        this._value = newVal;
+        this._value.parent = this
+    }
+
+    private _dbn: number
     /**
      * we need to keep track of the debruijn at which the `IRLetted` is instantiated
      * 
@@ -81,15 +157,56 @@ export class IRLetted
      * 
      * knowing the DeBruijn we can differentiate them
      */
-    dbn: number
+    get dbn(): number { return this._dbn; }
+    set dbn( newDbn: number )
+    {
+        if(!(
+            Number.isSafeInteger( newDbn ) && newDbn >= 0 
+        )) throw new BasePlutsError(
+            "invalid index for an `IRLetted` instance"
+        );
 
-    isClosedAtDbn: ( dbn: number ) => boolean
+        if( newDbn === this._dbn ){
+            // everything ok
+            // avoid calling `markHashAsInvalid` 
+            return;
+        }
 
-    readonly dependencies!: LettedSetEntry[]
+        this.markHashAsInvalid();
+        this._dbn = newDbn;
+    }
 
-    parent: IRParentTerm | undefined;
+    isClosedAtDbn( dbn: number ): boolean
+    {
+        if( !Number.isSafeInteger( dbn ) ) throw new Error("unexpected unsafe dbn integer")
+        const minUnbound = _getMinUnboundDbn( this._value );
+        if( minUnbound === undefined ) return true;
+        return minUnbound < dbn;
+    }
 
-    clone!: () => IRLetted
+    private _deps: LettedSetEntry[] | undefined;
+    get dependencies(): LettedSetEntry[]
+    {
+        if( this._deps === undefined )
+        this._deps = getSortedLettedSet( getLettedTerms( this._value ) );
+        return this._deps;
+    }
+
+    private _parent: IRParentTerm | undefined;
+    get parent(): IRParentTerm | undefined { return this._parent; }
+    set parent( newParent: IRParentTerm | undefined )
+    {
+        if(!( // assert
+            // new parent value is different than current
+            this._parent !== newParent && (
+                // and the new parent value is valid
+                newParent === undefined || 
+                isIRParentTerm( newParent )
+            )
+        )) return;
+
+        this._parent = newParent;
+    }
 
     readonly meta!: IRLettedMeta
 
@@ -97,7 +214,7 @@ export class IRLetted
         DeBruijn: number | bigint,
         toLet: IRTerm,
         metadata: Partial<IRLettedMeta> = {},
-        unsafe_hash: Uint8Array | undefined = undefined
+        _unsafeHash: IRHash | undefined = undefined
     )
     {
         DeBruijn = typeof DeBruijn === "bigint" ? Number( DeBruijn ) : DeBruijn; 
@@ -107,251 +224,49 @@ export class IRLetted
             "invalid index for an `IRLetted` instance"
         );
 
-        let _dbn: number =  DeBruijn;
-        Object.defineProperty(
-            this, "dbn",
-            {
-                get: () => _dbn,
-                set: ( newDbn: number ) => {
-                    if(!(
-                        Number.isSafeInteger( newDbn ) && newDbn >= 0 
-                    )) throw new BasePlutsError(
-                        "invalid index for an `IRLetted` instance"
-                    );
-
-                    if( newDbn === _dbn ){
-                        // everything ok
-                        // avoid calling `markHashAsInvalid` 
-                        return;
-                    }
-
-                    this.markHashAsInvalid();
-                    _dbn = newDbn;
-                },
-                enumerable: true,
-                configurable: false
-            }
-        );
-
         if( !isIRTerm( toLet ) )
         throw new BasePlutsError(
             "letted value was not an IRTerm"
         );
 
-        // initialize without calling "set"
-        // cloning here otherwhise breaks the tree
-        // TODO: find what is breaking the tree
-        // when solved add `this.value.clone()` to the `IRLetted.clone` method below 
-        let _value: IRTerm = toLet.clone();
-        _value.parent = this;
+        this._dbn = DeBruijn;
+
+        this._value = toLet;
+        this._value.parent = this;
 
         // we need the has before setting dependecies
-        let hash: Uint8Array | undefined = unsafe_hash instanceof Uint8Array ? new Uint8Array( unsafe_hash ) : undefined;
-        Object.defineProperty(
-            this, "hash", {
-                get: () => {
-                    if(!( hash instanceof Uint8Array ))
-                    {
-                        const normalized = getNormalizedLettedArgs( this.dbn, _value );
-                        if( normalized === undefined )
-                        {
-                            // `_value` doesn't includes any `IRVar`
-                            // aka. there is nothing to normalize
-                            // just use the value regardless of the
-                            // `IRLetted` dbn instantiation
-                            hash = blake2b_128(
-                                concatUint8Arr(
-                                    IRLetted.tag,
-                                    _value.hash
-                                )
-                            );
-                        }
-                        else
-                        {
-                            hash = blake2b_128(
-                                concatUint8Arr(
-                                    IRLetted.tag,
-                                    positiveIntAsBytes( normalized[0] ),
-                                    normalized[1].hash
-                                )
-                            );
-                            // const [ normalized_dbn, normalized_value] = normalized;
-                            // if( toHex( hash ) === "ee84fb036ed2726e01b0415109246927" )
-                            // {
-                            //     const original_value = _value.clone();
-                            //     const minDbn = getMinVarDbn( original_value );
-                            //     const minUnb = _getMinUnboundDbn( original_value );
-                            //     console.log(
-                            //         "_ee84fb036ed2726e01b0415109246927_",
-                            //         "\noriginal value:", prettyIRJsonStr( original_value, 2, { hoisted: false } ),
-                            //         "\nmin dbn:", minDbn,
-                            //         "\nmin unbound:", minUnb,
-                            //         "\nnormalized dbn:", normalized_dbn,
-                            //     );
-                            // }
-                        }
-                    }
-                    return hash.slice();
-                },
-                set: () => {},
-                enumerable: true,
-                configurable: false
-            }
-        );
-        Object.defineProperty(
-            this, "markHashAsInvalid",
-            {
-                value: () => { 
-                    hash = undefined;
-                    // tree changed; possibly dependencies too
-                    _deps = undefined;
-                    this.parent?.markHashAsInvalid();
-                },
-                writable: false,
-                enumerable:  false,
-                configurable: false
-            }
-        );
-
-        // make sure to use the cloned `_value` and NOT `toLet`
-        // since we need the same root ( setted trough `parent` )
-        let _deps: LettedSetEntry[] | undefined = undefined;
-        function _getDeps(): LettedSetEntry[]
-        {
-            if( _deps === undefined )
-            _deps = getSortedLettedSet( getLettedTerms( _value ) );
-            return _deps
-        }
+        this._hash = isIRHash( _unsafeHash ) ? _unsafeHash : undefined;
         
-        Object.defineProperty(
-            this, "value",
-            {
-                get: () => _value,
-                set: ( newVal: IRTerm ) => {
-                    if( !isIRTerm( newVal ) )
-                    throw new BasePlutsError("letted term was not IRTerm");
-                
-                    this.markHashAsInvalid();
-                    _deps = undefined;
-                    _value = newVal;
-                    _value.parent = this
-                },
-                enumerable: true,
-                configurable: false
-            }
-        );
+        this._deps = undefined;
 
-        Object.defineProperty(
-            this, "isClosedAtDbn", {
-                value: ( dbn: number ) => {
-                    if( !Number.isSafeInteger( dbn ) ) throw new Error("unexpected unsafe dbn integer")
-                    const minUnbound = _getMinUnboundDbn( _value );
-                    if( minUnbound === undefined ) return true;
-                    return minUnbound < dbn;
-                },
-                writable: false,
-                enumerable: true,
-                configurable: false
-            }
-        )
+        this._parent = undefined;
 
-        Object.defineProperty(
-            this, "dependencies",
-            {
-                get: (): LettedSetEntry[] => _getDeps()
-                /*
-                .map( dep => {
-
-                    // const clone = dep.letted.clone();
-                    // clone.parent = dep.letted.parent; 
-                    return {
-                        letted: dep.letted,
-                        nReferences: dep.nReferences
-                    }
-                }
-                ), // MUST return clones
-                //*/
-                ,
-                set: () => {},
-                enumerable: true,
-                configurable: false
-            }
-        )
-
-        let _parent: IRParentTerm | undefined = undefined;
-        Object.defineProperty(
-            this, "parent",
-            {
-                get: () => _parent,
-                set: ( newParent: IRParentTerm | undefined ) => {
-                    if(!( // assert
-                        // new parent value is different than current
-                        _parent !== newParent && (
-                            // and the new parent value is valid
-                            newParent === undefined || 
-                            isIRParentTerm( newParent )
-                        )
-                    )) return;
-                    
-                    // keep reference
-                    const oldParent = _parent;
-                    // change parent
-                    _parent = newParent;
-
-                    // if has old parent
-                    if( oldParent !== undefined && isIRParentTerm( oldParent ) )
-                    {
-                        // change reference to a clone for safety
-                        _modifyChildFromTo(
-                            oldParent,
-                            this,
-                            this.clone()
-                        );
-                    }
-                },
-                enumerable: true,
-                configurable: false
-            }
-        );
-
-        Object.defineProperty(
-            this, "meta",
-            {
-                value: {
-                    ...defaultLettedMeta,
-                    ...metadata
-                },
-                writable: false,
-                enumerable: true,
-                configurable: false
-            }
-        );
-
-        defineReadOnlyProperty(
-            this, "clone",
-            () => {
-                return new IRLetted(
-                    this.dbn,
-                    this.value, // .clone(), // cloned in constructor
-                    { ...this.meta },
-                    hash instanceof Uint8Array ? Uint8Array.prototype.slice.call( hash ) : undefined
-                )
-            }
-        );
-
+        this.meta = {
+            ...defaultLettedMeta,
+            ...metadata
+        };
     }
 
     static get tag(): Uint8Array { return new Uint8Array([ 0b0000_0101 ]); }
+
+    clone(): IRLetted
+    {
+        return new IRLetted(
+            this.dbn,
+            this.value.clone(),
+            { ...this.meta },
+            this.isHashPresent() ? this.hash : undefined
+        )
+    }
 
     toJson(): any 
     {
         return {
             type: "IRLetted",
-            hash: toHex( this.hash ),
+            hash: irHashToHex( this.hash ),
             value: this.value.toJson()
-        }
+        };
     }
-    
 }
 
 /**
@@ -363,7 +278,7 @@ export class IRLetted
 export function getSortedLettedSet( lettedTerms: LettedSetEntry[] ): LettedSetEntry[]
 {
     const set: LettedSetEntry[] = [];
-    const hashesSet: Uint8Array[] = [];
+    const hashesSet: IRHash[] = [];
      
     /**
      * **O((n * m) * d)**
@@ -381,7 +296,7 @@ export function getSortedLettedSet( lettedTerms: LettedSetEntry[] ): LettedSetEn
             const thisLettedEntry = _terms[i]; 
             const thisHash = thisLettedEntry.letted.hash;
 
-            const idxInSet = hashesSet.findIndex( hash => uint8ArrayEq( hash, thisHash ) )
+            const idxInSet = hashesSet.findIndex( hash => equalIrHash( hash, thisHash ) )
             // if( !hashesSet.includes( hash ) )
             // "includes" uses standard equality (===)
             if( idxInSet < 0 ) // not present
@@ -473,6 +388,17 @@ export function getLettedTerms( irTerm: IRTerm, options?: Partial<GetLettedTerms
             continue;
         }
 
+        if( t instanceof IRConstr )
+        {
+            stack.push( ...Array.from( t.fields ) );
+            continue;
+        }
+        if( t instanceof IRCase )
+        {
+            stack.push( t.constrTerm, ...Array.from( t.continuations ) );
+            continue;
+        }
+
         if( t instanceof IRFunc )
         {
             stack.push( t.body );
@@ -547,8 +473,8 @@ export function getNormalizedLettedArgs( lettedDbn: number, value: IRTerm ): [ n
                         if( // parent is actually pointing to child
                             currentChild === parent.arg ||
                             currentChild === parent.fn ||
-                            uint8ArrayEq( parent.arg.hash, currentChild.hash ) ||
-                            uint8ArrayEq( parent.fn.hash, currentChild.hash )
+                            equalIrHash( parent.arg.hash, currentChild.hash ) ||
+                            equalIrHash( parent.fn.hash, currentChild.hash )
                         )
                         {
                             // inline
@@ -562,13 +488,17 @@ export function getNormalizedLettedArgs( lettedDbn: number, value: IRTerm ): [ n
                         else return false; // modified parent
                     }
                     else {
-                        // inline
-                        _modifyChildFromTo(
-                            node.parent,
-                            node,
-                            node.value
-                        );
-                        return true; // modified parent
+                        if( node.parent ) // only modify if not root
+                        {
+                            // inline
+                            _modifyChildFromTo(
+                                node.parent,
+                                node,
+                                node.value
+                            );
+                            return true; // modified parent
+                        }
+                        else return false;
                     }
                 }
             }

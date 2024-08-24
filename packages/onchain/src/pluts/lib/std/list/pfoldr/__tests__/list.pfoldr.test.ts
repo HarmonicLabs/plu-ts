@@ -12,11 +12,11 @@ import { showUPLC } from "@harmoniclabs/uplc"
 
 const add2 = pfoldr( int, list( int ) )
     .$( ( elem, accum ) => accum.prepend( elem.add( 2 ) ) )
-    .$( [] );
+    .$( [] as any );
 
 const fromDataI = pfoldr( data, list( int ) )
     .$( ( elem, accum ) => accum.prepend( punIData.$( elem ) ) )
-    .$( [] ); 
+    .$( [] as any ); 
     
 const lst = pList( data )([
     pDataI(2),
@@ -30,7 +30,7 @@ describe("pfoldr", () => {
 
         expect(
             Machine.evalSimple(
-                add2.$([1,2,3])
+                add2.$([1,2,3] as any)
             )
         ).toEqual(
             Machine.evalSimple(
@@ -68,7 +68,7 @@ describe("pfoldr", () => {
         
         expect(
             showUPLC(
-                add2.$([1,2,3]).toUPLC()
+                add2.$([1,2,3] as any).toUPLC()
             )
         ).toEqual(
             showUPLC(

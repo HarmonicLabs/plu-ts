@@ -8,6 +8,8 @@ import { IRError } from "./IRNodes/IRError";
 import { IRDelayed } from "./IRNodes/IRDelayed";
 import { IRForced } from "./IRNodes/IRForced";
 import { IRVar } from "./IRNodes/IRVar";
+import { IRConstr } from "./IRNodes/IRConstr";
+import { IRCase } from "./IRNodes/IRCase";
 
 export type IRTerm
     = IRVar
@@ -19,4 +21,6 @@ export type IRTerm
     | IRHoisted
     | IRError
     | IRForced
-    | IRDelayed;
+    | IRDelayed
+    | IRConstr
+    | IRCase;

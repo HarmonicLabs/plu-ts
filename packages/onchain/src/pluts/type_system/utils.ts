@@ -60,6 +60,12 @@ export function termTypeToString( t: GenericTermType, limit: number = Infinity )
             structDefToString( t[1] as StructDefinition, limit - 1 )
         ) + ")";
     }
+    if( tag === PrimType.Sop )
+        {
+            return "sop(" + (
+                structDefToString( t[1] as StructDefinition, limit - 1 )
+            ) + ")";
+        }
     if( isTaggedAsAlias( t ) )
     {
         const aliased = termTypeToString( unwrapAlias( t as any ), limit - 1 );
@@ -94,7 +100,7 @@ export function termTypeToString( t: GenericTermType, limit: number = Infinity )
 
     if( tag === PrimType.Lambda )
     {
-        return termTypeToString( t[1], limit - 1 ) + " -> " + termTypeToString( t[2], limit - 1 );
+        return "(" + termTypeToString( t[1], limit - 1 ) + " -> " + termTypeToString( t[2], limit - 1 )+")";
     }
 
     if( typeof t[0] === "symbol" ) return "tyParam("+ ((t[0] ).description ?? "") +")";
@@ -180,6 +186,7 @@ export type TermTypeJson
     | TermTypeJsonLambda
     | TermTypeJsonTyParam
     | TermTypeJsonStruct
+    | TermTypeJsonSop
     | PrimType.Int | PrimType.BS | PrimType.Str | PrimType.Unit | PrimType.Bool | PrimType.Data;
 
 export interface TermTypeJsonAlias { alias: TermTypeJson }
@@ -190,6 +197,7 @@ export interface TermTypeJsonPair { pair: { fst: TermTypeJson, snd: TermTypeJson
 export interface TermTypeJsonLambda { lambda: { input: TermTypeJson, output: TermTypeJson } }
 export interface TermTypeJsonTyParam { tyParam: null }
 export interface TermTypeJsonStruct { struct: StructDefJson }
+export interface TermTypeJsonSop { sop: StructDefJson }
 
 export function termTypeToJson( t: GenericTermType ): TermTypeJson
 {
@@ -207,7 +215,13 @@ export function termTypeToJson( t: GenericTermType ): TermTypeJson
     if( tag === PrimType.Struct )
     {
         return {
-            struct: structDefToJson( t[1] )
+            struct: structDefToJson( t[1] as any )
+        };
+    }
+    if( tag === PrimType.Sop )
+    {
+        return {
+            sop: structDefToJson( t[1] as any )
         };
     }
     if( tag === PrimType.AsData )
@@ -247,7 +261,7 @@ export function termTypeToJson( t: GenericTermType ): TermTypeJson
         }
     }
 
-    return tag;
+    return tag as TermTypeJson;
 }
 
 export function termTypeFromJson( json: TermTypeJson ): TermType

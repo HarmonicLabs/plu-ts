@@ -15,3 +15,4 @@ export const _pflipIR = new IRHoisted(
         )
     )
 );
+_pflipIR.hash;

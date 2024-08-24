@@ -10,3 +10,6 @@ export * from "./ppairData";
 export * from "./pprepend";
 export * from "./ptrace";
 export * from "./str";
+export * from "./bls12_381_G1_element";
+export * from "./bls12_381_G2_element";
+export * from "./bls12_381_MlResult";

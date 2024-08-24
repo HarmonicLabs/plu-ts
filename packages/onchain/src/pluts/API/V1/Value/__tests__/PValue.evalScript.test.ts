@@ -1,5 +1,5 @@
-import { Machine } from "@harmoniclabs/plutus-machine";
-import { UPLCConst, UPLCTerm, ErrorUPLC } from "@harmoniclabs/uplc";
+import { CEKConst, Machine } from "@harmoniclabs/plutus-machine";
+import { UPLCTerm, ErrorUPLC } from "@harmoniclabs/uplc";
 import { Term, pmatch, termTypeToString, typeExtends } from "../../../..";
 import { compileIRToUPLC } from "../../../../../IR/toUPLC/compileIRToUPLC";
 import { PMaybe, fromData, pBool, pByteString, pInt, pPair, pdelay, pfn, phoist, pif, plam, precursiveList, ptoData, toData } from "../../../../lib";
@@ -44,14 +44,14 @@ describe("Machine.evalSimple( PValue )", () => {
         expect(
             Machine.evalSimple(
                 PValue.from( pList( PValueEntry.type )([]) as any )
-            ) instanceof UPLCConst
+            ) instanceof CEKConst
         ).toBe( true )
         
     });
 
     test("one entry value", () => {
         expect(
-            Machine.evalSimple( oneEntryValue ) instanceof UPLCConst
+            Machine.evalSimple( oneEntryValue ) instanceof CEKConst
         ).toBe( true )
     });
 
@@ -72,7 +72,7 @@ describe("Machine.evalSimple( PValue )", () => {
         const { result } = Machine.eval( uplc );
 
         expect(
-            result instanceof UPLCConst
+            result instanceof CEKConst
         ).toBe( true )
 
     });
@@ -84,7 +84,7 @@ describe("Machine.evalSimple( PValue )", () => {
         );
         
         expect(
-            result instanceof UPLCConst
+            result instanceof CEKConst
         ).toBe( true )
 
     })

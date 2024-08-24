@@ -1,7 +1,9 @@
 import type { TermFn, PList, PInt, PLam } from "../../../PTypes";
 import { Term } from "../../../Term";
 import { TermType, ToPType, fn, int, list } from "../../../type_system";
-import { pif, pisEmpty, plessInt, phead, ptail } from "../../builtins";
+import { pif } from "../../builtins/bool";
+import { plessInt } from "../../builtins/int/intBinOpToBool";
+import { pisEmpty, ptail, phead } from "../../builtins/list";
 import { papp } from "../../papp";
 import { perror } from "../../perror";
 import { pfn } from "../../pfn";
@@ -22,6 +24,7 @@ export function pindexList<ElemsT extends TermType>( elemsT: ElemsT )
                 int
             ],elemsT)
             (( self, list, idx ) => 
+                // TODO this "pif" is useless
                 pif( elemsT ).$(
 
                     pisEmpty.$( list )

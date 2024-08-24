@@ -1,5 +1,5 @@
 import { PCurrencySymbol, PTxId, PTxOutRef, V2 } from "../../API";
-import { pstruct, pmatch } from "../../PTypes";
+import { pstruct } from "../../PTypes";
 import { fromHex } from "@harmoniclabs/uint8array-utils";
 import { _old_plet } from "../../lib/plet/old";
 import { Cbor, CborBytes } from "@harmoniclabs/cbor";
@@ -17,6 +17,7 @@ import { pisEmpty } from "../../lib/builtins/list";
 import { pData, pDataB, pDataI } from "../../lib/std/data/pData";
 import { punsafeConvertType } from "../../lib/punsafeConvertType";
 import { compile } from "../compile";
+import { pmatch } from "../../lib/pmatch";
 
 export const MintRdmr = pstruct({
     Mint: {},
@@ -30,11 +31,8 @@ const oneShotNFT = pfn([
     V2.PScriptContext.type
 
 ],  bool)
-(( utxo, rdmr, ctx ) =>
+(( utxo, rdmr, { tx, purpose } ) =>
     
-    ctx.extract("tx","purpose").in( ({ tx, purpose }) =>
-    tx.extract("inputs","mint").in( tx =>
-
         plet(
             pmatch( purpose )
             .onMinting( mint => mint.currencySym )
@@ -44,11 +42,7 @@ const oneShotNFT = pfn([
         pmatch( rdmr )
         .onMint( _ =>
 
-            tx.inputs.some( input => {
-
-                return input.extract("utxoRef").in( ({ utxoRef }) => utxoRef.eq( utxo )  )
-
-            })
+            tx.inputs.some( ({ utxoRef }) => utxoRef.eq( utxo ) )
             .and(
     
                 tx.mint.some( entry => {
@@ -90,7 +84,7 @@ const oneShotNFT = pfn([
             ) 
         )
     
-    )))
+    )
 )
 
 const _oneShotNFT = pfn([
@@ -147,9 +141,9 @@ const _oneShotNFT = pfn([
     });
 })
 
-const mustSpendUtxo =  PTxOutRef.PTxOutRef({
+const mustSpendUtxo = V2.PTxOutRef.PTxOutRef({
     // 5dafdbe833a241350d679348d03599db3d5179385f96521f89ff8fa51fd57ebf#0
-    id: PTxId.PTxId({
+    id: V2.PTxId.PTxId({
         txId: pDataB("5dafdbe833a241350d679348d03599db3d5179385f96521f89ff8fa51fd57ebf")
     }) as any,
     index: pDataI(0)

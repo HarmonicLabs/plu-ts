@@ -21,10 +21,14 @@ type PFnFromTypes<Ins extends [ TermType, ...TermType[] ], Out extends TermType>
     never
 
 type TermFnFromTypes<Ins extends [ TermType, ...TermType[] ], Out extends TermType> =
-    Ins extends [ infer T extends TermType ] ? Term<PLam<ToPType<T>, ToPType<Out>>> & { $: ( input: PappArg<ToPType<T>> ) => UtilityTermOf<ToPType<Out>> } :
+    Ins extends [ infer T extends TermType ] ? 
+        Term<PLam<ToPType<T>, ToPType<Out>>> & { 
+            $: ( input: PappArg<ToPType<T>> ) => UtilityTermOf<ToPType<Out>>
+        } :
     Ins extends [ infer T extends TermType, ...infer RestIns extends [ TermType, ...TermType[] ] ] ?
-        Term<PLam<ToPType<T>,PFnFromTypes<RestIns, Out>>>
-        & { $: ( input: PappArg<ToPType<T>> ) => TermFnFromTypes< RestIns, Out > } :
+        Term<PLam<ToPType<T>,PFnFromTypes<RestIns, Out>>> & {
+            $: ( input: PappArg<ToPType<T>> ) => TermFnFromTypes< RestIns, Out >
+        } :
     never
 
 /*

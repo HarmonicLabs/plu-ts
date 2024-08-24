@@ -1,5 +1,7 @@
 import { IRApp } from "../IRNodes/IRApp";
+import { IRCase } from "../IRNodes/IRCase";
 import { IRConst } from "../IRNodes/IRConst";
+import { IRConstr } from "../IRNodes/IRConstr";
 import { IRDelayed } from "../IRNodes/IRDelayed";
 import { IRError } from "../IRNodes/IRError";
 import { IRForced } from "../IRNodes/IRForced";
@@ -10,7 +12,7 @@ import { IRNative } from "../IRNodes/IRNative";
 import { IRVar } from "../IRNodes/IRVar";
 import type { IRTerm } from "../IRTerm";
 
-export function isIRTerm<T>( stuff: T ): stuff is (T extends IRTerm ? T : T & IRTerm)
+export function isIRTerm( stuff: any ): stuff is IRTerm
 {
     return (
         stuff instanceof IRVar      ||
@@ -22,6 +24,8 @@ export function isIRTerm<T>( stuff: T ): stuff is (T extends IRTerm ? T : T & IR
         stuff instanceof IRHoisted  ||
         stuff instanceof IRError    ||
         stuff instanceof IRForced   ||
-        stuff instanceof IRDelayed
+        stuff instanceof IRDelayed  ||
+        stuff instanceof IRConstr   ||
+        stuff instanceof IRCase
     );
 }

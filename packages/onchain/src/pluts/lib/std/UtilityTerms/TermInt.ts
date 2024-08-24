@@ -6,9 +6,10 @@ import { peqInt, pgreaterEqInt, pgreaterInt, plessEqInt, plessInt } from "../../
 import { padd } from "../../builtins/int/padd";
 import { PappArg } from "../../pappArg";
 import { TermBool } from "./TermBool";
+import { addBaseUtilityTerm, BaseUtilityTermExtension } from "./BaseUtilityTerm";
 
 
-export type TermInt = Term<PInt> & {
+export type TermInt = Term<PInt> & BaseUtilityTermExtension & {
     
     readonly padd:       TermFn<[PInt], PInt>
     readonly add:           ( other: PappArg<PInt> ) => TermInt
@@ -58,6 +59,8 @@ const getterOnly = {
 export function addPIntMethods( term: Term<PInt> )
     : TermInt
 {
+    term = addBaseUtilityTerm( term );
+
     definePropertyIfNotPresent(
         term,
         "padd",

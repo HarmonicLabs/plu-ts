@@ -1,6 +1,6 @@
 import { DataConstr } from "@harmoniclabs/plutus-data";
 import { asData, bool } from "../../../type_system/types";
-import { pif } from "../../builtins";
+import { pif } from "../../builtins/bool";
 import { phoist } from "../../phoist";
 import { plam } from "../../plam";
 import { _punsafeConvertType } from "../../punsafeConvertType/minimal";

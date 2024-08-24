@@ -4,11 +4,10 @@ import type { ToPType } from "../../type_system/ts-pluts-conversion";
 import { type UtilityTermOf, addUtilityForType } from "../std/UtilityTerms/addUtilityForType";
 import { isWellFormedType } from "../../type_system/kinds/isWellFormedType";
 import { Term } from "../../Term";
-import { termTypeToString } from "../../type_system";
 
 
-export function punsafeConvertType<FromPInstance extends PType, ToTermType extends TermType>
-( psome: Term<FromPInstance>, toType: ToTermType ): UtilityTermOf<ToPType<ToTermType>>
+export function punsafeConvertType<ToTermType extends TermType>
+( psome: Term<PType>, toType: ToTermType ): UtilityTermOf<ToPType<ToTermType>>
 {
     if( !isWellFormedType( toType ) )
     {
@@ -42,4 +41,9 @@ export function punsafeConvertType<FromPInstance extends PType, ToTermType exten
     });
 
     return addUtilityForType( toType )( converted ) as any;
+}
+
+export function term_as<ToTermType extends TermType>( this: Term<PType>, toType: ToTermType ): UtilityTermOf<ToPType<ToTermType>>
+{
+    return punsafeConvertType( this, toType );
 }

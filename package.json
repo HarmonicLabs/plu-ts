@@ -1,6 +1,6 @@
 {
   "name": "@harmoniclabs/plu-ts",
-  "version": "0.6.3",
+  "version": "0.8.0",
   "description": "An embedded DSL for Cardano smart contracts creation coupled with a library for Cardano transactions, all in Typescript",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -22,22 +22,19 @@
     "build": "rm -rf ./dist && tsc --project ./tsconfig.json && tsc-alias -p ./tsconfig.json",
     "build:light": "tsc --project ./tsconfig.json && tsc-alias -p ./tsconfig.json",
     "buidl": "npm run build",
-    "ci": "npm run test && npm run build",
+    "ci": "npm i && npm run test && npm run build",
     "start": "npm-run-all --parallel build:watch run:watch",
     "pub": "npm run ci && npm pub",
-
     "test:onchain": "cd ./packages/onchain && npm run test",
     "build:onchain": "cd ./packages/onchain && npm run build",
     "buidl:onchain": "cd ./packages/onchain && npm run buidl",
     "ci:onchain": "cd ./packages/onchain && npm run ci",
     "pub:onchain": "cd ./packages/onchain && npm run ci && npm pub",
-
     "test:offchain": "cd ./packages/offchain && npm run test",
     "build:offchain": "cd ./packages/offchain && npm run build",
     "buidl:offchain": "cd ./packages/offchain && npm run buidl",
     "ci:offchain": "cd ./packages/offchain && npm run ci",
     "pub:offchain": "cd ./packages/offchain && npm run ci && npm pub"
-
   },
   "publishConfig": {
     "registry": "https://registry.npmjs.org"
@@ -70,17 +67,21 @@
   },
   "homepage": "https://github.com/HarmonicLabs/plu-ts#readme",
   "dependencies": {
+    "@harmoniclabs/bigint-utils": "^1.0.0",
+    "@harmoniclabs/bip32_ed25519": "^0.1.2",
     "@harmoniclabs/bytestring": "^1.0.0",
-    "@harmoniclabs/cardano-costmodels-ts": "^1.0.0",
-    "@harmoniclabs/cardano-ledger-ts": "^0.1.3",
-    "@harmoniclabs/cbor": "^1.1.2",
+    "@harmoniclabs/cardano-costmodels-ts": "^1.2.0",
+    "@harmoniclabs/cardano-ledger-ts": "^0.2.3",
+    "@harmoniclabs/cbor": "^1.3.0",
+    "@harmoniclabs/crypto": "^0.2.4",
+    "@harmoniclabs/obj-utils": "^1.0.0",
     "@harmoniclabs/pair": "^1.0.0",
-    "@harmoniclabs/plu-ts-offchain": "^0.1.9",
-    "@harmoniclabs/plu-ts-onchain": "^0.2.7",
-    "@harmoniclabs/plutus-data": "^1.0.0",
-    "@harmoniclabs/plutus-machine": "^1.0.4",
+    "@harmoniclabs/plu-ts-offchain": "0.1.14",
+    "@harmoniclabs/plu-ts-onchain": "^0.3.0",
+    "@harmoniclabs/plutus-data": "^1.2.4",
+    "@harmoniclabs/plutus-machine": "^2.0.1",
     "@harmoniclabs/uint8array-utils": "^1.0.0",
-    "@harmoniclabs/uplc": "^1.1.0"
+    "@harmoniclabs/uplc": "^1.2.3"
   },
   "devDependencies": {
     "@babel/preset-env": "^7.18.6",
@@ -90,10 +91,8 @@
     "@types/node": "^18.14.6",
     "jest": "^29.4.3",
     "jest-environment-jsdom": "^29.4.3",
-    "rollup": "^3.18.0",
     "tsc-alias": "^1.7.1",
-    "typescript": "^4.6.3",
-    "v8-profiler-next": "^1.9.0"
+    "typescript": "^4.6.3"
   },
   "funding": "https://github.com/sponsors/HarmonicLabs"
 }

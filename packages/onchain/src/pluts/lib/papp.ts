@@ -19,7 +19,7 @@ import { IRHoisted } from "../../IR/IRNodes/IRHoisted";
 import { IRTerm } from "../../IR/IRTerm";
 import { IRApp } from "../../IR/IRNodes/IRApp";
 import { IRError } from "../../IR/IRNodes/IRError";
-import { isIRTerm } from "../../IR/utils/isIRTerm";
+import type { BaseUtilityTermExtension } from "./std/UtilityTerms/BaseUtilityTerm";
 
 
 function isIdentityIR( ir: IRTerm ): boolean
@@ -37,10 +37,9 @@ function isIdentityIR( ir: IRTerm ): boolean
 
 export type PappResult<Output extends PType> =
     Output extends PLam<infer OutIn extends PType, infer OutOut extends PType> ?
-        Term<PLam<OutIn,OutOut>>
-        & {
+        Term<PLam<OutIn,OutOut>> & {
             $: ( someInput: PappArg<OutIn> ) => PappResult<OutOut>
-        } :
+        } & BaseUtilityTermExtension :
     UtilityTermOf<Output>
 
 function unwrapDataIfNeeded( input: Term<PType>, expectedInputTy: TermType ): Term<any>
@@ -93,19 +92,19 @@ export function papp<Input extends PType, Output extends PType>( a: Term<PLam<In
     }
     else
     {
-        _b = pappArgToTerm( b, lambdaType[1] ) as any;
+        _b = pappArgToTerm( b as any, lambdaType[1] ) as any;
     }
 
     const outputType = lambdaType[2]; // applyLambdaType( lambdaType, _b.type );
 
-    const e_stack = Error().stack?.split("\n");
+    // const e_stack = Error().stack?.split("\n");
 
     let n = 2;
-    let src = e_stack ? 
-        e_stack[2].includes("$ ") ? 
-            e_stack[n = 3] : 
-            e_stack[2] 
-        : undefined;
+    // let src = e_stack ? 
+    //     e_stack[2].includes("$ ") ? 
+    //         e_stack[n = 3] : 
+    //         e_stack[2] 
+    //     : undefined;
 
     const outputTerm = addUtilityForType( outputType )(
         new Term(
@@ -138,7 +137,7 @@ export function papp<Input extends PType, Output extends PType>( a: Term<PLam<In
                 const app = new IRApp(
                     funcIR,
                     argIR,
-                    { __src__: src }
+                    // { __src__: src }
                 );
 
                 return app; 

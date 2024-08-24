@@ -10,15 +10,16 @@ import { phoist } from "../../../phoist";
 import { plam } from "../../../plam";
 import { punsafeConvertType } from "../../../punsafeConvertType";
 import { pBoolToData } from "../../bool/pBoolToData";
-import { pList, pmap } from "../../list";
 import { pData } from "../pData";
 import { _papp, _pcompose } from "./minimal_common";
 import { getElemsT, getFstT, getSndT } from "../../../../type_system/tyArgs";
-import { pfstPair, psndPair } from "../../../builtins";
 import { _punsafeConvertType } from "../../../punsafeConvertType/minimal";
 import { IRNative } from "../../../../../IR/IRNodes/IRNative";
 import { PType } from "../../../../PType";
 import { DataConstr } from "@harmoniclabs/plutus-data";
+import { pList } from "../../list/const";
+import { _pmap } from "../../list/pmap/minimal";
+import { pfstPair, psndPair } from "../../../builtins/pair";
 
 const pIntToData  =new Term<PLam<PInt, PAsData<PInt>>>(
     lam( int, asData( int ) ) as any,
@@ -174,7 +175,7 @@ export function _toData<T extends TermType>( t: T ): ( term: Term<ToPType<T>> ) 
         return (( term: Term<any> ) => {
             const theTerm = _papp(
                 pMapToData( fstT, sndT ) as any,
-                pmap( elemsT, pair( asData( fstT ) , asData( sndT ) ) )
+                _pmap( elemsT, pair( asData( fstT ) , asData( sndT ) ) )
                 .$(
                     ((_pair: any) => {
 
@@ -215,7 +216,7 @@ export function _toData<T extends TermType>( t: T ): ( term: Term<ToPType<T>> ) 
         return (( term: Term<any> ) => {
             const theTerm = _papp(
                 pListToData( asData( elemsT ) ),
-                pmap( elemsT, asData(elemsT) )
+                _pmap( elemsT, asData(elemsT) )
                 .$( _ptoData( elemsT ) )
                 .$( term )
             ) as any;

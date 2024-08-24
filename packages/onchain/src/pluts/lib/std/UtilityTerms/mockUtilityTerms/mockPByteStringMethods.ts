@@ -7,6 +7,7 @@ import { bool, bs, int, lam, str } from "../../../../type_system/types";
 import { makeMockUtilityTerm } from "./makeMockUtilityTerm";
 import { makeMockTermBool } from "./mockPBoolMethods";
 import { makeMockTermInt } from "./mockPIntMethods";
+import { addBaseUtilityTerm } from "../BaseUtilityTerm";
 
 const getterOnly = {
     set: () => {},
@@ -21,6 +22,8 @@ export function makeMockTermBs(): TermBS
 
 export function mockPByteStringMethods( term: Term<PByteString> ): TermBS
 {
+    term = addBaseUtilityTerm( term );
+
     definePropertyIfNotPresent(
         term,
         "length",

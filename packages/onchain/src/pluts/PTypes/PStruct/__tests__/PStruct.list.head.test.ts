@@ -30,7 +30,7 @@ describe("structList.head", () => {
 
         expect(
             Machine.evalSimple(
-                myList.head.extract("there").in( ({ there }) => there )
+                myList.head.there
             )
         ).toEqual(
             Machine.evalSimple(

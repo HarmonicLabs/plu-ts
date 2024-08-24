@@ -1,4 +1,5 @@
 export * from "./PStruct";
+export * from "./PSoP";
 export * from "./PAlias";
 export * from "./PData";
 export * from "./PFn";

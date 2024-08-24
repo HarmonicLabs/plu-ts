@@ -9,15 +9,46 @@ import { ToPType } from "../../../../type_system/ts-pluts-conversion";
 import { typeExtends } from "../../../../type_system/typeExtends";
 import { unwrapAlias } from "../../../../type_system/tyArgs/unwrapAlias";
 import { phoist } from "../../../phoist";
-import { plam } from "../../../plam";
 import { punsafeConvertType } from "../../../punsafeConvertType";
-import { pBoolFromData } from "../../bool/pBoolFromData";
-import { pUnitFromData } from "../../unit";
-import { _papp, _pcompose } from "./minimal_common";
+import { _papp, _pcompose, _plam } from "./minimal_common";
 import { getElemsT, getFstT, getSndT } from "../../../../type_system/tyArgs";
 import { _pmap } from "../../list/pmap/minimal";
 import { _punsafeConvertType } from "../../../punsafeConvertType/minimal";
 import { IRNative } from "../../../../../IR/IRNodes/IRNative";
+import { IRApp } from "../../../../../IR/IRNodes/IRApp";
+import { IRFunc } from "../../../../../IR/IRNodes/IRFunc";
+import { IRVar } from "../../../../../IR/IRNodes/IRVar";
+import { IRConst } from "../../../../../IR/IRNodes/IRConst";
+import { _ir_apps } from "../../../../../IR/tree_utils/_ir_apps";
+import { phead, ptail } from "../../../builtins/list";
+
+
+const pUnitFromData = phoist(
+    new Term(
+        lam( data, unit ),
+        dbn => new IRFunc( 1, IRConst.unit )
+    )
+)
+
+const pBoolFromData = phoist(
+    new Term(
+        lam( data, bool ),
+        dbn => new IRFunc(
+            1,
+            _ir_apps(
+                IRNative.equalsInteger,
+                new IRApp(
+                    IRNative.fstPair,
+                    new IRApp(
+                        IRNative.unConstrData,
+                        new IRVar( 0 )
+                    )
+                ),
+                IRConst.int( 0 )
+            )
+        )
+    )
+);
 
 const punBData = new Term<PLam<PData, PByteString>>(
     lam( data, bs ),
@@ -62,22 +93,24 @@ const pStrFromData =
 
 const pPairFromData =
     phoist(
-        plam(
+        _plam(
             data,
             pair( data, data )
         )
         ( assumedList =>
-            plam( list( data ), pair( data, data ) )
-            ( listData =>
-                _papp(
+            _papp(
+                _plam( list( data ), pair( data, data ) )
+                ( listData =>
                     _papp(
-                        ppairData as any,
-                        (listData as any).head
-                    ) as any,
-                    (listData as any).tail.head
-                )
-            )
-            .$(
+                        _papp(
+                            ppairData as any,
+                            phead( data ).$( listData )
+                        ) as any,
+                        phead( data ).$(
+                            ptail( data ).$( listData )
+                        )
+                    )
+                ),
                 _papp( punListData as any, assumedList ) as any
             )
         )
@@ -90,7 +123,14 @@ export const fromData_minimal = _fromData;
 
 export function _fromData<T extends TermType>( t: T ): ( term: Term<PData> ) => Term<ToPType<T>>
 {
-    if( isTaggedAsAlias( t ) ) return _fromData( unwrapAlias( t as any ) ) as any;
+    if( isTaggedAsAlias( t ) ) return (( term: any ) => {
+        term = _fromData( unwrapAlias( t as any ) )( term );
+        return new Term(
+            t,
+            term.toIR,
+            Boolean(term.isConstant)
+        ) as any;
+    }) as any;
 
     // unwrap asData before `t extends data`
     if( t[0] === PrimType.AsData ) t = t[1] as T;
@@ -213,7 +253,10 @@ export function _fromData<T extends TermType>( t: T ): ( term: Term<PData> ) => 
         return (( term: Term<PData> ) => {
 
             const theTerm = punsafeConvertType(
-                pPairFromData.$( term ),
+                _papp(
+                    pPairFromData,
+                    term
+                ),
                 pair(
                     asData( fstT ),
                     asData( sndT )
@@ -230,7 +273,7 @@ export function _fromData<T extends TermType>( t: T ): ( term: Term<PData> ) => 
 function pid<T extends TermType, TT extends TermType>( fromT: T, toT: TT ): TermFn<[ ToPType<T> ], ToPType<TT>>
 {
     return phoist(
-        plam( fromT, toT )( x => punsafeConvertType( x, toT ) )
+        _plam( fromT, toT )( x => punsafeConvertType( x, toT ) )
     ) as any;
 }
 
@@ -343,5 +386,5 @@ export function _pfromData<T extends TermType>( t: T ): TermFn<[ PData ], ToPTyp
         ) as any;
     };
 
-    return plam( data, t )( _fromData( t ) ) as any
+    return _plam( data, t )( _fromData( t ) ) as any
 }

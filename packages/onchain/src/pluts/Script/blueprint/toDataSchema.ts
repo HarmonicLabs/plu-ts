@@ -1,7 +1,6 @@
 import { DataSchema, DataSchemaConstr, DataSchemaList, DataSchemaMap } from "./types";
-import { PrimType, TermType, bs, data, int, isTaggedAsAlias, list, map, termTypeToString, typeExtends, unwrapAlias } from "../../type_system";
+import { PrimType, TermType, bs, data, int, isTaggedAsAlias, list, map, termTypeToString, tyVar, typeExtends, unwrapAlias } from "../../type_system";
 import { getElemsT, getFstT, unwrapAsData } from "../../type_system/tyArgs";
-import { tyVar } from "@harmoniclabs/plu-ts-onchain";
 
 export function toDataSchema( t: TermType, title?: string ): DataSchema
 {

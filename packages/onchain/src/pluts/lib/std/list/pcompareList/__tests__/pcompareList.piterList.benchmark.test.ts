@@ -6,8 +6,7 @@ import { pcompareList } from "..";
 import { peqInt } from "../../../../builtins/int/intBinOpToBool";
 import { pList } from "../../const";
 import { pInt } from "../../../int";
-import { Machine } from "@harmoniclabs/plutus-machine";
-import { UPLCConst } from "@harmoniclabs/uplc";
+import { CEKConst, Machine } from "@harmoniclabs/plutus-machine";
 
 describe("pcompareList vs piterLists", () => {
 
@@ -45,7 +44,7 @@ describe("pcompareList vs piterLists", () => {
         {
             console.log(`
 test title: ${title}
-result: ${(iterRes.result as UPLCConst).value}
+result: ${(iterRes.result as CEKConst).value}
 iter: ${JSON.stringify(iterRes.budgetSpent.toJson())}
 comp: ${JSON.stringify(compRes.budgetSpent.toJson())}
             `);

@@ -1,11 +1,11 @@
-import { defineReadOnlyProperty } from "@harmoniclabs/obj-utils";
+import { defineReadOnlyProperty, hasOwn, isObject } from "@harmoniclabs/obj-utils";
 import { assert } from "../../utils/assert";
 import { getElemsT } from "./tyArgs";
 import { PLam } from "../PTypes";
 import { PType } from "../PType";
 import { Term } from "../Term";
 
-export const enum PrimType {
+export enum PrimType {
     Int  = "int",
     BS   = "bs",
     Str  = "str",
@@ -18,16 +18,118 @@ export const enum PrimType {
     Lambda = "lam",
     Struct = "struct",
     Alias = "alias",
-    AsData = "asData"
+    AsData = "asData",
+    Sop = "sop",
+    bls12_381_G1_element = "bls12_381_G1_element",
+    bls12_381_G2_element = "bls12_381_G2_element",
+    bls12_381_MlResult = "bls12_381_MlResult",
 }
 
-type BaseT
+Object.freeze( PrimType );
+
+/**
+ * subset of primitive types that do not require additional arguments
+ * 
+ * a.k.a.
+ * `[ BasePrimType ]` is a well formed `TermType`
+ */
+export type BasePrimType
+    = PrimType.Int
+    | PrimType.BS
+    | PrimType.bls12_381_G1_element
+    | PrimType.bls12_381_G2_element
+    | PrimType.bls12_381_MlResult
+    | PrimType.Str
+    | PrimType.Unit
+    | PrimType.Bool
+    | PrimType.Data;
+
+type NonStructTag
+    // | PrimType.Struct
+    // | PrimType.Sop
+    // | PrimType.Alias
+    = PrimType.Int
+    | PrimType.BS
+    | PrimType.bls12_381_G1_element
+    | PrimType.bls12_381_G2_element
+    | PrimType.bls12_381_MlResult
+    | PrimType.Str
+    | PrimType.Unit
+    | PrimType.Bool
+    | PrimType.Data
+    | PrimType.List
+    | PrimType.Pair
+    | PrimType.Delayed
+    | PrimType.Lambda
+    | PrimType.AsData;
+
+/*
+//this is better but the typescript folks decided to hard code a silly limit in tsc and not include any lazy evaluation option
+export type TermType
+    = readonly [ BaseT ]
+    | readonly [ PrimType.Struct, StructDefinition, Methods ]
+    | readonly [ PrimType.Sop, StructDefinition, Methods ]
+    | readonly [ PrimType.List, TermType ]
+    | readonly [ PrimType.Delayed, TermType ]
+    | readonly [ PrimType.Pair , TermType, TermType ]
+    | readonly [ PrimType.Lambda , TermType, TermType ]
+    | readonly [ PrimType.Alias, TermType, Methods ]
+    | readonly [ PrimType.AsData, TermType ]
+//*/
+export type TermType
+    = (
+        [ NonStructTag, ...TermType[] ]
+        | [ PrimType.Struct, StructDefinition, Methods ]
+        | [ PrimType.Sop, SopDefinition, Methods ]
+        | [ PrimType.Alias, TermType, Methods ]
+    )
+
+export type GenericTermType
+    = TermType
+    | [ TyParam ]
+    | [ NonStructTag, ...GenericTermType[] ]
+    | [ PrimType.Struct, GenericStructDefinition, Methods ]
+    | [ PrimType.Sop, SopDefinition, Methods ]
+    | [ PrimType.Alias, GenericTermType, Methods ]
+    // | [ PrimType.List, GenericTermType ]
+    // | [ PrimType.Delayed, GenericTermType ]
+    // | [ PrimType.Pair , GenericTermType, GenericTermType ]
+    // | [ PrimType.Lambda , GenericTermType, GenericTermType ]
+    // | [ PrimType.AsData, GenericTermType ]
+
+export type BaseDataRepPrimType
     = PrimType.Int
     | PrimType.BS
     | PrimType.Str
     | PrimType.Unit
     | PrimType.Bool
     | PrimType.Data
+
+export type DataRepPrimType
+    // | PrimType.Struct
+    // | PrimType.Sop
+    // | PrimType.Alias
+    // | PrimType.Pair
+    // | PrimType.Lambda
+    // | PrimType.Delayed
+    // | PrimType.bls12_381_G1_element
+    // | PrimType.bls12_381_G2_element
+    // | PrimType.bls12_381_MlResult
+    = BaseDataRepPrimType
+    | PrimType.List
+    | PrimType.AsData;
+
+/**
+ * subset if term types that can be represented with data
+ */
+export type DataRepTermType
+    = [ DataRepPrimType, ...DataRepTermType[] ]
+    | [ PrimType.Struct, StructDefinition, Methods ]
+    // sop are valid only if it has a struct definitin 
+    // not a SopDefiniton
+    | [ PrimType.Sop, StructDefinition, Methods ]
+    | [ PrimType.Alias, DataRepTermType, Methods ];
+
 
 export type Methods = { [method: string]: Term<PLam<PType,PType>> }
 
@@ -37,7 +139,9 @@ export type DelayedT<T extends GenericTermType> = [ PrimType.Delayed, T ];
 
 export type PairT<FstT extends GenericTermType, SndT extends GenericTermType> = [ PrimType.Pair , FstT, SndT ];
 
-export type StructT<GSDef extends GenericStructDefinition, SMethods extends Methods = {}> = [ PrimType.Struct, GSDef, SMethods ];
+export type StructT<SDef extends GenericStructDefinition, SMethods extends Methods = {}> = [ PrimType.Struct, SDef, SMethods ];
+
+export type SopT<SDef extends SopDefinition, SMethods extends Methods = {}> = [ PrimType.Sop, SDef, SMethods ];
 
 export type AliasT<T extends GenericTermType, AMethods extends Methods = {}> = T[0] extends PrimType.Alias ? T : [ PrimType.Alias, T, AMethods ];
 
@@ -51,40 +155,30 @@ export type FnT<Ins extends [ GenericTermType, ...GenericTermType[] ], OutT exte
     GenericTermType;
 
 
-type NonStructTag
-    = PrimType.Int
-    | PrimType.BS
-    | PrimType.Str
-    | PrimType.Unit
-    | PrimType.Bool
-    | PrimType.Data
-    | PrimType.List
-    | PrimType.Pair
-    | PrimType.Delayed
-    | PrimType.Lambda
-    // | PrimType.Alias
-    | PrimType.AsData;
+export interface ITermTyped<T extends TermType = TermType> {
+    type: T
+}
 
-/*
-//this is better but the typescript folks decided to hard code a silly limit in tsc and not include any lazy evaluation option
+export type ExtendedTermType = TermType | ITermTyped;
 
-export type TermType
-    = readonly [ BaseT ]
-    | readonly [ PrimType.Struct, StructDefinition, Methods ]
-    | readonly [ PrimType.List, TermType ]
-    | readonly [ PrimType.Delayed, TermType ]
-    | readonly [ PrimType.Pair , TermType, TermType ]
-    | readonly [ PrimType.Lambda , TermType, TermType ]
-    | readonly [ PrimType.Alias, TermType, Methods ]
-    | readonly [ PrimType.AsData, TermType ]
-//*/
-//*
-export type TermType
-    = [ NonStructTag, ...TermType[] ] | [ PrimType.Struct, StructDefinition, Methods ] | [ PrimType.Alias, TermType, Methods ]
-//*/
+type NormalizeTermType<ET extends ExtendedTermType> = ET extends ITermTyped<infer T> ? T : ET;
+
+export function normalizeTermType<ET extends ExtendedTermType>( extended: ET ): NormalizeTermType<ET>
+{
+    if(
+        typeof extended === "object" &&
+        extended !== null &&
+        !Array.isArray( extended ) &&
+        hasOwn( extended, "type" )
+    ) return extended.type;
+
+    return extended as NormalizeTermType<ET>;
+}
 
 export type NonAliasTermType
-    = [ NonStructTag, ...TermType[] ] | [ PrimType.Struct, StructDefinition, Methods ]
+    = [ NonStructTag, ...TermType[] ]
+    | [ PrimType.Struct, StructDefinition, Methods ]
+    | [ PrimType.Sop, StructDefinition, Methods ]
 
 export type StructCtorDef = {
     [field: string | number]: TermType
@@ -94,7 +188,23 @@ export type StructDefinition = {
     [constructor: string]: StructCtorDef
 }
 
-export function cloneStructCtorDef<CtorDef extends StructCtorDef>( ctorDef: Readonly<CtorDef> ): CtorDef
+export type GenericStructCtorDef = {
+    [field: string | number]: GenericTermType
+}
+
+export type GenericStructDefinition = {
+    [constructor: string]: GenericStructCtorDef
+}
+
+export type SopCtorDef = {
+    [field: string | number]: TermType
+}
+
+export type SopDefinition = {
+    [constructor: string]: SopCtorDef
+}
+
+export function cloneSopCtorDef<CtorDef extends SopCtorDef>( ctorDef: Readonly<CtorDef> ): CtorDef
 {
     const clone: CtorDef = {} as any;
 
@@ -106,7 +216,7 @@ export function cloneStructCtorDef<CtorDef extends StructCtorDef>( ctorDef: Read
     return clone;
 }
 
-export function cloneStructDef<SDef extends StructDefinition>( def: Readonly<SDef> ): SDef
+export function cloneSopDef<SDef extends SopDefinition>( def: Readonly<SDef> ): SDef
 {
     const clone: SDef = {} as SDef;
     const ctors = Object.keys( def );
@@ -116,7 +226,7 @@ export function cloneStructDef<SDef extends StructDefinition>( def: Readonly<SDe
         defineReadOnlyProperty(
             clone,
             ctors[ i ],
-            cloneStructCtorDef( def[ ctors[i] ] )
+            cloneSopCtorDef( def[ ctors[i] ] )
         );
     }
 
@@ -125,6 +235,9 @@ export function cloneStructDef<SDef extends StructDefinition>( def: Readonly<SDe
 
 export const int        = Object.freeze([ PrimType.Int  ]) as [ PrimType.Int  ];
 export const bs         = Object.freeze([ PrimType.BS   ]) as [ PrimType.BS   ];
+export const blsG1      = Object.freeze([ PrimType.bls12_381_G1_element ]) as [ PrimType.bls12_381_G1_element ];
+export const blsG2      = Object.freeze([ PrimType.bls12_381_G2_element ]) as [ PrimType.bls12_381_G2_element ];
+export const blsResult  = Object.freeze([ PrimType.bls12_381_MlResult   ]) as [ PrimType.bls12_381_MlResult   ];
 export const str        = Object.freeze([ PrimType.Str  ]) as [ PrimType.Str  ];
 export const unit       = Object.freeze([ PrimType.Unit ]) as [ PrimType.Unit ];
 export const bool       = Object.freeze([ PrimType.Bool ]) as [ PrimType.Bool ];
@@ -172,10 +285,17 @@ export const delayed    =
     <T extends GenericTermType>( toDelay: T ): [ PrimType.Delayed, T ] => 
         Object.freeze([ PrimType.Delayed, toDelay ]) as any;
 
-export const struct     = <GSDef extends GenericStructDefinition, SMethods extends Methods>( def: GSDef, methods?: SMethods ): StructT<GSDef, SMethods> =>
+export const struct     = <SDef extends GenericStructDefinition, SMethods extends Methods>( def: SDef, methods?: SMethods ): StructT<SDef, SMethods> =>
         Object.freeze([ 
             PrimType.Struct,
-            Object.freeze( cloneStructDef( def ) ),
+            Object.freeze( cloneSopDef( def as any ) ),
+            Object.freeze( methods ?? {} )
+        ]) as any;
+
+export const sop     = <SDef extends SopDefinition, SMethods extends Methods>( def: SDef, methods?: SMethods ): SopT<SDef, SMethods> =>
+        Object.freeze([ 
+            PrimType.Sop,
+            Object.freeze( cloneSopDef( def ) ),
             Object.freeze( methods ?? {} )
         ]) as any;
 
@@ -190,7 +310,7 @@ export function alias<T extends GenericTermType, AMethods extends Methods>( toAl
 } 
 
 export function asData( someT: [PrimType.Data] ): [ PrimType.Data ]
-export function asData<T extends StructT<GenericStructDefinition>>( someT: T ): T
+export function asData<T extends StructT<StructDefinition>>( someT: T ): T
 export function asData<T extends GenericTermType>( someT: T ): [ PrimType.AsData, T ]
 export function asData<T extends GenericTermType>( someT: T ): [ PrimType.AsData, T ] | T 
 {
@@ -199,6 +319,11 @@ export function asData<T extends GenericTermType>( someT: T ): [ PrimType.AsData
         someT[0] === PrimType.Lambda ||
         someT[0] === PrimType.Delayed
     ) return someT;
+
+    // invalid asData type that need an error
+    if(
+        someT[0] === PrimType.Sop
+    ) throw new Error("'SoP' type can not have an implicit data representation.");
 
     // already data
     if(
@@ -250,24 +375,4 @@ export function asData<T extends GenericTermType>( someT: T ): [ PrimType.AsData
 export type TermTypeParameter = symbol;
 export type TyParam = TermTypeParameter;
 
-export type GenericStructCtorDef = {
-    [field: string | number]: GenericTermType
-}
-    
-export type GenericStructDefinition = {
-    [constructor: string]: StructCtorDef
-}
-
 export const tyVar      = ( ( description?: any ) => Object.freeze([ Symbol( description ) ]) ) as (description?: any) => [ TyParam ]
-
-export type GenericTermType
-= TermType
-| [ TyParam ]
-| [ NonStructTag, ...GenericTermType[] ]
-| [ PrimType.Struct, GenericStructDefinition, Methods ]
-| [ PrimType.Alias, GenericTermType, Methods ]
-// | [ PrimType.List, GenericTermType ]
-// | [ PrimType.Delayed, GenericTermType ]
-// | [ PrimType.Pair , GenericTermType, GenericTermType ]
-// | [ PrimType.Lambda , GenericTermType, GenericTermType ]
-// | [ PrimType.AsData, GenericTermType ]

@@ -1,21 +1,18 @@
 import { definePropertyIfNotPresent, defineReadOnlyProperty } from "@harmoniclabs/obj-utils"
 import { PByteString, TermFn, PInt, PBool } from "../../../PTypes"
 import { Term } from "../../../Term"
-import { bs, int } from "../../../type_system/types"
-import { flippedCons, pappendBs, pconsBs, peqBs, pgreaterBS, pgreaterEqBS, pindexBs, plengthBs, plessBs, plessEqBs, psliceBs } from "../../builtins/bs"
-import { psub } from "../../builtins/int/psub"
+import { flippedCons, jsLikeSlice, pappendBs, pconsBs, peqBs, pgreaterBS, pgreaterEqBS, pindexBs, plengthBs, plessBs, plessEqBs, psliceBs, subByteString } from "../../builtins/bs"
 import { pdecodeUtf8 } from "../../builtins/str"
 import { PappArg } from "../../pappArg"
-import { pfn } from "../../pfn"
-import { phoist } from "../../phoist"
 import { plet } from "../../plet"
 import { TermBool } from "./TermBool"
 import { TermInt } from "./TermInt"
 import { TermStr } from "./TermStr"
+import { addBaseUtilityTerm, BaseUtilityTermExtension } from "./BaseUtilityTerm"
 
 
 
-export type TermBS = Term<PByteString> & {
+export type TermBS = Term<PByteString> & BaseUtilityTermExtension & {
 
     readonly length: TermInt
     
@@ -57,28 +54,6 @@ export type TermBS = Term<PByteString> & {
 
 }
 
-const subByteString = phoist(
-    pfn([
-        bs,
-        int,
-        int
-    ],  bs)
-    (( term, fromInclusive , ofLength ): TermBS =>
-        psliceBs.$( fromInclusive ).$( ofLength ).$( term )
-    )
-)
-
-const jsLikeSlice = phoist(
-    pfn([
-        bs,
-        int,
-        int
-    ],  bs)
-    (( term, fromInclusive , toExclusive ): TermBS =>
-        psliceBs.$( fromInclusive ).$( psub.$( toExclusive ).$( fromInclusive ) ).$( term )
-    )
-);
-
 const getterOnly = {
     set: () => {},
     configurable: false,
@@ -87,6 +62,8 @@ const getterOnly = {
 
 export function addPByteStringMethods( term: Term<PByteString> ): TermBS
 {
+    term = addBaseUtilityTerm( term );
+
     definePropertyIfNotPresent(
         term,
         "length",

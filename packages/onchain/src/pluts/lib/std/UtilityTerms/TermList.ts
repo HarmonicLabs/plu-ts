@@ -3,7 +3,7 @@ import { PType } from "../../../PType";
 import { PDataRepresentable } from "../../../PType/PDataRepresentable";
 import type { PList, TermFn, PInt, PLam, PBool, PPair } from "../../../PTypes";
 import { Term } from "../../../Term";
-import { ToPType, TermType, isWellFormedGenericType, PrimType, bool, lam, list, struct, typeExtends, tyVar, pair } from "../../../type_system";
+import { ToPType, TermType, isWellFormedGenericType, PrimType, bool, lam, list, struct, typeExtends, tyVar, pair, DataRepTermType } from "../../../type_system";
 import { getElemsT, getFstT, getSndT } from "../../../type_system/tyArgs";
 import { termTypeToString } from "../../../type_system/utils";
 import { UtilityTermOf } from "./addUtilityForType";
@@ -25,8 +25,29 @@ import { psome } from "../list/psome";
 import { TermBool } from "./TermBool";
 import { TermInt } from "./TermInt";
 import { peqList, pincludes, plookup } from "../list";
+import { punsafeConvertType } from "../../punsafeConvertType";
+import { BaseUtilityTermExtension, addBaseUtilityTerm } from "./BaseUtilityTerm";
 
-export type TermList<PElemsT extends PDataRepresentable> = Term<PList<PElemsT>> & {
+export function* fixedLengthIter<PT extends PDataRepresentable>(
+    list: TermList<PT>,
+    maxLength: number
+): Generator<UtilityTermOf<PT>, void, unknown>
+{
+    if( !Number.isSafeInteger( maxLength ) )
+    throw new Error("max length for 'fixedLengthIterable' is not an integer");
+
+    if( maxLength < 0 ) maxLength = -maxLength;
+
+    for( let i = 0; i < maxLength; i++ )
+    {
+        yield list.head;
+        list = list.tail;
+    }
+}
+
+export type TermList<PElemsT extends PDataRepresentable> = Term<PList<PElemsT>> & BaseUtilityTermExtension & {
+
+    fixedLengthIterable: ( maxLength: number ) => Generator<UtilityTermOf<PElemsT>, void, unknown>
 
     /**
      * **O(1)**
@@ -176,6 +197,9 @@ export function addPListMethods<PElemsT extends PType>( _lst: Term<PList<PElemsT
 {
     const elemsT = getElemsT( _lst.type );
 
+    // this clone is causing problems for aliases
+    // TODO: remove clone and test
+    /** @todo remove clone and test */
     const lst = new Term(
         list( elemsT ),
         // needs to be wrapped to prevent the garbage collector to collect garbage (lst)
@@ -198,12 +222,29 @@ export function addPListMethods<PElemsT extends PType>( _lst: Term<PList<PElemsT
 
 function _definePListMethods<PElemsT extends PType>( lst: Term<PList<PElemsT>>, elemsT: TermType ): void
 {
+    lst = addBaseUtilityTerm( lst );
+
+    defineReadOnlyProperty(
+        lst,
+        "fixedLengthIterable",
+        // as type conversion is fine because this is a funciton
+        // and will only always be accessed after this function has
+        // defined the necessary methods for "TermList" to be satisfied
+        ( max: number ) => fixedLengthIter( lst as TermList<PElemsT>, max )
+    );
+    
     definePropertyIfNotPresent(
         lst,
         "head",
         {
             get: () => {
-                return plet( phead( elemsT ).$( lst ), "list::head" )
+                return plet(
+                    punsafeConvertType(
+                        phead( elemsT ).$( lst ),
+                        elemsT
+                    ),
+                    "list::head"
+                )
             },
             ...getterOnly
         }
@@ -260,7 +301,7 @@ function _definePListMethods<PElemsT extends PType>( lst: Term<PList<PElemsT>>, 
         lst,
         "find",
         ( predicate: PappArg<PLam<PElemsT,PBool>> ): Term<PMaybeT<PElemsT>> => 
-            pfind( elemsT ).$( predicate ).$( lst ) as any
+            pfind( elemsT ).$( predicate as any ).$( lst ) as any
     );
 
     definePropertyIfNotPresent(
@@ -289,7 +330,7 @@ function _definePListMethods<PElemsT extends PType>( lst: Term<PList<PElemsT>>, 
     defineReadOnlyProperty(
         lst,
         "prepend",
-        ( elem: PappArg<PElemsT> ): TermList<PElemsT> => pprepend( elemsT ).$( elem ).$( lst ) as any
+        ( elem: PappArg<PElemsT> ): TermList<PElemsT> => pprepend( elemsT ).$( elem as any ).$( lst ) as any
     );
 
     defineReadOnlyProperty(
@@ -310,7 +351,7 @@ function _definePListMethods<PElemsT extends PType>( lst: Term<PList<PElemsT>>, 
         "map",
         <PReturnElemT extends PType>( f: PappArg<PLam<PElemsT,PReturnElemT>> ) => {
 
-            f = pappArgToTerm( f as any, lam( elemsT, tyVar() ) ) as Term<PLam<PElemsT,PReturnElemT>>;
+            f = pappArgToTerm( f as any, lam( elemsT, tyVar() ) ) as unknown as Term<PLam<PElemsT,PReturnElemT>>;
             
             const predicateTy = f.type;
 
@@ -369,7 +410,7 @@ function _definePListMethods<PElemsT extends PType>( lst: Term<PList<PElemsT>>, 
     defineReadOnlyProperty(
         lst,
         "includes",
-        ( elem: PappArg<PElemsT> ): TermBool => pincludes( elemsT ).$( lst ).$( elem )
+        ( elem: PappArg<PElemsT> ): TermBool => pincludes( elemsT ).$( lst ).$( elem as any )
     );
 
     definePropertyIfNotPresent(

@@ -8,10 +8,11 @@ import { termTypeToString } from "../../../../type_system/utils";
 import { UtilityTermOf } from "../addUtilityForType";
 import { PMaybe, type PMaybeT } from "../../PMaybe/PMaybe";
 import { TermBool } from "../TermBool";
-import { TermList } from "../TermList";
+import { TermList, fixedLengthIter } from "../TermList";
 import { makeMockUtilityTerm } from "./makeMockUtilityTerm";
 import { makeMockTermInt } from "./mockPIntMethods";
 import { makeMockTermBool } from "./mockPBoolMethods";
+import { addBaseUtilityTerm } from "../BaseUtilityTerm";
 
 const getterOnly = {
     set: () => {},
@@ -46,7 +47,18 @@ export function mockPListMethods<PElemsT extends PType>( lst: Term<PList<PElemsT
 function _mockPListMethods<PElemsT extends PType>( _lst: Term<PList<PElemsT>> )
     : TermList<PElemsT>
 {
+    _lst = addBaseUtilityTerm( _lst );
+
     const elemsT = getElemsT( _lst.type );
+
+    defineReadOnlyProperty(
+        _lst,
+        "fixedLengthIterable",
+        // as type conversion is fine because this is a funciton
+        // and will only always be accessed after this function has
+        // defined the necessary methods for "TermList" to be satisfied
+        ( max: number ) => fixedLengthIter( _lst as TermList<PElemsT>, max )
+    );
 
     definePropertyIfNotPresent(
         _lst,

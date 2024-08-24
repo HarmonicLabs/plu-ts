@@ -1,17 +1,23 @@
 import { defineReadOnlyProperty, isObject } from "@harmoniclabs/obj-utils";
 import type { ITxRunnerProvider } from "../IProvider";
 import type { TxBuilder } from "../TxBuilder";
-import { ITxBuildArgs, ITxBuildOutput, cloneITxBuildArgs } from "../../txBuild";
-import { Address, AddressStr, AnyCertificate, Certificate, CertificateType, Hash28, Hash32, ITxOut, ITxOutRef, IUTxO, IValuePolicyEntry, PlutusScriptType, PoolKeyHash, PoolParams, PubKeyHash, Script, ScriptType, StakeAddress, StakeAddressBech32, StakeCredentials, StakeValidatorHash, Tx, TxIn, TxMetadata, TxMetadatum, TxOutRefStr, TxWithdrawalsEntry, UTxO, Value, forceTxOutRefStr, isITxOut, isIUTxO } from "@harmoniclabs/cardano-ledger-ts";
+import { ITxBuildArgs, ITxBuildOutput, NormalizedITxBuildArgs, cloneITxBuildArgs, normalizeITxBuildArgs } from "../../txBuild";
+import { Address, AddressStr, CertStakeDelegation, Certificate, Hash28, Hash32, ITxOut, ITxOutRef, IUTxO, IValuePolicyEntry, PlutusScriptType, PoolKeyHash, PoolParams, PubKeyHash, Script, ScriptType, StakeAddress, StakeAddressBech32, Credential, StakeValidatorHash, Tx, TxIn, TxMetadata, TxMetadatum, TxOutRefStr, UTxO, Value, forceTxOutRefStr, isITxOut, isIUTxO, CredentialType, CertStakeDeRegistration, CertStakeRegistration, CertPoolRegistration, IPoolParams, CanBeHash28, CertPoolRetirement, StakeCredentials, ITxWithdrawalsEntry, Vote, IAnchor, IVoter, ProtocolParameters, IProposalProcedure, ITxWithdrawals, TxWithdrawals, INewCommitteeEntry, IConstitution, VotingProcedure, VotingProcedures, forceTxOutRef, IVotingProceduresEntry, TxOutRef, VoterKind, GovActionType, isIVotingProceduresEntry, isIProposalProcedure, eqITxOutRef } from "@harmoniclabs/cardano-ledger-ts";
 import { CanBeUInteger, canBeUInteger, forceBigUInt } from "../../utils/ints";
 import { CanResolveToUTxO, cloneCanResolveToUTxO, shouldResolveToUTxO } from "../CanResolveToUTxO/CanResolveToUTxO";
 import { jsonToMetadata } from "./jsonToMetadata";
 import { isGenesisInfos } from "../GenesisInfos";
-import { decodeBech32, sha2_256 } from "@harmoniclabs/crypto";
-import { fromHex, toHex } from "@harmoniclabs/uint8array-utils";
-import { Data, cloneData, dataToCbor, isData } from "@harmoniclabs/plutus-data";
+import { sha2_256 } from "@harmoniclabs/crypto";
+import { toHex } from "@harmoniclabs/uint8array-utils";
+import { Data, DataI, cloneData, dataToCbor, isData } from "@harmoniclabs/plutus-data";
 import { ByteString } from "@harmoniclabs/bytestring";
 import { CanBeData, canBeData, forceData } from "../../utils/CanBeData";
+import { CanBePoolKeyHash, forcePoolKeyHash } from "./CanBePoolKeyHash";
+import { CanBeStakeCreds, forceStakeCreds } from "./CanBeStakeCreds";
+import { forceAddr } from "./forceAddr";
+import { IProtocolVerision } from "@harmoniclabs/cardano-ledger-ts/dist/ledger/protocol/protocolVersion";
+import { Rational } from "../../utils/Rational";
+import { eqIVoter } from "../../txBuild/ITxBuildVotingProcedure";
 
 // /** sync */
 // interface TxBuilderStep {
@@ -134,45 +140,145 @@ function _getResolvedDatum( hash: string ): Data | undefined
 
 export class TxBuilderRunner
 {
+    /**
+     *  if any unresolved data was passed it is resolved via the provider passed;
+     * 
+     *  if the method needed are not present on the provider throws an `Error`;
+     * 
+     *  finalizes the `TxBuilderRunner` instance,
+     *  so that it can be re-used for other transactions,
+     *  
+     *  @returns {Promise<Tx>} a `Tx` instance
+     */
     readonly build!:() => Promise<Tx>
 
+    /**
+     * clears the `TxBuilderRunner` instance,
+     * so that it can be re-used for other transactions,
+     * making sure no other action where specified
+     *
+     * @returns a reference to the same `TxBuilderRunner`.
+     */
     readonly reset!: () => TxBuilderRunner;
     
     /**
      * @deprecated use `addRequiredSigner` instead
      */
     readonly addSigner!: ( signer: Address | StakeAddress | AddressStr | StakeAddressBech32 ) => TxBuilderRunner
+    /**
+     * adds the **all** credentials of the address to the `requiredSigners`
+     * field of a `Tx` instance.
+     * 
+     * only the signers included in that field are passed to a contract's `ScriptContext`.
+     * 
+     * that includes payment credentials and, if present, stake credentials.
+     * 
+     * if you have an address with both payment and stake credentials,
+     * but wish only to include one of them,
+     * consider using  the `addRequiredSignerKey` method
+     * 
+     * @returns a reference to the same `TxBuilderRunner`.
+     */
     readonly addRequiredSigner!: ( signer: Address | StakeAddress | AddressStr | StakeAddressBech32 ) => TxBuilderRunner
     /**
      * @deprecated use `addRequiredSignerKey` instead
      */
     readonly addSignerKey!: ( signerKey: Hash28 ) => TxBuilderRunner
+    /**
+     * adds the given key hash to the `requiredSigners` field of a `Tx` instance.
+     * 
+     * only the signers included in that field are passed to a contract's `ScriptContext`.
+     * 
+     * @returns a reference to the same `TxBuilderRunner`.
+     */
     readonly addRequiredSignerKey!: ( signerKey: Hash28 ) => TxBuilderRunner
     
+    /** alias for `attachValidator` */
     readonly attachCertificateValidator!: ( validator: Script<PlutusScriptType> ) => TxBuilderRunner
+    /** alias for `attachValidator` */
     readonly attachMintingValidator!: ( validator: Script<PlutusScriptType> ) => TxBuilderRunner
+    /** alias for `attachValidator` */
     readonly attachSpendingValidator!: ( validator: Script<PlutusScriptType> ) => TxBuilderRunner
+    /** alias for `attachValidator` */
     readonly attachWithdrawalValidator!: ( validator: Script<PlutusScriptType> ) => TxBuilderRunner
+    /**
+     * includes the script in the witnessSet field of the resulting `Tx`
+     * 
+     * @returns a reference to the same `TxBuilderRunner`.
+     */
     readonly attachValidator!: ( validator: Script<PlutusScriptType> ) => TxBuilderRunner
     
+    /**
+     * adds a metadata entry for the given `label`,
+     * or overrides if the same `label` was already present.
+     * 
+     * @returns a reference to the same `TxBuilderRunner`.
+     */
     readonly attachMetadata!: ( label: CanBeUInteger, metadata: TxMetadatum ) => TxBuilderRunner
-    /** alias for `attachMetadata` */
+    /**
+     * alias for `attachMetadata`
+     * 
+     * adds a metadata entry for the given `label`,
+     * or overrides if the same `label` was already present.
+     * 
+     * @returns a reference to the same `TxBuilderRunner`.
+     */
     readonly setMetadata!: ( label: CanBeUInteger, metadata: TxMetadatum ) => TxBuilderRunner
+    /**
+     * like [`attachMetadata`](./attachMetadata),
+     * adds a metadata entry for the given `label`,
+     * or overrides if the same `label` was already present.
+     * 
+     * `metadataJson` is a jsavascript value converted as follows
+     * 
+     * - `object` -> `TxMetadatumMap`
+     * - `array` -> `TxMetadatumList`
+     * - `string` -> `TxMetadatumText`
+     * (use `attachMetadataJsonWithConversion`
+     * for explicit conversion to `TxMetadatumBytes`
+     * or consider using `attachMetadata`)
+     * - `number` -> `TxMetadatumInt`
+     * - `bigint` -> `TxMetadatumInt`
+     * 
+     * @returns a reference to the same [`TxBuilderRunner`](./TxBuilderRunner).
+     */
     readonly attachMetadataJson!: ( label: CanBeUInteger, metadataJson: any ) => TxBuilderRunner
-    /** like `attachMetadataJson` but if a strings starts with `0x` is treated as an hexadecimal byte string */
+    /** like `attachMetadataJson` but if a string starts with `0x` is treated as an hexadecimal byte string */
     readonly attachMetadataJsonWithConversion!: ( label: CanBeUInteger, metadataJson: any ) => TxBuilderRunner
     
     /**
-     * explicitly set the change address;
-     * if missing the first input's address with `PubKeyHash` credentials (not script) will be used
+     * explicitly sets the change address;
+     * 
+     * if missing, an attempt to call the `ITxRunnerProvider` `getChangeAddress` method is done
+     * 
+     * if still missing the first input's address with `PubKeyHash`
+     * payment credentials (not script) will be used
+     * 
+     * if all the above fail, a call to the `build` method will throw an `Error`.
+     * 
+     * @returns a reference to the same `TxBuilderRunner`.
      */
     readonly setChangeAddress!: ( changeAddr: Address | AddressStr ) => TxBuilderRunner
 
     /**
-     * explicitly sets the collateral
+     * Sets the collateral input, and optionally output, for a transaction.
      * 
-     * if missing and the collateral is needed the tx builder will try to
-     * use one of the tx inputs as collateral
+     * If this method is not used,
+     * but the transaction needs collateral due to the presence of a plutus script,
+     * the `TxBuilderRunner` instance will try to use one of the normal inputs as collateral,
+     * see `setCollateralAmount`./setCollateralAmount for more infos.
+     * 
+     * `collateral` can either be a resolved `UTxO`
+     * or an unresolved `ITxOutRef`
+     * 
+     * in case it is an unresolved `ITxOutRef`
+     * a call to the `ITxRunnerProvider` `resolveUtxos` method
+     * is done in the `build` method;
+     * if `resolveUtxos` is missing on the provider the `build` method will throw an `Error`.
+     * 
+     * an additional `collateralOutput` may be specified.
+     * 
+     * @returns a reference to the same `TxBuilderRunner`.
      */
     readonly setCollateral!: (
         collateral: CanResolveToUTxO,
@@ -180,10 +286,15 @@ export class TxBuilderRunner
     ) => TxBuilderRunner
 
     /**
-     * if no collateral is explicitly set (using `setCollateral`)
+     * Sets the collateral amount for a transaction.
      * 
-     * the tx builder will try to use one of the inputs as collateral
-     * in that case is possible to modify the collateral amount
+     * If `setCollateral` is not used, 
+     * but the transaction needs collateral due to the presence of a plutus script,
+     * the `TxBuilderRunner` instance will try to use one of the normal inputs as collateral.
+     * 
+     * In case this happens, it is possible to limit the amount of the collateral using this method.
+     * 
+     * @returns a reference to the same `TxBuilderRunner`.
     **/
     readonly setCollateralAmount!: ( lovelaces: CanBeUInteger ) => TxBuilderRunner
     
@@ -192,51 +303,65 @@ export class TxBuilderRunner
      */
     readonly collectFrom!: ( utxos: CanResolveToUTxO[], redeemer?: CanBeData ) => TxBuilderRunner
     /**
-     * @param {CanResolveToUTxO[]} utxos
-     * utxo (or utxo references to be resolved) to use as inputs
-     * @param {CanBeData | undefined} redeemer
-     * data used as redeemer in the event the utxo is locked in a script 
-     * @param {UTxO | Script | undefined} script_or_ref
-     * optional script source; either by reference script (`UTxO`) or inline (`Script`)
-     * if none is provided the tx builder will try to get the matching to the UTxO associated address
-     * from scripts aviable trough any of the `addValidator` functions or any of the tef UTxOs aviable trough `referenceUtxos` 
-     * @param {CanBeData | undefined} datum
-     * optional datum to be used in the event the spending utxo has datum setted as an hash
-     * if missing the provider `resolveDatumHashes` function will be used
+     * adds the given `utxos` to the transaction inputs;
+     * the elements of the array that don't satisfy the `IUTxO` interface
+     * will be resolved using the provider `resolveUtxos` method.
+     * 
+     * this method does not allow to specify plutus realated arguments.
+     * 
+     * for inputs that need redeemers, scripts and datums use `addInput`.
+     * 
+     * @returns a reference to the same `TxBuilderRunner`.
     **/
     readonly addInputs!: (
-        utxos: CanResolveToUTxO[],
-        redeemer?: CanBeData,
-        script_or_ref?: UTxO | Script<PlutusScriptType>,
-        datum?: CanBeData
+        utxos: CanResolveToUTxO[]
+        // redeemer?: CanBeData,
+        // script_or_ref?: CanResolveToUTxO | Script<PlutusScriptType>,
+        // datum?: CanBeData
     ) => TxBuilderRunner
     /**
-     * @param {CanResolveToUTxO} utxos
-     * utxo (or utxo references to be resolved) to use as inputs
-     * @param {CanBeData | undefined} redeemer
-     * data used as redeemer in the event the utxo is locked in a script 
-     * @param {UTxO | Script | undefined} script_or_ref
-     * optional script source; either by reference script (`UTxO`) or inline (`Script`)
-     * if none is provided the tx builder will try to get the matching to the UTxO associated address
-     * from scripts aviable trough any of the `addValidator` functions or any of the tef UTxOs aviable trough `referenceUtxos` 
-     * @param {CanBeData | undefined} datum
-     * optional datum to be used in the event the spending utxo has datum setted as an hash
-     * if missing the provider `resolveDatumHashes` function will be used
+     * adds the given `utxo` to the transaction inputs;
+     * if`utxo` doesn't satisfy the `IUTxO` interface
+     * it will be resolved using the provider `resolveUtxos` method.
+     * 
+     * `redeemer` and `script_or_ref` must be specified together;
+     * if `datum` is missing defaults to `"inline"`.
+     * 
+     * if `script_or_ref` is a `Script`
+     * it will be included in the `witnesses`
+     * field of the resulting `Tx`;
+     * 
+     * if `script_or_ref` satisfies the `IUTxO` interface
+     * it will be used as reference input to provide the attached reference script
+     * (`build` fails if missing)
+     * 
+     * if `script_or_ref` satisfies the `ITxOutRef` interface
+     * or the `TxOutRefStr` type alias
+     * it will be resolved using the provider `resolveUtxos` method and
+     * it will be used as reference input to provide the attached reference script
+     * (`build` fails if missing)
+     * 
+     * @returns a reference to the same `TxBuilderRunner`.
     **/
     readonly addInput!: (
         utxos: CanResolveToUTxO,
         redeemer?: CanBeData,
-        script_or_ref?: UTxO | Script<PlutusScriptType>,
-        datum?: CanBeData
+        script_or_ref?: CanResolveToUTxO | Script<PlutusScriptType>,
+        datum?: CanBeData | "inline"
     ) => TxBuilderRunner
     
     /**
-     * adds an output to the transaction
+     * adds a transaction output.
+     * 
+     * if `amount` is `number` or `bigint` it is intended to be lovelaces only.
+     * 
+     * if `datum` is present is always added as inline datum.
      * 
      * @param address receiver address
      * @param amount Value to sent
      * @param datum optional inline datum to attach
      * @param refScript optional reference script to attach
+     * @returns a reference to the same `TxBuilderRunner`.
      */
     readonly payTo: (
         address: Address | AddressStr,
@@ -246,22 +371,10 @@ export class TxBuilderRunner
     ) => TxBuilderRunner
 
     // readonly compose: ( other: Tx ) => TxBuilderRunner
-    
-    readonly delegateTo!:(
-        delegator: CanBeStakeCreds,
-        poolId: CanBePoolKeyHash,
-        redeemer?: CanBeData,
-        script_or_ref?: Script<PlutusScriptType> | CanResolveToUTxO
-    ) => TxBuilderRunner
-    readonly deregisterStake!:(
-        delegator: CanBeStakeCreds,
-        redeemer?: CanBeData,
-        script_or_ref?: Script<PlutusScriptType> | CanResolveToUTxO
-    ) => TxBuilderRunner
     readonly mintAssets: (
         assets: IValuePolicyEntry,
+        script_or_ref: Script | CanResolveToUTxO,
         redeemer?: CanBeData,
-        script_or_ref?: Script | CanResolveToUTxO
     ) => TxBuilderRunner
     readonly withdraw!: (
         stakeAddress: CanBeStakeCreds,
@@ -270,9 +383,16 @@ export class TxBuilderRunner
         script_or_ref?: Script | CanResolveToUTxO
     ) => TxBuilderRunner
 
-    readonly registerPool!: ( params: PoolParams ) => TxBuilderRunner
-    readonly retirePool!: ( poolId: Hash28, epoch: CanBeUInteger ) => TxBuilderRunner
+    // certificates
 
+    readonly delegateTo!:(
+        delegator: CanBeStakeCreds,
+        poolId: CanBePoolKeyHash,
+        redeemer?: CanBeData,
+        script_or_ref?: Script<PlutusScriptType> | CanResolveToUTxO
+    ) => TxBuilderRunner
+    readonly registerPool!: ( params: IPoolParams ) => TxBuilderRunner
+    readonly retirePool!: ( poolId: CanBeHash28, epoch: CanBeUInteger ) => TxBuilderRunner
     readonly registerStake!: (
         delegator: CanBeStakeCreds,
         redeemer?: CanBeData,
@@ -283,7 +403,12 @@ export class TxBuilderRunner
         redeemer?: CanBeData,
         script_or_ref?: Script<PlutusScriptType> | CanResolveToUTxO
     ) => TxBuilderRunner
-    
+    readonly deregisterStake!:(
+        delegator: CanBeStakeCreds,
+        redeemer?: CanBeData,
+        script_or_ref?: Script<PlutusScriptType> | CanResolveToUTxO
+    ) => TxBuilderRunner
+
     /**
      * @deprecated `readFrom` is an ugly name; use `referenceUtxos` instead
      */
@@ -297,12 +422,105 @@ export class TxBuilderRunner
     readonly validToSlot!: ( slot: CanBeUInteger ) => TxBuilderRunner
     readonly invalidAfterSlot!: ( slot: CanBeUInteger ) => TxBuilderRunner
 
+    readonly vote: (
+        voter: IVoter,
+        governanceActionId: ITxOutRef | TxOutRefStr,
+        vote: Vote,
+        anchor?: IAnchor | undefined,
+        redeemer?: CanBeData,
+        script_or_ref?: Script<PlutusScriptType> | CanResolveToUTxO
+    ) => TxBuilderRunner
+    readonly voteDRep: (
+        drepKeyHash: CanBeHash28,
+        governanceActionId: ITxOutRef | TxOutRefStr,
+        vote: Vote,
+        anchor?: IAnchor | undefined
+    ) => TxBuilderRunner
+    readonly voteScriptDRep: (
+        drepScriptHash: CanBeHash28,
+        governanceActionId: ITxOutRef | TxOutRefStr,
+        vote: Vote,
+        anchor?: IAnchor | undefined,
+        redeemer?: CanBeData,
+        script_or_ref?: Script<PlutusScriptType> | CanResolveToUTxO
+    ) => TxBuilderRunner
+    readonly voteConstitutionalComittee: (
+        memberKeyHash: CanBeHash28,
+        governanceActionId: ITxOutRef | TxOutRefStr,
+        vote: Vote,
+        anchor?: IAnchor | undefined
+    ) => TxBuilderRunner
+    readonly voteScriptConstitutionalComittee: (
+        memberScriptHash: CanBeHash28,
+        governanceActionId: ITxOutRef | TxOutRefStr,
+        vote: Vote,
+        anchor?: IAnchor | undefined,
+        redeemer?: CanBeData,
+        script_or_ref?: Script<PlutusScriptType> | CanResolveToUTxO
+    ) => TxBuilderRunner
+    readonly voteStakePool: (
+        poolId: CanBeHash28,
+        governanceActionId: ITxOutRef | TxOutRefStr,
+        vote: Vote,
+        anchor?: IAnchor | undefined
+    ) => TxBuilderRunner
+
+    readonly propose: (
+        proposal: IProposalProcedure,
+        redeemer?: CanBeData,
+        script_or_ref?: Script<PlutusScriptType> | CanResolveToUTxO
+    ) => TxBuilderRunner
+    readonly proposeParametersChanges: (
+        changes: Partial<ProtocolParameters>,
+        procedureInfos: Omit<IProposalProcedure,"govAction">,
+        govActionId?: ITxOutRef | TxOutRefStr,
+        redeemer?: CanBeData,
+        script_or_ref?: Script<PlutusScriptType> | CanResolveToUTxO
+    ) => TxBuilderRunner
+    readonly proposeHardForkInitiation: (
+        nextProtocolVersion: IProtocolVerision,
+        procedureInfos: Omit<IProposalProcedure,"govAction">,
+        govActionId?: ITxOutRef | TxOutRefStr,
+        redeemer?: CanBeData,
+        script_or_ref?: Script<PlutusScriptType> | CanResolveToUTxO
+    ) => TxBuilderRunner
+    readonly proposeTreasuryWithdrawal: (
+        withdrawals: ITxWithdrawals | TxWithdrawals,
+        procedureInfos: Omit<IProposalProcedure,"govAction">,
+        redeemer?: CanBeData,
+        script_or_ref?: Script<PlutusScriptType> | CanResolveToUTxO
+    ) => TxBuilderRunner
+    readonly proposeNoConfidence: (
+        procedureInfos: Omit<IProposalProcedure,"govAction">,
+        govActionId?: ITxOutRef | TxOutRefStr,
+        redeemer?: CanBeData,
+        script_or_ref?: Script<PlutusScriptType> | CanResolveToUTxO
+    ) => TxBuilderRunner
+    readonly proposeComitteeUpdate: (
+        toRemove: Credential[],
+        toAdd: INewCommitteeEntry[],
+        threshold: Rational,
+        procedureInfos: Omit<IProposalProcedure,"govAction">,
+        govActionId?: ITxOutRef | TxOutRefStr,
+        redeemer?: CanBeData,
+        script_or_ref?: Script<PlutusScriptType> | CanResolveToUTxO
+    ) => TxBuilderRunner
+    readonly proposeNewConstitution: (
+        constitution: IConstitution,
+        procedureInfos: Omit<IProposalProcedure,"govAction">,
+        govActionId?: ITxOutRef | TxOutRefStr,
+        redeemer?: CanBeData,
+        script_or_ref?: Script<PlutusScriptType> | CanResolveToUTxO
+    ) => TxBuilderRunner
+    readonly proposeInfos: (
+        procedureInfos: Omit<IProposalProcedure,"govAction">,
+        redeemer?: CanBeData,
+        script_or_ref?: Script<PlutusScriptType> | CanResolveToUTxO
+    ) => TxBuilderRunner
+
     readonly tasks!: TxBuilderTask[];
-    readonly buildArgs!: ITxBuildArgs;
+    readonly buildArgs!: NormalizedITxBuildArgs;
     
-    /**
-     * @experimental
-     */
     constructor(
         txBuilder: TxBuilder,
         provider: Partial<ITxRunnerProvider>
@@ -378,7 +596,7 @@ export class TxBuilderRunner
                 //     configurable: false
                 // },
                 buildArgs: {
-                    get: () => cloneITxBuildArgs( buildArgs ),
+                    get: () => normalizeITxBuildArgs( buildArgs ),
                     set: () => {},
                     enumerable: true,
                     configurable: false
@@ -539,7 +757,7 @@ export class TxBuilderRunner
         }
 
         function _addCertificate(
-            cert: AnyCertificate, 
+            cert: Certificate, 
             script?: SimpleScriptInfos
         ): void
         {
@@ -561,7 +779,7 @@ export class TxBuilderRunner
         }
 
         function _addWithdraw(
-            withdrawal: TxWithdrawalsEntry,
+            withdrawal: ITxWithdrawalsEntry,
             script?: SimpleScriptInfos
         ): void
         {
@@ -598,7 +816,7 @@ export class TxBuilderRunner
             return theScript as Script<PlutusScriptType>;
         }
 
-        function _tryGetRefStakeScript( stakeCreds: StakeCredentials ): UTxO | undefined
+        function _tryGetRefStakeScript( stakeCreds: Credential ): UTxO | undefined
         {
             const scriptHash = stakeCreds.hash;
 
@@ -607,7 +825,7 @@ export class TxBuilderRunner
             return _tryGetRefScript( scriptHash.toString() );
         }
 
-        function _tryGetStakeScript( stakeCreds: StakeCredentials ): Script<PlutusScriptType> | undefined
+        function _tryGetStakeScript( stakeCreds: Credential ): Script<PlutusScriptType> | undefined
         {
             const scriptHash = stakeCreds.hash;
 
@@ -617,13 +835,13 @@ export class TxBuilderRunner
         }
 
         function _ensureStakeScript(
-            stakeCreds: StakeCredentials,
+            stakeCreds: Credential,
             script_or_ref: CanResolveToUTxO | Script<PlutusScriptType> | undefined,
             redeemer: CanBeData | undefined,
             script: SimpleScriptInfos | undefined
         ): SimpleScriptInfos 
         {
-            if( stakeCreds.type === "script" )
+            if( stakeCreds.type === CredentialType.Script )
             {
                 if( redeemer === undefined )
                 {
@@ -676,7 +894,7 @@ export class TxBuilderRunner
             script_or_ref?: Script<PlutusScriptType> | CanResolveToUTxO
         ): TxBuilderRunner
         {
-            const stakeCreds: StakeCredentials = forceStakeCreds( delegator );
+            const stakeCreds: Credential = forceStakeCreds( delegator );
             const poolKeyHash: PoolKeyHash = forcePoolKeyHash( poolId );
 
             let script: undefined | SimpleScriptInfos = undefined;
@@ -689,7 +907,7 @@ export class TxBuilderRunner
                 script_or_ref = delegator
             }
 
-            if( stakeCreds.type === "script" )
+            if( stakeCreds.type === CredentialType.Script )
             {
                 if( redeemer === undefined )
                 {
@@ -725,11 +943,10 @@ export class TxBuilderRunner
                     );
 
                     _addCertificate(
-                        new Certificate(
-                            2 as CertificateType.StakeDelegation,
-                            stakeCreds,
+                        new CertStakeDelegation({
+                            stakeCredential: stakeCreds,
                             poolKeyHash
-                        ),
+                        }),
                         script
                     );
                 }
@@ -744,7 +961,7 @@ export class TxBuilderRunner
             script_or_ref?: Script<PlutusScriptType> | CanResolveToUTxO
         ): TxBuilderRunner
         {
-            const stakeCreds: StakeCredentials = forceStakeCreds( delegator );
+            const stakeCreds: Credential = forceStakeCreds( delegator );
 
             let script: undefined | SimpleScriptInfos = undefined;
 
@@ -756,7 +973,7 @@ export class TxBuilderRunner
                 script_or_ref = delegator
             }
 
-            if( stakeCreds.type === "script" )
+            if( stakeCreds.type === CredentialType.Script )
             {
                 if( redeemer === undefined )
                 {
@@ -791,10 +1008,9 @@ export class TxBuilderRunner
                     );
 
                     _addCertificate(
-                        new Certificate(
-                            1 as CertificateType.StakeDeRegistration,
-                            stakeCreds
-                        ),
+                        new CertStakeDeRegistration({
+                            stakeCredential: stakeCreds,
+                        }),
                         script
                     );
                 }
@@ -809,7 +1025,7 @@ export class TxBuilderRunner
             script_or_ref?: Script<PlutusScriptType> | CanResolveToUTxO
         ): TxBuilderRunner
         {
-            const stakeCreds: StakeCredentials = forceStakeCreds( delegator );
+            const stakeCreds: Credential = forceStakeCreds( delegator );
 
             let script: undefined | SimpleScriptInfos = undefined;
 
@@ -821,7 +1037,7 @@ export class TxBuilderRunner
                 script_or_ref = delegator
             }
 
-            if( stakeCreds.type === "script" )
+            if( stakeCreds.type === CredentialType.Script )
             {
                 if( redeemer === undefined )
                 {
@@ -856,10 +1072,9 @@ export class TxBuilderRunner
                     );
 
                     _addCertificate(
-                        new Certificate(
-                            0 as CertificateType.StakeRegistration,
-                            stakeCreds
-                        ),
+                        new CertStakeRegistration({
+                            stakeCredential: stakeCreds,
+                        }),
                         script
                     );
                 }
@@ -868,25 +1083,23 @@ export class TxBuilderRunner
             return self;
         }
 
-        function _registerPool( poolParams: PoolParams ): TxBuilderRunner
+        function _registerPool( poolParams: IPoolParams | PoolParams ): TxBuilderRunner
         {
             _addCertificate(
-                new Certificate(
-                    3 as CertificateType.PoolRegistration,
-                    poolParams
-                )
+                new CertPoolRegistration({
+                    poolParams: new PoolParams( poolParams )
+                })
             );
             return self;
         }
 
-        function _retirePool( poolId: Hash28, epoch: CanBeUInteger ): TxBuilderRunner
+        function _retirePool( poolId: CanBeHash28, epoch: CanBeUInteger ): TxBuilderRunner
         {
             _addCertificate(
-                new Certificate(
-                    4 as CertificateType.PoolRetirement,
-                    new PoolKeyHash( poolId ),
-                    epoch
-                )
+                new CertPoolRetirement( {
+                    poolHash: new PoolKeyHash( poolId ),
+                    epoch 
+                })
             );
             return self;
         }
@@ -898,7 +1111,7 @@ export class TxBuilderRunner
             script_or_ref?: Script<PlutusScriptType> | CanResolveToUTxO
         ): TxBuilderRunner
         {
-            const stakeCreds: StakeCredentials = forceStakeCreds( stakeAddress );
+            const stakeCreds: Credential = forceStakeCreds( stakeAddress );
 
             let script: undefined | SimpleScriptInfos = undefined;
 
@@ -910,7 +1123,7 @@ export class TxBuilderRunner
                 script_or_ref = stakeAddress
             }
 
-            if( stakeCreds.type === "script" )
+            if( stakeCreds.type === CredentialType.Script )
             {
                 if( redeemer === undefined )
                 {
@@ -969,7 +1182,7 @@ export class TxBuilderRunner
         ): void
         {
             const paymentCreds = utxo.resolved.address.paymentCreds;
-            if( paymentCreds.type === "script" )
+            if( paymentCreds.type === CredentialType.Script )
             {
                 if( !canBeData( redeemer ) ) throw new Error("script input " + utxo.utxoRef.toString() + " is missing a redeemer");
                 else redeemer = forceData( redeemer );
@@ -1017,7 +1230,7 @@ export class TxBuilderRunner
 
                     buildArgs.inputs.push({
                         utxo,
-                        referenceScriptV2: {
+                        referenceScript: {
                             refUtxo: ref,
                             redeemer,
                             datum: isInlineDatum ? "inline" : datum as Data
@@ -1061,7 +1274,7 @@ export class TxBuilderRunner
 
             utxo = utxo instanceof UTxO ? utxo : new UTxO( utxo );
             const paymentCreds = (utxo as UTxO).resolved.address.paymentCreds;
-            if( paymentCreds.type === "script" )
+            if( paymentCreds.type === CredentialType.Script )
             {
                 const hashStr = paymentCreds.hash.toString();
                 
@@ -1198,6 +1411,483 @@ export class TxBuilderRunner
         {
             if( canBeUInteger( amount ) ) _collateralAmount = amount;
             return self;
+        }
+
+        function __mintAssets(
+            assets: IValuePolicyEntry,
+            script_or_ref: Script | IUTxO,
+            redeemer?: CanBeData,
+        ): TxBuilderRunner
+        {
+            redeemer = redeemer === undefined ? new DataI( 0 ) : forceData( redeemer );
+
+            if( !Array.isArray( buildArgs.mints ) )
+            {
+                buildArgs.mints = [];
+            }
+
+            buildArgs.mints.push({
+                value: assets,
+                script: isIUTxO( script_or_ref ) ?
+                {
+                    ref: new UTxO( script_or_ref ),
+                    // policyId: assets.policy,
+                    redeemer
+                } : {
+                    inline: script_or_ref as Script,
+                    // policyId: assets.policy,
+                    redeemer
+                }
+            });
+
+            return self;
+        }
+
+        function _mintAssets(
+            assets: IValuePolicyEntry,
+            script_or_ref: Script | CanResolveToUTxO,
+            redeemer?: CanBeData,
+        ): TxBuilderRunner
+        {
+            if( shouldResolveToUTxO( script_or_ref ) )
+            {
+                tasks.push({
+                    kind: TxBuilderTaskKind.ResolveUTxO,
+                    arg: script_or_ref,
+                    onResolved: ( ref ) => {
+                        __mintAssets( assets, ref, redeemer )
+                    }
+                });
+                
+                return self;
+            }
+            else return __mintAssets( assets, script_or_ref, redeemer );
+        }
+
+        function __vote(
+            voter: IVoter,
+            govActionId: ITxOutRef | TxOutRefStr,
+            vote: Vote,
+            anchor?: IAnchor | undefined,
+            redeemer?: Data,
+            script_or_ref?: Script<PlutusScriptType> | IUTxO
+        ): TxBuilderRunner
+        {
+            govActionId = forceTxOutRef( govActionId ) ;
+
+            if( !Array.isArray( buildArgs.votingProcedures ) )
+            buildArgs.votingProcedures = [];
+        
+            const govActionVote = {
+                govActionId,
+                vote: {
+                    vote,
+                    anchor
+                },
+            };
+            const votingProcedure: IVotingProceduresEntry = {
+                voter,
+                votes: [ govActionVote ]
+            };
+
+            const entry = buildArgs.votingProcedures.find( elem => {
+                const votingProcedure = isIVotingProceduresEntry( elem ) ? elem : elem.votingProcedure;
+                return eqIVoter( voter, votingProcedure.voter );
+            });
+            if( !entry )
+            {
+                buildArgs.votingProcedures.push({
+                    votingProcedure,
+                    script: redeemer === undefined ? undefined : 
+                    isIUTxO( script_or_ref ) ? {
+                        ref: script_or_ref,
+                        redeemer 
+                    } : (
+                        script_or_ref instanceof Script ? {
+                            inline: script_or_ref,
+                            redeemer
+                        } : undefined
+                    )
+                })
+            }
+            else
+            {
+                const votingProcedure = isIVotingProceduresEntry( entry ) ? entry : entry.votingProcedure;
+                const govActionEntry = votingProcedure.votes.find(({ govActionId: entryGovActionId }) => 
+                    eqITxOutRef(
+                        govActionId as ITxOutRef,
+                        entryGovActionId
+                    )
+                );
+                if( !govActionEntry )
+                {
+                    votingProcedure.votes.push( govActionVote )
+                }
+                else
+                {
+                    govActionEntry.vote = {
+                        vote,
+                        anchor
+                    };
+                }
+            }
+
+            return self;
+        }
+
+        function _vote(
+            voter: IVoter,
+            governanceActionId: ITxOutRef | TxOutRefStr,
+            vote: Vote,
+            anchor?: IAnchor | undefined,
+            redeemer?: CanBeData,
+            script_or_ref?: Script<PlutusScriptType> | CanResolveToUTxO
+        ): TxBuilderRunner
+        {
+            redeemer = canBeData( redeemer ) ? forceData( redeemer ) : undefined;
+            if( shouldResolveToUTxO( script_or_ref ) )
+            {
+                tasks.push({
+                    kind: TxBuilderTaskKind.ResolveUTxO,
+                    arg: script_or_ref,
+                    onResolved: ( ref ) => {
+                        __vote(
+                            voter,
+                            governanceActionId,
+                            vote,
+                            anchor,
+                            redeemer as (Data | undefined),
+                            ref
+                        )
+                    }
+                });
+                
+                return self;
+            }
+            else return __vote(
+                voter,
+                governanceActionId,
+                vote,
+                anchor,
+                redeemer as (Data | undefined),
+                script_or_ref
+            );
+        }
+
+
+        function _voteDRep(
+            drepKeyHash: CanBeHash28,
+            governanceActionId: ITxOutRef | TxOutRefStr,
+            vote: Vote,
+            anchor?: IAnchor | undefined
+        ): TxBuilderRunner
+        {
+            return _vote(
+                {
+                    kind: VoterKind.DRepKeyHash,
+                    hash: drepKeyHash
+                },
+                governanceActionId,
+                vote,
+                anchor
+            );
+        }
+        function _voteScriptDRep(
+            drepScriptHash: CanBeHash28,
+            governanceActionId: ITxOutRef | TxOutRefStr,
+            vote: Vote,
+            anchor?: IAnchor | undefined,
+            redeemer?: CanBeData,
+            script_or_ref?: Script<PlutusScriptType> | CanResolveToUTxO
+        ): TxBuilderRunner
+        {
+            return _vote(
+                {
+                    kind: VoterKind.DRepScript,
+                    hash: drepScriptHash
+                },
+                governanceActionId,
+                vote,
+                anchor,
+                redeemer,
+                script_or_ref
+            );
+        }
+        function _voteConstitutionalComittee(
+            memberKeyHash: CanBeHash28,
+            governanceActionId: ITxOutRef | TxOutRefStr,
+            vote: Vote,
+            anchor?: IAnchor | undefined
+        ): TxBuilderRunner
+        {
+            return _vote(
+                {
+                    kind: VoterKind.ConstitutionalCommitteKeyHash,
+                    hash: memberKeyHash
+                },
+                governanceActionId,
+                vote,
+                anchor
+            );
+        }
+        function _voteScriptConstitutionalComittee(
+            memberScriptHash: CanBeHash28,
+            governanceActionId: ITxOutRef | TxOutRefStr,
+            vote: Vote,
+            anchor?: IAnchor | undefined,
+            redeemer?: CanBeData,
+            script_or_ref?: Script<PlutusScriptType> | CanResolveToUTxO
+        ): TxBuilderRunner
+        {
+            return _vote(
+                {
+                    kind: VoterKind.ConstitutionalCommitteScript,
+                    hash: memberScriptHash
+                },
+                governanceActionId,
+                vote,
+                anchor,
+                redeemer,
+                script_or_ref
+            );
+        }
+        function _voteStakePool(
+            poolId: CanBeHash28,
+            governanceActionId: ITxOutRef | TxOutRefStr,
+            vote: Vote,
+            anchor?: IAnchor | undefined
+        ): TxBuilderRunner
+        {
+            return _vote(
+                {
+                    kind: VoterKind.StakingPoolKeyHash,
+                    hash: poolId
+                },
+                governanceActionId,
+                vote,
+                anchor
+            );
+        }
+
+        function __propose(
+            proposal: IProposalProcedure,
+            redeemer?: Data,
+            script_or_ref?: Script<PlutusScriptType> | IUTxO
+        ): TxBuilderRunner
+        {
+            if( !Array.isArray( buildArgs.proposalProcedures ) )
+            buildArgs.proposalProcedures = [];
+
+            buildArgs.proposalProcedures.push({
+                proposalProcedure: proposal,
+                script: redeemer === undefined ? undefined :
+                isIUTxO( script_or_ref ) ? {
+                    ref: script_or_ref,
+                    redeemer
+                } : (
+                    (script_or_ref instanceof Script) ? {
+                        inline: script_or_ref,
+                        redeemer
+                    } : undefined
+                )
+            })
+
+            const _proposalProcedure = buildArgs.proposalProcedures[ buildArgs.proposalProcedures.length - 1 ];
+            const govActionRef = isIProposalProcedure( _proposalProcedure ) ?
+                _proposalProcedure.govAction :
+                _proposalProcedure.proposalProcedure.govAction;
+
+            if(
+                (
+                    govActionRef.govActionType === GovActionType.ParameterChange ||
+                    govActionRef.govActionType === GovActionType.TreasuryWithdrawals
+                ) &&
+                govActionRef.policyHash === undefined
+            )
+            {
+                if(
+                    isIUTxO( script_or_ref ) &&
+                    script_or_ref.resolved.refScript instanceof Script
+                )
+                {
+                    govActionRef.policyHash = script_or_ref.resolved.refScript.hash;
+                }
+                else if( script_or_ref instanceof Script )
+                {
+                    govActionRef.policyHash = script_or_ref.hash;
+                }
+            }
+
+            return self;
+        }
+
+        function _propose(
+            proposal: IProposalProcedure,
+            redeemer?: CanBeData,
+            script_or_ref?: Script<PlutusScriptType> | CanResolveToUTxO
+        ): TxBuilderRunner
+        {
+            redeemer = canBeData( redeemer ) ? forceData( redeemer ) : undefined;
+            if( shouldResolveToUTxO( script_or_ref ) )
+            {
+                tasks.push({
+                    kind: TxBuilderTaskKind.ResolveUTxO,
+                    arg: script_or_ref,
+                    onResolved: ( ref ) => {
+                        __propose(
+                            proposal,
+                            redeemer as (Data | undefined),
+                            ref
+                        )
+                    }
+                });
+                
+                return self;
+            }
+            else return __propose(
+                proposal,
+                redeemer as (Data | undefined),
+                script_or_ref
+            );
+        }
+        function _proposeParametersChanges(
+            changes: Partial<ProtocolParameters>,
+            procedureInfos: Omit<IProposalProcedure,"govAction">,
+            govActionId?: ITxOutRef | TxOutRefStr,
+            redeemer?: CanBeData,
+            script_or_ref?: Script<PlutusScriptType> | CanResolveToUTxO
+        ): TxBuilderRunner
+        {
+            return _propose({
+                    ...procedureInfos,
+                    govAction: {
+                        govActionType: GovActionType.ParameterChange,
+                        protocolParamsUpdate: changes,
+                        govActionId: govActionId ? forceTxOutRef( govActionId ) : undefined,
+                        // policyHash // script hash if any specified
+                    },
+                },
+                redeemer,
+                script_or_ref
+            );
+        }
+        function _proposeHardForkInitiation(
+            nextProtocolVersion: IProtocolVerision,
+            procedureInfos: Omit<IProposalProcedure,"govAction">,
+            govActionId?: ITxOutRef | TxOutRefStr,
+            redeemer?: CanBeData,
+            script_or_ref?: Script<PlutusScriptType> | CanResolveToUTxO
+        ): TxBuilderRunner
+        {
+            return _propose({
+                    ...procedureInfos,
+                    govAction: {
+                        govActionType: GovActionType.InitHardFork,
+                        protocolVersion: nextProtocolVersion,
+                        govActionId: govActionId ? forceTxOutRef( govActionId ) : undefined,
+                    },
+                },
+                redeemer,
+                script_or_ref
+            );
+        }
+        function _proposeTreasuryWithdrawal(
+            withdrawals: ITxWithdrawals | TxWithdrawals,
+            procedureInfos: Omit<IProposalProcedure,"govAction">,
+            redeemer?: CanBeData,
+            script_or_ref?: Script<PlutusScriptType> | CanResolveToUTxO
+        ): TxBuilderRunner
+        {
+            return _propose({
+                    ...procedureInfos,
+                    govAction: {
+                        govActionType: GovActionType.TreasuryWithdrawals,
+                        withdrawals,
+                        // policyHash // script hash if any specified
+                    },
+                },
+                redeemer,
+                script_or_ref
+            );
+        }
+        function _proposeNoConfidence(
+            procedureInfos: Omit<IProposalProcedure,"govAction">,
+            govActionId?: ITxOutRef | TxOutRefStr,
+            redeemer?: CanBeData,
+            script_or_ref?: Script<PlutusScriptType> | CanResolveToUTxO
+        ): TxBuilderRunner
+        {
+            return _propose({
+                    ...procedureInfos,
+                    govAction: {
+                        govActionType: GovActionType.NoConfidence,
+                        govActionId: govActionId ? forceTxOutRef( govActionId ) : undefined,
+                        // policyHash // script hash if any specified
+                    },
+                },
+                redeemer,
+                script_or_ref
+            );
+        }
+        function _proposeComitteeUpdate(
+            toRemove: Credential[],
+            toAdd: INewCommitteeEntry[],
+            threshold: Rational,
+            procedureInfos: Omit<IProposalProcedure,"govAction">,
+            govActionId?: ITxOutRef | TxOutRefStr,
+            redeemer?: CanBeData,
+            script_or_ref?: Script<PlutusScriptType> | CanResolveToUTxO
+        ): TxBuilderRunner
+        {
+            return _propose({
+                    ...procedureInfos,
+                    govAction: {
+                        govActionType: GovActionType.UpdateCommittee,
+                        toRemove,
+                        toAdd,
+                        threshold,
+                        govActionId: govActionId ? forceTxOutRef( govActionId ) : undefined,
+                    },
+                },
+                redeemer,
+                script_or_ref
+            );
+        }
+        function _proposeNewConstitution(
+            constitution: IConstitution,
+            procedureInfos: Omit<IProposalProcedure,"govAction">,
+            govActionId?: ITxOutRef | TxOutRefStr,
+            redeemer?: CanBeData,
+            script_or_ref?: Script<PlutusScriptType> | CanResolveToUTxO
+        ): TxBuilderRunner
+        {
+            return _propose({
+                    ...procedureInfos,
+                    govAction: {
+                        govActionType: GovActionType.NewConstitution,
+                        constitution,
+                        govActionId: govActionId ? forceTxOutRef( govActionId ) : undefined,
+                    },
+                },
+                redeemer,
+                script_or_ref
+            );
+        }
+        function _proposeInfos(
+            procedureInfos: Omit<IProposalProcedure,"govAction">,
+            redeemer?: CanBeData,
+            script_or_ref?: Script<PlutusScriptType> | CanResolveToUTxO
+        ): TxBuilderRunner
+        {
+            return _propose({
+                    ...procedureInfos,
+                    govAction: {
+                        govActionType: GovActionType.Info,
+                    },
+                },
+                redeemer,
+                script_or_ref
+            );
         }
 
         async function _build(): Promise<Tx>
@@ -1376,9 +2066,21 @@ export class TxBuilderRunner
                         throw new Error("can't deduce change Address; missing inputs")    
                     }
     
-                    buildArgs.changeAddress = buildArgs.inputs
-                    ?.find( _in => _in.utxo.resolved.address.paymentCreds.type === "pubKey" )
-                    ?.utxo.resolved.address!;
+                    const _changeInput = buildArgs.inputs
+                    ?.find( _in => {
+                        const addr = ( isIUTxO( _in ) ? _in : _in.utxo ).resolved.address;
+                        return (
+                            addr instanceof Address ?
+                            addr : Address.fromString( addr )
+                        ).paymentCreds.type === CredentialType.KeyHash
+                    })
+
+                    buildArgs.changeAddress =
+                    (
+                        isIUTxO( _changeInput ) ?
+                        _changeInput :
+                        _changeInput?.utxo
+                    )?.resolved.address;
     
                     if( !buildArgs.changeAddress )
                     {
@@ -1387,7 +2089,7 @@ export class TxBuilderRunner
                         if( Array.isArray( buildArgs.outputs ) )
                         {
                             buildArgs.changeAddress = buildArgs.outputs
-                            ?.find( out => out.address.paymentCreds.type === "pubKey" )
+                            ?.find( out => forceAddr(out.address).paymentCreds.type === CredentialType.KeyHash )
                             ?.address!
                         }
                         else throw new Error("can't deduce change Address; only script inputs");
@@ -1486,6 +2188,10 @@ export class TxBuilderRunner
                     value: _deregisterStake,
                     ...readonlyValueDescriptor
                 },
+                mintAssets: {
+                    value: _mintAssets,
+                    ...readonlyValueDescriptor
+                },
                 registerStake: {
                     value: _registerStake,
                     ...readonlyValueDescriptor
@@ -1558,6 +2264,62 @@ export class TxBuilderRunner
                     value: _setCollateralAmount,
                     ...readonlyValueDescriptor
                 },
+                vote: {
+                    value: _vote,
+                    ...readonlyValueDescriptor
+                },
+                voteDRep: {
+                    value: _voteDRep,
+                    ...readonlyValueDescriptor
+                },
+                voteScriptDRep: {
+                    value: _voteScriptDRep,
+                    ...readonlyValueDescriptor
+                },
+                voteConstitutionalComittee: {
+                    value: _voteConstitutionalComittee,
+                    ...readonlyValueDescriptor
+                },
+                voteScriptConstitutionalComittee: {
+                    value: _voteScriptConstitutionalComittee,
+                    ...readonlyValueDescriptor
+                },
+                voteStakePool: {
+                    value: _voteStakePool,
+                    ...readonlyValueDescriptor
+                },
+                propose: {
+                    value: _propose,
+                    ...readonlyValueDescriptor
+                },
+                proposeParametersChanges: {
+                    value: _proposeParametersChanges,
+                    ...readonlyValueDescriptor
+                },
+                proposeHardForkInitiation: {
+                    value: _proposeHardForkInitiation,
+                    ...readonlyValueDescriptor
+                },
+                proposeTreasuryWithdrawal: {
+                    value: _proposeTreasuryWithdrawal,
+                    ...readonlyValueDescriptor
+                },
+                proposeNoConfidence: {
+                    value: _proposeNoConfidence,
+                    ...readonlyValueDescriptor
+                },
+                proposeComitteeUpdate: {
+                    value: _proposeComitteeUpdate,
+                    ...readonlyValueDescriptor
+                },
+                proposeNewConstitution: {
+                    value: _proposeNewConstitution,
+                    ...readonlyValueDescriptor
+                },
+                proposeInfos: {
+                    value: _proposeInfos,
+                    ...readonlyValueDescriptor
+                },
                 build: {
                     value: _build,
                     ...readonlyValueDescriptor
@@ -1565,57 +2327,4 @@ export class TxBuilderRunner
             }
         );
     }
-}
-
-// ------------------------------------ utils ------------------------------------- //
-
-export type CanBeStakeCreds = StakeAddress | StakeAddressBech32 | StakeCredentials | Script<PlutusScriptType>
-
-function forceStakeCreds( creds: CanBeStakeCreds ): StakeCredentials
-{
-    if( typeof creds === "string" )
-    {
-        if( !creds.startsWith("stake") )
-        {
-            throw new Error("invalid bech32 stake address");
-        }
-        creds = StakeAddress.fromString( creds );
-    }
-
-    if( creds instanceof StakeAddress )
-    {
-        return creds.toStakeCredentials()
-    }
-
-    if( creds instanceof Script )
-    {
-        return new StakeCredentials(
-            "script",
-            new StakeValidatorHash( creds.hash )
-        );
-    }
-
-    if( creds.type === "pointer" )
-    {
-        throw new Error("pointer stake credentials not supported");
-    }
-
-    return creds;
-}
-
-export type CanBePoolKeyHash = Hash28 | `pool1${string}` | `pool_test1${string}` | string /* hex */ | Uint8Array;
-
-function forcePoolKeyHash( canBe: CanBePoolKeyHash ): PoolKeyHash
-{
-    if( typeof canBe === "string" )
-    {
-        if( canBe.startsWith("pool") )
-        {
-            const [ _hrp, decoded ] = decodeBech32( canBe );
-
-            return new PoolKeyHash( new Uint8Array( decoded ) );
-        }
-        return new PoolKeyHash( fromHex( canBe ) );
-    }
-    return new PoolKeyHash( canBe );
 }

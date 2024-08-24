@@ -1,8 +1,8 @@
 import { Machine } from "@harmoniclabs/plutus-machine";
 import { pstruct } from "..";
-import { pDataI, pInt, phead, phoist, plam, pmakeUnit, toData } from "../../../lib"
+import { pDataI, pInt, phead, phoist, plam, pmakeUnit, pmatch, toData } from "../../../lib"
 import { data, list, unit, int } from "../../../type_system";
-import { getElemAtTerm, pmatch } from "../pmatch"
+import { getElemAtTerm } from "../../../lib/pmatch/getElemAtTerm";
 
 
 describe("getElemAtTerm", () => {
@@ -105,10 +105,7 @@ describe("getElemAtTerm", () => {
     test("extract nested", () => {
 
         const theTerm = pmatch( stuff )
-        .onStruct3( _ => _.extract("m").in( ({ m }) =>
-        m.extract("i").in( ({ i }) =>
-        i.extract("e").in( ({ e }) => e )
-        )));
+        .onStruct3( ({ m }) => m.i.e );
 
         expect(
             Machine.evalSimple(

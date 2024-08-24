@@ -3,17 +3,19 @@ import { Term } from "../../../Term";
 import { fn, bs, bool, int, lam } from "../../../type_system";
 import { papp } from "../../papp";
 import { PappArg } from "../../pappArg";
-import { phoist } from "../../phoist";
 import { TermBS, addPByteStringMethods } from "../../std/UtilityTerms/TermBS";
 import { TermBool, addPBoolMethods } from "../../std/UtilityTerms/TermBool";
 import { TermInt, addPIntMethods } from "../../std/UtilityTerms/TermInt";
 import { addApplications } from "../addApplications";
-import { pfn } from "../../pfn";
 import { _pflipIR } from "../_pflipIR";
 import { defineReadOnlyProperty } from "@harmoniclabs/obj-utils";
 import { IRNative } from "../../../../IR/IRNodes/IRNative";
 import { IRHoisted } from "../../../../IR/IRNodes/IRHoisted";
 import { IRApp } from "../../../../IR/IRNodes/IRApp";
+import { IRConst } from "../../../../IR/IRNodes/IRConst";
+import { _ir_apps } from "../../../../IR/tree_utils/_ir_apps";
+import { IRVar } from "../../../../IR/IRNodes/IRVar";
+import { IRFunc } from "../../../../IR/IRNodes/IRFunc";
 
 
 export type ByteStrBinOPToBS = Term< PLam< PByteString, PLam< PByteString, PByteString>>>
@@ -244,18 +246,20 @@ export const plessBs    = byteStrBinOpToBool( IRNative.lessThanByteString );
 export const plessEqBs  = byteStrBinOpToBool( IRNative.lessThanEqualsByteString );
 
 export const pgreaterBS: ByteStrBinOPToBool =
-    phoist(
-        pfn([ bs, bs ], bool )(
-            ( a: Term<PByteString>, b: Term<PByteString> ): TermBool => plessBs.$( b ).$( a )
+    addApplications<[ PByteString, PByteString ], PBool>(
+        new Term(
+            fn([ bs, bs ], bool),
+            _dbn => IRNative._gtBS
         )
-    ) as any;
+    );
 
 export const pgreaterEqBS: ByteStrBinOPToBool =
-    phoist(
-        pfn([ bs, bs ], bool )(
-            ( a: Term<PByteString>, b: Term<PByteString> ): TermBool => plessEqBs.$( b ).$( a )
+    addApplications<[ PByteString, PByteString ], PBool>(
+        new Term(
+            fn([ bs, bs ], bool),
+            _dbn => IRNative._gtEqBS
         )
-    ) as any;
+    );
 
 export const psha2_256: TermFn<[ PByteString ], PByteString> =
     addApplications<[ PByteString ], PByteString>(
@@ -276,6 +280,22 @@ export const pblake2b_256: TermFn<[ PByteString ], PByteString> =
         new Term(
             lam( bs, bs ),
             _dbn => IRNative.blake2b_256
+        )
+    );
+
+export const pkeccak_256: TermFn<[ PByteString ], PByteString> =
+    addApplications<[ PByteString ], PByteString>(
+        new Term(
+            lam( bs, bs ),
+            _dbn => IRNative.keccak_256
+        )
+    );
+
+export const pblake2b_224: TermFn<[ PByteString ], PByteString> =
+    addApplications<[ PByteString ], PByteString>(
+        new Term(
+            lam( bs, bs ),
+            _dbn => IRNative.blake2b_224
         )
     );
 
@@ -349,3 +369,104 @@ addApplications<[ PByteString, PByteString, PByteString ], PBool>(
         _dbn => IRNative.verifySchnorrSecp256k1Signature
     )
 );
+
+// bitwise - plutus v3
+
+export const pencodeIntBE: TermFn<[ PInt, PInt ], PByteString> =
+    addApplications<[ PInt, PInt ], PByteString>(
+        new Term(
+            fn([ int, int ], bs),
+            _dbn => new IRApp(
+                IRNative.integerToByteString,
+                IRConst.bool( true ) // big endian
+            )
+        )
+    );
+
+export const pencodeIntLE: TermFn<[ PInt, PInt ], PByteString> =
+    addApplications<[ PInt, PInt ], PByteString>(
+        new Term(
+            fn([ int, int ], bs),
+            _dbn => new IRApp(
+                IRNative.integerToByteString,
+                IRConst.bool( false ) // big endian
+            )
+        )
+    );
+
+export const pdecodeIntBE: TermFn<[ PByteString ], PInt> =
+    addApplications<[ PByteString ], PInt>(
+        new Term(
+            fn([ bs ], int),
+            _dbn => new IRHoisted(
+                new IRApp(
+                    IRNative.byteStringToInteger,
+                    IRConst.bool( true ) // big endian
+                )
+            )
+        )
+    );
+
+export const pdecodeIntLE: TermFn<[ PByteString ], PInt> =
+    addApplications<[ PByteString ], PInt>(
+        new Term(
+            fn([ bs ], int),
+            _dbn => new IRHoisted(
+                new IRApp(
+                    IRNative.byteStringToInteger,
+                    IRConst.bool( false ) // big endian
+                )
+            )
+        )
+    );
+
+
+export const subByteString = 
+    addApplications<[ PByteString, PInt, PInt ], PByteString>(
+        new Term(
+            fn([
+                bs,
+                int,
+                int
+            ],  bs),
+            _dbn => new IRHoisted(
+                new IRFunc(
+                    // (( term, fromInclusive , ofLength ): TermBS =>
+                    3,
+                    _ir_apps(
+                        IRNative.sliceByteString,
+                        new IRVar( 1 ), // fromInclusive
+                        new IRVar( 0 ), // ofLenght
+                        new IRVar( 2 ), // term
+                    )
+                )
+            )
+        )
+    );
+
+export const jsLikeSlice =
+    addApplications<[ PByteString, PInt, PInt ], PByteString>(
+        new Term(
+            fn([
+                bs,
+                int,
+                int
+            ],  bs),
+            _dbn => new IRHoisted(
+                new IRFunc(
+                    // (( term, fromInclusive , toExclusive ): TermBS =>
+                    3,
+                    _ir_apps(
+                        IRNative.sliceByteString,
+                        new IRVar( 1 ), // fromInclusive
+                        _ir_apps(
+                            IRNative.subtractInteger,
+                            new IRVar( 0 ), // toExclusive
+                            new IRVar( 1 ), // fromInclusive
+                        ), // ofLenght
+                        new IRVar( 2 ), // term
+                    )
+                )
+            )
+        )
+    );

@@ -1,10 +1,13 @@
 import { cloneStructDef } from "../PTypes/PStruct/cloneStructDef";
-import { GenericTermType, PrimType, lam, struct, pair, list, delayed, asData, alias } from "./types";
+import { GenericTermType, PrimType, lam, struct, pair, list, delayed, asData, alias, sop } from "./types";
 
 export function cloneTermType<T extends GenericTermType>( t: T ): T
 {
     if( t[ 0 ] === PrimType.Struct )
     return struct( cloneStructDef( t[1] ), t[2] ) as any;
+
+    if( t[ 0 ] === PrimType.Sop )
+    return sop( cloneStructDef( t[1] ), t[2] ) as any;
 
     if( t[ 0 ] === PrimType.Lambda )
     return lam( cloneTermType( t[1] ), cloneTermType( t[2] ) ) as any;

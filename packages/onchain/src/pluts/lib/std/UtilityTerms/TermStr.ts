@@ -6,9 +6,10 @@ import { PappArg } from "../../pappArg"
 import { plet } from "../../plet"
 import { TermBS } from "./TermBS"
 import { TermBool } from "./TermBool"
+import { addBaseUtilityTerm, BaseUtilityTermExtension } from "./BaseUtilityTerm"
 
 
-export type TermStr = Term<PString> & {
+export type TermStr = Term<PString> & BaseUtilityTermExtension & {
     readonly utf8Encoded: TermBS
     
     // pappendStr
@@ -27,6 +28,8 @@ const getterOnly = {
 
 export function addPStringMethods( term: Term<PString> ): TermStr
 {
+    term = addBaseUtilityTerm( term );
+
     definePropertyIfNotPresent(
         term,
         "utf8Encoded",

@@ -1,6 +1,5 @@
 import { ByteString } from "@harmoniclabs/bytestring";
 import { Cloneable } from "@harmoniclabs/cbor/dist/utils/Cloneable";
-import { blake2b_128 } from "@harmoniclabs/crypto";
 import { Pair } from "@harmoniclabs/pair";
 import { Data, isData, dataToCbor } from "@harmoniclabs/plutus-data";
 import { fromUtf8, toHex } from "@harmoniclabs/uint8array-utils";
@@ -24,6 +23,7 @@ import { termTypeToString } from "../../pluts/type_system/utils";
 import { IRParentTerm, isIRParentTerm } from "../utils/isIRParentTerm";
 import { _modifyChildFromTo } from "../toUPLC/_internal/_modifyChildFromTo";
 import { BaseIRMetadata } from "./BaseIRMetadata";
+import { hashIrData, IRHash, isIRHash } from "../IRHash";
 
 export type IRConstValue
     = CanBeUInteger
@@ -40,21 +40,13 @@ export interface IRConstMetadata extends BaseIRMetadata {}
 export class IRConst
     implements Cloneable<IRConst>, IHash, IIRParent, ToJson
 {
-    readonly hash: Uint8Array;
-    markHashAsInvalid: () => void;
+    static get tag(): Uint8Array { return new Uint8Array([ 0b0000_0011 ]); }
 
-    readonly meta: IRConstMetadata
-
-    readonly type!: TermType
-    readonly value!: IRConstValue
-
-    parent: IRParentTerm | undefined;
-
-    constructor( t: TermType, v: IRConstValue )
+    constructor( t: TermType, v: IRConstValue, _unsafeHash?: IRHash )
     {
         if(
             !isWellFormedType( t ) ||
-            typeExtends( t, lam( tyVar(), tyVar() ) ) &&
+            typeExtends( t, lam( tyVar(), tyVar() ) ) ||
             typeExtends( t, delayed( tyVar() ) )
         )
         {
@@ -62,20 +54,6 @@ export class IRConst
                 "invalid type for IR constant"
             );
         }
-
-        Object.defineProperty(
-            this, "meta", {
-                value: {},
-                writable: false,
-                enumerable: true,
-                configurable: false
-            }
-        );
-
-        defineReadOnlyProperty(
-            this, "type", cloneTermType( t )
-        );
-
         if(!(
             isIRConstValueAssignableToType( v, t )
         ))
@@ -86,84 +64,79 @@ export class IRConst
             );
         }
 
-        defineReadOnlyProperty(
-            this, "value", v
-        );
-
-        let _parent: IRParentTerm | undefined = undefined;
-        Object.defineProperty(
-            this, "parent",
-            {
-                get: () => _parent,
-                set: ( newParent: IRParentTerm | undefined ) => {
-                    if(!( // assert
-                        // new parent value is different than current
-                        _parent !== newParent && (
-                            // and the new parent value is valid
-                            newParent === undefined || 
-                            isIRParentTerm( newParent )
-                        )
-                    )) return;
-                    
-                    // keep reference
-                    const oldParent = _parent;
-                    // change parent
-                    _parent = newParent;
-
-                    // if has old parent
-                    if( oldParent !== undefined && isIRParentTerm( oldParent ) )
-                    {
-                        // change reference to a clone for safety
-                        _modifyChildFromTo(
-                            oldParent,
-                            this,
-                            this.clone()
-                        );
-                    }
+        Object.defineProperties(
+            this, {
+                type: {
+                    value: t,
+                    writable: false,
+                    enumerable: true,
+                    configurable: false
                 },
-                enumerable: true,
-                configurable: false
+                value: {
+                    value: v,
+                    writable: false,
+                    enumerable: true,
+                    configurable: false
+                }
             }
         );
 
-        let hash: Uint8Array | undefined = undefined;
-        Object.defineProperty(
-            this, "hash", {
-                get: () => {
-                    if(!( hash instanceof Uint8Array ))
-                    {
-                        hash = blake2b_128(
-                            concatUint8Arr(
-                                IRConst.tag,
-                                new Uint8Array( termTyToConstTy( this.type ) ),
-                                serializeIRConstValue( this.value, this.type )
-                            )
-                        )
-                    }
-                    return hash.slice();
-                },
-                set: () => {},
-                enumerable: true,
-                configurable: false
-            }
-        );
-
-        Object.defineProperty(
-            this, "markHashAsInvalid",
-            {
-                value: () => { throw new Error("IRConst `markHashAsInvalid` was called; but a constant doesn't have childs") },
-                writable: false,
-                enumerable:  true,
-                configurable: false
-            }
-        );
+        this._parent = undefined;
+        this._hash = isIRHash( _unsafeHash ) ? _unsafeHash : undefined;
     }
 
-    static get tag(): Uint8Array { return new Uint8Array([ 0b0000_0011 ]); }
+    readonly type!: TermType
+    readonly value!: IRConstValue
+
+    private _hash: IRHash | undefined;
+    get hash(): IRHash
+    {
+        if(!isIRHash( this._hash ))
+        {
+            this._hash = hashIrData(
+                concatUint8Arr(
+                    IRConst.tag,
+                    new Uint8Array( termTyToConstTy( this.type ) ),
+                    serializeIRConstValue( this.value, this.type )
+                )
+            )
+        }
+        return this._hash;
+    }
+    markHashAsInvalid(): void
+    { { throw new Error("IRConst `markHashAsInvalid` was called; but a constant doesn't have childs") } }
+    isHashPresent(): boolean { return isIRHash( this._hash ); }
+
+    private _meta: IRConstMetadata | undefined = undefined;
+    get meta(): IRConstMetadata | undefined
+    {
+        if( !this._meta ) this._meta = {};
+        return this._meta;
+    }
+
+    private _parent: IRParentTerm | undefined;
+    get parent(): IRParentTerm | undefined { return this._parent; }
+    set parent( newParent: IRParentTerm | undefined )
+    {
+        if(!( // assert
+            // new parent value is different than current
+            this._parent !== newParent && (
+                // and the new parent value is valid
+                newParent === undefined || 
+                isIRParentTerm( newParent )
+            )
+        )) return;
+        
+        this._parent = newParent;
+    }
 
     clone(): IRConst
     {
-        return new IRConst( this.type, this.value );
+        return new IRConst(
+            this.type,
+            this.value,
+            this.isHashPresent() ? this.hash : undefined
+        );
     }
 
     toJson(): any

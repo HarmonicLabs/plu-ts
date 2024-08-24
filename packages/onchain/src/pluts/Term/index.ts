@@ -1,5 +1,5 @@
-import { Machine } from "@harmoniclabs/plutus-machine";
-import { ToUPLC, UPLCTerm, UPLCConst } from "@harmoniclabs/uplc";
+import { CEKConst, Machine } from "@harmoniclabs/plutus-machine";
+import { ToUPLC, UPLCTerm } from "@harmoniclabs/uplc";
 import { IRConst } from "../../IR/IRNodes/IRConst";
 import { IRError } from "../../IR/IRNodes/IRError";
 import { IRHoisted } from "../../IR/IRNodes/IRHoisted";
@@ -7,16 +7,17 @@ import { IRTerm } from "../../IR/IRTerm";
 import { ToIR } from "../../IR/interfaces/ToIR";
 import { compileIRToUPLC } from "../../IR/toUPLC/compileIRToUPLC";
 import { PType } from "../PType";
-import { FromPType, TermType, ToPType, isWellFormedGenericType, termTypeToString } from "../type_system";
+import { FromPType, GenericTermType, TermType, ToPType, isWellFormedGenericType, isWellFormedType, termTypeToString } from "../type_system";
 import { cloneTermType } from "../type_system/cloneTermType";
 import { defineReadOnlyHiddenProperty } from "@harmoniclabs/obj-utils";
 import { Cloneable, isCloneable } from "../../utils/Cloneable";
 import { assert } from "../../utils/assert";
+import { IRVar } from "../../IR/IRNodes/IRVar";
 
 export type UnTerm<T extends Term<PType>> = T extends Term<infer PT extends PType > ? PT : never;
 
-export class Term<A extends PType>
-    implements ToUPLC, ToIR, Cloneable<Term<A>>
+export class Term<PT extends PType>
+    implements ToUPLC, ToIR, Cloneable<Term<PT>>
 {
     /**
      * in most cases it will never be used
@@ -24,8 +25,8 @@ export class Term<A extends PType>
      * it's solely purpose is to allow typescript to rise errors (at type level)
      * when the type arguments don't match
      */
-    _pInstance?: A;
-    get pInstance(): A | undefined
+    _pInstance?: PT;
+    get pInstance(): PT | undefined
     {
         if( this._pInstance === undefined ) return undefined;
         return isCloneable( this._pInstance ) ? 
@@ -34,15 +35,15 @@ export class Term<A extends PType>
     }
 
     // typescript being silly here
-    readonly type!: FromPType<A> | TermType;
+    readonly type!: FromPType<PT> | TermType;
     
     readonly toUPLC!: ( deBruijnLevel?: bigint | number ) => UPLCTerm
 
     readonly toIR!: ( deBruijnLevel?: bigint | number ) => IRTerm
 
-    readonly clone!: () => Term<A>
+    readonly clone!: () => Term<PT>
 
-    constructor( type: FromPType<A> | FromPType<ToPType<TermType>> , _toIR: ( dbn: bigint ) => IRTerm, isConstant: boolean = false )
+    constructor( type: FromPType<PT> | TermType | GenericTermType, _toIR: ( dbn: bigint ) => IRTerm, isConstant: boolean = false )
     {
         assert(
             isWellFormedGenericType( type ) ||
@@ -62,7 +63,7 @@ export class Term<A extends PType>
             }
         );
 
-        let _toIR_ = _toIR.bind( this );
+        let _toIR_ = _toIR; //.bind( this );
         let shouldHoist = false;
 
         let _IR_cache : { [dbn: string]: IRTerm } = {};
@@ -87,7 +88,8 @@ export class Term<A extends PType>
                     
                     if( 
                         !(ir instanceof IRHoisted) &&
-                        (this as any).isConstant
+                        (this as any).isConstant &&
+                        !(ir instanceof IRConst)
                     )
                     {
                         // console.log( showIR( ir ).text );
@@ -106,9 +108,9 @@ export class Term<A extends PType>
                         // if for whatever reason this is removed please adapt the rest of the codebas
                         uplc = Machine.evalSimple( uplc );
 
-                        if( uplc instanceof UPLCConst )
+                        if( uplc instanceof CEKConst )
                         {
-                            ir = new IRConst( this.type, uplc.value );
+                            ir = new IRConst( this.type, uplc.value as any );
                         }
                         else
                         {
@@ -116,7 +118,16 @@ export class Term<A extends PType>
                         }
                     }
 
-                    _IR_cache[dbnStr] = ir.clone();
+                    if(!(
+                        // we don't cache `IRVar` since
+                        // it is likely they will be accessed at different dbn
+                        ir instanceof IRVar ||
+                        // same for `IRConst`
+                        ir instanceof IRConst
+                    ))
+                    {
+                        _IR_cache[dbnStr] = ir.clone();
+                    }
                     return ir;
                 },
                 writable: false,
@@ -220,3 +231,31 @@ export type ToTermArrNonEmpty<Ts extends [ TermType, ...TermType[] ]> =
     Ts extends [infer T extends TermType] ? [ Term<ToPType<T>>] & [ Term<PType> ] :
     Ts extends [infer T extends TermType, ...infer RestTs extends [ TermType, ...TermType[] ] ] ? [ Term<ToPType<T>>, ...ToTermArr<RestTs> ] & [ Term<PType>, ...Term<PType>[] ] :
     never;
+
+
+Object.defineProperty(
+    Term.prototype, "as", /**
+    * here only as fallback
+    * 
+    * usually only the utility term "as" is accessed
+    */
+    {
+        value: function _as<T extends TermType>( this: Term<PType>, type: T ): Term<ToPType<T>>
+        {
+            if( !isWellFormedType( type ) )
+            {
+                throw new Error("`punsafeConvertType` called with invalid type");
+            }
+        
+            return new Term(
+                type,
+                this.toIR,
+                Boolean((this as any).isConstant) // isConstant
+            ) as any;
+        },
+        writable: false,
+        enumerable: false,
+        configurable: false
+    }
+    //*/
+)

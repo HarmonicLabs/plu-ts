@@ -1,13 +1,7 @@
-import { fromAscii, toHex } from "@harmoniclabs/uint8array-utils";
-import { PTokenName } from "../../API/V1/Value/PTokenName";
-import { PAddress, PAssetsEntry, PCurrencySymbol, PData, PExtended, PInt, PScriptContext, PScriptPurpose, PTxInfo, PTxOut, PTxOutRef, PType, PUnit, PValue, PValueEntry, Term, TermFn, TermList, bool, bs, data, delayed, fn, int, lam, list, pBSToData, pBool, pData, pInt, pList, pListToData, pand, pchooseList, pdelay, peqData, perror, pfn, pforce, phoist, pif, pindexBs, pisEmpty, plam, plet, pmakeUnit, pmatch, pmatchList, pnilData, precursive, pserialiseData, psha2_256, pstrictIf, pstruct, psub, ptrace, ptraceError, ptraceVal, punBData, punIData, punsafeConvertType, str, termTypeToString, unit } from "../..";
+import { PAddress, PAssetsEntry, PCurrencySymbol, PScriptContext, PScriptPurpose, PTxInfo, PTxOutRef, PValue, V2, bool, bs, data, lam, list, pBool, pData, pand, pdelay, perror, pfn, phoist, pif, plam, plet, pmakeUnit, pmatch, pstruct, ptraceError, punBData, punsafeConvertType, str, unit } from "../..";
 import { TxOutRef } from "@harmoniclabs/cardano-ledger-ts";
 import { dataFromCbor } from "@harmoniclabs/plutus-data";
-import { Machine } from "@harmoniclabs/plutus-machine";
-import { UPLCConst, prettyUPLC } from "@harmoniclabs/uplc";
-import { prettyIR, prettyIRJsonStr } from "../../../IR/utils/showIR";
-import { IRLetted, IRVar, getMinVarDbn, getNormalizedLettedArgs } from "../../../IR/IRNodes";
-import { IRTerm } from "../../../IR/IRTerm";
+import { Machine, CEKConst } from "@harmoniclabs/plutus-machine";
 import { _getMinUnboundDbn } from "../../../IR/toUPLC/subRoutines/handleLetted/groupByScope";
 
 const value_contains_master = phoist(
@@ -56,14 +50,14 @@ const tempura
     PTxOutRef.type,
     data,
     Redeemer.type,
-    PScriptContext.type
+    V2.PScriptContext.type
 ],  unit)
 (( utxoParam, state, rdmr, { tx, purpose } ) => {
 
     const spendingUtxoRef = plet(
         pmatch( purpose )
         .onSpending(({ utxoRef }) => utxoRef )
-        ._( _ => perror( PTxOutRef.type ) ),
+        ._( _ => perror( V2.PTxOutRef.type ) ),
         "spendingUtxoRef"
     );
 
@@ -164,8 +158,8 @@ describe("run tempura", () => {
         );
         //*/
 
-        expect( res.result instanceof UPLCConst ).toBe( true );
-        expect( res.result ).toEqual( UPLCConst.unit );
+        expect( res.result instanceof CEKConst ).toBe( true );
+        expect( res.result ).toEqual( CEKConst.unit );
     });
 
     test("mine 1", () => {
@@ -205,8 +199,8 @@ describe("run tempura", () => {
             (res as any)?.result
         );
 
-        expect( res.result instanceof UPLCConst ).toBe( true );
-        expect( res.result ).toEqual( UPLCConst.unit );
+        expect( res.result instanceof CEKConst ).toBe( true );
+        expect( res.result ).toEqual( CEKConst.unit );
     });
 
 });

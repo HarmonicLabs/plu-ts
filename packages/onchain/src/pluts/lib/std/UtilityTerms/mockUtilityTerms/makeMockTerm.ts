@@ -2,14 +2,12 @@ import { IRVar } from "../../../../../IR/IRNodes/IRVar";
 import { Term } from "../../../../Term";
 import { ToPType } from "../../../../type_system/ts-pluts-conversion";
 import { TermType } from "../../../../type_system/types";
-import { UtilityTermOf } from "../addUtilityForType";
-import { mockUtilityForType } from "./mockUtilityForType";
 
 const mockTermIr = Object.freeze( new IRVar( 0 ) );
 
-function genMockTermIr( _dbn: bigint )
+function genMockTermIr( _dbn: bigint ): IRVar
 {
-    return mockTermIr;
+    return mockTermIr as IRVar;
 }
 
 export function makeMockTerm<T extends TermType>( t: T ): Term<ToPType<T>>

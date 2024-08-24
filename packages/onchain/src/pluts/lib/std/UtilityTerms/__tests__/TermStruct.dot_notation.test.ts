@@ -1,9 +1,18 @@
 import { Machine } from "@harmoniclabs/plutus-machine"
-import { pstruct } from "../../../../PTypes"
-import { bs, int } from "../../../../type_system"
+import { pmatch, pstruct } from "../../../../PTypes"
+import { bs, int, list, unit } from "../../../../type_system"
 import { plet } from "../../../plet"
 import { pDataB, pDataI } from "../../data"
 import { pInt } from "../../int"
+import { passert } from "../../passert"
+import { pList } from "../../list/const"
+import { PTxOut } from "../../../../API/V2/Tx/PTxOut"
+import { phoist } from "../../../phoist"
+import { PTxInInfo } from "../../../../API/V2/Tx/PTxInInfo"
+import { pfn } from "../../../pfn"
+import { UtilityTermOf } from "../addUtilityForType"
+import { pmakeUnit } from "../../unit/pmakeUnit"
+import { TermStruct } from "../TermStruct"
 
 const SingleCtor = pstruct({
     SingleCtor: {
@@ -33,5 +42,6 @@ describe("dot notation", () => {
             )
         );
         
-    })
+    });
+    
 })

@@ -1,4 +1,4 @@
-import { TermType, alias, int, list, termTypeToString } from "../../.."
+import { PAssetsEntry, TermType, alias, int, list, termTypeToString } from "../../.."
 import { getElemsT } from "../getElemsT"
 
 describe("getElemsT", () => {

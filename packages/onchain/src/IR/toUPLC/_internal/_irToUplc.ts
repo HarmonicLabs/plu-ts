@@ -13,7 +13,10 @@ import { showIR } from "../../utils/showIR";
 import { IRError } from "../../IRNodes/IRError";
 import { IRForced } from "../../IRNodes/IRForced";
 import { IRDelayed } from "../../IRNodes/IRDelayed";
-import { UPLCTerm, UPLCVar, Lambda, Application, UPLCConst, Builtin, ErrorUPLC, Force, Delay } from "@harmoniclabs/uplc";
+import { UPLCTerm, UPLCVar, Lambda, Application, UPLCConst, Builtin, ErrorUPLC, Force, Delay, Constr, Case } from "@harmoniclabs/uplc";
+import { IRConstr } from "../../IRNodes/IRConstr";
+import { IRCase } from "../../IRNodes/IRCase";
+import { irHashToHex } from "../../IRHash";
 
 export type RawSrcMap = { [node_index: number]: string };
 
@@ -27,6 +30,32 @@ export function _irToUplc(
     max_idx: number
 }
 {
+    if(!(ir instanceof IRConst))
+    {
+        // console.log("_irToUplc", ir, node_index, Date.now());
+    }
+    else {
+        // if( ir.parent )
+        // {
+        //     console.log(ir.parent ? Object.getPrototypeOf( ir.parent ).constructor.name : undefined, Date.now() );
+        // }
+        // else
+        // {
+        //     console.log( Error().stack );
+        // }
+    }
+
+    if( ir instanceof IRConst )
+    {
+        return {
+            term: new UPLCConst(
+                termTyToConstTy( ir.type ),
+                ir.value as any
+            ),
+            max_idx: node_index
+        };
+    }
+
     if( ir instanceof IRVar ) return {
         term: new UPLCVar( ir.dbn ),
         max_idx: node_index
@@ -66,16 +95,6 @@ export function _irToUplc(
         };
     }
 
-    if( ir instanceof IRConst )
-    {
-        return {
-            term: new UPLCConst(
-                termTyToConstTy( ir.type ),
-                ir.value as any
-            ),
-            max_idx: node_index
-        };
-    }
     if( ir instanceof IRNative )
     {
         if( ir.tag < 0 )
@@ -99,7 +118,7 @@ export function _irToUplc(
         // return this.hoisted.toUPLC();
         throw new Error(
             "Can't convert 'IRHoisted' to valid UPLC;" +
-            "\nhoisted hash was: " + toHex( ir.hash ) +
+            "\nhoisted hash was: " + irHashToHex( ir.hash ) +
             "\nhoisted term was: " + showIR( ir.hoisted ).text
         );
     }
@@ -130,7 +149,53 @@ export function _irToUplc(
             max_idx
         };
     }
+    if( ir instanceof IRConstr )
+    {
+        if( ir.fields.length === 0 )
+        {
+            return {
+                term: new Constr( ir.index, [] ),
+                max_idx: node_index + 1
+            };
+        }
 
+        const fields = Array.from( ir.fields )
+        .slice( 1 )
+        .reduce(
+            ( accum, field, i ) => {
+                accum.push( _irToUplc( field, srcmap, accum[ i ].max_idx + 1 ) );
+                return accum;
+            },
+            [ _irToUplc( ir.fields[0], srcmap, node_index ) ]
+        )
+        return {
+            term: new Constr(
+                ir.index,
+                fields.map(({ term }) => term )
+            ),
+            max_idx: fields[fields.length - 1].max_idx
+        };
+    }
+    if( ir instanceof IRCase )
+    {
+        const { term: constrTerm, max_idx } = _irToUplc( ir.constrTerm, srcmap, node_index );
+        const conts = Array.from( ir.continuations )
+        .slice( 1 )
+        .reduce(
+            ( accum, cont, i ) => {
+                accum.push( _irToUplc( cont, srcmap, accum[ i ].max_idx + 1 ) );
+                return accum;
+            },
+            [ _irToUplc( ir.continuations[0], srcmap, max_idx + 1 ) ]
+        )
+        return {
+            term: new Case(
+                constrTerm,
+                conts.map(({ term }) => term )
+            ),
+            max_idx: conts[conts.length - 1].max_idx
+        };
+    }
     throw new Error("unknown IR term calling '_irToUplc'")
 }
 

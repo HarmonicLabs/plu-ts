@@ -1,17 +1,11 @@
 import { Term } from "../../../Term";
-import type { PStruct, RestrictedStructInstance, StructInstance } from "../../../PTypes/PStruct/pstruct";
-import type { PType } from "../../../PType";
+import type { PStruct, StructInstance } from "../../../PTypes/PStruct/pstruct";
 import type { TermFn } from "../../../PTypes/PFn/PFn";
-// !!! IMPORTANT !!!
-// DO NOT change the order of imports
-// `../../../Term/Type/kinds` is also a dependecy of `pmatch`
-import { getElemAtTerm } from "../../../PTypes/PStruct/pmatch";
-import { StructDefinition, isStructType, isStructDefinition, data, list, int, pair, Methods } from "../../../type_system";
+import { StructDefinition, isStructType, isStructDefinition, data, list, int, pair, Methods, termTypeToString } from "../../../type_system";
 import { peqData,  } from "../../builtins/data";
 import { PBool } from "../../../PTypes/PBool";
 import { TermBool } from "./TermBool";
 import { _fromData } from "../data/conversion/fromData_minimal";
-import { UtilityTermOf } from "./addUtilityForType";
 import { punsafeConvertType } from "../../punsafeConvertType";
 import { TermInt, addPIntMethods } from "./TermInt";
 import { TermList, addPListMethods } from "./TermList";
@@ -22,7 +16,7 @@ import { IRFunc } from "../../../../IR/IRNodes/IRFunc";
 import { IRApp } from "../../../../IR/IRNodes/IRApp";
 import { IRNative } from "../../../../IR/IRNodes/IRNative";
 import { IRVar } from "../../../../IR/IRNodes/IRVar";
-import { IRLetted, getMinVarDbn, getNormalizedLettedArgs } from "../../../../IR/IRNodes/IRLetted";
+import { IRLetted } from "../../../../IR/IRNodes/IRLetted";
 import type { PData } from "../../../PTypes/PData";
 import type { PList } from "../../../PTypes/PList";
 import type { PPair } from "../../../PTypes/PPair";
@@ -30,42 +24,32 @@ import type { PInt } from "../../../PTypes/PInt";
 import { FilterMethodsByInput, LiftMethods, MethodsAsTerms } from "./userMethods/methodsTypes";
 import { addUserMethods } from "./userMethods/addUserMethods";
 import { plet } from "../../plet";
-import { prettyIRJsonStr } from "../../../../IR/utils/showIR";
-import { toHex } from "@harmoniclabs/uint8array-utils";
 import { _getMinUnboundDbn } from "../../../../IR/toUPLC/subRoutines/handleLetted/groupByScope";
+import { getElemAtTerm } from "../../pmatch/getElemAtTerm";
+import { addBaseUtilityTerm, BaseUtilityTermExtension } from "./BaseUtilityTerm";
 
 export type RawStruct = {
     readonly index: TermInt,
     readonly fields: TermList<PData>
 }
 
-export type TermStruct<SDef extends StructDefinition, SMethods extends Methods> = Term<PStruct<SDef,SMethods>> & {
+export type TermStruct<SDef extends StructDefinition, SMethods extends Methods> = Term<PStruct<SDef,SMethods>> & BaseUtilityTermExtension & {
 
     readonly peq: TermFn<[PStruct<SDef, {}>], PBool>
-    readonly eq: ( other: Term<PStruct<SDef, {}>> ) => TermBool
+    readonly eq: ( other: Term<PStruct<SDef, {}>> | Term<PData> ) => TermBool
 
     readonly raw: RawStruct
-
+  
 } & 
 (
     IsSingleKey<SDef> extends true ? 
-        StructInstance<SDef[keyof SDef]> & {
-            /**
-             * @deprecated
-             */
-            extract: <Fields extends (keyof SDef[keyof SDef])[]>( ...fields: Fields ) => {
-                /**
-                 * @deprecated
-                 */
-                in: <PExprResult extends PType>( expr: ( extracted: RestrictedStructInstance<SDef[keyof SDef],Fields> ) => Term<PExprResult> ) => UtilityTermOf<PExprResult>
-            }
-        } : {}
+        StructInstance<SDef[keyof SDef]> : {}
 ) &
 LiftMethods<
-    FilterMethodsByInput<SMethods,PStruct<SDef, any>>
+    FilterMethodsByInput<SMethods,PStruct<SDef, {}>>
 > & 
 MethodsAsTerms<
-    FilterMethodsByInput<SMethods,PStruct<SDef, any>>
+    FilterMethodsByInput<SMethods,PStruct<SDef, {}>>
 >
 
 const hoisted_getFields = new IRHoisted(
@@ -80,6 +64,7 @@ const hoisted_getFields = new IRHoisted(
         "hoisted_getFields"
     )
 );
+hoisted_getFields.hash;
 
 export function addPStructMethods<
     SDef extends StructDefinition, 
@@ -88,6 +73,8 @@ export function addPStructMethods<
     struct: Term<PStruct<SDef, SMethods>> 
 ): TermStruct<SDef, SMethods>
 {
+    struct = addBaseUtilityTerm( struct );
+
     const t = struct.type;
     if( !isStructType(t) ) return struct as any;
 
@@ -132,17 +119,6 @@ export function addPStructMethods<
                                 getElemAtTerm( i ).$( letted_fieldsListData )
                             ),
                             ctorName + "::" + thisFieldName
-                            // (dbn, ir) => {
-                            //     if(ctorName + "::" + thisFieldName !== "PScriptContext::purpose") return;
-                            // 
-                            //     const [ _dbn, term ] = getNormalizedLettedArgs( ir.dbn, ir.value ) ?? [ 0, new IRVar( 0 )] ;
-                            //     console.log(
-                            //         "PScriptContext::purpose at dbn:", dbn, 
-                            //         "\nnormalized value:", prettyIRJsonStr( term, 2, { hoisted: false } ),
-                            //         "\nnormalized value hash:", toHex( term.hash ),
-                            //         "\nnormalized dbn:", _dbn,
-                            //     );
-                            // }
                         ),
                         thisFieldType
                     ),
@@ -151,23 +127,7 @@ export function addPStructMethods<
                     configurable: false
                 }
             );
-
         }
-
-        /**
-         * @deprecated
-         */
-        defineReadOnlyProperty(
-            struct,
-            "extract",
-            <Fields extends (keyof SDef[keyof SDef])[]>( ...fields: Fields ): {
-                in: <PExprResult extends PType>( expr: ( extracted: RestrictedStructInstance<SDef[keyof SDef],Fields> ) => Term<PExprResult> ) => Term<PExprResult>
-            } => {
-                return {
-                    in: ( expr ) => expr( struct as any )
-                }
-            }
-        );
     }
 
     definePropertyIfNotPresent(

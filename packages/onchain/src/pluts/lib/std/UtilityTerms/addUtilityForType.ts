@@ -9,21 +9,19 @@ import { Methods, PrimType, StructDefinition, TermType, bool, bs, int, lam, list
 import { unwrapAlias } from "../../../type_system/tyArgs/unwrapAlias";
 import type { PappArg } from "../../pappArg";
 import { papp } from "../../papp";
-import {
-    type TermAlias,
-    type TermBool,       addPBoolMethods,
-    type TermBS,         addPByteStringMethods,
-    type TermInt,        addPIntMethods,
-    type TermList,       addPListMethods,
-    type TermPair,       addPPairMethods,
-    type TermStr,        addPStringMethods,
-    type TermStruct,     addPStructMethods
-} from ".";
+import type { TermAlias } from "./TermAlias";
+import { type TermBool,       addPBoolMethods } from "./TermBool";
+import { type TermBS,         addPByteStringMethods } from "./TermBS";
+import { type TermInt,        addPIntMethods } from "./TermInt";
+import { type TermList,       addPListMethods } from "./TermList";
+import { type TermPair,       addPPairMethods } from "./TermPair";
+import { type TermStr,        addPStringMethods } from "./TermStr";
+import { type TermStruct,     addPStructMethods } from "./TermStruct";
 import { defineNonDeletableNormalProperty } from "@harmoniclabs/obj-utils";
 import { termTypeToString } from "../../../type_system/utils";
 import { addUserMethods } from "./userMethods/addUserMethods";
-import { _punsafeConvertType } from "../../punsafeConvertType/minimal";
-
+import { addBaseUtilityTerm, BaseUtilityTermExtension } from "./BaseUtilityTerm";
+import { punsafeConvertType } from "../../punsafeConvertType";
 
 // given the index returns the previous number ( PrevNum[2] -> 1; etc... )
 type PrevNum = [ never, 0, 1, 2, 3, 4, 5, 6 ];
@@ -34,6 +32,8 @@ type FiniteTermAlias<PT extends PType, AMethods extends Methods, MaxDepth extend
     PT extends PAlias<infer ActualPT extends PType, infer ActualAMethods extends Methods > ?
         FiniteTermAlias<ActualPT, ActualAMethods & AMethods, PrevNum[MaxDepth]> :
         TermAlias<PT, AMethods>
+
+
 
 export type UtilityTermOf<PElem extends PType> = 
     (
@@ -55,6 +55,7 @@ export type UtilityTermOf<PElem extends PType> =
         PElem extends PAlias<infer PT extends PType, infer AMethods extends Methods> ? FiniteTermAlias<PT, AMethods> :
         Term<PElem>
     ) & Term<PElem> // needed because sometime typescript doesn't understands that the term is the same just extended
+    & ( PElem extends PLam<PType,PType> ? {} : BaseUtilityTermExtension)
 
 export function addUtilityForType<T extends TermType>( t: T )
     : ( term: Term<ToPType<T>> ) => UtilityTermOf<ToPType<T>>
@@ -73,12 +74,16 @@ export function addUtilityForType<T extends TermType>( t: T )
 
     if( typeExtends( t, lam( tyVar(), tyVar() )) )
     {
-        return (( term: any ) => defineNonDeletableNormalProperty(
-            term,
-            "$",
-            ( input: any ) =>
-                papp( term, input )
-        )) as any;
+        return (( term: any ) => {
+            term = addBaseUtilityTerm( term );
+
+            return defineNonDeletableNormalProperty(
+                term,
+                "$",
+                ( input: any ) =>
+                    papp( term, input )
+            ) as any;
+        }) as any;
     }
 
     if( isStructType( t ) )
@@ -87,7 +92,7 @@ export function addUtilityForType<T extends TermType>( t: T )
     }
 
     // no utility
-    return ((x: any) => x) as any;
+    return ((x: any) => addBaseUtilityTerm( x )) as any;
 }
 
 // `addPAliasMethod` is (necessarily) mutually recursive with `addUtilityForType`
@@ -101,6 +106,8 @@ export function addPAliasMethods<
 {
     const originalType = aliasTerm.type;
 
+    aliasTerm = addBaseUtilityTerm( aliasTerm );
+    
     if( originalType[0] !== PrimType.Alias )
     {
         console.error( originalType );
@@ -114,9 +121,14 @@ export function addPAliasMethods<
 
     const aliasedType = unwrapAlias( originalType );
     
-    aliasTerm = addUtilityForType( aliasedType )( aliasTerm ) as any;
-
-    aliasTerm = addUserMethods( aliasTerm, originalType[2] as AMethods );
+    // intentionally discarding the result
+    // if we are aliasing a list, adding utility clones the term
+    // so changes the type
+    // so we loose the alias and possible methods
+    // this is really a bug in `addPListMethods`
+    // but for now this is the workaround
+    void addUtilityForType( aliasedType )( aliasTerm ) as any;
+    void addUserMethods( aliasTerm, originalType[2] as AMethods );
 
     return aliasTerm as any;
 }

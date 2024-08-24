@@ -5,7 +5,7 @@ import { IRVar } from "../../../../../IR/IRNodes/IRVar";
 import { PType } from "../../../../PType"
 import { PLam } from "../../../../PTypes"
 import { Term } from "../../../../Term"
-import { TermType, fn, lam } from "../../../../type_system"
+import { TermType, ToPType, fn, lam } from "../../../../type_system"
 
 
 export function _papp<Input extends PType, Output extends PType>( a: Term<PLam<Input,Output>>, b: Term<Input> ): Term<Output>
@@ -22,6 +22,32 @@ export function _papp<Input extends PType, Output extends PType>( a: Term<PLam<I
             b.toIR(dbn)
         )
     )
+}
+
+export function _plam<A extends TermType, B extends TermType >( inputType: A, outputType: B )
+: ( 
+    termFunc : ( input: Term<ToPType<A>> ) => Term<ToPType<B>>
+) => Term<PLam<ToPType<A>,ToPType<B>>>
+{
+    return ( 
+        termFunc: ( input: Term<ToPType<A>> ) => Term<ToPType<B>>
+    ) =>
+    new Term<PLam<ToPType<A>,ToPType<B>>>(
+        lam( inputType, outputType ) as any,
+        dbn => {
+            const thisLambdaPtr = dbn + BigInt( 1 );
+
+            const boundVar = new Term<ToPType<A>>(
+                inputType as any,
+                dbnAccessLevel => new IRVar( dbnAccessLevel - thisLambdaPtr )
+            );
+            
+            const body = termFunc( boundVar );
+
+            // here the debruijn level is incremented
+            return new IRFunc( 1, body.toIR( thisLambdaPtr ) );
+        }
+    );
 }
 
 export const _pcompose = ( a: TermType, b: TermType, c: TermType) =>

@@ -1,69 +1,47 @@
 import {
-    PDatumHash,
     pByteString,
-    PValue,
     pList,
     toData,
-    PTxOutRef,
-    PTxId,
     bs,
     pDataI,
     pPair,
-    PCurrencySymbol,
     list,
-    PTokenName,
     int,
     pInt,
     V1,
+    V2,
     map,
     data,
     pair,
-    PDCert,
-    PPOSIXTimeRange,
-    PLowerBound,
-    PExtended,
     bool,
     pBool,
-    PUpperBound,
-    PPubKeyHash,
-    PStakingCredential,
-    PAddress,
-    PCredential,
-    PValidatorHash,
-    PMaybe,
-    PScriptPurpose,
-    PTxInfo,
-    POutputDatum,
-    PTxOut,
     addUtilityForType,
-    V2,
-    PValueEntry,
-    PAssetsEntry
+    PMaybe,
 } from "../pluts";
 
-export const unitDatumHash = PDatumHash.from( pByteString("923918e403bf43c34b4ef6b48eb2ee04babed17320d8d1b9ff9ad086e86f44ec") );
-export const emptyValue = PValue.from( pList( PValueEntry.type )([]) as any );
+export const unitDatumHash = V2.PDatumHash.from( pByteString("923918e403bf43c34b4ef6b48eb2ee04babed17320d8d1b9ff9ad086e86f44ec") );
+export const emptyValue = V2.PValue.from( pList( V2.PValueEntry.type )([]) as any );
 
-export const emptyValueAsData = toData( PValue.type )( emptyValue );
+export const emptyValueAsData = toData( V2.PValue.type )( emptyValue );
 
-export const validatorSpendingUtxo = PTxOutRef.PTxOutRef({
-    id: toData( PTxId.type )(
-        PTxId.PTxId({
+export const validatorSpendingUtxo = V2.PTxOutRef.PTxOutRef({
+    id: toData( V2.PTxId.type )(
+        V2.PTxId.PTxId({
             txId: toData( bs )( pByteString("deadbeef") )
         })
     ),
     index: pDataI( 0 )
 });
 
-export const validatorSpendingUtxoAsData = toData( PTxOutRef.type )( validatorSpendingUtxo );
+export const validatorSpendingUtxoAsData = toData( V2.PTxOutRef.type )( validatorSpendingUtxo );
 
-export const beef32 = PValue.from(
-    pList( PValueEntry.type )([
-        PValueEntry.from([
-            PCurrencySymbol.from( pByteString("deadbeef") ),
-            pList( PAssetsEntry.type )([
-                PAssetsEntry.from([
-                    PTokenName.from( pByteString("beef") ),
+export const beef32 = V2.PValue.from(
+    pList( V2.PValueEntry.type )([
+        V2.PValueEntry.from([
+            V2.PCurrencySymbol.from( pByteString("deadbeef") ),
+            pList( V2.PAssetsEntry.type )([
+                V2.PAssetsEntry.from([
+                    V2.PTokenName.from( pByteString("beef") ),
                     pInt( 32 )
                 ])
             ])
@@ -71,56 +49,56 @@ export const beef32 = PValue.from(
     ])
 );
 
-export const beef32AsData = toData( PValue.type )( beef32 );
+export const beef32AsData = toData( V2.PValue.type )( beef32 );
 
-export const datums = toData( map( PDatumHash.type, data ) )
+export const datums = toData( map( V2.PDatumHash.type, data ) )
 (
-    pList( pair( PDatumHash.type, data ) )([])
+    pList( pair( V2.PDatumHash.type, data ) )([])
 );
 
-export const dCertificates = toData( list( PDCert.type ) )
+export const dCertificates = toData( list( V2.PDCert.type ) )
 (
-    pList( PDCert.type )([])
+    pList( V2.PDCert.type )([])
 );
 
-export const txId = toData( PTxId.type )(
-    PTxId.PTxId({
+export const txId = toData( V2.PTxId.type )(
+    V2.PTxId.PTxId({
         txId: toData( bs )( pByteString("deadbeef") )
     })
 );
 
-export const interval = toData( PPOSIXTimeRange.type )(
-    PPOSIXTimeRange.PInterval({
-        from: toData( PLowerBound.type )(
-            PLowerBound.PLowerBound({
-                bound: toData( PExtended.type )( PExtended.PFinite({ _0: pDataI(1) }) ),
+export const interval = toData( V2.PPOSIXTimeRange.type )(
+    V2.PPOSIXTimeRange.PInterval({
+        from: toData( V2.PBound.type )(
+            V2.PBound.PBound({
+                bound: toData( V2.PExtended.type )( V2.PExtended.PFinite({ n: pDataI(1) }) ),
                 inclusive: toData( bool )( pBool( false ) )
             })
         ),
-        to: toData( PUpperBound.type )(
-            PUpperBound.PUpperBound({
-                bound: toData( PExtended.type )( PExtended.PPosInf({}) ),
+        to: toData( V2.PBound.type )(
+            V2.PBound.PBound({
+                bound: toData( V2.PExtended.type )( V2.PExtended.PPosInf({}) ),
                 inclusive: toData( bool )( pBool( false ) )
             })
         )
     })
 );
 
-export const signatories = toData( list( PPubKeyHash.type ) )( pList( PPubKeyHash.type )([
-    PPubKeyHash.from("deadbeef")
+export const signatories = toData( list( V2.PPubKeyHash.type ) )( pList( V2.PPubKeyHash.type )([
+    V2.PPubKeyHash.from("deadbeef")
 ]) );
 
 export const withdrawals = 
-    toData( map( PStakingCredential.type,int ) )( 
-        pList( pair( PStakingCredential.type, int ) )([])
+    toData( map( V2.PStakingCredential.type,int ) )( 
+        pList( pair( V2.PStakingCredential.type, int ) )([])
     );
 
-export const address = toData( PAddress.type )(
-    PAddress.PAddress({
-        credential: PCredential.PScriptCredential({
-            valHash: toData( PValidatorHash.type )( PValidatorHash.from( pByteString("caffee") ) )
+export const address = toData( V2.PAddress.type )(
+    V2.PAddress.PAddress({
+        credential: V2.PCredential.PScriptCredential({
+            valHash: toData( V2.PValidatorHash.type )( V2.PValidatorHash.from( pByteString("caffee") ) )
         }) as any,
-        stakingCredential: PMaybe( PStakingCredential.type ).Nothing({}) as any
+        stakingCredential: PMaybe( V2.PStakingCredential.type ).Nothing({}) as any
     })
 );
 
@@ -131,7 +109,7 @@ export const inputs = toData( list( V1.PTxInInfo.type ) )(
             resolved: toData( V1.PTxOut.type )(
                 V1.PTxOut.PTxOut({
                     address,
-                    datumHash: PMaybe( PDatumHash.type ).Just({ val: toData( PDatumHash.type )(unitDatumHash) }) as any,
+                    datumHash: PMaybe( V2.PDatumHash.type ).Just({ val: toData( V2.PDatumHash.type )(unitDatumHash) }) as any,
                     value: beef32AsData as any
                 })
             )
@@ -156,22 +134,22 @@ export const txInfo_v1 = V1.PTxInfo.PTxInfo({
     outputs
 });
 
-export const _purp = PScriptPurpose.Spending({
+export const _purp = V2.PScriptPurpose.Spending({
     utxoRef: validatorSpendingUtxoAsData
 });
 
 export const ctx = V1.PScriptContext.PScriptContext({
     tx: toData( V1.PTxInfo.type )( txInfo_v1 ),
-    purpose: toData( PScriptPurpose.type )( _purp )
+    purpose: toData( V2.PScriptPurpose.type )( _purp )
 });
 
-export const v2_out = toData( PTxOut.type )
+export const v2_out = toData( V2.PTxOut.type )
 (
     V2.PTxOut.PTxOut({
         address,
         value: beef32AsData as any,
-        datum: POutputDatum.NoDatum({}) as any,
-        refScrpt: PMaybe( PValidatorHash.type ).Nothing({}) as any
+        datum: V2.POutputDatum.NoDatum({}) as any,
+        refScrpt: PMaybe( V2.PValidatorHash.type ).Nothing({}) as any
     })
 )
 
@@ -186,20 +164,20 @@ export const v2_inputs = toData( list( V2.PTxInInfo.type ) )
 )
 
 export const empty_v2_outs = toData( list(V2.PTxOut.type) )(
-    pList( PTxOut.type )([])
+    pList( V2.PTxOut.type )([])
 );
 
-export const empty_redeemers = toData( map( PScriptPurpose.type, data ) )(
-    pList( pair( PScriptPurpose.type, data ) )([])
+export const empty_redeemers = toData( map( V2.PScriptPurpose.type, data ) )(
+    pList( pair( V2.PScriptPurpose.type, data ) )([])
 );
 
 export const empty_refInputs = toData( list( V2.PTxInInfo.type ) )(
     pList( V2.PTxInInfo.type )([])
 )
 
-export const tx_v2 = addUtilityForType( PTxInfo.type )(
+export const tx_v2 = addUtilityForType( V2.PTxInfo.type )(
 
-    PTxInfo.PTxInfo({
+    V2.PTxInfo.PTxInfo({
         datums,
         dCertificates,
         fee:  emptyValueAsData as any,

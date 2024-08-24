@@ -81,7 +81,7 @@ const txBuilder = new TxBuilder(
 
 const pkAddr = new Address(
     "testnet",
-    new PaymentCredentials(
+    new Credential(
         "pubKey",
         new PubKeyHash( "1b372f69".repeat(7) )
     )
@@ -111,7 +111,7 @@ const succeedScript = new Script(
 
 const succeedScriptAddr = new Address(
     "testnet",
-    new PaymentCredentials(
+    new Credential(
         "script",
         succeedScript.hash
     )
@@ -215,7 +215,7 @@ describe("TxBuilder.build", () => {
                                 datum: new DataConstr( 0, [] )
                             }
                         }),
-                        referenceScriptV2: {
+                        referenceScript: {
                             datum: "inline",
                             redeemer: new DataConstr( 0, [] ),
                             refUtxo: new UTxO({
@@ -284,7 +284,7 @@ describe("TxBuilder.build", () => {
                                 // datum: new DataConstr( 0, [] )
                             }
                         }),
-                        referenceScriptV2: {
+                        referenceScript: {
                             datum: "inline",
                             redeemer: new DataConstr( 0, [] ),
                             refUtxo: new UTxO({
@@ -327,7 +327,7 @@ describe("TxBuilder.build", () => {
     const onlyBigThirdElem = pfn([
         data,
         list( int ),
-        PScriptContext.type
+        V2.PScriptContext.type
     ],  bool)
     (( _dat, nums, _ctx ) => 
         nums.at(0).ltEq( (BigInt(1) << BigInt(64)) - BigInt(1) )
@@ -335,7 +335,7 @@ describe("TxBuilder.build", () => {
 
     const mintSomething = pfn([
         data,
-        PScriptContext.type
+        V2.PScriptContext.type
     ],  bool)
     (( _rdmr, ctx ) => {
 
@@ -359,7 +359,7 @@ describe("TxBuilder.build", () => {
 
     const onlyBigThirdAddr = new Address(
         "mainnet",
-        new PaymentCredentials(
+        new Credential(
             "script",
             onlyBigThirdScript.hash
         )

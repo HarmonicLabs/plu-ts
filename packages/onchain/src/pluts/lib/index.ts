@@ -12,5 +12,6 @@ export * from "./std/UtilityTerms/addUtilityForType";
 export * from "./builtins";
 export * from "./builtins/ptrace";
 export * from "./plet";
+export * from "./pmatch/pmatch";
 export * from "./std";
 export * from "./show";

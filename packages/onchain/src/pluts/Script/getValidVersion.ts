@@ -1,5 +1,5 @@
 
-export const defaultVersion: [ number, number, number ] = Object.freeze([ 1, 0, 0 ]) as any;
+export const defaultVersion: [ number, number, number ] = Object.freeze([ 1, 1, 0 ]) as any;
 
 export function getValidVersion( version: Readonly<[number, number, number]> ): [number, number, number]
 {

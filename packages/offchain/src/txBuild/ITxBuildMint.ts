@@ -1,38 +1,91 @@
-import { Value, Script, Hash32, UTxO } from "@harmoniclabs/cardano-ledger-ts"
-import { CanBeData, forceData } from "../utils/CanBeData"
-import { hasOwn } from "@harmoniclabs/obj-utils"
-import { cloneData, isData } from "@harmoniclabs/plutus-data"
+import { Value, Script, Hash32, UTxO, Hash28, IUTxO, IValuePolicyEntry, NormalizedIValuePolicyEntry, normalizeIValueAsset, isIUTxO, IValueAssetBI } from "@harmoniclabs/cardano-ledger-ts"
+import { CanBeData, canBeData, forceData } from "../utils/CanBeData"
+import { hasOwn, isObject } from "@harmoniclabs/obj-utils"
+import { Data, cloneData, isData } from "@harmoniclabs/plutus-data"
 
 
 export interface ITxBuildMint {
-    value: Value
+    value: IValuePolicyEntry | Value
     script: {
         inline: Script
-        policyId: Hash32
+        /** @deprecated, policy inferred from value */
+        policyId?: Hash28
         redeemer: CanBeData
     } | {
-        ref: UTxO
-        policyId: Hash32
+        ref: IUTxO
+        /** @deprecated, policy inferred from value */
+        policyId?: Hash28
         redeemer: CanBeData
     }
 };
 
+export interface NormalizedITxBuildMint extends ITxBuildMint {
+    value: NormalizedIValuePolicyEntry,
+    script: {
+        inline: Script
+        redeemer: Data
+    } | {
+        ref: UTxO
+        redeemer: Data
+    }
+}
+
+export function normalizeITxBuildMint({ value, script }: ITxBuildMint ): NormalizedITxBuildMint
+{
+    if( value instanceof Value )
+    {
+        if( value.map.length !== 2 ) throw new Error("invalid mint value, only single policy allowed");
+        value = value.map[1] as NormalizedIValuePolicyEntry;
+    }
+
+    if( !isNormalizedIValuePolicyEntry( value ) )
+    {
+        value = {
+            policy: new Hash28( value.policy ),
+            assets: value.assets.map( normalizeIValueAsset )
+        } as NormalizedIValuePolicyEntry;
+    }
+
+    if(!isObject( script ) || !canBeData( script.redeemer ) ) throw new Error("invalid ITxBuildMint to normalize");
+
+    if( isIUTxO( (script as any).ref ) )
+    {
+        script = {
+            ref: new UTxO( (script as any).ref ),
+            redeemer: forceData( script.redeemer )
+        };
+    } else {
+        script = {
+            inline: ((script as any).inline as Script).clone(),
+            redeemer: forceData( script.redeemer )
+        };
+    }
+
+    return {
+        value,
+        script
+    } as NormalizedITxBuildMint;
+}
+
+function isNormalizedIValuePolicyEntry( stuff: any ): stuff is NormalizedIValuePolicyEntry
+{
+    return isObject( stuff ) && (
+        stuff.policy instanceof Hash28 &&
+        Array.isArray( stuff.assets ) &&
+        stuff.assets.every( isIValueAssetBI )
+    );
+}
+
+function isIValueAssetBI( stuff: any ): stuff is IValueAssetBI
+{
+    return isObject( stuff ) && (
+        stuff.name instanceof Uint8Array &&
+        typeof stuff.quantity === "bigint"
+    );
+}
+
+/** @deprecated use `normalizeITxBuildMint` instead */
 export function cloneITxBuildMint( mint: ITxBuildMint ): ITxBuildMint
 {
-    const script = hasOwn( mint.script, "inline" ) ?
-    {
-        inline: mint.script.inline.clone(),
-        policyId: mint.script.policyId.clone(),
-        redeemer: isData( mint.script.redeemer ) ? cloneData( mint.script.redeemer ) : forceData( mint.script.redeemer )
-    } :
-    {
-        ref: mint.script.ref.clone(),
-        policyId: mint.script.policyId.clone(),
-        redeemer: isData( mint.script.redeemer ) ? cloneData( mint.script.redeemer ) : forceData( mint.script.redeemer )
-    };
-    
-    return {
-        value: mint.value.clone(),
-        script
-    };
+    return normalizeITxBuildMint( mint );
 }

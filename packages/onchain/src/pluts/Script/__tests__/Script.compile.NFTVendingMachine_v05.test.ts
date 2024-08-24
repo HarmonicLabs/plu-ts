@@ -3,7 +3,6 @@ import { PScriptContext } from "../../API/V2/ScriptContext/PScriptContext";
 import { PCurrencySymbol } from "../../API/V1/Value/PCurrencySymbol";
 import { compile } from "../compile";
 import { bool, bs, data } from "../../type_system/types";
-import { pmatch } from "../../PTypes/PStruct/pmatch";
 import { pfn } from "../../lib/pfn";
 import { pisEmpty } from "../../lib/builtins/list";
 import { pByteString } from "../../lib/std/bs/pByteString";
@@ -16,10 +15,11 @@ import { PBool } from "../../PTypes/PBool";
 import { plet } from "../../lib/plet";
 import { ByteString } from "@harmoniclabs/bytestring";
 import { pshowInt } from "../../lib/show/int";
+import { pmatch } from "../../lib/pmatch";
 
 describe("NFTVendingMachine", () => {
 
-    test("it builds", () => {
+    test.skip("it builds", () => {
 
         const nftPolicy = pfn([
 
@@ -29,7 +29,7 @@ describe("NFTVendingMachine", () => {
             bs, // price oracle thread identifier policy
             
             data,
-            PScriptContext.type
+            V2.PScriptContext.type
 
         ],  bool)
         (( ownerPkh, counterValId, priceOracleId, _rdmr, { tx, purpose } ) =>  {

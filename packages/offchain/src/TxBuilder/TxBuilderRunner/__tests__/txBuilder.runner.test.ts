@@ -1,8 +1,9 @@
-import { Address, Script, PaymentCredentials, Hash32, UTxO, Value, defaultProtocolParameters, isIUTxO } from "@harmoniclabs/cardano-ledger-ts";
+import { Address, Script, Credential, Hash32, UTxO, Value, defaultProtocolParameters, isIUTxO } from "@harmoniclabs/cardano-ledger-ts";
 import { ITxRunnerProvider } from "../../IProvider";
 import { TxBuilder } from "../../TxBuilder";
 import { DataConstr, DataI } from "@harmoniclabs/plutus-data";
-import { compile, pfn, data, unit, pmakeUnit } from "@harmoniclabs/plu-ts-onchain";
+import { compile, pfn, data, unit, pmakeUnit, pBool, bool, pisEmpty } from "../../../../../onchain/src";
+import { parseUPLC, showUPLC } from "@harmoniclabs/uplc";
 
 const SYS_START = 1506203091000; // Date.parse("2017-09-23T21:44:51Z"); // mainnet start
 
@@ -43,7 +44,7 @@ const fakeProvider: ITxRunnerProvider = {
     async getChangeAddress() {
         return new Address(
             "testnet",
-            PaymentCredentials.pubKey( "aa".repeat(28) )
+            Credential.pubKey( "aa".repeat(28) )
         ).toString() as any
     }
 }
@@ -88,14 +89,14 @@ describe("TxBuilderRunner", () => {
         const okScript = new Script(
             "PlutusScriptV2",
             compile(
-                pfn([ data, data, data ], unit )
+                pfn([ data, data, data ], unit)
                 (( d, r, c ) => pmakeUnit())
             )
         );
 
         const okAddress = new Address(
             "testnet",
-            PaymentCredentials.script( okScript.hash )
+            Credential.script( okScript.hash )
         );
 
         const tx = await txRunner
@@ -113,6 +114,7 @@ describe("TxBuilderRunner", () => {
             }),
             new DataI( 0 )
         )
+        .attachValidator( okScript )
         .setCollateral(
             new UTxO({
                 utxoRef: {
@@ -125,7 +127,6 @@ describe("TxBuilderRunner", () => {
                 }
             })
         )
-        .attachValidator( okScript )
         .payTo( Address.fake, 5_000_000 )
         .build();
         
