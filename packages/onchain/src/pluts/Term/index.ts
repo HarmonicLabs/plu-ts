@@ -43,8 +43,6 @@ export class Term<PT extends PType>
 
     readonly clone!: () => Term<PT>
 
-<<<<<<< HEAD
-=======
     /*
     as<T extends TermType>( type: T ): UtilityTermOf<ToPType<T>>
     {
@@ -83,7 +81,6 @@ export class Term<PT extends PType>
     }
     //*/
 
->>>>>>> 4b54a0a9 (updated tests)
     constructor( type: FromPType<PT> | TermType | GenericTermType, _toIR: ( dbn: bigint ) => IRTerm, isConstant: boolean = false )
     {
         assert(
