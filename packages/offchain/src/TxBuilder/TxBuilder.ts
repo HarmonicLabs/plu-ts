@@ -1621,8 +1621,17 @@ export function getScriptDataHash( witnesses: TxWitnessSet, languageViews: Uint8
         dats !== undef
     )
     {
+        /* (Deprecated)
+            ; Finally, note that in the case that a transaction includes datums but does not
+            ; include any redeemers, the script data format becomes (in hex):
+            ; [ 80 | datums | A0 ]
+            ; corresponding to a CBOR empty list and an empty map (our apologies).
+        */
+        /* Post Babbage:
+            ; [ A0 | datums | A0 ]
+        */
         scriptData = new Uint8Array([
-            0x80,
+            0xa0,
             ...Cbor.encode( dats ).toBuffer(),
             0xa0
         ]);
