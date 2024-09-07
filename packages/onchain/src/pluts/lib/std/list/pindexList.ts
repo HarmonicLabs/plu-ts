@@ -2,7 +2,6 @@ import type { TermFn, PList, PInt, PLam } from "../../../PTypes";
 import { Term } from "../../../Term";
 import { TermType, ToPType, fn, int, list } from "../../../type_system";
 import { pif } from "../../builtins/bool";
-import { plessInt } from "../../builtins/int/intBinOpToBool";
 import { pisEmpty, ptail, phead } from "../../builtins/list";
 import { papp } from "../../papp";
 import { perror } from "../../perror";
@@ -16,41 +15,41 @@ export function pindexList<ElemsT extends TermType>( elemsT: ElemsT )
 : TermFn<[ PList<ToPType<ElemsT>>, PInt ], ToPType<ElemsT>>
 {
     return phoist(
-        precursive<PList<ToPType<ElemsT>>, PLam<PInt,ToPType<ElemsT>>>(
+        pfn([
+            list( elemsT ),
+            int
+        ],elemsT)
+        (( list, idx ) => pdropList( elemsT ).$( list ).$( idx ).head,
+            "pindexList"
+        )
+    ) as TermFn<[ PList<ToPType<ElemsT>>, PInt ], ToPType<ElemsT>>
+}
+
+export function pdropList<ElemsT extends TermType>( elemsT: ElemsT )
+: TermFn<[ PList<ToPType<ElemsT>>, PInt ], PList<ToPType<ElemsT>>>
+{
+    return phoist(
+        precursive<PList<ToPType<ElemsT>>, PLam<PInt,PList<ToPType<ElemsT>>>>(
 
             pfn([
-                fn([list( elemsT ), int ], elemsT),
+                fn([list( elemsT ), int ], list( elemsT )),
                 list( elemsT ),
                 int
-            ],elemsT)
-            (( self, list, idx ) => 
-                // TODO this "pif" is useless
-                pif( elemsT ).$(
-
-                    pisEmpty.$( list )
-                    .strictOr(
-                        plessInt.$( idx ).$( pInt( 0 ) ) 
-                    )
-                    
-                )
-                .then( perror( elemsT, "pindexList" ) )
+            ],list( elemsT ))
+            (( self, lst, idx ) => 
+                pif( list( elemsT ) ).$( pInt( 0 ).eq( idx ) )
+                .then( lst as any )
                 .else(
-
-                    pif( elemsT ).$( pInt( 0 ).eq( idx ) )
-                    .then( phead( elemsT ).$( list )  as any )
-                    .else(
+                    papp(
                         papp(
-                            papp(
-                                self,
-                                ptail( elemsT ).$( list )
-                            ),
-                            pInt( -1 ).add( idx )
-                        ) as Term<ToPType<ElemsT>>
-                    )
-
+                            self,
+                            ptail( elemsT ).$( lst )
+                        ),
+                        pInt( -1 ).add( idx )
+                    ) as Term<PList<ToPType<ElemsT>>>
                 ),
-                "pindexList"
-            )
+                "pdropList"
+            ) as any
 
         )
     )

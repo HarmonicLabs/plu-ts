@@ -22,7 +22,7 @@ export function keepRelevant(
 
     const multiAssetIns = initialUTxOSet.filter((input) =>
         new UTxO( input.utxo ).resolved.value.toUnits()
-            .filter(( asset ) => asset.unit !== "lovelace")
+            // .filter(( asset ) => asset.unit !== "lovelace")
             .some(( asset ) => reqOutputKeys.includes( asset.unit ))
     );
 

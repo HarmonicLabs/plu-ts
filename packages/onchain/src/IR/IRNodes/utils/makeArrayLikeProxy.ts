@@ -37,5 +37,19 @@ export function makeArrayLikeProxy<T>(
         );
     }
 
+    Object.defineProperty(
+        like, Symbol.iterator, {
+            value: iterArrayLikeProxy.bind( like ),
+            writable: false,
+            enumerable: false,
+            configurable: false
+        }
+    );
+
     return like;
+}
+
+function* iterArrayLikeProxy<T>( this: ArrayLike<T> )
+{
+    for( let i = 0; i < this.length; i++ ) yield this[i];
 }

@@ -17,7 +17,7 @@ import { pflip } from "../combinators";
 import { pevery } from "../list/pevery";
 import { pfilter } from "../list/pfilter";
 import { pfind } from "../list/pfind";
-import { pindexList } from "../list/pindexList";
+import { pdropList, pindexList } from "../list/pindexList";
 import { plength } from "../list/plength";
 import { pmap } from "../list/pmap";
 import { preverse } from "../list/preverse";
@@ -286,7 +286,7 @@ function _definePListMethods<PElemsT extends PType>( lst: Term<PList<PElemsT>>, 
     defineReadOnlyProperty(
         lst,
         "at",
-        ( index: PappArg<PInt> ): UtilityTermOf<PElemsT> => pindexList( elemsT ).$( lst ).$( index ) as any
+        ( index: PappArg<PInt> ): UtilityTermOf<PElemsT> => pdropList( elemsT ).$( lst ).$( index ).head as any
     );
 
     definePropertyIfNotPresent(

@@ -8,3 +8,5 @@ export * from "./IRHoisted";
 export * from "./IRLetted";
 export * from "./IRNative";
 export * from "./IRVar";
+export * from "./IRConstr";
+export * from "./IRCase";

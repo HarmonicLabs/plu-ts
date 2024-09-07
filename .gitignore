@@ -13,6 +13,8 @@ coverage/
 # output of build
 dist
 
+*private.test.ts
+
 src/offchain/tx/builder/__tests__/TxBuilder.contracts.test.ts
 
 # workers compilation

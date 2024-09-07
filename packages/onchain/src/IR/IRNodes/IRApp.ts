@@ -80,17 +80,17 @@ export class IRApp
     private _hash: IRHash | undefined;
     get hash(): IRHash {
         if(!isIRHash( this._hash ))
-            {
-                // basically a merkle tree
-                this._hash = hashIrData(
-                    concatUint8Arr(
-                        IRApp.tag,
-                        this._fn.hash,
-                        this._arg.hash
-                    )
-                );
-            }
-            return this._hash;
+        {
+            // basically a merkle tree
+            this._hash = hashIrData(
+                concatUint8Arr(
+                    IRApp.tag,
+                    this._fn.hash,
+                    this._arg.hash
+                )
+            );
+        }
+        return this._hash;
     }
     markHashAsInvalid(): void
     {

@@ -18,6 +18,7 @@ import { IRConst } from "../../../IRNodes/IRConst";
 import { incrementUnboundDbns } from "./incrementUnboundDbns";
 import { IRHoisted } from "../../../IRNodes";
 import { equalIrHash, irHashToHex } from "../../../IRHash";
+import { sanifyTree } from "../sanifyTree";
 
 
 function onlyLettedTerm( setEntry: LettedSetEntry ): IRLetted
@@ -308,14 +309,13 @@ export function handleLetted( term: IRTerm ): void
     // TODO: should probably merge `markRecursiveHoistsAsForced` inside `getLettedTerms` to iter once
     markRecursiveHoistsAsForced( term );
 
+
+    // in case there are no letted terms there is no work to do
     while( true )
     {
         const allDirectLetted = getLettedTerms( term, { all: false, includeHoisted: false });
-
-        // console.log("found ", allDirectLetted.length, "letted terms");
-    
-        // in case there are no letted terms there is no work to do
         if( allDirectLetted.length === 0 ) return;
+        // console.log("found ", allDirectLetted.length, "letted terms");
     
         const sortedLettedSet = getSortedLettedSet( allDirectLetted );
 
@@ -325,7 +325,6 @@ export function handleLetted( term: IRTerm ): void
         } = sortedLettedSet.pop()!;
 
         // console.log(` ------------------ working with ${lettedToStr(letted)} ------------------ `);
-
         if( nReferences === 1 )
         {
             // console.log("inlining letted (single reference) with value", prettyIRText( letted.value ) )
@@ -338,6 +337,7 @@ export function handleLetted( term: IRTerm ): void
         }
 
         const maxScope = findLettedMaxScope( letted );
+        sanifyTree( maxScope );
         const lettedHash = letted.hash;
 
         const sameLettedRefs = findAllNoHoisted(
@@ -388,8 +388,12 @@ export function handleLetted( term: IRTerm ): void
         {
             for( let j = 1; j < sameLettedRefs.length; j++ )
             {
+                const prevLca: IRTerm = lca; 
                 lca = lowestCommonAncestor( lca, sameLettedRefs[j], maxScope );
-                if( !isIRTerm( lca ) ) break;
+                if( !isIRTerm( lca ) )
+                {
+                    lca = prevLca;
+                };
             }
     
             if( !isIRTerm( lca ) )
@@ -540,6 +544,7 @@ export function handleLetted( term: IRTerm ): void
             finalMaxScope = (finalMaxScope as any).parent as any
         }
         // console.log("final max scope (delayed: " + delayed + ")" , prettyIRJsonStr( finalMaxScope ) )
+
     }
 }
 
