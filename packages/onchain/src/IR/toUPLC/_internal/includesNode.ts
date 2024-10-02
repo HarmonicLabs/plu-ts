@@ -1,3 +1,4 @@
+import { IRCase } from "../../IRNodes/IRCase";
 import { IRApp } from "../../IRNodes/IRApp";
 import { IRDelayed } from "../../IRNodes/IRDelayed";
 import { IRForced } from "../../IRNodes/IRForced";
@@ -5,6 +6,7 @@ import { IRFunc } from "../../IRNodes/IRFunc";
 import { IRHoisted } from "../../IRNodes/IRHoisted";
 import { IRLetted } from "../../IRNodes/IRLetted";
 import { IRTerm } from "../../IRTerm";
+import { IRConstr } from "../../IRNodes/IRConstr";
 
 export function includesNode( parent: IRTerm, predicate: ( node: IRTerm ) => boolean ): boolean
 {
@@ -27,6 +29,23 @@ export function includesNode( parent: IRTerm, predicate: ( node: IRTerm ) => boo
             stack.push(
                 t.fn,
                 t.arg
+            );
+            continue;
+        }
+
+        if( t instanceof IRCase )
+        {
+            stack.push(
+                t.constrTerm,
+                ...t.continuations
+            );
+            continue;
+        }
+
+        if( t instanceof IRConstr )
+        {
+            stack.push(
+                ...t.fields
             );
             continue;
         }

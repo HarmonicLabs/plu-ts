@@ -28,6 +28,15 @@ function _isClosedIRTerm( term: IRTerm, dbn: number, parent?: IRTerm ): boolean
     {
         return _isClosedIRTerm( term.fn, dbn, term ) && _isClosedIRTerm( term.arg, dbn, term);
     }
+    if( term instanceof IRConstr )
+    {
+        return Array.from( term.fields ).every( f => _isClosedIRTerm( f, dbn, term ) );
+    }
+    if( term instanceof IRCase )
+    {
+        return _isClosedIRTerm( term.constrTerm, dbn, term ) &&
+        Array.from( term.continuations ).every( cont => _isClosedIRTerm( cont, dbn, term ) );
+    }
     
     if( term instanceof IRConst ) return true;
     if( term instanceof IRError ) return true;
@@ -39,15 +48,7 @@ function _isClosedIRTerm( term: IRTerm, dbn: number, parent?: IRTerm ): boolean
     if( term instanceof IRForced ) return _isClosedIRTerm( term.forced, dbn, term );
     if( term instanceof IRDelayed ) return _isClosedIRTerm( term.delayed, dbn, term );
 
-    if( term instanceof IRConstr )
-    {
-        return Array.from( term.fields ).every( f => _isClosedIRTerm( f, dbn, term ) );
-    }
-    if( term instanceof IRCase )
-    {
-        return _isClosedIRTerm( term.constrTerm, dbn, term ) &&
-        Array.from( term.continuations ).every( cont => _isClosedIRTerm( cont, dbn, term ) );
-    }
+    
 
     // not even an IRTerm
     console.log( parent )

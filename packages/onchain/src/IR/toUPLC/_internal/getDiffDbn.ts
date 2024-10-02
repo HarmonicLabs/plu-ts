@@ -1,3 +1,4 @@
+import { IRCase } from "../../IRNodes/IRCase";
 import { IRApp } from "../../IRNodes/IRApp";
 import { IRDelayed } from "../../IRNodes/IRDelayed";
 import { IRForced } from "../../IRNodes/IRForced";
@@ -5,6 +6,8 @@ import { IRFunc } from "../../IRNodes/IRFunc";
 import { IRHoisted } from "../../IRNodes/IRHoisted";
 import { IRLetted } from "../../IRNodes/IRLetted";
 import { IRTerm } from "../../IRTerm";
+import { mapArrayLike } from "../../IRNodes/utils/mapArrayLike";
+import { IRConstr } from "../../IRNodes";
 
 type StackEntry = { term: IRTerm, dbn: number };
 
@@ -29,6 +32,29 @@ export function getDiffDbn( parentNode: IRTerm, childNode: IRTerm ): number | un
             stack.push(
                 { term: t.fn, dbn },
                 { term: t.arg, dbn }
+            );
+            continue;
+        }
+
+        if( t instanceof IRCase )
+        {
+            stack.push(
+                { term: t.constrTerm, dbn },
+                ...mapArrayLike(
+                    t.continuations,
+                    continuation => ({ term: continuation, dbn })
+                )
+            );
+            continue;
+        }
+
+        if( t instanceof IRConstr )
+        {
+            stack.push(
+                ...mapArrayLike(
+                    t.fields,
+                    field => ({ term: field, dbn })
+                )
             );
             continue;
         }

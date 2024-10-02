@@ -30,6 +30,14 @@ export function showIRText( _ir: IRTerm ): string
     function _loop( ir: IRTerm, dbn: number ): string
     {
         if( ir instanceof IRApp ) return `[${_loop(ir.fn, dbn)} ${_loop(ir.arg, dbn)}]`;
+        if( ir instanceof IRCase ) return `(case ${
+            _loop(ir.constrTerm, dbn)
+        } [${
+            Array.from( ir.continuations ).map( f => _loop( f, dbn )).join(" ")
+        }])`;
+        if( ir instanceof IRConstr ) return `(constr ${ir.index.toString()} [${
+            Array.from( ir.fields ).map( f => _loop( f, dbn )).join(" ")
+        }])`;
         if( ir instanceof IRNative ) return `(native ${nativeTagToString(ir.tag)})`;
         if( ir instanceof IRLetted )
         {
@@ -178,6 +186,14 @@ export function prettyIRText( _ir: IRTerm, _indent = 2 )
         const indent = `\n${indentStr.repeat( depth )}`;
 
         if( ir instanceof IRApp ) return `${indent}[${_loop(ir.fn, dbn, depth + 1 )} ${_loop(ir.arg, dbn, depth + 1)}${indent}]`;
+        if( ir instanceof IRCase ) return `${indent}(case ${indent}${
+            _loop(ir.constrTerm, dbn, depth + 1)
+        } ${indent}[${
+            Array.from( ir.continuations ).map( f => _loop( f, dbn, depth + 1 )).join(" ")
+        }${indent}])`;
+        if( ir instanceof IRConstr ) return `${indent}(constr ${ir.index.toString()} ${indent}[${
+            Array.from( ir.fields ).map( f => _loop( f, dbn, depth + 1 )).join(" ")
+        }${indent}])`;
         if( ir instanceof IRNative ) return `${indent}(native ${nativeTagToString(ir.tag)})`;
         if( ir instanceof IRLetted )
         {

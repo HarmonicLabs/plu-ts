@@ -16,9 +16,12 @@ import { isIRTerm } from "../../../utils/isIRTerm";
 import { markRecursiveHoistsAsForced } from "../markRecursiveHoistsAsForced";
 import { IRConst } from "../../../IRNodes/IRConst";
 import { incrementUnboundDbns } from "./incrementUnboundDbns";
-import { IRHoisted } from "../../../IRNodes";
 import { equalIrHash, irHashToHex } from "../../../IRHash";
 import { sanifyTree } from "../sanifyTree";
+import { mapArrayLike } from "../../../IRNodes/utils/mapArrayLike";
+import { IRCase } from "../../../IRNodes/IRCase";
+import { IRConstr } from "../../../IRNodes/IRConstr";
+import { IRHoisted } from "../../../IRNodes/IRHoisted";
 
 
 function onlyLettedTerm( setEntry: LettedSetEntry ): IRLetted
@@ -238,6 +241,28 @@ export function _handleLetted( term: IRTerm ): void
                     );
                     continue;
                 }
+                if( t instanceof IRCase )
+                {
+                    stack.push(
+                        { term: t.constrTerm, dbn },
+                        ...mapArrayLike(
+                            t.continuations,
+                            continuation => ({ term: continuation, dbn })
+                        )
+                    );
+                    continue;
+                }
+                if( t instanceof IRConstr )
+                {
+                    stack.push(
+                        ...mapArrayLike(
+                            t.fields,
+                            field => ({ term: field, dbn })
+                        )
+                    );
+                    continue
+                }
+
                 if( t instanceof IRDelayed )
                 {
                     stack.push({ term: t.delayed, dbn })
@@ -348,6 +373,15 @@ export function handleLetted( term: IRTerm ): void
         ) as IRLetted[];
 
         // console.log("found ", sameLettedRefs.length, "references of the letted terms");
+
+        if( sameLettedRefs.length <= 0 )
+        {
+            console.warn(
+                "wtf? 0 references found for letted term;\n\n" +
+                "!!! PLEASE OPEN AN ISSUE ON GITHUB (https://github.com/HarmonicLabs/plu-ts/issues) !!!\n\n"
+            );
+            continue;
+        }
 
         // just in case
         if( sameLettedRefs.length === 1 )
@@ -495,6 +529,27 @@ export function handleLetted( term: IRTerm ): void
                     );
                     continue;
                 }
+                if( t instanceof IRCase )
+                {
+                    stack.push(
+                        { term: t.constrTerm, dbn },
+                        ...mapArrayLike(
+                            t.continuations,
+                            continuation => ({ term: continuation, dbn })
+                        )
+                    );
+                    continue;
+                }
+                if( t instanceof IRConstr )
+                {
+                    stack.push(
+                        ...mapArrayLike(
+                            t.fields,
+                            field => ({ term: field, dbn })
+                        )
+                    );
+                    continue
+                }
                 if( t instanceof IRDelayed )
                 {
                     stack.push({ term: t.delayed, dbn })
@@ -589,19 +644,6 @@ function isChildOf( child: IRTerm | undefined, parent: IRTerm ): boolean
         if( !child ) return false;
         if( child === parent ) return true;
     } while( child = child?.parent );
-
-    return false;
-}
-
-function hasChild( parent: IRTerm, child: IRTerm ): boolean
-{
-    if( child === parent ) return true;
-    if( parent instanceof IRApp ) return hasChild( parent.fn, child ) || hasChild( parent.arg, child );
-    if( parent instanceof IRDelayed ) return hasChild( parent.delayed, child );
-    if( parent instanceof IRForced )  return hasChild( parent.forced, child );
-    if( parent instanceof IRFunc )  return hasChild( parent.body, child );
-    if( parent instanceof IRLetted )  return hasChild( parent.value, child );
-    if( parent instanceof IRHoisted )  return hasChild( parent.hoisted, child );
 
     return false;
 }

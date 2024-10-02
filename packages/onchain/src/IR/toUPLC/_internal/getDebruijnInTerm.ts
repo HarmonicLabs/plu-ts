@@ -1,9 +1,11 @@
 import { equalIrHash } from "../../IRHash";
+import { IRCase, IRConstr } from "../../IRNodes";
 import { IRApp } from "../../IRNodes/IRApp";
 import { IRDelayed } from "../../IRNodes/IRDelayed";
 import { IRForced } from "../../IRNodes/IRForced";
 import { IRFunc } from "../../IRNodes/IRFunc";
 import { IRLetted } from "../../IRNodes/IRLetted";
+import { mapArrayLike } from "../../IRNodes/utils/mapArrayLike";
 import { IRTerm } from "../../IRTerm";
 import { prettyIRJsonStr } from "../../utils";
 
@@ -24,6 +26,29 @@ export function getDebruijnInTerm( root: IRTerm, termToFind: IRTerm ): number
             stack.push(
                 { term: term.fn , dbn },
                 { term: term.arg, dbn },
+            );
+            continue;
+        }
+
+        if( term instanceof IRCase )
+        {
+            stack.push(
+                { term: term.constrTerm, dbn },
+                ...mapArrayLike(
+                    term.continuations,
+                    ( continuation ) => ({ term: continuation, dbn })
+                )
+            );
+            continue;
+        }
+
+        if( term instanceof IRConstr )
+        {
+            stack.push(
+                ...mapArrayLike(
+                    term.fields,
+                    ( field ) => ({ term: field, dbn })
+                )
             );
             continue;
         }

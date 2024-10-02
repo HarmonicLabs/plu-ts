@@ -64,19 +64,10 @@ export function getCallStackAt(
     Error.stackTraceLimit = n;
 
     let stackTrace: string | undefined = undefined;
-    if( hasV8Suff )
-    {
-        const ref = {};
-        Error.captureStackTrace( ref );
-        stackTrace = (ref as any).stack as string;
-    }
-    else
-    {
-        // `new Error().stack` still not standard in theory but widely supported
-        // (97% of browsers at time of writing)
-        // https://caniuse.com/?search=Error%3A%20stack
-        stackTrace = new Error().stack;
-    }
+    // `new Error().stack` still not standard in theory but widely supported
+    // (97% of browsers at time of writing)
+    // https://caniuse.com/?search=Error%3A%20stack
+    stackTrace = new Error().stack;
     stackTrace = stackTrace?.split(/\r?\n/)[n];
 
     Error.stackTraceLimit = originalStackTraceLimit;

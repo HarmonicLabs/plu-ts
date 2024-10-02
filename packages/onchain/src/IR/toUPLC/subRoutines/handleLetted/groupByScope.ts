@@ -1,9 +1,12 @@
 import { IRApp } from "../../../IRNodes/IRApp";
+import { IRCase } from "../../../IRNodes/IRCase";
+import { IRConstr } from "../../../IRNodes/IRConstr";
 import { IRDelayed } from "../../../IRNodes/IRDelayed";
 import { IRForced } from "../../../IRNodes/IRForced";
 import { IRFunc } from "../../../IRNodes/IRFunc";
 import { IRLetted, LettedSetEntry } from "../../../IRNodes/IRLetted";
 import { IRVar } from "../../../IRNodes/IRVar";
+import { mapArrayLike } from "../../../IRNodes/utils/mapArrayLike";
 import { IRTerm } from "../../../IRTerm";
 
 type ScopedLettedTerms = {
@@ -95,6 +98,30 @@ export function _getMinUnboundDbn( _term: IRTerm ): number | undefined
             );
             continue;
         }
+
+        if( term instanceof IRCase )
+        {
+            stack.push(
+                { term: term.constrTerm, dbn },
+                ...mapArrayLike(
+                    term.continuations,
+                    continuation => ({ term: continuation, dbn })
+                )
+            );
+            continue;
+        }
+
+        if( term instanceof IRConstr )
+        {
+            stack.push(
+                ...mapArrayLike(
+                    term.fields,
+                    field => ({ term: field, dbn })
+                )
+            );
+            continue
+        }
+
         if( term instanceof IRDelayed )
         {
             stack.push({ term: term.delayed, dbn })

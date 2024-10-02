@@ -10,6 +10,9 @@ import { _modifyChildFromTo } from "../../_internal/_modifyChildFromTo";
 import { showIR } from "../../../utils/showIR";
 import { markRecursiveHoistsAsForced } from "../markRecursiveHoistsAsForced";
 import { equalIrHash, IRHash, irHashToHex } from "../../../IRHash";
+import { mapArrayLike } from "../../../IRNodes/utils/mapArrayLike";
+import { IRCase } from "../../../IRNodes/IRCase";
+import { IRConstr } from "../../../IRNodes/IRConstr";
 
 export function handleHoistedAndReturnRoot( term: IRTerm ): IRTerm
 {
@@ -188,6 +191,29 @@ export function handleHoistedAndReturnRoot( term: IRTerm ): IRTerm
             stack.push(
                 { irTerm: irTerm.fn , dbn },
                 { irTerm: irTerm.arg, dbn },
+            );
+            continue;
+        }
+
+        if( irTerm instanceof IRCase )
+        {
+            stack.push(
+                { irTerm: irTerm.constrTerm , dbn },
+                ...mapArrayLike(
+                    irTerm.continuations,
+                    ( continuation ) => ({ irTerm: continuation, dbn })
+                )
+            );
+            continue;
+        }
+
+        if( irTerm instanceof IRConstr )
+        {
+            stack.push(
+                ...mapArrayLike(
+                    irTerm.fields,
+                    ( field ) => ({ irTerm: field, dbn })
+                )
             );
             continue;
         }

@@ -5,6 +5,9 @@ import { IRApp } from "../../../IRNodes/IRApp";
 import { IRDelayed } from "../../../IRNodes/IRDelayed";
 import { IRForced } from "../../../IRNodes/IRForced";
 import { IRFunc } from "../../../IRNodes/IRFunc";
+import { IRCase } from "../../../IRNodes/IRCase";
+import { mapArrayLike } from "../../../IRNodes/utils/mapArrayLike";
+import { IRConstr } from "../../../IRNodes/IRConstr";
 
 /**
  *  add 1 to every var's DeBruijn that accesses stuff outside the parent node
@@ -56,6 +59,28 @@ export function incrementUnboundDbns(
             );
             continue;
         }
+        if( t instanceof IRCase )
+        {
+            stack.push(
+                { term: t.constrTerm, dbn },
+                ...mapArrayLike(
+                    t.continuations,
+                    continuation => ({ term: continuation, dbn })
+                )
+            );
+            continue;
+        }
+        if( t instanceof IRConstr )
+        {
+            stack.push(
+                ...mapArrayLike(
+                    t.fields,
+                    field => ({ term: field, dbn })
+                )
+            );
+            continue;
+        }
+
         if( t instanceof IRDelayed )
         {
             stack.push({ term: t.delayed, dbn })

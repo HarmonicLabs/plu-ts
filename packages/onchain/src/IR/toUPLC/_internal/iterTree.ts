@@ -16,7 +16,7 @@ export function iterTree(
 ): void
 {
     const has_shouldSkipNode = typeof shouldSkipNode === "function";
-    const stack: { term: IRTerm, dbn: number, isIRAppArg?: boolean }[] = [{ term: _term, dbn: 0 }];
+    const stack: { term: IRTerm, dbn: number, shouldPopIfParentIsModified?: boolean }[] = [{ term: _term, dbn: 0 }];
 
     while( stack.length > 0 )
     {
@@ -31,20 +31,57 @@ export function iterTree(
 
         if( modifiedParent && termParent !== undefined )
         {
-            while( stack.length > 0 && stack[ stack.length - 1 ].isIRAppArg )
+            while( stack.length > 0 && stack[ stack.length - 1 ].shouldPopIfParentIsModified )
             {
                 // there is an extra node 
                 stack.pop();
             }
+            // restart from the parent
             stack.push({ term: termParent, dbn: dbn - negDbn });
             continue;
         }
         
         if( t instanceof IRApp )
         {
+            // sanifyTree as we go
+            if( t.fn.parent !== t ) t.fn = t.fn.clone();
+            if( t.arg.parent !== t ) t.arg = t.arg.clone();
+
             stack.push(
                 { term: t.fn, dbn  },
-                { term: t.arg, dbn, isIRAppArg: true }
+                { term: t.arg, dbn, shouldPopIfParentIsModified: true }
+            );
+            continue;
+        }
+
+        if( t instanceof IRCase )
+        {
+            // sanifyTree as we go
+            if( t.constrTerm.parent !== t ) t.constrTerm = t.constrTerm.clone();
+            for( let i = 0; i < t.continuations.length; i++ )
+            {
+                if( t.continuations[ i ].parent !== t ) t.continuations[ i ] = t.continuations[ i ].clone();
+            }
+
+            stack.push(
+                { term: t.constrTerm, dbn },
+                ...Array.from( t.continuations ).map( cont => 
+                    ({ term: cont, dbn, shouldPopIfParentIsModified: true })
+                )
+            );
+            continue;
+        }
+        if( t instanceof IRConstr )
+        {
+            // sanifyTree as we go
+            for( let i = 0; i < t.fields.length; i++ )
+            {
+                if( t.fields[ i ].parent !== t ) t.fields[ i ] = t.fields[ i ].clone();
+            }
+            stack.push(
+                ...Array.from( t.fields ).map(( f, i ) => 
+                    ({ term: f, dbn, shouldPopIfParentIsModified: i !== 0 })
+                )
             );
             continue;
         }
@@ -64,26 +101,6 @@ export function iterTree(
         if( t instanceof IRFunc )
         {
             stack.push({ term: t.body, dbn: dbn + t.arity });
-            continue;
-        }
-
-        if( t instanceof IRCase )
-        {
-            stack.push(
-                { term: t.constrTerm, dbn },
-                ...Array.from( t.continuations ).map( cont => 
-                    ({ term: cont, dbn, isIRAppArg: true })
-                )
-            );
-            continue;
-        }
-        if( t instanceof IRConstr )
-        {
-            stack.push(
-                ...Array.from( t.fields ).map( f => 
-                    ({ term: f, dbn, isIRAppArg: true })
-                )
-            );
             continue;
         }
         

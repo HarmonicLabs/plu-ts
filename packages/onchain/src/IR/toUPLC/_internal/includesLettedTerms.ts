@@ -1,3 +1,4 @@
+import { IRCase, IRConstr } from "../../IRNodes";
 import { IRApp } from "../../IRNodes/IRApp";
 import { IRDelayed } from "../../IRNodes/IRDelayed";
 import { IRForced } from "../../IRNodes/IRForced";
@@ -27,6 +28,23 @@ export function includesLettedTerms( _term: IRTerm ): boolean
             );
             continue;
         }
+
+        if( t instanceof IRCase )
+        {
+            stack.push(
+                t.constrTerm,
+                ...t.continuations
+            );
+            continue;
+        }
+
+        if( t instanceof IRConstr )
+            {
+                stack.push(
+                    ...t.fields
+                );
+                continue;
+            }
 
         if( t instanceof IRDelayed )
         {
