@@ -26,7 +26,7 @@ describe("fee", () => {
     );
 
     
-    test("fee", () => {
+    test("change with mint", () => {
 
         const paramUtxo = new UTxO({
             utxoRef: {
@@ -67,7 +67,7 @@ describe("fee", () => {
                     ])
                 }
             ],outputs: [
-                {
+                txBuilder.minimizeLovelaces({
                     address: scriptAddr,
                     value: new Value([
                         Value.lovelaceEntry( 2_000_000 ),
@@ -78,7 +78,7 @@ describe("fee", () => {
                         )
                     ]),
                     datum: new DataI( mintedSupply )
-                }
+                })
             ],
             changeAddress: addr0
         });
@@ -97,7 +97,9 @@ describe("fee", () => {
         //*/
         
         expect( tx.body.fee ).toBeGreaterThanOrEqual( 173983/*174611*/ );
-        // console.log( JSON.stringify( tx.toJson(), undefined, 2) )
+        expect( tx.body.outputs.length ).toBe( 2 );
+        expect( tx.body.outputs[1].value.map.length ).toBe( 2 );
+        console.log( JSON.stringify( tx.toJson(), undefined, 2) )
 
     });
 })

@@ -2,7 +2,7 @@ import { fromHex, isUint8Array, lexCompare, toHex } from "@harmoniclabs/uint8arr
 import { keepRelevant } from "./keepRelevant";
 import { GenesisInfos, NormalizedGenesisInfos, defaultMainnetGenesisInfos, defaultPreprodGenesisInfos, isGenesisInfos, isNormalizedGenesisInfos, normalizedGenesisInfos } from "./GenesisInfos";
 import { isCostModelsV2, isCostModelsV1, costModelsToLanguageViewCbor, isCostModelsV3, defaultV3Costs } from "@harmoniclabs/cardano-costmodels-ts";
-import { Tx, Value, ValueUnits, TxOut, TxRedeemerTag, ScriptType, UTxO, VKeyWitness, Script, BootstrapWitness, TxRedeemer, Hash32, TxIn, Hash28, AuxiliaryData, TxWitnessSet, getNSignersNeeded, txRedeemerTagToString, ScriptDataHash, TxBody, CredentialType, canBeHash32, VotingProcedures, ProposalProcedure, InstantRewardsSource, LitteralScriptType, defaultProtocolParameters } from "@harmoniclabs/cardano-ledger-ts";
+import { Tx, Value, ValueUnits, TxOut, TxRedeemerTag, ScriptType, UTxO, VKeyWitness, Script, BootstrapWitness, TxRedeemer, Hash32, TxIn, Hash28, AuxiliaryData, TxWitnessSet, getNSignersNeeded, txRedeemerTagToString, ScriptDataHash, TxBody, CredentialType, canBeHash32, VotingProcedures, ProposalProcedure, InstantRewardsSource, LitteralScriptType, defaultProtocolParameters, ITxOut } from "@harmoniclabs/cardano-ledger-ts";
 import { CborString, Cbor, CborArray, CanBeCborString, CborPositiveRational, CborMap, CborUInt } from "@harmoniclabs/cbor";
 import { byte, blake2b_256 } from "@harmoniclabs/crypto";
 import { Data, dataToCborObj, DataConstr, dataToCbor } from "@harmoniclabs/plutus-data";
@@ -189,6 +189,26 @@ export class TxBuilder
         if( tx_out instanceof Uint8Array ) size = BigInt( tx_out.length );
         
         return BigInt( this.protocolParamters.utxoCostPerByte ) * size;
+    }
+
+    minimizeLovelaces( out: ITxOut ): TxOut
+    {
+        const o = out instanceof TxOut ? out : txBuildOutToTxOut( out )
+        const minLovelaces = this.getMinimumOutputLovelaces( o );
+
+        return new TxOut({
+            address: o.address,
+            value: 
+            Value.add(
+                Value.sub(
+                    o.value,
+                    Value.lovelaces( o.value.lovelaces )
+                ),
+                Value.lovelaces( minLovelaces )
+            ),
+            datum: o.datum,
+            refScript: o.refScript
+        });
     }
 
     /**
@@ -981,23 +1001,17 @@ export class TxBuilder
         // and 2 are ~0.06 ADA (too low) so go for 4;
         const dummyFee = BigInt( "0xffffffff" );
 
-        const dummyOuts = outs.map( txO => txO.clone() )
+        const dummyOuts = outs.map( txO => txO.clone() );
 
         // add dummy change address output
         dummyOuts.push(
             new TxOut({
                 address: change.address,
-                value: Value.sub(
-                    totInputValue,
-                    Value.add(
-                        requiredOutputValue,
-                        Value.lovelaces(
-                            forceBigUInt(
-                                this.protocolParamters.txFeePerByte 
-                            )
-                        )
-                    )
-                ),
+                // this value obviously doesn't make sense
+                // however now we are not able to calculate it
+                // because we are missing the minted value and eventual
+                // values associated with certificates
+                value: Value.lovelaces( totInputValue.lovelaces ),
                 datum: change.datum ? (
                     change.datum instanceof Hash32 ?
                     change.datum :
@@ -1622,8 +1636,17 @@ export function getScriptDataHash( witnesses: TxWitnessSet, languageViews: Uint8
         dats !== undef
     )
     {
+        /* (Deprecated)
+            ; Finally, note that in the case that a transaction includes datums but does not
+            ; include any redeemers, the script data format becomes (in hex):
+            ; [ 80 | datums | A0 ]
+            ; corresponding to a CBOR empty list and an empty map (our apologies).
+        */
+        /* Post Babbage:
+            ; [ A0 | datums | A0 ]
+        */
         scriptData = new Uint8Array([
-            0x80,
+            0xa0,
             ...Cbor.encode( dats ).toBuffer(),
             0xa0
         ]);
