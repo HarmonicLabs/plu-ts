@@ -43,6 +43,44 @@ export class Term<PT extends PType>
 
     readonly clone!: () => Term<PT>
 
+    /*
+    as<T extends TermType>( type: T ): UtilityTermOf<ToPType<T>>
+    {
+        if( !isWellFormedType( type ) )
+        {
+            throw new Error("`punsafeConvertType` called with invalid type");
+        }
+    
+        const converted = new Term(
+            type,
+            this.toIR,
+            Boolean((this as any).isConstant) // isConstant
+        ) as any;
+    
+        Object.keys( this ).forEach( k => {
+    
+            // do not overwrite `type` and `toUPLC` properties
+            if(
+                k === "type" || 
+                k === "toUPLC" || 
+                k === "toIR"
+            ) return;
+            
+            Object.defineProperty(
+                converted,
+                k,
+                Object.getOwnPropertyDescriptor(
+                    this,
+                    k
+                ) ?? {}
+            )
+    
+        });
+    
+        return addUtilityForType( type )( converted ) as any;
+    }
+    //*/
+
     constructor( type: FromPType<PT> | TermType | GenericTermType, _toIR: ( dbn: bigint ) => IRTerm, isConstant: boolean = false )
     {
         assert(

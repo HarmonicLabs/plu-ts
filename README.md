@@ -18,7 +18,7 @@
 
 `plu-ts` is a library to allow Cardano-related software to be written entirely in [typescript](https://www.typescriptlang.org/), in support for a wider developer ecosystem adoption and easier integration.
 
-the project is be composed mainly of two parts: on-chain and off-chain;
+the project is composed mainly of two parts: on-chain and off-chain;
 
 the on-chain exports all the necessary for you to build your smart contract as an eDSL (_embedded_ Domain Specific Language)
 the off-chain one allows you to build transactions 
@@ -29,22 +29,26 @@ You can start playing with `plu-ts` by running the following command in your pro
 ```
 npm install @harmoniclabs/plu-ts
 ```
-or, equivalently, you can install directly form this repository
+or, equivalently, you can install directly from this repository
 ```
 npm install https://github.com/HarmonicLabs/plu-ts
 ```
 
 ## Get started
 
+<<<<<<< HEAD
 Have a look at the [`plu-ts` documentation](https://pluts.harmoniclabs.tech) where you can find some [example projects](https://pluts.harmoniclabs.tech/docs/examples/Hello%20World) to help you get started.
+=======
+Have a look at the [`plu-ts` documentation](https://pluts.harmoniclabs.tech) where you can find some [example projects](https://pluts.harmoniclabs.tech/examples/Hello%20World) to help you get started.
+>>>>>>> 789580f286572056104ecb369a1700904b74af7c
 
 ## Sponsors ❤️
 
 the [sponsors.md](./sponsors.md) file contains a list of supportes of this project.
 
-Everyone of them is special and is contribuitng in making this software aviable for everyone.
+Every one of them is special and is contributing to making this software available for everyone.
 
-Consider having a look at the [documentation](https://www.harmoniclabs.tech/plu-ts-docs/index.html) even if it is currently being written; feel free to contribute to the [`plu-ts-docs` repository](https://github.com/HarmonicLabs/plu-ts-docs)
+Consider having a look at the [documentation]([https://www.harmoniclabs.tech/plu-ts-docs/index.html](https://pluts.harmoniclabs.tech)) even if it is currently being written; feel free to contribute to the [`plu-ts-docs` repository](https://github.com/HarmonicLabs/plu-ts-docs)
 
 ## Project Catalyst
 
