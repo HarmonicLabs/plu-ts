@@ -99,7 +99,7 @@ describe("fee", () => {
         expect( tx.body.fee ).toBeGreaterThanOrEqual( 173983/*174611*/ );
         expect( tx.body.outputs.length ).toBe( 2 );
         expect( tx.body.outputs[1].value.map.length ).toBe( 2 );
-        console.log( JSON.stringify( tx.toJson(), undefined, 2) )
+        // console.log( JSON.stringify( tx.toJson(), undefined, 2) )
 
     });
 })
