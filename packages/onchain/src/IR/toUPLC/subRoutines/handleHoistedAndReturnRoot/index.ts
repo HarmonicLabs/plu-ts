@@ -13,6 +13,7 @@ import { equalIrHash, IRHash, irHashToHex } from "../../../IRHash";
 import { mapArrayLike } from "../../../IRNodes/utils/mapArrayLike";
 import { IRCase } from "../../../IRNodes/IRCase";
 import { IRConstr } from "../../../IRNodes/IRConstr";
+import { stringify } from "../../../../utils/stringify";
 
 export function handleHoistedAndReturnRoot( term: IRTerm ): IRTerm
 {
@@ -168,7 +169,7 @@ export function handleHoistedAndReturnRoot( term: IRTerm ): IRTerm
             {
                 throw new Error(
                     "unexpected hoisted term found with hash: " + irHashToHex( irTermHash ) +
-                    "\n showIR of the term: " + JSON.stringify(
+                    "\n showIR of the term: " + stringify(
                         showIR( irTerm ),
                         undefined,
                         2

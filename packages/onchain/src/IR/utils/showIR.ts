@@ -15,6 +15,7 @@ import { showUPLCConstValue } from "@harmoniclabs/uplc";
 import { IRConstr } from "../IRNodes/IRConstr";
 import { IRCase } from "../IRNodes/IRCase";
 import { equalIrHash, IRHash, irHashToHex } from "../IRHash";
+import { stringify } from "../../utils/stringify";
 
 const vars = "abcdefghilmopqrstuvzwxyjkABCDEFGHILJMNOPQRSTUVZWXYJK".split('');
 
@@ -358,7 +359,7 @@ export function prettyIRJsonStr( ir: IRTerm, indent = 2, opts: Partial<PrettyIRJ
     if( !_opts.letted ) toJson.letted = undefined;
     if( !_opts.hoisted ) toJson.hoisted = undefined;
 
-    return JSON.stringify(
+    return stringify(
         toJson,
         ( k, v ) => {
 

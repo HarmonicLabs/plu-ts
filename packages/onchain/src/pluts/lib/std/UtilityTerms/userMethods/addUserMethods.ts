@@ -10,6 +10,7 @@ import { getFnTypes } from "../../../../Script/Parametrized/getFnTypes";
 import { _plet } from "../../../plet/minimal";
 import { addUtilityForType } from "../addUtilityForType";
 import { isWellFormedMethods } from "./assertWellFormedMethods";
+import { stringify } from "../../../../../utils/stringify";
 
 function getMethodsWithFirstInputOfType( methods: Methods, type: TermType ): Methods
 {
@@ -56,7 +57,7 @@ export function addUserMethods<
     {
         throw new Error(
             "user-specified methods are not well formed, definition contains methods with ambigous names:  " +
-            JSON.stringify( Object.keys( methods ), undefined, 2 ) 
+            stringify( Object.keys( methods ), undefined, 2 ) 
         );
     }
 

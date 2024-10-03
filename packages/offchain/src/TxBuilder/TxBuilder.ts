@@ -1,7 +1,7 @@
 import { fromHex, isUint8Array, lexCompare, toHex } from "@harmoniclabs/uint8array-utils";
 import { keepRelevant } from "./keepRelevant";
 import { GenesisInfos, NormalizedGenesisInfos, defaultMainnetGenesisInfos, defaultPreprodGenesisInfos, isGenesisInfos, isNormalizedGenesisInfos, normalizedGenesisInfos } from "./GenesisInfos";
-import { isCostModelsV2, isCostModelsV1, costModelsToLanguageViewCbor, isCostModelsV3, defaultV3Costs } from "@harmoniclabs/cardano-costmodels-ts";
+import { isCostModelsV2, isCostModelsV1, costModelsToLanguageViewCbor, isCostModelsV3, defaultV3Costs, CostModelsToLanguageViewCborOpts } from "@harmoniclabs/cardano-costmodels-ts";
 import { Tx, Value, ValueUnits, TxOut, TxRedeemerTag, ScriptType, UTxO, VKeyWitness, Script, BootstrapWitness, TxRedeemer, Hash32, TxIn, Hash28, AuxiliaryData, TxWitnessSet, getNSignersNeeded, txRedeemerTagToString, ScriptDataHash, TxBody, CredentialType, canBeHash32, VotingProcedures, ProposalProcedure, InstantRewardsSource, LitteralScriptType, defaultProtocolParameters, ITxOut } from "@harmoniclabs/cardano-ledger-ts";
 import { CborString, Cbor, CborArray, CanBeCborString, CborPositiveRational, CborMap, CborUInt } from "@harmoniclabs/cbor";
 import { byte, blake2b_256 } from "@harmoniclabs/crypto";
@@ -20,6 +20,7 @@ import { TxBuilderProtocolParams, ValidatedTxBuilderProtocolParams, completeTxBu
 import { ChangeInfos } from "../txBuild/ChangeInfos/ChangeInfos";
 import { estimateMaxSignersNeeded, scriptTypeToDataVersion } from "./utils";
 import { cborFromRational } from "../utils/Rational";
+import { stringify } from "../utils/stringify";
 
 type ScriptLike = {
     hash: string,
@@ -277,7 +278,11 @@ export class TxBuilder
      * 2) `tx.witnesses.redeemers`
      * 3) `tx.witnesses.vkeyWitnesses` (empty)
      */
-    overrideTxRedeemers( tx: Tx, newRedeemers: TxRedeemer[] ): Tx
+    overrideTxRedeemers( 
+        tx: Tx, 
+        newRedeemers: TxRedeemer[],
+        opts: CostModelsToLanguageViewCborOpts = { mustHaveV3: true }
+    ): Tx
     {
         // datums passed by hash
         const datums = tx.witnesses.datums ?? [];
@@ -289,7 +294,7 @@ export class TxBuilder
                     tx.witnesses,
                     costModelsToLanguageViewCbor(
                         this.protocolParamters.costModels,
-                        { mustHaveV2: true, mustHaveV1: false }
+                        opts
                     ).toBuffer()
                 )
             }),
@@ -604,7 +609,7 @@ export class TxBuilder
                 `protocol paramters "utxoCostPerByte": ${this.protocolParamters.utxoCostPerByte}\n` +
                 `minimum lovelaces required: ${minLovelaces.toString()}\n` +
                 `output lovelaces          : ${out.value.lovelaces.toString()}\n` +
-                `tx output: ${JSON.stringify( out.toJson(), undefined, 2 )}`
+                `tx output: ${stringify( out.toJson(), undefined, 2 )}`
             );
         }
     }
@@ -1292,7 +1297,7 @@ export class TxBuilder
                 if( !Value.isAdaOnly( realCollValue ) )
                 throw new Error(
                     `total collateral value was including non-ADA value;\n` +
-                    `total collateral value was: ${JSON.stringify( realCollValue.toJson(), undef, 2 )}`
+                    `total collateral value was: ${stringify( realCollValue.toJson(), undef, 2 )}`
                 );
             }
         }
@@ -1578,7 +1583,7 @@ function onEvaluationResult(
                 `failed with \n`+
                 `error message: ${(result as any).msg}\n`+ 
                 `additional infos: ${
-                    JSON.stringify(
+                    stringify(
                         (result as any).addInfos,
                         ( k, v ) => {
                             if( isUint8Array( v ) )
