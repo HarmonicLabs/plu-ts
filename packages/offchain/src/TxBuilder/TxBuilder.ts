@@ -335,7 +335,7 @@ export class TxBuilder
 
         if( nRdmrs === 0 ){
             this.assertMinOutLovelaces( tx.body.outputs );
-            return tx
+            return tx;
         };
 
         let txOuts: TxOut[] = new Array( outs.length + 1 );
@@ -1344,24 +1344,25 @@ export class TxBuilder
 
         const txOuts: TxOut[] = new Array( outs.length + 1 ); 
         outs.forEach( (txO,i) => txOuts[i] = txO.clone() );
-        txOuts[txOuts.length - 1] = (
-            new TxOut({
-                address: change.address,
-                value: Value.sub(
-                    totInputValue,
-                    Value.add(
-                        requiredOutputValue,
-                        Value.lovelaces( minFee )
-                    )
-                ),
-                datum: change.datum ? (
-                    change.datum instanceof Hash32 ?
-                    change.datum :
-                    forceData( change.datum )
-                ): undef,
-                refScript: change.refScript
-            })
-        );
+        const changeOutput =new TxOut({
+            address: change.address,
+            value: Value.sub(
+                totInputValue,
+                Value.add(
+                    requiredOutputValue,
+                    Value.lovelaces( minFee )
+                )
+            ),
+            datum: change.datum ? (
+                change.datum instanceof Hash32 ?
+                change.datum :
+                forceData( change.datum )
+            ): undef,
+            refScript: change.refScript
+        });
+        txOuts[txOuts.length - 1] = changeOutput;
+
+        this.assertCorrectChangeOutput( changeOutput );
 
         let tx = new Tx({
             ...dummyTx,
@@ -1383,6 +1384,27 @@ export class TxBuilder
             outs,
             change
         };
+    }
+
+    assertCorrectChangeOutput(changeOutput: TxOut): void
+    {
+        if( changeOutput.value.lovelaces < 0 )
+        throw new Error("not enough input lovelaces to cover the output value and fee");
+
+        for( const { assets, policy } of changeOutput.value )
+        {
+            if( policy === "" ) continue;
+            for( const { quantity, name } of assets )
+            {
+                if( quantity < 0 )
+                {
+                    console.dir( changeOutput.value.toJson(), { depth: Infinity } );
+                    throw new Error(
+                        `not enough ${policy.toString()}.${toHex( name )} in input to cover the total output`
+                    );
+                }
+            }
+        }
     }
 
     findCollaterals( utxos: UTxO[], targetCollateralLovelaces: number | bigint = 10_000_000 ): UTxO[]
