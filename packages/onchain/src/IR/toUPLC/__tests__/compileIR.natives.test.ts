@@ -51,7 +51,8 @@ describe("compileIRToUPLC", () => {
             const uplc = compileIRToUPLC( IRNative._matchList );
     
             const expectedUplcStr =
-                "(lam a (lam b (lam c (force [[[(force (force (builtin chooseList))) c] a] (delay [[b [(force (builtin headList)) c]] [(force (builtin tailList)) c]])]))))";
+                "[(lam a [(lam b [(lam c (lam d (lam e (lam f (force [[[c f] d] (delay [[e [b f]] [a f]])]))))) (force (force (builtin chooseList)))]) (force (builtin headList))]) (force (builtin tailList))]";
+                // "(lam a (lam b (lam c (force [[[(force (force (builtin chooseList))) c] a] (delay [[b [(force (builtin headList)) c]] [(force (builtin tailList)) c]])]))))";
     
             expect(
                 showUPLC( uplc )

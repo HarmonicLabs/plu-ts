@@ -36,6 +36,8 @@ export function getElemAtTerm( n: number ): TermFn<[ PList<PData> ], PData >
         n--;
     }
 
+    // every use of this MUST be cloned
+    // headList and tailList are forced natives and WILL be hoisted out
     uplc = new IRHoisted(
         new IRFunc(
             1,
@@ -47,7 +49,7 @@ export function getElemAtTerm( n: number ): TermFn<[ PList<PData> ], PData >
         )
     );
 
-    const term = new Term( lam( list(data), data ), _dbn => uplc );
+    const term = new Term( lam( list(data), data ), _dbn => uplc.clone() );
 
     uplc.hash;
     defineReadOnlyProperty(

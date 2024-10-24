@@ -15,6 +15,7 @@ import { makeMockUtilityTerm } from "../std/UtilityTerms/mockUtilityTerms/makeMo
 import { getCallStackAt } from "../../../utils/getCallStackAt";
 import { IRTerm } from "../../../IR/IRTerm";
 import { termTypeToString } from "../../type_system";
+import { IRSelfCall } from "../../../IR/IRNodes/IRSelfCall";
 
 export type LettedTerm<PVarT extends PType, SomeExtension extends object> =
     Term<PVarT> & SomeExtension extends Term<PAlias<PVarT, {}>> ?
@@ -59,7 +60,8 @@ export function plet<PVarT extends PType, SomeExtension extends object>(
             if(
                 ir instanceof IRLetted || 
                 ir instanceof IRHoisted || 
-                ir instanceof IRVar 
+                ir instanceof IRVar ||
+                ir instanceof IRSelfCall
             )
             {
                 return ir;
@@ -97,7 +99,8 @@ export function plet<PVarT extends PType, SomeExtension extends object>(
 
                 if(
                     // inline variables; no need to add an application since already in scope
-                    arg instanceof IRVar
+                    arg instanceof IRVar ||
+                    arg instanceof IRSelfCall
                 )
                 {
                     return expr( withUtility( varValue as any ) as any ).toIR( dbn );

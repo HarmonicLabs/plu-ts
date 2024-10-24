@@ -23,6 +23,7 @@ import { IRCase } from "../../../IRNodes/IRCase";
 import { IRConstr } from "../../../IRNodes/IRConstr";
 import { IRHoisted } from "../../../IRNodes/IRHoisted";
 import { IRRecursive } from "../../../IRNodes/IRRecursive";
+import { IRSelfCall } from "../../../IRNodes/IRSelfCall";
 
 
 function onlyLettedTerm( setEntry: LettedSetEntry ): IRLetted
@@ -116,7 +117,10 @@ export function _handleLetted( term: IRTerm ): void
         }
 
         // always inline letted vars
-        if( lettedExampleElem.value instanceof IRVar )
+        if(
+            lettedExampleElem.value instanceof IRVar ||
+            lettedExampleElem.value instanceof IRSelfCall
+        )
         {
             for( const elem of sameLettedRefs )
             {
@@ -226,7 +230,10 @@ export function _handleLetted( term: IRTerm ): void
                 const { term: t, dbn } = stack.pop() as { term: IRTerm, dbn: number };
 
                 if(
-                    t instanceof IRVar &&
+                    (
+                        t instanceof IRVar ||
+                        t instanceof IRSelfCall
+                    ) &&
                     t.dbn > dbn
                 )
                 {
@@ -409,7 +416,10 @@ export function handleLetted( term: IRTerm ): void
         }
 
         // always inline letted vars
-        if( letted.value instanceof IRVar )
+        if(
+            letted.value instanceof IRVar ||
+            letted.value instanceof IRSelfCall
+        )
         {
             // console.log("inlining letted (value is var) with value", prettyIRText( letted.value ) )
             for( const elem of sameLettedRefs )
@@ -526,7 +536,10 @@ export function handleLetted( term: IRTerm ): void
                 const { term: t, dbn } = stack.pop() as { term: IRTerm, dbn: number };
 
                 if(
-                    t instanceof IRVar &&
+                    (
+                        t instanceof IRVar ||
+                        t instanceof IRSelfCall
+                    ) &&
                     t.dbn > dbn
                 )
                 {

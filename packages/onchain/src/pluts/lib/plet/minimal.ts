@@ -1,5 +1,6 @@
 import { IRHoisted } from "../../../IR/IRNodes/IRHoisted";
 import { IRLetted } from "../../../IR/IRNodes/IRLetted";
+import { IRSelfCall } from "../../../IR/IRNodes/IRSelfCall";
 import { IRVar } from "../../../IR/IRNodes/IRVar";
 import { isClosedIRTerm } from "../../../IR/utils/isClosedIRTerm";
 import type { PType } from "../../PType";
@@ -18,7 +19,8 @@ export function _plet<PVarT extends PType, SomeExtension extends object>( varVal
             if(
                 ir instanceof IRLetted || 
                 ir instanceof IRHoisted || 
-                ir instanceof IRVar 
+                ir instanceof IRVar ||
+                ir instanceof IRSelfCall
             )
             {
                 return ir;

@@ -9,6 +9,7 @@ import { IRCase } from "../../../IRNodes/IRCase";
 import { mapArrayLike } from "../../../IRNodes/utils/mapArrayLike";
 import { IRConstr } from "../../../IRNodes/IRConstr";
 import { IRRecursive } from "../../../IRNodes/IRRecursive";
+import { IRSelfCall } from "../../../IRNodes/IRSelfCall";
 
 /**
  *  add 1 to every var's DeBruijn that accesses stuff outside the parent node
@@ -27,7 +28,10 @@ export function incrementUnboundDbns(
         const { term: t, dbn } = stack.pop() as { term: IRTerm, dbn: number };
 
         if(
-            t instanceof IRVar &&
+            (
+                t instanceof IRVar ||
+                t instanceof IRSelfCall
+            ) &&
             t.dbn >= dbn
         )
         {

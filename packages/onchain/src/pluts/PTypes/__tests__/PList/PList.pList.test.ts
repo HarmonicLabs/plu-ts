@@ -1,10 +1,11 @@
-import { UPLCConst, constT, Lambda, Application, Builtin, UPLCVar } from "@harmoniclabs/uplc"
+import { UPLCConst, constT, Lambda, Application, Builtin, UPLCVar, showUPLC } from "@harmoniclabs/uplc"
 import { IRVar } from "../../../../IR/IRNodes/IRVar"
 import { Term } from "../../../Term"
 import { pInt } from "../../../lib/std/int/pInt"
 import { pList, pnil } from "../../../lib/std/list/const"
 import { int } from "../../../type_system/types"
 import { PInt } from "../../PInt"
+import { IRConst } from "../../../../IR"
 
 
 describe("pList", () => {
@@ -35,27 +36,36 @@ describe("pList", () => {
 
     })
 
-    test("pList( int )( < any Term<PInt> > ) is a constructed List", () => {
+    test.only("pList( int )( < any Term<PInt> > ) is a constructed List", () => {
 
         expect(
-            new Lambda(
+            showUPLC(
                 pList( int )([
+                    // don't use pInt here
+                    // we don't tell the compiler this is a constant
+                    // otherwise it will be optimized
                     new Term<PInt>(
                         int,
-                        _dbn => new IRVar( 0 )
+                        _dbn => IRConst.int( 42 )
                     )
                 ]).toUPLC( 0 )
             )
         ).toEqual(
-            new Lambda(
+            showUPLC(
                 new Application(
-                    new Application(
-                        Builtin.mkCons,
-                        new UPLCVar( 0 )
+                    new Lambda(
+                        new Application(
+                            new Application(
+                                new UPLCVar( 0 ), // Builtin.mkCons,
+                                UPLCConst.int( 42 )
+                            ),
+                            pnil( int ).toUPLC( 0 )
+                        )
                     ),
-                    pnil( int ).toUPLC( 0 )
+                    Builtin.mkCons
                 )
             )
+            
         );
 
     })

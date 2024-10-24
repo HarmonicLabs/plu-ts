@@ -4,11 +4,16 @@ import { IRNative } from "../../IRNodes/IRNative";
 import { IRNativeTag } from "../../IRNodes/IRNative/IRNativeTag";
 import { IRRecursive } from "../../IRNodes/IRRecursive";
 import { IRTerm } from "../../IRTerm";
+import { showIRText } from "../../utils";
+import { isIRParentTerm } from "../../utils/isIRParentTerm";
 import { _modifyChildFromTo } from "../_internal/_modifyChildFromTo";
 import { iterTree } from "../_internal/iterTree";
+import { sanifyTree } from "./sanifyTree";
 
 export function hoistForcedNatives( term: IRTerm ): IRTerm
 {
+    if( !isIRParentTerm(term) ) return term;
+
     const toHoist: { [tag: number]: IRNative[] } = {
         [IRNativeTag.strictIfThenElse]: [],
         [IRNativeTag.chooseUnit]: [],
@@ -22,6 +27,10 @@ export function hoistForcedNatives( term: IRTerm ): IRTerm
         [IRNativeTag.sndPair]: [],
         [IRNativeTag.strictChooseList]: [],
     };
+
+    sanifyTree( term );
+
+    // console.log( showIRText( term ) );
 
     // collect all forced natives
     iterTree( term, ( node ) => {
@@ -41,7 +50,7 @@ export function hoistForcedNatives( term: IRTerm ): IRTerm
         for( const node of nodes )
         {
             _modifyChildFromTo(
-                node.parent!,
+                node.parent,
                 node,
                 new IRVar( getDbnToRoot( node ) )
             );

@@ -13,6 +13,7 @@ import { defineReadOnlyHiddenProperty } from "@harmoniclabs/obj-utils";
 import { Cloneable, isCloneable } from "../../utils/Cloneable";
 import { assert } from "../../utils/assert";
 import { IRVar } from "../../IR/IRNodes/IRVar";
+import { IRSelfCall } from "../../IR/IRNodes/IRSelfCall";
 
 export type UnTerm<T extends Term<PType>> = T extends Term<infer PT extends PType > ? PT : never;
 
@@ -122,6 +123,7 @@ export class Term<PT extends PType>
                         // we don't cache `IRVar` since
                         // it is likely they will be accessed at different dbn
                         ir instanceof IRVar ||
+                        ir instanceof IRSelfCall ||
                         // same for `IRConst`
                         ir instanceof IRConst
                     ))

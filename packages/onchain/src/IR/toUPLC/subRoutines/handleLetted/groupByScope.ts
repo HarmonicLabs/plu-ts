@@ -6,6 +6,7 @@ import { IRForced } from "../../../IRNodes/IRForced";
 import { IRFunc } from "../../../IRNodes/IRFunc";
 import { IRLetted, LettedSetEntry } from "../../../IRNodes/IRLetted";
 import { IRRecursive } from "../../../IRNodes/IRRecursive";
+import { IRSelfCall } from "../../../IRNodes/IRSelfCall";
 import { IRVar } from "../../../IRNodes/IRVar";
 import { mapArrayLike } from "../../../IRNodes/utils/mapArrayLike";
 import { IRTerm } from "../../../IRTerm";
@@ -88,7 +89,10 @@ export function _getMinUnboundDbn( _term: IRTerm ): number | undefined
     {
         const { term, dbn } = stack.pop() as { term: IRTerm, dbn: number };
 
-        if( term instanceof IRVar )
+        if(
+            term instanceof IRVar ||
+            term instanceof IRSelfCall
+        )
         {
             if( term.dbn >= dbn ) // some val outside
             {

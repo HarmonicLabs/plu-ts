@@ -26,6 +26,7 @@ import { equalIrHash, hashIrData, IRHash, irHashToHex, isIRHash } from "../IRHas
 import { shallowEqualIRTermHash } from "../utils/equalIRTerm";
 import { IRNodeKind } from "../IRNodeKind";
 import { IRRecursive } from "./IRRecursive";
+import { IRSelfCall } from "./IRSelfCall";
 
 
 export type LettedSetEntry = {
@@ -454,6 +455,10 @@ export function getNormalizedLettedArgs( lettedDbn: number, value: IRTerm ): [ n
             {
                 node.dbn -= minDbn
             }
+            else if( node instanceof IRSelfCall )
+            {
+                node.dbn -= minDbn;
+            }
             else if( node instanceof IRLetted )
             {
                 const max = getMaxVarDbn( node.value );
@@ -545,7 +550,10 @@ export function getMinVarDbn( term: IRTerm ): number | undefined
 
     iterTree( term,
         (node) => {
-            if( node instanceof IRVar )
+            if(
+                node instanceof IRVar ||
+                node instanceof IRSelfCall
+            )
             {
                 if( foundAny )
                 {
@@ -581,7 +589,10 @@ function getMaxVarDbn( term: IRTerm ): number | undefined
 
     iterTree( term,
         (node) => {
-            if( node instanceof IRVar )
+            if(
+                node instanceof IRVar ||
+                node instanceof IRSelfCall
+            )
             {
                 if( foundAny )
                 {

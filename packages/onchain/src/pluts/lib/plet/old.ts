@@ -1,6 +1,7 @@
 import { IRApp } from "../../../IR/IRNodes/IRApp";
 import { IRFunc } from "../../../IR/IRNodes/IRFunc";
 import { IRLetted } from "../../../IR/IRNodes/IRLetted";
+import { IRSelfCall } from "../../../IR/IRNodes/IRSelfCall";
 import { IRVar } from "../../../IR/IRNodes/IRVar";
 import type { PType } from "../../PType";
 import { Term } from "../../Term";
@@ -54,7 +55,8 @@ export function _old_plet<PVarT extends PType, SomeExtension extends object>( va
     
                     if(
                         // inline variables; no need to add an application since already in scope
-                        arg instanceof IRVar
+                        arg instanceof IRVar ||
+                        arg instanceof IRSelfCall
                     )
                     {
                         return expr( withUtility( varValue as any ) as any ).toIR( dbn );
