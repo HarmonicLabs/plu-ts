@@ -1,46 +1,36 @@
-import { Cloneable } from "@harmoniclabs/cbor/dist/utils/Cloneable";
 import { BasePlutsError } from "../../utils/BasePlutsError";
-import { ToJson } from "../../utils/ToJson";
-import { IRTerm } from "../IRTerm";
-import { IHash } from "../interfaces/IHash";
-import { IIRParent } from "../interfaces/IIRParent";
-import { concatUint8Arr } from "../utils/concatUint8Arr";
-import { isIRTerm } from "../utils/isIRTerm";
-import { positiveIntAsBytes } from "../utils/positiveIntAsBytes";
-import { defineReadOnlyProperty } from "@harmoniclabs/obj-utils";
-import { IRParentTerm, isIRParentTerm } from "../utils/isIRParentTerm";
-import { _modifyChildFromTo } from "../toUPLC/_internal/_modifyChildFromTo";
-import { BaseIRMetadata } from "./BaseIRMetadata";
-import { equalIrHash, hashIrData, IRHash, isIRHash } from "../IRHash";
-import { shallowEqualIRTermHash } from "../utils/equalIRTerm";
+import { IRHash, isIRHash, hashIrData } from "../IRHash";
 import { IRNodeKind } from "../IRNodeKind";
+import { IRTerm } from "../IRTerm";
+import { isIRTerm } from "../utils";
+import { concatUint8Arr } from "../utils/concatUint8Arr";
+import { shallowEqualIRTermHash } from "../utils/equalIRTerm";
+import { isIRParentTerm } from "../utils/isIRParentTerm";
+import { BaseIRMetadata } from "./BaseIRMetadata";
 
-export interface IRFuncMetadata extends BaseIRMetadata {}
+export interface IRRecursiveMetadata extends BaseIRMetadata {}
 
-export class IRFunc
-    implements Cloneable<IRFunc>, IHash, IIRParent, ToJson
+export class IRRecursive
 {
+    static get kind(): IRNodeKind.Recursive { return IRNodeKind.Recursive; }
+    get kind(): IRNodeKind.Recursive { return IRRecursive.kind; }
+    static get tag(): Uint8Array { return new Uint8Array([ IRRecursive.kind ]); }
+
     readonly arity!: number;
 
     constructor(
-        arity: number,
         body: IRTerm,
         func_name?: string | undefined,
         _unsafeHash?: IRHash
     )
     {
-        if( !Number.isSafeInteger( arity ) && arity >= 1 )
-        throw new BasePlutsError(
-            "invalid arity for 'IRFunc'"
-        )
-
         if( !isIRTerm( body ) )
-        throw new Error("IRFunc body argument was not an IRTerm");
+        throw new Error("IRRecursive body argument was not an IRTerm");
 
         Object.defineProperties(
             this, {
                 arity: {
-                    value: arity,
+                    value: 1,
                     writable: false,
                     enumerable: true,
                     configurable: false
@@ -63,10 +53,6 @@ export class IRFunc
         
         this._parent = undefined;
     }
-
-    static get kind(): IRNodeKind.Func { return  IRNodeKind.Func; }
-    get kind(): IRNodeKind.Func { return IRFunc.kind; }
-    static get tag(): Uint8Array { return new Uint8Array([ IRFunc.kind ]); }
 
     private _body!: IRTerm
     get body(): IRTerm { return this._body }
@@ -94,8 +80,8 @@ export class IRFunc
         {
             this._hash = hashIrData(
                 concatUint8Arr(
-                    IRFunc.tag,
-                    positiveIntAsBytes( this.arity ),
+                    IRRecursive.tag,
+                    // positiveIntAsBytes( this.arity ),
                     this._body.hash
                 )
             );
@@ -109,7 +95,7 @@ export class IRFunc
         this.parent?.markHashAsInvalid();
     }
 
-    readonly meta: IRFuncMetadata
+    readonly meta: IRRecursiveMetadata
     get name(): string | undefined { return this.meta.name };
 
     private _parent: IRTerm | undefined;
@@ -128,22 +114,22 @@ export class IRFunc
         this._parent = newParent;
     }
 
-    clone(): IRFunc
+    clone(): IRRecursive
     {
-        return new IRFunc(
-            this.arity,
+        return new IRRecursive(
             this._body.clone(),
             this.meta.name,
             this.isHashPresent() ? this.hash : undefined
-        )
+        );
     }
+
     toJSON() { return this.toJson(); }
     toJson(): any
     {
         return {
-            type: "IRFunc",
+            type: "IRRecursive",
             arity: this.arity,
             body: this._body.toJson()
-        }
+        };
     }
 }

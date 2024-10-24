@@ -8,6 +8,7 @@ import { IRHoisted } from "../../IRNodes/IRHoisted";
 import { IRLetted } from "../../IRNodes/IRLetted";
 import { IRNative } from "../../IRNodes/IRNative";
 import { IRNativeTag } from "../../IRNodes/IRNative/IRNativeTag";
+import { IRRecursive } from "../../IRNodes/IRRecursive";
 import { IRTerm } from "../../IRTerm";
 
 type StackElem = {
@@ -142,6 +143,12 @@ export function markRecursiveHoistsAsForced( _term: IRTerm ): void
         if( t instanceof IRFunc )
         {
             stack.push({ term: t.body, isInRecursiveTerm });
+            continue;
+        }
+
+        if( t instanceof IRRecursive )
+        {
+            stack.push({ term: t.body, isInRecursiveTerm: true });
             continue;
         }
     }

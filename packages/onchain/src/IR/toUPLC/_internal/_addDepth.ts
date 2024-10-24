@@ -5,6 +5,7 @@ import { IRForced } from "../../IRNodes/IRForced";
 import { IRFunc } from "../../IRNodes/IRFunc";
 import { IRHoisted } from "../../IRNodes/IRHoisted";
 import { IRLetted } from "../../IRNodes/IRLetted";
+import { IRRecursive } from "../../IRNodes/IRRecursive";
 import { mapArrayLike } from "../../IRNodes/utils/mapArrayLike";
 import { IRTerm } from "../../IRTerm";
 import { defineDepth, IRTermWithDepth } from "./depth";
@@ -63,6 +64,12 @@ export function _addDepths( _term: IRTerm, initialDepth = 0 ): void
         }
 
         if( t instanceof IRFunc )
+        {
+            stack.push( defineDepth( t.body, t.depth + 1 ) )
+            continue;
+        }
+
+        if( t instanceof IRRecursive )
         {
             stack.push( defineDepth( t.body, t.depth + 1 ) )
             continue;

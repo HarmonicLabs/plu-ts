@@ -8,6 +8,7 @@ import { IRFunc } from "../../../IRNodes/IRFunc";
 import { IRCase } from "../../../IRNodes/IRCase";
 import { mapArrayLike } from "../../../IRNodes/utils/mapArrayLike";
 import { IRConstr } from "../../../IRNodes/IRConstr";
+import { IRRecursive } from "../../../IRNodes/IRRecursive";
 
 /**
  *  add 1 to every var's DeBruijn that accesses stuff outside the parent node
@@ -93,6 +94,11 @@ export function incrementUnboundDbns(
             continue;
         }
         if( t instanceof IRFunc )
+        {
+            stack.push({ term: t.body, dbn: dbn + t.arity });
+            continue;
+        }
+        if( t instanceof IRRecursive )
         {
             stack.push({ term: t.body, dbn: dbn + t.arity });
             continue;

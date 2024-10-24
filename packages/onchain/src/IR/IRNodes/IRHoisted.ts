@@ -21,6 +21,8 @@ import { IRConstr } from "./IRConstr";
 import { IRCase } from "./IRCase";
 import { equalIrHash, hashIrData, IRHash, irHashToHex, isIRHash } from "../IRHash";
 import { shallowEqualIRTermHash } from "../utils/equalIRTerm";
+import { IRNodeKind } from "../IRNodeKind";
+import { IRRecursive } from "./IRRecursive";
 
 
 export type HoistedSetEntry = {
@@ -90,7 +92,9 @@ export class IRHoisted
         };
     }
 
-    static get tag(): Uint8Array { return new Uint8Array([ 0b0000_0110 ]); }
+    static get kind(): IRNodeKind.Hoisted { return IRNodeKind.Hoisted; }
+    get kind(): IRNodeKind.Hoisted { return IRHoisted.kind; }
+    static get tag(): Uint8Array { return new Uint8Array([ IRHoisted.kind ]); }
 
     private _hash!: IRHash | undefined;
     get hash(): IRHash
@@ -170,7 +174,7 @@ export class IRHoisted
             this.isHashPresent() ? this.hash : undefined
         )
     }
-
+    toJSON() { return this.toJson(); }
     toJson(): any
     {
         return {
@@ -281,6 +285,13 @@ export function getHoistedTerms( irTerm: IRTerm ): HoistedSetEntry[]
             searchIn( term.body );
             return;
         }
+        
+        if( term instanceof IRRecursive )
+        {
+            searchIn( term.body );
+            return;
+        }
+
         if( term instanceof IRLetted )
         {
             // useless

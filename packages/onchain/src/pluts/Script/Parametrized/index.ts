@@ -295,7 +295,7 @@ export class Precompiled<Purp extends LitteralPurpose = LitteralPurpose>
             }
         )
     }
-
+    toJSON() { return this.toJson(); }
     toJson()
     {
         return {

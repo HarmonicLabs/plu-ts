@@ -8,6 +8,7 @@ import { IRLetted } from "../../IRNodes/IRLetted";
 import { IRTerm } from "../../IRTerm";
 import { mapArrayLike } from "../../IRNodes/utils/mapArrayLike";
 import { IRConstr } from "../../IRNodes";
+import { IRRecursive } from "../../IRNodes/IRRecursive";
 
 type StackEntry = { term: IRTerm, dbn: number };
 
@@ -72,6 +73,12 @@ export function getDiffDbn( parentNode: IRTerm, childNode: IRTerm ): number | un
         }
 
         if( t instanceof IRFunc )
+        {
+            stack.push({ term: t.body, dbn: dbn + t.arity });
+            continue;
+        }
+
+        if( t instanceof IRRecursive )
         {
             stack.push({ term: t.body, dbn: dbn + t.arity });
             continue;

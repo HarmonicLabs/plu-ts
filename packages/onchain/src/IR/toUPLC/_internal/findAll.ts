@@ -5,6 +5,7 @@ import { IRForced } from "../../IRNodes/IRForced";
 import { IRFunc } from "../../IRNodes/IRFunc";
 import { IRHoisted } from "../../IRNodes/IRHoisted";
 import { IRLetted } from "../../IRNodes/IRLetted";
+import { IRRecursive } from "../../IRNodes/IRRecursive";
 import { IRTerm } from "../../IRTerm";
 
 export function findAll( term: IRTerm, predicate: ( elem: IRTerm ) => boolean ): IRTerm[]
@@ -40,6 +41,12 @@ export function findAll( term: IRTerm, predicate: ( elem: IRTerm ) => boolean ):
         }
 
         if( t instanceof IRFunc )
+        {
+            stack.push( t.body );
+            continue;
+        }
+
+        if( t instanceof IRRecursive )
         {
             stack.push( t.body );
             continue;
@@ -115,6 +122,12 @@ export function findAllNoHoisted( term: IRTerm, predicate: ( elem: IRTerm ) => b
         }
 
         if( t instanceof IRFunc )
+        {
+            stack.push( t.body );
+            continue;
+        }
+
+        if( t instanceof IRRecursive )
         {
             stack.push( t.body );
             continue;

@@ -24,6 +24,8 @@ import { IRConstr } from "./IRConstr";
 import { IRCase } from "./IRCase";
 import { equalIrHash, hashIrData, IRHash, irHashToHex, isIRHash } from "../IRHash";
 import { shallowEqualIRTermHash } from "../utils/equalIRTerm";
+import { IRNodeKind } from "../IRNodeKind";
+import { IRRecursive } from "./IRRecursive";
 
 
 export type LettedSetEntry = {
@@ -247,7 +249,9 @@ export class IRLetted
         };
     }
 
-    static get tag(): Uint8Array { return new Uint8Array([ 0b0000_0101 ]); }
+    static get kind(): IRNodeKind.Letted { return IRNodeKind.Letted; }
+    get kind(): IRNodeKind.Letted { return IRLetted.kind; }
+    static get tag(): Uint8Array { return new Uint8Array([ IRLetted.kind ]); }
 
     clone(): IRLetted
     {
@@ -258,7 +262,7 @@ export class IRLetted
             this.isHashPresent() ? this.hash : undefined
         )
     }
-
+    toJSON() { return this.toJson(); }
     toJson(): any 
     {
         return {
@@ -400,6 +404,12 @@ export function getLettedTerms( irTerm: IRTerm, options?: Partial<GetLettedTerms
         }
 
         if( t instanceof IRFunc )
+        {
+            stack.push( t.body );
+            continue;
+        }
+
+        if( t instanceof IRRecursive )
         {
             stack.push( t.body );
             continue;

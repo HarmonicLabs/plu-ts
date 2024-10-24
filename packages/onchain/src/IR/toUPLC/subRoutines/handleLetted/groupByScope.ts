@@ -5,6 +5,7 @@ import { IRDelayed } from "../../../IRNodes/IRDelayed";
 import { IRForced } from "../../../IRNodes/IRForced";
 import { IRFunc } from "../../../IRNodes/IRFunc";
 import { IRLetted, LettedSetEntry } from "../../../IRNodes/IRLetted";
+import { IRRecursive } from "../../../IRNodes/IRRecursive";
 import { IRVar } from "../../../IRNodes/IRVar";
 import { mapArrayLike } from "../../../IRNodes/utils/mapArrayLike";
 import { IRTerm } from "../../../IRTerm";
@@ -42,7 +43,10 @@ export function groupByScope( letteds: LettedSetEntry[] ): ScopedLettedTerms[]
         }
 
         let maxScope: IRTerm | undefined = letted.parent;
-        if( maxScope instanceof IRFunc )
+        if(
+            maxScope instanceof IRFunc || 
+            maxScope instanceof IRRecursive
+        )
         {
             minUnboundDbn -= maxScope.arity;
         }
@@ -50,7 +54,10 @@ export function groupByScope( letteds: LettedSetEntry[] ): ScopedLettedTerms[]
         while( minUnboundDbn >= 0 )
         {
             maxScope = maxScope?.parent;
-            if( maxScope instanceof IRFunc )
+            if(
+                maxScope instanceof IRFunc || 
+                maxScope instanceof IRRecursive
+            )
             {
                 minUnboundDbn -= maxScope.arity
             }
@@ -133,6 +140,11 @@ export function _getMinUnboundDbn( _term: IRTerm ): number | undefined
             continue;
         }
         if( term instanceof IRFunc )
+        {
+            stack.push({ term: term.body, dbn: dbn + term.arity });
+            continue;
+        }
+        if( term instanceof IRRecursive )
         {
             stack.push({ term: term.body, dbn: dbn + term.arity });
             continue;

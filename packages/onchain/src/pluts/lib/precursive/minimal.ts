@@ -51,10 +51,16 @@ export function _precursive<A extends PType, B extends PType>
 
     const recursiveFn = new Term(
         fnBody.type[2] as TermType,
-        dbn => new IRApp(
-            IRNative.z_comb,
-            fnBody.toIR( dbn )
-        )
+        dbn => {
+            const fnBodyIr = fnBody.toIR( dbn );
+
+            
+
+            return new IRApp(
+                IRNative.z_comb,
+                fnBodyIr
+            )
+        }
     )
 
     return ( recursiveFn ) as any;

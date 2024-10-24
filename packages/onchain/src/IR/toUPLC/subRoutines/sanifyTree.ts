@@ -1,6 +1,10 @@
 import { IRApp, IRFunc, IRLetted, IRHoisted, IRDelayed, IRForced, IRConstr, IRCase } from "../../IRNodes";
+import { IRRecursive } from "../../IRNodes/IRRecursive";
 import { IRTerm } from "../../IRTerm";
 
+/**
+ * makes sure all the childrens in a tree are pointing to the correct parent 
+ */
 export function sanifyTree(ir: IRTerm): void
 {
     if (ir instanceof IRApp)
@@ -14,6 +18,12 @@ export function sanifyTree(ir: IRTerm): void
         return;
     }
     else if (ir instanceof IRFunc)
+    {
+        if( ir.body.parent !== ir ) ir.body = ir.body.clone();
+        else sanifyTree(ir.body);
+        return;
+    }
+    else if (ir instanceof IRRecursive)
     {
         if( ir.body.parent !== ir ) ir.body = ir.body.clone();
         else sanifyTree(ir.body);

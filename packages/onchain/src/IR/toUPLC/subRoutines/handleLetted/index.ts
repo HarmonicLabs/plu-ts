@@ -22,6 +22,7 @@ import { mapArrayLike } from "../../../IRNodes/utils/mapArrayLike";
 import { IRCase } from "../../../IRNodes/IRCase";
 import { IRConstr } from "../../../IRNodes/IRConstr";
 import { IRHoisted } from "../../../IRNodes/IRHoisted";
+import { IRRecursive } from "../../../IRNodes/IRRecursive";
 
 
 function onlyLettedTerm( setEntry: LettedSetEntry ): IRLetted
@@ -154,6 +155,7 @@ export function _handleLetted( term: IRTerm ): void
             {
                 // point to the first func or delay node above the lca
                 // (worst case scenario we hit the maxScope; which is an IRFunc)
+                // IRFuncs should always be under IRRecursives if any
                 while(!(
                     lca instanceof IRFunc ||
                     lca instanceof IRDelayed
@@ -172,7 +174,10 @@ export function _handleLetted( term: IRTerm ): void
         }
 
         const parentNode: IRFunc | IRDelayed = forceHoist ? maxScope : lca as any;
-        const parentNodeDirectChild = parentNode instanceof IRFunc ? parentNode.body : parentNode.delayed;
+        const parentNodeDirectChild = (
+            parentNode instanceof IRFunc ||
+            parentNode instanceof IRRecursive
+        ) ? parentNode.body : parentNode.delayed;
 
         // add 1 to every var's DeBruijn that accesses stuff outside the parent node
         // not including the `parentNode` node
@@ -193,7 +198,10 @@ export function _handleLetted( term: IRTerm ): void
         {
             tmpNode = tmpNode.parent as any;
             if( // is an intermediate `IRFunc`
-                tmpNode instanceof IRFunc && 
+                (
+                    tmpNode instanceof IRFunc ||
+                    tmpNode instanceof IRRecursive
+                ) && 
                 tmpNode !== parentNode // avoid counting parent node arity if IRFunc 
             )
             {
@@ -274,6 +282,11 @@ export function _handleLetted( term: IRTerm ): void
                     continue;
                 }
                 if( t instanceof IRFunc )
+                {
+                    stack.push({ term: t.body, dbn: dbn + t.arity });
+                    continue;
+                }
+                if( t instanceof IRRecursive )
                 {
                     stack.push({ term: t.body, dbn: dbn + t.arity });
                     continue;
@@ -442,6 +455,7 @@ export function handleLetted( term: IRTerm ): void
             {
                 // point to the first func or delay node above the lca
                 // (worst case scenario we hit the maxScope; which is an IRFunc)
+                // IRFuncs should always be under IRRecursives if any
                 while(!(
                     lca instanceof IRFunc ||
                     lca instanceof IRDelayed
@@ -460,7 +474,10 @@ export function handleLetted( term: IRTerm ): void
         }
 
         const parentNode: IRFunc | IRDelayed = forceHoist ? maxScope : lca as any;
-        const parentNodeDirectChild = parentNode instanceof IRFunc ? parentNode.body : parentNode.delayed;
+        const parentNodeDirectChild = (
+            parentNode instanceof IRFunc ||
+            parentNode instanceof IRRecursive
+        ) ? parentNode.body : parentNode.delayed;
 
         // add 1 to every var's DeBruijn that accesses stuff outside the parent node
         // not including the `parentNode` node
@@ -481,7 +498,10 @@ export function handleLetted( term: IRTerm ): void
         {
             tmpNode = tmpNode.parent as any;
             if( // is an intermediate `IRFunc`
-                tmpNode instanceof IRFunc && 
+                (
+                    tmpNode instanceof IRFunc ||
+                    tmpNode instanceof IRRecursive
+                ) && 
                 tmpNode !== parentNode // avoid counting parent node arity if IRFunc 
             )
             {
@@ -565,6 +585,11 @@ export function handleLetted( term: IRTerm ): void
                     stack.push({ term: t.body, dbn: dbn + t.arity });
                     continue;
                 }
+                if( t instanceof IRRecursive )
+                {
+                    stack.push({ term: t.body, dbn: dbn + t.arity });
+                    continue;
+                }
                 // no hoisted
             }
         }
@@ -579,7 +604,7 @@ export function handleLetted( term: IRTerm ): void
         );
 
         // replace child with new node
-        if( parentNode instanceof IRFunc ) parentNode.body = newNode;
+        if( parentNode instanceof IRFunc || parentNode instanceof IRRecursive ) parentNode.body = newNode;
         else parentNode.delayed = newNode;
 
         // console.log("replacing letted with value", prettyIRText( letted.value ) )
@@ -684,7 +709,12 @@ function findLettedMaxScope( letted: IRLetted ): IRFunc
             );
         }
         tmp = tmp.parent;
-        if( tmp instanceof IRFunc )
+        if( tmp instanceof IRRecursive )
+        {
+            minUnboundDbn -= tmp.arity;
+            // maxScope = tmp; // recursive cannot be a max scope
+        }
+        else if( tmp instanceof IRFunc )
         {
             minUnboundDbn -= tmp.arity;
             maxScope = tmp;

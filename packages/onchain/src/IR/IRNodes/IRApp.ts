@@ -11,6 +11,7 @@ import { BaseIRMetadata } from "./BaseIRMetadata";
 import { equalIrHash, hashIrData, IRHash, isIRHash } from "../IRHash";
 import { isObject } from "@harmoniclabs/obj-utils";
 import { shallowEqualIRTermHash } from "../utils/equalIRTerm";
+import { IRNodeKind } from "../IRNodeKind";
 
 export interface IRAppMeta extends BaseIRMetadata {
     __src__?: string | undefined
@@ -46,7 +47,9 @@ export class IRApp
         this._hash = isIRHash( _unsafeHash ) ? _unsafeHash : undefined;
     }
 
-    static get tag(): Uint8Array { return new Uint8Array([ 0b0000_0010 ]); }
+    static get kind(): IRNodeKind { return IRNodeKind.App; }
+    get kind(): IRNodeKind { return IRApp.kind; }
+    static get tag(): Uint8Array { return new Uint8Array([ IRApp.kind ]); }
 
     private _fn!: IRTerm;
     get fn(): IRTerm { return this._fn; }
@@ -132,7 +135,7 @@ export class IRApp
             this.isHashPresent() ? this.hash : undefined
         );
     }
-
+    toJSON() { return this.toJson(); }
     toJson(): any
     {
         return {

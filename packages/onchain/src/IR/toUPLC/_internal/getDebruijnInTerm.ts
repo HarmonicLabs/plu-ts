@@ -5,6 +5,7 @@ import { IRDelayed } from "../../IRNodes/IRDelayed";
 import { IRForced } from "../../IRNodes/IRForced";
 import { IRFunc } from "../../IRNodes/IRFunc";
 import { IRLetted } from "../../IRNodes/IRLetted";
+import { IRRecursive } from "../../IRNodes/IRRecursive";
 import { mapArrayLike } from "../../IRNodes/utils/mapArrayLike";
 import { IRTerm } from "../../IRTerm";
 import { prettyIRJsonStr } from "../../utils";
@@ -70,6 +71,14 @@ export function getDebruijnInTerm( root: IRTerm, termToFind: IRTerm ): number
         }
 
         if( term instanceof IRFunc )
+        {
+            stack.push(
+                { term: term.body, dbn: dbn + term.arity }
+            );
+            continue;
+        }
+
+        if( term instanceof IRRecursive )
         {
             stack.push(
                 { term: term.body, dbn: dbn + term.arity }

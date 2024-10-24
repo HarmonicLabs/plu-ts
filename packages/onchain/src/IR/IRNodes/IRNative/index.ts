@@ -11,6 +11,7 @@ import { BaseIRMetadata } from "../BaseIRMetadata";
 import { ToJson } from "../../../utils/ToJson";
 import { hashIrData, IRHash } from "../../IRHash";
 import { isObject } from "@harmoniclabs/obj-utils";
+import { IRNodeKind } from "../../IRNodeKind";
 
 /**
  * we might not need all the hashes
@@ -29,7 +30,9 @@ export class IRNative
 {
     readonly tag!: IRNativeTag;
 
-    static get tag(): Uint8Array { return new Uint8Array([ 0b0000_0100 ]); }
+    static get kind(): IRNodeKind.Native { return IRNodeKind.Native; }
+    get kind(): IRNodeKind.Native { return IRNative.kind; }
+    static get tag(): Uint8Array { return new Uint8Array([ IRNative.kind ]); }
 
     constructor( tag: IRNativeTag )
     {
@@ -87,7 +90,7 @@ export class IRNative
     {
         return new IRNative( this.tag );
     }
-
+    toJSON() { return this.toJson(); }
     toJson()
     {
         return {

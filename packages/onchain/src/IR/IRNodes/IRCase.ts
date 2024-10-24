@@ -12,13 +12,16 @@ import { MutArrayLike } from "../utils/MutArrayLike";
 import { equalIrHash, hashIrData, IRHash, isIRHash } from "../IRHash";
 import { _modifyChildFromTo } from "../toUPLC/_internal/_modifyChildFromTo";
 import { shallowEqualIRTermHash } from "../utils/equalIRTerm";
+import { IRNodeKind } from "../IRNodeKind";
 
 export interface IRCaseMeta extends BaseIRMetadata {}
 
 export class IRCase
     implements Cloneable<IRCase>, IHash, IIRParent, ToJson
 {
-    static get tag(): Uint8Array { return new Uint8Array([ 0b0000_1011 ]); }
+    static get kind(): IRNodeKind.Case { return IRNodeKind.Case; }
+    get kind(): IRNodeKind.Case { return IRCase.kind; }
+    static get tag(): Uint8Array { return new Uint8Array([ IRCase.kind ]); }
 
     constructor(
         constrTerm: IRTerm,
@@ -132,7 +135,7 @@ export class IRCase
             this.isHashPresent() ? this.hash : undefined
         );
     }
-
+    toJSON() { return this.toJson(); }
     toJson(): any
     {
         return {

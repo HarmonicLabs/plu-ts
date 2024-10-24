@@ -10,6 +10,7 @@ import { isIRTerm, prettyIRJsonStr } from "../../utils";
 import { IRConstr } from "../../IRNodes/IRConstr";
 import { IRCase } from "../../IRNodes/IRCase";
 import { equalIrHash, IRHash, irHashToHex, isIRHash } from "../../IRHash";
+import { IRRecursive } from "../../IRNodes/IRRecursive";
 
 /**
  * 
@@ -153,6 +154,12 @@ export function _modifyChildFromTo(
     }
 
     if( parent instanceof IRFunc )
+    {
+        parent.body = newChild;
+        return;
+    }
+
+    if( parent instanceof IRRecursive )
     {
         parent.body = newChild;
         return;

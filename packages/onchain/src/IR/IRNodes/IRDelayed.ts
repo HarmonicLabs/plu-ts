@@ -11,6 +11,7 @@ import { _modifyChildFromTo } from "../toUPLC/_internal/_modifyChildFromTo";
 import { BaseIRMetadata } from "./BaseIRMetadata";
 import { equalIrHash, hashIrData, IRHash, isIRHash } from "../IRHash";
 import { shallowEqualIRTermHash } from "../utils/equalIRTerm";
+import { IRNodeKind } from "../IRNodeKind";
 
 export interface IRDelayedMetadata extends BaseIRMetadata {}
 
@@ -32,7 +33,9 @@ export class IRDelayed
         this._parent = undefined;
     }
 
-    static get tag(): Uint8Array { return new Uint8Array([0b0000_1001]); }
+    static get kind(): IRNodeKind.Delayed { return IRNodeKind.Delayed; }
+    get kind(): IRNodeKind.Delayed { return IRDelayed.kind; }
+    static get tag(): Uint8Array { return new Uint8Array([ IRDelayed.kind ]); }
 
     private _delayed!: IRTerm
     get delayed(): IRTerm { return this._delayed }
@@ -98,7 +101,7 @@ export class IRDelayed
             this.isHashPresent() ? this.hash : undefined
         )
     }
-
+    toJSON() { return this.toJson(); }
     toJson(): any
     {
         return {

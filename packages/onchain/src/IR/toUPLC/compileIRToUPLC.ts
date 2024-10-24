@@ -12,6 +12,7 @@ import { handleHoistedAndReturnRoot } from "./subRoutines/handleHoistedAndReturn
 import { replaceNativesAndReturnRoot } from "./subRoutines/replaceNatives";
 import { replaceClosedLettedWithHoisted } from "./subRoutines/replaceClosedLettedWithHoisted";
 import { prettyIR } from "../utils";
+import { hoistForcedNatives } from "./subRoutines/hoistForcedNatives";
 
 export function compileIRToUPLC( term: IRTerm ): UPLCTerm
 {
@@ -98,6 +99,8 @@ export function compileIRToUPLC( term: IRTerm ): UPLCTerm
     // --------------------------- translate to UPLC --------------------------- //
     // ------------------------------------------------------------------------- //
     ///////////////////////////////////////////////////////////////////////////////
+
+    term = hoistForcedNatives( term );
 
     const srcmap = {};
     const uplc = _irToUplc( term, srcmap ).term;

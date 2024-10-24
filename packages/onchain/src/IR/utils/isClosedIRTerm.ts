@@ -11,6 +11,8 @@ import { IRForced } from "../IRNodes/IRForced";
 import { IRDelayed } from "../IRNodes/IRDelayed";
 import { IRConstr } from "../IRNodes/IRConstr";
 import { IRCase } from "../IRNodes/IRCase";
+import { IRRecursive } from "../IRNodes/IRRecursive";
+import { IRSelfCall } from "../IRNodes/IRSelfCall";
 
 function _isClosedIRTerm( term: IRTerm, dbn: number, parent?: IRTerm ): boolean
 {
@@ -18,8 +20,17 @@ function _isClosedIRTerm( term: IRTerm, dbn: number, parent?: IRTerm ): boolean
     {
         return term.dbn < dbn;
     }
+    if( term instanceof IRSelfCall )
+    {
+        return term.dbn < dbn;
+    }
 
     if( term instanceof IRFunc )
+    {
+        return _isClosedIRTerm( term.body, dbn + term.arity, term );
+    }
+
+    if( term instanceof IRRecursive )
     {
         return _isClosedIRTerm( term.body, dbn + term.arity, term );
     }

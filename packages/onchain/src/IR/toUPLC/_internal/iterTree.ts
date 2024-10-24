@@ -6,6 +6,7 @@ import { IRForced } from "../../IRNodes/IRForced";
 import { IRFunc } from "../../IRNodes/IRFunc";
 import { IRHoisted } from "../../IRNodes/IRHoisted";
 import { IRLetted } from "../../IRNodes/IRLetted";
+import { IRRecursive } from "../../IRNodes/IRRecursive";
 import { IRTerm } from "../../IRTerm";
 
 export function iterTree(
@@ -25,7 +26,7 @@ export function iterTree(
         if( has_shouldSkipNode && shouldSkipNode( t, dbn ) ) continue;
 
         const termParent = t.parent;
-        const negDbn = t instanceof IRFunc ? t.arity : 0;
+        const negDbn = t instanceof IRFunc || t instanceof IRRecursive ? t.arity : 0;
 
         const modifiedParent = fn( t, dbn ) === true;
 
@@ -103,7 +104,13 @@ export function iterTree(
             stack.push({ term: t.body, dbn: dbn + t.arity });
             continue;
         }
-        
+
+        if( t instanceof IRRecursive )
+        {
+            stack.push({ term: t.body, dbn: dbn + t.arity });
+            continue;
+        }
+
         if( t instanceof IRHoisted )
         {
             // 0 because hoisted are closed
