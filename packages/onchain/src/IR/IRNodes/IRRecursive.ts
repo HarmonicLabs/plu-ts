@@ -5,7 +5,7 @@ import { IRTerm } from "../IRTerm";
 import { isIRTerm } from "../utils";
 import { concatUint8Arr } from "../utils/concatUint8Arr";
 import { shallowEqualIRTermHash } from "../utils/equalIRTerm";
-import { isIRParentTerm } from "../utils/isIRParentTerm";
+import { IRParentTerm, isIRParentTerm } from "../utils/isIRParentTerm";
 import { BaseIRMetadata } from "./BaseIRMetadata";
 
 export interface IRRecursiveMetadata extends BaseIRMetadata {}
@@ -98,8 +98,8 @@ export class IRRecursive
     readonly meta: IRRecursiveMetadata
     get name(): string | undefined { return this.meta.name };
 
-    private _parent: IRTerm | undefined;
-    get parent(): IRTerm | undefined { return this._parent; }
+    private _parent: IRParentTerm | undefined;
+    get parent(): IRParentTerm | undefined { return this._parent; }
     set parent( newParent: IRTerm | undefined )
     {
         if(!( // assert

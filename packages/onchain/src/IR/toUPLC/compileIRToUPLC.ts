@@ -11,10 +11,16 @@ import { handleLetted } from "./subRoutines/handleLetted";
 import { handleHoistedAndReturnRoot } from "./subRoutines/handleHoistedAndReturnRoot";
 import { replaceNativesAndReturnRoot } from "./subRoutines/replaceNatives";
 import { replaceClosedLettedWithHoisted } from "./subRoutines/replaceClosedLettedWithHoisted";
-import { prettyIR } from "../utils";
 import { hoistForcedNatives } from "./subRoutines/hoistForcedNatives";
+import { handleRecursiveTerms } from "./subRoutines/handleRecursiveTerms";
+import { CompilerOptions, completeCompilerOptions } from "./CompilerOptions";
+import { replaceHoistedWithLetted } from "./subRoutines/replaceHoistedWithLetted";
 
-export function compileIRToUPLC( term: IRTerm ): UPLCTerm
+
+export function compileIRToUPLC(
+    term: IRTerm,
+    paritalOptions: Partial<CompilerOptions> = {}
+): UPLCTerm
 {
     // most of the time we are just compiling small
     // pre-execuded terms (hence constants)
@@ -25,6 +31,8 @@ export function compileIRToUPLC( term: IRTerm ): UPLCTerm
     // --------------------------------- init  --------------------------------- //
     // ------------------------------------------------------------------------- //
     ///////////////////////////////////////////////////////////////////////////////
+
+    const options = completeCompilerOptions( paritalOptions );
 
     // unwrap top level letted and hoisted;
     while( term instanceof IRLetted || term instanceof IRHoisted )
@@ -73,12 +81,16 @@ export function compileIRToUPLC( term: IRTerm ): UPLCTerm
     term = replaceNativesAndReturnRoot( term );
 
     replaceClosedLettedWithHoisted( term );
+    
+    if( options.delayHoists ) replaceHoistedWithLetted( term );
 
     // handle letted before hoisted because the tree is smaller
     // and we also have less letted dependecies to handle
     handleLetted( term );
-    
-    term = handleHoistedAndReturnRoot( term );
+    if( options.delayHoists )
+    {
+        term = handleHoistedAndReturnRoot( term );
+    }
 
     // replaced hoisted terms might include new letted terms
     while(
@@ -99,6 +111,11 @@ export function compileIRToUPLC( term: IRTerm ): UPLCTerm
     // --------------------------- translate to UPLC --------------------------- //
     // ------------------------------------------------------------------------- //
     ///////////////////////////////////////////////////////////////////////////////
+
+    // introduces new hoisted terms
+    handleRecursiveTerms( term );
+    // handle new hoisted terms
+    term = handleHoistedAndReturnRoot( term )
 
     term = hoistForcedNatives( term );
 

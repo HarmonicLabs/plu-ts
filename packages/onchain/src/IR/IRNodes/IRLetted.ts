@@ -59,7 +59,8 @@ export interface IRLettedMeta extends BaseIRMetadata {
      * useful to hoist letted terms used once in recursive expressions
     **/
     forceHoist: boolean,
-    __src__?: string | undefined
+    __src__?: string | undefined,
+    isClosed: boolean
 }
 
 export interface IRLettedMetadata extends IRMetadata {
@@ -67,7 +68,9 @@ export interface IRLettedMetadata extends IRMetadata {
 }
 
 const defaultLettedMeta: IRLettedMeta = freezeAll({
-    forceHoist: false
+    forceHoist: false,
+    __src__: undefined,
+    isClosed: false
 });
 
 let n_hash_access = 0;
@@ -80,6 +83,16 @@ export class IRLetted
     {
         if(!isIRHash( this._hash ))
         {
+            if( this.meta.isClosed )
+            {
+                this._hash = hashIrData(
+                    concatUint8Arr(
+                        IRLetted.tag,
+                        this._value.hash
+                    )
+                );
+                return this._hash;
+            }
             const normalized = getNormalizedLettedArgs( this.dbn, this._value );
             if( normalized === undefined )
             {
@@ -103,20 +116,22 @@ export class IRLetted
                         normalized[1].hash
                     )
                 );
-                // const [ normalized_dbn, normalized_value] = normalized;
-                // if( toHex( hash ) === "ee84fb036ed2726e01b0415109246927" )
-                // {
-                //     const original_value = _value.clone();
-                //     const minDbn = getMinVarDbn( original_value );
-                //     const minUnb = _getMinUnboundDbn( original_value );
-                //     console.log(
-                //         "_ee84fb036ed2726e01b0415109246927_",
-                //         "\noriginal value:", prettyIRJsonStr( original_value, 2, { hoisted: false } ),
-                //         "\nmin dbn:", minDbn,
-                //         "\nmin unbound:", minUnb,
-                //         "\nnormalized dbn:", normalized_dbn,
-                //     );
-                // }
+                /*
+                const [ normalized_dbn, normalized_value] = normalized;
+                if( toHex( hash ) === "ee84fb036ed2726e01b0415109246927" )
+                {
+                    const original_value = _value.clone();
+                    const minDbn = getMinVarDbn( original_value );
+                    const minUnb = _getMinUnboundDbn( original_value );
+                    console.log(
+                        "_ee84fb036ed2726e01b0415109246927_",
+                        "\noriginal value:", prettyIRJsonStr( original_value, 2, { hoisted: false } ),
+                        "\nmin dbn:", minDbn,
+                        "\nmin unbound:", minUnb,
+                        "\nnormalized dbn:", normalized_dbn,
+                    );
+                }
+                //*/
             }
         }
 
@@ -227,6 +242,13 @@ export class IRLetted
             "invalid index for an `IRLetted` instance"
         );
 
+        while(
+            toLet instanceof IRLetted ||
+            toLet instanceof IRHoisted
+        )
+        {
+            toLet = toLet instanceof IRLetted ? toLet.value : toLet.hoisted;
+        }
         if( !isIRTerm( toLet ) )
         throw new BasePlutsError(
             "letted value was not an IRTerm"
@@ -446,7 +468,6 @@ export function getNormalizedLettedArgs( lettedDbn: number, value: IRTerm ): [ n
 {
     const normalized_value = value.clone();
     const minDbn = getMinVarDbn( normalized_value );
-
     if( minDbn === undefined ) return undefined;
 
     iterTree( normalized_value,
@@ -459,6 +480,7 @@ export function getNormalizedLettedArgs( lettedDbn: number, value: IRTerm ): [ n
             {
                 node.dbn -= minDbn;
             }
+            //*
             else if( node instanceof IRLetted )
             {
                 const max = getMaxVarDbn( node.value );
@@ -517,6 +539,7 @@ export function getNormalizedLettedArgs( lettedDbn: number, value: IRTerm ): [ n
                     }
                 }
             }
+            //*/
         },
         // shouldSkipNode ?
         // hoisted terms are not really here

@@ -79,7 +79,7 @@ describe("Machine.evalSimple( PValue )", () => {
 
     test("value in maybe", () => {
 
-        const { result } = Machine.eval(
+        const { result, logs } = Machine.eval(
             PMaybe( PValue.type ).Just({ val: toData( PValue.type )( oneEntryValue ) })
         );
         
@@ -200,9 +200,12 @@ describe("pvalueOf", () => {
         oneEntryValue.pamountOf.$( currSym ).$( tn )
 
         const expected = Machine.evalSimple( pInt(0) );
+
+        const uplc = pvalueOf.$( oneEntryValue ).$( currSym as any ).$("abc").toUPLC( 0 );
+
         let received !: UPLCTerm;
         expect(
-            () => received = Machine.evalSimple( pvalueOf.$( oneEntryValue ).$( currSym as any ).$("abc") )
+            () => received = Machine.evalSimple( uplc )
         ).not.toThrow()
         //*
         expect(

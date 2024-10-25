@@ -11,8 +11,8 @@ import { IRHoisted } from "../../../IR/IRNodes/IRHoisted"
 import { IRFunc } from "../../../IR/IRNodes/IRFunc"
 import { IRApp } from "../../../IR/IRNodes/IRApp"
 import { IRVar } from "../../../IR/IRNodes/IRVar"
-import { CEKConst, evalScript } from "@harmoniclabs/plutus-machine"
-import { ErrorUPLC, UPLCConst } from "@harmoniclabs/uplc"
+import { CEKConst, Machine } from "@harmoniclabs/plutus-machine"
+import { ErrorUPLC, prettyUPLC, showUPLC, UPLCConst } from "@harmoniclabs/uplc"
 
 
 describe("precursive", () => {
@@ -61,12 +61,12 @@ describe("precursive", () => {
             )
         );
 
-    test("evalScript(Z) is fine", () => {
+    test("Machine.evalSimple(Z) is fine", () => {
 
         let evaluedZ;
 
         expect( () => {
-            evaluedZ = evalScript( Z.toUPLC(0) );
+            evaluedZ = Machine.evalSimple( Z.toUPLC(0) );
         }).not.toThrow()
 
         expect( evaluedZ ).not.toEqual( undefined );
@@ -113,10 +113,12 @@ describe("precursive", () => {
         {
             const res = jsFactorial( n );
             // console.log( `${n}! === ${res}` );
+            const uplc = pfactorial.$( pInt( n ) )
+            .toUPLC( 0 );
+
             expect(
-                evalScript(
-                    pfactorial.$( pInt( n ) )
-                    .toUPLC( 0 )
+                Machine.evalSimple(
+                    uplc
                 )
             ).toEqual(
                 CEKConst.int( res )
@@ -134,8 +136,9 @@ describe("precursive", () => {
             
             // console.log( `${n}! === ${res}` );
 
+            const uplc = pfactorial.$( pInt( n ) ).toUPLC( 0 );
             expect(
-                evalScript(
+                Machine.evalSimple(
                     pfactorial.$( pInt( n ) )
                     .toUPLC( 0 )
                 )

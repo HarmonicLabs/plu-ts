@@ -1,5 +1,13 @@
 import { IRApp } from "../../../IR/IRNodes/IRApp";
+import { IRFunc } from "../../../IR/IRNodes/IRFunc";
 import { IRNative } from "../../../IR/IRNodes/IRNative";
+import { IRRecursive } from "../../../IR/IRNodes/IRRecursive";
+import { IRSelfCall } from "../../../IR/IRNodes/IRSelfCall";
+import { IRVar } from "../../../IR/IRNodes/IRVar";
+import { IRTerm } from "../../../IR/IRTerm";
+import { _modifyChildFromTo } from "../../../IR/toUPLC/_internal/_modifyChildFromTo";
+import { sanifyTree } from "../../../IR/toUPLC/subRoutines/sanifyTree";
+import { getChildren } from "../../../IR/tree_utils/getChildren";
 import { assert } from "../../../utils/assert";
 import { PType } from "../../PType";
 import { PFn, PLam } from "../../PTypes";
@@ -52,16 +60,57 @@ export function _precursive<A extends PType, B extends PType>
     const recursiveFn = new Term(
         fnBody.type[2] as TermType,
         dbn => {
-            const fnBodyIr = fnBody.toIR( dbn );
+            const fnBodyIr = assertArity2AndRemoveFirst( fnBody.toIR( dbn ) );
 
+            replaceSelfVars( fnBodyIr );
             
-
-            return new IRApp(
-                IRNative.z_comb,
-                fnBodyIr
-            )
+            return new IRRecursive( fnBodyIr );
+            // return new IRApp(
+            //     IRNative.z_comb,
+            //     fnBodyIr
+            // )
         }
     )
 
     return ( recursiveFn ) as any;
 }
+
+function assertArity2AndRemoveFirst( term: IRTerm ): IRFunc
+{
+    if(!( term instanceof IRFunc )) throw new Error("argument of precursive must be a function");
+
+    if( term.arity >= 2 )
+    {
+        return new IRFunc(
+            term.arity - 1,
+            term.body
+        );
+    }
+    // else term.arity === 1
+
+    if(!( term.body instanceof IRFunc ))
+    throw new Error("argument of precursive must be a function with arity >= 2");
+
+    return term.body;
+}
+
+function replaceSelfVars( term: IRTerm, dbn: number = 0 ): void
+{
+    if( term instanceof IRVar )
+    {
+        if( term.dbn === dbn )
+        {
+            _modifyChildFromTo(
+                term.parent,
+                term,
+                new IRSelfCall( dbn )
+            );
+        }
+        return;
+    }
+    if(
+        term instanceof IRFunc ||
+        term instanceof IRRecursive
+    ) return replaceSelfVars( term.body, dbn + term.arity );
+    getChildren( term ).forEach( child => replaceSelfVars( child, dbn ) );
+} 

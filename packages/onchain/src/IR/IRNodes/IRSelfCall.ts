@@ -53,7 +53,6 @@ export class IRSelfCall
         if(!(
             Number.isSafeInteger( newDbn ) && newDbn >= 0 
         )){
-            // console.log( e.stack );
             throw new BasePlutsError(
                 "invalid index for an `IRSelfCall` instance; new DeBruijn was: " + newDbn
             );
