@@ -92,9 +92,8 @@ export function compileIRToUPLC(
         term.parent = undefined;
     }
 
-    replaceClosedLettedWithHoisted( term );
-    
     if( options.delayHoists ) replaceHoistedWithLetted( term );
+    else replaceClosedLettedWithHoisted( term );
 
     // handle letted before hoisted because the tree is smaller
     // and we also have less letted dependecies to handle

@@ -269,7 +269,7 @@ export class IRLetted
         this.meta = {
             ...defaultLettedMeta,
             ...metadata,
-            isClosed: metadata.isClosed || this.isClosedAtDbn( 0 )
+            // isClosed: metadata.isClosed || this.isClosedAtDbn( 0 )
         };
     }
 

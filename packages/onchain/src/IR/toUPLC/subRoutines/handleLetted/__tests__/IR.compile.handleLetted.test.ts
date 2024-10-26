@@ -121,22 +121,25 @@ describe("handleLetted", () => {
 
     test("two refs hoisted with different DeBruijn", () => {
 
-        const letted = new IRLetted(
-            0,
+        const letted = new IRLetted( 0,
             new IRApp(
                 new IRNative( IRNativeTag.addInteger ),
                 new IRConst( int, 2 )
             )
         );
 
+        const cloned = letted.clone();
+        cloned.dbn++;
+
+        // "[(lam a (force (delay [a [[(lam b a) (con integer 0)] (con integer 2)]]))) [(builtin addInteger) (con integer 2)]]"
         const root = new IRForced(
             new IRDelayed(
                 new IRApp(
-                    letted,
+                    letted.clone(),
                     new IRApp(
                         new IRApp(
-                            new IRFunc( 1, letted.clone() ), // useless function
-                            new IRConst( int, 0 )
+                            new IRFunc( 1, cloned ), // function to increment dbn
+                            new IRConst( int, 0 ) // useless argument
                         ),
                         new IRConst( int, 2 )
                     )
@@ -144,12 +147,17 @@ describe("handleLetted", () => {
             )
         );
 
-        // logJson( root )
-
         expect( getLettedTerms( root ).length ).toEqual( 2 );
 
         const compiled = compileIRToUPLC( root );
 
+        expect(
+            showUPLC( compiled )
+        ).toEqual(
+            "(force (delay [(lam a [a [[(lam b a) (con integer 0)] (con integer 2)]]) [(builtin addInteger) (con integer 2)]]))"
+        )
+
+        /*
         const expected = new IRFunc(
             1,
             new IRApp(
@@ -174,12 +182,7 @@ describe("handleLetted", () => {
         const expectedCompiled = compileIRToUPLC(
             expected
         );
-
-        expect(
-            showUPLC( compiled )
-        ).toEqual(
-            "[(lam a (force (delay [a [[(lam b a) (con integer 0)] (con integer 2)]]))) [(builtin addInteger) (con integer 2)]]"
-        )
+        //*/
         
     });
 
@@ -325,7 +328,9 @@ describe("handleLetted", () => {
         const compiled = compileIRToUPLC( root );
 
         expect( showUPLC( compiled ) )
-        .toEqual("[(lam a (force (delay [[(builtin addInteger) [a (con integer 2)]] [a (con integer 2)]]))) [(builtin addInteger) (con integer 2)]]")
+        .toEqual(
+            "(force (delay [(lam a [[(builtin addInteger) [a (con integer 2)]] [a (con integer 2)]]) [(builtin addInteger) (con integer 2)]]))"
+        )
     });
 
     test("vars outside and inside", () => {
@@ -353,7 +358,7 @@ describe("handleLetted", () => {
         const compiled = compileIRToUPLC( root );
 
         expect( showUPLC( compiled ) )
-        .toEqual("[(lam a (lam b (lam c [[(lam d (lam e [[(builtin addInteger) b] d])) a] a]))) (con integer 2)]");
+        .toEqual("(lam a (lam b [(lam c [[(lam d (lam e [[(builtin addInteger) a] d])) c] c]) (con integer 2)]))");
 
         // all inlined
         const expected = new IRFunc( 2, // a, b
