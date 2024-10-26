@@ -112,8 +112,8 @@ export class IRFunc
     readonly meta: IRFuncMetadata
     get name(): string | undefined { return this.meta.name };
 
-    private _parent: IRTerm | undefined;
-    get parent(): IRTerm | undefined { return this._parent; }
+    private _parent: IRParentTerm | undefined;
+    get parent(): IRParentTerm | undefined { return this._parent; }
     set parent( newParent: IRTerm | undefined )
     {
         if(!( // assert

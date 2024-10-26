@@ -7,7 +7,7 @@ import { _modifyChildFromTo } from "./_internal/_modifyChildFromTo";
 import { _makeAllNegativeNativesHoisted } from "./_internal/_makeAllNegativeNativesHoisted";
 import { _irToUplc } from "./_internal/_irToUplc";
 import { includesNode } from "./_internal/includesNode";
-import { handleLetted } from "./subRoutines/handleLetted";
+import { handleLettedAndReturnRoot } from "./subRoutines/handleLetted";
 import { handleHoistedAndReturnRoot } from "./subRoutines/handleHoistedAndReturnRoot";
 import { replaceNativesAndReturnRoot } from "./subRoutines/replaceNatives";
 import { replaceClosedLettedWithHoisted } from "./subRoutines/replaceClosedLettedWithHoisted";
@@ -97,11 +97,9 @@ export function compileIRToUPLC(
 
     // handle letted before hoisted because the tree is smaller
     // and we also have less letted dependecies to handle
-    handleLetted( term );
-    if( options.delayHoists )
-    {
-        term = handleHoistedAndReturnRoot( term );
-    }
+    term = handleLettedAndReturnRoot( term );
+    
+    term = handleHoistedAndReturnRoot( term );
 
     // replaced hoisted terms might include new letted terms
     while(
@@ -113,7 +111,7 @@ export function compileIRToUPLC(
         )
     )
     {
-        handleLetted( term );
+        term = handleLettedAndReturnRoot( term );
         term = handleHoistedAndReturnRoot( term );
     }
 

@@ -17,7 +17,7 @@ export function replaceHoistedWithLetted( term: IRTerm ): void
     {
         const parent = hoisted.parent!;
         const letted = new IRLetted(
-            Math.round( Number.MAX_SAFE_INTEGER / 2 ),
+            0x0fffffff, // doesn't matter since closed term
             hoisted.hoisted,
             { isClosed: true }
         );

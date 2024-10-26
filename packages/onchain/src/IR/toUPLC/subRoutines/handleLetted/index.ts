@@ -1,14 +1,14 @@
 import { IRApp } from "../../../IRNodes/IRApp";
 import { IRFunc } from "../../../IRNodes/IRFunc";
-import { getSortedLettedSet, getLettedTerms, IRLetted, jsonLettedSetEntry, expandedJsonLettedSetEntry, LettedSetEntry } from "../../../IRNodes/IRLetted";
+import { getSortedLettedSet, getLettedTerms, IRLetted } from "../../../IRNodes/IRLetted";
 import { IRVar } from "../../../IRNodes/IRVar";
 import { IRTerm } from "../../../IRTerm";
 import { _addDepths } from "../../_internal/_addDepth";
 import { _modifyChildFromTo } from "../../_internal/_modifyChildFromTo";
-import { findAll, findAllNoHoisted } from "../../_internal/findAll";
+import { findAllNoHoisted } from "../../_internal/findAll";
 import { getDebruijnInTerm } from "../../_internal/getDebruijnInTerm";
-import { _getMinUnboundDbn, groupByScope } from "./groupByScope";
-import { lettedToStr, prettyIR, prettyIRJsonStr, prettyIRText, showIR } from "../../../utils/showIR";
+import { _getMinUnboundDbn } from "./groupByScope";
+import { prettyIRJsonStr } from "../../../utils/showIR";
 import { IRDelayed } from "../../../IRNodes/IRDelayed";
 import { IRForced } from "../../../IRNodes/IRForced";
 import { lowestCommonAncestor } from "../../_internal/lowestCommonAncestor";
@@ -21,21 +21,18 @@ import { sanifyTree } from "../sanifyTree";
 import { mapArrayLike } from "../../../IRNodes/utils/mapArrayLike";
 import { IRCase } from "../../../IRNodes/IRCase";
 import { IRConstr } from "../../../IRNodes/IRConstr";
-import { IRHoisted } from "../../../IRNodes/IRHoisted";
 import { IRRecursive } from "../../../IRNodes/IRRecursive";
 import { IRSelfCall } from "../../../IRNodes/IRSelfCall";
-import { IRNativeTag } from "../../../IRNodes/IRNative/IRNativeTag";
-import { IRNative } from "../../../IRNodes/IRNative";
 import { findHighestRecursiveParent } from "./findHighestRecursiveParent";
-import { max } from "@harmoniclabs/bigint-utils";
+import { IRParentTerm } from "../../../utils/isIRParentTerm";
 
-export function handleLetted( term: IRTerm ): void
+export function handleLettedAndReturnRoot( term: IRTerm ): IRTerm
 {
     // console.log(" ------------------------------------------- handleLetted ------------------------------------------- ");
     // console.log( prettyIRJsonStr( term ))
     // most of the time we are just compiling small
     // pre-execuded terms (hence constants)
-    if( term instanceof IRConst ) return;
+    if( term instanceof IRConst ) return term;
     
     // TODO: should probably merge `markRecursiveHoistsAsForced` inside `getLettedTerms` to iter once
     markRecursiveHoistsAsForced( term );
@@ -46,9 +43,8 @@ export function handleLetted( term: IRTerm ): void
     while( true )
     {
         const allDirectLetted = getLettedTerms( term, { all: false, includeHoisted: false });
-        if( allDirectLetted.length === 0 ) return;
-        // console.log("found ", allDirectLetted.length, "letted terms");
-    
+        if( allDirectLetted.length === 0 ) return term;
+        
         const sortedLettedSet = getSortedLettedSet( allDirectLetted );
 
         const {
@@ -81,7 +77,20 @@ export function handleLetted( term: IRTerm ): void
             continue;
         }
 
-        const maxScope = findLettedMaxScope( letted );
+        const maxScope = findLettedMaxScope( letted ) ?? ((): IRTerm => {
+            if( letted.meta.isClosed || letted.isClosedAtDbn( 0 ) )
+            {
+                // value is closed (hoisted),
+                // so the max scope is the entire script
+                return term;
+            }
+            else throw new Error(
+                `could not find a max scope for letted value with hash ${irHashToHex(letted.hash)}`
+            );
+        })();
+
+        const lettedTermCanBeHoisted = maxScope === term;
+
         const minScope = findHighestRecursiveParent( letted, maxScope );
         
         sanifyTree( maxScope );
@@ -155,12 +164,12 @@ export function handleLetted( term: IRTerm ): void
 
         if( !isIRTerm( lca ) )
         {
-            // default to maxScope
-            // lca = maxScope;
             throw new Error(
                 "letting nodes with hash " + irHashToHex( lettedHash ) + " from different trees"
             );
         }
+
+        const realLca = lca;
 
         // point to the first func or delay node above the lca
         // (worst case scenario we hit the maxScope; which is an IRFunc)
@@ -168,21 +177,35 @@ export function handleLetted( term: IRTerm ): void
         while(!(
             lca instanceof IRFunc ||
             lca instanceof IRDelayed
-        ))
+        ) && lca )
         {
             lca = lca?.parent ?? undefined;
-            // if somehow we hit the root
-            if( !isIRTerm( lca ) )
-            {
-                throw new Error(
-                    "lowest common ancestor outside the max scope"
-                );
-            }
+        }
+
+
+        if( !isIRTerm( lca ) )
+        {
+            if( !lettedTermCanBeHoisted )
+            throw new Error(
+                "lowest common ancestor outside the max scope"
+            );
+
+            lca = realLca;
+            const tmpRoot = handleLettedAsHoistedAndReturnRoot(
+                letted,
+                realLca, // lca
+                sameLettedRefs,
+                term
+            );
+
+            if( lca === maxScope || !lca.parent ) term = tmpRoot;
+            
+            continue;
         }
 
         // shouldLog && console.log("lca", prettyIRJsonStr( lca ) );
 
-        const parentNode: IRFunc | IRDelayed = lca;
+        const parentNode: IRTerm = lca;
         const parentNodeDirectChild = (
             parentNode instanceof IRFunc ||
             parentNode instanceof IRRecursive
@@ -256,21 +279,18 @@ function isChildOf( child: IRTerm | undefined, parent: IRTerm ): boolean
  * @param letted 
  * @returns {IRFunc} the lowest `IRFunc` in the tree that defines all the variables needed for the 
  */
-function findLettedMaxScope( letted: IRLetted ): IRFunc | IRDelayed
+function findLettedMaxScope( letted: IRLetted ): IRTerm | undefined
 {
     let minUnboundDbn = _getMinUnboundDbn( letted.value );
     if( minUnboundDbn === undefined )
     {
         let tmp: IRTerm | IRDelayed = letted;
-        let maxScope: IRTerm | IRDelayed | undefined = undefined;
+        let maxScope: IRTerm | undefined = undefined;
         while( tmp.parent )
         {
-            tmp = tmp.parent
+            tmp = tmp.parent;
             if( tmp instanceof IRFunc || tmp instanceof IRDelayed ) maxScope = tmp;
         };
-        if( !maxScope ) throw new Error(
-            `could not find a max scope for letted value with hash ${irHashToHex(letted.hash)}`
-        );
         return maxScope;
     }
 
@@ -424,4 +444,67 @@ function getDiffDbn( letted: IRLetted, parentNode: IRTerm ): number
         }
     }
     return diffDbn;
+}
+
+function handleLettedAsHoistedAndReturnRoot(
+    letted: IRLetted,
+    lca: IRTerm,
+    sameLettedRefs: IRLetted[],
+    currentRoot: IRTerm
+): IRTerm
+{
+    const lettedHash = letted.hash;
+    let parentNode: IRParentTerm | undefined = lca.parent;
+    const parentNodeDirectChild = lca;
+
+    // add 1 to every var's DeBruijn that accesses stuff outside the parent node
+    // not including the `parentNode` node
+    // since the new function introdcued substituting the letted term
+    // is added inside the `parentNode` node
+    incrementUnboundDbns(
+        parentNodeDirectChild,
+        // `shouldNotModifyLetted` arg (given the hash returns `true` if it should NOT modify the term)
+        ({ hash }) => equalIrHash( hash, lettedHash )
+    );
+    
+    // now we replace
+    const lettedValue = letted.value; //.clone();
+
+    // no need to modify letted value dbns, since closed
+    // modifyValueToLetDbns( lettedValue, getDiffDbn( letted, parentNode ) );
+
+    const newNode = new IRApp(
+        new IRFunc(
+            1,
+            parentNodeDirectChild
+        ),
+        lettedValue,
+        { __src__ : letted.meta.__src__ }
+    );
+
+    // replace child with new node
+    if( parentNode )
+    {
+        _modifyChildFromTo(
+            parentNode,
+            parentNodeDirectChild,
+            newNode
+        );
+    }
+    else
+    {
+        currentRoot = newNode;
+    }
+
+    // console.log("replacing letted with value", prettyIRText( letted.value ) )
+    for( const ref of sameLettedRefs )
+    {
+        _modifyChildFromTo(
+            ref.parent,
+            ref,
+            new IRVar( getDebruijnInTerm( parentNodeDirectChild, ref ) )
+        );
+    }
+
+    return currentRoot;
 }

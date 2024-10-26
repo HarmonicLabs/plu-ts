@@ -9,7 +9,7 @@ import { IRLetted, getLettedTerms } from "../../../../IRNodes/IRLetted";
 import { IRNative } from "../../../../IRNodes/IRNative";
 import { IRNativeTag } from "../../../../IRNodes/IRNative/IRNativeTag";
 import { IRVar } from "../../../../IRNodes/IRVar";
-import { handleLetted } from "..";
+import { handleLettedAndReturnRoot } from "..";
 import { IRTerm } from "../../../../IRTerm";
 import { _ir_apps } from "../../../../tree_utils/_ir_apps";
 import { IRHoisted } from "../../../../IRNodes/IRHoisted";
@@ -20,7 +20,7 @@ import { Machine } from "@harmoniclabs/plutus-machine";
 import { pInt } from "../../../../../pluts/lib/std/int/pInt";
 import { irHashToHex } from "../../../../IRHash";
 
-describe("handleLetted", () => {
+describe("handleLettedAndReturnRoot", () => {
 
     test("single ref inlined", () => {
 
@@ -413,11 +413,11 @@ describe("handleLetted", () => {
             )
         );
 
-        const newIR = quadrupleIR.clone();
+        let newIR: IRTerm = quadrupleIR.clone();
 
         // console.log( showIR( newIR ) );
 
-        handleLetted( newIR );
+        newIR = handleLettedAndReturnRoot( newIR );
 
         const expected = new IRFunc(
             funcArity,

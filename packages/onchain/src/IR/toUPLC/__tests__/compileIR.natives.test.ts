@@ -51,7 +51,7 @@ describe("compileIRToUPLC", () => {
             const uplc = compileIRToUPLC( IRNative._matchList );
     
             const expectedUplcStr =
-                "[(lam a [(lam b [(lam c (lam d (lam e (lam f (force [[[c f] d] (delay [[e [b f]] [a f]])]))))) (force (force (builtin chooseList)))]) (force (builtin headList))]) (force (builtin tailList))]";
+                "[(lam a [(lam b [(lam c (lam d (lam e (lam f (force (force [[[c f] d] (delay [[e [b f]] [a f]])])))))) (force (force (builtin chooseList)))]) (force (builtin headList))]) (force (builtin tailList))]";
                 // "(lam a (lam b (lam c (force [[[(force (force (builtin chooseList))) c] a] (delay [[b [(force (builtin headList)) c]] [(force (builtin tailList)) c]])]))))";
     
             expect(
@@ -70,7 +70,8 @@ describe("compileIRToUPLC", () => {
             
             expect( showUPLC( uplc ) )
             .toEqual(
-                "[(lam a [(lam b [a (lam c [[b b] c])]) (lam b [a (lam c [[b b] c])])]) (lam a (lam b (lam c (lam d [(lam e [[[(lam f (lam g (lam h (force [[[(force (force (builtin chooseList))) h] f] (delay [[g [(force (builtin headList)) h]] [(force (builtin tailList)) h]])])))) [b e]] [c e]] d]) [[a b] c]]))))]"
+                "[(lam a [(lam b [(lam c (lam d (lam e [(lam f [f f]) (lam f (lam g [[[(lam h (lam i (lam l (force (force [[[c l] h] (delay [[i [b l]] [a l]])]))))) [d [f f]]] [e [f f]]] g]))]))) (force (force (builtin chooseList)))]) (force (builtin headList))]) (force (builtin tailList))]"
+                // "[(lam a [(lam b [a (lam c [[b b] c])]) (lam b [a (lam c [[b b] c])])]) (lam a (lam b (lam c (lam d [(lam e [[[(lam f (lam g (lam h (force [[[(force (force (builtin chooseList))) h] f] (delay [[g [(force (builtin headList)) h]] [(force (builtin tailList)) h]])])))) [b e]] [c e]] d]) [[a b] c]]))))]"
             )
             
         })
