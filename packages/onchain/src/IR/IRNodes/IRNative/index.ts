@@ -182,7 +182,7 @@ export class IRNative
     static get _indexList() { return new IRNative( IRNativeTag._indexList ); }
     static get _foldr() { return new IRNative( IRNativeTag._foldr ); }
     static get _foldl() { return new IRNative( IRNativeTag._foldl ); }
-    static get _mkFind() { return new IRNative( IRNativeTag._mkFind ); }
+    static get _mkFindData() { return new IRNative( IRNativeTag._mkFindData ); }
     static get _length() { return new IRNative( IRNativeTag._length ); }
     static get _some() { return new IRNative( IRNativeTag._some ); }
     static get _every() { return new IRNative( IRNativeTag._every ); }

@@ -35,8 +35,8 @@ describe("compileIRToUPLC", () => {
                 )
             )
     
-            // console.log( showUPLC( ir_zUPLC ) )
-            // console.log( showUPLC( ZUPLC ) )
+            // // console.log( showUPLC( ir_zUPLC ) )
+            // // console.log( showUPLC( ZUPLC ) )
     
             expect(
                 ir_zUPLC
@@ -62,11 +62,11 @@ describe("compileIRToUPLC", () => {
     
         });
     
-        test.skip("_recursiveList (requireing other negative natives)", () => {
+        test("_recursiveList (requireing other negative natives)", () => {
     
             const uplc = compileIRToUPLC( IRNative._recursiveList );
 
-            console.log( showUPLC( uplc ) );
+            // console.log( showUPLC( uplc ) );
             
             expect( showUPLC( uplc ) )
             .toEqual(

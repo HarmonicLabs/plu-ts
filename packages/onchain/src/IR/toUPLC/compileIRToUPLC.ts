@@ -80,6 +80,18 @@ export function compileIRToUPLC(
 
     term = replaceNativesAndReturnRoot( term );
 
+    // unwrap top level letted and hoisted;
+    // some natives may be converted to hoisted;
+    // this is really just an edge case
+    while( term instanceof IRLetted || term instanceof IRHoisted )
+    {
+        // replace with value
+        term = term instanceof IRLetted ? term.value : term.hoisted;
+
+        // forget the parent; this is the new root
+        term.parent = undefined;
+    }
+
     replaceClosedLettedWithHoisted( term );
     
     if( options.delayHoists ) replaceHoistedWithLetted( term );

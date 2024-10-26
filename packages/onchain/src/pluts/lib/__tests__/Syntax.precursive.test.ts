@@ -116,6 +116,8 @@ describe("precursive", () => {
             const uplc = pfactorial.$( pInt( n ) )
             .toUPLC( 0 );
 
+            // n === 0 && console.log( prettyUPLC( uplc ) );
+
             expect(
                 Machine.evalSimple(
                     uplc

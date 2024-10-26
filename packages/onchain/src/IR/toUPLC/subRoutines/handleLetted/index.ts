@@ -24,324 +24,10 @@ import { IRConstr } from "../../../IRNodes/IRConstr";
 import { IRHoisted } from "../../../IRNodes/IRHoisted";
 import { IRRecursive } from "../../../IRNodes/IRRecursive";
 import { IRSelfCall } from "../../../IRNodes/IRSelfCall";
-
-
-function onlyLettedTerm( setEntry: LettedSetEntry ): IRLetted
-{
-    return setEntry.letted;
-}
-
-export function _handleLetted( term: IRTerm ): void
-{
-    // most of the time we are just compiling small
-    // pre-execuded terms (hence constants)
-    if( term instanceof IRConst ) return;
-    
-    // TODO: should probably merge `markRecursiveHoistsAsForced` inside `getLettedTerms` to iter once
-    markRecursiveHoistsAsForced( term );
-
-    const allDirectLetted = getLettedTerms( term, { all: false, includeHoisted: false });
-
-    // in case there are no letted terms there is no work to do
-    if( allDirectLetted.length === 0 ) return;
-
-    const allLettedRefs = getLettedTerms( term, { all: true, includeHoisted: false }).map( onlyLettedTerm );
-    const sortedLettedSet = getSortedLettedSet( allDirectLetted );
-
-    const allScopes: {
-        maxScope: IRFunc,
-        lettedRefs: IRLetted[],
-        forceHoist: boolean
-    }[] = sortedLettedSet.map(({ letted }) => {
-
-        const theHash = letted.hash;
-        const allSameLetted = allLettedRefs.filter(({ hash }) => equalIrHash( hash, theHash ) );
-
-        const scopes = new Array<{
-            maxScope: IRFunc,
-            lettedRefs: IRLetted[],
-            forceHoist: boolean
-        }>();
-
-        for( const letted of allSameLetted )
-        {
-            const _maxScope = findLettedMaxScope( letted );
-            const idx = scopes.findIndex(({ maxScope }) => maxScope === _maxScope );
-            if( idx < 0 )
-            {
-                scopes.push({
-                    maxScope: _maxScope,
-                    lettedRefs: [ letted ],
-                    forceHoist: letted.meta.forceHoist === true
-                });
-            }
-            else
-            {
-                scopes[idx].lettedRefs.push( letted );
-                scopes[idx].forceHoist ||= (letted.meta.forceHoist === true);
-            }
-        }
-
-        return scopes;
-    }).reduce((a, b) => a.concat( b ))
-
-    // needs to go from last to first so that letted terms' hashes will not change
-    // (aka. we replace dependents before dependecies)
-    while( allScopes.length > 0 )
-    {
-        let {
-            maxScope,
-            lettedRefs: sameLettedRefs,
-            forceHoist
-        } = allScopes.pop()!;
-
-        // const maxScope = findLettedMaxScope( lettedExampleElem );
-        const setLettedHash = sameLettedRefs[0].hash;
-
-        const lettedExampleElem = sameLettedRefs[0];
-
-        if( !lettedExampleElem ) continue;
-
-        // inline single references
-        if(
-            !forceHoist && 
-            sameLettedRefs.length <= 1
-        )
-        {
-            _modifyChildFromTo(
-                lettedExampleElem.parent,
-                lettedExampleElem,
-                lettedExampleElem.value
-            );
-            continue;
-        }
-
-        // always inline letted vars
-        if(
-            lettedExampleElem.value instanceof IRVar ||
-            lettedExampleElem.value instanceof IRSelfCall
-        )
-        {
-            for( const elem of sameLettedRefs )
-            {
-                // inline
-                _modifyChildFromTo(
-                    elem.parent,
-                    elem,
-                    elem.value
-                );
-            }
-            continue;
-        }
-
-        let lca: IRTerm | undefined = sameLettedRefs[0];
-
-        // if `froceHoist` is true;
-        // we append directly to `maxScope`
-        // hence no need to look for `lca`
-        if( !forceHoist )
-        {
-            for( let j = 1; j < sameLettedRefs.length; j++ )
-            {
-                lca = lowestCommonAncestor( lca, sameLettedRefs[j], maxScope );
-                if( !isIRTerm( lca ) ) break;
-            }
-    
-            if( !isIRTerm( lca ) )
-            {
-                // default to maxScope
-                lca = maxScope;
-                throw new Error(
-                    "letting nodes with hash " + irHashToHex( setLettedHash ) + " from different trees"
-                );
-            }
-            else
-            {
-                // point to the first func or delay node above the lca
-                // (worst case scenario we hit the maxScope; which is an IRFunc)
-                // IRFuncs should always be under IRRecursives if any
-                while(!(
-                    lca instanceof IRFunc ||
-                    lca instanceof IRDelayed
-                ))
-                {
-                    lca = lca?.parent ?? undefined;
-                    // if somehow we hit the root
-                    if( !isIRTerm( lca ) )
-                    {
-                        throw new Error(
-                            "lowest common ancestor outside the max scope"
-                        );
-                    }
-                }
-            }
-        }
-
-        const parentNode: IRFunc | IRDelayed = forceHoist ? maxScope : lca as any;
-        const parentNodeDirectChild = (
-            parentNode instanceof IRFunc ||
-            parentNode instanceof IRRecursive
-        ) ? parentNode.body : parentNode.delayed;
-
-        // add 1 to every var's DeBruijn that accesses stuff outside the parent node
-        // not including the `parentNode` node
-        // since the new function introdcued substituting the letted term
-        // is added inside the `parentNode` node
-        incrementUnboundDbns(
-            parentNodeDirectChild,
-            // shouldNotModifyLetted
-            ({ hash }) => equalIrHash( hash, setLettedHash )
-        );
-        
-        // get the difference in DeBruijn
-        // between the maxScope and the letted term
-        let diffDbn = 0; // getDiffDbn( parentNodeDirectChild, letted );
-        //*
-        let tmpNode: IRTerm = lettedExampleElem;
-        while( tmpNode !== parentNode )
-        {
-            tmpNode = tmpNode.parent as any;
-            if( // is an intermediate `IRFunc`
-                (
-                    tmpNode instanceof IRFunc ||
-                    tmpNode instanceof IRRecursive
-                ) && 
-                tmpNode !== parentNode // avoid counting parent node arity if IRFunc 
-            )
-            {
-                // increment differential in DeBruijn by n vars indroduced here
-                diffDbn += tmpNode.arity;
-            }
-        }
-        //*/
-
-        // now we replace
-        const lettedValue = lettedExampleElem.value.clone();
-
-        // if there is any actual difference between the letted term
-        // and the position where it will be finally placed
-        // the value needs to be modified accoridingly
-        if( diffDbn > 0 )
-        {
-            const stack: { term: IRTerm, dbn: number }[] = [{ term: lettedValue, dbn: 0 }];
-
-            while( stack.length > 0 )
-            {
-                const { term: t, dbn } = stack.pop() as { term: IRTerm, dbn: number };
-
-                if(
-                    (
-                        t instanceof IRVar ||
-                        t instanceof IRSelfCall
-                    ) &&
-                    t.dbn > dbn
-                )
-                {
-                    t.dbn -= diffDbn;
-                }
-
-                if( t instanceof IRLetted )
-                {
-                    t.dbn -= diffDbn;
-                    // reduce dbn in letted value too
-                    stack.push({ term: t.value, dbn });
-                    continue;
-                }
-                
-                if( t instanceof IRApp )
-                {
-                    stack.push(
-                        { term: t.arg, dbn },
-                        { term: t.fn, dbn  }
-                    );
-                    continue;
-                }
-                if( t instanceof IRCase )
-                {
-                    stack.push(
-                        { term: t.constrTerm, dbn },
-                        ...mapArrayLike(
-                            t.continuations,
-                            continuation => ({ term: continuation, dbn })
-                        )
-                    );
-                    continue;
-                }
-                if( t instanceof IRConstr )
-                {
-                    stack.push(
-                        ...mapArrayLike(
-                            t.fields,
-                            field => ({ term: field, dbn })
-                        )
-                    );
-                    continue
-                }
-
-                if( t instanceof IRDelayed )
-                {
-                    stack.push({ term: t.delayed, dbn })
-                    continue;
-                }
-                if( t instanceof IRForced )
-                {
-                    stack.push({ term: t.forced, dbn });
-                    continue;
-                }
-                if( t instanceof IRFunc )
-                {
-                    stack.push({ term: t.body, dbn: dbn + t.arity });
-                    continue;
-                }
-                if( t instanceof IRRecursive )
-                {
-                    stack.push({ term: t.body, dbn: dbn + t.arity });
-                    continue;
-                }
-                // no hoisted
-            }
-        }
-
-        // save parent so when replacing we don't create a circular sameLettedRefs
-        const parent = parentNode;
-
-        const newNode = new IRApp(
-            new IRFunc(
-                1,
-                parentNodeDirectChild
-            ),
-            lettedValue
-        );
-
-        _modifyChildFromTo(
-            parent,
-            parentNodeDirectChild, // not really used since we know parent is not `IRApp`
-            newNode
-        );
-
-        sameLettedRefs = findAllNoHoisted(
-            parentNodeDirectChild,
-            term => 
-                term instanceof IRLetted &&
-                (
-                    sameLettedRefs.includes( term ) ||
-                    sameLettedRefs.some(({ hash }) => equalIrHash( hash, setLettedHash ) )
-                )
-        ) as IRLetted[];
-
-        for( const ref of sameLettedRefs )
-        {
-            if( isChildOf( ref, parentNodeDirectChild ) )
-            {
-                _modifyChildFromTo(
-                    ref.parent,
-                    ref,
-                    new IRVar( getDebruijnInTerm( parentNodeDirectChild, ref ) )
-                );
-            }
-        }
-    }
-}
+import { IRNativeTag } from "../../../IRNodes/IRNative/IRNativeTag";
+import { IRNative } from "../../../IRNodes/IRNative";
+import { findHighestRecursiveParent } from "./findHighestRecursiveParent";
+import { max } from "@harmoniclabs/bigint-utils";
 
 export function handleLetted( term: IRTerm ): void
 {
@@ -353,7 +39,6 @@ export function handleLetted( term: IRTerm ): void
     
     // TODO: should probably merge `markRecursiveHoistsAsForced` inside `getLettedTerms` to iter once
     markRecursiveHoistsAsForced( term );
-
 
     // in case there are no letted terms there is no work to do
     while( true )
@@ -369,6 +54,17 @@ export function handleLetted( term: IRTerm ): void
             nReferences
         } = sortedLettedSet.pop()!;
 
+        // const _lettedValue_ = letted.value;
+        // const shouldLog = false;
+        /*
+        (
+            _lettedValue_ instanceof IRApp &&
+            _lettedValue_.fn instanceof IRNative &&
+            _lettedValue_.fn.tag === IRNativeTag.headList &&
+            _lettedValue_.arg instanceof IRVar
+        );
+        //*/
+
         // console.log(` ------------------ working with ${lettedToStr(letted)} ------------------ `);
         if( nReferences === 1 )
         {
@@ -382,8 +78,12 @@ export function handleLetted( term: IRTerm ): void
         }
 
         const maxScope = findLettedMaxScope( letted );
+        const minScope = findHighestRecursiveParent( letted, maxScope );
+        
         sanifyTree( maxScope );
         const lettedHash = letted.hash;
+
+        // shouldLog && console.log("maxScope", prettyIRJsonStr( maxScope ) );
 
         const sameLettedRefs = findAllNoHoisted(
             maxScope,
@@ -404,7 +104,7 @@ export function handleLetted( term: IRTerm ): void
         }
 
         // just in case
-        if( sameLettedRefs.length === 1 )
+        if( sameLettedRefs.length === 1 && !minScope )
         {
             // console.log("inlining letted (single reference pedantic) with value", prettyIRText( letted.value ) )
             _modifyChildFromTo(
@@ -434,56 +134,51 @@ export function handleLetted( term: IRTerm ): void
             continue;
         }
 
-        let lca: IRTerm | undefined = sameLettedRefs[0];
+        let lca: IRTerm | undefined = minScope ?? sameLettedRefs[0];
         
-        const forceHoist = sameLettedRefs.some( letted => letted.meta.forceHoist === true );
+        // const forceHoist = false && sameLettedRefs.some( letted => letted.meta.forceHoist === true );
 
-        // if `froceHoist` is true;
-        // we append directly to `maxScope`
-        // hence no need to look for `lca`
-        if( !forceHoist )
-        {
-            for( let j = 1; j < sameLettedRefs.length; j++ )
-            {
-                const prevLca: IRTerm = lca; 
-                lca = lowestCommonAncestor( lca, sameLettedRefs[j], maxScope );
-                if( !isIRTerm( lca ) )
-                {
-                    lca = prevLca;
-                };
-            }
     
+        for( let j = 1; j < sameLettedRefs.length; j++ )
+        {
+            const prevLca: IRTerm = lca; 
+            lca = lowestCommonAncestor( lca, sameLettedRefs[j], maxScope );
             if( !isIRTerm( lca ) )
             {
-                // default to maxScope
-                // lca = maxScope;
-                throw new Error(
-                    "letting nodes with hash " + irHashToHex( lettedHash ) + " from different trees"
-                );
-            }
-            else
+                lca = prevLca;
+            };
+        }
+
+        if( !isIRTerm( lca ) )
+        {
+            // default to maxScope
+            // lca = maxScope;
+            throw new Error(
+                "letting nodes with hash " + irHashToHex( lettedHash ) + " from different trees"
+            );
+        }
+
+        // point to the first func or delay node above the lca
+        // (worst case scenario we hit the maxScope; which is an IRFunc)
+        // IRFuncs should always be under IRRecursives if any
+        while(!(
+            lca instanceof IRFunc ||
+            lca instanceof IRDelayed
+        ))
+        {
+            lca = lca?.parent ?? undefined;
+            // if somehow we hit the root
+            if( !isIRTerm( lca ) )
             {
-                // point to the first func or delay node above the lca
-                // (worst case scenario we hit the maxScope; which is an IRFunc)
-                // IRFuncs should always be under IRRecursives if any
-                while(!(
-                    lca instanceof IRFunc ||
-                    lca instanceof IRDelayed
-                ))
-                {
-                    lca = lca?.parent ?? undefined;
-                    // if somehow we hit the root
-                    if( !isIRTerm( lca ) )
-                    {
-                        throw new Error(
-                            "lowest common ancestor outside the max scope"
-                        );
-                    }
-                }
+                throw new Error(
+                    "lowest common ancestor outside the max scope"
+                );
             }
         }
 
-        const parentNode: IRFunc | IRDelayed = forceHoist ? maxScope : lca as any;
+        // console.log("lca", prettyIRJsonStr( lca ) );
+
+        const parentNode: IRFunc | IRDelayed = lca;
         const parentNodeDirectChild = (
             parentNode instanceof IRFunc ||
             parentNode instanceof IRRecursive
@@ -524,88 +219,7 @@ export function handleLetted( term: IRTerm ): void
         // now we replace
         const lettedValue = letted.value.clone();
 
-        // if there is any actual difference between the letted term
-        // and the position where it will be finally placed
-        // the value needs to be modified accoridingly
-        if( diffDbn > 0 )
-        {
-            const stack: { term: IRTerm, dbn: number }[] = [{ term: lettedValue, dbn: 0 }];
-
-            while( stack.length > 0 )
-            {
-                const { term: t, dbn } = stack.pop() as { term: IRTerm, dbn: number };
-
-                if(
-                    (
-                        t instanceof IRVar ||
-                        t instanceof IRSelfCall
-                    ) &&
-                    t.dbn > dbn
-                )
-                {
-                    t.dbn -= diffDbn;
-                }
-
-                if( t instanceof IRLetted )
-                {
-                    t.dbn -= diffDbn;
-                    // reduce dbn in letted value too
-                    stack.push({ term: t.value, dbn });
-                    continue;
-                }
-                
-                if( t instanceof IRApp )
-                {
-                    stack.push(
-                        { term: t.arg, dbn },
-                        { term: t.fn, dbn  }
-                    );
-                    continue;
-                }
-                if( t instanceof IRCase )
-                {
-                    stack.push(
-                        { term: t.constrTerm, dbn },
-                        ...mapArrayLike(
-                            t.continuations,
-                            continuation => ({ term: continuation, dbn })
-                        )
-                    );
-                    continue;
-                }
-                if( t instanceof IRConstr )
-                {
-                    stack.push(
-                        ...mapArrayLike(
-                            t.fields,
-                            field => ({ term: field, dbn })
-                        )
-                    );
-                    continue
-                }
-                if( t instanceof IRDelayed )
-                {
-                    stack.push({ term: t.delayed, dbn })
-                    continue;
-                }
-                if( t instanceof IRForced )
-                {
-                    stack.push({ term: t.forced, dbn });
-                    continue;
-                }
-                if( t instanceof IRFunc )
-                {
-                    stack.push({ term: t.body, dbn: dbn + t.arity });
-                    continue;
-                }
-                if( t instanceof IRRecursive )
-                {
-                    stack.push({ term: t.body, dbn: dbn + t.arity });
-                    continue;
-                }
-                // no hoisted
-            }
-        }
+        modifyValueToLetDbns( lettedValue, diffDbn );
 
         const newNode = new IRApp(
             new IRFunc(
@@ -639,40 +253,6 @@ export function handleLetted( term: IRTerm ): void
         // console.log("final max scope (delayed: " + delayed + ")" , prettyIRJsonStr( finalMaxScope ) )
 
     }
-}
-
-
-function remove<T>( array: T[], shouldRemove: (elem: T, i: number) => boolean ): void
-{
-    for( let i = 0; i < array.length; i++ )
-    {
-        if( shouldRemove( array[i], i ) )
-        {
-            array.splice( i, 1 );
-        }
-    }
-}
-
-function removeFirst<T>( array: T[], shouldRemove: (elem: T, i: number) => boolean ): void
-{
-    for( let i = 0; i < array.length; i++ )
-    {
-        if( shouldRemove( array[i], i ) )
-        {
-            array.splice( i, 1 );
-            break;
-        }
-    }
-}
-
-function removeIdx( array: any[], idx: number ): void
-{
-    array.slice( idx, 1 );
-}
-
-function filterWithIndex<T>( array: T[], predicate: ( elem: T, i: number ) => boolean ): { elem: T, i: number }[]
-{
-    return array.map((elem, i) => ({ elem, i })).filter(({ elem, i }) => predicate( elem, i ));
 }
 
 function isChildOf( child: IRTerm | undefined, parent: IRTerm ): boolean
@@ -745,4 +325,90 @@ function findLettedMaxScope( letted: IRLetted ): IRFunc
 
     return maxScope;
 
+}
+
+function modifyValueToLetDbns( lettedValue: IRTerm, diffDbn: number ): void
+{
+    // if there is any actual difference between the letted term
+    // and the position where it will be finally placed
+    // the value needs to be modified accoridingly
+    if( diffDbn > 0 )
+    {
+        const stack: { term: IRTerm, dbn: number }[] = [{ term: lettedValue, dbn: 0 }];
+    
+        while( stack.length > 0 )
+        {
+            const { term: t, dbn } = stack.pop() as { term: IRTerm, dbn: number };
+    
+            if(
+                (
+                    t instanceof IRVar ||
+                    t instanceof IRSelfCall
+                ) &&
+                t.dbn > dbn
+            )
+            {
+                t.dbn -= diffDbn;
+            }
+    
+            if( t instanceof IRLetted )
+            {
+                t.dbn -= diffDbn;
+                // reduce dbn in letted value too
+                stack.push({ term: t.value, dbn });
+                continue;
+            }
+            
+            if( t instanceof IRApp )
+            {
+                stack.push(
+                    { term: t.arg, dbn },
+                    { term: t.fn, dbn  }
+                );
+                continue;
+            }
+            if( t instanceof IRCase )
+            {
+                stack.push(
+                    { term: t.constrTerm, dbn },
+                    ...mapArrayLike(
+                        t.continuations,
+                        continuation => ({ term: continuation, dbn })
+                    )
+                );
+                continue;
+            }
+            if( t instanceof IRConstr )
+            {
+                stack.push(
+                    ...mapArrayLike(
+                        t.fields,
+                        field => ({ term: field, dbn })
+                    )
+                );
+                continue
+            }
+            if( t instanceof IRDelayed )
+            {
+                stack.push({ term: t.delayed, dbn })
+                continue;
+            }
+            if( t instanceof IRForced )
+            {
+                stack.push({ term: t.forced, dbn });
+                continue;
+            }
+            if( t instanceof IRFunc )
+            {
+                stack.push({ term: t.body, dbn: dbn + t.arity });
+                continue;
+            }
+            if( t instanceof IRRecursive )
+            {
+                stack.push({ term: t.body, dbn: dbn + t.arity });
+                continue;
+            }
+            // no hoisted
+        }
+    }
 }

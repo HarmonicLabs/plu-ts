@@ -102,6 +102,7 @@ export const enum IRNativeTag {
     // -------------------------------------------------------------------------- //
     ////////////////////////////////////////////////////////////////////////////////
 
+    /** @deprecated */
     z_comb              = -1, // useful to understand when we are going recursive during optimizations
     _matchList          = -2,
     _recursiveList      = -3,
@@ -109,7 +110,7 @@ export const enum IRNativeTag {
     _indexList          = -5,
     _foldr              = -6,
     _foldl              = -7,
-    _mkFind               = -8,
+    _mkFindData               = -8,
     _length             = -9,
     _some               = -10,
     _every              = -11,
@@ -130,7 +131,9 @@ export const enum IRNativeTag {
     _pairDataToData         = -26,
     _strFromData        = -27,
     _pairDataFromData       = -28,
+    /** @deprecated */
     _lazyChooseList     = -29,
+    /** @deprecated */
     _lazyIfThenElse     = -30
 }
 
@@ -146,7 +149,7 @@ export function nativeTagToString( nativeTag: IRNativeTag ): string
         case IRNativeTag._indexList     : return "indexList";
         case IRNativeTag._foldr         : return "foldr";
         case IRNativeTag._foldl         : return "foldl";
-        case IRNativeTag._mkFind          : return "mkFind";
+        case IRNativeTag._mkFindData          : return "mkFind";
         case IRNativeTag._length        : return "length";
         case IRNativeTag._some          : return "some";
         case IRNativeTag._every         : return "every";
