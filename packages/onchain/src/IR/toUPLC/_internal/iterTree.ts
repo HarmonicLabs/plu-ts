@@ -13,10 +13,12 @@ export function iterTree(
     _term: IRTerm,
     fn: ( elem: IRTerm, dbn: number ) => (boolean | undefined | void),
     // necessary for letted hash calculation (exclude hoisted)
-    shouldSkipNode?: ( elem: IRTerm, dbn: number ) => boolean
+    shouldSkipNode?: ( elem: IRTerm, dbn: number ) => boolean,
+    shouldExit?: ( elem: IRTerm, dbn: number ) => boolean
 ): void
 {
     const has_shouldSkipNode = typeof shouldSkipNode === "function";
+    const has_shouldExit = typeof shouldExit === "function";
     const stack: { term: IRTerm, dbn: number, shouldPopIfParentIsModified?: boolean }[] = [{ term: _term, dbn: 0 }];
 
     while( stack.length > 0 )
@@ -29,6 +31,8 @@ export function iterTree(
         const negDbn = t instanceof IRFunc || t instanceof IRRecursive ? t.arity : 0;
 
         const modifiedParent = fn( t, dbn ) === true;
+
+        if( has_shouldExit && shouldExit( t, dbn ) ) return;
 
         if( modifiedParent && termParent !== undefined )
         {

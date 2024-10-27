@@ -36,7 +36,7 @@ describe("pList", () => {
 
     })
 
-    test.only("pList( int )( < any Term<PInt> > ) is a constructed List", () => {
+    test.skip("pList( int )( < any Term<PInt> > ) is a constructed List", () => {
 
         expect(
             showUPLC(

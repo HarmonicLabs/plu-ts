@@ -20,10 +20,10 @@ import { IRSelfCall } from "../../../IR/IRNodes/IRSelfCall";
 export type LettedTerm<PVarT extends PType, SomeExtension extends object> =
     Term<PVarT> & SomeExtension extends Term<PAlias<PVarT, {}>> ?
         TermAlias<PVarT, {}> & SomeExtension & {
-            in: <PExprResult extends PType>( expr: (value: TermAlias<PVarT, {}> & SomeExtension) => Term<PExprResult> ) => Term<PExprResult>
+            in: <PExprResult extends PType>( expr: (value: TermAlias<PVarT, {}> & SomeExtension) => Term<PExprResult> ) => UtilityTermOf<PExprResult>
         } :
         UtilityTermOf<PVarT> & {
-            in: <PExprResult extends PType>( expr: (value: UtilityTermOf<PVarT>) => Term<PExprResult> ) => Term<PExprResult>
+            in: <PExprResult extends PType>( expr: (value: UtilityTermOf<PVarT>) => Term<PExprResult> ) => UtilityTermOf<PExprResult>
         }
 
 export function plet<PVarT extends PType, SomeExtension extends object>(
@@ -84,7 +84,7 @@ export function plet<PVarT extends PType, SomeExtension extends object>(
 
     const withUtility = addUtilityForType( varValue.type );
     
-    const continuation = <PExprResult extends PType>( expr: (value: TermPVar) => Term<PExprResult> ): Term<PExprResult> => {
+    const continuation = <PExprResult extends PType>( expr: (value: TermPVar) => Term<PExprResult> ): UtilityTermOf<PExprResult> => {
 
         // only to extracts the type; never compiled
         const outType = expr( makeMockUtilityTerm( varValue.type ) as any ).type;
@@ -132,7 +132,7 @@ export function plet<PVarT extends PType, SomeExtension extends object>(
             }
         );
 
-        return term;
+        return addUtilityForType( outType )( term ) as UtilityTermOf<PExprResult>;
     }
     
     const lettedUtility = addUtilityForType( type )( letted );

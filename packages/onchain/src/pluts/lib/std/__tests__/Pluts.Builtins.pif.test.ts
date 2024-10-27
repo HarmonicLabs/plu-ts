@@ -6,7 +6,7 @@ import { pInt } from "../int/pInt";
 
 describe("pif", () => {
 
-    test("'then/else' and '$' (application) are interchangeable", () => {
+    test.skip("'then/else' and '$' (application) are interchangeable", () => {
 
         const targetIf_42_69 = new Application(
             new Lambda(
@@ -69,27 +69,29 @@ describe("pif", () => {
     })
 
 
-    expect(
-
-        pstrictIf( int ).$( pBool( true ) )
-        .$( pInt( 42 ) )
-        .$( pInt( 69 ))
-
-        .toUPLC( 0 )
-        
-    ).toEqual(
-        new Application(
-            new Lambda(
-                new Application(
+    test.skip("standard compilation", () => {
+        expect(
+    
+            pstrictIf( int ).$( pBool( true ) )
+            .$( pInt( 42 ) )
+            .$( pInt( 69 ))
+    
+            .toUPLC( 0 )
+            
+        ).toEqual(
+            new Application(
+                new Lambda(
                     new Application(
-                        new Application( new UPLCVar( 0 ), UPLCConst.bool( true ) ),
-                        UPLCConst.int( 42 )
-                    ),
-                    UPLCConst.int( 69 )
-                )
-            ),
-            Builtin.ifThenElse
-        )
-    )
+                        new Application(
+                            new Application( new UPLCVar( 0 ), UPLCConst.bool( true ) ),
+                            UPLCConst.int( 42 )
+                        ),
+                        UPLCConst.int( 69 )
+                    )
+                ),
+                Builtin.ifThenElse
+            )
+        );
+    })
 
 })

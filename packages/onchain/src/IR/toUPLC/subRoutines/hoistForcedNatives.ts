@@ -2,6 +2,7 @@ import { IRApp, IRVar } from "../../IRNodes";
 import { IRFunc } from "../../IRNodes/IRFunc";
 import { IRNative } from "../../IRNodes/IRNative";
 import { IRNativeTag } from "../../IRNodes/IRNative/IRNativeTag";
+import { isForcedNative } from "../../IRNodes/IRNative/isForcedNative";
 import { IRRecursive } from "../../IRNodes/IRRecursive";
 import { IRTerm } from "../../IRTerm";
 import { showIRText } from "../../utils";
@@ -34,7 +35,7 @@ export function hoistForcedNatives( term: IRTerm ): IRTerm
 
     // collect all forced natives
     iterTree( term, ( node ) => {
-        if( node instanceof IRNative && isForcedNativeTag( node.tag ) )
+        if( isForcedNative( node ) )
         {
             toHoist[node.tag].push( node );
         }
@@ -62,23 +63,6 @@ export function hoistForcedNatives( term: IRTerm ): IRTerm
     }
 
     return term;
-}
-
-function isForcedNativeTag( tag: IRNativeTag ): boolean
-{
-    return (
-        tag === IRNativeTag.strictIfThenElse    ||
-        tag === IRNativeTag.chooseUnit          ||
-        tag === IRNativeTag.trace               ||
-        tag === IRNativeTag.mkCons              ||
-        tag === IRNativeTag.headList            ||
-        tag === IRNativeTag.tailList            ||
-        tag === IRNativeTag.nullList            ||
-        tag === IRNativeTag.chooseData          ||
-        tag === IRNativeTag.fstPair             ||
-        tag === IRNativeTag.sndPair             ||
-        tag === IRNativeTag.strictChooseList
-    );
 }
 
 function getDbnToRoot( node: IRNative ): number

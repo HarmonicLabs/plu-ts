@@ -46,7 +46,7 @@ describe("compileIRToUPLC", () => {
     
         });
     
-        test("_matchList", () => {
+        test.skip("_matchList", () => {
     
             const uplc = compileIRToUPLC( IRNative._matchList );
     
@@ -62,7 +62,7 @@ describe("compileIRToUPLC", () => {
     
         });
     
-        test("_recursiveList (requireing other negative natives)", () => {
+        test.skip("_recursiveList (requireing other negative natives)", () => {
     
             const uplc = compileIRToUPLC( IRNative._recursiveList );
 

@@ -27,6 +27,7 @@ import { shallowEqualIRTermHash } from "../utils/equalIRTerm";
 import { IRNodeKind } from "../IRNodeKind";
 import { IRRecursive } from "./IRRecursive";
 import { IRSelfCall } from "./IRSelfCall";
+import { fromHex } from "@harmoniclabs/uint8array-utils";
 
 
 export type LettedSetEntry = {
@@ -83,16 +84,17 @@ export class IRLetted
     {
         if(!isIRHash( this._hash ))
         {
-            if( this.meta.isClosed )
-            {
-                this._hash = hashIrData(
-                    concatUint8Arr(
-                        IRLetted.tag,
-                        this._value.hash
-                    )
-                );
-                return this._hash;
-            }
+            /*
+            NOTE TO SELF:
+
+            NEVER
+            NEVER
+            NEVER
+
+            NEVER GET THE HASH BASED ON THE METADATA
+
+            NEVER
+            */
             const normalized = getNormalizedLettedArgs( this.dbn, this._value );
             if( normalized === undefined )
             {
@@ -471,6 +473,7 @@ export function getNormalizedLettedArgs( lettedDbn: number, value: IRTerm ): [ n
     const minDbn = getMinVarDbn( normalized_value );
     if( minDbn === undefined ) return undefined;
 
+    if( minDbn !== 0 )
     iterTree( normalized_value,
         (node, relativeDbn) => {
             if( node instanceof IRVar )

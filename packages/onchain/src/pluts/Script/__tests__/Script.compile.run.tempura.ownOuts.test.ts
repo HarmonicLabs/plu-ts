@@ -3,6 +3,7 @@ import { TxOutRef } from "@harmoniclabs/cardano-ledger-ts";
 import { dataFromCbor } from "@harmoniclabs/plutus-data";
 import { Machine, CEKConst } from "@harmoniclabs/plutus-machine";
 import { addPBoolMethods } from "../../lib/std/UtilityTerms/TermBool";
+import { prettyUPLC } from "@harmoniclabs/uplc";
 
 const value_contains_master = phoist(
     pfn([
@@ -56,7 +57,7 @@ const tempura
     const { inputs: ins, outputs: outs } = tx;
 
     const ownAddr = plet(
-        ins.head.resolved.address
+        outs.head.address
     );
 
     const ownOuts = plet(
@@ -65,12 +66,11 @@ const tempura
         , "ownOuts"
     );
 
-    const fake1 = addPBoolMethods( plet( ownAddr, "ownAddr" ).in( _ => pBool( true ) ) );
-    const fake2 = addPBoolMethods( plet( ownOuts, "ownOuts" ).in( _ => pBool( true ) ) );
-    const fake3 = addPBoolMethods( plet( ownOuts, "ownOuts" ).in( _ => pBool( true ) ) );
+    const fake1 = plet( ownAddr, "ownAddr" ).in( _ => pBool( true ) );
+    const fake2 = plet( ownOuts, "ownOuts" ).in( _ => pBool( true ) );
+    const fake3 = plet( ownOuts, "ownOuts" ).in( _ => pBool( true ) );
 
     return passert.$(
-        // pBool( true )
         fake1
         .and( fake2 )
         .and( fake3 )
@@ -125,6 +125,7 @@ describe("run tempura", () => {
         //     (res as any)?.result
         // );
 
+        // console.dir( res.result, { depth: 10 } );
         expect( res.result instanceof CEKConst ).toBe( true );
 
         const expectedResult = CEKConst.unit;

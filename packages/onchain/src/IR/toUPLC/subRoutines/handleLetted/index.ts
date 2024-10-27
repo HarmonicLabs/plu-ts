@@ -8,7 +8,7 @@ import { _modifyChildFromTo } from "../../_internal/_modifyChildFromTo";
 import { findAllNoHoisted } from "../../_internal/findAll";
 import { getDebruijnInTerm } from "../../_internal/getDebruijnInTerm";
 import { _getMinUnboundDbn } from "./groupByScope";
-import { prettyIRJsonStr } from "../../../utils/showIR";
+import { prettyIRInline, prettyIRJsonStr, prettyIRText } from "../../../utils/showIR";
 import { IRDelayed } from "../../../IRNodes/IRDelayed";
 import { IRForced } from "../../../IRNodes/IRForced";
 import { lowestCommonAncestor } from "../../_internal/lowestCommonAncestor";
@@ -16,7 +16,7 @@ import { isIRTerm } from "../../../utils/isIRTerm";
 import { markRecursiveHoistsAsForced } from "../markRecursiveHoistsAsForced";
 import { IRConst } from "../../../IRNodes/IRConst";
 import { incrementUnboundDbns } from "./incrementUnboundDbns";
-import { equalIrHash, irHashToHex } from "../../../IRHash";
+import { equalIrHash, IRHash, irHashToHex } from "../../../IRHash";
 import { sanifyTree } from "../sanifyTree";
 import { mapArrayLike } from "../../../IRNodes/utils/mapArrayLike";
 import { IRCase } from "../../../IRNodes/IRCase";
@@ -25,19 +25,19 @@ import { IRRecursive } from "../../../IRNodes/IRRecursive";
 import { IRSelfCall } from "../../../IRNodes/IRSelfCall";
 import { findHighestRecursiveParent } from "./findHighestRecursiveParent";
 import { IRParentTerm } from "../../../utils/isIRParentTerm";
+import { fromHex } from "@harmoniclabs/uint8array-utils";
+import { iterTree } from "../../_internal/iterTree";
 
 export function handleLettedAndReturnRoot( term: IRTerm ): IRTerm
 {
     // console.log(" ------------------------------------------- handleLetted ------------------------------------------- ");
-    // console.log( prettyIRJsonStr( term ))
+    // console.log( prettyIRText( term ))
     // most of the time we are just compiling small
     // pre-execuded terms (hence constants)
     if( term instanceof IRConst ) return term;
     
     // TODO: should probably merge `markRecursiveHoistsAsForced` inside `getLettedTerms` to iter once
     markRecursiveHoistsAsForced( term );
-
-   // console.log( prettyIRJsonStr( term ) );
 
     // in case there are no letted terms there is no work to do
     while( true )
@@ -56,10 +56,12 @@ export function handleLettedAndReturnRoot( term: IRTerm ): IRTerm
         const _lettedValue_ = letted.value;
         const shouldLog = (
             _lettedValue_ instanceof IRApp &&
-            _lettedValue_.fn instanceof IRNative &&
-            _lettedValue_.fn.tag === IRNativeTag.addInteger &&
-            _lettedValue_.arg instanceof IRConst &&
-            BigInt( _lettedValue_.arg.value as any ) === BigInt( 2 )
+            _lettedValue_.fn instanceof IRFunc &&
+            _lettedValue_.fn.arity === 1 &&
+            _lettedValue_.fn.body instanceof IRLetted &&
+            equalIrHash( _lettedValue_.fn.body.hash, new Uint32Array( fromHex("71030a2d7560e563fe25fd782edd847f").buffer ) as IRHash ) &&
+            _lettedValue_.arg instanceof IRLetted &&
+            equalIrHash( _lettedValue_.arg.hash, new Uint32Array( fromHex("82dfb8a2f2703fe59fb25f8372e5e958").buffer ) as IRHash )
         );
         //*/
 
@@ -96,16 +98,12 @@ export function handleLettedAndReturnRoot( term: IRTerm ): IRTerm
         sanifyTree( maxScope );
         const lettedHash = letted.hash;
 
-        // shouldLog && console.log("maxScope", prettyIRJsonStr( maxScope ) );
-
         const sameLettedRefs = findAllNoHoisted(
             maxScope,
             node => 
                 node instanceof IRLetted &&
                 equalIrHash( node.hash, lettedHash )
         ) as IRLetted[];
-
-        // shouldLog && console.log("found ", sameLettedRefs.length, "references of the letted terms");
 
         if( sameLettedRefs.length <= 0 )
         {
@@ -147,7 +145,6 @@ export function handleLettedAndReturnRoot( term: IRTerm ): IRTerm
             continue;
         }
 
-        // shouldLog && console.log("minScope === undefined", minScope === undefined );
         let lca: IRTerm | undefined = minScope ?? sameLettedRefs[0];
         
         // const forceHoist = false && sameLettedRefs.some( letted => letted.meta.forceHoist === true );
@@ -203,8 +200,6 @@ export function handleLettedAndReturnRoot( term: IRTerm ): IRTerm
             continue;
         }
 
-        // shouldLog && console.log("lca", prettyIRJsonStr( lca ) );
-
         const parentNode: IRTerm = lca;
         const parentNodeDirectChild = (
             parentNode instanceof IRFunc ||
@@ -218,6 +213,7 @@ export function handleLettedAndReturnRoot( term: IRTerm ): IRTerm
         incrementUnboundDbns(
             parentNodeDirectChild,
             // `shouldNotModifyLetted` arg (given the hash returns `true` if it should NOT modify the term)
+            // this callback is ONLY called on LETTED terms
             ({ hash }) => equalIrHash( hash, lettedHash )
         );
         
@@ -239,7 +235,6 @@ export function handleLettedAndReturnRoot( term: IRTerm ): IRTerm
         if( parentNode instanceof IRFunc || parentNode instanceof IRRecursive ) parentNode.body = newNode;
         else parentNode.delayed = newNode;
 
-        // console.log("replacing letted with value", prettyIRText( letted.value ) )
         for( const ref of sameLettedRefs )
         {
             _modifyChildFromTo(
@@ -258,20 +253,8 @@ export function handleLettedAndReturnRoot( term: IRTerm ): IRTerm
         // {
         //     finalMaxScope = (finalMaxScope as any).parent as any
         // }
-        // console.log("final max scope (delayed: " + delayed + ")" , prettyIRJsonStr( finalMaxScope ) )
-
+        // console.log("final max scope (delayed: " + delayed + ")" , prettyIRText( finalMaxScope ) )
     }
-}
-
-function isChildOf( child: IRTerm | undefined, parent: IRTerm ): boolean
-{
-    do
-    {
-        if( !child ) return false;
-        if( child === parent ) return true;
-    } while( child = child?.parent );
-
-    return false;
 }
 
 /**
@@ -496,7 +479,6 @@ function handleLettedAsHoistedAndReturnRoot(
         currentRoot = newNode;
     }
 
-    // console.log("replacing letted with value", prettyIRText( letted.value ) )
     for( const ref of sameLettedRefs )
     {
         _modifyChildFromTo(

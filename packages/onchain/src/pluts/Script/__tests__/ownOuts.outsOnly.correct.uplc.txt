@@ -1,0 +1,181 @@
+[
+  (lam tail
+    [
+      (lam head
+        [
+          (lam sndPair
+            [
+              (lam ifThenElse
+                [
+                  (lam and 
+                    [
+                      (lam getFields
+                        [
+                          [
+                            [
+                              [
+                                (lam _utxoParam 
+                                  (lam _state 
+                                    (lam _rdmr 
+                                      (lam ctx
+                                        [
+                                          (lam txOuts
+                                            [
+                                              (lam ownAddr 
+                                                [
+                                                  (lam ownOuts
+                                                    [
+                                                      (lam q 
+                                                        (force 
+                                                          [
+                                                            [
+                                                              [
+                                                                ifThenElse 
+                                                                q
+                                                              ] 
+                                                              (delay 
+                                                                (con unit ())
+                                                              )
+                                                            ] 
+                                                            (delay (error)
+                                                            )
+                                                          ]
+                                                        )
+                                                      ) 
+                                                      [
+                                                        [
+                                                          and 
+                                                          [
+                                                            [
+                                                              and 
+                                                              [
+                                                                (lam q 
+                                                                  (con boolean True)
+                                                                ) 
+                                                                ownAddr
+                                                              ]
+                                                            ] 
+                                                            (delay 
+                                                              [
+                                                                (lam q 
+                                                                  (con boolean True)
+                                                                ) 
+                                                                ownOuts
+                                                              ]
+                                                            )
+                                                          ]
+                                                        ] 
+                                                        (delay 
+                                                          [
+                                                            (lam q 
+                                                              (con boolean True)
+                                                            ) 
+                                                            ownOuts
+                                                          ]
+                                                        )
+                                                      ]
+                                                    ]
+                                                  ) 
+                                                  [
+                                                    (lam ownOuts 
+                                                      txOuts
+                                                    ) 
+                                                    ownAddr
+                                                  ]
+                                                ]
+                                              ) 
+                                              [
+                                                head 
+                                                [
+                                                  getFields 
+                                                  [
+                                                    head 
+                                                    txOuts
+                                                  ]
+                                                ]
+                                              ]
+                                            ]
+                                          ) 
+                                          [
+                                            (builtin unListData) 
+                                            [
+                                              (lam txFields
+                                                [
+                                                  head 
+                                                  [
+                                                    tail 
+                                                    [
+                                                      tail 
+                                                      txFields
+                                                    ]
+                                                  ]
+                                                ]
+                                              ) 
+                                              [
+                                                getFields 
+                                                [
+                                                  head 
+                                                  [
+                                                    getFields 
+                                                    ctx
+                                                  ]
+                                                ]
+                                              ]
+                                            ]
+                                          ]
+                                        ]
+                                      )
+                                    )
+                                  )
+                                ) 
+                                (con data Constr 0 [B #1cd30f11c3d774fa1cb43620810a405e6048c8ecea2e85ff43f5c3ad08096e46,I 1])
+                              ] 
+                              (con data Constr 0 [I 0,B #71eb1a4896739027745df976a065ded7ffd4e6371a2a9256999f59371b50b36a,I 5,I 65535,I 0,I 1693749160500,I 0,List []])
+                            ] 
+                            (con data Constr 1 [B #842b09bb0f88bf1232901043701534ce])
+                          ] 
+                          (con data Constr 0 [Constr 0 [List [Constr 0 [Constr 0 [Constr 0 [B #12cc3906a43731477e63522a24cbb5eaf74046bf7b44f600d8f062ecac331b71],I 0],Constr 0 [Constr 0 [Constr 1 [B #c9981006c4abf1eab96a0c87b0ee3d40b8007cd4c9b3d0dea357c278],Constr 1 []],Map [(B #,Map [(B #,I 1612020)]),(B #c9981006c4abf1eab96a0c87b0ee3d40b8007cd4c9b3d0dea357c278,Map [(B #6974616d6165,I 1)])],Constr 2 [Constr 0 [I 0,B #71eb1a4896739027745df976a065ded7ffd4e6371a2a9256999f59371b50b36a,I 5,I 16383,I 0,I 1693749160500,I 0,List []]],Constr 1 []]],Constr 0 [Constr 0 [Constr 0 [B #fbbce31d47e45af499baff9446c99ccbc2e80db613467dbc5ffea2f3bb10a8a2],I 1],Constr 0 [Constr 0 [Constr 0 [B #13867b04db054caa9655378fe37fedee7029924fbe1243887dc35fd8],Constr 1 []],Map [(B #,Map [(B #,I 9915106559)])],Constr 0 [],Constr 1 []]]],List [Constr 0 [Constr 0 [Constr 0 [B #fbbce31d47e45af499baff9446c99ccbc2e80db613467dbc5ffea2f3bb10a8a2],I 0],Constr 0 [Constr 0 [Constr 1 [B #c9981006c4abf1eab96a0c87b0ee3d40b8007cd4c9b3d0dea357c278],Constr 1 []],Map [(B #,Map [(B #,I 19451110)])],Constr 2 [I 0],Constr 0 [B #c9981006c4abf1eab96a0c87b0ee3d40b8007cd4c9b3d0dea357c278]]],Constr 0 [Constr 0 [Constr 0 [B #fbbce31d47e45af499baff9446c99ccbc2e80db613467dbc5ffea2f3bb10a8a2],I 0],Constr 0 [Constr 0 [Constr 1 [B #c9981006c4abf1eab96a0c87b0ee3d40b8007cd4c9b3d0dea357c278],Constr 1 []],Map [(B #,Map [(B #,I 19451110)])],Constr 2 [I 0],Constr 0 [B #c9981006c4abf1eab96a0c87b0ee3d40b8007cd4c9b3d0dea357c278]]]],List [Constr 0 [Constr 0 [Constr 1 [B #c9981006c4abf1eab96a0c87b0ee3d40b8007cd4c9b3d0dea357c278],Constr 1 []],Map [(B #,Map [(B #,I 1612020)]),(B #c9981006c4abf1eab96a0c87b0ee3d40b8007cd4c9b3d0dea357c278,Map [(B #6974616d6165,I 1)])],Constr 2 [Constr 0 [I 1,B #00000f3b69e1436d48366f34c2e217cf598dc2f886d7dc5bb56688b8365a748b,I 5,I 16383,I 685500,I 1693749846000,I 0,List []]],Constr 1 []],Constr 0 [Constr 0 [Constr 0 [B #13867b04db054caa9655378fe37fedee7029924fbe1243887dc35fd8],Constr 1 []],Map [(B #,Map [(B #,I 9914919938)]),(B #c9981006c4abf1eab96a0c87b0ee3d40b8007cd4c9b3d0dea357c278,Map [(B #54454d50555241,I 5000000000)])],Constr 0 [],Constr 1 []]],Map [(B #,Map [(B #,I 186621)])],Map [(B #,Map [(B #,I 0)]),(B #c9981006c4abf1eab96a0c87b0ee3d40b8007cd4c9b3d0dea357c278,Map [(B #54454d50555241,I 5000000000)])],List [],Map [],Constr 0 [Constr 0 [Constr 1 [I 1693749756000],Constr 0 []],Constr 0 [Constr 1 [I 1693749936000],Constr 0 []]],List [],Map [(Constr 1 [Constr 0 [Constr 0 [B #12cc3906a43731477e63522a24cbb5eaf74046bf7b44f600d8f062ecac331b71],I 0]],Constr 1 [B #842b09bb0f88bf1232901043701534ce]),(Constr 0 [B #c9981006c4abf1eab96a0c87b0ee3d40b8007cd4c9b3d0dea357c278],Constr 0 [])],Map [],B #198ca261bc2c0f39e64132c19cd2b2e38dffc4f5594ec195d8750013f73f1b7b],Constr 1 [Constr 0 [Constr 0 [B #12cc3906a43731477e63522a24cbb5eaf74046bf7b44f600d8f062ecac331b71],I 0]]])
+                        ]
+                      ) 
+                      (lam getFields 
+                        [
+                          sndPair 
+                          [
+                            (builtin unConstrData) 
+                            getFields
+                          ]
+                        ]
+                      )
+                    ]
+                  ) 
+                  (lam and 
+                    (lam getFields 
+                      (force 
+                        [
+                          [
+                            [
+                              ifThenElse 
+                              and
+                            ] 
+                            getFields
+                          ] 
+                          (delay 
+                            (con boolean False)
+                          )
+                        ]
+                      )
+                    )
+                  )
+                ]
+              ) 
+              (force (builtin ifThenElse))
+            ]
+          ) 
+          (force (force (builtin sndPair)))
+        ]
+      ) 
+      (force (builtin headList))
+    ]
+  ) 
+  (force (builtin tailList))
+]

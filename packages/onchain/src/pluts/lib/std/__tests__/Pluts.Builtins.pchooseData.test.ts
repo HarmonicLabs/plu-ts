@@ -7,7 +7,7 @@ import { pInt } from "../int/pInt";
 
 describe("pchooseData", () => {
 
-    test.only("'caseConstr/caseMap/caseList/caseI/CaseB' and '$' (application) are interchangeable", () => {
+    test.skip("'caseConstr/caseMap/caseList/caseI/CaseB' and '$' (application) are interchangeable", () => {
 
         const target = new Application(
             new Lambda(

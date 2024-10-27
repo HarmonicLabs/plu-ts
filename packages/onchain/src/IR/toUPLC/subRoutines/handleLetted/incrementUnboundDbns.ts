@@ -19,7 +19,7 @@ import { IRSelfCall } from "../../../IRNodes/IRSelfCall";
 **/
 export function incrementUnboundDbns(
     theTerm: IRTerm, 
-    shouldNotModifyLetted: (letted: IRLetted) => boolean
+    shouldNotModifyLetted: (letted: IRLetted, dbn: number ) => boolean
 ): void
 {
     const stack: { term: IRTerm, dbn: number }[] = [{ term: theTerm, dbn: 0 }];
@@ -41,7 +41,7 @@ export function incrementUnboundDbns(
         }
         if( t instanceof IRLetted )
         {
-            if( shouldNotModifyLetted( t ) )
+            if( shouldNotModifyLetted( t, dbn ) )
             {
                 // don't modify letted to be hoisted
                 continue;

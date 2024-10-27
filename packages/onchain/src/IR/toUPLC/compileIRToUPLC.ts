@@ -15,6 +15,8 @@ import { hoistForcedNatives } from "./subRoutines/hoistForcedNatives";
 import { handleRecursiveTerms } from "./subRoutines/handleRecursiveTerms";
 import { CompilerOptions, completeCompilerOptions } from "./CompilerOptions";
 import { replaceHoistedWithLetted } from "./subRoutines/replaceHoistedWithLetted";
+import { IRNative } from "../IRNodes";
+import { replaceForcedNativesWithHoisted } from "./subRoutines/replaceForcedNativesWithHoisted";
 
 
 export function compileIRToUPLC(
@@ -91,6 +93,13 @@ export function compileIRToUPLC(
         // forget the parent; this is the new root
         term.parent = undefined;
     }
+    
+    if(
+        term instanceof IRNative ||
+        term instanceof IRConst // while we are at it
+    ) return _irToUplc( term ).term;
+
+    if( options.delayHoists ) replaceForcedNativesWithHoisted( term );
 
     if( options.delayHoists ) replaceHoistedWithLetted( term );
     else replaceClosedLettedWithHoisted( term );
@@ -122,11 +131,19 @@ export function compileIRToUPLC(
     ///////////////////////////////////////////////////////////////////////////////
 
     // introduces new hoisted terms
+    // however we cannot do this before
+    // because in order to hanlde letted at the best
+    // we need to know where the `IRRecursive` nodes are
     handleRecursiveTerms( term );
+    // if( options.delayHoists ) replaceHoistedWithLetted( term );
+
     // handle new hoisted terms
     term = handleHoistedAndReturnRoot( term )
 
-    term = hoistForcedNatives( term );
+    // strictly necessary to check the options
+    // otherwise forced natives where already hoisted
+    // will be re-hosited; causeing uselsess evaluations
+    if( !options.delayHoists ) term = hoistForcedNatives( term );
 
     const srcmap = {};
     const uplc = _irToUplc( term, srcmap ).term;
