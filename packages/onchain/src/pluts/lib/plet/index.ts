@@ -52,8 +52,8 @@ export function plet<PVarT extends PType, SomeExtension extends object>(
 
     const letted = new Term(
         type,
-        dbn => {
-            const ir =  varValue.toIR( dbn );
+        (cfg, dbn) => {
+            const ir =  varValue.toIR( cfg, dbn );
 
             // `compileIRToUPLC` can handle it even if this check is not present
             // but why spend useful tree iterations if we can avoid them here?
@@ -92,10 +92,9 @@ export function plet<PVarT extends PType, SomeExtension extends object>(
         // return papp( plam( varValue.type, outType )( expr as any ), varValue as any ) as any;
         const term = new Term(
             outType,
-            dbn => {
+            (cfg, dbn) => {
 
-
-                const arg = varValue.toIR( dbn );
+                const arg = varValue.toIR( cfg, dbn );
 
                 if(
                     // inline variables; no need to add an application since already in scope
@@ -103,7 +102,7 @@ export function plet<PVarT extends PType, SomeExtension extends object>(
                     arg instanceof IRSelfCall
                 )
                 {
-                    return expr( withUtility( varValue as any ) as any ).toIR( dbn );
+                    return expr( withUtility( varValue as any ) as any ).toIR( cfg, dbn );
                 }
 
                 // if(
@@ -111,7 +110,7 @@ export function plet<PVarT extends PType, SomeExtension extends object>(
                 //     arg instanceof IRLetted
                 // )
                 // {
-                //     return expr( withUtility( varValue as any ) as any ).toIR( dbn );
+                //     return expr( withUtility( varValue as any ) as any ).toIR( cfg, dbn );
                 // }
 
                 return new IRApp(
@@ -121,10 +120,10 @@ export function plet<PVarT extends PType, SomeExtension extends object>(
                             withUtility(
                                 new Term(
                                     varValue.type,
-                                    varAccessDbn => new IRVar( varAccessDbn - ( dbn + BigInt(1) ) ) // point to the lambda generated here
+                                    ( cfg, varAccessDbn) => new IRVar( varAccessDbn - ( dbn + BigInt(1) ) ) // point to the lambda generated here
                                 ) as any
                             ) as any
-                        ).toIR( ( dbn + BigInt(1) ) )
+                        ).toIR( cfg, ( dbn + BigInt(1) ) )
                     ),
                     arg,
                     { __src__ }

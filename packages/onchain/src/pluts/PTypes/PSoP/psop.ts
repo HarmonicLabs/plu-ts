@@ -241,9 +241,9 @@ export function psop<
                 return addUtilityForType( thisSopType )(
                     new Term(
                         thisSopType,
-                        dbn => new IRConstr(
+                        (cfg, dbn) => new IRConstr(
                             i,
-                            ctorDefFieldsNames.map( fieldKey => jsSop[ fieldKey ].toIR( dbn ) )
+                            ctorDefFieldsNames.map( fieldKey => jsSop[ fieldKey ].toIR( cfg, dbn ) )
                         )
                     )
                 ) as any;

@@ -10,9 +10,9 @@ export function _plet<PVarT extends PType, SomeExtension extends object>( varVal
 {
     return new Term(
         varValue.type,
-        dbn => {
+        (cfg, dbn) => {
 
-            const ir =  varValue.toIR( dbn );
+            const ir =  varValue.toIR( cfg, dbn );
 
             // `compileIRToUPLC` can handle it even if this check is not present
             // but why spend useful tree iterations if we can avoid them here?

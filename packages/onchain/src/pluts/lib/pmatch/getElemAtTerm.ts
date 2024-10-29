@@ -57,7 +57,7 @@ export function getElemAtTerm( n: number ): TermFn<[ PList<PData> ], PData >
         ( lst: Term<PList<PData>>) => 
             new Term(
                 data,
-                dbn => new IRApp( uplc.clone(), lst.toIR(dbn) )
+                (cfg, dbn) => new IRApp( uplc.clone(), lst.toIR( cfg, dbn) )
             )
     );
 

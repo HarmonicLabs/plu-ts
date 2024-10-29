@@ -75,9 +75,9 @@ export function pmatchSop<SDef extends SopDefinition>( sopTerm: Term<PSop<SDef, 
 
                     return new Term<PType>(
                         returnT,
-                        dbn => new IRCase(
-                            sopTerm.toIR( dbn ),
-                            continuationTerms.map( term => term.toIR( dbn ) )
+                        (cfg, dbn) => new IRCase(
+                            sopTerm.toIR( cfg, dbn ),
+                            continuationTerms.map( term => term.toIR( cfg, dbn ) )
                         )
                     );
 
@@ -126,9 +126,9 @@ export function pmatchSop<SDef extends SopDefinition>( sopTerm: Term<PSop<SDef, 
 
                 return new Term<PType>(
                     returnT,
-                    dbn => new IRCase(
-                        sopTerm.toIR( dbn ),
-                        continuationTerms.map( term => term.toIR( dbn ) )
+                    (cfg, dbn) => new IRCase(
+                        sopTerm.toIR(cfg, dbn ),
+                        continuationTerms.map( term => term.toIR( cfg, dbn ) )
                     )
                 );;
             }
@@ -177,7 +177,7 @@ function makeConstrContinuationTerm<SCtorDef extends SopCtorDef>(
             fields.map( f => ctorDef[f] ) as any,
             returnT
         ),
-        dbn => {
+        (cfg, dbn) => {
 
             const fstArgLambdaPtr = dbn + BigInt( 1 );
 
@@ -192,7 +192,7 @@ function makeConstrContinuationTerm<SCtorDef extends SopCtorDef>(
                         value: addUtilityForType( t )(
                             new Term<PType>(
                                 t,
-                                dbnAccessLevel => new IRVar(
+                                (cfg, dbnAccessLevel) => new IRVar(
                                     dbnAccessLevel - (fstArgLambdaPtr + BigInt( i ))
                                 )
                             )
@@ -206,7 +206,7 @@ function makeConstrContinuationTerm<SCtorDef extends SopCtorDef>(
 
             const body = cb( sInstance );
 
-            return new IRFunc( nFields, body.toIR( dbn + BigInt( nFields ) ) );
+            return new IRFunc( nFields, body.toIR( cfg, dbn + BigInt( nFields ) ) );
         }
     )
 }

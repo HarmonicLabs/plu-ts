@@ -15,8 +15,9 @@ import { hoistForcedNatives } from "./subRoutines/hoistForcedNatives";
 import { handleRecursiveTerms } from "./subRoutines/handleRecursiveTerms";
 import { CompilerOptions, completeCompilerOptions } from "./CompilerOptions";
 import { replaceHoistedWithLetted } from "./subRoutines/replaceHoistedWithLetted";
-import { IRNative } from "../IRNodes";
+import { IRApp, IRCase, IRConstr, IRNative, IRVar } from "../IRNodes";
 import { replaceForcedNativesWithHoisted } from "./subRoutines/replaceForcedNativesWithHoisted";
+import { performUplcOptimizationsAndReturnRoot } from "./subRoutines/performUplcOptimizationsAndReturnRoot";
 
 
 export function compileIRToUPLC(
@@ -144,6 +145,27 @@ export function compileIRToUPLC(
     // otherwise forced natives where already hoisted
     // will be re-hosited; causeing uselsess evaluations
     if( !options.delayHoists ) term = hoistForcedNatives( term );
+
+    // at this point we expect the IR to be translable 1:1 to UPLC
+
+    term = performUplcOptimizationsAndReturnRoot( term, options );
+
+    if(
+        options.addMarker &&
+        options.targetUplcVersion.major >= 1 &&
+        options.targetUplcVersion.minor >= 1 &&
+        options.targetUplcVersion.patch >= 0
+    )
+    {
+        term = new IRCase(
+            new IRConstr( 0, [] ),
+            [
+                term,
+                // never evaluated
+                IRConst.int( 42 )
+            ]
+        );
+    }
 
     const srcmap = {};
     const uplc = _irToUplc( term, srcmap ).term;

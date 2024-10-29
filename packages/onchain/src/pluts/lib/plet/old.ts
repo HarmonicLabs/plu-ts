@@ -26,10 +26,10 @@ export function _old_plet<PVarT extends PType, SomeExtension extends object>( va
 
     const letted = new Term(
         type,
-        dbn =>
+        (cfg, dbn) =>
             new IRLetted(
                 Number( dbn ),
-                varValue.toIR( dbn )
+                varValue.toIR( cfg, dbn )
             )
     );
     
@@ -50,8 +50,8 @@ export function _old_plet<PVarT extends PType, SomeExtension extends object>( va
         const term = addUtilityForType( outType )(
             new Term(
                 outType,
-                dbn => {
-                    const arg = varValue.toIR( dbn );
+                (cfg, dbn) => {
+                    const arg = varValue.toIR( cfg, dbn );
     
                     if(
                         // inline variables; no need to add an application since already in scope
@@ -59,7 +59,7 @@ export function _old_plet<PVarT extends PType, SomeExtension extends object>( va
                         arg instanceof IRSelfCall
                     )
                     {
-                        return expr( withUtility( varValue as any ) as any ).toIR( dbn );
+                        return expr( withUtility( varValue as any ) as any ).toIR( cfg, dbn );
                     }
     
                     return new IRApp(
@@ -69,10 +69,10 @@ export function _old_plet<PVarT extends PType, SomeExtension extends object>( va
                                 withUtility(
                                     new Term(
                                         varValue.type,
-                                        varAccessDbn => new IRVar( varAccessDbn - ( dbn + BigInt(1) ) ) // point to the lambda generated here
+                                        (cfg, varAccessDbn) => new IRVar( varAccessDbn - ( dbn + BigInt(1) ) ) // point to the lambda generated here
                                     ) as any
                                 ) as any
-                            ).toIR( ( dbn + BigInt(1) ) )
+                            ).toIR( cfg, dbn + BigInt(1) )
                         ),
                         arg
                     )

@@ -19,6 +19,7 @@ import { DataI } from "@harmoniclabs/plutus-data";
 import { Machine } from "@harmoniclabs/plutus-machine";
 import { pInt } from "../../../../../pluts/lib/std/int/pInt";
 import { irHashToHex } from "../../../../IRHash";
+import { debugOptions, productionOptions } from "../../../CompilerOptions";
 
 describe("handleLettedAndReturnRoot", () => {
 
@@ -149,7 +150,7 @@ describe("handleLettedAndReturnRoot", () => {
 
         expect( getLettedTerms( root ).length ).toEqual( 2 );
 
-        const compiled = compileIRToUPLC( root );
+        const compiled = compileIRToUPLC( root, { ...productionOptions, addMarker: false } );
 
         expect(
             showUPLC( compiled )
@@ -252,7 +253,7 @@ describe("handleLettedAndReturnRoot", () => {
 
         // logJson( root, 4 )
 
-        const compiled = compileIRToUPLC( root );
+        const compiled = compileIRToUPLC( root, debugOptions );
 
         expect(
             showUPLC( compiled )
@@ -325,7 +326,7 @@ describe("handleLettedAndReturnRoot", () => {
             )
         );
 
-        const compiled = compileIRToUPLC( root );
+        const compiled = compileIRToUPLC( root, { ...productionOptions, addMarker: false } );
 
         expect( showUPLC( compiled ) )
         .toEqual(
@@ -355,10 +356,10 @@ describe("handleLettedAndReturnRoot", () => {
             )
         );
 
-        const compiled = compileIRToUPLC( root );
+        const compiled = compileIRToUPLC( root, debugOptions );
 
         expect( showUPLC( compiled ) )
-        .toEqual("(lam a (lam b [(lam c [[(lam d (lam e [[(builtin addInteger) a] d])) c] c]) (con integer 2)]))");
+        .toEqual("[(lam a (lam b (lam c [[(lam d (lam e [[(builtin addInteger) b] d])) a] a]))) (con integer 2)]");
 
         // all inlined
         const expected = new IRFunc( 2, // a, b

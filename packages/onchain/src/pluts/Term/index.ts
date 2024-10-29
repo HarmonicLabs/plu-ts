@@ -9,11 +9,12 @@ import { compileIRToUPLC } from "../../IR/toUPLC/compileIRToUPLC";
 import { PType } from "../PType";
 import { FromPType, GenericTermType, TermType, ToPType, isWellFormedGenericType, isWellFormedType, termTypeToString } from "../type_system";
 import { cloneTermType } from "../type_system/cloneTermType";
-import { defineReadOnlyHiddenProperty } from "@harmoniclabs/obj-utils";
+import { defineReadOnlyHiddenProperty, isObject } from "@harmoniclabs/obj-utils";
 import { Cloneable, isCloneable } from "../../utils/Cloneable";
 import { assert } from "../../utils/assert";
 import { IRVar } from "../../IR/IRNodes/IRVar";
 import { IRSelfCall } from "../../IR/IRNodes/IRSelfCall";
+import { CompilerOptions, debugOptions, defaultOptions } from "../../IR/toUPLC/CompilerOptions";
 
 export type UnTerm<T extends Term<PType>> = T extends Term<infer PT extends PType > ? PT : never;
 
@@ -38,13 +39,17 @@ export class Term<PT extends PType>
     // typescript being silly here
     readonly type!: FromPType<PT> | TermType;
     
-    readonly toUPLC!: ( deBruijnLevel?: bigint | number ) => UPLCTerm
+    readonly toUPLC!: ( deBruijnLevel?: bigint | number, config?: CompilerOptions ) => UPLCTerm
 
-    readonly toIR!: ( deBruijnLevel?: bigint | number ) => IRTerm
+    readonly toIR!: ( config?: CompilerOptions, deBruijnLevel?: bigint | number ) => IRTerm
 
     readonly clone!: () => Term<PT>
 
-    constructor( type: FromPType<PT> | TermType | GenericTermType, _toIR: ( dbn: bigint ) => IRTerm, isConstant: boolean = false )
+    constructor(
+        type: FromPType<PT> | TermType | GenericTermType,
+        _toIR: ( config: CompilerOptions, dbn: bigint ) => IRTerm,
+        isConstant: boolean = false
+    )
     {
         assert(
             isWellFormedGenericType( type ) ||
@@ -71,15 +76,16 @@ export class Term<PT extends PType>
         Object.defineProperty(
             this, "toIR",
             {
-                value: ( deBruijnLevel: bigint | number = 0 ) =>
+                value: ( config: CompilerOptions = defaultOptions, deBruijnLevel: bigint | number = 0 ) =>
                 {
+                    if(!isObject( config )) config = defaultOptions;
                     const dbnStr = deBruijnLevel.toString();
                     const _cacheHit = _IR_cache[ shouldHoist ? "hoisted" : dbnStr ];
                     if( _cacheHit ) return _cacheHit.clone();
 
                     if( typeof deBruijnLevel !== "bigint" ) deBruijnLevel = BigInt( deBruijnLevel );
 
-                    let ir = _toIR_( deBruijnLevel );
+                    let ir = _toIR_( config, deBruijnLevel );
                     if( shouldHoist )
                     {
                         const res = new IRHoisted( ir );
@@ -100,7 +106,7 @@ export class Term<PT extends PType>
                         // as for the current implementation we don't care
                         // because we are going to re-assign the variable `ir` anyway
                         // if this ever changes make sure to call `ir.clone()`
-                        let uplc = compileIRToUPLC( ir/*.clone()*/ );
+                        let uplc = compileIRToUPLC( ir, debugOptions );
 
                         // console.log( showUPLC( uplc ) )
         
@@ -141,12 +147,12 @@ export class Term<PT extends PType>
         Object.defineProperty(
         this, "toUPLC",
         {
-            value: ( deBruijnLevel: bigint | number = 0 ) =>
+            value: ( deBruijnLevel: bigint | number = 0, config = defaultOptions ) =>
             {
                 const key = shouldHoist ? "hoisted" : deBruijnLevel.toString();
                 const _cacheHit = _UPLC_cache[key];
                 if( _cacheHit ) return _cacheHit.clone()
-                const res = compileIRToUPLC( this.toIR( deBruijnLevel ) );
+                const res = compileIRToUPLC( this.toIR( config, deBruijnLevel ), config );
                 _UPLC_cache[key] = res.clone();
                 return res;
             },

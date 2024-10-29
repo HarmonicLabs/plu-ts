@@ -11,7 +11,7 @@ export function perror<T extends TermType>( type: T , msg: string | undefined = 
         { __original__: addInfos };
 
     let src = new Error().stack?.split("\n")[2];
-    src = src?.slice( src.indexOf("at ") + 3 ?? 0 );
+    src = src?.slice( src.indexOf("at ") + 3 );
     
     (addInfos as any).__src__ = src;
     

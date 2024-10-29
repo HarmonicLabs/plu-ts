@@ -8,9 +8,9 @@ export function pdelay<PInstance extends PType>(toDelay: Term<PInstance>): Term<
 {
     return new Term(
         delayed( toDelay.type ),
-        (dbn) => {
+        (cfg, dbn) => {
             return new IRDelayed(
-                toDelay.toIR( dbn )
+                toDelay.toIR( cfg, dbn )
             );
         }
     );

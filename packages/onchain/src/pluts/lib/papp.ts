@@ -109,7 +109,7 @@ export function papp<Input extends PType, Output extends PType>( a: Term<PLam<In
     const outputTerm = addUtilityForType( outputType )(
         new Term(
             outputType,
-            dbn => {
+            (cfg, dbn) => {
 
                 let funcIR: IRTerm;
 
@@ -117,18 +117,18 @@ export function papp<Input extends PType, Output extends PType>( a: Term<PLam<In
                 {
                     if(!hasOwn( a, "unsafeWithInputOfType" ))
                     {
-                        funcIR = a.toIR(dbn)
+                        funcIR = a.toIR( cfg,dbn)
                     }
-                    else funcIR = (a as any).unsafeWithInputOfType( _b.type ).toIR(dbn)
+                    else funcIR = (a as any).unsafeWithInputOfType( _b.type ).toIR( cfg,dbn)
                 }
                 else
                 {
-                    funcIR = a.toIR(dbn)
+                    funcIR = a.toIR( cfg,dbn)
                 }
 
                 if( funcIR instanceof IRError ) return funcIR;
                 
-                const argIR  = _b.toIR( dbn );
+                const argIR  = _b.toIR( cfg, dbn );
                 if( argIR instanceof IRError ) return argIR;
 
                 // omit id function

@@ -59,8 +59,8 @@ export function _precursive<A extends PType, B extends PType>
 
     const recursiveFn = new Term(
         fnBody.type[2] as TermType,
-        dbn => {
-            const fnBodyIr = assertArity2AndRemoveFirst( fnBody.toIR( dbn ) );
+        (cfg, dbn) => {
+            const fnBodyIr = assertArity2AndRemoveFirst( fnBody.toIR( cfg, dbn ) );
 
             replaceSelfVars( fnBodyIr );
             

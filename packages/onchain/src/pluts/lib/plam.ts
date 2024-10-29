@@ -33,18 +33,18 @@ return (
 
     let lambdaTerm  = new Term<PLam<ToPType<A>,ToPType<B>>>(
         lam( inputType, outputType ) as any,
-        dbn => {
+        ( cfg, dbn ) => {
             const thisLambdaPtr = dbn + BigInt( 1 );
 
             const boundVar = new Term<ToPType<A>>(
                 inputType as any,
-                dbnAccessLevel => new IRVar( dbnAccessLevel - thisLambdaPtr )
+                (cfg, dbnAccessLevel) => new IRVar( dbnAccessLevel - thisLambdaPtr )
             );
             
             const body = termFunc( addUtilityForType( inputType )( boundVar ) as any);
 
             // here the debruijn level is incremented
-            return new IRFunc( 1, body.toIR( thisLambdaPtr ), func_name );
+            return new IRFunc( 1, body.toIR( cfg, thisLambdaPtr ), func_name );
         }
     );
 
@@ -55,12 +55,12 @@ return (
                 inT, 
                 outputType
             ) as any,
-            dbn => {
+            (cfg, dbn) => {
                 const thisLambdaPtr = dbn + BigInt( 1 );
     
                 const boundVar = new Term<ToPType<A>>(
                     inT as any,
-                    dbnAccessLevel => new IRVar( dbnAccessLevel - thisLambdaPtr )
+                    (cfg, dbnAccessLevel) => new IRVar( dbnAccessLevel - thisLambdaPtr )
                 );
                 
                 const body = termFunc(
@@ -74,7 +74,7 @@ return (
                 );
     
                 // here the debruijn level is incremented
-                return new IRFunc( 1, body.toIR( thisLambdaPtr ) );
+                return new IRFunc( 1, body.toIR( cfg, thisLambdaPtr ) );
             }
         )
     );

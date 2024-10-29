@@ -1,5 +1,6 @@
 import { IRTerm } from "../IRTerm";
+import { CompilerOptions } from "../toUPLC/CompilerOptions";
 
 export interface ToIR {
-    toIR: ( dbn?: number | bigint ) => IRTerm 
+    toIR: ( config: CompilerOptions, dbn?: number | bigint ) => IRTerm 
 }

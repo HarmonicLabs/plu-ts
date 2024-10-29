@@ -17,9 +17,9 @@ export function _papp<Input extends PType, Output extends PType>( a: Term<PLam<I
     }
     return new Term(
         outT as any,
-        dbn => new IRApp(
-            a.toIR(dbn),
-            b.toIR(dbn)
+        (cfg, dbn) => new IRApp(
+            a.toIR(cfg, dbn),
+            b.toIR(cfg, dbn)
         )
     )
 }
@@ -34,18 +34,18 @@ export function _plam<A extends TermType, B extends TermType >( inputType: A, ou
     ) =>
     new Term<PLam<ToPType<A>,ToPType<B>>>(
         lam( inputType, outputType ) as any,
-        dbn => {
+        (cfg, dbn) => {
             const thisLambdaPtr = dbn + BigInt( 1 );
 
             const boundVar = new Term<ToPType<A>>(
                 inputType as any,
-                dbnAccessLevel => new IRVar( dbnAccessLevel - thisLambdaPtr )
+                (cfg, dbnAccessLevel) => new IRVar( dbnAccessLevel - thisLambdaPtr )
             );
             
             const body = termFunc( boundVar );
 
             // here the debruijn level is incremented
-            return new IRFunc( 1, body.toIR( thisLambdaPtr ) );
+            return new IRFunc( 1, body.toIR( cfg, thisLambdaPtr ) );
         }
     );
 }

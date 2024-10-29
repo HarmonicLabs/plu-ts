@@ -1,6 +1,7 @@
-import { Application, Lambda, UPLCVar, showUPLC } from "@harmoniclabs/uplc";
+import { Application, Lambda, UPLCVar, prettyUPLC, showUPLC } from "@harmoniclabs/uplc";
 import { IRNative } from "../../IRNodes/IRNative";
 import { compileIRToUPLC } from "../compileIRToUPLC";
+import { debugOptions } from "../CompilerOptions";
 
 
 describe("compileIRToUPLC", () => {
@@ -11,7 +12,7 @@ describe("compileIRToUPLC", () => {
     
             const z = IRNative.z_comb;
     
-            const ir_zUPLC = compileIRToUPLC( z );
+            const ir_zUPLC = compileIRToUPLC( z, debugOptions );
     
             const innerZ = new Lambda( // toMakeRecursive
                 new Application(
@@ -35,13 +36,17 @@ describe("compileIRToUPLC", () => {
                 )
             )
     
-            // // console.log( showUPLC( ir_zUPLC ) )
-            // // console.log( showUPLC( ZUPLC ) )
+            // console.log( prettyUPLC( ir_zUPLC ) )
+            // console.log( prettyUPLC( ZUPLC ) )
     
             expect(
-                ir_zUPLC
+                showUPLC(
+                    ir_zUPLC
+                )
             ).toEqual(
-                ZUPLC
+                showUPLC(
+                    ZUPLC
+                )
             )
     
         });

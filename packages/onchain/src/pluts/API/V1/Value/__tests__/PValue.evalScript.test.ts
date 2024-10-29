@@ -1,5 +1,5 @@
 import { CEKConst, Machine } from "@harmoniclabs/plutus-machine";
-import { UPLCTerm, ErrorUPLC } from "@harmoniclabs/uplc";
+import { UPLCTerm, ErrorUPLC, showUPLC } from "@harmoniclabs/uplc";
 import { Term, pmatch, termTypeToString, typeExtends } from "../../../..";
 import { compileIRToUPLC } from "../../../../../IR/toUPLC/compileIRToUPLC";
 import { PMaybe, fromData, pBool, pByteString, pInt, pPair, pdelay, pfn, phoist, pif, plam, precursiveList, ptoData, toData } from "../../../../lib";
@@ -9,6 +9,7 @@ import { PCurrencySymbol } from "../PCurrencySymbol";
 import { PTokenName } from "../PTokenName";
 import { PAssetsEntry, PValue, PValueEntry } from "../PValue";
 import { getFstT, getSndT } from "../../../../type_system/tyArgs";
+import { debugOptions } from "../../../../../IR/toUPLC/CompilerOptions";
 
 const currSym = PCurrencySymbol.from( pByteString("ff".repeat(28)) );
 const tn = PTokenName.from( pByteString("") );
@@ -291,15 +292,16 @@ describe("pvalueOf", () => {
 
         })
 
-        test("token present", () => {
+        test.only("token present", () => {
 
             const term = pvalueOf.$( dynamicOneEntryValue ).$( currSym as any ).$( tn as any );
 
-            const uplc = term.toUPLC(0);
+            const uplc = term.toUPLC(0, debugOptions);
 
             const expected = Machine.evalSimple( pInt( 1_000_000 ) );
             const received = Machine.evalSimple( uplc );
             
+            // console.log( showUPLC( uplc ) );
             /*
             const compiled = UPLCEncoder.compile( new UPLCProgram([1,0,0], uplc.clone() ) ).toBuffer().buffer;
 
