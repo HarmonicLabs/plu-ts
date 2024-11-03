@@ -36,11 +36,7 @@ npm install https://github.com/HarmonicLabs/plu-ts
 
 ## Get started
 
-<<<<<<< HEAD
 Have a look at the [`plu-ts` documentation](https://pluts.harmoniclabs.tech) where you can find some [example projects](https://pluts.harmoniclabs.tech/docs/examples/Hello%20World) to help you get started.
-=======
-Have a look at the [`plu-ts` documentation](https://pluts.harmoniclabs.tech) where you can find some [example projects](https://pluts.harmoniclabs.tech/examples/Hello%20World) to help you get started.
->>>>>>> 789580f286572056104ecb369a1700904b74af7c
 
 ## Sponsors ❤️
 
