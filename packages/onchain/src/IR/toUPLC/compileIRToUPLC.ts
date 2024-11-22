@@ -13,22 +13,21 @@ import { replaceNativesAndReturnRoot } from "./subRoutines/replaceNatives";
 import { replaceClosedLettedWithHoisted } from "./subRoutines/replaceClosedLettedWithHoisted";
 import { hoistForcedNatives } from "./subRoutines/hoistForcedNatives";
 import { handleRecursiveTerms } from "./subRoutines/handleRecursiveTerms";
-import { CompilerOptions, completeCompilerOptions } from "./CompilerOptions";
+import { CompilerOptions, completeCompilerOptions, defaultOptions } from "./CompilerOptions";
 import { replaceHoistedWithLetted } from "./subRoutines/replaceHoistedWithLetted";
 import { IRApp, IRCase, IRConstr, IRNative, IRVar } from "../IRNodes";
 import { replaceForcedNativesWithHoisted } from "./subRoutines/replaceForcedNativesWithHoisted";
 import { performUplcOptimizationsAndReturnRoot } from "./subRoutines/performUplcOptimizationsAndReturnRoot";
 
-
 export function compileIRToUPLC(
     term: IRTerm,
-    paritalOptions: Partial<CompilerOptions> = {}
+    paritalOptions: Partial<CompilerOptions> = defaultOptions
 ): UPLCTerm
 {
     // most of the time we are just compiling small
     // pre-execuded terms (hence constants)
     if( term instanceof IRConst ) return _irToUplc( term ).term;
-    
+
     ///////////////////////////////////////////////////////////////////////////////
     // ------------------------------------------------------------------------- //
     // --------------------------------- init  --------------------------------- //

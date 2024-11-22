@@ -1,7 +1,7 @@
 import { defineReadOnlyProperty, isObject } from "@harmoniclabs/obj-utils";
 import type { ITxRunnerProvider } from "../IProvider";
 import type { TxBuilder } from "../TxBuilder";
-import { ITxBuildArgs, ITxBuildOutput, NormalizedITxBuildArgs, cloneITxBuildArgs, normalizeITxBuildArgs } from "../../txBuild";
+import { ITxBuildArgs, ITxBuildOutput, NormalizedITxBuildArgs, normalizeITxBuildArgs } from "../../txBuild";
 import { Address, AddressStr, CertStakeDelegation, Certificate, Hash28, Hash32, ITxOut, ITxOutRef, IUTxO, IValuePolicyEntry, PlutusScriptType, PoolKeyHash, PoolParams, PubKeyHash, Script, ScriptType, StakeAddress, StakeAddressBech32, Credential, StakeValidatorHash, Tx, TxIn, TxMetadata, TxMetadatum, TxOutRefStr, UTxO, Value, forceTxOutRefStr, isITxOut, isIUTxO, CredentialType, CertStakeDeRegistration, CertStakeRegistration, CertPoolRegistration, IPoolParams, CanBeHash28, CertPoolRetirement, StakeCredentials, ITxWithdrawalsEntry, Vote, IAnchor, IVoter, ProtocolParameters, IProposalProcedure, ITxWithdrawals, TxWithdrawals, INewCommitteeEntry, IConstitution, VotingProcedure, VotingProcedures, forceTxOutRef, IVotingProceduresEntry, TxOutRef, VoterKind, GovActionType, isIVotingProceduresEntry, isIProposalProcedure, eqITxOutRef } from "@harmoniclabs/cardano-ledger-ts";
 import { CanBeUInteger, canBeUInteger, forceBigUInt } from "../../utils/ints";
 import { CanResolveToUTxO, cloneCanResolveToUTxO, shouldResolveToUTxO } from "../CanResolveToUTxO/CanResolveToUTxO";
@@ -19,17 +19,6 @@ import { IProtocolVerision } from "@harmoniclabs/cardano-ledger-ts/dist/ledger/p
 import { Rational } from "../../utils/Rational";
 import { eqIVoter } from "../../txBuild/ITxBuildVotingProcedure";
 
-// /** sync */
-// interface TxBuilderStep {
-// 
-// }
-// 
-// function cloneStep( step: TxBuilderStep ): TxBuilderStep
-// {
-//     return {
-// 
-//     };
-// }
 
 type SimpleScriptInfos = {
     inline: Script<PlutusScriptType>
@@ -110,6 +99,7 @@ const readonlyValueDescriptor = Object.freeze({
 
 const _datumsCache: { [hash: string]: Data } = {};
 const _datumsHashes: string[] = [];
+const _MAX_DATUMS_CACHE_SIZE = 20;
 
 function _saveResolvedDatum( datum: Data, hash?: string ): void
 {
@@ -129,6 +119,11 @@ function _saveResolvedDatum( datum: Data, hash?: string ): void
             _datumsHashes.push( hash );
             _datumsCache[ hash ] = theData;
         }
+    }
+    while( _datumsHashes.length > _MAX_DATUMS_CACHE_SIZE )
+    {
+        const h = _datumsHashes.shift()!;
+        delete _datumsCache[ h ];
     }
 }
 
@@ -1270,7 +1265,13 @@ export class TxBuilderRunner
             datum?: CanBeData | undefined
         ): void
         {
-            if( canBeData( datum ) ) _saveResolvedDatum( forceData( datum ) );
+            if( datum && canBeData( datum ) ) {
+                try
+                {
+                    datum = forceData( datum );
+                    _saveResolvedDatum( datum );
+                } catch {}
+            }
 
             utxo = utxo instanceof UTxO ? utxo : new UTxO( utxo );
             const paymentCreds = (utxo as UTxO).resolved.address.paymentCreds;
@@ -1296,7 +1297,13 @@ export class TxBuilderRunner
         ): TxBuilderRunner
         {
             // save datum before resolving utxo
-            if( canBeData( datum ) ) _saveResolvedDatum( forceData( datum ) );
+            if( datum && canBeData( datum ) ) {
+                try
+                {
+                    datum = forceData( datum );
+                    _saveResolvedDatum( datum );
+                } catch {}
+            }
 
             for( const _utxo of utxos )
             {
@@ -1321,7 +1328,13 @@ export class TxBuilderRunner
             if( shouldResolveToUTxO( script_or_ref ) )
             {
                 // save datum before resolving utxo
-                if( canBeData( datum ) ) _saveResolvedDatum( forceData( datum ) );
+                if( datum && canBeData( datum ) ) {
+                    try
+                    {
+                        datum = forceData( datum );
+                        _saveResolvedDatum( datum );
+                    } catch {}
+                }
 
                 tasks.push({
                     kind: TxBuilderTaskKind.ResolveUTxO,
@@ -1544,7 +1557,7 @@ export class TxBuilderRunner
             script_or_ref?: Script<PlutusScriptType> | CanResolveToUTxO
         ): TxBuilderRunner
         {
-            redeemer = canBeData( redeemer ) ? forceData( redeemer ) : undefined;
+            redeemer = redeemer && canBeData( redeemer ) ? forceData( redeemer ) : undefined;
             if( shouldResolveToUTxO( script_or_ref ) )
             {
                 tasks.push({
@@ -1727,7 +1740,7 @@ export class TxBuilderRunner
             script_or_ref?: Script<PlutusScriptType> | CanResolveToUTxO
         ): TxBuilderRunner
         {
-            redeemer = canBeData( redeemer ) ? forceData( redeemer ) : undefined;
+            redeemer = redeemer && canBeData( redeemer ) ? forceData( redeemer ) : undefined;
             if( shouldResolveToUTxO( script_or_ref ) )
             {
                 tasks.push({
@@ -1968,7 +1981,10 @@ export class TxBuilderRunner
                     const resolvedDatums = await provider.resolveDatumHashes( datumHashesToResolve );
                     for( const { hash, datum } of resolvedDatums )
                     {
-                        _saveResolvedDatum( forceData( datum ), hash.toString() );
+                        try {
+                            const forced = forceData( datum );
+                            _saveResolvedDatum( forced, hash.toString() );
+                        } catch {}
                     }
                 }
     

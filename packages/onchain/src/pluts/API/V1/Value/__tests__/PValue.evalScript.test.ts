@@ -1,5 +1,5 @@
 import { CEKConst, Machine } from "@harmoniclabs/plutus-machine";
-import { UPLCTerm, ErrorUPLC, showUPLC } from "@harmoniclabs/uplc";
+import { UPLCTerm, ErrorUPLC, showUPLC, prettyUPLC, compileUPLC, UPLCProgram } from "@harmoniclabs/uplc";
 import { Term, pmatch, termTypeToString, typeExtends } from "../../../..";
 import { compileIRToUPLC } from "../../../../../IR/toUPLC/compileIRToUPLC";
 import { PMaybe, fromData, pBool, pByteString, pInt, pPair, pdelay, pfn, phoist, pif, plam, precursiveList, ptoData, toData } from "../../../../lib";
@@ -9,7 +9,8 @@ import { PCurrencySymbol } from "../PCurrencySymbol";
 import { PTokenName } from "../PTokenName";
 import { PAssetsEntry, PValue, PValueEntry } from "../PValue";
 import { getFstT, getSndT } from "../../../../type_system/tyArgs";
-import { debugOptions } from "../../../../../IR/toUPLC/CompilerOptions";
+import { debugOptions, productionOptions } from "../../../../../IR/toUPLC/CompilerOptions";
+import { writeFileSync } from "fs";
 
 const currSym = PCurrencySymbol.from( pByteString("ff".repeat(28)) );
 const tn = PTokenName.from( pByteString("") );
@@ -322,9 +323,20 @@ describe("pvalueOf", () => {
             )
             .toEqual( int )
 
+            const termUplc = pInt(1_000_000).eq( term ).toUPLC(0, productionOptions);
+            
+            writeFileSync(
+                "./some.flat",
+                compileUPLC(
+                    new UPLCProgram( [1,1,0], termUplc )
+                ).toBuffer().buffer
+            )
+
+            // console.log( showUPLC( termUplc ) );
+
             expect(
                 Machine.evalSimple(
-                    pInt(1_000_000).eq( term as any )
+                    termUplc // pInt(1_000_000).eq( term )
                 )
             ).toEqual(
                 Machine.evalSimple(

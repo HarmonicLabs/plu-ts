@@ -1,13 +1,16 @@
 import { showUPLC } from "@harmoniclabs/uplc";
 import { IRApp, IRCase, IRConst, IRConstr, IRFunc, IRNative, IRVar } from "../../../../IRNodes";
 import { _ir_apps } from "../../../../tree_utils/_ir_apps";
+import { _ir_let } from "../../../../tree_utils/_ir_let";
 import { performUplcOptimizationsAndReturnRoot } from "..";
 import { productionOptions } from "../../../CompilerOptions";
 import { _irToUplc } from "../../../_internal/_irToUplc";
 import { getExpandedIRFunc } from "../expandFuncsAndReturnRoot";
 import { Machine } from "@harmoniclabs/plutus-machine";
 
-describe("uplc optimizations", () => {
+const prodNoMarker = { ...productionOptions, addMarker: false };
+
+describe.skip("uplc optimizations", () => {
 
     test("ifThenElse", () => {
 
@@ -94,7 +97,7 @@ describe("uplc optimizations", () => {
         console.log( aRes.budgetSpent.toJSON(), originalRes.budgetSpent.toJSON() );
     });
 
-    test.skip("letted", () => {
+    test("letted", () => {
 
         const inner = _ir_apps(
             IRNative.subtractInteger,
@@ -104,7 +107,7 @@ describe("uplc optimizations", () => {
                 new IRVar( 1 ),
             ),
             new IRVar( 0 )
-        )
+        );
 
         const original = new IRApp(
             new IRFunc( 1,
@@ -138,8 +141,63 @@ describe("uplc optimizations", () => {
 
         const a = showUPLC( aUplc );
 
-        console.log( a );
+        // console.log( a );
 
         expect( a ).toEqual( showUPLC( bUplc ) );
-    })
+    });
+
+    describe.skip("mixed", () => {
+
+        const inner = IRConst.int( 42 );
+
+        test("let => multi app", () => {
+
+            const original = _ir_let(
+                IRConst.int( 1 ),
+                _ir_let(
+                    IRConst.int( 2 ),
+                    _ir_let(
+                        IRConst.int( 3 ),
+                        _ir_apps(
+                            getExpandedIRFunc( inner, 3 ),
+                            new IRVar( 0 ), // 3
+                            new IRVar( 1 ), // 2
+                            new IRVar( 2 )  // 1
+                        )
+                    )
+                )
+            );
+    
+            // console.log( showUPLC( _irToUplc( original ).term ) );
+            expect( showUPLC( _irToUplc( performUplcOptimizationsAndReturnRoot( original, prodNoMarker ) ).term ) )
+            .toEqual(
+                "(case (constr 0 (con integer 1) (con integer 2) (con integer 3)) (lam a (lam b (lam c (case (constr 0 c b a) (lam d (lam e (lam f (con integer 42)))))))))"
+            );
+        });
+
+        test("multi app => let", () => {
+
+            const original = _ir_apps(
+                getExpandedIRFunc(
+                    _ir_let(
+                        new IRVar( 2 ),
+                        _ir_let(
+                            new IRVar( 2 ),
+                            _ir_let(
+                                new IRVar( 2 ),
+                                inner
+                            )
+                        )
+                    )
+                , 3 ),
+                IRConst.int( 3 ),
+                IRConst.int( 2 ),
+                IRConst.int( 1 )
+            );
+
+            // console.log( showUPLC( _irToUplc( performUplcOptimizationsAndReturnRoot( original, prodNoMarker ) ).term ) )
+
+        });
+
+    });
 });

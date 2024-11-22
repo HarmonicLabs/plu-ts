@@ -1,5 +1,5 @@
 import { CEKConst, Machine } from "@harmoniclabs/plutus-machine";
-import { ToUPLC, UPLCTerm } from "@harmoniclabs/uplc";
+import { prettyUPLC, showUPLC, ToUPLC, UPLCTerm } from "@harmoniclabs/uplc";
 import { IRConst } from "../../IR/IRNodes/IRConst";
 import { IRError } from "../../IR/IRNodes/IRError";
 import { IRHoisted } from "../../IR/IRNodes/IRHoisted";
@@ -108,7 +108,7 @@ export class Term<PT extends PType>
                         // if this ever changes make sure to call `ir.clone()`
                         let uplc = compileIRToUPLC( ir, debugOptions );
 
-                        // console.log( showUPLC( uplc ) )
+                        // console.log( prettyUPLC( uplc ) )
         
                         // !!! IMPORTANT !!!
                         // pair creation assumes this evaluation is happening here
@@ -151,7 +151,7 @@ export class Term<PT extends PType>
             {
                 const key = shouldHoist ? "hoisted" : deBruijnLevel.toString();
                 const _cacheHit = _UPLC_cache[key];
-                if( _cacheHit ) return _cacheHit.clone()
+                if( _cacheHit ) return _cacheHit.clone();
                 const res = compileIRToUPLC( this.toIR( config, deBruijnLevel ), config );
                 _UPLC_cache[key] = res.clone();
                 return res;

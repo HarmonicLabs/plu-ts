@@ -8,7 +8,6 @@ import { PappArg } from "../../pappArg";
 import { TermBool } from "./TermBool";
 import { addBaseUtilityTerm, BaseUtilityTermExtension } from "./BaseUtilityTerm";
 
-
 export type TermInt = Term<PInt> & BaseUtilityTermExtension & {
     
     readonly padd:       TermFn<[PInt], PInt>

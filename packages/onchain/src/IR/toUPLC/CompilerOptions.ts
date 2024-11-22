@@ -1,3 +1,4 @@
+import { isObject } from "@harmoniclabs/obj-utils";
 import { defaultUplcVersion, UPLCVersion } from "@harmoniclabs/uplc";
 
 export interface CompilerUplcOptimizations {
@@ -52,6 +53,7 @@ export function completeUplcOptimizations(
     complete: CompilerUplcOptimizations = defaultUplcOptimizations
 ): CompilerUplcOptimizations
 {
+    if( !isObject( options ) ) return { ...defaultUplcOptimizations };
     return {
         groupApplications: options.groupApplications ?? complete.groupApplications,
         inlineSingleUse: options.inlineSingleUse ?? complete.inlineSingleUse,
@@ -137,24 +139,26 @@ export function completeCompilerOptions(
         ...defaultOptions,
         ...complete
     };
-    let uplcOptimizations = complete.uplcOptimizations as CompilerUplcOptimizations;
+    let uplcOptimizations = options.uplcOptimizations as CompilerUplcOptimizations;
     if( typeof options.uplcOptimizations === "boolean" )
     {
         if( options.uplcOptimizations )
         {
             uplcOptimizations = {
-                ...uplcOptimizations,
-                ...productionUplcOptimizations
+                ...productionUplcOptimizations,
+                ...uplcOptimizations
             }
         }
         else
         {
             uplcOptimizations = {
+                ...debugUplcOptimizations,
                 ...uplcOptimizations,
-                ...debugUplcOptimizations
             }
         }
     }
+    // console.log( "uplcOptimizations", uplcOptimizations );
+    // console.log( "completeUplcOptimizations( uplcOptimizations )",completeUplcOptimizations( uplcOptimizations ))
     return {
         targetUplcVersion,
         removeTraces: options.removeTraces ?? complete.removeTraces,
