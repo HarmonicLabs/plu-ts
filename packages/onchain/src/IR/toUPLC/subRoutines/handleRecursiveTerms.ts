@@ -39,3 +39,24 @@ export function handleRecursiveTerms( term: IRTerm ): void
     }
     getChildren( term ).forEach( handleRecursiveTerms );
 }
+
+export function handleRootRecursiveTerm( term: IRTerm ): IRTerm
+{
+    if( term instanceof IRRecursive )
+    {
+        const bodyPtr = term.body;
+        const newRoot = new IRApp(
+            new IRHoisted(
+                new IRFunc( 1,
+                    new IRApp( new IRVar( 0 ), new IRVar( 0 ) )
+                )
+            ),
+            new IRFunc( 1, bodyPtr )
+        );
+        handleRecursiveTerms( bodyPtr );
+        return newRoot;
+    }
+    // else
+    handleRecursiveTerms( term );
+    return term;
+}

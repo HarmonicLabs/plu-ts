@@ -12,7 +12,7 @@ import { handleHoistedAndReturnRoot } from "./subRoutines/handleHoistedAndReturn
 import { replaceNativesAndReturnRoot } from "./subRoutines/replaceNatives";
 import { replaceClosedLettedWithHoisted } from "./subRoutines/replaceClosedLettedWithHoisted";
 import { hoistForcedNatives } from "./subRoutines/hoistForcedNatives";
-import { handleRecursiveTerms } from "./subRoutines/handleRecursiveTerms";
+import { handleRecursiveTerms, handleRootRecursiveTerm } from "./subRoutines/handleRecursiveTerms";
 import { CompilerOptions, completeCompilerOptions, defaultOptions } from "./CompilerOptions";
 import { replaceHoistedWithLetted } from "./subRoutines/replaceHoistedWithLetted";
 import { IRApp, IRCase, IRConstr, IRNative, IRVar } from "../IRNodes";
@@ -134,7 +134,7 @@ export function compileIRToUPLC(
     // however we cannot do this before
     // because in order to hanlde letted at the best
     // we need to know where the `IRRecursive` nodes are
-    handleRecursiveTerms( term );
+    term = handleRootRecursiveTerm( term );
     // if( options.delayHoists ) replaceHoistedWithLetted( term );
 
     // handle new hoisted terms

@@ -325,12 +325,12 @@ describe("pvalueOf", () => {
 
             const termUplc = pInt(1_000_000).eq( term ).toUPLC(0, productionOptions);
             
-            writeFileSync(
-                "./some.flat",
-                compileUPLC(
-                    new UPLCProgram( [1,1,0], termUplc )
-                ).toBuffer().buffer
-            )
+            // writeFileSync(
+            //     "./some.flat",
+            //     compileUPLC(
+            //         new UPLCProgram( [1,1,0], termUplc )
+            //     ).toBuffer().buffer
+            // )
 
             // console.log( showUPLC( termUplc ) );
 
