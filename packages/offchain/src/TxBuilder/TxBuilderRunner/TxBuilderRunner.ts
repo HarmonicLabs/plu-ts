@@ -187,6 +187,9 @@ export class TxBuilderRunner
      * @returns a reference to the same `TxBuilderRunner`.
      */
     readonly addRequiredSignerKey!: ( signerKey: Hash28 ) => TxBuilderRunner
+
+    /** adds a metadata message according to cip 20 */
+    readonly attachMemo!: ( memo: string ) => TxBuilderRunner
     
     /** alias for `attachValidator` */
     readonly attachCertificateValidator!: ( validator: Script<PlutusScriptType> ) => TxBuilderRunner
@@ -652,6 +655,11 @@ export class TxBuilderRunner
             throw new Error("invalid required signer");
         }
 
+        function _attachMemo( memo: string ): TxBuilderRunner
+        {
+            buildArgs.memo = memo;
+            return self;
+        }
         function _attachMetadata( label: CanBeUInteger, metadatum: TxMetadatum ): TxBuilderRunner
         {            
             const meta = buildArgs.metadata?.metadata;

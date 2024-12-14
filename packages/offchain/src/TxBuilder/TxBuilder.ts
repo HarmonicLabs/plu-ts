@@ -1,8 +1,8 @@
-import { fromHex, isUint8Array, lexCompare, toHex } from "@harmoniclabs/uint8array-utils";
+import { fromHex, fromUtf8, isUint8Array, lexCompare, toHex } from "@harmoniclabs/uint8array-utils";
 import { keepRelevant } from "./keepRelevant";
 import { GenesisInfos, NormalizedGenesisInfos, defaultMainnetGenesisInfos, defaultPreprodGenesisInfos, isGenesisInfos, isNormalizedGenesisInfos, normalizedGenesisInfos } from "./GenesisInfos";
 import { isCostModelsV2, isCostModelsV1, costModelsToLanguageViewCbor, isCostModelsV3, defaultV3Costs, CostModelsToLanguageViewCborOpts } from "@harmoniclabs/cardano-costmodels-ts";
-import { Tx, Value, ValueUnits, TxOut, TxRedeemerTag, ScriptType, UTxO, VKeyWitness, Script, BootstrapWitness, TxRedeemer, Hash32, TxIn, Hash28, AuxiliaryData, TxWitnessSet, getNSignersNeeded, txRedeemerTagToString, ScriptDataHash, TxBody, CredentialType, canBeHash32, VotingProcedures, ProposalProcedure, InstantRewardsSource, LitteralScriptType, defaultProtocolParameters, ITxOut } from "@harmoniclabs/cardano-ledger-ts";
+import { Tx, Value, ValueUnits, TxOut, TxRedeemerTag, ScriptType, UTxO, VKeyWitness, Script, BootstrapWitness, TxRedeemer, Hash32, TxIn, Hash28, AuxiliaryData, TxWitnessSet, getNSignersNeeded, txRedeemerTagToString, ScriptDataHash, TxBody, CredentialType, canBeHash32, VotingProcedures, ProposalProcedure, InstantRewardsSource, LitteralScriptType, defaultProtocolParameters, ITxOut, TxMetadatumList, TxMetadatumMap, TxMetadatumText, TxMetadata } from "@harmoniclabs/cardano-ledger-ts";
 import { CborString, Cbor, CborArray, CanBeCborString, CborPositiveRational, CborMap, CborUInt } from "@harmoniclabs/cbor";
 import { byte, blake2b_256 } from "@harmoniclabs/crypto";
 import { Data, dataToCborObj, DataConstr, dataToCbor } from "@harmoniclabs/plutus-data";
@@ -642,6 +642,7 @@ export class TxBuilder
             invalidAfter,
             certificates,
             withdrawals,
+            memo,
             metadata,
             votingProcedures,
             proposalProcedures,
@@ -1186,7 +1187,31 @@ export class TxBuilder
 
         i = 0;
 
-        const auxData = metadata !== undefined? new AuxiliaryData({ metadata }) : undefined;
+        let auxData: AuxiliaryData | undefined = undef;
+        let _metadata = metadata;
+
+        if( memo !== undef )
+        {
+            _metadata = new TxMetadata({
+                ..._metadata?.metadata,
+                674: new TxMetadatumMap([
+                    {
+                        k: new TxMetadatumText("msg"),
+                        v: new TxMetadatumList(
+                            splitStringByByteLength( memo, 64 )
+                            .map( chunk => new TxMetadatumText( chunk ) )
+                        )
+                    }
+                ])
+            });
+        }
+
+        if( _metadata !== undef )
+        {
+            auxData = new AuxiliaryData({
+                metadata: _metadata,
+            });
+        }
 
         const redeemers =
             spendRedeemers
@@ -1693,4 +1718,59 @@ export function getScriptDataHash( witnesses: TxWitnessSet, languageViews: Uint8
             blake2b_256( scriptData )
         )
     );
+}
+
+// Helper function to get byte length of a string using UTF-8 encoding
+// const getByteLength = (str: string): number => {
+//     return new TextEncoder().encode(str).length;
+// };
+function getByteLength( str: string ): number
+{
+    return fromUtf8( str ).length;
+}
+
+/**
+ * Claude prompt (yes I'm lazy):
+ * 
+ * write a typescript function that given a string and a number, 
+ * returns an array of strings whose length IN BYTES is at most the second parameter, 
+ * if a utf 8 char is present at the intersection 
+ * of the two chunks IT MUST STAY INTACT and it will be part of the following chunk.
+ * 
+ * @example
+ * const exampleString = "Hello, 🌍! This is a test.";
+ * const maxChunkBytes = 10;
+ * const result = splitStringByByteLength(exampleString, maxChunkBytes);
+ * console.log(result); // ["Hello, ", "🌍! This", " is a test", "."]
+ */
+export function splitStringByByteLength(input: string, maxByteLength: number = 64): string[] {
+    // If input is empty or max byte length is 0, return empty array
+    if (!input || maxByteLength <= 0) return [];
+
+    const chunks: string[] = [];
+    let currentChunk = '';
+
+    for (const char of input) {
+        const potentialChunk = currentChunk + char;
+        const potentialChunkByteLength = getByteLength(potentialChunk);
+
+        // If adding this character would exceed max byte length
+        if (potentialChunkByteLength > maxByteLength) {
+            // Push current chunk and start a new one
+            if (currentChunk) {
+                chunks.push(currentChunk);
+                currentChunk = '';
+            }
+        }
+
+        // Add character to current chunk
+        currentChunk += char;
+    }
+
+    // Add final chunk if not empty
+    if (currentChunk) {
+        chunks.push(currentChunk);
+    }
+
+    return chunks;
 }
