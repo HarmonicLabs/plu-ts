@@ -16,6 +16,8 @@ import { IRConstr } from "../IRNodes/IRConstr";
 import { IRCase } from "../IRNodes/IRCase";
 import { equalIrHash, IRHash, irHashToHex } from "../IRHash";
 import { stringify } from "../../utils/stringify";
+import { IRRecursive } from "../IRNodes/IRRecursive";
+import { IRSelfCall } from "../IRNodes/IRSelfCall";
 
 const vars = "abcdefghilmopqrstuvzwxyjkABCDEFGHILJMNOPQRSTUVZWXYJK".split('');
 
@@ -50,6 +52,7 @@ export function showIRText( _ir: IRTerm ): string
             return hoistedToStr(ir);
         }
         if( ir instanceof IRVar ) return getVarNameForDbn( dbn - 1 - ir.dbn );
+        if( ir instanceof IRSelfCall ) return "self_" + getVarNameForDbn( dbn - 1 - ir.dbn );
         if( ir instanceof IRConst ) return constToString(ir);
         if( ir instanceof IRDelayed ) return `(delay ${_loop( ir.delayed, dbn )})`;
         if( ir instanceof IRForced ) return `(force ${_loop( ir.forced, dbn )})`;
@@ -62,6 +65,11 @@ export function showIRText( _ir: IRTerm ): string
                 vars[i] = getVarNameForDbn( dbn++ );
             }
             return `(func ${typeof ir.name === "string" ? "{"+ir.name+"}" : ""} ${vars.join(" ")} ${_loop( ir.body, dbn )})`
+        }
+        if( ir instanceof IRRecursive )
+        {
+            const varName = "self_" + getVarNameForDbn( dbn++ );
+            return `(recursive ${varName} ${_loop( ir.body, dbn )})`;
         }
 
         return "";
@@ -150,6 +158,7 @@ export function showIR( _ir: IRTerm )
             return hoistedToStr(ir);
         }
         if( ir instanceof IRVar ) return getVarNameForDbn( dbn - 1 - ir.dbn );
+        if( ir instanceof IRSelfCall ) return "self_" + getVarNameForDbn( dbn - 1 - ir.dbn );
         if( ir instanceof IRConst ) return constToString(ir);
         if( ir instanceof IRDelayed ) return `(delay ${_loop( ir.delayed, dbn )})`;
         if( ir instanceof IRForced ) return `(force ${_loop( ir.forced, dbn )})`;
@@ -162,6 +171,11 @@ export function showIR( _ir: IRTerm )
                 vars[i] = getVarNameForDbn( dbn++ );
             }
             return `(func ${typeof ir.name === "string" ? "{"+ir.name+"}" : ""} ${vars.join(" ")} ${_loop( ir.body, dbn )})`
+        }
+        if( ir instanceof IRRecursive )
+        {
+            const varName = "self_" + getVarNameForDbn( dbn++ );
+            return `(recursive ${varName} ${_loop( ir.body, dbn )})`;
         }
 
         return "";
@@ -206,6 +220,7 @@ export function prettyIRText( _ir: IRTerm, _indent = 2 )
             return `${indent}${hoistedToStr(ir)}`;
         }
         if( ir instanceof IRVar ) return indent + getVarNameForDbn( dbn - 1 - ir.dbn );
+        if( ir instanceof IRSelfCall ) return indent + "self_" + getVarNameForDbn( dbn - 1 - ir.dbn );
         if( ir instanceof IRConst ) return `${indent}${constToString(ir)}`;
         if( ir instanceof IRDelayed ) return `${indent}(delay ${_loop( ir.delayed, dbn, depth + 1 )}${indent})`;
         if( ir instanceof IRForced ) return `${indent}(force ${_loop( ir.forced, dbn, depth + 1 )}${indent})`;
@@ -218,6 +233,11 @@ export function prettyIRText( _ir: IRTerm, _indent = 2 )
                 vars[i] = getVarNameForDbn( dbn++ );
             }
             return `${indent}(func ${typeof ir.name === "string" ? "{"+ir.name+"}" : ""} ${vars.join(" ")} ${_loop( ir.body, dbn, depth + 1 )}${indent})`
+        }
+        if( ir instanceof IRRecursive )
+        {
+            const varName = "self_" + getVarNameForDbn( dbn++ );
+            return `${indent}(recursive ${varName} ${_loop( ir.body, dbn, depth + 1 )}${indent})`;
         }
 
         return "";
@@ -301,7 +321,7 @@ export function prettyIR( _ir: IRTerm, _indent = 2 ) : PrettiedIR
         if( ir instanceof IRLetted )
         {
             addLetted( ir );
-            return `${indent}${lettedToStr(ir)})`;
+            return `${indent}${lettedToStr(ir)}`;
         }
         if( ir instanceof IRHoisted )
         {
@@ -309,6 +329,7 @@ export function prettyIR( _ir: IRTerm, _indent = 2 ) : PrettiedIR
             return `${indent}${hoistedToStr(ir)}`;
         }
         if( ir instanceof IRVar ) return indent + getVarNameForDbn( dbn - 1 - ir.dbn );
+        if( ir instanceof IRSelfCall ) return indent + "self_" + getVarNameForDbn( dbn - 1 - ir.dbn );
         if( ir instanceof IRConst ) return `${indent}${constToString(ir)}`;
         if( ir instanceof IRDelayed ) return `${indent}(delay ${_loop( ir.delayed, dbn, depth + 1 )}${indent})`;
         if( ir instanceof IRForced ) return `${indent}(force ${_loop( ir.forced, dbn, depth + 1 )}${indent})`;
@@ -321,6 +342,11 @@ export function prettyIR( _ir: IRTerm, _indent = 2 ) : PrettiedIR
                 vars[i] = getVarNameForDbn( dbn++ );
             }
             return `${indent}(func ${typeof ir.name === "string" ? "{"+ir.name+"}" : ""} ${vars.join(" ")} ${_loop( ir.body, dbn, depth + 1 )}${indent})`
+        }
+        if( ir instanceof IRRecursive )
+        {
+            const varName = "self_" + getVarNameForDbn( dbn++ );
+            return `${indent}(recursive ${varName} ${_loop( ir.body, dbn, depth + 1 )}${indent})`;
         }
 
         return "";
@@ -386,4 +412,62 @@ export function lettedToStr( ir: IRLetted ): string
 export function constToString( ir: IRConst ): string
 {
     return `(const ${termTypeToString(ir.type, 2)} ${showUPLCConstValue(ir.value as any)})`;
+}
+
+export function prettyIRInline( _ir: IRTerm, _indent = 2 ): string
+{
+    const indentStr = " ".repeat(_indent);
+
+    function _loop( ir: IRTerm, dbn: number, depth: number ): string
+    {
+        const indent = `\n${indentStr.repeat( depth )}`;
+
+        if( ir instanceof IRApp ) return `${indent}[${_loop( ir.fn, dbn, depth + 1 )} ${_loop( ir.arg, dbn, depth + 1 )}${indent}]`;
+        if( ir instanceof IRNative ) return `${indent}(native ${nativeTagToString( ir.tag )})`;
+        if( ir instanceof IRLetted )
+        {
+            // addLetted( ir );
+            return (
+                `${indent}(letted${(ir.meta.name ? " {"+ir.meta.name+"}" : "")} ${ir.dbn} ${irHashToHex( ir.hash )}` + 
+                `${_loop( ir.value, dbn, depth + 1 )}`+
+                `${indent})`
+            );
+        }
+        if( ir instanceof IRHoisted )
+        {
+            // addHoisted( ir )
+            // return `${indent}${hoistedToStr(ir)}`;
+            return (
+                `${indent}(hoisted${(ir.meta.name ? " {"+ir.meta.name+"}" : "")} ${irHashToHex( ir.hash )}` + 
+                `${_loop( ir.hoisted, dbn, depth + 1 )}`+
+                `${indent})`
+            );
+        }
+        if( ir instanceof IRVar ) return indent + getVarNameForDbn( dbn - 1 - ir.dbn );
+        if( ir instanceof IRSelfCall ) return indent + "self_" + getVarNameForDbn( dbn - 1 - ir.dbn );
+        if( ir instanceof IRConst ) return `${indent}${constToString(ir)}`;
+        if( ir instanceof IRDelayed ) return `${indent}(delay ${_loop( ir.delayed, dbn, depth + 1 )}${indent})`;
+        if( ir instanceof IRForced ) return `${indent}(force ${_loop( ir.forced, dbn, depth + 1 )}${indent})`;
+        if( ir instanceof IRError ) return "(error)"
+        if( ir instanceof IRFunc )
+        {
+            let vars: string[] = new Array( ir.arity );
+            for( let i  = 0; i < ir.arity; i++)
+            {
+                vars[i] = getVarNameForDbn( dbn++ );
+            }
+            return `${indent}(func ${typeof ir.name === "string" ? "{"+ir.name+"}" : ""} ${vars.join(" ")} ${_loop( ir.body, dbn, depth + 1 )}${indent})`
+        }
+        if( ir instanceof IRRecursive )
+        {
+            const varName = "self_" + getVarNameForDbn( dbn++ );
+            return `${indent}(recursive ${varName} ${_loop( ir.body, dbn, depth + 1 )}${indent})`;
+        }
+
+        return "";
+    }
+
+    const text = _loop( _ir, 0, 0 );
+
+    return text;
 }

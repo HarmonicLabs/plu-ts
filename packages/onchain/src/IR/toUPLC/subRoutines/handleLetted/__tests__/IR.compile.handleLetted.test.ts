@@ -9,7 +9,7 @@ import { IRLetted, getLettedTerms } from "../../../../IRNodes/IRLetted";
 import { IRNative } from "../../../../IRNodes/IRNative";
 import { IRNativeTag } from "../../../../IRNodes/IRNative/IRNativeTag";
 import { IRVar } from "../../../../IRNodes/IRVar";
-import { handleLetted } from "..";
+import { handleLettedAndReturnRoot } from "..";
 import { IRTerm } from "../../../../IRTerm";
 import { _ir_apps } from "../../../../tree_utils/_ir_apps";
 import { IRHoisted } from "../../../../IRNodes/IRHoisted";
@@ -19,8 +19,9 @@ import { DataI } from "@harmoniclabs/plutus-data";
 import { Machine } from "@harmoniclabs/plutus-machine";
 import { pInt } from "../../../../../pluts/lib/std/int/pInt";
 import { irHashToHex } from "../../../../IRHash";
+import { debugOptions, productionOptions } from "../../../CompilerOptions";
 
-describe("handleLetted", () => {
+describe("handleLettedAndReturnRoot", () => {
 
     test("single ref inlined", () => {
 
@@ -121,22 +122,25 @@ describe("handleLetted", () => {
 
     test("two refs hoisted with different DeBruijn", () => {
 
-        const letted = new IRLetted(
-            0,
+        const letted = new IRLetted( 0,
             new IRApp(
                 new IRNative( IRNativeTag.addInteger ),
                 new IRConst( int, 2 )
             )
         );
 
+        const cloned = letted.clone();
+        cloned.dbn++;
+
+        // "[(lam a (force (delay [a [[(lam b a) (con integer 0)] (con integer 2)]]))) [(builtin addInteger) (con integer 2)]]"
         const root = new IRForced(
             new IRDelayed(
                 new IRApp(
-                    letted,
+                    letted.clone(),
                     new IRApp(
                         new IRApp(
-                            new IRFunc( 1, letted.clone() ), // useless function
-                            new IRConst( int, 0 )
+                            new IRFunc( 1, cloned ), // function to increment dbn
+                            new IRConst( int, 0 ) // useless argument
                         ),
                         new IRConst( int, 2 )
                     )
@@ -144,12 +148,17 @@ describe("handleLetted", () => {
             )
         );
 
-        // logJson( root )
-
         expect( getLettedTerms( root ).length ).toEqual( 2 );
 
-        const compiled = compileIRToUPLC( root );
+        const compiled = compileIRToUPLC( root, { ...productionOptions, addMarker: false } );
 
+        expect(
+            showUPLC( compiled )
+        ).toEqual(
+            "(force (delay [(lam a [a [[(lam b a) (con integer 0)] (con integer 2)]]) [(builtin addInteger) (con integer 2)]]))"
+        )
+
+        /*
         const expected = new IRFunc(
             1,
             new IRApp(
@@ -174,12 +183,7 @@ describe("handleLetted", () => {
         const expectedCompiled = compileIRToUPLC(
             expected
         );
-
-        expect(
-            showUPLC( compiled )
-        ).toEqual(
-            "[(lam a (force (delay [a [[(lam b a) (con integer 0)] (con integer 2)]]))) [(builtin addInteger) (con integer 2)]]"
-        )
+        //*/
         
     });
 
@@ -249,7 +253,7 @@ describe("handleLetted", () => {
 
         // logJson( root, 4 )
 
-        const compiled = compileIRToUPLC( root );
+        const compiled = compileIRToUPLC( root, debugOptions );
 
         expect(
             showUPLC( compiled )
@@ -322,10 +326,12 @@ describe("handleLetted", () => {
             )
         );
 
-        const compiled = compileIRToUPLC( root );
+        const compiled = compileIRToUPLC( root, { ...productionOptions, addMarker: false } );
 
         expect( showUPLC( compiled ) )
-        .toEqual("[(lam a (force (delay [[(builtin addInteger) [a (con integer 2)]] [a (con integer 2)]]))) [(builtin addInteger) (con integer 2)]]")
+        .toEqual(
+            "(force (delay [(lam a [[(builtin addInteger) [a (con integer 2)]] [a (con integer 2)]]) [(builtin addInteger) (con integer 2)]]))"
+        )
     });
 
     test("vars outside and inside", () => {
@@ -350,7 +356,7 @@ describe("handleLetted", () => {
             )
         );
 
-        const compiled = compileIRToUPLC( root );
+        const compiled = compileIRToUPLC( root, debugOptions );
 
         expect( showUPLC( compiled ) )
         .toEqual("[(lam a (lam b (lam c [[(lam d (lam e [[(builtin addInteger) b] d])) a] a]))) (con integer 2)]");
@@ -408,11 +414,11 @@ describe("handleLetted", () => {
             )
         );
 
-        const newIR = quadrupleIR.clone();
+        let newIR: IRTerm = quadrupleIR.clone();
 
         // console.log( showIR( newIR ) );
 
-        handleLetted( newIR );
+        newIR = handleLettedAndReturnRoot( newIR );
 
         const expected = new IRFunc(
             funcArity,

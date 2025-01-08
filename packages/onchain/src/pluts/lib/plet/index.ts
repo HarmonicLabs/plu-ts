@@ -15,14 +15,15 @@ import { makeMockUtilityTerm } from "../std/UtilityTerms/mockUtilityTerms/makeMo
 import { getCallStackAt } from "../../../utils/getCallStackAt";
 import { IRTerm } from "../../../IR/IRTerm";
 import { termTypeToString } from "../../type_system";
+import { IRSelfCall } from "../../../IR/IRNodes/IRSelfCall";
 
 export type LettedTerm<PVarT extends PType, SomeExtension extends object> =
     Term<PVarT> & SomeExtension extends Term<PAlias<PVarT, {}>> ?
         TermAlias<PVarT, {}> & SomeExtension & {
-            in: <PExprResult extends PType>( expr: (value: TermAlias<PVarT, {}> & SomeExtension) => Term<PExprResult> ) => Term<PExprResult>
+            in: <PExprResult extends PType>( expr: (value: TermAlias<PVarT, {}> & SomeExtension) => Term<PExprResult> ) => UtilityTermOf<PExprResult>
         } :
         UtilityTermOf<PVarT> & {
-            in: <PExprResult extends PType>( expr: (value: UtilityTermOf<PVarT>) => Term<PExprResult> ) => Term<PExprResult>
+            in: <PExprResult extends PType>( expr: (value: UtilityTermOf<PVarT>) => Term<PExprResult> ) => UtilityTermOf<PExprResult>
         }
 
 export function plet<PVarT extends PType, SomeExtension extends object>(
@@ -51,15 +52,16 @@ export function plet<PVarT extends PType, SomeExtension extends object>(
 
     const letted = new Term(
         type,
-        dbn => {
-            const ir =  varValue.toIR( dbn );
+        (cfg, dbn) => {
+            const ir =  varValue.toIR( cfg, dbn );
 
             // `compileIRToUPLC` can handle it even if this check is not present
             // but why spend useful tree iterations if we can avoid them here?
             if(
                 ir instanceof IRLetted || 
                 ir instanceof IRHoisted || 
-                ir instanceof IRVar 
+                ir instanceof IRVar ||
+                ir instanceof IRSelfCall
             )
             {
                 return ir;
@@ -82,7 +84,7 @@ export function plet<PVarT extends PType, SomeExtension extends object>(
 
     const withUtility = addUtilityForType( varValue.type );
     
-    const continuation = <PExprResult extends PType>( expr: (value: TermPVar) => Term<PExprResult> ): Term<PExprResult> => {
+    const continuation = <PExprResult extends PType>( expr: (value: TermPVar) => Term<PExprResult> ): UtilityTermOf<PExprResult> => {
 
         // only to extracts the type; never compiled
         const outType = expr( makeMockUtilityTerm( varValue.type ) as any ).type;
@@ -90,17 +92,17 @@ export function plet<PVarT extends PType, SomeExtension extends object>(
         // return papp( plam( varValue.type, outType )( expr as any ), varValue as any ) as any;
         const term = new Term(
             outType,
-            dbn => {
+            (cfg, dbn) => {
 
-
-                const arg = varValue.toIR( dbn );
+                const arg = varValue.toIR( cfg, dbn );
 
                 if(
                     // inline variables; no need to add an application since already in scope
-                    arg instanceof IRVar
+                    arg instanceof IRVar ||
+                    arg instanceof IRSelfCall
                 )
                 {
-                    return expr( withUtility( varValue as any ) as any ).toIR( dbn );
+                    return expr( withUtility( varValue as any ) as any ).toIR( cfg, dbn );
                 }
 
                 // if(
@@ -108,7 +110,7 @@ export function plet<PVarT extends PType, SomeExtension extends object>(
                 //     arg instanceof IRLetted
                 // )
                 // {
-                //     return expr( withUtility( varValue as any ) as any ).toIR( dbn );
+                //     return expr( withUtility( varValue as any ) as any ).toIR( cfg, dbn );
                 // }
 
                 return new IRApp(
@@ -118,10 +120,10 @@ export function plet<PVarT extends PType, SomeExtension extends object>(
                             withUtility(
                                 new Term(
                                     varValue.type,
-                                    varAccessDbn => new IRVar( varAccessDbn - ( dbn + BigInt(1) ) ) // point to the lambda generated here
+                                    ( cfg, varAccessDbn) => new IRVar( varAccessDbn - ( dbn + BigInt(1) ) ) // point to the lambda generated here
                                 ) as any
                             ) as any
-                        ).toIR( ( dbn + BigInt(1) ) )
+                        ).toIR( cfg, ( dbn + BigInt(1) ) )
                     ),
                     arg,
                     { __src__ }
@@ -129,7 +131,7 @@ export function plet<PVarT extends PType, SomeExtension extends object>(
             }
         );
 
-        return term;
+        return addUtilityForType( outType )( term ) as UtilityTermOf<PExprResult>;
     }
     
     const lettedUtility = addUtilityForType( type )( letted );

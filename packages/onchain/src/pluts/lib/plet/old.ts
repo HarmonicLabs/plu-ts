@@ -1,6 +1,7 @@
 import { IRApp } from "../../../IR/IRNodes/IRApp";
 import { IRFunc } from "../../../IR/IRNodes/IRFunc";
 import { IRLetted } from "../../../IR/IRNodes/IRLetted";
+import { IRSelfCall } from "../../../IR/IRNodes/IRSelfCall";
 import { IRVar } from "../../../IR/IRNodes/IRVar";
 import type { PType } from "../../PType";
 import { Term } from "../../Term";
@@ -25,10 +26,10 @@ export function _old_plet<PVarT extends PType, SomeExtension extends object>( va
 
     const letted = new Term(
         type,
-        dbn =>
+        (cfg, dbn) =>
             new IRLetted(
                 Number( dbn ),
-                varValue.toIR( dbn )
+                varValue.toIR( cfg, dbn )
             )
     );
     
@@ -49,15 +50,16 @@ export function _old_plet<PVarT extends PType, SomeExtension extends object>( va
         const term = addUtilityForType( outType )(
             new Term(
                 outType,
-                dbn => {
-                    const arg = varValue.toIR( dbn );
+                (cfg, dbn) => {
+                    const arg = varValue.toIR( cfg, dbn );
     
                     if(
                         // inline variables; no need to add an application since already in scope
-                        arg instanceof IRVar
+                        arg instanceof IRVar ||
+                        arg instanceof IRSelfCall
                     )
                     {
-                        return expr( withUtility( varValue as any ) as any ).toIR( dbn );
+                        return expr( withUtility( varValue as any ) as any ).toIR( cfg, dbn );
                     }
     
                     return new IRApp(
@@ -67,10 +69,10 @@ export function _old_plet<PVarT extends PType, SomeExtension extends object>( va
                                 withUtility(
                                     new Term(
                                         varValue.type,
-                                        varAccessDbn => new IRVar( varAccessDbn - ( dbn + BigInt(1) ) ) // point to the lambda generated here
+                                        (cfg, varAccessDbn) => new IRVar( varAccessDbn - ( dbn + BigInt(1) ) ) // point to the lambda generated here
                                     ) as any
                                 ) as any
-                            ).toIR( ( dbn + BigInt(1) ) )
+                            ).toIR( cfg, dbn + BigInt(1) )
                         ),
                         arg
                     )

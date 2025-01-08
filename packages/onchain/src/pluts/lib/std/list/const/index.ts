@@ -73,7 +73,7 @@ export function pconstList<ElemsT extends TermType>( elemsT: ElemsT ): ( elems: 
         return addPListMethods(
             new Term<PList<ToPType<ElemsT>>>(
                 list( elemsT ),
-                dbn => {
+                (cfg, dbn) => {
                     return IRConst.listOf( elemsT )
                     ( 
                         elems.map(

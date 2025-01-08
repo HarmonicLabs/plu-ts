@@ -17,6 +17,8 @@ import { UPLCTerm, UPLCVar, Lambda, Application, UPLCConst, Builtin, ErrorUPLC, 
 import { IRConstr } from "../../IRNodes/IRConstr";
 import { IRCase } from "../../IRNodes/IRCase";
 import { irHashToHex } from "../../IRHash";
+import { IRRecursive } from "../../IRNodes/IRRecursive";
+import { IRSelfCall } from "../../IRNodes/IRSelfCall";
 
 export type RawSrcMap = { [node_index: number]: string };
 
@@ -76,6 +78,21 @@ export function _irToUplc(
             term: lam,
             max_idx
         };
+    }
+
+    if( ir instanceof IRRecursive )
+    {
+        throw new Error(
+            "Can't convert 'IRRecursive' to valid UPLC;" +
+            "IRRecursive are expected to be converted before calling '_irToUplc'"
+        );
+    }
+    if( ir instanceof IRSelfCall )
+    {
+        throw new Error(
+            "Can't convert 'IRSelfCall' to valid UPLC;" +
+            "IRSelfCall are expected to be converted before calling '_irToUplc'"
+        );
     }
 
     if( ir instanceof IRApp )

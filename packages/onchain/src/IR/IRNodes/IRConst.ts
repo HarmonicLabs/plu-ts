@@ -24,6 +24,7 @@ import { IRParentTerm, isIRParentTerm } from "../utils/isIRParentTerm";
 import { _modifyChildFromTo } from "../toUPLC/_internal/_modifyChildFromTo";
 import { BaseIRMetadata } from "./BaseIRMetadata";
 import { hashIrData, IRHash, isIRHash } from "../IRHash";
+import { IRNodeKind } from "../IRNodeKind";
 
 export type IRConstValue
     = CanBeUInteger
@@ -40,7 +41,9 @@ export interface IRConstMetadata extends BaseIRMetadata {}
 export class IRConst
     implements Cloneable<IRConst>, IHash, IIRParent, ToJson
 {
-    static get tag(): Uint8Array { return new Uint8Array([ 0b0000_0011 ]); }
+    static get kind(): IRNodeKind.Const { return IRNodeKind.Const; }
+    get kind(): IRNodeKind.Const { return IRConst.kind; }
+    static get tag(): Uint8Array { return new Uint8Array([ IRConst.kind ]); }
 
     constructor( t: TermType, v: IRConstValue, _unsafeHash?: IRHash )
     {
@@ -138,7 +141,7 @@ export class IRConst
             this.isHashPresent() ? this.hash : undefined
         );
     }
-
+    toJSON() { return this.toJson(); }
     toJson(): any
     {
         return {

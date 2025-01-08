@@ -14,6 +14,7 @@ import { MutArrayLike } from "../utils/MutArrayLike";
 import { equalIrHash, hashIrData, IRHash, isIRHash } from "../IRHash";
 import { _modifyChildFromTo } from "../toUPLC/_internal/_modifyChildFromTo";
 import { shallowEqualIRTermHash } from "../utils/equalIRTerm";
+import { IRNodeKind } from "../IRNodeKind";
 
 export interface IRConstrMeta extends BaseIRMetadata {}
 
@@ -25,7 +26,9 @@ export class IRConstr
 
     readonly meta: IRConstrMeta
 
-    static get tag(): Uint8Array { return new Uint8Array([ 0b0000_1010 ]); }
+    static get kind(): IRNodeKind.Constr { return IRNodeKind.Constr; }
+    get kind(): IRNodeKind.Constr { return IRConstr.kind; }
+    static get tag(): Uint8Array { return new Uint8Array([ IRNodeKind.Constr ]); }
 
     constructor(
         index: number | bigint,
@@ -128,7 +131,7 @@ export class IRConstr
             this.isHashPresent() ? this.hash : undefined
         );
     }
-
+    toJSON() { return this.toJson(); }
     toJson(): any
     {
         return {

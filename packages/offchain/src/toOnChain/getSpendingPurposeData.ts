@@ -1,4 +1,4 @@
-import { Hash28, StakeCredentials, StakeValidatorHash, Tx, TxBody, TxRedeemer, TxRedeemerTag, VoterKind } from "@harmoniclabs/cardano-ledger-ts";
+import { Hash28, StakeCredentials, StakeCredentialsType, StakeValidatorHash, Tx, TxBody, TxRedeemer, TxRedeemerTag, VoterKind } from "@harmoniclabs/cardano-ledger-ts";
 import type { ToDataVersion } from "@harmoniclabs/cardano-ledger-ts/dist/toData/defaultToDataVersion";
 import { Data, DataB, DataConstr, DataI, DataList, isData } from "@harmoniclabs/plutus-data";
 import { lexCompare } from "@harmoniclabs/uint8array-utils";
@@ -85,7 +85,7 @@ export function getScriptInfoData(
         );
         purposeArgs = [
             new StakeCredentials(
-                "script",
+                StakeCredentialsType.Script,
                 new StakeValidatorHash( stakeAddr.credentials )
             )
             .toData( version )

@@ -84,23 +84,26 @@ describe("getElemAtTerm", () => {
 
     const unitAsData = toData( unit )( pmakeUnit() );
 
-    const stuff = Struct3.Struct3({
-        j: unitAsData,
-        k: unitAsData,
-        l: unitAsData,
-        m: Struct2.Struct2({
-            f: unitAsData,
-            g: unitAsData,
-            h: unitAsData,
-            i: Struct1.Struct1({
-                b: unitAsData,
-                a: unitAsData,
-                c: unitAsData,
-                d: unitAsData,
-                e: pDataI(42),
-            }) as any,
-        }) as any
-    })
+    const stuff = plam( data, Struct3.type )
+    ( unitAsData =>
+        Struct3.Struct3({
+            j: unitAsData,
+            k: unitAsData,
+            l: unitAsData,
+            m: Struct2.Struct2({
+                f: unitAsData,
+                g: unitAsData,
+                h: unitAsData,
+                i: Struct1.Struct1({
+                    b: unitAsData,
+                    a: unitAsData,
+                    c: unitAsData,
+                    d: unitAsData,
+                    e: pDataI(42),
+                }) as any,
+            }) as any
+        })
+    ).$( unitAsData );
 
     test("extract nested", () => {
 

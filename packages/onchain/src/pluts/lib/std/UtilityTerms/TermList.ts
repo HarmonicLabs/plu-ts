@@ -203,7 +203,7 @@ export function addPListMethods<PElemsT extends PType>( _lst: Term<PList<PElemsT
     const lst = new Term(
         list( elemsT ),
         // needs to be wrapped to prevent the garbage collector to collect garbage (lst)
-        dbn => _lst.toIR( dbn ),
+        (cfg, dbn) => _lst.toIR( cfg, dbn ),
         (_lst as any).isConstant
     ) as any;
 

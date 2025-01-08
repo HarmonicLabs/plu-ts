@@ -8,6 +8,8 @@ import { IRFunc } from "../../../IRNodes/IRFunc";
 import { IRCase } from "../../../IRNodes/IRCase";
 import { mapArrayLike } from "../../../IRNodes/utils/mapArrayLike";
 import { IRConstr } from "../../../IRNodes/IRConstr";
+import { IRRecursive } from "../../../IRNodes/IRRecursive";
+import { IRSelfCall } from "../../../IRNodes/IRSelfCall";
 
 /**
  *  add 1 to every var's DeBruijn that accesses stuff outside the parent node
@@ -17,7 +19,7 @@ import { IRConstr } from "../../../IRNodes/IRConstr";
 **/
 export function incrementUnboundDbns(
     theTerm: IRTerm, 
-    shouldNotModifyLetted: (letted: IRLetted) => boolean
+    shouldNotModifyLetted: (letted: IRLetted, dbn: number ) => boolean
 ): void
 {
     const stack: { term: IRTerm, dbn: number }[] = [{ term: theTerm, dbn: 0 }];
@@ -26,7 +28,10 @@ export function incrementUnboundDbns(
         const { term: t, dbn } = stack.pop() as { term: IRTerm, dbn: number };
 
         if(
-            t instanceof IRVar &&
+            (
+                t instanceof IRVar ||
+                t instanceof IRSelfCall
+            ) &&
             t.dbn >= dbn
         )
         {
@@ -36,7 +41,7 @@ export function incrementUnboundDbns(
         }
         if( t instanceof IRLetted )
         {
-            if( shouldNotModifyLetted( t ) )
+            if( shouldNotModifyLetted( t, dbn ) )
             {
                 // don't modify letted to be hoisted
                 continue;
@@ -93,6 +98,11 @@ export function incrementUnboundDbns(
             continue;
         }
         if( t instanceof IRFunc )
+        {
+            stack.push({ term: t.body, dbn: dbn + t.arity });
+            continue;
+        }
+        if( t instanceof IRRecursive )
         {
             stack.push({ term: t.body, dbn: dbn + t.arity });
             continue;

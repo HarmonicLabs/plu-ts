@@ -11,6 +11,33 @@ import { IRNativeTag } from "../../../IRNodes/IRNative/IRNativeTag";
 import { IRVar } from "../../../IRNodes/IRVar";
 import { IRTerm } from "../../../IRTerm";
 import { _ir_apps } from "../../../tree_utils/_ir_apps";
+import { IRRecursive } from "../../../IRNodes/IRRecursive";
+import { IRSelfCall } from "../../../IRNodes/IRSelfCall";
+
+const hoisted_incr = new IRHoisted(
+    new IRApp( IRNative.addInteger, IRConst.int( 1 ) )
+);
+hoisted_incr.hash;
+
+const hoisted_decr = new IRHoisted(
+    new IRApp( IRNative.addInteger, IRConst.int( -1 ) )
+);
+hoisted_decr.hash;
+
+const hoisted_isZero = new IRHoisted(
+    new IRApp( IRNative.equalsInteger, IRConst.int( 0 ) )
+);
+hoisted_isZero.hash;
+
+const hoisted_isPositive = new IRHoisted(
+    new IRApp( IRNative.lessThanInteger, IRConst.int( 0 ) )
+);
+hoisted_isPositive.hash;
+
+const hoisted_isNonNegative = new IRHoisted(
+    new IRApp( IRNative.lessThanEqualInteger, IRConst.int( 0 ) )
+);
+hoisted_isNonNegative.hash;
 
 const innerZ = new IRFunc( 1, // f
     new IRApp(
@@ -39,23 +66,25 @@ const hoisted_z_comb = new IRHoisted(
 hoisted_z_comb.hash;
 
 const hoisted_matchList = new IRHoisted(
-    new IRFunc( 3,
+    new IRFunc( 3, // delayed_matchNil, matchCons, list
         new IRForced(
-            _ir_apps(
-                IRNative.strictChooseList,
-                new IRVar( 0 ), // list, last argument of IRFunc above
-                new IRVar( 2 ), // matchNil (`delayed( resultT )`)
-                new IRDelayed(
-                    _ir_apps(
-                        new IRVar( 1 ), // matchCons
-                        new IRApp(
-                            IRNative.headList,
-                            new IRVar( 0 ) // list
-                        ),
-                        new IRApp(
-                            IRNative.tailList,
-                            new IRVar( 0 ) // list
-                        ),
+            new IRForced(
+                _ir_apps(
+                    IRNative.strictChooseList,
+                    new IRVar( 0 ), // list, last argument of IRFunc above
+                    new IRVar( 2 ), // delayed_matchNil (`delayed( resultT )`)
+                    new IRDelayed( // delay
+                        _ir_apps(
+                            new IRVar( 1 ), // matchCons
+                            new IRApp(
+                                IRNative.headList,
+                                new IRVar( 0 ) // list
+                            ),
+                            new IRApp(
+                                IRNative.tailList,
+                                new IRVar( 0 ) // list
+                            ),
+                        )
                     )
                 )
             )
@@ -64,6 +93,7 @@ const hoisted_matchList = new IRHoisted(
 );
 hoisted_matchList.hash;
 
+//*
 const hoisted_lazyIfThenElse = new IRHoisted(
     new IRFunc( 3, // condition, delayed_caseTrue, delayed_caseFalse
         new IRForced(
@@ -78,30 +108,46 @@ const hoisted_lazyIfThenElse = new IRHoisted(
 );
 hoisted_lazyIfThenElse.hash;
 
+const hosited_lazyChooseList = new IRHoisted(
+    new IRFunc( 3, // list, delayed_caseNil, delayed_caseCons
+        new IRForced(
+            _ir_apps(
+                IRNative.strictChooseList,
+                new IRVar( 2 ),
+                new IRVar( 1 ),
+                new IRVar( 0 )
+            )
+        )
+    )
+);
+hosited_lazyChooseList.hash;
+//*/
+
 const hoisted_dropList = new IRHoisted(
-    new IRApp(
-        hoisted_z_comb.clone(),
-        new IRFunc( 3, // self, lst, n
+    new IRRecursive( // self,
+        new IRFunc( 2, // lst, n
             new IRApp(
                 new IRFunc( 1, // tailOfTheList (pletted)
-                    _ir_apps(
-                        hoisted_lazyIfThenElse.clone(),
+                    new IRForced(
                         _ir_apps(
-                            IRNative.equalsInteger,
-                            new IRConst( int, 1 ), // constant 1
-                            new IRVar( 1 ) // n
-                        ),
-                        // then
-                        new IRVar( 0 ), // tailOfTheList
-                        // else
-                        _ir_apps(
-                            new IRVar( 3 ), // self
+                            IRNative.strictIfThenElse.clone(),
                             _ir_apps(
-                                IRNative.subtractInteger,
-                                new IRVar( 1 ), // n
-                                new IRConst( int, 1 )
+                                hoisted_isZero.clone(),
+                                new IRVar( 1 ) // n
                             ),
-                            new IRVar( 0 )  // tailOfTheList
+                            // then
+                            new IRDelayed( new IRVar( 0 ) ), // tailOfTheList
+                            // else
+                            new IRDelayed(
+                                _ir_apps(
+                                    new IRSelfCall( 3 ), // self
+                                    new IRVar( 0 ),  // tailOfTheList
+                                    _ir_apps(
+                                        hoisted_decr.clone(),
+                                        new IRVar( 1 ), // n
+                                    ),
+                                )
+                            )
                         )
                     )
                 ),
@@ -110,35 +156,26 @@ const hoisted_dropList = new IRHoisted(
                     new IRVar( 1 ) // lst
                 )
             )
-            
         )
     )
 );
 hoisted_dropList.hash;
 
 const hoisted_recursiveList = new IRHoisted(
-    new IRApp(
-        hoisted_z_comb.clone(),
-        new IRFunc( 4, // self, matchNil, mathcCons, lst
-            new IRApp(
-                new IRFunc( 1, // finalSelf
-                    _ir_apps(
-                        hoisted_matchList.clone(),
-                        new IRApp(
-                            new IRVar( 3 ), // matchNil
-                            new IRVar( 0 )  // finalSelf
-                        ),
-                        new IRApp(
-                            new IRVar( 2 ), // matchCons,
-                            new IRVar( 0 )  // finalSelf
-                        ),
-                        new IRVar( 1 ), // lst
-                    )
-                ),
+    new IRFunc(2, // matchNil (3), matchCons (2)
+        new IRRecursive( // self (1)
+            new IRFunc( 1, // lst (0)
                 _ir_apps(
-                    new IRVar( 3 ), // self
-                    new IRVar( 2 ), // matchNil
-                    new IRVar( 1 )  // matchCons
+                    hoisted_matchList.clone(),
+                    new IRApp(
+                        new IRVar( 3 ), // matchNil
+                        new IRSelfCall( 1 )  // self
+                    ),
+                    new IRApp(
+                        new IRVar( 2 ), // matchCons,
+                        new IRSelfCall( 1 )  // self
+                    ),
+                    new IRVar( 0 ), // lst
                 )
             )
         )
@@ -147,12 +184,14 @@ const hoisted_recursiveList = new IRHoisted(
 hoisted_recursiveList.hash;
 
 const hoisted_lazyOr = new IRHoisted(
-    new IRFunc( 2, // a, b
-        _ir_apps(
-            hoisted_lazyIfThenElse.clone(),
-            new IRVar( 1 ), // a
-            new IRConst( bool, true ), // a == true  -> true
-            new IRVar( 0 )  // a == false -> whatever b is
+    new IRFunc( 2, // a(1), delayed_b (0)
+        new IRForced(
+            _ir_apps(
+                IRNative.strictIfThenElse,
+                new IRVar( 1 ), // a
+                new IRDelayed( new IRConst( bool, true ) ), // a == true  -> true // const 7 bits; var 8 bits
+                new IRVar( 0 )  // a == false -> whatever b is
+            )
         )
     )
 );
@@ -160,11 +199,13 @@ hoisted_lazyOr.hash;
 
 const hoisted_lazyAnd = new IRHoisted(
     new IRFunc( 2, // a, b
-        _ir_apps(
-            hoisted_lazyIfThenElse.clone(),
-            new IRVar( 1 ), // a
-            new IRVar( 0 ), // a == true  -> whatever b is
-            new IRConst( bool, false )  // a == false -> false
+        new IRForced(
+            _ir_apps(
+                IRNative.strictIfThenElse,
+                new IRVar( 1 ), // a
+                new IRVar( 0 ), // a == true  -> whatever b is
+                new IRDelayed( new IRConst( bool, false ) )  // a == false -> false
+            )
         )
     )
 );
@@ -217,27 +258,13 @@ export function nativeToIR( native: IRNative ): IRTerm
         break;
         case IRNativeTag._indexList     :
             return new IRHoisted(
-                new IRFunc( 3, // self, lst, n
-                    _ir_apps(
-                        hoisted_lazyIfThenElse.clone(),
+                new IRFunc( 2, // lst, n
+                    new IRApp( // drop n and take head
+                        IRNative.headList,
                         _ir_apps(
-                            IRNative.equalsInteger,
-                            new IRConst( int, 0 ), // constant 0
-                            new IRVar( 0 ) // n
-                        ),
-                        // then
-                        new IRApp(
-                            IRNative.headList,
+                            hoisted_dropList.clone(),
                             new IRVar( 1 ), // lst
-                        ),
-                        // else
-                        new IRApp( // drop n and take head
-                            IRNative.headList,
-                            _ir_apps(
-                                hoisted_dropList.clone(),
-                                new IRVar( 1 ), // list
-                                new IRVar( 0 )  // n
-                            )
+                            new IRVar( 0 )  // n
                         )
                     )
                 )
@@ -248,16 +275,15 @@ export function nativeToIR( native: IRNative ): IRTerm
         break;
         case IRNativeTag._foldl         :
             return new IRHoisted(
-                new IRFunc( 1, // reduceFunc
-                    new IRApp(
-                        hoisted_z_comb.clone(),
-                        new IRFunc( 2, // self, accum
+                new IRFunc( 1, // reduceFunc (4)
+                    new IRRecursive( // self (3)
+                        new IRFunc( 1, // accum (2)
                             _ir_apps(
                                 hoisted_matchList.clone(),
                                 new IRDelayed( new IRVar( 0 ) ), // pdelay( accum )
-                                new IRFunc( 2, // head, tail
+                                new IRFunc( 2, // head (1), tail (0)
                                     _ir_apps(
-                                        new IRVar( 3 ), // self
+                                        new IRSelfCall( 3 ), // self
                                         // compute new accumoulator before proceeding
                                         _ir_apps(
                                             new IRVar( 4 ), // reduceFunc
@@ -273,47 +299,65 @@ export function nativeToIR( native: IRNative ): IRTerm
                 )
             );
         break;
-        case IRNativeTag._mkFind          :
+        case IRNativeTag._mkFindData          :
             return new IRHoisted(
-                new IRFunc( 2, // elemToData, predicate
-                    new IRApp(
-                        hoisted_z_comb.clone(),
-                        new IRFunc( 2, // self, list
-                            _ir_apps(
-                                hoisted_lazyIfThenElse.clone(),
-                                new IRApp(
-                                    IRNative.nullList,
-                                    new IRVar( 0 ) // list
-                                ),
-                                // then
-                                // Nothing data
-                                new IRConst(
-                                    data,
-                                    new DataConstr( 1, [] ) // Nothing is the second contructor
-                                ),
-                                // else
-                                new IRApp(
-                                    new IRFunc( 1, // head (pletted)
-                                        _ir_apps(
-                                            hoisted_lazyIfThenElse.clone(),
-                                            new IRApp(
-                                                new IRVar( 3 ), // predicate
-                                                new IRVar( 0 )  // head
-                                            ),
-                                            // then
-                                            _ir_apps(
-                                                IRNative.constrData,
-                                                new IRConst( int, 0 ), // just contructor
-                                                new IRApp(
-                                                    new IRVar( 4 ), // elemToData
-                                                    new IRVar( 0 )  // head
-                                                )
-                                            )
+                new IRFunc( 2, // elemToData (4), predicate (3)
+                    new IRRecursive( // self (2)
+                        new IRFunc( 1, // list (1)
+                            new IRForced(
+                                _ir_apps(
+                                    new IRApp(
+                                        IRNative.strictChooseList,
+                                        new IRVar( 0 ) // list
+                                    ),
+                                    // then (caseNil)
+                                    // Nothing data
+                                    new IRDelayed(
+                                        new IRConst(
+                                            data,
+                                            new DataConstr( 1, [] ) // Nothing is the second contructor
                                         )
                                     ),
-                                    new IRApp(
-                                        IRNative.headList,
-                                        new IRVar( 0 ) // list
+                                    // else // caseCons
+                                    new IRDelayed(
+                                        new IRApp(
+                                            new IRFunc( 1, // head (0) (pletted)
+                                                new IRForced(
+                                                    _ir_apps(
+                                                        IRNative.strictIfThenElse,
+                                                        new IRApp(
+                                                            new IRVar( 3 ), // predicate
+                                                            new IRVar( 0 )  // head
+                                                        ),
+                                                        // then
+                                                        new IRDelayed(
+                                                            _ir_apps(
+                                                                IRNative.constrData,
+                                                                new IRConst( int, 0 ), // just contructor
+                                                                new IRApp(
+                                                                    new IRVar( 4 ), // elemToData
+                                                                    new IRVar( 0 )  // head
+                                                                )
+                                                            )
+                                                        ),
+                                                        // else
+                                                        new IRDelayed(
+                                                            new IRApp(
+                                                                new IRSelfCall( 2 ), // self
+                                                                new IRApp(
+                                                                    IRNative.tailList,
+                                                                    new IRVar( 1 ) // list
+                                                                )
+                                                            )
+                                                        )
+                                                    )
+                                                )
+                                            ),
+                                            new IRApp(
+                                                IRNative.headList,
+                                                new IRVar( 0 ) // list
+                                            )
+                                        )
                                     )
                                 )
                             )
@@ -324,26 +368,25 @@ export function nativeToIR( native: IRNative ): IRTerm
         break;
         case IRNativeTag._length        :
             return new IRHoisted(
-                new IRApp(
-                    hoisted_z_comb.clone(),
-                    new IRFunc( 2, // self, list
-                        _ir_apps(
-                            hoisted_lazyIfThenElse.clone(),
-                            new IRApp(
-                                IRNative.nullList,
-                                new IRVar( 0 )  // list
-                            ),
-                            // then
-                            new IRConst( int, 0 ),
-                            // else
+                new IRRecursive( // self
+                    new IRFunc( 1, // list
+                        new IRForced(
                             _ir_apps(
-                                IRNative.addInteger,
-                                new IRConst( int, 1 ),
                                 new IRApp(
-                                    new IRVar( 1 ), // self
-                                    new IRApp(      // list.tail
-                                        IRNative.tailList,
-                                        new IRVar( 0 )  // list
+                                    IRNative.strictChooseList,
+                                    new IRVar( 0 )  // list
+                                ),
+                                // then
+                                new IRConst( int, 0 ),
+                                // else
+                                _ir_apps(
+                                    hoisted_incr.clone(),
+                                    new IRApp(
+                                        new IRSelfCall( 1 ), // self
+                                        new IRApp(      // list.tail
+                                            IRNative.tailList,
+                                            new IRVar( 0 )  // list
+                                        )
                                     )
                                 )
                             )
@@ -416,21 +459,27 @@ export function nativeToIR( native: IRNative ): IRTerm
                     _ir_apps(
                         hoisted_foldr.clone(),
                         new IRFunc( 2, // elem, accum
-                            _ir_apps(
-                                hoisted_lazyIfThenElse.clone(),
-                                new IRApp(
-                                    new IRVar( 2 ), // predicate
-                                    new IRVar( 1 )  // elem
-                                ),
-                                // then
+                            new IRForced(
                                 _ir_apps(
-                                    IRNative.mkCons,
-                                    new IRVar( 1 ), // elem
-                                    new IRVar( 0 )  // accum
-                                ),
-                                // else
-                                // filter out this element
-                                new IRVar( 0 ) // accum
+                                    IRNative.strictIfThenElse,
+                                    new IRApp(
+                                        new IRVar( 2 ), // predicate
+                                        new IRVar( 1 )  // elem
+                                    ),
+                                    // then
+                                    new IRDelayed(
+                                        _ir_apps(
+                                            IRNative.mkCons,
+                                            new IRVar( 1 ), // elem
+                                            new IRVar( 0 )  // accum
+                                        )
+                                    ),
+                                    // else
+                                    // filter out this element
+                                    new IRDelayed(
+                                        new IRVar( 0 )  // accum
+                                    )
+                                )
                             ),
                         ),
                         // initial accum
@@ -618,18 +667,7 @@ export function nativeToIR( native: IRNative ): IRTerm
             );
         break;
         case IRNativeTag._lazyChooseList:
-            return new IRHoisted(
-                new IRFunc( 3, // list, delayed_caseNil, delayed_caseCons
-                    new IRForced(
-                        _ir_apps(
-                            IRNative.strictChooseList,
-                            new IRVar( 2 ),
-                            new IRVar( 1 ),
-                            new IRVar( 0 )
-                        )
-                    )
-                )
-            );
+            return hosited_lazyChooseList.clone();
         break;
         case IRNativeTag._lazyIfThenElse:
             return hoisted_lazyIfThenElse.clone()

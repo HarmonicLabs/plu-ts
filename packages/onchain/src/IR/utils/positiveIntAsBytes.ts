@@ -19,21 +19,9 @@ export function positiveIntAsBytes( n: number | bigint ): Uint8Array
         );
     }
 
-    let max = 0x100;
-    let nBytes = 1;
-    while( max <= n )
-    {
-        nBytes++;
-        max = max << 8;
-    }
-    const result = new Uint8Array( nBytes );
-    // just reuse some variable
-    while( n > 0 )
-    {
-        result[ --nBytes ] = n & 0xff;
-        n = n >>> 8;
-    }
-    return result;
+    let str = n.toString(16);
+    str = str.length % 2 === 0 ? str : "0" + str;
+    return fromHex( str );
 }
 
 export function positiveBigIntAsBytes( n: bigint ): Uint8Array

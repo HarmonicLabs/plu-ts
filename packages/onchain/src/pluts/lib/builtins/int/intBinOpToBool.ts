@@ -55,10 +55,10 @@ export const plessEqInt = intBinOpToBool( IRNative.lessThanEqualInteger );
 export const pgreaterInt = addApplications<[ PInt, PInt ], PBool>( 
         new Term<PLam<PInt, PLam<PInt, PBool>>>(
         fn([ int, int ], bool ),
-        _dbn => new IRHoisted(
+        (cfg, _dbn) => new IRHoisted(
             new IRApp(
                 _pflipIR.clone(),
-                plessInt.toIR( 0 )
+                plessInt.toIR( cfg, 0 )
             )
         )
     )
@@ -67,10 +67,10 @@ export const pgreaterInt = addApplications<[ PInt, PInt ], PBool>(
 export const pgreaterEqInt = addApplications<[ PInt, PInt ], PBool>( 
     new Term<PLam<PInt, PLam<PInt, PBool>>>(
     fn([ int, int ], bool ),
-    _dbn => new IRHoisted(
+    (cfg, _dbn) => new IRHoisted(
         new IRApp(
             _pflipIR,
-            plessEqInt.toIR( 0 )
+            plessEqInt.toIR( cfg, 0 )
         )
     )
 )

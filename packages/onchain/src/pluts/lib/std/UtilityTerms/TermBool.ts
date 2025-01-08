@@ -34,9 +34,9 @@ function pdelay<PInstance extends PType>(toDelay: Term<PInstance>): Term<PDelaye
 {
     return new Term(
         delayed( toDelay.type ),
-        (dbn) => {
+        (cfg, dbn) => {
             return new IRDelayed(
-                toDelay.toIR( dbn )
+                toDelay.toIR( cfg, dbn )
             );
         }
     );

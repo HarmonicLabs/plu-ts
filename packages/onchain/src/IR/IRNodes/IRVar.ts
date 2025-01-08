@@ -9,6 +9,7 @@ import { IRParentTerm, isIRParentTerm } from "../utils/isIRParentTerm";
 import { _modifyChildFromTo } from "../toUPLC/_internal/_modifyChildFromTo";
 import { BaseIRMetadata } from "./BaseIRMetadata";
 import { hashIrData, IRHash, isIRHash } from "../IRHash";
+import { IRNodeKind } from "../IRNodeKind";
 
 export interface IRVarMetadata extends BaseIRMetadata {}
 
@@ -39,7 +40,7 @@ export class IRVar
      * the IR DeBruijn index is not necessarly the same of the UPLC
      * ( more ofthen than not it won't be the same )
      * 
-     * this is because in the IR things like `plet`
+     * this is because in the IR things like `IRLetted` and `IRHoisted`
      * are skipping some DeBruijin levels that are instead present
      * in the final UPLC
     **/
@@ -60,6 +61,10 @@ export class IRVar
         this.markHashAsInvalid();
         this._dbn = newDbn;
     }
+
+    static get kind(): IRNodeKind.Var { return IRNodeKind.Var; }
+    get kind(): IRNodeKind.Var { return IRVar.kind; }
+    static get tag(): Uint8Array { return new Uint8Array([ IRVar.kind ]); }
 
     readonly meta: IRVarMetadata
 
@@ -102,13 +107,11 @@ export class IRVar
         this._parent = undefined;
     }
 
-    static get tag(): Uint8Array { return new Uint8Array([ 0b0000_0000 ]); }
-
     clone(): IRVar
     {
         return new IRVar( this.dbn );
     }
-
+    toJSON() { return this.toJson(); }
     toJson(): any
     {
         return {

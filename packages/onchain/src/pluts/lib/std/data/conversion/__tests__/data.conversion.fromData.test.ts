@@ -6,6 +6,8 @@ import { punIData, punListData } from "../../../../builtins/data";
 import { Machine } from "@harmoniclabs/plutus-machine";
 import { pInt } from "../../../int";
 import { pmap } from "../../../list";
+import { prettyUPLC } from "@harmoniclabs/uplc";
+import { debugOptions } from "../../../../../../IR/toUPLC/CompilerOptions";
 
 
 const d = new DataList([
@@ -110,6 +112,10 @@ describe("fromData", () => {
         //         plistInt
         //     )
         // );
+
+        const uplc = plistInt.at(0).toUPLC(0, debugOptions);
+
+        // console.log( prettyUPLC( uplc ) );
 
         expect(
             Machine.evalSimple(

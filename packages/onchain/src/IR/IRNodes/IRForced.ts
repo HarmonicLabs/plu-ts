@@ -11,6 +11,7 @@ import { _modifyChildFromTo } from "../toUPLC/_internal/_modifyChildFromTo";
 import { BaseIRMetadata } from "./BaseIRMetadata";
 import { equalIrHash, hashIrData, IRHash, isIRHash } from "../IRHash";
 import { shallowEqualIRTermHash } from "../utils/equalIRTerm";
+import { IRNodeKind } from "../IRNodeKind";
 
 export interface IRForcedMetadata extends BaseIRMetadata {}
 
@@ -33,7 +34,6 @@ export class IRForced
 
         this._parent = undefined;
     }
-
 
     private _forced!: IRTerm;
     get forced(): IRTerm { return this._forced; }
@@ -92,10 +92,9 @@ export class IRForced
         this._parent = newParent;
     }
 
-    static get tag(): Uint8Array
-    {
-        return new Uint8Array([0b0000_1000]);
-    }
+    static get kind(): IRNodeKind.Forced { return IRNodeKind.Forced; }
+    get kind(): IRNodeKind.Forced { return IRForced.kind; }
+    static get tag(): Uint8Array { return new Uint8Array([ IRForced.kind ]); }
 
     clone(): IRForced
     {
@@ -104,7 +103,7 @@ export class IRForced
             this.isHashPresent() ? this.hash : undefined
         );
     }
-
+    toJSON() { return this.toJson(); }
     toJson(): any
     {
         return {

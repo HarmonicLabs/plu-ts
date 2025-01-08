@@ -27,7 +27,7 @@ export function mockPListMethods<PElemsT extends PType>( lst: Term<PList<PElemsT
     const _lst = new Term(
         list( elemsT ),
         // needs to be wrapped to prevent the garbage collector to collect garbage (lst)
-        dbn => lst.toIR( dbn ),
+        (cfg, dbn) => lst.toIR( cfg, dbn ),
         (lst as any).isConstant
     ) as any;
 

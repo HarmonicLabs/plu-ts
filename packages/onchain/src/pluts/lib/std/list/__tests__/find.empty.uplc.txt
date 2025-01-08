@@ -1,0 +1,122 @@
+[
+  (lam tail
+    [
+      (lam head
+        [
+          (lam prepend
+            [
+              (lam chooseList
+                [
+                  (lam if
+                    [
+                      [
+                        [
+                          (lam intToData
+                            (lam isZero
+                              [
+                                (lam inner
+                                  [
+                                    inner
+                                    inner
+                                  ]
+                                ) 
+                                (lam self_find
+                                  (lam _list
+                                    [
+                                      (lam l
+                                        (force 
+                                          [
+                                            [
+                                              [
+                                                chooseList 
+                                                _list
+                                              ] 
+                                              (delay 
+                                                (con data Constr 1 [])
+                                              )
+                                            ] 
+                                            (delay 
+                                              (force 
+                                                [
+                                                  [
+                                                    [
+                                                      if 
+                                                      [
+                                                        isZero 
+                                                        l
+                                                      ]
+                                                    ] 
+                                                    (delay 
+                                                      [
+                                                        [
+                                                          (builtin constrData) 
+                                                          (con integer 0)
+                                                        ] 
+                                                        [
+                                                          [
+                                                            prepend 
+                                                            [
+                                                              intToData 
+                                                              l
+                                                            ]
+                                                          ] 
+                                                          [
+                                                            (builtin mkNilData) 
+                                                            (con unit ())
+                                                          ]
+                                                        ]
+                                                      ]
+                                                    )
+                                                  ] 
+                                                  (delay 
+                                                    [
+                                                      [
+                                                        self_find 
+                                                        self_find
+                                                      ] 
+                                                      [
+                                                        tail 
+                                                        _list
+                                                      ]
+                                                    ]
+                                                  )
+                                                ]
+                                              )
+                                            )
+                                          ]
+                                        )
+                                      ) 
+                                      [
+                                        head 
+                                        _list
+                                      ]
+                                    ]
+                                  )
+                                )
+                              ]
+                            )
+                          ) 
+                          (builtin iData)
+                        ] 
+                        [
+                          (builtin equalsInteger) 
+                          (con integer 0)
+                        ]
+                      ] 
+                      (con (list integer) [])
+                    ]
+                  ) 
+                  (force (builtin ifThenElse))
+                ]
+              ) 
+              (force (force (builtin chooseList)))
+            ]
+          ) 
+          (force (builtin mkCons))
+        ]
+      ) 
+      (force (builtin headList))
+    ]
+  ) 
+  (force (builtin tailList))
+]

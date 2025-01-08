@@ -5,7 +5,7 @@ import { IRFunc } from "../../IRNodes/IRFunc";
 import { IRLetted } from "../../IRNodes/IRLetted";
 import { IRVar } from "../../IRNodes/IRVar";
 import { IRTerm } from "../../IRTerm";
-import { handleLetted } from "../subRoutines/handleLetted/index";
+import { handleLettedAndReturnRoot } from "../subRoutines/handleLetted/index";
 import { _ir_apps } from "../../tree_utils/_ir_apps";
 import { prettyIRJsonStr } from "../../utils/showIR";
 
@@ -40,7 +40,7 @@ describe("compileIRToUPLC", () => {
             );
 
             // const beforeTree = prettyIRJsonStr( irTree );
-            handleLetted( irTree );
+            irTree = handleLettedAndReturnRoot( irTree );
 
             expect(
                 irTree.toJson()
@@ -68,7 +68,7 @@ describe("compileIRToUPLC", () => {
         test("same scope; different DeBruijn", () => {
 
             // we use `IRDelayed` because plain `IRVars`a re inlined
-            const tree = new IRFunc(
+            let tree: IRTerm = new IRFunc(
                 1,
                 new IRApp(
                     new IRFunc(
@@ -95,7 +95,7 @@ describe("compileIRToUPLC", () => {
                 (tree as any).body.arg.hash
             );
 
-            handleLetted( tree )
+            tree = handleLettedAndReturnRoot( tree )
 
             expect( tree.toJson() )
             .toEqual(

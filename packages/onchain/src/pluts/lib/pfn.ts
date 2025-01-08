@@ -182,7 +182,7 @@ export function pfn<InputsTypes extends [ TermType, ...TermType[] ], OutputType 
                 const body = termFunction( ...boundVars as any );
 
                 // here the debruijn level is incremented
-                return new IRFunc( termFunction.length, body.toIR( thisLambdaPtr ), func_name );
+                return new IRFunc( termFunction.length, body.toIR( cfg, thisLambdaPtr ), func_name );
             }
         );
 
@@ -195,14 +195,14 @@ export function pfn<InputsTypes extends [ TermType, ...TermType[] ], OutputType 
 
                 return new Term<PLam<PType,PType>>(
                     fn( newInsTys as any, outputType ) as any,
-                    dbn => {
+                    (cfg, dbn) => {
                         const thisLambdaPtr = dbn + BigInt( 1 );
 
                         const boundVars = inputsTypes.map( inT => {
 
                             const boundVar = new Term<PType>(
                                 inT,
-                                dbnAccessLevel => new IRVar( dbnAccessLevel - thisLambdaPtr )
+                                (cfg, dbnAccessLevel) => new IRVar( dbnAccessLevel - thisLambdaPtr )
                             );
 
                             defineReadOnlyHiddenProperty(
@@ -217,7 +217,7 @@ export function pfn<InputsTypes extends [ TermType, ...TermType[] ], OutputType 
                         const body = termFunction( ...boundVars as any );
 
                         // here the debruijn level is incremented
-                        return new IRFunc( termFunction.length, body.toIR( thisLambdaPtr ), func_name );
+                        return new IRFunc( termFunction.length, body.toIR( cfg, thisLambdaPtr ), func_name );
                     }
                 );
             }

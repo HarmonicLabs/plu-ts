@@ -7,6 +7,7 @@ import { IRHoisted } from "../../IRNodes/IRHoisted";
 import { IRLetted } from "../../IRNodes/IRLetted";
 import { IRTerm } from "../../IRTerm";
 import { IRConstr } from "../../IRNodes/IRConstr";
+import { IRRecursive } from "../../IRNodes/IRRecursive";
 
 export function includesNode( parent: IRTerm, predicate: ( node: IRTerm ) => boolean ): boolean
 {
@@ -63,6 +64,12 @@ export function includesNode( parent: IRTerm, predicate: ( node: IRTerm ) => boo
         }
 
         if( t instanceof IRFunc )
+        {
+            stack.push( t.body );
+            continue;
+        }
+
+        if( t instanceof IRRecursive )
         {
             stack.push( t.body );
             continue;

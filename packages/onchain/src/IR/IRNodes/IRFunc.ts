@@ -13,6 +13,7 @@ import { _modifyChildFromTo } from "../toUPLC/_internal/_modifyChildFromTo";
 import { BaseIRMetadata } from "./BaseIRMetadata";
 import { equalIrHash, hashIrData, IRHash, isIRHash } from "../IRHash";
 import { shallowEqualIRTermHash } from "../utils/equalIRTerm";
+import { IRNodeKind } from "../IRNodeKind";
 
 export interface IRFuncMetadata extends BaseIRMetadata {}
 
@@ -63,7 +64,9 @@ export class IRFunc
         this._parent = undefined;
     }
 
-    static get tag(): Uint8Array { return new Uint8Array([ 0b0000_00001 ]); }
+    static get kind(): IRNodeKind.Func { return  IRNodeKind.Func; }
+    get kind(): IRNodeKind.Func { return IRFunc.kind; }
+    static get tag(): Uint8Array { return new Uint8Array([ IRFunc.kind ]); }
 
     private _body!: IRTerm
     get body(): IRTerm { return this._body }
@@ -109,8 +112,8 @@ export class IRFunc
     readonly meta: IRFuncMetadata
     get name(): string | undefined { return this.meta.name };
 
-    private _parent: IRTerm | undefined;
-    get parent(): IRTerm | undefined { return this._parent; }
+    private _parent: IRParentTerm | undefined;
+    get parent(): IRParentTerm | undefined { return this._parent; }
     set parent( newParent: IRTerm | undefined )
     {
         if(!( // assert
@@ -134,7 +137,7 @@ export class IRFunc
             this.isHashPresent() ? this.hash : undefined
         )
     }
-
+    toJSON() { return this.toJson(); }
     toJson(): any
     {
         return {

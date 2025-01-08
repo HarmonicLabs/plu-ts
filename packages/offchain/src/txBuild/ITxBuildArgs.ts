@@ -32,6 +32,12 @@ export interface ITxBuildArgs {
     invalidAfter?: CanBeUInteger,
     certificates?: ITxBuildCert[],
     withdrawals?: ITxBuildWithdrawal[],
+    /**
+     * # metadata message following cip20
+     * 
+     * overwrites the metadata at label 674 if already present. 
+     **/
+    memo?: string,
     metadata?: TxMetadata,
     // conway
     votingProcedures?: (IVotingProceduresEntry | ITxBuildVotingProcedure)[],
@@ -55,6 +61,12 @@ export interface NormalizedITxBuildArgs extends ITxBuildArgs {
     invalidAfter?: CanBeUInteger,
     certificates?: NormalizedITxBuildCert[],
     withdrawals?: NormalizedITxBuildWithdrawal[],
+    /**
+     * # metadata message following cip20
+     * 
+     * overwrites the metadata at label 674 if already present. 
+     **/
+    memo?: string,
     metadata?: TxMetadata,
     // conway
     votingProcedures?: NormalizedITxBuildVotingProcedure[],
@@ -77,6 +89,7 @@ export function normalizeITxBuildArgs({
     invalidAfter,
     certificates,
     withdrawals,
+    memo,
     metadata,
     votingProcedures,
     proposalProcedures,
@@ -102,6 +115,7 @@ export function normalizeITxBuildArgs({
         invalidAfter: invalidAfter === undefined ? undefined : BigInt( invalidAfter ),
         certificates: certificates?.map( normalizeITxBuildCert ),
         withdrawals: withdrawals?.map( normalizeITxBuildWithdrawal ),
+        memo: memo ? String( memo ) : undefined,
         metadata,
         votingProcedures:
             Array.isArray( votingProcedures ) ?

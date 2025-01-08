@@ -15,8 +15,8 @@ export function pforce<PInstance extends PType >( toForce: Term<PDelayed<PInstan
     return addUtilityForType( outType )(
         new Term(
             outType as any,
-            (dbn) => {
-                const toForceUPLC = toForce.toIR( dbn );
+            (cfg, dbn) => {
+                const toForceUPLC = toForce.toIR( cfg, dbn );
 
                 // if directly applying to Delay UPLC just remove the delay
                 // example:

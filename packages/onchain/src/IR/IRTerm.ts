@@ -10,6 +10,8 @@ import { IRForced } from "./IRNodes/IRForced";
 import { IRVar } from "./IRNodes/IRVar";
 import { IRConstr } from "./IRNodes/IRConstr";
 import { IRCase } from "./IRNodes/IRCase";
+import { IRRecursive } from "./IRNodes/IRRecursive";
+import { IRSelfCall } from "./IRNodes/IRSelfCall";
 
 export type IRTerm
     = IRVar
@@ -23,4 +25,6 @@ export type IRTerm
     | IRForced
     | IRDelayed
     | IRConstr
-    | IRCase;
+    | IRCase
+    | IRRecursive
+    | IRSelfCall;

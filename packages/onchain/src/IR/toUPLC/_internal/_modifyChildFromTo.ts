@@ -10,6 +10,7 @@ import { isIRTerm, prettyIRJsonStr } from "../../utils";
 import { IRConstr } from "../../IRNodes/IRConstr";
 import { IRCase } from "../../IRNodes/IRCase";
 import { equalIrHash, IRHash, irHashToHex, isIRHash } from "../../IRHash";
+import { IRRecursive } from "../../IRNodes/IRRecursive";
 
 /**
  * 
@@ -45,18 +46,32 @@ export function _modifyChildFromTo(
         currentChild.parent = undefined;
     }
 
+    // DO NOT USE **ONLY** SHALLOW EQUALITY
+    // child might be cloned
+    // however delay hash computation until needed
+    let _childHash: IRHash | undefined;
+    const currChildHash = () => {
+        if( isIRHash( _childHash ) ) return _childHash
+        _childHash = isIRHash( currentChild ) ? currentChild : currentChild.hash
+        return _childHash;
+    };
+
     if( parent instanceof IRApp )
     {
-        // DO NO USE **ONLY** SHALLOW EQUALITY
-        // child might be cloned
-        const currChildHash = isIRHash( currentChild ) ? currentChild : currentChild.hash;
-
         // check the argument first as it is more likely to have a smaller tree
-        if( currentChild === parent.arg || equalIrHash( parent.arg.hash, currChildHash ) )
+        if( currentChild === parent.arg )
         {
             parent.arg = newChild;
         }
-        else if( currentChild === parent.fn || equalIrHash( parent.fn.hash, currChildHash ) )
+        else if( currentChild === parent.fn )
+        {
+            parent.fn = newChild;
+        }
+        else if( equalIrHash( parent.arg.hash, currChildHash() ) )
+        {
+            parent.arg = newChild;
+        }
+        else if( equalIrHash( parent.fn.hash, currChildHash() ) )
         {
             parent.fn = newChild;
         }
@@ -69,7 +84,7 @@ export function _modifyChildFromTo(
             );
             throw new Error(
                 "unknown 'IRApp' child to modify; given child to modify hash: " +
-                irHashToHex( currChildHash ) +
+                irHashToHex( currChildHash() ) +
                 "; function child hash: " + irHashToHex( parent.fn.hash ) +
                 "; argument child hash: " + irHashToHex( parent.arg.hash )
             );
@@ -91,11 +106,10 @@ export function _modifyChildFromTo(
             }
         }
         if( foundChild ) return;
-        const currChildHash = isIRHash( currentChild ) ? currentChild : currentChild.hash;
         for( let i = 0; i < parent.fields.length; i++ )
         {
             const field = parent.fields[i];
-            if( equalIrHash( field.hash, currChildHash ) )
+            if( equalIrHash( field.hash, currChildHash() ) )
             {
                 parent.fields[i] = newChild;
                 break
@@ -122,8 +136,7 @@ export function _modifyChildFromTo(
             }
         }
         if( foundChild ) return;
-        const currChildHash = isIRHash( currentChild ) ? currentChild : currentChild.hash;
-        if( equalIrHash( currChildHash, parent.constrTerm.hash ) )
+        if( equalIrHash( currChildHash(), parent.constrTerm.hash ) )
         {
             parent.constrTerm = newChild;
             return;
@@ -131,7 +144,7 @@ export function _modifyChildFromTo(
         for( let i = 0; i < parent.continuations.length; i++ )
         {
             const field = parent.continuations[i];
-            if( equalIrHash( field.hash, currChildHash ) )
+            if( equalIrHash( field.hash, currChildHash() ) )
             {
                 parent.continuations[i] = newChild;
                 break
@@ -153,6 +166,12 @@ export function _modifyChildFromTo(
     }
 
     if( parent instanceof IRFunc )
+    {
+        parent.body = newChild;
+        return;
+    }
+
+    if( parent instanceof IRRecursive )
     {
         parent.body = newChild;
         return;

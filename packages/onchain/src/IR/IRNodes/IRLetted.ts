@@ -24,6 +24,10 @@ import { IRConstr } from "./IRConstr";
 import { IRCase } from "./IRCase";
 import { equalIrHash, hashIrData, IRHash, irHashToHex, isIRHash } from "../IRHash";
 import { shallowEqualIRTermHash } from "../utils/equalIRTerm";
+import { IRNodeKind } from "../IRNodeKind";
+import { IRRecursive } from "./IRRecursive";
+import { IRSelfCall } from "./IRSelfCall";
+import { fromHex } from "@harmoniclabs/uint8array-utils";
 
 
 export type LettedSetEntry = {
@@ -56,7 +60,8 @@ export interface IRLettedMeta extends BaseIRMetadata {
      * useful to hoist letted terms used once in recursive expressions
     **/
     forceHoist: boolean,
-    __src__?: string | undefined
+    __src__?: string | undefined,
+    isClosed: boolean
 }
 
 export interface IRLettedMetadata extends IRMetadata {
@@ -64,7 +69,9 @@ export interface IRLettedMetadata extends IRMetadata {
 }
 
 const defaultLettedMeta: IRLettedMeta = freezeAll({
-    forceHoist: false
+    forceHoist: false,
+    __src__: undefined,
+    isClosed: false
 });
 
 let n_hash_access = 0;
@@ -77,6 +84,17 @@ export class IRLetted
     {
         if(!isIRHash( this._hash ))
         {
+            /*
+            NOTE TO SELF:
+
+            NEVER
+            NEVER
+            NEVER
+
+            NEVER GET THE HASH BASED ON THE METADATA
+
+            NEVER
+            */
             const normalized = getNormalizedLettedArgs( this.dbn, this._value );
             if( normalized === undefined )
             {
@@ -100,20 +118,22 @@ export class IRLetted
                         normalized[1].hash
                     )
                 );
-                // const [ normalized_dbn, normalized_value] = normalized;
-                // if( toHex( hash ) === "ee84fb036ed2726e01b0415109246927" )
-                // {
-                //     const original_value = _value.clone();
-                //     const minDbn = getMinVarDbn( original_value );
-                //     const minUnb = _getMinUnboundDbn( original_value );
-                //     console.log(
-                //         "_ee84fb036ed2726e01b0415109246927_",
-                //         "\noriginal value:", prettyIRJsonStr( original_value, 2, { hoisted: false } ),
-                //         "\nmin dbn:", minDbn,
-                //         "\nmin unbound:", minUnb,
-                //         "\nnormalized dbn:", normalized_dbn,
-                //     );
-                // }
+                /*
+                const [ normalized_dbn, normalized_value] = normalized;
+                if( toHex( hash ) === "ee84fb036ed2726e01b0415109246927" )
+                {
+                    const original_value = _value.clone();
+                    const minDbn = getMinVarDbn( original_value );
+                    const minUnb = _getMinUnboundDbn( original_value );
+                    console.log(
+                        "_ee84fb036ed2726e01b0415109246927_",
+                        "\noriginal value:", prettyIRJsonStr( original_value, 2, { hoisted: false } ),
+                        "\nmin dbn:", minDbn,
+                        "\nmin unbound:", minUnb,
+                        "\nnormalized dbn:", normalized_dbn,
+                    );
+                }
+                //*/
             }
         }
 
@@ -224,6 +244,13 @@ export class IRLetted
             "invalid index for an `IRLetted` instance"
         );
 
+        while(
+            toLet instanceof IRLetted ||
+            toLet instanceof IRHoisted
+        )
+        {
+            toLet = toLet instanceof IRLetted ? toLet.value : toLet.hoisted;
+        }
         if( !isIRTerm( toLet ) )
         throw new BasePlutsError(
             "letted value was not an IRTerm"
@@ -243,11 +270,14 @@ export class IRLetted
 
         this.meta = {
             ...defaultLettedMeta,
-            ...metadata
+            ...metadata,
+            // isClosed: metadata.isClosed || this.isClosedAtDbn( 0 )
         };
     }
 
-    static get tag(): Uint8Array { return new Uint8Array([ 0b0000_0101 ]); }
+    static get kind(): IRNodeKind.Letted { return IRNodeKind.Letted; }
+    get kind(): IRNodeKind.Letted { return IRLetted.kind; }
+    static get tag(): Uint8Array { return new Uint8Array([ IRLetted.kind ]); }
 
     clone(): IRLetted
     {
@@ -258,7 +288,7 @@ export class IRLetted
             this.isHashPresent() ? this.hash : undefined
         )
     }
-
+    toJSON() { return this.toJson(); }
     toJson(): any 
     {
         return {
@@ -405,6 +435,12 @@ export function getLettedTerms( irTerm: IRTerm, options?: Partial<GetLettedTerms
             continue;
         }
 
+        if( t instanceof IRRecursive )
+        {
+            stack.push( t.body );
+            continue;
+        }
+
         if( t instanceof IRForced )
         {
             stack.push( t.forced );
@@ -435,15 +471,20 @@ export function getNormalizedLettedArgs( lettedDbn: number, value: IRTerm ): [ n
 {
     const normalized_value = value.clone();
     const minDbn = getMinVarDbn( normalized_value );
-
     if( minDbn === undefined ) return undefined;
 
+    if( minDbn !== 0 )
     iterTree( normalized_value,
         (node, relativeDbn) => {
             if( node instanceof IRVar )
             {
                 node.dbn -= minDbn
             }
+            else if( node instanceof IRSelfCall )
+            {
+                node.dbn -= minDbn;
+            }
+            //*
             else if( node instanceof IRLetted )
             {
                 const max = getMaxVarDbn( node.value );
@@ -502,6 +543,7 @@ export function getNormalizedLettedArgs( lettedDbn: number, value: IRTerm ): [ n
                     }
                 }
             }
+            //*/
         },
         // shouldSkipNode ?
         // hoisted terms are not really here
@@ -535,7 +577,10 @@ export function getMinVarDbn( term: IRTerm ): number | undefined
 
     iterTree( term,
         (node) => {
-            if( node instanceof IRVar )
+            if(
+                node instanceof IRVar ||
+                node instanceof IRSelfCall
+            )
             {
                 if( foundAny )
                 {
@@ -571,7 +616,10 @@ function getMaxVarDbn( term: IRTerm ): number | undefined
 
     iterTree( term,
         (node) => {
-            if( node instanceof IRVar )
+            if(
+                node instanceof IRVar ||
+                node instanceof IRSelfCall
+            )
             {
                 if( foundAny )
                 {

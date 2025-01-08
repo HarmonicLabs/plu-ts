@@ -304,7 +304,7 @@ export function pstruct<
                 {
                     dataReprTerm = new Term(
                         thisStructType,
-                        _dbn => {
+                        (cfg, _dbn) => {
                             return IRConst.data(
                                 new DataConstr(
                                     i,
@@ -324,7 +324,7 @@ export function pstruct<
                                                 console.log( ctorDefFieldsNames );
                                                 console.log( fieldKey, termTypeToString( thisCtorDef[ fieldKey ] ) );
                                                 console.log( res )
-                                                // console.log( showUPLC( _term.toIR( _dbn ) ) )
+                                                // console.log( showUPLC( _term.toIR( cfg, _dbn ) ) )
                                                 throw res;
                                             }
                                             
@@ -341,7 +341,7 @@ export function pstruct<
                 {
                     dataReprTerm = new Term(
                         thisStructType,
-                        dbn => {
+                        (cfg, dbn) => {
     
                             return new IRApp(
                                 new IRApp(
@@ -357,7 +357,7 @@ export function pstruct<
                                             return res;
                                         }
                                     )
-                                ).toIR( dbn )
+                                ).toIR( cfg, dbn )
                             )
                         }
                     )

@@ -94,11 +94,11 @@ export function addPStructMethods<
 
         const letted_fieldsListData = new Term<PList<PData>>(
             list( data ),
-            dbn => new IRLetted(
+            (cfg, dbn) => new IRLetted(
                 Number(dbn),
                 new IRApp(
                     hoisted_getFields.clone(),
-                    struct.toIR( dbn )
+                    struct.toIR( cfg, dbn )
                 )
             )
         );
@@ -146,33 +146,33 @@ export function addPStructMethods<
 
     const letted_unconstred = new Term<PPair<PInt,PList<PData>>>(
         pair( int, list( data )),
-        dbn => new IRLetted(
+        (cfg, dbn) => new IRLetted(
             Number(dbn),
             new IRApp(
                 IRNative.unConstrData,
-                struct.toIR( dbn )
+                struct.toIR( cfg, dbn )
             )
         )
     );
 
     const letted_ctorIdx = new Term<PInt>(
         int,
-        dbn => new IRLetted(
+        (cfg, dbn) => new IRLetted(
             Number(dbn),
             new IRApp(
                 IRNative.fstPair,
-                letted_unconstred.toIR( dbn )
+                letted_unconstred.toIR( cfg, dbn )
             )
         )
     );
 
     const letted_rawFields = new Term<PList<PData>>(
         list( data ),
-        dbn => new IRLetted(
+        (cfg, dbn) => new IRLetted(
             Number(dbn),
             new IRApp(
                 IRNative.sndPair,
-                letted_unconstred.toIR( dbn )
+                letted_unconstred.toIR( cfg, dbn )
             )
         )
     );

@@ -14,6 +14,7 @@ import { mapArrayLike } from "../../../IRNodes/utils/mapArrayLike";
 import { IRCase } from "../../../IRNodes/IRCase";
 import { IRConstr } from "../../../IRNodes/IRConstr";
 import { stringify } from "../../../../utils/stringify";
+import { IRRecursive } from "../../../IRNodes/IRRecursive";
 
 export function handleHoistedAndReturnRoot( term: IRTerm ): IRTerm
 {
@@ -236,6 +237,14 @@ export function handleHoistedAndReturnRoot( term: IRTerm ): IRTerm
         }
 
         if( irTerm instanceof IRFunc )
+        {
+            stack.push(
+                { irTerm: irTerm.body, dbn: dbn + irTerm.arity }
+            );
+            continue;
+        }
+
+        if( irTerm instanceof IRRecursive )
         {
             stack.push(
                 { irTerm: irTerm.body, dbn: dbn + irTerm.arity }
