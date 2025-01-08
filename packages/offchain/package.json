@@ -1,6 +1,6 @@
 {
     "name": "@harmoniclabs/plu-ts-offchain",
-    "version": "0.1.17",
+    "version": "0.2.0",
     "description": "An embedded DSL for Cardano smart contracts creation coupled with a library for Cardano transactions, all in Typescript",
     "main": "./dist/index.js",
     "types": "./dist/index.d.ts",
@@ -54,20 +54,20 @@
     "homepage": "https://github.com/HarmonicLabs/plu-ts#readme",
     "dependencies": {
         "@harmoniclabs/bigint-utils": "^1.0.0",
-        "@harmoniclabs/crypto": "^0.2.4",
+        "@harmoniclabs/crypto": "^0.2.5",
         "@harmoniclabs/obj-utils": "^1.0.0",
-        "@harmoniclabs/uint8array-utils": "^1.0.0"
+        "@harmoniclabs/uint8array-utils": "^1.0.3"
     },
     "peerDependencies": {
         "@harmoniclabs/bip32_ed25519": "^0.1.2",
         "@harmoniclabs/bytestring": "^1.0.0",
-        "@harmoniclabs/cardano-costmodels-ts": "^1.2.0",
-        "@harmoniclabs/cardano-ledger-ts": "^0.2.8",
-        "@harmoniclabs/cbor": "^1.3.1",
+        "@harmoniclabs/cardano-costmodels-ts": "^1.3.0",
+        "@harmoniclabs/cardano-ledger-ts": "^0.3.1",
+        "@harmoniclabs/cbor": "^1.5.0",
         "@harmoniclabs/pair": "^1.0.0",
         "@harmoniclabs/plutus-data": "^1.2.4",
-        "@harmoniclabs/plutus-machine": "^2.0.1",
-        "@harmoniclabs/uplc": "^1.3.0"
+        "@harmoniclabs/plutus-machine": "^2.1.0",
+        "@harmoniclabs/uplc": "^1.4.0"
     },
     "devDependencies": {
         "@babel/preset-env": "^7.18.6",
