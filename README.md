@@ -1,7 +1,7 @@
 <p align="center">
-  <img width="100px" src="./assets/logo/plu-ts.svg" align="center"/>
-  <h1 align="center">plu-ts</h1>
-  <p align="center">An embedded DSL for Cardano smart contracts creation coupled with a library for Cardano transactions, all in Typescript</p>
+  <img width="100px" src="./assets/logo/pebble.svg" align="center"/>
+  <h1 align="center">pebble</h1>
+  <p align="center">A simple, yet rock solid, functional language with an imperative bias, targeting UPLC</p>
 
   <p align="center">
     <img src="https://img.shields.io/github/commit-activity/m/HarmonicLabs/plu-ts?style=for-the-badge" />
@@ -14,37 +14,25 @@
   </p>
 </p>
 
-## what is plu-ts?
-
-`plu-ts` is a library to allow Cardano-related software to be written entirely in [typescript](https://www.typescriptlang.org/), in support for a wider developer ecosystem adoption and easier integration.
-
-the project is composed mainly of two parts: on-chain and off-chain;
-
-the on-chain exports all the necessary for you to build your smart contract as an eDSL (_embedded_ Domain Specific Language)
-the off-chain one allows you to build transactions 
+## what is pebble?
 
 ## Install
 
-You can start playing with `plu-ts` by running the following command in your project root directory
+command line
+
+```bash
+npm install -g @harmoniclabs/pebble
 ```
-npm install @harmoniclabs/plu-ts
-```
-or, equivalently, you can install directly from this repository
-```
-npm install https://github.com/HarmonicLabs/plu-ts
+
+or as library (in your project root dir)
+
+```bash
+npm install @harmoniclabs/pebble
 ```
 
 ## Get started
 
-Have a look at the [`plu-ts` documentation](https://pluts.harmoniclabs.tech) where you can find some [example projects](https://pluts.harmoniclabs.tech/docs/examples/Hello%20World) to help you get started.
-
 ## Sponsors ❤️
-
-the [sponsors.md](./sponsors.md) file contains a list of supportes of this project.
-
-Every one of them is special and is contributing to making this software available for everyone.
-
-Consider having a look at the [documentation]([https://www.harmoniclabs.tech/plu-ts-docs/index.html](https://pluts.harmoniclabs.tech)) even if it is currently being written; feel free to contribute to the [`plu-ts-docs` repository](https://github.com/HarmonicLabs/plu-ts-docs)
 
 ## Project Catalyst
 

@@ -1,7 +1,7 @@
 {
-  "name": "@harmoniclabs/plu-ts",
-  "version": "0.10.0",
-  "description": "An embedded DSL for Cardano smart contracts all in Typescript",
+  "name": "@harmoniclabs/pebble",
+  "version": "0.1.0",
+  "description": "A simple, yet rock solid, functional language with an imperative bias, targeting UPLC",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "browser": {
@@ -51,12 +51,12 @@
   "license": "Apache-2.0",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/HarmonicLabs/plu-ts.git"
+    "url": "git+https://github.com/HarmonicLabs/pebble.git"
   },
   "bugs": {
-    "url": "https://github.com/HarmonicLabs/plu-ts/issues"
+    "url": "https://github.com/HarmonicLabs/pebble/issues"
   },
-  "homepage": "https://github.com/HarmonicLabs/plu-ts#readme",
+  "homepage": "https://github.com/HarmonicLabs/pebble#readme",
   "dependencies": {
     "@harmoniclabs/bigint-utils": "^1.0.0",
     "@harmoniclabs/bytestring": "^1.0.0",
