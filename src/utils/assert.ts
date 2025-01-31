@@ -1,14 +1,5 @@
-export function assert( condition: boolean, errorMessage: string | Error , addInfos?: any  ,...args: any[])
+export function assert<T>( thing: T, message: string = "TypeAssertion failed" ): NonNullable<T>
 {
-    if( condition ) return;
-    
-    args.length > 0 && console.error(...args);
-    addInfos && console.error(addInfos);
-
-    if( errorMessage instanceof Error )
-    {
-        throw errorMessage
-    };
-
-    throw new Error( errorMessage );
+    if ( !thing ) throw new Error( message );
+    return thing;
 }

@@ -25,16 +25,7 @@
     "ci": "npm i && npm run test && npm run build",
     "start": "npm-run-all --parallel build:watch run:watch",
     "pub": "npm run ci && npm pub",
-    "test:onchain": "cd ./packages/onchain && npm run test",
-    "build:onchain": "cd ./packages/onchain && npm run build",
-    "buidl:onchain": "cd ./packages/onchain && npm run buidl",
-    "ci:onchain": "cd ./packages/onchain && npm run ci",
-    "pub:onchain": "cd ./packages/onchain && npm run ci && npm pub",
-    "test:offchain": "cd ./packages/offchain && npm run test",
-    "build:offchain": "cd ./packages/offchain && npm run build",
-    "buidl:offchain": "cd ./packages/offchain && npm run buidl",
-    "ci:offchain": "cd ./packages/offchain && npm run ci",
-    "pub:offchain": "cd ./packages/offchain && npm run ci && npm pub"
+    "genDiagnosticMessages": "node ./scripts/genDiagnosticMessages.js"
   },
   "publishConfig": {
     "registry": "https://registry.npmjs.org"
