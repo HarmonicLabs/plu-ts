@@ -1,3 +1,4 @@
+import { hasSourceRange, HasSourceRange } from "../nodes/HasSourceRange";
 import { Source } from "./Source";
 
 export class SourceRange
@@ -19,8 +20,23 @@ export class SourceRange
         this.source = source;
     }
 
-    static join(a: SourceRange, b: SourceRange): SourceRange {
+    clone(): SourceRange
+    {
+        return new SourceRange(this.source, this.start, this.end);
+    }
+
+    static join(
+        a: SourceRange | HasSourceRange,
+        b: SourceRange | HasSourceRange
+    ): SourceRange
+    {
+        a = hasSourceRange(a) ? a.range : a;
+        b = hasSourceRange(b) ? b.range : b;
+        if(!( a instanceof SourceRange )) throw new Error("a is not a SourceRange");
+        if(!( b instanceof SourceRange )) throw new Error("b is not a SourceRange");
+
         if (a.source != b.source) throw new Error("source mismatch");
+        
         let range = new SourceRange(
             a.source,
             a.start < b.start ? a.start : b.start,

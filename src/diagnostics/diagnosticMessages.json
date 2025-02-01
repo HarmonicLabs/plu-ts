@@ -52,6 +52,9 @@
   "Initializer, definitive assignment or nullable type expected.": 238,
   "Definitive assignment has no effect on local variables.": 239,
   "Ambiguous operator overload '{0}' (conflicting overloads '{1}' and '{2}').": 240,
+  "A variable statement must have at least one variable declaration.": 241,
+  "A field in a deconstructed declaration cannot have an initialization": 242,
+  "A field in a deconstructed declaration cannot have an explicit type; did you mean to cast using the 'as' keyword?": 243,
 
   "Importing the table disables some indirect call optimizations.": 901,
   "Exporting the table disables some indirect call optimizations.": 902,
@@ -134,6 +137,7 @@
   "Invaild destructuring": 1356,
   "Destructuring requires an initializer expression": 1362,
   "Only a single variable is allowed in a for...of statement": 1363,
+  "Rest parameters are not supported in pebble, cosider using a concrete parameter with default value '[]'": 1364,
 
   "Duplicate identifier '{0}'.": 2300,
   "Cannot find name '{0}'.": 2304,

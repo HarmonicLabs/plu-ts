@@ -8,7 +8,6 @@ import { Machine } from "@harmoniclabs/plutus-machine";
 import { ErrorUPLC, UPLCTerm, UPLCDecoder, UPLCEncoder, UPLCProgram, showUPLC } from "@harmoniclabs/uplc";
 import { Script, ScriptType } from "@harmoniclabs/cardano-ledger-ts"
 import { pfn } from "../../lib/pfn";
-import { bool } from "../../type_system/types";
 import { plet } from "../../lib/plet";
 import { perror } from "../../lib/perror";
 import type { UtilityTermOf } from "../../lib/std/UtilityTerms/addUtilityForType";

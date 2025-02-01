@@ -54,6 +54,9 @@ export enum DiagnosticCode {
     Initializer_definitive_assignment_or_nullable_type_expected = 238,
     Definitive_assignment_has_no_effect_on_local_variables = 239,
     Ambiguous_operator_overload_0_conflicting_overloads_1_and_2 = 240,
+    A_variable_statement_must_have_at_least_one_variable_declaration = 241,
+    A_field_in_a_deconstructed_declaration_cannot_have_an_initialization = 242,
+    A_field_in_a_deconstructed_declaration_cannot_have_an_explicit_type_did_you_mean_to_cast_using_the_as_keyword = 243,
     Importing_the_table_disables_some_indirect_call_optimizations = 901,
     Exporting_the_table_disables_some_indirect_call_optimizations = 902,
     Expression_compiles_to_a_dynamic_check_at_runtime = 903,
@@ -134,6 +137,7 @@ export enum DiagnosticCode {
     Invaild_destructuring = 1356,
     Destructuring_requires_an_initializer_expression = 1362,
     Only_a_single_variable_is_allowed_in_a_for_of_statement = 1363,
+    Rest_parameters_are_not_supported_in_pebble_cosider_using_a_concrete_parameter_with_default_value = 1364,
     Duplicate_identifier_0 = 2300,
     Cannot_find_name_0 = 2304,
     Module_0_has_no_exported_member_1 = 2305,
@@ -271,6 +275,9 @@ export function diagnosticCodeToString(code: DiagnosticCode): string {
         case 238: return "Initializer, definitive assignment or nullable type expected.";
         case 239: return "Definitive assignment has no effect on local variables.";
         case 240: return "Ambiguous operator overload '{0}' (conflicting overloads '{1}' and '{2}').";
+        case 241: return "A variable statement must have at least one variable declaration.";
+        case 242: return "A field in a deconstructed declaration cannot have an initialization";
+        case 243: return "A field in a deconstructed declaration cannot have an explicit type; did you mean to cast using the 'as' keyword?";
         case 901: return "Importing the table disables some indirect call optimizations.";
         case 902: return "Exporting the table disables some indirect call optimizations.";
         case 903: return "Expression compiles to a dynamic check at runtime.";
@@ -351,6 +358,7 @@ export function diagnosticCodeToString(code: DiagnosticCode): string {
         case 1356: return "Invaild destructuring";
         case 1362: return "Destructuring requires an initializer expression";
         case 1363: return "Only a single variable is allowed in a for...of statement";
+        case 1364: return "Rest parameters are not supported in pebble, cosider using a concrete parameter with default value '[]'";
         case 2300: return "Duplicate identifier '{0}'.";
         case 2304: return "Cannot find name '{0}'.";
         case 2305: return "Module '{0}' has no exported member '{1}'.";

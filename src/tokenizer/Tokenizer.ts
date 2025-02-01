@@ -48,7 +48,7 @@ export class Tokenizer extends DiagnosticEmitter {
     nextToken: Token = fakeToken;
     nextTokenPos: number = 0;
 
-    // cache result of `peekOnNewLine`
+    // cache result of `isNextTokenOnNewLine`
     nextTokenOnNewLine: OnNewLine = OnNewLine.Unknown;
 
     // custom comment handling
@@ -95,13 +95,19 @@ export class Tokenizer extends DiagnosticEmitter {
         this.end = end;
     }
 
+    /*
     toArray(): Token[] {
         let tokens = new Array<Token>();
-        while (this.next() != Token.EndOfFile) {
-            tokens.push(this.token);
+        let token: Token;
+        while ((token = this.next()) != Token.EndOfFile) {
+            if( token === Token.Identifier ) this.readIdentifier();
+            if( token === Token.IntegerLiteral ) this.readInteger();
+
+            tokens.push( token );
         }
         return tokens;
     }
+    */
 
     /** advances the tokenizer and returns the new token */
     next(identifierHandling: IdentifierHandling = IdentifierHandling.Default): Token {
@@ -610,7 +616,7 @@ export class Tokenizer extends DiagnosticEmitter {
         return nextToken;
     }
 
-    peekOnNewLine(): boolean {
+    isNextTokenOnNewLine(): boolean {
         switch (this.nextTokenOnNewLine) {
             case OnNewLine.No: return false;
             case OnNewLine.Yes: return true;
@@ -677,9 +683,13 @@ export class Tokenizer extends DiagnosticEmitter {
         }
     }
 
+    eof() {
+        return this.skip(Token.EndOfFile);
+    }
+
     // state management
 
-    /** gets the current state */
+    /** #__PURE__ gets the current state */
     mark(): TokenizerState {
         // let state = reusableState;
         // if (state) {
@@ -717,7 +727,9 @@ export class Tokenizer extends DiagnosticEmitter {
         this.nextTokenOnNewLine = OnNewLine.Unknown;
     }
 
-    /** #__PURE__ */
+    /**
+     * pure function for the same state
+    **/
     range(start: number = -1, end: number = -1): SourceRange {
         if (start < 0) { // default range
             start = this.tokenPos;

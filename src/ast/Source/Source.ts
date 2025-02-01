@@ -1,8 +1,7 @@
-import { LIBRARY_PREFIX, PATH_DELIMITER, LIBRARY_SUBST } from "../../../common";
-import { CharCode } from "../../../utils/CharCode";
-import { mangleInternalPath } from "../../../utils/mangleInternalPath";
-import { IAstNode, Statement } from "../../AstNode";
-import { AstNodeKind } from "../../AstNodeKind";
+import { LIBRARY_PREFIX, PATH_DELIMITER, LIBRARY_SUBST } from "../../common";
+import { CharCode } from "../../utils/CharCode";
+import { mangleInternalPath } from "../../utils/mangleInternalPath";
+import { PebbleAst } from "../PebbleAst";
 import { SourceRange } from "./SourceRange";
 
 /** Indicates the specific kind of a source. */
@@ -20,33 +19,26 @@ export enum SourceKind {
 Object.freeze(SourceKind);
 
 /** A top-level source node. */
-export class Source implements IAstNode {
+export class Source {
 
     /** Gets the special native source. */
-    static get native(): Source {
+    static native(): Source {
         let source = Source._native;
-        if (!source) Source._native = source = new Source(SourceKind.LibraryEntry, LIBRARY_PREFIX + "native.ts", "[native code]");
+        if (!source) Source._native = source = new Source(SourceKind.LibraryEntry, LIBRARY_PREFIX + "native.pebble", "[native code]");
         return source;
     }
     private static _native: Source | undefined = undefined;
 
-    readonly kind: AstNodeKind = AstNodeKind.Source;
     readonly range: SourceRange;
 
-    sourceKind: SourceKind;
-    
     constructor(
         /** Source kind. */
-        sourceKind: SourceKind,
+        public sourceKind: SourceKind,
         /** Normalized path with file extension. */
         public normalizedPath: string,
         /** Full source text. */
         public text: string
     ) {
-        // super(AstNodeKind.Source, new SourceRange(0, text.length));
-        Object.defineProperty(this, "sourceKind", { value: sourceKind, writable: false });
-
-        this.kind = AstNodeKind.Source;
         let internalPath = mangleInternalPath(normalizedPath);
         this.internalPath = internalPath;
         let pos = internalPath.lastIndexOf(PATH_DELIMITER);
@@ -60,19 +52,19 @@ export class Source implements IAstNode {
     /** Simple path (last part without extension). */
     simplePath: string;
     /** Contained statements. */
-    statements: Statement[];
+    statements: PebbleAst[];
     /** Source map index. */
     debugInfoIndex: number = -1;
     /** Re-exported sources. */
     exportPaths: string[] | undefined = undefined;
 
     /** Checks if this source represents native code. */
-    get isNative(): boolean {
+    isNative(): boolean {
         return this.internalPath === LIBRARY_SUBST;
     }
 
     /** Checks if this source is part of the (standard) library. */
-    get isLibrary(): boolean {
+    isLibrary(): boolean {
         let kind = this.sourceKind;
         return kind === SourceKind.Library || kind === SourceKind.LibraryEntry;
     }

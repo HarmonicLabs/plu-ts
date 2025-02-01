@@ -13,14 +13,15 @@ export enum Token {
     Break,        // ES2017
     // Case,         // ES2017
     Catch,        // ES2017
-    Class,        // ES2017
+    // Class,        // ES2017
+    Struct,
     Const,        // ES2017
     Continue,     // ES2017
-    Constructor,
+    // Constructor,
     Debugger,     // ES2017
-    Declare,
-    Default,      // ES2017
-    Delete,       // ES2017
+    // Declare,
+    // Default,      // ES2017
+    // Delete,       // ES2017
     Do,           // ES2017
     Else,         // ES2017
     Enum,         // ES2017 future
@@ -43,7 +44,7 @@ export enum Token {
     Let,          // ES2017 non-lexical
     // Module,       // AS possible identifier
     Namespace,    // AS possible identifier
-    New,          // ES2017
+    // New,          // ES2017
     // Null,         // ES
     Number,
     Of,
@@ -63,7 +64,7 @@ export enum Token {
     True,         // ES
     Try,          // ES2017
     Type,         // AS possible identifier
-    TypeOf,       // ES2017
+    // TypeOf,       // ES2017
     Undefined,    // ES
     Var,          // ES2017
     Void,         // ES2017
@@ -80,11 +81,15 @@ export enum Token {
   
     // punctuation
     
+    /** `{` */
     OpenBrace,                              // {
+    /** `}` */
     CloseBrace,                             // }
     OpenParen,                              // (
     CloseParen,                             // )
+    /** `[` */
     OpenBracket,                            // [
+    /** `]` */
     CloseBracket,                           // ]
     Dot,                                    // .
     Dot_Dot_Dot,                            // ...
@@ -118,6 +123,7 @@ export enum Token {
     Ampersand_Ampersand,                    // &&
     Bar_Bar,                                // ||
     Question,                               // ?
+    /** `:` */
     Colon,                                  // :
     Equals,                                 // =
     Plus_Equals,                            // +=

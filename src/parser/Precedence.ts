@@ -1,0 +1,81 @@
+import { Token } from "../tokenizer/Token";
+
+/** Operator precedence from least to largest. */
+export enum Precedence {
+    None,           // No precedence
+    Comma,          // ,
+    Spread,         // ...
+    Yield,          // yield
+    Assignment,     // = += -= **= *= /= %= <<= >>= >>>= &= ^= |=
+    Conditional,    // ? : (ternary)
+    LogicalOr,      // ||
+    LogicalAnd,     // &&
+    BitwiseOr,      // |
+    BitwiseXor,     // ^
+    BitwiseAnd,     // &
+    Equality,       // == != === !==
+    Relational,     // < > <= >= as in instanceof
+    Shift,          // << >> >>>
+    Additive,       // + -
+    Multiplicative, // * / %
+    Exponentiated,  // **
+    UnaryPrefix,    // ++... _ --... !... ~... etc.
+    UnaryPostfix,   // ...++ _ ...--
+    Call,           // func(...)
+    MemberAccess,   // obj.prop _ arr[idx]
+    Grouping,       // ( ... )
+}
+Object.freeze(Precedence);
+
+/** Determines the precedence of a non-starting token. */
+export function determinePrecedence(kind: Token): Precedence
+{
+    switch (kind) {
+        case Token.Comma: return Precedence.Comma;
+        case Token.Equals:
+        case Token.Plus_Equals:
+        case Token.Minus_Equals:
+        case Token.Asterisk_Asterisk_Equals:
+        case Token.Asterisk_Equals:
+        case Token.Slash_Equals:
+        case Token.Percent_Equals:
+        case Token.LessThan_LessThan_Equals:
+        case Token.GreaterThan_GreaterThan_Equals:
+        case Token.GreaterThan_GreaterThan_GreaterThan_Equals:
+        case Token.Ampersand_Equals:
+        case Token.Caret_Equals:
+        case Token.Bar_Equals: return Precedence.Assignment;
+        case Token.Question: return Precedence.Conditional;
+        case Token.Bar_Bar: return Precedence.LogicalOr;
+        case Token.Ampersand_Ampersand: return Precedence.LogicalAnd;
+        case Token.Bar: return Precedence.BitwiseOr;
+        case Token.Caret: return Precedence.BitwiseXor;
+        case Token.Ampersand: return Precedence.BitwiseAnd;
+        case Token.Equals_Equals:
+        case Token.Exclamation_Equals:
+        case Token.Equals_Equals_Equals:
+        case Token.Exclamation_Equals_Equals: return Precedence.Equality;
+        case Token.As:
+        case Token.In:
+        case Token.InstanceOf:
+        case Token.LessThan:
+        case Token.GreaterThan:
+        case Token.LessThan_Equals:
+        case Token.GreaterThan_Equals: return Precedence.Relational;
+        case Token.LessThan_LessThan:
+        case Token.GreaterThan_GreaterThan:
+        case Token.GreaterThan_GreaterThan_GreaterThan: return Precedence.Shift;
+        case Token.Plus:
+        case Token.Minus: return Precedence.Additive;
+        case Token.Asterisk:
+        case Token.Slash:
+        case Token.Percent: return Precedence.Multiplicative;
+        case Token.Asterisk_Asterisk: return Precedence.Exponentiated;
+        case Token.Plus_Plus:
+        case Token.Minus_Minus: return Precedence.UnaryPostfix;
+        case Token.Dot:
+        case Token.OpenBracket:
+        case Token.Exclamation: return Precedence.MemberAccess;
+    }
+    return Precedence.None;
+}

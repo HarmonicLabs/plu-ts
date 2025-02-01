@@ -1,5 +1,5 @@
-import { Source } from "../ast/nodes/Source/Source";
-import { SourceRange } from "../ast/nodes/Source/SourceRange";
+import { Source } from "../ast/Source/Source";
+import { SourceRange } from "../ast/Source/SourceRange";
 import { assert } from "../utils/assert";
 import { DiagnosticCode, DiagnosticCategory } from "./DiagnosticCategory";
 import { DiagnosticMessage } from "./DiagnosticMessage";
