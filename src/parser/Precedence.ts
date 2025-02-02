@@ -13,7 +13,7 @@ export enum Precedence {
     BitwiseOr,      // |
     BitwiseXor,     // ^
     BitwiseAnd,     // &
-    Equality,       // == != === !==
+    Equality,       // == !== === !==
     Relational,     // < > <= >= as in instanceof
     Shift,          // << >> >>>
     Additive,       // + -

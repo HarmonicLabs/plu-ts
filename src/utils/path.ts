@@ -68,9 +68,9 @@ export function normalizePath(path: string): string {
         let ipos = pos;
         while (--ipos >= 0) {
           if (path.charCodeAt(ipos) === separator) {
-            if (pos - ipos != 3 ||
-              path.charCodeAt(ipos + 1) != CharCode.Dot ||
-              path.charCodeAt(ipos + 2) != CharCode.Dot
+            if (pos - ipos !== 3 ||
+              path.charCodeAt(ipos + 1) !== CharCode.Dot ||
+              path.charCodeAt(ipos + 2) !== CharCode.Dot
             ) { // exclude '..' itself
               path = atEnd
                 ? path.substring(0, ipos)
@@ -84,9 +84,9 @@ export function normalizePath(path: string): string {
 
         // if there's no preceeding '/', trim start if non-empty
         if (ipos < 0 && pos > 0) {
-          if (pos != 2 ||
-            path.charCodeAt(0) != CharCode.Dot ||
-            path.charCodeAt(1) != CharCode.Dot
+          if (pos !== 2 ||
+            path.charCodeAt(0) !== CharCode.Dot ||
+            path.charCodeAt(1) !== CharCode.Dot
           ) { // exclude '..' itself
             path = path.substring(pos + 4);
             len = path.length;

@@ -1,7 +1,8 @@
-import { PebbleAst } from "../../PebbleAst";
 import { SourceRange } from "../../Source/SourceRange";
 import { PebbleExpr } from "../expr/PebbleExpr";
 import { HasSourceRange } from "../HasSourceRange";
+import { PebbleStmt } from "./PebbleStmt";
+import { VarStmt } from "./VarStmt";
 
 /**
  * ***NOT*** for...of loop
@@ -12,10 +13,10 @@ export class ForStmt
     implements HasSourceRange
 {
     constructor(
-        readonly init: PebbleAst,
-        readonly condition: PebbleExpr,
-        readonly update: PebbleAst,
-        readonly body: PebbleAst,
+        readonly init: VarStmt | undefined,
+        readonly condition: PebbleExpr | undefined,
+        readonly update: PebbleExpr | undefined,
+        readonly body: PebbleStmt,
         readonly range: SourceRange,
     ) {}
 }

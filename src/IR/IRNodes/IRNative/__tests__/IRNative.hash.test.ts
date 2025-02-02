@@ -2,7 +2,7 @@ import { IRNative } from "..";
 
 describe("IRNative.hash", () => {
 
-    test("sndPair != unConstrData", () => {
+    test("sndPair !== unConstrData", () => {
 
         expect( IRNative.sndPair.tag )
         .not.toEqual( IRNative.unConstrData.tag );

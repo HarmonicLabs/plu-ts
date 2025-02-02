@@ -1,7 +1,7 @@
 import { Identifier } from "../ast/nodes/common/Identifier";
-import { NamedDeconstructVarDecl } from "../ast/nodes/VarDecl/NamedDeconstructVarDecl";
-import { SingleDeconstructVarDecl } from "../ast/nodes/VarDecl/SingleDeconstructVarDecl copy";
-import { DeconstructVarDecl, VarDecl } from "../ast/nodes/VarDecl/VarDecl";
+import { NamedDeconstructVarDecl } from "../ast/nodes/declarations/VarDecl/NamedDeconstructVarDecl";
+import { SingleDeconstructVarDecl } from "../ast/nodes/declarations/VarDecl/SingleDeconstructVarDecl copy";
+import { DeconstructVarDecl, VarDecl } from "../ast/nodes/declarations/VarDecl/VarDecl";
 import { VarStmt } from "../ast/nodes/statements/VarStmt";
 import { PebbleAst } from "../ast/PebbleAst";
 import { SourceKind, Source } from "../ast/Source/Source";
@@ -16,8 +16,8 @@ import { normalizePath } from "../utils/path";
 import { isNonEmpty } from "../utils/isNonEmpty";
 import { PebbleExpr } from "../ast/nodes/expr/PebbleExpr";
 import { SourceRange } from "../ast/Source/SourceRange";
-import { SimpleVarDecl } from "../ast/nodes/VarDecl/SimpleVarDecl";
-import { ArrayLikeDeconstr } from "../ast/nodes/VarDecl/ArrayLikeDeconstr";
+import { SimpleVarDecl } from "../ast/nodes/declarations/VarDecl/SimpleVarDecl";
+import { ArrayLikeDeconstr } from "../ast/nodes/declarations/VarDecl/ArrayLikeDeconstr";
 import { PebbleType } from "../ast/nodes/types/PebbleType";
 import { IdentifierHandling } from "../tokenizer/IdentifierHandling";
 import { Precedence } from "./Precedence";
@@ -30,6 +30,26 @@ import { LitTrueExpr } from "../ast/nodes/expr/litteral/LitTrueExpr";
 import { ParentesizedExpr } from "../ast/nodes/expr/ParentesizedExpr";
 import { ArrowKind } from "../ast/nodes/expr/functions/ArrowKind";
 import { FuncExpr } from "../ast/nodes/expr/functions/FuncExpr";
+import { PebbleStmt } from "../ast/nodes/statements/PebbleStmt";
+import { BooleanType, BytesType, ListType, NumberType, NativeOptionalType, VoidType, LinearMapType, FuncType } from "../ast/nodes/types/NativeType";
+import { NamedType } from "../ast/nodes/types/NamedType";
+import { LitArrExpr } from "../ast/nodes/expr/litteral/LitArrExpr";
+import { LitNamedObjExpr } from "../ast/nodes/expr/litteral/LitNamedObjExpr";
+import { LitObjExpr } from "../ast/nodes/expr/litteral/LitObjExpr";
+import { LitStrExpr } from "../ast/nodes/expr/litteral/LitStrExpr";
+import { LitIntExpr } from "../ast/nodes/expr/litteral/LitIntExpr";
+import { LitHexBytesExpr } from "../ast/nodes/expr/litteral/LitHexBytesExpr";
+import { CallExpr } from "../ast/nodes/expr/functions/CallExpr";
+import { BlockStmt } from "../ast/nodes/statements/BlockStmt";
+import { BreakStmt } from "../ast/nodes/statements/BreakStmt";
+import { ContinueStmt } from "../ast/nodes/statements/ContinueStmt";
+import { DoWhileStmt } from "../ast/nodes/statements/DoWhileStmt";
+import { ForStmt } from "../ast/nodes/statements/ForStmt";
+import { ForOfStmt } from "../ast/nodes/statements/ForOfStmt";
+import { IfStmt } from "../ast/nodes/statements/IfStmt";
+import { ReturnStmt } from "../ast/nodes/statements/ReturnStmt";
+import { EmptyStmt } from "../ast/nodes/statements/EmptyStmt";
+import { FuncDecl } from "../ast/nodes/declarations/FuncDecl";
 
 export class Parser extends DiagnosticEmitter
 {
@@ -88,14 +108,8 @@ export class Parser extends DiagnosticEmitter
         while( !tn.eof() )
         {
             stmt = this.parseTopLevelStatement();
-            if( stmt )
-            {
-                src.statements.push( stmt );
-            }
-            else
-            {
-                this.skipStatement();
-            }
+            if( stmt ) src.statements.push( stmt );
+            else this.skipStatement();
         }
         return src.statements;
     }
@@ -132,24 +146,25 @@ export class Parser extends DiagnosticEmitter
 
                 statement = this.parseVarStmt( flags, startPos );
             }
+            // todo
         }
-    }
-
-    skipStatement()
-    {
-
     }
 
     parseVarStmt(
         flags: CommonFlags,
         startPos: number,
-        opts: ParseVarOpts = { isFor: false, isForOf: false }
+        opts: Partial<ParseVarOpts> = defaultParseVarOpts
     ): VarStmt | undefined
     {
+        const tn = this.tn;
         // at (`const` | `let` | `var`)
         // varDecl [, ...varDecl] `;`?
 
-        const tn = this.tn;
+        opts = {
+            ...defaultParseVarOpts,
+            ...opts
+        };
+        const isFor = opts.isFor;
 
         const decls: VarDecl[] = [];
         let decl: VarDecl | undefined = undefined;
@@ -415,9 +430,143 @@ export class Parser extends DiagnosticEmitter
     {
         const tn = this.tn;
 
-        const identifier = this.parseIdentifier();
-        if( !identifier ) return undefined;
-        return new PebbleType( identifier, identifier.range );
+        const canError = !suppressErrors;
+
+        const token = tn.next();
+        let startPos = tn.tokenPos;
+
+        const currRange = tn.range( startPos, tn.pos );
+
+        switch( token )
+        {
+            case Token.Void: return new VoidType( currRange );
+            // case Token.True:
+            // case Token.False: 
+            case Token.Boolean: return new BooleanType( currRange );
+            case Token.Number: return new NumberType( currRange )
+            case Token.Bytes: return new BytesType( currRange );
+            case Token.Optional: {
+
+                if( !tn.skip( Token.LessThan ) )
+                {
+                    canError && this.error(
+                        DiagnosticCode._0_expected,
+                        currRange, "Type argument for Optional"
+                    );
+                    return undefined;
+                }
+
+                const tyArg = this.parseType();
+                if( !tyArg ) return undefined;
+
+                if (!tn.skip(Token.GreaterThan)) {
+                    canError && this.error(
+                        DiagnosticCode._0_expected,
+                        tn.range(tn.pos), ">"
+                    );
+                    return undefined;
+                }
+
+                return new NativeOptionalType( tyArg, tn.range( startPos, tn.pos ) );
+            }
+            case Token.List: {
+
+                if( !tn.skip( Token.LessThan ) )
+                {
+                    canError && this.error(
+                        DiagnosticCode._0_expected,
+                        currRange, "Type argument for Optional"
+                    );
+                    return undefined;
+                }
+
+                const tyArg = this.parseType();
+                if( !tyArg ) return undefined;
+
+                if (!tn.skip(Token.GreaterThan)) {
+                    canError && this.error(
+                        DiagnosticCode._0_expected,
+                        tn.range(tn.pos), ">"
+                    );
+                    return undefined;
+                }
+
+                new ListType( tyArg, tn.range( startPos, tn.pos ) );
+            }
+            case Token.LinearMap: {
+
+                if( !tn.skip( Token.LessThan ) )
+                {
+                    canError && this.error(
+                        DiagnosticCode._0_expected,
+                        currRange, "Type argument for Optional"
+                    );
+                    return undefined;
+                }
+
+                const keyTy = this.parseType();
+                if( !keyTy ) return undefined;
+
+                if( !tn.skip( Token.Comma ) )
+                {
+                    canError && this.error(
+                        DiagnosticCode._0_expected,
+                        currRange, ","
+                    );
+                    return undefined;
+                }
+
+                const valTy = this.parseType();
+                if( !valTy ) return undefined;
+
+                if (!tn.skip(Token.GreaterThan)) {
+                    canError && this.error(
+                        DiagnosticCode._0_expected,
+                        tn.range(tn.pos), ">"
+                    );
+                    return undefined;
+                }
+
+                new LinearMapType( keyTy, valTy, tn.range( startPos, tn.pos ) );
+            }
+            case Token.Identifier: {
+
+                const name = new Identifier( tn.readIdentifier(), tn.range() );
+                
+                const params = new Array<PebbleType>();
+
+                if( tn.skip( Token.LessThan ) )
+                {
+                    do {
+                        const ty = this.parseType();
+                        if( !ty ) return undefined;
+                        params.push( ty );
+                    } while( tn.skip( Token.Comma ) );
+
+                    if( !tn.skip( Token.GreaterThan ) )
+                    {
+                        canError && this.error(
+                            DiagnosticCode._0_expected,
+                            tn.range(), ">"
+                        );
+                        return undefined;
+                    }
+                }
+
+                return new NamedType(
+                    name,
+                    params,
+                    tn.range( startPos, tn.pos )
+                );
+            }
+            default: {
+                canError && this.error(
+                    DiagnosticCode.Type_expected,
+                    tn.range()
+                );
+                return undefined;
+            }
+        }
     }
 
     parseParenthesizedExpr(
@@ -453,17 +602,17 @@ export class Parser extends DiagnosticEmitter
 
         switch (token) {
 
-            // TODO: SpreadExpression, YieldExpression
+            // TODO: SpreadPebbleExpr, YieldPebbleExpr
             case Token.Dot_Dot_Dot:
             case Token.Yield: {
                 this.error(
                     DiagnosticCode.Not_implemented_0,
-                    tn.range(), "SpreadExpression, YieldExpression"
+                    tn.range(), "SpreadPebbleExpr, YieldPebbleExpr"
                 )
                 return undefined;
             }
 
-            // UnaryPrefixExpression
+            // UnaryPrefixPebbleExpr
             case Token.Exclamation:
             case Token.Tilde:
             case Token.Plus:
@@ -508,12 +657,12 @@ export class Parser extends DiagnosticEmitter
             case Token.False: return new LitFalseExpr(tn.range());
             case Token.This: return new LitThisExpr(tn.range());
 
-            // ParenthesizedExpression or FunctionExpression
+            // ParenthesizedPebbleExpr or FunctionPebbleExpr
             case Token.OpenParen: {
                 // determine whether this is a function expression
 
                 if (tn.skip(Token.CloseParen)) { // must be a function expression (fast route)
-                    return this.parseFunctionExpressionCommon(
+                    return this.parseCommonFuncExpr(
                         Identifier.anonymous(tn.range(startPos)),
                         [],
                         ArrowKind.Parenthesized
@@ -530,116 +679,122 @@ export class Parser extends DiagnosticEmitter
                     return this.tryParseCallExprOrReturnSame( inner );
                 }
            }
-            // ArrayLiteralExpression
+            // ArrayLiteralPebbleExpr
             case Token.OpenBracket: {
-                let elementExpressions = new Array<PebbleExpr>();
-                while (!tn.skip(Token.CloseBracket)) {
+                const elementPebbleExprs = new Array<PebbleExpr>();
+                while (!tn.skip(Token.CloseBracket))
+                {
                     let expr: PebbleExpr | undefined;
                     if (tn.peek() === Token.Comma) {
-                        expr = new OmittedExpression(tn.range(tn.pos));
+                        this.error(
+                            DiagnosticCode.PebbleExpr_expected,
+                            tn.range()
+                        );
+                        return undefined;
                     } else {
                         expr = this.parseExpr(Precedence.Comma + 1);
                         if (!expr) return undefined;
                     }
-                    elementExpressions.push(expr);
-                    if (!tn.skip(Token.Comma)) {
-                        if (tn.skip(Token.CloseBracket)) {
-                            break;
-                        } else {
-                            this.error(
-                                DiagnosticCode._0_expected,
-                                tn.range(), "]"
-                            );
-                            return undefined;
-                        }
+                 
+                    elementPebbleExprs.push(expr);
+
+                    if( tn.skip( Token.Comma ) ) continue;
+
+                    if( tn.skip( Token.CloseBracket ) ) {
+                        break;
+                    } else {
+                        this.error(
+                            DiagnosticCode._0_expected,
+                            tn.range(), "]"
+                        );
+                        return undefined;
                     }
                 }
-                return new ArrayLiteralExpression(elementExpressions, tn.range(startPos, tn.pos));
+                return new LitArrExpr(
+                    elementPebbleExprs,
+                    tn.range(startPos, tn.pos)
+                );
             }
-            // ObjectLiteralExpression
+            // LitObjExpr
             case Token.OpenBrace: {
                 let startPos = tn.tokenPos;
                 let names = new Array<Identifier>();
                 let values = new Array<PebbleExpr>();
                 let name: Identifier;
                 while (!tn.skip(Token.CloseBrace)) {
+
                     if (!tn.skipIdentifier()) {
-                        if (!tn.skip(Token.StringLiteral)) {
-                            this.error(
-                                DiagnosticCode.Identifier_expected,
-                                tn.range(),
-                            );
-                            return undefined;
-                        }
-                        name = new Identifier(tn.readString(), tn.range());
-                        name.isQuoted = true;
-                    } else {
-                        name = new Identifier(tn.readIdentifier(), tn.range());
-                    }
-                    names.push(name);
-                    if (tn.skip(Token.Colon)) {
-                        let value = this.parseExpr(Precedence.Comma + 1);
-                        if (!value) return undefined;
-                        values.push(value);
-                    } else if (!name.isQuoted) {
-                        values.push(name);
-                    } else {
                         this.error(
-                            DiagnosticCode._0_expected,
-                            tn.range(), ":"
+                            DiagnosticCode.Identifier_expected,
+                            tn.range(),
                         );
                         return undefined;
                     }
-                    if (!tn.skip(Token.Comma)) {
-                        if (tn.skip(Token.CloseBrace)) {
-                            break;
-                        } else {
-                            this.error(
-                                DiagnosticCode._0_expected,
-                                tn.range(), "}"
-                            );
-                            return undefined;
-                        }
+                    
+                    name = new Identifier(tn.readIdentifier(), tn.range());
+                    names.push(name);
+
+                    if (tn.skip(Token.Colon))
+                    {
+                        let value = this.parseExpr(Precedence.Comma + 1);
+                        if (!value) return undefined;
+                        values.push(value);
+                    }
+                    else values.push(name);
+
+                    if( tn.skip( Token.Comma ) ) continue; 
+
+                    if( tn.skip(Token.CloseBrace) ) break;
+                    else {
+                        this.error(
+                            DiagnosticCode._0_expected,
+                            tn.range(), "}"
+                        );
+                        return undefined;
                     }
                 }
-                return new ObjectLiteralExpression(names, values, tn.range(startPos, tn.pos));
-            }
-            // TypeAssertionExpression (unary prefix)
-            case Token.LessThan: {
-                let toType = this.parseType();
-                if (!toType) return undefined;
-                if (!tn.skip(Token.GreaterThan)) {
-                    this.error(
-                        DiagnosticCode._0_expected,
-                        tn.range(), ">"
-                    );
-                    return undefined;
-                }
-                let expr = this.parseExpr(Precedence.Call);
-                if (!expr) return undefined;
-                return new TypeAssertionExpression(
-                    TypeAssertionKind.Prefix,
-                    expr,
-                    toType,
-                    tn.range(startPos, tn.pos)
-                );
+
+                return new LitObjExpr(names, values, tn.range(startPos, tn.pos));
             }
             case Token.Identifier: {
-                let identifierText = tn.readIdentifier();
-                if (identifierText === "undefined") return new UndefinedExpression(tn.range()); // special
-                let identifier = new Identifier(identifierText, tn.range(startPos, tn.pos));
-                if (tn.skip(Token.TemplateLiteral)) {
-                    return this.parseTemplateLiteral(identifier);
+                const identifierText = tn.readIdentifier();
+                if (identifierText === "undefined") return new LitUndefExpr(tn.range()); // special
+
+                const identifier = new Identifier(identifierText, tn.range(startPos, tn.pos));
+
+                // LitNamedObjExpr
+                // eg: `Identifier{ a: 1, b: 2 }`
+                if( tn.peek() === Token.OpenBrace ) {
+                    const endPos = tn.pos;
+                    const litObjExpr = this.parseExprStart();
+                    if(!( litObjExpr instanceof LitObjExpr ))
+                    {
+                        this.error(
+                            DiagnosticCode.Object_literal_expected,
+                            tn.range( identifier.range.end, endPos )
+                        );
+                        return undefined;
+                    }
+
+                    return new LitNamedObjExpr(
+                        identifier,
+                        litObjExpr.fieldNames,
+                        litObjExpr.values,
+                        SourceRange.join( identifier.range, litObjExpr.range )
+                    );
                 }
-                if (tn.peek() === Token.Equals_GreaterThan && !tn.peekOnNewLine()) {
-                    return this.parseFunctionExpressionCommon(
+
+                if(
+                    tn.peek() === Token.FatArrow
+                    // && !tn.isNextTokenOnNewLine() // original impl had this, not sure why
+                ) {
+                    return this.parseCommonFuncExpr(
                         Identifier.anonymous(tn.range(startPos)),
                         [
-                            new VarDecl(
-                                ParameterKind.Default,
+                            new SimpleVarDecl(
                                 identifier,
-                                NamedTypeNode.omitted(identifier.range.atEnd()),
-                                undefined,
+                                undefined, // var type
+                                undefined, // var initializer
                                 identifier.range
                             )
                         ],
@@ -650,28 +805,33 @@ export class Parser extends DiagnosticEmitter
                 return this.tryParseCallExprOrReturnSame(identifier, true);
             }
             case Token.StringLiteral: {
-                return new StringLiteralExpression(tn.readString(), tn.range(startPos, tn.pos));
+                return new LitStrExpr(tn.readString(), tn.range(startPos, tn.pos));
             }
-            case Token.TemplateLiteral: {
-                return this.parseTemplateLiteral();
+            case Token.StringTemplateLiteralQuote: {
+                this.error(
+                    DiagnosticCode.Not_implemented_0,
+                    tn.range(), "string template literals"
+                )
+                return undefined;
+                // return this.parseTemplateLiteral();
             }
             case Token.IntegerLiteral: {
-                let value = tn.readInteger();
+                const value = tn.readInteger();
                 tn.checkForIdentifierStartAfterNumericLiteral();
-                return new IntegerLiteralExpression(value, tn.range(startPos, tn.pos));
+                return new LitIntExpr(value, tn.range(startPos, tn.pos));
             }
             case Token.HexBytesLiteral: {
-                return new HexBytesLiteralExpression(
+                return new LitHexBytesExpr(
                     tn.readHexBytes(),
                     tn.range(startPos, tn.pos)
                 );
             };
-            // RegexpLiteralExpression
+            // RegexpLiteralPebbleExpr
             // note that this also continues on invalid ones so the surrounding AST remains intact
             case Token.Slash: {
                 this.error(
                     DiagnosticCode.Not_implemented_0,
-                    tn.range(), "RegexpLiteralExpression"
+                    tn.range(), "RegexpLiteralPebbleExpr"
                 );
                 return undefined;
                 // let regexpPattern = tn.readRegexpPattern(); // also reports
@@ -682,7 +842,7 @@ export class Parser extends DiagnosticEmitter
                 //     );
                 //     return undefined;
                 // }
-                // return new RegexpLiteralExpression(
+                // return new RegexpLiteralPebbleExpr(
                 //     regexpPattern,
                 //     tn.readRegexpFlags(), // also reports
                 //     tn.range(startPos, tn.pos)
@@ -693,8 +853,8 @@ export class Parser extends DiagnosticEmitter
                 if (!expr) return undefined;
                 return this.tryParseCallExprOrReturnSame(expr);
             }
-            // case Token.Class: return this.parseClassExpression();
-            case Token.Struct: return this.parseStructExpr();
+            // case Token.Class: return this.parseClassPebbleExpr();
+            // case Token.Struct: return this.parseStructExpr();
             default: {
                 if (token === Token.EndOfFile) {
                     this.error(
@@ -703,7 +863,7 @@ export class Parser extends DiagnosticEmitter
                     );
                 } else {
                     this.error(
-                        DiagnosticCode.Expression_expected,
+                        DiagnosticCode.PebbleExpr_expected,
                         tn.range()
                     );
                 }
@@ -722,7 +882,7 @@ export class Parser extends DiagnosticEmitter
         // either at 'function':
         //  Identifier?
         //  '(' Parameters (':' Type)?
-        //  Statement
+        //  PebbleStmt
 
         if (tn.token === Token.Function) {
             if (tn.skipIdentifier()) {
@@ -741,7 +901,7 @@ export class Parser extends DiagnosticEmitter
 
             // or at '(' of arrow function:
             //  Parameters (':' Type)?
-            //  Statement
+            //  PebbleStmt
 
         } else {
             arrowKind = ArrowKind.Parenthesized;
@@ -762,7 +922,7 @@ export class Parser extends DiagnosticEmitter
         let parameters = this.parseParameters();
         if (!parameters) return undefined;
 
-        return this.parseFunctionExpressionCommon(
+        return this.parseCommonFuncExpr(
             name, 
             parameters, 
             arrowKind, 
@@ -807,7 +967,7 @@ export class Parser extends DiagnosticEmitter
     parseParameter(): VarDecl | undefined
     {
         const tn = this.tn;
-        // before: ('public' | 'private' | 'protected' | '...')? Identifier '?'? (':' Type)? ('=' Expression)?
+        // before: ('public' | 'private' | 'protected' | '...')? Identifier '?'? (':' Type)? ('=' PebbleExpr)?
 
         let accessFlags: CommonFlags = CommonFlags.None;
         
@@ -837,7 +997,7 @@ export class Parser extends DiagnosticEmitter
      * ``` 
      */
     private tryParseCallExprOrReturnSame(
-        expr: PebbleExpr,
+        callerExpr: PebbleExpr,
         potentiallyGeneric: boolean = false
     ): PebbleExpr {
         const tn = this.tn;
@@ -849,15 +1009,91 @@ export class Parser extends DiagnosticEmitter
         ) {
             let args = this.parseArguments();
             if (!args) break;
-            expr = new CallExpression( // is again callable
-                expr,
+            callerExpr = new CallExpr( // is again callable
+                callerExpr,
                 typeArguments,
                 args,
-                tn.range(expr.range.start, tn.pos)
+                tn.range( callerExpr.range.start, tn.pos )
             );
             potentiallyGeneric = false;
         }
-        return expr;
+        return callerExpr;
+    }
+
+    tryParseTypeArgumentsBeforeArguments(): PebbleType[] | undefined
+    {
+        const tn = this.tn;
+        // at '<': Type (',' Type)* '>' '('
+
+        const state = tn.mark();
+        if (!tn.skip(Token.LessThan)) return undefined;
+
+        const startPos = tn.tokenPos;
+        let typeArguments: PebbleType[] = [];
+        do {
+            // closing '>'
+            if (tn.peek() === Token.GreaterThan) break;
+
+            let type = this.parseType( /*suppressError*/ true );
+            if( !type ) {
+                tn.reset(state);
+                return undefined;
+            }
+            
+            typeArguments.push(type);
+        } while( tn.skip( Token.Comma ) );
+
+        // closing '>'
+        if( !tn.skip( Token.GreaterThan ) )
+        {
+            tn.reset(state);
+            return undefined;
+        }
+
+        let end = tn.pos;
+        // next token must be '('
+        // because this method is called BEFORE parsing arguments
+        if( !tn.skip(Token.OpenParen) )
+        {
+            tn.reset(state);
+            return undefined;
+        }
+
+        if( typeArguments.length <= 0 )
+        {
+            this.error(
+                DiagnosticCode.Type_argument_list_cannot_be_empty,
+                tn.range(startPos, end)
+            );
+            return undefined;
+        }
+
+        return typeArguments;
+    }
+
+    parseArguments(): PebbleExpr[] | undefined
+    {
+        const tn = this.tn;
+        // at '(': (PebbleExpr (',' PebbleExpr)*)? ')'
+
+        let args = new Array<PebbleExpr>();
+        while( !tn.skip( Token.CloseParen ) )
+        {
+            const expr = this.parseExpr( Precedence.Comma + 1 );
+            if (!expr) return undefined;
+            args.push(expr);
+            
+            if( tn.skip( Token.Comma ) ) continue;
+            
+            if (tn.skip(Token.CloseParen)) break;
+            
+            this.error(
+                DiagnosticCode._0_expected,
+                tn.range(), ")"
+            );
+            return undefined;
+        }
+        return args;
     }
 
     private emitErrorIfInvalidAutoSemicolon(): void {
@@ -875,7 +1111,7 @@ export class Parser extends DiagnosticEmitter
         );
     }
 
-    private parseFunctionExpressionCommon(
+    private parseCommonFuncExpr(
         name: Identifier,
         parameters: VarDecl[],
         arrowKind: ArrowKind,
@@ -888,39 +1124,47 @@ export class Parser extends DiagnosticEmitter
         if (signatureStart < 0) signatureStart = startPos;
 
         let returnType: PebbleType | undefined = undefined;
-        if (arrowKind != ArrowKind.Single && tn.skip(Token.Colon)) {
+        
+        // either `function ( ... )` or `( ... )`
+        // BUT NOT `param =>`
+        // AND there is a `:`
+        // we parse the return type
+        if( arrowKind !== ArrowKind.Single && tn.skip(Token.Colon) )
+        {
             returnType = this.parseType();
             if (!returnType) return undefined;
-        } else {
-            returnType = NamedTypeNode.omitted(tn.range(tn.pos));
+        }
+        // else the return type stays undefined (to infer)
+        else returnType = undefined;
+ 
+        const expectArrow = arrowKind !== ArrowKind.None;
+
+        if(
+            expectArrow &&                      // if we expect an arrow
+            !tn.skip(Token.FatArrow)  // but there is none; then error 
+        )
+        {
+            this.error(
+                DiagnosticCode._0_expected,
+                tn.range(tn.pos), "=>"
+            );
+            return undefined;
         }
 
-        if (arrowKind) {
-            if (!tn.skip(Token.Equals_GreaterThan)) {
-                this.error(
-                    DiagnosticCode._0_expected,
-                    tn.range(tn.pos), "=>"
-                );
-                return undefined;
-            }
-        }
-
-        let signature = new FunctionTypeNode(
+        let signature = new FuncType(
             parameters,
             returnType,
-            explicitThis,
-            tn.range(signatureStart, tn.pos),
-            false,
+            tn.range(signatureStart, tn.pos)
         );
 
-        let body: Statement | undefined = undefined;
-        if (arrowKind) {
-            if (tn.skip(Token.OpenBrace)) {
-                body = this.parseBlockStatement(false);
-            } else {
-                let bodyExpression = this.parseExpression(Precedence.Comma + 1);
-                if (bodyExpression) body = new ExpressionStatement(bodyExpression);
-            }
+        let body: PebbleStmt | PebbleExpr | undefined = undefined;
+        if( expectArrow )
+        {
+            // if `{` then block statement `() => {}`
+            // else lambda `() => expr`
+            body = tn.skip( Token.OpenBrace ) ?
+                this.parseBlockStmt( false ) :
+                this.parseExpr( Precedence.Comma + 1 );
         } else {
             if (!tn.skip(Token.OpenBrace)) {
                 this.error(
@@ -929,20 +1173,426 @@ export class Parser extends DiagnosticEmitter
                 );
                 return undefined;
             }
-            body = this.parseBlockStatement(false);
+            body = this.parseBlockStmt( false );
         }
         if (!body) return undefined;
 
-        let declaration = new FunctionDeclaration(
+        let declaration = new FuncDecl(
             name,
             CommonFlags.None,
-            undefined,
+            [],
             signature,
             body,
             arrowKind,
             tn.range(startPos, tn.pos)
         );
-        return new FunctionExpression(declaration);
+        return new FuncExpr(declaration, declaration.range);
+    }
+
+    parseStatement(
+        topLevel: boolean = false
+    ): PebbleStmt | undefined
+    {
+        const tn = this.tn;
+        // at previous token
+
+        const state = tn.mark();
+        const token = tn.next();
+        let statement: PebbleStmt | undefined = undefined;
+        switch (token) {
+            case Token.Break: {
+                statement = this.parseBreak();
+                break;
+            }
+            case Token.Var:
+            case Token.Let:
+            case Token.Const: {
+                statement = this.parseVarStmt( CommonFlags.Const, tn.tokenPos  );
+                break;
+            }
+            case Token.Continue: {
+                statement = this.parseContinue();
+                break;
+            }
+            case Token.Do: {
+                statement = this.parseDoStatement();
+                break;
+            }
+            case Token.For: {
+                statement = this.parseForStatement();
+                break;
+            }
+            case Token.If: {
+                statement = this.parseIfStatement();
+                break;
+            }
+            case Token.OpenBrace: {
+                statement = this.parseBlockStmt( topLevel );
+                break;
+            }
+            case Token.Return: {
+                if( topLevel ) {
+                    this.error(
+                        DiagnosticCode.A_return_statement_can_only_be_used_within_a_function_body,
+                        tn.range()
+                    ); // recoverable
+                }
+                statement = this.parseReturn();
+                break;
+            }
+            case Token.Test: {
+                if( !topLevel )
+                return this.error(
+                    DiagnosticCode.A_test_can_only_be_specified_at_the_top_level_of_the_file_it_cannot_be_defined_in_functions_etc,
+                    tn.range()
+                );
+                statement = this.parseTestStatement();
+                break;
+            }
+            case Token.Semicolon: {
+                return new EmptyStmt(tn.range(tn.tokenPos));
+            }
+            // case Token.Switch: {
+            //     statement = this.parseSwitchStatement();
+            //     break;
+            // }
+            case Token.Match: {
+                statement = this.parseMatchStatement();
+                break;
+            };
+            // case Token.Throw: {
+            //     statement = this.parseThrowStatement();
+            //     break;
+            // }
+            case Token.Fail: {
+                statement = this.parseFailStatement();
+                break;
+            };
+            case Token.Assert: {
+                statement = this.parseAssertStatement();
+                break;
+            };
+            // case Token.Try: {
+            //     statement = this.parseTryStatement();
+            //     break;
+            // }
+            case Token.Void: {
+                this.error(
+                    DiagnosticCode.Not_implemented_0,
+                    tn.range(), "void statements"
+                )
+                // statement = this.parseVoidStatement();
+                break;
+            }
+            case Token.While: {
+                statement = this.parseWhileStatement();
+                break;
+            }
+            // case Token.Type: { // also identifier
+            //     if (tn.peek(IdentifierHandling.Prefer) === Token.Identifier) {
+            //         statement = this.parseTypeDeclaration(CommonFlags.None, tn.tokenPos);
+            //         break;
+            //     }
+            //     // fall-through
+            // }
+            default: {
+                tn.reset(state);
+                statement = this.parseExpr();
+                break;
+            }
+        }
+        if (!statement) { // has been reported
+            tn.reset(state);
+            this.skipStatement();
+        } else {
+            tn.discard(state);
+        }
+        return statement;
+    }
+
+    parseBlockStmt(
+        topLevel: boolean
+    ): BlockStmt | undefined
+    {
+        const tn = this.tn;
+        // at '{': PebbleStmt* '}' ';'?
+
+        const startPos = tn.tokenPos;
+        const statements = new Array<PebbleStmt>();
+
+        while( !tn.skip( Token.CloseBrace ) )
+        {
+            let state = tn.mark();
+            let statement = this.parseStatement(topLevel);
+            if (!statement) {
+                if (tn.token === Token.EndOfFile) return undefined;
+                tn.reset(state);
+                this.skipStatement();
+            } else {
+                statements.push(statement);
+            }
+        }
+
+        let ret = new BlockStmt(statements, tn.range(startPos, tn.pos));
+        if (topLevel) tn.skip(Token.Semicolon);
+        return ret;
+    }
+
+    parseBreak(): BreakStmt | undefined
+    {
+        const tn = this.tn;
+        // at 'break': Identifier? ';'?
+
+        let identifier: Identifier | undefined = undefined;
+        if (tn.peek() === Token.Identifier && !tn.isNextTokenOnNewLine()) {
+            tn.next(IdentifierHandling.Prefer);
+            identifier = new Identifier(tn.readIdentifier(), tn.range());
+        }
+        const result = new BreakStmt(identifier, tn.range());
+        tn.skip(Token.Semicolon);
+        return result;
+    }
+
+    parseContinue(): ContinueStmt | undefined
+    {
+        const tn = this.tn;
+        // at 'continue': Identifier? ';'?
+
+        let identifier: Identifier | undefined = undefined;
+        if (tn.peek() === Token.Identifier && !tn.isNextTokenOnNewLine()) {
+            tn.next(IdentifierHandling.Prefer);
+            identifier = new Identifier(tn.readIdentifier(), tn.range());
+        }
+        let ret = new ContinueStmt(identifier, tn.range());
+        tn.skip(Token.Semicolon);
+        return ret;
+    }
+
+    parseDoStatement(): DoWhileStmt | undefined
+    {
+        const tn = this.tn;
+        // at 'do': Statement 'while' '(' Expression ')' ';'?
+
+        let startPos = tn.tokenPos;
+        let statement = this.parseStatement();
+        if (!statement) return undefined;
+
+        if( !tn.skip( Token.While ) )
+        {
+            this.error(
+                DiagnosticCode._0_expected,
+                tn.range(), "while"
+            );
+            return undefined;
+        }
+        if( !tn.skip( Token.OpenParen ) )
+        {
+            this.error(
+                DiagnosticCode._0_expected,
+                tn.range(), "("
+            );
+            return undefined;
+        }
+
+        let condition = this.parseExpr();
+        if (!condition) return undefined;
+
+        if( !tn.skip( Token.CloseParen ) )
+        {
+            this.error(
+                DiagnosticCode._0_expected,
+                tn.range(), ")"
+            );
+            return undefined;
+        }
+
+        const result = new DoWhileStmt(
+            statement,
+            condition,
+            tn.range(startPos, tn.pos)
+        );
+        tn.skip(Token.Semicolon);
+        return result;
+    }
+
+    parseForStatement(): ForStmt | ForOfStmt | undefined
+    {
+        const tn = this.tn;
+        // at 'for': '(' Statement? Expression? ';' Expression? ')' Statement
+
+        const startPos = tn.tokenPos;
+
+        if( !tn.skip( Token.OpenParen ) )
+        return this.error(
+            DiagnosticCode._0_expected,
+            tn.range(), "("
+        );
+
+        let init: VarStmt | undefined = undefined;
+
+        this.parseVarStmt
+        const token = tn.peek();
+        switch( token )
+        {
+            case Token.Let:
+            case Token.Var:
+            case Token.Const: {
+                tn.next();
+                init = this.parseVarStmt(
+                    token === Token.Const ? CommonFlags.Const : CommonFlags.Let,
+                    tn.tokenPos,
+                    { isFor: true }
+                );
+                break;
+            }
+        }
+
+        // for...of
+        if( tn.skip( Token.Of ) )
+        {
+            if(!( init instanceof VarStmt ))
+            return this.error(
+                DiagnosticCode._0_expected,
+                tn.range( startPos ), "Variable declaration"
+            );
+
+            const decls = init.declarations;
+            if( decls.length !== 1 )
+            return this.error(
+                DiagnosticCode.Only_a_single_variable_is_allowed_in_a_for_of_statement,
+                tn.range()
+            );
+
+            const decl = decls[0];
+            if(
+                decl.initExpr !== undefined ||
+                decl.type !== undefined
+            )
+            {
+                return this.error(
+                    DiagnosticCode.The_variable_declaration_of_a_for_of_statement_cannot_have_an_initializer,
+                    tn.range()
+                );
+            }
+            
+            const iterable = this.parseExpr();
+            if( !iterable ) return undefined;
+
+            const body = this.parseStatement();
+            if( !body ) return undefined;
+
+            return new ForOfStmt(
+                init as VarStmt<[VarDecl]>,
+                iterable,
+                body,
+                tn.range(startPos, tn.pos)
+            );
+        }
+
+        // non for...of
+
+        if( !tn.skip( Token.Semicolon ) )
+        return this.error(
+            DiagnosticCode._0_expected,
+            tn.range(), ";"
+        );
+
+        let condition: PebbleExpr | undefined = undefined;
+        if( !tn.skip( Token.Semicolon ) )
+        {
+            condition = this.parseExpr();
+            if (!condition) return undefined;
+
+            if( !tn.skip( Token.Semicolon ) )
+            return this.error(
+                DiagnosticCode._0_expected,
+                tn.range(), ";"
+            );
+        }
+
+        let update: PebbleExpr | undefined = undefined;
+        if( !tn.skip( Token.CloseParen ) )
+        {
+            update = this.parseExpr();
+            if (!update) return undefined;
+
+            if( !tn.skip( Token.CloseParen ) )
+            return this.error(
+                DiagnosticCode._0_expected,
+                tn.range(), ")"
+            );
+        }
+
+        const body = this.parseStatement();
+        if( !body ) return undefined;
+        
+        return new ForStmt(
+            init,
+            condition,
+            update,
+            body,
+            tn.range(startPos, tn.pos)
+        );
+    }
+
+    parseIfStatement(): IfStmt | undefined
+    {
+        const tn = this.tn;
+        // at 'if': '(' Expression ')' Statement ('else' Statement)?
+
+        const startPos = tn.tokenPos;
+
+        if( !tn.skip( Token.OpenParen ) )
+        return this.error(
+            DiagnosticCode._0_expected,
+            tn.range(), "("
+        );
+
+        let condition = this.parseExpr();
+        if (!condition) return undefined;
+
+        if( !tn.skip( Token.CloseParen ) )
+        return this.error(
+            DiagnosticCode._0_expected,
+            tn.range(), ")"
+        );
+
+        let thenStatement = this.parseStatement();
+        if (!thenStatement) return undefined;
+
+        let elseStatement: PebbleStmt | undefined = undefined;
+        if( tn.skip( Token.Else ) )
+        {
+            elseStatement = this.parseStatement();
+            if (!elseStatement) return undefined;
+        }
+
+        return new IfStmt(
+            condition,
+            thenStatement,
+            elseStatement,
+            tn.range(startPos, tn.pos)
+        );
+    }
+
+    parseReturn(): ReturnStmt | undefined
+    {
+        const tn = this.tn;
+        // at 'return': Expression? ';'
+
+        const startPos = tn.tokenPos;
+
+        let expr: PebbleExpr | undefined = undefined;
+        if(
+            !tn.skip(Token.Semicolon) &&
+            !tn.isNextTokenOnNewLine()
+        ) {
+            expr = this.parseExpr();
+            if (!expr) return undefined;
+            tn.skip(Token.Semicolon); // if any
+        }
+
+        return new ReturnStmt(expr, tn.range(startPos, tn.pos));
     }
 
     /**
@@ -1001,7 +1651,7 @@ export class Parser extends DiagnosticEmitter
 
                             // no arrow after `( Identifier )`
                             // so it must be a parenthesized expression
-                            if (!tn.skip(Token.Equals_GreaterThan)) {
+                            if (!tn.skip(Token.FatArrow)) {
                                 tn.reset(tnState);
                                 return false;
                             }

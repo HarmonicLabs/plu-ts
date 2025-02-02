@@ -85,7 +85,7 @@ export class Tokenizer extends DiagnosticEmitter {
             pos += 2;
             while (
                 pos < end &&
-                text.charCodeAt(pos) != CharCode.LineFeed
+                text.charCodeAt(pos) !== CharCode.LineFeed
             ) {
                 ++pos;
             }
@@ -99,7 +99,7 @@ export class Tokenizer extends DiagnosticEmitter {
     toArray(): Token[] {
         let tokens = new Array<Token>();
         let token: Token;
-        while ((token = this.next()) != Token.EndOfFile) {
+        while ((token = this.next()) !== Token.EndOfFile) {
             if( token === Token.Identifier ) this.readIdentifier();
             if( token === Token.IntegerLiteral ) this.readInteger();
 
@@ -187,7 +187,7 @@ export class Tokenizer extends DiagnosticEmitter {
                 }
                 case CharCode.Backtick: {
                     this.pos = pos;
-                    return Token.TemplateLiteral;
+                    return Token.StringTemplateLiteralQuote;
                 }
                 case CharCode.Percent: {
                     ++pos;
@@ -445,7 +445,7 @@ export class Tokenizer extends DiagnosticEmitter {
                         }
                         if (chr === CharCode.GreaterThan) {
                             this.pos = pos + 1;
-                            return Token.Equals_GreaterThan;
+                            return Token.FatArrow;
                         }
                     }
                     this.pos = pos;
@@ -554,10 +554,10 @@ export class Tokenizer extends DiagnosticEmitter {
                             (pos += numCodeUnits(c)) < end &&
                             isIdentifierPart(c = <number>text.codePointAt(pos))
                         ) { /* nop */ }
-                        if (identifierHandling != IdentifierHandling.Always) {
+                        if (identifierHandling !== IdentifierHandling.Always) {
                             let maybeKeywordToken = tokenFromKeyword(text.substring(posBefore, pos));
                             if (
-                                maybeKeywordToken != Token.Invalid &&
+                                maybeKeywordToken !== Token.Invalid &&
                                 !(
                                     identifierHandling === IdentifierHandling.Prefer &&
                                     tokenIsAlsoIdentifier(maybeKeywordToken)
@@ -737,8 +737,7 @@ export class Tokenizer extends DiagnosticEmitter {
         } else if (end < 0) {
             end = start;
         }
-        let range = new SourceRange(this.source, start, end);
-        return range;
+        return new SourceRange(this.source, start, end);
     }
 
     readIdentifier(): string {
@@ -964,7 +963,7 @@ export class Tokenizer extends DiagnosticEmitter {
         while (pos < end) {
             let c = text.charCodeAt(pos);
             if (c === CharCode.Dot || (c | 32) === CharCode.e) return false;
-            if (c != CharCode._ && (c < CharCode._0 || c > CharCode._9)) break;
+            if (c !== CharCode._ && (c < CharCode._0 || c > CharCode._9)) break;
             // does not validate separator placement (this is done in readXYInteger)
             pos++;
         }
@@ -1344,7 +1343,7 @@ export class Tokenizer extends DiagnosticEmitter {
             ++pos;
         }
 
-        if (pos != start && sepEnd === pos) {
+        if (pos !== start && sepEnd === pos) {
             this.error(
                 DiagnosticCode.Numeric_separators_are_not_allowed_here,
                 this.range(sepEnd - 1)

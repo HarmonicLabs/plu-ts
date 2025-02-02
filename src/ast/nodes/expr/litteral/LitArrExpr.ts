@@ -1,10 +1,12 @@
 import { SourceRange } from "../../../Source/SourceRange";
 import { HasSourceRange } from "../../HasSourceRange";
+import { PebbleExpr } from "../PebbleExpr";
 
-export class FuncExpr implements HasSourceRange
+export class LitArrExpr
+    implements HasSourceRange
 {
     constructor(
-        readonly decl: {},
+        readonly elems: PebbleExpr[],
         readonly range: SourceRange
     ) {}
 }

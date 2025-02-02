@@ -8,74 +8,75 @@ export enum Token {
     Abstract,
     As,
     Async,
-    Await,        // ES2017
-    Boolean,      // ES2017
-    Break,        // ES2017
-    // Case,         // ES2017
-    Catch,        // ES2017
-    // Class,        // ES2017
+    Await,        
+    Boolean,      
+    Break,        
+    // Case,         
+    Catch,        
+    // Class,        
     Struct,
-    Const,        // ES2017
-    Continue,     // ES2017
+    Const,        
+    Continue,     
     // Constructor,
-    Debugger,     // ES2017
+    Debugger,     
     // Declare,
-    // Default,      // ES2017
-    // Delete,       // ES2017
-    Do,           // ES2017
-    Else,         // ES2017
-    Enum,         // ES2017 future
-    Export,       // ES2017
-    Extends,      // ES2017
-    False,        // ES
-    Finally,      // ES2017
-    For,          // ES2017
+    // Default,      
+    // Delete,       
+    Do,           
+    Else,         
+    Enum,
+    Export,       
+    Extends,      
+    False,        
+    Finally,      
+    For,          
     From,         // AS possible identifier
-    Function,     // ES2017
+    Function,     
     Get,
-    If,           // ES2017
-    Implements,   // ES2017 non-lexical
-    Import,       // ES2017
-    In,           // ES2017
-    InstanceOf,   // ES2017
-    Interface,    // ES2017 non-lexical
+    If,           
+    Implements,
+    Import,       
+    In,           
+    InstanceOf,   
+    Interface,
     Is,
     KeyOf,
-    Let,          // ES2017 non-lexical
-    // Module,       // AS possible identifier
-    Namespace,    // AS possible identifier
-    // New,          // ES2017
-    // Null,         // ES
+    Let,
+    Namespace,
+    // New,          
+    // Null,         
     Number,
     Of,
     Override,
-    Package,      // ES2017 non-lexical
-    Private,      // ES2017 non-lexical
-    Protected,    // ES2017 non-lexical
-    Public,       // ES2017 non-lexical
+    Package,   
+    Private,   
+    Protected, 
+    Public,    
     Readonly,
-    Return,       // ES2017
+    Return,       
     Set,
-    Static,       // ES2017 non-lexical
-    // Super,        // ES2017
-    // Switch,       // ES2017
-    This,         // ES2017
-    // Throw,        // ES2017
-    True,         // ES
-    Try,          // ES2017
+    Static,    
+    // Super,        
+    // Switch,       
+    This,         
+    // Throw,        
+    True,         
+    Try,          
     Type,         // AS possible identifier
-    // TypeOf,       // ES2017
-    Undefined,    // ES
-    Var,          // ES2017
-    Void,         // ES2017
-    While,        // ES2017
-    With,         // ES2017
-    Yield,        // ES2017
+    // TypeOf,       
+    Undefined,    
+    Var,          
+    Void,         
+    While,        
+    With,         
+    Yield,        
 
-    // extra keywords for plu-ts
+    // extra keywords for pebble
     // https://github.com/tc39/proposal-pattern-matching
-    Match,          // match( thing ): ReturnType { ... }
-    When,           // when Constr{ ... } => { ... }
+    Match,          // match( thing ) { ... }
+    When,           // when Constr{ ... }: { ... }
+    Test,           // test "name" { ... }
+
     Fail,
     Assert,
   
@@ -91,40 +92,73 @@ export enum Token {
     OpenBracket,                            // [
     /** `]` */
     CloseBracket,                           // ]
+    /** `.` */
     Dot,                                    // .
+    /** `...` */
     Dot_Dot_Dot,                            // ...
+    /** `;` */
     Semicolon,                              // ;
+    /** `,` */
     Comma,                                  // ,
+    /** `<` */
     LessThan,                               // <
+    /** `>` */
     GreaterThan,                            // >
+    /** `<=` */
     LessThan_Equals,                        // <=
+    /** `>=` */
     GreaterThan_Equals,                     // >=
+    /** `==` */
     Equals_Equals,                          // ==
+    /** `!=` */
     Exclamation_Equals,                     // !=
+    /** `===` */
     Equals_Equals_Equals,                   // ===
+    /** `!==` */
     Exclamation_Equals_Equals,              // !==
-    Equals_GreaterThan,                     // =>
+    /** `=>` */
+    FatArrow,                               // =>
+    /** `+` */
     Plus,                                   // +
+    /** `-` */
     Minus,                                  // -
+    /** `**` */
     Asterisk_Asterisk,                      // **
+    /** `*` */
     Asterisk,                               // *
+    /** `/` */
     Slash,                                  // /
+    /** `%` */
     Percent,                                // %
+    /** `++` */
     Plus_Plus,                              // ++
+    /** `--` */
     Minus_Minus,                            // --
+    /** `<<` */
     LessThan_LessThan,                      // <<
+    /** `>>` */
     GreaterThan_GreaterThan,                // >>
+    /** `>>>` */
     GreaterThan_GreaterThan_GreaterThan,    // >>>
+    /** `+` */
     Ampersand,                              // &
+    /** `|` */
     Bar,                                    // |
+    /** `^` */
     Caret,                                  // ^
+    /** `!` */
     Exclamation,                            // !
+    /** `~` */
     Tilde,                                  // ~
+    /** `&&` */
     Ampersand_Ampersand,                    // &&
+    /** `||` */
     Bar_Bar,                                // ||
+    /** `?` */
     Question,                               // ?
     /** `:` */
     Colon,                                  // :
+    /** `=` */
     Equals,                                 // =
     Plus_Equals,                            // +=
     Minus_Equals,                           // -=
@@ -140,6 +174,12 @@ export enum Token {
     Caret_Equals,                           // ^=
     At,                                     // @
 
+    // custom native types for pebble
+
+    Bytes,      // bytes
+    Optional,   // Optional<T>
+    List,       // List<T>
+    LinearMap,  // LinearMap<K,V> 
   
     // literals
   
@@ -148,7 +188,7 @@ export enum Token {
     HexBytesLiteral,
     IntegerLiteral,
     // FloatLiteral,
-    TemplateLiteral,
+    StringTemplateLiteralQuote,
   
     // meta
   

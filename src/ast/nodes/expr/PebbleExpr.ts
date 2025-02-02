@@ -1,3 +1,4 @@
+import { CallExpr } from "./functions/CallExpr";
 import { FuncExpr } from "./functions/FuncExpr";
 import { isLitteralExpr, LitteralExpr } from "./litteral/LitteralExpr";
 import { ParentesizedExpr } from "./ParentesizedExpr";
@@ -12,14 +13,15 @@ export type PebbleExpr
     | LitteralExpr
     | ParentesizedExpr
     | FuncExpr
-    | todo;
+    | CallExpr
 
 export function isPebbleExpr( thing: any ): thing is PebbleExpr
 {
     return (
-        isUnaryPrefixExpr( thing ) ||
-        isLitteralExpr( thing )    ||
-        (thing instanceof ParentesizedExpr) ||
-        (thing instanceof FuncExpr) ||
+        isUnaryPrefixExpr( thing )
+        || isLitteralExpr( thing )
+        || (thing instanceof ParentesizedExpr)
+        || (thing instanceof FuncExpr)
+        || (thing instanceof CallExpr)
     );
 }

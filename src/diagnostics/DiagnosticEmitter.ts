@@ -135,8 +135,10 @@ export abstract class DiagnosticEmitter {
         arg0: string | undefined = undefined,
         arg1: string | undefined = undefined,
         arg2: string | undefined = undefined
-    ): void {
+    ): undefined
+    {
         this.emitDiagnostic(code, DiagnosticCategory.Error, range, undefined, arg0, arg1, arg2);
+        return undefined;
     }
 
     /** Emits an error diagnostic message with a related range. */

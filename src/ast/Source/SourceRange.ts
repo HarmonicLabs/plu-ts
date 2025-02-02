@@ -35,7 +35,7 @@ export class SourceRange
         if(!( a instanceof SourceRange )) throw new Error("a is not a SourceRange");
         if(!( b instanceof SourceRange )) throw new Error("b is not a SourceRange");
 
-        if (a.source != b.source) throw new Error("source mismatch");
+        if (a.source !== b.source) throw new Error("source mismatch");
         
         let range = new SourceRange(
             a.source,

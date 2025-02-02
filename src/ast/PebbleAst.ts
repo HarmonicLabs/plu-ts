@@ -1,4 +1,4 @@
-import { isVarDecl, VarDecl } from "./nodes/VarDecl/VarDecl";
+import { isVarDecl, VarDecl } from "./nodes/declarations/VarDecl/VarDecl";
 import { Identifier } from "./nodes/common/Identifier";
 import { isPebbleExpr, PebbleExpr } from "./nodes/expr/PebbleExpr";
 import { isPebbleStmt, PebbleStmt } from "./nodes/statements/PebbleStmt";

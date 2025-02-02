@@ -1,10 +1,11 @@
 import { SourceRange } from "../../../Source/SourceRange";
 import { HasSourceRange } from "../../HasSourceRange";
 
-export class FuncExpr implements HasSourceRange
+export class LitStrExpr
+    implements HasSourceRange
 {
     constructor(
-        readonly decl: {},
+        readonly string: string,
         readonly range: SourceRange
     ) {}
 }

@@ -1,4 +1,8 @@
+import { BlockStmt } from "./BlockStmt";
+import { BreakStmt } from "./BreakStmt";
+import { ContinueStmt } from "./ContinueStmt";
 import { DoWhileStmt } from "./DoWhileStmt";
+import { EmptyStmt } from "./EmptyStmt";
 import { ForOfStmt } from "./ForOfStmt";
 import { ForStmt } from "./ForStmt";
 import { IfStmt } from "./IfStmt";
@@ -13,7 +17,12 @@ export type PebbleStmt
     | ForOfStmt
     | WhileStmt
     | DoWhileStmt
-    | ReturnStmt;
+    | ReturnStmt
+    | BlockStmt
+    | BreakStmt
+    | ContinueStmt
+    | EmptyStmt
+    ;
 
 
 export function isPebbleStmt( stmt: any ): stmt is PebbleStmt
@@ -26,5 +35,9 @@ export function isPebbleStmt( stmt: any ): stmt is PebbleStmt
         || stmt instanceof WhileStmt
         || stmt instanceof DoWhileStmt
         || stmt instanceof ReturnStmt
+        || stmt instanceof BlockStmt
+        || stmt instanceof BreakStmt
+        || stmt instanceof ContinueStmt
+        || stmt instanceof EmptyStmt
     );
 }
