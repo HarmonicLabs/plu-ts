@@ -144,6 +144,12 @@ export enum DiagnosticCode {
     Pattern_expected = 1366,
     This_case_will_never_be_evaluated_because_all_patterns_will_be_catched_before = 1367,
     Statement_expected = 1368,
+    Patterns_may_not_have_initializers_or_explicit_types = 1369,
+    A_case_expression_must_have_at_least_one_clause = 1370,
+    A_match_statement_must_have_at_least_one_case = 1371,
+    Cases_in_a_match_statement_must_be_followed_by_other_statements = 1372,
+    Variable_declaration_must_have_an_initializer = 1373,
+    Deconstructed_elements_may_not_have_initializers_or_explicit_types = 1374,
     Duplicate_identifier_0 = 2300,
     Cannot_find_name_0 = 2304,
     Module_0_has_no_exported_member_1 = 2305,
@@ -371,6 +377,12 @@ export function diagnosticCodeToString(code: DiagnosticCode): string {
         case 1366: return "Pattern expected.";
         case 1367: return "This case will never be evaluated because all patterns will be catched before";
         case 1368: return "Statement expected.";
+        case 1369: return "Patterns may not have initializers or explicit types";
+        case 1370: return "A 'case' expression must have at least one clause";
+        case 1371: return "A 'match' statement must have at least one case";
+        case 1372: return "Cases in a 'match' statement must be followed by other statements";
+        case 1373: return "Variable declaration must have an initializer";
+        case 1374: return "Deconstructed elements may not have initializers or explicit types";
         case 2300: return "Duplicate identifier '{0}'.";
         case 2304: return "Cannot find name '{0}'.";
         case 2305: return "Module '{0}' has no exported member '{1}'.";

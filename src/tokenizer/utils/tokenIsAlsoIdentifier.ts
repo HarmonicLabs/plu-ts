@@ -9,15 +9,15 @@ export function tokenIsAlsoIdentifier(token: Token): boolean {
         // case Token.Delete:
         case Token.From:
         case Token.For:
-        case Token.Get:
+        // case Token.Get:
+        // case Token.Set:
         case Token.InstanceOf:
-        // case Token.Is:
-        case Token.KeyOf:
+        case Token.Is:
+        // case Token.KeyOf:
         // case Token.Module:
-        case Token.Namespace:
+        // case Token.Namespace:
         // case Token.Null:
         case Token.Readonly:
-        case Token.Set:
         case Token.Type:
         case Token.Void: return true;
         default: return false;

@@ -1,7 +1,7 @@
 import { ArrayLikeDeconstr } from "./ArrayLikeDeconstr";
 import { NamedDeconstructVarDecl } from "./NamedDeconstructVarDecl";
 import { SimpleVarDecl } from "./SimpleVarDecl";
-import { SingleDeconstructVarDecl } from "./SingleDeconstructVarDecl copy";
+import { SingleDeconstructVarDecl } from "./SingleDeconstructVarDecl";
 
 export type DeconstructVarDecl
     = NamedDeconstructVarDecl // ConstrName{ ... }

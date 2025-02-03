@@ -3,7 +3,7 @@ import { Identifier } from "../../common/Identifier";
 import { PebbleExpr } from "../../expr/PebbleExpr";
 import { HasSourceRange } from "../../HasSourceRange";
 import { PebbleType } from "../../types/PebbleType";
-import { ISingleDeconstructVarDecl, SingleDeconstructVarDecl } from "./SingleDeconstructVarDecl copy";
+import { ISingleDeconstructVarDecl, SingleDeconstructVarDecl } from "./SingleDeconstructVarDecl";
 import { VarDecl } from "./VarDecl";
 
 export class NamedDeconstructVarDecl

@@ -144,6 +144,13 @@
   "Pattern expected.": 1366,
   "This case will never be evaluated because all patterns will be catched before": 1367,
   "Statement expected.": 1368,
+  "Patterns may not have initializers or explicit types": 1369,
+  "A 'case' expression must have at least one clause": 1370,
+  "A 'match' statement must have at least one case": 1371,
+  "Cases in a 'match' statement must be followed by other statements": 1372,
+  "Variable declaration must have an initializer": 1373,
+  "Deconstructed elements may not have initializers or explicit types": 1374,
+
 
 
   "Duplicate identifier '{0}'.": 2300,

@@ -1,4 +1,5 @@
 import { SourceRange } from "../../Source/SourceRange";
+import { VarDecl } from "../declarations/VarDecl/VarDecl";
 import { HasSourceRange } from "../HasSourceRange";
 import { PebbleExpr } from "./PebbleExpr";
 
@@ -7,16 +8,16 @@ export class CaseExpr
 {
     constructor(
         readonly matchExpr: PebbleExpr,
-        readonly cases: CaseExprCase[],
+        readonly cases: CaseExprMatcher[],
         readonly range: SourceRange,
     ) {}
 }
 
-export class CaseExprCase
+export class CaseExprMatcher
     implements HasSourceRange
 {
     constructor(
-        readonly pattern: PebbleExpr,
+        readonly pattern: VarDecl,
         readonly body: PebbleExpr,
         readonly range: SourceRange,
     ) {}

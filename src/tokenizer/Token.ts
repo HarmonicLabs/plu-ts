@@ -32,29 +32,29 @@ export enum Token {
     For,          
     From,         // AS possible identifier
     Function,     
-    Get,
+    // Get,
     If,           
     Implements,
     Import,       
     In,           
     InstanceOf,   
     Interface,
-    // Is,
-    KeyOf,
+    Is,         // case thing is pattern => expression
+    // KeyOf,
     Let,
-    Namespace,
+    // Namespace,
     // New,          
     // Null,         
     Number,
     Of,
-    Override,
-    Package,   
-    Private,   
-    Protected, 
-    Public,    
+    // Override,
+    // Package,   
+    // Private,   
+    // Protected, 
+    // Public,    
     Readonly,
     Return,       
-    Set,
+    // Set,
     Static,    
     // Super,        
     // Switch,       
@@ -68,15 +68,15 @@ export enum Token {
     Var,          
     Void,         
     While,        
-    With,         
-    Yield,        
+    // With,         
+    // Yield,        
 
     // extra keywords for pebble
     // https://github.com/tc39/proposal-pattern-matching
     Match,          // match( thing ) { ... }
     When,           // when Constr{ ... }: { ... }
 
-    Case,           // case thing |: Constr{} => expr |: Other{} => expr |: _ => expr;
+    Case,           // case thing is Constr{} => expr is Other{} => expr is _ => expr;
 
     Test,           // test "name" { ... }
 
@@ -176,8 +176,8 @@ export enum Token {
     Bar_Equals,                             // |=
     Caret_Equals,                           // ^=
     At,                                     // @
-    /** `|:` */
-    CaseMatcher,                            // |:
+    // /** `|:` */
+    // CaseMatcher,                            // |:
 
     // custom native types for pebble
 
@@ -202,3 +202,12 @@ export enum Token {
 }
 
 Object.freeze(Token);
+
+/*
+
+case thing
+    is Constr{} => expr
+    is Other{} => expr
+    is _ => expr;
+
+*/

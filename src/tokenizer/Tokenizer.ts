@@ -527,10 +527,6 @@ export class Tokenizer extends DiagnosticEmitter {
                             this.pos = pos + 1;
                             return Token.Bar_Equals;
                         }
-                        if( chr === CharCode.Colon ) {
-                            this.pos = pos + 1;
-                            return Token.CaseMatcher;
-                        }
                     }
                     this.pos = pos;
                     return Token.Bar;

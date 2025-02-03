@@ -1,6 +1,6 @@
 import { Identifier } from "../ast/nodes/common/Identifier";
 import { NamedDeconstructVarDecl } from "../ast/nodes/declarations/VarDecl/NamedDeconstructVarDecl";
-import { SingleDeconstructVarDecl } from "../ast/nodes/declarations/VarDecl/SingleDeconstructVarDecl copy";
+import { SingleDeconstructVarDecl } from "../ast/nodes/declarations/VarDecl/SingleDeconstructVarDecl";
 import { DeconstructVarDecl, VarDecl } from "../ast/nodes/declarations/VarDecl/VarDecl";
 import { VarStmt } from "../ast/nodes/statements/VarStmt";
 import { PebbleAst } from "../ast/PebbleAst";
@@ -56,6 +56,7 @@ import { AssertStmt } from "../ast/nodes/statements/AssertStmt";
 import { TestStmt } from "../ast/nodes/statements/TestStmt";
 import { MatchStmt, MatchStmtCase } from "../ast/nodes/statements/MatchStmt";
 import { WhileStmt } from "../ast/nodes/statements/WhileStmt";
+import { CaseExpr, CaseExprMatcher } from "../ast/nodes/expr/CaseExpr";
 
 export class Parser extends DiagnosticEmitter
 {
@@ -175,8 +176,16 @@ export class Parser extends DiagnosticEmitter
         const decls: VarDecl[] = [];
         let decl: VarDecl | undefined = undefined;
         do {
-            decl = this.parseVarDecl( flags, opts );
+            decl = this._parseVarDecl( flags );
             if( !decl ) return undefined;
+            if( !isFor && !decl.initExpr )
+            {
+                this.error(
+                    DiagnosticCode.Variable_declaration_must_have_an_initializer,
+                    decl.range
+                );
+                return undefined;
+            }
             decls.push( decl );
         } while( tn.skip( Token.Comma ) ); // keep pushing while there are commas
         
@@ -201,27 +210,26 @@ export class Parser extends DiagnosticEmitter
         return result;
     }
 
-    parseVarDecl(
-        flags: CommonFlags = CommonFlags.None,
-        opts: Partial<ParseVarOpts> = defaultParseVarOpts
-    ): VarDecl | undefined
-    {
-        const tn = this.tn;
-        const startRange = tn.range();
-
-        opts = {
-            ...defaultParseVarOpts,
-            ...opts
-        };
-
-        const varDecl = this._parseVarDecl();
-        if( !varDecl ) return undefined;
-
-        if( !varDecl.initExpr && !opts.isParam )
-        {
-
-        }
-    }
+    // parseVarDecl(
+    //     flags: CommonFlags = CommonFlags.None,
+    //     opts: Partial<ParseVarOpts> = defaultParseVarOpts
+    // ): VarDecl | undefined
+    // {
+    //     const tn = this.tn;
+    //     // const startRange = tn.range();
+    // 
+    //     opts = {
+    //         ...defaultParseVarOpts,
+    //         ...opts
+    //     };
+    // 
+    //     const varDecl = this._parseVarDecl();
+    //     if( !varDecl ) return undefined;
+    // 
+    //     if( !varDecl.initExpr && !opts.isParam )
+    //     {
+    //     }
+    // }
 
     /**
      * the parsed variable declaration may or may not have a type and/or an initializer
@@ -240,7 +248,6 @@ export class Parser extends DiagnosticEmitter
     ): VarDecl | undefined
     {
         const tn = this.tn;
-
 
         // ConstrName{ ... } || renamed
         const renamedField: Identifier | undefined = this.parseIdentifier();
@@ -383,7 +390,80 @@ export class Parser extends DiagnosticEmitter
 
     parseArrayLikeDeconstr(): ArrayLikeDeconstr | undefined
     {
+        const tn = this.tn;
 
+        // at '[': ( VarDecl ','? )* ']' ( ':' PebbleType )? ( '=' PebbleExpr )?
+
+        const startPos = tn.pos;
+
+        const elems = new Array<VarDecl>();
+        let rest: Identifier | undefined = undefined;
+
+        while( !tn.skip( Token.CloseBracket ) )
+        {
+            if( tn.skip( Token.Dot_Dot_Dot ) )
+            {
+                if( rest )
+                return this.error(
+                    DiagnosticCode.A_rest_element_must_be_last_in_an_array_destructuring_pattern,
+                    tn.range()
+                );
+
+                rest = this.parseIdentifier();
+                if( !rest )
+                return this.error(
+                    DiagnosticCode.Identifier_expected,
+                    tn.range()
+                );
+
+                tn.skip( Token.Comma ); // skip comma if present
+
+                continue; // checks for close bracket
+            }
+
+            if( rest )
+            return this.error(
+                DiagnosticCode.A_rest_element_must_be_last_in_an_array_destructuring_pattern,
+                rest.range
+            );
+
+            const elem = this._parseVarDecl();
+            if( !elem ) return undefined;
+
+            if( elem.initExpr || elem.type )
+            return this.error(
+                DiagnosticCode.Deconstructed_elements_may_not_have_initializers_or_explicit_types,
+                elem.initExpr ? elem.initExpr.range : elem.type!.range
+            );
+
+            elems.push( elem );
+
+            if( tn.skip( Token.Comma ) ) continue;
+
+            if( tn.skip( Token.CloseBracket ) ) break;
+            else {
+                this.error(
+                    DiagnosticCode._0_expected,
+                    tn.range(), "]"
+                );
+                return undefined;
+            }
+        }
+
+        const [ explicitType, initializer ] = this._parseTypeAndInitializer();
+
+        let range = tn.range( startPos, tn.pos );
+
+        if( initializer ) range = SourceRange.join( range, initializer.range );
+        else if( explicitType ) range = SourceRange.join( range, explicitType.range );
+
+        return new ArrayLikeDeconstr(
+            elems,
+            rest,
+            explicitType,
+            initializer,
+            range
+        );
     }
 
     parseIdentifier(
@@ -703,8 +783,9 @@ export class Parser extends DiagnosticEmitter
         switch (token) {
 
             // TODO: SpreadPebbleExpr, YieldPebbleExpr
+            // case Token.Yield: 
             case Token.Dot_Dot_Dot:
-            case Token.Yield: {
+            {
                 this.error(
                     DiagnosticCode.Not_implemented_0,
                     tn.range(), "SpreadPebbleExpr, YieldPebbleExpr"
@@ -979,15 +1060,68 @@ export class Parser extends DiagnosticEmitter
     parseCaseExpr(): CaseExpr | undefined
     {
         const tn = this.tn;
-        // at 'case': Expression ('|' VarDecl '=>' Expression)+ ';'?
+        // at 'case': Expression ('is' VarDecl '=>' Expression)+
 
         const startPos = tn.tokenPos;
 
         const expr = this.parseExpr();
         if (!expr) return undefined;
 
-        let cases = new Array<CaseExprCase>();
-        this.parseExpr( Precedence.CaseExpr )
+        let noPatternCaseSeen = false;
+        const cases = new Array<CaseExprMatcher>();
+
+        while( tn.skip( Token.Is ) )
+        {            
+            if( noPatternCaseSeen )
+            return this.error(
+                DiagnosticCode.This_case_will_never_be_evaluated_because_all_patterns_will_be_catched_before,
+                tn.range()
+            );
+
+            const startPos = tn.tokenPos;
+
+            const matcher = this._parseVarDecl();
+            if( !matcher ) return undefined;
+
+            if( matcher instanceof SimpleVarDecl ) noPatternCaseSeen = true;
+
+            if( matcher.initExpr || matcher.type )
+            return this.error(
+                DiagnosticCode.Patterns_may_not_have_initializers_or_explicit_types,
+                matcher.initExpr ? matcher.initExpr.range : matcher.type!.range
+            );
+
+            if( !tn.skip( Token.FatArrow ) )
+            return this.error(
+                DiagnosticCode._0_expected,
+                tn.range(), "=>"
+            );
+
+            const body = this.parseExpr( Precedence.CaseExpr );
+            if( !body ) return undefined;
+
+            cases.push(
+                new CaseExprMatcher(
+                    matcher,
+                    body,
+                    tn.range( startPos, tn.pos )
+                )
+            );
+        }
+
+        const finalRange = tn.range( startPos, tn.pos );
+
+        if( cases.length < 1 )
+        return this.error(
+            DiagnosticCode.A_case_expression_must_have_at_least_one_clause,
+            finalRange
+        );
+
+        return new CaseExpr(
+            expr,
+            cases,
+            finalRange
+        );
     }
 
     parseFunctionExpr(): FuncExpr | undefined
@@ -1282,7 +1416,8 @@ export class Parser extends DiagnosticEmitter
             // else lambda `() => expr`
             body = tn.skip( Token.OpenBrace ) ?
                 this.parseBlockStmt( false ) :
-                this.parseExpr( Precedence.Comma + 1 );
+                // this.parseExpr( Precedence.Comma + 1 );
+                this.parseExpr( Precedence.CaseExpr );
         } else {
             if (!tn.skip(Token.OpenBrace)) {
                 this.error(
@@ -1742,7 +1877,7 @@ export class Parser extends DiagnosticEmitter
     parseMatchStatement(): MatchStmt | undefined
     {
         const tn = this.tn;
-        // at 'match': Expression '{' MatchWhen* '}' ';'
+        // at 'match': Expression '{' MatchStmtCase* '}' ';'
 
         const startPos = tn.pos;
 
@@ -1760,11 +1895,17 @@ export class Parser extends DiagnosticEmitter
         );
 
         let noPatternCaseSeen: boolean = false;
-        let cases = new Array<MatchStmtCase>();
+        const cases = new Array<MatchStmtCase>();
         while( !tn.skip( Token.CloseBrace ) )
         {
-            const startPos = tn.pos;
-            const pattern = this.parseVarDecl();
+            if( !tn.skip( Token.When ) )
+            return this.error(
+                DiagnosticCode._0_expected,
+                tn.range(), "when"
+            );
+
+            // const startPos = tn.pos;
+            const pattern = this._parseVarDecl();
 
             if( !pattern )
             return this.error(
@@ -1780,15 +1921,15 @@ export class Parser extends DiagnosticEmitter
 
             if( pattern instanceof SimpleVarDecl ) noPatternCaseSeen = true;
 
-            if( !tn.skip( Token.FatArrow ) )
+            if( !tn.skip( Token.Colon ) )
             return this.error(
                 DiagnosticCode._0_expected,
-                tn.range(), "=>"
+                tn.range(), ":"
             );
 
             const statePreBody = tn.mark();
-            let body = this.parseBlockStmt( false );
-            if (!body)
+            const body = this.parseStatement( false );
+            if( !body )
             return this.error(
                 DiagnosticCode._0_expected,
                 tn.range( statePreBody.tokenPos, statePreBody.pos ), "{"
@@ -1803,10 +1944,16 @@ export class Parser extends DiagnosticEmitter
             );
         }
 
+        if( cases.length < 1 )
+        return this.error(
+            DiagnosticCode.A_match_statement_must_have_at_least_one_case,
+            tn.range( startPos, tn.pos )
+        );
+
         return new MatchStmt(
             expr,
             cases,
-            tn.range(startPos, tn.pos)
+            tn.range( startPos, tn.pos )
         );
     }
 

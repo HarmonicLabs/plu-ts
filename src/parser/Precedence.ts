@@ -13,8 +13,9 @@ export enum Precedence {
     None,           // No precedence
     Comma,          // ,
     Spread,         // ...
-    CaseExpr,       // case ... (|: ...)+
-    Assignment,     // = += -= **= *= /= %= <<= >>= >>>= &= ^= |= (|> pipe operator in the future)
+    Assignment,     // = += -= **= *= /= %= <<= >>= >>>= &= ^= |=
+    CaseExpr,       // case thing (is pattern => expression)+
+    Pipe,           // |> (pipe operator in the future)
     Conditional,    // ? : (ternary)
     LogicalOr,      // ||
     LogicalAnd,     // &&
@@ -41,7 +42,8 @@ export function determinePrecedence(kind: Token): Precedence
     switch( kind ) {
         case Token.Comma: return Precedence.Comma;
         case Token.Dot_Dot_Dot: return Precedence.Spread;
-        case Token.CaseMatcher: return Precedence.CaseExpr;
+        case Token.Case:
+        case Token.Is: return Precedence.CaseExpr;
         case Token.Equals:
         case Token.Plus_Equals:
         case Token.Minus_Equals:

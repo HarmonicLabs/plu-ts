@@ -23,7 +23,7 @@ export function tokenFromKeyword(text: string): Token {
         case CharCode.c: {
             // if (text === "catch") return Token.Catch;
             // if (text === "class") return Token.Class;
-            // if (text === "case") return Token.Case;
+            if (text === "case") return Token.Case;
             if (text === "const") return Token.Const;
             if (text === "continue") return Token.Continue;
             // if (text === "constructor") return Token.Constructor;
@@ -62,15 +62,15 @@ export function tokenFromKeyword(text: string): Token {
             if (text === "finally") return Token.Finally;
             break;
         }
-        case CharCode.g: {
-            if (text === "get") return Token.Get;
-            break;
-        }
+        // case CharCode.g: {
+        //     if (text === "get") return Token.Get;
+        //     break;
+        // }
         case CharCode.i: {
             if (len === 2) {
                 if (text === "if") return Token.If;
                 if (text === "in") return Token.In;
-                // if (text === "is") return Token.Is;
+                if (text === "is") return Token.Is;
                 break;
             }
             switch (text.charCodeAt(3)) {
@@ -93,10 +93,10 @@ export function tokenFromKeyword(text: string): Token {
             }
             break;
         }
-        case CharCode.k: {
-            if (text === "keyof") return Token.KeyOf;
-            break;
-        }
+        // case CharCode.k: {
+        //     if (text === "keyof") return Token.KeyOf;
+        //     break;
+        // }
         case CharCode.l: {
             if (text === "let") return Token.Let;
             break;
@@ -109,25 +109,25 @@ export function tokenFromKeyword(text: string): Token {
         case CharCode.n: {
             // if (text === "new") return Token.New;
             // if (text === "undefined") return Token.Null;
-            if (text === "namespace") return Token.Namespace;
+            // if (text === "namespace") return Token.Namespace;
             if (text === "number") return Token.Number;
             break;
         }
         case CharCode.o: {
             if (text === "of") return Token.Of;
-            if (text === "override") return Token.Override;
+            // if (text === "override") return Token.Override;
             break;
         }
-        case CharCode.p: {
-            if (len === 7) {
-                if (text === "private") return Token.Private;
-                if (text === "package") return Token.Package;
-                break;
-            }
-            if (text === "public") return Token.Public;
-            if (text === "protected") return Token.Protected;
-            break;
-        }
+        // case CharCode.p: {
+        //     if (len === 7) {
+        //         if (text === "private") return Token.Private;
+        //         if (text === "package") return Token.Package;
+        //         break;
+        //     }
+        //     if (text === "public") return Token.Public;
+        //     if (text === "protected") return Token.Protected;
+        //     break;
+        // }
         case CharCode.r: {
             if (text === "return") return Token.Return;
             if (text === "readonly") return Token.Readonly;
@@ -139,7 +139,7 @@ export function tokenFromKeyword(text: string): Token {
                 if (text === "static") return Token.Static;
                 break;
             }
-            if (text === "set") return Token.Set;
+            // if (text === "set") return Token.Set;
             // if (text === "super") return Token.Super;
             break;
         }
@@ -167,13 +167,13 @@ export function tokenFromKeyword(text: string): Token {
         case CharCode.w: {
             if (text === "while") return Token.While;
             if (text === "when") return Token.When;
-            if (text === "with") return Token.With;
+            // if (text === "with") return Token.With;
             break;
         }
-        case CharCode.y: {
-            if (text === "yield") return Token.Yield;
-            break;
-        }
+        // case CharCode.y: {
+        //     if (text === "yield") return Token.Yield;
+        //     break;
+        // }
         default: break;
     }
     return Token.Invalid;
