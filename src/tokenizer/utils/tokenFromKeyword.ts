@@ -6,14 +6,14 @@ export function tokenFromKeyword(text: string): Token {
     if (len <= 0) return Token.Invalid;
     switch (text.charCodeAt(0)) {
         case CharCode.a: {
-            if (len === 5) {
-                if (text === "async") return Token.Async;
-                if (text === "await") return Token.Await;
-                break;
-            }
+            // if (len === 5) {
+            //     if (text === "async") return Token.Async;
+            //     if (text === "await") return Token.Await;
+            //     break;
+            // }
             if( text === "assert" ) return Token.Assert;
             if( text === "as" ) return Token.As;
-            if( text === "abstract" ) return Token.Abstract;
+            // if( text === "abstract" ) return Token.Abstract;
             break;
         }
         case CharCode.b: {
@@ -21,25 +21,22 @@ export function tokenFromKeyword(text: string): Token {
             break;
         }
         case CharCode.c: {
-            if (len === 5) {
-                if (text === "const") return Token.Const;
-                if (text === "class") return Token.Class;
-                if (text === "catch") return Token.Catch;
-                break;
-            }
+            // if (text === "catch") return Token.Catch;
+            // if (text === "class") return Token.Class;
             // if (text === "case") return Token.Case;
+            if (text === "const") return Token.Const;
             if (text === "continue") return Token.Continue;
-            if (text === "constructor") return Token.Constructor;
+            // if (text === "constructor") return Token.Constructor;
             break;
         }
         case CharCode.d: {
-            if (len === 7) {
-                if (text === "default") return Token.Default;
-                if (text === "declare") return Token.Declare;
-                break;
-            }
+            // if (len === 7) {
+            //     if (text === "default") return Token.Default;
+            //     if (text === "declare") return Token.Declare;
+            //     break;
+            // }
             if (text === "do") return Token.Do;
-            if (text === "delete") return Token.Delete;
+            // if (text === "delete") return Token.Delete;
             if (text === "debugger") return Token.Debugger;
             break;
         }
@@ -73,7 +70,7 @@ export function tokenFromKeyword(text: string): Token {
             if (len === 2) {
                 if (text === "if") return Token.If;
                 if (text === "in") return Token.In;
-                if (text === "is") return Token.Is;
+                // if (text === "is") return Token.Is;
                 break;
             }
             switch (text.charCodeAt(3)) {
@@ -110,7 +107,7 @@ export function tokenFromKeyword(text: string): Token {
             break;
         }
         case CharCode.n: {
-            if (text === "new") return Token.New;
+            // if (text === "new") return Token.New;
             // if (text === "undefined") return Token.Null;
             if (text === "namespace") return Token.Namespace;
             if (text === "number") return Token.Number;
@@ -155,7 +152,7 @@ export function tokenFromKeyword(text: string): Token {
             }
             if (text === "try") return Token.Try;
             // if (text === "throw") return Token.Throw;
-            if (text === "typeof") return Token.TypeOf;
+            // if (text === "typeof") return Token.TypeOf;
             break;
         }
         case CharCode.u: {

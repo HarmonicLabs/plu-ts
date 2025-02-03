@@ -20,7 +20,7 @@ import { SimpleVarDecl } from "../ast/nodes/declarations/VarDecl/SimpleVarDecl";
 import { ArrayLikeDeconstr } from "../ast/nodes/declarations/VarDecl/ArrayLikeDeconstr";
 import { PebbleType } from "../ast/nodes/types/PebbleType";
 import { IdentifierHandling } from "../tokenizer/IdentifierHandling";
-import { Precedence } from "./Precedence";
+import { determinePrecedence, Precedence } from "./Precedence";
 import { makeUnaryPrefixExpr } from "../ast/nodes/expr/unary/UnaryPrefixExpr";
 import { LitUndefExpr } from "../ast/nodes/expr/litteral/LitUndefExpr";
 import { LitVoidExpr } from "../ast/nodes/expr/litteral/LitVoidExpr";
@@ -50,6 +50,12 @@ import { IfStmt } from "../ast/nodes/statements/IfStmt";
 import { ReturnStmt } from "../ast/nodes/statements/ReturnStmt";
 import { EmptyStmt } from "../ast/nodes/statements/EmptyStmt";
 import { FuncDecl } from "../ast/nodes/declarations/FuncDecl";
+import { CharCode } from "../utils/CharCode";
+import { FailStmt } from "../ast/nodes/statements/FailStmt";
+import { AssertStmt } from "../ast/nodes/statements/AssertStmt";
+import { TestStmt } from "../ast/nodes/statements/TestStmt";
+import { MatchStmt, MatchStmtCase } from "../ast/nodes/statements/MatchStmt";
+import { WhileStmt } from "../ast/nodes/statements/WhileStmt";
 
 export class Parser extends DiagnosticEmitter
 {
@@ -196,7 +202,7 @@ export class Parser extends DiagnosticEmitter
     }
 
     parseVarDecl(
-        flags: CommonFlags,
+        flags: CommonFlags = CommonFlags.None,
         opts: Partial<ParseVarOpts> = defaultParseVarOpts
     ): VarDecl | undefined
     {
@@ -591,7 +597,101 @@ export class Parser extends DiagnosticEmitter
         precedence: Precedence = Precedence.Comma
     ): PebbleExpr | undefined
     {
+        const tn = this.tn;
 
+        const exprStart = this.parseExprStart();
+        if (!exprStart) return undefined;
+
+        const startPos = exprStart.range.start;
+
+        // precedence climbing
+        // see: http://www.engr.mun.ca/~theo/Misc/exp_parsing.htm#climbing
+        let nextPrecedence: Precedence;
+        while(
+            (nextPrecedence = determinePrecedence(tn.peek())) >= precedence
+        ) {
+            const token = tn.next();
+            switch( token ) {
+                case Token.As: {
+
+                    break;
+                }
+                case Token.Exclamation: {
+
+                    break;
+                }
+                case Token.InstanceOf: {
+
+                    break;
+                }
+                case Token.OpenBracket: { // [ // accessing list element
+                    
+                    break;
+                }
+                case Token.Plus_Plus:
+                case Token.Minus_Minus: {
+
+                    break;
+                }
+                case Token.Question: {
+                    // handle `?.` access or ternary
+
+                    break;
+                }
+                case Token.Comma: { // comma operator
+
+                    break;
+                }
+                case Token.Dot: { // accessing property
+                    
+                    break;
+                }
+                // BinaryExpression (right associative)
+                case Token.Equals:
+                case Token.Plus_Equals:
+                case Token.Minus_Equals:
+                case Token.Asterisk_Asterisk_Equals:
+                case Token.Asterisk_Equals:
+                case Token.Slash_Equals:
+                case Token.Percent_Equals:
+                case Token.LessThan_LessThan_Equals:
+                case Token.GreaterThan_GreaterThan_Equals:
+                case Token.GreaterThan_GreaterThan_GreaterThan_Equals:
+                case Token.Ampersand_Equals:
+                case Token.Caret_Equals:
+                case Token.Bar_Equals:
+                case Token.Asterisk_Asterisk: {
+
+                    break;
+                }
+                // BinaryExpression
+                case Token.LessThan:
+                case Token.GreaterThan:
+                case Token.LessThan_Equals:
+                case Token.GreaterThan_Equals:
+                case Token.Equals_Equals:
+                case Token.Equals_Equals_Equals:
+                case Token.Exclamation_Equals_Equals:
+                case Token.Exclamation_Equals:
+                case Token.Plus:
+                case Token.Minus:
+                case Token.Asterisk:
+                case Token.Slash:
+                case Token.Percent:
+                case Token.LessThan_LessThan:
+                case Token.GreaterThan_GreaterThan:
+                case Token.GreaterThan_GreaterThan_GreaterThan:
+                case Token.Ampersand:
+                case Token.Bar:
+                case Token.Caret:
+                case Token.Ampersand_Ampersand:
+                case Token.Bar_Bar:
+                case Token.In: {
+
+                    break;
+                }
+            }
+        }
     }
 
     parseExprStart(): PebbleExpr | undefined
@@ -687,7 +787,7 @@ export class Parser extends DiagnosticEmitter
                     let expr: PebbleExpr | undefined;
                     if (tn.peek() === Token.Comma) {
                         this.error(
-                            DiagnosticCode.PebbleExpr_expected,
+                            DiagnosticCode.Expression_expected,
                             tn.range()
                         );
                         return undefined;
@@ -849,9 +949,13 @@ export class Parser extends DiagnosticEmitter
                 // );
             }
             case Token.Function: {
-                let expr = this.parseFunctionExpr();
+                const expr = this.parseFunctionExpr();
                 if (!expr) return undefined;
                 return this.tryParseCallExprOrReturnSame(expr);
+            }
+            case Token.Case: {
+                const expr = this.parseCaseExpr();
+                if (!expr) return undefined;
             }
             // case Token.Class: return this.parseClassPebbleExpr();
             // case Token.Struct: return this.parseStructExpr();
@@ -863,13 +967,27 @@ export class Parser extends DiagnosticEmitter
                     );
                 } else {
                     this.error(
-                        DiagnosticCode.PebbleExpr_expected,
+                        DiagnosticCode.Expression_expected,
                         tn.range()
                     );
                 }
                 return undefined;
             }
         }
+    }
+
+    parseCaseExpr(): CaseExpr | undefined
+    {
+        const tn = this.tn;
+        // at 'case': Expression ('|' VarDecl '=>' Expression)+ ';'?
+
+        const startPos = tn.tokenPos;
+
+        const expr = this.parseExpr();
+        if (!expr) return undefined;
+
+        let cases = new Array<CaseExprCase>();
+        this.parseExpr( Precedence.CaseExpr )
     }
 
     parseFunctionExpr(): FuncExpr | undefined
@@ -1157,7 +1275,7 @@ export class Parser extends DiagnosticEmitter
             tn.range(signatureStart, tn.pos)
         );
 
-        let body: PebbleStmt | PebbleExpr | undefined = undefined;
+        let body: BlockStmt | PebbleExpr | undefined = undefined;
         if( expectArrow )
         {
             // if `{` then block statement `() => {}`
@@ -1297,15 +1415,19 @@ export class Parser extends DiagnosticEmitter
             // }
             default: {
                 tn.reset(state);
-                statement = this.parseExpr();
+                // statement = this.parseExpr();
                 break;
             }
         }
-        if (!statement) { // has been reported
+        if( !statement ) { // has been reported
             tn.reset(state);
+            this.error(
+                DiagnosticCode.Statement_expected,
+                tn.range()
+            );
             this.skipStatement();
         } else {
-            tn.discard(state);
+            // tn.discard(state);
         }
         return statement;
     }
@@ -1595,6 +1717,191 @@ export class Parser extends DiagnosticEmitter
         return new ReturnStmt(expr, tn.range(startPos, tn.pos));
     }
 
+    parseTestStatement(): TestStmt | undefined
+    {
+        const tn = this.tn;
+        // at 'test': string? BlockStmt
+
+        let testName: string | undefined = undefined;
+        if( tn.skip( Token.StringLiteral ) ) testName = tn.readString();
+
+        let body = this.parseBlockStmt( true );
+        if( !body )
+        return this.error(
+            DiagnosticCode.Tests_must_be_specified_in_a_block_statement,
+            tn.range()
+        );
+
+        return new TestStmt(
+            testName,
+            body,
+            tn.range()
+        );
+    }
+
+    parseMatchStatement(): MatchStmt | undefined
+    {
+        const tn = this.tn;
+        // at 'match': Expression '{' MatchWhen* '}' ';'
+
+        const startPos = tn.pos;
+
+        const expr = this.parseExpr();
+        if( !expr )
+        return this.error(
+            DiagnosticCode.Expression_expected,
+            tn.range( startPos - 5, startPos)
+        );
+
+        if( !tn.skip( Token.OpenBrace ) )
+        return this.error(
+            DiagnosticCode._0_expected,
+            tn.range(), "{"
+        );
+
+        let noPatternCaseSeen: boolean = false;
+        let cases = new Array<MatchStmtCase>();
+        while( !tn.skip( Token.CloseBrace ) )
+        {
+            const startPos = tn.pos;
+            const pattern = this.parseVarDecl();
+
+            if( !pattern )
+            return this.error(
+                DiagnosticCode.Pattern_expected,
+                tn.range()
+            );
+
+            if( noPatternCaseSeen )
+            return this.error(
+                DiagnosticCode.This_case_will_never_be_evaluated_because_all_patterns_will_be_catched_before,
+                pattern.range
+            );
+
+            if( pattern instanceof SimpleVarDecl ) noPatternCaseSeen = true;
+
+            if( !tn.skip( Token.FatArrow ) )
+            return this.error(
+                DiagnosticCode._0_expected,
+                tn.range(), "=>"
+            );
+
+            const statePreBody = tn.mark();
+            let body = this.parseBlockStmt( false );
+            if (!body)
+            return this.error(
+                DiagnosticCode._0_expected,
+                tn.range( statePreBody.tokenPos, statePreBody.pos ), "{"
+            )
+
+            cases.push(
+                new MatchStmtCase(
+                    pattern,
+                    body,
+                    tn.range()
+                )
+            );
+        }
+
+        return new MatchStmt(
+            expr,
+            cases,
+            tn.range(startPos, tn.pos)
+        );
+    }
+
+    parseFailStatement(): FailStmt | undefined
+    {
+        const tn = this.tn;
+        // at 'fail': Expression? ';'
+
+        if(
+            tn.skip( Token.Semicolon ) ||
+            tn.isNextTokenOnNewLine()
+        )
+        return new FailStmt( undefined, tn.range() );
+
+        const expr = this.parseExpr();
+        if( !expr ) return undefined;
+        
+        return new FailStmt( expr, tn.range() );
+    }
+
+    parseAssertStatement(): AssertStmt | undefined
+    {
+        const tn = this.tn;
+
+        // at 'assert': Expression (else Expression)? ';'?
+
+        const condition = this.parseExpr();
+        if( !condition )
+        return this.error(
+            DiagnosticCode.Expression_expected,
+            tn.range()
+        );
+
+        if( !tn.skip( Token.Else ) )
+        {
+            tn.skip( Token.Semicolon );
+            return new AssertStmt(
+                condition,
+                undefined, 
+                tn.range()
+            );
+        }
+    
+        const message = this.parseExpr();
+        if( !message )
+        return this.error(
+            DiagnosticCode.Expression_expected,
+            tn.range()
+        );
+
+        tn.skip( Token.Semicolon );
+
+        return new AssertStmt(
+            condition,
+            message,
+            tn.range()
+        );
+    }
+
+    parseWhileStatement(): WhileStmt | undefined
+    {
+        const tn = this.tn;
+        // at 'while': '(' Expression ')' Statement
+
+        const startPos = tn.tokenPos;
+
+        if( !tn.skip( Token.OpenParen ) )
+        return this.error(
+            DiagnosticCode._0_expected,
+            tn.range(), "("
+        );
+
+        let condition = this.parseExpr();
+        if (!condition) return undefined;
+
+        if( !tn.skip( Token.CloseParen ) )
+        return this.error(
+            DiagnosticCode._0_expected,
+            tn.range(), ")"
+        );
+
+        let statement = this.parseStatement();
+        if (!statement)
+        return this.error(
+            DiagnosticCode.Statement_expected,
+            tn.range()
+        );
+
+        return new WhileStmt(
+            condition,
+            statement,
+            tn.range(startPos, tn.pos)
+        );
+    }
+    
     /**
      * looks ahead to see if the expression
      * needs to be parsed as an arrow function or a parenthesized expression
@@ -1714,6 +2021,115 @@ export class Parser extends DiagnosticEmitter
         tn.reset(tnState);
         return false;
     }
+
+    /** Skips over a statement on errors in an attempt to reduce unnecessary diagnostic noise. */
+    skipStatement(): void
+    {
+        const tn = this.tn;
+        if (tn.isNextTokenOnNewLine()) tn.next(); // if reset() to the previous line
+        do {
+            let nextToken = tn.peek();
+            if (
+                nextToken === Token.EndOfFile ||   // next step should handle this
+                nextToken === Token.Semicolon      // end of the statement for sure
+            ) {
+                tn.next();
+                break;
+            }
+            if (tn.isNextTokenOnNewLine()) break;   // end of the statement maybe
+            switch (tn.next()) {
+                case Token.Identifier: {
+                    tn.readIdentifier();
+                    break;
+                }
+                case Token.StringLiteral:
+                case Token.StringTemplateLiteralQuote: {
+                    tn.readString();
+                    break;
+                }
+                case Token.IntegerLiteral: {
+                    tn.readInteger();
+                    tn.checkForIdentifierStartAfterNumericLiteral();
+                    break;
+                }
+                case Token.HexBytesLiteral: {
+                    console.log("case Token.HexBytesLiteral");
+                    tn.readHexBytes();
+                    break;
+                };
+                // case Token.FloatLiteral: {
+                //     tn.readFloat();
+                //     tn.checkForIdentifierStartAfterNumericLiteral();
+                //     break;
+                // }
+                case Token.OpenBrace: {
+                    this.skipBlock(tn);
+                    break;
+                }
+            }
+        } while (true);
+        tn.readingTemplateString = false;
+    }
+
+    /** Skips over a block on errors in an attempt to reduce unnecessary diagnostic noise. */
+    skipBlock(tn: Tokenizer): void {
+        // at '{': ... '}'
+        let depth = 1;
+        let again = true;
+        do {
+            switch (tn.next()) {
+                case Token.EndOfFile: {
+                    this.error(
+                        DiagnosticCode._0_expected,
+                        tn.range(), "}"
+                    );
+                    again = false;
+                    break;
+                }
+                case Token.OpenBrace: {
+                    ++depth;
+                    break;
+                }
+                case Token.CloseBrace: {
+                    --depth;
+                    if (!depth) again = false;
+                    break;
+                }
+                case Token.Identifier: {
+                    tn.readIdentifier();
+                    break;
+                }
+                case Token.StringLiteral: {
+                    tn.readString();
+                    break;
+                }
+                case Token.StringTemplateLiteralQuote: {
+                    tn.readString();
+                    while (tn.readingTemplateString) {
+                        this.skipBlock(tn);
+                        tn.readString(CharCode.Backtick);
+                    }
+                    break;
+                }
+                case Token.IntegerLiteral: {
+                    tn.readInteger();
+                    tn.checkForIdentifierStartAfterNumericLiteral();
+                    break;
+                }
+                case Token.HexBytesLiteral: {
+                    tn.readHexBytes();
+                    break;
+                };
+                // case Token.FloatLiteral: {
+                //     tn.readFloat();
+                //     tn.checkForIdentifierStartAfterNumericLiteral();
+                //     break;
+                // }
+            }
+        } while (again);
+    }
+
+    
 }
 
 const defaultParseVarOpts: ParseVarOpts = Object.freeze({

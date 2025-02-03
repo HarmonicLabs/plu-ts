@@ -140,6 +140,11 @@
   "Only a single variable is allowed in a for...of statement": 1363,
   "Rest parameters are not supported in pebble, cosider using a concrete parameter with default value '[]'": 1364,
   "A test can only be specified at the top level of the file (it cannot be defined in functions etc.)": 1365,
+  "Tests must be specified in a block statement": 1365,
+  "Pattern expected.": 1366,
+  "This case will never be evaluated because all patterns will be catched before": 1367,
+  "Statement expected.": 1368,
+
 
   "Duplicate identifier '{0}'.": 2300,
   "Cannot find name '{0}'.": 2304,

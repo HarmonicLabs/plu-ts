@@ -140,6 +140,10 @@ export enum DiagnosticCode {
     Only_a_single_variable_is_allowed_in_a_for_of_statement = 1363,
     Rest_parameters_are_not_supported_in_pebble_cosider_using_a_concrete_parameter_with_default_value = 1364,
     A_test_can_only_be_specified_at_the_top_level_of_the_file_it_cannot_be_defined_in_functions_etc = 1365,
+    Tests_must_be_specified_in_a_block_statement = 1365,
+    Pattern_expected = 1366,
+    This_case_will_never_be_evaluated_because_all_patterns_will_be_catched_before = 1367,
+    Statement_expected = 1368,
     Duplicate_identifier_0 = 2300,
     Cannot_find_name_0 = 2304,
     Module_0_has_no_exported_member_1 = 2305,
@@ -363,6 +367,10 @@ export function diagnosticCodeToString(code: DiagnosticCode): string {
         case 1363: return "Only a single variable is allowed in a for...of statement";
         case 1364: return "Rest parameters are not supported in pebble, cosider using a concrete parameter with default value '[]'";
         case 1365: return "A test can only be specified at the top level of the file (it cannot be defined in functions etc.)";
+        case 1365: return "Tests must be specified in a block statement";
+        case 1366: return "Pattern expected.";
+        case 1367: return "This case will never be evaluated because all patterns will be catched before";
+        case 1368: return "Statement expected.";
         case 2300: return "Duplicate identifier '{0}'.";
         case 2304: return "Cannot find name '{0}'.";
         case 2305: return "Module '{0}' has no exported member '{1}'.";

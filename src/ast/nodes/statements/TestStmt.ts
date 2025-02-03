@@ -1,14 +1,15 @@
 import { SourceRange } from "../../Source/SourceRange";
 import { PebbleExpr } from "../expr/PebbleExpr";
 import { HasSourceRange } from "../HasSourceRange";
-import { PebbleStmt } from "./PebbleStmt";
+import { BlockStmt } from "./BlockStmt";
 
-export class WhileStmt
+
+export class TestStmt
     implements HasSourceRange
 {
     constructor(
-        readonly condition: PebbleExpr,
-        readonly body: PebbleStmt,
+        readonly testName: string | undefined,
+        readonly body: BlockStmt,
         readonly range: SourceRange,
     ) {}
 }

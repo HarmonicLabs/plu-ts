@@ -1,12 +1,20 @@
 import { Token } from "../tokenizer/Token";
 
-/** Operator precedence from least to largest. */
+/**
+ * Operator precedence from least to largest.
+ * 
+ * see: http://www.engr.mun.ca/~theo/Misc/exp_parsing.htm#climbing
+ * 
+ * The idea is that parseExpr(precedence) recognizes expressions 
+ * with precedence less than p
+ * 
+**/
 export enum Precedence {
     None,           // No precedence
     Comma,          // ,
     Spread,         // ...
-    Yield,          // yield
-    Assignment,     // = += -= **= *= /= %= <<= >>= >>>= &= ^= |=
+    CaseExpr,       // case ... (|: ...)+
+    Assignment,     // = += -= **= *= /= %= <<= >>= >>>= &= ^= |= (|> pipe operator in the future)
     Conditional,    // ? : (ternary)
     LogicalOr,      // ||
     LogicalAnd,     // &&
@@ -30,8 +38,10 @@ Object.freeze(Precedence);
 /** Determines the precedence of a non-starting token. */
 export function determinePrecedence(kind: Token): Precedence
 {
-    switch (kind) {
+    switch( kind ) {
         case Token.Comma: return Precedence.Comma;
+        case Token.Dot_Dot_Dot: return Precedence.Spread;
+        case Token.CaseMatcher: return Precedence.CaseExpr;
         case Token.Equals:
         case Token.Plus_Equals:
         case Token.Minus_Equals:

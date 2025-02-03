@@ -5,14 +5,14 @@ export enum Token {
     // keywords
     // discarded: ANY, NEVER, STRING, SYMBOL, LESSTHAN_SLASH, NULL
   
-    Abstract,
+    // Abstract,
     As,
-    Async,
-    Await,        
+    // Async,
+    // Await,        
     Boolean,      
     Break,        
     // Case,         
-    Catch,        
+    // Catch,        
     // Class,        
     Struct,
     Const,        
@@ -39,7 +39,7 @@ export enum Token {
     In,           
     InstanceOf,   
     Interface,
-    Is,
+    // Is,
     KeyOf,
     Let,
     Namespace,
@@ -75,10 +75,13 @@ export enum Token {
     // https://github.com/tc39/proposal-pattern-matching
     Match,          // match( thing ) { ... }
     When,           // when Constr{ ... }: { ... }
+
+    Case,           // case thing |: Constr{} => expr |: Other{} => expr |: _ => expr;
+
     Test,           // test "name" { ... }
 
-    Fail,
-    Assert,
+    Fail,       // fail ("message")?
+    Assert,     // assert (condition) (else "message")?
   
     // punctuation
     
@@ -173,6 +176,8 @@ export enum Token {
     Bar_Equals,                             // |=
     Caret_Equals,                           // ^=
     At,                                     // @
+    /** `|:` */
+    CaseMatcher,                            // |:
 
     // custom native types for pebble
 

@@ -2,18 +2,18 @@ import { Token } from "../Token";
 
 export function tokenIsAlsoIdentifier(token: Token): boolean {
     switch (token) {
-        case Token.Abstract:
+        // case Token.Abstract:
         case Token.As:
-        case Token.Constructor:
-        case Token.Declare:
-        case Token.Delete:
+        // case Token.Constructor:
+        // case Token.Declare:
+        // case Token.Delete:
         case Token.From:
         case Token.For:
         case Token.Get:
         case Token.InstanceOf:
-        case Token.Is:
+        // case Token.Is:
         case Token.KeyOf:
-        case Token.Module:
+        // case Token.Module:
         case Token.Namespace:
         // case Token.Null:
         case Token.Readonly:
