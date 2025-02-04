@@ -20,11 +20,20 @@ export class DiagnosticMessage {
     /** Related range, if any. */
     relatedRange: SourceRange | undefined = undefined; // TODO: Make this a related message for chains?
 
+    /** error stack at `emitDiagnostic` (if any) */
+    emitStack: string | undefined;
+
     /** Constructs a new diagnostic message. */
-    private constructor(code: number, category: DiagnosticCategory, message: string) {
+    private constructor(
+        code: number,
+        category: DiagnosticCategory,
+        message: string,
+        emitStack: string | undefined = undefined
+    ) {
         this.code = code;
         this.category = category;
         this.message = message;
+        this.emitStack = emitStack;
     }
 
     /** Creates a new diagnostic message of the specified category. */
@@ -33,13 +42,14 @@ export class DiagnosticMessage {
         category: DiagnosticCategory,
         arg0: string | undefined = undefined,
         arg1: string | undefined = undefined,
-        arg2: string | undefined = undefined
+        arg2: string | undefined = undefined,
+        emitStack: string | undefined = undefined
     ): DiagnosticMessage {
         let message = diagnosticCodeToString(code);
         if (arg0 !== undefined) message = message.replace("{0}", arg0);
         if (arg1 !== undefined) message = message.replace("{1}", arg1);
         if (arg2 !== undefined) message = message.replace("{2}", arg2);
-        return new DiagnosticMessage(code, category, message);
+        return new DiagnosticMessage(code, category, message, emitStack);
     }
 
     /** Tests if this message equals the specified. */

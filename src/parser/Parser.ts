@@ -75,7 +75,8 @@ import { TernaryExpr } from "../ast/nodes/expr/TernaryExpr";
 import { CommaExpr } from "../ast/nodes/expr/CommaExpr";
 import { DotPropAccessExpr, makePropAccessExpr } from "../ast/nodes/expr/PropAccessExpr";
 import { makeBinaryExpr } from "../ast/nodes/expr/binary/BinaryExpr";
-import { AssignmentStmt, makeAssignmentStmt } from "../ast/nodes/statements/AssignmentStmt";
+import { AssignmentStmt, isAssignmentStmt, isAssignmentToken, makeAssignmentStmt } from "../ast/nodes/statements/AssignmentStmt";
+import { ExprStmt } from "../ast/nodes/statements/ExprStmt";
 
 export class Parser extends DiagnosticEmitter
 {
@@ -147,7 +148,11 @@ export class Parser extends DiagnosticEmitter
                 "\n" +
                 this.diagnostics
                 .map( msg => msg.range?.toString() )
-                .join("\n")
+                .join("\n") +
+                "\n" +
+                this.diagnostics
+                .find( msg => msg.emitStack )
+                ?.emitStack
             );
         }
         return src.statements;
@@ -518,23 +523,26 @@ export class Parser extends DiagnosticEmitter
             );
         }
 
-        const members = new Array<ImportDecl>();
         if( !tn.skip( Token.OpenBrace ) ) // import { ... } from "module";
-        {
-            while( !tn.skip( Token.CloseBrace ) )
-            {
-                let member = this.parseImportDeclaration();
-                if (!member) return undefined;
-                members.push( member );
+        return this.error(
+            DiagnosticCode._0_expected,
+            tn.range(), "{"
+        );
 
-                if( !tn.skip( Token.Comma ) )
-                {
-                    if (tn.skip(Token.CloseBrace)) break;
-                    return this.error(
-                        DiagnosticCode._0_expected,
-                        tn.range(), "}"
-                    );
-                }
+        const members = new Array<ImportDecl>();
+        while( !tn.skip( Token.CloseBrace ) )
+        {
+            let member = this.parseImportDeclaration();
+            if (!member) return undefined;
+            members.push( member );
+
+            if( !tn.skip( Token.Comma ) )
+            {
+                if (tn.skip(Token.CloseBrace)) break;
+                return this.error(
+                    DiagnosticCode._0_expected,
+                    tn.range(), "}"
+                );
             }
         }
 
@@ -1190,6 +1198,7 @@ export class Parser extends DiagnosticEmitter
             fieldName = this.parseIdentifier( startRange )!;
             if( isRest ) {
                 rest = fieldName;
+                tn.skip( Token.Comma ); // skip comma if present
                 continue; // checks for close brace and exits while loop
             }
 
@@ -1205,6 +1214,7 @@ export class Parser extends DiagnosticEmitter
             {
                 element = SimpleVarDecl.onlyIdentifier( fieldName );
                 elements.set( fieldName.name, element );
+                tn.skip( Token.Comma ); // skip comma if present
                 continue; // early continue to check for close brace or next field
             }            
             // else ther is colon (eg: { field: ... })
@@ -1237,6 +1247,7 @@ export class Parser extends DiagnosticEmitter
             }
 
             elements.set( fieldName.name, element );
+            tn.skip( Token.Comma ); // skip comma if present
         } // while( !tn.skip( Token.CloseBrace ) )
 
         [ explicitType, initializer ] = this._parseTypeAndInitializer();
@@ -2616,13 +2627,20 @@ export class Parser extends DiagnosticEmitter
                 break;
             }
             case Token.Identifier: {
-                statement = this.parseAssignmentStatement();
-                break;
-                // throw new Error("TODO: parseIdentifierStatement");
+                // const preIdState = tn.mark();
+                // tn.readIdentifier();
+                // const nextToken = tn.peek();
+                // tn.reset(preIdState);
+                // if( isAssignmentToken( nextToken ) )
+                // {
+                    statement = this.parseAssignmentStatement();
+                    break;
+                // }
+                // else fall through to default
             }
             default: {
-                tn.reset(state);
-                // statement = this.parseExpr();
+                // tn.reset(state);
+                // statement = this.parseExprStmt();
                 break;
             }
         }
@@ -2637,6 +2655,19 @@ export class Parser extends DiagnosticEmitter
             // tn.discard(state);
         }
         return statement;
+    }
+
+    parseExprStmt(): ExprStmt | undefined
+    {
+        console.log("parseExprStmt");
+        const tn = this.tn;
+
+        const startPos = tn.tokenPos;
+        const expr = this.parseExpr();
+        console.log( expr );
+        if (!expr) return undefined;
+        
+        return new ExprStmt(expr, tn.range(startPos, tn.pos));
     }
 
     parseAssignmentStatement(): AssignmentStmt | undefined
@@ -2863,6 +2894,12 @@ export class Parser extends DiagnosticEmitter
             
             const iterable = this.parseExpr();
             if( !iterable ) return undefined;
+
+            if( !tn.skip( Token.CloseParen ) )
+            return this.error(
+                DiagnosticCode._0_expected,
+                tn.range(), ")"
+            );
 
             const body = this.parseStatement();
             if( !body ) return undefined;

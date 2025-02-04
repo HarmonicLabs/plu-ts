@@ -28,7 +28,8 @@ export abstract class DiagnosticEmitter {
         arg1: string | undefined = undefined,
         arg2: string | undefined = undefined
     ): void {
-        let message = DiagnosticMessage.create(code, category, arg0, arg1, arg2);
+        const emitStack = new Error().stack;
+        let message = DiagnosticMessage.create(code, category, arg0, arg1, arg2, emitStack);
         if (range) message = message.withRange(range);
         if (relatedRange) message.relatedRange = relatedRange;
         // It is possible that the same diagnostic is emitted twice, for example

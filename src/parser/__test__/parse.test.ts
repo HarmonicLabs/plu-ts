@@ -26,4 +26,22 @@ describe("parseFile", () => {
         testParse( "var a = 1; a = 2;" );
         testParse( "var a = 1; a |= 2;" );
     })
+
+    describe("prop access", () => {
+        testParse( "const a = b.c;" );
+        testParse( "const a = tx.inputs;" );
+    });
+
+    describe.only("for loop", () => {
+        testParse( "for( const a of b ) {}" );
+    });
+
+    describe("simple main", () => {
+        testParse("function main() {}");
+        testParse("function main( ctx ) {}");
+        testParse("function main( ctx: ScriptContext ) {}");
+        testParse("function main( {}: ScriptContext ) {}");
+        testParse("function main( { tx }: ScriptContext ) {}");
+        testParse("function main( { tx, purpose }: ScriptContext ) {}");
+    });
 });

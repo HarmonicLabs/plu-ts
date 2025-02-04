@@ -61,6 +61,25 @@ export type AssignmentTokenToStmt<T extends AssignmentStmtToken> =
     T extends Token.Bar_Bar_Equals ? LogicalOrAssignmentStmt :
     never; 
 
+export function isAssignmentToken( token: any ): token is AssignmentStmtToken
+{
+    return token === Token.Equals
+        || token === Token.Plus_Equals
+        || token === Token.Minus_Equals
+        || token === Token.Asterisk_Asterisk_Equals
+        || token === Token.Asterisk_Equals
+        || token === Token.Slash_Equals
+        || token === Token.Percent_Equals
+        || token === Token.LessThan_LessThan_Equals
+        || token === Token.GreaterThan_GreaterThan_Equals
+        || token === Token.GreaterThan_GreaterThan_GreaterThan_Equals
+        || token === Token.Ampersand_Equals
+        || token === Token.Caret_Equals
+        || token === Token.Bar_Equals
+        || token === Token.Ampersand_Ampersand_Equals
+        || token === Token.Bar_Bar_Equals;
+}
+
 export function isAssignmentStmt( stmt: any ): stmt is AssignmentStmt
 {
     return isObject( stmt ) && (
