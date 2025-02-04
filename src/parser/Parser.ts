@@ -75,6 +75,7 @@ import { TernaryExpr } from "../ast/nodes/expr/TernaryExpr";
 import { CommaExpr } from "../ast/nodes/expr/CommaExpr";
 import { DotPropAccessExpr, makePropAccessExpr } from "../ast/nodes/expr/PropAccessExpr";
 import { makeBinaryExpr } from "../ast/nodes/expr/binary/BinaryExpr";
+import { AssignmentStmt, makeAssignmentStmt } from "../ast/nodes/statements/AssignmentStmt";
 
 export class Parser extends DiagnosticEmitter
 {
@@ -142,6 +143,10 @@ export class Parser extends DiagnosticEmitter
                 "Parsing failed: \n" +
                 this.diagnostics
                 .map( msg => msg.toString() )
+                .join("\n") +
+                "\n" +
+                this.diagnostics
+                .map( msg => msg.range?.toString() )
                 .join("\n")
             );
         }
@@ -2499,7 +2504,7 @@ export class Parser extends DiagnosticEmitter
             case Token.Var:
             case Token.Let:
             case Token.Const: {
-                statement = this.parseVarStmt( CommonFlags.Const, tn.tokenPos  );
+                statement = this.parseVarStmt( CommonFlags.Const, tn.tokenPos );
                 break;
             }
             case Token.Continue: {
@@ -2603,6 +2608,18 @@ export class Parser extends DiagnosticEmitter
             case Token.Bar_Bar_Equals :
             case Token.Question_Question_Equals:
             case Token.Bar_Equals:
+            {
+                this.error(
+                    DiagnosticCode.Not_implemented_0,
+                    tn.range(), "mutable variables assignmets"
+                );
+                break;
+            }
+            case Token.Identifier: {
+                statement = this.parseAssignmentStatement();
+                break;
+                // throw new Error("TODO: parseIdentifierStatement");
+            }
             default: {
                 tn.reset(state);
                 // statement = this.parseExpr();
@@ -2621,6 +2638,63 @@ export class Parser extends DiagnosticEmitter
         }
         return statement;
     }
+
+    parseAssignmentStatement(): AssignmentStmt | undefined
+    {
+        const tn = this.tn;
+        const startPos = tn.tokenPos;
+
+        if( !tn.skipIdentifier() )
+        return this.error(
+            DiagnosticCode.Identifier_expected,
+            tn.range()
+        );
+
+        const varIdentifier = new Identifier( tn.readIdentifier(), tn.range() );
+        const assignmentToken = tn.next();
+        switch( assignmentToken )
+        {
+            case Token.Equals:
+            case Token.Plus_Equals:
+            case Token.Minus_Equals:
+            case Token.Asterisk_Asterisk_Equals:
+            case Token.Asterisk_Equals:
+            case Token.Slash_Equals:
+            case Token.Percent_Equals:
+            case Token.LessThan_LessThan_Equals:
+            case Token.GreaterThan_GreaterThan_Equals:
+            case Token.GreaterThan_GreaterThan_GreaterThan_Equals:
+            case Token.Ampersand_Equals:
+            case Token.Caret_Equals:
+            case Token.Bar_Equals:
+            case Token.Ampersand_Ampersand_Equals:
+            case Token.Bar_Bar_Equals :
+            // case Token.Question_Question_Equals:
+            {
+                const expr = this.parseExpr();
+                if( !expr ) return undefined;
+                return makeAssignmentStmt(
+                    varIdentifier,
+                    assignmentToken,
+                    expr,
+                    tn.range( startPos, tn.pos )
+                );
+            }
+            case Token.Question_Question_Equals: {
+                return this.error(
+                    DiagnosticCode.Not_implemented_0,
+                    tn.range(), "??="
+                )
+            }
+            default: {
+                return this.error(
+                    DiagnosticCode._0_expected,
+                    tn.range(), "="
+                );
+            }
+        }
+    }
+
 
     parseBlockStmt(
         topLevel: boolean = false

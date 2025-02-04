@@ -1,5 +1,4 @@
-import { Source } from "../ast/nodes/Source/Source";
-import { SourceRange } from "../ast/nodes/Source/SourceRange";
+import { SourceRange } from "../ast/Source/SourceRange";
 import { assert } from "../utils/assert";
 import { CharCode } from "../utils/CharCode";
 import { setColorsEnabled, isColorsEnabled, COLOR_RESET, COLOR_RED } from "../utils/terminal";

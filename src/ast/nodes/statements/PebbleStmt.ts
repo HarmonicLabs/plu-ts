@@ -19,6 +19,7 @@ import { ReturnStmt } from "./ReturnStmt";
 import { TestStmt } from "./TestStmt";
 import { VarStmt } from "./VarStmt";
 import { WhileStmt } from "./WhileStmt";
+import { AssignmentStmt, isAssignmentStmt } from "./AssignmentStmt";
 
 /**
  * An expression is a piece of code
@@ -54,6 +55,7 @@ export type PebbleStmt
     | ExportStmt
     | ImportStmt
     | TypeImplementsStmt
+    | AssignmentStmt
     ;
 
 
@@ -81,5 +83,6 @@ export function isPebbleStmt( stmt: any ): stmt is PebbleStmt
         || stmt instanceof ExportStmt
         || stmt instanceof ImportStmt
         || stmt instanceof TypeImplementsStmt
+        || isAssignmentStmt( stmt )
     );
 }
