@@ -127,6 +127,15 @@ export class Parser extends DiagnosticEmitter
             if( stmt ) src.statements.push( stmt );
             else this.skipStatement();
         }
+        if( this.diagnostics.length > 0 )
+        {
+            throw new Error(
+                "Parsing failed: \n" +
+                this.diagnostics
+                .map( msg => msg.toString() )
+                .join("\n")
+            );
+        }
         return src.statements;
     }
 
@@ -171,8 +180,8 @@ export class Parser extends DiagnosticEmitter
                         tn.range(), "const enum"
                     );
                 }
-
                 statement = this.parseVarStmt( flags, startPos );
+                break;
             }
             case Token.Enum: {
                 tn.next();
@@ -1337,16 +1346,15 @@ export class Parser extends DiagnosticEmitter
 
         if( !tn.skip(Token.Equals) ) return [ type, undefined ];
 
-        let initializer: PebbleExpr | undefined = undefined;
-
-        if (isRest) {
+        if( isRest ){
             this.error(
                 DiagnosticCode.A_rest_parameter_cannot_have_an_initializer,
                 SourceRange.join( startRange, tn.range() )
             );
         }
 
-        return [ type, this.parseExpr( Precedence.Comma + 1 ) ];
+        const init = this.parseExpr(Precedence.Comma + 1);
+        return [ type, init ];
     }
 
     parseType(
@@ -1518,10 +1526,10 @@ export class Parser extends DiagnosticEmitter
     {
         const tn = this.tn;
 
-        const exprStart = this.parseExprStart();
-        if (!exprStart) return undefined;
+        let expr = this.parseExprStart();
+        if( !expr ) return undefined;
 
-        const startPos = exprStart.range.start;
+        const startPos = expr.range.start;
 
         // precedence climbing
         // see: http://www.engr.mun.ca/~theo/Misc/exp_parsing.htm#climbing
@@ -1611,6 +1619,8 @@ export class Parser extends DiagnosticEmitter
                 }
             }
         }
+
+        return expr;
     }
 
     parseExprStart(): PebbleExpr | undefined
@@ -3039,7 +3049,6 @@ export class Parser extends DiagnosticEmitter
                     break;
                 }
                 case Token.HexBytesLiteral: {
-                    console.log("case Token.HexBytesLiteral");
                     tn.readHexBytes();
                     break;
                 };
