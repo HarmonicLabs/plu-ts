@@ -179,6 +179,11 @@ export enum Token {
 
     /** `??=` */
     Question_Question_Equals,               // ??=
+    /** `||=` */
+    Bar_Bar_Equals,                         // ||=
+    /** `&&=` */
+    Ampersand_Ampersand_Equals,             // &&=
+
     /** `??` */
     Question_Question,                      // ??
     /** `?.` */

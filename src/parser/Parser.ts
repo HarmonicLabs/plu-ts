@@ -73,7 +73,7 @@ import { ElemAccessExpr } from "../ast/nodes/expr/ElemAccessExpr";
 import { makeUnaryPostfixExpr } from "../ast/nodes/expr/unary/UnaryPostfixExpr";
 import { TernaryExpr } from "../ast/nodes/expr/TernaryExpr";
 import { CommaExpr } from "../ast/nodes/expr/CommaExpr";
-import { makePropAccessExpr } from "../ast/nodes/expr/PropAccessExpr";
+import { DotPropAccessExpr, makePropAccessExpr } from "../ast/nodes/expr/PropAccessExpr";
 import { makeBinaryExpr } from "../ast/nodes/expr/binary/BinaryExpr";
 
 export class Parser extends DiagnosticEmitter
@@ -1679,7 +1679,7 @@ export class Parser extends DiagnosticEmitter
                             startPos,
                             expr,
                             prop
-                        );
+                        )!;
                         if( !expr ) return undefined;
                         break;
                     }
@@ -2058,6 +2058,42 @@ export class Parser extends DiagnosticEmitter
                 return undefined;
             }
         }
+    }
+
+    private joinPropertyCall(
+        startPos: number,
+        expr: PebbleExpr,
+        call: CallExpr
+    ): CallExpr | undefined
+    {
+        const tn = this.tn;
+        let callee = call.func;
+        switch( true )
+        {
+            case callee instanceof Identifier: return call;
+            case callee instanceof CallExpr: {
+                const inner = this.joinPropertyCall(
+                    startPos,
+                    expr,
+                    callee
+                );
+                if( !inner ) return undefined;
+                call = new CallExpr(
+                    inner,
+                    call.genericTypeArgs,
+                    call.args,
+                    tn.range( startPos, tn.pos )
+                );
+                break;
+            }
+            default: {
+                return this.error(
+                    DiagnosticCode.Identifier_expected,
+                    call.range
+                );
+            }
+        }
+        return call;
     }
 
     parseCaseExpr(): CaseExpr | undefined
@@ -2551,6 +2587,22 @@ export class Parser extends DiagnosticEmitter
             //     }
             //     // fall-through
             // }
+            case Token.Equals:
+            case Token.Plus_Equals:
+            case Token.Minus_Equals:
+            case Token.Asterisk_Asterisk_Equals:
+            case Token.Asterisk_Equals:
+            case Token.Slash_Equals:
+            case Token.Percent_Equals:
+            case Token.LessThan_LessThan_Equals:
+            case Token.GreaterThan_GreaterThan_Equals:
+            case Token.GreaterThan_GreaterThan_GreaterThan_Equals:
+            case Token.Ampersand_Equals:
+            case Token.Caret_Equals:
+            case Token.Ampersand_Ampersand_Equals:
+            case Token.Bar_Bar_Equals :
+            case Token.Question_Question_Equals:
+            case Token.Bar_Equals:
             default: {
                 tn.reset(state);
                 // statement = this.parseExpr();

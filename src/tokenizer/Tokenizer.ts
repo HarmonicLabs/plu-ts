@@ -213,7 +213,17 @@ export class Tokenizer extends DiagnosticEmitter {
                     if (maxTokenLength > 1 && pos < end) {
                         let chr = text.charCodeAt(pos);
                         if (chr === CharCode.Ampersand) {
-                            this.pos = pos + 1;
+                            // this.pos = pos + 1;
+                            ++pos;
+                            if(
+                                maxTokenLength > 2 && pos < end &&
+                                text.charCodeAt(pos) === CharCode.Equals
+                            )
+                            {
+                                this.pos = pos + 1;
+                                return Token.Ampersand_Ampersand_Equals;
+                            }
+                            this.pos = pos;
                             return Token.Ampersand_Ampersand;
                         }
                         if (chr === CharCode.Equals) {
@@ -497,10 +507,16 @@ export class Tokenizer extends DiagnosticEmitter {
                 case CharCode.Question: {
                     // this.pos = pos + 1;
                     pos++;
-                    if( text.charCodeAt(pos) === CharCode.Question )
+                    if(
+                        maxTokenLength > 1 && pos < end &&
+                        text.charCodeAt(pos) === CharCode.Question
+                    )
                     {
                         pos++;
-                        if( text.charCodeAt(pos) === CharCode.Equals )
+                        if(
+                            maxTokenLength > 2 && pos < end &&
+                            text.charCodeAt(pos) === CharCode.Equals
+                        )
                         {
                             this.pos = pos + 1;
                             return Token.Question_Question_Equals;
@@ -545,7 +561,16 @@ export class Tokenizer extends DiagnosticEmitter {
                     if (maxTokenLength > 1 && pos < end) {
                         let chr = text.charCodeAt(pos);
                         if (chr === CharCode.Bar) {
-                            this.pos = pos + 1;
+                            // this.pos = pos + 1;
+                            ++pos;
+                            if (
+                                maxTokenLength > 2 && pos < end &&
+                                text.charCodeAt(pos) === CharCode.Equals
+                            ) {
+                                this.pos = pos + 1;
+                                return Token.Bar_Bar_Equals;
+                            }
+                            this.pos = pos;
                             return Token.Bar_Bar;
                         }
                         if (chr === CharCode.Equals) {
