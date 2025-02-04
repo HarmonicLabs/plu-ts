@@ -1,5 +1,5 @@
 import { hasOwn, isObject } from "@harmoniclabs/obj-utils";
-import { isPebbleExpr, PebbleExpr } from "../../expr/PebbleExpr";
+import { isPebbleExpr, PebbleExpr } from "../../../expr/PebbleExpr";
 
 export interface HasInitExpr {
     readonly initExpr: PebbleExpr | undefined;

@@ -58,6 +58,7 @@ export enum DiagnosticCode {
     A_field_in_a_deconstructed_declaration_cannot_have_an_initialization = 242,
     A_field_in_a_deconstructed_declaration_cannot_have_an_explicit_type_did_you_mean_to_cast_using_the_as_keyword = 243,
     Object_literal_expected = 244,
+    Initialization_expressions_are_not_allowed_in_a_struct_declaration = 245,
     Importing_the_table_disables_some_indirect_call_optimizations = 901,
     Exporting_the_table_disables_some_indirect_call_optimizations = 902,
     Expression_compiles_to_a_dynamic_check_at_runtime = 903,
@@ -224,6 +225,7 @@ export enum DiagnosticCode {
     Type_0_has_no_call_signatures = 2757,
     Get_accessor_0_must_be_at_least_as_accessible_as_the_setter = 2808,
     This_member_cannot_have_an_override_modifier_because_it_is_not_declared_in_the_base_class_0 = 4117,
+    Type_parameter_is_unused = 4118,
     File_0_not_found = 6054,
     Numeric_separators_are_not_allowed_here = 6188,
     Multiple_consecutive_numeric_separators_are_not_permitted = 6189,
@@ -291,6 +293,7 @@ export function diagnosticCodeToString(code: DiagnosticCode): string {
         case 242: return "A field in a deconstructed declaration cannot have an initialization";
         case 243: return "A field in a deconstructed declaration cannot have an explicit type; did you mean to cast using the 'as' keyword?";
         case 244: return "Object literal expected";
+        case 245: return "Initialization expressions are not allowed in a struct declaration";
         case 901: return "Importing the table disables some indirect call optimizations.";
         case 902: return "Exporting the table disables some indirect call optimizations.";
         case 903: return "Expression compiles to a dynamic check at runtime.";
@@ -457,6 +460,7 @@ export function diagnosticCodeToString(code: DiagnosticCode): string {
         case 2757: return "Type '{0}' has no call signatures.";
         case 2808: return "Get accessor '{0}' must be at least as accessible as the setter.";
         case 4117: return "This member cannot have an 'override' modifier because it is not declared in the base class '{0}'.";
+        case 4118: return "Type parameter is unused.";
         case 6054: return "File '{0}' not found.";
         case 6188: return "Numeric separators are not allowed here.";
         case 6189: return "Multiple consecutive numeric separators are not permitted.";

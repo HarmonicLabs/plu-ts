@@ -1,8 +1,8 @@
-import { SourceRange } from "../../../Source/SourceRange";
-import { Identifier } from "../../common/Identifier";
-import { PebbleExpr } from "../../expr/PebbleExpr";
-import { HasSourceRange } from "../../HasSourceRange";
-import { PebbleType } from "../../types/PebbleType";
+import { SourceRange } from "../../../../Source/SourceRange";
+import { Identifier } from "../../../common/Identifier";
+import { PebbleExpr } from "../../../expr/PebbleExpr";
+import { HasSourceRange } from "../../../HasSourceRange";
+import { PebbleType } from "../../../types/PebbleType";
 import { HasInitExpr } from "./HasInit";
 import { VarDecl } from "./VarDecl";
 

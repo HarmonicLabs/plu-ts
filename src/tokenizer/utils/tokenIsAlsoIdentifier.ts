@@ -8,17 +8,17 @@ export function tokenIsAlsoIdentifier(token: Token): boolean {
         // case Token.Declare:
         // case Token.Delete:
         case Token.From:
-        case Token.For:
+        // case Token.For:  // not allowed
         // case Token.Get:
         // case Token.Set:
-        case Token.InstanceOf:
+        // case Token.InstanceOf:  // not allowed
         case Token.Is:
         // case Token.KeyOf:
         // case Token.Module:
         // case Token.Namespace:
         // case Token.Null:
         case Token.Readonly:
-        case Token.Type:
+        // case Token.Type: // we don't allow it in pebble
         case Token.Void: return true;
         default: return false;
     }

@@ -56,6 +56,7 @@
   "A field in a deconstructed declaration cannot have an initialization": 242,
   "A field in a deconstructed declaration cannot have an explicit type; did you mean to cast using the 'as' keyword?": 243,
   "Object literal expected": 244,
+  "Initialization expressions are not allowed in a struct declaration": 245,
 
   "Importing the table disables some indirect call optimizations.": 901,
   "Exporting the table disables some indirect call optimizations.": 902,
@@ -227,6 +228,7 @@
   "Type '{0}' has no call signatures.": 2757,
   "Get accessor '{0}' must be at least as accessible as the setter.": 2808,
   "This member cannot have an 'override' modifier because it is not declared in the base class '{0}'.": 4117,
+  "Type parameter is unused.": 4118,
 
   "File '{0}' not found.": 6054,
   "Numeric separators are not allowed here.": 6188,

@@ -1,7 +1,7 @@
 import { Identifier } from "../ast/nodes/common/Identifier";
-import { NamedDeconstructVarDecl } from "../ast/nodes/declarations/VarDecl/NamedDeconstructVarDecl";
-import { SingleDeconstructVarDecl } from "../ast/nodes/declarations/VarDecl/SingleDeconstructVarDecl";
-import { DeconstructVarDecl, VarDecl } from "../ast/nodes/declarations/VarDecl/VarDecl";
+import { NamedDeconstructVarDecl } from "../ast/nodes/statements/declarations/VarDecl/NamedDeconstructVarDecl";
+import { SingleDeconstructVarDecl } from "../ast/nodes/statements/declarations/VarDecl/SingleDeconstructVarDecl";
+import { DeconstructVarDecl, VarDecl } from "../ast/nodes/statements/declarations/VarDecl/VarDecl";
 import { VarStmt } from "../ast/nodes/statements/VarStmt";
 import { PebbleAst } from "../ast/PebbleAst";
 import { SourceKind, Source } from "../ast/Source/Source";
@@ -16,8 +16,8 @@ import { normalizePath } from "../utils/path";
 import { isNonEmpty } from "../utils/isNonEmpty";
 import { PebbleExpr } from "../ast/nodes/expr/PebbleExpr";
 import { SourceRange } from "../ast/Source/SourceRange";
-import { SimpleVarDecl } from "../ast/nodes/declarations/VarDecl/SimpleVarDecl";
-import { ArrayLikeDeconstr } from "../ast/nodes/declarations/VarDecl/ArrayLikeDeconstr";
+import { SimpleVarDecl } from "../ast/nodes/statements/declarations/VarDecl/SimpleVarDecl";
+import { ArrayLikeDeconstr } from "../ast/nodes/statements/declarations/VarDecl/ArrayLikeDeconstr";
 import { PebbleType } from "../ast/nodes/types/PebbleType";
 import { IdentifierHandling } from "../tokenizer/IdentifierHandling";
 import { determinePrecedence, Precedence } from "./Precedence";
@@ -49,7 +49,7 @@ import { ForOfStmt } from "../ast/nodes/statements/ForOfStmt";
 import { IfStmt } from "../ast/nodes/statements/IfStmt";
 import { ReturnStmt } from "../ast/nodes/statements/ReturnStmt";
 import { EmptyStmt } from "../ast/nodes/statements/EmptyStmt";
-import { FuncDecl } from "../ast/nodes/declarations/FuncDecl";
+import { FuncDecl } from "../ast/nodes/statements/declarations/FuncDecl";
 import { CharCode } from "../utils/CharCode";
 import { FailStmt } from "../ast/nodes/statements/FailStmt";
 import { AssertStmt } from "../ast/nodes/statements/AssertStmt";
@@ -57,6 +57,8 @@ import { TestStmt } from "../ast/nodes/statements/TestStmt";
 import { MatchStmt, MatchStmtCase } from "../ast/nodes/statements/MatchStmt";
 import { WhileStmt } from "../ast/nodes/statements/WhileStmt";
 import { CaseExpr, CaseExprMatcher } from "../ast/nodes/expr/CaseExpr";
+import { StructConstrDecl, StructDecl } from "../ast/nodes/statements/declarations/StructDecl";
+import { InterfaceDecl, InterfaceDeclMethod } from "../ast/nodes/statements/declarations/InterfaceDecl";
 
 export class Parser extends DiagnosticEmitter
 {
@@ -121,7 +123,7 @@ export class Parser extends DiagnosticEmitter
         return src.statements;
     }
 
-    parseTopLevelStatement(): PebbleAst | undefined
+    parseTopLevelStatement(): PebbleStmt | undefined
     {
         const tn = this.tn;
         
@@ -140,21 +142,773 @@ export class Parser extends DiagnosticEmitter
             exportEnd = tn.pos;
         }
 
+        const initialState = tn.mark();
+
         let statement: PebbleAst | undefined = undefined;
         let first = tn.peek();
         if (startPos < 0) startPos = tn.nextTokenPos;
 
         switch( first ) {
+            case Token.Var:
+            case Token.Let:
             case Token.Const: {
-                tn.next(); // skip `const`
-                flags |= CommonFlags.Const;
+                tn.next(); // skip `const` | `let` | `var`
+                flags |= first === Token.Var ? CommonFlags.None : CommonFlags.Const;
 
-                if( tn.skip( Token.Enum ) ) { throw new Error("const enum not supported"); }
+                if( tn.skip( Token.Enum ) )
+                {
+                    tn.reset( initialState );
+                    this.skipStatement();
+                    return this.error(
+                        DiagnosticCode.Not_implemented_0,
+                        tn.range(), "const enum"
+                    );
+                }
 
                 statement = this.parseVarStmt( flags, startPos );
             }
-            // todo
+            case Token.Enum: {
+                tn.next();
+                statement = this.parseEnum(flags, startPos);
+                // decorators = undefined;
+                break;
+            }
+            case Token.Function: {
+                tn.next();
+                statement = this.parseFuncDecl(flags, startPos);
+                // decorators = undefined;
+                break;
+            }
+            // case Token.Class:
+            case Token.Struct: {
+                tn.next();
+                statement = this.parseStruct(flags, startPos);
+                break;
+            }
+            case Token.Interface: {
+                tn.next();
+                statement = this.parseInterface(flags, startPos);
+                // decorators = undefined;
+                break;
+            }
+            case Token.Import: {
+                tn.next();
+                flags |= CommonFlags.Import;
+                if (flags & CommonFlags.Export) {
+                    // statement = this.parseExportImport(startPos);
+                    this.error(
+                        DiagnosticCode._0_modifier_cannot_be_used_here,
+                        tn.range(exportStart, exportEnd), "export"
+                    ); // recoverable
+                    return undefined;
+                }
+                statement = this.parseImport();
+                break;
+            }
+            case Token.Type: { // also identifier // no more
+                // let state = tn.mark();
+                tn.next();
+                // if (tn.peek(IdentifierHandling.Prefer) === Token.Identifier) {
+                //     tn.discard(state);
+                //     statement = this.parseTypeDeclaration(flags, startPos);
+                //     // decorators = undefined;
+                // } else {
+                //     tn.reset(state);
+                //     statement = this.parseStatement(true);
+                // }
+                statement = this.parseTypeStmt(flags, startPos);
+                break;
+            }
+            default: {
+                if( flags & CommonFlags.Export ) {
+                    statement = this.parseExport(startPos);
+                    break;
+                }
+                statement = this.parseStatement( true );
+            }
+            break;
         }
+
+        return statement;
+    }
+
+    parseExport(
+        startPos?: number
+    ): ExportStmt | ExportStarStmt | undefined
+    {
+        const tn = this.tn;
+
+        startPos = startPos ?? tn.tokenPos;
+
+
+        // export { ... } from "module";
+        if( tn.skip( Token.OpenBrace ) )
+        {
+            const members = new Array<ExportMember>();
+            while( !tn.skip( Token.CloseBrace ) )
+            {
+                const member = this.parseExportMember();
+                if( !member ) return undefined;
+                members.push( member );
+
+                if( tn.skip( Token.Comma ) ) continue;
+
+                if( tn.skip( Token.CloseBrace ) ) break;
+                else return this.error(
+                    DiagnosticCode._0_expected,
+                    tn.range(), "}"
+                );
+            }
+
+            tn.skip( Token.Semicolon ); // if any
+
+            return new ExportStmt(
+                members,
+                tn.range( startPos, tn.pos )
+            );
+        }
+
+        // export * from "module";
+        if( !tn.skip( Token.Asterisk ) )
+        return this.error(
+            DiagnosticCode._0_expected,
+            tn.range(), "{ or *"
+        );
+
+        if( !tn.skip( Token.From ) )
+        return this.error(
+            DiagnosticCode._0_expected,
+            tn.range(), "from"
+        );
+
+        if( !tn.skip( Token.StringLiteral ) )
+        return this.error(
+            DiagnosticCode.String_literal_expected,
+            tn.range()
+        );
+
+        tn.skip( Token.Semicolon ); // if any
+
+        return new ExportStarStmt(
+            new LitStrExpr( tn.readString(), tn.range() ),
+            tn.range( startPos, tn.pos )
+        );
+    }
+
+    parseTypeStmt(
+        flags: CommonFlags = CommonFlags.None,
+        startPos?: number
+    ): TypeAliasDecl | TypeImplementsStmt | undefined
+    {
+        const tn = this.tn;
+        startPos = startPos ?? tn.tokenPos;
+
+        // at 'type': Type
+        // (('=' Type ) ';'?) |
+        // ('implements' Identifier '{' MethodImpl* '}' ';'?)
+
+        if( !tn.skipIdentifier() )
+        return this.error(
+            DiagnosticCode.Identifier_expected,
+            tn.range()
+        );
+
+        const typeId = this.parseType()//  new Identifier( tn.readIdentifier(), tn.range() );
+
+        if( tn.skip( Token.Equals ) ) // type NewType = OriginalType
+        {
+            const aliasedType = this.parseType();
+            if( !aliasedType ) return undefined;
+
+            tn.skip( Token.Semicolon ); // if any
+
+            return new TypeAliasDecl(
+                typeId,
+                aliasedType,
+                tn.range()
+            );
+        }
+
+        if( !tn.skip( Token.Implements ) )
+        return this.error(
+            DiagnosticCode._0_expected,
+            tn.range(), "implements"
+        );
+
+        const interfaceType = this.parseType();
+
+        if( !tn.skip( Token.OpenBrace ) )
+        return this.error(
+            DiagnosticCode._0_expected,
+            tn.range(), "{"
+        );
+
+        const members = new Array<InterfaceMethodImpl>();
+        while( !tn.skip( Token.CloseBrace ) )
+        {
+            const startPos = tn.tokenPos;
+
+            const namedSig = this.parseNamedFuncSig( flags, tn.tokenPos );
+            if( !namedSig ) return undefined;
+
+            const [ methodName, typeParams, sig ] = namedSig;
+
+            if( !tn.skip( Token.OpenBrace ) )
+            return this.error(
+                DiagnosticCode._0_expected,
+                tn.range(), "{"
+            );
+
+            const body = this.parseBlockStmt();
+            if( !body ) return undefined;
+
+            members.push(
+                new InterfaceMethodImpl(
+                    methodName,
+                    typeParams,
+                    sig,
+                    body,
+                    tn.range( startPos, tn.pos )
+                )
+            );
+        }
+
+        tn.skip( Token.Semicolon ); // if any
+
+        return new TypeImplementsStmt(
+            typeId,
+            interfaceType,
+            members,
+            tn.range()
+        );
+    }
+
+    parseImport(): ImportStmt | ImportStarStmt | undefined
+    {
+        const tn = this.tn;
+
+        // at 'import':
+        //  ('{' (ImportMember (',' ImportMember)* '}') | ('*' 'as' Identifier)?
+        //  'from' StringLiteral ';'?
+
+        const startPos = tn.tokenPos;
+
+        if( tn.skip( Token.Asterisk ) ) // import * as module from "module";
+        {
+            if( !tn.skip( Token.As ) )
+            return this.error(
+                DiagnosticCode._0_expected,
+                tn.range(), "as"
+            );
+
+            if( !tn.skipIdentifier() )
+            return this.error(
+                DiagnosticCode.Identifier_expected,
+                tn.range()
+            );
+
+            const identifier = new Identifier( tn.readIdentifier(), tn.range() );
+
+            if( !tn.skip( Token.From ) )
+            return this.error(
+                DiagnosticCode._0_expected,
+                tn.range(), "from"
+            );
+
+            if( !tn.skip( Token.StringLiteral ) )
+            return this.error(
+                DiagnosticCode.String_literal_expected,
+                tn.range()
+            );
+
+            const path = new LitStrExpr( tn.readString(), tn.range() );
+
+            tn.skip( Token.Semicolon ); // if any
+
+            return new ImportStarStmt(
+                identifier,
+                path,
+                tn.range( startPos, tn.pos )
+            );
+        }
+
+        const members = new Array<ImportDecl>();
+        if( !tn.skip( Token.OpenBrace ) ) // import { ... } from "module";
+        {
+            while( !tn.skip( Token.CloseBrace ) )
+            {
+                let member = this.parseImportDeclaration();
+                if (!member) return undefined;
+                members.push( member );
+
+                if( !tn.skip( Token.Comma ) )
+                {
+                    if (tn.skip(Token.CloseBrace)) break;
+                    return this.error(
+                        DiagnosticCode._0_expected,
+                        tn.range(), "}"
+                    );
+                }
+            }
+        }
+    }
+
+    parseImportDeclaration(): ImportDecl | undefined
+    {
+        const tn = this.tn;
+        // before: Identifier ('as' Identifier)?
+
+        if( !tn.skipIdentifier(IdentifierHandling.Always) )
+        return this.error(
+            DiagnosticCode.Identifier_expected,
+            tn.range()
+        );
+        
+        let identifier = new Identifier(tn.readIdentifier(), tn.range());
+
+        let asIdentifier: Identifier | undefined = undefined;
+        if( tn.skip( Token.As ) )
+        {
+            if( !tn.skipIdentifier() )
+            return this.error(
+                DiagnosticCode.Identifier_expected,
+                tn.range()
+            );
+             
+            asIdentifier = new Identifier(tn.readIdentifier(), tn.range());
+        }
+
+        return new ImportDecl(
+            identifier,
+            asIdentifier,
+            asIdentifier ? SourceRange.join(identifier.range, asIdentifier.range) :
+            identifier.range
+        );
+    }
+
+    parseInterface(
+        flags: CommonFlags,
+        startPos?: number,
+    ): InterfaceDecl | undefined
+    {
+        const tn = this.tn;
+
+        // at 'interface': Identifier
+        // ('<' TypeParameters '>')?
+        // '{' (FuncDecl | VarDecl)* '}' ';'?
+
+        startPos = startPos ?? tn.tokenPos;
+
+        if( !tn.skipIdentifier() )
+        return this.error(
+            DiagnosticCode.Identifier_expected,
+            tn.range()
+        );
+
+        const name = new Identifier( tn.readIdentifier(), tn.range() );
+
+        let typeParams: NamedType[] = [];
+        if( tn.skip( Token.LessThan ) )
+        {
+            typeParams = this.parseTypeParameters();
+            if( !typeParams || typeParams.length <= 0 ) return undefined;
+        }
+
+        if( !tn.skip( Token.OpenBrace ) )
+        return this.error(
+            DiagnosticCode._0_expected,
+            tn.range(), "{"
+        );
+
+        const members = new Array<InterfaceDeclMethod>();
+        while( !tn.skip( Token.CloseBrace ) )
+        {
+            const namedSig = this.parseNamedFuncSig( flags, tn.tokenPos );
+            if( !namedSig ) return undefined;
+
+            const [ methodName, typeParams, sig ] = namedSig;
+
+            let body: BlockStmt | undefined = undefined;
+            if( tn.skip( Token.OpenBrace ) )
+            {
+                body = this.parseBlockStmt();
+                if( !body ) return undefined;
+            }
+
+            members.push(
+                new InterfaceDeclMethod(
+                    methodName,
+                    typeParams,
+                    sig,
+                    body,
+                    tn.range( startPos, tn.pos )
+                )
+            );
+        }
+
+        tn.skip( Token.Semicolon ); // if any
+
+        return new InterfaceDecl(
+            name,
+            typeParams,
+            members,
+            tn.range( startPos, tn.pos )
+        );
+    }
+
+    parseStruct(
+        flags = CommonFlags.None,
+        startPos?: number
+    ): StructDecl | undefined
+    {
+        const tn = this.tn;
+
+        startPos = startPos ?? tn.tokenPos;
+
+        if( !tn.skipIdentifier() )
+        return this.error(
+            DiagnosticCode.Identifier_expected,
+            tn.range()
+        );
+
+        const name = new Identifier( tn.readIdentifier(), tn.range() );
+
+        let typeParams: NamedType[] | undefined = undefined;
+        if( tn.skip( Token.LessThan ) )
+        {
+            typeParams = this.parseTypeParameters();
+            if( !typeParams ) return undefined;
+            flags |= CommonFlags.Generic;
+        }
+
+        if( !tn.skip( Token.OpenBrace ) )
+        return this.error(
+            DiagnosticCode._0_expected,
+            tn.range(), "{"
+        );
+
+        const structDefBodyOpenState = tn.mark();
+
+        if( tn.skip( Token.CloseBrace ) ) // single constr no fields shortcut
+        {
+            if( typeParams )
+            {
+                this.error(
+                    DiagnosticCode.Type_parameter_is_unused,
+                    typeParams[0].range
+                ); // recoverable
+            }
+            const range = tn.range( startPos, tn.pos );
+            tn.skip( Token.Semicolon ); // if any
+            return new StructDecl(
+                name,
+                [], // typeParams
+                [
+                    new StructConstrDecl(
+                        new Identifier( name.name, name.range ),
+                        [], // fields
+                        range
+                    )
+                ],
+                range.clone()
+            );
+        }
+
+        let isSingleConstrShortcut = false;
+
+        let constrIdentifier: Identifier | undefined = undefined;
+
+        if( !tn.skipIdentifier() )
+        return this.error(
+            DiagnosticCode.Identifier_expected,
+            tn.range()
+        );
+
+        constrIdentifier = new Identifier( tn.readIdentifier(), tn.range() );
+        
+        // no `{` after identifier means single constr shortcut
+        if( !tn.skip( Token.OpenBrace ) )
+        {
+            constrIdentifier = undefined;
+            isSingleConstrShortcut = true;
+            tn.reset( structDefBodyOpenState );
+            const fields = this.parseStructConstrFields();
+            if( !fields ) return undefined;
+            if( !tn.skip( Token.CloseBrace ) )
+            return this.error(
+                DiagnosticCode._0_expected,
+                tn.range(), "}"
+            );
+            tn.skip( Token.Semicolon ); // if any
+            return new StructDecl(
+                name,
+                typeParams ?? [],
+                [
+                    new StructConstrDecl(
+                        new Identifier( name.name, name.range ),
+                        fields,
+                        tn.range( startPos, tn.pos )
+                    )
+                ],
+                tn.range( startPos, tn.pos )
+            );
+        }
+
+        const constrFields = this.parseStructConstrFields();
+        if( !Array.isArray( constrFields ) ) return undefined;
+        
+        const constrs = [
+            new StructConstrDecl(
+                constrIdentifier,
+                constrFields,
+                tn.range( startPos, tn.pos )
+            )
+        ];
+
+        while( !tn.skip( Token.CloseBrace ) )
+        {
+            if( !tn.skipIdentifier() )
+            return this.error(
+                DiagnosticCode.Identifier_expected,
+                tn.range()
+            );
+    
+            constrIdentifier = new Identifier( tn.readIdentifier(), tn.range() );
+            
+            // no `{` only allowed in single constr shortcut
+            // this is not the case
+            if( !tn.skip( Token.OpenBrace ) )
+            return this.error(
+                DiagnosticCode._0_expected,
+                tn.range(), "{"
+            );
+    
+            const constrFields = this.parseStructConstrFields();
+            if( !Array.isArray( constrFields ) ) return undefined;
+            
+            constrs.push(
+                new StructConstrDecl(
+                    constrIdentifier,
+                    constrFields,
+                    tn.range( startPos, tn.pos )
+                )
+            );
+        }
+
+        tn.skip( Token.Semicolon ); // if any
+
+        return new StructDecl(
+            name,
+            typeParams ?? [],
+            constrs,
+            tn.range( startPos, tn.pos )
+        );
+    }
+
+    parseStructConstrFields(): VarDecl[] | undefined
+    {
+        const tn = this.tn;
+        // at '{'
+
+        const fields = new Array<VarDecl>();
+
+        while( !tn.skip( Token.CloseBrace ) )
+        {
+            const field = this._parseVarDecl();
+            if( !field ) return undefined;
+
+            if( !field.type )
+            return this.error(
+                DiagnosticCode.Type_expected,
+                field.range.atEnd()
+            );
+
+            if( field.initExpr )
+            return this.error(
+                DiagnosticCode.Initialization_expressions_are_not_allowed_in_a_struct_declaration,
+                SourceRange.join( field.type.range.atEnd(), field.initExpr.range )
+            );
+
+            fields.push( field );
+
+            if(
+                tn.skip( Token.Comma ) ||
+                tn.skip( Token.Semicolon ) ||
+                tn.isNextTokenOnNewLine()
+            ) continue;
+
+            if( tn.skip( Token.CloseBrace ) ) break;
+            else return this.error(
+                DiagnosticCode._0_expected,
+                tn.range(), "}"
+            );
+        }
+    }
+    
+    private parseNamedFuncSig(
+        flags: CommonFlags = CommonFlags.None,
+        startPos?: number
+    ): [ Identifier, NamedType[], FuncType ] | undefined
+    {
+        const tn = this.tn;
+
+        startPos = startPos ?? tn.tokenPos;
+
+        if( !tn.skipIdentifier() )
+        return this.error(
+            DiagnosticCode.Identifier_expected,
+            tn.range()
+        );
+
+        const name = new Identifier( tn.readIdentifier(), tn.range() );
+        let sigStart = -1;
+
+        let typeParams = new Array<NamedType>();
+        if( tn.skip( Token.LessThan ) )
+        {
+            sigStart = tn.tokenPos;
+            typeParams = this.parseTypeParameters();
+            if( typeParams.length === 0 ) return undefined;
+            flags |= CommonFlags.Generic;
+        }
+
+        if( !tn.skip( Token.OpenParen ) )
+        return this.error(
+            DiagnosticCode._0_expected,
+            tn.range(), "("
+        );
+
+        sigStart = sigStart < 0 ? tn.tokenPos : sigStart;
+
+        const params = this.parseParameters();
+        if( !params ) return undefined;
+
+        let returnType: PebbleType | undefined = undefined;
+        if( tn.skip( Token.Colon ) )
+        {
+            returnType = this.parseType();
+            if( !returnType ) return undefined;
+        }
+
+        return [
+            name,
+            typeParams,
+            new FuncType(
+                params,
+                returnType,
+                tn.range( sigStart, tn.pos )
+            )
+        ];
+    }
+
+    parseFuncDecl(
+        flags: CommonFlags,
+        startPos?: number
+    ): FuncDecl | undefined
+    {
+        const tn = this.tn;
+
+        startPos = startPos ?? tn.tokenPos;
+
+        const namedSig = this.parseNamedFuncSig( flags, startPos );
+        if( !namedSig ) return undefined;
+
+        const [ name, typeParams, sig ] = namedSig;
+
+        if( !tn.skip( Token.OpenBrace ) )
+        return this.error(
+            DiagnosticCode.Function_implementation_is_missing_or_not_immediately_following_the_declaration,
+            tn.range()
+        );
+        
+        const body = this.parseBlockStmt();
+        if( !body ) return undefined;
+
+        const endPos = tn.pos;
+
+        tn.skip( Token.Semicolon ); // if any
+
+        return new FuncDecl(
+            name,
+            flags,
+            typeParams,
+            sig,
+            body,
+            ArrowKind.None,
+            tn.range( startPos, endPos )
+        );
+    }
+
+    parseEnum(
+        flags: CommonFlags,
+        startPos: number
+    ): EnumDecl | undefined
+    {
+        const tn = this.tn;
+        // at 'enum': Identifier '{' (EnumValueDecl (',' EnumValueDecl )*)? '}' ';'?
+
+        if( tn.next() !== Token.Identifier )
+        return this.error(
+            DiagnosticCode.Identifier_expected,
+            tn.range()
+        );
+        const identifier = new Identifier( tn.readIdentifier(), tn.range() );
+        if( !tn.skip( Token.OpenBrace ) )
+        return this.error(
+            DiagnosticCode._0_expected,
+            tn.range(), "{"
+        );
+
+        const members = new Array<EnumValueDecl>();
+        while( !tn.skip( Token.CloseBrace ) )
+        {
+            const member = this.parseEnumValue( CommonFlags.None );
+            if( !member ) return undefined;
+            members.push( member );
+            
+            if( tn.skip( Token.Comma ) ) continue;
+
+            if( tn.skip( Token.CloseBrace ) ) break;
+            else return this.error(
+                DiagnosticCode._0_expected,
+                tn.range(), "}"
+            );
+        }
+
+        tn.skip( Token.Semicolon ); // if any
+
+        return new EnumDecl(
+            identifier,
+            members,
+            tn.range( startPos, tn.pos )
+        );
+    }
+
+    parseEnumValue(
+        tn: Tokenizer,
+        parentFlags: CommonFlags
+    ): EnumValueDecl | undefined
+    {
+        // before: Identifier ('=' Expression)?
+
+        if( !tn.skipIdentifier() )
+        return this.error(
+            DiagnosticCode.Identifier_expected,
+            tn.range()
+        );
+        const identifier = new Identifier(tn.readIdentifier(), tn.range());
+        let value: PebbleExpr | undefined = undefined;
+        if( tn.skip( Token.Equals ) )
+        {
+            value = this.parseExpr(Precedence.Comma + 1);
+            if (!value) return undefined;
+        }
+        return new EnumValueDecl(
+            identifier,
+            parentFlags,
+            value,
+            SourceRange.join(identifier.range, tn.range())
+        );
     }
 
     parseVarStmt(
@@ -1568,7 +2322,7 @@ export class Parser extends DiagnosticEmitter
     }
 
     parseBlockStmt(
-        topLevel: boolean
+        topLevel: boolean = false
     ): BlockStmt | undefined
     {
         const tn = this.tn;

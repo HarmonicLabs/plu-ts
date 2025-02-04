@@ -1,5 +1,5 @@
 import { SourceRange } from "../../Source/SourceRange";
-import { VarDecl } from "../declarations/VarDecl/VarDecl";
+import { VarDecl } from "../statements/declarations/VarDecl/VarDecl";
 import { HasSourceRange } from "../HasSourceRange";
 import { PebbleExpr } from "./PebbleExpr";
 

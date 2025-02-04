@@ -2,6 +2,7 @@ import { AssertStmt } from "./AssertStmt";
 import { BlockStmt } from "./BlockStmt";
 import { BreakStmt } from "./BreakStmt";
 import { ContinueStmt } from "./ContinueStmt";
+import { isPebbleDecl, PebbleDecl } from "./declarations/PebbleDecl";
 import { DoWhileStmt } from "./DoWhileStmt";
 import { EmptyStmt } from "./EmptyStmt";
 import { FailStmt } from "./FailStmt";
@@ -42,6 +43,7 @@ export type PebbleStmt
     | AssertStmt
     | TestStmt
     | MatchStmt
+    | PebbleDecl
     ;
 
 
@@ -63,5 +65,6 @@ export function isPebbleStmt( stmt: any ): stmt is PebbleStmt
         || stmt instanceof AssertStmt
         || stmt instanceof TestStmt
         || stmt instanceof MatchStmt
+        || isPebbleDecl( stmt )
     );
 }

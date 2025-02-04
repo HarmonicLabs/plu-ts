@@ -1,6 +1,7 @@
 import { LIBRARY_PREFIX, PATH_DELIMITER, LIBRARY_SUBST } from "../../common";
 import { CharCode } from "../../utils/CharCode";
 import { mangleInternalPath } from "../../utils/mangleInternalPath";
+import { PebbleStmt } from "../nodes/statements/PebbleStmt";
 import { PebbleAst } from "../PebbleAst";
 import { SourceRange } from "./SourceRange";
 
@@ -52,7 +53,7 @@ export class Source {
     /** Simple path (last part without extension). */
     simplePath: string;
     /** Contained statements. */
-    statements: PebbleAst[];
+    statements: PebbleStmt[];
     /** Source map index. */
     debugInfoIndex: number = -1;
     /** Re-exported sources. */

@@ -1,6 +1,6 @@
 import { SourceRange } from "../../Source/SourceRange";
 import { HasSourceRange } from "../HasSourceRange";
-import { VarDecl } from "../declarations/VarDecl/VarDecl";
+import { VarDecl } from "../statements/declarations/VarDecl/VarDecl";
 import { PebbleType } from "./PebbleType";
 
 export type NativeType

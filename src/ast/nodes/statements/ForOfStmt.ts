@@ -2,7 +2,7 @@ import { PebbleAst } from "../../PebbleAst";
 import { SourceRange } from "../../Source/SourceRange";
 import { PebbleExpr } from "../expr/PebbleExpr";
 import { HasSourceRange } from "../HasSourceRange";
-import { VarDecl } from "../declarations/VarDecl/VarDecl";
+import { VarDecl } from "./declarations/VarDecl/VarDecl";
 import { VarStmt } from "./VarStmt";
 
 /**
