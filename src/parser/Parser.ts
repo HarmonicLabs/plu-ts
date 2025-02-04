@@ -1683,6 +1683,7 @@ export class Parser extends DiagnosticEmitter
                             prop,
                             tn.range( startPos, tn.pos )
                         );
+                        expr = this.tryParseCallExprOrReturnSame( expr );
                         break;
                     }
 

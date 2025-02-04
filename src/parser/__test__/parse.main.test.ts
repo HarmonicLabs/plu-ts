@@ -25,7 +25,7 @@ function main( { tx, purpose }: ScriptContext )
         sumLove += input.value.lovelaces();
     }
 
-    assert tx.outputs.length === 1 else "only one output allowed";
+    assert tx.outputs.length() === 1 else "only one output allowed";
     assert sumLove >= 1000_000_000;
 }
 `;
