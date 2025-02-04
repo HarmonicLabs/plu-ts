@@ -177,6 +177,13 @@ export class Tokenizer extends DiagnosticEmitter {
                         this.pos = pos;
                         return Token.Exclamation_Equals;
                     }
+                    else if(
+                        maxTokenLength > 1 && pos < end &&
+                        text.charCodeAt(pos) === CharCode.Dot
+                    ) {
+                        this.pos = pos + 1;
+                        return Token.Exclamation_Dot; // !.
+                    }
                     this.pos = pos;
                     return Token.Exclamation;
                 }
@@ -488,7 +495,25 @@ export class Tokenizer extends DiagnosticEmitter {
                     return Token.GreaterThan;
                 }
                 case CharCode.Question: {
-                    this.pos = pos + 1;
+                    // this.pos = pos + 1;
+                    pos++;
+                    if( text.charCodeAt(pos) === CharCode.Question )
+                    {
+                        pos++;
+                        if( text.charCodeAt(pos) === CharCode.Equals )
+                        {
+                            this.pos = pos + 1;
+                            return Token.Question_Question_Equals;
+                        }
+                        this.pos = pos;
+                        return Token.Question_Question;
+                    }
+                    else if( text.charCodeAt(pos) === CharCode.Dot )
+                    {
+                        this.pos = pos + 1;
+                        return Token.Question_Dot;
+                    }
+                    this.pos = pos;
                     return Token.Question;
                 }
                 case CharCode.OpenBracket: {

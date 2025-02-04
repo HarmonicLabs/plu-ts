@@ -170,7 +170,7 @@ export enum DiagnosticCode {
     Cannot_invoke_an_expression_whose_type_lacks_a_call_signature_Type_0_has_no_compatible_call_signatures = 2349,
     This_expression_is_not_constructable = 2351,
     A_function_whose_declared_type_is_not_void_must_return_a_value = 2355,
-    The_operand_of_an_increment_or_decrement_operator_must_be_a_variable_or_a_property_access = 2357,
+    The_operand_of_an_increment_or_decrement_operator_must_be_a_variable = 2357,
     The_left_hand_side_of_an_assignment_expression_must_be_a_variable_or_a_property_access = 2364,
     Operator_0_cannot_be_applied_to_types_1_and_2 = 2365,
     A_super_call_must_be_the_first_statement_in_the_constructor = 2376,
@@ -203,7 +203,7 @@ export enum DiagnosticCode {
     Non_abstract_class_0_does_not_implement_inherited_abstract_member_1_from_2 = 2515,
     Object_is_possibly_null = 2531,
     Cannot_assign_to_0_because_it_is_a_constant_or_a_read_only_property = 2540,
-    The_target_of_an_assignment_must_be_a_variable_or_a_property_access = 2541,
+    The_target_of_an_assignment_must_be_a_variable = 2541,
     Index_signature_in_type_0_only_permits_reading = 2542,
     Expected_0_arguments_but_got_1 = 2554,
     Expected_at_least_0_arguments_but_got_1 = 2555,
@@ -224,8 +224,9 @@ export enum DiagnosticCode {
     Property_0_is_missing_in_type_1_but_required_in_type_2 = 2741,
     Type_0_has_no_call_signatures = 2757,
     Get_accessor_0_must_be_at_least_as_accessible_as_the_setter = 2808,
+    Type_parameter_is_unused = 2809,
+    Assignments_are_statemetns_not_expressions = 2810,
     This_member_cannot_have_an_override_modifier_because_it_is_not_declared_in_the_base_class_0 = 4117,
-    Type_parameter_is_unused = 4118,
     File_0_not_found = 6054,
     Numeric_separators_are_not_allowed_here = 6188,
     Multiple_consecutive_numeric_separators_are_not_permitted = 6189,
@@ -405,7 +406,7 @@ export function diagnosticCodeToString(code: DiagnosticCode): string {
         case 2349: return "Cannot invoke an expression whose type lacks a call signature. Type '{0}' has no compatible call signatures.";
         case 2351: return "This expression is not constructable.";
         case 2355: return "A function whose declared type is not 'void' must return a value.";
-        case 2357: return "The operand of an increment or decrement operator must be a variable or a property access.";
+        case 2357: return "The operand of an increment or decrement operator must be a variable.";
         case 2364: return "The left-hand side of an assignment expression must be a variable or a property access.";
         case 2365: return "Operator '{0}' cannot be applied to types '{1}' and '{2}'.";
         case 2376: return "A 'super' call must be the first statement in the constructor.";
@@ -438,7 +439,7 @@ export function diagnosticCodeToString(code: DiagnosticCode): string {
         case 2515: return "Non-abstract class '{0}' does not implement inherited abstract member '{1}' from '{2}'.";
         case 2531: return "Object is possibly 'null'.";
         case 2540: return "Cannot assign to '{0}' because it is a constant or a read-only property.";
-        case 2541: return "The target of an assignment must be a variable or a property access.";
+        case 2541: return "The target of an assignment must be a variable";
         case 2542: return "Index signature in type '{0}' only permits reading.";
         case 2554: return "Expected {0} arguments, but got {1}.";
         case 2555: return "Expected at least {0} arguments, but got {1}.";
@@ -459,8 +460,9 @@ export function diagnosticCodeToString(code: DiagnosticCode): string {
         case 2741: return "Property '{0}' is missing in type '{1}' but required in type '{2}'.";
         case 2757: return "Type '{0}' has no call signatures.";
         case 2808: return "Get accessor '{0}' must be at least as accessible as the setter.";
+        case 2809: return "Type parameter is unused.";
+        case 2810: return "Assignments are statemetns, not expressions.";
         case 4117: return "This member cannot have an 'override' modifier because it is not declared in the base class '{0}'.";
-        case 4118: return "Type parameter is unused.";
         case 6054: return "File '{0}' not found.";
         case 6188: return "Numeric separators are not allowed here.";
         case 6189: return "Multiple consecutive numeric separators are not permitted.";

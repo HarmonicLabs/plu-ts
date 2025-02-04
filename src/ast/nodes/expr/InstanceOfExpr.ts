@@ -4,12 +4,12 @@ import { PebbleType } from "../types/PebbleType";
 import { PebbleExpr } from "./PebbleExpr";
 
 
-export class TypeConversionExpr
+export class InstanceOfExpr
     implements HasSourceRange
 {
     constructor(
-        readonly expr: PebbleExpr,
-        readonly asType: PebbleType,
-        readonly range: SourceRange = SourceRange.join( expr.range, asType.range )
+        readonly instanceExpr: PebbleExpr,
+        readonly ofType: PebbleType,
+        readonly range: SourceRange
     ) {}
 }

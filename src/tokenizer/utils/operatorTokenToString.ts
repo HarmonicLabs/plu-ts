@@ -2,13 +2,13 @@ import { Token } from "../Token";
 
 export function operatorTokenToString(token: Token): string {
     switch (token) {
-        case Token.Delete: return "delete";
-        case Token.In: return "in";
+        // case Token.Delete: return "delete";
+        // case Token.In: return "in";
         case Token.InstanceOf: return "instanceof";
-        case Token.New: return "new";
-        case Token.TypeOf: return "typeof";
+        // case Token.New: return "new";
+        // case Token.TypeOf: return "typeof";
         case Token.Void: return "void";
-        case Token.Yield: return "yield";
+        // case Token.Yield: return "yield";
         case Token.Dot_Dot_Dot: return "...";
         case Token.Comma: return ",";
         case Token.LessThan: return "<";

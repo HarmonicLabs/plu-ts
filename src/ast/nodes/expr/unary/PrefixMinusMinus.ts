@@ -11,3 +11,12 @@ export class PrefixMinusMinus
         readonly range: SourceRange
     ) {}
 }
+
+export class PostfixMinusMinus
+    implements HasSourceRange, IUnaryExpression
+{
+    constructor(
+        readonly operand: PebbleExpr,
+        readonly range: SourceRange
+    ) {}
+}

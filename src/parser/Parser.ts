@@ -66,6 +66,15 @@ import { ExportStarStmt } from "../ast/nodes/statements/ExportStarStmt";
 import { InterfaceMethodImpl, TypeImplementsStmt } from "../ast/nodes/statements/TypeImplementsStmt";
 import { TypeAliasDecl } from "../ast/nodes/statements/declarations/TypeAliasDecl";
 import { EnumDecl, EnumValueDecl } from "../ast/nodes/statements/declarations/EnumDecl";
+import { TypeConversionExpr } from "../ast/nodes/expr/TypeConversionExpr";
+import { NonNullExpr } from "../ast/nodes/expr/NonNullExpr";
+import { InstanceOfExpr } from "../ast/nodes/expr/InstanceOfExpr";
+import { ElemAccessExpr } from "../ast/nodes/expr/ElemAccessExpr";
+import { makeUnaryPostfixExpr } from "../ast/nodes/expr/unary/UnaryPostfixExpr";
+import { TernaryExpr } from "../ast/nodes/expr/TernaryExpr";
+import { CommaExpr } from "../ast/nodes/expr/CommaExpr";
+import { makePropAccessExpr } from "../ast/nodes/expr/PropAccessExpr";
+import { makeBinaryExpr } from "../ast/nodes/expr/binary/BinaryExpr";
 
 export class Parser extends DiagnosticEmitter
 {
@@ -1526,7 +1535,7 @@ export class Parser extends DiagnosticEmitter
     {
         const tn = this.tn;
 
-        let expr = this.parseExprStart();
+        let expr: PebbleExpr = this.parseExprStart()!;
         if( !expr ) return undefined;
 
         const startPos = expr.range.start;
@@ -1540,40 +1549,154 @@ export class Parser extends DiagnosticEmitter
             const token = tn.next();
             switch( token ) {
                 case Token.As: {
+                    if( tn.skip( Token.Const ) )
+                    return this.error(
+                        DiagnosticCode.Not_implemented_0,
+                        tn.range(), "as const"
+                    );
 
+                    const toType = this.parseType();
+                    if( !toType ) return undefined;
+
+                    expr = new TypeConversionExpr(
+                        expr,
+                        toType,
+                        tn.range( startPos, tn.pos )
+                    );
                     break;
                 }
                 case Token.Exclamation: {
-
+                    expr = new NonNullExpr(
+                        expr,
+                        tn.range( startPos, tn.pos )
+                    );
+                    expr = this.tryParseCallExprOrReturnSame( expr );
                     break;
                 }
                 case Token.InstanceOf: {
-
+                    const ofType = this.parseType();
+                    if( !ofType ) return undefined;
+                    expr = new InstanceOfExpr(
+                        expr,
+                        ofType,
+                        tn.range( startPos, tn.pos )
+                    );
                     break;
                 }
                 case Token.OpenBracket: { // [ // accessing list element
-                    
+                    const idxExpr = this.parseExpr();
+                    if( !idxExpr ) return undefined;
+                    if( !tn.skip( Token.CloseBracket ) )
+                    return this.error(
+                        DiagnosticCode._0_expected,
+                        tn.range(), "]"
+                    );
+                    expr = new ElemAccessExpr(
+                        expr,
+                        idxExpr,
+                        tn.range( startPos, tn.pos )
+                    );
                     break;
                 }
                 case Token.Plus_Plus:
                 case Token.Minus_Minus: {
 
+                    if(!( expr instanceof Identifier ))
+                    return this.error(
+                        DiagnosticCode.The_operand_of_an_increment_or_decrement_operator_must_be_a_variable,
+                        expr.range
+                    );
+
+                    expr = makeUnaryPostfixExpr(
+                        token,
+                        expr,
+                        tn.range( startPos, tn.pos )
+                    );
+
                     break;
                 }
                 case Token.Question: {
-                    // handle `?.` access or ternary
+                    const ifTrue = this.parseExpr();
+                    if( !ifTrue ) return undefined;
 
+                    if( !tn.skip( Token.Colon ) )
+                    return this.error(
+                        DiagnosticCode._0_expected,
+                        tn.range(), ":"
+                    );
+
+                    const ifFalse = this.parseExpr(
+                        precedence > Precedence.Comma ? Precedence.Comma + 1 : Precedence.Comma
+                    );
+                    if( !ifFalse ) return undefined;
+
+                    expr = new TernaryExpr(
+                        expr,
+                        ifTrue,
+                        ifFalse,
+                        tn.range( startPos, tn.pos )
+                    );
                     break;
                 }
                 case Token.Comma: { // comma operator
-
+                    const commaExprs = [ expr ];
+                    do {
+                        expr = this.parseExpr( Precedence.Comma + 1 )!;
+                        if( !expr ) return undefined;
+                        commaExprs.push( expr );
+                    } while( tn.skip( Token.Comma ) );
+                    expr = new CommaExpr(
+                        commaExprs,
+                        tn.range( startPos, tn.pos )
+                    );
                     break;
                 }
+                case Token.Question_Dot:
+                case Token.Exclamation_Dot:
                 case Token.Dot: { // accessing property
-                    
+                    let prop: Identifier | CallExpr | undefined = undefined;
+                    if( tn.skipIdentifier( IdentifierHandling.Always ) )
+                    {
+                        prop = new Identifier(
+                            tn.readIdentifier(),
+                            tn.range()
+                        );
+                        expr = makePropAccessExpr(
+                            token,
+                            expr,
+                            prop,
+                            tn.range( startPos, tn.pos )
+                        );
+                        break;
+                    }
+
+                    const state = tn.mark();
+                    prop = this.parseExpr( Precedence.Comma + 1 ) as CallExpr | undefined;
+
+                    if( prop instanceof CallExpr )
+                    {
+                        expr = this.joinPropertyCall(
+                            startPos,
+                            expr,
+                            prop
+                        );
+                        if( !expr ) return undefined;
+                        break;
+                    }
+                    else {
+                        let errRange: SourceRange;
+                        if( prop ) errRange = (prop as PebbleExpr).range;
+                        else {
+                            tn.reset( state );
+                            errRange = tn.range();
+                        }
+                        return this.error(
+                            DiagnosticCode.Identifier_expected,
+                            errRange
+                        );
+                    }
                     break;
                 }
-                // BinaryExpression (right associative)
                 case Token.Equals:
                 case Token.Plus_Equals:
                 case Token.Minus_Equals:
@@ -1586,9 +1709,25 @@ export class Parser extends DiagnosticEmitter
                 case Token.GreaterThan_GreaterThan_GreaterThan_Equals:
                 case Token.Ampersand_Equals:
                 case Token.Caret_Equals:
-                case Token.Bar_Equals:
+                case Token.Ampersand_Ampersand_Equals:
+                case Token.Bar_Bar_Equals :
+                case Token.Question_Question_Equals:
+                case Token.Bar_Equals: {
+                    return this.error(
+                        DiagnosticCode.Assignments_are_statemetns_not_expressions,
+                        tn.range()
+                    );
+                }
+                // BinaryExpression (right associative)
                 case Token.Asterisk_Asterisk: {
-
+                    const next = this.parseExpr( nextPrecedence );
+                    if( !next ) return undefined;
+                    expr = makeBinaryExpr(
+                        token,
+                        expr,
+                        next,
+                        tn.range( startPos, tn.pos )
+                    );
                     break;
                 }
                 // BinaryExpression
@@ -1612,10 +1751,25 @@ export class Parser extends DiagnosticEmitter
                 case Token.Bar:
                 case Token.Caret:
                 case Token.Ampersand_Ampersand:
+                case Token.Question_Question:
                 case Token.Bar_Bar:
-                case Token.In: {
-
+                // case Token.In:
+                {
+                    const next = this.parseExpr( nextPrecedence + 1 );
+                    if( !next ) return undefined;
+                    expr = makeBinaryExpr(
+                        token,
+                        expr,
+                        next,
+                        tn.range( startPos, tn.pos )
+                    );
                     break;
+                }
+                default: {
+                    return this.error(
+                        DiagnosticCode.Expression_expected,
+                        tn.range()
+                    );
                 }
             }
         }
@@ -1669,7 +1823,7 @@ export class Parser extends DiagnosticEmitter
                 ))
                 {
                     this.error(
-                        DiagnosticCode.The_operand_of_an_increment_or_decrement_operator_must_be_a_variable_or_a_property_access,
+                        DiagnosticCode.The_operand_of_an_increment_or_decrement_operator_must_be_a_variable,
                         operand.range
                     );
                 }

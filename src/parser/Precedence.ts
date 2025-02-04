@@ -13,11 +13,11 @@ export enum Precedence {
     None,           // No precedence
     Comma,          // ,
     Spread,         // ...
-    Assignment,     // = += -= **= *= /= %= <<= >>= >>>= &= ^= |=
+    Assignment,     // = += -= **= *= /= %= <<= >>= >>>= &= ^= |= ??=
     CaseExpr,       // case thing (is pattern => expression)+
     Pipe,           // |> (pipe operator in the future)
     Conditional,    // ? : (ternary)
-    LogicalOr,      // ||
+    LogicalOr,      // || ??
     LogicalAnd,     // &&
     BitwiseOr,      // |
     BitwiseXor,     // ^
@@ -31,7 +31,7 @@ export enum Precedence {
     UnaryPrefix,    // ++... _ --... !... ~... etc.
     UnaryPostfix,   // ...++ _ ...--
     Call,           // func(...)
-    MemberAccess,   // obj.prop _ arr[idx]
+    MemberAccess,   // obj.prop | obj?.prop | arr[idx]
     Grouping,       // ( ... )
 }
 Object.freeze(Precedence);
@@ -56,8 +56,10 @@ export function determinePrecedence(kind: Token): Precedence
         case Token.GreaterThan_GreaterThan_GreaterThan_Equals:
         case Token.Ampersand_Equals:
         case Token.Caret_Equals:
+        case Token.Question_Question_Equals:
         case Token.Bar_Equals: return Precedence.Assignment;
         case Token.Question: return Precedence.Conditional;
+        case Token.Question_Question: // ?? (null coalescing) same as logical or (left associative)
         case Token.Bar_Bar: return Precedence.LogicalOr;
         case Token.Ampersand_Ampersand: return Precedence.LogicalAnd;
         case Token.Bar: return Precedence.BitwiseOr;
@@ -68,7 +70,7 @@ export function determinePrecedence(kind: Token): Precedence
         case Token.Equals_Equals_Equals:
         case Token.Exclamation_Equals_Equals: return Precedence.Equality;
         case Token.As:
-        case Token.In:
+        // case Token.In:
         case Token.InstanceOf:
         case Token.LessThan:
         case Token.GreaterThan:
@@ -86,6 +88,7 @@ export function determinePrecedence(kind: Token): Precedence
         case Token.Plus_Plus:
         case Token.Minus_Minus: return Precedence.UnaryPostfix;
         case Token.Dot:
+        case Token.Question_Dot:
         case Token.OpenBracket:
         case Token.Exclamation: return Precedence.MemberAccess;
     }

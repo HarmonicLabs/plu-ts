@@ -69,7 +69,7 @@ export function tokenFromKeyword(text: string): Token {
         case CharCode.i: {
             if (len === 2) {
                 if (text === "if") return Token.If;
-                if (text === "in") return Token.In;
+                // if (text === "in") return Token.In;
                 if (text === "is") return Token.Is;
                 break;
             }

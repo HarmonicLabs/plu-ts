@@ -36,7 +36,7 @@ export enum Token {
     If,           
     Implements,
     Import,       
-    In,           
+    // In,           
     InstanceOf,   
     Interface,
     Is,         // case thing is pattern => expression
@@ -176,8 +176,15 @@ export enum Token {
     Bar_Equals,                             // |=
     Caret_Equals,                           // ^=
     At,                                     // @
-    // /** `|:` */
-    // CaseMatcher,                            // |:
+
+    /** `??=` */
+    Question_Question_Equals,               // ??=
+    /** `??` */
+    Question_Question,                      // ??
+    /** `?.` */
+    Question_Dot,                           // ?.
+    /** `!.` */
+    Exclamation_Dot,                        // !.
 
     // custom native types for pebble
 
