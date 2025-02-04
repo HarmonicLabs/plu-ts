@@ -1,6 +1,7 @@
-import { PExtended, PInterval, PBound, PScriptContext, bool, int, pData, pDataI, peqInt, perror, pfn, phoist, plet, pmatch, pstruct, psub, punsafeConvertType, V2 } from "../..";
+import { PExtended, PInterval, PBound, pData, pDataI, peqInt, perror, pfn, phoist, plet, pmatch, pstruct, psub, punsafeConvertType, V2 } from "../..";
 import { Machine, CEKConst } from "@harmoniclabs/plutus-machine";
 import { DataConstr, dataFromCbor } from "@harmoniclabs/plutus-data";
+import { bool, int } from "../../../type_system";
 
 /*
 const getFinite = phoist(

@@ -1,5 +1,6 @@
 import { DataI } from "@harmoniclabs/plutus-data";
-import { compile, int, passert, pData, perror, pfn, plet, pmatch, PScriptContext, PTxOut, punIData, PValue, Term, termTypeToString, unit } from "../.."
+import { compile, passert, pData, perror, pfn, plet, pmatch, PScriptContext, PTxOut, punIData, PValue, Term } from "../.."
+import { unit } from "../../../type_system";
 
 test("plet keeps utility", () => {
 

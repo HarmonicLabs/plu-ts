@@ -1,4 +1,4 @@
-import { int } from "../../../../../pluts"
+import { int } from "../../../../../type_system"
 import { IRConst } from "../../../../IRNodes/IRConst"
 import { IRDelayed } from "../../../../IRNodes/IRDelayed"
 import { IRForced } from "../../../../IRNodes/IRForced"

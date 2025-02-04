@@ -1,6 +1,5 @@
 import { defineReadOnlyProperty, hasOwn, isObject } from "@harmoniclabs/obj-utils";
 import { getElemsT } from "./tyArgs";
-import assert from "assert";
 import { Term, PLam, PType } from "../pluts";
 
 export enum PrimType {
@@ -266,6 +265,11 @@ export const lam        =
     <InT extends GenericTermType, OutT extends GenericTermType>
     ( input: InT, output: OutT ): LamT< InT, OutT > =>
         Object.freeze([ PrimType.Lambda, input, output ]) as any;
+
+function assert( condition: boolean, message: string ): void
+{
+    if( !condition ) throw new Error( message );
+}
 
 export const fn         =
     <InsTs extends [ GenericTermType, ...GenericTermType[] ], OutT extends GenericTermType>( inputs: InsTs , output: OutT ): FnT<InsTs, OutT> => {

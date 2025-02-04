@@ -33,5 +33,5 @@ function main( { tx, purpose }: ScriptContext )
     let stmts: any;
     expect(() => stmts = parseFile( fileName, srcText )).not.toThrow();
 
-    console.log( stmts );
+    // console.log( stmts );
 })

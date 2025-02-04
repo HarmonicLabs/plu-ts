@@ -1,6 +1,7 @@
 import { Lambda, UPLCConst } from "@harmoniclabs/uplc";
-import { data, pfn, pmakeUnit, unit } from "../..";
 import { productionOptions } from "../../../IR/toUPLC/CompilerOptions";
+import { data, unit } from "../../../type_system";
+import { pfn, pmakeUnit } from "../../lib";
 
 test("okScript", () => {
 

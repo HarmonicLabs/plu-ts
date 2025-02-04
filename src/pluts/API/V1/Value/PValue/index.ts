@@ -11,8 +11,6 @@ import { PCurrencySymbol } from "../PCurrencySymbol";
 import { PTokenName } from "../PTokenName";
 import { _papp } from "../../../../lib/std/data/conversion/minimal_common";
 import { plam } from "../../../../lib/plam";
-import { unwrapAlias } from "../../../../../type_system";
-import { makeMockTerm } from "../../../../lib/std/UtilityTerms/mockUtilityTerms/makeMockTerm";
 
 export const PAssetsEntry = palias(
     pair(
