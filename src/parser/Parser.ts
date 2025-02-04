@@ -239,6 +239,30 @@ export class Parser extends DiagnosticEmitter
         return statement;
     }
 
+    parseTypeParameters(): PebbleType[] | undefined
+    {
+        const tn = this.tn;
+        // at '<': TypeParameter (',' TypeParameter)* '>'
+
+        const typeParams = new Array<PebbleType>();
+        while( !tn.skip( Token.GreaterThan ) )
+        {
+            const typeParam = this.parseType();
+            if( !typeParam ) return undefined;
+            typeParams.push( typeParam );
+
+            if( tn.skip( Token.Comma ) ) continue;
+
+            if( tn.skip( Token.GreaterThan ) ) break;
+            else return this.error(
+                DiagnosticCode._0_expected,
+                tn.range(), ">"
+            );
+        }
+
+        return typeParams;
+    }
+
     parseExport(
         startPos?: number
     ): ExportStmt | ExportStarStmt | undefined
@@ -404,7 +428,7 @@ export class Parser extends DiagnosticEmitter
             members.push(
                 new InterfaceMethodImpl(
                     methodName,
-                    typeParams,
+                    typeParams ?? [],
                     sig,
                     body,
                     tn.range( startPos, tn.pos )
@@ -568,7 +592,7 @@ export class Parser extends DiagnosticEmitter
 
         const name = new Identifier( tn.readIdentifier(), tn.range() );
 
-        let typeParams: NamedType[] = [];
+        let typeParams: PebbleType[] | undefined = undefined;
         if( tn.skip( Token.LessThan ) )
         {
             typeParams = this.parseTypeParameters();
@@ -599,7 +623,7 @@ export class Parser extends DiagnosticEmitter
             members.push(
                 new InterfaceDeclMethod(
                     methodName,
-                    typeParams,
+                    typeParams ?? [],
                     sig,
                     body,
                     tn.range( startPos, tn.pos )
@@ -611,7 +635,7 @@ export class Parser extends DiagnosticEmitter
 
         return new InterfaceDecl(
             name,
-            typeParams,
+            typeParams ?? [],
             members,
             tn.range( startPos, tn.pos )
         );
@@ -634,7 +658,7 @@ export class Parser extends DiagnosticEmitter
 
         const name = new Identifier( tn.readIdentifier(), tn.range() );
 
-        let typeParams: NamedType[] | undefined = undefined;
+        let typeParams: PebbleType[] | undefined = undefined;
         if( tn.skip( Token.LessThan ) )
         {
             typeParams = this.parseTypeParameters();
@@ -809,7 +833,7 @@ export class Parser extends DiagnosticEmitter
     private parseNamedFuncSig(
         flags: CommonFlags = CommonFlags.None,
         startPos?: number
-    ): [ Identifier, NamedType[], FuncType ] | undefined
+    ): [ Identifier, PebbleType[] | undefined, FuncType ] | undefined
     {
         const tn = this.tn;
 
@@ -824,12 +848,12 @@ export class Parser extends DiagnosticEmitter
         const name = new Identifier( tn.readIdentifier(), tn.range() );
         let sigStart = -1;
 
-        let typeParams = new Array<NamedType>();
+        let typeParams: PebbleType[] | undefined = undefined;
         if( tn.skip( Token.LessThan ) )
         {
             sigStart = tn.tokenPos;
             typeParams = this.parseTypeParameters();
-            if( typeParams.length === 0 ) return undefined;
+            if( !typeParams || typeParams.length === 0 ) return undefined;
             flags |= CommonFlags.Generic;
         }
 
@@ -892,7 +916,7 @@ export class Parser extends DiagnosticEmitter
         return new FuncDecl(
             name,
             flags,
-            typeParams,
+            typeParams ?? [],
             sig,
             body,
             ArrowKind.None,

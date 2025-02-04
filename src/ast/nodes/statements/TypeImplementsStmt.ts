@@ -23,7 +23,7 @@ export class InterfaceMethodImpl
 {
     constructor(
         readonly methodName: Identifier,
-        readonly typeParameters: NamedType[],
+        readonly typeParameters: PebbleType[],
         readonly signature: FuncType,
         readonly body: BlockStmt,
         readonly range: SourceRange,

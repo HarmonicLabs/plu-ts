@@ -1,7 +1,7 @@
 import { SourceRange } from "../../../Source/SourceRange";
 import { Identifier } from "../../common/Identifier";
 import { HasSourceRange } from "../../HasSourceRange";
-import { NamedType } from "../../types/NamedType";
+import { PebbleType } from "../../types/PebbleType";
 import { VarDecl } from "./VarDecl/VarDecl";
 
 
@@ -10,7 +10,7 @@ export class StructDecl
 {
     constructor(
         readonly name: Identifier,
-        readonly typeParams: NamedType[],
+        readonly typeParams: PebbleType[],
         readonly constrs: StructConstrDecl[],
         readonly range: SourceRange
     ) {}
