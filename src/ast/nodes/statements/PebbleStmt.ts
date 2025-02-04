@@ -5,10 +5,15 @@ import { ContinueStmt } from "./ContinueStmt";
 import { isPebbleDecl, PebbleDecl } from "./declarations/PebbleDecl";
 import { DoWhileStmt } from "./DoWhileStmt";
 import { EmptyStmt } from "./EmptyStmt";
+import { TypeImplementsStmt } from "./TypeImplementsStmt";
+import { ExportStarStmt } from "./ExportStarStmt";
+import { ExportStmt } from "./ExportStmt";
 import { FailStmt } from "./FailStmt";
 import { ForOfStmt } from "./ForOfStmt";
 import { ForStmt } from "./ForStmt";
 import { IfStmt } from "./IfStmt";
+import { ImportStarStmt } from "./ImportStarStmt";
+import { ImportStmt } from "./ImportStmt";
 import { MatchStmt } from "./MatchStmt";
 import { ReturnStmt } from "./ReturnStmt";
 import { TestStmt } from "./TestStmt";
@@ -44,6 +49,11 @@ export type PebbleStmt
     | TestStmt
     | MatchStmt
     | PebbleDecl
+    | ExportStarStmt
+    | ImportStarStmt
+    | ExportStmt
+    | ImportStmt
+    | TypeImplementsStmt
     ;
 
 
@@ -66,5 +76,10 @@ export function isPebbleStmt( stmt: any ): stmt is PebbleStmt
         || stmt instanceof TestStmt
         || stmt instanceof MatchStmt
         || isPebbleDecl( stmt )
+        || stmt instanceof ExportStarStmt
+        || stmt instanceof ImportStarStmt
+        || stmt instanceof ExportStmt
+        || stmt instanceof ImportStmt
+        || stmt instanceof TypeImplementsStmt
     );
 }

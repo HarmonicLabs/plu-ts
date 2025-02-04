@@ -59,6 +59,13 @@ import { WhileStmt } from "../ast/nodes/statements/WhileStmt";
 import { CaseExpr, CaseExprMatcher } from "../ast/nodes/expr/CaseExpr";
 import { StructConstrDecl, StructDecl } from "../ast/nodes/statements/declarations/StructDecl";
 import { InterfaceDecl, InterfaceDeclMethod } from "../ast/nodes/statements/declarations/InterfaceDecl";
+import { ImportStarStmt } from "../ast/nodes/statements/ImportStarStmt";
+import { ImportDecl, ImportStmt } from "../ast/nodes/statements/ImportStmt";
+import { ExportStmt } from "../ast/nodes/statements/ExportStmt";
+import { ExportStarStmt } from "../ast/nodes/statements/ExportStarStmt";
+import { InterfaceMethodImpl, TypeImplementsStmt } from "../ast/nodes/statements/TypeImplementsStmt";
+import { TypeAliasDecl } from "../ast/nodes/statements/declarations/TypeAliasDecl";
+import { EnumDecl, EnumValueDecl } from "../ast/nodes/statements/declarations/EnumDecl";
 
 export class Parser extends DiagnosticEmitter
 {
@@ -244,10 +251,10 @@ export class Parser extends DiagnosticEmitter
         // export { ... } from "module";
         if( tn.skip( Token.OpenBrace ) )
         {
-            const members = new Array<ExportMember>();
+            const members = new Array<ImportDecl>();
             while( !tn.skip( Token.CloseBrace ) )
             {
-                const member = this.parseExportMember();
+                const member = this.parseImportDeclaration();
                 if( !member ) return undefined;
                 members.push( member );
 
@@ -260,10 +267,23 @@ export class Parser extends DiagnosticEmitter
                 );
             }
 
+            if( !tn.skip( Token.From ) )
+            return this.error(
+                DiagnosticCode._0_expected,
+                tn.range(), "from"
+            );
+    
+            if( !tn.skip( Token.StringLiteral ) )
+            return this.error(
+                DiagnosticCode.String_literal_expected,
+                tn.range()
+            );
+    
             tn.skip( Token.Semicolon ); // if any
 
             return new ExportStmt(
                 members,
+                new LitStrExpr( tn.readString(), tn.range() ),
                 tn.range( startPos, tn.pos )
             );
         }
@@ -314,6 +334,11 @@ export class Parser extends DiagnosticEmitter
         );
 
         const typeId = this.parseType()//  new Identifier( tn.readIdentifier(), tn.range() );
+        if( !typeId )
+        return this.error(
+            DiagnosticCode.Type_expected,
+            tn.range()
+        );
 
         if( tn.skip( Token.Equals ) ) // type NewType = OriginalType
         {
@@ -335,13 +360,27 @@ export class Parser extends DiagnosticEmitter
             tn.range(), "implements"
         );
 
-        const interfaceType = this.parseType();
+        let interfaceType: PebbleType | undefined = undefined;
 
         if( !tn.skip( Token.OpenBrace ) )
-        return this.error(
-            DiagnosticCode._0_expected,
-            tn.range(), "{"
-        );
+        {
+            const state = tn.mark();
+            interfaceType = this.parseType();
+            if(
+                !interfaceType ||
+                !tn.skip( Token.OpenBrace )
+            )
+            {
+                const otherState = tn.mark();
+                tn.reset( state );
+                this.error(
+                    DiagnosticCode._0_expected,
+                    tn.range(), "{"
+                );
+                tn.reset( otherState );
+                return undefined;
+            }
+        }
 
         const members = new Array<InterfaceMethodImpl>();
         while( !tn.skip( Token.CloseBrace ) )
@@ -451,6 +490,28 @@ export class Parser extends DiagnosticEmitter
                 }
             }
         }
+
+        if( !tn.skip( Token.From ) )
+        return this.error(
+            DiagnosticCode._0_expected,
+            tn.range(), "from"
+        );
+
+        if( !tn.skip( Token.StringLiteral ) )
+        return this.error(
+            DiagnosticCode.String_literal_expected,
+            tn.range()
+        );
+
+        const path = new LitStrExpr( tn.readString(), tn.range() );
+
+        tn.skip( Token.Semicolon ); // if any
+
+        return new ImportStmt(
+            members,
+            path,
+            tn.range( startPos, tn.pos )
+        );
     }
 
     parseImportDeclaration(): ImportDecl | undefined
@@ -885,10 +946,10 @@ export class Parser extends DiagnosticEmitter
     }
 
     parseEnumValue(
-        tn: Tokenizer,
         parentFlags: CommonFlags
     ): EnumValueDecl | undefined
     {
+        const tn = this.tn;
         // before: Identifier ('=' Expression)?
 
         if( !tn.skipIdentifier() )

@@ -1,5 +1,7 @@
+import { EnumDecl } from "./EnumDecl";
 import { FuncDecl } from "./FuncDecl";
 import { StructDecl } from "./StructDecl";
+import { TypeAliasDecl } from "./TypeAliasDecl";
 import { isVarDecl, VarDecl } from "./VarDecl/VarDecl";
 
 export type PebbleDecl
