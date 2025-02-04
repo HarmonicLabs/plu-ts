@@ -1,6 +1,6 @@
 import { PScriptContext } from "../../../API/V2";
 import { pstruct } from "../../../PTypes/PStruct/pstruct";
-import { bs, int } from "../../../type_system/types";
+import { bs, int } from "../../../../type_system/types";
 import { perror } from "../../perror";
 import { pfn } from "../../pfn";
 import { pInt } from "../../std";

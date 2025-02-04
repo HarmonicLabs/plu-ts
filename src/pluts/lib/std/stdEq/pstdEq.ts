@@ -1,7 +1,7 @@
 import type { PBool } from "../../../PTypes/PBool";
 import type { PFn } from "../../../PTypes/PFn/PFn";
-import { int, typeExtends, type TermType, type ToPType, bs, str, unit, bool, data, list, tyVar, termTypeToString, pair } from "../../../type_system";
-import { getElemsT } from "../../../type_system/tyArgs";
+import { int, typeExtends, type TermType, type ToPType, bs, str, unit, bool, data, list, tyVar, termTypeToString, pair } from "../../../../type_system";
+import { getElemsT } from "../../../../type_system/tyArgs";
 import { peqBool } from "../../builtins/bool";
 import { peqBs } from "../../builtins/bs";
 import { peqData } from "../../builtins/data";

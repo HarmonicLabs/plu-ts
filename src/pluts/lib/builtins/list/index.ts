@@ -3,7 +3,7 @@ import { IRNative } from "../../../../IR/IRNodes/IRNative";
 import { PType } from "../../../PType";
 import { TermFn, PList, PLam, PBool } from "../../../PTypes";
 import { Term } from "../../../Term";
-import { TermType, ToPType, tyVar, fn, list, delayed, lam, bool } from "../../../type_system";
+import { TermType, ToPType, tyVar, fn, list, delayed, lam, bool } from "../../../../type_system";
 import { papp } from "../../papp";
 import { PappArg } from "../../pappArg";
 import { pdelay } from "../../pdelay";

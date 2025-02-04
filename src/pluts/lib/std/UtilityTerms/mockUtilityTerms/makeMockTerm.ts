@@ -1,8 +1,8 @@
 import { IRVar } from "../../../../../IR/IRNodes/IRVar";
 import { CompilerOptions } from "../../../../../IR/toUPLC/CompilerOptions";
 import { Term } from "../../../../Term";
-import { ToPType } from "../../../../type_system/ts-pluts-conversion";
-import { TermType } from "../../../../type_system/types";
+import { ToPType } from "../../../../../type_system/ts-pluts-conversion";
+import { TermType } from "../../../../../type_system/types";
 
 const mockTermIr = Object.freeze( new IRVar( 0 ) );
 

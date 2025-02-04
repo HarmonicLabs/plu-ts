@@ -1,13 +1,6 @@
 import { PType } from "../../../PType";
 import type { PBool, PByteString, PInt, PList, PPair, PString, PStruct, PLam, PAlias } from "../../../PTypes";
 import { Term } from "../../../Term";
-import { isTaggedAsAlias } from "../../../type_system/kinds/isTaggedAsAlias";
-import { isStructType } from "../../../type_system/kinds/isWellFormedType";
-import { ToPType } from "../../../type_system/ts-pluts-conversion";
-import { typeExtends } from "../../../type_system/typeExtends";
-import { Methods, PrimType, StructDefinition, TermType, bool, bs, int, lam, list, pair, str, tyVar } from "../../../type_system/types";
-import { unwrapAlias } from "../../../type_system/tyArgs/unwrapAlias";
-import type { PappArg } from "../../pappArg";
 import { papp } from "../../papp";
 import type { TermAlias } from "./TermAlias";
 import { type TermBool,       addPBoolMethods } from "./TermBool";
@@ -18,10 +11,10 @@ import { type TermPair,       addPPairMethods } from "./TermPair";
 import { type TermStr,        addPStringMethods } from "./TermStr";
 import { type TermStruct,     addPStructMethods } from "./TermStruct";
 import { defineNonDeletableNormalProperty } from "@harmoniclabs/obj-utils";
-import { termTypeToString } from "../../../type_system/utils";
 import { addUserMethods } from "./userMethods/addUserMethods";
 import { addBaseUtilityTerm, BaseUtilityTermExtension } from "./BaseUtilityTerm";
-import { punsafeConvertType } from "../../punsafeConvertType";
+import { Methods, StructDefinition, TermType, ToPType, isTaggedAsAlias, typeExtends, bool, bs, int, list, tyVar, pair, str, lam, isStructType, PrimType, termTypeToString, unwrapAlias } from "../../../../type_system";
+import { PappArg } from "../../pappArg";
 
 // given the index returns the previous number ( PrevNum[2] -> 1; etc... )
 type PrevNum = [ never, 0, 1, 2, 3, 4, 5, 6 ];

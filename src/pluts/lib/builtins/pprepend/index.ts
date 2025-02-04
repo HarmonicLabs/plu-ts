@@ -1,7 +1,7 @@
 import { IRNative } from "../../../../IR/IRNodes/IRNative";
 import { TermFn, PList } from "../../../PTypes";
 import { Term } from "../../../Term";
-import { TermType, ToPType, fn, list } from "../../../type_system";
+import { TermType, ToPType, fn, list } from "../../../../type_system";
 import { addApplications } from "../addApplications";
 
 

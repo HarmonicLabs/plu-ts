@@ -1,5 +1,5 @@
 import { DataI, DataList } from "@harmoniclabs/plutus-data";
-import { data, int, list } from "../../../../../type_system";
+import { data, int, list } from "../../../../../../type_system";
 import { pData, pDataI } from "../../pData";
 import { fromData } from "../fromData";
 import { punIData, punListData } from "../../../../builtins/data";

@@ -1,6 +1,6 @@
 import { UtilityTermOf } from "./addUtilityForType";
-import { ToPType } from "../../../type_system/ts-pluts-conversion";
-import { TermType } from "../../../type_system/types";
+import { ToPType } from "../../../../type_system/ts-pluts-conversion";
+import { TermType } from "../../../../type_system/types";
 import { hasOwn, defineReadOnlyProperty } from "@harmoniclabs/obj-utils";
 import { term_as } from "../../punsafeConvertType";
 import { Term } from "../../../Term";

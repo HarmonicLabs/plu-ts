@@ -1,7 +1,7 @@
 import { Machine } from "@harmoniclabs/plutus-machine";
 import { pstruct } from "..";
 import { pDataI, pInt, phead, phoist, plam, pmakeUnit, pmatch, toData } from "../../../lib"
-import { data, list, unit, int } from "../../../type_system";
+import { data, list, unit, int } from "../../../../type_system";
 import { getElemAtTerm } from "../../../lib/pmatch/getElemAtTerm";
 
 

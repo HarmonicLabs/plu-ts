@@ -1,5 +1,5 @@
-import { typeExtends } from "../../type_system/typeExtends";
-import { StructCtorDef, StructDefinition } from "../../type_system/types";
+import { typeExtends } from "../../../type_system/typeExtends";
+import { StructCtorDef, StructDefinition } from "../../../type_system/types";
 
 function structCtorEq( a: StructCtorDef, b: StructCtorDef ): boolean
 {

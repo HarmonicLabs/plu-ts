@@ -3,7 +3,7 @@ import { pList } from "..";
 import { IRHoisted, getHoistedTerms } from "../../../../../IR/IRNodes/IRHoisted";
 import { compileIRToUPLC } from "../../../../../IR/toUPLC/compileIRToUPLC";
 import { showIR } from "../../../../../IR/utils/showIR";
-import { int, list } from "../../../../type_system";
+import { int, list } from "../../../../../type_system";
 import { pchooseList, peqInt, pif } from "../../../builtins";
 import { pfind } from "../pfind"
 import { prettyUPLC, showUPLC } from "@harmoniclabs/uplc";

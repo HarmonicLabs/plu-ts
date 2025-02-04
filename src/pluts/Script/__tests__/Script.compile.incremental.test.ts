@@ -1,7 +1,7 @@
 import { Machine } from "@harmoniclabs/plutus-machine";
 import { pstruct, pfn } from "../../../pluts";
 import { pBool } from "../../lib";
-import { bool, data, int, list, struct } from "../../type_system"
+import { bool, data, int, list, struct } from "../../../type_system"
 import { compile } from "../compile"
 import { compileIRToUPLC } from "../../../IR/toUPLC/compileIRToUPLC";
 

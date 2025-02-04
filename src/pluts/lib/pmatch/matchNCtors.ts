@@ -1,7 +1,7 @@
 import { IRApp, IRConst, IRDelayed, IRError, IRForced, IRFunc, IRHoisted, IRNative, IRTerm, IRVar } from "../../../IR";
 import { PType } from "../../PType";
 import { Term } from "../../Term";
-import { LamT, PrimType, TermType, data, fn, lam, list } from "../../type_system/types";
+import { LamT, PrimType, TermType, data, fn, lam, list } from "../../../type_system/types";
 
 
 export function matchNCtorsIdxs( _n: number, returnT: TermType ): Term<PType>

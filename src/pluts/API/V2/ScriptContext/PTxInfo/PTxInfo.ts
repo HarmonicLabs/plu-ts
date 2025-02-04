@@ -1,7 +1,7 @@
 import { pstruct } from "../../../../PTypes/PStruct/pstruct";
 import { PTxInInfo } from "../../Tx/PTxInInfo";
 import { PTxOut } from "../../Tx/PTxOut";
-import { list, pair, int, data } from "../../../../type_system";
+import { list, pair, int, data } from "../../../../../type_system";
 import { PValue } from "../../../V1/Value/PValue";
 import { PDCert } from "../../../V1/PDCert";
 import { PStakingCredential } from "../../../V1/Address/PStakingCredential";

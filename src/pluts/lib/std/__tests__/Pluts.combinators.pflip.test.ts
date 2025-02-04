@@ -1,5 +1,5 @@
 import { ByteString } from "@harmoniclabs/bytestring";
-import { bs, int } from "../../../type_system";
+import { bs, int } from "../../../../type_system";
 import { pconsBs } from "../../builtins";
 import { pByteString } from "../bs/pByteString";
 import { pflip } from "../combinators";

@@ -2,7 +2,7 @@ import { defineReadOnlyProperty } from "@harmoniclabs/obj-utils";
 import { IRNative } from "../../../../IR/IRNodes/IRNative";
 import { TermFn, PBool, PLam, PDelayed } from "../../../PTypes";
 import { Term } from "../../../Term";
-import { TermType, ToPType, tyVar, fn, bool, delayed, lam } from "../../../type_system";
+import { TermType, ToPType, tyVar, fn, bool, delayed, lam } from "../../../../type_system";
 import { UtilityTermOf } from "../../std/UtilityTerms/addUtilityForType";
 import { papp } from "../../papp";
 import { PappArg, pappArgToTerm } from "../../pappArg";

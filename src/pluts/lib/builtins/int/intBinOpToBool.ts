@@ -1,7 +1,7 @@
 import { defineReadOnlyProperty } from "@harmoniclabs/obj-utils";
 import { PLam, PInt, PBool } from "../../../PTypes";
 import { Term } from "../../../Term";
-import { fn, int, bool } from "../../../type_system";
+import { fn, int, bool } from "../../../../type_system";
 import { papp } from "../../papp";
 import { PappArg } from "../../pappArg";
 import { TermBool, addPBoolMethods } from "../../std/UtilityTerms/TermBool";

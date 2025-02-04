@@ -1,5 +1,5 @@
 import { toHex } from "@harmoniclabs/uint8array-utils";
-import { termTyToConstTy } from "../../../pluts/type_system/termTyToConstTy";
+import { termTyToConstTy } from "../../../type_system/termTyToConstTy";
 import { IRApp } from "../../IRNodes/IRApp";
 import { IRConst } from "../../IRNodes/IRConst";
 import { IRFunc } from "../../IRNodes/IRFunc";

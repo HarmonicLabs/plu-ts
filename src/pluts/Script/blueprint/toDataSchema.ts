@@ -1,6 +1,6 @@
 import { DataSchema, DataSchemaConstr, DataSchemaList, DataSchemaMap } from "./types";
-import { PrimType, TermType, bs, data, int, isTaggedAsAlias, list, map, termTypeToString, tyVar, typeExtends, unwrapAlias } from "../../type_system";
-import { getElemsT, getFstT, unwrapAsData } from "../../type_system/tyArgs";
+import { PrimType, TermType, bs, data, int, isTaggedAsAlias, list, map, termTypeToString, tyVar, typeExtends, unwrapAlias } from "../../../type_system";
+import { getElemsT, getFstT, unwrapAsData } from "../../../type_system/tyArgs";
 
 export function toDataSchema( t: TermType, title?: string ): DataSchema
 {

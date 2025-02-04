@@ -1,5 +1,6 @@
-import { data, int, pBool, pInt, pList, pPair, pair, plookup, pmatch } from "../../../../.."
+import { pBool, pInt, pList, pPair, plookup, pmatch } from "../../../../.."
 import { Machine, CEKConst } from "@harmoniclabs/plutus-machine";
+import { pair, int, data } from "../../../../../../type_system";
 
 function pMapInts( entries: [ number, number ][] )
 {

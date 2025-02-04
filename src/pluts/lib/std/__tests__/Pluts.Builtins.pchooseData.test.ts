@@ -1,6 +1,6 @@
 import { DataConstr } from "@harmoniclabs/plutus-data";
 import { Force, Application, Builtin, UPLCConst, Delay, showUPLC, UPLCVar, Lambda } from "@harmoniclabs/uplc";
-import { int } from "../../../type_system/types";
+import { int } from "../../../../type_system/types";
 import { pchooseData } from "../../builtins";
 import { pData } from "../data/pData";
 import { pInt } from "../int/pInt";

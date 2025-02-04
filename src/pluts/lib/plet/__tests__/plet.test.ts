@@ -1,6 +1,6 @@
 import { pBool, pfn, plet } from "../.."
 import { compileIRToUPLC } from "../../../../IR/toUPLC/compileIRToUPLC";
-import { bool, int } from "../../../type_system"
+import { bool, int } from "../../../../type_system"
 
 
 const double = pfn([ int ], int)

@@ -4,7 +4,7 @@ import { assert } from "../../../utils/assert";
 import { PType } from "../../PType";
 import { PLam, TermFn } from "../../PTypes";
 import { Term } from "../../Term";
-import { TermType, lam, tyVar, typeExtends } from "../../type_system";
+import { TermType, lam, tyVar, typeExtends } from "../../../type_system";
 import { addUtilityForType } from "../std/UtilityTerms/addUtilityForType";
 import { _precursive } from "./minimal";
 

@@ -1,8 +1,9 @@
 import { fromAscii } from "@harmoniclabs/uint8array-utils";
-import { PData, PInt,PType,Term, TermFn, TermList, V2, bool, bs, data, delayed, fn, int, lam, list, pBSToData, pBool, pData, pDataI, pInt, pIntToData, pList, pListToData, pchooseList, pdelay, peqData, perror, pfn, pforce, phoist, pif, pindexBs, pisEmpty, plam, plet, pmakeUnit, pmatch, pmatchList, pnilData, precursive, pserialiseData, psha2_256, pstrictIf, pstruct, psub, ptrace, ptraceError, ptraceVal, punBData, punIData, punsafeConvertType, str, termTypeToString, unit } from "../..";
+import { PData, PInt,PType,Term, TermFn, TermList, V2, pBSToData, pBool, pData, pDataI, pInt, pIntToData, pList, pListToData, pchooseList, pdelay, peqData, perror, pfn, pforce, phoist, pif, pindexBs, pisEmpty, plam, plet, pmakeUnit, pmatch, pmatchList, pnilData, precursive, pserialiseData, psha2_256, pstrictIf, pstruct, psub, ptrace, ptraceError, ptraceVal, punBData, punIData, punsafeConvertType } from "../..";
 import { TxOutRef } from "@harmoniclabs/cardano-ledger-ts";
 import { dataFromCbor } from "@harmoniclabs/plutus-data";
 import { CEKConst, Machine } from "@harmoniclabs/plutus-machine";
+import { int, bs, lam, list, bool, fn, data, unit, str, delayed } from "../../../type_system";
 
 const master_tn = V2.PTokenName.from( fromAscii("itamae") );
 

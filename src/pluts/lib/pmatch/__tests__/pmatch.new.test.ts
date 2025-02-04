@@ -1,11 +1,11 @@
 import { Machine } from "@harmoniclabs/plutus-machine";
 import { showUPLC } from "@harmoniclabs/uplc";
-import { int, pDataI, pInt, padd, pfn, plet, pstruct } from "../../..";
+import { pDataI, pInt, padd, pfn, plet, pstruct } from "../../..";
 import { IRLetted, IRNative, IRVar, IRFunc, IRConst } from "../../../../IR/IRNodes";
 import { compileIRToUPLC } from "../../../../IR/toUPLC/compileIRToUPLC";
 import { _ir_apps } from "../../../../IR/tree_utils/_ir_apps";
 import { pmatch } from "../../pmatch";
-
+import { int } from "../../../../type_system/types";
 
 const Nums = pstruct({
     TwoNums: {

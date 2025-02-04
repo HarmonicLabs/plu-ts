@@ -1,5 +1,5 @@
 import { Force, Application, Builtin, UPLCConst, constT, Delay } from "@harmoniclabs/uplc";
-import { bool, int } from "../../../type_system/types";
+import { bool, int } from "../../../../type_system/types";
 import { pchooseList } from "../../builtins";
 import { pBool } from "../bool/pBool";
 import { pList } from "../list/const";

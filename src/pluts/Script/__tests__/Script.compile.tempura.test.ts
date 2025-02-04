@@ -1,7 +1,7 @@
 import { fromAscii } from "@harmoniclabs/uint8array-utils";
-import { V2, PData, PInt, Term, TermFn, TermList, bool, bs, data, fn, int, lam, list, pBSToData, pData, pDataI, pInt, pIntToData, pList, pListToData, pchooseList, pdelay, peqData, perror, pfn, phoist, pif, pisEmpty, plam, plet, pmakeUnit, pmatch, pmatchList, pnilData, precursive, pserialiseData, psha2_256, pstrictIf, pstruct, psub, punBData, punsafeConvertType, unit, PUnit } from "../../..";
+import { V2, PData, PInt, Term, TermFn, TermList, pBSToData, pData, pDataI, pInt, pIntToData, pList, pListToData, pchooseList, pdelay, peqData, perror, pfn, phoist, pif, pisEmpty, plam, plet, pmakeUnit, pmatch, pmatchList, pnilData, precursive, pserialiseData, psha2_256, pstrictIf, pstruct, psub, punBData, punsafeConvertType, PUnit } from "../../..";
 import { TxOutRef, UTxO, Value } from "@harmoniclabs/cardano-ledger-ts";
-import { showUPLC } from "@harmoniclabs/uplc";
+import { int, bs, lam, list, bool, fn, data, unit } from "../../../type_system";
 
 const master_tn = V2.PTokenName.from( fromAscii("itamae") );
 

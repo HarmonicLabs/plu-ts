@@ -3,10 +3,10 @@ import { PAsData, PData } from "../PData/PData";
 import { PDataRepresentable } from "../../PType/PDataRepresentable";
 import { UtilityTermOf, addUtilityForType } from "../../lib/std/UtilityTerms/addUtilityForType";
 
-import { structDefToString, termTypeToString } from "../../type_system/utils";
-import { Methods, PrimType, StructCtorDef, StructDefinition, StructT, asData, data, struct } from "../../type_system/types";
-import { ToPType } from "../../type_system/ts-pluts-conversion";
-import { typeExtends, isStructDefinition } from "../../type_system";
+import { structDefToString, termTypeToString } from "../../../type_system/utils";
+import { Methods, PrimType, StructCtorDef, StructDefinition, StructT, asData, data, struct } from "../../../type_system/types";
+import { ToPType } from "../../../type_system/ts-pluts-conversion";
+import { typeExtends, isStructDefinition } from "../../../type_system";
 import { Term } from "../../Term";
 import { punsafeConvertType } from "../../lib/punsafeConvertType";
 import { TermStruct } from "../../lib/std/UtilityTerms/TermStruct";

@@ -1,7 +1,7 @@
 import { toData } from "../../../lib";
 import { PMaybe } from "../../../lib/std/PMaybe/PMaybe";
 import { pStr } from "../../../lib/std/str/pStr";
-import { int, str } from "../../../type_system/types";
+import { int, str } from "../../../../type_system/types";
 
 
 describe("pgenericStruct", () => {

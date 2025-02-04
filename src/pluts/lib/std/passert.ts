@@ -1,7 +1,7 @@
 import { PBool } from "../../PTypes/PBool";
 import { PDelayed } from "../../PTypes/PDelayed";
 import { TermFn } from "../../PTypes/PFn/PFn";
-import { bool, delayed, str, TermType, unit } from "../../type_system/types";
+import { bool, delayed, str, TermType, unit } from "../../../type_system/types";
 import { pif, pstrictIf } from "../builtins/bool";
 import { pdelay } from "../pdelay";
 import { perror } from "../perror";
@@ -10,7 +10,7 @@ import { pforce } from "../pforce";
 import { phoist } from "../phoist";
 import { ptraceError } from "./traces";
 import { pmakeUnit } from "./unit/pmakeUnit";
-import { ToPType } from "../../type_system/ts-pluts-conversion";
+import { ToPType } from "../../../type_system/ts-pluts-conversion";
 
 export const passert = phoist(
     pfn([ bool ], unit)

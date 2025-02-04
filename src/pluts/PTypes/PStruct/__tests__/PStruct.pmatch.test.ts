@@ -6,7 +6,7 @@ import { pmakeUnit } from "../../../lib/std/unit/pmakeUnit";
 import { pByteString } from "../../../lib/std/bs/pByteString";
 import { padd, pconsBs, pindexBs } from "../../../lib/builtins";
 import { perror } from "../../../lib/perror";
-import { TermType, bs, int, unit } from "../../../type_system/types";
+import { TermType, bs, int, unit } from "../../../../type_system/types";
 import { pDataB, pDataI, pmatch, toData } from "../../../lib";
 import { fromHex } from "@harmoniclabs/uint8array-utils";
 import { ByteString } from "@harmoniclabs/bytestring";

@@ -1,6 +1,6 @@
 import { Machine } from "@harmoniclabs/plutus-machine"
 import { pif, pstrictIf } from "../bool"
-import { int } from "../../../type_system"
+import { int } from "../../../../type_system"
 import { pBool, pInt, perror, pmatch, psop } from "../../.."
 import { defaultV3Costs } from "@harmoniclabs/cardano-costmodels-ts";
 import { UPLCDecoder, UPLCEncoder, UPLCProgram, showUPLC } from "@harmoniclabs/uplc";

@@ -1,7 +1,7 @@
 import type { PType } from "../PType";
 import type { PLam, PInt, PBool, PByteString, PString, PUnit, PPair, PList, PAlias } from "../PTypes";
 
-import { termTypeToString, getNRequiredLambdaArgs } from "../type_system/utils";
+import { termTypeToString, getNRequiredLambdaArgs } from "../../type_system/utils";
 import { UtilityTermOf } from "./std/UtilityTerms/addUtilityForType";
 import { pfn } from "./pfn";
 import { pList } from "./std/list/const";
@@ -12,14 +12,14 @@ import { pBool } from "./std/bool/pBool";
 import { pInt } from "./std/int/pInt";
 import { pmakeUnit } from "./std/unit/pmakeUnit";
 import { Term } from "../Term";
-import { TermType, ToPType, tyVar, isWellFormedType, typeExtends, int, bool, isTypeParam, bs, str, unit, fn, list, PrimType, GenericTermType, isWellFormedGenericType, Methods } from "../type_system";
+import { TermType, ToPType, tyVar, isWellFormedType, typeExtends, int, bool, isTypeParam, bs, str, unit, fn, list, PrimType, GenericTermType, isWellFormedGenericType, Methods } from "../../type_system";
 import { fromHex, isUint8Array } from "@harmoniclabs/uint8array-utils";
 import { ByteString } from "@harmoniclabs/bytestring";
 import { CborString } from "@harmoniclabs/cbor";
 import { has_n_determined_keys } from "@harmoniclabs/obj-utils";
 import { Pair } from "@harmoniclabs/pair";
 import { assert } from "../../utils/assert";
-import { clearAsData } from "../type_system/tyArgs/clearAsData";
+import { clearAsData } from "../../type_system/tyArgs/clearAsData";
 
 
 type _TsFunctionSatisfying<KnownArgs extends Term<PType>[], POut extends PType> =

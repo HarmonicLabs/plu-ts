@@ -3,7 +3,7 @@ import type { Term } from "../../../../Term";
 import type { PLam } from "../../../../PTypes/PFn/PLam";
 import { defineReadOnlyProperty } from "@harmoniclabs/obj-utils";
 import { getFnTypes } from "../../../../Script/Parametrized/getFnTypes";
-import { Methods, PrimType, TermType, typeExtends } from "../../../../type_system";
+import { Methods, PrimType, TermType, typeExtends } from "../../../../../type_system";
 // avoid potential dependecies and circular deps
 // import { getMethodsWithFirstInputOfType } from "../UtilityTerms/userMethods/addUserMethods";
 import { LiftMethods, FilterMethodsByInput, MethodsAsTerms } from "../../UtilityTerms/userMethods/methodsTypes";

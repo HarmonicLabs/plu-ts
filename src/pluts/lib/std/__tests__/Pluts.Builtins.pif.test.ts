@@ -1,5 +1,5 @@
 import { Force, Application, Builtin, UPLCConst, Delay, showUPLC, Lambda, UPLCVar } from "@harmoniclabs/uplc";
-import { int } from "../../../type_system/types";
+import { int } from "../../../../type_system/types";
 import { pif, pstrictIf } from "../../builtins";
 import { pBool } from "../bool/pBool";
 import { pInt } from "../int/pInt";

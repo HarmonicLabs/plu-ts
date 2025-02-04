@@ -4,7 +4,7 @@ import { Term } from "../../../../Term";
 import { TermStr } from "../TermStr";
 import { makeMockTermBs } from "./mockPByteStringMethods";
 import { makeMockUtilityTerm } from "./makeMockUtilityTerm";
-import { bool, lam, str } from "../../../../type_system";
+import { bool, lam, str } from "../../../../../type_system";
 import { makeMockTerm } from "./makeMockTerm";
 import { makeMockTermBool } from "./mockPBoolMethods";
 import { addBaseUtilityTerm } from "../BaseUtilityTerm";

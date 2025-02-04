@@ -1,6 +1,6 @@
 import { TermFn, PLam, PBool, PList } from "../../../PTypes";
 import { Term } from "../../../Term";
-import { TermType, ToPType, lam, bool, list, delayed } from "../../../type_system";
+import { TermType, ToPType, lam, bool, list, delayed } from "../../../../type_system";
 import { papp } from "../../papp";
 import { pdelay } from "../../pdelay";
 import { pfn } from "../../pfn";

@@ -1,7 +1,7 @@
 import { pfn } from "../../pfn";
 import { PDataRepresentable } from "../../../PType/PDataRepresentable";
 import { PStruct, pstruct } from "../../../PTypes/PStruct/pstruct";
-import { StructT, TermType, FromPType, ToPType } from "../../../type_system";
+import { StructT, TermType, FromPType, ToPType } from "../../../../type_system";
 import { _fromData } from "../data/conversion/fromData_minimal";
 import { TermFn } from "../../../PTypes/PFn/PFn";
 import { pmatch } from "../../pmatch/pmatch";

@@ -1,6 +1,6 @@
 import type { TermFn, PList, PInt, PLam } from "../../../PTypes";
 import { Term } from "../../../Term";
-import { TermType, ToPType, fn, int, list } from "../../../type_system";
+import { TermType, ToPType, fn, int, list } from "../../../../type_system";
 import { pif } from "../../builtins/bool";
 import { pisEmpty, ptail, phead } from "../../builtins/list";
 import { papp } from "../../papp";

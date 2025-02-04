@@ -1,7 +1,7 @@
 import { ByteString } from "@harmoniclabs/bytestring";
 import { IRConst } from "../../../../IR/IRNodes/IRConst";
 import { Term } from "../../../Term";
-import { bs } from "../../../type_system/types";
+import { bs } from "../../../../type_system/types";
 import { TermBS, addPByteStringMethods } from "../UtilityTerms/TermBS";
 
 export function pByteString( _bs: ByteString | string | Uint8Array ): TermBS

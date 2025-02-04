@@ -1,8 +1,8 @@
 import type { PType } from "../../PType";
-import type { TermType } from "../../type_system/types";
-import type { ToPType } from "../../type_system/ts-pluts-conversion";
+import type { TermType } from "../../../type_system/types";
+import type { ToPType } from "../../../type_system/ts-pluts-conversion";
 import { type UtilityTermOf, addUtilityForType } from "../std/UtilityTerms/addUtilityForType";
-import { isWellFormedType } from "../../type_system/kinds/isWellFormedType";
+import { isWellFormedType } from "../../../type_system/kinds/isWellFormedType";
 import { Term } from "../../Term";
 
 

@@ -1,10 +1,10 @@
 import { PDataRepresentable } from "../../PType/PDataRepresentable";
 import { UtilityTermOf, addUtilityForType } from "../../lib/std/UtilityTerms/addUtilityForType";
 
-import { structDefToString } from "../../type_system/utils";
-import { Methods, PrimType, SopCtorDef, SopDefinition, SopT, sop } from "../../type_system/types";
-import { ToPType } from "../../type_system/ts-pluts-conversion";
-import { typeExtends, isSopDefinition } from "../../type_system";
+import { structDefToString } from "../../../type_system/utils";
+import { Methods, PrimType, SopCtorDef, SopDefinition, SopT, sop } from "../../../type_system/types";
+import { ToPType } from "../../../type_system/ts-pluts-conversion";
+import { typeExtends, isSopDefinition } from "../../../type_system";
 import { Term } from "../../Term";
 import { PType } from "../../PType";
 import { defineReadOnlyProperty, isObject } from "@harmoniclabs/obj-utils";

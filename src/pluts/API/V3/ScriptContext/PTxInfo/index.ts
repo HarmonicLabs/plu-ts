@@ -1,5 +1,5 @@
 import { pstruct } from "../../../../PTypes/PStruct/pstruct";
-import { list, pair, int, data, map } from "../../../../type_system";
+import { list, pair, int, data, map } from "../../../../../type_system";
 import { PValue } from "../../../V1/Value/PValue";
 import { PPOSIXTimeRange } from "../../../V1/Time";
 import { PPubKeyHash } from "../../../V1/PubKey/PPubKeyHash";

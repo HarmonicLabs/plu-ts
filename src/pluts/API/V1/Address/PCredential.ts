@@ -2,7 +2,7 @@ import { pstruct } from "../../../PTypes/PStruct/pstruct";
 import { punBData } from "../../../lib/builtins/data";
 import { pfn } from "../../../lib/pfn";
 import { phoist } from "../../../lib/phoist";
-import { bs } from "../../../type_system/types";
+import { bs } from "../../../../type_system/types";
 import { PPubKeyHash } from "../PubKey/PPubKeyHash";
 import { PValidatorHash } from "../ScriptsHashes/PValidatorHash";
 

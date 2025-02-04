@@ -1,9 +1,7 @@
 import { defineReadOnlyProperty, hasOwn, isObject } from "@harmoniclabs/obj-utils";
-import { assert } from "../../utils/assert";
 import { getElemsT } from "./tyArgs";
-import { PLam } from "../PTypes";
-import { PType } from "../PType";
-import { Term } from "../Term";
+import assert from "assert";
+import { Term, PLam, PType } from "../pluts";
 
 export enum PrimType {
     Int  = "int",

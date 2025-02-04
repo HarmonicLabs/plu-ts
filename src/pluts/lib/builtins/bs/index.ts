@@ -1,6 +1,6 @@
 import { PLam, PByteString, PBool, PInt, PFn, TermFn } from "../../../PTypes";
 import { Term } from "../../../Term";
-import { fn, bs, bool, int, lam } from "../../../type_system";
+import { fn, bs, bool, int, lam } from "../../../../type_system";
 import { papp } from "../../papp";
 import { PappArg } from "../../pappArg";
 import { TermBS, addPByteStringMethods } from "../../std/UtilityTerms/TermBS";

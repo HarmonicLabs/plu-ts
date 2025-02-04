@@ -1,6 +1,6 @@
 import { IRError } from "../../IR/IRNodes/IRError";
 import { Term } from "../Term";
-import { TermType, ToPType } from "../type_system";
+import { TermType, ToPType } from "../../type_system";
 
 export function perror<T extends TermType>( type: T , msg: string | undefined = undefined, addInfos: object | undefined = {}): Term<ToPType<T>>
 {

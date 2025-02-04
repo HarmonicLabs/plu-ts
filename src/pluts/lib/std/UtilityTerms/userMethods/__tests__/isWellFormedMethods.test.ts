@@ -1,4 +1,6 @@
-import { bool, int, pBool, pfn } from "../../../../..";
+import { bool, int } from "../../../../../../type_system";
+import { pfn } from "../../../../pfn";
+import { pBool } from "../../../bool/pBool";
 import { isWellFormedMethods } from "../assertWellFormedMethods";
 
 const fakeTerm = pfn([ int ], bool )(( n ) => pBool( true ));

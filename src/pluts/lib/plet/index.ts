@@ -6,7 +6,7 @@ import { IRFunc } from "../../../IR/IRNodes/IRFunc";
 import { IRLetted } from "../../../IR/IRNodes/IRLetted";
 import { IRVar } from "../../../IR/IRNodes/IRVar";
 import { Term } from "../../Term";
-import { PrimType } from "../../type_system/types";
+import { PrimType } from "../../../type_system/types";
 import { _fromData } from "../std/data/conversion/fromData_minimal";
 import { IRHoisted } from "../../../IR/IRNodes/IRHoisted";
 import { isClosedIRTerm } from "../../../IR/utils/isClosedIRTerm";
@@ -14,7 +14,7 @@ import { UtilityTermOf, addUtilityForType } from "../std/UtilityTerms/addUtility
 import { makeMockUtilityTerm } from "../std/UtilityTerms/mockUtilityTerms/makeMockUtilityTerm";
 import { getCallStackAt } from "../../../utils/getCallStackAt";
 import { IRTerm } from "../../../IR/IRTerm";
-import { termTypeToString } from "../../type_system";
+import { termTypeToString } from "../../../type_system";
 import { IRSelfCall } from "../../../IR/IRNodes/IRSelfCall";
 
 export type LettedTerm<PVarT extends PType, SomeExtension extends object> =

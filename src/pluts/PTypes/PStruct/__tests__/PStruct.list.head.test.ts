@@ -1,8 +1,8 @@
 import { Machine } from "@harmoniclabs/plutus-machine";
 import { pDataI, pInt, pList, toData } from "../../../lib";
-import { int, list, termTypeToString } from "../../../type_system";
-import { getElemsT } from "../../../type_system/tyArgs";
 import { pstruct } from "../pstruct";
+import { int, list } from "../../../../type_system";
+import { getElemsT } from "../../../../type_system/tyArgs";
 
 
 const MyStruct = pstruct({

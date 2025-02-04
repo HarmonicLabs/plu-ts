@@ -1,7 +1,7 @@
 import { Machine } from "@harmoniclabs/plutus-machine"
 import { pmatchList } from ".."
 import { pfn } from "../../../.."
-import { int, list } from "../../../../../type_system"
+import { int, list } from "../../../../../../type_system"
 import { pdelay } from "../../../../pdelay"
 import { pInt } from "../../../int"
 

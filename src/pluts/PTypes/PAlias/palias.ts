@@ -1,12 +1,12 @@
 import type { Term } from "../../Term";
 
 import { punsafeConvertType } from "../../lib/punsafeConvertType";
-import { AliasT, Methods, PrimType, TermType, alias, data } from "../../type_system/types";
+import { AliasT, Methods, PrimType, TermType, alias, data } from "../../../type_system/types";
 import { PDataRepresentable } from "../../PType/PDataRepresentable";
 import { PData } from "../PData/PData";
-import { FromPType, ToPType } from "../../type_system/ts-pluts-conversion";
-import { isWellFormedType } from "../../type_system/kinds/isWellFormedType";
-import { typeExtends } from "../../type_system/typeExtends";
+import { FromPType, ToPType } from "../../../type_system/ts-pluts-conversion";
+import { isWellFormedType } from "../../../type_system/kinds/isWellFormedType";
+import { typeExtends } from "../../../type_system/typeExtends";
 import { assert } from "../../../utils/assert";
 import { defineReadOnlyProperty } from "@harmoniclabs/obj-utils";
 import { PType } from "../../PType";

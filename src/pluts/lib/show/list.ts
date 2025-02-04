@@ -1,7 +1,7 @@
 import { PByteString, PList, TermFn } from "../../PTypes";
-import { TermType, bs, lam, list } from "../../type_system/types";
+import { TermType, bs, lam, list } from "../../../type_system/types";
 import { pshow } from "./pshow";
-import { ToPType } from "../../type_system";
+import { ToPType } from "../../../type_system";
 import { phoist } from "../phoist";
 import { pfn } from "../pfn";
 import { pfoldl } from "../std/list/pfoldl";

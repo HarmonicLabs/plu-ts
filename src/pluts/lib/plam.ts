@@ -1,9 +1,9 @@
 import { defineReadOnlyHiddenProperty, defineReadOnlyProperty } from "@harmoniclabs/obj-utils";
 import { PLam } from "../PTypes";
 import { Term } from "../Term";
-import { includesDynamicPairs } from "../type_system/includesDynamicPairs";
-import { ToPType } from "../type_system/ts-pluts-conversion";
-import { TermType, lam } from "../type_system/types";
+import { includesDynamicPairs } from "../../type_system/includesDynamicPairs";
+import { ToPType } from "../../type_system/ts-pluts-conversion";
+import { TermType, lam } from "../../type_system/types";
 import { getCallStackAt } from "../../utils/getCallStackAt";
 import { PappResult, papp } from "./papp";
 import { IRVar } from "../../IR/IRNodes/IRVar";

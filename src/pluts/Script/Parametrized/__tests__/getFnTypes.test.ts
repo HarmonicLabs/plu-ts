@@ -1,4 +1,4 @@
-import { bs, fn, int, lam, str } from "../../../type_system/types";
+import { bs, fn, int, lam, str } from "../../../../type_system/types";
 import { getFnTypes } from "../getFnTypes";
 
 describe("getFnTypes", () => {

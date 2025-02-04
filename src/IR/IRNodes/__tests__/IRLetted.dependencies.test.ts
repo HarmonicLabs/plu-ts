@@ -1,4 +1,4 @@
-import { int } from "../../../pluts";
+import { int } from "../../../type_system/types";
 import { IRApp } from "../IRApp";
 import { IRConst } from "../IRConst";
 import { IRLetted, getLettedTerms, getSortedLettedSet, jsonLettedSetEntry } from "../IRLetted";

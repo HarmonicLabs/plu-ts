@@ -1,4 +1,4 @@
-import { str } from "../../type_system/types";
+import { str } from "../../../type_system/types";
 import { pid, ptrace } from "../builtins";
 import { phoist } from "../phoist";
 import { plam } from "../plam";

@@ -1,5 +1,5 @@
 import { fromAscii } from "@harmoniclabs/uint8array-utils";
-import { bool, bs } from "../../type_system";
+import { bool, bs } from "../../../type_system";
 import { pstrictIf, ptrace } from "../builtins";
 import { phoist } from "../phoist";
 import { plam } from "../plam";

@@ -1,7 +1,7 @@
 import { PBool, TermFn } from "../../../PTypes";
-import { PairT, TermType, ToPType, bool } from "../../../type_system";
-import { getDirectFstT } from "../../../type_system/tyArgs/getDirectFstT";
-import { getDirectSndT } from "../../../type_system/tyArgs/getDirectSndT";
+import { PairT, TermType, ToPType, bool } from "../../../../type_system";
+import { getDirectFstT } from "../../../../type_system/tyArgs/getDirectFstT";
+import { getDirectSndT } from "../../../../type_system/tyArgs/getDirectSndT";
 import { pfn } from "../../pfn";
 import { pfstPairNoUnwrap, psndPairNoUnwrap } from "../../builtins/pair/noUnwrap";
 import { pstdEq } from "../stdEq/pstdEq";

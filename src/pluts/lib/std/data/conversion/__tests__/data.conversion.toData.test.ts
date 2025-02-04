@@ -1,6 +1,6 @@
 import { Machine } from "@harmoniclabs/plutus-machine";
 import { PAssetsEntry, PCurrencySymbol, PScriptPurpose, PTokenName, PValue, PValueEntry } from "../../../../../API";
-import { pair, data, asData, typeExtends, list, termTypeToString, int, bs } from "../../../../../type_system";
+import { pair, data, asData, typeExtends, list, termTypeToString, int, bs } from "../../../../../../type_system";
 import { pByteString } from "../../../bs";
 import { pInt } from "../../../int";
 import { pList } from "../../../list";

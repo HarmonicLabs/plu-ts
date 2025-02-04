@@ -1,5 +1,6 @@
-import { PMaybe, PPubKeyHash, PScriptContext, V2, bool, bs, compile, pBool, pfn, plet, pmatch, pstruct, unit } from "../../../pluts"
-
+import { PMaybe, PPubKeyHash, PScriptContext, V2, compile, pBool, pfn, plet, pmatch, pstruct } from "../../../pluts"
+import { bool, bs } from "../../../type_system";
+import { unit } from "../../../type_system";
 
 describe("compile PMaybe func", () => {
 

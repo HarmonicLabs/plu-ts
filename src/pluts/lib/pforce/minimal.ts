@@ -3,7 +3,7 @@ import { IRForced } from "../../../IR/IRNodes/IRForced";
 import { PType } from "../../PType";
 import { PDelayed } from "../../PTypes/PDelayed";
 import { Term } from "../../Term";
-import { PrimType } from "../../type_system/types";
+import { PrimType } from "../../../type_system/types";
 
 export function _pforce<PInstance extends PType >
 ( toForce: Term<PDelayed<PInstance>> | Term<PInstance> ): Term<PInstance>

@@ -1,6 +1,6 @@
 import { CEKConst, Machine } from "@harmoniclabs/plutus-machine";
 import { psop } from "../../../PTypes/PSoP/psop";
-import { bs, int } from "../../../type_system";
+import { bs, int } from "../../../../type_system";
 import { pBs } from "../../std";
 import { pInt } from "../../std/int/pInt";
 import { pmatch } from "../pmatch";

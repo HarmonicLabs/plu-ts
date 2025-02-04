@@ -1,7 +1,7 @@
 import { IRNative } from "../../../IR/IRNodes/IRNative";
 import type { TermFn, PString } from "../../PTypes";
 import { Term } from "../../Term";
-import { TermType, ToPType, fn, str, bool, delayed } from "../../type_system";
+import { TermType, ToPType, fn, str, bool, delayed } from "../../../type_system";
 import { pdelay } from "../pdelay";
 import { perror } from "../perror";
 import { pfn } from "../pfn";

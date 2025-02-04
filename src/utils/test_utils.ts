@@ -2,22 +2,16 @@ import {
     pByteString,
     pList,
     toData,
-    bs,
     pDataI,
     pPair,
-    list,
-    int,
     pInt,
     V1,
     V2,
-    map,
-    data,
-    pair,
-    bool,
     pBool,
     addUtilityForType,
     PMaybe,
 } from "../pluts";
+import { bs, bool, data, list, map, pair, int } from "../type_system";
 
 export const unitDatumHash = V2.PDatumHash.from( pByteString("923918e403bf43c34b4ef6b48eb2ee04babed17320d8d1b9ff9ad086e86f44ec") );
 export const emptyValue = V2.PValue.from( pList( V2.PValueEntry.type )([]) as any );

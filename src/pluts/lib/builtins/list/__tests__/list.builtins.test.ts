@@ -1,6 +1,6 @@
 import { Machine } from "@harmoniclabs/plutus-machine"
 import { pchooseList } from ".."
-import { int, unit } from "../../../../type_system/types"
+import { int, unit } from "../../../../../type_system/types"
 import { pInt } from "../../../std/int/pInt"
 import { perror } from "../../../perror"
 

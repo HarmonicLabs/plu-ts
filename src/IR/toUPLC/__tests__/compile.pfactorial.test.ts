@@ -1,4 +1,5 @@
-import { precursive, pfn, lam, int, pif } from "../../.."
+import { precursive, pfn, pif } from "../../../pluts"
+import { lam, int } from "../../../type_system"
 
 const pfactorial = precursive(
     pfn([

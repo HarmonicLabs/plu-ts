@@ -1,6 +1,6 @@
 import { CEKError, Machine } from "@harmoniclabs/plutus-machine";
 import { PMaybe } from "..";
-import { int } from "../../../../type_system/types";
+import { int } from "../../../../../type_system/types";
 import { pDataI } from "../../data/pData";
 import { pInt } from "../../int/pInt";
 

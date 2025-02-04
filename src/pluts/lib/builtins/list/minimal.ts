@@ -1,7 +1,7 @@
 import { IRNative } from "../../../../IR/IRNodes/IRNative";
 import { TermFn, PList } from "../../../PTypes";
 import { Term } from "../../../Term";
-import { TermType, ToPType, fn, lam, list } from "../../../type_system";
+import { TermType, ToPType, fn, lam, list } from "../../../../type_system";
 
 export function _pstrictChooseList<ListElemT extends TermType, ReturnT extends TermType>( listElemT: ListElemT, returnT: ReturnT )
     : TermFn<[ PList< ToPType<ListElemT>> , ToPType<ReturnT>, ToPType<ReturnT> ], ToPType<ReturnT>>

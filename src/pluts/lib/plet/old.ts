@@ -5,7 +5,7 @@ import { IRSelfCall } from "../../../IR/IRNodes/IRSelfCall";
 import { IRVar } from "../../../IR/IRNodes/IRVar";
 import type { PType } from "../../PType";
 import { Term } from "../../Term";
-import { PrimType } from "../../type_system/types";
+import { PrimType } from "../../../type_system/types";
 import { UtilityTermOf, addUtilityForType } from "../std/UtilityTerms/addUtilityForType";
 import { _fromData } from "../std/data/conversion/fromData_minimal";
 

@@ -1,7 +1,7 @@
 import type { PDataRepresentable } from "../../../PType/PDataRepresentable";
 import type { PBool, PDelayed, PList, TermFn } from "../../../PTypes";
 import { PAlias, palias } from "../../../PTypes/PAlias/palias";
-import { TermType, list, lam, bool, delayed, AliasT, ListT, ToPType } from "../../../type_system";
+import { TermType, list, lam, bool, delayed, AliasT, ListT, ToPType } from "../../../../type_system";
 import { punsafeConvertType } from "../../punsafeConvertType";
 import { pfn } from "../../pfn";
 import { phoist } from "../../phoist";

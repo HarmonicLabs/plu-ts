@@ -1,6 +1,6 @@
 import { toHex } from "@harmoniclabs/uint8array-utils";
 import { IRApp, IRFunc, IRHoisted, IRNative } from "..";
-import { int } from "../../../pluts";
+import { int } from "../../../type_system";
 import { IRTerm } from "../../IRTerm";
 import { IRConst } from "../IRConst";
 import { IRLetted, getNormalizedLettedArgs } from "../IRLetted";

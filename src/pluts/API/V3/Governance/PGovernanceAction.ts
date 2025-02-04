@@ -1,6 +1,6 @@
 import { PMaybe } from "../../../lib";
 import { pstruct } from "../../../PTypes/PStruct/pstruct";
-import { int, list, map } from "../../../type_system/types";
+import { int, list, map } from "../../../../type_system/types";
 import { PCredential } from "../../V1/Address/PCredential";
 import { PValidatorHash } from "../../V1/ScriptsHashes/PValidatorHash";
 import { PTxOutRef } from "../Tx/PTxOutRef";

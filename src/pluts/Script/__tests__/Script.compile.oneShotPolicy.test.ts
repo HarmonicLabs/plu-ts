@@ -16,6 +16,7 @@ import { pData, pDataB, pDataI } from "../../lib/std/data/pData";
 import { punsafeConvertType } from "../../lib/punsafeConvertType";
 import { compile } from "../compile";
 import { pmatch } from "../../lib/pmatch";
+import { bool } from "../../../type_system";
 
 export const MintRdmr = pstruct({
     Mint: {},

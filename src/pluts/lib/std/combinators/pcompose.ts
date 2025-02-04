@@ -1,7 +1,7 @@
 import { PFn, PLam, TermFn } from "../../../PTypes";
 import { Term } from "../../../Term";
-import { ToPType } from "../../../type_system";
-import { TermType, lam } from "../../../type_system/types";
+import { ToPType } from "../../../../type_system";
+import { TermType, lam } from "../../../../type_system/types";
 import { papp } from "../../papp";
 import { pfn } from "../../pfn";
 import { phoist } from "../../phoist";

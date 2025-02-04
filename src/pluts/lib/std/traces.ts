@@ -1,4 +1,4 @@
-import { bool, delayed, str, TermType } from "../../type_system/types";
+import { bool, delayed, str, TermType } from "../../../type_system/types";
 import { pdelay } from "../pdelay";
 import { perror } from "../perror";
 import { pfn } from "../pfn";
@@ -10,7 +10,7 @@ import { pif } from "../builtins/bool";
 import { ptrace } from "../builtins/ptrace";
 import { TermFn } from "../../PTypes/PFn/PFn";
 import { PString } from "../../PTypes/PString";
-import { ToPType } from "../../type_system/ts-pluts-conversion";
+import { ToPType } from "../../../type_system/ts-pluts-conversion";
 
 export const ptraceIfTrue = phoist(
     pfn([

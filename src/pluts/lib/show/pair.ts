@@ -1,11 +1,11 @@
 import { fromAscii } from "@harmoniclabs/uint8array-utils";
 import { PByteString } from "../../PTypes";
 import { TermFn } from "../../PTypes/PFn/PFn";
-import { ToPType } from "../../type_system/ts-pluts-conversion";
-import { clearAsData } from "../../type_system/tyArgs/clearAsData";
-import { getDirectFstT } from "../../type_system/tyArgs/getDirectFstT";
-import { getDirectSndT } from "../../type_system/tyArgs/getDirectSndT";
-import { PairT, TermType, bool, bs, lam } from "../../type_system/types";
+import { ToPType } from "../../../type_system/ts-pluts-conversion";
+import { clearAsData } from "../../../type_system/tyArgs/clearAsData";
+import { getDirectFstT } from "../../../type_system/tyArgs/getDirectFstT";
+import { getDirectSndT } from "../../../type_system/tyArgs/getDirectSndT";
+import { PairT, TermType, bool, bs, lam } from "../../../type_system/types";
 import { pfstPair, psndPair } from "../builtins";
 import { pfn } from "../pfn";
 import { phoist } from "../phoist";

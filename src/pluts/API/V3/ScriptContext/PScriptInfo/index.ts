@@ -1,6 +1,6 @@
 import { PMaybe } from "../../../../lib/std/PMaybe/PMaybe";
 import { pstruct } from "../../../../PTypes/PStruct/pstruct";
-import { data, int } from "../../../../type_system/types";
+import { data, int } from "../../../../../type_system/types";
 import { PCredential } from "../../../V1/Address/PCredential";
 import { PCurrencySymbol } from "../../../V1/Value/PCurrencySymbol";
 import { PProposalProcedure } from "../../Governance/PProposalProcedure";

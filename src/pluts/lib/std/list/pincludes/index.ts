@@ -1,4 +1,4 @@
-import { TermType, bool, fn, list } from "../../../../type_system";
+import { TermType, bool, fn, list } from "../../../../../type_system";
 import { papp } from "../../../papp";
 import { pfn } from "../../../pfn";
 import { phoist } from "../../../phoist";

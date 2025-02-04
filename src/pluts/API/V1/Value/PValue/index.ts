@@ -6,12 +6,12 @@ import { pfn } from "../../../../lib/pfn";
 import { phoist } from "../../../../lib/phoist";
 import { pInt } from "../../../../lib/std/int/pInt";
 import { _precursiveList } from "../../../../lib/std/list/precursiveList/minimal";
-import { asData, delayed, fn, int, lam, list, pair } from "../../../../type_system/types";
+import { asData, delayed, fn, int, lam, list, pair } from "../../../../../type_system/types";
 import { PCurrencySymbol } from "../PCurrencySymbol";
 import { PTokenName } from "../PTokenName";
 import { _papp } from "../../../../lib/std/data/conversion/minimal_common";
 import { plam } from "../../../../lib/plam";
-import { unwrapAlias } from "../../../../type_system";
+import { unwrapAlias } from "../../../../../type_system";
 import { makeMockTerm } from "../../../../lib/std/UtilityTerms/mockUtilityTerms/makeMockTerm";
 
 export const PAssetsEntry = palias(

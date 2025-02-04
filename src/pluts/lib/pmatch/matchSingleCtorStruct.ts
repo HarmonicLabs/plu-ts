@@ -12,7 +12,7 @@ import { psndPairNoUnwrap } from "../../lib/builtins/pair/noUnwrap";
 import { papp } from "../../lib/papp";
 import { pfn } from "../../lib/pfn";
 import { phoist } from "../../lib/phoist";
-import { data, lam, list, int, TermType } from "../../type_system";
+import { data, lam, list, int, TermType } from "../../../type_system";
 
 const hoisted_getFields = new IRHoisted(
     new IRFunc( 1, // struct

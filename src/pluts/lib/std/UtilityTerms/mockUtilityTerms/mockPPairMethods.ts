@@ -2,10 +2,10 @@ import { definePropertyIfNotPresent, defineReadOnlyProperty } from "@harmoniclab
 import { PType } from "../../../../PType";
 import { PPair } from "../../../../PTypes/PPair";
 import { Term } from "../../../../Term";
-import { PrimType, TermType, bool, isWellFormedType, lam, pair, tyVar, typeExtends, unwrapAlias } from "../../../../type_system";
+import { PrimType, TermType, bool, isWellFormedType, lam, pair, tyVar, typeExtends, unwrapAlias } from "../../../../../type_system";
 import { TermPair } from "../TermPair";
 import { makeMockUtilityTerm } from "./makeMockUtilityTerm";
-import { unwrapAsData } from "../../../../type_system/tyArgs/unwrapAsData";
+import { unwrapAsData } from "../../../../../type_system/tyArgs/unwrapAsData";
 import { makeMockTerm } from "./makeMockTerm";
 import { makeMockTermBool } from "./mockPBoolMethods";
 import { addBaseUtilityTerm } from "../BaseUtilityTerm";

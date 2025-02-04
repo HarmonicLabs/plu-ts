@@ -2,7 +2,7 @@ import { fromAscii, fromHex } from "@harmoniclabs/uint8array-utils";
 import { PType } from "../../PType";
 import { Term } from "../../Term";
 import { TermInt } from "../../lib/std/UtilityTerms/TermInt";
-import { PrimType, bs, fn, int, lam, list, pair, str, tyVar } from "../../type_system/types";
+import { PrimType, bs, fn, int, lam, list, pair, str, tyVar } from "../../../type_system/types";
 import { padd } from "../builtins/int/padd";
 import { pappArgToTerm } from "../pappArg";
 import { pfn } from "../pfn";

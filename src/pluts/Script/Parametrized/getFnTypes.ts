@@ -1,4 +1,4 @@
-import { PrimType, TermType } from "../../type_system";
+import { PrimType, TermType } from "../../../type_system";
 
 /**
  * given a term type of a function (lambda)

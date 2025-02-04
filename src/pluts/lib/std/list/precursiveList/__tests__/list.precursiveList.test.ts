@@ -1,6 +1,6 @@
 import { pfn, pif, pisEmpty } from "../../../.."
 import { Machine } from "@harmoniclabs/plutus-machine"
-import { int, lam, list } from "../../../../../type_system"
+import { int, lam, list } from "../../../../../../type_system"
 import { pdelay } from "../../../../pdelay"
 import { pInt } from "../../../int"
 import { precursiveList } from "../index";

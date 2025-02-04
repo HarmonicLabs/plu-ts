@@ -2,7 +2,7 @@ import { defineReadOnlyProperty } from "@harmoniclabs/obj-utils";
 import { IRNative } from "../../../../IR/IRNodes/IRNative";
 import { PLam, PString, PBool, PByteString } from "../../../PTypes";
 import { Term } from "../../../Term";
-import { fn, str, bool, lam, bs } from "../../../type_system";
+import { fn, str, bool, lam, bs } from "../../../../type_system";
 import { papp } from "../../papp";
 import { PappArg } from "../../pappArg";
 import { TermBS, addPByteStringMethods } from "../../std/UtilityTerms/TermBS";

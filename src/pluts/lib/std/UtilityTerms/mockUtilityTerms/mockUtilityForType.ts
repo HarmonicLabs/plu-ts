@@ -1,18 +1,18 @@
 import { PType } from "../../../../PType";
 import type { PAlias } from "../../../../PTypes";
 import { Term } from "../../../../Term";
-import { isTaggedAsAlias } from "../../../../type_system/kinds/isTaggedAsAlias";
-import { isStructType } from "../../../../type_system/kinds/isWellFormedType";
-import { ToPType } from "../../../../type_system/ts-pluts-conversion";
-import { typeExtends } from "../../../../type_system/typeExtends";
-import { Methods, PrimType, TermType, bool, bs, int, lam, list, pair, str, tyVar } from "../../../../type_system/types";
-import { unwrapAlias } from "../../../../type_system/tyArgs/unwrapAlias";
+import { isTaggedAsAlias } from "../../../../../type_system/kinds/isTaggedAsAlias";
+import { isStructType } from "../../../../../type_system/kinds/isWellFormedType";
+import { ToPType } from "../../../../../type_system/ts-pluts-conversion";
+import { typeExtends } from "../../../../../type_system/typeExtends";
+import { Methods, PrimType, TermType, bool, bs, int, lam, list, pair, str, tyVar } from "../../../../../type_system/types";
+import { unwrapAlias } from "../../../../../type_system/tyArgs/unwrapAlias";
 import {
     TermAlias,
 } from "../../UtilityTerms";
 import { defineNonDeletableNormalProperty } from "@harmoniclabs/obj-utils";
 import { _punsafeConvertType } from "../../../punsafeConvertType/minimal";
-import { termTypeToString } from "../../../../type_system/utils";
+import { termTypeToString } from "../../../../../type_system/utils";
 import { UtilityTermOf } from "../../UtilityTerms/addUtilityForType";
 import { mockUserMethods } from "./mockUserMethods";
 import { mockPBoolMethods } from "./mockPBoolMethods";

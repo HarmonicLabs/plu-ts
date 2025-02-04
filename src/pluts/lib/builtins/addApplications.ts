@@ -3,7 +3,7 @@ import type { PType } from "../../PType";
 import type { PFn, TermFn } from "../../PTypes/PFn/PFn";
 import type { Term } from "../../Term";
 
-import { getNRequiredLambdaArgs } from "../../type_system/utils";
+import { getNRequiredLambdaArgs } from "../../../type_system/utils";
 import { papp } from "../papp";
 import { PappArg } from "../pappArg";
 import { Head } from "../../../utils/types";

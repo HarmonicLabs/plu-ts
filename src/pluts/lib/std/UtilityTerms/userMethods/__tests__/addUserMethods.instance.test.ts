@@ -1,6 +1,8 @@
 import { showUPLC } from "@harmoniclabs/uplc";
-import { Methods, Term, bool, bs, data, int, lam, map, pBool, pInt, padd, palias, perror, pfn, phoist, pmatch, punBData } from "../../../../..";
+import { Term, pBool, pInt, padd, palias, perror, pfn, phoist, pmatch, punBData } from "../../../../..";
 import { addUserMethods } from "../addUserMethods";
+import { int, lam, bs, map, data, bool } from "../../../../../../type_system";
+
 
 describe("addUserMethod result", () => {
 

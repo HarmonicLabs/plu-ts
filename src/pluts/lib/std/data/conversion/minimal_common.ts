@@ -5,7 +5,7 @@ import { IRVar } from "../../../../../IR/IRNodes/IRVar";
 import { PType } from "../../../../PType"
 import { PLam } from "../../../../PTypes"
 import { Term } from "../../../../Term"
-import { TermType, ToPType, fn, lam } from "../../../../type_system"
+import { TermType, ToPType, fn, lam } from "../../../../../type_system"
 
 
 export function _papp<Input extends PType, Output extends PType>( a: Term<PLam<Input,Output>>, b: Term<Input> ): Term<Output>

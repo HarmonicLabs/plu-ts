@@ -1,6 +1,6 @@
 import { palias } from "../palias"
 import { pInt } from "../../../lib/std/int/pInt";
-import { int } from "../../../type_system/types";
+import { int } from "../../../../type_system/types";
 import { CEKConst, Machine } from "@harmoniclabs/plutus-machine";
 
 

@@ -1,5 +1,5 @@
 import { PLam, PList, PDelayed, PFn } from "../../../../PTypes";
-import { TermType, ToPType, lam, list, fn, delayed } from "../../../../type_system";
+import { TermType, ToPType, lam, list, fn, delayed } from "../../../../../type_system";
 import { pfn } from "../../../pfn";
 import { phoist } from "../../../phoist";
 import { _papp } from "../../data/conversion/minimal_common";

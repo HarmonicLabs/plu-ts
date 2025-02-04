@@ -1,4 +1,4 @@
-import { IRNative } from "..";
+import { IRNative } from "../index";
 
 describe("IRNative.hash", () => {
 

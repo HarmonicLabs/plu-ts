@@ -1,6 +1,6 @@
 import { Term } from "../../../Term";
 import { TermStr, addPStringMethods } from "../UtilityTerms";
-import { str } from "../../../type_system/types"
+import { str } from "../../../../type_system/types"
 import { IRConst } from "../../../../IR/IRNodes/IRConst";
 
 export function pStr( string: string ): TermStr

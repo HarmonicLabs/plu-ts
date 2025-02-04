@@ -1,7 +1,7 @@
 import { DataConstr } from "@harmoniclabs/plutus-data";
 import type { PData } from "../../../PTypes";
 import { Term } from "../../../Term";
-import { data } from "../../../type_system/types";
+import { data } from "../../../../type_system/types";
 import { IRHoisted } from "../../../../IR/IRNodes/IRHoisted";
 import { IRConst } from "../../../../IR/IRNodes/IRConst";
 

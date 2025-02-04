@@ -1,6 +1,6 @@
 import { fromAscii } from "@harmoniclabs/uint8array-utils";
 import { pif } from "../builtins/bool";
-import { bs, int, lam } from "../../type_system/types";
+import { bs, int, lam } from "../../../type_system/types";
 import { phoist } from "../phoist";
 import { pfn } from "../pfn";
 import { plam } from "../plam";

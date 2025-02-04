@@ -1,5 +1,5 @@
 import { defineReadOnlyProperty } from "@harmoniclabs/obj-utils";
-import { GenericStructDefinition, SopCtorDef, SopDefinition, StructCtorDef, StructDefinition } from "../../type_system";
+import { GenericStructDefinition, SopCtorDef, SopDefinition, StructCtorDef, StructDefinition } from "../../../type_system";
 
 
 export function cloneSopCtorDef<CtorDef extends SopCtorDef>( ctorDef: Readonly<CtorDef> ): CtorDef

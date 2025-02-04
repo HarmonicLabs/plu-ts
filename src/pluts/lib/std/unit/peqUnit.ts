@@ -1,5 +1,5 @@
 import { IRFunc, IRHoisted, IRConst } from "../../../../IR";
-import { bool, unit, fn } from "../../../type_system";
+import { bool, unit, fn } from "../../../../type_system";
 import { addApplications } from "../../builtins/addApplications";
 import { PBool } from "../../../PTypes/PBool";
 import { PUnit } from "../../../PTypes/PUnit";

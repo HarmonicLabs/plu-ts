@@ -1,7 +1,6 @@
-import { PScriptPurpose } from "../../API/V1/ScriptContext/PScriptPurpose";
-import { pList } from "../../lib/std/list/const";
+import { pList } from "../../pluts";
+import { PScriptPurpose } from "../../pluts/API/V3/ScriptContext/PScriptPurpose";
 import { PrimType, asData, data, int, list, pair, struct } from "../types"
-import { termTypeToString } from "../utils";
 
 describe("type creation", () => {
 

@@ -2,7 +2,7 @@ import { PPubKeyHash } from "../../API/V1/PubKey/PPubKeyHash";
 import { PScriptContext } from "../../API/V2/ScriptContext/PScriptContext";
 import { PCurrencySymbol } from "../../API/V1/Value/PCurrencySymbol";
 import { compile } from "../compile";
-import { bool, bs, data } from "../../type_system/types";
+import { bool, bs, data } from "../../../type_system/types";
 import { pfn } from "../../lib/pfn";
 import { pisEmpty } from "../../lib/builtins/list";
 import { pByteString } from "../../lib/std/bs/pByteString";

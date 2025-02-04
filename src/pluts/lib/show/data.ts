@@ -1,4 +1,4 @@
-import { bs, data } from "../../type_system";
+import { bs, data } from "../../../type_system";
 import { pserialiseData, ptrace } from "../builtins";
 import { phoist } from "../phoist";
 import { plam } from "../plam";

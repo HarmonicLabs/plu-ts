@@ -1,5 +1,5 @@
-import { toHex } from "@harmoniclabs/uint8array-utils";
-import { compile, data, passert, pBool, perror, pfn, plet, pmatch, PMaybe, PPubKeyHash, PScriptContext, punBData, unit } from ".."
+import { compile, passert, pBool, perror, pfn, plet, pmatch, PMaybe, PPubKeyHash, PScriptContext, punBData } from ".."
+import { unit, data } from "../../type_system";
 
 test("hello pluts", () => {
 

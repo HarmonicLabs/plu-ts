@@ -3,10 +3,10 @@ import { Pair } from "@harmoniclabs/pair";
 import { PDataRepresentable } from "../../PType/PDataRepresentable";
 import { cloneSopDef, cloneStructDef } from "./cloneStructDef";
 import { PStruct, pstruct } from "./pstruct";
-import { AliasT, GenericStructCtorDef, GenericStructDefinition, GenericTermType, Methods, PrimType, StructDefinition, StructT, TermType, alias, int, struct, tyVar } from "../../type_system/types";
-import { termTypeToString } from "../../type_system/utils";
-import { isStructType } from "../../type_system/kinds/isWellFormedType";
-import { isTaggedAsAlias } from "../../type_system/kinds/isTaggedAsAlias";
+import { AliasT, GenericStructCtorDef, GenericStructDefinition, GenericTermType, Methods, PrimType, StructDefinition, StructT, TermType, alias, int, struct, tyVar } from "../../../type_system/types";
+import { termTypeToString } from "../../../type_system/utils";
+import { isStructType } from "../../../type_system/kinds/isWellFormedType";
+import { isTaggedAsAlias } from "../../../type_system/kinds/isTaggedAsAlias";
 
 
 /**

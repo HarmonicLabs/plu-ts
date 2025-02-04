@@ -1,5 +1,5 @@
 import { palias } from "../../../PTypes/PAlias/palias";
-import { data, map } from "../../../type_system";
+import { data, map } from "../../../../type_system";
 
 /**
 

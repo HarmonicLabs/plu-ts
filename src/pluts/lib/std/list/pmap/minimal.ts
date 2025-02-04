@@ -1,5 +1,5 @@
 import type { TermFn, PLam, PList } from "../../../../PTypes";
-import { TermType, ToPType, fn, lam, list } from "../../../../type_system";
+import { TermType, ToPType, fn, lam, list } from "../../../../../type_system";
 import { _pprepend } from "../../../builtins/pprepend/minimal";
 import { phoist } from "../../../phoist";
 import { plam } from "../../../plam";

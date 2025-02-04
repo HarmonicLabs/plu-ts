@@ -3,7 +3,7 @@ import { IRVar } from "../../../../IR/IRNodes/IRVar"
 import { Term } from "../../../Term"
 import { pInt } from "../../../lib/std/int/pInt"
 import { pList, pnil } from "../../../lib/std/list/const"
-import { int } from "../../../type_system/types"
+import { int } from "../../../../type_system/types"
 import { PInt } from "../../PInt"
 import { IRConst } from "../../../../IR"
 

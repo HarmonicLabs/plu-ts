@@ -1,5 +1,5 @@
 import { toHex } from "@harmoniclabs/uint8array-utils";
-import { data, int } from "../../../../../pluts/type_system/types";
+import { data, int } from "../../../../../type_system/types";
 import { IRApp } from "../../../../IRNodes/IRApp";
 import { IRConst } from "../../../../IRNodes/IRConst";
 import { IRDelayed } from "../../../../IRNodes/IRDelayed";

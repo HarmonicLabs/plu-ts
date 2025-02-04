@@ -1,5 +1,5 @@
 import { PBlsG2 } from "../../../PTypes/PBlsG2";
-import { blsG2, bool, bs, fn, int } from "../../../type_system/types";
+import { blsG2, bool, bs, fn, int } from "../../../../type_system/types";
 import { IRNative } from "../../../../IR/IRNodes/IRNative";
 import { Term } from "../../../Term";
 import { PFn } from "../../../PTypes/PFn/PFn";

@@ -4,27 +4,20 @@ import { Pair } from "@harmoniclabs/pair";
 import { Data, isData, dataToCbor } from "@harmoniclabs/plutus-data";
 import { fromUtf8, toHex } from "@harmoniclabs/uint8array-utils";
 import { isConstValueInt } from "@harmoniclabs/uplc";
-import { cloneTermType } from "../../pluts/type_system/cloneTermType";
-import { termTyToConstTy } from "../../pluts/type_system/termTyToConstTy";
 import { BasePlutsError } from "../../utils/BasePlutsError";
 import { ToJson } from "../../utils/ToJson";
 import UPLCFlatUtils from "../../utils/UPLCFlatUtils";
 import { CanBeUInteger, canBeUInteger, forceBigUInt } from "../../utils/ints";
-import { IRTerm } from "../IRTerm";
 import { IHash, IIRParent } from "../interfaces";
 import { concatUint8Arr } from "../utils/concatUint8Arr";
-import { isIRTerm } from "../utils/isIRTerm";
 import { positiveBigIntAsBytes } from "../utils/positiveIntAsBytes";
-import { defineReadOnlyProperty } from "@harmoniclabs/obj-utils";
-import { isWellFormedType } from "../../pluts/type_system/kinds/isWellFormedType";
-import { typeExtends } from "../../pluts/type_system/typeExtends";
-import { GenericTermType, PrimType, TermType, bool, bs, data, delayed, int, lam, list, pair, str, tyVar, unit } from "../../pluts/type_system/types";
-import { termTypeToString } from "../../pluts/type_system/utils";
 import { IRParentTerm, isIRParentTerm } from "../utils/isIRParentTerm";
 import { _modifyChildFromTo } from "../toUPLC/_internal/_modifyChildFromTo";
 import { BaseIRMetadata } from "./BaseIRMetadata";
 import { hashIrData, IRHash, isIRHash } from "../IRHash";
 import { IRNodeKind } from "../IRNodeKind";
+import { TermType, isWellFormedType, typeExtends, lam, tyVar, delayed, termTypeToString, unit, bool, bs, int, str, data, list, pair, GenericTermType, PrimType } from "../../type_system";
+import { termTyToConstTy } from "../../type_system/termTyToConstTy";
 
 export type IRConstValue
     = CanBeUInteger

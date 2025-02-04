@@ -1,4 +1,4 @@
-import type { Methods } from "../../../../type_system";
+import type { Methods } from "../../../../../type_system";
 
 /**
  * checks thatevery method name does not have an equivalent that starts with "p"

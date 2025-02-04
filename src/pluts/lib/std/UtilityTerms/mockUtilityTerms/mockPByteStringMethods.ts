@@ -3,7 +3,7 @@ import { PByteString } from "../../../../PTypes/PByteString";
 import { Term } from "../../../../Term";
 import { TermBS } from "../TermBS";
 import { makeMockTerm } from "./makeMockTerm";
-import { bool, bs, int, lam, str } from "../../../../type_system/types";
+import { bool, bs, int, lam, str } from "../../../../../type_system/types";
 import { makeMockUtilityTerm } from "./makeMockUtilityTerm";
 import { makeMockTermBool } from "./mockPBoolMethods";
 import { makeMockTermInt } from "./mockPIntMethods";

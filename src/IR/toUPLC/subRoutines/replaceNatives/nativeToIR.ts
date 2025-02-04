@@ -1,5 +1,5 @@
 import { DataConstr } from "@harmoniclabs/plutus-data";
-import { bool, data, int, unit } from "../../../../pluts/type_system/types";
+import { bool, data, int, unit } from "../../../../type_system/types";
 import { IRApp } from "../../../IRNodes/IRApp";
 import { IRConst } from "../../../IRNodes/IRConst";
 import { IRDelayed } from "../../../IRNodes/IRDelayed";

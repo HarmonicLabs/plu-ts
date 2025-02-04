@@ -1,7 +1,7 @@
 import { IRNative } from "../../../IR/IRNodes/IRNative";
 import { TermFn, PUnit } from "../../PTypes";
 import { Term } from "../../Term";
-import { TermType, ToPType, fn, unit } from "../../type_system";
+import { TermType, ToPType, fn, unit } from "../../../type_system";
 import { addApplications } from "./addApplications";
 
 export function pchooseUnit<ReturnT extends TermType>( returnT: ReturnT )

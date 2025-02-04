@@ -1,6 +1,6 @@
 import { PBool, PList, TermFn } from "../../../PTypes";
-import { ToPType } from "../../../type_system";
-import { TermType, bool, lam, list } from "../../../type_system/types";
+import { ToPType } from "../../../../type_system";
+import { TermType, bool, lam, list } from "../../../../type_system/types";
 import { pisEmpty } from "../../builtins/list";
 import { pfn } from "../../pfn";
 import { phoist } from "../../phoist";

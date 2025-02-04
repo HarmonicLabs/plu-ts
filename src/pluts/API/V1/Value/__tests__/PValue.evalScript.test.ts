@@ -4,11 +4,11 @@ import { Term, pmatch, termTypeToString, typeExtends } from "../../../..";
 import { compileIRToUPLC } from "../../../../../IR/toUPLC/compileIRToUPLC";
 import { PMaybe, fromData, pBool, pByteString, pInt, pPair, pdelay, pfn, phoist, pif, plam, precursiveList, ptoData, toData } from "../../../../lib";
 import { pList } from "../../../../lib/std/list/const";
-import { bool, bs, fn, int, list } from "../../../../type_system/types";
+import { bool, bs, fn, int, list } from "../../../../../type_system/types";
 import { PCurrencySymbol } from "../PCurrencySymbol";
 import { PTokenName } from "../PTokenName";
 import { PAssetsEntry, PValue, PValueEntry } from "../PValue";
-import { getFstT, getSndT } from "../../../../type_system/tyArgs";
+import { getFstT, getSndT } from "../../../../../type_system/tyArgs";
 import { debugOptions, productionOptions } from "../../../../../IR/toUPLC/CompilerOptions";
 import { writeFileSync } from "fs";
 

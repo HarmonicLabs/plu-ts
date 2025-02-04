@@ -1,4 +1,4 @@
-import { TermType, bool, bs, data, delayed, int, lam, list, pair, str, termTypeToString, unit } from "../../../../../type_system";
+import { TermType, bool, bs, data, delayed, int, lam, list, pair, str, termTypeToString, unit } from "../../../../../../type_system";
 import { addUtilityForType } from "../../addUtilityForType";
 import { makeMockTerm } from "../makeMockTerm";
 import { mockUtilityForType } from "../mockUtilityForType";

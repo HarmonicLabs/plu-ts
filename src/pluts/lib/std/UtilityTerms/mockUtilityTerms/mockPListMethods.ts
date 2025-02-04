@@ -2,9 +2,9 @@ import { definePropertyIfNotPresent, defineReadOnlyProperty } from "@harmoniclab
 import { PType } from "../../../../PType";
 import type { PList, TermFn, PInt, PLam, PBool } from "../../../../PTypes";
 import { Term } from "../../../../Term";
-import { ToPType, TermType, isWellFormedGenericType, PrimType, bool, lam, list, struct, typeExtends, tyVar, int, pair } from "../../../../type_system";
-import { getElemsT, getFstT, getSndT, unwrapAsData } from "../../../../type_system/tyArgs";
-import { termTypeToString } from "../../../../type_system/utils";
+import { ToPType, TermType, isWellFormedGenericType, PrimType, bool, lam, list, struct, typeExtends, tyVar, int, pair } from "../../../../../type_system";
+import { getElemsT, getFstT, getSndT, unwrapAsData } from "../../../../../type_system/tyArgs";
+import { termTypeToString } from "../../../../../type_system/utils";
 import { UtilityTermOf } from "../addUtilityForType";
 import { PMaybe, type PMaybeT } from "../../PMaybe/PMaybe";
 import { TermBool } from "../TermBool";

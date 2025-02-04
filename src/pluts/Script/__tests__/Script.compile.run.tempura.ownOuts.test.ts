@@ -1,9 +1,10 @@
-import { V2, bool, bs, data, lam, pBool, pData, perror, pfn, phoist, pif, plam, plet, pmakeUnit, pstruct, ptraceError, punsafeConvertType, str, unit } from "../..";
+import { V2, pBool, pData, perror, pfn, phoist, pif, plam, plet, pmakeUnit, pstruct, ptraceError, punsafeConvertType } from "../..";
 import { TxOutRef } from "@harmoniclabs/cardano-ledger-ts";
 import { dataFromCbor } from "@harmoniclabs/plutus-data";
 import { Machine, CEKConst } from "@harmoniclabs/plutus-machine";
 import { addPBoolMethods } from "../../lib/std/UtilityTerms/TermBool";
 import { prettyUPLC } from "@harmoniclabs/uplc";
+import { bool, bs, data, lam, str, unit } from "../../../type_system";
 
 const value_contains_master = phoist(
     pfn([

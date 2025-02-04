@@ -3,7 +3,7 @@ import { PAlias, PBool, PInt, PStruct } from "../../../../PTypes";
 import { PFn } from "../../../../PTypes/PFn/PFn";
 import type { PLam } from "../../../../PTypes/PFn/PLam";
 import type { Term } from "../../../../Term";
-import type { Methods, StructDefinition } from "../../../../type_system/types";
+import type { Methods, StructDefinition } from "../../../../../type_system/types";
 import { PappArg } from "../../../pappArg";
 import type { UtilityTermOf } from "../addUtilityForType";
 

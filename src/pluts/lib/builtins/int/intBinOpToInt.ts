@@ -2,7 +2,7 @@ import { defineReadOnlyProperty } from "@harmoniclabs/obj-utils";
 import { IRTerm } from "../../../../IR/IRTerm";
 import { PLam, PInt } from "../../../PTypes";
 import { Term } from "../../../Term";
-import { fn, int } from "../../../type_system";
+import { fn, int } from "../../../../type_system";
 import { papp } from "../../papp";
 import { PappArg } from "../../pappArg";
 import { TermInt } from "../../std";

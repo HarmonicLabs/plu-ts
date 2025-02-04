@@ -3,7 +3,7 @@ import { makeMockTerm } from "./makeMockTerm"
 import { TermBool } from "../TermBool";
 import { Term } from "../../../../Term";
 import { PBool } from "../../../../PTypes/PBool";
-import { bool, delayed, lam } from "../../../../type_system/types";
+import { bool, delayed, lam } from "../../../../../type_system/types";
 import { makeMockUtilityTerm } from "./makeMockUtilityTerm";
 import { addBaseUtilityTerm } from "../BaseUtilityTerm";
 

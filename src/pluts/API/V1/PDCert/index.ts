@@ -1,5 +1,5 @@
 import { pstruct } from "../../../PTypes/PStruct/pstruct";
-import { int } from "../../../type_system/types";
+import { int } from "../../../../type_system/types";
 import { PStakingCredential } from "../Address/PStakingCredential";
 import { PPubKeyHash } from "../PubKey/PPubKeyHash";
 

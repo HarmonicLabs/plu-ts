@@ -2,7 +2,7 @@ import { assertValidListType } from ".";
 import { IRConst } from "../../../../../IR/IRNodes/IRConst";
 import { PList } from "../../../../PTypes";
 import { Term } from "../../../../Term";
-import { TermType, ToPType, typeExtends, pair, data, list } from "../../../../type_system";
+import { TermType, ToPType, typeExtends, pair, data, list } from "../../../../../type_system";
 import { pnilPairData, pnilData } from "../../../builtins/data";
 import { _punsafeConvertType } from "../../../punsafeConvertType/minimal";
 

@@ -1,9 +1,9 @@
-import { PrimType, SopDefinition, StructCtorDef, StructDefinition, TermType, data, list } from "../../type_system/types";
+import { PrimType, SopDefinition, StructCtorDef, StructDefinition, TermType, data, list } from "../../../type_system/types";
 import type { Term } from "../../Term";
 import { PStruct } from "../../PTypes/PStruct/pstruct";
-import { termTypeToString } from "../../type_system/utils";
+import { termTypeToString } from "../../../type_system/utils";
 import type { PSop } from "../../PTypes/PSoP/psop";
-import { isTaggedAsAlias, unwrapAlias } from "../../type_system";
+import { isTaggedAsAlias, unwrapAlias } from "../../../type_system";
 import { pmatchStruct } from "./pmatchStruct";
 import { pmatchSop } from "./pmatchSop";
 import { PMatchOptions } from "./PMatchOptions";

@@ -1,5 +1,5 @@
-import { ToPType } from "../../../../type_system/ts-pluts-conversion";
-import { TermType } from "../../../../type_system/types";
+import { ToPType } from "../../../../../type_system/ts-pluts-conversion";
+import { TermType } from "../../../../../type_system/types";
 import { UtilityTermOf } from "../addUtilityForType";
 import { makeMockTerm } from "./makeMockTerm";
 import { mockUtilityForType } from "./mockUtilityForType";

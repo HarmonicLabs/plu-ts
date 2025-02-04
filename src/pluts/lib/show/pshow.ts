@@ -1,6 +1,6 @@
 import { PByteString, PString, TermFn } from "../../PTypes";
-import { TermType, ToPType, bool, bs, data, int, list, pair, str, termTypeToString, tyVar, typeExtends, unit } from "../../type_system";
-import { getElemsT } from "../../type_system/tyArgs";
+import { TermType, ToPType, bool, bs, data, int, list, pair, str, termTypeToString, tyVar, typeExtends, unit } from "../../../type_system";
+import { getElemsT } from "../../../type_system/tyArgs";
 import { pshowBool } from "./bool";
 import { pshowBs } from "./bs";
 import { pshowData } from "./data";

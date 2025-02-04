@@ -1,5 +1,5 @@
 import { DataConstr } from "@harmoniclabs/plutus-data";
-import { asData, bool } from "../../../type_system/types";
+import { asData, bool } from "../../../../type_system/types";
 import { pif } from "../../builtins/bool";
 import { phoist } from "../../phoist";
 import { plam } from "../../plam";

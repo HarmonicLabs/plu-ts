@@ -1,5 +1,5 @@
 import { pstruct } from "../pstruct"
-import { TermType, int, str } from "../../../type_system";
+import { TermType, int, str } from "../../../../type_system";
 import { pDataI } from "../../../lib";
 import { DataConstr, DataI } from "@harmoniclabs/plutus-data";
 import { CEKConst, Machine } from "@harmoniclabs/plutus-machine";

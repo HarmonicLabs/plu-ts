@@ -1,6 +1,6 @@
 import { definePropertyIfNotPresent, defineReadOnlyProperty } from "@harmoniclabs/obj-utils";
 import { TermInt } from "../TermInt";
-import { bool, int, lam } from "../../../../type_system";
+import { bool, int, lam } from "../../../../../type_system";
 import { makeMockTerm } from "./makeMockTerm";
 import { Term } from "../../../../Term";
 import { PInt } from "../../../../PTypes/PInt";

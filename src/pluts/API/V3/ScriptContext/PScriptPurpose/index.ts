@@ -1,5 +1,5 @@
 import { pstruct } from "../../../../PTypes/PStruct/pstruct";
-import { int } from "../../../../type_system/types";
+import { int } from "../../../../../type_system/types";
 import { PCredential } from "../../../V1/Address/PCredential";
 import { PCurrencySymbol } from "../../../V1/Value/PCurrencySymbol";
 import { PProposalProcedure } from "../../Governance/PProposalProcedure";

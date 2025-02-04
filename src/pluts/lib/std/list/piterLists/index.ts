@@ -1,8 +1,8 @@
 import { TermFn } from "../../../../PTypes/PFn";
 import { PFn } from "../../../../PTypes/PFn/PFn";
 import { PList } from "../../../../PTypes/PList";
-import { ToPType } from "../../../../type_system";
-import { TermType, delayed, fn, lam, list } from "../../../../type_system/types";
+import { ToPType } from "../../../../../type_system";
+import { TermType, delayed, fn, lam, list } from "../../../../../type_system/types";
 import { papp } from "../../../papp";
 import { pdelay } from "../../../pdelay";
 import { pfn } from "../../../pfn";

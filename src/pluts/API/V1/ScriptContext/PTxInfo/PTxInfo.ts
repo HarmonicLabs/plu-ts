@@ -1,5 +1,5 @@
 import { pstruct } from "../../../../PTypes/PStruct/pstruct";
-import { data, int, list, pair } from "../../../../type_system/types";
+import { data, int, list, pair } from "../../../../../type_system/types";
 import { PStakingCredential } from "../../Address/PStakingCredential";
 import { PDCert } from "../../PDCert";
 import { PPubKeyHash } from "../../PubKey/PPubKeyHash";

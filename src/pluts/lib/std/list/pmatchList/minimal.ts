@@ -1,6 +1,6 @@
 import { PType } from "../../../../PType";
 import { TermFn, PLam, PList, PDelayed } from "../../../../PTypes";
-import { TermType, ToPType, fn, list, delayed, data } from "../../../../type_system";
+import { TermType, ToPType, fn, list, delayed, data } from "../../../../../type_system";
 import { _phead, _pstrictChooseList, _ptail } from "../../../builtins/list/minimal";
 import { pdelay } from "../../../pdelay";
 import { pfn } from "../../../pfn";

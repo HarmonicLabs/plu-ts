@@ -3,7 +3,7 @@ import { PData } from "../../PTypes/PData/PData";
 import { PList } from "../../PTypes/PList";
 import { SopInstance } from "../../PTypes/PSoP/psop";
 import { Term } from "../../Term";
-import { SopCtorDef, SopDefinition } from "../../type_system";
+import { SopCtorDef, SopDefinition } from "../../../type_system";
 import { TermList } from "../std/UtilityTerms/TermList";
 import { UtilityTermOf } from "../std/UtilityTerms/addUtilityForType";
 

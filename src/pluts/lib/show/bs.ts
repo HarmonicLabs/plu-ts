@@ -1,4 +1,4 @@
-import { bs, fn, int } from "../../type_system/types";
+import { bs, fn, int } from "../../../type_system/types";
 import { pif, ptrace } from "../builtins";
 import { pfn } from "../pfn";
 import { phoist } from "../phoist";

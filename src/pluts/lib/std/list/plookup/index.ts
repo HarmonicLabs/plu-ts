@@ -1,8 +1,8 @@
 import { PList, PPair, TermFn } from "../../../../PTypes";
-import { TermType, ToPType, asData, bool, data, lam, list, pair, termTypeToString, typeExtends } from "../../../../type_system";
-import { unwrapAsData } from "../../../../type_system/tyArgs";
-import { getDirectFstT } from "../../../../type_system/tyArgs/getDirectFstT";
-import { getDirectSndT } from "../../../../type_system/tyArgs/getDirectSndT";
+import { TermType, ToPType, asData, bool, data, lam, list, pair, termTypeToString, typeExtends } from "../../../../../type_system";
+import { unwrapAsData } from "../../../../../type_system/tyArgs";
+import { getDirectFstT } from "../../../../../type_system/tyArgs/getDirectFstT";
+import { getDirectSndT } from "../../../../../type_system/tyArgs/getDirectSndT";
 import { pif } from "../../../builtins/bool";
 import { peqData } from "../../../builtins/data";
 import { pfstPairNoUnwrap, psndPairNoUnwrap } from "../../../builtins/pair/noUnwrap";

@@ -1,6 +1,4 @@
-import { PValue } from "../../API";
-import { PScriptPurpose } from "../../API/V1/ScriptContext/PScriptPurpose";
-import { pList } from "../../lib/std/list/const";
+import { PValue, pList, PScriptPurpose } from "../../pluts";
 import { typeExtends } from "../typeExtends";
 import { alias, asData, bs, data, delayed, int, lam, list, map, pair, sop, str, struct, tyVar, unit } from "../types";
 import { withAllPairElemsAsData } from "../withAllPairElemsAsData";

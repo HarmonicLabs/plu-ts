@@ -1,8 +1,8 @@
 import { definePropertyIfNotPresent, defineReadOnlyProperty, hasOwn } from "@harmoniclabs/obj-utils";
 import { PStruct } from "../../../../PTypes/PStruct/pstruct";
 import { Term } from "../../../../Term";
-import { isStructDefinition, isStructType } from "../../../../type_system/kinds/isWellFormedType";
-import { Methods, StructDefinition, bool, data, int, lam, list, pair } from "../../../../type_system/types";
+import { isStructDefinition, isStructType } from "../../../../../type_system/kinds/isWellFormedType";
+import { Methods, StructDefinition, bool, data, int, lam, list, pair } from "../../../../../type_system/types";
 import { TermStruct } from "../TermStruct";
 import { makeMockTerm } from "./makeMockTerm";
 import { makeMockUtilityTerm } from "./makeMockUtilityTerm";

@@ -1,7 +1,7 @@
 import type { PType } from "../../PType";
-import type { TermType } from "../../type_system/types";
-import type { ToPType } from "../../type_system/ts-pluts-conversion";
-import { isWellFormedType } from "../../type_system/kinds/isWellFormedType";
+import type { TermType } from "../../../type_system/types";
+import type { ToPType } from "../../../type_system/ts-pluts-conversion";
+import { isWellFormedType } from "../../../type_system/kinds/isWellFormedType";
 import { Term } from "../../Term";
 
 

@@ -3,7 +3,7 @@ import { phead } from "../builtins/list";
 import { TermFn } from "../../PTypes/PFn/PFn";
 import { PList } from "../../PTypes/PList";
 import { PData } from "../../PTypes/PData/PData";
-import { data, lam, list } from "../../type_system/types";
+import { data, lam, list } from "../../../type_system/types";
 import { IRVar } from "../../../IR/IRNodes/IRVar";
 import { IRTerm } from "../../../IR/IRTerm";
 import { IRApp } from "../../../IR/IRNodes/IRApp";

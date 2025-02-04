@@ -1,5 +1,5 @@
 import { Machine } from "@harmoniclabs/plutus-machine";
-import { int } from "../../../type_system";
+import { int } from "../../../../type_system";
 import { pstruct } from "../pstruct";
 import { pInt } from "../../../lib/std/int/pInt";
 import { pDataI } from "../../../lib/std/data/pData";

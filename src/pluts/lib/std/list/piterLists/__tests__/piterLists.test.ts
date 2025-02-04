@@ -1,6 +1,6 @@
 import { Machine } from "@harmoniclabs/plutus-machine";
 import { piterLists } from "..";
-import { bool, int } from "../../../../../type_system/types";
+import { bool, int } from "../../../../../../type_system/types";
 import { pBool } from "../../../bool";
 import { pList } from "../../const";
 import { pInt } from "../../../int";

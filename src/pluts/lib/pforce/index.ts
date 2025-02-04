@@ -3,7 +3,7 @@ import { IRForced } from "../../../IR/IRNodes/IRForced";
 import { PType } from "../../PType";
 import { PDelayed } from "../../PTypes";
 import { Term } from "../../Term";
-import { PrimType } from "../../type_system";
+import { PrimType } from "../../../type_system";
 import { UtilityTermOf, addUtilityForType } from "../std/UtilityTerms/addUtilityForType";
 
 export function pforce<PInstance extends PType >( toForce: Term<PDelayed<PInstance>> ): UtilityTermOf<PInstance>

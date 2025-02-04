@@ -12,7 +12,7 @@ import { assert } from "../../../utils/assert";
 import { PType } from "../../PType";
 import { PFn, PLam } from "../../PTypes";
 import { Term } from "../../Term";
-import { TermType, lam, tyVar, typeExtends } from "../../type_system";
+import { TermType, lam, tyVar, typeExtends } from "../../../type_system";
 
 
 /**

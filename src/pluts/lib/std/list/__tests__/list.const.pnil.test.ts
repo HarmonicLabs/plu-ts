@@ -1,5 +1,5 @@
 import { Application, Builtin, UPLCConst, showUPLC } from "@harmoniclabs/uplc";
-import { bs, data, int, pair } from "../../../../type_system"
+import { bs, data, int, pair } from "../../../../../type_system"
 import { pnil } from "../const"
 import { debugOptions } from "../../../../../IR/toUPLC/CompilerOptions";
 

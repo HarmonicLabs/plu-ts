@@ -1,4 +1,4 @@
-import { TermType, delayed, int, lam, list } from "../../../type_system";
+import { TermType, delayed, int, lam, list } from "../../../../type_system";
 import { papp } from "../../papp";
 import { pdelay } from "../../pdelay";
 import { pfn } from "../../pfn";

@@ -1,5 +1,5 @@
 import { pstruct } from "../../../PTypes/PStruct/pstruct";
-import { data } from "../../../type_system";
+import { data } from "../../../../type_system";
 import { PScriptInfo } from "./PScriptInfo";
 import { PTxInfo } from "./PTxInfo";
 

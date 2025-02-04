@@ -1,6 +1,6 @@
 import { pstruct } from "../../../../PTypes/PStruct/pstruct";
-import { isStructDefinition } from "../../../../type_system";
-import { int } from "../../../../type_system/types";
+import { isStructDefinition } from "../../../../../type_system";
+import { int } from "../../../../../type_system/types";
 import { PPubKeyHash } from "../../PubKey/PPubKeyHash";
 import { PValidatorHash } from "../../ScriptsHashes/PValidatorHash";
 import { PCredential } from "../PCredential";

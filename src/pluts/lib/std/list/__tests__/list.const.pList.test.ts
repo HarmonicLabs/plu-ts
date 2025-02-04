@@ -1,6 +1,6 @@
 import { Machine } from "@harmoniclabs/plutus-machine";
 import { PTxInInfo } from "../../../../API/V2/Tx/PTxInInfo"
-import { data, int, str } from "../../../../type_system"
+import { data, int, str } from "../../../../../type_system"
 import { pInt } from "../../int";
 import { pStr } from "../../str";
 import { pList, pnil } from "../const"
