@@ -11,7 +11,7 @@ import { POutputDatum } from "./Tx/POutputDatum";
 import { PTxOut } from "./Tx/PTxOut";
 import { PTxInInfo } from "./Tx/PTxInInfo";
 
-export const V2 = Object.freeze({
+export const V2: typeof V1 = Object.freeze({
     ...V1,
 
     PScriptContext,
@@ -20,4 +20,4 @@ export const V2 = Object.freeze({
     POutputDatum,
     PTxInInfo,
     PTxOut
-} as const);
+} as any);

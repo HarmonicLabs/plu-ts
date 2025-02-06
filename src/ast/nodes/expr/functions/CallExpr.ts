@@ -1,4 +1,5 @@
 import { SourceRange } from "../../../Source/SourceRange";
+import { Identifier } from "../../common/Identifier";
 import { HasSourceRange } from "../../HasSourceRange";
 import { PebbleAstType } from "../../types/PebbleAstType";
 import { PebbleExpr } from "../PebbleExpr";

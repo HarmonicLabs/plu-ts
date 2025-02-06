@@ -57,7 +57,7 @@ const complier = new AstCompiler(
 );
 
 test("type check", async () => {
-    const diagnostics = await complier.typeCheck("a.pebble");
+    const diagnostics = await complier.checkCircularDependencies("a.pebble");
 
     expect( diagnostics.length )
     // at least the 3 files in the cycle

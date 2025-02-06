@@ -1,9 +1,7 @@
-import { PType } from "../PType";
-import { PInt, PByteString, PString, PUnit, PBool, PList, PPair, PDelayed, PLam, PAlias, PStruct, PData, PAsData } from "../PTypes";
-import { PBlsG1 } from "../PTypes/PBlsG1";
-import { PBlsG2 } from "../PTypes/PBlsG2";
-import { PBlsMlRes } from "../PTypes/PBlsMlRes";
-import { PSop } from "../PTypes/PSoP/psop";
+import { PAlias, PAsData, PBool, PByteString, PData, PDelayed, PInt, PLam, PList, PPair, PSop, PString, PStruct, PType, PUnit } from "../pluts";
+import { PBlsG1 } from "../pluts/PTypes/PBlsG1";
+import { PBlsG2 } from "../pluts/PTypes/PBlsG2";
+import { PBlsMlRes } from "../pluts/PTypes/PBlsMlRes";
 import { AliasT, GenericTermType, Methods, NonAliasTermType, PrimType, SopDefinition, StructDefinition, TermType } from "./types";
 
 export type ToPType<T extends TermType> =

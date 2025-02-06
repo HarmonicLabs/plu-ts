@@ -2083,7 +2083,7 @@ export class Parser extends DiagnosticEmitter
                 const inner = this.joinPropertyCall(
                     startPos,
                     expr,
-                    callee
+                    callee as CallExpr
                 );
                 if( !inner ) return undefined;
                 call = new CallExpr(

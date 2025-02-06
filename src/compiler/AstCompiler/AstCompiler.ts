@@ -85,8 +85,8 @@ export class AstCompiler extends DiagnosticEmitter
         super( diagnostics );
     }
 
-    readonly depGraph = new DependencyGraph();
-    readonly exportedSymbols = new Map<string, Source>();
+    // readonly depGraph = new DependencyGraph();
+    // readonly exportedSymbols = new Map<string, Source>();
 
     async compileFile(
         path: string,
@@ -115,8 +115,21 @@ export class AstCompiler extends DiagnosticEmitter
 
     async compileSource( src: Source )
     {
-        await this._typeCheck( src );
+        await this._checkCircularDependencies( src );
 
+        return this.diagnostics;
+    }
+
+    async checkCircularDependencies( src: Source | Path ): Promise<DiagnosticMessage[]>
+    {
+        if(!( src instanceof Source ))
+        {
+            src = src.toString();
+            src = mangleInternalPath( removeSingleDotDirsFromPath( src ) );
+            src = (await this.sourceFromInternalPath( src ))!;
+            if( !src ) return this.diagnostics;
+        }
+        await this._checkCircularDependencies( src );
         return this.diagnostics;
     }
 
@@ -154,24 +167,11 @@ export class AstCompiler extends DiagnosticEmitter
         return this._sourceCache.get( internalPath );
     }
 
-    async typeCheck( src: Source | Path ): Promise<DiagnosticMessage[]>
-    {
-        if(!( src instanceof Source ))
-        {
-            src = src.toString();
-            src = mangleInternalPath( removeSingleDotDirsFromPath( src ) );
-            src = (await this.sourceFromInternalPath( src ))!;
-            if( !src ) return this.diagnostics;
-        }
-        await this._typeCheck( src );
-        return this.diagnostics;
-    }
-
     /**
      * 
      * @returns `true` if there were no errors. `false` otherwise.
      */
-    private async _typeCheck(
+    private async _checkCircularDependencies(
         source: Source | ResolveStackNode
     ): Promise<boolean>
     {
@@ -254,13 +254,11 @@ export class AstCompiler extends DiagnosticEmitter
 
         const imports = stmts.filter( isImportStmtLike );
 
-        const srcPath = src.internalPath;
+        // const srcPath = src.internalPath;
+        // const importPaths = this.importPathsFromStmts( imports, srcPath );
+        // this.depGraph.addDependencies( srcPath, importPaths );
 
-        const importPaths = this.importPathsFromStmts( imports, srcPath );
-        
-        this.depGraph.addDependencies( srcPath, importPaths );
-
-        return await this.typeCheckDependencies(
+        return await this.checkCircularDependenciesDependencies(
             imports,
             resolveStack
         );
@@ -290,7 +288,7 @@ export class AstCompiler extends DiagnosticEmitter
         .filter( path => path !== "" );
     }
 
-    async typeCheckDependencies(
+    async checkCircularDependenciesDependencies(
         imports: ImportStmtLike[],
         dependent: ResolveStackNode
     ): Promise<boolean>
@@ -306,7 +304,7 @@ export class AstCompiler extends DiagnosticEmitter
              if( !src ) continue; // error already reported parsing import
 
             const resolveStack = new ResolveStackNode( dependent, src );
-            if( !await this._typeCheck( resolveStack ) ) return false;
+            if( !await this._checkCircularDependencies( resolveStack ) ) return false;
         }
 
         return true;

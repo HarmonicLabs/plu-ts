@@ -145,8 +145,8 @@ export function resolveAsRootPath( toResolve: string, fromPath: string ): string
     result = result === "." || result.endsWith( fromDirname.slice( 0, fromDirname.length - 1 ) ) ?
         result + PATH_DELIMITER :
         result;
-    result = result.startsWith("/") ? result : "/" + result;
-    
+    // result = result.startsWith("/") ? result : "/" + result;
+
     return result;
 }
 
