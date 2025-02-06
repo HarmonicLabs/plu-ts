@@ -1,14 +1,14 @@
 import { SourceRange } from "../../../Source/SourceRange";
 import { HasSourceRange } from "../../HasSourceRange";
-import { PebbleType } from "../../types/PebbleType";
+import { PebbleAstType } from "../../types/PebbleAstType";
 
 
 export class TypeAliasDecl
     implements HasSourceRange
 {
     constructor(
-        readonly typeIdentifier: PebbleType,
-        readonly aliasedType: PebbleType,
+        readonly typeIdentifier: PebbleAstType,
+        readonly aliasedType: PebbleAstType,
         readonly range: SourceRange,
     ) {}
 }

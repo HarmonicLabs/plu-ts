@@ -1,16 +1,16 @@
 import { SourceRange } from "../../Source/SourceRange";
 import { HasSourceRange } from "../HasSourceRange";
 import { VarDecl } from "../statements/declarations/VarDecl/VarDecl";
-import { PebbleType } from "./PebbleType";
+import { PebbleAstType } from "./PebbleAstType";
 
 export type NativeType
     = VoidType
     | BooleanType
     | NumberType
     | BytesType
-    | NativeOptionalType<PebbleType>
-    | ListType<PebbleType>
-    | LinearMapType<PebbleType,PebbleType>
+    | NativeOptionalType<PebbleAstType>
+    | ListType<PebbleAstType>
+    | LinearMapType<PebbleAstType,PebbleAstType>
     | FuncType
     ;
 
@@ -56,7 +56,7 @@ export class BytesType implements HasSourceRange
     ) {}
 }
 
-export class NativeOptionalType<TArg extends PebbleType> implements HasSourceRange
+export class NativeOptionalType<TArg extends PebbleAstType> implements HasSourceRange
 {
     constructor(
         readonly typeArg: TArg,
@@ -64,7 +64,7 @@ export class NativeOptionalType<TArg extends PebbleType> implements HasSourceRan
     ) {}
 }
 
-export class ListType<TArg extends PebbleType> implements HasSourceRange
+export class ListType<TArg extends PebbleAstType> implements HasSourceRange
 {
     constructor(
         readonly typeArg: TArg,
@@ -72,7 +72,7 @@ export class ListType<TArg extends PebbleType> implements HasSourceRange
     ) {}
 }
 
-export class LinearMapType<KT extends PebbleType, VT extends PebbleType> implements HasSourceRange
+export class LinearMapType<KT extends PebbleAstType, VT extends PebbleAstType> implements HasSourceRange
 {
     constructor(
         readonly keyTypeArg: KT,
@@ -85,7 +85,7 @@ export class FuncType implements HasSourceRange
 {
     constructor(
         readonly params: VarDecl[],
-        readonly returnType: PebbleType | undefined,
+        readonly returnType: PebbleAstType | undefined,
         readonly range: SourceRange
     ) {}
 }

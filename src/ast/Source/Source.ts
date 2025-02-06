@@ -1,6 +1,6 @@
 import { LIBRARY_PREFIX, PATH_DELIMITER, LIBRARY_SUBST } from "../../common";
 import { CharCode } from "../../utils/CharCode";
-import { mangleInternalPath } from "../../utils/mangleInternalPath";
+import { mangleInternalPath } from "../../compiler/path/mangleInternalPath";
 import { PebbleStmt } from "../nodes/statements/PebbleStmt";
 import { PebbleAst } from "../PebbleAst";
 import { SourceRange } from "./SourceRange";

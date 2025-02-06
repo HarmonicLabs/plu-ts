@@ -4,14 +4,14 @@ import { HasSourceRange } from "../../HasSourceRange";
 import { BlockStmt } from "../BlockStmt";
 import { NamedType } from "../../types/NamedType";
 import { FuncType } from "../../types/NativeType";
-import { PebbleType } from "../../types/PebbleType";
+import { PebbleAstType } from "../../types/PebbleAstType";
 
 export class InterfaceDecl
     implements HasSourceRange
 {
     constructor(
         readonly name: Identifier,
-        readonly typeParams: PebbleType[],
+        readonly typeParams: PebbleAstType[],
         readonly methods: InterfaceDeclMethod[],
         readonly range: SourceRange
     ) {}
@@ -22,7 +22,7 @@ export class InterfaceDeclMethod
 {
     constructor(
         readonly name: Identifier,
-        readonly typeParams: PebbleType[],
+        readonly typeParams: PebbleAstType[],
         readonly signature: FuncType,
         readonly body: BlockStmt | undefined,
         readonly range: SourceRange

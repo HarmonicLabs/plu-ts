@@ -11,14 +11,14 @@ import { DiagnosticMessage } from "../diagnostics/DiagnosticMessage";
 import { DiagnosticCode } from "../diagnostics/diagnosticMessages.generated";
 import { Token } from "../tokenizer/Token";
 import { Tokenizer } from "../tokenizer/Tokenizer";
-import { mangleInternalPath } from "../utils/mangleInternalPath";
-import { normalizePath } from "../utils/path";
+import { mangleInternalPath } from "../compiler/path/mangleInternalPath";
+import { normalizePath } from "../compiler/path/path";
 import { isNonEmpty } from "../utils/isNonEmpty";
 import { PebbleExpr } from "../ast/nodes/expr/PebbleExpr";
 import { SourceRange } from "../ast/Source/SourceRange";
 import { SimpleVarDecl } from "../ast/nodes/statements/declarations/VarDecl/SimpleVarDecl";
 import { ArrayLikeDeconstr } from "../ast/nodes/statements/declarations/VarDecl/ArrayLikeDeconstr";
-import { PebbleType } from "../ast/nodes/types/PebbleType";
+import { PebbleAstType } from "../ast/nodes/types/PebbleAstType";
 import { IdentifierHandling } from "../tokenizer/IdentifierHandling";
 import { determinePrecedence, Precedence } from "./Precedence";
 import { makeUnaryPrefixExpr } from "../ast/nodes/expr/unary/UnaryPrefixExpr";
@@ -267,12 +267,12 @@ export class Parser extends DiagnosticEmitter
         return statement;
     }
 
-    parseTypeParameters(): PebbleType[] | undefined
+    parseTypeParameters(): PebbleAstType[] | undefined
     {
         const tn = this.tn;
         // at '<': TypeParameter (',' TypeParameter)* '>'
 
-        const typeParams = new Array<PebbleType>();
+        const typeParams = new Array<PebbleAstType>();
         while( !tn.skip( Token.GreaterThan ) )
         {
             const typeParam = this.parseType();
@@ -412,7 +412,7 @@ export class Parser extends DiagnosticEmitter
             tn.range(), "implements"
         );
 
-        let interfaceType: PebbleType | undefined = undefined;
+        let interfaceType: PebbleAstType | undefined = undefined;
 
         if( !tn.skip( Token.OpenBrace ) )
         {
@@ -623,7 +623,7 @@ export class Parser extends DiagnosticEmitter
 
         const name = new Identifier( tn.readIdentifier(), tn.range() );
 
-        let typeParams: PebbleType[] | undefined = undefined;
+        let typeParams: PebbleAstType[] | undefined = undefined;
         if( tn.skip( Token.LessThan ) )
         {
             typeParams = this.parseTypeParameters();
@@ -689,7 +689,7 @@ export class Parser extends DiagnosticEmitter
 
         const name = new Identifier( tn.readIdentifier(), tn.range() );
 
-        let typeParams: PebbleType[] | undefined = undefined;
+        let typeParams: PebbleAstType[] | undefined = undefined;
         if( tn.skip( Token.LessThan ) )
         {
             typeParams = this.parseTypeParameters();
@@ -864,7 +864,7 @@ export class Parser extends DiagnosticEmitter
     private parseNamedFuncSig(
         flags: CommonFlags = CommonFlags.None,
         startPos?: number
-    ): [ Identifier, PebbleType[] | undefined, FuncType ] | undefined
+    ): [ Identifier, PebbleAstType[] | undefined, FuncType ] | undefined
     {
         const tn = this.tn;
 
@@ -879,7 +879,7 @@ export class Parser extends DiagnosticEmitter
         const name = new Identifier( tn.readIdentifier(), tn.range() );
         let sigStart = -1;
 
-        let typeParams: PebbleType[] | undefined = undefined;
+        let typeParams: PebbleAstType[] | undefined = undefined;
         if( tn.skip( Token.LessThan ) )
         {
             sigStart = tn.tokenPos;
@@ -899,7 +899,7 @@ export class Parser extends DiagnosticEmitter
         const params = this.parseParameters();
         if( !params ) return undefined;
 
-        let returnType: PebbleType | undefined = undefined;
+        let returnType: PebbleAstType | undefined = undefined;
         if( tn.skip( Token.Colon ) )
         {
             returnType = this.parseType();
@@ -1177,7 +1177,7 @@ export class Parser extends DiagnosticEmitter
         let isRest = false;
         let startRange: SourceRange | undefined = undefined
         let flags = CommonFlags.None;
-        let explicitType: PebbleType | undefined = undefined;
+        let explicitType: PebbleAstType | undefined = undefined;
         let initializer: PebbleExpr | undefined = undefined;
         while( !tn.skip( Token.CloseBrace ) )
         {
@@ -1265,7 +1265,7 @@ export class Parser extends DiagnosticEmitter
     {
         const tn = this.tn;
 
-        // at '[': ( VarDecl ','? )* ']' ( ':' PebbleType )? ( '=' PebbleExpr )?
+        // at '[': ( VarDecl ','? )* ']' ( ':' PebbleAstType )? ( '=' PebbleExpr )?
 
         const startPos = tn.pos;
 
@@ -1356,16 +1356,16 @@ export class Parser extends DiagnosticEmitter
     }
 
     /**
-     * parses `(: PebbleType)? (= PebbleExpr)?` for parameters and variable declarations
+     * parses `(: PebbleAstType)? (= PebbleExpr)?` for parameters and variable declarations
      */
     private _parseTypeAndInitializer(
         startRange: SourceRange = this.tn.range(),
         isRest: boolean = false,
-    ): [ type: PebbleType | undefined, initializer: PebbleExpr | undefined ]
+    ): [ type: PebbleAstType | undefined, initializer: PebbleExpr | undefined ]
     {
         const tn = this.tn;
 
-        let type: PebbleType | undefined = undefined;
+        let type: PebbleAstType | undefined = undefined;
 
         if( tn.skip(Token.Colon) ) type = this.parseType();
 
@@ -1384,7 +1384,7 @@ export class Parser extends DiagnosticEmitter
 
     parseType(
         suppressErrors: boolean = false
-    ): PebbleType | undefined
+    ): PebbleAstType | undefined
     {
         const tn = this.tn;
 
@@ -1491,7 +1491,7 @@ export class Parser extends DiagnosticEmitter
 
                 const name = new Identifier( tn.readIdentifier(), tn.range() );
                 
-                const params = new Array<PebbleType>();
+                const params = new Array<PebbleAstType>();
 
                 if( tn.skip( Token.LessThan ) )
                 {
@@ -2309,7 +2309,7 @@ export class Parser extends DiagnosticEmitter
         potentiallyGeneric: boolean = false
     ): PebbleExpr {
         const tn = this.tn;
-        let typeArguments: PebbleType[] | undefined = undefined;
+        let typeArguments: PebbleAstType[] | undefined = undefined;
         while (
             tn.skip(Token.OpenParen) ||
             potentiallyGeneric &&
@@ -2328,7 +2328,7 @@ export class Parser extends DiagnosticEmitter
         return callerExpr;
     }
 
-    tryParseTypeArgumentsBeforeArguments(): PebbleType[] | undefined
+    tryParseTypeArgumentsBeforeArguments(): PebbleAstType[] | undefined
     {
         const tn = this.tn;
         // at '<': Type (',' Type)* '>' '('
@@ -2337,7 +2337,7 @@ export class Parser extends DiagnosticEmitter
         if (!tn.skip(Token.LessThan)) return undefined;
 
         const startPos = tn.tokenPos;
-        let typeArguments: PebbleType[] = [];
+        let typeArguments: PebbleAstType[] = [];
         do {
             // closing '>'
             if (tn.peek() === Token.GreaterThan) break;
@@ -2431,7 +2431,7 @@ export class Parser extends DiagnosticEmitter
         if (startPos < 0) startPos = name.range.start;
         if (signatureStart < 0) signatureStart = startPos;
 
-        let returnType: PebbleType | undefined = undefined;
+        let returnType: PebbleAstType | undefined = undefined;
         
         // either `function ( ... )` or `( ... )`
         // BUT NOT `param =>`

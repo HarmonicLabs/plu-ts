@@ -3,7 +3,7 @@ import { Identifier } from "../common/Identifier";
 import { HasSourceRange } from "../HasSourceRange";
 import { NamedType } from "../types/NamedType";
 import { FuncType } from "../types/NativeType";
-import { PebbleType } from "../types/PebbleType";
+import { PebbleAstType } from "../types/PebbleAstType";
 import { BlockStmt } from "./BlockStmt";
 
 
@@ -11,8 +11,8 @@ export class TypeImplementsStmt
     implements HasSourceRange
 {
     constructor(
-        readonly typeIdentifier: PebbleType,
-        readonly interfaceType: PebbleType | undefined,
+        readonly typeIdentifier: PebbleAstType,
+        readonly interfaceType: PebbleAstType | undefined,
         readonly methodImplementations: InterfaceMethodImpl[],
         readonly range: SourceRange,
     ) {}
@@ -23,7 +23,7 @@ export class InterfaceMethodImpl
 {
     constructor(
         readonly methodName: Identifier,
-        readonly typeParameters: PebbleType[],
+        readonly typeParameters: PebbleAstType[],
         readonly signature: FuncType,
         readonly body: BlockStmt,
         readonly range: SourceRange,

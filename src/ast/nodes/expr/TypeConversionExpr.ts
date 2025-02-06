@@ -1,6 +1,6 @@
 import { SourceRange } from "../../Source/SourceRange";
 import { HasSourceRange } from "../HasSourceRange";
-import { PebbleType } from "../types/PebbleType";
+import { PebbleAstType } from "../types/PebbleAstType";
 import { PebbleExpr } from "./PebbleExpr";
 
 
@@ -9,7 +9,7 @@ export class TypeConversionExpr
 {
     constructor(
         readonly expr: PebbleExpr,
-        readonly asType: PebbleType,
+        readonly asType: PebbleAstType,
         readonly range: SourceRange = SourceRange.join( expr.range, asType.range )
     ) {}
 }
