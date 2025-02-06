@@ -13,7 +13,7 @@ export class ImportStarStmt
 {
     constructor(
         readonly anIdentifier: Identifier,
-        readonly path: LitStrExpr,
+        readonly fromPath: LitStrExpr,
         readonly range: SourceRange,
     ) {}
 }

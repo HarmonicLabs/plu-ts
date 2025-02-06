@@ -13,6 +13,9 @@ import {
 
 const separator = CharCode.Slash;
 
+export type Path = string;
+
+
 /**
  * Normalizes the specified path, removing interior placeholders.
  * Expects a posix-compatible relative path (not Windows compatible).
@@ -136,12 +139,15 @@ export function resolveAsRootPath( toResolve: string, fromPath: string ): string
         }
     }
 
-    const result = removeSingleDotDirsFromPath(
+    let result = removeSingleDotDirsFromPath(
         fromDirs.join( PATH_DELIMITER )
     );
-    return result === "." || result.endsWith( fromDirname.slice( 0, fromDirname.length - 1 ) ) ?
+    result = result === "." || result.endsWith( fromDirname.slice( 0, fromDirname.length - 1 ) ) ?
         result + PATH_DELIMITER :
         result;
+    result = result.startsWith("/") ? result : "/" + result;
+    
+    return result;
 }
 
 /** Obtains the directory portion of a normalized path. */

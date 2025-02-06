@@ -113,7 +113,7 @@ export const INDEX_SUFFIX = PATH_DELIMITER + "index";
 /** Stub function delimiter. */
 export const STUB_DELIMITER = "@";
 /** */
-export const extension = ".ts";
+export const extension = ".pebble";
 
 /** Common names. */
 export namespace CommonNames {

@@ -11,14 +11,11 @@ import { DiagnosticMessage } from "../diagnostics/DiagnosticMessage";
 import { DiagnosticCode } from "../diagnostics/diagnosticMessages.generated";
 import { Token } from "../tokenizer/Token";
 import { Tokenizer } from "../tokenizer/Tokenizer";
-import { mangleInternalPath } from "../compiler/path/mangleInternalPath";
-import { normalizePath } from "../compiler/path/path";
 import { isNonEmpty } from "../utils/isNonEmpty";
 import { PebbleExpr } from "../ast/nodes/expr/PebbleExpr";
 import { SourceRange } from "../ast/Source/SourceRange";
 import { SimpleVarDecl } from "../ast/nodes/statements/declarations/VarDecl/SimpleVarDecl";
 import { ArrayLikeDeconstr } from "../ast/nodes/statements/declarations/VarDecl/ArrayLikeDeconstr";
-import { PebbleAstType } from "../ast/nodes/types/PebbleAstType";
 import { IdentifierHandling } from "../tokenizer/IdentifierHandling";
 import { determinePrecedence, Precedence } from "./Precedence";
 import { makeUnaryPrefixExpr } from "../ast/nodes/expr/unary/UnaryPrefixExpr";
@@ -77,6 +74,9 @@ import { DotPropAccessExpr, makePropAccessExpr } from "../ast/nodes/expr/PropAcc
 import { makeBinaryExpr } from "../ast/nodes/expr/binary/BinaryExpr";
 import { AssignmentStmt, isAssignmentStmt, isAssignmentToken, makeAssignmentStmt } from "../ast/nodes/statements/AssignmentStmt";
 import { ExprStmt } from "../ast/nodes/statements/ExprStmt";
+import { PebbleAstType } from "../ast/nodes/types/PebbleAstType";
+import { mangleInternalPath } from "../compiler/path/mangleInternalPath";
+import { removeSingleDotDirsFromPath } from "../compiler/path/path";
 
 export class Parser extends DiagnosticEmitter
 {
@@ -94,9 +94,9 @@ export class Parser extends DiagnosticEmitter
         path: string,
         src: string,
         isEntry: boolean = false
-    )
+    ): [ Source, DiagnosticMessage[] ]
     {
-        const normalizedPath = normalizePath(path);
+        const normalizedPath = removeSingleDotDirsFromPath( path );
         const internalPath = mangleInternalPath(normalizedPath);
     
         const kind = (
@@ -109,27 +109,34 @@ export class Parser extends DiagnosticEmitter
                 : SourceKind.User
         );
     
-        return Parser.parseSource(
-            new Source(
-                kind,
-                normalizedPath,
-                src
-            )
+        const source = new Source(
+            kind,
+            internalPath,
+            src
         );
+
+        return [
+            source,
+            Parser.parseSource( source )
+        ]; 
     }
 
     static parseSource(
-        src: Source
-    )
+        src: Source,
+        diagnostics?: DiagnosticMessage[]
+    ): DiagnosticMessage[]
     {
         return new Parser(
-            new Tokenizer( src )
+            new Tokenizer( src ),
+            diagnostics
         ).parseSource();
     }
 
-    parseSource()
+    parseSource(): DiagnosticMessage[]
     {
         const src = this.tn.source;
+        if( src.statements.length > 0 ) return this.diagnostics;
+
         const tn = this.tn;
         let stmt: any;
         while( !tn.eof() )
@@ -138,24 +145,8 @@ export class Parser extends DiagnosticEmitter
             if( stmt ) src.statements.push( stmt );
             else this.skipStatement();
         }
-        if( this.diagnostics.length > 0 )
-        {
-            throw new Error(
-                "Parsing failed: \n" +
-                this.diagnostics
-                .map( msg => msg.toString() )
-                .join("\n") +
-                "\n" +
-                this.diagnostics
-                .map( msg => msg.range?.toString() )
-                .join("\n") +
-                "\n" +
-                this.diagnostics
-                .find( msg => msg.emitStack )
-                ?.emitStack
-            );
-        }
-        return src.statements;
+
+        return this.diagnostics;
     }
 
     parseTopLevelStatement(): PebbleStmt | undefined
@@ -228,7 +219,7 @@ export class Parser extends DiagnosticEmitter
             }
             case Token.Import: {
                 tn.next();
-                flags |= CommonFlags.Import;
+                // flags |= CommonFlags.Import;
                 if (flags & CommonFlags.Export) {
                     // statement = this.parseExportImport(startPos);
                     this.error(

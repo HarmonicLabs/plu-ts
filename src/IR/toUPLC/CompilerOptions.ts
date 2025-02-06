@@ -129,6 +129,8 @@ export const debugOptions: CompilerOptions = Object.freeze({
 
 export const defaultOptions: CompilerOptions = productionOptions;
 
+export const defulatCompilerOptions = defaultOptions;
+
 export function completeCompilerOptions(
     options: Partial<CompilerOptions>,
     complete: CompilerOptions = defaultOptions

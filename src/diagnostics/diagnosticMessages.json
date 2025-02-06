@@ -229,10 +229,12 @@
   "Get accessor '{0}' must be at least as accessible as the setter.": 2808,
   "Type parameter is unused.": 2809,
   "Assignments are statemetns, not expressions.": 2810,
-  
+
   "This member cannot have an 'override' modifier because it is not declared in the base class '{0}'.": 4117,
 
   "File '{0}' not found.": 6054,
+  "Import path '{0}' is part of a circular dependency.": 6055,
+  
   "Numeric separators are not allowed here.": 6188,
   "Multiple consecutive numeric separators are not permitted.": 6189,
   "This expression is not callable because it is a 'get' accessor. Did you mean to use it without '()'?": 6234,

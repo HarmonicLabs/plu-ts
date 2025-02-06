@@ -7,7 +7,7 @@ export class ExportStarStmt
     implements HasSourceRange
 {
     constructor(
-        readonly path: LitStrExpr,
+        readonly fromPath: LitStrExpr,
         readonly range: SourceRange,
     ) {}
 }

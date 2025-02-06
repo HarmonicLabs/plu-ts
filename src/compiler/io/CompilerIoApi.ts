@@ -2,6 +2,8 @@ import { toUtf8 } from "@harmoniclabs/uint8array-utils";
 import { DiagnosticMessage } from "../../diagnostics/DiagnosticMessage";
 import { MaybePromise } from "../../utils/MaybePromise";
 import { ConsoleErrorStream, ConsoleLogStream, IOutputStream, MemoryStream } from "./IOutputStream";
+import { mangleInternalPath } from "../path/mangleInternalPath";
+import { removeSingleDotDirsFromPath } from "../path/path";
 
 /** Compiler API options. */
 export interface CompilerIoApi {
@@ -13,6 +15,8 @@ export interface CompilerIoApi {
     readFile: (filename: string, baseDir: string) => MaybePromise<string | undefined>;
     /** Writes a file to disk (or memory). */
     writeFile: (filename: string, contents: Uint8Array | string, baseDir: string) => MaybePromise<void>;
+    /** Lists all files within a directory. */
+    exsistSync: (filename: string) => boolean;
     /** Lists all files within a directory. */
     listFiles: (dirname: string, baseDir: string) => MaybePromise<string[] | undefined>;
     /** Handler for diagnostic messages. */
@@ -50,6 +54,7 @@ export function createMemoryCompilerIoApi({
         stderr,
         readFile: memoryFsRead.bind( sources ),
         writeFile: memoryFsWrite.bind( outputs ),
+        exsistSync: exsistSync.bind( sources ),
         listFiles: memoryFsList.bind( sources ),
         reportDiagnostic: defaultReportDiagnostic.bind( stderr )
     };
@@ -60,11 +65,20 @@ function defaultReportDiagnostic(this: MemoryStream, diagnostic: DiagnosticMessa
     this.write( diagnostic.toString() + "\n" );
 }
 
+function memoryFsAdaptFilename( filename: string ): string
+{
+    filename = removeSingleDotDirsFromPath( filename );
+    // filename = filename.replace( /\\/g, "/" );
+    filename = filename.startsWith( "/" ) ? filename.slice( 1 ) : filename; 
+    return filename;
+}
+
 function memoryFsRead(
     this: MemoryFs,
     filename: string
 ): string | undefined
 {
+    filename = memoryFsAdaptFilename( filename );
     return this.get( filename );
 }
 
@@ -81,6 +95,7 @@ function memoryFsWrite(
     contents: Uint8Array | string
 ): void
 {
+    filename = memoryFsAdaptFilename( filename );
     if(typeof contents !== "string")
     {
         if( contents instanceof Uint8Array )
@@ -91,4 +106,12 @@ function memoryFsWrite(
             contents = String( contents );
     }
     this.set( filename, contents as string );
+}
+
+function exsistSync(
+    this: MemoryFs,
+    filename: string
+): boolean
+{
+    return this.has( filename );
 }

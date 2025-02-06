@@ -228,6 +228,7 @@ export enum DiagnosticCode {
     Assignments_are_statemetns_not_expressions = 2810,
     This_member_cannot_have_an_override_modifier_because_it_is_not_declared_in_the_base_class_0 = 4117,
     File_0_not_found = 6054,
+    Import_path_0_is_part_of_a_circular_dependency = 6055,
     Numeric_separators_are_not_allowed_here = 6188,
     Multiple_consecutive_numeric_separators_are_not_permitted = 6189,
     This_expression_is_not_callable_because_it_is_a_get_accessor_Did_you_mean_to_use_it_without = 6234,
@@ -464,6 +465,7 @@ export function diagnosticCodeToString(code: DiagnosticCode): string {
         case 2810: return "Assignments are statemetns, not expressions.";
         case 4117: return "This member cannot have an 'override' modifier because it is not declared in the base class '{0}'.";
         case 6054: return "File '{0}' not found.";
+        case 6055: return "Import path '{0}' is part of a circular dependency.";
         case 6188: return "Numeric separators are not allowed here.";
         case 6189: return "Multiple consecutive numeric separators are not permitted.";
         case 6234: return "This expression is not callable because it is a 'get' accessor. Did you mean to use it without '()'?";

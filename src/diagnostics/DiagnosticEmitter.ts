@@ -18,6 +18,11 @@ export abstract class DiagnosticEmitter {
         this.diagnostics = diagnostics;
     }
 
+    emitDiagnosticMessage(message: DiagnosticMessage): void
+    {
+        this.diagnostics.push( message );
+    }
+
     /** Emits a diagnostic message of the specified category. */
     emitDiagnostic(
         code: DiagnosticCode,
@@ -27,8 +32,15 @@ export abstract class DiagnosticEmitter {
         arg0: string | undefined = undefined,
         arg1: string | undefined = undefined,
         arg2: string | undefined = undefined
-    ): void {
-        const emitStack = new Error().stack;
+    ): void
+    {
+        const originalStackLimit = Error.stackTraceLimit;
+        Error.stackTraceLimit = 4;
+        let emitStack = new Error().stack;
+        Error.stackTraceLimit = originalStackLimit;
+
+        emitStack = emitStack?.split("\n").slice(2).map( l => l.trim() ).join("\n");
+
         let message = DiagnosticMessage.create(code, category, arg0, arg1, arg2, emitStack);
         if (range) message = message.withRange(range);
         if (relatedRange) message.relatedRange = relatedRange;
@@ -55,7 +67,7 @@ export abstract class DiagnosticEmitter {
                 seen.set(range.source, seenInSource);
             }
         }
-        this.diagnostics.push(message);
+        this.emitDiagnosticMessage(message);
         // console.log(formatDiagnosticMessage(message, true, true) + "\n"); // temporary
         // console.log(<string>new Error("stack").stack);
     }
