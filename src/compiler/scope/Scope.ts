@@ -1,17 +1,4 @@
 
-export interface SymbolInfos {
-    /** `true` if the symbol indicates a type */
-    isTypeSymbol: boolean;
-    /**
-     * if `isTypeSymbol` is `true`,
-     * this is the definition of the type.
-     * 
-     * if `isTypeSymbol` is `false`,
-     * this is the type of the symbol.
-     */
-    type: any;
-}
-
 export class Scope
 {
     private readonly symbols = new Map<string, SymbolInfos>();

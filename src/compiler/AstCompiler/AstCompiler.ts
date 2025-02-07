@@ -1,6 +1,7 @@
 import { ExportStarStmt } from "../../ast/nodes/statements/ExportStarStmt";
 import { ImportStarStmt } from "../../ast/nodes/statements/ImportStarStmt";
 import { ImportStmt } from "../../ast/nodes/statements/ImportStmt";
+import { PebbleStmt } from "../../ast/nodes/statements/PebbleStmt";
 import { Source, SourceKind } from "../../ast/Source/Source";
 import { SourceRange } from "../../ast/Source/SourceRange";
 import { extension } from "../../common";
@@ -115,7 +116,14 @@ export class AstCompiler extends DiagnosticEmitter
     {
         await this._checkCircularDependencies( src );
 
+        await this.compileEntryFileStmts( src.statements );
+
         return this.diagnostics;
+    }
+
+    async compileEntryFileStmts( src: PebbleStmt[] )
+    {
+
     }
 
     async checkCircularDependencies( src: Source | Path ): Promise<DiagnosticMessage[]>

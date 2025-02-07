@@ -2,7 +2,6 @@ import { toUtf8 } from "@harmoniclabs/uint8array-utils";
 import { DiagnosticMessage } from "../../diagnostics/DiagnosticMessage";
 import { MaybePromise } from "../../utils/MaybePromise";
 import { ConsoleErrorStream, ConsoleLogStream, IOutputStream, MemoryStream } from "./IOutputStream";
-import { mangleInternalPath } from "../path/mangleInternalPath";
 import { removeSingleDotDirsFromPath } from "../path/path";
 
 /** Compiler API options. */

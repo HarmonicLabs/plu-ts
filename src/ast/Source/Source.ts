@@ -1,5 +1,5 @@
 import { LIBRARY_PREFIX, PATH_DELIMITER, LIBRARY_SUBST } from "../../common";
-import { mangleInternalPath } from "../../compiler/path/mangleInternalPath";
+import { getInternalPath } from "../../compiler/path/path";
 import { CharCode } from "../../utils/CharCode";
 import { PebbleStmt } from "../nodes/statements/PebbleStmt";
 import { SourceRange } from "./SourceRange";
@@ -39,7 +39,7 @@ export class Source {
         /** Full source text. */
         public text: string
     ) {
-        let internalPath = mangleInternalPath(normalizedPath);
+        let internalPath = getInternalPath( normalizedPath );
         this.internalPath = internalPath;
         let pos = internalPath.lastIndexOf(PATH_DELIMITER);
         this.simplePath = pos >= 0 ? internalPath.substring(pos + 1) : internalPath;
