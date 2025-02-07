@@ -1,12 +1,6 @@
 import { isObject } from "@harmoniclabs/obj-utils";
-
-export type PebbleTypeSym
-    = 
-    ;
-
-export type PebbleValueSym
-    =
-    ;
+import { TirCustomType, TirType } from "../../../../tir/TirType";
+import { TirNativeType } from "../../../../tir/TirNativeType";
 
 // can't call `Symbol`, so we don't confuse it with the built-in js `Symbol`
 export type PebbleSym
@@ -17,20 +11,8 @@ export type PebbleSym
 export function isPebbleSym( obj: any ): obj is PebbleSym
 {
     return isObject( obj ) && (
-        isPebbleTypeSym( obj ) ||
-        isPebbleValueSym( obj )
-    );
-}
-
-export function isPebbleTypeSym( obj: any ): obj is PebbleTypeSym
-{
-    return isObject( obj ) && (
-    );
-}
-
-export function isPebbleValueSym( obj: any ): obj is PebbleValueSym
-{
-    return isObject( obj ) && (
+        obj instanceof PebbleTypeSym
+        || obj instanceof PebbleValueSym
     );
 }
 
@@ -38,20 +20,52 @@ export interface IPebbleSym {
     readonly name: string;
 }
 
-export interface IPebbleTypeSym extends IPebbleSym {
-    // preserve overall PebbleSym shape
-    // for js runtime engine optimizations
-    readonly type: undefined; 
-    // actual type sym infos
+export class PebbleTypeSym implements IPebbleTypeSym
+{
+    readonly name: string;
+    private readonly concreteType: undefined;
     readonly isBuiltinType: boolean;
-    readonly typeDef: ;
+    readonly typeDef: TirCustomType | TirNativeType;
+
+    constructor({
+        name,
+        isBuiltinType,
+        typeDef
+    }: IPebbleTypeSym)
+    {
+        this.name = name;
+        this.concreteType = undefined;
+        this.isBuiltinType = isBuiltinType;
+        this.typeDef = typeDef;
+    }
 }
 
-export interface IPebbleValueSym extends IPebbleSym {
-    // actual value sym infos
-    readonly type: ;
-    // preserve overall PebbleSym shape
-    // for js runtime engine optimizations
-    readonly isBuiltinType: undefined;
-    readonly typeDef: undefined;
+export interface IPebbleTypeSym extends IPebbleSym
+{
+    readonly isBuiltinType: boolean;
+    readonly typeDef: TirCustomType | TirNativeType;
+}
+
+export class PebbleValueSym implements IPebbleValueSym
+{
+    readonly name: string;
+    readonly concreteType: TirType;
+    private readonly isBuiltinType: undefined;
+    private readonly typeDef: undefined;
+
+    constructor({
+        name,
+        concreteType
+    }: IPebbleValueSym)
+    {
+        this.name = name;
+        this.concreteType = concreteType;
+        this.isBuiltinType = undefined;
+        this.typeDef = undefined;
+    }
+}
+
+export interface IPebbleValueSym extends IPebbleSym
+{
+    readonly concreteType: TirType;
 }
