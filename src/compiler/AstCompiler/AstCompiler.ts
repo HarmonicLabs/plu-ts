@@ -14,7 +14,7 @@ import { Parser } from "../../parser/Parser";
 import { CompilerIoApi, createMemoryCompilerIoApi } from "../io/CompilerIoApi";
 import { IPebbleCompiler } from "../IPebbleCompiler";
 import { getInternalPath, Path, resolveProjAbsolutePath } from "../path/path";
-import { Scope } from "../scope/Scope";
+import { Scope } from "./scope/Scope";
 
 class ResolveStackNode {
     constructor(
