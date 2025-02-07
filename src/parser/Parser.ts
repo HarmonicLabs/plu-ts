@@ -75,8 +75,7 @@ import { makeBinaryExpr } from "../ast/nodes/expr/binary/BinaryExpr";
 import { AssignmentStmt, isAssignmentStmt, isAssignmentToken, makeAssignmentStmt } from "../ast/nodes/statements/AssignmentStmt";
 import { ExprStmt } from "../ast/nodes/statements/ExprStmt";
 import { PebbleAstType } from "../ast/nodes/types/PebbleAstType";
-import { mangleInternalPath } from "../compiler/path/mangleInternalPath";
-import { removeSingleDotDirsFromPath } from "../compiler/path/path";
+import { getInternalPath, removeSingleDotDirsFromPath } from "../compiler/path/path";
 
 export class Parser extends DiagnosticEmitter
 {
@@ -96,8 +95,7 @@ export class Parser extends DiagnosticEmitter
         isEntry: boolean = false
     ): [ Source, DiagnosticMessage[] ]
     {
-        const normalizedPath = removeSingleDotDirsFromPath( path );
-        const internalPath = mangleInternalPath(normalizedPath);
+        const internalPath = getInternalPath( path );
     
         const kind = (
             isEntry
@@ -179,7 +177,7 @@ export class Parser extends DiagnosticEmitter
             case Token.Let:
             case Token.Const: {
                 tn.next(); // skip `const` | `let` | `var`
-                flags |= first === Token.Var ? CommonFlags.None : CommonFlags.Const;
+                flags |= first === Token.Const ? CommonFlags.Const : CommonFlags.None;
 
                 if( tn.skip( Token.Enum ) )
                 {
@@ -664,7 +662,7 @@ export class Parser extends DiagnosticEmitter
     }
 
     parseStruct(
-        flags = CommonFlags.None,
+        flags = CommonFlags.Const,
         startPos?: number
     ): StructDecl | undefined
     {
@@ -739,7 +737,7 @@ export class Parser extends DiagnosticEmitter
             constrIdentifier = undefined;
             isSingleConstrShortcut = true;
             tn.reset( structDefBodyOpenState );
-            const fields = this.parseStructConstrFields();
+            const fields = this.parseStructConstrFields( flags );
             if( !fields ) return undefined;
             if( !tn.skip( Token.CloseBrace ) )
             return this.error(
@@ -761,7 +759,7 @@ export class Parser extends DiagnosticEmitter
             );
         }
 
-        const constrFields = this.parseStructConstrFields();
+        const constrFields = this.parseStructConstrFields( flags );
         if( !Array.isArray( constrFields ) ) return undefined;
         
         const constrs = [
@@ -790,7 +788,7 @@ export class Parser extends DiagnosticEmitter
                 tn.range(), "{"
             );
     
-            const constrFields = this.parseStructConstrFields();
+            const constrFields = this.parseStructConstrFields( flags );
             if( !Array.isArray( constrFields ) ) return undefined;
             
             constrs.push(
@@ -812,7 +810,7 @@ export class Parser extends DiagnosticEmitter
         );
     }
 
-    parseStructConstrFields(): VarDecl[] | undefined
+    parseStructConstrFields( flags: CommonFlags ): VarDecl[] | undefined
     {
         const tn = this.tn;
         // at '{'
@@ -821,7 +819,7 @@ export class Parser extends DiagnosticEmitter
 
         while( !tn.skip( Token.CloseBrace ) )
         {
-            const field = this._parseVarDecl();
+            const field = this._parseVarDecl( flags );
             if( !field ) return undefined;
 
             if( !field.type )
@@ -1105,7 +1103,7 @@ export class Parser extends DiagnosticEmitter
      * an initializer MUST NOT be present NOR a type
      */
     private _parseVarDecl(
-        flags: CommonFlags = CommonFlags.None,
+        flags: CommonFlags,
     ): VarDecl | undefined
     {
         const tn = this.tn;
@@ -1117,7 +1115,7 @@ export class Parser extends DiagnosticEmitter
             tn.skip( Token.OpenBrace )
         ) // ConstrName{ ... } || { ... }
         {
-            const unnamed = this.parseSingleDeconstructVarDecl();
+            const unnamed = this.parseSingleDeconstructVarDecl( flags );
             if( !unnamed ) return undefined;
             return renamedField instanceof Identifier ? 
                 // ConstrName{ ... }
@@ -1135,7 +1133,7 @@ export class Parser extends DiagnosticEmitter
                 );
                 return undefined;
             }
-            return this.parseArrayLikeDeconstr();
+            return this.parseArrayLikeDeconstr( flags );
         }
         else if( renamedField instanceof Identifier ) // renamed
         {
@@ -1149,13 +1147,14 @@ export class Parser extends DiagnosticEmitter
                 renamedField,
                 explicitType,
                 initializer,
+                flags,
                 range
             );
         }
         else return undefined;
     }
 
-    parseSingleDeconstructVarDecl(): SingleDeconstructVarDecl | undefined
+    parseSingleDeconstructVarDecl( flags: CommonFlags ): SingleDeconstructVarDecl | undefined
     {
         const tn = this.tn;
 
@@ -1167,7 +1166,6 @@ export class Parser extends DiagnosticEmitter
         let rest: Identifier | undefined = undefined;
         let isRest = false;
         let startRange: SourceRange | undefined = undefined
-        let flags = CommonFlags.None;
         let explicitType: PebbleAstType | undefined = undefined;
         let initializer: PebbleExpr | undefined = undefined;
         while( !tn.skip( Token.CloseBrace ) )
@@ -1203,14 +1201,14 @@ export class Parser extends DiagnosticEmitter
 
             if( !tn.skip( Token.Colon ) ) // only field, with no colon (eg: { field, ... })
             {
-                element = SimpleVarDecl.onlyIdentifier( fieldName );
+                element = SimpleVarDecl.onlyIdentifier( fieldName, flags );
                 elements.set( fieldName.name, element );
                 tn.skip( Token.Comma ); // skip comma if present
                 continue; // early continue to check for close brace or next field
             }            
             // else ther is colon (eg: { field: ... })
 
-            element = this._parseVarDecl();
+            element = this._parseVarDecl( flags );
             if( !element ) // field: ... what?
             {
                 this.error(
@@ -1248,11 +1246,12 @@ export class Parser extends DiagnosticEmitter
             rest,
             explicitType,
             initializer,
+            flags,
             SourceRange.join( initRange, tn.range() )
         );
     }
 
-    parseArrayLikeDeconstr(): ArrayLikeDeconstr | undefined
+    parseArrayLikeDeconstr( flags: CommonFlags ): ArrayLikeDeconstr | undefined
     {
         const tn = this.tn;
 
@@ -1291,7 +1290,7 @@ export class Parser extends DiagnosticEmitter
                 rest.range
             );
 
-            const elem = this._parseVarDecl();
+            const elem = this._parseVarDecl( flags );
             if( !elem ) return undefined;
 
             if( elem.initExpr || elem.type )
@@ -1326,6 +1325,7 @@ export class Parser extends DiagnosticEmitter
             rest,
             explicitType,
             initializer,
+            flags,
             range
         );
     }
@@ -1983,12 +1983,7 @@ export class Parser extends DiagnosticEmitter
                     return this.parseCommonFuncExpr(
                         Identifier.anonymous(tn.range(startPos)),
                         [
-                            new SimpleVarDecl(
-                                identifier,
-                                undefined, // var type
-                                undefined, // var initializer
-                                identifier.range
-                            )
+                            SimpleVarDecl.onlyIdentifier( identifier, CommonFlags.None )
                         ],
                         ArrowKind.Single,
                         startPos
@@ -2127,7 +2122,7 @@ export class Parser extends DiagnosticEmitter
 
             const startPos = tn.tokenPos;
 
-            const matcher = this._parseVarDecl();
+            const matcher = this._parseVarDecl( CommonFlags.Const );
             if( !matcher ) return undefined;
 
             if( matcher instanceof SimpleVarDecl ) noPatternCaseSeen = true;
@@ -2243,7 +2238,7 @@ export class Parser extends DiagnosticEmitter
 
         while (!tn.skip(Token.CloseParen))
         {
-            let param = this.parseParameter();
+            let param = this.parseParameter( CommonFlags.Const );
             if (!param) return undefined;
             parameters.push(param);
 
@@ -2263,13 +2258,11 @@ export class Parser extends DiagnosticEmitter
         return parameters;
     }
 
-    parseParameter(): VarDecl | undefined
+    parseParameter( flags: CommonFlags ): VarDecl | undefined
     {
         const tn = this.tn;
-        // before: ('public' | 'private' | 'protected' | '...')? Identifier '?'? (':' Type)? ('=' PebbleExpr)?
+        // before: Identifier '?'? (':' Type)? ('=' PebbleExpr)?
 
-        let accessFlags: CommonFlags = CommonFlags.None;
-        
         if (tn.skip(Token.Dot_Dot_Dot)) {
             this.error(
                 DiagnosticCode.A_parameter_property_cannot_be_declared_using_a_rest_parameter,
@@ -2278,7 +2271,7 @@ export class Parser extends DiagnosticEmitter
             return undefined;
         }
 
-        return this._parseVarDecl( accessFlags );
+        return this._parseVarDecl( flags );
     }
 
     /**
@@ -3063,7 +3056,7 @@ export class Parser extends DiagnosticEmitter
             );
 
             // const startPos = tn.pos;
-            const pattern = this._parseVarDecl();
+            const pattern = this._parseVarDecl( CommonFlags.Const );
 
             if( !pattern )
             return this.error(

@@ -8,6 +8,7 @@ import {
 } from "../../utils/text";
 
 import {
+    extension,
 	PATH_DELIMITER
 } from "../../common";
 
@@ -15,6 +16,22 @@ const separator = CharCode.Slash;
 
 export type Path = string;
 
+export function getInternalPath( path: string ): string
+{
+    return mangleInternalPath( removeSingleDotDirsFromPath( path ) );
+}
+
+/** Mangles an external to an internal path. */
+export function mangleInternalPath(path: string): string {
+    if (path.endsWith( extension ))
+        path = path.substring( 0, path.length - extension.length );
+    if (path.endsWith("/")) {
+        path += "index";
+    } else if (path.endsWith(extension)) {
+        path = path.substring(0, path.length - extension.length);
+    }
+    return path;
+}
 
 /**
  * Normalizes the specified path, removing interior placeholders.
@@ -112,7 +129,7 @@ export function removeSingleDotDirsFromPath(path: string): string {
 }
 
 /** Resolves the specified path relative to the specified origin. */
-export function resolveAsRootPath( toResolve: string, fromPath: string ): string | undefined
+export function resolveProjAbsolutePath( toResolve: string, fromPath: string ): string | undefined
 {
     const fromDirname = dirname( fromPath )
     toResolve = removeSingleDotDirsFromPath( toResolve );

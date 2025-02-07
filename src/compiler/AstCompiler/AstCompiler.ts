@@ -11,9 +11,7 @@ import { CompilerOptions } from "../../IR/toUPLC/CompilerOptions";
 import { Parser } from "../../parser/Parser";
 import { CompilerIoApi, createMemoryCompilerIoApi } from "../io/CompilerIoApi";
 import { IPebbleCompiler } from "../IPebbleCompiler";
-import { mangleInternalPath } from "../path/mangleInternalPath";
-import { Path, removeSingleDotDirsFromPath, resolveAsRootPath } from "../path/path";
-import { DependencyGraph } from "./DependencyGrapth";
+import { getInternalPath, Path, resolveProjAbsolutePath } from "../path/path";
 
 class ResolveStackNode {
     constructor(
@@ -94,8 +92,8 @@ export class AstCompiler extends DiagnosticEmitter
         isEntry: boolean = true
     )
     {
-        const internalPath = mangleInternalPath( removeSingleDotDirsFromPath( path ) );
-        srcText = srcText ?? await this.io.readFile( path, this.rootPath );
+        const internalPath = getInternalPath( path );
+        srcText = srcText ?? await this.io.readFile( internalPath, this.rootPath );
         if( !srcText )
         {
             this.error(
@@ -125,7 +123,7 @@ export class AstCompiler extends DiagnosticEmitter
         if(!( src instanceof Source ))
         {
             src = src.toString();
-            src = mangleInternalPath( removeSingleDotDirsFromPath( src ) );
+            src = getInternalPath( src );
             src = (await this.sourceFromInternalPath( src ))!;
             if( !src ) return this.diagnostics;
         }
@@ -194,7 +192,7 @@ export class AstCompiler extends DiagnosticEmitter
                 const importStmt = req.dependent.statements.find( stmt => {
                     if( !isImportStmtLike( stmt ) ) return false;
 
-                    const asRootPath = resolveAsRootPath(
+                    const asRootPath = resolveProjAbsolutePath(
                         stmt.fromPath.string,
                         req.dependent.internalPath
                     );
@@ -203,9 +201,7 @@ export class AstCompiler extends DiagnosticEmitter
                     return asRootPath === prevPath
                 }) as ImportStmtLike | undefined;
 
-                prevPath = mangleInternalPath(
-                    removeSingleDotDirsFromPath( req.dependent.internalPath )
-                ); 
+                prevPath = getInternalPath( req.dependent.internalPath ); 
                 if( !importStmt )
                 {
                     this.error(
@@ -271,7 +267,7 @@ export class AstCompiler extends DiagnosticEmitter
     {
         return stmts
         .map( imp => {
-            const internalPath = resolveAsRootPath(
+            const internalPath = resolveProjAbsolutePath(
                 imp.fromPath.string,
                 requestingPath
             );
@@ -283,7 +279,7 @@ export class AstCompiler extends DiagnosticEmitter
                 );
                 return "";
             }
-            return mangleInternalPath( internalPath );
+            return getInternalPath( internalPath );
         })
         .filter( path => path !== "" );
     }

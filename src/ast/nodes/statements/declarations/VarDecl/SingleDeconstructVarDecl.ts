@@ -1,3 +1,4 @@
+import { CommonFlags } from "../../../../../common";
 import { SourceRange } from "../../../../Source/SourceRange";
 import { Identifier } from "../../../common/Identifier";
 import { PebbleExpr } from "../../../expr/PebbleExpr";
@@ -21,6 +22,7 @@ export class SingleDeconstructVarDecl
         readonly rest: Identifier | undefined,
         readonly type: PebbleAstType | undefined,
         readonly initExpr: PebbleExpr | undefined,
+        public flags: CommonFlags,
         readonly range: SourceRange
     ) {}
 }

@@ -14,6 +14,7 @@ export class ArrayLikeDeconstr
         readonly rest: Identifier | undefined,
         readonly type: PebbleAstType | undefined, // just for the type checker, ususally this is inferred
         readonly initExpr: PebbleExpr | undefined,
+        public flags: number,
         readonly range: SourceRange,
     ) {}
 }

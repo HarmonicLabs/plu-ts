@@ -1,4 +1,4 @@
-import { removeSingleDotDirsFromPath, dirname, resolveAsRootPath } from "../path";
+import { removeSingleDotDirsFromPath, dirname, resolveProjAbsolutePath } from "../path";
 
 describe("path", () => {
 
@@ -61,12 +61,12 @@ describe("path", () => {
 
     });
  
-    describe("resolveAsRootPath", () => {
+    describe("resolveProjAbsolutePath", () => {
 
         function testPath( inp: string, origin: string, out: string | undefined )
         {
             test(inp + " from " + origin +" -> " + out, () => {
-                expect( resolveAsRootPath( inp, origin ) ).toEqual( out );
+                expect( resolveProjAbsolutePath( inp, origin ) ).toEqual( out );
             });
         }
 

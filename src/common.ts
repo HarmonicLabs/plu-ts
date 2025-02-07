@@ -86,7 +86,11 @@ export enum CommonFlags {
 
 Object.freeze(CommonFlags);
 
-export const WIN = globalThis.process && globalThis.process.platform === "win32";
+let hasGlobalThis: boolean;
+try {
+    hasGlobalThis = typeof globalThis !== "undefined"
+} catch { hasGlobalThis = false; }
+export const WIN = hasGlobalThis && globalThis.process && globalThis.process.platform === "win32";
 export const EOL = WIN ? "\r\n" : "\n";
 export const SEP = WIN ? "\\"   : "/";
 

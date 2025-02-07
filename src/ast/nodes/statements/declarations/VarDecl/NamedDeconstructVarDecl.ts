@@ -1,3 +1,4 @@
+import { CommonFlags } from "../../../../../common";
 import { SourceRange } from "../../../../Source/SourceRange";
 import { Identifier } from "../../../common/Identifier";
 import { PebbleExpr } from "../../../expr/PebbleExpr";
@@ -15,6 +16,7 @@ export class NamedDeconstructVarDecl
         readonly rest: Identifier | undefined,
         readonly type: PebbleAstType | undefined, // can be undefined when use ad function parameter
         readonly initExpr: PebbleExpr | undefined, // can be undefined when use ad function parameter
+        public flags: CommonFlags,
         readonly range: SourceRange,
     ) {}
 
@@ -31,6 +33,7 @@ export class NamedDeconstructVarDecl
             unnamed.rest,
             unnamed.type,
             unnamed.initExpr,
+            unnamed.flags,
             range
         );
     }
