@@ -1,8 +1,8 @@
 import { SourceRange } from "../../Source/SourceRange";
 import { Identifier } from "../common/Identifier";
 import { HasSourceRange } from "../HasSourceRange";
-import { NamedType } from "../types/NamedType";
-import { FuncType } from "../types/NativeType";
+import { AstNamedType } from "../types/AstNamedType";
+import { AstFuncType } from "../types/AstNativeType";
 import { PebbleAstType } from "../types/PebbleAstType";
 import { BlockStmt } from "./BlockStmt";
 
@@ -24,7 +24,7 @@ export class InterfaceMethodImpl
     constructor(
         readonly methodName: Identifier,
         readonly typeParameters: PebbleAstType[],
-        readonly signature: FuncType,
+        readonly signature: AstFuncType,
         readonly body: BlockStmt,
         readonly range: SourceRange,
     ) {}

@@ -1,4 +1,4 @@
-import { assertValidListType } from ".";
+import { assertValidAstListType } from ".";
 import { IRConst } from "../../../../../IR/IRNodes/IRConst";
 import { PList } from "../../../../PTypes";
 import { Term } from "../../../../Term";
@@ -9,7 +9,7 @@ import { _punsafeConvertType } from "../../../punsafeConvertType/minimal";
 
 export function _pnil<ElemsT extends TermType>( elemsT: ElemsT ): Term<PList<ToPType<ElemsT>>>
 {
-    assertValidListType( elemsT );
+    assertValidAstListType( elemsT );
 
     if(
         typeExtends( elemsT, pair( data, data ) )

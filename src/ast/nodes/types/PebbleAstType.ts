@@ -1,16 +1,16 @@
 import { isObject } from "@harmoniclabs/obj-utils";
-import { isNativeType, NativeType } from "./NativeType";
-import { NamedType } from "./NamedType";
+import { isAstNativeType, AstNativeType } from "./AstNativeType";
+import { AstNamedType } from "./AstNamedType";
 
 export type PebbleAstType
-    = NativeType
-    | NamedType
+    = AstNativeType
+    | AstNamedType
     ;
 
 export function isPebbleAstType( obj: any ): obj is PebbleAstType
 {
     return isObject( obj ) && (
-        isNativeType( obj ) ||
-        (obj instanceof NamedType)
+        isAstNativeType( obj ) ||
+        (obj instanceof AstNamedType)
     );
 }

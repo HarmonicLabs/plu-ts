@@ -1,7 +1,7 @@
 import { Identifier } from "../ast/nodes/common/Identifier";
 import { NamedDeconstructVarDecl } from "../ast/nodes/statements/declarations/VarDecl/NamedDeconstructVarDecl";
 import { SingleDeconstructVarDecl } from "../ast/nodes/statements/declarations/VarDecl/SingleDeconstructVarDecl";
-import { DeconstructVarDecl, VarDecl } from "../ast/nodes/statements/declarations/VarDecl/VarDecl";
+import { VarDecl } from "../ast/nodes/statements/declarations/VarDecl/VarDecl";
 import { VarStmt } from "../ast/nodes/statements/VarStmt";
 import { PebbleAst } from "../ast/PebbleAst";
 import { SourceKind, Source } from "../ast/Source/Source";
@@ -28,8 +28,8 @@ import { ParentesizedExpr } from "../ast/nodes/expr/ParentesizedExpr";
 import { ArrowKind } from "../ast/nodes/expr/functions/ArrowKind";
 import { FuncExpr } from "../ast/nodes/expr/functions/FuncExpr";
 import { PebbleStmt } from "../ast/nodes/statements/PebbleStmt";
-import { BooleanType, BytesType, ListType, NumberType, NativeOptionalType, VoidType, LinearMapType, FuncType } from "../ast/nodes/types/NativeType";
-import { NamedType } from "../ast/nodes/types/NamedType";
+import { AstBooleanType, AstBytesType, AstListType, AstNumberType, AstNativeOptionalType, AstVoidType, AstLinearMapType, AstFuncType } from "../ast/nodes/types/AstNativeType";
+import { AstNamedType } from "../ast/nodes/types/AstNamedType";
 import { LitArrExpr } from "../ast/nodes/expr/litteral/LitArrExpr";
 import { LitNamedObjExpr } from "../ast/nodes/expr/litteral/LitNamedObjExpr";
 import { LitObjExpr } from "../ast/nodes/expr/litteral/LitObjExpr";
@@ -70,12 +70,12 @@ import { ElemAccessExpr } from "../ast/nodes/expr/ElemAccessExpr";
 import { makeUnaryPostfixExpr } from "../ast/nodes/expr/unary/UnaryPostfixExpr";
 import { TernaryExpr } from "../ast/nodes/expr/TernaryExpr";
 import { CommaExpr } from "../ast/nodes/expr/CommaExpr";
-import { DotPropAccessExpr, makePropAccessExpr } from "../ast/nodes/expr/PropAccessExpr";
+import { makePropAccessExpr } from "../ast/nodes/expr/PropAccessExpr";
 import { makeBinaryExpr } from "../ast/nodes/expr/binary/BinaryExpr";
-import { AssignmentStmt, isAssignmentStmt, isAssignmentToken, makeAssignmentStmt } from "../ast/nodes/statements/AssignmentStmt";
+import { AssignmentStmt, makeAssignmentStmt } from "../ast/nodes/statements/AssignmentStmt";
 import { ExprStmt } from "../ast/nodes/statements/ExprStmt";
 import { PebbleAstType } from "../ast/nodes/types/PebbleAstType";
-import { getInternalPath, removeSingleDotDirsFromPath } from "../compiler/path/path";
+import { getInternalPath } from "../compiler/path/path";
 
 export class Parser extends DiagnosticEmitter
 {
@@ -853,7 +853,7 @@ export class Parser extends DiagnosticEmitter
     private parseNamedFuncSig(
         flags: CommonFlags = CommonFlags.None,
         startPos?: number
-    ): [ Identifier, PebbleAstType[] | undefined, FuncType ] | undefined
+    ): [ Identifier, PebbleAstType[] | undefined, AstFuncType ] | undefined
     {
         const tn = this.tn;
 
@@ -898,7 +898,7 @@ export class Parser extends DiagnosticEmitter
         return [
             name,
             typeParams,
-            new FuncType(
+            new AstFuncType(
                 params,
                 returnType,
                 tn.range( sigStart, tn.pos )
@@ -1388,12 +1388,12 @@ export class Parser extends DiagnosticEmitter
 
         switch( token )
         {
-            case Token.Void: return new VoidType( currRange );
+            case Token.Void: return new AstVoidType( currRange );
             // case Token.True:
             // case Token.False: 
-            case Token.Boolean: return new BooleanType( currRange );
-            case Token.Number: return new NumberType( currRange )
-            case Token.Bytes: return new BytesType( currRange );
+            case Token.Boolean: return new AstBooleanType( currRange );
+            case Token.Number: return new AstNumberType( currRange )
+            case Token.Bytes: return new AstBytesType( currRange );
             case Token.Optional: {
 
                 if( !tn.skip( Token.LessThan ) )
@@ -1416,7 +1416,7 @@ export class Parser extends DiagnosticEmitter
                     return undefined;
                 }
 
-                return new NativeOptionalType( tyArg, tn.range( startPos, tn.pos ) );
+                return new AstNativeOptionalType( tyArg, tn.range( startPos, tn.pos ) );
             }
             case Token.List: {
 
@@ -1440,7 +1440,7 @@ export class Parser extends DiagnosticEmitter
                     return undefined;
                 }
 
-                new ListType( tyArg, tn.range( startPos, tn.pos ) );
+                new AstListType( tyArg, tn.range( startPos, tn.pos ) );
             }
             case Token.LinearMap: {
 
@@ -1476,7 +1476,7 @@ export class Parser extends DiagnosticEmitter
                     return undefined;
                 }
 
-                new LinearMapType( keyTy, valTy, tn.range( startPos, tn.pos ) );
+                new AstLinearMapType( keyTy, valTy, tn.range( startPos, tn.pos ) );
             }
             case Token.Identifier: {
 
@@ -1502,7 +1502,7 @@ export class Parser extends DiagnosticEmitter
                     }
                 }
 
-                return new NamedType(
+                return new AstNamedType(
                     name,
                     params,
                     tn.range( startPos, tn.pos )
@@ -2443,7 +2443,7 @@ export class Parser extends DiagnosticEmitter
             return undefined;
         }
 
-        let signature = new FuncType(
+        let signature = new AstFuncType(
             parameters,
             returnType,
             tn.range(signatureStart, tn.pos)

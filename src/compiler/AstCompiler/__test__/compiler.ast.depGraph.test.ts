@@ -56,7 +56,7 @@ const complier = new AstCompiler(
     }),
 );
 
-test("type check", async () => {
+test("checkCircularDependencies", async () => {
     const diagnostics = await complier.checkCircularDependencies("a.pebble");
 
     expect( diagnostics.length )

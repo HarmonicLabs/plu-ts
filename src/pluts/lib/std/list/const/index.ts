@@ -16,7 +16,7 @@ import { CEKConst } from "@harmoniclabs/plutus-machine";
 import { TermList, addPListMethods } from "../../UtilityTerms/TermList";
 
 
-export function assertValidListType( elemsT: TermType ): void
+export function assertValidAstListType( elemsT: TermType ): void
 {
     assert(
         isWellFormedType( elemsT ) &&
@@ -30,7 +30,7 @@ export function assertValidListType( elemsT: TermType ): void
 
 export function pnil<ElemsT extends TermType>( elemsT: ElemsT ): TermList<ToPType<ElemsT>>
 {
-    assertValidListType( elemsT );
+    assertValidAstListType( elemsT );
 
     if(
         typeExtends( elemsT, pair( tyVar(), tyVar() ) )
@@ -55,7 +55,7 @@ export function pnil<ElemsT extends TermType>( elemsT: ElemsT ): TermList<ToPTyp
 
 export function pconstList<ElemsT extends TermType>( elemsT: ElemsT ): ( elems: Term<ToPType<ElemsT>>[] ) => TermList<ToPType<ElemsT>>
 {
-    assertValidListType( elemsT );
+    assertValidAstListType( elemsT );
 
     return ( elems: Term<ToPType<ElemsT>>[] ): TermList<ToPType<ElemsT>> => {
         assert(

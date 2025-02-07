@@ -5,9 +5,9 @@ import { CompilerIoApi, createMemoryCompilerIoApi } from "../io/CompilerIoApi";
 import { IPebbleCompiler } from "../IPebbleCompiler";
 
 /**
- * compiles Functional IR to IRTerm (old plu-ts IR).
+ * compiles Typed IR to IRTerm (old plu-ts IR).
  * 
- * FIR -> IRTerm
+ * TIR -> IRTerm
  */
 export class FirCompiler extends DiagnosticEmitter
     implements IPebbleCompiler

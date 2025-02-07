@@ -3,7 +3,7 @@ import { Identifier } from "../common/Identifier";
 import { HasSourceRange } from "../HasSourceRange";
 import { PebbleAstType } from "./PebbleAstType";
 
-export class NamedType implements HasSourceRange
+export class AstNamedType implements HasSourceRange
 {
     constructor(
         readonly name: Identifier,

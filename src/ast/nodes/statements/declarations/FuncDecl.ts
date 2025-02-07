@@ -5,8 +5,8 @@ import { ArrowKind } from "../../expr/functions/ArrowKind";
 import { PebbleExpr } from "../../expr/PebbleExpr";
 import { HasSourceRange } from "../../HasSourceRange";
 import { BlockStmt } from "../BlockStmt";
-import { NamedType } from "../../types/NamedType";
-import { FuncType } from "../../types/NativeType";
+import { AstNamedType } from "../../types/AstNamedType";
+import { AstFuncType } from "../../types/AstNativeType";
 import { PebbleAstType } from "../../types/PebbleAstType";
 
 export class FuncDecl
@@ -16,7 +16,7 @@ export class FuncDecl
         readonly name: Identifier,
         readonly flags: CommonFlags,
         readonly typeParams: PebbleAstType[],
-        readonly signature: FuncType,
+        readonly signature: AstFuncType,
         readonly body: BlockStmt | PebbleExpr,
         readonly arrowKind: ArrowKind,
         readonly range: SourceRange,

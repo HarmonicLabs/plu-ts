@@ -1,3 +1,5 @@
+import { Source } from "../../ast/Source/Source";
+import { DiagnosticMessage } from "../../diagnostics/DiagnosticMessage";
 import { parseFile } from "../parseFile";
 
 
@@ -30,8 +32,9 @@ function main( { tx, purpose }: ScriptContext )
 }
 `;
 
-    let stmts: any;
-    expect(() => stmts = parseFile( fileName, srcText )).not.toThrow();
+    let src!: Source;
+    let diagnosticMessages!: DiagnosticMessage[];
+    expect(() => [ src, diagnosticMessages ] = parseFile( fileName, srcText )).not.toThrow();
 
-    // console.log( stmts );
+    // console.log( src.statements );
 })

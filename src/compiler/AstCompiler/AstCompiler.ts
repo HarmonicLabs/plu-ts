@@ -1,3 +1,4 @@
+import { FuncDecl } from "../../ast/nodes/statements/declarations/FuncDecl";
 import { ExportStarStmt } from "../../ast/nodes/statements/ExportStarStmt";
 import { ImportStarStmt } from "../../ast/nodes/statements/ImportStarStmt";
 import { ImportStmt } from "../../ast/nodes/statements/ImportStmt";
@@ -13,6 +14,7 @@ import { Parser } from "../../parser/Parser";
 import { CompilerIoApi, createMemoryCompilerIoApi } from "../io/CompilerIoApi";
 import { IPebbleCompiler } from "../IPebbleCompiler";
 import { getInternalPath, Path, resolveProjAbsolutePath } from "../path/path";
+import { Scope } from "../scope/Scope";
 
 class ResolveStackNode {
     constructor(
@@ -58,22 +60,29 @@ function isImportStmtLike( stmt: any ): stmt is ImportStmtLike
     );
 }
 /**
- * compiles Pebble AST to Functional IR.
+ * compiles Pebble AST to Typed IR.
  * 
- * AST -> FIR
+ * AST -> TIR
  * 
  * The AST is simply the result of tokenization and parsing.
  * 
  * Therefore the AST is only syntactically correct, but not necessarily semantically correct.
  * 
- * During the compilation from AST to FIR,
- * missign types are inferred and the resulting FIR is checked for semantic correctness.
+ * During the compilation from AST to TIR,
+ * missign types are inferred and the resulting TIR is checked for semantic correctness.
  * 
  * In short, here is where type checking happens.
  */
 export class AstCompiler extends DiagnosticEmitter
     implements IPebbleCompiler
 {
+    /** 
+     * The standard library scope.
+     * 
+     * (ScriptContext, built-in functions, etc.)
+    **/
+    readonly stdScope: Scope;
+
     constructor(
         readonly cfg: CompilerOptions,
         readonly io: CompilerIoApi = createMemoryCompilerIoApi({ useConsoleAsOutput: true }),
@@ -123,7 +132,9 @@ export class AstCompiler extends DiagnosticEmitter
 
     async compileEntryFileStmts( src: PebbleStmt[] )
     {
-
+        const mainFunc = src.find( stmt => {
+            stmt instanceof FuncDecl
+        })
     }
 
     async checkCircularDependencies( src: Source | Path ): Promise<DiagnosticMessage[]>

@@ -3,68 +3,60 @@ import { HasSourceRange } from "../HasSourceRange";
 import { VarDecl } from "../statements/declarations/VarDecl/VarDecl";
 import { PebbleAstType } from "./PebbleAstType";
 
-export type NativeType
-    = VoidType
-    | BooleanType
-    | NumberType
-    | BytesType
-    | NativeOptionalType<PebbleAstType>
-    | ListType<PebbleAstType>
-    | LinearMapType<PebbleAstType,PebbleAstType>
-    | FuncType
+export type AstNativeType
+    = AstVoidType
+    | AstBooleanType
+    | AstNumberType
+    | AstBytesType
+    | AstNativeOptionalType<PebbleAstType>
+    | AstListType<PebbleAstType>
+    | AstLinearMapType<PebbleAstType,PebbleAstType>
+    | AstFuncType
     ;
 
-export function isNativeType( thing: any ): thing is NativeType
+export function isAstNativeType( thing: any ): thing is AstNativeType
 {
     return (
-        thing instanceof VoidType
-        || thing instanceof BooleanType
-        || thing instanceof NumberType
-        || thing instanceof BytesType
-        || thing instanceof NativeOptionalType
-        || thing instanceof ListType
-        || thing instanceof LinearMapType
-        || thing instanceof FuncType
+        thing instanceof AstVoidType
+        || thing instanceof AstBooleanType
+        || thing instanceof AstNumberType
+        || thing instanceof AstBytesType
+        || thing instanceof AstNativeOptionalType
+        || thing instanceof AstListType
+        || thing instanceof AstLinearMapType
+        || thing instanceof AstFuncType
     );
 }
 
-export class VoidType implements HasSourceRange
+export class AstVoidType implements HasSourceRange
 {
     constructor(
         readonly range: SourceRange
     ) {}
 }
 
-export class BooleanType implements HasSourceRange
+export class AstBooleanType implements HasSourceRange
 {
     constructor(
         readonly range: SourceRange
     ) {}
 }
 
-export class NumberType implements HasSourceRange
+export class AstNumberType implements HasSourceRange
 {
     constructor(
         readonly range: SourceRange
     ) {}
 }
 
-export class BytesType implements HasSourceRange
+export class AstBytesType implements HasSourceRange
 {
     constructor(
         readonly range: SourceRange
     ) {}
 }
 
-export class NativeOptionalType<TArg extends PebbleAstType> implements HasSourceRange
-{
-    constructor(
-        readonly typeArg: TArg,
-        readonly range: SourceRange
-    ) {}
-}
-
-export class ListType<TArg extends PebbleAstType> implements HasSourceRange
+export class AstNativeOptionalType<TArg extends PebbleAstType> implements HasSourceRange
 {
     constructor(
         readonly typeArg: TArg,
@@ -72,7 +64,15 @@ export class ListType<TArg extends PebbleAstType> implements HasSourceRange
     ) {}
 }
 
-export class LinearMapType<KT extends PebbleAstType, VT extends PebbleAstType> implements HasSourceRange
+export class AstListType<TArg extends PebbleAstType> implements HasSourceRange
+{
+    constructor(
+        readonly typeArg: TArg,
+        readonly range: SourceRange
+    ) {}
+}
+
+export class AstLinearMapType<KT extends PebbleAstType, VT extends PebbleAstType> implements HasSourceRange
 {
     constructor(
         readonly keyTypeArg: KT,
@@ -81,7 +81,7 @@ export class LinearMapType<KT extends PebbleAstType, VT extends PebbleAstType> i
     ) {}
 }
 
-export class FuncType implements HasSourceRange
+export class AstFuncType implements HasSourceRange
 {
     constructor(
         readonly params: VarDecl[],
