@@ -692,8 +692,6 @@ export class Parser extends DiagnosticEmitter
             tn.range(), "{"
         );
 
-        const structDefBodyOpenState = tn.mark();
-
         if( tn.skip( Token.CloseBrace ) ) // single constr no fields shortcut
         {
             if( typeParams )
@@ -719,9 +717,10 @@ export class Parser extends DiagnosticEmitter
             );
         }
 
-        let isSingleConstrShortcut = false;
-
         let constrIdentifier: Identifier | undefined = undefined;
+
+        // in case of single constr shortcut
+        const preIdState = tn.mark();
 
         if( !tn.skipIdentifier() )
         return this.error(
@@ -729,21 +728,22 @@ export class Parser extends DiagnosticEmitter
             tn.range()
         );
 
-        constrIdentifier = new Identifier( tn.readIdentifier(), tn.range() );
+        constrIdentifier = new Identifier( tn.readIdentifier() , tn.range() );
         
         // no `{` after identifier means single constr shortcut
         if( !tn.skip( Token.OpenBrace ) )
         {
+            // reset before identifier, because this is a field name
+            tn.reset( preIdState );
+
             constrIdentifier = undefined;
-            isSingleConstrShortcut = true;
-            tn.reset( structDefBodyOpenState );
+            
             const fields = this.parseStructConstrFields( flags );
             if( !fields ) return undefined;
-            if( !tn.skip( Token.CloseBrace ) )
-            return this.error(
-                DiagnosticCode._0_expected,
-                tn.range(), "}"
-            );
+
+            // `parseStructConstrFields` already skips the closing brace
+            // if( !tn.skip( Token.CloseBrace ) )
+
             tn.skip( Token.Semicolon ); // if any
             return new StructDecl(
                 name,
@@ -820,7 +820,10 @@ export class Parser extends DiagnosticEmitter
         while( !tn.skip( Token.CloseBrace ) )
         {
             const field = this._parseVarDecl( flags );
-            if( !field ) return undefined;
+            if( !field ) return this.warning(
+                DiagnosticCode._0_expected,
+                tn.range(), "var declaration"
+            );
 
             if( !field.type )
             return this.error(
@@ -848,6 +851,8 @@ export class Parser extends DiagnosticEmitter
                 tn.range(), "}"
             );
         }
+
+        return fields;
     }
     
     private parseNamedFuncSig(
@@ -1392,7 +1397,8 @@ export class Parser extends DiagnosticEmitter
             // case Token.True:
             // case Token.False: 
             case Token.Boolean: return new AstBooleanType( currRange );
-            case Token.Number: return new AstNumberType( currRange )
+            case Token.Int: return new AstNumberType( currRange )
+            // case Token.Number: return new AstNumberType( currRange )
             case Token.Bytes: return new AstBytesType( currRange );
             case Token.Optional: {
 
@@ -2644,12 +2650,10 @@ export class Parser extends DiagnosticEmitter
 
     parseExprStmt(): ExprStmt | undefined
     {
-        console.log("parseExprStmt");
         const tn = this.tn;
 
         const startPos = tn.tokenPos;
         const expr = this.parseExpr();
-        console.log( expr );
         if (!expr) return undefined;
         
         return new ExprStmt(expr, tn.range(startPos, tn.pos));

@@ -53,7 +53,12 @@ export class Scope
     }
     isTypeDefinedInThisScope( name: string ): boolean
     {
-        return this.typeSymbols.isDefinedInThisScope( name );
+        return (
+            this.typeSymbols.isDefinedInThisScope( name ) ||
+            // unlike variables
+            // types cannot be shadowed
+            (this.parent?.isTypeDefinedInThisScope( name ) ?? false)
+        );
     }
 }
 

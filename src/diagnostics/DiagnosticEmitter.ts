@@ -125,7 +125,7 @@ export abstract class DiagnosticEmitter {
         arg0: string | undefined = undefined,
         arg1: string | undefined = undefined,
         arg2: string | undefined = undefined
-    ): void {
+    ): undefined {
         this.emitDiagnostic(code, DiagnosticCategory.Warning, range, undefined, arg0, arg1, arg2);
     }
 

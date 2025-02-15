@@ -52,12 +52,12 @@ export function tokenFromKeyword(text: string): Token {
         }
         case CharCode.f: {
             if (len <= 5) {
+                if (text === "fail") return Token.Fail;
                 if (text === "false") return Token.False;
                 if (text === "for") return Token.For;
                 if (text === "from") return Token.From;
                 break;
             }
-            if (text === "fail") return Token.Fail;
             if (text === "function") return Token.Function;
             if (text === "finally") return Token.Finally;
             break;
@@ -73,6 +73,7 @@ export function tokenFromKeyword(text: string): Token {
                 if (text === "is") return Token.Is;
                 break;
             }
+            if( text === "int" ) return Token.Int;
             switch (text.charCodeAt(3)) {
                 case CharCode.l: {
                     if (text === "implements") return Token.Implements;
@@ -110,7 +111,9 @@ export function tokenFromKeyword(text: string): Token {
             // if (text === "new") return Token.New;
             // if (text === "undefined") return Token.Null;
             // if (text === "namespace") return Token.Namespace;
-            if (text === "number") return Token.Number;
+            
+            // replaced by "int"
+            // if (text === "number") return Token.Number;
             break;
         }
         case CharCode.o: {
@@ -137,6 +140,7 @@ export function tokenFromKeyword(text: string): Token {
             if (len === 6) {
                 // if (text === "switch") return Token.Switch;
                 if (text === "static") return Token.Static;
+                if (text === "struct") return Token.Struct;
                 break;
             }
             // if (text === "set") return Token.Set;

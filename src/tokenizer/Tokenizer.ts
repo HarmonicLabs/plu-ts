@@ -796,7 +796,7 @@ export class Tokenizer extends DiagnosticEmitter {
         let pos = this.pos;
         let start = pos;
         let c = <number>text.codePointAt(pos);
-        assert(isIdentifierStart(c));
+        assert(isIdentifierStart(c), "token is not an identifier");
         while (
             (pos += numCodeUnits(c)) < end &&
             isIdentifierPart(c = <number>text.codePointAt(pos))
