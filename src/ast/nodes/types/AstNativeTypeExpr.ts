@@ -1,20 +1,25 @@
 import { SourceRange } from "../../Source/SourceRange";
 import { HasSourceRange } from "../HasSourceRange";
 import { VarDecl } from "../statements/declarations/VarDecl/VarDecl";
-import { PebbleAstType } from "./PebbleAstType";
+import { AstNamedTypeExpr } from "./AstNamedTypeExpr";
+import { AstTypeExpr } from "./AstTypeExpr";
 
-export type AstNativeType
+export type AstNativeTypeExpr
     = AstVoidType
     | AstBooleanType
     | AstNumberType
     | AstBytesType
-    | AstNativeOptionalType<PebbleAstType>
-    | AstListType<PebbleAstType>
-    | AstLinearMapType<PebbleAstType,PebbleAstType>
+
+    | AstNativeOptionalType<AstTypeExpr>
+    | AstListType<AstTypeExpr>
+    | AstLinearMapType<AstTypeExpr,AstTypeExpr>
     | AstFuncType
+    | AstAsSopType
+    | AstAsDataType
+
     ;
 
-export function isAstNativeType( thing: any ): thing is AstNativeType
+export function isAstNativeTypeExpr( thing: any ): thing is AstNativeTypeExpr
 {
     return (
         thing instanceof AstVoidType
@@ -25,6 +30,8 @@ export function isAstNativeType( thing: any ): thing is AstNativeType
         || thing instanceof AstListType
         || thing instanceof AstLinearMapType
         || thing instanceof AstFuncType
+        || thing instanceof AstAsSopType
+        || thing instanceof AstAsDataType
     );
 }
 
@@ -56,7 +63,7 @@ export class AstBytesType implements HasSourceRange
     ) {}
 }
 
-export class AstNativeOptionalType<TArg extends PebbleAstType> implements HasSourceRange
+export class AstNativeOptionalType<TArg extends AstTypeExpr> implements HasSourceRange
 {
     constructor(
         readonly typeArg: TArg,
@@ -64,7 +71,7 @@ export class AstNativeOptionalType<TArg extends PebbleAstType> implements HasSou
     ) {}
 }
 
-export class AstListType<TArg extends PebbleAstType> implements HasSourceRange
+export class AstListType<TArg extends AstTypeExpr> implements HasSourceRange
 {
     constructor(
         readonly typeArg: TArg,
@@ -72,7 +79,7 @@ export class AstListType<TArg extends PebbleAstType> implements HasSourceRange
     ) {}
 }
 
-export class AstLinearMapType<KT extends PebbleAstType, VT extends PebbleAstType> implements HasSourceRange
+export class AstLinearMapType<KT extends AstTypeExpr, VT extends AstTypeExpr> implements HasSourceRange
 {
     constructor(
         readonly keyTypeArg: KT,
@@ -85,7 +92,25 @@ export class AstFuncType implements HasSourceRange
 {
     constructor(
         readonly params: VarDecl[],
-        readonly returnType: PebbleAstType | undefined,
+        readonly returnType: AstTypeExpr | undefined,
+        readonly range: SourceRange
+    ) {}
+}
+
+export class AstAsSopType implements HasSourceRange
+{
+    constructor(
+        /* AsSop only takes structs or aliases of structs */
+        readonly tyParams: AstNamedTypeExpr,
+        readonly range: SourceRange
+    ) {}
+}
+
+export class AstAsDataType implements HasSourceRange
+{
+    constructor(
+        /* AsData only takes structs or aliases of structs */
+        readonly tyParams: AstNamedTypeExpr,
         readonly range: SourceRange
     ) {}
 }

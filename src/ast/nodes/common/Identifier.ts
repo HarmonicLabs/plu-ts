@@ -5,7 +5,7 @@ export class Identifier
     implements HasSourceRange
 {
     constructor(
-        readonly name: string,
+        readonly text: string,
         readonly range: SourceRange,
     ) {}
 

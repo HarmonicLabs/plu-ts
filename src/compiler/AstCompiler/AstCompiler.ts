@@ -1,8 +1,15 @@
 import { FuncDecl } from "../../ast/nodes/statements/declarations/FuncDecl";
+import { StructDecl } from "../../ast/nodes/statements/declarations/StructDecl";
+import { TypeAliasDecl } from "../../ast/nodes/statements/declarations/TypeAliasDecl";
+import { SimpleVarDecl } from "../../ast/nodes/statements/declarations/VarDecl/SimpleVarDecl";
 import { ExportStarStmt } from "../../ast/nodes/statements/ExportStarStmt";
 import { ImportStarStmt } from "../../ast/nodes/statements/ImportStarStmt";
 import { ImportStmt } from "../../ast/nodes/statements/ImportStmt";
 import { PebbleStmt } from "../../ast/nodes/statements/PebbleStmt";
+import { TypeImplementsStmt } from "../../ast/nodes/statements/TypeImplementsStmt";
+import { AstNamedTypeExpr } from "../../ast/nodes/types/AstNamedTypeExpr";
+import { AstBooleanType, AstBytesType, AstNumberType, AstVoidType } from "../../ast/nodes/types/AstNativeTypeExpr";
+import { AstTypeExpr } from "../../ast/nodes/types/AstTypeExpr";
 import { Source, SourceKind } from "../../ast/Source/Source";
 import { SourceRange } from "../../ast/Source/SourceRange";
 import { extension } from "../../common";
@@ -11,12 +18,17 @@ import { DiagnosticMessage } from "../../diagnostics/DiagnosticMessage";
 import { DiagnosticCode } from "../../diagnostics/diagnosticMessages.generated";
 import { CompilerOptions } from "../../IR/toUPLC/CompilerOptions";
 import { Parser } from "../../parser/Parser";
+import { TirBoolT, TirBytesT, TirIntT, TirVoidT } from "../../tir/TirNativeType";
+import { TirStructConstr, TirStructField, TirStructType } from "../../tir/TirStructType";
+import { TirType } from "../../tir/TirType";
 import { CompilerIoApi, createMemoryCompilerIoApi } from "../io/CompilerIoApi";
 import { IPebbleCompiler } from "../IPebbleCompiler";
 import { getInternalPath, Path, resolveProjAbsolutePath } from "../path/path";
 import { ResolveStackNode } from "./ResolveStackNode";
 import { Scope } from "./scope/Scope";
-
+import { stdTypesSrc } from "./scope/stdScope/std/stdTypes";
+import { stdScope } from "./scope/stdScope/stdScope";
+ 
 /**
  * compiles Pebble AST to Typed IR.
  * 
@@ -49,6 +61,122 @@ export class AstCompiler extends DiagnosticEmitter
     )
     {
         super( diagnostics );
+        this.stdScope = this._getInitScope();
+    }
+
+    private _getInitScope(): Scope
+    {
+        const scope = stdScope.clone();
+
+        const [ source, diagnostics ] = Parser.parseFile("prelude.pebble", stdTypesSrc, false);
+        if( diagnostics.length > 0 )
+        {
+            for( const msg of diagnostics )
+                this.emitDiagnosticMessage( msg );
+
+            throw new Error("Failed to parse prelude.pebble");
+        }
+
+        const stmts = source.statements;
+        const typeImpls: TypeImplementsStmt[] = []; 
+        for( const stmt of stmts )
+        {
+            if( stmt instanceof StructDecl || stmt instanceof TypeAliasDecl )
+                this.pushTypeDecl( stmt, scope );
+            else if( stmt instanceof TypeImplementsStmt )
+                typeImpls.push( stmt );
+        }
+        for( const stmt of typeImpls )
+            this.pushTypeImpl( stmt, scope );
+
+        return scope;
+    }
+
+    private _compileInitStructDecl(
+        decl: StructDecl,
+        scope: Scope
+    ): TirStructType
+    {
+        const constrs: TirStructConstr[] = new Array( decl.constrs.length );
+        for( let i = 0; i < decl.constrs.length; i++ )
+        {
+            const constr = decl.constrs[ i ];
+            const fields: TirStructField[] = new Array( constr.fields.length );
+            for( let j = 0; j < constr.fields.length; j++ )
+            {
+                const field = constr.fields[ j ];
+                if(!( field instanceof SimpleVarDecl ))
+                {
+                    this.error(
+                        DiagnosticCode.Invalid_field_declaration,
+                        field.range
+                    );
+                    continue;
+                }
+                if( !field.type )
+                {
+                    this.error(
+                        DiagnosticCode.Field_declarations_must_be_typed,
+                        field.range
+                    );
+                    continue;
+                }
+                if( field.initExpr )
+                {
+                    this.error(
+                        DiagnosticCode.Initialization_expressions_are_not_allowed_in_a_struct_declaration,
+                        field.initExpr.range
+                    ); // recoverable (just ignore the initializer)
+                }
+                fields[ j ] = new TirStructField(
+                    field.name.text,
+                    // we can only afford this "blind" `resolveType`
+                    // because we know the source parsed
+                    // and we know that the type definitions are sorted
+                    this._compileTypeExpr( field.type, scope ),
+                );
+            }
+            constrs[ i ] = {
+                name: constr.name.text,
+                fields
+            };
+        }
+        return new TirStructType(
+            decl.name.text,
+            constrs,
+            []
+        );
+    }
+
+    private _compileTypeExpr(
+        typeExpr: AstTypeExpr,
+        scope: Scope
+    ): TirType
+    {
+        if( typeExpr instanceof AstNamedTypeExpr )
+            return this._compileNamedTypeExpr( typeExpr, scope );
+        else
+            return this._compileNativeTypeExpr( typeExpr );
+    }
+
+    private _compileNamedTypeExpr(
+        typeExpr: AstNamedTypeExpr,
+        scope: Scope
+    ): TirType
+    {
+
+    }
+
+    private _compileNativeTypeExpr(
+        typeExpr: AstTypeExpr,
+        scope: Scope
+    ): TirType
+    {
+        if( typeExpr instanceof AstVoidType ) return new TirVoidT();
+        else if( typeExpr instanceof AstBooleanType ) return new TirBoolT();
+        else if( typeExpr instanceof AstNumberType ) return new TirIntT();
+        else if( typeExpr instanceof AstBytesType ) return new TirBytesT();
+        
     }
 
     // readonly depGraph = new DependencyGraph();

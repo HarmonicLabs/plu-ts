@@ -1,9 +1,9 @@
 import { SourceRange } from "../../Source/SourceRange";
 import { Identifier } from "../common/Identifier";
 import { HasSourceRange } from "../HasSourceRange";
-import { AstNamedType } from "../types/AstNamedType";
-import { AstFuncType } from "../types/AstNativeType";
-import { PebbleAstType } from "../types/PebbleAstType";
+import { AstNamedTypeExpr } from "../types/AstNamedTypeExpr";
+import { AstFuncType } from "../types/AstNativeTypeExpr";
+import { AstTypeExpr } from "../types/AstTypeExpr";
 import { BlockStmt } from "./BlockStmt";
 
 
@@ -11,8 +11,8 @@ export class TypeImplementsStmt
     implements HasSourceRange
 {
     constructor(
-        readonly typeIdentifier: PebbleAstType,
-        readonly interfaceType: PebbleAstType | undefined,
+        readonly typeIdentifier: AstTypeExpr,
+        readonly interfaceType: AstTypeExpr | undefined,
         readonly methodImplementations: InterfaceMethodImpl[],
         readonly range: SourceRange,
     ) {}
@@ -23,7 +23,7 @@ export class InterfaceMethodImpl
 {
     constructor(
         readonly methodName: Identifier,
-        readonly typeParameters: PebbleAstType[],
+        readonly typeParameters: AstTypeExpr[],
         readonly signature: AstFuncType,
         readonly body: BlockStmt,
         readonly range: SourceRange,

@@ -1,6 +1,6 @@
 import { SourceRange } from "../../Source/SourceRange";
 import { HasSourceRange } from "../HasSourceRange";
-import { PebbleAstType } from "../types/PebbleAstType";
+import { AstTypeExpr } from "../types/AstTypeExpr";
 import { PebbleExpr } from "./PebbleExpr";
 
 

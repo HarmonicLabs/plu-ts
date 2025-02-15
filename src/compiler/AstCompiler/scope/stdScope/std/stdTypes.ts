@@ -1,4 +1,5 @@
-export type Hash32 = bytes;
+export const stdTypesSrc = 
+`export type Hash32 = bytes;
 export type Hash28 = bytes;
 export type PolicyId = Hash28;
 export type TokenName = bytes;
@@ -16,6 +17,18 @@ export struct Credential {
     Script { hash: ScriptHash }
 }
 
+type Credential implements {
+    hash(): bytes
+    {
+        // return case this
+        //     is PubKey{ hash } => hash
+        //     is Script{ hash } => hash;
+        return builtin.unBData(
+            builtin.unConstrData( this ).snd.head
+        );
+    }
+}
+
 export type ChangedParameters = LinearMap<int,data>;
 
 export struct Rational {
@@ -23,12 +36,12 @@ export struct Rational {
     denominator: int
 }
 
-export struct PProtocolVersion {
+export struct ProtocolVersion {
     major: int,
     minor: int
 }
 
-export ConstitutionInfo {
+export struct ConstitutionInfo {
     consitutionScriptHash: Optional<ScriptHash>
 }
 
@@ -40,7 +53,7 @@ export struct GovAction {
     }
     HardForkInitiation {
         govActionId: Optional<TxOutRef>,
-        nextProtocolVersion: 
+        nextProtocolVersion: ProtocolVersion
     }
     TreasuryWithdrawals {
         withdrawals: LinearMap<Credential, int>
@@ -66,18 +79,6 @@ export struct ProposalProcedure {
     deposit: int,
     credential: Credential,
     action: GovAction
-}
-
-type Credential implements {
-    hash(): bytes
-    {
-        // return case this
-        //     is PubKey{ hash } => hash
-        //     is Script{ hash } => hash;
-        return builtin.unBData(
-            builtin.unConstrData( this ).snd.head
-        );
-    }
 }
 
 export struct Voter {
@@ -157,6 +158,10 @@ type Value implements {
         // todo
         fail;
     }
+    lovelaces(): int
+    {
+        return this.amountOf( #, # );
+    }
 }
 
 export struct OutputDatum {
@@ -222,4 +227,4 @@ export struct ScriptContext {
     tx: Tx,
     redeemer: data,
     purpose: ScriptInfo
-}
+}`;

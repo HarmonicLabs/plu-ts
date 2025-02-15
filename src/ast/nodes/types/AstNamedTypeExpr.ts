@@ -1,13 +1,13 @@
 import { SourceRange } from "../../Source/SourceRange";
 import { Identifier } from "../common/Identifier";
 import { HasSourceRange } from "../HasSourceRange";
-import { PebbleAstType } from "./PebbleAstType";
+import { AstTypeExpr } from "./AstTypeExpr";
 
-export class AstNamedType implements HasSourceRange
+export class AstNamedTypeExpr implements HasSourceRange
 {
     constructor(
         readonly name: Identifier,
-        readonly tyArgs: PebbleAstType[],
+        readonly tyArgs: AstTypeExpr[],
         readonly range: SourceRange
     ) {}
 }

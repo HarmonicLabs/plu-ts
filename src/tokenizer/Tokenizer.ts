@@ -1056,6 +1056,7 @@ export class Tokenizer extends DiagnosticEmitter {
         let text = this.source.text;
         let pos = this.pos;
         pos = text[pos] === "#" ? pos + 1 : pos;
+        this.pos = pos;
         let end = this.end;
         let start = pos;
         let length = 0;

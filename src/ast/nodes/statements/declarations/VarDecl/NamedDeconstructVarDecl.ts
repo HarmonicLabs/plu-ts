@@ -3,7 +3,7 @@ import { SourceRange } from "../../../../Source/SourceRange";
 import { Identifier } from "../../../common/Identifier";
 import { PebbleExpr } from "../../../expr/PebbleExpr";
 import { HasSourceRange } from "../../../HasSourceRange";
-import { PebbleAstType } from "../../../types/PebbleAstType";
+import { AstTypeExpr } from "../../../types/AstTypeExpr";
 import { ISingleDeconstructVarDecl, SingleDeconstructVarDecl } from "./SingleDeconstructVarDecl";
 import { VarDecl } from "./VarDecl";
 
@@ -14,7 +14,7 @@ export class NamedDeconstructVarDecl
         readonly name: Identifier,
         readonly fields: Map<string, VarDecl>,
         readonly rest: Identifier | undefined,
-        readonly type: PebbleAstType | undefined, // can be undefined when use ad function parameter
+        readonly type: AstTypeExpr | undefined, // can be undefined when use ad function parameter
         readonly initExpr: PebbleExpr | undefined, // can be undefined when use ad function parameter
         public flags: CommonFlags,
         readonly range: SourceRange,

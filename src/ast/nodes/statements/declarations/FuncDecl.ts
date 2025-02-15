@@ -5,9 +5,9 @@ import { ArrowKind } from "../../expr/functions/ArrowKind";
 import { PebbleExpr } from "../../expr/PebbleExpr";
 import { HasSourceRange } from "../../HasSourceRange";
 import { BlockStmt } from "../BlockStmt";
-import { AstNamedType } from "../../types/AstNamedType";
-import { AstFuncType } from "../../types/AstNativeType";
-import { PebbleAstType } from "../../types/PebbleAstType";
+import { AstNamedTypeExpr } from "../../types/AstNamedTypeExpr";
+import { AstFuncType } from "../../types/AstNativeTypeExpr";
+import { AstTypeExpr } from "../../types/AstTypeExpr";
 
 export class FuncDecl
     implements HasSourceRange
@@ -15,7 +15,7 @@ export class FuncDecl
     constructor(
         readonly name: Identifier,
         readonly flags: CommonFlags,
-        readonly typeParams: PebbleAstType[],
+        readonly typeParams: Identifier[],
         readonly signature: AstFuncType,
         readonly body: BlockStmt | PebbleExpr,
         readonly arrowKind: ArrowKind,

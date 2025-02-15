@@ -151,6 +151,9 @@ export enum DiagnosticCode {
     Cases_in_a_match_statement_must_be_followed_by_other_statements = 1372,
     Variable_declaration_must_have_an_initializer = 1373,
     Deconstructed_elements_may_not_have_initializers_or_explicit_types = 1374,
+    Invalid_field_declaration = 1375,
+    Field_declarations_must_be_typed = 1376,
+    Type_parameters_must_be_identifiers = 1377,
     Duplicate_identifier_0 = 2300,
     Cannot_find_name_0 = 2304,
     Module_0_has_no_exported_member_1 = 2305,
@@ -225,7 +228,8 @@ export enum DiagnosticCode {
     Type_0_has_no_call_signatures = 2757,
     Get_accessor_0_must_be_at_least_as_accessible_as_the_setter = 2808,
     Type_parameter_is_unused = 2809,
-    Assignments_are_statemetns_not_expressions = 2810,
+    Assignments_are_statements_not_expressions = 2810,
+    Type_parameter_name_must_not_match_a_native_type_name = 2811,
     This_member_cannot_have_an_override_modifier_because_it_is_not_declared_in_the_base_class_0 = 4117,
     File_0_not_found = 6054,
     Import_path_0_is_part_of_a_circular_dependency = 6055,
@@ -388,6 +392,9 @@ export function diagnosticCodeToString(code: DiagnosticCode): string {
         case 1372: return "Cases in a 'match' statement must be followed by other statements";
         case 1373: return "Variable declaration must have an initializer";
         case 1374: return "Deconstructed elements may not have initializers or explicit types";
+        case 1375: return "Invalid field declaration";
+        case 1376: return "Field declarations must be typed";
+        case 1377: return "Type parameters must be identifiers";
         case 2300: return "Duplicate identifier '{0}'.";
         case 2304: return "Cannot find name '{0}'.";
         case 2305: return "Module '{0}' has no exported member '{1}'.";
@@ -462,7 +469,8 @@ export function diagnosticCodeToString(code: DiagnosticCode): string {
         case 2757: return "Type '{0}' has no call signatures.";
         case 2808: return "Get accessor '{0}' must be at least as accessible as the setter.";
         case 2809: return "Type parameter is unused.";
-        case 2810: return "Assignments are statemetns, not expressions.";
+        case 2810: return "Assignments are statements, not expressions.";
+        case 2811: return "Type parameter name must not match a native type name.";
         case 4117: return "This member cannot have an 'override' modifier because it is not declared in the base class '{0}'.";
         case 6054: return "File '{0}' not found.";
         case 6055: return "Import path '{0}' is part of a circular dependency.";

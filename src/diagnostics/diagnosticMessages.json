@@ -151,7 +151,9 @@
   "Cases in a 'match' statement must be followed by other statements": 1372,
   "Variable declaration must have an initializer": 1373,
   "Deconstructed elements may not have initializers or explicit types": 1374,
-
+  "Invalid field declaration": 1375,
+  "Field declarations must be typed": 1376,
+  "Type parameters must be identifiers": 1377,
 
 
   "Duplicate identifier '{0}'.": 2300,
@@ -228,7 +230,8 @@
   "Type '{0}' has no call signatures.": 2757,
   "Get accessor '{0}' must be at least as accessible as the setter.": 2808,
   "Type parameter is unused.": 2809,
-  "Assignments are statemetns, not expressions.": 2810,
+  "Assignments are statements, not expressions.": 2810,
+  "Type parameter name must not match a native type name.": 2811,
 
   "This member cannot have an 'override' modifier because it is not declared in the base class '{0}'.": 4117,
 

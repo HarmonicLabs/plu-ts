@@ -2,7 +2,7 @@ import { isVarDecl, VarDecl } from "./nodes/statements/declarations/VarDecl/VarD
 import { Identifier } from "./nodes/common/Identifier";
 import { isPebbleExpr, PebbleExpr } from "./nodes/expr/PebbleExpr";
 import { isPebbleStmt, PebbleStmt } from "./nodes/statements/PebbleStmt";
-import { isPebbleAstType, PebbleAstType } from "./nodes/types/PebbleAstType";
+import { isAstTypeExpr, AstTypeExpr } from "./nodes/types/AstTypeExpr";
 import { isPebbleDecl, PebbleDecl } from "./nodes/statements/declarations/PebbleDecl";
 
 
@@ -10,7 +10,7 @@ export type PebbleAst
     = VarDecl
     | PebbleStmt
     | PebbleExpr
-    | PebbleAstType
+    | AstTypeExpr
     | Identifier
     | PebbleDecl
     ;
@@ -22,7 +22,7 @@ export function isPebbleAst( thing: any ): thing is PebbleAst
         || isVarDecl( thing )
         || isPebbleStmt( thing )
         || isPebbleExpr( thing )
-        || isPebbleAstType( thing )
+        || isAstTypeExpr( thing )
         || isPebbleDecl( thing )
     );
 }

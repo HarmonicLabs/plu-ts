@@ -1,6 +1,6 @@
 import { SourceRange } from "../../Source/SourceRange";
 import { HasSourceRange } from "../HasSourceRange";
-import { PebbleAstType } from "../types/PebbleAstType";
+import { AstTypeExpr } from "../types/AstTypeExpr";
 import { PebbleExpr } from "./PebbleExpr";
 
 
@@ -9,7 +9,7 @@ export class InstanceOfExpr
 {
     constructor(
         readonly instanceExpr: PebbleExpr,
-        readonly ofType: PebbleAstType,
+        readonly ofType: AstTypeExpr,
         readonly range: SourceRange
     ) {}
 }

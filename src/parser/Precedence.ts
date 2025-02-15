@@ -33,6 +33,7 @@ export enum Precedence {
     Call,           // func(...)
     MemberAccess,   // obj.prop | obj?.prop | arr[idx]
     Grouping,       // ( ... )
+    Litteral,       // "string", #hex_bytes
 }
 Object.freeze(Precedence);
 
@@ -91,6 +92,7 @@ export function determinePrecedence(kind: Token): Precedence
         case Token.Question_Dot:
         case Token.OpenBracket:
         case Token.Exclamation: return Precedence.MemberAccess;
+        case Token.HexBytesLiteral: return Precedence.Litteral;
     }
     return Precedence.None;
 }
