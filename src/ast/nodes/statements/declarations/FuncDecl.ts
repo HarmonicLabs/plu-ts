@@ -5,9 +5,7 @@ import { ArrowKind } from "../../expr/functions/ArrowKind";
 import { PebbleExpr } from "../../expr/PebbleExpr";
 import { HasSourceRange } from "../../HasSourceRange";
 import { BlockStmt } from "../BlockStmt";
-import { AstNamedTypeExpr } from "../../types/AstNamedTypeExpr";
 import { AstFuncType } from "../../types/AstNativeTypeExpr";
-import { AstTypeExpr } from "../../types/AstTypeExpr";
 
 export class FuncDecl
     implements HasSourceRange

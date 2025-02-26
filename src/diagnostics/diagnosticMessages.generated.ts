@@ -237,7 +237,9 @@ export enum DiagnosticCode {
     Multiple_consecutive_numeric_separators_are_not_permitted = 6189,
     This_expression_is_not_callable_because_it_is_a_get_accessor_Did_you_mean_to_use_it_without = 6234,
     _super_must_be_called_before_accessing_this_in_the_constructor_of_a_derived_class = 17009,
-    _super_must_be_called_before_accessing_a_property_of_super_in_the_constructor_of_a_derived_class = 17011
+    _super_must_be_called_before_accessing_a_property_of_super_in_the_constructor_of_a_derived_class = 17011,
+    Unkonwn_AST_node = 20000,
+    Dev_was_too_lazy_to_add_a_prooper_error_message_Something_went_wrong = 42069
 }
 
 /** Translates a diagnostic code to its respective string. */
@@ -479,6 +481,8 @@ export function diagnosticCodeToString(code: DiagnosticCode): string {
         case 6234: return "This expression is not callable because it is a 'get' accessor. Did you mean to use it without '()'?";
         case 17009: return "'super' must be called before accessing 'this' in the constructor of a derived class.";
         case 17011: return "'super' must be called before accessing a property of 'super' in the constructor of a derived class.";
+        case 20000: return "Unkonwn AST node.";
+        case 42069: return "Dev was too lazy to add a prooper error message. Something went wrong";
         default: return "";
     }
 }

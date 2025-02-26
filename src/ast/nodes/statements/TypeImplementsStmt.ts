@@ -1,7 +1,6 @@
 import { SourceRange } from "../../Source/SourceRange";
 import { Identifier } from "../common/Identifier";
 import { HasSourceRange } from "../HasSourceRange";
-import { AstNamedTypeExpr } from "../types/AstNamedTypeExpr";
 import { AstFuncType } from "../types/AstNativeTypeExpr";
 import { AstTypeExpr } from "../types/AstTypeExpr";
 import { BlockStmt } from "./BlockStmt";

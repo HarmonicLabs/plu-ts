@@ -4,7 +4,7 @@ import { TypeImplementsStmt } from "../../ast/nodes/statements/TypeImplementsStm
 import { Source } from "../../ast/Source/Source";
 import { DiagnosticMessage } from "../../diagnostics/DiagnosticMessage";
 import { parseFile } from "../parseFile";
-import { stdTypesSrc } from "../../compiler/AstCompiler/scope/stdScope/std/stdTypes";
+import { preludeTypesSrc } from "../../compiler/AstCompiler/scope/stdScope/std/stdTypes";
 
 test("parse TxOut", () => {
     const fileName = "TxOutRef.pebble";
@@ -25,7 +25,7 @@ export struct TxOutRef {
 test("parse std", () => {
 
     const fileName = "std.pebble";
-    const srcText = stdTypesSrc;
+    const srcText = preludeTypesSrc;
 
     let src!: Source;
     let diagnosticMessages!: DiagnosticMessage[];

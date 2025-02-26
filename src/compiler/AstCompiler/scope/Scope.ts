@@ -1,18 +1,144 @@
-import { IPebbleSym, PebbleSym } from "./symbols/PebbleSym";
+import { PEBBLE_INTERNAL_IDENTIFIER_PREFIX, PEBBLE_INTERNAL_IDENTIFIER_SEPARATOR } from "../../internalVar";
+import { TirConcreteCustomType, TirConcreteType } from "../../tir/types/TirConcreteType";
+import { IPebbleConcreteTypeSym, IPebbleGenericSym, IPebbleSym, PebbleAnyTypeSym, PebbleConcreteFunctionSym, PebbleConcreteTypeSym, PebbleGenericFunctionSym, PebbleGenericSym, PebbleSym, PebbleValueSym } from "./symbols/PebbleSym";
+import { TypeSymbolTable } from "./TypeSymbolTable";
+import { ValueSymbolTable } from "./ValueSymbolTable";
 
 export class Scope
 {
+    readonly parent: Scope | undefined;
+    readonly valueSymbols: ValueSymbolTable;
+    readonly typeSymbols : TypeSymbolTable | undefined;
+
+    private _isReadonly = false;
+
     constructor(
-        readonly parent: Scope | undefined,
-        valueSymbols?: SymbolTable,
-        typeSymbols ?: SymbolTable
+        parent: Scope | undefined,
+        valueSymbols?: ValueSymbolTable,
+        typeSymbols ?: TypeSymbolTable
     ) {
-        this.valueSymbols = valueSymbols ?? new SymbolTable( this, this.parent?.valueSymbols );
-        this.typeSymbols  = typeSymbols  ?? new SymbolTable( this, this.parent?.typeSymbols  );
+        this._isReadonly = false;
+
+        this.parent = parent;
+        this.valueSymbols = valueSymbols instanceof ValueSymbolTable ?
+            valueSymbols :
+            new ValueSymbolTable( this );
         (this.valueSymbols as any).scope = this;
-        (this.typeSymbols  as any).scope = this;
-        (this.valueSymbols as any).parentTable = this.parent?.valueSymbols;
-        (this.typeSymbols  as any).parentTable = this.parent?.typeSymbols;
+
+        this.typeSymbols  = typeSymbols  ?? undefined;
+        if(
+            this.typeSymbols instanceof TypeSymbolTable
+        ) {
+            (this.typeSymbols  as any).scope = this;
+        }
+    }
+
+    readonly(): void { this._isReadonly = true; }
+
+    getAppliedGenericType(
+        genericName: string,
+        args: string[],
+    ): PebbleConcreteTypeSym | undefined
+    {
+        const expectedName =
+        PEBBLE_INTERNAL_IDENTIFIER_PREFIX + 
+        genericName + 
+        PEBBLE_INTERNAL_IDENTIFIER_SEPARATOR +
+        args.join("_");
+        
+        const result = this.resolveType( expectedName );
+        if( result instanceof PebbleConcreteTypeSym )
+            return result;
+        if( result !== undefined )
+            throw new Error("unexpected symbol: " + expectedName);
+        
+        return this._getAppliedGenericType( genericName, args, undefined, expectedName );
+    }
+    _getAppliedGenericType(
+        genericName: string | PebbleGenericSym,
+        args: (string | PebbleConcreteTypeSym)[],
+        lowestFullyDefinedScope: Scope | undefined,
+        expectedName: string
+    ): PebbleConcreteTypeSym | undefined
+    {
+        if(!( this.typeSymbols instanceof TypeSymbolTable ))
+        {
+            return this.parent?._getAppliedGenericType(
+                genericName,
+                args,
+                lowestFullyDefinedScope,
+                expectedName
+            );
+        }
+
+        const nextArgs = args.map( arg => {
+            if( arg instanceof PebbleConcreteTypeSym )
+                return arg;
+            const resolved = this.typeSymbols?.symbols.get( arg );
+            if( resolved instanceof PebbleConcreteTypeSym )
+                return resolved;
+            if( resolved !== undefined )
+                throw new Error("unexpected symbol: " + arg);
+            return arg;
+        });
+
+        lowestFullyDefinedScope = lowestFullyDefinedScope ?? (
+            nextArgs.some( arg => arg instanceof PebbleConcreteTypeSym ) ?
+                this :
+                undefined
+        );
+
+        const genericNameWasString = typeof genericName === "string";
+        const nextGenericName = genericNameWasString ?
+            this.typeSymbols.resolve( genericName ) :
+            genericName;
+
+        const genericSymIsHere = nextGenericName instanceof PebbleGenericSym;
+        if(
+            genericNameWasString
+            && genericSymIsHere
+            && !(lowestFullyDefinedScope instanceof Scope)
+        ) lowestFullyDefinedScope = this;
+
+        if(
+            genericSymIsHere
+            && nextArgs.every( arg => arg instanceof PebbleConcreteTypeSym )
+        ) {
+            const applied = applyGenericType(
+                nextGenericName,
+                nextArgs as PebbleConcreteTypeSym[]
+            );
+            
+            if( applied === undefined ) return undefined;
+
+            const appliedSym = new PebbleConcreteTypeSym({
+                name: expectedName,
+                concreteType: applied
+            });
+
+            // define name so that it can be resolved in the future
+            if( lowestFullyDefinedScope instanceof Scope )
+                lowestFullyDefinedScope.defineConcreteType( appliedSym );
+            else throw new Error(
+                "unexpected lowestFullyDefinedScope undefined, "+
+                "but full type is defined"
+            );
+
+            return appliedSym;
+        }
+
+        if( !this.parent ) return undefined;
+        if(!(
+            genericSymIsHere
+            || typeof nextGenericName === "string"
+        )) throw new Error("unexpected next generic type symbol");
+
+        return this.parent._getAppliedGenericType(
+            nextGenericName,
+            nextArgs,
+            lowestFullyDefinedScope,
+            expectedName
+        );
     }
 
     clone(): Scope
@@ -20,85 +146,115 @@ export class Scope
         const cloned = new Scope(
             this.parent?.clone(),
             this.valueSymbols.clone(),
-            this.typeSymbols.clone()
+            this.typeSymbols?.clone()
         );
         return cloned;
     }
 
-    readonly valueSymbols: SymbolTable;
-    readonly typeSymbols : SymbolTable;
-    
-    defineValue( sym: PebbleSym & IPebbleSym ): void
+    defineValue( sym: PebbleValueSym ): boolean
     {
-        this.valueSymbols.define( sym );
+        if( this._isReadonly ) return false;
+        return this.valueSymbols.define( sym );
     }
-    defineType( sym: PebbleSym & IPebbleSym ): void
+    /**
+     * @returns `true` if the symbol was defined successfully
+     * @returns `false` if the symbol was already defined
+     */
+    defineType( sym: PebbleAnyTypeSym ): boolean
     {
-        this.typeSymbols.define( sym );
+        if( this._isReadonly ) return false;
+
+        if( sym instanceof PebbleConcreteTypeSym )
+            return this.defineConcreteType( sym );
+
+        if( sym instanceof PebbleGenericSym )
+            return this.defineGenericType( sym );
+
+        if( sym instanceof PebbleConcreteFunctionSym )
+            return this.defineConcreteFuncType( sym );
+
+        if( sym instanceof PebbleGenericFunctionSym )
+            return this.defineGenericFuncType( sym );
+
+        throw new Error("unknown type symbol");
+    }
+    defineConcreteType( sym: IPebbleConcreteTypeSym ): boolean
+    {
+        if( this._isReadonly ) return false;
+        
+        if(!( this.typeSymbols instanceof TypeSymbolTable ))
+        {
+            (this as any).typeSymbols = new TypeSymbolTable( this );
+        }
+        return this.typeSymbols!.define(
+            sym instanceof PebbleConcreteTypeSym ? sym : new PebbleConcreteTypeSym( sym )
+        );
+    }
+    defineGenericType( sym: IPebbleGenericSym ): boolean
+    {
+        if( this._isReadonly ) return false;
+
+        if(!( this.typeSymbols instanceof TypeSymbolTable ))
+        {
+            (this as any).typeSymbols = new TypeSymbolTable( this );
+        }
+        return this.typeSymbols!.define(
+            sym instanceof PebbleGenericSym ? sym : new PebbleGenericSym( sym )
+        );
+    }
+    defineConcreteFuncType( sym: PebbleConcreteFunctionSym ): boolean
+    {
+        if( this._isReadonly ) return false;
+
+        if(!( this.typeSymbols instanceof TypeSymbolTable ))
+        {
+            (this as any).typeSymbols = new TypeSymbolTable( this );
+        }
+        return this.typeSymbols!.define(
+            sym instanceof PebbleConcreteFunctionSym ? sym : new PebbleConcreteFunctionSym( sym )
+        );
+    }
+    defineGenericFuncType( sym: PebbleGenericFunctionSym ): boolean
+    {
+        if( this._isReadonly ) return false;
+
+        if(!( this.typeSymbols instanceof TypeSymbolTable ))
+        {
+            (this as any).typeSymbols = new TypeSymbolTable( this );
+        }
+        return this.typeSymbols!.define(
+            sym instanceof PebbleGenericFunctionSym ? sym : new PebbleGenericFunctionSym( sym )
+        );
     }
 
-    resolveValue( name: string ): IPebbleSym | undefined
+    resolveValue( name: string ): PebbleValueSym | undefined
     {
         return this.valueSymbols.resolve( name );
     }
-    resolveType( name: string ): IPebbleSym | undefined
+    resolveType( name: string ): PebbleAnyTypeSym | undefined
     {
-        return this.typeSymbols.resolve( name );
+        if( this.typeSymbols instanceof TypeSymbolTable )
+            return this.typeSymbols.resolve( name );
+        else return this.parent?.resolveType( name );
     }
 
-    // to check for re-declarations
-    isValueDefinedInThisScope( name: string ): boolean
-    {
-        return this.valueSymbols.isDefinedInThisScope( name );
-    }
-    isTypeDefinedInThisScope( name: string ): boolean
+    isDefined( name: string ): boolean
     {
         return (
-            this.typeSymbols.isDefinedInThisScope( name ) ||
-            // unlike variables
-            // types cannot be shadowed
-            (this.parent?.isTypeDefinedInThisScope( name ) ?? false)
+            this.valueSymbols.isDefined( name ) ||
+            (this.typeSymbols?.isDefined( name ) ?? false)
         );
     }
 }
 
-export class SymbolTable
+function applyGenericType( 
+    genericSym: PebbleGenericSym,
+    argsSyms: PebbleConcreteTypeSym[]
+): TirConcreteType | undefined
 {
-    private readonly symbols = new Map<string, IPebbleSym>();
-    constructor(
-        readonly scope: Scope,
-        readonly parentTable: SymbolTable | undefined,
-        // readonly name: string | undefined = undefined,
-    ) {}
+    if( argsSyms.length !== genericSym.nTypeParameters )
+        return undefined;
 
-    clone(): SymbolTable
-    {
-        const cloned = new SymbolTable(
-            this.scope,
-            this.parentTable?.clone(),
-            // this.name
-        );
-        for (const [name, sym] of this.symbols)
-        {
-            cloned.symbols.set( name, sym );
-        }
-        return cloned;
-    }
-
-    define( sym: PebbleSym & IPebbleSym ): void
-    {
-        this.symbols.set( sym.name, sym );
-    }
-
-    // to check for re-declarations
-    isDefinedInThisScope( name: string ): boolean
-    {
-        return this.symbols.has( name ); // || this.parent?.isDefined( name );
-    }
-
-    resolve( name: string ): IPebbleSym | undefined
-    {
-        return this.symbols.get( name ) ?? this.parentTable?.resolve( name );
-    }
-
+    const args = argsSyms.map( arg => arg.concreteType );
+    return genericSym.getConcreteType( ...args );
 }

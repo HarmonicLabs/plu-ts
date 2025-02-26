@@ -1,6 +1,9 @@
 import { toHex } from "@harmoniclabs/uint8array-utils";
 
-export const internalVarPrefix = "§"; // invalid char for js identifiers
+/** invalid char for normal js identifiers */
+export const PEBBLE_INTERNAL_IDENTIFIER_PREFIX = "§";
+/** invalid char for normal js identifiers */
+export const PEBBLE_INTERNAL_IDENTIFIER_SEPARATOR = "#";
 
 const internalNamesUsed = new Set<string>();
 
@@ -20,11 +23,11 @@ try {
 
 export function getInternalName( name?: string ): string
 {
-    if( typeof name !== "string" || name.length === 0 ) name = internalVarPrefix;
+    if( typeof name !== "string" || name.length === 0 ) name = PEBBLE_INTERNAL_IDENTIFIER_PREFIX;
 
-    name = name.startsWith( internalVarPrefix ) ? name : internalVarPrefix + name;
+    name = name.startsWith( PEBBLE_INTERNAL_IDENTIFIER_PREFIX ) ? name : PEBBLE_INTERNAL_IDENTIFIER_PREFIX + name;
 
-    if( internalNamesUsed.has( name ) || name === internalVarPrefix )
+    if( internalNamesUsed.has( name ) || name === PEBBLE_INTERNAL_IDENTIFIER_PREFIX )
     {
         const bytes = new Uint8Array( Math.max( 1, Math.log1p( internalNamesUsed.size ) >>> 0 ) );
         do {
@@ -37,5 +40,5 @@ export function getInternalName( name?: string ): string
 
 export function isInternalName( name: string ): boolean
 {
-    return name.startsWith( internalVarPrefix ); // && isIdentifier( name.slice( 1 ) );
+    return name.startsWith( PEBBLE_INTERNAL_IDENTIFIER_PREFIX ); // && isIdentifier( name.slice( 1 ) );
 }

@@ -5,11 +5,8 @@ import { SimpleVarDecl } from "../../ast/nodes/statements/declarations/VarDecl/S
 import { ExportStarStmt } from "../../ast/nodes/statements/ExportStarStmt";
 import { ImportStarStmt } from "../../ast/nodes/statements/ImportStarStmt";
 import { ImportStmt } from "../../ast/nodes/statements/ImportStmt";
-import { PebbleStmt } from "../../ast/nodes/statements/PebbleStmt";
+import { isPebbleStmt, PebbleStmt } from "../../ast/nodes/statements/PebbleStmt";
 import { TypeImplementsStmt } from "../../ast/nodes/statements/TypeImplementsStmt";
-import { AstNamedTypeExpr } from "../../ast/nodes/types/AstNamedTypeExpr";
-import { AstBooleanType, AstBytesType, AstNumberType, AstVoidType } from "../../ast/nodes/types/AstNativeTypeExpr";
-import { AstTypeExpr } from "../../ast/nodes/types/AstTypeExpr";
 import { Source, SourceKind } from "../../ast/Source/Source";
 import { SourceRange } from "../../ast/Source/SourceRange";
 import { extension } from "../../common";
@@ -18,16 +15,31 @@ import { DiagnosticMessage } from "../../diagnostics/DiagnosticMessage";
 import { DiagnosticCode } from "../../diagnostics/diagnosticMessages.generated";
 import { CompilerOptions } from "../../IR/toUPLC/CompilerOptions";
 import { Parser } from "../../parser/Parser";
-import { TirBoolT, TirBytesT, TirIntT, TirVoidT } from "../../tir/TirNativeType";
-import { TirStructConstr, TirStructField, TirStructType } from "../../tir/TirStructType";
-import { TirType } from "../../tir/TirType";
+import { TirConcreteStructConstr, TirConcreteStructField, TirConcreteStructType } from "../tir/types/TirConcreteStructType";
 import { CompilerIoApi, createMemoryCompilerIoApi } from "../io/CompilerIoApi";
 import { IPebbleCompiler } from "../IPebbleCompiler";
-import { getInternalPath, Path, resolveProjAbsolutePath } from "../path/path";
+import { getInternalPath, InternalPath, resolveProjAbsolutePath } from "../path/path";
 import { ResolveStackNode } from "./ResolveStackNode";
 import { Scope } from "./scope/Scope";
-import { stdTypesSrc } from "./scope/stdScope/std/stdTypes";
-import { stdScope } from "./scope/stdScope/stdScope";
+import { EnumDecl } from "../../ast/nodes/statements/declarations/EnumDecl";
+import { TirProgram } from "../tir/program/TirProgram";
+import { preludeScope, stdScope } from "./scope/stdScope/stdScope";
+import { preludeTypesSrc } from "./scope/stdScope/prelude/preludeTypesSrc";
+
+/*
+Handling type expressions that depend on other types 
+(such as generics, function return types, and inferred types from complex expressions)
+requires a more structured approach. 
+
+This typically involves a two-pass system:
+
+    1) First Pass (Declaration & Collection): 
+        Collect all type information and dependencies.
+
+    2) Second Pass (Resolution & Inference): 
+        Resolve dependent types, infer missing types, 
+        and enforce type consistency.
+*/
  
 /**
  * compiles Pebble AST to Typed IR.
@@ -51,189 +63,130 @@ export class AstCompiler extends DiagnosticEmitter
      * 
      * (ScriptContext, built-in functions, etc.)
     **/
-    readonly stdScope: Scope;
+    readonly preludeScope: Scope;
+    readonly program: TirProgram;
+    readonly parsedAstSources: Map<InternalPath, Source> = new Map();
 
     constructor(
+        entry: string,
         readonly cfg: CompilerOptions,
-        readonly io: CompilerIoApi = createMemoryCompilerIoApi({ useConsoleAsOutput: true }),
         readonly rootPath: string = "/",
+        readonly io: CompilerIoApi = createMemoryCompilerIoApi({ useConsoleAsOutput: true }),
         diagnostics?: DiagnosticMessage[]
     )
     {
         super( diagnostics );
-        this.stdScope = this._getInitScope();
+        this.preludeScope = preludeScope.clone();
+        this.preludeScope.readonly();
+        entry = resolveProjAbsolutePath( getInternalPath( entry ), rootPath )!;
+        this.program = new TirProgram( entry );
     }
 
-    private _getInitScope(): Scope
+    async compileFile( path: string )
     {
-        const scope = stdScope.clone();
+        const src = await this.sourceFromInternalPath( getInternalPath( path ) );
+        if( !src ) return this.diagnostics;
+        await this.parseAllImportedFiles(
+            ResolveStackNode.entry( src )
+        );
+        if( this.diagnostics.length > 0 ) return this.diagnostics;
 
-        const [ source, diagnostics ] = Parser.parseFile("prelude.pebble", stdTypesSrc, false);
-        if( diagnostics.length > 0 )
-        {
-            for( const msg of diagnostics )
-                this.emitDiagnosticMessage( msg );
-
-            throw new Error("Failed to parse prelude.pebble");
-        }
-
-        const stmts = source.statements;
-        const typeImpls: TypeImplementsStmt[] = []; 
-        for( const stmt of stmts )
-        {
-            if( stmt instanceof StructDecl || stmt instanceof TypeAliasDecl )
-                this.pushTypeDecl( stmt, scope );
-            else if( stmt instanceof TypeImplementsStmt )
-                typeImpls.push( stmt );
-        }
-        for( const stmt of typeImpls )
-            this.pushTypeImpl( stmt, scope );
-
-        return scope;
+        return this._compileParsedSource( src );
     }
 
-    private _compileInitStructDecl(
-        decl: StructDecl,
-        scope: Scope
-    ): TirStructType
+    /**
+     * translates the source AST statements
+     * to TIR statements; and saves the result in `this.program`
+     */
+    private async _compileParsedSource( src: Source )
     {
-        const constrs: TirStructConstr[] = new Array( decl.constrs.length );
-        for( let i = 0; i < decl.constrs.length; i++ )
+        if( src.statements.length === 0 )
         {
-            const constr = decl.constrs[ i ];
-            const fields: TirStructField[] = new Array( constr.fields.length );
-            for( let j = 0; j < constr.fields.length; j++ )
+            throw new Error("_compileParsedSource: source has no statements");
+        }
+
+        this.program
+
+
+        return this.diagnostics;
+    }
+
+    /**
+     * Collect all types declared in the top-level statements
+     * 
+     * @returns the file top-level scope ( preludeScope <- imports <- fileTopLevelDecls )
+     */
+    collectTypes( scope: Scope, topLevelStmts: PebbleStmt[] ): Scope
+    {
+        const importsScope = new Scope( this.preludeScope );
+        this.collectImportedTypes( importsScope, topLevelStmts );
+        const fileTopLevelDeclsScope = new Scope( importsScope );
+        this.collectFileDeclaredTypes( fileTopLevelDeclsScope, topLevelStmts );
+        return fileTopLevelDeclsScope
+    }
+
+    /**
+     * Collect all imported types
+     */
+    collectImportedTypes( scope: Scope, imports: PebbleStmt[] ): void
+    {
+        for( const stmt of imports )
+        {
+            if( stmt instanceof ImportStmt )
             {
-                const field = constr.fields[ j ];
-                if(!( field instanceof SimpleVarDecl ))
-                {
-                    this.error(
-                        DiagnosticCode.Invalid_field_declaration,
-                        field.range
-                    );
-                    continue;
-                }
-                if( !field.type )
-                {
-                    this.error(
-                        DiagnosticCode.Field_declarations_must_be_typed,
-                        field.range
-                    );
-                    continue;
-                }
-                if( field.initExpr )
-                {
-                    this.error(
-                        DiagnosticCode.Initialization_expressions_are_not_allowed_in_a_struct_declaration,
-                        field.initExpr.range
-                    ); // recoverable (just ignore the initializer)
-                }
-                fields[ j ] = new TirStructField(
-                    field.name.text,
-                    // we can only afford this "blind" `resolveType`
-                    // because we know the source parsed
-                    // and we know that the type definitions are sorted
-                    this._compileTypeExpr( field.type, scope ),
-                );
+                const importPath = stmt.fromPath.string;
+                continue;
             }
-            constrs[ i ] = {
-                name: constr.name.text,
-                fields
-            };
+            if( stmt instanceof ImportStarStmt )
+            {
+                const importPath = stmt.fromPath.string;
+                continue;
+            }
         }
-        return new TirStructType(
-            decl.name.text,
-            constrs,
-            []
-        );
     }
 
-    private _compileTypeExpr(
-        typeExpr: AstTypeExpr,
-        scope: Scope
-    ): TirType
+    /**
+     * Collect all types declared in the top-level statements
+     */
+    collectFileDeclaredTypes( scope: Scope, topLevelStmts: PebbleStmt[] ): void
     {
-        if( typeExpr instanceof AstNamedTypeExpr )
-            return this._compileNamedTypeExpr( typeExpr, scope );
-        else
-            return this._compileNativeTypeExpr( typeExpr );
-    }
-
-    private _compileNamedTypeExpr(
-        typeExpr: AstNamedTypeExpr,
-        scope: Scope
-    ): TirType
-    {
-
-    }
-
-    private _compileNativeTypeExpr(
-        typeExpr: AstTypeExpr,
-        scope: Scope
-    ): TirType
-    {
-        if( typeExpr instanceof AstVoidType ) return new TirVoidT();
-        else if( typeExpr instanceof AstBooleanType ) return new TirBoolT();
-        else if( typeExpr instanceof AstNumberType ) return new TirIntT();
-        else if( typeExpr instanceof AstBytesType ) return new TirBytesT();
-        
-    }
-
-    // readonly depGraph = new DependencyGraph();
-    // readonly exportedSymbols = new Map<string, Source>();
-
-    async compileFile(
-        path: string,
-        srcText: string | undefined = undefined,
-        isEntry: boolean = true
-    )
-    {
-        const internalPath = getInternalPath( path );
-        srcText = srcText ?? await this.io.readFile( internalPath, this.rootPath );
-        if( !srcText )
+        for( const stmt of topLevelStmts )
         {
-            this.error(
-                DiagnosticCode.File_0_not_found,
-                undefined, path
-            );
-            return;
+            // if( stmt instanceof ImportStmt )
+            // {
+            //     const importPath = stmt.fromPath.string;
+            //     continue;
+            // }
+            if( stmt instanceof FuncDecl )
+            {
+                const funcName = stmt.name.text;
+                const isGeneric = stmt.typeParams.length > 0;
+                continue;
+            }
+            if( stmt instanceof StructDecl )
+            {
+                const structName = stmt.name.text;
+                const isGeneric = stmt.typeParams.length > 0;
+                continue;
+            }
+            if( stmt instanceof EnumDecl )
+            {
+                const enumName = stmt.name.text;
+                continue;
+            }
+            if( stmt instanceof TypeAliasDecl )
+            {
+                const aliasName = stmt.name.text;
+                const isGeneric = stmt.typeParams.length > 0;
+                continue;
+            }
+            if( stmt instanceof TypeImplementsStmt )
+            {
+                const typeExpr = stmt.typeIdentifier;
+                const interfaceTypeExpr = stmt.interfaceType;
+                continue;
+            }
         }
-        const src = new Source(
-            SourceKind.User,
-            internalPath,
-            srcText
-        );
-
-        return this.compileSource( src );
-    }
-
-    async compileSource( src: Source )
-    {
-        await this._checkCircularDependencies( src );
-
-        await this.compileEntryFileStmts( src.statements );
-
-        return this.diagnostics;
-    }
-
-    async compileEntryFileStmts( src: PebbleStmt[] )
-    {
-        const mainFunc = src.find( stmt => {
-            stmt instanceof FuncDecl
-        })
-    }
-
-    async checkCircularDependencies( src: Source | Path ): Promise<DiagnosticMessage[]>
-    {
-        if(!( src instanceof Source ))
-        {
-            src = src.toString();
-            src = getInternalPath( src );
-            src = (await this.sourceFromInternalPath( src ))!;
-            if( !src ) return this.diagnostics;
-        }
-        await this._checkCircularDependencies( src );
-        return this.diagnostics;
     }
 
     /** MUST NOT be used as a "seen" log */
@@ -242,7 +195,7 @@ export class AstCompiler extends DiagnosticEmitter
         internalPath: string
     ): Promise<Source | undefined>
     {
-        const cached = this._sourceCache.get( internalPath );
+        const cached = this.parsedAstSources.get( internalPath ) ?? this._sourceCache.get( internalPath );
         if( cached ) return cached;
 
         const srcText = await this.io.readFile( internalPath + extension, this.rootPath );
@@ -263,112 +216,58 @@ export class AstCompiler extends DiagnosticEmitter
         this._sourceCache.set( internalPath, src );
         return src;
     }
-    sourceFromInternalPathSync(
-        internalPath: string
-    ): Source | undefined
-    {
-        return this._sourceCache.get( internalPath );
-    }
 
     /**
-     * 
      * @returns `true` if there were no errors. `false` otherwise.
      */
-    private async _checkCircularDependencies(
-        source: Source | ResolveStackNode
+    private async parseAllImportedFiles(
+        _resolveStackNode: ResolveStackNode
     ): Promise<boolean>
     {
-        const src = source instanceof ResolveStackNode ? source.dependent : source;
-        const resolveStack = source instanceof ResolveStackNode ? source : new ResolveStackNode( undefined, src );
+        const src = _resolveStackNode.dependent; // resolveStackNode instanceof ResolveStackNode ? source.dependent : source;
+        const resolveStack = _resolveStackNode; // source instanceof ResolveStackNode ? source : new ResolveStackNode( undefined, src );
 
         const isCycle = resolveStack.parent?.includesInternalPath( src.internalPath ) ?? false;
 
         if( isCycle )
         {
-            const offendingPath = src.internalPath;
-            let prevPath = offendingPath;
-            let req: ResolveStackNode = resolveStack;
-            const pathsInCycle: string[] = [];
-            const seen = new Set<string>();
-
-            // we go through the loop so we can signal the error
-            // at every offending import
-            while( req = req.parent! ) {
-                const importStmt = req.dependent.statements.find( stmt => {
-                    if( !isImportStmtLike( stmt ) ) return false;
-
-                    const asRootPath = resolveProjAbsolutePath(
-                        stmt.fromPath.string,
-                        req.dependent.internalPath
-                    );
-                    if( !asRootPath ) return false;
-
-                    return asRootPath === prevPath
-                }) as ImportStmtLike | undefined;
-
-                prevPath = getInternalPath( req.dependent.internalPath ); 
-                if( !importStmt )
-                {
-                    this.error(
-                        DiagnosticCode.Import_path_0_is_part_of_a_circular_dependency,
-                        new SourceRange( req.dependent, 0, 0 ),
-                        offendingPath
-                    );
-                    continue;
-                }
-                
-                const thePath = importStmt.fromPath.string;
-                const last = seen.has( thePath ) 
-                
-                if( !last )
-                {
-                    pathsInCycle.push( thePath );
-                    seen.add( thePath );
-                }
-
-                pathsInCycle.push( thePath );
-                this.error(
-                    DiagnosticCode.Import_path_0_is_part_of_a_circular_dependency,
-                    importStmt.range, thePath
-                );
-                if( last ) break;
-            };
-
-            // this.io.stderr.write(
-            //     "Circular dependency detected:\n" +
-            //     pathsInCycle.map( path => "  " + path ).join("\n") +
-            //     "\n"
-            // );
+            this._reportCircularDependency( src, resolveStack );
             return false;
         }
 
-        const diagnostics = Parser.parseSource( src, [] );
+        if( this.parsedAstSources.has( src.internalPath ) ) return true;
+        Parser.parseSource( src, this.diagnostics );
+        this.parsedAstSources.set( src.internalPath, src );
 
-        if( diagnostics.length > 0 )
-        {
-            for( const msg of diagnostics )
-                this.emitDiagnosticMessage( msg );
-            return false;
-        }
+        if( this.diagnostics.length > 0 ) return false;
 
-        const stmts = src.statements;
+        // get all imports to parse recursively
+        const imports = src.statements.filter( isImportStmtLike );
 
-        const imports = stmts.filter( isImportStmtLike );
-
-        // const srcPath = src.internalPath;
-        // const importPaths = this.importPathsFromStmts( imports, srcPath );
-        // this.depGraph.addDependencies( srcPath, importPaths );
-
-        return await this.checkCircularDependenciesDependencies(
-            imports,
-            resolveStack
+        const srcPath = resolveStack.dependent.internalPath;
+        const paths = this.importPathsFromStmts( imports, srcPath );
+        const sources = await Promise.all(
+            paths.map( this.sourceFromInternalPath.bind( this ) )
         );
+        
+        for( const src of sources )
+        {
+            if( !src ) continue; // error already reported in `importPathsFromStmts`
+
+            const nextStack = new ResolveStackNode( resolveStack, src );
+            // recursively parse imported files
+            if( !await this.parseAllImportedFiles( nextStack ) ) return false;
+        }
+
+        this._compileParsedSource( src );
+
+        return true;
     }
 
     private importPathsFromStmts(
         stmts: ImportStmtLike[],
         requestingPath: string
-    )
+    ): string[]
     {
         return stmts
         .map( imp => {
@@ -389,26 +288,59 @@ export class AstCompiler extends DiagnosticEmitter
         .filter( path => path !== "" );
     }
 
-    async checkCircularDependenciesDependencies(
-        imports: ImportStmtLike[],
-        dependent: ResolveStackNode
-    ): Promise<boolean>
+    private _reportCircularDependency(
+        src: Source,
+        resolveStack: ResolveStackNode
+    ): void
     {
-        const srcPath = dependent.dependent.internalPath;
-        const paths = this.importPathsFromStmts( imports, srcPath );
-        const sources = await Promise.all(
-            paths.map( this.sourceFromInternalPath.bind( this ) )
-        );
-        
-        for( const src of sources )
-        {
-             if( !src ) continue; // error already reported parsing import
+        const offendingPath = src.internalPath;
+        let prevPath = offendingPath;
+        let req: ResolveStackNode = resolveStack;
+        const pathsInCycle: string[] = [];
+        const seen = new Set<string>();
 
-            const resolveStack = new ResolveStackNode( dependent, src );
-            if( !await this._checkCircularDependencies( resolveStack ) ) return false;
-        }
+        // we go through the loop so we can signal the error
+        // at every offending import
+        while( req = req.parent! ) {
+            const importStmt = req.dependent.statements.find( stmt => {
+                if( !isImportStmtLike( stmt ) ) return false;
 
-        return true;
+                const asRootPath = resolveProjAbsolutePath(
+                    stmt.fromPath.string,
+                    req.dependent.internalPath
+                );
+                if( !asRootPath ) return false;
+
+                return asRootPath === prevPath
+            }) as ImportStmtLike | undefined;
+
+            prevPath = getInternalPath( req.dependent.internalPath ); 
+            if( !importStmt )
+            {
+                this.error(
+                    DiagnosticCode.Import_path_0_is_part_of_a_circular_dependency,
+                    new SourceRange( req.dependent, 0, 0 ),
+                    offendingPath
+                );
+                continue;
+            }
+            
+            const thePath = importStmt.fromPath.string;
+            const last = seen.has( thePath ) 
+            
+            if( !last )
+            {
+                pathsInCycle.push( thePath );
+                seen.add( thePath );
+            }
+
+            pathsInCycle.push( thePath );
+            this.error(
+                DiagnosticCode.Import_path_0_is_part_of_a_circular_dependency,
+                importStmt.range, thePath
+            );
+            if( last ) break;
+        };
     }
 }
 

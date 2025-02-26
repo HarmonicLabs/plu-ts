@@ -1,4 +1,4 @@
-export const stdTypesSrc = 
+export const preludeTypesSrc = 
 `export type Hash32 = bytes;
 export type Hash28 = bytes;
 export type PolicyId = Hash28;
@@ -203,6 +203,61 @@ export struct Vote {
     Yes {}
     Abstain {}
 }
+
+export struct Delegatee {
+    StakePool { poolKeyHash: PubKeyHash }
+    DRep { drep: Credential }
+    PoolAndDRep {
+        poolKeyHash: PubKeyHash,
+        drep: Credential
+    }
+}
+
+export struct Certificate {
+    StakeRegistration {
+        stakeKey: Credential,
+        deposit: Optional<int>
+    }
+    StakeDeRegistration {
+        stakeKey: Credential,
+        refund: Optional<int>
+    }
+    Delegation {
+        delegator: Credential,
+        delegatee: Delegatee
+    }
+    RegistrationAndDelegation {
+        delegator: Credential,
+        delegatee: Delegatee,
+        lovelacesDeposit: int
+    }
+    DRepRegistration {
+        drep: Credential,
+        lovelacesDeposit: int
+    }
+    DRepUpdate {
+        drep: Credential
+    }
+    DRepDeRegistration {
+        drep: Credential,
+        refund: int
+    }
+    PoolRegistration {
+        poolId: PubKeyHash,
+        poolVRF: bytes
+    }
+    PoolRetire {
+        poolId: PubKeyHash,
+        epoch: int
+    }
+    CommitteeHotAuthorization {
+        cold: Credential,
+        hot: Credential
+    }
+    CommitteeResignation {
+        cold: Credential
+    }
+} 
 
 export struct Tx {
     inputs: List<TxIn>,

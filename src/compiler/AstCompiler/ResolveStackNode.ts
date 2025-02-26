@@ -7,6 +7,16 @@ export class ResolveStackNode {
         readonly dependent: Source
     ) {}
 
+    static entry( dependent: Source ): ResolveStackNode
+    {
+        return new ResolveStackNode( undefined, dependent );
+    }
+
+    getNext( dependent: Source ): ResolveStackNode
+    {
+        return new ResolveStackNode( this, dependent );
+    }
+
     includesInternalPath( path: Path ): boolean
     {
         let req: ResolveStackNode | undefined = this;
