@@ -20,7 +20,7 @@ export class SingleDeconstructVarDecl
     constructor(
         readonly fields: Map<string, VarDecl>,
         readonly rest: Identifier | undefined,
-        readonly type: AstTypeExpr | undefined,
+        public type: AstTypeExpr | undefined,
         readonly initExpr: PebbleExpr | undefined,
         public flags: CommonFlags,
         readonly range: SourceRange

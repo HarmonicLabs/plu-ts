@@ -11,7 +11,7 @@ export class SimpleVarDecl
 {
     constructor(
         readonly name: Identifier,
-        readonly type: AstTypeExpr | undefined,
+        public type: AstTypeExpr | undefined,
         readonly initExpr: PebbleExpr | undefined,
         public flags: CommonFlags,
         readonly range: SourceRange,

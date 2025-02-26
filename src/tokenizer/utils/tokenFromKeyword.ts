@@ -35,7 +35,7 @@ export function tokenFromKeyword(text: string): Token {
             //     if (text === "declare") return Token.Declare;
             //     break;
             // }
-            if (text === "do") return Token.Do;
+            // if (text === "do") return Token.Do;
             // if (text === "delete") return Token.Delete;
             if (text === "debugger") return Token.Debugger;
             break;

@@ -22,7 +22,7 @@ export enum Token {
     // Declare,
     // Default,      
     // Delete,       
-    Do,           
+    // Do,           
     Else,         
     Enum,
     Export,       

@@ -12,7 +12,7 @@ export class ArrayLikeDeconstr
     constructor(
         readonly elements: VarDecl[],
         readonly rest: Identifier | undefined,
-        readonly type: AstTypeExpr | undefined, // just for the type checker, or func params, usually this is inferred
+        public type: AstTypeExpr | undefined, // just for the type checker, or func params, usually this is inferred
         readonly initExpr: PebbleExpr | undefined,
         public flags: number,
         readonly range: SourceRange,

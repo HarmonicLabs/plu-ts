@@ -105,10 +105,20 @@ export class AstCompiler extends DiagnosticEmitter
             throw new Error("_compileParsedSource: source has no statements");
         }
 
-        this.program
-
+        this.program.files.set(
+            src.internalPath,
+            this._compileSourceStatements( src.statements )
+        );
 
         return this.diagnostics;
+    }
+
+    /**
+     * assumes the types have been collected before
+     */
+    private _compileSourceStatements( stmts: PebbleStmt[] )
+    {
+        const result = [];
     }
 
     /**

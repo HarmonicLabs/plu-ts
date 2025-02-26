@@ -1277,7 +1277,7 @@ export class Parser extends DiagnosticEmitter
                 continue; // checks for close brace and exits while loop
             }
 
-            if( !fieldName ) { // (eg: { , ... }) ??
+             if( !fieldName ) { // (eg: { , ... }) ??
                 this.error(
                     DiagnosticCode.Identifier_expected,
                     tn.range()
@@ -1289,7 +1289,18 @@ export class Parser extends DiagnosticEmitter
             {
                 element = SimpleVarDecl.onlyIdentifier( fieldName, flags );
                 elements.set( fieldName.text, element );
-                tn.skip( Token.Comma ); // skip comma if present
+
+                if(tn.skip(Token.CloseBrace)) break; // last field destructured
+
+                if( !tn.skip(Token.Comma) )
+                {
+                    this.error(
+                        DiagnosticCode._0_expected,
+                        tn.range(), ","
+                    );
+                    return undefined;
+                }
+
                 continue; // early continue to check for close brace or next field
             }            
             // else ther is colon (eg: { field: ... })
@@ -1319,6 +1330,20 @@ export class Parser extends DiagnosticEmitter
                     element.range
                 );
                 return undefined;
+            }
+
+            if( tn.skip( Token.As ) )
+            {
+                const castType = this.parseTypeExpr();
+                if( !castType )
+                {
+                    this.error(
+                        DiagnosticCode.Type_expected,
+                        tn.range()
+                    );
+                    return undefined;
+                }
+                element.type = castType;
             }
 
             elements.set( fieldName.text, element );
@@ -1384,6 +1409,20 @@ export class Parser extends DiagnosticEmitter
                 DiagnosticCode.Deconstructed_elements_may_not_have_initializers_or_explicit_types,
                 elem.initExpr ? elem.initExpr.range : elem.type!.range
             );
+
+            if( tn.skip(Token.As) )
+            {
+                const castType = this.parseTypeExpr();
+                if( !castType )
+                {
+                    this.error(
+                        DiagnosticCode.Type_expected,
+                        tn.range()
+                    );
+                    return undefined;
+                }
+                elem.type = castType;
+            }
 
             elems.push( elem );
 
@@ -2604,10 +2643,10 @@ export class Parser extends DiagnosticEmitter
                 statement = this.parseContinue();
                 break;
             }
-            case Token.Do: {
-                statement = this.parseDoStatement();
-                break;
-            }
+            // case Token.Do: {
+            //     statement = this.parseDoStatement();
+            //     break;
+            // }
             case Token.For: {
                 statement = this.parseForStatement();
                 break;
@@ -2865,6 +2904,7 @@ export class Parser extends DiagnosticEmitter
         return ret;
     }
 
+    /*
     parseDoStatement(): DoWhileStmt | undefined
     {
         const tn = this.tn;
@@ -2911,6 +2951,7 @@ export class Parser extends DiagnosticEmitter
         tn.skip(Token.Semicolon);
         return result;
     }
+    */
 
     parseForStatement(): ForStmt | ForOfStmt | undefined
     {

@@ -1,0 +1,28 @@
+import { HasSourceRange } from "../../../ast/nodes/HasSourceRange";
+import { SourceRange } from "../../../ast/Source/SourceRange";
+import { TirExpr } from "../expressions/TirExpr";
+import { TirConcreteType } from "../types/TirConcreteType";
+
+
+export class TirFuncDecl
+    implements HasSourceRange
+{
+    constructor(
+        readonly name: string,
+        readonly params: TirSimpleFuncParam[],
+        readonly returnType: TirConcreteType,
+        readonly body: TirBlockStmt,
+        readonly range: SourceRange,
+    ) {}
+}
+
+export class TirSimpleFuncParam
+    implements HasSourceRange
+{
+    constructor(
+        readonly name: string,
+        readonly type: TirConcreteType, // params MUST have a type, even with initExpr
+        readonly initExpr: TirExpr | undefined, // optional initializer for params
+        readonly range: SourceRange,
+    ) {}
+}

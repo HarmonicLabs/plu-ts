@@ -40,7 +40,7 @@ export type PebbleStmt
     | ForStmt
     | ForOfStmt
     | WhileStmt
-    | DoWhileStmt
+    // | DoWhileStmt
     | ReturnStmt
     | BlockStmt
     | BreakStmt
