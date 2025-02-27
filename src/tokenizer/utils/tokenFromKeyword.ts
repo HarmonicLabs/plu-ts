@@ -83,10 +83,10 @@ export function tokenFromKeyword(text: string): Token {
                     if (text === "import") return Token.Import;
                     break;
                 }
-                case CharCode.t: {
-                    if (text === "instanceof") return Token.InstanceOf;
-                    break;
-                }
+                // case CharCode.t: {
+                //     if (text === "instanceof") return Token.InstanceOf;
+                //     break;
+                // }
                 case CharCode.e: {
                     if (text === "interface") return Token.Interface;
                     break;

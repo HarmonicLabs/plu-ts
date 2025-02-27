@@ -7,7 +7,9 @@ export class AssertStmt
     implements HasSourceRange
 {
     constructor(
+        /** must be boolean or Optional */
         readonly condition: PebbleExpr,
+        /** must be string */
         readonly elseExpr: PebbleExpr | undefined,
         readonly range: SourceRange,
     ) {}

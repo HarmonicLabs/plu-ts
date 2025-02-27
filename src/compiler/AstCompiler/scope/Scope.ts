@@ -113,7 +113,7 @@ export class Scope
 
             const appliedSym = new PebbleConcreteTypeSym({
                 name: expectedName,
-                concreteType: applied
+                concreteType: applied,
             });
 
             // define name so that it can be resolved in the future

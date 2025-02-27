@@ -4,7 +4,8 @@ export function operatorTokenToString(token: Token): string {
     switch (token) {
         // case Token.Delete: return "delete";
         // case Token.In: return "in";
-        case Token.InstanceOf: return "instanceof";
+        // case Token.InstanceOf: return "instanceof";
+        case Token.Is: return "is";
         // case Token.New: return "new";
         // case Token.TypeOf: return "typeof";
         case Token.Void: return "void";

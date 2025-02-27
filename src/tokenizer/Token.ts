@@ -37,7 +37,7 @@ export enum Token {
     Implements,
     Import,       
     // In,           
-    InstanceOf,   
+    // InstanceOf,   
     Interface,
     Is,         // case thing is pattern => expression
     // KeyOf,

@@ -5,7 +5,7 @@ import { HasSourceRange } from "../HasSourceRange";
 
 /**
  * ```ts
- * export { ... } from "module";
+ * import * as module from "module";
  * ```
  */
 export class ImportStarStmt

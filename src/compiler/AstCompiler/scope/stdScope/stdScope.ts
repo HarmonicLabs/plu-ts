@@ -17,20 +17,20 @@ export const stdScope = new Scope( undefined );
 stdScope.defineType(
     new PebbleConcreteTypeSym({
         name: "void",
-        concreteType: new TirVoidT()
+        concreteType: new TirVoidT(),
     })
 );
 stdScope.defineType(
     new PebbleConcreteTypeSym({
         name: "boolean",
-        concreteType: new TirBoolT()
+        concreteType: new TirBoolT(),
     })
 );
 const int_t = new TirIntT();
 stdScope.defineType(
     new PebbleConcreteTypeSym({
         name: "int",
-        concreteType: int_t
+        concreteType: int_t,
     })
 );
 const bytes_t = new TirBytesT();

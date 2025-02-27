@@ -3,9 +3,9 @@ import { CommaExpr } from "./CommaExpr";
 import { ElemAccessExpr } from "./ElemAccessExpr";
 import { CallExpr } from "./functions/CallExpr";
 import { FuncExpr } from "./functions/FuncExpr";
-import { InstanceOfExpr } from "./InstanceOfExpr";
+import { IsExpr } from "./IsExpr";
 import { isLitteralExpr, LitteralExpr } from "./litteral/LitteralExpr";
-import { NonNullExpr } from "./NonNullExpr";
+import { NonNullExpr } from "./unary/NonNullExpr";
 import { ParentesizedExpr } from "./ParentesizedExpr";
 import { isPropAccessExpr, PropAccessExpr } from "./PropAccessExpr";
 import { TernaryExpr } from "./TernaryExpr";
@@ -27,7 +27,7 @@ export type PebbleExpr
     | CaseExpr
     | TypeConversionExpr
     | NonNullExpr
-    | InstanceOfExpr
+    | IsExpr // ( purpose is Spending )
     | ElemAccessExpr
     | TernaryExpr
     | CommaExpr
@@ -46,7 +46,7 @@ export function isPebbleExpr( thing: any ): thing is PebbleExpr
         || thing instanceof CaseExpr
         || thing instanceof TypeConversionExpr
         || thing instanceof NonNullExpr
-        || thing instanceof InstanceOfExpr
+        || thing instanceof IsExpr
         || thing instanceof ElemAccessExpr
         || thing instanceof TernaryExpr
         || thing instanceof CommaExpr

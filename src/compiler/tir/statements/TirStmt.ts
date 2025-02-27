@@ -1,8 +1,23 @@
+import { isObject } from "@harmoniclabs/obj-utils";
+import { TirAssertStmt } from "./TirAssertStmt";
+import { TirAssignmentStmt } from "./TirAssignmentStmt";
+import { TirBlockStmt } from "./TirBlockStmt";
+import { TirBreakStmt } from "./TirBreakStmt";
+import { TirContinueStmt } from "./TirContinueStmt";
+import { TirExportStarStmt } from "./TirExportStarStmt";
+import { TirExportStmt } from "./TirExportStmt";
+import { TirFailStmt } from "./TirFailStmt";
 import { TirForOfStmt } from "./TirForOfStmt";
 import { TirForStmt } from "./TirForStmt";
 import { TirFuncDecl, TirSimpleFuncParam } from "./TirFuncDecl";
 import { TirIfStmt } from "./TirIfStmt";
+import { TirImportStmt } from "./TirImportStmt";
+import { TirMatchStmt } from "./TirMatchStmt";
+import { TirReturnStmt } from "./TirReturnStmt";
+import { TirTestStmt } from "./TirTestStmt";
 import { TirSimpleVarDecl } from "./TirVarDecl/TirSimpleVarDecl";
+import { TirWhileStmt } from "./TirWhileStmt";
+import { TirExprStmt } from "./TirExprStmt";
 
 export type TirStmt
     = TirIfStmt
@@ -32,21 +47,53 @@ export type TirStmt
     | TirTestStmt
     | TirMatchStmt
     | TirExportStarStmt
-    | TirImportStarStmt
+    | TirExportStarStmt
     | TirExportStmt
     | TirImportStmt
-    | TirTypeImplementsStmt
     | TirAssignmentStmt
-    ;
-
-export type TirVarDecl
-    = TirSimpleVarDecl
-    | TirNamedDeconstructVarDecl
-    | TirSingleDeconstructVarDecl
-    | TirArrayLikeDeconstr
+    | TirExprStmt
     ;
 
 export function isTirStmt( thing: any ): thing is TirStmt
 {
-    return false;
+    return isObject( thing ) && (
+        thing instanceof TirIfStmt
+        || isTirVarDecl( thing)
+        || thing instanceof TirFuncDecl
+        || thing instanceof TirSimpleFuncParam
+        || thing instanceof TirForStmt
+        || thing instanceof TirForOfStmt
+        || thing instanceof TirWhileStmt
+        || thing instanceof TirReturnStmt
+        || thing instanceof TirBlockStmt
+        || thing instanceof TirBreakStmt
+        || thing instanceof TirContinueStmt
+        || thing instanceof TirFailStmt
+        || thing instanceof TirAssertStmt
+        || thing instanceof TirTestStmt
+        || thing instanceof TirMatchStmt
+        || thing instanceof TirExportStarStmt
+        || thing instanceof TirExportStarStmt
+        || thing instanceof TirExportStmt
+        || thing instanceof TirImportStmt
+        || thing instanceof TirAssignmentStmt
+        || thing instanceof TirExprStmt
+    );
+}
+
+export type TirVarDecl
+    = TirSimpleVarDecl
+    // | TirNamedDeconstructVarDecl
+    // | TirSingleDeconstructVarDecl
+    // | TirArrayLikeDeconstr
+    ;
+
+export function isTirVarDecl( thing: any ): thing is TirVarDecl
+{
+    return isObject( thing ) && (
+              thing instanceof TirSimpleVarDecl
+          // || thing instanceof TirNamedDeconstructVarDecl
+          // || thing instanceof TirSingleDeconstructVarDecl
+          // || thing instanceof TirArrayLikeDeconstr
+    );
 }

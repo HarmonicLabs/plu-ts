@@ -61,7 +61,8 @@ export class PebbleConcreteTypeSym
 
     constructor({
         name,
-        concreteType
+        concreteType,
+        
     }: IPebbleConcreteTypeSym)
     {
         this.name = name;

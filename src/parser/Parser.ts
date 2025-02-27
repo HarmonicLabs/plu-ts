@@ -64,8 +64,7 @@ import { InterfaceMethodImpl, TypeImplementsStmt } from "../ast/nodes/statements
 import { TypeAliasDecl } from "../ast/nodes/statements/declarations/TypeAliasDecl";
 import { EnumDecl, EnumValueDecl } from "../ast/nodes/statements/declarations/EnumDecl";
 import { TypeConversionExpr } from "../ast/nodes/expr/TypeConversionExpr";
-import { NonNullExpr } from "../ast/nodes/expr/NonNullExpr";
-import { InstanceOfExpr } from "../ast/nodes/expr/InstanceOfExpr";
+import { NonNullExpr } from "../ast/nodes/expr/unary/NonNullExpr";
 import { ElemAccessExpr } from "../ast/nodes/expr/ElemAccessExpr";
 import { makeUnaryPostfixExpr } from "../ast/nodes/expr/unary/UnaryPostfixExpr";
 import { TernaryExpr } from "../ast/nodes/expr/TernaryExpr";
@@ -76,6 +75,7 @@ import { AssignmentStmt, makeAssignmentStmt } from "../ast/nodes/statements/Assi
 import { ExprStmt } from "../ast/nodes/statements/ExprStmt";
 import { AstTypeExpr } from "../ast/nodes/types/AstTypeExpr";
 import { getInternalPath } from "../compiler/path/path";
+import { IsExpr } from "../ast/nodes/expr/IsExpr";
 
 export class Parser extends DiagnosticEmitter
 {
@@ -1344,6 +1344,9 @@ export class Parser extends DiagnosticEmitter
                     return undefined;
                 }
                 element.type = castType;
+                /// @ts-ignore Cannot assign to 'range' because it is a read-only property.ts(2540)
+                element.range =
+                    SourceRange.join( element.range, castType.range );
             }
 
             elements.set( fieldName.text, element );
@@ -1422,6 +1425,9 @@ export class Parser extends DiagnosticEmitter
                     return undefined;
                 }
                 elem.type = castType;
+                /// @ts-ignore Cannot assign to 'range' because it is a read-only property.ts(2540)
+                elem.range =
+                    SourceRange.join( elem.range, castType.range );
             }
 
             elems.push( elem );
@@ -1716,10 +1722,20 @@ export class Parser extends DiagnosticEmitter
                     expr = this.tryParseCallExprOrReturnSame( expr );
                     break;
                 }
-                case Token.InstanceOf: {
-                    const ofType = this.parseTypeExpr();
-                    if( !ofType ) return undefined;
-                    expr = new InstanceOfExpr(
+                case Token.Is: {
+                    // TODO:
+                    // should optionally check for destructuring 
+                    if(!(tn.skipIdentifier()))
+                    {
+                        this.error(
+                            DiagnosticCode.Identifier_expected,
+                            tn.range()
+                        );
+                        return undefined
+                    }
+                    const ofType = new Identifier( tn.readIdentifier(), tn.range() );
+                    tn.skip(Token.Semicolon); // if any
+                    expr = new IsExpr(
                         expr,
                         ofType,
                         tn.range( startPos, tn.pos )
@@ -2879,13 +2895,13 @@ export class Parser extends DiagnosticEmitter
         const tn = this.tn;
         // at 'break': Identifier? ';'?
 
-        let identifier: Identifier | undefined = undefined;
-        if (tn.peek() === Token.Identifier && !tn.isNextTokenOnNewLine()) {
-            tn.next(IdentifierHandling.Prefer);
-            identifier = new Identifier(tn.readIdentifier(), tn.range());
-        }
-        const result = new BreakStmt(identifier, tn.range());
-        tn.skip(Token.Semicolon);
+        // let identifier: Identifier | undefined = undefined;
+        // if (tn.peek() === Token.Identifier && !tn.isNextTokenOnNewLine()) {
+        //     tn.next(IdentifierHandling.Prefer);
+        //     identifier = new Identifier(tn.readIdentifier(), tn.range());
+        // }
+        const result = new BreakStmt(tn.range());
+        tn.skip(Token.Semicolon); // if any
         return result;
     }
 
@@ -2894,13 +2910,13 @@ export class Parser extends DiagnosticEmitter
         const tn = this.tn;
         // at 'continue': Identifier? ';'?
 
-        let identifier: Identifier | undefined = undefined;
-        if (tn.peek() === Token.Identifier && !tn.isNextTokenOnNewLine()) {
-            tn.next(IdentifierHandling.Prefer);
-            identifier = new Identifier(tn.readIdentifier(), tn.range());
-        }
-        let ret = new ContinueStmt(identifier, tn.range());
-        tn.skip(Token.Semicolon);
+        // let identifier: Identifier | undefined = undefined;
+        // if (tn.peek() === Token.Identifier && !tn.isNextTokenOnNewLine()) {
+        //     tn.next(IdentifierHandling.Prefer);
+        //     identifier = new Identifier(tn.readIdentifier(), tn.range());
+        // }
+        let ret = new ContinueStmt(tn.range());
+        tn.skip(Token.Semicolon); // if any
         return ret;
     }
 
@@ -3144,8 +3160,14 @@ export class Parser extends DiagnosticEmitter
         const tn = this.tn;
         // at 'test': string? BlockStmt
 
-        let testName: string | undefined = undefined;
-        if( tn.skip( Token.StringLiteral ) ) testName = tn.readString();
+        const startPost = tn.pos;
+
+        let testName: LitStrExpr | undefined = undefined;
+        if( tn.skip( Token.StringLiteral ) ) 
+        {
+            const value = tn.readString();
+            testName = new LitStrExpr( value, tn.range( startPost, tn.pos ) );
+        }
 
         let body = this.parseBlockStmt( true );
         if( !body )
@@ -3157,7 +3179,7 @@ export class Parser extends DiagnosticEmitter
         return new TestStmt(
             testName,
             body,
-            tn.range()
+            tn.range( startPost, tn.pos )
         );
     }
 

@@ -2,6 +2,7 @@ import { HasSourceRange } from "../../../ast/nodes/HasSourceRange";
 import { SourceRange } from "../../../ast/Source/SourceRange";
 import { TirExpr } from "../expressions/TirExpr";
 import { TirConcreteType } from "../types/TirConcreteType";
+import { TirBlockStmt } from "./TirBlockStmt";
 
 
 export class TirFuncDecl

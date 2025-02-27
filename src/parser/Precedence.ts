@@ -44,7 +44,8 @@ export function determinePrecedence(kind: Token): Precedence
         case Token.Comma: return Precedence.Comma;
         case Token.Dot_Dot_Dot: return Precedence.Spread;
         case Token.Case:
-        case Token.Is: return Precedence.CaseExpr;
+        // TODO: this would be a special case, `is` is used for `case` expressions
+        // case Token.Is: return Precedence.CaseExpr;
         case Token.Equals:
         case Token.Plus_Equals:
         case Token.Minus_Equals:
@@ -72,7 +73,8 @@ export function determinePrecedence(kind: Token): Precedence
         case Token.Exclamation_Equals_Equals: return Precedence.Equality;
         case Token.As:
         // case Token.In:
-        case Token.InstanceOf:
+        // case Token.InstanceOf:
+        case Token.Is: // TODO: `is` keyword is used (with lower precedence) for `case` expressions
         case Token.LessThan:
         case Token.GreaterThan:
         case Token.LessThan_Equals:
