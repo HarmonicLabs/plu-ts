@@ -1,11 +1,11 @@
 import { TirInterfaceType } from "./TirInterfaceType";
-import { TirConcreteCustomType } from "./TirConcreteType";
+import { TirCustomType } from "./TirType";
 
 
 export class TirInterfaceImpl
 {
     constructor(
-        readonly targetType: TirConcreteCustomType,
+        readonly targetType: TirCustomType,
         readonly interf: TirInterfaceType
     ) {}
 

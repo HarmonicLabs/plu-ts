@@ -1,11 +1,12 @@
-import { TirBoolT, TirBytesT, TirDataT, TirFuncT, TirLinearMapT, TirListT, TirIntT, TirOptT, TirSopT, TirVoidT, TirAsDataT } from "../../../tir/types/TirNativeType";
+import { TirBoolT, TirBytesT, TirDataT, TirFuncT, TirLinearMapT, TirListT, TirIntT, TirOptT, TirAsSopT, TirVoidT, TirAsDataT, TirStringT } from "../../../tir/types/TirNativeType";
 import { Scope } from "../Scope";
 import { TirNativeType } from "../../../tir/types/TirNativeType";
 import { PebbleConcreteTypeSym, PebbleGenericSym } from "../symbols/PebbleSym";
-import { TirConcreteAliasType } from "../../../tir/types/TirConcreteAliasType";
-import { TirConcreteStructConstr, TirConcreteStructField, TirConcreteStructType } from "../../../tir/types/TirConcreteStructType";
+import { TirAliasType } from "../../../tir/types/TirAliasType";
+import { StructFlags, TirStructConstr, TirStructField, TirStructType } from "../../../tir/types/TirStructType";
 import { TirInterfaceImpl } from "../../../tir/types/TirInterfaceImpl";
 import { TirInterfaceMethod, TirInterfaceType } from "../../../tir/types/TirInterfaceType";
+import { CommonFlags } from "../../../../common";
 
 
 /**
@@ -14,33 +15,42 @@ import { TirInterfaceMethod, TirInterfaceType } from "../../../tir/types/TirInte
  */
 export const stdScope = new Scope( undefined );
 
+export const void_t = new TirVoidT();
 stdScope.defineType(
     new PebbleConcreteTypeSym({
         name: "void",
-        concreteType: new TirVoidT(),
+        concreteType: void_t,
     })
 );
+export const bool_t = new TirBoolT();
 stdScope.defineType(
     new PebbleConcreteTypeSym({
         name: "boolean",
-        concreteType: new TirBoolT(),
+        concreteType: bool_t,
     })
 );
-const int_t = new TirIntT();
+export const int_t = new TirIntT();
 stdScope.defineType(
     new PebbleConcreteTypeSym({
         name: "int",
         concreteType: int_t,
     })
 );
-const bytes_t = new TirBytesT();
+export const bytes_t = new TirBytesT();
 stdScope.defineType(
     new PebbleConcreteTypeSym({
         name: "bytes",
         concreteType: bytes_t
     })
 );
-const data_t = new TirDataT();
+export const string_t = new TirStringT();
+stdScope.defineType(
+    new PebbleConcreteTypeSym({
+        name: "string",
+        concreteType: string_t
+    })
+);
+export const data_t = new TirDataT();
 stdScope.defineType(
     new PebbleConcreteTypeSym({
         name: "data",
@@ -89,14 +99,14 @@ stdScope.defineType(
                 return undefined;
             const arg = typeArgs[0];
             if(!(
-                arg instanceof TirConcreteStructType
+                arg instanceof TirStructType
                 || (
-                    arg instanceof TirConcreteAliasType
-                    && arg.aliased instanceof TirConcreteStructType
+                    arg instanceof TirAliasType
+                    && arg.aliased instanceof TirStructType
                 )
             )) return undefined;
-            return new TirSopT(
-                arg as TirConcreteStructType | TirConcreteAliasType<TirConcreteStructType>
+            return new TirAsSopT(
+                arg as TirStructType | TirAliasType<TirStructType>
             );
         },
     })
@@ -110,14 +120,14 @@ stdScope.defineType(
                 return undefined;
             const arg = typeArgs[0];
             if(!(
-                arg instanceof TirConcreteStructType
+                arg instanceof TirStructType
                 || (
-                    arg instanceof TirConcreteAliasType
-                    && arg.aliased instanceof TirConcreteStructType
+                    arg instanceof TirAliasType
+                    && arg.aliased instanceof TirStructType
                 )
             )) return undefined;
             return new TirAsDataT(
-                arg as TirConcreteStructType | TirConcreteAliasType<TirConcreteStructType>
+                arg as TirStructType | TirAliasType<TirStructType>
             );
         },
     })
@@ -128,7 +138,7 @@ stdScope.readonly();
 export const preludeScope = new Scope( stdScope );
 
 // export type Hash32 = bytes;
-const hash32_t = new TirConcreteAliasType(
+export const hash32_t = new TirAliasType(
     "Hash32",
     bytes_t,
     []
@@ -140,7 +150,7 @@ preludeScope.defineType(
     })
 );
 // export type Hash28 = bytes;
-const hash28_t = new TirConcreteAliasType(
+export const hash28_t = new TirAliasType(
     "Hash28",
     bytes_t,
     []
@@ -152,7 +162,7 @@ preludeScope.defineType(
     })
 );
 // export type PolicyId = Hash28;
-const policyId_t = new TirConcreteAliasType(
+export const policyId_t = new TirAliasType(
     "PolicyId",
     hash28_t,
     []
@@ -164,7 +174,7 @@ preludeScope.defineType(
     })
 );
 // export type TokenName = bytes;
-const tokenName_t = new TirConcreteAliasType(
+export const tokenName_t = new TirAliasType(
     "TokenName",
     bytes_t,
     []
@@ -176,7 +186,7 @@ preludeScope.defineType(
     })
 );
 // export type PubKeyHash = Hash28;
-const pubKeyHash_t = new TirConcreteAliasType(
+export const pubKeyHash_t = new TirAliasType(
     "PubKeyHash",
     hash28_t,
     []
@@ -188,7 +198,7 @@ preludeScope.defineType(
     })
 );
 // export type ScriptHash = Hash28;
-const scriptHash_t = new TirConcreteAliasType(
+export const scriptHash_t = new TirAliasType(
     "ScriptHash",
     hash28_t,
     []
@@ -200,7 +210,7 @@ preludeScope.defineType(
     })
 );
 // export type TxHash = Hash32;
-const txHash_t = new TirConcreteAliasType(
+export const txHash_t = new TirAliasType(
     "TxHash",
     hash32_t,
     []
@@ -214,50 +224,54 @@ preludeScope.defineType(
 
 function mkSingleConstructorStruct(
     name: string,
-    fields: { [x: string]: TirNativeType }
-): TirConcreteStructType
+    fields: { [x: string]: TirNativeType },
+    flags: StructFlags
+): TirStructType
 {
-    return new TirConcreteStructType(
+    return new TirStructType(
         name,
         [
-            new TirConcreteStructConstr(
+            new TirStructConstr(
                 name,
                 Object.keys( fields ).map( name => 
-                    new TirConcreteStructField(name, fields[name])
+                    new TirStructField(name, fields[name])
                 )
             )
         ],
-        []
+        [],
+        flags
     );
 }
 
 function mkMultiConstructorStruct(
     name: string,
-    constrs: { [x: string]: { [x: string]: TirNativeType } }
-): TirConcreteStructType
+    constrs: { [x: string]: { [x: string]: TirNativeType } },
+    flags: StructFlags
+): TirStructType
 {
-    return new TirConcreteStructType(
+    return new TirStructType(
         name,
         Object.keys( constrs ).map( constrName => 
-            new TirConcreteStructConstr(
+            new TirStructConstr(
                 constrName,
                 Object.keys( constrs[constrName] ).map( name => 
-                    new TirConcreteStructField(name, constrs[constrName][name])
+                    new TirStructField(name, constrs[constrName][name])
                 )
             )
         ),
-        []
+        [],
+        flags
     );
 }
 // export struct TxOutRef {
 //     id: TxHash,
 //     index: int,
 // }
-const txOutRef_t = mkSingleConstructorStruct(
+export const txOutRef_t = mkSingleConstructorStruct(
     "TxOutRef", {
         id: txHash_t,
         index: int_t
-    }
+    }, StructFlags.onlyData
 );
 preludeScope.defineType(
     new PebbleConcreteTypeSym({
@@ -269,7 +283,7 @@ preludeScope.defineType(
 //     PubKey { hash: PubKeyHash }
 //     Script { hash: ScriptHash }
 // }
-const credential_t = mkMultiConstructorStruct(
+export const credential_t = mkMultiConstructorStruct(
     "Credential", {
         PubKey: {
             hash: pubKeyHash_t
@@ -277,7 +291,7 @@ const credential_t = mkMultiConstructorStruct(
         Script: {
             hash: scriptHash_t
         }
-    }
+    }, StructFlags.onlyData
 );
 // TODO: 
 // understand how to describe function impls
@@ -304,10 +318,10 @@ preludeScope.defineType(
     new PebbleConcreteTypeSym({
         name: "Credential",
         concreteType: credential_t
-    })
+    }),
 );
 // export type ChangedParameters = LinearMap<int,data>;
-const map_int_data_sym = preludeScope.getAppliedGenericType(
+export const map_int_data_sym = preludeScope.getAppliedGenericType(
     "LinearMap",
     ["int", "data"]
 );
@@ -322,11 +336,11 @@ preludeScope.defineType(
 //     numerator: int,
 //     denominator: int
 // }
-const rational_t = mkSingleConstructorStruct(
+export const rational_t = mkSingleConstructorStruct(
     "Rational", {
         numerator: int_t,
         denominator: int_t
-    }
+    }, StructFlags.onlyData
 );
 preludeScope.defineType(
     new PebbleConcreteTypeSym({
@@ -338,11 +352,11 @@ preludeScope.defineType(
 //     major: int,
 //     minor: int
 // }
-const protocolVersion_t = mkSingleConstructorStruct(
+export const protocolVersion_t = mkSingleConstructorStruct(
     "ProtocolVersion", {
         major: int_t,
         minor: int_t
-    }
+    }, StructFlags.onlyData
 );
 preludeScope.defineType(
     new PebbleConcreteTypeSym({
@@ -353,15 +367,15 @@ preludeScope.defineType(
 // export struct ConstitutionInfo {
 //     consitutionScriptHash: Optional<ScriptHash>
 // }
-const opt_scriptHash_sym = preludeScope.getAppliedGenericType(
+export const opt_scriptHash_sym = preludeScope.getAppliedGenericType(
     "Optional",
     ["ScriptHash"]
 );
 if(!opt_scriptHash_sym) throw new Error("expected opt_scriptHash_sym");
-const constitutionInfo_t = mkSingleConstructorStruct(
+export const constitutionInfo_t = mkSingleConstructorStruct(
     "ConstitutionInfo", {
         consitutionScriptHash: opt_scriptHash_sym.concreteType.clone()
-    }
+    }, StructFlags.None
 );
 preludeScope.defineType(
     new PebbleConcreteTypeSym({
@@ -398,22 +412,22 @@ preludeScope.defineType(
 //     }
 //     InfoAction {}
 // }
-const opt_txOutRef_sym = preludeScope.getAppliedGenericType(
+export const opt_txOutRef_sym = preludeScope.getAppliedGenericType(
     "Optional",
     ["TxOutRef"]
 );
 if(!opt_txOutRef_sym) throw new Error("expected opt_txOutRef_sym");
-const map_cred_int_sym = preludeScope.getAppliedGenericType(
+export const map_cred_int_sym = preludeScope.getAppliedGenericType(
     "LinearMap",
     ["Credential", "int"]
 );
 if(!map_cred_int_sym) throw new Error("expected map_cred_int_sym");
-const list_cred_sym = preludeScope.getAppliedGenericType(
+export const list_cred_sym = preludeScope.getAppliedGenericType(
     "List",
     ["Credential"]
 );
 if(!list_cred_sym) throw new Error("expected list_cred_sym");
-const govAction_t = mkMultiConstructorStruct(
+export const govAction_t = mkMultiConstructorStruct(
     "GovAction", {
         ParameterChange: {
             govActionId: opt_txOutRef_sym.concreteType.clone(),
@@ -442,7 +456,7 @@ const govAction_t = mkMultiConstructorStruct(
             info: constitutionInfo_t.clone()
         },
         InfoAction: {}
-    }
+    }, StructFlags.onlyData
 );
 preludeScope.defineType(
     new PebbleConcreteTypeSym({
@@ -455,12 +469,12 @@ preludeScope.defineType(
 //     credential: Credential,
 //     action: GovAction
 // }
-const proposalProcedure_t = mkSingleConstructorStruct(
+export const proposalProcedure_t = mkSingleConstructorStruct(
     "ProposalProcedure", {
         deposit: int_t,
         credential: credential_t.clone(),
         action: govAction_t.clone()
-    }
+    }, StructFlags.onlyData
 );
 preludeScope.defineType(
     new PebbleConcreteTypeSym({
@@ -479,7 +493,7 @@ preludeScope.defineType(
 //         credential: PubKeyHash
 //     }
 // }
-const voter_t = mkMultiConstructorStruct(
+export const voter_t = mkMultiConstructorStruct(
     "Voter", {
         Committee: {
             credential: credential_t.clone()
@@ -490,7 +504,7 @@ const voter_t = mkMultiConstructorStruct(
         StakePool: {
             pubKeyHash: pubKeyHash_t.clone()
         }
-    }
+    }, StructFlags.onlyData
 );
 preludeScope.defineType(
     new PebbleConcreteTypeSym({
@@ -518,7 +532,7 @@ preludeScope.defineType(
 //         proposal: ProposalProcedure
 //     }
 // }
-const scriptPurpose_t = mkMultiConstructorStruct(
+export const scriptPurpose_t = mkMultiConstructorStruct(
     "ScriptPurpose", {
         Mint: {
             policy: policyId_t.clone()
@@ -540,7 +554,7 @@ const scriptPurpose_t = mkMultiConstructorStruct(
             index: int_t,
             proposal: proposalProcedure_t.clone()
         }
-    }
+    }, StructFlags.onlyData
 );
 preludeScope.defineType(
     new PebbleConcreteTypeSym({
@@ -569,12 +583,12 @@ preludeScope.defineType(
 //         proposal: ProposalProcedure
 //     }
 // }
-const opt_data_sym = preludeScope.getAppliedGenericType(
+export const opt_data_sym = preludeScope.getAppliedGenericType(
     "Optional",
     ["data"]
 );
 if(!opt_data_sym) throw new Error("expected opt_data_sym");
-const scriptInfo_t = mkMultiConstructorStruct(
+export const scriptInfo_t = mkMultiConstructorStruct(
     "ScriptInfo", {
         Mint: {
             policy: policyId_t.clone()
@@ -597,7 +611,7 @@ const scriptInfo_t = mkMultiConstructorStruct(
             index: int_t,
             proposal: proposalProcedure_t.clone()
         }
-    }
+    }, StructFlags.onlyData
 );
 preludeScope.defineType(
     new PebbleConcreteTypeSym({
@@ -613,7 +627,7 @@ preludeScope.defineType(
 //        c: int
 //     }
 // }
-const stakeCredential_t = mkMultiConstructorStruct(
+export const stakeCredential_t = mkMultiConstructorStruct(
     "StakeCredential", {
         Credential: {
             credential: credential_t.clone()
@@ -623,7 +637,7 @@ const stakeCredential_t = mkMultiConstructorStruct(
             b: int_t,
             c: int_t
         }
-    }
+    }, StructFlags.onlyData
 );
 preludeScope.defineType(
     new PebbleConcreteTypeSym({
@@ -635,16 +649,16 @@ preludeScope.defineType(
 //     payment: Credential,
 //     stake: Optional<Credential>
 // }
-const opt_stakeCredential_sym = preludeScope.getAppliedGenericType(
+export const opt_stakeCredential_sym = preludeScope.getAppliedGenericType(
     "Optional",
     ["StakeCredential"]
 );
 if(!opt_stakeCredential_sym) throw new Error("expected opt_stakeCredential_sym");
-const address_t = mkSingleConstructorStruct(
+export const address_t = mkSingleConstructorStruct(
     "Address", {
         payment: credential_t.clone(),
         stake: opt_stakeCredential_sym.concreteType.clone()
-    }
+    }, StructFlags.onlyData
 );
 preludeScope.defineType(
     new PebbleConcreteTypeSym({
@@ -653,17 +667,17 @@ preludeScope.defineType(
     })
 );
 // export type Value = LinearMap<PolicyId, LinearMap<TokenName, int>>
-const map_tokenName_int_sym = preludeScope.getAppliedGenericType(
+export const map_tokenName_int_sym = preludeScope.getAppliedGenericType(
     "LinearMap",
     ["TokenName", "int"]
 );
 if(!map_tokenName_int_sym) throw new Error("expected map_tokenName_int_sym");
-const map_policyId_map_tokenName_int_sym = preludeScope.getAppliedGenericType(
+export const map_policyId_map_tokenName_int_sym = preludeScope.getAppliedGenericType(
     "LinearMap",
     ["PolicyId", map_tokenName_int_sym.name]
 );
 if(!map_policyId_map_tokenName_int_sym) throw new Error("expected map_policyId_map_tokenName_int_sym");
-const value_t = new TirConcreteAliasType(
+export const value_t = new TirAliasType(
     "Value",
     map_policyId_map_tokenName_int_sym.concreteType.clone(),
     []
@@ -694,7 +708,7 @@ type Value implements {
 //     DatumHash { hash: Hash32 }
 //     InlineDatum { datum: data }
 // }
-const outputDatum_t = mkMultiConstructorStruct(
+export const outputDatum_t = mkMultiConstructorStruct(
     "OutputDatum", {
         NoDatum: {},
         DatumHash: {
@@ -703,7 +717,7 @@ const outputDatum_t = mkMultiConstructorStruct(
         InlineDatum: {
             datum: data_t.clone()
         }
-    }
+    }, StructFlags.onlyData
 );
 preludeScope.defineType(
     new PebbleConcreteTypeSym({
@@ -717,13 +731,13 @@ preludeScope.defineType(
 //     datum: OutputDatum,
 //     referenceScript: Optional<ScriptHash>
 // }
-const txOut_t = mkSingleConstructorStruct(
+export const txOut_t = mkSingleConstructorStruct(
     "TxOut", {
         address: address_t.clone(),
         value: value_t.clone(),
         datum: outputDatum_t.clone(),
         referenceScript: opt_scriptHash_sym.concreteType.clone()
-    }
+    }, StructFlags.onlyData
 );
 preludeScope.defineType(
     new PebbleConcreteTypeSym({
@@ -735,11 +749,11 @@ preludeScope.defineType(
 //     txOutRef: TxOutRef,
 //     resolved: TxOut
 // }
-const txIn_t = mkSingleConstructorStruct(
+export const txIn_t = mkSingleConstructorStruct(
     "TxIn", {
         txOutRef: txOutRef_t.clone(),
         resolved: txOut_t.clone()
-    }
+    }, StructFlags.onlyData
 );
 preludeScope.defineType(
     new PebbleConcreteTypeSym({
@@ -752,14 +766,14 @@ preludeScope.defineType(
 //     Finite { n: int }
 //     PosInf {}
 // }
-const extendedInteger_t = mkMultiConstructorStruct(
+export const extendedInteger_t = mkMultiConstructorStruct(
     "ExtendedInteger", {
         NegInf: {},
         Finite: {
             n: int_t.clone()
         },
         PosInf: {}
-    }
+    }, StructFlags.None
 );
 preludeScope.defineType(
     new PebbleConcreteTypeSym({
@@ -771,11 +785,11 @@ preludeScope.defineType(
 //     boundary: ExtendedInteger,
 //     isInclusive: boolean
 // }
-const intervalBoundary_t = mkSingleConstructorStruct(
+export const intervalBoundary_t = mkSingleConstructorStruct(
     "IntervalBoundary", {
         boundary: extendedInteger_t.clone(),
-        isInclusive: new TirBoolT()
-    }
+        isInclusive: bool_t.clone()
+    }, StructFlags.None
 );
 preludeScope.defineType(
     new PebbleConcreteTypeSym({
@@ -787,11 +801,11 @@ preludeScope.defineType(
 //     from: IntervalBoundary,
 //     to: IntervalBoundary,
 // }
-const interval_t = mkSingleConstructorStruct(
+export const interval_t = mkSingleConstructorStruct(
     "Interval", {
         from: intervalBoundary_t.clone(),
         to: intervalBoundary_t.clone()
-    }
+    }, StructFlags.None
 );
 preludeScope.defineType(
     new PebbleConcreteTypeSym({
@@ -804,12 +818,12 @@ preludeScope.defineType(
 //     Yes {}
 //     Abstain {}
 // }
-const vote_t = mkMultiConstructorStruct(
+export const vote_t = mkMultiConstructorStruct(
     "Vote", {
         No: {},
         Yes: {},
         Abstain: {}
-    }
+    }, StructFlags.onlyData
 );
 preludeScope.defineType(
     new PebbleConcreteTypeSym({
@@ -825,7 +839,7 @@ preludeScope.defineType(
 //         drep: Credential
 //     }
 // }
-const delegatee_t = mkMultiConstructorStruct(
+export const delegatee_t = mkMultiConstructorStruct(
     "Delegatee", {
         StakePool: {
             poolKeyHash: pubKeyHash_t.clone()
@@ -837,7 +851,7 @@ const delegatee_t = mkMultiConstructorStruct(
             poolKeyHash: pubKeyHash_t.clone(),
             drep: credential_t.clone()
         }
-    }
+    }, StructFlags.onlyData
 );
 preludeScope.defineType(
     new PebbleConcreteTypeSym({
@@ -890,12 +904,12 @@ preludeScope.defineType(
 //         cold: Credential
 //     }
 // }
-const opt_int_sym = preludeScope.getAppliedGenericType(
+export const opt_int_sym = preludeScope.getAppliedGenericType(
     "Optional",
     ["int"]
 );
 if(!opt_int_sym) throw new Error("expected opt_int_sym");
-const certificate_t = mkMultiConstructorStruct(
+export const certificate_t = mkMultiConstructorStruct(
     "Certificate", {
         StakeRegistration: {
             stakeKey: credential_t.clone(),
@@ -938,7 +952,7 @@ const certificate_t = mkMultiConstructorStruct(
             hot: credential_t.clone()
         },
         CommitteeResignation: { cold: credential_t.clone() }
-    }
+    }, StructFlags.onlyData
 );
 preludeScope.defineType(
     new PebbleConcreteTypeSym({
@@ -964,52 +978,52 @@ preludeScope.defineType(
 //     currentTreasury: Optional<int>,
 //     treasuryDonation: Optional<int>
 // }
-const list_txIn_sym = preludeScope.getAppliedGenericType(
+export const list_txIn_sym = preludeScope.getAppliedGenericType(
     "List",
     ["TxIn"]
 );
 if(!list_txIn_sym) throw new Error("expected list_txIn_sym");
-const list_txOut_sym = preludeScope.getAppliedGenericType(
+export const list_txOut_sym = preludeScope.getAppliedGenericType(
     "List",
     ["TxOut"]
 );
 if(!list_txOut_sym) throw new Error("expected list_txOut_sym");
-const list_certificate_sym = preludeScope.getAppliedGenericType(
+export const list_certificate_sym = preludeScope.getAppliedGenericType(
     "List",
     ["Certificate"]
 );
 if(!list_certificate_sym) throw new Error("expected list_certificate_sym");
-const list_pubKeyHash_sym = preludeScope.getAppliedGenericType(
+export const list_pubKeyHash_sym = preludeScope.getAppliedGenericType(
     "List",
     ["PubKeyHash"]
 );
 if(!list_pubKeyHash_sym) throw new Error("expected list_pubKeyHash_sym");
-const map_scriptPurpose_data_sym = preludeScope.getAppliedGenericType(
+export const map_scriptPurpose_data_sym = preludeScope.getAppliedGenericType(
     "LinearMap",
     ["ScriptPurpose", "data"]
 );
 if(!map_scriptPurpose_data_sym) throw new Error("expected map_scriptPurpose_data_sym");
-const map_hash32_data_sym = preludeScope.getAppliedGenericType(
+export const map_hash32_data_sym = preludeScope.getAppliedGenericType(
     "LinearMap",
     ["Hash32", "data"]
 );
 if(!map_hash32_data_sym) throw new Error("expected map_hash32_data_sym");
-const map_txOutRef_vote_sym = preludeScope.getAppliedGenericType(
+export const map_txOutRef_vote_sym = preludeScope.getAppliedGenericType(
     "LinearMap",
     ["TxOutRef", "Vote"]
 );
 if(!map_txOutRef_vote_sym) throw new Error("expected map_txOutRef_vote_sym");
-const map_voter_map_txOutRef_vote_sym = preludeScope.getAppliedGenericType(
+export const map_voter_map_txOutRef_vote_sym = preludeScope.getAppliedGenericType(
     "LinearMap",
     ["Voter", map_txOutRef_vote_sym.name]
 );
 if(!map_voter_map_txOutRef_vote_sym) throw new Error("expected map_voter_map_txOutRef_vote_sym");
-const list_proposalProcedure_sym = preludeScope.getAppliedGenericType(
+export const list_proposalProcedure_sym = preludeScope.getAppliedGenericType(
     "List",
     ["ProposalProcedure"]
 );
 if(!list_proposalProcedure_sym) throw new Error("expected list_proposalProcedure_sym");
-const tx_t = mkSingleConstructorStruct(
+export const tx_t = mkSingleConstructorStruct(
     "Tx", {
         inputs: list_txIn_sym.concreteType.clone(),
         refInputs: list_txIn_sym.concreteType.clone(),
@@ -1027,7 +1041,7 @@ const tx_t = mkSingleConstructorStruct(
         proposals: list_proposalProcedure_sym.concreteType.clone(),
         currentTreasury: opt_int_sym.concreteType.clone(),
         treasuryDonation: opt_int_sym.concreteType.clone()
-    }
+    }, StructFlags.onlyData
 );
 preludeScope.defineType(
     new PebbleConcreteTypeSym({
@@ -1040,12 +1054,12 @@ preludeScope.defineType(
 //     redeemer: data,
 //     purpose: ScriptInfo
 // }
-const scriptContext_t = mkSingleConstructorStruct(
+export const scriptContext_t = mkSingleConstructorStruct(
     "ScriptContext", {
         tx: tx_t.clone(),
         redeemer: data_t.clone(),
         purpose: scriptInfo_t.clone()
-    }
+    }, StructFlags.onlyData
 );
 preludeScope.defineType(
     new PebbleConcreteTypeSym({

@@ -1,3 +1,4 @@
+import { ITirExpr } from "./ITirExpr";
 import { TirLitteralExpr } from "./litteral/TirLitteralExpr";
 import { TirCallExpr } from "./TirCallExpr";
 import { TirCaseExpr } from "./TirCaseExpr";
@@ -11,7 +12,7 @@ import { TirUnaryPostfixExpr } from "./unary/TirUnaryPostfixExpr";
 import { TirUnaryPrefixExpr } from "./unary/TirUnaryPrefixExpr";
 
 export type TirExpr
-    = TirUnaryPrefixExpr
+    =( TirUnaryPrefixExpr
     | TirUnaryPostfixExpr
     | TirLitteralExpr
     | TirParentesizedExpr
@@ -23,4 +24,6 @@ export type TirExpr
     | TirTernaryExpr
     // | TirCommaExpr // comma expressions removed at compilation from AST (keep side-effects only)
     | TirPropAccessExpr
+    )
+    & ITirExpr
     ;

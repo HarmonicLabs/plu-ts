@@ -15,7 +15,7 @@ import { DiagnosticMessage } from "../../diagnostics/DiagnosticMessage";
 import { DiagnosticCode } from "../../diagnostics/diagnosticMessages.generated";
 import { CompilerOptions } from "../../IR/toUPLC/CompilerOptions";
 import { Parser } from "../../parser/Parser";
-import { TirConcreteStructConstr, TirConcreteStructField, TirConcreteStructType } from "../tir/types/TirConcreteStructType";
+import { TirStructConstr, TirStructField, TirStructType } from "../tir/types/TirStructType";
 import { CompilerIoApi, createMemoryCompilerIoApi } from "../io/CompilerIoApi";
 import { IPebbleCompiler } from "../IPebbleCompiler";
 import { getInternalPath, InternalPath, resolveProjAbsolutePath } from "../path/path";
@@ -25,6 +25,14 @@ import { EnumDecl } from "../../ast/nodes/statements/declarations/EnumDecl";
 import { TirProgram } from "../tir/program/TirProgram";
 import { preludeScope, stdScope } from "./scope/stdScope/stdScope";
 import { preludeTypesSrc } from "./scope/stdScope/prelude/preludeTypesSrc";
+import { TirSource } from "../tir/program/TirSource";
+import { IfStmt } from "../../ast/nodes/statements/IfStmt";
+import { TirStmt } from "../tir/statements/TirStmt";
+import { PebbleExpr } from "../../ast/nodes/expr/PebbleExpr";
+import { TirExpr } from "../tir/expressions/TirExpr";
+import { UnaryExclamation } from "../../ast/nodes/expr/unary/UnaryExclamation";
+import { TirUnaryExclamation } from "../tir/expressions/unary/TirUnaryExclamation";
+import { TirBoolT, TirOptT } from "../tir/types/TirNativeType";
 
 /*
 Handling type expressions that depend on other types 
@@ -105,9 +113,15 @@ export class AstCompiler extends DiagnosticEmitter
             throw new Error("_compileParsedSource: source has no statements");
         }
 
+        const tirSource = new TirSource(
+            src.internalPath,
+            preludeScope
+        );
+        this._compileSourceStatements( tirSource, src.statements )
+
         this.program.files.set(
             src.internalPath,
-            this._compileSourceStatements( src.statements )
+            tirSource
         );
 
         return this.diagnostics;
@@ -116,9 +130,55 @@ export class AstCompiler extends DiagnosticEmitter
     /**
      * assumes the types have been collected before
      */
-    private _compileSourceStatements( stmts: PebbleStmt[] )
+    private _compileSourceStatements( tirSource: TirSource, stmts: PebbleStmt[] ): void
     {
-        const result = [];
+        const tirSrcScope = tirSource.scope;
+        for( const stmt of stmts )
+        {
+            tirSource.statements.push(
+                this._compileStatement( tirSrcScope, stmt )
+            );
+        }
+    }
+    
+    /**
+     * here we just translate to TIR
+     * 
+     * WE DO NOT OPTIMIZE
+     * 
+     * optimizaitons are part of the TIR -> TermIR compilation
+    **/
+    private _compileStatement( scope: Scope, stmt: PebbleStmt ): TirStmt
+    {
+    }
+    
+    /**
+     * here we just translate to TIR
+     * 
+     * WE DO NOT OPTIMIZE
+     * 
+     * optimizaitons are part of the TIR -> TermIR compilation
+    **/
+    private _compileExpr( scope: Scope, expr: PebbleExpr ): TirExpr | undefined
+    {
+        if( expr instanceof UnaryExclamation )
+        {
+            const operand = this._compileExpr( scope, expr.operand );
+            if( !operand ) return undefined;
+            const operandType = operand.type;
+            const canAssignToBool = canAssignToType( operandType, new TirBoolT() );
+            const canAssignToOpt  = canAssignToType( operandType, new TirOptT() );
+            if(!(
+                canAssignToBool
+                || canAssignToOpt
+            )) {
+                return this.error(
+                    DiagnosticCode.Type_0_is_not_assignable_to_type_1,
+                    expr.operand.range, operandType.name, "boolean | Optional<T>"
+                );
+            }
+            return new TirUnaryExclamation( operand, expr.range );
+        }
     }
 
     /**

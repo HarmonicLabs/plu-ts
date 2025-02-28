@@ -1,18 +1,19 @@
-import { TirConcreteAliasType } from "./TirConcreteAliasType";
-import { TirConcreteStructType } from "./TirConcreteStructType";
-import { TirConcreteType } from "./TirConcreteType";
+import { TirAliasType } from "./TirAliasType";
+import { TirStructType } from "./TirStructType";
+import { TirType } from "./TirType";
 
 export type TirNativeType
     = TirVoidT 
     | TirBoolT
     | TirIntT
     | TirBytesT
+    | TirStringT
     | TirDataT
-    | TirOptT<TirConcreteType>
-    | TirListT<TirConcreteType>
-    | TirLinearMapT<TirConcreteType,TirConcreteType>
+    | TirOptT<TirType>
+    | TirListT<TirType>
+    | TirLinearMapT<TirType,TirType>
     | TirFuncT
-    | TirSopT
+    | TirAsSopT
     | TirAsDataT
     ;
 
@@ -23,70 +24,128 @@ export function isTirNativeType( t: any ): t is TirNativeType
         || t instanceof TirBoolT
         || t instanceof TirIntT
         || t instanceof TirBytesT
+        || t instanceof TirStringT
         || t instanceof TirDataT
         || t instanceof TirOptT
         || t instanceof TirListT
         || t instanceof TirLinearMapT
         || t instanceof TirFuncT
-        || t instanceof TirSopT
+        || t instanceof TirAsSopT
         || t instanceof TirAsDataT
     );
 }
 
 export class TirVoidT {
     clone(): TirVoidT { return new TirVoidT(); }
+    isConcrete(): boolean { return true; }
+    toString(): string { return "void"; }
 }
 export class TirBoolT {
     clone(): TirBoolT { return new TirBoolT(); }
+    isConcrete(): boolean { return true; }
+    toString(): string { return "boolean"; }
 }
 export class TirIntT {
     clone(): TirIntT { return new TirIntT(); }
+    isConcrete(): boolean { return true; }
+    toString(): string { return "int"; }
 }
 export class TirBytesT {
     clone(): TirBytesT { return new TirBytesT(); }
+    isConcrete(): boolean { return true; }
+    toString(): string { return "bytes"; }
+}
+export class TirStringT {
+    clone(): TirStringT { return new TirStringT(); }
+    isConcrete(): boolean { return true; }
+    toString(): string { return "string"; }
 }
 export class TirDataT {
     clone(): TirDataT { return new TirDataT(); }
+    isConcrete(): boolean { return true; }
+    toString(): string { return "data"; }
 }
 
-export class TirOptT<T extends TirConcreteType = TirConcreteType>
+export class TirOptT<T extends TirType = TirType>
 {
     constructor(
         readonly typeArg: T
     ) {}
+
+    toString(): string {
+        return `Optional<${this.typeArg.toString()}>`;
+    }
+
+    private _isConcrete: boolean | undefined = undefined;
+    isConcrete(): boolean {
+        if( typeof this._isConcrete !== "boolean" )
+            this._isConcrete = this.typeArg.isConcrete();
+        return this._isConcrete;
+    }
 
     clone(): TirOptT<T> {
-        return new TirOptT(
+        const result = new TirOptT(
             this.typeArg.clone()
         ) as TirOptT<T>;
+        result._isConcrete = this._isConcrete;
+        return result;
     }
 }
 
-export class TirListT<T extends TirConcreteType = TirConcreteType>
+export class TirListT<T extends TirType = TirType>
 {
     constructor(
         readonly typeArg: T
     ) {}
 
+    toString(): string {
+        return `List<${this.typeArg.toString()}>`;
+    }
+
+    private _isConcrete: boolean | undefined = undefined;
+    isConcrete(): boolean {
+        if( typeof this._isConcrete !== "boolean" )
+            this._isConcrete = this.typeArg.isConcrete();
+        return this._isConcrete;
+    }
+
     clone(): TirListT<T> { 
-        return new TirListT(
+        const result = new TirListT(
             this.typeArg.clone()
         ) as TirListT<T>;
+        result._isConcrete = this._isConcrete;
+        return result;
     }
 }
 
-export class TirLinearMapT<K extends TirConcreteType,V extends TirConcreteType = TirConcreteType>
+export class TirLinearMapT<K extends TirType,V extends TirType = TirType>
 {
     constructor(
         readonly keyTypeArg: K,
         readonly valTypeArg: V
     ) {}
 
+    toString(): string {
+        return `LinearMap<${this.keyTypeArg.toString()},${this.valTypeArg.toString()}>`;
+    }
+
+    private _isConcrete: boolean | undefined = undefined;
+    isConcrete(): boolean {
+        if( typeof this._isConcrete !== "boolean" )
+            this._isConcrete = (
+                this.keyTypeArg.isConcrete()
+                && this.valTypeArg.isConcrete()
+            );
+        return this._isConcrete;
+    }
+
     clone(): TirLinearMapT<K,V> {
-        return new TirLinearMapT(
+        const result = new TirLinearMapT(
             this.keyTypeArg.clone(),
             this.valTypeArg.clone()
         ) as TirLinearMapT<K,V>;
+        result._isConcrete = this._isConcrete;
+        return result;
     }
 }
 
@@ -94,15 +153,31 @@ export class TirFuncT
 {
     constructor(
         // readonly genericTyArgsName: TirTypeParam[],
-        readonly argTypes: TirConcreteType[],
-        readonly returnType: TirConcreteType
+        readonly argTypes: TirType[],
+        readonly returnType: TirType
     ) {}
 
+    toString(): string {
+        return `(${this.argTypes.map( t => t.toString() ).join(",")}) => ${this.returnType.toString()}`;
+    }
+
+    private _isConcrete: boolean | undefined = undefined;
+    isConcrete(): boolean {
+        if( typeof this._isConcrete !== "boolean" )
+            this._isConcrete = (
+                this.argTypes.every( t => t.isConcrete() )
+                && this.returnType.isConcrete()
+            );
+        return this._isConcrete;
+    }
+
     clone(): TirFuncT {
-        return new TirFuncT(
+        const result = new TirFuncT(
             this.argTypes.map( t => t.clone() ),
             this.returnType.clone()
         );
+        result._isConcrete = this._isConcrete;
+        return result;
     }
 }
 
@@ -112,14 +187,31 @@ export class TirFuncT
  * indicates that a struct type (or an alias of it)
  * must be represented only as SoP (Sum of Products)
 **/
-export class TirSopT
+export class TirAsSopT
 {
     constructor(
-        readonly typeDef: TirConcreteStructType | TirConcreteAliasType<TirConcreteStructType>
-    ) {}
+        readonly typeDef: TirStructType | TirAliasType<TirStructType>
+    ) {
+        const originalTypeDef = typeDef;
+        while( typeDef instanceof TirAliasType ) typeDef = typeDef.aliased;
+        if( !(typeDef instanceof TirStructType) )
+            throw new Error(`TirAsSopT: expected a struct type, got ${originalTypeDef.toString()}`);
+        this.typeDef = originalTypeDef
+    }
 
-    clone(): TirSopT {
-        return new TirSopT(this.typeDef.clone());
+    toString(): string {
+        return `SoP<${this.typeDef.toString()}>`;
+    }
+
+    private _isConcrete: boolean | undefined = undefined;
+    isConcrete(): boolean {
+        if( typeof this._isConcrete !== "boolean" )
+            this._isConcrete = this.typeDef.isConcrete();
+        return this._isConcrete;
+    }
+
+    clone(): TirAsSopT {
+        return new TirAsSopT(this.typeDef.clone());
     }
 }
 
@@ -132,8 +224,25 @@ export class TirSopT
 export class TirAsDataT
 {
     constructor(
-        readonly typeDef: TirConcreteStructType | TirConcreteAliasType<TirConcreteStructType>
-    ) {}
+        readonly typeDef: TirStructType | TirAliasType<TirStructType>
+    ) {
+        const originalTypeDef = typeDef;
+        while( typeDef instanceof TirAliasType ) typeDef = typeDef.aliased;
+        if( !(typeDef instanceof TirStructType) )
+            throw new Error(`TirAsDataT: expected a struct type, got ${originalTypeDef.toString()}`);
+        this.typeDef = originalTypeDef
+    }
+
+    toString(): string {
+        return `AsData<${this.typeDef.toString()}>`;
+    }
+
+    private _isConcrete: boolean | undefined = undefined;
+    isConcrete(): boolean {
+        if( typeof this._isConcrete !== "boolean" )
+            this._isConcrete = this.typeDef.isConcrete();
+        return this._isConcrete;
+    }
 
     clone(): TirAsDataT {
         return new TirAsDataT(this.typeDef.clone());

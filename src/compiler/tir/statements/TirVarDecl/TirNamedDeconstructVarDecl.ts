@@ -1,14 +1,14 @@
 import { HasSourceRange } from "../../../../ast/nodes/HasSourceRange";
 import { SourceRange } from "../../../../ast/Source/SourceRange";
 import { TirExpr } from "../../expressions/TirExpr";
-import { TirConcreteType } from "../../types/TirConcreteType";
+import { TirType } from "../../types/TirType";
 
 export class TirNamedDeconstructVarDecl
     implements HasSourceRange
 {
     constructor(
         readonly name: string,
-        readonly type: TirConcreteType,
+        readonly type: TirType,
         readonly initExpr: TirExpr,
         readonly range: SourceRange,
     ) {}

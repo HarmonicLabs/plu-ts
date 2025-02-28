@@ -1,5 +1,5 @@
 import { isObject } from "@harmoniclabs/obj-utils";
-import { TirConcreteType } from "../../../tir/types/TirConcreteType";
+import { TirType } from "../../../tir/types/TirType";
 
 // can't call `Symbol`, so we don't confuse it with the built-in js `Symbol`
 export type PebbleSym
@@ -26,12 +26,12 @@ export interface IPebbleSym {
 }
 
 export interface IPebbleValueSym extends IPebbleSym {
-    readonly concreteType: TirConcreteType | undefined;
+    readonly concreteType: TirType | undefined;
 }
 export class PebbleValueSym implements IPebbleValueSym
 {
     readonly name: string;
-    readonly concreteType: TirConcreteType | undefined;
+    readonly concreteType: TirType | undefined;
 
     constructor({
         name,
@@ -50,14 +50,14 @@ export type PebbleAnyTypeSym
     | PebbleGenericFunctionSym
     ;
 export interface IPebbleConcreteTypeSym extends IPebbleSym {
-    readonly concreteType: TirConcreteType;
+    readonly concreteType: TirType;
 }
 
 export class PebbleConcreteTypeSym
     implements IPebbleConcreteTypeSym
 {
     readonly name: string;
-    readonly concreteType: TirConcreteType;
+    readonly concreteType: TirType;
 
     constructor({
         name,
@@ -72,7 +72,7 @@ export class PebbleConcreteTypeSym
 
 export interface IPebbleGenericSym extends IPebbleSym {
     readonly nTypeParameters: number;
-    getConcreteType: ( ...typeArgs: TirConcreteType[] ) => (TirConcreteType | undefined);
+    getConcreteType: ( ...typeArgs: TirType[] ) => (TirType | undefined);
 }
 
 export class PebbleGenericSym
@@ -80,7 +80,7 @@ export class PebbleGenericSym
 {
     readonly name: string;
     readonly nTypeParameters: number;
-    getConcreteType: ( ...typeArgs: TirConcreteType[] ) => (TirConcreteType | undefined);
+    getConcreteType: ( ...typeArgs: TirType[] ) => (TirType | undefined);
 
     constructor({
         name,
@@ -100,8 +100,8 @@ export interface IPebbleFunctionSym extends IPebbleSym {
 }
 
 export interface IPebbleConcreteFuncOverload {
-    readonly params: TirConcreteType[];
-    readonly returnType: TirConcreteType;
+    readonly params: TirType[];
+    readonly returnType: TirType;
 }
 
 export class PebbleConcreteFunctionSym
@@ -123,8 +123,8 @@ export class PebbleConcreteFunctionSym
 export class PebbleConcreteFuncOverload
     implements IPebbleConcreteFuncOverload
 {
-    readonly params: TirConcreteType[];
-    readonly returnType: TirConcreteType;
+    readonly params: TirType[];
+    readonly returnType: TirType;
 
     constructor({
         params,
@@ -139,8 +139,8 @@ export class PebbleConcreteFuncOverload
 export interface IPebbleGenericFunctionSym extends IPebbleSym {
     readonly name: string;
     readonly typeParams: symbol[];
-    readonly params: (TirConcreteType | symbol)[];
-    readonly returnType: TirConcreteType | symbol;
+    readonly params: (TirType | symbol)[];
+    readonly returnType: TirType | symbol;
 }
 
 export class PebbleGenericFunctionSym
@@ -148,8 +148,8 @@ export class PebbleGenericFunctionSym
 {
     readonly name: string;
     readonly typeParams: symbol[];
-    readonly params: (TirConcreteType | symbol)[];
-    readonly returnType: TirConcreteType | symbol;
+    readonly params: (TirType | symbol)[];
+    readonly returnType: TirType | symbol;
 
     constructor({
         name,

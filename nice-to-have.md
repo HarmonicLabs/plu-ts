@@ -26,7 +26,7 @@
         b: bytes
     }
     ```
-- add `data` as struct modifier, to indicate only data encoding (error on non data-representable fields) (compatible with `untagged`)
+- add `data` as struct and enum modifier, to indicate only data encoding (error on non data-representable fields) (compatible with `untagged` in the case of structs)
     ```ts
     data struct MyThing {
         a: int,
@@ -36,11 +36,21 @@
         a: int,
         b: bytes
     }
+    data enum Ord {
+        Lt = -1,
+        Eq = 0,
+        Gt = 1
+    }
     ```
-- add `runtime` keyword as struct modifier, to indicate only SoP encoding (error on data operations)
+- add `runtime` keyword as struct and enum modifier, to indicate only SoP encoding (error on data operations)
     ```ts
     runtime struct MyThing {
         a: int,
         b: bytes
+    }
+    runtime enum Ord {
+        Lt, // cannot assign custom values in case of runtime enum
+        Eq,
+        Gt
     }
     ```

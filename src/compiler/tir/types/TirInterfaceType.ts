@@ -1,4 +1,4 @@
-import { TirConcreteType } from "./TirConcreteType";
+import { TirType } from "./TirType";
 
 export class TirInterfaceType
 {
@@ -27,8 +27,8 @@ export class TirInterfaceMethod
     constructor(
         public parentInterface: TirInterfaceType,
         readonly name: string,
-        readonly params: TirConcreteType[],
-        readonly returnType: TirConcreteType
+        readonly params: TirType[],
+        readonly returnType: TirType
     ) {}
 
     clone(): TirInterfaceMethod

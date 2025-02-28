@@ -1,5 +1,5 @@
 import { PEBBLE_INTERNAL_IDENTIFIER_PREFIX, PEBBLE_INTERNAL_IDENTIFIER_SEPARATOR } from "../../internalVar";
-import { TirConcreteCustomType, TirConcreteType } from "../../tir/types/TirConcreteType";
+import { TirCustomType, TirType } from "../../tir/types/TirType";
 import { IPebbleConcreteTypeSym, IPebbleGenericSym, IPebbleSym, PebbleAnyTypeSym, PebbleConcreteFunctionSym, PebbleConcreteTypeSym, PebbleGenericFunctionSym, PebbleGenericSym, PebbleSym, PebbleValueSym } from "./symbols/PebbleSym";
 import { TypeSymbolTable } from "./TypeSymbolTable";
 import { ValueSymbolTable } from "./ValueSymbolTable";
@@ -250,7 +250,7 @@ export class Scope
 function applyGenericType( 
     genericSym: PebbleGenericSym,
     argsSyms: PebbleConcreteTypeSym[]
-): TirConcreteType | undefined
+): TirType | undefined
 {
     if( argsSyms.length !== genericSym.nTypeParameters )
         return undefined;

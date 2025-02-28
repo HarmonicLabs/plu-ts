@@ -54,9 +54,9 @@ export class Source {
     /** Contained statements. */
     statements: PebbleStmt[];
     /** Source map index. */
-    debugInfoIndex: number = -1;
+    // debugInfoIndex: number = -1;
     /** Re-exported sources. */
-    exportPaths: string[] | undefined = undefined;
+    // exportPaths: string[] | undefined = undefined;
 
     /** Checks if this source represents native code. */
     isNative(): boolean {

@@ -76,6 +76,7 @@ import { ExprStmt } from "../ast/nodes/statements/ExprStmt";
 import { AstTypeExpr } from "../ast/nodes/types/AstTypeExpr";
 import { getInternalPath } from "../compiler/path/path";
 import { IsExpr } from "../ast/nodes/expr/IsExpr";
+import { hoistStatementsInplace } from "./hoistStatementsInplace";
 
 export class Parser extends DiagnosticEmitter
 {
@@ -143,6 +144,8 @@ export class Parser extends DiagnosticEmitter
             if( stmt ) src.statements.push( stmt );
             else this.skipStatement();
         }
+
+        hoistStatementsInplace( src.statements );
 
         return this.diagnostics;
     }
