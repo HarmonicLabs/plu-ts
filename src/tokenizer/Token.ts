@@ -65,7 +65,8 @@ export enum Token {
     Try,          
     Type,         // AS possible identifier
     // TypeOf,       
-    Undefined,    
+    Undefined,
+    Using,
     Var,          
     Void,         
     While,        
@@ -194,11 +195,17 @@ export enum Token {
 
     // custom native types for pebble
 
+    Data,       // data (both type and struct modifier)
     Bytes,      // bytes
     Optional,   // Optional<T>
     List,       // List<T>
     LinearMap,  // LinearMap<K,V> 
-  
+
+    // struct decl modifiers
+
+    Tagged,     // `tagged` data struct
+    Runtime,    // `runtime` struct (SoP encoding)
+    
     // literals
   
     Identifier,

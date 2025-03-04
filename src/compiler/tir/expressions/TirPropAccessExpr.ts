@@ -5,6 +5,8 @@ import { Identifier } from "../../../ast/nodes/common/Identifier";
 import { HasSourceRange } from "../../../ast/nodes/HasSourceRange";
 import { SourceRange } from "../../../ast/Source/SourceRange";
 import { TirCallExpr } from "./TirCallExpr";
+import { ITirExpr } from "./ITirExpr";
+import { TirType } from "../types/TirType";
 
 export type TirPropAccessExpr
     = TirOptionalPropAccessExpr
@@ -34,31 +36,34 @@ export function isTirPropAccessExpr( thing: any ): thing is TirPropAccessExpr
 }
 
 export class TirOptionalPropAccessExpr
-    implements HasSourceRange
+    implements ITirExpr
 {
     constructor(
         readonly object: TirExpr,
         readonly prop: Identifier | TirCallExpr,
+        readonly type: TirType,
         readonly range: SourceRange
     ) {}
 }
 
 export class TirNonNullPropAccessExpr
-    implements HasSourceRange
+    implements ITirExpr
 {
     constructor(
         readonly object: TirExpr,
         readonly prop: Identifier | TirCallExpr,
+        readonly type: TirType,
         readonly range: SourceRange
     ) {}
 }
 
 export class TirDotPropAccessExpr
-    implements HasSourceRange
+    implements ITirExpr
 {
     constructor(
         readonly object: TirExpr,
         readonly prop: Identifier | TirCallExpr,
+        readonly type: TirType,
         readonly range: SourceRange
     ) {}
 }

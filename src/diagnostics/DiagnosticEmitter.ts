@@ -3,6 +3,7 @@ import { SourceRange } from "../ast/Source/SourceRange";
 import { assert } from "../utils/assert";
 import { DiagnosticCode, DiagnosticCategory } from "./DiagnosticCategory";
 import { DiagnosticMessage } from "./DiagnosticMessage";
+import { HasOwnToString } from "./utils/types";
 
 /** Base class of all diagnostic emitters. */
 export abstract class DiagnosticEmitter {
@@ -24,14 +25,14 @@ export abstract class DiagnosticEmitter {
     }
 
     /** Emits a diagnostic message of the specified category. */
-    emitDiagnostic(
+    emitDiagnostic<A,B,C>(
         code: DiagnosticCode,
         category: DiagnosticCategory,
         range: SourceRange | undefined,
         relatedRange: SourceRange | undefined,
-        arg0: string | undefined = undefined,
-        arg1: string | undefined = undefined,
-        arg2: string | undefined = undefined
+        arg0: string | HasOwnToString<A> | undefined = undefined,
+        arg1: string | HasOwnToString<B> | undefined = undefined,
+        arg2: string | HasOwnToString<C> | undefined = undefined
     ): void
     {
         const originalStackLimit = Error.stackTraceLimit;
@@ -142,12 +143,12 @@ export abstract class DiagnosticEmitter {
     }
 
     /** Emits an error diagnostic message. */
-    error(
+    error<A,B,C>(
         code: DiagnosticCode,
         range: SourceRange | undefined,
-        arg0: string | undefined = undefined,
-        arg1: string | undefined = undefined,
-        arg2: string | undefined = undefined
+        arg0: string | HasOwnToString<A> | undefined = undefined,
+        arg1: string | HasOwnToString<B> | undefined = undefined,
+        arg2: string | HasOwnToString<C> | undefined = undefined
     ): undefined
     {
         this.emitDiagnostic(code, DiagnosticCategory.Error, range, undefined, arg0, arg1, arg2);

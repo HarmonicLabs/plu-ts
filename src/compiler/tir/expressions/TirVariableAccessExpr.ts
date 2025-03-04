@@ -1,16 +1,12 @@
-import { HasSourceRange } from "../../../ast/nodes/HasSourceRange";
 import { SourceRange } from "../../../ast/Source/SourceRange";
 import { TirType } from "../types/TirType";
 import { ITirExpr } from "./ITirExpr";
-import { TirExpr } from "./TirExpr";
 
-export class TirTernaryExpr
+export class TirVariableAccessExpr
     implements ITirExpr
 {
     constructor(
-        readonly condition: TirExpr,
-        readonly ifTrue: TirExpr,
-        readonly ifFalse: TirExpr,
+        readonly name: string,
         readonly type: TirType,
         readonly range: SourceRange
     ) {}

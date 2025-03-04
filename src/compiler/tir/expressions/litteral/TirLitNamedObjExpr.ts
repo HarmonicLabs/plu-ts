@@ -3,7 +3,7 @@ import { ITirExpr } from "../ITirExpr";
 import { SourceRange } from "../../../../ast/Source/SourceRange";
 import { TirExpr } from "../TirExpr";
 import { ITirLitObjExpr } from "./TirLitObjExpr";
-import { PebbleConcreteTypeSym } from "../../../AstCompiler/scope/symbols/PebbleSym";
+import { TirType } from "../../types/TirType";
 
 export class TirLitNamedObjExpr
     implements ITirExpr, ITirLitObjExpr
@@ -12,7 +12,7 @@ export class TirLitNamedObjExpr
         readonly name: Identifier,
         readonly fieldNames: Identifier[],
         readonly values: TirExpr[],
-        readonly type: PebbleConcreteTypeSym,
+        readonly type: TirType,
         readonly range: SourceRange
     ) {}
 }

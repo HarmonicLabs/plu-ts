@@ -1,12 +1,15 @@
 import { SourceRange } from "../../Source/SourceRange";
 import { HasSourceRange } from "../HasSourceRange";
-import { PebbleExpr } from "./PebbleExpr";
+import { PebbleExpr } from "../expr/PebbleExpr";
 
-export class CommaExpr
+/**
+ * both `--i` and `i--`
+ */
+export class DecrStmt
     implements HasSourceRange
 {
     constructor(
-        readonly exprs: PebbleExpr[],
+        readonly operandVarName: PebbleExpr,
         readonly range: SourceRange
     ) {}
 }

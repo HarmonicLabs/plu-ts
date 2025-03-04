@@ -1,3 +1,4 @@
+import { getAppliedTypeInternalName } from "../../AstCompiler/scope/Scope";
 import { TirInterfaceImpl } from "./TirInterfaceImpl";
 import { TirType } from "./TirType";
 
@@ -11,6 +12,13 @@ export class TirAliasType<AliasedT extends  TirType = TirType>
 
     toString(): string {
         return this.name;
+    }
+
+    toInternalName(): string {
+        return getAppliedTypeInternalName(
+            "Alias",
+            [ this.aliased.toInternalName() ]
+        );
     }
 
     private _isConcrete: boolean | undefined = undefined;

@@ -7,7 +7,7 @@ import { AstTypeExpr } from "./AstTypeExpr";
 export type AstNativeTypeExpr
     = AstVoidType
     | AstBooleanType
-    | AstNumberType
+    | AstIntType
     | AstBytesType
 
     | AstNativeOptionalType<AstTypeExpr>
@@ -24,7 +24,7 @@ export function isAstNativeTypeExpr( thing: any ): thing is AstNativeTypeExpr
     return (
         thing instanceof AstVoidType
         || thing instanceof AstBooleanType
-        || thing instanceof AstNumberType
+        || thing instanceof AstIntType
         || thing instanceof AstBytesType
         || thing instanceof AstNativeOptionalType
         || thing instanceof AstListType
@@ -49,7 +49,7 @@ export class AstBooleanType implements HasSourceRange
     ) {}
 }
 
-export class AstNumberType implements HasSourceRange
+export class AstIntType implements HasSourceRange
 {
     constructor(
         readonly range: SourceRange

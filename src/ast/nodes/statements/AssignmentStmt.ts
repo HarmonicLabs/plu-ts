@@ -9,17 +9,20 @@ import { HasSourceRange } from "../HasSourceRange";
 // | AssignmentPattern
 export type AssignmentStmt
     = SimpleAssignmentStmt
+    // int
     | AddAssignmentStmt
     | SubAssignmentStmt
     | ExpAssignmentStmt
     | MultAssignmentStmt
     | DivAssignmentStmt
     | ModuloAssignmentStmt
+    // bytes
     | ShiftLeftAssignmentStmt
     | ShiftRightAssignmentStmt
     | BitwiseAndAssignmentStmt
     | BitwiseXorAssignmentStmt
     | BitwiseOrAssignmentStmt
+    // boolean
     | LogicalAndAssignmentStmt
     | LogicalOrAssignmentStmt
     ;

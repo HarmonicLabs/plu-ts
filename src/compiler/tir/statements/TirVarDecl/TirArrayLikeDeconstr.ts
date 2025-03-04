@@ -1,21 +1,18 @@
 import { HasSourceRange } from "../../../../ast/nodes/HasSourceRange";
 import { SourceRange } from "../../../../ast/Source/SourceRange";
-import { CommonFlags } from "../../../../common";
 import { TirExpr } from "../../expressions/TirExpr";
 import { TirType } from "../../types/TirType";
 import { TirVarDecl } from "./TirVarDecl";
 
-export class TirNamedDeconstructVarDecl
+export class TirArrayLikeDeconstr
     implements HasSourceRange
 {
     constructor(
-        /** only original (not aliased) constr name used in destructuring */
-        readonly constrName: string,
-        readonly fields: Map<string, TirVarDecl>,
+        readonly elements: TirVarDecl[],
         readonly rest: string | undefined,
-        readonly type: TirType,
+        public type: TirType,
         readonly initExpr: TirExpr | undefined,
-        public flags: CommonFlags,
+        public flags: number,
         readonly range: SourceRange,
     ) {}
 }

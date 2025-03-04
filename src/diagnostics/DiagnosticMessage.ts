@@ -5,6 +5,7 @@ import { setColorsEnabled, isColorsEnabled, COLOR_RESET, COLOR_RED } from "../ut
 import { isLineBreak, isWhiteSpace } from "../utils/text";
 import { DiagnosticCategory, DiagnosticCode, diagnosticCategoryToString, diagnosticCategoryToColor } from "./DiagnosticCategory";
 import { diagnosticCodeToString } from "./diagnosticMessages.generated";
+import { HasOwnToString } from "./utils/types";
 
 /** Represents a diagnostic message. */
 export class DiagnosticMessage {
@@ -37,18 +38,23 @@ export class DiagnosticMessage {
     }
 
     /** Creates a new diagnostic message of the specified category. */
-    static create(
+    static create<A, B, C>(
         code: DiagnosticCode,
         category: DiagnosticCategory,
-        arg0: string | undefined = undefined,
-        arg1: string | undefined = undefined,
-        arg2: string | undefined = undefined,
+        arg0: string | HasOwnToString<A> | undefined = undefined,
+        arg1: string | HasOwnToString<B> | undefined = undefined,
+        arg2: string | HasOwnToString<C> | undefined = undefined,
         emitStack: string | undefined = undefined
     ): DiagnosticMessage {
         let message = diagnosticCodeToString(code);
-        if (arg0 !== undefined) message = message.replace("{0}", arg0);
-        if (arg1 !== undefined) message = message.replace("{1}", arg1);
-        if (arg2 !== undefined) message = message.replace("{2}", arg2);
+
+        if( typeof arg0 !== "string" && arg0 !== undefined) arg0 = arg0.toString();
+        if( typeof arg1 !== "string" && arg1 !== undefined) arg1 = arg1.toString();
+        if( typeof arg2 !== "string" && arg2 !== undefined) arg2 = arg2.toString();
+
+        if( typeof arg0 === "string" ) message = message.replace("{0}", arg0);
+        if( typeof arg1 === "string" ) message = message.replace("{1}", arg1);
+        if( typeof arg2 === "string" ) message = message.replace("{2}", arg2);
         return new DiagnosticMessage(code, category, message, emitStack);
     }
 

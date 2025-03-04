@@ -1,8 +1,6 @@
 import { SourceRange } from "../../../Source/SourceRange";
 import { Identifier } from "../../common/Identifier";
 import { HasSourceRange } from "../../HasSourceRange";
-import { AstNamedTypeExpr } from "../../types/AstNamedTypeExpr";
-import { AstTypeExpr } from "../../types/AstTypeExpr";
 import { VarDecl } from "./VarDecl/VarDecl";
 
 

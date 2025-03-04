@@ -7,6 +7,7 @@ import { StructFlags, TirStructConstr, TirStructField, TirStructType } from "../
 import { TirInterfaceImpl } from "../../../tir/types/TirInterfaceImpl";
 import { TirInterfaceMethod, TirInterfaceType } from "../../../tir/types/TirInterfaceType";
 import { CommonFlags } from "../../../../common";
+import { TirTypeParam } from "../../../tir/types/TirTypeParam";
 
 
 /**
@@ -16,47 +17,47 @@ import { CommonFlags } from "../../../../common";
 export const stdScope = new Scope( undefined );
 
 export const void_t = new TirVoidT();
-stdScope.defineType(
-    new PebbleConcreteTypeSym({
-        name: "void",
-        concreteType: void_t,
-    })
-);
+export const void_sym = new PebbleConcreteTypeSym({
+    name: "void",
+    concreteType: void_t,
+});
+stdScope.defineType( void_sym );
+
 export const bool_t = new TirBoolT();
-stdScope.defineType(
-    new PebbleConcreteTypeSym({
-        name: "boolean",
-        concreteType: bool_t,
-    })
-);
+export const bool_sym = new PebbleConcreteTypeSym({
+    name: "boolean",
+    concreteType: bool_t,
+});
+stdScope.defineType( bool_sym );
+
 export const int_t = new TirIntT();
-stdScope.defineType(
-    new PebbleConcreteTypeSym({
-        name: "int",
-        concreteType: int_t,
-    })
-);
+export const int_sym = new PebbleConcreteTypeSym({
+    name: "int",
+    concreteType: int_t,
+});
+stdScope.defineType( int_sym );
+
 export const bytes_t = new TirBytesT();
-stdScope.defineType(
-    new PebbleConcreteTypeSym({
-        name: "bytes",
-        concreteType: bytes_t
-    })
-);
+export const bytes_sym = new PebbleConcreteTypeSym({
+    name: "bytes",
+    concreteType: bytes_t
+});
+stdScope.defineType( bytes_sym );
+
 export const string_t = new TirStringT();
-stdScope.defineType(
-    new PebbleConcreteTypeSym({
-        name: "string",
-        concreteType: string_t
-    })
-);
+export const string_sym = new PebbleConcreteTypeSym({
+    name: "string",
+    concreteType: string_t
+});
+stdScope.defineType( string_sym );
+
 export const data_t = new TirDataT();
-stdScope.defineType(
-    new PebbleConcreteTypeSym({
-        name: "data",
-        concreteType: data_t
-    })
-);
+export const data_sym = new PebbleConcreteTypeSym({
+    name: "data",
+    concreteType: data_t
+});
+stdScope.defineType( data_sym );
+export const any_optional_t = new TirOptT( new TirTypeParam() );
 stdScope.defineType(
     new PebbleGenericSym({
         name: "Optional",
@@ -68,6 +69,7 @@ stdScope.defineType(
         },
     })
 );
+export const any_list_t = new TirListT( new TirTypeParam() );
 stdScope.defineType(
     new PebbleGenericSym({
         name: "List",
@@ -79,6 +81,7 @@ stdScope.defineType(
         },
     })
 );
+export const any_linearMap_t = new TirLinearMapT( new TirTypeParam(), new TirTypeParam() );
 stdScope.defineType(
     new PebbleGenericSym({
         name: "LinearMap",
@@ -271,7 +274,7 @@ export const txOutRef_t = mkSingleConstructorStruct(
     "TxOutRef", {
         id: txHash_t,
         index: int_t
-    }, StructFlags.onlyData
+    }, StructFlags.onlyData | StructFlags.taggedDataEncoding
 );
 preludeScope.defineType(
     new PebbleConcreteTypeSym({
@@ -291,7 +294,7 @@ export const credential_t = mkMultiConstructorStruct(
         Script: {
             hash: scriptHash_t
         }
-    }, StructFlags.onlyData
+    }, StructFlags.onlyData | StructFlags.taggedDataEncoding
 );
 // TODO: 
 // understand how to describe function impls
@@ -340,7 +343,7 @@ export const rational_t = mkSingleConstructorStruct(
     "Rational", {
         numerator: int_t,
         denominator: int_t
-    }, StructFlags.onlyData
+    }, StructFlags.onlyData | StructFlags.taggedDataEncoding
 );
 preludeScope.defineType(
     new PebbleConcreteTypeSym({
@@ -356,7 +359,7 @@ export const protocolVersion_t = mkSingleConstructorStruct(
     "ProtocolVersion", {
         major: int_t,
         minor: int_t
-    }, StructFlags.onlyData
+    }, StructFlags.onlyData | StructFlags.taggedDataEncoding
 );
 preludeScope.defineType(
     new PebbleConcreteTypeSym({
@@ -375,7 +378,7 @@ if(!opt_scriptHash_sym) throw new Error("expected opt_scriptHash_sym");
 export const constitutionInfo_t = mkSingleConstructorStruct(
     "ConstitutionInfo", {
         consitutionScriptHash: opt_scriptHash_sym.concreteType.clone()
-    }, StructFlags.None
+    }, StructFlags.onlyData | StructFlags.taggedDataEncoding
 );
 preludeScope.defineType(
     new PebbleConcreteTypeSym({
@@ -456,7 +459,7 @@ export const govAction_t = mkMultiConstructorStruct(
             info: constitutionInfo_t.clone()
         },
         InfoAction: {}
-    }, StructFlags.onlyData
+    }, StructFlags.onlyData | StructFlags.taggedDataEncoding
 );
 preludeScope.defineType(
     new PebbleConcreteTypeSym({
@@ -474,7 +477,7 @@ export const proposalProcedure_t = mkSingleConstructorStruct(
         deposit: int_t,
         credential: credential_t.clone(),
         action: govAction_t.clone()
-    }, StructFlags.onlyData
+    }, StructFlags.onlyData | StructFlags.taggedDataEncoding
 );
 preludeScope.defineType(
     new PebbleConcreteTypeSym({
@@ -504,7 +507,7 @@ export const voter_t = mkMultiConstructorStruct(
         StakePool: {
             pubKeyHash: pubKeyHash_t.clone()
         }
-    }, StructFlags.onlyData
+    }, StructFlags.onlyData | StructFlags.taggedDataEncoding
 );
 preludeScope.defineType(
     new PebbleConcreteTypeSym({
@@ -554,7 +557,7 @@ export const scriptPurpose_t = mkMultiConstructorStruct(
             index: int_t,
             proposal: proposalProcedure_t.clone()
         }
-    }, StructFlags.onlyData
+    }, StructFlags.onlyData | StructFlags.taggedDataEncoding
 );
 preludeScope.defineType(
     new PebbleConcreteTypeSym({
@@ -611,7 +614,7 @@ export const scriptInfo_t = mkMultiConstructorStruct(
             index: int_t,
             proposal: proposalProcedure_t.clone()
         }
-    }, StructFlags.onlyData
+    }, StructFlags.onlyData | StructFlags.taggedDataEncoding
 );
 preludeScope.defineType(
     new PebbleConcreteTypeSym({
@@ -637,7 +640,7 @@ export const stakeCredential_t = mkMultiConstructorStruct(
             b: int_t,
             c: int_t
         }
-    }, StructFlags.onlyData
+    }, StructFlags.onlyData | StructFlags.taggedDataEncoding
 );
 preludeScope.defineType(
     new PebbleConcreteTypeSym({
@@ -658,7 +661,7 @@ export const address_t = mkSingleConstructorStruct(
     "Address", {
         payment: credential_t.clone(),
         stake: opt_stakeCredential_sym.concreteType.clone()
-    }, StructFlags.onlyData
+    }, StructFlags.onlyData | StructFlags.taggedDataEncoding
 );
 preludeScope.defineType(
     new PebbleConcreteTypeSym({
@@ -717,7 +720,7 @@ export const outputDatum_t = mkMultiConstructorStruct(
         InlineDatum: {
             datum: data_t.clone()
         }
-    }, StructFlags.onlyData
+    }, StructFlags.onlyData | StructFlags.taggedDataEncoding
 );
 preludeScope.defineType(
     new PebbleConcreteTypeSym({
@@ -737,7 +740,7 @@ export const txOut_t = mkSingleConstructorStruct(
         value: value_t.clone(),
         datum: outputDatum_t.clone(),
         referenceScript: opt_scriptHash_sym.concreteType.clone()
-    }, StructFlags.onlyData
+    }, StructFlags.onlyData | StructFlags.taggedDataEncoding
 );
 preludeScope.defineType(
     new PebbleConcreteTypeSym({
@@ -753,7 +756,7 @@ export const txIn_t = mkSingleConstructorStruct(
     "TxIn", {
         txOutRef: txOutRef_t.clone(),
         resolved: txOut_t.clone()
-    }, StructFlags.onlyData
+    }, StructFlags.onlyData | StructFlags.taggedDataEncoding
 );
 preludeScope.defineType(
     new PebbleConcreteTypeSym({
@@ -773,7 +776,7 @@ export const extendedInteger_t = mkMultiConstructorStruct(
             n: int_t.clone()
         },
         PosInf: {}
-    }, StructFlags.None
+    }, StructFlags.taggedDataEncoding
 );
 preludeScope.defineType(
     new PebbleConcreteTypeSym({
@@ -789,7 +792,7 @@ export const intervalBoundary_t = mkSingleConstructorStruct(
     "IntervalBoundary", {
         boundary: extendedInteger_t.clone(),
         isInclusive: bool_t.clone()
-    }, StructFlags.None
+    }, StructFlags.taggedDataEncoding
 );
 preludeScope.defineType(
     new PebbleConcreteTypeSym({
@@ -805,7 +808,7 @@ export const interval_t = mkSingleConstructorStruct(
     "Interval", {
         from: intervalBoundary_t.clone(),
         to: intervalBoundary_t.clone()
-    }, StructFlags.None
+    }, StructFlags.taggedDataEncoding
 );
 preludeScope.defineType(
     new PebbleConcreteTypeSym({
@@ -823,7 +826,7 @@ export const vote_t = mkMultiConstructorStruct(
         No: {},
         Yes: {},
         Abstain: {}
-    }, StructFlags.onlyData
+    }, StructFlags.onlyData | StructFlags.taggedDataEncoding
 );
 preludeScope.defineType(
     new PebbleConcreteTypeSym({
@@ -851,7 +854,7 @@ export const delegatee_t = mkMultiConstructorStruct(
             poolKeyHash: pubKeyHash_t.clone(),
             drep: credential_t.clone()
         }
-    }, StructFlags.onlyData
+    }, StructFlags.onlyData | StructFlags.taggedDataEncoding
 );
 preludeScope.defineType(
     new PebbleConcreteTypeSym({
@@ -952,7 +955,7 @@ export const certificate_t = mkMultiConstructorStruct(
             hot: credential_t.clone()
         },
         CommitteeResignation: { cold: credential_t.clone() }
-    }, StructFlags.onlyData
+    }, StructFlags.onlyData | StructFlags.taggedDataEncoding
 );
 preludeScope.defineType(
     new PebbleConcreteTypeSym({
@@ -1041,7 +1044,7 @@ export const tx_t = mkSingleConstructorStruct(
         proposals: list_proposalProcedure_sym.concreteType.clone(),
         currentTreasury: opt_int_sym.concreteType.clone(),
         treasuryDonation: opt_int_sym.concreteType.clone()
-    }, StructFlags.onlyData
+    }, StructFlags.onlyData | StructFlags.taggedDataEncoding
 );
 preludeScope.defineType(
     new PebbleConcreteTypeSym({
@@ -1049,7 +1052,7 @@ preludeScope.defineType(
         concreteType: tx_t
     })
 );
-// export struct ScriptContext {
+// export tagged data struct ScriptContext {
 //     tx: Tx,
 //     redeemer: data,
 //     purpose: ScriptInfo
@@ -1059,7 +1062,7 @@ export const scriptContext_t = mkSingleConstructorStruct(
         tx: tx_t.clone(),
         redeemer: data_t.clone(),
         purpose: scriptInfo_t.clone()
-    }, StructFlags.onlyData
+    }, StructFlags.onlyData | StructFlags.taggedDataEncoding
 );
 preludeScope.defineType(
     new PebbleConcreteTypeSym({

@@ -7,7 +7,7 @@ export class TirFailStmt
 {
     constructor(
         /** must be string (or utf8 bytes) */
-        readonly value: TirExpr | undefined,
+        readonly failMsgExpr: TirExpr | undefined,
         readonly range: SourceRange,
     ) {}
 }

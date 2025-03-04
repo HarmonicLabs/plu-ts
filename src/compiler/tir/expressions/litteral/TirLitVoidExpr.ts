@@ -1,14 +1,11 @@
 import { SourceRange } from "../../../../ast/Source/SourceRange";
-import { PebbleConcreteTypeSym } from "../../../AstCompiler/scope/symbols/PebbleSym";
-import { TirVoidT } from "../../types/TirNativeType";
+import { void_t } from "../../../AstCompiler/scope/stdScope/stdScope";
+import { TirType } from "../../types/TirType";
 import { ITirExpr } from "../ITirExpr";
 
 export class TirLitVoidExpr implements ITirExpr
 {
-    readonly type: PebbleConcreteTypeSym = new PebbleConcreteTypeSym({
-        name: "void",
-        concreteType: new TirVoidT(),
-    });
+    readonly type: TirType = void_t;
     constructor(
         readonly range: SourceRange
     ) {}

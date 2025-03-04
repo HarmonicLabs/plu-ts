@@ -1,19 +1,19 @@
-import { ITirExpr } from "./ITirExpr";
-import { TirLitteralExpr } from "./litteral/TirLitteralExpr";
+import { isObject } from "@harmoniclabs/obj-utils";
+import { isTirLitteralExpr, TirLitteralExpr } from "./litteral/TirLitteralExpr";
 import { TirCallExpr } from "./TirCallExpr";
 import { TirCaseExpr } from "./TirCaseExpr";
 import { TirElemAccessExpr } from "./TirElemAccessExpr";
 import { TirFuncExpr } from "./TirFuncExpr";
 import { TirIsExpr } from "./TirIsExpr";
 import { TirParentesizedExpr } from "./TirParentesizedExpr";
-import { TirPropAccessExpr } from "./TirPropAccessExpr";
+import { isTirPropAccessExpr, TirPropAccessExpr } from "./TirPropAccessExpr";
 import { TirTernaryExpr } from "./TirTernaryExpr";
-import { TirUnaryPostfixExpr } from "./unary/TirUnaryPostfixExpr";
-import { TirUnaryPrefixExpr } from "./unary/TirUnaryPrefixExpr";
+import { isTirUnaryPrefixExpr, TirUnaryPrefixExpr } from "./unary/TirUnaryPrefixExpr";
+import { isTirBinaryExpr, TirBinaryExpr } from "./binary/TirBinaryExpr";
+import { TirVariableAccessExpr } from "./TirVariableAccessExpr";
 
 export type TirExpr
     =( TirUnaryPrefixExpr
-    | TirUnaryPostfixExpr
     | TirLitteralExpr
     | TirParentesizedExpr
     | TirFuncExpr
@@ -22,8 +22,27 @@ export type TirExpr
     | TirIsExpr // ( purpose is Spending )
     | TirElemAccessExpr // arr[idx]
     | TirTernaryExpr
-    // | TirCommaExpr // comma expressions removed at compilation from AST (keep side-effects only)
     | TirPropAccessExpr
+    | TirBinaryExpr
+    | TirVariableAccessExpr
     )
-    & ITirExpr
+    // & ITirExpr
     ;
+
+export function isTirExpr( thing: any ): thing is TirExpr
+{
+    return isObject( thing ) && (
+        isTirUnaryPrefixExpr( thing )
+        || isTirLitteralExpr( thing )
+        || thing instanceof TirParentesizedExpr
+        || thing instanceof TirFuncExpr
+        || thing instanceof TirCallExpr
+        || thing instanceof TirCaseExpr
+        || thing instanceof TirIsExpr
+        || thing instanceof TirElemAccessExpr
+        || thing instanceof TirTernaryExpr
+        || isTirPropAccessExpr( thing )
+        || isTirBinaryExpr( thing )
+        || thing instanceof TirVariableAccessExpr
+    );
+}

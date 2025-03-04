@@ -1,15 +1,12 @@
 import { ITirExpr } from "../ITirExpr";
 import { SourceRange } from "../../../../ast/Source/SourceRange";
-import { PebbleConcreteTypeSym } from "../../../AstCompiler/scope/symbols/PebbleSym";
-import { TirBytesT } from "../../types/TirNativeType";
+import { TirType } from "../../types/TirType";
+import { bytes_t } from "../../../AstCompiler/scope/stdScope/stdScope";
 
 export class TirLitStrExpr
     implements ITirExpr
 {
-    readonly type: PebbleConcreteTypeSym = new PebbleConcreteTypeSym({
-        name: "bytes",
-        concreteType: new TirBytesT()
-    });
+    readonly type: TirType = bytes_t
     
     constructor(
         readonly string: string,

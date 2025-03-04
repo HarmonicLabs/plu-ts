@@ -59,6 +59,23 @@ export enum DiagnosticCode {
     A_field_in_a_deconstructed_declaration_cannot_have_an_explicit_type_did_you_mean_to_cast_using_the_as_keyword = 243,
     Object_literal_expected = 244,
     Initialization_expressions_are_not_allowed_in_a_struct_declaration = 245,
+    Empty_array_litteral_must_be_explicitly_cast_to_a_type = 246,
+    Cannot_infer_type_for_empty_array_litteral = 247,
+    Litteral_value_undefined_must_be_explicitly_cast_to_an_Optional_type = 248,
+    Unnamed_object_litteral_must_be_explicitly_cast_to_a_type = 249,
+    Unnamed_object_litteral_does_not_match_0_struct_definition = 250,
+    Unnamed_object_litteral_is_not_assignable_to_0_An_explicit_constrctor_must_be_used = 251,
+    Unnamed_object_litteral_is_not_assignable_to_0 = 252,
+    Unnamed_object_litteral_is_not_assignable_to_0_The_fields_do_not_match_the_the_type_definition = 253,
+    Field_0_is_not_part_of_the_1_constructor_for_2_struct = 254,
+    Field_0_is_missing_but_required_by_the_1_constructor_of_the_2_struct = 254,
+    Named_object_litteral_is_not_assignable_to_0 = 255,
+    _0_is_not_defined = 256,
+    Cannot_infer_struct_type_from_constructor_0_Declare_it_with_a_using_keyword_declaration = 257,
+    Constructor_0_aliased_as_1_is_not_part_of_the_2_definition = 258,
+    Deconstructing_0_requires_the_name_of_the_constructor = 259,
+    Construcotr_0_is_not_part_of_the_definiton_of_1 = 260,
+    Invalid_rest_parameter_there_are_no_more_fields = 261,
     Importing_the_table_disables_some_indirect_call_optimizations = 901,
     Exporting_the_table_disables_some_indirect_call_optimizations = 902,
     Expression_compiles_to_a_dynamic_check_at_runtime = 903,
@@ -92,8 +109,8 @@ export enum DiagnosticCode {
     A_set_accessor_cannot_have_a_return_type_annotation = 1095,
     Type_parameter_list_cannot_be_empty = 1098,
     Type_argument_list_cannot_be_empty = 1099,
-    A_continue_statement_can_only_be_used_within_an_enclosing_iteration_statement = 1104,
-    A_break_statement_can_only_be_used_within_an_enclosing_iteration_or_switch_statement = 1105,
+    A_continue_statement_can_only_be_used_within_a_loop = 1104,
+    A_break_statement_can_only_be_used_within_a_loop = 1105,
     A_return_statement_can_only_be_used_within_a_function_body = 1108,
     Expression_expected = 1109,
     Type_expected = 1110,
@@ -154,6 +171,20 @@ export enum DiagnosticCode {
     Invalid_field_declaration = 1375,
     Field_declarations_must_be_typed = 1376,
     Type_parameters_must_be_identifiers = 1377,
+    Invalid_for_statement_update = 1378,
+    The_argument_of_a_for_of_statement_must_be_an_iterable = 1379,
+    A_fail_statement_can_only_be_used_within_a_function_body = 1380,
+    An_assert_statement_can_only_be_used_within_a_function_body = 1381,
+    A_test_statement_can_only_be_used_outside_a_function = 1382,
+    A_match_statement_can_only_be_used_within_a_function_body = 1383,
+    A_value_of_type_0_cannot_be_deconstructed = 1384,
+    The_argument_of_a_match_statement_branch_must_be_deconstructed = 1385,
+    A_value_of_type_0_cannot_be_deconstructed_by_named_object = 1385,
+    A_value_of_type_0_cannot_be_deconstructed_as_unnamed_object = 1386,
+    A_value_of_type_0_has_multiple_constructors = 1387,
+    Unknown_0_constructor_1 = 1388,
+    Constructor_0_was_already_specified = 1389,
+    A_value_of_type_0_cannot_be_deconstructed_as_an_array = 1390,
     Duplicate_identifier_0 = 2300,
     Cannot_find_name_0 = 2304,
     Module_0_has_no_exported_member_1 = 2305,
@@ -205,7 +236,7 @@ export enum DiagnosticCode {
     Cannot_create_an_instance_of_an_abstract_class = 2511,
     Non_abstract_class_0_does_not_implement_inherited_abstract_member_1_from_2 = 2515,
     Object_is_possibly_null = 2531,
-    Cannot_assign_to_0_because_it_is_a_constant_or_a_read_only_property = 2540,
+    Cannot_assign_to_0_because_it_is_a_constant = 2540,
     The_target_of_an_assignment_must_be_a_variable = 2541,
     Index_signature_in_type_0_only_permits_reading = 2542,
     Expected_0_arguments_but_got_1 = 2554,
@@ -302,6 +333,23 @@ export function diagnosticCodeToString(code: DiagnosticCode): string {
         case 243: return "A field in a deconstructed declaration cannot have an explicit type; did you mean to cast using the 'as' keyword?";
         case 244: return "Object literal expected";
         case 245: return "Initialization expressions are not allowed in a struct declaration";
+        case 246: return "Empty array litteral must be explicitly cast to a type.";
+        case 247: return "Cannot infer type for empty array litteral.";
+        case 248: return "Litteral value undefined must be explicitly cast to an Optional type.";
+        case 249: return "Unnamed object litteral must be explicitly cast to a type.";
+        case 250: return "Unnamed object litteral does not match '{0}' struct definition.";
+        case 251: return "Unnamed object litteral is not assignable to {0}. An explicit constrctor must be used.";
+        case 252: return "Unnamed object litteral is not assignable to {0}.";
+        case 253: return "Unnamed object litteral is not assignable to {0}. The fields do not match the the type definition.";
+        case 254: return "Field '{0}' is not part of the '{1}' constructor for '{2}' struct.";
+        case 254: return "Field '{0}' is missing, but required by the '{1}' constructor of the '{2}' struct.";
+        case 255: return "Named object litteral is not assignable to {0}.";
+        case 256: return "'{0}' is not defined";
+        case 257: return "Cannot infer struct type from constructor '{0}'. Declare it with a 'using' keyword declaration.";
+        case 258: return "Constructor '{0}', aliased as '{1}', is not part of the '{2}' definition.";
+        case 259: return "Deconstructing '{0}' requires the name of the constructor.";
+        case 260: return "Construcotr '{0}' is not part of the definiton of '{1}'.";
+        case 261: return "Invalid rest parameter, there are no more fields.";
         case 901: return "Importing the table disables some indirect call optimizations.";
         case 902: return "Exporting the table disables some indirect call optimizations.";
         case 903: return "Expression compiles to a dynamic check at runtime.";
@@ -335,8 +383,8 @@ export function diagnosticCodeToString(code: DiagnosticCode): string {
         case 1095: return "A 'set' accessor cannot have a return type annotation.";
         case 1098: return "Type parameter list cannot be empty.";
         case 1099: return "Type argument list cannot be empty.";
-        case 1104: return "A 'continue' statement can only be used within an enclosing iteration statement.";
-        case 1105: return "A 'break' statement can only be used within an enclosing iteration or switch statement.";
+        case 1104: return "A 'continue' statement can only be used within a loop.";
+        case 1105: return "A 'break' statement can only be used within a loop.";
         case 1108: return "A 'return' statement can only be used within a function body.";
         case 1109: return "Expression expected.";
         case 1110: return "Type expected.";
@@ -394,9 +442,23 @@ export function diagnosticCodeToString(code: DiagnosticCode): string {
         case 1372: return "Cases in a 'match' statement must be followed by other statements";
         case 1373: return "Variable declaration must have an initializer";
         case 1374: return "Deconstructed elements may not have initializers or explicit types";
-        case 1375: return "Invalid field declaration";
-        case 1376: return "Field declarations must be typed";
-        case 1377: return "Type parameters must be identifiers";
+        case 1375: return "Invalid field declaration.";
+        case 1376: return "Field declarations must be typed.";
+        case 1377: return "Type parameters must be identifiers.";
+        case 1378: return "Invalid for statement update.";
+        case 1379: return "The argument of a for...of statement must be an iterable.";
+        case 1380: return "A 'fail' statement can only be used within a function body.";
+        case 1381: return "An 'assert' statement can only be used within a function body.";
+        case 1382: return "A 'test' statement can only be used outside a function.";
+        case 1383: return "A 'match' statement can only be used within a function body.";
+        case 1384: return "A value of type '{0}' cannot be deconstructed.";
+        case 1385: return "The argument of a 'match' statement branch must be deconstructed.";
+        case 1385: return "A value of type '{0}' cannot be deconstructed by named object.";
+        case 1386: return "A value of type '{0}' cannot be deconstructed as unnamed object.";
+        case 1387: return "A value of type '{0}' has multiple constructors";
+        case 1388: return "Unknown '{0}' constructor '{1}'";
+        case 1389: return "Constructor '{0}' was already specified";
+        case 1390: return "A value of type '{0}' cannot be deconstructed as an array.";
         case 2300: return "Duplicate identifier '{0}'.";
         case 2304: return "Cannot find name '{0}'.";
         case 2305: return "Module '{0}' has no exported member '{1}'.";
@@ -448,7 +510,7 @@ export function diagnosticCodeToString(code: DiagnosticCode): string {
         case 2511: return "Cannot create an instance of an abstract class.";
         case 2515: return "Non-abstract class '{0}' does not implement inherited abstract member '{1}' from '{2}'.";
         case 2531: return "Object is possibly 'null'.";
-        case 2540: return "Cannot assign to '{0}' because it is a constant or a read-only property.";
+        case 2540: return "Cannot assign to '{0}' because it is a constant.";
         case 2541: return "The target of an assignment must be a variable";
         case 2542: return "Index signature in type '{0}' only permits reading.";
         case 2554: return "Expected {0} arguments, but got {1}.";

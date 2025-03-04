@@ -1,5 +1,5 @@
 import { SourceRange } from "../../../../ast/Source/SourceRange";
-import { PebbleConcreteTypeSym } from "../../../AstCompiler/scope/symbols/PebbleSym";
+import { TirType } from "../../types/TirType";
 import { ITirExpr } from "../ITirExpr";
 import { TirExpr } from "../TirExpr";
 
@@ -8,7 +8,7 @@ export class TirLitArrExpr
 {
     constructor(
         readonly elems: TirExpr[],
+        readonly type: TirType,
         readonly range: SourceRange,
-        readonly type: PebbleConcreteTypeSym
     ) {}
 }

@@ -1,6 +1,3 @@
-import { UnaryPrefixExpr } from "../../../../ast/nodes/expr/unary/UnaryPrefixExpr";
-import { TirPrefixMinusMinus } from "./TirPrefixMinusMinus";
-import { TirPrefixPlusPlus } from "./TirPrefixPlusPlus";
 import { TirUnaryExclamation } from "./TirUnaryExclamation";
 import { TirUnaryMinus } from "./TirUnaryMinus";
 import { TirUnaryPlus } from "./TirUnaryPlus";
@@ -11,17 +8,13 @@ export type TirUnaryPrefixExpr
     | TirUnaryPlus
     | TirUnaryMinus
     | TirUnaryTilde
-    | TirPrefixPlusPlus
-    | TirPrefixMinusMinus;
 
-export function isUnaryPrefixExpr( thing: any ): thing is UnaryPrefixExpr
+export function isTirUnaryPrefixExpr( thing: any ): thing is TirUnaryPrefixExpr
 {
     return (
         thing instanceof TirUnaryExclamation   ||
         thing instanceof TirUnaryPlus          ||
         thing instanceof TirUnaryMinus         ||
-        thing instanceof TirUnaryTilde         ||
-        thing instanceof TirPrefixPlusPlus     ||
-        thing instanceof TirPrefixMinusMinus
+        thing instanceof TirUnaryTilde
     );
 }

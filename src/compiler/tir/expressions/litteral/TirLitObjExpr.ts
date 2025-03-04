@@ -2,7 +2,7 @@ import { Identifier } from "../../../../ast/nodes/common/Identifier";
 import { ITirExpr } from "../ITirExpr";
 import { SourceRange } from "../../../../ast/Source/SourceRange";
 import { TirExpr } from "../TirExpr";
-import { PebbleConcreteTypeSym } from "../../../AstCompiler/scope/symbols/PebbleSym";
+import { TirType } from "../../types/TirType";
 
 export interface ITirLitObjExpr {
     fieldNames: Identifier[];
@@ -15,7 +15,7 @@ export class TirLitObjExpr
     constructor(
         readonly fieldNames: Identifier[],
         readonly values: TirExpr[],
-        readonly type: PebbleConcreteTypeSym,
+        readonly type: TirType,
         readonly range: SourceRange
     ) {}
 }

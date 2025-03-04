@@ -1,3 +1,4 @@
+import { UsingDecl } from "../UsingDecl";
 import { EnumDecl } from "./EnumDecl";
 import { FuncDecl } from "./FuncDecl";
 import { StructDecl } from "./StructDecl";
@@ -10,6 +11,7 @@ export type PebbleDecl
     | StructDecl
     | EnumDecl
     | TypeAliasDecl
+    | UsingDecl
     ;
 
 export function isPebbleDecl( thing: any ): thing is PebbleDecl
@@ -20,5 +22,6 @@ export function isPebbleDecl( thing: any ): thing is PebbleDecl
         || thing instanceof StructDecl
         || thing instanceof EnumDecl
         || thing instanceof TypeAliasDecl
+        || thing instanceof UsingDecl
     );
 }

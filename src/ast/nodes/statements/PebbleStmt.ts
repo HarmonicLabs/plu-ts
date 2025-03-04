@@ -21,6 +21,8 @@ import { VarStmt } from "./VarStmt";
 import { WhileStmt } from "./WhileStmt";
 import { AssignmentStmt, isAssignmentStmt } from "./AssignmentStmt";
 import { ExprStmt } from "./ExprStmt";
+import { IncrStmt } from "./IncrStmt";
+import { DecrStmt } from "./DecrStmt";
 
 /**
  * An expression is a piece of code
@@ -57,7 +59,9 @@ export type PebbleStmt
     | ImportStmt
     | TypeImplementsStmt
     | AssignmentStmt
-    | ExprStmt
+    | ExprStmt // function calls with side effects (void functions) (error, traces, etc.)
+    | IncrStmt // TODO: move inside AssignmentStmt
+    | DecrStmt // TODO: move inside AssignmentStmt
     ;
 
 
@@ -87,5 +91,7 @@ export function isPebbleStmt( stmt: any ): stmt is PebbleStmt
         || stmt instanceof TypeImplementsStmt
         || isAssignmentStmt( stmt )
         || stmt instanceof ExprStmt
+        || stmt instanceof IncrStmt
+        || stmt instanceof DecrStmt
     );
 }

@@ -26,20 +26,24 @@ export interface IPebbleSym {
 }
 
 export interface IPebbleValueSym extends IPebbleSym {
-    readonly concreteType: TirType | undefined;
+    readonly type: TirType;
+    readonly isConstant: boolean;
 }
 export class PebbleValueSym implements IPebbleValueSym
 {
     readonly name: string;
-    readonly concreteType: TirType | undefined;
+    readonly type: TirType;
+    readonly isConstant: boolean;
 
     constructor({
         name,
-        concreteType
+        type,
+        isConstant
     }: IPebbleValueSym)
     {
         this.name = name;
-        this.concreteType = concreteType;
+        this.type = type;
+        this.isConstant = isConstant
     }
 }
 
@@ -62,7 +66,6 @@ export class PebbleConcreteTypeSym
     constructor({
         name,
         concreteType,
-        
     }: IPebbleConcreteTypeSym)
     {
         this.name = name;

@@ -1,7 +1,8 @@
 import { HasSourceRange } from "../../../ast/nodes/HasSourceRange";
 import { SourceRange } from "../../../ast/Source/SourceRange";
 import { TirExpr } from "../expressions/TirExpr";
-import { TirStmt, TirVarDecl } from "./TirStmt";
+import { TirStmt } from "./TirStmt";
+import { TirVarDecl } from "./TirVarDecl/TirVarDecl";
 
 /**
  * ***NOT*** for...of loop
@@ -14,7 +15,7 @@ export class TirForStmt
     constructor(
         readonly init: TirVarDecl[],
         readonly condition: TirExpr | undefined,
-        readonly update: TirExpr | undefined,
+        readonly update: TirStmt[] | undefined,
         readonly body: TirStmt,
         readonly range: SourceRange,
     ) {}

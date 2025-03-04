@@ -1,5 +1,4 @@
 import { CaseExpr } from "./CaseExpr";
-import { CommaExpr } from "./CommaExpr";
 import { ElemAccessExpr } from "./ElemAccessExpr";
 import { CallExpr } from "./functions/CallExpr";
 import { FuncExpr } from "./functions/FuncExpr";
@@ -30,7 +29,7 @@ export type PebbleExpr
     | IsExpr // ( purpose is Spending )
     | ElemAccessExpr
     | TernaryExpr
-    | CommaExpr
+    // | CommaExpr
     | PropAccessExpr
     ;
 
@@ -49,7 +48,7 @@ export function isPebbleExpr( thing: any ): thing is PebbleExpr
         || thing instanceof IsExpr
         || thing instanceof ElemAccessExpr
         || thing instanceof TernaryExpr
-        || thing instanceof CommaExpr
+        // || thing instanceof CommaExpr
         || isPropAccessExpr( thing )
     );
 }

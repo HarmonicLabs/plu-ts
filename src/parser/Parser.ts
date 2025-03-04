@@ -28,7 +28,7 @@ import { ParentesizedExpr } from "../ast/nodes/expr/ParentesizedExpr";
 import { ArrowKind } from "../ast/nodes/expr/functions/ArrowKind";
 import { FuncExpr } from "../ast/nodes/expr/functions/FuncExpr";
 import { PebbleStmt } from "../ast/nodes/statements/PebbleStmt";
-import { AstBooleanType, AstBytesType, AstListType, AstNumberType, AstNativeOptionalType, AstVoidType, AstLinearMapType, AstFuncType } from "../ast/nodes/types/AstNativeTypeExpr";
+import { AstBooleanType, AstBytesType, AstListType, AstIntType, AstNativeOptionalType, AstVoidType, AstLinearMapType, AstFuncType } from "../ast/nodes/types/AstNativeTypeExpr";
 import { AstNamedTypeExpr } from "../ast/nodes/types/AstNamedTypeExpr";
 import { LitArrExpr } from "../ast/nodes/expr/litteral/LitArrExpr";
 import { LitNamedObjExpr } from "../ast/nodes/expr/litteral/LitNamedObjExpr";
@@ -68,15 +68,17 @@ import { NonNullExpr } from "../ast/nodes/expr/unary/NonNullExpr";
 import { ElemAccessExpr } from "../ast/nodes/expr/ElemAccessExpr";
 import { makeUnaryPostfixExpr } from "../ast/nodes/expr/unary/UnaryPostfixExpr";
 import { TernaryExpr } from "../ast/nodes/expr/TernaryExpr";
-import { CommaExpr } from "../ast/nodes/expr/CommaExpr";
 import { makePropAccessExpr } from "../ast/nodes/expr/PropAccessExpr";
 import { makeBinaryExpr } from "../ast/nodes/expr/binary/BinaryExpr";
-import { AssignmentStmt, makeAssignmentStmt } from "../ast/nodes/statements/AssignmentStmt";
+import { AssignmentStmt, isAssignmentStmt, makeAssignmentStmt } from "../ast/nodes/statements/AssignmentStmt";
 import { ExprStmt } from "../ast/nodes/statements/ExprStmt";
 import { AstTypeExpr } from "../ast/nodes/types/AstTypeExpr";
 import { getInternalPath } from "../compiler/path/path";
 import { IsExpr } from "../ast/nodes/expr/IsExpr";
 import { hoistStatementsInplace } from "./hoistStatementsInplace";
+import { UsingDecl, UsingDeclaredConstructor } from "../ast/nodes/statements/UsingDecl";
+import { IncrStmt } from "../ast/nodes/statements/IncrStmt";
+import { DecrStmt } from "../ast/nodes/statements/DecrStmt";
 
 export class Parser extends DiagnosticEmitter
 {
@@ -162,7 +164,7 @@ export class Parser extends DiagnosticEmitter
 
         // `export` keyword
         // `export default` is NOT supported (`export default` should have never exsisted)
-        if (tn.skip(Token.Export)) {
+        if (tn.skip( Token.Export)) {
             if (startPos < 0) startPos = tn.tokenPos;
             flags |= CommonFlags.Export;
             exportStart = tn.tokenPos;
@@ -180,7 +182,7 @@ export class Parser extends DiagnosticEmitter
             case Token.Let:
             case Token.Const: {
                 tn.next(); // skip `const` | `let` | `var`
-                flags |= first === Token.Const ? CommonFlags.Const : CommonFlags.None;
+                flags |= first === Token.Const ? CommonFlags.Const : CommonFlags.Let;
 
                 if( tn.skip( Token.Enum ) )
                 {
@@ -192,6 +194,10 @@ export class Parser extends DiagnosticEmitter
                     );
                 }
                 statement = this.parseVarStmt( flags, startPos );
+                break;
+            }
+            case Token.Using: {
+                statement = this.parseUsingDecl();
                 break;
             }
             case Token.Enum: {
@@ -220,7 +226,6 @@ export class Parser extends DiagnosticEmitter
             }
             case Token.Import: {
                 tn.next();
-                // flags |= CommonFlags.Import;
                 if (flags & CommonFlags.Export) {
                     // statement = this.parseExportImport(startPos);
                     this.error(
@@ -259,6 +264,81 @@ export class Parser extends DiagnosticEmitter
         tn.skip( Token.Semicolon ); // if any
 
         return statement;
+    }
+
+    parseUsingDecl(): UsingDecl | undefined
+    {
+        const tn = this.tn;
+        const startPos = tn.tokenPos;
+
+        if( !tn.skip( Token.OpenBrace ) ) return this.error(
+            DiagnosticCode._0_expected,
+            tn.range(), "{"
+        );
+
+        const members = new Array<UsingDeclaredConstructor>();
+        while( !tn.skip( Token.CloseBrace ) )
+        {
+            const thisStartPos = tn.tokenPos;
+
+            if( !tn.skipIdentifier() ) return this.error(
+                DiagnosticCode.Identifier_expected,
+                tn.range()
+            );
+
+            const identifier = new Identifier( tn.readIdentifier(), tn.range() );
+
+            let renamed: Identifier | undefined = undefined;
+            if( tn.skip( Token.Colon ) )
+            {
+                if( !tn.skipIdentifier() ) return this.error(
+                    DiagnosticCode.Identifier_expected,
+                    tn.range()
+                );
+                renamed = new Identifier( tn.readIdentifier(), tn.range() );
+            }
+
+            members.push(new UsingDeclaredConstructor(
+                identifier,
+                renamed,
+                tn.range( thisStartPos, tn.pos )
+            ));
+
+            if( !tn.skip( Token.Comma ) )
+            {
+                if( tn.skip( Token.CloseBrace ) ) break;
+                return this.error(
+                    DiagnosticCode._0_expected,
+                    tn.range(), "}"
+                );
+            }
+        }
+
+        if( !tn.skip( Token.Equals ) ) return this.error(
+            DiagnosticCode._0_expected,
+            tn.range(), "="
+        );
+
+        if( !tn.skipIdentifier() ) return this.error(
+            DiagnosticCode.Identifier_expected,
+            tn.range()
+        );
+
+        const identifier = new Identifier( tn.readIdentifier(), tn.range() );
+
+        let typeArgs: AstTypeExpr[] = [];
+        if( tn.skip( Token.LessThan ) )
+        {
+            typeArgs = this.parseTypeArguments()!;
+            if( !typeArgs ) return undefined;
+        }
+
+        return new UsingDecl(
+            members,
+            identifier,
+            typeArgs,
+            tn.range( startPos, tn.pos )
+        );
     }
 
     parseTypeParameters(): Identifier[] | undefined
@@ -418,7 +498,7 @@ export class Parser extends DiagnosticEmitter
         {
             typeArgs = this.parseTypeArguments()!;
             if( !Array.isArray( typeArgs ) || typeArgs.length <= 0 ) return undefined;
-            flags |= CommonFlags.Generic;
+            // flags |= CommonFlags.Generic;
         }
 
         // type NewType = OriginalType
@@ -589,7 +669,7 @@ export class Parser extends DiagnosticEmitter
 
             if( !tn.skip( Token.Comma ) )
             {
-                if (tn.skip(Token.CloseBrace)) break;
+                if (tn.skip( Token.CloseBrace)) break;
                 return this.error(
                     DiagnosticCode._0_expected,
                     tn.range(), "}"
@@ -751,7 +831,7 @@ export class Parser extends DiagnosticEmitter
                 !Array.isArray( typeParams )
                 || typeParams.length <= 0
             ) return undefined;
-            flags |= CommonFlags.Generic;
+            // flags |= CommonFlags.Generic;
         }
 
         if( !tn.skip( Token.OpenBrace ) )
@@ -950,7 +1030,7 @@ export class Parser extends DiagnosticEmitter
             sigStart = tn.tokenPos;
             typeParams = this.parseTypeParameters();
             if( !typeParams || typeParams.length === 0 ) return undefined;
-            flags |= CommonFlags.Generic;
+            // flags |= CommonFlags.Generic;
         }
 
         if( !tn.skip( Token.OpenParen ) )
@@ -1149,7 +1229,7 @@ export class Parser extends DiagnosticEmitter
         const result = new VarStmt( decls, tn.range( startPos, tn.pos ) );
 
         // if there is no final semicolon (and we are not in a for loop)
-        if( !isFor && !tn.skip(Token.Semicolon) )
+        if( !isFor && !tn.skip( Token.Semicolon) )
         {
             // check for automatic semicolon insertion
             this.emitErrorIfInvalidAutoSemicolon();
@@ -1249,7 +1329,7 @@ export class Parser extends DiagnosticEmitter
 
         const initRange = tn.range();
 
-        let elements = new Map<string, VarDecl>();
+        let elements = new Map<Identifier, VarDecl>();
         let fieldName: Identifier | undefined = undefined;
         let element: VarDecl | undefined = undefined;
         let rest: Identifier | undefined = undefined;
@@ -1270,7 +1350,7 @@ export class Parser extends DiagnosticEmitter
             
             startRange = tn.range();
 
-            if( tn.skip(Token.Dot_Dot_Dot) ) isRest = true;
+            if( tn.skip( Token.Dot_Dot_Dot) ) isRest = true;
 
             // field
             fieldName = this.parseIdentifier( startRange )!;
@@ -1291,11 +1371,11 @@ export class Parser extends DiagnosticEmitter
             if( !tn.skip( Token.Colon ) ) // only field, with no colon (eg: { field, ... })
             {
                 element = SimpleVarDecl.onlyIdentifier( fieldName, flags );
-                elements.set( fieldName.text, element );
+                elements.set( fieldName, element );
 
-                if(tn.skip(Token.CloseBrace)) break; // last field destructured
+                if(tn.skip( Token.CloseBrace)) break; // last field destructured
 
-                if( !tn.skip(Token.Comma) )
+                if( !tn.skip( Token.Comma) )
                 {
                     this.error(
                         DiagnosticCode._0_expected,
@@ -1352,7 +1432,7 @@ export class Parser extends DiagnosticEmitter
                     SourceRange.join( element.range, castType.range );
             }
 
-            elements.set( fieldName.text, element );
+            elements.set( fieldName, element );
             tn.skip( Token.Comma ); // skip comma if present
         } // while( !tn.skip( Token.CloseBrace ) )
 
@@ -1416,7 +1496,7 @@ export class Parser extends DiagnosticEmitter
                 elem.initExpr ? elem.initExpr.range : elem.type!.range
             );
 
-            if( tn.skip(Token.As) )
+            if( tn.skip( Token.As) )
             {
                 const castType = this.parseTypeExpr();
                 if( !castType )
@@ -1492,9 +1572,9 @@ export class Parser extends DiagnosticEmitter
 
         let type: AstTypeExpr | undefined = undefined;
 
-        if( tn.skip(Token.Colon) ) type = this.parseTypeExpr();
+        if( tn.skip( Token.Colon) ) type = this.parseTypeExpr();
 
-        if( !tn.skip(Token.Equals) ) return [ type, undefined ];
+        if( !tn.skip( Token.Equals) ) return [ type, undefined ];
 
         if( isRest ){
             this.error(
@@ -1526,8 +1606,8 @@ export class Parser extends DiagnosticEmitter
             // case Token.True:
             // case Token.False: 
             case Token.Boolean: return new AstBooleanType( currRange );
-            case Token.Int: return new AstNumberType( currRange )
-            // case Token.Number: return new AstNumberType( currRange )
+            case Token.Int: return new AstIntType( currRange )
+            // case Token.Number: return new AstIntType( currRange )
             case Token.Bytes: return new AstBytesType( currRange );
             case Token.Optional: {
 
@@ -1543,7 +1623,7 @@ export class Parser extends DiagnosticEmitter
                 const tyArg = this.parseTypeExpr();
                 if( !tyArg ) return undefined;
 
-                if (!tn.skip(Token.GreaterThan)) {
+                if (!tn.skip( Token.GreaterThan)) {
                     canError && this.error(
                         DiagnosticCode._0_expected,
                         tn.range(tn.pos), ">"
@@ -1567,7 +1647,7 @@ export class Parser extends DiagnosticEmitter
                 const tyArg = this.parseTypeExpr();
                 if( !tyArg ) return undefined;
 
-                if (!tn.skip(Token.GreaterThan)) {
+                if (!tn.skip( Token.GreaterThan)) {
                     canError && this.error(
                         DiagnosticCode._0_expected,
                         tn.range(tn.pos), ">"
@@ -1603,7 +1683,7 @@ export class Parser extends DiagnosticEmitter
                 const valTy = this.parseTypeExpr();
                 if( !valTy ) return undefined;
 
-                if (!tn.skip(Token.GreaterThan)) {
+                if (!tn.skip( Token.GreaterThan)) {
                     canError && this.error(
                         DiagnosticCode._0_expected,
                         tn.range(tn.pos), ">"
@@ -1661,7 +1741,7 @@ export class Parser extends DiagnosticEmitter
         startPos = tn.range( startPos ).start;
         const inner = this.parseExpr();
         if (!inner) return undefined;
-        if (!tn.skip(Token.CloseParen)) {
+        if (!tn.skip( Token.CloseParen)) {
             this.error(
                 DiagnosticCode._0_expected,
                 tn.range(), ")"
@@ -1682,7 +1762,7 @@ export class Parser extends DiagnosticEmitter
 
         const startPos = expr.range.start;
 
-        if( tn.skip(Token.HexBytesLiteral) )
+        if( tn.skip( Token.HexBytesLiteral) )
         {
             const hexBytes = tn.readHexBytes();
             if( !hexBytes ) return undefined;
@@ -1737,7 +1817,7 @@ export class Parser extends DiagnosticEmitter
                         return undefined
                     }
                     const ofType = new Identifier( tn.readIdentifier(), tn.range() );
-                    tn.skip(Token.Semicolon); // if any
+                    tn.skip( Token.Semicolon); // if any
                     expr = new IsExpr(
                         expr,
                         ofType,
@@ -1800,19 +1880,19 @@ export class Parser extends DiagnosticEmitter
                     );
                     break;
                 }
-                case Token.Comma: { // comma operator
-                    const commaExprs = [ expr ];
-                    do {
-                        expr = this.parseExpr( Precedence.Comma + 1 )!;
-                        if( !expr ) return undefined;
-                        commaExprs.push( expr );
-                    } while( tn.skip( Token.Comma ) );
-                    expr = new CommaExpr(
-                        commaExprs,
-                        tn.range( startPos, tn.pos )
-                    );
-                    break;
-                }
+                // case Token.Comma: { // comma operator
+                //     const commaExprs = [ expr ];
+                //     do {
+                //         expr = this.parseExpr( Precedence.Comma + 1 )!;
+                //         if( !expr ) return undefined;
+                //         commaExprs.push( expr );
+                //     } while( tn.skip( Token.Comma ) );
+                //     expr = new CommaExpr(
+                //         commaExprs,
+                //         tn.range( startPos, tn.pos )
+                //     );
+                //     break;
+                // }
                 case Token.Question_Dot:
                 case Token.Exclamation_Dot:
                 case Token.Dot: { // accessing property
@@ -1996,7 +2076,6 @@ export class Parser extends DiagnosticEmitter
                     tn.range(startPos, tn.pos)
                 );
             }
-
             // Special Identifier
             case Token.Void: return new LitVoidExpr( tn.range() );
             case Token.Undefined: return new LitUndefExpr(tn.range());
@@ -2008,7 +2087,7 @@ export class Parser extends DiagnosticEmitter
             case Token.OpenParen: {
                 // determine whether this is a function expression
 
-                if (tn.skip(Token.CloseParen)) { // must be a function expression (fast route)
+                if (tn.skip( Token.CloseParen)) { // must be a function expression (fast route)
                     return this.parseCommonFuncExpr(
                         Identifier.anonymous(tn.range(startPos)),
                         [],
@@ -2029,7 +2108,7 @@ export class Parser extends DiagnosticEmitter
             // ArrayLiteralPebbleExpr
             case Token.OpenBracket: {
                 const elementPebbleExprs = new Array<PebbleExpr>();
-                while (!tn.skip(Token.CloseBracket))
+                while (!tn.skip( Token.CloseBracket))
                 {
                     let expr: PebbleExpr | undefined;
                     if (tn.peek() === Token.Comma) {
@@ -2068,7 +2147,7 @@ export class Parser extends DiagnosticEmitter
                 let names = new Array<Identifier>();
                 let values = new Array<PebbleExpr>();
                 let name: Identifier;
-                while (!tn.skip(Token.CloseBrace)) {
+                while (!tn.skip( Token.CloseBrace)) {
 
                     if (!tn.skipIdentifier()) {
                         this.error(
@@ -2081,7 +2160,7 @@ export class Parser extends DiagnosticEmitter
                     name = new Identifier(tn.readIdentifier(), tn.range());
                     names.push(name);
 
-                    if (tn.skip(Token.Colon))
+                    if (tn.skip( Token.Colon))
                     {
                         let value = this.parseExpr(Precedence.Comma + 1);
                         if (!value) return undefined;
@@ -2091,7 +2170,7 @@ export class Parser extends DiagnosticEmitter
 
                     if( tn.skip( Token.Comma ) ) continue; 
 
-                    if( tn.skip(Token.CloseBrace) ) break;
+                    if( tn.skip( Token.CloseBrace) ) break;
                     else {
                         this.error(
                             DiagnosticCode._0_expected,
@@ -2177,7 +2256,7 @@ export class Parser extends DiagnosticEmitter
                 );
                 return undefined;
                 // let regexpPattern = tn.readRegexpPattern(); // also reports
-                // if (!tn.skip(Token.Slash)) {
+                // if (!tn.skip( Token.Slash)) {
                 //     this.error(
                 //         DiagnosticCode._0_expected,
                 //         tn.range(), "/"
@@ -2340,7 +2419,7 @@ export class Parser extends DiagnosticEmitter
                 name = Identifier.anonymous(tn.range(tn.pos));
             }
             
-            if (!tn.skip(Token.OpenParen)) {
+            if (!tn.skip( Token.OpenParen)) {
                 this.error(
                     DiagnosticCode._0_expected,
                     tn.range(tn.pos), "("
@@ -2391,16 +2470,16 @@ export class Parser extends DiagnosticEmitter
         // at '(': (Parameter (',' Parameter)*)? ')'
         let parameters = new Array<VarDecl>();
 
-        while (!tn.skip(Token.CloseParen))
+        while (!tn.skip( Token.CloseParen))
         {
             let param = this.parseParameter( CommonFlags.Const );
             if (!param) return undefined;
             parameters.push(param);
 
-            if (!tn.skip(Token.Comma))
+            if (!tn.skip( Token.Comma))
             {
                 // if not comma, then we expect no more params
-                if (tn.skip(Token.CloseParen)) break;
+                if (tn.skip( Token.CloseParen)) break;
 
                 this.error(
                     DiagnosticCode._0_expected,
@@ -2418,7 +2497,7 @@ export class Parser extends DiagnosticEmitter
         const tn = this.tn;
         // before: Identifier '?'? (':' Type)? ('=' PebbleExpr)?
 
-        if (tn.skip(Token.Dot_Dot_Dot)) {
+        if (tn.skip( Token.Dot_Dot_Dot)) {
             this.error(
                 DiagnosticCode.A_parameter_property_cannot_be_declared_using_a_rest_parameter,
                 tn.range()
@@ -2450,7 +2529,7 @@ export class Parser extends DiagnosticEmitter
         const tn = this.tn;
         let typeArguments: AstTypeExpr[] | undefined = undefined;
         while (
-            tn.skip(Token.OpenParen) ||
+            tn.skip( Token.OpenParen) ||
             potentiallyGeneric &&
             (typeArguments = this.tryParseTypeArgumentsBeforeArguments())
         ) {
@@ -2473,7 +2552,7 @@ export class Parser extends DiagnosticEmitter
         // at '<': Type (',' Type)* '>' '('
 
         const state = tn.mark();
-        if (!tn.skip(Token.LessThan)) return undefined;
+        if (!tn.skip( Token.LessThan)) return undefined;
 
         const startPos = tn.tokenPos;
         let typeArguments: AstTypeExpr[] = [];
@@ -2500,7 +2579,7 @@ export class Parser extends DiagnosticEmitter
         let end = tn.pos;
         // next token must be '('
         // because this method is called BEFORE parsing arguments
-        if( !tn.skip(Token.OpenParen) )
+        if( !tn.skip( Token.OpenParen) )
         {
             tn.reset(state);
             return undefined;
@@ -2532,7 +2611,7 @@ export class Parser extends DiagnosticEmitter
             
             if( tn.skip( Token.Comma ) ) continue;
             
-            if (tn.skip(Token.CloseParen)) break;
+            if (tn.skip( Token.CloseParen)) break;
             
             this.error(
                 DiagnosticCode._0_expected,
@@ -2576,7 +2655,7 @@ export class Parser extends DiagnosticEmitter
         // BUT NOT `param =>`
         // AND there is a `:`
         // we parse the return type
-        if( arrowKind !== ArrowKind.Single && tn.skip(Token.Colon) )
+        if( arrowKind !== ArrowKind.Single && tn.skip( Token.Colon) )
         {
             returnType = this.parseTypeExpr();
             if (!returnType) return undefined;
@@ -2588,7 +2667,7 @@ export class Parser extends DiagnosticEmitter
 
         if(
             expectArrow &&                      // if we expect an arrow
-            !tn.skip(Token.FatArrow)  // but there is none; then error 
+            !tn.skip( Token.FatArrow)  // but there is none; then error 
         )
         {
             this.error(
@@ -2614,7 +2693,7 @@ export class Parser extends DiagnosticEmitter
                 // this.parseExpr( Precedence.Comma + 1 );
                 this.parseExpr( Precedence.CaseExpr );
         } else {
-            if (!tn.skip(Token.OpenBrace)) {
+            if (!tn.skip( Token.OpenBrace)) {
                 this.error(
                     DiagnosticCode._0_expected,
                     tn.range(tn.pos), "{"
@@ -2656,6 +2735,10 @@ export class Parser extends DiagnosticEmitter
             case Token.Let:
             case Token.Const: {
                 statement = this.parseVarStmt( CommonFlags.Const, tn.tokenPos );
+                break;
+            }
+            case Token.Using: {
+                statement = this.parseUsingDecl();
                 break;
             }
             case Token.Continue: {
@@ -2889,7 +2972,7 @@ export class Parser extends DiagnosticEmitter
         }
 
         let ret = new BlockStmt(statements, tn.range(startPos, tn.pos));
-        if (topLevel) tn.skip(Token.Semicolon);
+        if (topLevel) tn.skip( Token.Semicolon);
         return ret;
     }
 
@@ -2904,7 +2987,7 @@ export class Parser extends DiagnosticEmitter
         //     identifier = new Identifier(tn.readIdentifier(), tn.range());
         // }
         const result = new BreakStmt(tn.range());
-        tn.skip(Token.Semicolon); // if any
+        tn.skip( Token.Semicolon); // if any
         return result;
     }
 
@@ -2919,7 +3002,7 @@ export class Parser extends DiagnosticEmitter
         //     identifier = new Identifier(tn.readIdentifier(), tn.range());
         // }
         let ret = new ContinueStmt(tn.range());
-        tn.skip(Token.Semicolon); // if any
+        tn.skip( Token.Semicolon); // if any
         return ret;
     }
 
@@ -2967,7 +3050,7 @@ export class Parser extends DiagnosticEmitter
             condition,
             tn.range(startPos, tn.pos)
         );
-        tn.skip(Token.Semicolon);
+        tn.skip( Token.Semicolon);
         return result;
     }
     */
@@ -3073,11 +3156,27 @@ export class Parser extends DiagnosticEmitter
             );
         }
 
-        let update: PebbleExpr | undefined = undefined;
+        let update: PebbleStmt | undefined = undefined;
+        const updates: (AssignmentStmt | IncrStmt | DecrStmt)[] = [];
         if( !tn.skip( Token.CloseParen ) )
         {
-            update = this.parseExpr();
-            if (!update) return undefined;
+            do {
+                update = this.parseStatement();
+                if (!update) return undefined;
+
+                if(!(
+                    update instanceof IncrStmt
+                    || update instanceof DecrStmt
+                    || isAssignmentStmt( update )
+                ))
+                return this.error(
+                    DiagnosticCode.Invalid_for_statement_update,
+                    update.range
+                );
+    
+                updates.push( update );
+            } while( tn.skip( Token.Comma ) );  // comma expression (allowed only in for update part)
+
 
             if( !tn.skip( Token.CloseParen ) )
             return this.error(
@@ -3092,7 +3191,7 @@ export class Parser extends DiagnosticEmitter
         return new ForStmt(
             init,
             condition,
-            update,
+            updates,
             body,
             tn.range(startPos, tn.pos)
         );
@@ -3147,12 +3246,12 @@ export class Parser extends DiagnosticEmitter
 
         let expr: PebbleExpr | undefined = undefined;
         if(
-            !tn.skip(Token.Semicolon) &&
+            !tn.skip( Token.Semicolon) &&
             !tn.isNextTokenOnNewLine()
         ) {
             expr = this.parseExpr();
             if (!expr) return undefined;
-            tn.skip(Token.Semicolon); // if any
+            tn.skip( Token.Semicolon); // if any
         }
 
         return new ReturnStmt(expr, tn.range(startPos, tn.pos));
@@ -3374,7 +3473,7 @@ export class Parser extends DiagnosticEmitter
 
         // `()` makes no sense as parenthesized expression
         // it must be `() =>` or `(): Type =>`
-        if (tn.skip(Token.CloseParen)) return true;
+        if (tn.skip( Token.CloseParen)) return true;
 
         // get back to this token before return
         const tnState = tn.mark();
@@ -3403,7 +3502,7 @@ export class Parser extends DiagnosticEmitter
                         case Token.CloseParen: {
 
                             // `( Identifier ):Type =>` is function expression
-                            if (tn.skip(Token.Colon)) {
+                            if (tn.skip( Token.Colon)) {
                                 let type = this.parseTypeExpr( true );
 
                                 // we got `( Identifier ):` but no type
@@ -3417,7 +3516,7 @@ export class Parser extends DiagnosticEmitter
 
                             // no arrow after `( Identifier )`
                             // so it must be a parenthesized expression
-                            if (!tn.skip(Token.FatArrow)) {
+                            if (!tn.skip( Token.FatArrow)) {
                                 tn.reset(tnState);
                                 return false;
                             }

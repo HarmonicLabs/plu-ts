@@ -1,6 +1,6 @@
 import { TirBytesT, TirDataT, TirListT, TirOptT, TirStringT } from "../../TirNativeType";
 import { TirType } from "../../TirType";
-import { CanAssign, canAssignTo } from "../canAssignTo";
+import { CanAssign, getCanAssign } from "../canAssignTo";
 import { address_t, bool_t, bytes_t, certificate_t, constitutionInfo_t, credential_t, data_t, delegatee_t, extendedInteger_t, govAction_t, hash28_t, hash32_t, int_t, interval_t, intervalBoundary_t, outputDatum_t, policyId_t, proposalProcedure_t, protocolVersion_t, pubKeyHash_t, rational_t, scriptContext_t, scriptHash_t, scriptInfo_t, scriptPurpose_t, stakeCredential_t, string_t, tokenName_t, tx_t, txHash_t, txIn_t, txOut_t, txOutRef_t, value_t, void_t, vote_t, voter_t } from "../../../../AstCompiler/scope/stdScope/stdScope";
 import { TirAliasType } from "../../TirAliasType";
 import { canCastToData } from "../canCastTo";
@@ -79,7 +79,7 @@ const allStdVariants =
 
 const noAliasStd = stdTypes.filter( t => !(t instanceof TirAliasType) );
 
-describe("canAssignTo", () => {
+describe("getCanAssign", () => {
 
     function testAssign(
         a: TirType,
@@ -88,8 +88,8 @@ describe("canAssignTo", () => {
     ) {
         const aStr = a.toString();
         const bStr = b.toString();
-        test(`canAssignTo( ${aStr}, ${bStr} )`, () => {
-            const result = canAssignTo(
+        test(`getCanAssign( ${aStr}, ${bStr} )`, () => {
+            const result = getCanAssign(
                 a,
                 b,
             );
@@ -144,8 +144,8 @@ describe("canAssignTo", () => {
                 if( i === j ) continue;
 
                 if( // happen to have same shape, different name
-                    (canAssignTo(noAliasStd[i], rational_t) && canAssignTo(noAliasStd[j], protocolVersion_t))
-                    || (canAssignTo(noAliasStd[i], protocolVersion_t) && canAssignTo(noAliasStd[j], rational_t))
+                    (getCanAssign(noAliasStd[i], rational_t) && getCanAssign(noAliasStd[j], protocolVersion_t))
+                    || (getCanAssign(noAliasStd[i], protocolVersion_t) && getCanAssign(noAliasStd[j], rational_t))
                 ) testAssign( noAliasStd[i], noAliasStd[j], CanAssign.RequiresExplicitCast );
 
                 else if(
@@ -182,7 +182,7 @@ describe("canAssignTo", () => {
         for( let j = 0; j < allStdVariants.length; j++ ) {
             const a = allStdVariants[i];
             const b = allStdVariants[j];
-            const result = canAssignTo( a, b );
+            const result = getCanAssign( a, b );
             results[result].push( [ a, b ] );
         }
     }
@@ -195,7 +195,7 @@ describe("canAssignTo", () => {
     console.log( lengts );
 
     for( const [a, b] of results[CanAssign.LiftToOptional] ) {
-        console.log(`canAssignTo( ${a.toString()}, ${b.toString()} )`);
+        console.log(`getCanAssign( ${a.toString()}, ${b.toString()} )`);
     }
     //*/
 

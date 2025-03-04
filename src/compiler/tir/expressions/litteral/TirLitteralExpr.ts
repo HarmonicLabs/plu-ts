@@ -15,13 +15,14 @@ export type TirLitteralExpr
     | TirLitUndefExpr
     | TirLitTrueExpr
     | TirLitFalseExpr
+    | TirLitStrExpr
+    | TirLitIntExpr
+    | TirLitHexBytesExpr
     | TirLitThisExpr
     | TirLitArrExpr
     | TirLitObjExpr
     | TirLitNamedObjExpr
-    | TirLitStrExpr
-    | TirLitIntExpr
-    | TirLitHexBytesExpr
+    
 
 export function isTirLitteralExpr( thing: any ): thing is TirLitteralExpr
 {

@@ -10,9 +10,9 @@ export class TirSource
     /**
      * all the symbols at the top-level 
      * 
-     * ( stdScope <- preambleScope <- imports <- sourceScope ) 
+     * ( stdScope <- preambleScope <- imports ) 
     **/
-    readonly sourceScope: Scope;
+    readonly scope: Scope;
     readonly importedInternalPaths: Set<InternalPath> = new Set();
     /**
      * all the *exported* symbols 
@@ -26,7 +26,7 @@ export class TirSource
         preambleScope: Scope,
     ) {
         this.internalPath = internalPath;
-        this.sourceScope = new Scope( preambleScope );
+        this.scope = preambleScope.newChildScope();
         this.importedInternalPaths = new Set();
         this.exportedSymbols = new Set();
         this.statements = [];

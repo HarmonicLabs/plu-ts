@@ -17,6 +17,11 @@ export class SimpleVarDecl
         readonly range: SourceRange,
     ) {}
 
+    isConst(): boolean
+    {
+        return (this.flags & CommonFlags.Const) !== 0;
+    }
+
     static onlyIdentifier( identifier: Identifier, flags: CommonFlags ): SimpleVarDecl
     {
         return new SimpleVarDecl(

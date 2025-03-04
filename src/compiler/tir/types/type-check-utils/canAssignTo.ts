@@ -17,20 +17,43 @@ export enum CanAssign {
 }
 Object.freeze( CanAssign );
 
-export function canAssignTo( a: TirType, b: TirType ): CanAssign
+export function isStructOrStructAlias( type: TirType ): boolean
 {
-    if( !a.isConcrete() ) return CanAssign.LeftArgIsNotConcrete;
-    return uncheckedCanAssignToType( a, b, new Map() );
+    while( type instanceof TirAliasType ) type = type.aliased;
+    return type instanceof TirStructType;
 }
 
-function uncheckedCanAssignToType(
+export function getStructType( type: TirType | undefined ): TirStructType | undefined
+{
+    while( type instanceof TirAliasType ) type = type.aliased;
+    return type instanceof TirStructType ? type : undefined;
+}
+
+/**
+ * @returns `true` if `a` can be assigned to `b` **without** explicit cast
+ * 
+ * use `getCanAssign` for more detailed information
+ */
+export function canAssignTo( a: TirType, b: TirType ): boolean
+{
+    return getCanAssign( a, b ) === CanAssign.Yes;
+}
+
+export function getCanAssign( a: TirType, b: TirType ): CanAssign
+{
+    // remove for tests
+    if( a === b ) return CanAssign.Yes; // same object, we don't care if not concrete
+    if( !a.isConcrete() ) return CanAssign.LeftArgIsNotConcrete;
+    return uncheckedGetCanAssign( a, b, new Map() );
+}
+
+function uncheckedGetCanAssign(
     a: TirType,
     b: TirType,
     symbols: Map<symbol, TirType>
 ): CanAssign
 {
-    // remove for tests
-    if( a === b ) return CanAssign.Yes; // same object
+    if( a === b ) return CanAssign.Yes; // same object (here for recursive calls)
 
     // unwrap all aliases
     // aliases are only for custom interface implementations
@@ -42,7 +65,7 @@ function uncheckedCanAssignToType(
     {
         if( symbols.has( b.symbol ) )
         {
-            return uncheckedCanAssignToType( a, symbols.get( b.symbol )!, symbols );
+            return uncheckedGetCanAssign( a, symbols.get( b.symbol )!, symbols );
         }
         symbols.set( b.symbol, a );
         return CanAssign.Yes;
@@ -79,10 +102,10 @@ function uncheckedCanAssignToType(
 
     if( b instanceof TirOptT )
     {
-        if( a instanceof TirOptT ) return uncheckedCanAssignToType( a.typeArg, b.typeArg, symbols );
+        if( a instanceof TirOptT ) return uncheckedGetCanAssign( a.typeArg, b.typeArg, symbols );
         if( a instanceof TirDataT ) return CanAssign.RequiresExplicitCast;
 
-        const canAssingToDefined = uncheckedCanAssignToType( a, b.typeArg, symbols );
+        const canAssingToDefined = uncheckedGetCanAssign( a, b.typeArg, symbols );
         switch( canAssingToDefined )
         {
             case CanAssign.Yes: // value => Some{ value }
@@ -101,7 +124,7 @@ function uncheckedCanAssignToType(
     }
     if( b instanceof TirListT )
     {
-        if( a instanceof TirListT ) return uncheckedCanAssignToType( a.typeArg, b.typeArg, symbols );
+        if( a instanceof TirListT ) return uncheckedGetCanAssign( a.typeArg, b.typeArg, symbols );
         if( a instanceof TirDataT ) return CanAssign.RequiresExplicitCast;
         return CanAssign.No;
     }
@@ -110,8 +133,8 @@ function uncheckedCanAssignToType(
         if( a instanceof TirLinearMapT )
         {
             return decideCanAssignField(
-                uncheckedCanAssignToType( a.keyTypeArg, b.keyTypeArg, symbols ),
-                uncheckedCanAssignToType( a.valTypeArg, b.valTypeArg, symbols )
+                uncheckedGetCanAssign( a.keyTypeArg, b.keyTypeArg, symbols ),
+                uncheckedGetCanAssign( a.valTypeArg, b.valTypeArg, symbols )
             );
         }
         if( a instanceof TirDataT ) return CanAssign.RequiresExplicitCast;
@@ -132,12 +155,12 @@ function uncheckedCanAssignToType(
     }
     if( b instanceof TirAsDataT )
     {
-        if( a instanceof TirAsDataT ) return uncheckedCanAssignToType( a.typeDef, b.typeDef, symbols );
+        if( a instanceof TirAsDataT ) return uncheckedGetCanAssign( a.typeDef, b.typeDef, symbols );
         if( a instanceof TirDataT ) return CanAssign.No;
         if( a instanceof TirStructType )
         {
             if( a.onlySoP() ) return CanAssign.No;
-            const canAssignStruct = uncheckedCanAssignToType( a, b.typeDef, symbols );
+            const canAssignStruct = uncheckedGetCanAssign( a, b.typeDef, symbols );
             if(
                 canAssignStruct === CanAssign.Yes ||
                 canAssignStruct === CanAssign.RequiresExplicitCast
@@ -148,12 +171,12 @@ function uncheckedCanAssignToType(
     }
     if( a instanceof TirAsDataT )
     {
-        return uncheckedCanAssignToType( a.typeDef, b, symbols );
+        return uncheckedGetCanAssign( a.typeDef, b, symbols );
     }
 
     if( b instanceof TirAsSopT )
     {
-        if( a instanceof TirAsSopT ) return uncheckedCanAssignToType( a.typeDef, b.typeDef, symbols );
+        if( a instanceof TirAsSopT ) return uncheckedGetCanAssign( a.typeDef, b.typeDef, symbols );
         if( a instanceof TirStructType ) {
             if(!a.allowsSoPEncoding()) return CanAssign.No;
             const canAssignDef = canAssignStruct( a, b.typeDef, symbols );
@@ -205,13 +228,13 @@ function uncheckedCanAssignToType(
             a instanceof TirFuncT
             && a.argTypes.length === b.argTypes.length
         )) return CanAssign.No;
-        let currentDecision = uncheckedCanAssignToType( a.returnType, b.returnType, symbols );
+        let currentDecision = uncheckedGetCanAssign( a.returnType, b.returnType, symbols );
         for( let i = 0; i < a.argTypes.length; i++ )
         {
             currentDecision = decideCanAssignField(
                 currentDecision,
                 // TODO make one only for functions
-                uncheckedCanAssignToType( a.argTypes[i], b.argTypes[i], symbols )
+                uncheckedGetCanAssign( a.argTypes[i], b.argTypes[i], symbols )
             );
             if( currentDecision <= CanAssign.No ) return currentDecision;
         }
@@ -298,7 +321,7 @@ function canAssignCtorDef(
         prevDecision = currentDecision;
         currentDecision = decideCanAssignField(
             currentDecision,
-            uncheckedCanAssignToType(
+            uncheckedGetCanAssign(
                 a.fields[i].type,
                 b.fields[i].type,
                 symbols

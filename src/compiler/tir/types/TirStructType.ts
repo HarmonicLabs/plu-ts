@@ -1,9 +1,15 @@
+import { getAppliedTypeInternalName } from "../../AstCompiler/scope/Scope";
 import { TirInterfaceImpl } from "./TirInterfaceImpl";
 import { TirType } from "./TirType";
 
 export enum StructFlags {
     None = 0,
-    untaggedDataEncoding = 1 << 0,
+    /**
+     * tags single constructor structs
+     * 
+     * by default, single constructor structs are encoded only as lists
+     */
+    taggedDataEncoding = 1 << 0,
     onlyData = 1 << 1,
     onlySoP = 1 << 2,
 }
@@ -18,8 +24,24 @@ export class TirStructType
         public flags: StructFlags
     ) {}
 
+    isSingleConstr(): boolean {
+        return this.constructors.length === 1;
+    }
+
     toString(): string {
         return this.name;
+    }
+
+    toInternalName(): string {
+        return getAppliedTypeInternalName(
+            "Struct",
+            [
+                this.name,
+                ...this.constructors.map( c => 
+                    c.fields.map( f => f.type.toInternalName() )
+                ).flat( Infinity ) as string[]
+            ]
+        );
     }
 
     private _isConcrete: boolean | undefined = undefined;
@@ -49,8 +71,8 @@ export class TirStructType
      * of course if `onlySoP` is set, then this doesn't matter,
      * but still not an error, just useless
      */
-    untaggedDataEncoding(): boolean {
-        return (this.flags & StructFlags.untaggedDataEncoding) !== 0;
+    taggedDataEncoding(): boolean {
+        return (this.flags & StructFlags.taggedDataEncoding) !== 0;
     }
 
     onlyData(): boolean {
@@ -78,6 +100,10 @@ export class TirStructConstr
         readonly name: string,
         readonly fields: TirStructField[]
     ) {}
+
+    toString(): string {
+        return this.name;
+    }
 
     isConcrete(): boolean {
         return this.fields.every(

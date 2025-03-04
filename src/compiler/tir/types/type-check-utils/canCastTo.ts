@@ -22,11 +22,11 @@ export function canCastTo( a: TirType, b: TirType ): boolean
     {
         switch( canAssignTo( a, b.typeDef ) ) {
             case CanAssign.Yes:
-            case CanAssign.OnlyAsData:
+            // case CanAssign.OnlyAsData:
             case CanAssign.RequiresExplicitCast:
                 return canCastToData( a );
             case CanAssign.No:
-            case CanAssign.OnlySoP:
+            // case CanAssign.OnlySoP:
             case CanAssign.LeftArgIsNotConcrete:
             default:
                 return false;
@@ -37,8 +37,8 @@ export function canCastTo( a: TirType, b: TirType ): boolean
     {
         switch( canAssignTo( a, b ) ) {
             case CanAssign.Yes:
-            case CanAssign.OnlySoP:
-            case CanAssign.OnlyAsData:
+            // case CanAssign.OnlySoP:
+            // case CanAssign.OnlyAsData:
             case CanAssign.RequiresExplicitCast:
                 return true;
             case CanAssign.No:
@@ -121,12 +121,12 @@ export function canCastTo( a: TirType, b: TirType ): boolean
     {
         switch( canAssignTo( a, b.typeDef ) ) {
             case CanAssign.Yes:
-            case CanAssign.OnlySoP: // a is struct with no indication
+            // case CanAssign.OnlySoP: // a is struct with no indication
                 return true;
             case CanAssign.RequiresExplicitCast: // a is same structure sop with differnt name
                 return canCastTo( a, b.typeDef )
             case CanAssign.No:
-            case CanAssign.OnlyAsData:
+            // case CanAssign.OnlyAsData:
             case CanAssign.LeftArgIsNotConcrete:
             default:
                 return false;

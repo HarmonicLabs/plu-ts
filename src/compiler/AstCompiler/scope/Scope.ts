@@ -1,14 +1,41 @@
 import { PEBBLE_INTERNAL_IDENTIFIER_PREFIX, PEBBLE_INTERNAL_IDENTIFIER_SEPARATOR } from "../../internalVar";
-import { TirCustomType, TirType } from "../../tir/types/TirType";
+import { TirAliasType } from "../../tir/types/TirAliasType";
+import { TirListT } from "../../tir/types/TirNativeType";
+import { TirType } from "../../tir/types/TirType";
+import { getStructType, isStructOrStructAlias } from "../../tir/types/type-check-utils/canAssignTo";
 import { IPebbleConcreteTypeSym, IPebbleGenericSym, IPebbleSym, PebbleAnyTypeSym, PebbleConcreteFunctionSym, PebbleConcreteTypeSym, PebbleGenericFunctionSym, PebbleGenericSym, PebbleSym, PebbleValueSym } from "./symbols/PebbleSym";
 import { TypeSymbolTable } from "./TypeSymbolTable";
 import { ValueSymbolTable } from "./ValueSymbolTable";
+
+const invalidSymbolNames = new Set([
+    "this"
+]);
+
+export function getAppliedTypeInternalName(
+    genericName: string,
+    args: string[]
+): string
+{
+    return (
+        PEBBLE_INTERNAL_IDENTIFIER_PREFIX + 
+        genericName + 
+        PEBBLE_INTERNAL_IDENTIFIER_SEPARATOR +
+        args.join("_")
+    );
+}
+
+export interface IAvaiableConstructor {
+    declaredName: string;
+    originalName: string;
+    structSym: PebbleConcreteTypeSym;
+}
 
 export class Scope
 {
     readonly parent: Scope | undefined;
     readonly valueSymbols: ValueSymbolTable;
     readonly typeSymbols : TypeSymbolTable | undefined;
+    readonly aviableConstructors: Map<string, IAvaiableConstructor> = new Map();
 
     private _isReadonly = false;
 
@@ -35,16 +62,81 @@ export class Scope
 
     readonly(): void { this._isReadonly = true; }
 
+    newChildScope(): Scope
+    {
+        return new Scope( this );
+    }
+
+    /**
+     * @returns `true` if the constructor was defined successfully
+     * 
+     * @returns `false`
+     *      if it was already defined in this scope (shadows any similar definitions in parent scopes),
+     *      or if the type symbol is not assignable to a struct,
+     *      or if it is a struct but is not concrete
+     */
+    defineAviableConstructorIfValid(
+        declaredName: string,
+        originalName: string,
+        structSym: PebbleConcreteTypeSym,
+        // genericTypeSymbol: PebbleGenericSym | undefined
+    ): boolean
+    {
+        const structType = getStructType( structSym.concreteType );
+        if( !structType || !structType.isConcrete() )
+            return false; // not a concrete struct
+
+        if( this.aviableConstructors.has( declaredName ) ) return false; // already defined
+
+        this.aviableConstructors.set( declaredName, {
+            declaredName,
+            originalName,
+            structSym
+        });
+        return true;
+    }
+    inferStructTypeFromConstructorName( name: string ): IAvaiableConstructor | undefined
+    {
+        return (
+            this.aviableConstructors.get( name )
+            ?? this.parent?.inferStructTypeFromConstructorName( name )
+        );
+    }
+
+    symFromConcreteType( sym: TirType ): PebbleConcreteTypeSym
+    {
+        const resolveInternalNameResult = this.resolveType( sym.toInternalName() );
+        
+        if( resolveInternalNameResult instanceof PebbleConcreteTypeSym )
+            return resolveInternalNameResult;
+        if( resolveInternalNameResult !== undefined )
+            throw new Error("unexpected symbol: " + sym.toInternalName());
+
+        const concreteSym = new PebbleConcreteTypeSym({
+            name: sym.toInternalName(),
+            concreteType: sym
+        });
+        this.defineConcreteType( concreteSym );
+        return concreteSym;
+    }
+
+    getThisSym(): TirType | undefined
+    {
+        const sym = this.resolveType( "this" );
+        if(!(
+            sym
+            && sym instanceof PebbleConcreteTypeSym
+            && sym.concreteType.isConcrete()
+        )) return undefined;
+        return sym.concreteType;
+    }
+
     getAppliedGenericType(
         genericName: string,
         args: string[],
     ): PebbleConcreteTypeSym | undefined
     {
-        const expectedName =
-        PEBBLE_INTERNAL_IDENTIFIER_PREFIX + 
-        genericName + 
-        PEBBLE_INTERNAL_IDENTIFIER_SEPARATOR +
-        args.join("_");
+        const expectedName = getAppliedTypeInternalName( genericName, args );
         
         const result = this.resolveType( expectedName );
         if( result instanceof PebbleConcreteTypeSym )
@@ -54,7 +146,7 @@ export class Scope
         
         return this._getAppliedGenericType( genericName, args, undefined, expectedName );
     }
-    _getAppliedGenericType(
+    private _getAppliedGenericType(
         genericName: string | PebbleGenericSym,
         args: (string | PebbleConcreteTypeSym)[],
         lowestFullyDefinedScope: Scope | undefined,
@@ -154,6 +246,8 @@ export class Scope
     defineValue( sym: PebbleValueSym ): boolean
     {
         if( this._isReadonly ) return false;
+        if( invalidSymbolNames.has( sym.name ) )
+            return false;
         return this.valueSymbols.define( sym );
     }
     /**
@@ -163,6 +257,8 @@ export class Scope
     defineType( sym: PebbleAnyTypeSym ): boolean
     {
         if( this._isReadonly ) return false;
+        if( invalidSymbolNames.has( sym.name ) )
+            return false;
 
         if( sym instanceof PebbleConcreteTypeSym )
             return this.defineConcreteType( sym );
@@ -181,6 +277,8 @@ export class Scope
     defineConcreteType( sym: IPebbleConcreteTypeSym ): boolean
     {
         if( this._isReadonly ) return false;
+        if( invalidSymbolNames.has( sym.name ) )
+            return false;
         
         if(!( this.typeSymbols instanceof TypeSymbolTable ))
         {
@@ -193,6 +291,8 @@ export class Scope
     defineGenericType( sym: IPebbleGenericSym ): boolean
     {
         if( this._isReadonly ) return false;
+        if( invalidSymbolNames.has( sym.name ) )
+            return false;
 
         if(!( this.typeSymbols instanceof TypeSymbolTable ))
         {
@@ -205,6 +305,8 @@ export class Scope
     defineConcreteFuncType( sym: PebbleConcreteFunctionSym ): boolean
     {
         if( this._isReadonly ) return false;
+        if( invalidSymbolNames.has( sym.name ) )
+            return false;
 
         if(!( this.typeSymbols instanceof TypeSymbolTable ))
         {
@@ -217,6 +319,8 @@ export class Scope
     defineGenericFuncType( sym: PebbleGenericFunctionSym ): boolean
     {
         if( this._isReadonly ) return false;
+        if( invalidSymbolNames.has( sym.name ) )
+            return false;
 
         if(!( this.typeSymbols instanceof TypeSymbolTable ))
         {

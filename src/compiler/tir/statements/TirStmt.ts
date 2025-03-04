@@ -15,9 +15,9 @@ import { TirImportStmt } from "./TirImportStmt";
 import { TirMatchStmt } from "./TirMatchStmt";
 import { TirReturnStmt } from "./TirReturnStmt";
 import { TirTestStmt } from "./TirTestStmt";
-import { TirSimpleVarDecl } from "./TirVarDecl/TirSimpleVarDecl";
 import { TirWhileStmt } from "./TirWhileStmt";
 import { TirExprStmt } from "./TirExprStmt";
+import { TirVarDecl, isTirVarDecl } from "./TirVarDecl/TirVarDecl";
 
 export type TirStmt
     = TirIfStmt
@@ -78,22 +78,5 @@ export function isTirStmt( thing: any ): thing is TirStmt
         || thing instanceof TirImportStmt
         || thing instanceof TirAssignmentStmt
         || thing instanceof TirExprStmt
-    );
-}
-
-export type TirVarDecl
-    = TirSimpleVarDecl
-    // | TirNamedDeconstructVarDecl
-    // | TirSingleDeconstructVarDecl
-    // | TirArrayLikeDeconstr
-    ;
-
-export function isTirVarDecl( thing: any ): thing is TirVarDecl
-{
-    return isObject( thing ) && (
-              thing instanceof TirSimpleVarDecl
-          // || thing instanceof TirNamedDeconstructVarDecl
-          // || thing instanceof TirSingleDeconstructVarDecl
-          // || thing instanceof TirArrayLikeDeconstr
     );
 }

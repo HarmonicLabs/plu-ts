@@ -2,8 +2,8 @@ import { Token } from "../../../../tokenizer/Token";
 import { SourceRange } from "../../../Source/SourceRange";
 import { PebbleExpr } from "../PebbleExpr";
 import { NonNullExpr } from "./NonNullExpr";
-import { PostfixMinusMinus } from "./PrefixMinusMinus";
-import { PostfixPlusPlus } from "./PrefixPlusPlus";
+import { DecrStmt } from "./DecrStmt";
+import { IncrStmt } from "../../statements/IncrStmt";
 
 /**
  * TODO:
@@ -11,16 +11,16 @@ import { PostfixPlusPlus } from "./PrefixPlusPlus";
  *  (NOTE: `?.` (optional chaining) is a different token)
 **/
 export type UnaryPostfixExpr
-    = PostfixPlusPlus
-    | PostfixMinusMinus
+    = IncrStmt
+    | DecrStmt
     | NonNullExpr
     ;
 
 export function isUnaryPostfixExpr( thing: any ): thing is UnaryPostfixExpr
 {
     return (
-        thing instanceof PostfixPlusPlus
-        || thing instanceof PostfixMinusMinus
+        thing instanceof IncrStmt
+        || thing instanceof DecrStmt
         || thing instanceof NonNullExpr
     );
 }
@@ -32,8 +32,8 @@ export type UnaryPostfixToken
     ;
 
 export type UnaryPostfixTokenToExpr<T extends UnaryPostfixToken> =
-    T extends Token.Plus_Plus ?   PostfixPlusPlus :
-    T extends Token.Minus_Minus ? PostfixMinusMinus :
+    T extends Token.Plus_Plus ?   IncrStmt :
+    T extends Token.Minus_Minus ? DecrStmt :
     T extends Token.Exclamation ? NonNullExpr :
     never;
 
@@ -44,8 +44,8 @@ export function makeUnaryPostfixExpr<T extends UnaryPostfixToken>(
 ): UnaryPostfixTokenToExpr<T>
 {
     switch( token ) {
-        case Token.Plus_Plus: return new PostfixPlusPlus( operand, range ) as any;
-        case Token.Minus_Minus: return new PostfixMinusMinus( operand, range ) as any;
+        case Token.Plus_Plus: return new IncrStmt( operand, range ) as any;
+        case Token.Minus_Minus: return new DecrStmt( operand, range ) as any;
         case Token.Exclamation: return new NonNullExpr( operand, range ) as any;
         default:
             throw new Error( "Invalid token for unary prefix expression" );
