@@ -7,7 +7,8 @@ import { PebbleExpr } from "../PebbleExpr";
 export class CallExpr implements HasSourceRange
 {
     constructor(
-        readonly func: PebbleExpr,
+        /** any expression that yeidls a function */
+        readonly funcExpr: PebbleExpr,
         /** if the function is generic */
         readonly genericTypeArgs: AstTypeExpr[] | undefined,
         readonly args: PebbleExpr[],

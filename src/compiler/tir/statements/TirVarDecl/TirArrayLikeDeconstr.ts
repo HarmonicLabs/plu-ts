@@ -11,7 +11,7 @@ export class TirArrayLikeDeconstr
         readonly elements: TirVarDecl[],
         readonly rest: string | undefined,
         public type: TirType,
-        readonly initExpr: TirExpr | undefined,
+        public initExpr: TirExpr | undefined,
         public flags: number,
         readonly range: SourceRange,
     ) {}

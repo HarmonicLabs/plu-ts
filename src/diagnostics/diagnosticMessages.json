@@ -74,6 +74,8 @@
   "Deconstructing '{0}' requires the name of the constructor.": 259,
   "Construcotr '{0}' is not part of the definiton of '{1}'.": 260,
   "Invalid rest parameter, there are no more fields.": 261,
+  "Cannot infer variable type. Try to make the type explicit.": 262,
+  "Cannot infer return type. Try to make the type explicit.": 263,
 
 
   "Importing the table disables some indirect call optimizations.": 901,

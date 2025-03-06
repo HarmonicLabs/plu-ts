@@ -3,7 +3,7 @@ import { Identifier } from "./nodes/common/Identifier";
 import { isPebbleExpr, PebbleExpr } from "./nodes/expr/PebbleExpr";
 import { isPebbleStmt, PebbleStmt } from "./nodes/statements/PebbleStmt";
 import { isAstTypeExpr, AstTypeExpr } from "./nodes/types/AstTypeExpr";
-import { isPebbleDecl, PebbleDecl } from "./nodes/statements/declarations/PebbleDecl";
+import { isPebbleAstTypeDecl, PebbleAstTypeDecl } from "./nodes/statements/declarations/PebbleAstTypeDecl";
 
 
 export type PebbleAst
@@ -12,7 +12,7 @@ export type PebbleAst
     | PebbleExpr
     | AstTypeExpr
     | Identifier
-    | PebbleDecl
+    | PebbleAstTypeDecl
     ;
 
 export function isPebbleAst( thing: any ): thing is PebbleAst
@@ -23,6 +23,6 @@ export function isPebbleAst( thing: any ): thing is PebbleAst
         || isPebbleStmt( thing )
         || isPebbleExpr( thing )
         || isAstTypeExpr( thing )
-        || isPebbleDecl( thing )
+        || isPebbleAstTypeDecl( thing )
     );
 }

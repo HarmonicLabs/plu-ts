@@ -2,7 +2,7 @@ import { AssertStmt } from "./AssertStmt";
 import { BlockStmt } from "./BlockStmt";
 import { BreakStmt } from "./BreakStmt";
 import { ContinueStmt } from "./ContinueStmt";
-import { isPebbleDecl, PebbleDecl } from "./declarations/PebbleDecl";
+import { isPebbleAstTypeDecl, PebbleAstTypeDecl } from "./declarations/PebbleAstTypeDecl";
 import { DoWhileStmt } from "./DoWhileStmt";
 import { EmptyStmt } from "./EmptyStmt";
 import { TypeImplementsStmt } from "./TypeImplementsStmt";
@@ -23,6 +23,8 @@ import { AssignmentStmt, isAssignmentStmt } from "./AssignmentStmt";
 import { ExprStmt } from "./ExprStmt";
 import { IncrStmt } from "./IncrStmt";
 import { DecrStmt } from "./DecrStmt";
+import { UsingStmt } from "./UsingStmt";
+import { FuncDecl } from "./declarations/FuncDecl";
 
 /**
  * An expression is a piece of code
@@ -52,7 +54,7 @@ export type PebbleStmt
     | AssertStmt
     | TestStmt
     | MatchStmt
-    | PebbleDecl
+    | PebbleAstTypeDecl
     | ExportStarStmt
     | ImportStarStmt
     | ExportStmt
@@ -60,8 +62,8 @@ export type PebbleStmt
     | TypeImplementsStmt
     | AssignmentStmt
     | ExprStmt // function calls with side effects (void functions) (error, traces, etc.)
-    | IncrStmt // TODO: move inside AssignmentStmt
-    | DecrStmt // TODO: move inside AssignmentStmt
+    | UsingStmt
+    | FuncDecl
     ;
 
 
@@ -83,7 +85,7 @@ export function isPebbleStmt( stmt: any ): stmt is PebbleStmt
         || stmt instanceof AssertStmt
         || stmt instanceof TestStmt
         || stmt instanceof MatchStmt
-        || isPebbleDecl( stmt )
+        || isPebbleAstTypeDecl( stmt )
         || stmt instanceof ExportStarStmt
         || stmt instanceof ImportStarStmt
         || stmt instanceof ExportStmt
@@ -93,5 +95,7 @@ export function isPebbleStmt( stmt: any ): stmt is PebbleStmt
         || stmt instanceof ExprStmt
         || stmt instanceof IncrStmt
         || stmt instanceof DecrStmt
+        || stmt instanceof UsingStmt
+        || stmt instanceof FuncDecl
     );
 }

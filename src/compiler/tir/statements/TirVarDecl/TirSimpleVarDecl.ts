@@ -9,7 +9,7 @@ export class TirSimpleVarDecl
     constructor(
         readonly name: string,
         readonly type: TirType,
-        readonly initExpr: TirExpr,
+        readonly initExpr: TirExpr | undefined, // deconstructed OR function param
         readonly range: SourceRange,
     ) {}
 }

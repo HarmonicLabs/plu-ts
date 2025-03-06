@@ -66,7 +66,6 @@ import { EnumDecl, EnumValueDecl } from "../ast/nodes/statements/declarations/En
 import { TypeConversionExpr } from "../ast/nodes/expr/TypeConversionExpr";
 import { NonNullExpr } from "../ast/nodes/expr/unary/NonNullExpr";
 import { ElemAccessExpr } from "../ast/nodes/expr/ElemAccessExpr";
-import { makeUnaryPostfixExpr } from "../ast/nodes/expr/unary/UnaryPostfixExpr";
 import { TernaryExpr } from "../ast/nodes/expr/TernaryExpr";
 import { makePropAccessExpr } from "../ast/nodes/expr/PropAccessExpr";
 import { makeBinaryExpr } from "../ast/nodes/expr/binary/BinaryExpr";
@@ -76,7 +75,7 @@ import { AstTypeExpr } from "../ast/nodes/types/AstTypeExpr";
 import { getInternalPath } from "../compiler/path/path";
 import { IsExpr } from "../ast/nodes/expr/IsExpr";
 import { hoistStatementsInplace } from "./hoistStatementsInplace";
-import { UsingDecl, UsingDeclaredConstructor } from "../ast/nodes/statements/UsingDecl";
+import { UsingStmt, UsingStmtDeclaredConstructor } from "../ast/nodes/statements/UsingStmt";
 import { IncrStmt } from "../ast/nodes/statements/IncrStmt";
 import { DecrStmt } from "../ast/nodes/statements/DecrStmt";
 
@@ -266,7 +265,7 @@ export class Parser extends DiagnosticEmitter
         return statement;
     }
 
-    parseUsingDecl(): UsingDecl | undefined
+    parseUsingDecl(): UsingStmt | undefined
     {
         const tn = this.tn;
         const startPos = tn.tokenPos;
@@ -276,7 +275,7 @@ export class Parser extends DiagnosticEmitter
             tn.range(), "{"
         );
 
-        const members = new Array<UsingDeclaredConstructor>();
+        const members = new Array<UsingStmtDeclaredConstructor>();
         while( !tn.skip( Token.CloseBrace ) )
         {
             const thisStartPos = tn.tokenPos;
@@ -298,7 +297,7 @@ export class Parser extends DiagnosticEmitter
                 renamed = new Identifier( tn.readIdentifier(), tn.range() );
             }
 
-            members.push(new UsingDeclaredConstructor(
+            members.push(new UsingStmtDeclaredConstructor(
                 identifier,
                 renamed,
                 tn.range( thisStartPos, tn.pos )
@@ -333,7 +332,7 @@ export class Parser extends DiagnosticEmitter
             if( !typeArgs ) return undefined;
         }
 
-        return new UsingDecl(
+        return new UsingStmt(
             members,
             identifier,
             typeArgs,
@@ -1102,7 +1101,7 @@ export class Parser extends DiagnosticEmitter
 
         tn.skip( Token.Semicolon ); // if any
 
-        return new FuncDecl(
+        const expr = new FuncExpr(
             name,
             flags,
             typeParams ?? [],
@@ -1111,6 +1110,7 @@ export class Parser extends DiagnosticEmitter
             ArrowKind.None,
             tn.range( startPos, endPos )
         );
+        return new FuncDecl( expr );
     }
 
     parseEnum(
@@ -1843,6 +1843,9 @@ export class Parser extends DiagnosticEmitter
                 case Token.Plus_Plus:
                 case Token.Minus_Minus: {
 
+                    throw new Error("increments and decrements are assingment statements, not expressions");
+
+                    /*
                     if(!( expr instanceof Identifier ))
                     return this.error(
                         DiagnosticCode.The_operand_of_an_increment_or_decrement_operator_must_be_a_variable,
@@ -1854,6 +1857,7 @@ export class Parser extends DiagnosticEmitter
                         expr,
                         tn.range( startPos, tn.pos )
                     );
+                    */
 
                     break;
                 }
@@ -2087,7 +2091,10 @@ export class Parser extends DiagnosticEmitter
             case Token.OpenParen: {
                 // determine whether this is a function expression
 
-                if (tn.skip( Token.CloseParen)) { // must be a function expression (fast route)
+                // close paren immediately follows open (`()`)
+                // must be a function expression
+                // (fast route)
+                if( tn.skip( Token.CloseParen) ) {
                     return this.parseCommonFuncExpr(
                         Identifier.anonymous(tn.range(startPos)),
                         [],
@@ -2210,6 +2217,7 @@ export class Parser extends DiagnosticEmitter
                     );
                 }
 
+                // param => ...
                 if(
                     tn.peek() === Token.FatArrow
                     // && !tn.isNextTokenOnNewLine() // original impl had this, not sure why
@@ -2419,7 +2427,7 @@ export class Parser extends DiagnosticEmitter
                 name = Identifier.anonymous(tn.range(tn.pos));
             }
             
-            if (!tn.skip( Token.OpenParen)) {
+            if (!tn.skip( Token.OpenParen )) {
                 this.error(
                     DiagnosticCode._0_expected,
                     tn.range(tn.pos), "("
@@ -2637,6 +2645,7 @@ export class Parser extends DiagnosticEmitter
         );
     }
 
+    /* essentially parses function body */
     private parseCommonFuncExpr(
         name: Identifier,
         parameters: VarDecl[],
@@ -2666,21 +2675,17 @@ export class Parser extends DiagnosticEmitter
         const expectArrow = arrowKind !== ArrowKind.None;
 
         if(
-            expectArrow &&                      // if we expect an arrow
-            !tn.skip( Token.FatArrow)  // but there is none; then error 
-        )
-        {
-            this.error(
+            expectArrow &&              // if we expect an arrow
+            !tn.skip( Token.FatArrow )  // but there is none; then error 
+        ) return this.error(
                 DiagnosticCode._0_expected,
                 tn.range(tn.pos), "=>"
             );
-            return undefined;
-        }
 
         let signature = new AstFuncType(
             parameters,
             returnType,
-            tn.range(signatureStart, tn.pos)
+            tn.range( signatureStart, tn.pos )
         );
 
         let body: BlockStmt | PebbleExpr | undefined = undefined;
@@ -2690,9 +2695,9 @@ export class Parser extends DiagnosticEmitter
             // else lambda `() => expr`
             body = tn.skip( Token.OpenBrace ) ?
                 this.parseBlockStmt( false ) :
-                // this.parseExpr( Precedence.Comma + 1 );
-                this.parseExpr( Precedence.CaseExpr );
+                this.parseExpr( Precedence.Comma + 1 );
         } else {
+            // function name(...) expects necessarely a block statement as body
             if (!tn.skip( Token.OpenBrace)) {
                 this.error(
                     DiagnosticCode._0_expected,
@@ -2702,9 +2707,9 @@ export class Parser extends DiagnosticEmitter
             }
             body = this.parseBlockStmt( false );
         }
-        if (!body) return undefined;
+        if( !body ) return undefined;
 
-        let declaration = new FuncDecl(
+        return new FuncExpr(
             name,
             CommonFlags.None,
             [],
@@ -2713,7 +2718,6 @@ export class Parser extends DiagnosticEmitter
             arrowKind,
             tn.range(startPos, tn.pos)
         );
-        return new FuncExpr(declaration, declaration.range);
     }
 
     parseStatement(

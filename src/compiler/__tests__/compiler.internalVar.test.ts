@@ -1,5 +1,5 @@
 import { isIdentifier } from "../../utils/text";
-import { getInternalName, isInternalName } from "../internalVar";
+import { getInternalVarName, isInternalName } from "../internalVar";
 
 test("isInternalVar", () => {
 
@@ -7,7 +7,7 @@ test("isInternalVar", () => {
     {
         expect( isIdentifier( str ) ).toBe( expected );
         expect( isInternalName( str ) ).toBe( !expected );
-        expect( isInternalName( getInternalName( str ) ) ).toBe( expected );
+        expect( isInternalName( getInternalVarName( str ) ) ).toBe( expected );
     }
 
     testStr( "a" );

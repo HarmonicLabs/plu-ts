@@ -6,7 +6,7 @@ export class IncrStmt
     implements HasSourceRange
 {
     constructor(
-        readonly operandVarName: Identifier,
+        readonly varIdentifier: Identifier,
         readonly range: SourceRange
     ) {}
 }

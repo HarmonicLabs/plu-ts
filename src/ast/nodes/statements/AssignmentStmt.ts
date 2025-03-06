@@ -4,10 +4,12 @@ import { Identifier } from "../common/Identifier";
 import { PebbleExpr } from "../expr/PebbleExpr";
 import { SourceRange } from "../../Source/SourceRange";
 import { HasSourceRange } from "../HasSourceRange";
+import { DecrStmt } from "./DecrStmt";
+import { IncrStmt } from "./IncrStmt";
 
 
 // | AssignmentPattern
-export type AssignmentStmt
+export type ExplicitAssignmentStmt
     = SimpleAssignmentStmt
     // int
     | AddAssignmentStmt
@@ -27,6 +29,17 @@ export type AssignmentStmt
     | LogicalOrAssignmentStmt
     ;
 
+export type ImplicitAssignmentStmt
+    = IncrStmt
+    | DecrStmt
+    ;
+
+export type AssignmentStmt
+    = ExplicitAssignmentStmt
+    | ImplicitAssignmentStmt
+    ;
+
+
 export type AssignmentStmtToken
     = Token.Equals
     | Token.Plus_Equals
@@ -35,6 +48,8 @@ export type AssignmentStmtToken
     | Token.Asterisk_Equals
     | Token.Slash_Equals
     | Token.Percent_Equals
+    | Token.Plus_Plus
+    | Token.Minus_Minus
     | Token.LessThan_LessThan_Equals
     | Token.GreaterThan_GreaterThan_Equals
     | Token.GreaterThan_GreaterThan_GreaterThan_Equals
@@ -54,6 +69,8 @@ export type AssignmentTokenToStmt<T extends AssignmentStmtToken> =
     T extends Token.Asterisk_Equals ? MultAssignmentStmt :
     T extends Token.Slash_Equals ? DivAssignmentStmt :
     T extends Token.Percent_Equals ? ModuloAssignmentStmt :
+    T extends Token.Plus_Plus ? IncrStmt :
+    T extends Token.Minus_Minus ? DecrStmt :
     T extends Token.LessThan_LessThan_Equals ? ShiftLeftAssignmentStmt :
     T extends Token.GreaterThan_GreaterThan_Equals ? ShiftRightAssignmentStmt :
     T extends Token.GreaterThan_GreaterThan_GreaterThan_Equals ? ShiftRightAssignmentStmt :
@@ -73,6 +90,8 @@ export function isAssignmentToken( token: any ): token is AssignmentStmtToken
         || token === Token.Asterisk_Equals
         || token === Token.Slash_Equals
         || token === Token.Percent_Equals
+        || token === Token.Plus_Plus
+        || token === Token.Minus_Minus
         || token === Token.LessThan_LessThan_Equals
         || token === Token.GreaterThan_GreaterThan_Equals
         || token === Token.GreaterThan_GreaterThan_GreaterThan_Equals
@@ -85,6 +104,21 @@ export function isAssignmentToken( token: any ): token is AssignmentStmtToken
 
 export function isAssignmentStmt( stmt: any ): stmt is AssignmentStmt
 {
+    return isImplicitAssignmentStmt( stmt )
+        || isExplicitAssignmentStmt( stmt )
+        ;
+}
+
+export function isImplicitAssignmentStmt( stmt: any ): stmt is ImplicitAssignmentStmt
+{
+    return isObject( stmt ) && (
+        stmt instanceof IncrStmt
+        || stmt instanceof DecrStmt
+    );
+}
+
+export function isExplicitAssignmentStmt( stmt: any ): stmt is ExpAssignmentStmt
+{
     return isObject( stmt ) && (
            stmt instanceof SimpleAssignmentStmt
         || stmt instanceof AddAssignmentStmt
@@ -93,6 +127,8 @@ export function isAssignmentStmt( stmt: any ): stmt is AssignmentStmt
         || stmt instanceof MultAssignmentStmt
         || stmt instanceof DivAssignmentStmt
         || stmt instanceof ModuloAssignmentStmt
+        // || stmt instanceof IncrStmt
+        // || stmt instanceof DecrStmt
         || stmt instanceof ShiftLeftAssignmentStmt
         || stmt instanceof ShiftRightAssignmentStmt
         || stmt instanceof BitwiseAndAssignmentStmt
@@ -119,6 +155,8 @@ export function makeAssignmentStmt<T extends AssignmentStmtToken>(
         case Token.Asterisk_Equals: return new MultAssignmentStmt( varIdentifier, assignedExpr, range ) as any;
         case Token.Slash_Equals: return new DivAssignmentStmt( varIdentifier, assignedExpr, range ) as any;
         case Token.Percent_Equals: return new ModuloAssignmentStmt( varIdentifier, assignedExpr, range ) as any;
+        case Token.Plus_Plus: return new IncrStmt( varIdentifier, range ) as any;
+        case Token.Minus_Minus: return new DecrStmt( varIdentifier, range ) as any;
         case Token.LessThan_LessThan_Equals: return new ShiftLeftAssignmentStmt( varIdentifier, assignedExpr, range ) as any;
         case Token.GreaterThan_GreaterThan_Equals: return new ShiftRightAssignmentStmt( varIdentifier, assignedExpr, range ) as any;
         case Token.GreaterThan_GreaterThan_GreaterThan_Equals: return new ShiftRightAssignmentStmt( varIdentifier, assignedExpr, range ) as any;

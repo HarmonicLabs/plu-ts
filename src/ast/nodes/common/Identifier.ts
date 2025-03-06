@@ -16,4 +16,9 @@ export class Identifier
     {
         return new Identifier( "", range );
     }
+
+    isAnonymous(): boolean
+    {
+        return this.text === "";
+    }
 }

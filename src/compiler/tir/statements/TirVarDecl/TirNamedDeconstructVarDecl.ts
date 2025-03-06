@@ -14,7 +14,7 @@ export class TirNamedDeconstructVarDecl
         readonly fields: Map<string, TirVarDecl>,
         readonly rest: string | undefined,
         readonly type: TirType,
-        readonly initExpr: TirExpr | undefined,
+        public initExpr: TirExpr | undefined,
         public flags: CommonFlags,
         readonly range: SourceRange,
     ) {}

@@ -76,6 +76,8 @@ export enum DiagnosticCode {
     Deconstructing_0_requires_the_name_of_the_constructor = 259,
     Construcotr_0_is_not_part_of_the_definiton_of_1 = 260,
     Invalid_rest_parameter_there_are_no_more_fields = 261,
+    Cannot_infer_variable_type_Try_to_make_the_type_explicit = 262,
+    Cannot_infer_return_type_Try_to_make_the_type_explicit = 263,
     Importing_the_table_disables_some_indirect_call_optimizations = 901,
     Exporting_the_table_disables_some_indirect_call_optimizations = 902,
     Expression_compiles_to_a_dynamic_check_at_runtime = 903,
@@ -350,6 +352,8 @@ export function diagnosticCodeToString(code: DiagnosticCode): string {
         case 259: return "Deconstructing '{0}' requires the name of the constructor.";
         case 260: return "Construcotr '{0}' is not part of the definiton of '{1}'.";
         case 261: return "Invalid rest parameter, there are no more fields.";
+        case 262: return "Cannot infer variable type. Try to make the type explicit.";
+        case 263: return "Cannot infer return type. Try to make the type explicit.";
         case 901: return "Importing the table disables some indirect call optimizations.";
         case 902: return "Exporting the table disables some indirect call optimizations.";
         case 903: return "Expression compiles to a dynamic check at runtime.";

@@ -11,9 +11,11 @@ import { TirTernaryExpr } from "./TirTernaryExpr";
 import { isTirUnaryPrefixExpr, TirUnaryPrefixExpr } from "./unary/TirUnaryPrefixExpr";
 import { isTirBinaryExpr, TirBinaryExpr } from "./binary/TirBinaryExpr";
 import { TirVariableAccessExpr } from "./TirVariableAccessExpr";
+import { TirNonNullExpr } from "./TirNonNullExpr";
 
 export type TirExpr
     =( TirUnaryPrefixExpr
+    | TirNonNullExpr
     | TirLitteralExpr
     | TirParentesizedExpr
     | TirFuncExpr

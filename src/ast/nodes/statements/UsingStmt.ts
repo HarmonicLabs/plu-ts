@@ -3,18 +3,18 @@ import { Identifier } from "../common/Identifier";
 import { HasSourceRange } from "../HasSourceRange";
 import { AstTypeExpr } from "../types/AstTypeExpr";
 
-export class UsingDecl
+export class UsingStmt
     implements HasSourceRange
 {
     constructor(
-        readonly constructorNames: UsingDeclaredConstructor[],
+        readonly constructorNames: UsingStmtDeclaredConstructor[],
         readonly structName: Identifier,
         readonly structTypeParams: AstTypeExpr[],
         readonly range: SourceRange
     ) {}
 }
 
-export class UsingDeclaredConstructor
+export class UsingStmtDeclaredConstructor
     implements HasSourceRange
 {
     constructor(

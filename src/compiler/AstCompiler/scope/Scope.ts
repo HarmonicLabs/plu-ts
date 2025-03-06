@@ -1,11 +1,13 @@
 import { PEBBLE_INTERNAL_IDENTIFIER_PREFIX, PEBBLE_INTERNAL_IDENTIFIER_SEPARATOR } from "../../internalVar";
-import { TirAliasType } from "../../tir/types/TirAliasType";
-import { TirListT } from "../../tir/types/TirNativeType";
 import { TirType } from "../../tir/types/TirType";
-import { getStructType, isStructOrStructAlias } from "../../tir/types/type-check-utils/canAssignTo";
+import { getStructType } from "../../tir/types/type-check-utils/canAssignTo";
 import { IPebbleConcreteTypeSym, IPebbleGenericSym, IPebbleSym, PebbleAnyTypeSym, PebbleConcreteFunctionSym, PebbleConcreteTypeSym, PebbleGenericFunctionSym, PebbleGenericSym, PebbleSym, PebbleValueSym } from "./symbols/PebbleSym";
 import { TypeSymbolTable } from "./TypeSymbolTable";
 import { ValueSymbolTable } from "./ValueSymbolTable";
+
+export interface ScopeInfos {
+    isFunctionDeclScope: boolean;
+}
 
 const invalidSymbolNames = new Set([
     "this"
@@ -41,6 +43,7 @@ export class Scope
 
     constructor(
         parent: Scope | undefined,
+        readonly infos: ScopeInfos,
         valueSymbols?: ValueSymbolTable,
         typeSymbols ?: TypeSymbolTable
     ) {
@@ -62,9 +65,9 @@ export class Scope
 
     readonly(): void { this._isReadonly = true; }
 
-    newChildScope(): Scope
+    newChildScope( infos: ScopeInfos ): Scope
     {
-        return new Scope( this );
+        return new Scope( this, infos );
     }
 
     /**
@@ -120,7 +123,7 @@ export class Scope
         return concreteSym;
     }
 
-    getThisSym(): TirType | undefined
+    getThisType(): TirType | undefined
     {
         const sym = this.resolveType( "this" );
         if(!(
@@ -237,6 +240,7 @@ export class Scope
     {
         const cloned = new Scope(
             this.parent?.clone(),
+            { ...this.infos },
             this.valueSymbols.clone(),
             this.typeSymbols?.clone()
         );
@@ -331,7 +335,10 @@ export class Scope
         );
     }
 
-    resolveValue( name: string ): PebbleValueSym | undefined
+    resolveValue( name: string ): [
+        symbol:  PebbleValueSym,
+        isDefinedOutsideFuncScope: boolean
+    ] | undefined
     {
         return this.valueSymbols.resolve( name );
     }

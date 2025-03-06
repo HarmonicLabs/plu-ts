@@ -9,7 +9,6 @@ import { ParentesizedExpr } from "./ParentesizedExpr";
 import { isPropAccessExpr, PropAccessExpr } from "./PropAccessExpr";
 import { TernaryExpr } from "./TernaryExpr";
 import { TypeConversionExpr } from "./TypeConversionExpr";
-import { isUnaryPostfixExpr, UnaryPostfixExpr } from "./unary/UnaryPostfixExpr";
 import { isUnaryPrefixExpr, UnaryPrefixExpr } from "./unary/UnaryPrefixExpr";
 
 /**
@@ -18,7 +17,7 @@ import { isUnaryPrefixExpr, UnaryPrefixExpr } from "./unary/UnaryPrefixExpr";
  */
 export type PebbleExpr
     = UnaryPrefixExpr
-    | UnaryPostfixExpr
+    | NonNullExpr
     | LitteralExpr
     | ParentesizedExpr
     | FuncExpr
@@ -29,15 +28,14 @@ export type PebbleExpr
     | IsExpr // ( purpose is Spending )
     | ElemAccessExpr
     | TernaryExpr
-    // | CommaExpr
-    | PropAccessExpr
+    // | PropAccessExpr
     ;
 
 export function isPebbleExpr( thing: any ): thing is PebbleExpr
 {
     return (
         isUnaryPrefixExpr( thing )
-        || isUnaryPostfixExpr( thing )
+        || thing instanceof NonNullExpr
         || isLitteralExpr( thing )
         || thing instanceof ParentesizedExpr
         || thing instanceof FuncExpr

@@ -2,12 +2,13 @@
 export class TirTypeParam
 {
     constructor(
-        readonly symbol: symbol = Symbol()
+        readonly name: string,
+        readonly symbol: symbol = Symbol( this.name )
     ) {}
 
     toString(): string
     {
-        return `TypeParam(${this.symbol.toString()})`;
+        return this.name;
     }
 
     toInternalName(): string
@@ -19,6 +20,16 @@ export class TirTypeParam
     
     clone(): TirTypeParam
     {
-        return new TirTypeParam(this.symbol);
+        return new TirTypeParam(this.name, this.symbol);
+    }
+
+    eq( other: TirTypeParam ): boolean
+    {
+        return this.symbol === other.symbol;
+    }
+
+    static eq( a: TirTypeParam, b: TirTypeParam ): boolean
+    {
+        return a.symbol === b.symbol
     }
 }

@@ -9,7 +9,6 @@ import { TirExportStmt } from "./TirExportStmt";
 import { TirFailStmt } from "./TirFailStmt";
 import { TirForOfStmt } from "./TirForOfStmt";
 import { TirForStmt } from "./TirForStmt";
-import { TirFuncDecl, TirSimpleFuncParam } from "./TirFuncDecl";
 import { TirIfStmt } from "./TirIfStmt";
 import { TirImportStmt } from "./TirImportStmt";
 import { TirMatchStmt } from "./TirMatchStmt";
@@ -18,6 +17,7 @@ import { TirTestStmt } from "./TirTestStmt";
 import { TirWhileStmt } from "./TirWhileStmt";
 import { TirExprStmt } from "./TirExprStmt";
 import { TirVarDecl, isTirVarDecl } from "./TirVarDecl/TirVarDecl";
+import { TirFuncDecl } from "./TirFuncDecl";
 
 export type TirStmt
     = TirIfStmt
@@ -32,7 +32,6 @@ export type TirStmt
     // function tirFunc( §thing#1a3f: Thing ) {
     //     const { a, b } = §thing#1a3f;
     // }
-    | TirSimpleFuncParam
     | TirForStmt
     // easier to optimize than normal for loop
     // we remember the difference between the two 
@@ -60,7 +59,6 @@ export function isTirStmt( thing: any ): thing is TirStmt
         thing instanceof TirIfStmt
         || isTirVarDecl( thing)
         || thing instanceof TirFuncDecl
-        || thing instanceof TirSimpleFuncParam
         || thing instanceof TirForStmt
         || thing instanceof TirForOfStmt
         || thing instanceof TirWhileStmt
