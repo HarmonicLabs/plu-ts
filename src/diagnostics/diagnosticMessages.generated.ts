@@ -78,6 +78,15 @@ export enum DiagnosticCode {
     Invalid_rest_parameter_there_are_no_more_fields = 261,
     Cannot_infer_variable_type_Try_to_make_the_type_explicit = 262,
     Cannot_infer_return_type_Try_to_make_the_type_explicit = 263,
+    Cannot_use_is_operator_on_a_value_that_is_not_a_struct_type = 264,
+    Constructor_0_is_not_part_of_the_definition_of_1 = 265,
+    This_check_is_redundant_Struct_0_has_only_one_possible_constructor = 266,
+    This_expression_cannot_be_indexed = 267,
+    Cannot_evaluate_type_expression = 268,
+    Type_0_does_not_have_constructors = 269,
+    Constructor_name_0_is_already_declared_in_this_scope = 270,
+    Unterminated_Unicode_escape_sequence = 271,
+    Left_side_of_opeartor_is_not_optional_right_side_is_unused = 272,
     Importing_the_table_disables_some_indirect_call_optimizations = 901,
     Exporting_the_table_disables_some_indirect_call_optimizations = 902,
     Expression_compiles_to_a_dynamic_check_at_runtime = 903,
@@ -140,16 +149,7 @@ export enum DiagnosticCode {
     An_implementation_cannot_be_declared_in_ambient_contexts = 1183,
     The_variable_declaration_of_a_for_of_statement_cannot_have_an_initializer = 1190,
     An_extended_Unicode_escape_value_must_be_between_0x0_and_0x10FFFF_inclusive = 1198,
-    Unterminated_Unicode_escape_sequence = 1199,
-    Decorators_are_not_valid_here = 1206,
-    _abstract_modifier_can_only_appear_on_a_class_method_or_property_declaration = 1242,
-    Method_0_cannot_have_an_implementation_because_it_is_marked_abstract = 1245,
-    An_interface_property_cannot_have_an_initializer = 1246,
-    A_definite_assignment_assertion_is_not_permitted_in_this_context = 1255,
-    A_class_may_only_extend_another_class = 1311,
     A_parameter_property_cannot_be_declared_using_a_rest_parameter = 1317,
-    A_default_export_can_only_be_used_in_a_module = 1319,
-    An_expression_of_type_0_cannot_be_tested_for_truthiness = 1345,
     An_identifier_or_keyword_cannot_immediately_follow_a_numeric_literal = 1351,
     A_destructured_parameter_for_a_constructor_cannot_have_a_modifier = 1352,
     A_rest_element_must_be_last_in_an_object_destructuring_pattern = 1353,
@@ -187,6 +187,8 @@ export enum DiagnosticCode {
     Unknown_0_constructor_1 = 1388,
     Constructor_0_was_already_specified = 1389,
     A_value_of_type_0_cannot_be_deconstructed_as_an_array = 1390,
+    Expression_is_not_callable = 1391,
+    Unexpected_argument = 1392,
     Duplicate_identifier_0 = 2300,
     Cannot_find_name_0 = 2304,
     Module_0_has_no_exported_member_1 = 2305,
@@ -235,8 +237,6 @@ export enum DiagnosticCode {
     In_const_enum_declarations_member_initializer_must_be_constant_expression = 2474,
     Export_declaration_conflicts_with_exported_declaration_of_0 = 2484,
     _0_is_referenced_directly_or_indirectly_in_its_own_base_expression = 2506,
-    Cannot_create_an_instance_of_an_abstract_class = 2511,
-    Non_abstract_class_0_does_not_implement_inherited_abstract_member_1_from_2 = 2515,
     Object_is_possibly_null = 2531,
     Cannot_assign_to_0_because_it_is_a_constant = 2540,
     The_target_of_an_assignment_must_be_a_variable = 2541,
@@ -263,7 +263,8 @@ export enum DiagnosticCode {
     Type_parameter_is_unused = 2809,
     Assignments_are_statements_not_expressions = 2810,
     Type_parameter_name_must_not_match_a_native_type_name = 2811,
-    This_member_cannot_have_an_override_modifier_because_it_is_not_declared_in_the_base_class_0 = 4117,
+    Type_0_cannot_be_converted_to_type_1 = 2812,
+    Non_null_opeartor_used_on_expression_of_type_0_which_is_not_optional_this_will_be_omitted_during_compilation = 2813,
     File_0_not_found = 6054,
     Import_path_0_is_part_of_a_circular_dependency = 6055,
     Numeric_separators_are_not_allowed_here = 6188,
@@ -354,6 +355,15 @@ export function diagnosticCodeToString(code: DiagnosticCode): string {
         case 261: return "Invalid rest parameter, there are no more fields.";
         case 262: return "Cannot infer variable type. Try to make the type explicit.";
         case 263: return "Cannot infer return type. Try to make the type explicit.";
+        case 264: return "Cannot use 'is' operator on a value that is not a struct type.";
+        case 265: return "Constructor '{0}' is not part of the definition of '{1}'.";
+        case 266: return "This check is redundant. Struct '{0}' has only one possible constructor.";
+        case 267: return "This expression cannot be indexed.";
+        case 268: return "Cannot evaluate type expression.";
+        case 269: return "Type '{0}' does not have constructors.";
+        case 270: return "Constructor name '{0}' is already declared in this scope.";
+        case 271: return "Unterminated Unicode escape sequence";
+        case 272: return "Left side of '??' opeartor is not optional, right side is unused";
         case 901: return "Importing the table disables some indirect call optimizations.";
         case 902: return "Exporting the table disables some indirect call optimizations.";
         case 903: return "Expression compiles to a dynamic check at runtime.";
@@ -416,16 +426,7 @@ export function diagnosticCodeToString(code: DiagnosticCode): string {
         case 1183: return "An implementation cannot be declared in ambient contexts.";
         case 1190: return "The variable declaration of a 'for...of' statement cannot have an initializer.";
         case 1198: return "An extended Unicode escape value must be between 0x0 and 0x10FFFF inclusive.";
-        case 1199: return "Unterminated Unicode escape sequence.";
-        case 1206: return "Decorators are not valid here.";
-        case 1242: return "'abstract' modifier can only appear on a class, method, or property declaration.";
-        case 1245: return "Method '{0}' cannot have an implementation because it is marked abstract.";
-        case 1246: return "An interface property cannot have an initializer.";
-        case 1255: return "A definite assignment assertion '!' is not permitted in this context.";
-        case 1311: return "A class may only extend another class.";
         case 1317: return "A parameter property cannot be declared using a rest parameter.";
-        case 1319: return "A default export can only be used in a module.";
-        case 1345: return "An expression of type '{0}' cannot be tested for truthiness.";
         case 1351: return "An identifier or keyword cannot immediately follow a numeric literal.";
         case 1352: return "A destructured parameter for a constructor cannot have a modifier";
         case 1353: return "A rest element must be last in an object destructuring pattern";
@@ -463,6 +464,8 @@ export function diagnosticCodeToString(code: DiagnosticCode): string {
         case 1388: return "Unknown '{0}' constructor '{1}'";
         case 1389: return "Constructor '{0}' was already specified";
         case 1390: return "A value of type '{0}' cannot be deconstructed as an array.";
+        case 1391: return "Expression is not callable.";
+        case 1392: return "Unexpected argument.";
         case 2300: return "Duplicate identifier '{0}'.";
         case 2304: return "Cannot find name '{0}'.";
         case 2305: return "Module '{0}' has no exported member '{1}'.";
@@ -511,8 +514,6 @@ export function diagnosticCodeToString(code: DiagnosticCode): string {
         case 2474: return "In 'const' enum declarations member initializer must be constant expression.";
         case 2484: return "Export declaration conflicts with exported declaration of '{0}'.";
         case 2506: return "'{0}' is referenced directly or indirectly in its own base expression.";
-        case 2511: return "Cannot create an instance of an abstract class.";
-        case 2515: return "Non-abstract class '{0}' does not implement inherited abstract member '{1}' from '{2}'.";
         case 2531: return "Object is possibly 'null'.";
         case 2540: return "Cannot assign to '{0}' because it is a constant.";
         case 2541: return "The target of an assignment must be a variable";
@@ -539,7 +540,8 @@ export function diagnosticCodeToString(code: DiagnosticCode): string {
         case 2809: return "Type parameter is unused.";
         case 2810: return "Assignments are statements, not expressions.";
         case 2811: return "Type parameter name must not match a native type name.";
-        case 4117: return "This member cannot have an 'override' modifier because it is not declared in the base class '{0}'.";
+        case 2812: return "Type '{0}' cannot be converted to type '{1}'.";
+        case 2813: return "Non-null opeartor used on expression of type '{0}', which is not optional, this will be omitted during compilation.";
         case 6054: return "File '{0}' not found.";
         case 6055: return "Import path '{0}' is part of a circular dependency.";
         case 6188: return "Numeric separators are not allowed here.";

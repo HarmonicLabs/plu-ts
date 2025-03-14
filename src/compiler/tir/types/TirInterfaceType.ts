@@ -1,3 +1,4 @@
+import { TirFuncT } from "./TirNativeType";
 import { TirType } from "./TirType";
 
 export class TirInterfaceType
@@ -30,6 +31,14 @@ export class TirInterfaceMethod
         readonly params: TirType[],
         readonly returnType: TirType
     ) {}
+
+    type(): TirFuncT
+    {
+        return new TirFuncT(
+            this.params,
+            this.returnType
+        );
+    }
 
     clone(): TirInterfaceMethod
     {

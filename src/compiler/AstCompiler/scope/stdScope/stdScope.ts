@@ -14,7 +14,7 @@ import { TirTypeParam } from "../../../tir/types/TirTypeParam";
  * defines the {@link TirNativeType}s as 
  * {@link PebbleTypeSym}s in the standard scope
  */
-export const stdScope = new Scope( undefined );
+export const stdScope = new Scope( undefined, { isFunctionDeclScope: false } );
 
 export const void_t = new TirVoidT();
 export const void_sym = new PebbleConcreteTypeSym({
@@ -57,7 +57,7 @@ export const data_sym = new PebbleConcreteTypeSym({
     concreteType: data_t
 });
 stdScope.defineType( data_sym );
-export const any_optional_t = new TirOptT( new TirTypeParam() );
+export const any_optional_t = new TirOptT( new TirTypeParam("T") );
 stdScope.defineType(
     new PebbleGenericSym({
         name: "Optional",
@@ -69,7 +69,7 @@ stdScope.defineType(
         },
     })
 );
-export const any_list_t = new TirListT( new TirTypeParam() );
+export const any_list_t = new TirListT( new TirTypeParam("T") );
 stdScope.defineType(
     new PebbleGenericSym({
         name: "List",
@@ -81,7 +81,7 @@ stdScope.defineType(
         },
     })
 );
-export const any_linearMap_t = new TirLinearMapT( new TirTypeParam(), new TirTypeParam() );
+export const any_linearMap_t = new TirLinearMapT( new TirTypeParam("KeyT"), new TirTypeParam("ValueT") );
 stdScope.defineType(
     new PebbleGenericSym({
         name: "LinearMap",
@@ -138,7 +138,7 @@ stdScope.defineType(
 
 stdScope.readonly();
 
-export const preludeScope = new Scope( stdScope );
+export const preludeScope = new Scope( stdScope, { isFunctionDeclScope: false } );
 
 // export type Hash32 = bytes;
 export const hash32_t = new TirAliasType(
@@ -598,7 +598,7 @@ export const scriptInfo_t = mkMultiConstructorStruct(
         },
         Spend: {
             ref: txOutRef_t.clone(),
-            datum: opt_data_sym.concreteType.clone()
+            optionalDatum: opt_data_sym.concreteType.clone()
         },
         Withdraw: {
             credential: credential_t.clone()

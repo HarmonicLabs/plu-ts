@@ -27,7 +27,7 @@ export type PropAccessTokenToExpr<T extends PropAccessToken> =
 export function makePropAccessExpr<T extends PropAccessToken>(
     token: T,
     object: PebbleExpr,
-    prop: Identifier | CallExpr,
+    prop: Identifier,
     range: SourceRange
 ): PropAccessTokenToExpr<T>
 {
@@ -54,7 +54,7 @@ export class OptionalPropAccessExpr
 {
     constructor(
         readonly object: PebbleExpr,
-        readonly prop: Identifier | CallExpr,
+        readonly prop: Identifier,
         readonly range: SourceRange
     ) {}
 }
@@ -64,7 +64,7 @@ export class NonNullPropAccessExpr
 {
     constructor(
         readonly object: PebbleExpr,
-        readonly prop: Identifier | CallExpr,
+        readonly prop: Identifier,
         readonly range: SourceRange
     ) {}
 }
@@ -74,7 +74,7 @@ export class DotPropAccessExpr
 {
     constructor(
         readonly object: PebbleExpr,
-        readonly prop: Identifier | CallExpr,
+        readonly prop: Identifier,
         readonly range: SourceRange
     ) {}
 }

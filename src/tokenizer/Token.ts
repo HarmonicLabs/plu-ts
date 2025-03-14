@@ -62,7 +62,7 @@ export enum Token {
     This,         
     // Throw,        
     True,         
-    Try,          
+    // Try,           
     Type,         // AS possible identifier
     // TypeOf,       
     Undefined,

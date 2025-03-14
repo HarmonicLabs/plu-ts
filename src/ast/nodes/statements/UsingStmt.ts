@@ -8,8 +8,7 @@ export class UsingStmt
 {
     constructor(
         readonly constructorNames: UsingStmtDeclaredConstructor[],
-        readonly structName: Identifier,
-        readonly structTypeParams: AstTypeExpr[],
+        readonly structTypeExpr: AstTypeExpr,
         readonly range: SourceRange
     ) {}
 }

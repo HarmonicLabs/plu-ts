@@ -29,7 +29,12 @@ export function getAppliedTypeInternalName(
 export interface IAvaiableConstructor {
     declaredName: string;
     originalName: string;
-    structSym: PebbleConcreteTypeSym;
+    structType: TirType;
+}
+
+export interface JsonScope {
+    values: { [x: string]: string };
+    child: JsonScope | undefined;
 }
 
 export class Scope
@@ -63,6 +68,19 @@ export class Scope
         }
     }
 
+    // debug purposes
+    toJSON(): JsonScope { return this.toJson(); }
+    toJson( child: JsonScope | undefined = undefined ): JsonScope
+    {
+        const localValues: { [x: string]: string } = {};
+        for( const [key, value] of this.valueSymbols.symbols ) localValues[key] = value.type.toString();
+
+        const thisResult = { values: localValues, child };
+
+        if( this.parent ) return this.parent.toJson( thisResult );
+        else return thisResult;
+    }
+
     readonly(): void { this._isReadonly = true; }
 
     newChildScope( infos: ScopeInfos ): Scope
@@ -81,12 +99,12 @@ export class Scope
     defineAviableConstructorIfValid(
         declaredName: string,
         originalName: string,
-        structSym: PebbleConcreteTypeSym,
+        structOrAliasType: TirType,
         // genericTypeSymbol: PebbleGenericSym | undefined
     ): boolean
     {
-        const structType = getStructType( structSym.concreteType );
-        if( !structType || !structType.isConcrete() )
+        const structType = getStructType( structOrAliasType );
+        if( !structType || !structType.isConcrete() || !structOrAliasType.isConcrete() )
             return false; // not a concrete struct
 
         if( this.aviableConstructors.has( declaredName ) ) return false; // already defined
@@ -94,7 +112,7 @@ export class Scope
         this.aviableConstructors.set( declaredName, {
             declaredName,
             originalName,
-            structSym
+            structType: structOrAliasType
         });
         return true;
     }
@@ -270,12 +288,15 @@ export class Scope
         if( sym instanceof PebbleGenericSym )
             return this.defineGenericType( sym );
 
+        /*
         if( sym instanceof PebbleConcreteFunctionSym )
             return this.defineConcreteFuncType( sym );
 
         if( sym instanceof PebbleGenericFunctionSym )
             return this.defineGenericFuncType( sym );
+        //*/
 
+        console.error( sym )
         throw new Error("unknown type symbol");
     }
     defineConcreteType( sym: IPebbleConcreteTypeSym ): boolean
@@ -306,6 +327,7 @@ export class Scope
             sym instanceof PebbleGenericSym ? sym : new PebbleGenericSym( sym )
         );
     }
+    /*
     defineConcreteFuncType( sym: PebbleConcreteFunctionSym ): boolean
     {
         if( this._isReadonly ) return false;
@@ -334,13 +356,25 @@ export class Scope
             sym instanceof PebbleGenericFunctionSym ? sym : new PebbleGenericFunctionSym( sym )
         );
     }
+    //*/
 
     resolveValue( name: string ): [
         symbol:  PebbleValueSym,
         isDefinedOutsideFuncScope: boolean
     ] | undefined
     {
-        return this.valueSymbols.resolve( name );
+        const localResult = this.valueSymbols.resolve( name );
+        if( localResult !== undefined ) return [ localResult, false ];
+
+        const thisIsFuncDeclScope = this.infos.isFunctionDeclScope;
+
+        const parentResult = this.parent?.resolveValue( name );
+        if( parentResult === undefined ) return undefined;
+
+        return [
+            parentResult[0],
+            thisIsFuncDeclScope || parentResult[1]
+        ];
     }
     resolveType( name: string ): PebbleAnyTypeSym | undefined
     {

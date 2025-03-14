@@ -12,6 +12,7 @@ import { isTirUnaryPrefixExpr, TirUnaryPrefixExpr } from "./unary/TirUnaryPrefix
 import { isTirBinaryExpr, TirBinaryExpr } from "./binary/TirBinaryExpr";
 import { TirVariableAccessExpr } from "./TirVariableAccessExpr";
 import { TirNonNullExpr } from "./TirNonNullExpr";
+import { TirTypeConversionExpr } from "./TirTypeConversionExpr";
 
 export type TirExpr
     =( TirUnaryPrefixExpr
@@ -21,6 +22,7 @@ export type TirExpr
     | TirFuncExpr
     | TirCallExpr
     | TirCaseExpr
+    | TirTypeConversionExpr
     | TirIsExpr // ( purpose is Spending )
     | TirElemAccessExpr // arr[idx]
     | TirTernaryExpr
@@ -40,6 +42,7 @@ export function isTirExpr( thing: any ): thing is TirExpr
         || thing instanceof TirFuncExpr
         || thing instanceof TirCallExpr
         || thing instanceof TirCaseExpr
+        || thing instanceof TirTypeConversionExpr
         || thing instanceof TirIsExpr
         || thing instanceof TirElemAccessExpr
         || thing instanceof TirTernaryExpr

@@ -53,6 +53,7 @@ function uncheckedGetCanAssign(
     symbols: Map<symbol, TirType>
 ): CanAssign
 {
+    // remove for tests
     if( a === b ) return CanAssign.Yes; // same object (here for recursive calls)
 
     // unwrap all aliases

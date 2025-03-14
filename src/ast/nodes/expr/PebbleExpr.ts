@@ -10,6 +10,8 @@ import { isPropAccessExpr, PropAccessExpr } from "./PropAccessExpr";
 import { TernaryExpr } from "./TernaryExpr";
 import { TypeConversionExpr } from "./TypeConversionExpr";
 import { isUnaryPrefixExpr, UnaryPrefixExpr } from "./unary/UnaryPrefixExpr";
+import { Identifier } from "../common/Identifier";
+import { BinaryExpr, isBinaryExpr } from "./binary/BinaryExpr";
 
 /**
  * an expression is anything that can be evaluated to a value
@@ -28,6 +30,8 @@ export type PebbleExpr
     | IsExpr // ( purpose is Spending )
     | ElemAccessExpr
     | TernaryExpr
+    | Identifier // variable access
+    | BinaryExpr
     // | PropAccessExpr
     ;
 
@@ -48,5 +52,7 @@ export function isPebbleExpr( thing: any ): thing is PebbleExpr
         || thing instanceof TernaryExpr
         // || thing instanceof CommaExpr
         || isPropAccessExpr( thing )
+        || thing instanceof Identifier
+        || isBinaryExpr( thing )
     );
 }

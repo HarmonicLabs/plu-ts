@@ -1,5 +1,6 @@
 import { HasSourceRange } from "../../../ast/nodes/HasSourceRange";
 import { SourceRange } from "../../../ast/Source/SourceRange";
+import { TirLitStrExpr } from "../expressions/litteral/TirLitStrExpr";
 import { TirImportDecl } from "./TirImportStmt";
 
 /**
@@ -12,7 +13,7 @@ export class TirExportStmt
 {
     constructor(
         readonly members: TirImportDecl[],
-        readonly path: LitStrExpr,
+        readonly path: TirLitStrExpr,
         readonly range: SourceRange,
     ) {}
 }

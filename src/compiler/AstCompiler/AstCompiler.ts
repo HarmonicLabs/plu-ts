@@ -19,15 +19,14 @@ import { IPebbleCompiler } from "../IPebbleCompiler";
 import { getInternalPath, InternalPath, resolveProjAbsolutePath } from "../path/path";
 import { ResolveStackNode } from "./ResolveStackNode";
 import { getAppliedTypeInternalName, Scope, ScopeInfos } from "./scope/Scope";
-import { EnumDecl } from "../../ast/nodes/statements/declarations/EnumDecl";
 import { TirProgram } from "../tir/program/TirProgram";
-import { any_list_t, any_optional_t, bool_sym, bool_t, bytes_t, int_t, preludeScope, string_t, void_t } from "./scope/stdScope/stdScope";
+import { any_list_t, any_optional_t, bool_t, bytes_t, int_t, preludeScope, string_t, void_t } from "./scope/stdScope/stdScope";
 import { TirSource } from "../tir/program/TirSource";
 import { TirStmt } from "../tir/statements/TirStmt";
 import { isTirExpr, TirExpr } from "../tir/expressions/TirExpr";
 import { UnaryExclamation } from "../../ast/nodes/expr/unary/UnaryExclamation";
 import { TirUnaryExclamation } from "../tir/expressions/unary/TirUnaryExclamation";
-import { TirDataT, TirFuncT, TirLinearMapT, TirListT, TirOptT } from "../tir/types/TirNativeType";
+import { TirBoolT, TirDataT, TirFuncT, TirLinearMapT, TirListT, TirOptT } from "../tir/types/TirNativeType";
 import { canAssignTo, getStructType, isStructOrStructAlias } from "../tir/types/type-check-utils/canAssignTo";
 import { UnaryPlus } from "../../ast/nodes/expr/unary/UnaryPlus";
 import { UnaryMinus } from "../../ast/nodes/expr/unary/UnaryMinus";
@@ -51,7 +50,7 @@ import { TirLitHexBytesExpr } from "../tir/expressions/litteral/TirLitHexBytesEx
 import { LitThisExpr } from "../../ast/nodes/expr/litteral/LitThisExpr";
 import { TirLitThisExpr } from "../tir/expressions/litteral/TirLitThisExpr";
 import { LitArrExpr } from "../../ast/nodes/expr/litteral/LitArrExpr";
-import { PebbleConcreteTypeSym, PebbleValueSym } from "./scope/symbols/PebbleSym";
+import { PebbleConcreteTypeSym, PebbleGenericSym, PebbleValueSym } from "./scope/symbols/PebbleSym";
 import { TirLitArrExpr } from "../tir/expressions/litteral/TirLitArrExpr";
 import { TirAliasType } from "../tir/types/TirAliasType";
 import { isTirType, TirType } from "../tir/types/TirType";
@@ -69,8 +68,8 @@ import { CallExpr } from "../../ast/nodes/expr/functions/CallExpr";
 import { IsExpr } from "../../ast/nodes/expr/IsExpr";
 import { ElemAccessExpr } from "../../ast/nodes/expr/ElemAccessExpr";
 import { TernaryExpr } from "../../ast/nodes/expr/TernaryExpr";
-import { isPropAccessExpr, PropAccessExpr } from "../../ast/nodes/expr/PropAccessExpr";
-import { CaseExpr } from "../../ast/nodes/expr/CaseExpr";
+import { DotPropAccessExpr, isPropAccessExpr, NonNullPropAccessExpr, OptionalPropAccessExpr, PropAccessExpr } from "../../ast/nodes/expr/PropAccessExpr";
+import { CaseExpr, CaseExprMatcher } from "../../ast/nodes/expr/CaseExpr";
 import { TypeConversionExpr } from "../../ast/nodes/expr/TypeConversionExpr";
 import { NonNullExpr } from "../../ast/nodes/expr/unary/NonNullExpr";
 import { IfStmt } from "../../ast/nodes/statements/IfStmt";
@@ -97,7 +96,7 @@ import { NamedDeconstructVarDecl } from "../../ast/nodes/statements/declarations
 import { ISingleDeconstructVarDecl, SingleDeconstructVarDecl } from "../../ast/nodes/statements/declarations/VarDecl/SingleDeconstructVarDecl";
 import { ArrayLikeDeconstr } from "../../ast/nodes/statements/declarations/VarDecl/ArrayLikeDeconstr";
 import { AstTypeExpr } from "../../ast/nodes/types/AstTypeExpr";
-import { AstBooleanType, AstBytesType, AstIntType, AstNativeOptionalType, AstVoidType, isAstNativeTypeExpr } from "../../ast/nodes/types/AstNativeTypeExpr";
+import { AstBooleanType, AstBytesType, AstFuncType, AstIntType, AstLinearMapType, AstListType, AstNativeOptionalType, AstVoidType, isAstNativeTypeExpr } from "../../ast/nodes/types/AstNativeTypeExpr";
 import { TirSimpleVarDecl } from "../tir/statements/TirVarDecl/TirSimpleVarDecl";
 import { TirNamedDeconstructVarDecl } from "../tir/statements/TirVarDecl/TirNamedDeconstructVarDecl";
 import { TirSingleDeconstructVarDecl } from "../tir/statements/TirVarDecl/TirSingleDeconstructVarDecl";
@@ -109,7 +108,7 @@ import { TirForStmt } from "../tir/statements/TirForStmt";
 import { IncrStmt } from "../../ast/nodes/statements/IncrStmt";
 import { DecrStmt } from "../../ast/nodes/statements/DecrStmt";
 import { TirAssignmentStmt } from "../tir/statements/TirAssignmentStmt";
-import { TirAddExpr, TirBitwiseAndExpr, TirBitwiseOrExpr, TirBitwiseXorExpr, TirDivExpr, TirExponentiationExpr, TirLogicalAndExpr, TirLogicalOrExpr, TirModuloExpr, TirMultExpr, TirShiftLeftExpr, TirShiftRightExpr, TirSubExpr } from "../tir/expressions/binary/TirBinaryExpr";
+import { TirAddExpr, TirBinaryExpr, TirBitwiseAndExpr, TirBitwiseOrExpr, TirBitwiseXorExpr, TirDivExpr, TirEqualExpr, TirExponentiationExpr, TirGreaterThanEqualExpr, TirGreaterThanExpr, TirLessThanEqualExpr, TirLessThanExpr, TirLogicalAndExpr, TirLogicalOrExpr, TirModuloExpr, TirMultExpr, TirNotEqualExpr, TirOptionalDefaultExpr, TirShiftLeftExpr, TirShiftRightExpr, TirSubExpr } from "../tir/expressions/binary/TirBinaryExpr";
 import { TirVariableAccessExpr } from "../tir/expressions/TirVariableAccessExpr";
 import { TirForOfStmt } from "../tir/statements/TirForOfStmt";
 import { TirWhileStmt } from "../tir/statements/TirWhileStmt";
@@ -136,6 +135,17 @@ import { getUnaliased } from "../tir/types/type-check-utils/getUnaliased";
 import { TirTypeParam } from "../tir/types/TirTypeParam";
 import { getInternalVarName } from "../internalVar";
 import { TirCallExpr } from "../tir/expressions/TirCallExpr";
+import { TirCaseExpr, TirCaseExprMatcher } from "../tir/expressions/TirCaseExpr";
+import { TirTypeConversionExpr } from "../tir/expressions/TirTypeConversionExpr";
+import { canCastTo } from "../tir/types/type-check-utils/canCastTo";
+import { TirIsExpr } from "../tir/expressions/TirIsExpr";
+import { TirElemAccessExpr } from "../tir/expressions/TirElemAccessExpr";
+import { TirTernaryExpr } from "../tir/expressions/TirTernaryExpr";
+import { TirDotPropAccessExpr, TirNonNullPropAccessExpr, TirOptionalPropAccessExpr, TirPropAccessExpr } from "../tir/expressions/TirPropAccessExpr";
+import { getPropAccessReturnType } from "./getPropAccessReturnType";
+import { AstNamedTypeExpr } from "../../ast/nodes/types/AstNamedTypeExpr";
+import { TirExportStmt } from "../tir/statements/TirExportStmt";
+import { AddExpr, BinaryExpr, BitwiseAndExpr, BitwiseOrExpr, BitwiseXorExpr, DivExpr, EqualExpr, ExponentiationExpr, GreaterThanEqualExpr, GreaterThanExpr, isBinaryExpr, LessThanEqualExpr, LessThanExpr, LogicalAndExpr, LogicalOrExpr, ModuloExpr, MultExpr, NotEqualExpr, OptionalDefaultExpr, ShiftLeftExpr, ShiftRightExpr, SubExpr } from "../../ast/nodes/expr/binary/BinaryExpr";
 
 export interface ICompileStmtCtx {
     scope: Scope;
@@ -298,7 +308,7 @@ export class AstCompiler extends DiagnosticEmitter
      * translates the source AST statements
      * to TIR statements; and saves the result in `this.program`
      */
-    private async _compileParsedSource( src: Source )
+    private async _compileParsedSource( src: Source ): Promise<DiagnosticMessage[]>
     {
         if( src.statements.length === 0 )
         {
@@ -497,7 +507,12 @@ export class AstCompiler extends DiagnosticEmitter
         const functionCtx = funcCtx.functionCtx;
         if( !functionCtx ) throw new Error("functionCtx is undefined");
 
-        functionCtx.returnHints.type = typeHint?.returnType;
+        const signatureReturnType = expr.signature.returnType ? this._compileConcreteTypeExpr(
+            ctx,
+            expr.signature.returnType
+        ) : undefined;
+
+        functionCtx.returnHints.type = signatureReturnType ?? typeHint?.returnType;
 
         if( !expr.name.isAnonymous() )
         {
@@ -505,7 +520,7 @@ export class AstCompiler extends DiagnosticEmitter
             // for recursion
             const fullType = new TirFuncT(
                 params.map( p => p.type ),
-                typeHint?.returnType ?? new TirTypeParam("any")
+                signatureReturnType ?? typeHint?.returnType ?? new TirTypeParam("any")
             );
             funcCtx.scope.valueSymbols.symbols.set( funcName, new PebbleValueSym({
                 name: funcName,
@@ -575,17 +590,51 @@ export class AstCompiler extends DiagnosticEmitter
     ): [] | undefined
     {
         stmt.constructorNames;
+        stmt.structTypeExpr;
         stmt.range;
-        stmt.structName;
-        stmt.structTypeParams;
 
-        const structSym = ctx.scope.resolveType( stmt.structName.text );
-        if( !structSym ) return this.error(
-            DiagnosticCode._0_is_not_defined,
-            stmt.structName.range, stmt.structName.text
+        const structOrAliasType = this._compileConcreteTypeExpr( ctx, stmt.structTypeExpr );
+        if( !structOrAliasType ) return undefined;
+
+        // un-alias
+        const structType = getStructType( structOrAliasType );
+        if( !structType || !structType.isConcrete() ) return this.error(
+            DiagnosticCode.Type_0_does_not_have_constructors,
+            stmt.structTypeExpr.range, structOrAliasType.toString()
         );
 
-        return TODO;
+        const defCtorNames = structType.constructors.map( c => c.name );
+        const sameStmtCtorNames: string[] = [];
+
+        for( const stmtCtor of stmt.constructorNames )
+        {
+            const stmtCtorNameId = stmtCtor.constructorName;
+            const stmtCtorName = stmtCtorNameId.text;
+            const stmtReassignedCtorName = stmtCtor.renamedConstructorName;
+
+            if( !defCtorNames.includes( stmtCtorName ) ) return this.error(
+                DiagnosticCode.Constructor_0_is_not_part_of_the_definition_of_1,
+                stmtCtorNameId.range, stmtCtorName, structType.toString(),
+            );
+            if( sameStmtCtorNames.includes( stmtCtorName ) ) return this.error(
+                DiagnosticCode.Constructor_0_was_already_specified,
+                stmtCtorNameId.range, stmtCtorName
+            );
+            sameStmtCtorNames.push( stmtCtorName );
+
+            const valid = ctx.scope.defineAviableConstructorIfValid(
+                stmtReassignedCtorName?.text ?? stmtCtorName,
+                stmtCtorName,
+                structOrAliasType
+            );
+            if( !valid )
+            return this.error(
+                DiagnosticCode.Constructor_name_0_is_already_declared_in_this_scope,
+                stmtCtorNameId.range, stmtCtorName
+            );
+        }
+
+        return [];
     }
 
     private _compileExprStmt(
@@ -689,6 +738,7 @@ export class AstCompiler extends DiagnosticEmitter
                     pattern,
                     deconstructableType
                 );
+                if( !branchArg ) return undefined;
                 const branchBody = wrapManyStatements(
                     this._compileStatement(
                         branchCtx,
@@ -721,6 +771,7 @@ export class AstCompiler extends DiagnosticEmitter
                     pattern,
                     deconstructableType
                 );
+                if( !branchArg ) return undefined;
                 const branchBody = wrapManyStatements(
                     this._compileStatement(
                         branchCtx,
@@ -751,6 +802,7 @@ export class AstCompiler extends DiagnosticEmitter
                     pattern,
                     deconstructableType
                 );
+                if( !branchArg ) return undefined;
                 const branchBody = wrapManyStatements(
                     this._compileStatement(
                         branchCtx,
@@ -794,6 +846,7 @@ export class AstCompiler extends DiagnosticEmitter
                 pattern,
                 deconstructableType
             );
+            if( !branchArg ) return undefined;
             const branchBody = wrapManyStatements(
                 this._compileStatement(
                     branchCtx,
@@ -826,6 +879,7 @@ export class AstCompiler extends DiagnosticEmitter
                 pattern,
                 deconstructableType
             );
+            if( !branchArg ) return undefined;
             const branchBody = wrapManyStatements(
                 this._compileStatement(
                     branchCtx,
@@ -882,17 +936,30 @@ export class AstCompiler extends DiagnosticEmitter
         if( !tirCond ) return undefined;
         if(
             !canAssignTo( tirCond.type, bool_t )
-            || !canAssignTo( tirCond.type, any_optional_t )
-        ) return this.error(
-            DiagnosticCode.Type_0_is_not_assignable_to_type_1,
-            stmt.condition.range, tirCond.type.toString(), bool_t.toString()
-        );
+            && !canAssignTo( tirCond.type, any_optional_t )
+        ) {
+            return this.error(
+                DiagnosticCode.Type_0_is_not_assignable_to_type_1,
+                stmt.condition.range, tirCond.type.toString(), bool_t.toString()
+            );
+        }
 
         let failMsgExpr: TirExpr | undefined = undefined;
         if( stmt.elseExpr )
         {
             failMsgExpr = this._compileExpr( ctx, stmt.elseExpr, string_t );
             if( !failMsgExpr ) return undefined;
+
+            if( canAssignTo( failMsgExpr.type, bytes_t ) )
+            {
+                // auto cast to string
+                failMsgExpr = new TirTypeConversionExpr(
+                    failMsgExpr,
+                    string_t,
+                    failMsgExpr.range
+                );
+            }
+
             if( !canAssignTo( failMsgExpr.type, string_t ) ) return this.error(
                 DiagnosticCode.Type_0_is_not_assignable_to_type_1,
                 stmt.elseExpr.range, failMsgExpr.type.toString(), string_t.toString()
@@ -952,14 +1019,15 @@ export class AstCompiler extends DiagnosticEmitter
     
     private _compileBlockStmt(
         ctx: CompileStmtCtx,
-        stmt: BlockStmt
+        stmt: BlockStmt,
     ): [ TirBlockStmt ] | undefined
     {
+        const blockCtx = ctx.newBranchChildScope();
         // stmt.stmts;
         const tirStmts: TirStmt[] = [];
-        for( const stmt of tirStmts )
+        for( const blockStmt of stmt.stmts )
         {
-            const tirStmt = this._compileStatement( ctx.newBranchChildScope(), stmt );
+            const tirStmt = this._compileStatement( blockCtx, blockStmt );
             if( !Array.isArray( tirStmt ) ) return undefined;
             tirStmts.push( ...tirStmt );
         }
@@ -1006,7 +1074,7 @@ export class AstCompiler extends DiagnosticEmitter
         if( !tirCond ) return undefined;
         if(
             !canAssignTo( tirCond.type, bool_t )
-            || !canAssignTo( tirCond.type, any_optional_t )
+            && !canAssignTo( tirCond.type, any_optional_t )
         ) return this.error(
             DiagnosticCode.Type_0_is_not_assignable_to_type_1,
             stmt.condition.range, tirCond.type.toString(), bool_t.toString()
@@ -1432,10 +1500,10 @@ export class AstCompiler extends DiagnosticEmitter
             isConstant: decl.isConst()
         });
         if( !success )
-            return this.error(
-                DiagnosticCode.Duplicate_identifier_0,
-                decl.name.range, decl.name.text
-            );
+        return this.error(
+            DiagnosticCode.Duplicate_identifier_0,
+            decl.name.range, decl.name.text
+        );
 
         return new TirSimpleVarDecl(
             decl.name.text,
@@ -1719,6 +1787,7 @@ export class AstCompiler extends DiagnosticEmitter
         {
             const compiledArg = this._compileConcreteTypeExpr( ctx, typeExpr.typeArg );
             if( !compiledArg || !compiledArg.isConcrete() ) return undefined;
+
             const compiledInternalName = compiledArg.toInternalName();
             let sym = ctx.scope.getAppliedGenericType(
                 "Optional",
@@ -1727,7 +1796,8 @@ export class AstCompiler extends DiagnosticEmitter
             if( !sym )
             {
                 const inferredType = new TirOptT( compiledArg );
-                if( !inferredType.isConcrete() ) return undefined; // unreachable
+                if( !inferredType.isConcrete() ) return undefined; // unreachable; just setting _isConcrete to true
+
                 sym = new PebbleConcreteTypeSym({
                     name: getAppliedTypeInternalName(
                         "Optional",
@@ -1739,8 +1809,129 @@ export class AstCompiler extends DiagnosticEmitter
             }
             return sym.concreteType; // use exsisting type
         }
+        if( typeExpr instanceof AstListType )
+        {
+            const compiledArg = this._compileConcreteTypeExpr( ctx, typeExpr.typeArg );
+            if( !compiledArg || !compiledArg.isConcrete() ) return undefined;
+            
+            const compiledInternalName = compiledArg.toInternalName();
+            let sym = ctx.scope.getAppliedGenericType(
+                "List",
+                [  compiledInternalName ]
+            );
 
-        return TODO;
+            if( !sym )
+            {
+                const inferredType = new TirListT( compiledArg );
+                if( !inferredType.isConcrete() ) return undefined; // unreachable; just setting _isConcrete to true
+                sym = new PebbleConcreteTypeSym({
+                    name: getAppliedTypeInternalName(
+                        "List",
+                        [ compiledInternalName ]
+                    ),
+                    concreteType: inferredType
+                });
+                ctx.scope.defineConcreteType( sym );
+            }
+
+            return sym.concreteType; // use exsisting type
+        }
+        if( typeExpr instanceof AstLinearMapType )
+        {
+            const kArg = this._compileConcreteTypeExpr( ctx, typeExpr.keyTypeArg );
+            if( !kArg || !kArg.isConcrete() ) return undefined;
+
+            const vArg = this._compileConcreteTypeExpr( ctx, typeExpr.valTypeArg );
+            if( !vArg || !vArg.isConcrete() ) return undefined;
+
+            const kInternalName = kArg.toInternalName();
+            const vInternalName = vArg.toInternalName();
+            let sym = ctx.scope.getAppliedGenericType(
+                "LinearMap",
+                [ kInternalName, vInternalName ]
+            );
+
+            if( !sym )
+            {
+                const inferredType = new TirLinearMapT( kArg, vArg );
+                if( !inferredType.isConcrete() ) return undefined; // unreachable; just setting _isConcrete to true
+                sym = new PebbleConcreteTypeSym({
+                    name: getAppliedTypeInternalName(
+                        "LinearMap",
+                        [ kInternalName, vInternalName ]
+                    ),
+                    concreteType: inferredType
+                });
+                ctx.scope.defineConcreteType( sym );
+            }
+
+            return sym.concreteType; // use exsisting type
+        }
+        if( typeExpr instanceof AstFuncType )
+        {
+            if( !typeExpr.returnType ) return this.error(
+                DiagnosticCode.Type_expected,
+                typeExpr.range.atEnd()
+            );
+
+            const argTypes = typeExpr.params.map( argTypeExpr =>
+                this._compileConcreteTypeExpr( ctx, argTypeExpr )
+            );
+            if( argTypes.some( argType => !argType || !argType.isConcrete() ) ) return undefined;
+
+            const retType = this._compileConcreteTypeExpr( ctx, typeExpr.returnType );
+            if( !retType || !retType.isConcrete() ) return undefined;
+
+            // there is no need to generate symbols on (anonymous) function types
+            return new TirFuncT( argTypes as TirType[], retType );
+        }
+        if( typeExpr instanceof AstNamedTypeExpr ) // struct, aliases and respective params
+        {
+            const typeDefSym = ctx.scope.resolveType( typeExpr.name.text );
+            if( !typeDefSym ) return this.error(
+                DiagnosticCode._0_is_not_defined,
+                typeExpr.name.range, typeExpr.name.text
+            );
+
+            const typeExprArgs = typeExpr.tyArgs.map( typeArgExpr =>
+                this._compileConcreteTypeExpr( ctx, typeArgExpr )
+            ) as TirType[];
+            if( typeExprArgs.some( typeArg =>
+                !typeArg
+                || !typeArg.isConcrete()
+            )) return undefined;
+
+            if( typeDefSym instanceof PebbleConcreteTypeSym )
+            {
+                if( typeExprArgs.length > 0 )
+                return this.error(
+                    DiagnosticCode.Type_0_is_not_generic,
+                    typeExpr.name.range, typeDefSym.concreteType.toString()
+                );
+                return typeDefSym.concreteType;
+            }
+            if( typeDefSym instanceof PebbleGenericSym )
+            {
+                const nTypeDefArgs = typeDefSym.nTypeParameters
+                if( typeExprArgs.length !== nTypeDefArgs )
+                return this.error(
+                    DiagnosticCode.Expected_0_type_arguments_but_got_1,
+                    typeExpr.range, nTypeDefArgs.toString(), typeExprArgs.length.toString()
+                );
+                const inferredType = typeDefSym.getConcreteType( ...typeExprArgs );
+                if( !inferredType ) return this.error(
+                    DiagnosticCode.Cannot_evaluate_type_expression,
+                    typeExpr.range
+                );
+                return inferredType;
+            }
+            
+            console.error( typeDefSym );
+            throw new Error("unreachable::AstCompiler::_compileConcreteTypeExpr");
+        }
+
+        console.error( typeExpr );
+        throw new Error("unreachable::AstCompiler::_compileConcreteTypeExpr");
     }
     
     private _compileIfStmt(
@@ -1752,7 +1943,7 @@ export class AstCompiler extends DiagnosticEmitter
         if( !coditionExpr ) return undefined;
         if(
             !canAssignTo( coditionExpr.type, bool_t )
-            || !canAssignTo( coditionExpr.type, any_optional_t )
+            && !canAssignTo( coditionExpr.type, any_optional_t )
         ) return this.error(
             DiagnosticCode.Type_0_is_not_assignable_to_type_1,
             stmt.condition.range, coditionExpr.type.toString(), "boolean | Optional<T>"
@@ -1811,19 +2002,20 @@ export class AstCompiler extends DiagnosticEmitter
         typeHint: TirType | undefined
     ): TirExpr | undefined
     {
+        if( expr instanceof Identifier ) return this._compileVarAccessExpr( ctx, expr, typeHint );
         if( isUnaryPrefixExpr( expr ) ) return this._compileUnaryPrefixExpr( ctx, expr, typeHint );
         if( expr instanceof NonNullExpr ) return this._compileNonNullExpr( ctx, expr, typeHint );
         if( expr instanceof ParentesizedExpr ) return this._compileExpr( ctx, expr.expr, typeHint );
         if( expr instanceof FuncExpr ) return this._compileFuncExpr( ctx, expr, typeHint );
         if( expr instanceof CallExpr ) return this._compileCallExpr( ctx, expr, typeHint );
-        /* MOVE ME
-        if( expr instanceof CaseExpr ) return ...;
-        if( expr instanceof TypeConversionExpr ) return ...;
-        if( expr instanceof NonNullExpr ) return ...;
-        if( expr instanceof IsExpr ) return ...;
-        if( expr instanceof ElemAccessExpr ) return ...;
-        if( expr instanceof TernaryExpr ) return ...;
+        if( expr instanceof CaseExpr ) return this._compileCaseExpr( ctx, expr, typeHint );
+        if( expr instanceof TypeConversionExpr ) return this._compileTypeConversionExpr( ctx, expr, typeHint );
+        if( expr instanceof NonNullExpr ) return this._compileNonNullExpr( ctx, expr, typeHint );
+        if( expr instanceof IsExpr ) return this._compileIsExpr( ctx, expr, typeHint );
+        if( expr instanceof ElemAccessExpr ) return this._compileElemAccessExpr( ctx, expr, typeHint );
+        if( expr instanceof TernaryExpr ) return this._compileTernaryExpr( ctx, expr, typeHint );
         if( isPropAccessExpr( expr ) ) return this._compilePropAccessExpr( ctx, expr, typeHint );
+        if( isBinaryExpr( expr ) ) return this._compileBinaryExpr( ctx, expr, typeHint );
         //*/
 
         if( isLitteralExpr( expr ) ) return this._compileLitteralExpr( ctx, expr, typeHint );
@@ -1832,16 +2024,909 @@ export class AstCompiler extends DiagnosticEmitter
         throw new Error("unreachable::AstCompiler::_compileExpr");
     }
 
-    private _compileCallExpr(
+    private _compileBinaryExpr(
         ctx: CompileStmtCtx,
-        expr: CallExpr,
+        expr: BinaryExpr,
         typeHint: TirType | undefined
-    ): TirCallExpr
+    ): TirBinaryExpr | undefined
     {
-        expr.genericTypeArgs
-        expr.funcExpr;
-        expr.args;
-        expr.range;
+        if( expr instanceof ExponentiationExpr ) return this._compileExponentiationExpr( ctx, expr, typeHint );
+        if( expr instanceof LessThanExpr ) return this._compileLessThanExpr( ctx, expr, typeHint );
+        if( expr instanceof GreaterThanExpr ) return this._compileGreaterThanExpr( ctx, expr, typeHint );
+        if( expr instanceof LessThanEqualExpr ) return this._compileLessThanEqualExpr( ctx, expr, typeHint );
+        if( expr instanceof GreaterThanEqualExpr ) return this._compileGreaterThanEqualExpr( ctx, expr, typeHint );
+        if( expr instanceof EqualExpr ) return this._compileEqualExpr( ctx, expr, typeHint );
+        if( expr instanceof NotEqualExpr ) return this._compileNotEqualExpr( ctx, expr, typeHint );
+        if( expr instanceof AddExpr ) return this._compileAddExpr( ctx, expr, typeHint );
+        if( expr instanceof SubExpr ) return this._compileSubExpr( ctx, expr, typeHint );
+        if( expr instanceof MultExpr ) return this._compileMultExpr( ctx, expr, typeHint );
+        if( expr instanceof DivExpr ) return this._compileDivExpr( ctx, expr, typeHint );
+        if( expr instanceof ModuloExpr ) return this._compileModuloExpr( ctx, expr, typeHint );
+        if( expr instanceof ShiftLeftExpr ) return this._compileShiftLeftExpr( ctx, expr, typeHint );
+        if( expr instanceof ShiftRightExpr ) return this._compileShiftRightExpr( ctx, expr, typeHint );
+        if( expr instanceof BitwiseAndExpr ) return this._compileBitwiseAndExpr( ctx, expr, typeHint );
+        if( expr instanceof BitwiseXorExpr ) return this._compileBitwiseXorExpr( ctx, expr, typeHint );
+        if( expr instanceof BitwiseOrExpr ) return this._compileBitwiseOrExpr( ctx, expr, typeHint );
+        if( expr instanceof LogicalAndExpr ) return this._compileLogicalAndExpr( ctx, expr, typeHint );
+        if( expr instanceof LogicalOrExpr ) return this._compileLogicalOrExpr( ctx, expr, typeHint );
+        if( expr instanceof OptionalDefaultExpr ) return this._compileOptionalDefaultExpr( ctx, expr, typeHint );
+
+        console.error( expr );
+        throw new Error("unreachable::AstCompiler::_compileBinaryExpr");
+    }
+    // WE ONLY NEED BINARY EXPR HERE
+    // FROM LAST TO FIRST
+    // THAT IS NOT YET IMPLEMENTED
+
+    private _compileExponentiationExpr(
+        ctx: CompileStmtCtx,
+        expr: ExponentiationExpr,
+        _typeHint: TirType | undefined
+    ): TirExponentiationExpr | undefined
+    {
+        const left = this._compileExpr( ctx, expr.left, int_t );
+        if( !left ) return undefined;
+
+        if( !canAssignTo( left.type, int_t ) )
+        return this.error(
+            DiagnosticCode.Type_0_is_not_assignable_to_type_1,
+            expr.left.range, left.type.toString(), int_t.toString()
+        );
+
+        const right = this._compileExpr( ctx, expr.right, int_t );
+        if( !right ) return undefined;
+
+        if( !canAssignTo( right.type, int_t ) )
+        return this.error(
+            DiagnosticCode.Type_0_is_not_assignable_to_type_1,
+            expr.right.range, right.type.toString(), int_t.toString()
+        );
+
+        return new TirExponentiationExpr(
+            left,
+            right,
+            // implicit int type
+            expr.range
+        );
+    }
+
+    private _compileLessThanExpr(
+        ctx: CompileStmtCtx,
+        expr: LessThanExpr,
+        typeHint: TirType | undefined
+    ): TirLessThanExpr | undefined
+    {
+        const left = this._compileExpr( ctx, expr.left, typeHint );
+        if( !left ) return undefined;
+
+        if(
+            !canAssignTo( left.type, int_t )
+            && !canAssignTo( left.type, bytes_t )
+        ) return this.error(
+            DiagnosticCode.Type_0_is_not_assignable_to_type_1,
+            expr.left.range, left.type.toString(), int_t.toString()
+        );
+
+        let leftType = left.type;
+        while( leftType instanceof TirAliasType ) leftType = leftType.aliased;
+
+        const right = this._compileExpr( ctx, expr.right, leftType );
+        if( !right ) return undefined;
+
+        if( !canAssignTo( right.type, leftType ) )
+        return this.error(
+            DiagnosticCode.Type_0_is_not_assignable_to_type_1,
+            expr.right.range, right.type.toString(), leftType.toString()
+        );
+
+        return new TirLessThanExpr(
+            left,
+            right,
+            // implicit bool type,
+            expr.range
+        ); 
+    }
+
+    private _compileGreaterThanExpr(
+        ctx: CompileStmtCtx,
+        expr: GreaterThanExpr,
+        typeHint: TirType | undefined
+    ): TirGreaterThanExpr | undefined
+    {
+        const left = this._compileExpr( ctx, expr.left, typeHint );
+        if( !left ) return undefined;
+
+        if(
+            !canAssignTo( left.type, int_t )
+            && !canAssignTo( left.type, bytes_t )
+        ) return this.error(
+            DiagnosticCode.Type_0_is_not_assignable_to_type_1,
+            expr.left.range, left.type.toString(), int_t.toString()
+        );
+
+        let leftType = left.type;
+        while( leftType instanceof TirAliasType ) leftType = leftType.aliased;
+
+        const right = this._compileExpr( ctx, expr.right, leftType );
+        if( !right ) return undefined;
+
+        if( !canAssignTo( right.type, leftType ) )
+        return this.error(
+            DiagnosticCode.Type_0_is_not_assignable_to_type_1,
+            expr.right.range, right.type.toString(), leftType.toString()
+        );
+
+        return new TirGreaterThanExpr(
+            left,
+            right,
+            // implicit bool type,
+            expr.range
+        ); 
+    }
+
+    private _compileLessThanEqualExpr(
+        ctx: CompileStmtCtx,
+        expr: LessThanEqualExpr,
+        typeHint: TirType | undefined
+    ): TirLessThanEqualExpr | undefined
+    {
+        const left = this._compileExpr( ctx, expr.left, typeHint );
+        if( !left ) return undefined;
+
+        if(
+            !canAssignTo( left.type, int_t )
+            && !canAssignTo( left.type, bytes_t )
+        ) return this.error(
+            DiagnosticCode.Type_0_is_not_assignable_to_type_1,
+            expr.left.range, left.type.toString(), int_t.toString()
+        );
+
+        let leftType = left.type;
+        while( leftType instanceof TirAliasType ) leftType = leftType.aliased;
+
+        const right = this._compileExpr( ctx, expr.right, leftType );
+        if( !right ) return undefined;
+
+        if( !canAssignTo( right.type, leftType ) )
+        return this.error(
+            DiagnosticCode.Type_0_is_not_assignable_to_type_1,
+            expr.right.range, right.type.toString(), leftType.toString()
+        );
+
+        return new TirLessThanEqualExpr(
+            left,
+            right,
+            // implicit bool type,
+            expr.range
+        ); 
+    }
+
+    // only aviable for ints and bytes
+    private _compileGreaterThanEqualExpr(
+        ctx: CompileStmtCtx,
+        expr: GreaterThanEqualExpr,
+        typeHint: TirType | undefined
+    ): TirGreaterThanEqualExpr | undefined
+    {
+        const left = this._compileExpr( ctx, expr.left, typeHint );
+        if( !left ) return undefined;
+
+        if(
+            !canAssignTo( left.type, int_t )
+            && !canAssignTo( left.type, bytes_t )
+        )
+        return this.error(
+            DiagnosticCode.Type_0_is_not_assignable_to_type_1,
+            expr.left.range, left.type.toString(), int_t.toString()
+        );
+
+        let leftType = left.type;
+        while( leftType instanceof TirAliasType ) leftType = leftType.aliased;
+
+        const right = this._compileExpr( ctx, expr.right, leftType );
+        if( !right ) return undefined;
+
+        if( !canAssignTo( right.type, leftType ) )
+        return this.error(
+            DiagnosticCode.Type_0_is_not_assignable_to_type_1,
+            expr.right.range, right.type.toString(), leftType.toString()
+        );
+
+        return new TirGreaterThanEqualExpr(
+            left,
+            right,
+            // implicit bool type,
+            expr.range
+        );
+    }
+
+    private _compileEqualExpr(
+        ctx: CompileStmtCtx,
+        expr: EqualExpr,
+        typeHint: TirType | undefined
+    ): TirEqualExpr | undefined
+    {
+        const left = this._compileExpr( ctx, expr.left, typeHint );
+        if( !left ) return undefined;
+
+        const leftType = left.type;
+
+        const right = this._compileExpr( ctx, expr.right, leftType );
+        if( !right ) return undefined;
+
+        if( !canAssignTo( right.type, leftType ) )
+        return this.error(
+            DiagnosticCode.Type_0_is_not_assignable_to_type_1,
+            expr.right.range, right.type.toString(), leftType.toString()
+        );
+
+        return new TirEqualExpr(
+            left,
+            right,
+            // implicit bool type,
+            expr.range
+        );
+    }
+
+    private _compileNotEqualExpr(
+        ctx: CompileStmtCtx,
+        expr: NotEqualExpr,
+        typeHint: TirType | undefined
+    ): TirNotEqualExpr | undefined
+    {
+        const left = this._compileExpr( ctx, expr.left, typeHint );
+        if( !left ) return undefined;
+
+        const leftType = left.type;
+
+        const right = this._compileExpr( ctx, expr.right, leftType );
+        if( !right ) return undefined;
+
+        if( !canAssignTo( right.type, leftType ) )
+        return this.error(
+            DiagnosticCode.Type_0_is_not_assignable_to_type_1,
+            expr.right.range, right.type.toString(), leftType.toString()
+        );
+
+        return new TirNotEqualExpr(
+            left,
+            right,
+            // implicit bool type,
+            expr.range
+        );
+    }
+
+    private _compileAddExpr(
+        ctx: CompileStmtCtx,
+        expr: AddExpr,
+        _typeHint: TirType | undefined
+    ): TirAddExpr | undefined
+    {
+        const left = this._compileExpr( ctx, expr.left, int_t );
+        if( !left ) return undefined;
+
+        if( !canAssignTo( left.type, int_t ) )
+        return this.error(
+            DiagnosticCode.Type_0_is_not_assignable_to_type_1,
+            expr.left.range, left.type.toString(), int_t.toString()
+        );
+
+        const right = this._compileExpr( ctx, expr.right, int_t );
+        if( !right ) return undefined;
+
+        if( !canAssignTo( right.type, int_t ) )
+        return this.error(
+            DiagnosticCode.Type_0_is_not_assignable_to_type_1,
+            expr.right.range, right.type.toString(), int_t.toString()
+        );
+
+        return new TirAddExpr(
+            left,
+            right,
+            // implicit int type,
+            expr.range
+        );
+    }
+
+    private _compileSubExpr(
+        ctx: CompileStmtCtx,
+        expr: SubExpr,
+        _typeHint: TirType | undefined
+    ): TirSubExpr | undefined
+    {
+        const left = this._compileExpr( ctx, expr.left, int_t );
+        if( !left ) return undefined;
+
+        if( !canAssignTo( left.type, int_t ) )
+        return this.error(
+            DiagnosticCode.Type_0_is_not_assignable_to_type_1,
+            expr.left.range, left.type.toString(), int_t.toString()
+        );
+
+        const right = this._compileExpr( ctx, expr.right, int_t );
+        if( !right ) return undefined;
+
+        if( !canAssignTo( right.type, int_t ) )
+        return this.error(
+            DiagnosticCode.Type_0_is_not_assignable_to_type_1,
+            expr.right.range, right.type.toString(), int_t.toString()
+        );
+
+        return new TirSubExpr(
+            left,
+            right,
+            // implicit int type,
+            expr.range
+        );
+    }
+
+    private _compileMultExpr(
+        ctx: CompileStmtCtx,
+        expr: MultExpr,
+        _typeHint: TirType | undefined
+    ): TirMultExpr | undefined
+    {
+        const left = this._compileExpr( ctx, expr.left, int_t );
+        if( !left ) return undefined;
+
+        if( !canAssignTo( left.type, int_t ) )
+        return this.error(
+            DiagnosticCode.Type_0_is_not_assignable_to_type_1,
+            expr.left.range, left.type.toString(), int_t.toString()
+        );
+
+        const right = this._compileExpr( ctx, expr.right, int_t );
+        if( !right ) return undefined;
+
+        if( !canAssignTo( right.type, int_t ) )
+        return this.error(
+            DiagnosticCode.Type_0_is_not_assignable_to_type_1,
+            expr.right.range, right.type.toString(), int_t.toString()
+        );
+
+        return new TirMultExpr(
+            left,
+            right,
+            // implicit int type,
+            expr.range
+        );
+    }
+
+    private _compileDivExpr(
+        ctx: CompileStmtCtx,
+        expr: DivExpr,
+        _typeHint: TirType | undefined
+    ): TirDivExpr | undefined
+    {
+        const left = this._compileExpr( ctx, expr.left, int_t );
+        if( !left ) return undefined;
+
+        if( !canAssignTo( left.type, int_t ) )
+        return this.error(
+            DiagnosticCode.Type_0_is_not_assignable_to_type_1,
+            expr.left.range, left.type.toString(), int_t.toString()
+        );
+
+        const right = this._compileExpr( ctx, expr.right, int_t );
+        if( !right ) return undefined;
+
+        if( !canAssignTo( right.type, int_t ) )
+        return this.error(
+            DiagnosticCode.Type_0_is_not_assignable_to_type_1,
+            expr.right.range, right.type.toString(), int_t.toString()
+        );
+
+        return new TirDivExpr(
+            left,
+            right,
+            // implicit int type,
+            expr.range
+        );
+    }
+
+    private _compileModuloExpr(
+        ctx: CompileStmtCtx,
+        expr: ModuloExpr,
+        _typeHint: TirType | undefined
+    ): TirModuloExpr | undefined
+    {
+        const left = this._compileExpr( ctx, expr.left, int_t );
+        if( !left ) return undefined;
+
+        if( !canAssignTo( left.type, int_t ) )
+        return this.error(
+            DiagnosticCode.Type_0_is_not_assignable_to_type_1,
+            expr.left.range, left.type.toString(), int_t.toString()
+        );
+
+        const right = this._compileExpr( ctx, expr.right, int_t );
+        if( !right ) return undefined;
+
+        if( !canAssignTo( right.type, int_t ) )
+        return this.error(
+            DiagnosticCode.Type_0_is_not_assignable_to_type_1,
+            expr.right.range, right.type.toString(), int_t.toString()
+        );
+
+        return new TirModuloExpr(
+            left,
+            right,
+            // implicit int type,
+            expr.range
+        );
+    }
+
+    private _compileShiftLeftExpr(
+        ctx: CompileStmtCtx,
+        expr: ShiftLeftExpr,
+        _typeHint: TirType | undefined
+    ): TirShiftLeftExpr | undefined
+    {
+        const left = this._compileExpr( ctx, expr.left, bytes_t );
+        if( !left ) return undefined;
+
+        if( !canAssignTo( left.type, bytes_t ) )
+        return this.error(
+            DiagnosticCode.Type_0_is_not_assignable_to_type_1,
+            expr.left.range, left.type.toString(), bytes_t.toString()
+        );
+
+        const right = this._compileExpr( ctx, expr.right, int_t );
+        if( !right ) return undefined;
+
+        if( !canAssignTo( right.type, int_t ) )
+        return this.error(
+            DiagnosticCode.Type_0_is_not_assignable_to_type_1,
+            expr.right.range, right.type.toString(), int_t.toString()
+        );
+
+        return new TirShiftLeftExpr(
+            left,
+            right,
+            // implicit bytes type,
+            expr.range
+        );
+    }
+
+    private _compileShiftRightExpr(
+        ctx: CompileStmtCtx,
+        expr: ShiftRightExpr,
+        _typeHint: TirType | undefined
+    ): TirShiftRightExpr | undefined
+    {
+        const left = this._compileExpr( ctx, expr.left, bytes_t );
+        if( !left ) return undefined;
+
+        if( !canAssignTo( left.type, bytes_t ) )
+        return this.error(
+            DiagnosticCode.Type_0_is_not_assignable_to_type_1,
+            expr.left.range, left.type.toString(), bytes_t.toString()
+        );
+
+        const right = this._compileExpr( ctx, expr.right, int_t );
+        if( !right ) return undefined;
+
+        if( !canAssignTo( right.type, int_t ) )
+        return this.error(
+            DiagnosticCode.Type_0_is_not_assignable_to_type_1,
+            expr.right.range, right.type.toString(), int_t.toString()
+        );
+
+        return new TirShiftRightExpr(
+            left,
+            right,
+            // implicit bytes type,
+            expr.range
+        );
+    }
+
+    private _compileBitwiseAndExpr(
+        ctx: CompileStmtCtx,
+        expr: BitwiseAndExpr,
+        _typeHint: TirType | undefined
+    ): TirBitwiseAndExpr | undefined
+    {
+        const left = this._compileExpr( ctx, expr.left, bytes_t );
+        if( !left ) return undefined;
+
+        if( !canAssignTo( left.type, bytes_t ) )
+        return this.error(
+            DiagnosticCode.Type_0_is_not_assignable_to_type_1,
+            expr.left.range, left.type.toString(), bytes_t.toString()
+        );
+
+        const right = this._compileExpr( ctx, expr.right, bytes_t );
+        if( !right ) return undefined;
+
+        if( !canAssignTo( right.type, bytes_t ) )
+        return this.error(
+            DiagnosticCode.Type_0_is_not_assignable_to_type_1,
+            expr.right.range, right.type.toString(), bytes_t.toString()
+        );
+
+        return new TirBitwiseAndExpr(
+            left,
+            right,
+            // implicit bytes type,
+            expr.range
+        );
+    }
+
+    private _compileBitwiseXorExpr(
+        ctx: CompileStmtCtx,
+        expr: BitwiseXorExpr,
+        _typeHint: TirType | undefined
+    ): TirBitwiseXorExpr | undefined
+    {
+        const left = this._compileExpr( ctx, expr.left, bytes_t );
+        if( !left ) return undefined;
+
+        if( !canAssignTo( left.type, bytes_t ) )
+        return this.error(
+            DiagnosticCode.Type_0_is_not_assignable_to_type_1,
+            expr.left.range, left.type.toString(), bytes_t.toString()
+        );
+
+        const right = this._compileExpr( ctx, expr.right, bytes_t );
+        if( !right ) return undefined;
+
+        if( !canAssignTo( right.type, bytes_t ) )
+        return this.error(
+            DiagnosticCode.Type_0_is_not_assignable_to_type_1,
+            expr.right.range, right.type.toString(), bytes_t.toString()
+        );
+
+        return new TirBitwiseXorExpr(
+            left,
+            right,
+            // implicit bytes type,
+            expr.range
+        );
+    }
+
+    private _compileBitwiseOrExpr(
+        ctx: CompileStmtCtx,
+        expr: BitwiseOrExpr,
+        _typeHint: TirType | undefined
+    ): TirBitwiseOrExpr | undefined
+    {
+        const left = this._compileExpr( ctx, expr.left, bytes_t );
+        if( !left ) return undefined;
+
+        if( !canAssignTo( left.type, bytes_t ) )
+        return this.error(
+            DiagnosticCode.Type_0_is_not_assignable_to_type_1,
+            expr.left.range, left.type.toString(), bytes_t.toString()
+        );
+
+        const right = this._compileExpr( ctx, expr.right, bytes_t );
+        if( !right ) return undefined;
+
+        if( !canAssignTo( right.type, bytes_t ) )
+        return this.error(
+            DiagnosticCode.Type_0_is_not_assignable_to_type_1,
+            expr.right.range, right.type.toString(), bytes_t.toString()
+        );
+
+        return new TirBitwiseOrExpr(
+            left,
+            right,
+            // implicit bytes type,
+            expr.range
+        );
+    }
+
+    private _compileLogicalAndExpr(
+        ctx: CompileStmtCtx,
+        expr: LogicalAndExpr,
+        _typeHint: TirType | undefined
+    ): TirLogicalAndExpr | undefined
+    {
+        const left = this._compileExpr( ctx, expr.left, bool_t );
+        if( !left ) return undefined;
+
+        // TODO: accept optionals
+        if( !canAssignTo( left.type, bool_t ) )
+        return this.error(
+            DiagnosticCode.Type_0_is_not_assignable_to_type_1,
+            expr.left.range, left.type.toString(), bool_t.toString()
+        );
+
+        const right = this._compileExpr( ctx, expr.right, bool_t );
+        if( !right ) return undefined;
+
+        // TODO: accept optionals
+        if( !canAssignTo( right.type, bool_t ) )
+        return this.error(
+            DiagnosticCode.Type_0_is_not_assignable_to_type_1,
+            expr.right.range, right.type.toString(), bool_t.toString()
+        );
+
+        return new TirLogicalAndExpr(
+            left,
+            right,
+            // implicit bool type,
+            expr.range
+        );
+    }
+
+    private _compileLogicalOrExpr(
+        ctx: CompileStmtCtx,
+        expr: LogicalOrExpr,
+        _typeHint: TirType | undefined
+    ): TirLogicalOrExpr | undefined
+    {
+        const left = this._compileExpr( ctx, expr.left, bool_t );
+        if( !left ) return undefined;
+
+        // TODO: accept optionals
+        if( !canAssignTo( left.type, bool_t ) )
+        return this.error(
+            DiagnosticCode.Type_0_is_not_assignable_to_type_1,
+            expr.left.range, left.type.toString(), bool_t.toString()
+        );
+
+        const right = this._compileExpr( ctx, expr.right, bool_t );
+        if( !right ) return undefined;
+
+        // TODO: accept optionals
+        if( !canAssignTo( right.type, bool_t ) )
+        return this.error(
+            DiagnosticCode.Type_0_is_not_assignable_to_type_1,
+            expr.right.range, right.type.toString(), bool_t.toString()
+        );
+
+        return new TirLogicalOrExpr(
+            left,
+            right,
+            // implicit bool type,
+            expr.range
+        );
+    }
+
+    private _compileOptionalDefaultExpr(
+        ctx: CompileStmtCtx,
+        expr: OptionalDefaultExpr,
+        typeHint: TirType | undefined
+    ): TirOptionalDefaultExpr | undefined
+    {
+        const left = this._compileExpr( ctx, expr.left, typeHint ? new TirOptT( typeHint ) : undefined );
+        if( !left ) return undefined;
+
+        const leftType = left.type;
+        const leftOptArg = getOptTypeArg( leftType );
+        const returnType = leftOptArg ?? leftType;
+        const optReturnType = new TirOptT( returnType );
+
+        if( !leftOptArg ) return this.warning(
+            DiagnosticCode.Left_side_of_opeartor_is_not_optional_right_side_is_unused,
+            expr.right.range
+        );
+
+        const right = this._compileExpr( ctx, expr.right, leftOptArg ?? typeHint );
+        if( !right ) return undefined;
+
+        const isUnwrappedReturn = canAssignTo( right.type, returnType );
+        if( !isUnwrappedReturn && !canAssignTo( right.type, optReturnType ) ) return this.error(
+            DiagnosticCode.Type_0_is_not_assignable_to_type_1,
+            expr.right.range, right.type.toString(), returnType.toString()
+        );
+
+        return new TirOptionalDefaultExpr(
+            left,
+            right,
+            isUnwrappedReturn ? returnType : optReturnType,
+            expr.range
+        );
+    }
+
+    private _compileVarAccessExpr(
+        ctx: CompileStmtCtx,
+        expr: Identifier,
+        typeHint: TirType | undefined
+    ): TirVariableAccessExpr | undefined
+    {
+        const resolvedValue = ctx.scope.resolveValue( expr.text );
+        if( !resolvedValue ) return this.error(
+            DiagnosticCode._0_is_not_defined,
+            expr.range, expr.text
+        );
+        const [ varSym, isDefinedOutsideFuncScope ] = resolvedValue;
+        return new TirVariableAccessExpr(
+            expr.text,
+            varSym.type,
+            expr.range
+        );
+    }
+
+    private _compilePropAccessExpr(
+        ctx: CompileStmtCtx,
+        expr: PropAccessExpr,
+        typeHint: TirType | undefined
+    ): TirPropAccessExpr | undefined
+    {
+        if( expr instanceof OptionalPropAccessExpr ) return this._compileOptionalPropAccessExpr( ctx, expr, typeHint );
+        if( expr instanceof NonNullPropAccessExpr ) return this._compileNonNullPropAccessExpr( ctx, expr, typeHint );
+        if( expr instanceof DotPropAccessExpr ) return this._compileDotPropAccessExpr( ctx, expr, typeHint );
+
+        console.error( expr );
+        throw new Error("unreachable::AstCompiler::_compilePropAccessExpr");
+    }
+
+    private _compileOptionalPropAccessExpr(
+        ctx: CompileStmtCtx,
+        expr: OptionalPropAccessExpr,
+        _typeHint: TirType | undefined
+    ): TirOptionalPropAccessExpr | undefined
+    {
+        const objExpr = this._compileExpr( ctx, expr.object, undefined );
+        if( !objExpr ) return undefined;
+
+        const objType = objExpr.type;
+        const returnType = getPropAccessReturnType( objType, expr.prop );
+        if( !returnType ) return this.error(
+            DiagnosticCode.Property_0_does_not_exist_on_type_1,
+            expr.prop.range, expr.prop.text, objType.toString()
+        );
+
+        const optionalType = new TirOptT( returnType );
+
+        return new TirOptionalPropAccessExpr(
+            objExpr,
+            expr.prop,
+            optionalType,
+            expr.range
+        );
+    }
+
+    private _compileNonNullPropAccessExpr(
+        ctx: CompileStmtCtx,
+        expr: NonNullPropAccessExpr,
+        _typeHint: TirType | undefined
+    ): TirDotPropAccessExpr | undefined
+    {
+        const nonNullObj = this._compileNonNullExpr(
+            ctx,
+            new NonNullExpr( expr.object, expr.object.range ),
+            undefined
+        );
+        if( !nonNullObj ) return undefined;
+        return this._compileDotPropAccessExpr(
+            ctx,
+            new DotPropAccessExpr( nonNullObj, expr.prop, expr.range ),
+            _typeHint
+        );
+    }
+
+    private _compileDotPropAccessExpr(
+        ctx: CompileStmtCtx,
+        expr: DotPropAccessExpr,
+        _typeHint: TirType | undefined
+    ): TirDotPropAccessExpr | undefined
+    {
+        const objExpr = this._compileExpr( ctx, expr.object, undefined );
+        if( !objExpr ) return undefined;
+
+        const objType = objExpr.type;
+        const returnType = getPropAccessReturnType( objType, expr.prop );
+        if( !returnType ) return this.error(
+            DiagnosticCode.Property_0_does_not_exist_on_type_1,
+            expr.prop.range, expr.prop.text, objType.toString()
+        );
+
+        return new TirDotPropAccessExpr(
+            objExpr,
+            expr.prop,
+            returnType,
+            expr.range
+        );
+    }
+
+    private _compileTernaryExpr(
+        ctx: CompileStmtCtx,
+        expr: TernaryExpr,
+        typeHint: TirType | undefined
+    ): TirTernaryExpr | undefined
+    {
+        const cond = this._compileExpr( ctx, expr.condition, bool_t );
+        if( !cond ) return undefined;
+        if( !canAssignTo( cond.type, bool_t ) ) return this.error(
+            DiagnosticCode.Type_0_is_not_assignable_to_type_1,
+            expr.condition.range, cond.type.toString(), bool_t.toString()
+        );
+
+        const thenExpr = this._compileExpr( ctx, expr.ifTrue, typeHint );
+        if( !thenExpr ) return undefined;
+
+        const returnType = thenExpr.type;
+
+        const elseExpr = this._compileExpr( ctx, expr.ifFalse, returnType );
+        if( !elseExpr ) return undefined;
+
+        if( !canAssignTo( elseExpr.type, returnType ) ) return this.error(
+            DiagnosticCode.Type_0_is_not_assignable_to_type_1,
+            expr.ifFalse.range, elseExpr.type.toString(), returnType.toString()
+        );
+
+        return new TirTernaryExpr(
+            cond,
+            thenExpr,
+            elseExpr,
+            returnType,
+            expr.range
+        );
+    }
+
+    private _compileElemAccessExpr(
+        ctx: CompileStmtCtx,
+        expr: ElemAccessExpr,
+        typeHint: TirType | undefined
+    ): TirElemAccessExpr | undefined
+    {
+        const litsTypeHint = typeHint ? new TirListT( typeHint ) : undefined;
+
+        const arrLikeExpr = this._compileExpr( ctx, expr.arrLikeExpr, litsTypeHint );
+        if( !arrLikeExpr ) return undefined;
+        
+        const arrLikeType = arrLikeExpr.type;
+        const elemsType = getListTypeArg( arrLikeType );
+        if( !elemsType ) return this.error(
+            DiagnosticCode.This_expression_cannot_be_indexed,
+            expr.arrLikeExpr.range
+        );
+
+        const indexExpr = this._compileExpr( ctx, expr.indexExpr, int_t );
+        if( !indexExpr ) return undefined;
+        if( !canAssignTo( indexExpr.type, int_t ) ) return this.error(
+            DiagnosticCode.Type_0_is_not_assignable_to_type_1,
+            expr.indexExpr.range, indexExpr.type.toString(), int_t.toString()
+        );
+
+        return new TirElemAccessExpr(
+            arrLikeExpr,
+            indexExpr,
+            elemsType,
+            expr.range
+        );
+    }
+
+    private _compileIsExpr(
+        ctx: CompileStmtCtx,
+        expr: IsExpr,
+        _typeHint: TirType | undefined
+    ): TirIsExpr | undefined
+    {
+        const target = this._compileExpr( ctx, expr.instanceExpr, undefined );
+        if( !target ) return undefined;
+
+        const structType = getStructType( target.type );
+        if( !structType ) return this.error(
+            DiagnosticCode.Cannot_use_is_operator_on_a_value_that_is_not_a_struct_type,
+            expr.instanceExpr.range
+        );
+
+        const targetCtorId = expr.ofType;
+        const targetCtorName = targetCtorId.text;
+
+        const structCtors = structType.constructors;
+        const targetCtor = structCtors.find( ctor => ctor.name === targetCtorName );
+        if( !targetCtor ) return this.error(
+            DiagnosticCode.Constructor_0_is_not_part_of_the_definition_of_1,
+            expr.ofType.range, targetCtorName, structType.toString()
+        );
+
+        if( structCtors.length === 1 )
+        this.warning(
+            DiagnosticCode.This_check_is_redundant_Struct_0_has_only_one_possible_constructor,
+            expr.range, structType.toString()
+        );
+
+        return new TirIsExpr(
+            target,
+            expr.ofType,
+            bool_t,
+            expr.range
+        );
     }
 
     private _compileNonNullExpr(
@@ -1854,21 +2939,165 @@ export class AstCompiler extends DiagnosticEmitter
         if( !operand ) return undefined;
         const operandType = operand.type;
         const nonNullType = getOptTypeArg( operandType );
-        if( !nonNullType ) return this.error(
-            DiagnosticCode.Type_0_is_not_assignable_to_type_1,
-            expr.operand.range, operandType.toString(), "Optional<T>"
+        if( !nonNullType ) this.warning(
+            DiagnosticCode.Non_null_opeartor_used_on_expression_of_type_0_which_is_not_optional_this_will_be_omitted_during_compilation,
+            expr.operand.range, operandType.toString()
         );
         return new TirNonNullExpr(
             operand,
-            nonNullType,
+            nonNullType ?? operandType,
             expr.range
-        );   
+        );
+    }
+
+    private _compileTypeConversionExpr(
+        ctx: CompileStmtCtx,
+        ast: TypeConversionExpr,
+        typeHint: TirType | undefined
+    ): TirTypeConversionExpr | undefined
+    {
+        const targetType = this._compileConcreteTypeExpr( ctx, ast.asType );
+        if( !targetType ) return undefined;
+
+        const expr = this._compileExpr( ctx, ast.expr, targetType );
+        if( !expr ) return undefined;
+
+        if( !canCastTo( expr.type, targetType ) ) return this.error(
+            DiagnosticCode.Type_0_cannot_be_converted_to_type_1,
+            ast.expr.range, expr.type.toString(), targetType.toString()
+        );
+
+        return new TirTypeConversionExpr(
+            expr,
+            targetType,
+            ast.range
+        );
+    }
+
+    private _compileCaseExpr(
+        ctx: CompileStmtCtx,
+        expr: CaseExpr,
+        typeHint: TirType | undefined
+    ): TirCaseExpr | undefined
+    {
+        const matchExpr = this._compileExpr( ctx, expr.matchExpr, typeHint );
+        if( !matchExpr ) return undefined;
+
+        const cases = expr.cases.map( branch =>
+            this._compileCaseExprMatcher(
+                ctx,
+                branch,
+                matchExpr.type,
+                typeHint
+            )
+        ) as TirCaseExprMatcher[]; // we early return in case of undefined so this is safe
+        if( cases.some( c => !c ) ) return undefined;
+
+        const returnType = cases[0]?.body.type ?? typeHint;
+        if( !returnType ) return this.error(
+            DiagnosticCode.Cannot_infer_return_type_Try_to_make_the_type_explicit,
+            expr.range
+        );
+
+        return new TirCaseExpr(
+            matchExpr,
+            cases,
+            returnType,
+            expr.range
+        );
+    }
+
+    private _compileCaseExprMatcher(
+        ctx: CompileStmtCtx,
+        matcher: CaseExprMatcher,
+        patternType: TirType,
+        returnTypeHint: TirType | undefined
+    ): TirCaseExprMatcher | undefined
+    {
+        const pattern = this._compileVarDecl( ctx, matcher.pattern, patternType );
+        if( !pattern ) return undefined;
+        if( !canAssignTo( pattern.type, patternType ) ) return this.error(
+            DiagnosticCode.Type_0_is_not_assignable_to_type_1,
+            matcher.pattern.range, pattern.type.toString(), patternType.toString()
+        );
+
+        const body = this._compileExpr( ctx, matcher.body, returnTypeHint );
+        if( !body ) return undefined;
+        if( returnTypeHint && !canAssignTo( body.type, returnTypeHint ) ) return this.error(
+            DiagnosticCode.Type_0_is_not_assignable_to_type_1,
+            matcher.body.range, body.type.toString(), returnTypeHint.toString()
+        );
+
+        return new TirCaseExprMatcher(
+            pattern,
+            body,
+            matcher.range
+        );
+    }
+    
+    private _compileCallExpr(
+        ctx: CompileStmtCtx,
+        expr: CallExpr,
+        typeHint: TirType | undefined
+    ): TirCallExpr | undefined
+    {
+        // TODO: expr.genericTypeArgs
+        expr.funcExpr;
+        expr.args;
+        expr.range;
+
+        if(!( typeHint instanceof TirFuncT )) typeHint = undefined;
+
+        const funcExpr = this._compileExpr( ctx, expr.funcExpr, typeHint );
+        if( !funcExpr ) return undefined;
+
+        if( !( funcExpr.type instanceof TirFuncT ) ) return this.error(
+            DiagnosticCode.Expression_is_not_callable,
+            expr.funcExpr.range
+        );
+        const funcType = funcExpr.type;
+
+        for( let i = funcType.argTypes.length; i < expr.args.length; i++ )
+        {
+            this.warning(
+                DiagnosticCode.Unexpected_argument,
+                expr.args[i].range
+            ); // not a big deal
+        }
+
+        if( funcType.argTypes.length < expr.args.length )
+            expr.args.length = funcType.argTypes.length; // drop extra
+
+        const finalCallExprType = funcType.argTypes.length === expr.args.length ?
+            funcType.returnType :
+            new TirFuncT( funcType.argTypes.slice( expr.args.length ), funcType.returnType );
+
+        const args = expr.args.map((arg, i) =>
+            this._compileExpr( ctx, arg, funcType.argTypes[i] )
+        ) as TirExpr[]; // we early return in case of undefined
+        for( let i = 0; i < args.length; i++ )
+        {
+            const arg = args[i];
+            if( !arg ) return undefined;
+            if( !canAssignTo( arg.type, funcType.argTypes[i] ) )
+            return this.error(
+                DiagnosticCode.Type_0_is_not_assignable_to_type_1,
+                expr.args[i].range, arg.type.toString(), funcType.argTypes[i].toString()
+            );
+        }
+
+        return new TirCallExpr(
+            funcExpr,
+            args,
+            finalCallExprType,
+            expr.range
+        );
     }
 
     private _compileUnaryPrefixExpr(
         ctx: CompileStmtCtx,
         expr: UnaryPrefixExpr,
-        typeHint: TirType | undefined
+        _typeHint: TirType | undefined
     ): TirUnaryPrefixExpr | undefined
     {
         if( expr instanceof UnaryExclamation )
@@ -2005,7 +3234,7 @@ export class AstCompiler extends DiagnosticEmitter
         } else typeHint = undefined;
         const constructorName = expr.name.text;
         const inferredStructType: TirStructType | undefined = getStructType(
-            ctx.scope.inferStructTypeFromConstructorName( constructorName )?.structSym.concreteType
+            ctx.scope.inferStructTypeFromConstructorName( constructorName )?.structType
         );
         if( !inferredStructType )
         {
@@ -2195,7 +3424,7 @@ export class AstCompiler extends DiagnosticEmitter
         const compiledRestElems = restElems.map( elem => {
             const compiled = this._compileExpr( ctx, elem, elemsType );
             if( !compiled ) return undefined;
-            if( !canAssignTo( compiled.type, elemsType ) )
+            if( !canAssignTo( compiled.type, elemsType! ) )
             {
                 return this.error(
                     DiagnosticCode.Type_0_is_not_assignable_to_type_1,
@@ -2217,7 +3446,7 @@ export class AstCompiler extends DiagnosticEmitter
      * Collect all types declared in the top-level statements
      * 
      * @returns the file top-level scope ( preludeScope <- imports <- fileTopLevelDecls )
-     */
+     * /
     collectTypes( ctx: CompileStmtCtx, topLevelStmts: PebbleStmt[] ): Scope
     {
         const importsScope = new Scope(
@@ -2229,6 +3458,7 @@ export class AstCompiler extends DiagnosticEmitter
         this.collectFileDeclaredTypes( fileTopLevelDeclsScope, topLevelStmts );
         return fileTopLevelDeclsScope
     }
+    //*/
 
     /**
      * Collect all imported types
@@ -2281,7 +3511,7 @@ export class AstCompiler extends DiagnosticEmitter
     /**
      * @returns `true` if there were no errors. `false` otherwise.
      */
-    private async parseAllImportedFiles(
+    async parseAllImportedFiles(
         _resolveStackNode: ResolveStackNode
     ): Promise<boolean>
     {

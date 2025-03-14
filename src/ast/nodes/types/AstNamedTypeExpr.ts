@@ -3,6 +3,9 @@ import { Identifier } from "../common/Identifier";
 import { HasSourceRange } from "../HasSourceRange";
 import { AstTypeExpr } from "./AstTypeExpr";
 
+/**
+ * struct, aliases and respective params
+ */
 export class AstNamedTypeExpr implements HasSourceRange
 {
     constructor(

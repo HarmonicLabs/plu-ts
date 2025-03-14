@@ -6,8 +6,8 @@ export type PebbleSym
     = PebbleConcreteTypeSym
     | PebbleValueSym
     | PebbleGenericSym
-    | PebbleConcreteFunctionSym
-    | PebbleGenericFunctionSym
+    // | PebbleConcreteFunctionSym
+    // | PebbleGenericFunctionSym
     ;
 
 export function isPebbleSym( obj: any ): obj is PebbleSym
@@ -16,8 +16,8 @@ export function isPebbleSym( obj: any ): obj is PebbleSym
         obj instanceof PebbleConcreteTypeSym
         || obj instanceof PebbleValueSym
         || obj instanceof PebbleGenericSym
-        || obj instanceof PebbleConcreteFunctionSym
-        || obj instanceof PebbleGenericFunctionSym
+        // || obj instanceof PebbleConcreteFunctionSym
+        // || obj instanceof PebbleGenericFunctionSym
     );
 }
 
@@ -50,8 +50,8 @@ export class PebbleValueSym implements IPebbleValueSym
 export type PebbleAnyTypeSym
     = PebbleConcreteTypeSym
     | PebbleGenericSym
-    | PebbleConcreteFunctionSym
-    | PebbleGenericFunctionSym
+    // | PebbleConcreteFunctionSym
+    // | PebbleGenericFunctionSym
     ;
 export interface IPebbleConcreteTypeSym extends IPebbleSym {
     readonly concreteType: TirType;
@@ -106,6 +106,7 @@ export interface IPebbleConcreteFuncOverload {
     readonly params: TirType[];
     readonly returnType: TirType;
 }
+
 
 export class PebbleConcreteFunctionSym
     implements IPebbleFunctionSym

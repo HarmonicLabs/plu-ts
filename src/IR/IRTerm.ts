@@ -18,9 +18,9 @@ export type IRTerm
     | IRFunc
     | IRApp
     | IRConst
-    | IRNative
-    | IRLetted
-    | IRHoisted
+    | IRNative // builtin list_at  list[3] list.tail.tail.tail.head
+    | IRLetted // hoist to lowest scope allowed
+    | IRHoisted // hoisted to top scope
     | IRError
     | IRForced
     | IRDelayed

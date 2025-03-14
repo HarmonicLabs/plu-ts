@@ -10,27 +10,40 @@ describe("parseMain", () => {
         const fileName = "test.pebble";
         const srcText = `
     import { MyDatum } from "./MyDatum";
+    import { MyAction } from "./MyAction";
     
-    function main( { tx, purpose }: ScriptContext )
+    function main({ tx, purpose }: ScriptContext )
     {
         const [ a, b, ...rest ] = tx.inputs;
     
         const Spending{
             utxoRef, 
             maybeDatum: Just{ 
-                value: datum // as MyDatum
+                value: datum as MyDatum
             }
         } = purpose;
     
-        var sumLove = 0
-    
-        for( const { resolved: input } of tx.inputs )
-        {
-            sumLove += input.value.lovelaces();
-        }
+        let sumLove = 0;
     
         assert tx.outputs.length() === 1 else "only one output allowed";
         assert sumLove >= 1000_000_000;
+
+        let a = 0;
+        let b = 1;
+        let c = 2;
+        for( let i = 0; i < 10; i++ )
+        {
+            a += 1;
+        }
+
+        match( purpose ) {
+            Spending{ utxoRef, maybeDatum: Just{ value: datum as MyDatum } } => {}
+            Minting{ } => {}
+            Certify{ } => {}
+            _ => {}
+        }
+
+        trace a;
     }
     `;
     

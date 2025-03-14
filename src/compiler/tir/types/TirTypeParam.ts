@@ -1,10 +1,14 @@
 
 export class TirTypeParam
 {
+    readonly symbol: symbol;
     constructor(
         readonly name: string,
-        readonly symbol: symbol = Symbol( this.name )
-    ) {}
+        symbol?: symbol
+    ) {
+        this.name = name;
+        if( typeof symbol !== "symbol" ) this.symbol = Symbol(name);
+    }
 
     toString(): string
     {

@@ -17,7 +17,7 @@ import { SourceRange } from "../ast/Source/SourceRange";
 import { SimpleVarDecl } from "../ast/nodes/statements/declarations/VarDecl/SimpleVarDecl";
 import { ArrayLikeDeconstr } from "../ast/nodes/statements/declarations/VarDecl/ArrayLikeDeconstr";
 import { IdentifierHandling } from "../tokenizer/IdentifierHandling";
-import { determinePrecedence, Precedence } from "./Precedence";
+import { determinePrecedence, Precedence } from "../pluts/__tests__/Precedence";
 import { makeUnaryPrefixExpr } from "../ast/nodes/expr/unary/UnaryPrefixExpr";
 import { LitUndefExpr } from "../ast/nodes/expr/litteral/LitUndefExpr";
 import { LitVoidExpr } from "../ast/nodes/expr/litteral/LitVoidExpr";
@@ -120,7 +120,7 @@ export class Parser extends DiagnosticEmitter
             Parser.parseSource( source )
         ]; 
     }
-
+    
     static parseSource(
         src: Source,
         diagnostics?: DiagnosticMessage[]
@@ -318,24 +318,12 @@ export class Parser extends DiagnosticEmitter
             tn.range(), "="
         );
 
-        if( !tn.skipIdentifier() ) return this.error(
-            DiagnosticCode.Identifier_expected,
-            tn.range()
-        );
-
-        const identifier = new Identifier( tn.readIdentifier(), tn.range() );
-
-        let typeArgs: AstTypeExpr[] = [];
-        if( tn.skip( Token.LessThan ) )
-        {
-            typeArgs = this.parseTypeArguments()!;
-            if( !typeArgs ) return undefined;
-        }
+        const structTypeExpr = this.parseTypeExpr();
+        if( !structTypeExpr ) return undefined;
 
         return new UsingStmt(
             members,
-            identifier,
-            typeArgs,
+            structTypeExpr,
             tn.range( startPos, tn.pos )
         );
     }
@@ -2312,7 +2300,7 @@ export class Parser extends DiagnosticEmitter
     ): CallExpr | undefined
     {
         const tn = this.tn;
-        let callee = call.func;
+        let callee = call.funcExpr;
         switch( true )
         {
             case callee instanceof Identifier: return call;
@@ -2738,7 +2726,10 @@ export class Parser extends DiagnosticEmitter
             case Token.Var:
             case Token.Let:
             case Token.Const: {
-                statement = this.parseVarStmt( CommonFlags.Const, tn.tokenPos );
+                statement = this.parseVarStmt(
+                    token === Token.Const ? CommonFlags.Const : CommonFlags.Let,
+                    tn.tokenPos
+                );
                 break;
             }
             case Token.Using: {
@@ -3074,7 +3065,7 @@ export class Parser extends DiagnosticEmitter
 
         let init: VarStmt | undefined = undefined;
 
-        this.parseVarStmt
+        // this.parseVarStmt
         const token = tn.peek();
         switch( token )
         {

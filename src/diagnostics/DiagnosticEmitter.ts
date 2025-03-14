@@ -36,7 +36,7 @@ export abstract class DiagnosticEmitter {
     ): void
     {
         const originalStackLimit = Error.stackTraceLimit;
-        Error.stackTraceLimit = 4;
+        Error.stackTraceLimit = 6;
         let emitStack = new Error().stack;
         Error.stackTraceLimit = originalStackLimit;
 
@@ -128,6 +128,7 @@ export abstract class DiagnosticEmitter {
         arg2: string | undefined = undefined
     ): undefined {
         this.emitDiagnostic(code, DiagnosticCategory.Warning, range, undefined, arg0, arg1, arg2);
+        return undefined;
     }
 
     /** Emits a warning diagnostic message with a related range. */

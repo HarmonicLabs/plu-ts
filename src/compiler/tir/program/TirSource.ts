@@ -17,7 +17,7 @@ export class TirSource
     /**
      * all the *exported* symbols 
     **/
-    readonly exportedSymbols: Set<PebbleSym> = new Set();
+    readonly exportedSymbols: Map<string, PebbleSym> = new Map();
 
     readonly statements: TirStmt[] = [];
 
@@ -26,9 +26,9 @@ export class TirSource
         preambleScope: Scope,
     ) {
         this.internalPath = internalPath;
-        this.scope = preambleScope.newChildScope();
+        this.scope = preambleScope.newChildScope({ isFunctionDeclScope: false });
         this.importedInternalPaths = new Set();
-        this.exportedSymbols = new Set();
+        this.exportedSymbols = new Map();
         this.statements = [];
     }
 }

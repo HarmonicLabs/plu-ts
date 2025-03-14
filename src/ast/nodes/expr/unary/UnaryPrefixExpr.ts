@@ -7,6 +7,7 @@ import { UnaryMinus } from "./UnaryMinus";
 import { UnaryPlus } from "./UnaryPlus";
 import { UnaryTilde } from "./UnaryTilde";
 import { DecrStmt } from "../../statements/DecrStmt";
+import { Identifier } from "../../common/Identifier";
 
 export type UnaryPrefixExpr
     = UnaryExclamation
@@ -54,8 +55,8 @@ export function makeUnaryPrefixExpr<T extends UnaryPrefixToken>(
         case Token.Plus: return new UnaryPlus( operand, range ) as any;
         case Token.Minus: return new UnaryMinus( operand, range ) as any;
         case Token.Tilde: return new UnaryTilde( operand, range ) as any;
-        case Token.Plus_Plus: return new IncrStmt( operand, range ) as any;
-        case Token.Minus_Minus: return new DecrStmt( operand, range ) as any;
+        case Token.Plus_Plus: return new IncrStmt( operand as Identifier, range ) as any;
+        case Token.Minus_Minus: return new DecrStmt( operand as Identifier, range ) as any;
         default:
             throw new Error( "Invalid token for unary prefix expression" );
     }

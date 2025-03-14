@@ -23,7 +23,7 @@ export type LitteralExpr
     | LitIntExpr
     | LitHexBytesExpr
 
-export function isLitteralExpr( thing: any ): thing is LitteralExpr
+export function isLitteralExpr( thing: any ): boolean // thing is LitteralExpr
 {
     return (
         thing instanceof LitVoidExpr

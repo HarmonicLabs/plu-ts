@@ -2,7 +2,7 @@ import { TirAliasType } from "../TirAliasType";
 import { TirDataT, TirAsDataT, TirVoidT, TirBoolT, TirIntT, TirOptT, TirBytesT, TirStringT, TirListT, TirLinearMapT, TirAsSopT, TirFuncT } from "../TirNativeType";
 import { TirStructType, StructFlags } from "../TirStructType";
 import { TirType } from "../TirType";
-import { canAssignTo, CanAssign } from "./canAssignTo";
+import { canAssignTo, CanAssign, getCanAssign } from "./canAssignTo";
 
 export function canCastTo( a: TirType, b: TirType ): boolean
 {
@@ -20,7 +20,7 @@ export function canCastTo( a: TirType, b: TirType ): boolean
     }
     if( b instanceof TirAsDataT )
     {
-        switch( canAssignTo( a, b.typeDef ) ) {
+        switch( getCanAssign( a, b.typeDef ) ) {
             case CanAssign.Yes:
             // case CanAssign.OnlyAsData:
             case CanAssign.RequiresExplicitCast:
@@ -35,7 +35,7 @@ export function canCastTo( a: TirType, b: TirType ): boolean
     }
     if( b instanceof TirStructType )
     {
-        switch( canAssignTo( a, b ) ) {
+        switch( getCanAssign( a, b ) ) {
             case CanAssign.Yes:
             // case CanAssign.OnlySoP:
             // case CanAssign.OnlyAsData:
@@ -119,7 +119,7 @@ export function canCastTo( a: TirType, b: TirType ): boolean
 
     if( b instanceof TirAsSopT )
     {
-        switch( canAssignTo( a, b.typeDef ) ) {
+        switch( getCanAssign( a, b.typeDef ) ) {
             case CanAssign.Yes:
             // case CanAssign.OnlySoP: // a is struct with no indication
                 return true;
@@ -139,9 +139,9 @@ export function canCastTo( a: TirType, b: TirType ): boolean
         return (
             a.argTypes.length === b.argTypes.length
             && a.argTypes.every( ( arg, i ) =>
-                canAssignTo( arg, b.argTypes[i] ) === CanAssign.Yes
+                getCanAssign( arg, (b as TirFuncT).argTypes[i] ) === CanAssign.Yes
             )
-            && canAssignTo( a.returnType, b.returnType ) === CanAssign.Yes
+            && getCanAssign( a.returnType, b.returnType ) === CanAssign.Yes
         );
     }
 
@@ -206,7 +206,7 @@ function structCanCastToData( struct: TirStructType ): boolean
     {
         for( const field of ctor.fields )
         {
-            if( !canCastToData( field ) )
+            if( !canCastToData( field.type ) )
             {
                 struct.flags |= StructFlags.onlySoP;
                 return false;

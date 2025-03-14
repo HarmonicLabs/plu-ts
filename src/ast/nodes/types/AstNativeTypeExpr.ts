@@ -1,7 +1,6 @@
 import { SourceRange } from "../../Source/SourceRange";
 import { HasSourceRange } from "../HasSourceRange";
 import { VarDecl } from "../statements/declarations/VarDecl/VarDecl";
-import { AstNamedTypeExpr } from "./AstNamedTypeExpr";
 import { AstTypeExpr } from "./AstTypeExpr";
 
 export type AstNativeTypeExpr
@@ -14,8 +13,6 @@ export type AstNativeTypeExpr
     | AstListType<AstTypeExpr>
     | AstLinearMapType<AstTypeExpr,AstTypeExpr>
     | AstFuncType
-    | AstAsSopType
-    | AstAsDataType
 
     ;
 
@@ -30,8 +27,6 @@ export function isAstNativeTypeExpr( thing: any ): thing is AstNativeTypeExpr
         || thing instanceof AstListType
         || thing instanceof AstLinearMapType
         || thing instanceof AstFuncType
-        || thing instanceof AstAsSopType
-        || thing instanceof AstAsDataType
     );
 }
 
@@ -97,10 +92,11 @@ export class AstFuncType implements HasSourceRange
     ) {}
 }
 
+/*
 export class AstAsSopType implements HasSourceRange
 {
     constructor(
-        /* AsSop only takes structs or aliases of structs */
+        // AsSop only takes structs or aliases of structs
         readonly tyParams: AstNamedTypeExpr,
         readonly range: SourceRange
     ) {}
@@ -109,8 +105,9 @@ export class AstAsSopType implements HasSourceRange
 export class AstAsDataType implements HasSourceRange
 {
     constructor(
-        /* AsData only takes structs or aliases of structs */
+        // AsData only takes structs or aliases of structs
         readonly tyParams: AstNamedTypeExpr,
         readonly range: SourceRange
     ) {}
 }
+//*/

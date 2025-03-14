@@ -1,4 +1,4 @@
-import { Token } from "../tokenizer/Token";
+import { Token } from "../../tokenizer/Token";
 
 /**
  * Operator precedence from least to largest.
@@ -24,7 +24,7 @@ export enum Precedence {
     BitwiseAnd,     // &
     Equality,       // == !== === !==
     Relational,     // < > <= >= as in instanceof
-    Shift,          // << >> >>>
+    Shift,          // << >> >>>  
     Additive,       // + -
     Multiplicative, // * / %
     Exponentiated,  // **
