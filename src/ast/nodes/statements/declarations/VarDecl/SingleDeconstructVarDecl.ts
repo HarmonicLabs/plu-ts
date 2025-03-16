@@ -27,4 +27,9 @@ export class SingleDeconstructVarDecl
         public flags: CommonFlags,
         readonly range: SourceRange
     ) {}
+
+    isConst(): boolean
+    {
+        return (this.flags & CommonFlags.Const) !== 0;
+    }
 }

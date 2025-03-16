@@ -10,23 +10,28 @@ import { AstCompiler } from "../AstCompiler";
 describe("parseMain", () => {
 
     test("parseMain", async () => {
+
+        const myDatumPath = "my_datum.pebble";
+        const myDatumSrc = `
+export struct MyDatum {}
+        `;
     
         const fileName = "test.pebble";
         const srcText = `
+import { MyDatum } from "./${myDatumPath}";
+
 function main({ tx, purpose }: ScriptContext ): void
 {
     const [ a, b, ...rest ] = tx.inputs;
 
     const Spend{
         ref, 
-        optionalDatum: datum
-        // Type 'Optional<data>' is not assignable to type 'Struct'.
-        // Just{ 
-        //     value: datum
-        // }
+        optionalDatum: Some{ 
+            value: datum as MyDatum
+        }
     } = purpose;
 
-    const sumLove = 0;
+    let sumLove = 0;
 
     for( const { resolved: input } of tx.inputs )
     {
@@ -48,6 +53,7 @@ function main({ tx, purpose }: ScriptContext ): void
             createMemoryCompilerIoApi({
                 sources: new Map([
                     [fileName, srcText],
+                    [myDatumPath, myDatumSrc],
                 ]),
                 useConsoleAsOutput: true,
             }),
@@ -55,7 +61,8 @@ function main({ tx, purpose }: ScriptContext ): void
     
         const diagnostics = await complier.compileFile( fileName );
 
-        console.log( diagnostics.map( d => d.toString() ) );
+        // console.log( diagnostics );
+        expect( diagnostics.length ).toBe( 0 );
     });
     
 });

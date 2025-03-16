@@ -1,6 +1,7 @@
 import { SourceRange } from "../../../Source/SourceRange";
 import { Identifier } from "../../common/Identifier";
 import { HasSourceRange } from "../../HasSourceRange";
+import { SimpleVarDecl } from "./VarDecl/SimpleVarDecl";
 import { VarDecl } from "./VarDecl/VarDecl";
 
 
@@ -20,7 +21,8 @@ export class StructConstrDecl
 {
     constructor(
         readonly name: Identifier,
-        readonly fields: VarDecl[],
+        // name and type
+        readonly fields: SimpleVarDecl[],
         readonly range: SourceRange
     ) {}
 }

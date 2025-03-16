@@ -27,7 +27,7 @@ import { isTirExpr, TirExpr } from "../tir/expressions/TirExpr";
 import { UnaryExclamation } from "../../ast/nodes/expr/unary/UnaryExclamation";
 import { TirUnaryExclamation } from "../tir/expressions/unary/TirUnaryExclamation";
 import { TirBoolT, TirDataT, TirFuncT, TirLinearMapT, TirListT, TirOptT } from "../tir/types/TirNativeType";
-import { canAssignTo, getStructType, isStructOrStructAlias } from "../tir/types/type-check-utils/canAssignTo";
+import { canAssignTo, getNamedDestructableType, getStructType, isStructOrStructAlias } from "../tir/types/type-check-utils/canAssignTo";
 import { UnaryPlus } from "../../ast/nodes/expr/unary/UnaryPlus";
 import { UnaryMinus } from "../../ast/nodes/expr/unary/UnaryMinus";
 import { TirUnaryPlus } from "../tir/expressions/unary/TirUnaryPlus";
@@ -50,7 +50,7 @@ import { TirLitHexBytesExpr } from "../tir/expressions/litteral/TirLitHexBytesEx
 import { LitThisExpr } from "../../ast/nodes/expr/litteral/LitThisExpr";
 import { TirLitThisExpr } from "../tir/expressions/litteral/TirLitThisExpr";
 import { LitArrExpr } from "../../ast/nodes/expr/litteral/LitArrExpr";
-import { PebbleConcreteTypeSym, PebbleGenericSym, PebbleValueSym } from "./scope/symbols/PebbleSym";
+import { PebbleAnyTypeSym, PebbleConcreteTypeSym, PebbleGenericSym, PebbleValueSym } from "./scope/symbols/PebbleSym";
 import { TirLitArrExpr } from "../tir/expressions/litteral/TirLitArrExpr";
 import { TirAliasType } from "../tir/types/TirAliasType";
 import { isTirType, TirType } from "../tir/types/TirType";
@@ -61,7 +61,7 @@ import { LitNamedObjExpr } from "../../ast/nodes/expr/litteral/LitNamedObjExpr";
 import { TirLitUndefExpr } from "../tir/expressions/litteral/TirLitUndefExpr";
 import { TirLitObjExpr } from "../tir/expressions/litteral/TirLitObjExpr";
 import { TirLitNamedObjExpr } from "../tir/expressions/litteral/TirLitNamedObjExpr";
-import { TirStructConstr, TirStructType } from "../tir/types/TirStructType";
+import { StructFlags, TirStructConstr, TirStructField, TirStructType } from "../tir/types/TirStructType";
 import { ParentesizedExpr } from "../../ast/nodes/expr/ParentesizedExpr";
 import { FuncExpr } from "../../ast/nodes/expr/functions/FuncExpr";
 import { CallExpr } from "../../ast/nodes/expr/functions/CallExpr";
@@ -87,7 +87,7 @@ import { MatchStmt, MatchStmtCase } from "../../ast/nodes/statements/MatchStmt";
 import { ReturnStmt } from "../../ast/nodes/statements/ReturnStmt";
 import { TestStmt } from "../../ast/nodes/statements/TestStmt";
 import { WhileStmt } from "../../ast/nodes/statements/WhileStmt";
-import { ExportStmt } from "../../ast/nodes/statements/ExportStmt";
+import { ExportImportStmt } from "../../ast/nodes/statements/ExportImportStmt";
 import { AddAssignmentStmt, AssignmentStmt, BitwiseAndAssignmentStmt, BitwiseOrAssignmentStmt, BitwiseXorAssignmentStmt, DivAssignmentStmt, ExpAssignmentStmt, ExplicitAssignmentStmt, isAssignmentStmt, isExplicitAssignmentStmt, LogicalAndAssignmentStmt, LogicalOrAssignmentStmt, ModuloAssignmentStmt, MultAssignmentStmt, ShiftLeftAssignmentStmt, ShiftRightAssignmentStmt, SimpleAssignmentStmt, SubAssignmentStmt } from "../../ast/nodes/statements/AssignmentStmt";
 import { ExprStmt } from "../../ast/nodes/statements/ExprStmt";
 import { VarDecl } from "../../ast/nodes/statements/declarations/VarDecl/VarDecl";
@@ -102,7 +102,7 @@ import { TirNamedDeconstructVarDecl } from "../tir/statements/TirVarDecl/TirName
 import { TirSingleDeconstructVarDecl } from "../tir/statements/TirVarDecl/TirSingleDeconstructVarDecl";
 import { TirArrayLikeDeconstr } from "../tir/statements/TirVarDecl/TirArrayLikeDeconstr";
 import { Identifier } from "../../ast/nodes/common/Identifier";
-import { TirVarDecl } from "../tir/statements/TirVarDecl/TirVarDecl";
+import { isTirVarDecl, TirVarDecl } from "../tir/statements/TirVarDecl/TirVarDecl";
 import { wrapManyStatements } from "./wrapManyStatementsOrReturnSame";
 import { TirForStmt } from "../tir/statements/TirForStmt";
 import { IncrStmt } from "../../ast/nodes/statements/IncrStmt";
@@ -137,7 +137,7 @@ import { getInternalVarName } from "../internalVar";
 import { TirCallExpr } from "../tir/expressions/TirCallExpr";
 import { TirCaseExpr, TirCaseExprMatcher } from "../tir/expressions/TirCaseExpr";
 import { TirTypeConversionExpr } from "../tir/expressions/TirTypeConversionExpr";
-import { canCastTo } from "../tir/types/type-check-utils/canCastTo";
+import { canCastTo, canCastToData } from "../tir/types/type-check-utils/canCastTo";
 import { TirIsExpr } from "../tir/expressions/TirIsExpr";
 import { TirElemAccessExpr } from "../tir/expressions/TirElemAccessExpr";
 import { TirTernaryExpr } from "../tir/expressions/TirTernaryExpr";
@@ -146,6 +146,7 @@ import { getPropAccessReturnType } from "./getPropAccessReturnType";
 import { AstNamedTypeExpr } from "../../ast/nodes/types/AstNamedTypeExpr";
 import { TirExportStmt } from "../tir/statements/TirExportStmt";
 import { AddExpr, BinaryExpr, BitwiseAndExpr, BitwiseOrExpr, BitwiseXorExpr, DivExpr, EqualExpr, ExponentiationExpr, GreaterThanEqualExpr, GreaterThanExpr, isBinaryExpr, LessThanEqualExpr, LessThanExpr, LogicalAndExpr, LogicalOrExpr, ModuloExpr, MultExpr, NotEqualExpr, OptionalDefaultExpr, ShiftLeftExpr, ShiftRightExpr, SubExpr } from "../../ast/nodes/expr/binary/BinaryExpr";
+import { ExportStmt } from "../../ast/nodes/statements/ExportStmt";
 
 export interface ICompileStmtCtx {
     scope: Scope;
@@ -310,13 +311,10 @@ export class AstCompiler extends DiagnosticEmitter
      */
     private async _compileParsedSource( src: Source ): Promise<DiagnosticMessage[]>
     {
-        if( src.statements.length === 0 )
-        {
-            throw new Error("_compileParsedSource: source has no statements");
-        }
+        if( src.statements.length === 0 ) return this.diagnostics;
 
         const tirSource = new TirSource(
-            src.internalPath,
+            resolveProjAbsolutePath( src.internalPath, this.rootPath )!,
             preludeScope
         );
         this._compileSourceStatements( tirSource, src.statements )
@@ -328,22 +326,236 @@ export class AstCompiler extends DiagnosticEmitter
 
         return this.diagnostics;
     }
-
-    /**
-     * assumes the types have been collected before
-     */
     private _compileSourceStatements( tirSource: TirSource, stmts: PebbleStmt[] ): void
     {
-        const tirSrcScope = tirSource.scope;
+        if( tirSource.compiled ) return;
+
+        // clone array so we don't remove stmts from the original AST
+        stmts = stmts.slice();
+
+        // defines imported symbols on top level scope, modifies stmts array
+        this._collectImports( tirSource, stmts );
+
+        // collect top level **type** (struct and aliases) declarations
+        this._collectTypeDeclarations( tirSource, stmts );
+
+        // collect top level **interface** declarations
+        // this._collectInterfaceDeclarations( tirSource, stmts );
+
+        // adds interface **implementations** to types declared in this file
+        // this._applyInterfaceImplementations( tirSource, stmts );
+
+        // compile **value** statements
+        const srcCompileCtx = CompileStmtCtx.fromScopeOnly( tirSource.scope );
         const nAstStmts = stmts.length;
         for( let i = 0; i < nAstStmts; i++ )
         {
             const stmt = stmts[i];
-            const tirStmts = this._compileStatement( CompileStmtCtx.fromScopeOnly( tirSrcScope ), stmt );
-            if( !Array.isArray( tirStmts ) ) return undefined;
+            const tirStmts = this._compileStatement( srcCompileCtx, stmt, tirSource );
+
+            // if statement compilation failed, skip to next statement
+            if( !Array.isArray( tirStmts ) ) continue;
+
             tirSource.statements.push(
                 ...tirStmts
             );
+        }
+
+        tirSource.compiled = true;
+    }
+
+    private _collectTypeDeclarations( tirSource: TirSource, stmts: PebbleStmt[] ): void
+    {
+        for( let i = 0; i < stmts.length; i++ )
+        {
+            let stmt = stmts[i];
+            let exported = false;
+            if( stmt instanceof ExportStmt )
+            {
+                exported = true;
+                stmt = stmt.stmt;
+            }
+            if(
+                stmt instanceof StructDecl
+                || stmt instanceof TypeAliasDecl
+            ) {
+                const typeSym = stmt instanceof StructDecl
+                    ? this._compileStructDecl( tirSource, stmt )
+                    : this._compileTypeAliasDecl( tirSource, stmt );
+
+                if( !typeSym ) continue;
+
+                if( !tirSource.scope.defineType( typeSym ) ) this.error(
+                    DiagnosticCode._0_is_already_defined,
+                    stmt.name.range,
+                    stmt.name.text
+                );
+
+                if( exported )
+                {
+                    if( tirSource.exportedTypeNames.has( stmt.name.text ) ) this.error(
+                        DiagnosticCode._0_is_already_exported,
+                        stmt.name.range,
+                        stmt.name.text
+                    );
+                    else void tirSource.exportedTypeNames.add( stmt.name.text );
+                }
+
+                // remove from array so we don't process it again
+                void stmts.splice( i, 1 );
+                i--;
+            }
+        }
+    }
+
+    private _compileStructDecl( tirSource: TirSource, stmt: StructDecl ): PebbleAnyTypeSym
+    {
+        if( stmt.typeParams.length > 0 ) throw new Error("not_implemented::AstCompiler::_compileStructDecl::typeParams");
+        const self = this;
+        const structType = new TirStructType(
+            stmt.name.text,
+            stmt.constrs.map( ctor =>
+                new TirStructConstr(
+                    ctor.name.text,
+                    ctor.fields.map( f => {
+
+                        if( !f.type ) return self.error(
+                            DiagnosticCode._0_is_not_defined,
+                            f.name.range, f.name.text
+                        );
+
+                        // TODO: recursive struct definitions
+                        const fieldType  = self._compileConcreteTypeExpr(
+                            CompileStmtCtx.fromScopeOnly( tirSource.scope ),
+                            f.type
+                        );
+                        if( !fieldType ) return undefined;
+
+                        return new TirStructField(
+                            f.name.text,
+                            fieldType
+                        );
+                    })
+                    .filter( f => f instanceof TirStructField ) as TirStructField[]
+                )
+            ),
+            [], // impls
+            // TODO: handle struct flags
+            StructFlags.None
+        );
+        return new PebbleConcreteTypeSym({
+            name: stmt.name.text,
+            concreteType: structType,
+        });
+    }
+
+    private _compileTypeAliasDecl( tirSource: TirSource, stmt: TypeAliasDecl ): PebbleAnyTypeSym | undefined
+    {
+        if( stmt.typeParams.length > 0 ) throw new Error("not_implemented::AstCompiler::_compileTypeAliasDecl::typeParams");
+        const self = this;
+        const aliasedType = self._compileConcreteTypeExpr(
+            CompileStmtCtx.fromScopeOnly( tirSource.scope ),
+            stmt.aliasedType
+        );
+        if( !aliasedType ) return undefined;
+        const aliasType = new TirAliasType(
+            stmt.name.text,
+            aliasedType,
+            [] // interface implementations
+        );
+        return new PebbleConcreteTypeSym({
+            name: stmt.name.text,
+            concreteType: aliasType
+        })
+    }
+
+    private _collectImports( tirSource: TirSource, stmts: PebbleStmt[] ): void
+    {
+        const srcPath = tirSource.internalPath + extension;
+        for( let i = 0; i < stmts.length; i++ )
+        {
+            const stmt = stmts[i];
+            if( stmt instanceof ImportStarStmt )
+            {
+                this.error(
+                    DiagnosticCode.Not_implemented_0,
+                    stmt.range, "import *"
+                );
+                continue;
+            }
+            if(!(
+                stmt instanceof ImportStmt
+            )) continue;
+
+            const projAbsoultePath = getInternalPath( resolveProjAbsolutePath( stmt.fromPath.string, this.rootPath ) ?? "" );
+            // console.log(projAbsoultePath, [ ...this.program.files.keys() ]);
+            const importedSource = this.program.files.get( projAbsoultePath );
+            if( !importedSource )
+            {
+                return this.error(
+                    DiagnosticCode.File_0_not_found,
+                    stmt.fromPath.range,
+                    stmt.fromPath.string
+                );
+            }
+
+            if(
+                importedSource.exportedValueNames.size === 0
+                && importedSource.exportedTypeNames.size === 0
+            ) {
+                this.error(
+                    DiagnosticCode.File_0_has_no_exports,
+                    stmt.fromPath.range,
+                    stmt.fromPath.string
+                );
+                continue;
+            }
+
+            for( const importDecl of stmt.members )
+            {
+                const declName = importDecl.identifier.text;
+                const isValue = importedSource.exportedValueNames.has( declName );
+                const isType = importedSource.exportedTypeNames.has( declName );
+
+                if( !isValue && !isType ) {
+                    this.error(
+                        DiagnosticCode.Module_0_has_no_exported_member_1,
+                        importDecl.identifier.range,
+                        stmt.fromPath.string,
+                        declName,
+                    );
+                    continue;
+                }
+
+                // define on source top level scope
+                if( isValue )
+                {
+                    const result = importedSource.scope.resolveValue( declName );
+                    if( !result ) throw new Error("unreachable::AstCompiler::_compileSourceStatements::importedSource.scope.resolveValue");
+                    const valueSym = result[0];
+
+                    if( !tirSource.importsScope.defineValue( valueSym ) ) this.error(
+                        DiagnosticCode._0_is_already_defined,
+                        importDecl.identifier.range,
+                        declName
+                    );
+                }
+                if( isType )
+                {
+                    const typeSym = importedSource.scope.resolveType( declName );
+                    if( !typeSym ) throw new Error("unreachable::AstCompiler::_compileSourceStatements::importedSource.scope.resolveType");
+                    
+                    if( !tirSource.importsScope.defineType( typeSym ) ) this.error(
+                        DiagnosticCode._0_is_already_defined,
+                        importDecl.identifier.range,
+                        declName
+                    );
+                }
+            }
+
+            // remove from array so we don't process it again
+            void stmts.splice( i, 1 );
+            i--;
         }
     }
     
@@ -357,15 +569,15 @@ export class AstCompiler extends DiagnosticEmitter
     private _compileStatement(
         ctx: CompileStmtCtx,
         stmt: PebbleStmt,
-        // useful to infer variable type by usage
-        // sameLevelStmts: readonly PebbleStmt[],
-        // stmtIdx: number
+        // only passed for top level statements
+        // where exports are expected
+        tirSource: TirSource | undefined = undefined
     ): TirStmt[] | undefined
     {
         if(
             stmt instanceof ExportStarStmt
             || stmt instanceof ImportStarStmt
-            || stmt instanceof ExportStmt
+            || stmt instanceof ExportImportStmt
             || stmt instanceof ImportStmt
         ) throw new Error("export/import statements should be handled separately, not in _compileStatement");
 
@@ -377,9 +589,10 @@ export class AstCompiler extends DiagnosticEmitter
             "handled separately, not in _compileStatement"
         );
 
+        if( stmt instanceof ExportStmt ) return this._compileExportStmt( ctx, stmt, tirSource );
         
         if( stmt instanceof IfStmt ) return this._compileIfStmt( ctx, stmt );
-        if( stmt instanceof VarStmt ) return this._compileVarStmt( ctx, stmt );
+        if( stmt instanceof VarStmt ) return this._compileVarStmt( ctx, stmt, !!tirSource );
         if( stmt instanceof ForStmt ) return this._compileForStmt( ctx, stmt );
         if( stmt instanceof ForOfStmt ) return this._compileForOfStmt( ctx, stmt );
         if( stmt instanceof WhileStmt ) return this._compileWhileStmt( ctx, stmt );
@@ -399,6 +612,83 @@ export class AstCompiler extends DiagnosticEmitter
 
         console.error( stmt );
         throw new Error("unreachable::AstCompiler::_compileStatement");
+    }
+
+    private _compileExportStmt(
+        ctx: CompileStmtCtx,
+        stmt: ExportStmt,
+        tirSource: TirSource | undefined
+    ): TirStmt[] | undefined
+    {
+        // if `tirSource` is not present (and we are not at top level)
+        // raise an error but compile the statements normally
+        // as if `export` was not present
+        if( !tirSource ) this.error(
+            DiagnosticCode._export_keyword_cannot_be_used_here,
+            stmt.range
+        );
+        const compiledStmts = this._compileStatement( ctx, stmt.stmt, undefined );
+        if( !Array.isArray( compiledStmts ) ) return undefined;
+
+        if( tirSource )
+        for( const compiledStmt of compiledStmts )
+        {
+            if( compiledStmt instanceof TirFuncDecl ) {
+                if( !tirSource.exportValue( compiledStmt.expr.name ) ) this.error(
+                    DiagnosticCode._0_is_already_exported,
+                    stmt.range, compiledStmt.expr.name
+                );
+            }
+            else if( isTirVarDecl( compiledStmt ) ) this._handleExportStmtVarDecl( compiledStmt, tirSource );
+            else this.error(
+                DiagnosticCode.Only_function_declarations_and_constants_ca_be_exported,
+                stmt.range
+            );
+        }
+
+        return compiledStmts;
+    }
+    private _handleExportStmtVarDecl(
+        decl: TirVarDecl,
+        tirSource: TirSource
+    ): void
+    {
+        if( decl instanceof TirSimpleVarDecl )
+        {
+            if( !tirSource.exportValue( decl.name ) ) this.error(
+                DiagnosticCode._0_is_already_exported,
+                decl.range, decl.name
+            );
+        }
+        else if(
+            decl instanceof TirNamedDeconstructVarDecl
+            || decl instanceof TirSingleDeconstructVarDecl
+        )
+        {
+            for( const innerDecl of decl.fields.values() )
+                this._handleExportStmtVarDecl( innerDecl, tirSource );
+
+            if(
+                typeof decl.rest === "string"
+                && !tirSource.exportValue( decl.rest )
+            ) this.error(
+                DiagnosticCode._0_is_already_exported,
+                decl.range, decl.rest
+            );
+        }
+        else if( decl instanceof TirArrayLikeDeconstr )
+        {
+            for( const innerDecl of decl.elements )
+                this._handleExportStmtVarDecl( innerDecl, tirSource );
+
+            if(
+                typeof decl.rest === "string"
+                && !tirSource.exportValue( decl.rest )
+            ) this.error(
+                DiagnosticCode._0_is_already_exported,
+                decl.range, decl.rest
+            );
+        }
     }
 
     private _compileFuncDecl(
@@ -561,6 +851,7 @@ export class AstCompiler extends DiagnosticEmitter
     private _hasDuplicateTypeParams( typeParams: Identifier[] ): boolean
     {
         const typeParamNames = new Set<string>();
+        let result = false;
         for( const tp of typeParams )
         {
             if( typeParamNames.has( tp.text ) )
@@ -569,11 +860,11 @@ export class AstCompiler extends DiagnosticEmitter
                     DiagnosticCode.Duplicate_identifier_0,
                     tp.range, tp.text
                 );
-                return true;
+                result = true;
             }
             typeParamNames.add( tp.text );
         }
-        return false;
+        return result;
     }
     
     /**
@@ -1101,7 +1392,6 @@ export class AstCompiler extends DiagnosticEmitter
         stmt: ForOfStmt
     ): [ TirForOfStmt ] | undefined
     {
-
         const iterableExpr = this._compileExpr(
             ctx,
             stmt.iterable,
@@ -1151,7 +1441,7 @@ export class AstCompiler extends DiagnosticEmitter
     {
         const loopScope = ctx.newLoopChildScope();
 
-        const tirInit = stmt.init ? this._compileVarStmt( loopScope, stmt.init ) : undefined;
+        const tirInit = stmt.init ? this._compileVarStmt( loopScope, stmt.init, false ) : undefined;
         if( !tirInit ) return undefined;
 
         const tirCond = stmt.condition ? this._compileExpr( loopScope, stmt.condition, bool_t ) : undefined;
@@ -1446,15 +1736,13 @@ export class AstCompiler extends DiagnosticEmitter
     private _compileVarStmt(
         ctx: CompileStmtCtx,
         stmt: VarStmt,
-        // useful to infer variable type by usage
-        // sameLevelStmts: readonly PebbleStmt[],
-        // stmtIdx: number
+        isTopLevel: boolean
     ): TirVarDecl[] | undefined
     {
         const tirVarDecls: TirVarDecl[] = [];
         for( const decl of stmt.declarations )
         {
-            const tirDecl = this._compileVarDecl( ctx, decl, undefined );
+            const tirDecl = this._compileVarDecl( ctx, decl, undefined, isTopLevel );
             if( !tirDecl ) return undefined;
             tirVarDecls.push( tirDecl );
         }
@@ -1464,11 +1752,19 @@ export class AstCompiler extends DiagnosticEmitter
         ctx: CompileStmtCtx,
         decl: VarDecl,
         typeHint: TirType | undefined, // coming from deconstructing
+        isTopLevel: boolean = false
         // useful to infer variable type by usage
         // sameLevelStmts: readonly PebbleStmt[],
         // stmtIdx: number
     ): TirVarDecl | undefined
     {
+        if(
+            isTopLevel &&
+            !decl.isConst()
+        ) return this.error(
+            DiagnosticCode.Only_constants_can_be_declared_outside_of_a_function,
+            decl.range
+        );
         if( decl instanceof SimpleVarDecl )
             return this._compileSimpleVarDecl( ctx, decl, typeHint );
         if( decl instanceof NamedDeconstructVarDecl )
@@ -1539,39 +1835,83 @@ export class AstCompiler extends DiagnosticEmitter
         if( !typeAndExpr ) return undefined;
         const [ finalVarType, initExpr ] = typeAndExpr;
 
-        const finalStructType = getStructType( finalVarType )
-        if( !finalStructType )
-            return this.error(
-                DiagnosticCode.Type_0_is_not_assignable_to_type_1,
-                decl.range, finalVarType.toString(), "Struct"
-            );
-
-        const finalConstructorDef = finalStructType.constructors.find( ctor =>
-            ctor.name === decl.name.text
-        );
-        if( !finalConstructorDef )
-            return this.error(
-                DiagnosticCode.Construcotr_0_is_not_part_of_the_definiton_of_1,
-                decl.name.range, decl.name.text, finalStructType.toString()
-            );
-
-        const deconstructedFields = this._getDeconstructedFields(
-            ctx,
-            decl,
-            finalConstructorDef
-        );
-        if( !deconstructedFields ) return undefined;
-        const [ fieds, rest ] = deconstructedFields;
-
-        return new TirNamedDeconstructVarDecl(
-            decl.name.text,
-            fieds,
-            rest,
-            finalVarType,
-            initExpr,
-            decl.flags,
+        const namedDestructableType = getNamedDestructableType( finalVarType )
+        if(
+            !namedDestructableType
+            || !namedDestructableType.isConcrete()
+        )
+        return this.error(
+            DiagnosticCode.Invaild_destructuring,
             decl.range
         );
+
+        if( namedDestructableType instanceof TirStructType )
+        {
+            const finalConstructorDef = namedDestructableType.constructors.find( ctor =>
+                ctor.name === decl.name.text
+            );
+            if( !finalConstructorDef )
+            return this.error(
+                DiagnosticCode.Construcotr_0_is_not_part_of_the_definiton_of_1,
+                decl.name.range, decl.name.text, namedDestructableType.toString()
+            );
+    
+            const deconstructedFields = this._getDeconstructedFields(
+                ctx,
+                decl,
+                finalConstructorDef
+            );
+            if( !deconstructedFields ) return undefined;
+            const [ fieds, rest ] = deconstructedFields;
+    
+            return new TirNamedDeconstructVarDecl(
+                decl.name.text,
+                fieds,
+                rest,
+                finalVarType,
+                initExpr,
+                decl.flags,
+                decl.range
+            );
+        }
+        if( namedDestructableType instanceof TirOptT )
+        {
+            const optConstrName = decl.name.text;
+            if(!(
+                optConstrName === "Some"
+                || optConstrName === "None"
+            ))
+            return this.error(
+                DiagnosticCode.Construcotr_0_is_not_part_of_the_definiton_of_1,
+                decl.name.range, decl.name.text, namedDestructableType.toString()
+            );
+
+            const deconstructedFields = this._getDeconstructedFields(
+                ctx,
+                decl,
+                new TirStructConstr(
+                    optConstrName,
+                    optConstrName === "Some" ? [
+                        new TirStructField(
+                            "value",
+                            namedDestructableType.typeArg
+                        )
+                    ] : [],
+                )
+            );
+            if( !deconstructedFields ) return undefined;
+            const [ fieds, rest ] = deconstructedFields;
+    
+            return new TirNamedDeconstructVarDecl(
+                decl.name.text,
+                fieds,
+                rest,
+                finalVarType,
+                initExpr,
+                decl.flags,
+                decl.range
+            );
+        }
     }
     private _compileSingleDeconstructVarDecl(
         ctx: CompileStmtCtx,
@@ -1743,13 +2083,28 @@ export class AstCompiler extends DiagnosticEmitter
 
         // even in deconstructions
         // we allow for `as` type assertions
-        // and we store the type in the var decl type
+        // and we store the type to be converted to in the var decl type
         // here we check that the type assertion is valid
-        if( declarationType && deconstructTypeHint && !canAssignTo( declarationType, typeHint! ) )
+        if( declarationType && deconstructTypeHint )
+        {
+            // TODO: is data really a special case? or should we check for casts in general?
+
+            // special case for deconstructed data
+            // we need to check for casts
+            if( deconstructTypeHint instanceof TirDataT )
+            {
+                if( !canCastToData( declarationType ) )
+                return this.error(
+                    DiagnosticCode.Type_0_is_not_assignable_to_type_1,
+                    decl.type!.range, declarationType.toString(), typeHint!.toString()
+                );
+            }
+            else if( !canAssignTo( declarationType, typeHint! ) )
             return this.error(
                 DiagnosticCode.Type_0_is_not_assignable_to_type_1,
                 decl.type!.range, declarationType.toString(), typeHint!.toString()
             );
+        }
 
         let initExpr: TirExpr | undefined = undefined;
         if( decl.initExpr )

@@ -78,7 +78,9 @@ function memoryFsRead(
 ): string | undefined
 {
     filename = memoryFsAdaptFilename( filename );
-    return this.get( filename );
+    while( filename.startsWith( "/" ) ) filename = filename.slice( 1 );
+    const result = this.get( filename );
+    return result;
 }
 
 function memoryFsList(

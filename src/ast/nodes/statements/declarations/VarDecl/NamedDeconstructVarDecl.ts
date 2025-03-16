@@ -21,6 +21,11 @@ export class NamedDeconstructVarDecl
         readonly range: SourceRange,
     ) {}
 
+    isConst(): boolean
+    {
+        return (this.flags & CommonFlags.Const) !== 0;
+    }
+
     static fromSingleDeconstruct(
         name: Identifier,
         unnamed: SingleDeconstructVarDecl,

@@ -4,7 +4,7 @@ import { subByteString } from "../../pluts";
 import { map } from "../../type_system";
 import { TirAliasType } from "../tir/types/TirAliasType";
 import { TirInterfaceImpl } from "../tir/types/TirInterfaceImpl";
-import { TirAsDataT, TirAsSopT, TirBoolT, TirBytesT, TirDataT, TirFuncT, TirIntT, TirLinearMapT, TirListT, TirOptT, TirStringT, TirVoidT } from "../tir/types/TirNativeType";
+import { TirBoolT, TirBytesT, TirDataT, TirFuncT, TirIntT, TirLinearMapT, TirListT, TirOptT, TirStringT, TirVoidT } from "../tir/types/TirNativeType";
 import { TirStructType } from "../tir/types/TirStructType";
 import { TirType } from "../tir/types/TirType";
 import { TirTypeParam } from "../tir/types/TirTypeParam";
@@ -18,19 +18,10 @@ export function getPropAccessReturnType(
     const propName = propId.text;
 
     while(
-        objType instanceof TirAsDataT
-        || objType instanceof TirAsSopT
-        || objType instanceof TirAliasType
+        objType instanceof TirAliasType
         || objType instanceof TirTypeParam
     ) {
         if( objType instanceof TirTypeParam ) return undefined;
-        if(
-            objType instanceof TirAsDataT
-            || objType instanceof TirAsSopT
-        ) {
-            objType = objType.typeDef;
-            continue;
-        }
         const result = findPropInImpls( objType.impls, propName );
         if( result ) return result;
         objType = objType.aliased;

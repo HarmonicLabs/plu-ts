@@ -7,7 +7,7 @@ import { DoWhileStmt } from "./DoWhileStmt";
 import { EmptyStmt } from "./EmptyStmt";
 import { TypeImplementsStmt } from "./TypeImplementsStmt";
 import { ExportStarStmt } from "./ExportStarStmt";
-import { ExportStmt } from "./ExportStmt";
+import { ExportImportStmt } from "./ExportImportStmt";
 import { FailStmt } from "./FailStmt";
 import { ForOfStmt } from "./ForOfStmt";
 import { ForStmt } from "./ForStmt";
@@ -25,6 +25,7 @@ import { IncrStmt } from "./IncrStmt";
 import { DecrStmt } from "./DecrStmt";
 import { UsingStmt } from "./UsingStmt";
 import { FuncDecl } from "./declarations/FuncDecl";
+import { ExportStmt } from "./ExportStmt";
 
 /**
  * An expression is a piece of code
@@ -57,13 +58,14 @@ export type PebbleStmt
     | PebbleAstTypeDecl
     | ExportStarStmt
     | ImportStarStmt
-    | ExportStmt
+    | ExportImportStmt
     | ImportStmt
     | TypeImplementsStmt
     | AssignmentStmt
     | ExprStmt // function calls with side effects (void functions) (error, traces, etc.)
     | UsingStmt
     | FuncDecl
+    | ExportStmt
     ;
 
 
@@ -88,7 +90,7 @@ export function isPebbleStmt( stmt: any ): stmt is PebbleStmt
         || isPebbleAstTypeDecl( stmt )
         || stmt instanceof ExportStarStmt
         || stmt instanceof ImportStarStmt
-        || stmt instanceof ExportStmt
+        || stmt instanceof ExportImportStmt
         || stmt instanceof ImportStmt
         || stmt instanceof TypeImplementsStmt
         || isAssignmentStmt( stmt )
@@ -97,5 +99,6 @@ export function isPebbleStmt( stmt: any ): stmt is PebbleStmt
         || stmt instanceof DecrStmt
         || stmt instanceof UsingStmt
         || stmt instanceof FuncDecl
+        || stmt instanceof ExportStmt
     );
 }

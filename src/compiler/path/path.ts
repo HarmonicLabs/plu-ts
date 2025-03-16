@@ -160,12 +160,13 @@ export function resolveProjAbsolutePath( toResolve: string, fromPath: string ): 
     let result = removeSingleDotDirsFromPath(
         fromDirs.join( PATH_DELIMITER )
     );
-    result = result === "." || result.endsWith( fromDirname.slice( 0, fromDirname.length - 1 ) ) ?
-        result + PATH_DELIMITER :
-        result;
+    // result = result === "." || result.endsWith( fromDirname.slice( 0, fromDirname.length - 1 ) ) ?
+    //     result + PATH_DELIMITER :
+    //     result;
+    
     // result = result.startsWith("/") ? result : "/" + result;
 
-    return result;
+    return result.replace("//", "/");
 }
 
 /** Obtains the directory portion of a normalized path. */

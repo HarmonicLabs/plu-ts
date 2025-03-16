@@ -3,18 +3,6 @@
 /** Enum of available diagnostic codes. */
 export enum DiagnosticCode {
     Not_implemented_0 = 100,
-    Operation_is_unsafe = 101,
-    User_defined_0 = 102,
-    Feature_0_is_not_enabled = 103,
-    Low_memory_limit_exceeded_by_static_data_0_1 = 104,
-    Module_requires_at_least_0_pages_of_initial_memory = 105,
-    Module_requires_at_least_0_pages_of_maximum_memory = 106,
-    Shared_memory_requires_maximum_memory_to_be_defined = 107,
-    Shared_memory_requires_feature_threads_to_be_enabled = 108,
-    Transform_0_1 = 109,
-    Start_function_name_0_is_invalid_or_conflicts_with_another_export = 110,
-    Element_0_not_found = 111,
-    Exchange_of_0_values_is_not_supported_by_all_embeddings = 112,
     Conversion_from_type_0_to_1_requires_an_explicit_cast = 200,
     Conversion_from_type_0_to_1_will_require_an_explicit_cast_when_switching_between_32_64_bit = 201,
     Type_0_cannot_be_changed_to_type_1 = 202,
@@ -48,7 +36,6 @@ export enum DiagnosticCode {
     A_class_with_a_constructor_explicitly_returning_something_else_than_this_must_be_final = 231,
     Property_0_is_always_assigned_before_being_used = 233,
     Expression_does_not_compile_to_a_value_at_runtime = 234,
-    Only_variables_functions_and_enums_become_WebAssembly_module_exports = 235,
     Literal_0_does_not_fit_into_i64_or_u64_types = 236,
     Index_signature_accessors_in_type_0_differ_in_types = 237,
     Initializer_definitive_assignment_or_nullable_type_expected = 238,
@@ -87,6 +74,11 @@ export enum DiagnosticCode {
     Constructor_name_0_is_already_declared_in_this_scope = 270,
     Unterminated_Unicode_escape_sequence = 271,
     Left_side_of_opeartor_is_not_optional_right_side_is_unused = 272,
+    _0_is_already_defined = 273,
+    _0_is_already_exported = 274,
+    _export_keyword_cannot_be_used_here = 275,
+    Only_constants_can_be_declared_outside_of_a_function = 276,
+    Only_function_declarations_and_constants_ca_be_exported = 277,
     Importing_the_table_disables_some_indirect_call_optimizations = 901,
     Exporting_the_table_disables_some_indirect_call_optimizations = 902,
     Expression_compiles_to_a_dynamic_check_at_runtime = 903,
@@ -127,15 +119,11 @@ export enum DiagnosticCode {
     Type_expected = 1110,
     A_default_clause_cannot_appear_more_than_once_in_a_switch_statement = 1113,
     Duplicate_label_0 = 1114,
-    An_export_assignment_cannot_have_modifiers = 1120,
     Octal_literals_are_not_allowed_in_strict_mode = 1121,
     Digit_expected = 1124,
     Hexadecimal_digit_expected = 1125,
     Unexpected_end_of_text = 1126,
     Invalid_character = 1127,
-    _case_or_default_expected = 1130,
-    _super_must_be_followed_by_an_argument_list_or_member_access = 1034,
-    A_declare_modifier_cannot_be_used_in_an_already_ambient_context = 1038,
     Type_argument_expected = 1140,
     String_literal_expected = 1141,
     Line_break_not_permitted_here = 1142,
@@ -192,6 +180,7 @@ export enum DiagnosticCode {
     Duplicate_identifier_0 = 2300,
     Cannot_find_name_0 = 2304,
     Module_0_has_no_exported_member_1 = 2305,
+    File_0_has_no_exports = 2306,
     An_interface_can_only_extend_an_interface = 2312,
     Generic_type_0_requires_1_type_argument_s = 2314,
     Type_0_is_not_generic = 2315,
@@ -220,7 +209,6 @@ export enum DiagnosticCode {
     Multiple_constructor_implementations_are_not_allowed = 2392,
     Duplicate_function_implementation = 2393,
     This_overload_signature_is_not_compatible_with_its_implementation_signature = 2394,
-    Individual_declarations_in_merged_declaration_0_must_be_all_exported_or_all_local = 2395,
     Property_0_in_type_1_is_not_assignable_to_the_same_property_in_base_type_2 = 2416,
     A_class_can_only_implement_an_interface = 2422,
     A_namespace_declaration_cannot_be_located_prior_to_a_class_or_function_with_which_it_is_merged = 2434,
@@ -235,7 +223,6 @@ export enum DiagnosticCode {
     Type_0_has_no_property_1 = 2460,
     The_0_operator_cannot_be_applied_to_type_1 = 2469,
     In_const_enum_declarations_member_initializer_must_be_constant_expression = 2474,
-    Export_declaration_conflicts_with_exported_declaration_of_0 = 2484,
     _0_is_referenced_directly_or_indirectly_in_its_own_base_expression = 2506,
     Object_is_possibly_null = 2531,
     Cannot_assign_to_0_because_it_is_a_constant = 2540,
@@ -246,14 +233,10 @@ export enum DiagnosticCode {
     Expected_0_type_arguments_but_got_1 = 2558,
     Property_0_has_no_initializer_and_is_not_assigned_in_the_constructor_before_this_is_used_or_returned = 2564,
     Property_0_is_used_before_being_assigned = 2565,
-    _0_is_defined_as_an_accessor_in_class_1_but_is_overridden_here_in_2_as_an_instance_property = 2610,
-    _0_is_defined_as_a_property_in_class_1_but_is_overridden_here_in_2_as_an_accessor = 2611,
-    A_member_initializer_in_a_enum_declaration_cannot_reference_members_declared_after_it_including_members_defined_in_other_enums = 2651,
     Constructor_of_class_0_is_private_and_only_accessible_within_the_class_declaration = 2673,
     Constructor_of_class_0_is_protected_and_only_accessible_within_the_class_declaration = 2674,
     Cannot_extend_a_class_0_Class_constructor_is_marked_as_private = 2675,
     The_this_types_of_each_signature_are_incompatible = 2685,
-    Namespace_0_has_no_exported_member_1 = 2694,
     Namespace_can_only_have_declarations = 2695,
     Required_type_parameters_may_not_follow_optional_type_parameters = 2706,
     Duplicate_property_0 = 2718,
@@ -280,18 +263,6 @@ export enum DiagnosticCode {
 export function diagnosticCodeToString(code: DiagnosticCode): string {
     switch (code) {
         case 100: return "Not implemented: {0}";
-        case 101: return "Operation is unsafe.";
-        case 102: return "User-defined: {0}";
-        case 103: return "Feature '{0}' is not enabled.";
-        case 104: return "Low memory limit exceeded by static data: {0} > {1}";
-        case 105: return "Module requires at least '{0}' pages of initial memory.";
-        case 106: return "Module requires at least '{0}' pages of maximum memory.";
-        case 107: return "Shared memory requires maximum memory to be defined.";
-        case 108: return "Shared memory requires feature 'threads' to be enabled.";
-        case 109: return "Transform '{0}': {1}";
-        case 110: return "Start function name '{0}' is invalid or conflicts with another export.";
-        case 111: return "Element '{0}' not found.";
-        case 112: return "Exchange of '{0}' values is not supported by all embeddings";
         case 200: return "Conversion from type '{0}' to '{1}' requires an explicit cast.";
         case 201: return "Conversion from type '{0}' to '{1}' will require an explicit cast when switching between 32/64-bit.";
         case 202: return "Type '{0}' cannot be changed to type '{1}'.";
@@ -325,7 +296,6 @@ export function diagnosticCodeToString(code: DiagnosticCode): string {
         case 231: return "A class with a constructor explicitly returning something else than 'this' must be '@final'.";
         case 233: return "Property '{0}' is always assigned before being used.";
         case 234: return "Expression does not compile to a value at runtime.";
-        case 235: return "Only variables, functions and enums become WebAssembly module exports.";
         case 236: return "Literal '{0}' does not fit into 'i64' or 'u64' types.";
         case 237: return "Index signature accessors in type '{0}' differ in types.";
         case 238: return "Initializer, definitive assignment or nullable type expected.";
@@ -364,6 +334,11 @@ export function diagnosticCodeToString(code: DiagnosticCode): string {
         case 270: return "Constructor name '{0}' is already declared in this scope.";
         case 271: return "Unterminated Unicode escape sequence";
         case 272: return "Left side of '??' opeartor is not optional, right side is unused";
+        case 273: return "'{0}' is already defined.";
+        case 274: return "'{0}' is already exported.";
+        case 275: return "'export' keyword cannot be used here.";
+        case 276: return "Only constants can be declared outside of a function.";
+        case 277: return "Only function declarations and constants ca be exported.";
         case 901: return "Importing the table disables some indirect call optimizations.";
         case 902: return "Exporting the table disables some indirect call optimizations.";
         case 903: return "Expression compiles to a dynamic check at runtime.";
@@ -404,15 +379,11 @@ export function diagnosticCodeToString(code: DiagnosticCode): string {
         case 1110: return "Type expected.";
         case 1113: return "A 'default' clause cannot appear more than once in a 'switch' statement.";
         case 1114: return "Duplicate label '{0}'.";
-        case 1120: return "An export assignment cannot have modifiers.";
         case 1121: return "Octal literals are not allowed in strict mode.";
         case 1124: return "Digit expected.";
         case 1125: return "Hexadecimal digit expected.";
         case 1126: return "Unexpected end of text.";
         case 1127: return "Invalid character.";
-        case 1130: return "'case' or 'default' expected.";
-        case 1034: return "'super' must be followed by an argument list or member access.";
-        case 1038: return "A 'declare' modifier cannot be used in an already ambient context.";
         case 1140: return "Type argument expected.";
         case 1141: return "String literal expected.";
         case 1142: return "Line break not permitted here.";
@@ -469,6 +440,7 @@ export function diagnosticCodeToString(code: DiagnosticCode): string {
         case 2300: return "Duplicate identifier '{0}'.";
         case 2304: return "Cannot find name '{0}'.";
         case 2305: return "Module '{0}' has no exported member '{1}'.";
+        case 2306: return "File '{0}' has no exports.";
         case 2312: return "An interface can only extend an interface.";
         case 2314: return "Generic type '{0}' requires {1} type argument(s).";
         case 2315: return "Type '{0}' is not generic.";
@@ -497,7 +469,6 @@ export function diagnosticCodeToString(code: DiagnosticCode): string {
         case 2392: return "Multiple constructor implementations are not allowed.";
         case 2393: return "Duplicate function implementation.";
         case 2394: return "This overload signature is not compatible with its implementation signature.";
-        case 2395: return "Individual declarations in merged declaration '{0}' must be all exported or all local.";
         case 2416: return "Property '{0}' in type '{1}' is not assignable to the same property in base type '{2}'.";
         case 2422: return "A class can only implement an interface.";
         case 2434: return "A namespace declaration cannot be located prior to a class or function with which it is merged.";
@@ -512,7 +483,6 @@ export function diagnosticCodeToString(code: DiagnosticCode): string {
         case 2460: return "Type '{0}' has no property '{1}'.";
         case 2469: return "The '{0}' operator cannot be applied to type '{1}'.";
         case 2474: return "In 'const' enum declarations member initializer must be constant expression.";
-        case 2484: return "Export declaration conflicts with exported declaration of '{0}'.";
         case 2506: return "'{0}' is referenced directly or indirectly in its own base expression.";
         case 2531: return "Object is possibly 'null'.";
         case 2540: return "Cannot assign to '{0}' because it is a constant.";
@@ -523,14 +493,10 @@ export function diagnosticCodeToString(code: DiagnosticCode): string {
         case 2558: return "Expected {0} type arguments, but got {1}.";
         case 2564: return "Property '{0}' has no initializer and is not assigned in the constructor before 'this' is used or returned.";
         case 2565: return "Property '{0}' is used before being assigned.";
-        case 2610: return "'{0}' is defined as an accessor in class '{1}', but is overridden here in '{2}' as an instance property.";
-        case 2611: return "'{0}' is defined as a property in class '{1}', but is overridden here in '{2}' as an accessor.";
-        case 2651: return "A member initializer in a enum declaration cannot reference members declared after it, including members defined in other enums.";
         case 2673: return "Constructor of class '{0}' is private and only accessible within the class declaration.";
         case 2674: return "Constructor of class '{0}' is protected and only accessible within the class declaration.";
         case 2675: return "Cannot extend a class '{0}'. Class constructor is marked as private.";
         case 2685: return "The 'this' types of each signature are incompatible.";
-        case 2694: return "Namespace '{0}' has no exported member '{1}'.";
         case 2695: return "Namespace can only have declarations.";
         case 2706: return "Required type parameters may not follow optional type parameters.";
         case 2718: return "Duplicate property '{0}'.";

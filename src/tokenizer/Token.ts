@@ -203,7 +203,7 @@ export enum Token {
 
     // struct decl modifiers
 
-    Tagged,     // `tagged` data struct
+    taggedModifier,     // `tagged` data struct
     Runtime,    // `runtime` struct (SoP encoding)
     
     // literals

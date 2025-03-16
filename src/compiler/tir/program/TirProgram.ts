@@ -7,7 +7,7 @@ export class TirProgram
     /** all the files in the program */
     readonly files: Map<InternalPath, TirSource> = new Map();
     readonly entry: InternalPath;
-    
+
     constructor(
         entry: InternalPath,
     ) {

@@ -1,6 +1,5 @@
+import { isObject } from "@harmoniclabs/obj-utils";
 import { getAppliedTypeInternalName } from "../../AstCompiler/scope/Scope";
-import { TirAliasType } from "./TirAliasType";
-import { TirStructType } from "./TirStructType";
 import { TirType } from "./TirType";
 
 export type TirNativeType
@@ -14,8 +13,6 @@ export type TirNativeType
     | TirListT<TirType>
     | TirLinearMapT<TirType,TirType>
     | TirFuncT
-    | TirAsSopT
-    | TirAsDataT
     ;
 
 export function isTirNativeType( t: any ): t is TirNativeType
@@ -31,8 +28,19 @@ export function isTirNativeType( t: any ): t is TirNativeType
         || t instanceof TirListT
         || t instanceof TirLinearMapT
         || t instanceof TirFuncT
-        || t instanceof TirAsSopT
-        || t instanceof TirAsDataT
+    );
+}
+
+export type TirNamedDestructableNativeType
+    = TirDataT
+    | TirOptT<TirType>
+    ;
+
+export function isTirNamedDestructableNativeType( t: any ): t is TirNamedDestructableNativeType
+{
+    return isObject( t ) && (
+        t instanceof TirDataT
+        || t instanceof TirOptT
     );
 }
 
@@ -259,87 +267,5 @@ export class TirFuncT
         );
         result._isConcrete = this._isConcrete;
         return result;
-    }
-}
-
-/**
- * compiler utility
- * 
- * indicates that a struct type (or an alias of it)
- * must be represented only as SoP (Sum of Products)
-**/
-export class TirAsSopT
-{
-    constructor(
-        readonly typeDef: TirStructType | TirAliasType<TirStructType>
-    ) {
-        const originalTypeDef = typeDef;
-        while( typeDef instanceof TirAliasType ) typeDef = typeDef.aliased;
-        if( !(typeDef instanceof TirStructType) )
-            throw new Error(`TirAsSopT: expected a struct type, got ${originalTypeDef.toString()}`);
-        this.typeDef = originalTypeDef
-    }
-
-    toString(): string {
-        return `runtime ${this.typeDef.toString()}`;
-    }
-
-    toInternalName(): string {
-        return getAppliedTypeInternalName(
-            "SoP",
-            [ this.typeDef.toInternalName() ]
-        );
-    }
-
-    private _isConcrete: boolean | undefined = undefined;
-    isConcrete(): boolean {
-        if( typeof this._isConcrete !== "boolean" )
-            this._isConcrete = this.typeDef.isConcrete();
-        return this._isConcrete;
-    }
-
-    clone(): TirAsSopT {
-        return new TirAsSopT(this.typeDef.clone());
-    }
-}
-
-/**
- * compiler utility
- * 
- * indicates that a struct type (or an alias of it)
- * must be represented only as data `Constr`
-**/
-export class TirAsDataT
-{
-    constructor(
-        readonly typeDef: TirStructType | TirAliasType<TirStructType>
-    ) {
-        const originalTypeDef = typeDef;
-        while( typeDef instanceof TirAliasType ) typeDef = typeDef.aliased;
-        if( !(typeDef instanceof TirStructType) )
-            throw new Error(`TirAsDataT: expected a struct type, got ${originalTypeDef.toString()}`);
-        this.typeDef = originalTypeDef
-    }
-
-    toString(): string {
-        return `data ${this.typeDef.toString()}`;
-    }
-
-    toInternalName(): string {
-        return getAppliedTypeInternalName(
-            "AsData",
-            [ this.typeDef.toInternalName() ]
-        );
-    }
-
-    private _isConcrete: boolean | undefined = undefined;
-    isConcrete(): boolean {
-        if( typeof this._isConcrete !== "boolean" )
-            this._isConcrete = this.typeDef.isConcrete();
-        return this._isConcrete;
-    }
-
-    clone(): TirAsDataT {
-        return new TirAsDataT(this.typeDef.clone());
     }
 }

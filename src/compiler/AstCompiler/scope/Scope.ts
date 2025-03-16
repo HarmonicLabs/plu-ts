@@ -1,7 +1,7 @@
 import { PEBBLE_INTERNAL_IDENTIFIER_PREFIX, PEBBLE_INTERNAL_IDENTIFIER_SEPARATOR } from "../../internalVar";
 import { TirType } from "../../tir/types/TirType";
 import { getStructType } from "../../tir/types/type-check-utils/canAssignTo";
-import { IPebbleConcreteTypeSym, IPebbleGenericSym, IPebbleSym, PebbleAnyTypeSym, PebbleConcreteFunctionSym, PebbleConcreteTypeSym, PebbleGenericFunctionSym, PebbleGenericSym, PebbleSym, PebbleValueSym } from "./symbols/PebbleSym";
+import { IPebbleConcreteTypeSym, IPebbleGenericSym, PebbleAnyTypeSym, PebbleConcreteTypeSym, PebbleGenericSym, PebbleValueSym } from "./symbols/PebbleSym";
 import { TypeSymbolTable } from "./TypeSymbolTable";
 import { ValueSymbolTable } from "./ValueSymbolTable";
 
@@ -34,6 +34,7 @@ export interface IAvaiableConstructor {
 
 export interface JsonScope {
     values: { [x: string]: string };
+    types: string[];
     child: JsonScope | undefined;
 }
 
@@ -75,7 +76,17 @@ export class Scope
         const localValues: { [x: string]: string } = {};
         for( const [key, value] of this.valueSymbols.symbols ) localValues[key] = value.type.toString();
 
-        const thisResult = { values: localValues, child };
+        const localTypes: string[] = [];
+        if( this.typeSymbols instanceof TypeSymbolTable )
+        {
+            for( const typeName of this.typeSymbols.symbols.keys() ) localTypes.push( typeName );
+        }
+
+        const thisResult: JsonScope = {
+            values: localValues,
+            types: localTypes,
+            child
+        };
 
         if( this.parent ) return this.parent.toJson( thisResult );
         else return thisResult;

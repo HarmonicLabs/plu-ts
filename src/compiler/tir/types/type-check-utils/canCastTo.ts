@@ -1,5 +1,5 @@
 import { TirAliasType } from "../TirAliasType";
-import { TirDataT, TirAsDataT, TirVoidT, TirBoolT, TirIntT, TirOptT, TirBytesT, TirStringT, TirListT, TirLinearMapT, TirAsSopT, TirFuncT } from "../TirNativeType";
+import { TirDataT, TirVoidT, TirBoolT, TirIntT, TirOptT, TirBytesT, TirStringT, TirListT, TirLinearMapT, TirFuncT } from "../TirNativeType";
 import { TirStructType, StructFlags } from "../TirStructType";
 import { TirType } from "../TirType";
 import { canAssignTo, CanAssign, getCanAssign } from "./canAssignTo";
@@ -18,26 +18,11 @@ export function canCastTo( a: TirType, b: TirType ): boolean
     {
         return canCastToData( a );
     }
-    if( b instanceof TirAsDataT )
-    {
-        switch( getCanAssign( a, b.typeDef ) ) {
-            case CanAssign.Yes:
-            // case CanAssign.OnlyAsData:
-            case CanAssign.RequiresExplicitCast:
-                return canCastToData( a );
-            case CanAssign.No:
-            // case CanAssign.OnlySoP:
-            case CanAssign.LeftArgIsNotConcrete:
-            default:
-                return false;
-        }
-        return false;
-    }
     if( b instanceof TirStructType )
     {
         switch( getCanAssign( a, b ) ) {
             case CanAssign.Yes:
-            // case CanAssign.OnlySoP:
+            // case CanAssign.runtimeModifier:
             // case CanAssign.OnlyAsData:
             case CanAssign.RequiresExplicitCast:
                 return true;
@@ -117,21 +102,6 @@ export function canCastTo( a: TirType, b: TirType ): boolean
         return false;
     }
 
-    if( b instanceof TirAsSopT )
-    {
-        switch( getCanAssign( a, b.typeDef ) ) {
-            case CanAssign.Yes:
-            // case CanAssign.OnlySoP: // a is struct with no indication
-                return true;
-            case CanAssign.RequiresExplicitCast: // a is same structure sop with differnt name
-                return canCastTo( a, b.typeDef )
-            case CanAssign.No:
-            // case CanAssign.OnlyAsData:
-            case CanAssign.LeftArgIsNotConcrete:
-            default:
-                return false;
-        }
-    }
     if( b instanceof TirFuncT )
     {
         if(!( a instanceof TirFuncT )) return false;
@@ -160,12 +130,10 @@ export function canCastToData( a: TirType ): boolean
 {
     while(
         a instanceof TirAliasType
-        || a instanceof TirAsDataT
         || a instanceof TirOptT
         || a instanceof TirListT
     ) {
         if( a instanceof TirAliasType ) a = a.aliased;
-        if( a instanceof TirAsDataT ) a = a.typeDef;
         if( a instanceof TirOptT ) a = a.typeArg;
         if( a instanceof TirListT ) a = a.typeArg;
     }
@@ -185,7 +153,7 @@ export function canCastToData( a: TirType ): boolean
         return key && value;
     }
 
-    // TirFuncT | TirAsSopT | TirTypeParam
+    // TirFuncT | TirTypeParam
     // a;
 
     return false;

@@ -1,7 +1,7 @@
 import { TirAliasType } from "../TirAliasType";
-import { TirAsDataT, TirBoolT, TirBytesT, TirDataT, TirIntT, TirLinearMapT, TirListT, TirOptT, TirAsSopT, TirStringT, TirVoidT, TirFuncT } from "../TirNativeType";
+import { TirBoolT, TirBytesT, TirDataT, TirIntT, TirLinearMapT, TirListT, TirOptT, TirStringT, TirVoidT, TirFuncT } from "../TirNativeType";
 import { StructFlags, TirStructConstr, TirStructType } from "../TirStructType";
-import { TirType } from "../TirType";
+import { isTirNamedDestructableType, TirNamedDestructableType, TirType } from "../TirType";
 import { TirTypeParam } from "../TirTypeParam";
 import { canCastToData } from "./canCastTo";
 
@@ -13,7 +13,7 @@ export enum CanAssign {
     LiftToOptional,
     RequiresExplicitCast,
     // OnlyAsData,
-    // OnlySoP,
+    // runtimeModifier,
 }
 Object.freeze( CanAssign );
 
@@ -28,6 +28,14 @@ export function getStructType( type: TirType | undefined ): TirStructType | unde
     while( type instanceof TirAliasType ) type = type.aliased;
     return type instanceof TirStructType ? type : undefined;
 }
+
+export function getNamedDestructableType( type: TirType | undefined ): TirNamedDestructableType | undefined
+{
+    while( type instanceof TirAliasType ) type = type.aliased;
+    if( !isTirNamedDestructableType( type ) ) return undefined;
+    return type;
+}
+
 
 /**
  * @returns `true` if `a` can be assigned to `b` **without** explicit cast
@@ -144,7 +152,7 @@ function uncheckedGetCanAssign(
 
     if( b instanceof TirDataT )
     {
-        if( a instanceof TirDataT || a instanceof TirAsDataT ) return CanAssign.Yes;
+        if( a instanceof TirDataT ) return CanAssign.Yes;
         if( a instanceof TirStructType )
             return a.allowsDataEncoding() ? CanAssign.RequiresExplicitCast : CanAssign.No;
         // int, bytes, string, bool, even void
@@ -154,67 +162,6 @@ function uncheckedGetCanAssign(
         // can all cast to data
         return canCastToData( a ) ? CanAssign.RequiresExplicitCast : CanAssign.No;
     }
-    if( b instanceof TirAsDataT )
-    {
-        if( a instanceof TirAsDataT ) return uncheckedGetCanAssign( a.typeDef, b.typeDef, symbols );
-        if( a instanceof TirDataT ) return CanAssign.No;
-        if( a instanceof TirStructType )
-        {
-            if( a.onlySoP() ) return CanAssign.No;
-            const canAssignStruct = uncheckedGetCanAssign( a, b.typeDef, symbols );
-            if(
-                canAssignStruct === CanAssign.Yes ||
-                canAssignStruct === CanAssign.RequiresExplicitCast
-            ) return CanAssign.RequiresExplicitCast;
-            return CanAssign.No;
-        }
-        return CanAssign.No;
-    }
-    if( a instanceof TirAsDataT )
-    {
-        return uncheckedGetCanAssign( a.typeDef, b, symbols );
-    }
-
-    if( b instanceof TirAsSopT )
-    {
-        if( a instanceof TirAsSopT ) return uncheckedGetCanAssign( a.typeDef, b.typeDef, symbols );
-        if( a instanceof TirStructType ) {
-            if(!a.allowsSoPEncoding()) return CanAssign.No;
-            const canAssignDef = canAssignStruct( a, b.typeDef, symbols );
-            switch( canAssignDef ) {
-                case CanAssign.Yes:
-                    return CanAssign.Yes;
-                case CanAssign.RequiresExplicitCast:
-                    return CanAssign.RequiresExplicitCast;
-                // case CanAssign.OnlySoP:
-                //     return CanAssign.OnlySoP;
-                case CanAssign.No:
-                // case CanAssign.OnlyAsData:
-                case CanAssign.LeftArgIsNotConcrete:
-                default:
-                    return CanAssign.No;
-            }
-        }
-        return CanAssign.No;
-    }
-    if( a instanceof TirAsSopT )
-    {
-        if(!( b instanceof TirStructType )) return CanAssign.No;
-
-        switch( canAssignStruct( a.typeDef, b, symbols ) ) {
-            case CanAssign.Yes:
-            // case CanAssign.OnlySoP:
-                return CanAssign.Yes;
-            case CanAssign.RequiresExplicitCast:
-                return CanAssign.RequiresExplicitCast;
-            case CanAssign.No:
-            // case CanAssign.OnlyAsData:
-            case CanAssign.LeftArgIsNotConcrete:
-            default:
-                return CanAssign.No;
-        }
-    }
-
     if( b instanceof TirStructType )
     {
         if( a instanceof TirStructType ) return canAssignStruct( a, b, symbols );
@@ -362,7 +309,7 @@ function decideCanAssignField( currentDecision: CanAssign, fieldDecision: CanAss
                 case CanAssign.Yes: return CanAssign.RequiresExplicitCast;
                 case CanAssign.RequiresExplicitCast: return CanAssign.RequiresExplicitCast;
                 // case CanAssign.OnlyAsData: return CanAssign.OnlyAsData;
-                // case CanAssign.OnlySoP: return CanAssign.OnlySoP;
+                // case CanAssign.runtimeModifier: return CanAssign.runtimeModifier;
                 default: return CanAssign.No;
             }
             break;
@@ -373,18 +320,18 @@ function decideCanAssignField( currentDecision: CanAssign, fieldDecision: CanAss
         //         case CanAssign.Yes: return CanAssign.OnlyAsData;
         //         case CanAssign.RequiresExplicitCast: return CanAssign.OnlyAsData;
         //         case CanAssign.OnlyAsData: return CanAssign.OnlyAsData;
-        //         case CanAssign.OnlySoP: return CanAssign.No; // conflict
+        //         case CanAssign.runtimeModifier: return CanAssign.No; // conflict
         //         default: return CanAssign.No;
         //     }
         //     break;
         // }
-        // case CanAssign.OnlySoP: {
+        // case CanAssign.runtimeModifier: {
         //     switch( currentDecision )
         //     {
-        //         case CanAssign.Yes: return CanAssign.OnlySoP;
-        //         case CanAssign.RequiresExplicitCast: return CanAssign.OnlySoP;
+        //         case CanAssign.Yes: return CanAssign.runtimeModifier;
+        //         case CanAssign.RequiresExplicitCast: return CanAssign.runtimeModifier;
         //         // case CanAssign.OnlyAsData: return CanAssign.No; // conflict
-        //         case CanAssign.OnlySoP: return CanAssign.OnlySoP;
+        //         case CanAssign.runtimeModifier: return CanAssign.runtimeModifier;
         //         default: return CanAssign.No;
         //     }
         //     break;

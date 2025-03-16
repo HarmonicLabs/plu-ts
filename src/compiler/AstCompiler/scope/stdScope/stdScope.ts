@@ -1,12 +1,9 @@
-import { TirBoolT, TirBytesT, TirDataT, TirFuncT, TirLinearMapT, TirListT, TirIntT, TirOptT, TirAsSopT, TirVoidT, TirAsDataT, TirStringT } from "../../../tir/types/TirNativeType";
+import { TirBoolT, TirBytesT, TirDataT, TirFuncT, TirLinearMapT, TirListT, TirIntT, TirOptT, TirVoidT, TirStringT } from "../../../tir/types/TirNativeType";
 import { Scope } from "../Scope";
 import { TirNativeType } from "../../../tir/types/TirNativeType";
 import { PebbleConcreteTypeSym, PebbleGenericSym } from "../symbols/PebbleSym";
 import { TirAliasType } from "../../../tir/types/TirAliasType";
 import { StructFlags, TirStructConstr, TirStructField, TirStructType } from "../../../tir/types/TirStructType";
-import { TirInterfaceImpl } from "../../../tir/types/TirInterfaceImpl";
-import { TirInterfaceMethod, TirInterfaceType } from "../../../tir/types/TirInterfaceType";
-import { CommonFlags } from "../../../../common";
 import { TirTypeParam } from "../../../tir/types/TirTypeParam";
 
 
@@ -90,48 +87,6 @@ stdScope.defineType(
             if( typeArgs.length < 2 )
                 throw new Error("expected 2 type arguments");
             return new TirLinearMapT(typeArgs[0], typeArgs[1]);
-        },
-    })
-);
-stdScope.defineType(
-    new PebbleGenericSym({
-        name: "Sop",
-        nTypeParameters: 1,
-        getConcreteType(...typeArgs) {
-            if( typeArgs.length < 1 )
-                return undefined;
-            const arg = typeArgs[0];
-            if(!(
-                arg instanceof TirStructType
-                || (
-                    arg instanceof TirAliasType
-                    && arg.aliased instanceof TirStructType
-                )
-            )) return undefined;
-            return new TirAsSopT(
-                arg as TirStructType | TirAliasType<TirStructType>
-            );
-        },
-    })
-);
-stdScope.defineType(
-    new PebbleGenericSym({
-        name: "AsData",
-        nTypeParameters: 1,
-        getConcreteType(...typeArgs) {
-            if( typeArgs.length < 1 )
-                return undefined;
-            const arg = typeArgs[0];
-            if(!(
-                arg instanceof TirStructType
-                || (
-                    arg instanceof TirAliasType
-                    && arg.aliased instanceof TirStructType
-                )
-            )) return undefined;
-            return new TirAsDataT(
-                arg as TirStructType | TirAliasType<TirStructType>
-            );
         },
     })
 );

@@ -8,9 +8,6 @@ export enum CommonFlags {
     /** No flags set. */
     None = 0,
 
-    /** Has an `export` modifier. */
-    Export = 1 << 0,
-
     /** Has a `const` modifier. */
     Const = 1 << 1,
     /** Has a `let` modifier. */
@@ -18,25 +15,15 @@ export enum CommonFlags {
     /** (func parameter) has a `var` modifier. */
     Var = 1 << 3,
 
-    /** Has `tagged` struct modifier */
-    Tagged = 1 << 8,
-    /** Has a `data` struct modifier. */
-    OnlyData = 1 << 9,
-    /** Has a `runtime` struct modifier. */
-    OnlySoP = 1 << 10,
-
-    /** Is a constructor. */
-    Constructor = 1 << 11,
-
-    /** Has a constant value and is therefore inlined. */
-    Inlined = 1 << 12,
-    /** Is scoped. */
-    Scoped = 1 << 13,
-
     /** Has a `static` method modifier. */
     Static = 1 << 7,
-    /** Is an overridden method. */
-    Overridden = 1 << 28,
+    
+    /** Has `tagged` struct modifier */
+    taggedModifier = 1 << 8,
+    /** Has a `data` struct modifier. */
+    dataModifier = 1 << 9,
+    /** Has a `runtime` struct modifier. */
+    runtimeModifier = 1 << 10,
 }
 
 Object.freeze(CommonFlags);

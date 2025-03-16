@@ -58,7 +58,7 @@ import { StructConstrDecl, StructDecl } from "../ast/nodes/statements/declaratio
 import { InterfaceDecl, InterfaceDeclMethod } from "../ast/nodes/statements/declarations/InterfaceDecl";
 import { ImportStarStmt } from "../ast/nodes/statements/ImportStarStmt";
 import { ImportDecl, ImportStmt } from "../ast/nodes/statements/ImportStmt";
-import { ExportStmt } from "../ast/nodes/statements/ExportStmt";
+import { ExportImportStmt } from "../ast/nodes/statements/ExportImportStmt";
 import { ExportStarStmt } from "../ast/nodes/statements/ExportStarStmt";
 import { InterfaceMethodImpl, TypeImplementsStmt } from "../ast/nodes/statements/TypeImplementsStmt";
 import { TypeAliasDecl } from "../ast/nodes/statements/declarations/TypeAliasDecl";
@@ -78,6 +78,12 @@ import { hoistStatementsInplace } from "./hoistStatementsInplace";
 import { UsingStmt, UsingStmtDeclaredConstructor } from "../ast/nodes/statements/UsingStmt";
 import { IncrStmt } from "../ast/nodes/statements/IncrStmt";
 import { DecrStmt } from "../ast/nodes/statements/DecrStmt";
+import { ExportStmt } from "../ast/nodes/statements/ExportStmt";
+
+interface ParseStmtOpts {
+    isExport?: boolean;
+    topLevel?: boolean;
+}
 
 export class Parser extends DiagnosticEmitter
 {
@@ -156,18 +162,15 @@ export class Parser extends DiagnosticEmitter
         const tn = this.tn;
         
         let flags = CommonFlags.None;
-        let startPos = -1;
-
-        let exportStart = 0;
-        let exportEnd = 0;
+        let startPos = tn.pos;
 
         // `export` keyword
         // `export default` is NOT supported (`export default` should have never exsisted)
-        if (tn.skip( Token.Export)) {
-            if (startPos < 0) startPos = tn.tokenPos;
-            flags |= CommonFlags.Export;
-            exportStart = tn.tokenPos;
-            exportEnd = tn.pos;
+        if( tn.skip( Token.Export ) ) {
+            const exportEnd = tn.pos;
+            const stmt = this.parseTopLevelStatement();
+            if( !stmt ) return undefined;
+            return new ExportStmt( stmt, tn.range( startPos, exportEnd ) );
         }
 
         const initialState = tn.mark();
@@ -211,7 +214,15 @@ export class Parser extends DiagnosticEmitter
                 // decorators = undefined;
                 break;
             }
-            // case Token.Class:
+            case Token.taggedModifier: {
+                throw new Error("not_implemented::taggedModifier");
+            }
+            case Token.Data: {
+                throw new Error("not_implemented::dataModifier");
+            }
+            case Token.Runtime: {
+                throw new Error("not_implemented::runtimeModifier");
+            }
             case Token.Struct: {
                 tn.next();
                 statement = this.parseStruct(flags, startPos);
@@ -225,14 +236,6 @@ export class Parser extends DiagnosticEmitter
             }
             case Token.Import: {
                 tn.next();
-                if (flags & CommonFlags.Export) {
-                    // statement = this.parseExportImport(startPos);
-                    this.error(
-                        DiagnosticCode._0_modifier_cannot_be_used_here,
-                        tn.range(exportStart, exportEnd), "export"
-                    ); // recoverable
-                    return undefined;
-                }
                 statement = this.parseImport();
                 break;
             }
@@ -251,11 +254,7 @@ export class Parser extends DiagnosticEmitter
                 break;
             }
             default: {
-                if( flags & CommonFlags.Export ) {
-                    statement = this.parseExport(startPos);
-                    break;
-                }
-                statement = this.parseStatement( true );
+                statement = this.parseStatement({ topLevel: true, isExport: false });
             }
             break;
         }
@@ -382,7 +381,7 @@ export class Parser extends DiagnosticEmitter
 
     parseExport(
         startPos?: number
-    ): ExportStmt | ExportStarStmt | undefined
+    ): ExportImportStmt | ExportStarStmt | undefined
     {
         const tn = this.tn;
 
@@ -422,7 +421,7 @@ export class Parser extends DiagnosticEmitter
     
             tn.skip( Token.Semicolon ); // if any
 
-            return new ExportStmt(
+            return new ExportImportStmt(
                 members,
                 new LitStrExpr( tn.readString(), tn.range() ),
                 tn.range( startPos, tn.pos )
@@ -948,12 +947,12 @@ export class Parser extends DiagnosticEmitter
         );
     }
 
-    parseStructConstrFields( flags: CommonFlags ): VarDecl[] | undefined
+    parseStructConstrFields( flags: CommonFlags ): SimpleVarDecl[] | undefined
     {
         const tn = this.tn;
         // at '{'
 
-        const fields = new Array<VarDecl>();
+        const fields = new Array<SimpleVarDecl>();
 
         while( !tn.skip( Token.CloseBrace ) )
         {
@@ -961,6 +960,12 @@ export class Parser extends DiagnosticEmitter
             if( !field ) return this.warning(
                 DiagnosticCode._0_expected,
                 tn.range(), "var declaration"
+            );
+
+            if(!(field instanceof SimpleVarDecl))
+            return this.error(
+                DiagnosticCode.Invalid_field_declaration,
+                field.range
             );
 
             if( !field.type )
@@ -2709,7 +2714,13 @@ export class Parser extends DiagnosticEmitter
     }
 
     parseStatement(
-        topLevel: boolean = false
+        {
+            topLevel,
+            isExport
+        }: Partial<ParseStmtOpts> = {
+            topLevel: false,
+            isExport: false
+        }
     ): PebbleStmt | undefined
     {
         const tn = this.tn;
@@ -2864,6 +2875,7 @@ export class Parser extends DiagnosticEmitter
         }
         if( !statement ) { // has been reported
             tn.reset(state);
+            console.log(Token[token]);
             this.error(
                 DiagnosticCode.Statement_expected,
                 tn.range()
@@ -2942,7 +2954,6 @@ export class Parser extends DiagnosticEmitter
         }
     }
 
-
     parseBlockStmt(
         topLevel: boolean = false
     ): BlockStmt | undefined
@@ -2956,7 +2967,7 @@ export class Parser extends DiagnosticEmitter
         while( !tn.skip( Token.CloseBrace ) )
         {
             let state = tn.mark();
-            let statement = this.parseStatement(topLevel);
+            let statement = this.parseStatement({ topLevel, isExport: false });
             if (!statement) {
                 if (tn.token === Token.EndOfFile) return undefined;
                 tn.reset(state);
@@ -3334,7 +3345,7 @@ export class Parser extends DiagnosticEmitter
             );
 
             const statePreBody = tn.mark();
-            const body = this.parseStatement( false );
+            const body = this.parseStatement({ topLevel: false, isExport: false });
             if( !body )
             return this.error(
                 DiagnosticCode._0_expected,

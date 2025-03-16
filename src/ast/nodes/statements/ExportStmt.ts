@@ -1,19 +1,17 @@
 import { SourceRange } from "../../Source/SourceRange";
-import { LitStrExpr } from "../expr/litteral/LitStrExpr";
 import { HasSourceRange } from "../HasSourceRange";
-import { ImportDecl } from "./ImportStmt";
+import { PebbleStmt } from "./PebbleStmt";
 
 /**
  * ```ts
- * export { ... } from "module";
+ * export <PebbleStmt>
  * ```
  */
 export class ExportStmt
     implements HasSourceRange
 {
     constructor(
-        readonly members: ImportDecl[],
-        readonly path: LitStrExpr,
+        readonly stmt: PebbleStmt,
         readonly range: SourceRange,
     ) {}
 }

@@ -4,7 +4,7 @@ import { InterfaceDecl } from "../ast/nodes/statements/declarations/InterfaceDec
 import { StructDecl } from "../ast/nodes/statements/declarations/StructDecl";
 import { TypeAliasDecl } from "../ast/nodes/statements/declarations/TypeAliasDecl";
 import { ExportStarStmt } from "../ast/nodes/statements/ExportStarStmt";
-import { ExportStmt } from "../ast/nodes/statements/ExportStmt";
+import { ExportImportStmt } from "../ast/nodes/statements/ExportImportStmt";
 import { ImportStarStmt } from "../ast/nodes/statements/ImportStarStmt";
 import { ImportStmt } from "../ast/nodes/statements/ImportStmt";
 import { PebbleStmt } from "../ast/nodes/statements/PebbleStmt";
@@ -54,7 +54,7 @@ export function hoistStatementsInplace( stmts: PebbleStmt[] ): void
             || stmt instanceof ImportStarStmt
         ) moveStmt( stmts, i, lastSortedIdx++ );
 
-        hasExports = hasExports || stmt instanceof ExportStmt || stmt instanceof ExportStarStmt;
+        hasExports = hasExports || stmt instanceof ExportImportStmt || stmt instanceof ExportStarStmt;
         hasEnums = hasEnums || stmt instanceof EnumDecl;
         hasStructs = hasStructs || stmt instanceof StructDecl || stmt instanceof TypeAliasDecl;
         hasInterfaces = hasInterfaces || stmt instanceof InterfaceDecl;
@@ -67,7 +67,7 @@ export function hoistStatementsInplace( stmts: PebbleStmt[] ): void
     {
         const stmt = stmts[i];
         if(
-            stmt instanceof ExportStmt
+            stmt instanceof ExportImportStmt
             || stmt instanceof ExportStarStmt
         ) moveStmt( stmts, i, lastSortedIdx++ );
     }
