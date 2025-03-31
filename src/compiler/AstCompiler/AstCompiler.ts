@@ -8,7 +8,7 @@ import { PebbleStmt } from "../../ast/nodes/statements/PebbleStmt";
 import { TypeImplementsStmt } from "../../ast/nodes/statements/TypeImplementsStmt";
 import { Source, SourceKind } from "../../ast/Source/Source";
 import { SourceRange } from "../../ast/Source/SourceRange";
-import { CommonFlags, extension } from "../../common";
+import { extension } from "../../common";
 import { DiagnosticEmitter } from "../../diagnostics/DiagnosticEmitter";
 import { DiagnosticMessage } from "../../diagnostics/DiagnosticMessage";
 import { DiagnosticCode } from "../../diagnostics/diagnosticMessages.generated";
@@ -17,7 +17,6 @@ import { Parser } from "../../parser/Parser";
 import { CompilerIoApi, createMemoryCompilerIoApi } from "../io/CompilerIoApi";
 import { IPebbleCompiler } from "../IPebbleCompiler";
 import { getInternalPath, InternalPath, resolveProjAbsolutePath } from "../path/path";
-import { ResolveStackNode } from "./ResolveStackNode";
 import { getAppliedTypeInternalName, Scope, ScopeInfos } from "./scope/Scope";
 import { TirProgram } from "../tir/program/TirProgram";
 import { any_list_t, any_optional_t, bool_t, bytes_t, int_t, preludeScope, string_t, void_t } from "./scope/stdScope/stdScope";
@@ -26,7 +25,7 @@ import { TirStmt } from "../tir/statements/TirStmt";
 import { isTirExpr, TirExpr } from "../tir/expressions/TirExpr";
 import { UnaryExclamation } from "../../ast/nodes/expr/unary/UnaryExclamation";
 import { TirUnaryExclamation } from "../tir/expressions/unary/TirUnaryExclamation";
-import { TirBoolT, TirDataT, TirFuncT, TirLinearMapT, TirListT, TirOptT } from "../tir/types/TirNativeType";
+import { TirDataT, TirFuncT, TirLinearMapT, TirListT, TirOptT } from "../tir/types/TirNativeType";
 import { canAssignTo, getNamedDestructableType, getStructType, isStructOrStructAlias } from "../tir/types/type-check-utils/canAssignTo";
 import { UnaryPlus } from "../../ast/nodes/expr/unary/UnaryPlus";
 import { UnaryMinus } from "../../ast/nodes/expr/unary/UnaryMinus";
@@ -103,7 +102,6 @@ import { TirSingleDeconstructVarDecl } from "../tir/statements/TirVarDecl/TirSin
 import { TirArrayLikeDeconstr } from "../tir/statements/TirVarDecl/TirArrayLikeDeconstr";
 import { Identifier } from "../../ast/nodes/common/Identifier";
 import { isTirVarDecl, TirVarDecl } from "../tir/statements/TirVarDecl/TirVarDecl";
-import { wrapManyStatements } from "./wrapManyStatementsOrReturnSame";
 import { TirForStmt } from "../tir/statements/TirForStmt";
 import { IncrStmt } from "../../ast/nodes/statements/IncrStmt";
 import { DecrStmt } from "../../ast/nodes/statements/DecrStmt";
@@ -141,101 +139,14 @@ import { canCastTo, canCastToData } from "../tir/types/type-check-utils/canCastT
 import { TirIsExpr } from "../tir/expressions/TirIsExpr";
 import { TirElemAccessExpr } from "../tir/expressions/TirElemAccessExpr";
 import { TirTernaryExpr } from "../tir/expressions/TirTernaryExpr";
-import { TirDotPropAccessExpr, TirNonNullPropAccessExpr, TirOptionalPropAccessExpr, TirPropAccessExpr } from "../tir/expressions/TirPropAccessExpr";
-import { getPropAccessReturnType } from "./getPropAccessReturnType";
+import { TirDotPropAccessExpr, TirOptionalPropAccessExpr, TirPropAccessExpr } from "../tir/expressions/TirPropAccessExpr";
 import { AstNamedTypeExpr } from "../../ast/nodes/types/AstNamedTypeExpr";
-import { TirExportStmt } from "../tir/statements/TirExportStmt";
 import { AddExpr, BinaryExpr, BitwiseAndExpr, BitwiseOrExpr, BitwiseXorExpr, DivExpr, EqualExpr, ExponentiationExpr, GreaterThanEqualExpr, GreaterThanExpr, isBinaryExpr, LessThanEqualExpr, LessThanExpr, LogicalAndExpr, LogicalOrExpr, ModuloExpr, MultExpr, NotEqualExpr, OptionalDefaultExpr, ShiftLeftExpr, ShiftRightExpr, SubExpr } from "../../ast/nodes/expr/binary/BinaryExpr";
 import { ExportStmt } from "../../ast/nodes/statements/ExportStmt";
-
-export interface ICompileStmtCtx {
-    scope: Scope;
-    /** present if the statement is in a function body */
-    functionCtx: CompileFuncCtx | undefined;
-    /** to check if `continue` and `break` are valid in this contex */
-    isLoop: boolean;
-}
-
-export class CompileStmtCtx implements ICompileStmtCtx
-{
-    constructor(
-        readonly scope: Scope,
-        readonly functionCtx: CompileFuncCtx | undefined,
-        readonly isLoop: boolean
-    ) {}
-
-    newChildScope(
-        childScopeInfos: ScopeInfos,
-        isLoop: boolean
-    ): CompileStmtCtx
-    {
-        return new CompileStmtCtx(
-            this.scope.newChildScope( childScopeInfos ),
-            this.functionCtx,
-            isLoop
-        );
-    }
-
-    newFunctionChildScope( funcName: string ): CompileStmtCtx
-    {
-        return new CompileStmtCtx(
-            this.scope.newChildScope({
-                ...this.scope.infos,
-                isFunctionDeclScope: true
-            }),
-            { // function ctx
-                funcName,
-                parentFunctionCtx: this.functionCtx,
-                returnHints: {
-                    type: undefined,
-                    isInferred: false
-                }
-            },
-            false // isLoop
-        );
-    }
-
-    newBranchChildScope(): CompileStmtCtx
-    {
-        // same as this, just new block
-        return this.newChildScope(
-            { ...this.scope.infos },
-            this.isLoop
-        );
-    }
-
-    newLoopChildScope(): CompileStmtCtx
-    {
-        return this.newChildScope(
-            { ...this.scope.infos },
-            true
-        );
-    }
-
-    static fromScopeOnly( scope: Scope ): CompileStmtCtx
-    {
-        return new CompileStmtCtx(
-            scope,
-            undefined,
-            false
-        );
-    }
-}
-
-export interface CompileFuncCtx {
-    /** present where the function definition is inside
-     * an other funciton definiton (closure)
-     * 
-     * in which case, only constants from the parent funciton can be used
-    **/
-    parentFunctionCtx: CompileFuncCtx | undefined;
-    returnHints: {
-        type: TirType | undefined;
-        isInferred: boolean;
-    };
-    // to check recursive functions while inferrring return type
-    funcName: string;
-}
+import { ResolveStackNode } from "./utils/deps/ResolveStackNode";
+import { getPropAccessReturnType } from "./utils/getPropAccessReturnType";
+import { wrapManyStatements } from "./utils/wrapManyStatementsOrReturnSame";
+import { AstCompilationCtx } from "./AstCompilationCtx";
 
 /*
 Handling type expressions that depend on other types 
@@ -346,7 +257,7 @@ export class AstCompiler extends DiagnosticEmitter
         // this._applyInterfaceImplementations( tirSource, stmts );
 
         // compile **value** statements
-        const srcCompileCtx = CompileStmtCtx.fromScopeOnly( tirSource.scope );
+        const srcCompileCtx = AstCompilationCtx.fromScopeOnly( tirSource.scope, this.diagnostics );
         const nAstStmts = stmts.length;
         for( let i = 0; i < nAstStmts; i++ )
         {
@@ -426,7 +337,7 @@ export class AstCompiler extends DiagnosticEmitter
 
                         // TODO: recursive struct definitions
                         const fieldType  = self._compileConcreteTypeExpr(
-                            CompileStmtCtx.fromScopeOnly( tirSource.scope ),
+                            AstCompilationCtx.fromScopeOnly( tirSource.scope, this.diagnostics ),
                             f.type
                         );
                         if( !fieldType ) return undefined;
@@ -454,7 +365,7 @@ export class AstCompiler extends DiagnosticEmitter
         if( stmt.typeParams.length > 0 ) throw new Error("not_implemented::AstCompiler::_compileTypeAliasDecl::typeParams");
         const self = this;
         const aliasedType = self._compileConcreteTypeExpr(
-            CompileStmtCtx.fromScopeOnly( tirSource.scope ),
+            AstCompilationCtx.fromScopeOnly( tirSource.scope, this.diagnostics ),
             stmt.aliasedType
         );
         if( !aliasedType ) return undefined;
@@ -567,7 +478,7 @@ export class AstCompiler extends DiagnosticEmitter
      * optimizaitons are part of the TIR -> TermIR compilation
     **/
     private _compileStatement(
-        ctx: CompileStmtCtx,
+        ctx: AstCompilationCtx,
         stmt: PebbleStmt,
         // only passed for top level statements
         // where exports are expected
@@ -615,7 +526,7 @@ export class AstCompiler extends DiagnosticEmitter
     }
 
     private _compileExportStmt(
-        ctx: CompileStmtCtx,
+        ctx: AstCompilationCtx,
         stmt: ExportStmt,
         tirSource: TirSource | undefined
     ): TirStmt[] | undefined
@@ -692,7 +603,7 @@ export class AstCompiler extends DiagnosticEmitter
     }
 
     private _compileFuncDecl(
-        ctx: CompileStmtCtx,
+        ctx: AstCompilationCtx,
         stmt: FuncDecl
     ): [ TirFuncDecl ] | undefined
     {
@@ -719,7 +630,7 @@ export class AstCompiler extends DiagnosticEmitter
         return [ new TirFuncDecl( expr ) ];
     }
     private _compileFuncExpr(
-        ctx: CompileStmtCtx,
+        ctx: AstCompilationCtx,
         expr: FuncExpr,
         typeHint: TirType | undefined
     ): TirFuncExpr | undefined
@@ -876,7 +787,7 @@ export class AstCompiler extends DiagnosticEmitter
      * @returns {undefined} `undefined` if compilation failed
     **/
     private _compileUsingStmt(
-        ctx: CompileStmtCtx,
+        ctx: AstCompilationCtx,
         stmt: UsingStmt
     ): [] | undefined
     {
@@ -929,7 +840,7 @@ export class AstCompiler extends DiagnosticEmitter
     }
 
     private _compileExprStmt(
-        ctx: CompileStmtCtx,
+        ctx: AstCompilationCtx,
         stmt: ExprStmt
     ): [ TirExprStmt ] | undefined
     {
@@ -939,7 +850,7 @@ export class AstCompiler extends DiagnosticEmitter
     }
 
     private _compileMatchStmt(
-        ctx: CompileStmtCtx,
+        ctx: AstCompilationCtx,
         stmt: MatchStmt
     ): [ TirMatchStmt ] | undefined
     {
@@ -984,7 +895,7 @@ export class AstCompiler extends DiagnosticEmitter
         ) ];
     }
     private _compileTirMatchStmtCase(
-        ctx: CompileStmtCtx,
+        ctx: AstCompilationCtx,
         matchCase: MatchStmtCase,
         deconstructableType: DeconstructableTirType,
         constrNamesAlreadySpecified: string[]
@@ -1189,7 +1100,7 @@ export class AstCompiler extends DiagnosticEmitter
     }
 
     private _compileTestStmt(
-        ctx: CompileStmtCtx,
+        ctx: AstCompilationCtx,
         stmt: TestStmt
     ): [ TirTestStmt ] | undefined
     {
@@ -1219,7 +1130,7 @@ export class AstCompiler extends DiagnosticEmitter
     }
 
     private _compileAssertStmt(
-        ctx: CompileStmtCtx,
+        ctx: AstCompilationCtx,
         stmt: AssertStmt
     ): [ TirAssertStmt ] | undefined
     {
@@ -1261,7 +1172,7 @@ export class AstCompiler extends DiagnosticEmitter
     }
 
     private _compileFailStmt(
-        ctx: CompileStmtCtx,
+        ctx: AstCompilationCtx,
         stmt: FailStmt
     ): [ TirFailStmt ] | undefined
     {
@@ -1285,7 +1196,7 @@ export class AstCompiler extends DiagnosticEmitter
     }
 
     private _compileContinueStmt(
-        ctx: CompileStmtCtx,
+        ctx: AstCompilationCtx,
         stmt: ContinueStmt
     ): [ TirContinueStmt ] | undefined
     {
@@ -1297,7 +1208,7 @@ export class AstCompiler extends DiagnosticEmitter
     }
 
     private _compileBreakStmt(
-        ctx: CompileStmtCtx,
+        ctx: AstCompilationCtx,
         stmt: BreakStmt
     ): [ TirBreakStmt ] | undefined
     {
@@ -1309,7 +1220,7 @@ export class AstCompiler extends DiagnosticEmitter
     }
     
     private _compileBlockStmt(
-        ctx: CompileStmtCtx,
+        ctx: AstCompilationCtx,
         stmt: BlockStmt,
     ): [ TirBlockStmt ] | undefined
     {
@@ -1326,7 +1237,7 @@ export class AstCompiler extends DiagnosticEmitter
     }
 
     private _compileReturnStmt(
-        ctx: CompileStmtCtx,
+        ctx: AstCompilationCtx,
         stmt: ReturnStmt
     ): [ TirReturnStmt ] | undefined
     {
@@ -1357,7 +1268,7 @@ export class AstCompiler extends DiagnosticEmitter
     }
 
     private _compileWhileStmt(
-        ctx: CompileStmtCtx,
+        ctx: AstCompilationCtx,
         stmt: WhileStmt
     ): [ TirWhileStmt ] | undefined
     {
@@ -1388,7 +1299,7 @@ export class AstCompiler extends DiagnosticEmitter
     }
 
     private _compileForOfStmt(
-        ctx: CompileStmtCtx,
+        ctx: AstCompilationCtx,
         stmt: ForOfStmt
     ): [ TirForOfStmt ] | undefined
     {
@@ -1435,7 +1346,7 @@ export class AstCompiler extends DiagnosticEmitter
         ) ];
     }
     private _compileForStmt(
-        ctx: CompileStmtCtx,
+        ctx: AstCompilationCtx,
         stmt: ForStmt
     ): [ TirForStmt ] | undefined
     {
@@ -1468,7 +1379,7 @@ export class AstCompiler extends DiagnosticEmitter
         ) ];
     }
     private _compileForUpdateStmts(
-        ctx: CompileStmtCtx,
+        ctx: AstCompilationCtx,
         stmts: AssignmentStmt[]
     ): TirAssignmentStmt[] | undefined
     {
@@ -1485,7 +1396,7 @@ export class AstCompiler extends DiagnosticEmitter
         return tirStmts;
     }
     private _compileAssignmentStmt(
-        ctx: CompileStmtCtx,
+        ctx: AstCompilationCtx,
         stmt: AssignmentStmt
     ): [ TirAssignmentStmt ] | undefined
     {
@@ -1539,7 +1450,7 @@ export class AstCompiler extends DiagnosticEmitter
         }
     }
     private _compileExplicitAssignmentStmt(
-        ctx: CompileStmtCtx,
+        ctx: AstCompilationCtx,
         stmt: ExplicitAssignmentStmt
     ): TirAssignmentStmt | undefined
     {
@@ -1714,7 +1625,7 @@ export class AstCompiler extends DiagnosticEmitter
         );
     }
     private __getBinOpAssignmentLeftArg(
-        ctx: CompileStmtCtx,
+        ctx: AstCompilationCtx,
         stmt: ExplicitAssignmentStmt,
         varType: TirType,
         exprType: TirType
@@ -1734,7 +1645,7 @@ export class AstCompiler extends DiagnosticEmitter
     }
 
     private _compileVarStmt(
-        ctx: CompileStmtCtx,
+        ctx: AstCompilationCtx,
         stmt: VarStmt,
         isTopLevel: boolean
     ): TirVarDecl[] | undefined
@@ -1749,7 +1660,7 @@ export class AstCompiler extends DiagnosticEmitter
         return tirVarDecls;
     }
     private _compileVarDecl(
-        ctx: CompileStmtCtx,
+        ctx: AstCompilationCtx,
         decl: VarDecl,
         typeHint: TirType | undefined, // coming from deconstructing
         isTopLevel: boolean = false
@@ -1778,7 +1689,7 @@ export class AstCompiler extends DiagnosticEmitter
         throw new Error("unreachable::AstCompiler::_compileVarDecl");
     }
     private _compileSimpleVarDecl(
-        ctx: CompileStmtCtx,
+        ctx: AstCompilationCtx,
         decl: SimpleVarDecl,
         typeHint: TirType | undefined, // coming from deconstructing
         // useful to infer variable type by usage
@@ -1809,7 +1720,7 @@ export class AstCompiler extends DiagnosticEmitter
         );
     }
     private _compileNamedDeconstructVarDecl(
-        ctx: CompileStmtCtx,
+        ctx: AstCompilationCtx,
         decl: NamedDeconstructVarDecl,
         typeHint: TirType | undefined, // coming from deconstructing
         // useful to infer variable type by usage
@@ -1914,7 +1825,7 @@ export class AstCompiler extends DiagnosticEmitter
         }
     }
     private _compileSingleDeconstructVarDecl(
-        ctx: CompileStmtCtx,
+        ctx: AstCompilationCtx,
         decl: SingleDeconstructVarDecl,
         typeHint: TirType | undefined, // coming from deconstructing
         // useful to infer variable type by usage
@@ -1956,7 +1867,7 @@ export class AstCompiler extends DiagnosticEmitter
         );
     }
     private _compileArrayLikeDeconstr(
-        ctx: CompileStmtCtx,
+        ctx: AstCompilationCtx,
         decl: ArrayLikeDeconstr,
         typeHint: TirType | undefined, // coming from deconstructing
         // useful to infer variable type by usage
@@ -2013,7 +1924,7 @@ export class AstCompiler extends DiagnosticEmitter
         );
     }
     private _getDeconstructedFields(
-        ctx: CompileStmtCtx,
+        ctx: AstCompilationCtx,
         astDeconstruct: ISingleDeconstructVarDecl,
         ctorDef: TirStructConstr
     ): [
@@ -2059,7 +1970,7 @@ export class AstCompiler extends DiagnosticEmitter
         return [ tirFields, rest ];
     }
     private _getVarDeclTypeAndExpr(
-        ctx: CompileStmtCtx,
+        ctx: AstCompilationCtx,
         decl: { type: AstTypeExpr | undefined, initExpr: PebbleExpr | undefined, range: SourceRange },
         deconstructTypeHint: TirType | undefined, // coming from deconstructing
         // sameLevelStmts: readonly PebbleStmt[],
@@ -2130,7 +2041,7 @@ export class AstCompiler extends DiagnosticEmitter
     }
 
     private _compileConcreteTypeExpr(
-        ctx: CompileStmtCtx,
+        ctx: AstCompilationCtx,
         typeExpr: AstTypeExpr
     ): TirType | undefined
     {
@@ -2290,7 +2201,7 @@ export class AstCompiler extends DiagnosticEmitter
     }
     
     private _compileIfStmt(
-        ctx: CompileStmtCtx,
+        ctx: AstCompilationCtx,
         stmt: IfStmt
     ): [ TirIfStmt ] | undefined
     {
@@ -2343,7 +2254,7 @@ export class AstCompiler extends DiagnosticEmitter
      * optimizaitons are part of the TIR -> TermIR compilation
     **/
     private _compileExpr(
-        ctx: CompileStmtCtx,
+        ctx: AstCompilationCtx,
         expr: PebbleExpr,
         /**
          * this is just a type **hint**
@@ -2380,7 +2291,7 @@ export class AstCompiler extends DiagnosticEmitter
     }
 
     private _compileBinaryExpr(
-        ctx: CompileStmtCtx,
+        ctx: AstCompilationCtx,
         expr: BinaryExpr,
         typeHint: TirType | undefined
     ): TirBinaryExpr | undefined
@@ -2414,7 +2325,7 @@ export class AstCompiler extends DiagnosticEmitter
     // THAT IS NOT YET IMPLEMENTED
 
     private _compileExponentiationExpr(
-        ctx: CompileStmtCtx,
+        ctx: AstCompilationCtx,
         expr: ExponentiationExpr,
         _typeHint: TirType | undefined
     ): TirExponentiationExpr | undefined
@@ -2446,7 +2357,7 @@ export class AstCompiler extends DiagnosticEmitter
     }
 
     private _compileLessThanExpr(
-        ctx: CompileStmtCtx,
+        ctx: AstCompilationCtx,
         expr: LessThanExpr,
         typeHint: TirType | undefined
     ): TirLessThanExpr | undefined
@@ -2483,7 +2394,7 @@ export class AstCompiler extends DiagnosticEmitter
     }
 
     private _compileGreaterThanExpr(
-        ctx: CompileStmtCtx,
+        ctx: AstCompilationCtx,
         expr: GreaterThanExpr,
         typeHint: TirType | undefined
     ): TirGreaterThanExpr | undefined
@@ -2520,7 +2431,7 @@ export class AstCompiler extends DiagnosticEmitter
     }
 
     private _compileLessThanEqualExpr(
-        ctx: CompileStmtCtx,
+        ctx: AstCompilationCtx,
         expr: LessThanEqualExpr,
         typeHint: TirType | undefined
     ): TirLessThanEqualExpr | undefined
@@ -2558,7 +2469,7 @@ export class AstCompiler extends DiagnosticEmitter
 
     // only aviable for ints and bytes
     private _compileGreaterThanEqualExpr(
-        ctx: CompileStmtCtx,
+        ctx: AstCompilationCtx,
         expr: GreaterThanEqualExpr,
         typeHint: TirType | undefined
     ): TirGreaterThanEqualExpr | undefined
@@ -2596,7 +2507,7 @@ export class AstCompiler extends DiagnosticEmitter
     }
 
     private _compileEqualExpr(
-        ctx: CompileStmtCtx,
+        ctx: AstCompilationCtx,
         expr: EqualExpr,
         typeHint: TirType | undefined
     ): TirEqualExpr | undefined
@@ -2624,7 +2535,7 @@ export class AstCompiler extends DiagnosticEmitter
     }
 
     private _compileNotEqualExpr(
-        ctx: CompileStmtCtx,
+        ctx: AstCompilationCtx,
         expr: NotEqualExpr,
         typeHint: TirType | undefined
     ): TirNotEqualExpr | undefined
@@ -2652,7 +2563,7 @@ export class AstCompiler extends DiagnosticEmitter
     }
 
     private _compileAddExpr(
-        ctx: CompileStmtCtx,
+        ctx: AstCompilationCtx,
         expr: AddExpr,
         _typeHint: TirType | undefined
     ): TirAddExpr | undefined
@@ -2684,7 +2595,7 @@ export class AstCompiler extends DiagnosticEmitter
     }
 
     private _compileSubExpr(
-        ctx: CompileStmtCtx,
+        ctx: AstCompilationCtx,
         expr: SubExpr,
         _typeHint: TirType | undefined
     ): TirSubExpr | undefined
@@ -2716,7 +2627,7 @@ export class AstCompiler extends DiagnosticEmitter
     }
 
     private _compileMultExpr(
-        ctx: CompileStmtCtx,
+        ctx: AstCompilationCtx,
         expr: MultExpr,
         _typeHint: TirType | undefined
     ): TirMultExpr | undefined
@@ -2748,7 +2659,7 @@ export class AstCompiler extends DiagnosticEmitter
     }
 
     private _compileDivExpr(
-        ctx: CompileStmtCtx,
+        ctx: AstCompilationCtx,
         expr: DivExpr,
         _typeHint: TirType | undefined
     ): TirDivExpr | undefined
@@ -2780,7 +2691,7 @@ export class AstCompiler extends DiagnosticEmitter
     }
 
     private _compileModuloExpr(
-        ctx: CompileStmtCtx,
+        ctx: AstCompilationCtx,
         expr: ModuloExpr,
         _typeHint: TirType | undefined
     ): TirModuloExpr | undefined
@@ -2812,7 +2723,7 @@ export class AstCompiler extends DiagnosticEmitter
     }
 
     private _compileShiftLeftExpr(
-        ctx: CompileStmtCtx,
+        ctx: AstCompilationCtx,
         expr: ShiftLeftExpr,
         _typeHint: TirType | undefined
     ): TirShiftLeftExpr | undefined
@@ -2844,7 +2755,7 @@ export class AstCompiler extends DiagnosticEmitter
     }
 
     private _compileShiftRightExpr(
-        ctx: CompileStmtCtx,
+        ctx: AstCompilationCtx,
         expr: ShiftRightExpr,
         _typeHint: TirType | undefined
     ): TirShiftRightExpr | undefined
@@ -2876,7 +2787,7 @@ export class AstCompiler extends DiagnosticEmitter
     }
 
     private _compileBitwiseAndExpr(
-        ctx: CompileStmtCtx,
+        ctx: AstCompilationCtx,
         expr: BitwiseAndExpr,
         _typeHint: TirType | undefined
     ): TirBitwiseAndExpr | undefined
@@ -2908,7 +2819,7 @@ export class AstCompiler extends DiagnosticEmitter
     }
 
     private _compileBitwiseXorExpr(
-        ctx: CompileStmtCtx,
+        ctx: AstCompilationCtx,
         expr: BitwiseXorExpr,
         _typeHint: TirType | undefined
     ): TirBitwiseXorExpr | undefined
@@ -2940,7 +2851,7 @@ export class AstCompiler extends DiagnosticEmitter
     }
 
     private _compileBitwiseOrExpr(
-        ctx: CompileStmtCtx,
+        ctx: AstCompilationCtx,
         expr: BitwiseOrExpr,
         _typeHint: TirType | undefined
     ): TirBitwiseOrExpr | undefined
@@ -2972,7 +2883,7 @@ export class AstCompiler extends DiagnosticEmitter
     }
 
     private _compileLogicalAndExpr(
-        ctx: CompileStmtCtx,
+        ctx: AstCompilationCtx,
         expr: LogicalAndExpr,
         _typeHint: TirType | undefined
     ): TirLogicalAndExpr | undefined
@@ -3006,7 +2917,7 @@ export class AstCompiler extends DiagnosticEmitter
     }
 
     private _compileLogicalOrExpr(
-        ctx: CompileStmtCtx,
+        ctx: AstCompilationCtx,
         expr: LogicalOrExpr,
         _typeHint: TirType | undefined
     ): TirLogicalOrExpr | undefined
@@ -3040,7 +2951,7 @@ export class AstCompiler extends DiagnosticEmitter
     }
 
     private _compileOptionalDefaultExpr(
-        ctx: CompileStmtCtx,
+        ctx: AstCompilationCtx,
         expr: OptionalDefaultExpr,
         typeHint: TirType | undefined
     ): TirOptionalDefaultExpr | undefined
@@ -3076,7 +2987,7 @@ export class AstCompiler extends DiagnosticEmitter
     }
 
     private _compileVarAccessExpr(
-        ctx: CompileStmtCtx,
+        ctx: AstCompilationCtx,
         expr: Identifier,
         typeHint: TirType | undefined
     ): TirVariableAccessExpr | undefined
@@ -3095,7 +3006,7 @@ export class AstCompiler extends DiagnosticEmitter
     }
 
     private _compilePropAccessExpr(
-        ctx: CompileStmtCtx,
+        ctx: AstCompilationCtx,
         expr: PropAccessExpr,
         typeHint: TirType | undefined
     ): TirPropAccessExpr | undefined
@@ -3109,7 +3020,7 @@ export class AstCompiler extends DiagnosticEmitter
     }
 
     private _compileOptionalPropAccessExpr(
-        ctx: CompileStmtCtx,
+        ctx: AstCompilationCtx,
         expr: OptionalPropAccessExpr,
         _typeHint: TirType | undefined
     ): TirOptionalPropAccessExpr | undefined
@@ -3135,7 +3046,7 @@ export class AstCompiler extends DiagnosticEmitter
     }
 
     private _compileNonNullPropAccessExpr(
-        ctx: CompileStmtCtx,
+        ctx: AstCompilationCtx,
         expr: NonNullPropAccessExpr,
         _typeHint: TirType | undefined
     ): TirDotPropAccessExpr | undefined
@@ -3154,7 +3065,7 @@ export class AstCompiler extends DiagnosticEmitter
     }
 
     private _compileDotPropAccessExpr(
-        ctx: CompileStmtCtx,
+        ctx: AstCompilationCtx,
         expr: DotPropAccessExpr,
         _typeHint: TirType | undefined
     ): TirDotPropAccessExpr | undefined
@@ -3178,7 +3089,7 @@ export class AstCompiler extends DiagnosticEmitter
     }
 
     private _compileTernaryExpr(
-        ctx: CompileStmtCtx,
+        ctx: AstCompilationCtx,
         expr: TernaryExpr,
         typeHint: TirType | undefined
     ): TirTernaryExpr | undefined
@@ -3213,7 +3124,7 @@ export class AstCompiler extends DiagnosticEmitter
     }
 
     private _compileElemAccessExpr(
-        ctx: CompileStmtCtx,
+        ctx: AstCompilationCtx,
         expr: ElemAccessExpr,
         typeHint: TirType | undefined
     ): TirElemAccessExpr | undefined
@@ -3246,7 +3157,7 @@ export class AstCompiler extends DiagnosticEmitter
     }
 
     private _compileIsExpr(
-        ctx: CompileStmtCtx,
+        ctx: AstCompilationCtx,
         expr: IsExpr,
         _typeHint: TirType | undefined
     ): TirIsExpr | undefined
@@ -3285,7 +3196,7 @@ export class AstCompiler extends DiagnosticEmitter
     }
 
     private _compileNonNullExpr(
-        ctx: CompileStmtCtx,
+        ctx: AstCompilationCtx,
         expr: NonNullExpr,
         typeHint: TirType | undefined
     ): TirNonNullExpr | undefined
@@ -3306,7 +3217,7 @@ export class AstCompiler extends DiagnosticEmitter
     }
 
     private _compileTypeConversionExpr(
-        ctx: CompileStmtCtx,
+        ctx: AstCompilationCtx,
         ast: TypeConversionExpr,
         typeHint: TirType | undefined
     ): TirTypeConversionExpr | undefined
@@ -3330,7 +3241,7 @@ export class AstCompiler extends DiagnosticEmitter
     }
 
     private _compileCaseExpr(
-        ctx: CompileStmtCtx,
+        ctx: AstCompilationCtx,
         expr: CaseExpr,
         typeHint: TirType | undefined
     ): TirCaseExpr | undefined
@@ -3363,7 +3274,7 @@ export class AstCompiler extends DiagnosticEmitter
     }
 
     private _compileCaseExprMatcher(
-        ctx: CompileStmtCtx,
+        ctx: AstCompilationCtx,
         matcher: CaseExprMatcher,
         patternType: TirType,
         returnTypeHint: TirType | undefined
@@ -3391,7 +3302,7 @@ export class AstCompiler extends DiagnosticEmitter
     }
     
     private _compileCallExpr(
-        ctx: CompileStmtCtx,
+        ctx: AstCompilationCtx,
         expr: CallExpr,
         typeHint: TirType | undefined
     ): TirCallExpr | undefined
@@ -3450,7 +3361,7 @@ export class AstCompiler extends DiagnosticEmitter
     }
 
     private _compileUnaryPrefixExpr(
-        ctx: CompileStmtCtx,
+        ctx: AstCompilationCtx,
         expr: UnaryPrefixExpr,
         _typeHint: TirType | undefined
     ): TirUnaryPrefixExpr | undefined
@@ -3511,7 +3422,7 @@ export class AstCompiler extends DiagnosticEmitter
     }
 
     private _compileLitteralExpr(
-        ctx: CompileStmtCtx,
+        ctx: AstCompilationCtx,
         expr: LitteralExpr,
         typeHint: TirType | undefined
     ): TirExpr | undefined
@@ -3570,7 +3481,7 @@ export class AstCompiler extends DiagnosticEmitter
     }
 
     private _compileLitteralNamedObjExpr(
-        ctx: CompileStmtCtx,
+        ctx: AstCompilationCtx,
         expr: LitNamedObjExpr,
         typeHint: TirType | undefined
     ): TirLitNamedObjExpr | undefined
@@ -3631,7 +3542,7 @@ export class AstCompiler extends DiagnosticEmitter
     }
 
     private _compileLitteralObjExpr(
-        ctx: CompileStmtCtx,
+        ctx: AstCompilationCtx,
         expr: LitObjExpr,
         typeHint: TirType | undefined
     ): TirLitObjExpr | undefined
@@ -3675,7 +3586,7 @@ export class AstCompiler extends DiagnosticEmitter
     }
 
     private __commonCompileStructFieldValues(
-        ctx: CompileStmtCtx,
+        ctx: AstCompilationCtx,
         expr: LitObjExpr | LitNamedObjExpr,
         realType: TirType, // possibly aliased
         structType: TirStructType,
@@ -3730,7 +3641,7 @@ export class AstCompiler extends DiagnosticEmitter
     }
 
     private _compileLitteralArrayExpr(
-        ctx: CompileStmtCtx,
+        ctx: AstCompilationCtx,
         expr: LitArrExpr,
         typeHint: TirType | undefined
     ): TirExpr | undefined
@@ -3802,7 +3713,7 @@ export class AstCompiler extends DiagnosticEmitter
      * 
      * @returns the file top-level scope ( preludeScope <- imports <- fileTopLevelDecls )
      * /
-    collectTypes( ctx: CompileStmtCtx, topLevelStmts: PebbleStmt[] ): Scope
+    collectTypes( ctx: AstCompilationCtx, topLevelStmts: PebbleStmt[] ): Scope
     {
         const importsScope = new Scope(
             this.preludeScope,
@@ -3818,7 +3729,7 @@ export class AstCompiler extends DiagnosticEmitter
     /**
      * Collect all imported types
      */
-    collectImportedTypes( ctx: CompileStmtCtx, imports: PebbleStmt[] ): void
+    collectImportedTypes( ctx: AstCompilationCtx, imports: PebbleStmt[] ): void
     {
         for( const stmt of imports )
         {

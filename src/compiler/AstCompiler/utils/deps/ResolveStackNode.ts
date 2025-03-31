@@ -1,5 +1,5 @@
-import { Source } from "../../ast/Source/Source";
-import { Path } from "../path/path";
+import { Source } from "../../../../ast/Source/Source";
+import { Path } from "../../../path/path";
 
 export class ResolveStackNode {
     constructor(
