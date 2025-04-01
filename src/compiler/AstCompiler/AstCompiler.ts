@@ -147,6 +147,7 @@ import { ResolveStackNode } from "./utils/deps/ResolveStackNode";
 import { getPropAccessReturnType } from "./utils/getPropAccessReturnType";
 import { wrapManyStatements } from "./utils/wrapManyStatementsOrReturnSame";
 import { AstCompilationCtx } from "./AstCompilationCtx";
+import { _compileStatement } from "./internal/statements/_compileStatement";
 
 /*
 Handling type expressions that depend on other types 
@@ -262,7 +263,7 @@ export class AstCompiler extends DiagnosticEmitter
         for( let i = 0; i < nAstStmts; i++ )
         {
             const stmt = stmts[i];
-            const tirStmts = this._compileStatement( srcCompileCtx, stmt, tirSource );
+            const tirStmts = _compileStatement( srcCompileCtx, stmt, tirSource );
 
             // if statement compilation failed, skip to next statement
             if( !Array.isArray( tirStmts ) ) continue;
@@ -470,138 +471,6 @@ export class AstCompiler extends DiagnosticEmitter
         }
     }
     
-    /**
-     * here we just translate to TIR
-     * 
-     * WE DO NOT OPTIMIZE
-     * 
-     * optimizaitons are part of the TIR -> TermIR compilation
-    **/
-    private _compileStatement(
-        ctx: AstCompilationCtx,
-        stmt: PebbleStmt,
-        // only passed for top level statements
-        // where exports are expected
-        tirSource: TirSource | undefined = undefined
-    ): TirStmt[] | undefined
-    {
-        if(
-            stmt instanceof ExportStarStmt
-            || stmt instanceof ImportStarStmt
-            || stmt instanceof ExportImportStmt
-            || stmt instanceof ImportStmt
-        ) throw new Error("export/import statements should be handled separately, not in _compileStatement");
-
-        if(
-            isPebbleAstTypeDecl( stmt )
-            || stmt instanceof TypeImplementsStmt
-        ) throw new Error(
-            "type declarations and interface implementations should be " +
-            "handled separately, not in _compileStatement"
-        );
-
-        if( stmt instanceof ExportStmt ) return this._compileExportStmt( ctx, stmt, tirSource );
-        
-        if( stmt instanceof IfStmt ) return this._compileIfStmt( ctx, stmt );
-        if( stmt instanceof VarStmt ) return this._compileVarStmt( ctx, stmt, !!tirSource );
-        if( stmt instanceof ForStmt ) return this._compileForStmt( ctx, stmt );
-        if( stmt instanceof ForOfStmt ) return this._compileForOfStmt( ctx, stmt );
-        if( stmt instanceof WhileStmt ) return this._compileWhileStmt( ctx, stmt );
-        if( stmt instanceof ReturnStmt ) return this._compileReturnStmt( ctx, stmt );
-        if( stmt instanceof BlockStmt ) return this._compileBlockStmt( ctx, stmt );
-        if( stmt instanceof BreakStmt ) return this._compileBreakStmt( ctx, stmt );
-        if( stmt instanceof ContinueStmt ) return this._compileContinueStmt( ctx, stmt );
-        if( stmt instanceof EmptyStmt ) return [];
-        if( stmt instanceof FailStmt ) return this._compileFailStmt( ctx, stmt );
-        if( stmt instanceof AssertStmt ) return this._compileAssertStmt( ctx, stmt );
-        if( stmt instanceof TestStmt ) return this._compileTestStmt( ctx, stmt );
-        if( stmt instanceof MatchStmt ) return this._compileMatchStmt( ctx, stmt );
-        if( isAssignmentStmt( stmt ) ) return this._compileAssignmentStmt( ctx, stmt );
-        if( stmt instanceof ExprStmt ) return this._compileExprStmt( ctx, stmt );
-        if( stmt instanceof UsingStmt ) return this._compileUsingStmt( ctx, stmt );
-        if( stmt instanceof FuncDecl ) return this._compileFuncDecl( ctx, stmt );
-
-        console.error( stmt );
-        throw new Error("unreachable::AstCompiler::_compileStatement");
-    }
-
-    private _compileExportStmt(
-        ctx: AstCompilationCtx,
-        stmt: ExportStmt,
-        tirSource: TirSource | undefined
-    ): TirStmt[] | undefined
-    {
-        // if `tirSource` is not present (and we are not at top level)
-        // raise an error but compile the statements normally
-        // as if `export` was not present
-        if( !tirSource ) this.error(
-            DiagnosticCode._export_keyword_cannot_be_used_here,
-            stmt.range
-        );
-        const compiledStmts = this._compileStatement( ctx, stmt.stmt, undefined );
-        if( !Array.isArray( compiledStmts ) ) return undefined;
-
-        if( tirSource )
-        for( const compiledStmt of compiledStmts )
-        {
-            if( compiledStmt instanceof TirFuncDecl ) {
-                if( !tirSource.exportValue( compiledStmt.expr.name ) ) this.error(
-                    DiagnosticCode._0_is_already_exported,
-                    stmt.range, compiledStmt.expr.name
-                );
-            }
-            else if( isTirVarDecl( compiledStmt ) ) this._handleExportStmtVarDecl( compiledStmt, tirSource );
-            else this.error(
-                DiagnosticCode.Only_function_declarations_and_constants_ca_be_exported,
-                stmt.range
-            );
-        }
-
-        return compiledStmts;
-    }
-    private _handleExportStmtVarDecl(
-        decl: TirVarDecl,
-        tirSource: TirSource
-    ): void
-    {
-        if( decl instanceof TirSimpleVarDecl )
-        {
-            if( !tirSource.exportValue( decl.name ) ) this.error(
-                DiagnosticCode._0_is_already_exported,
-                decl.range, decl.name
-            );
-        }
-        else if(
-            decl instanceof TirNamedDeconstructVarDecl
-            || decl instanceof TirSingleDeconstructVarDecl
-        )
-        {
-            for( const innerDecl of decl.fields.values() )
-                this._handleExportStmtVarDecl( innerDecl, tirSource );
-
-            if(
-                typeof decl.rest === "string"
-                && !tirSource.exportValue( decl.rest )
-            ) this.error(
-                DiagnosticCode._0_is_already_exported,
-                decl.range, decl.rest
-            );
-        }
-        else if( decl instanceof TirArrayLikeDeconstr )
-        {
-            for( const innerDecl of decl.elements )
-                this._handleExportStmtVarDecl( innerDecl, tirSource );
-
-            if(
-                typeof decl.rest === "string"
-                && !tirSource.exportValue( decl.rest )
-            ) this.error(
-                DiagnosticCode._0_is_already_exported,
-                decl.range, decl.rest
-            );
-        }
-    }
-
     private _compileFuncDecl(
         ctx: AstCompilationCtx,
         stmt: FuncDecl
@@ -942,7 +811,7 @@ export class AstCompiler extends DiagnosticEmitter
                 );
                 if( !branchArg ) return undefined;
                 const branchBody = wrapManyStatements(
-                    this._compileStatement(
+                    _compileStatement(
                         branchCtx,
                         matchCase.body
                     ),
@@ -975,7 +844,7 @@ export class AstCompiler extends DiagnosticEmitter
                 );
                 if( !branchArg ) return undefined;
                 const branchBody = wrapManyStatements(
-                    this._compileStatement(
+                    _compileStatement(
                         branchCtx,
                         matchCase.body
                     ),
@@ -1006,7 +875,7 @@ export class AstCompiler extends DiagnosticEmitter
                 );
                 if( !branchArg ) return undefined;
                 const branchBody = wrapManyStatements(
-                    this._compileStatement(
+                    _compileStatement(
                         branchCtx,
                         matchCase.body
                     ),
@@ -1050,7 +919,7 @@ export class AstCompiler extends DiagnosticEmitter
             );
             if( !branchArg ) return undefined;
             const branchBody = wrapManyStatements(
-                this._compileStatement(
+                _compileStatement(
                     branchCtx,
                     matchCase.body
                 ),
@@ -1083,7 +952,7 @@ export class AstCompiler extends DiagnosticEmitter
             );
             if( !branchArg ) return undefined;
             const branchBody = wrapManyStatements(
-                this._compileStatement(
+                _compileStatement(
                     branchCtx,
                     matchCase.body
                 ),
@@ -1110,7 +979,7 @@ export class AstCompiler extends DiagnosticEmitter
         );
 
         let tirBody = wrapManyStatements(
-            this._compileStatement(
+            _compileStatement(
                 ctx.newBranchChildScope(),
                 stmt.body
             ),
@@ -1229,7 +1098,7 @@ export class AstCompiler extends DiagnosticEmitter
         const tirStmts: TirStmt[] = [];
         for( const blockStmt of stmt.stmts )
         {
-            const tirStmt = this._compileStatement( blockCtx, blockStmt );
+            const tirStmt = _compileStatement( blockCtx, blockStmt );
             if( !Array.isArray( tirStmt ) ) return undefined;
             tirStmts.push( ...tirStmt );
         }
@@ -1283,7 +1152,7 @@ export class AstCompiler extends DiagnosticEmitter
         );
 
         const tirBody = wrapManyStatements(
-            this._compileStatement(
+            _compileStatement(
                 ctx.newLoopChildScope(),
                 stmt.body
             ),
@@ -1330,7 +1199,7 @@ export class AstCompiler extends DiagnosticEmitter
         );
 
         const tirBody = wrapManyStatements(
-            this._compileStatement(
+            _compileStatement(
                 loopCtx,
                 stmt.body
             ),
@@ -1362,7 +1231,7 @@ export class AstCompiler extends DiagnosticEmitter
         if( !tirUpdates ) return undefined;
 
         const tirBody = wrapManyStatements(
-            this._compileStatement(
+            _compileStatement(
                 loopScope.newBranchChildScope(),
                 stmt.body
             ),
@@ -2215,7 +2084,7 @@ export class AstCompiler extends DiagnosticEmitter
             stmt.condition.range, coditionExpr.type.toString(), "boolean | Optional<T>"
         );
         const thenBranch = wrapManyStatements(
-            this._compileStatement(
+            _compileStatement(
                 ctx.newBranchChildScope(),
                 stmt.thenBranch
             ),
@@ -2227,7 +2096,7 @@ export class AstCompiler extends DiagnosticEmitter
         if( stmt.elseBranch )
         {
             elseBranch = wrapManyStatements(
-                this._compileStatement(
+                _compileStatement(
                     ctx.newBranchChildScope(),
                     stmt.elseBranch
                 ),
