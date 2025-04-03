@@ -7,6 +7,7 @@ import { TirStmt } from "../../../tir/statements/TirStmt";
 import { isTirVarDecl } from "../../../tir/statements/TirVarDecl/TirVarDecl";
 import { AstCompilationCtx } from "../../AstCompilationCtx";
 import { _compileStatement } from "./_compileStatement";
+import { _handleExportStmtVarDecl } from "./_handleExportStmtVarDecl";
 
 export function _compileExportStmt(
     ctx: AstCompilationCtx,
@@ -33,9 +34,9 @@ export function _compileExportStmt(
                 stmt.range, compiledStmt.expr.name
             );
         }
-        else if( isTirVarDecl( compiledStmt ) ) this._handleExportStmtVarDecl( compiledStmt, tirSource );
+        else if( isTirVarDecl( compiledStmt ) ) _handleExportStmtVarDecl( ctx, compiledStmt, tirSource );
         else ctx.error(
-            DiagnosticCode.Only_function_declarations_and_constants_ca_be_exported,
+            DiagnosticCode.Only_function_declarations_and_constants_can_be_exported,
             stmt.range
         );
     }

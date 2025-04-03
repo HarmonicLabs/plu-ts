@@ -1,11 +1,21 @@
-function _handleExportStmtVarDecl(
+import { DiagnosticCode } from "../../../../diagnostics/diagnosticMessages.generated";
+import { TirSource } from "../../../tir/program/TirSource";
+import { TirArrayLikeDeconstr } from "../../../tir/statements/TirVarDecl/TirArrayLikeDeconstr";
+import { TirNamedDeconstructVarDecl } from "../../../tir/statements/TirVarDecl/TirNamedDeconstructVarDecl";
+import { TirSimpleVarDecl } from "../../../tir/statements/TirVarDecl/TirSimpleVarDecl";
+import { TirSingleDeconstructVarDecl } from "../../../tir/statements/TirVarDecl/TirSingleDeconstructVarDecl";
+import { TirVarDecl } from "../../../tir/statements/TirVarDecl/TirVarDecl";
+import { AstCompilationCtx } from "../../AstCompilationCtx";
+
+export function _handleExportStmtVarDecl(
+    ctx: AstCompilationCtx,
     decl: TirVarDecl,
     tirSource: TirSource
 ): void
 {
     if( decl instanceof TirSimpleVarDecl )
     {
-        if( !tirSource.exportValue( decl.name ) ) this.error(
+        if( !tirSource.exportValue( decl.name ) ) ctx.error(
             DiagnosticCode._0_is_already_exported,
             decl.range, decl.name
         );
@@ -16,12 +26,12 @@ function _handleExportStmtVarDecl(
     )
     {
         for( const innerDecl of decl.fields.values() )
-            this._handleExportStmtVarDecl( innerDecl, tirSource );
+            _handleExportStmtVarDecl( ctx, innerDecl, tirSource );
 
         if(
             typeof decl.rest === "string"
             && !tirSource.exportValue( decl.rest )
-        ) this.error(
+        ) ctx.error(
             DiagnosticCode._0_is_already_exported,
             decl.range, decl.rest
         );
@@ -29,12 +39,12 @@ function _handleExportStmtVarDecl(
     else if( decl instanceof TirArrayLikeDeconstr )
     {
         for( const innerDecl of decl.elements )
-            this._handleExportStmtVarDecl( innerDecl, tirSource );
+            _handleExportStmtVarDecl( ctx, innerDecl, tirSource );
 
         if(
             typeof decl.rest === "string"
             && !tirSource.exportValue( decl.rest )
-        ) this.error(
+        ) ctx.error(
             DiagnosticCode._0_is_already_exported,
             decl.range, decl.rest
         );

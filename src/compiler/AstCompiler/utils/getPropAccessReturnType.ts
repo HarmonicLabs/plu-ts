@@ -1,14 +1,11 @@
-import { lookup } from "dns";
-import { Identifier } from "../../ast/nodes/common/Identifier";
-import { subByteString } from "../../pluts";
-import { map } from "../../type_system";
-import { TirAliasType } from "../tir/types/TirAliasType";
-import { TirInterfaceImpl } from "../tir/types/TirInterfaceImpl";
-import { TirBoolT, TirBytesT, TirDataT, TirFuncT, TirIntT, TirLinearMapT, TirListT, TirOptT, TirStringT, TirVoidT } from "../tir/types/TirNativeType";
-import { TirStructType } from "../tir/types/TirStructType";
-import { TirType } from "../tir/types/TirType";
-import { TirTypeParam } from "../tir/types/TirTypeParam";
-import { bool_t, bytes_t, int_t, string_t } from "./scope/stdScope/stdScope";
+import { Identifier } from "../../../ast/nodes/common/Identifier";
+import { TirAliasType } from "../../tir/types/TirAliasType";
+import { TirInterfaceImpl } from "../../tir/types/TirInterfaceImpl";
+import { TirVoidT, TirBoolT, TirIntT, TirBytesT, TirStringT, TirDataT, TirOptT, TirFuncT, TirListT, TirLinearMapT } from "../../tir/types/TirNativeType";
+import { TirStructType } from "../../tir/types/TirStructType";
+import { TirType } from "../../tir/types/TirType";
+import { TirTypeParam } from "../../tir/types/TirTypeParam";
+import { int_t, bytes_t, bool_t, string_t } from "../scope/stdScope/stdScope";
 
 export function getPropAccessReturnType(
     objType: TirType,

@@ -1,6 +1,6 @@
-import { SourceRange } from "../../ast/Source/SourceRange";
-import { TirBlockStmt } from "../tir/statements/TirBlockStmt";
-import { TirStmt } from "../tir/statements/TirStmt";
+import { SourceRange } from "../../../ast/Source/SourceRange";
+import { TirBlockStmt } from "../../tir/statements/TirBlockStmt";
+import { TirStmt } from "../../tir/statements/TirStmt";
 
 export function wrapManyStatements(
     stmts: TirStmt[] | undefined,

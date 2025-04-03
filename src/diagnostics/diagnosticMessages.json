@@ -76,7 +76,7 @@
   "'{0}' is already exported.": 274,
   "'export' keyword cannot be used here.": 275,
   "Only constants can be declared outside of a function.": 276,
-  "Only function declarations and constants ca be exported.": 277,
+  "Only function declarations and constants can be exported.": 277,
 
   "Importing the table disables some indirect call optimizations.": 901,
   "Exporting the table disables some indirect call optimizations.": 902,

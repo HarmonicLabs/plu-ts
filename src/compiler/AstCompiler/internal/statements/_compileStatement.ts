@@ -27,6 +27,24 @@ import { TirSource } from "../../../tir/program/TirSource";
 import { ImportStarStmt } from "../../../tir/statements/TirImportStarStmt";
 import { TirStmt } from "../../../tir/statements/TirStmt";
 import { AstCompilationCtx } from "../../AstCompilationCtx";
+import { _compileAssertStmt } from "./_compileAssertStmt";
+import { _compileAssignmentStmt } from "./_compileAssignmentStmt";
+import { _compileBlockStmt } from "./_compileBlockStmt";
+import { _compileBreakStmt } from "./_compileBreakStmt";
+import { _compileContinueStmt } from "./_compileContinueStmt";
+import { _compileExportStmt } from "./_compileExportStmt";
+import { _compileExprStmt } from "./_compileExprStmt";
+import { _compileFailStmt } from "./_compileFailStmt";
+import { _compileForOfStmt } from "./_compileForOfStmt";
+import { _compileForStmt } from "./_compileForStmt";
+import { _compileFuncDecl } from "./_compileFuncDecl";
+import { _compileIfStmt } from "./_compileIfStmt";
+import { _compileMatchStmt } from "./_compileMatchStmt";
+import { _compileReturnStmt } from "./_compileReturnStmt";
+import { _compileTestStmt } from "./_compileTestStmt";
+import { _compileUsingStmt } from "./_compileUsingStmt";
+import { _compileVarStmt } from "./_compileVarStmt";
+import { _compileWhileStmt } from "./_compileWhileStmt";
 
 /**
  * here we just translate to TIR

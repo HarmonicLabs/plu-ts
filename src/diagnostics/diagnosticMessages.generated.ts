@@ -78,7 +78,7 @@ export enum DiagnosticCode {
     _0_is_already_exported = 274,
     _export_keyword_cannot_be_used_here = 275,
     Only_constants_can_be_declared_outside_of_a_function = 276,
-    Only_function_declarations_and_constants_ca_be_exported = 277,
+    Only_function_declarations_and_constants_can_be_exported = 277,
     Importing_the_table_disables_some_indirect_call_optimizations = 901,
     Exporting_the_table_disables_some_indirect_call_optimizations = 902,
     Expression_compiles_to_a_dynamic_check_at_runtime = 903,
@@ -338,7 +338,7 @@ export function diagnosticCodeToString(code: DiagnosticCode): string {
         case 274: return "'{0}' is already exported.";
         case 275: return "'export' keyword cannot be used here.";
         case 276: return "Only constants can be declared outside of a function.";
-        case 277: return "Only function declarations and constants ca be exported.";
+        case 277: return "Only function declarations and constants can be exported.";
         case 901: return "Importing the table disables some indirect call optimizations.";
         case 902: return "Exporting the table disables some indirect call optimizations.";
         case 903: return "Expression compiles to a dynamic check at runtime.";
