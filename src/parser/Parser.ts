@@ -2875,7 +2875,7 @@ export class Parser extends DiagnosticEmitter
         }
         if( !statement ) { // has been reported
             tn.reset(state);
-            console.log(Token[token]);
+            // console.log(Token[token]);
             this.error(
                 DiagnosticCode.Statement_expected,
                 tn.range()

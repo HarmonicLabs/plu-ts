@@ -12,4 +12,5 @@ export function compileTirProgram(
     tirProgram: TirProgram
 ): IRTerm
 {
+    return {} as IRTerm;
 }
