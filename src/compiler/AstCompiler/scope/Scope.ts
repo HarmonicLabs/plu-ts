@@ -1,6 +1,6 @@
 import { PEBBLE_INTERNAL_IDENTIFIER_PREFIX, PEBBLE_INTERNAL_IDENTIFIER_SEPARATOR } from "../../internalVar";
 import { TirType } from "../../tir/types/TirType";
-import { getStructType } from "../../tir/types/type-check-utils/canAssignTo";
+import { getStructType } from "../../tir/types/utils/canAssignTo";
 import { IPebbleConcreteTypeSym, IPebbleGenericSym, PebbleAnyTypeSym, PebbleConcreteTypeSym, PebbleGenericSym, PebbleValueSym } from "./symbols/PebbleSym";
 import { TypeSymbolTable } from "./TypeSymbolTable";
 import { ValueSymbolTable } from "./ValueSymbolTable";

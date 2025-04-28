@@ -2,7 +2,7 @@ import { NonNullExpr } from "../../../../ast/nodes/expr/unary/NonNullExpr";
 import { DiagnosticCode } from "../../../../diagnostics/diagnosticMessages.generated";
 import { TirNonNullExpr } from "../../../tir/expressions/TirNonNullExpr";
 import { TirType } from "../../../tir/types/TirType";
-import { getOptTypeArg } from "../../../tir/types/type-check-utils/getOptTypeArg";
+import { getOptTypeArg } from "../../../tir/types/utils/getOptTypeArg";
 import { AstCompilationCtx } from "../../AstCompilationCtx";
 import { _compileExpr } from "./_compileExpr";
 

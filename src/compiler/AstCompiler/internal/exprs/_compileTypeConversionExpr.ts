@@ -2,7 +2,7 @@ import { TypeConversionExpr } from "../../../../ast/nodes/expr/TypeConversionExp
 import { DiagnosticCode } from "../../../../diagnostics/diagnosticMessages.generated";
 import { TirTypeConversionExpr } from "../../../tir/expressions/TirTypeConversionExpr";
 import { TirType } from "../../../tir/types/TirType";
-import { canCastTo } from "../../../tir/types/type-check-utils/canCastTo";
+import { canCastTo } from "../../../tir/types/utils/canCastTo";
 import { AstCompilationCtx } from "../../AstCompilationCtx";
 import { _compileConcreteTypeExpr } from "../types/_compileConcreteTypeExpr";
 import { _compileExpr } from "./_compileExpr";

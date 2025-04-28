@@ -3,7 +3,7 @@ import { DiagnosticCode } from "../../../../../diagnostics/diagnosticMessages.ge
 import { TirGreaterThanEqualExpr } from "../../../../tir/expressions/binary/TirBinaryExpr";
 import { TirAliasType } from "../../../../tir/types/TirAliasType";
 import { TirType } from "../../../../tir/types/TirType";
-import { canAssignTo } from "../../../../tir/types/type-check-utils/canAssignTo";
+import { canAssignTo } from "../../../../tir/types/utils/canAssignTo";
 import { AstCompilationCtx } from "../../../AstCompilationCtx";
 import { int_t, bytes_t } from "../../../scope/stdScope/stdScope";
 import { _compileExpr } from "../_compileExpr";

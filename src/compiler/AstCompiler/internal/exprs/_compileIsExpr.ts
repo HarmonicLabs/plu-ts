@@ -2,7 +2,7 @@ import { IsExpr } from "../../../../ast/nodes/expr/IsExpr";
 import { DiagnosticCode } from "../../../../diagnostics/diagnosticMessages.generated";
 import { TirIsExpr } from "../../../tir/expressions/TirIsExpr";
 import { TirType } from "../../../tir/types/TirType";
-import { getStructType } from "../../../tir/types/type-check-utils/canAssignTo";
+import { getStructType } from "../../../tir/types/utils/canAssignTo";
 import { AstCompilationCtx } from "../../AstCompilationCtx";
 import { bool_t } from "../../scope/stdScope/stdScope";
 import { _compileExpr } from "./_compileExpr";

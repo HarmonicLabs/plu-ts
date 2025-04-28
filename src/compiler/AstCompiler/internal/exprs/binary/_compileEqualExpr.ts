@@ -2,7 +2,7 @@ import { EqualExpr } from "../../../../../ast/nodes/expr/binary/BinaryExpr";
 import { DiagnosticCode } from "../../../../../diagnostics/diagnosticMessages.generated";
 import { TirEqualExpr } from "../../../../tir/expressions/binary/TirBinaryExpr";
 import { TirType } from "../../../../tir/types/TirType";
-import { canAssignTo } from "../../../../tir/types/type-check-utils/canAssignTo";
+import { canAssignTo } from "../../../../tir/types/utils/canAssignTo";
 import { AstCompilationCtx } from "../../../AstCompilationCtx";
 import { _compileExpr } from "../_compileExpr";
 

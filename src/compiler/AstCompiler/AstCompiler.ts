@@ -26,7 +26,7 @@ import { isTirExpr, TirExpr } from "../tir/expressions/TirExpr";
 import { UnaryExclamation } from "../../ast/nodes/expr/unary/UnaryExclamation";
 import { TirUnaryExclamation } from "../tir/expressions/unary/TirUnaryExclamation";
 import { TirDataT, TirFuncT, TirLinearMapT, TirListT, TirOptT } from "../tir/types/TirNativeType";
-import { canAssignTo, getNamedDestructableType, getStructType, isStructOrStructAlias } from "../tir/types/type-check-utils/canAssignTo";
+import { canAssignTo, getNamedDestructableType, getStructType, isStructOrStructAlias } from "../tir/types/utils/canAssignTo";
 import { UnaryPlus } from "../../ast/nodes/expr/unary/UnaryPlus";
 import { UnaryMinus } from "../../ast/nodes/expr/unary/UnaryMinus";
 import { TirUnaryPlus } from "../tir/expressions/unary/TirUnaryPlus";
@@ -53,7 +53,7 @@ import { PebbleAnyTypeSym, PebbleConcreteTypeSym, PebbleGenericSym, PebbleValueS
 import { TirLitArrExpr } from "../tir/expressions/litteral/TirLitArrExpr";
 import { TirAliasType } from "../tir/types/TirAliasType";
 import { isTirType, TirType } from "../tir/types/TirType";
-import { getListTypeArg } from "../tir/types/type-check-utils/getListTypeArg";
+import { getListTypeArg } from "../tir/types/utils/getListTypeArg";
 import { LitObjExpr } from "../../ast/nodes/expr/litteral/LitObjExpr";
 import { LitUndefExpr } from "../../ast/nodes/expr/litteral/LitUndefExpr";
 import { LitNamedObjExpr } from "../../ast/nodes/expr/litteral/LitNamedObjExpr";
@@ -118,7 +118,7 @@ import { TirFailStmt } from "../tir/statements/TirFailStmt";
 import { TirAssertStmt } from "../tir/statements/TirAssertStmt";
 import { TirTestStmt } from "../tir/statements/TirTestStmt";
 import { TirMatchStmt, TirMatchStmtCase } from "../tir/statements/TirMatchStmt";
-import { DeconstructableTirType, getDeconstructableType } from "../tir/types/type-check-utils/getDeconstructableType";
+import { DeconstructableTirType, getDeconstructableType } from "../tir/types/utils/getDeconstructableType";
 import { UsingStmt } from "../../ast/nodes/statements/UsingStmt";
 import { isPebbleAstTypeDecl } from "../../ast/nodes/statements/declarations/PebbleAstTypeDecl";
 import { TirExprStmt } from "../tir/statements/TirExprStmt";
@@ -127,15 +127,15 @@ import { PebbleExpr } from "../../ast/nodes/expr/PebbleExpr";
 import { isUnaryPrefixExpr, UnaryPrefixExpr } from "../../ast/nodes/expr/unary/UnaryPrefixExpr";
 import { TirUnaryPrefixExpr } from "../tir/expressions/unary/TirUnaryPrefixExpr";
 import { TirNonNullExpr } from "../tir/expressions/TirNonNullExpr";
-import { getOptTypeArg } from "../tir/types/type-check-utils/getOptTypeArg";
+import { getOptTypeArg } from "../tir/types/utils/getOptTypeArg";
 import { TirFuncExpr } from "../tir/expressions/TirFuncExpr";
-import { getUnaliased } from "../tir/types/type-check-utils/getUnaliased";
+import { getUnaliased } from "../tir/types/utils/getUnaliased";
 import { TirTypeParam } from "../tir/types/TirTypeParam";
 import { getInternalVarName } from "../internalVar";
 import { TirCallExpr } from "../tir/expressions/TirCallExpr";
 import { TirCaseExpr, TirCaseExprMatcher } from "../tir/expressions/TirCaseExpr";
 import { TirTypeConversionExpr } from "../tir/expressions/TirTypeConversionExpr";
-import { canCastTo, canCastToData } from "../tir/types/type-check-utils/canCastTo";
+import { canCastTo, canCastToData } from "../tir/types/utils/canCastTo";
 import { TirIsExpr } from "../tir/expressions/TirIsExpr";
 import { TirElemAccessExpr } from "../tir/expressions/TirElemAccessExpr";
 import { TirTernaryExpr } from "../tir/expressions/TirTernaryExpr";
@@ -259,7 +259,7 @@ export class AstCompiler extends DiagnosticEmitter
         // adds interface **implementations** to types declared in this file
         // this._applyInterfaceImplementations( tirSource, stmts );
 
-        // compile **value** statements
+        // compile statements
         const srcCompileCtx = AstCompilationCtx.fromScopeOnly( tirSource.scope, this.diagnostics );
         const nAstStmts = stmts.length;
         for( let i = 0; i < nAstStmts; i++ )

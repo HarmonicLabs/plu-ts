@@ -14,14 +14,30 @@ describe("parseMain", () => {
         const myDatumPath = "my_datum.pebble";
         const myDatumSrc = `
 export struct MyDatum {}
-        `;
+
+struct SimpleDatum {
+    name: string,
+    age: int
+}
+
+struct ExplicitSimple {
+    ExplicitSimple { /* ...fields  */ }
+}
+
+struct Animal {
+    Dog { /* ...fields  */ }
+    Cat { /* ...fields  */ }
+    Fish { /* ...fields  */ }
+}`;
     
         const fileName = "test.pebble";
         const srcText = `
 import { MyDatum } from "./${myDatumPath}";
 
-function main({ tx, purpose }: ScriptContext ): void
+function main( param: Stuff, ctx: ScriptContext ): void
 {
+    const { tx, purpose } = ctx;
+
     const [ a, b, ...rest ] = tx.inputs;
 
     const Spend{
@@ -39,6 +55,15 @@ function main({ tx, purpose }: ScriptContext ): void
         // Property 'lovelaces' does not exist on type 'Value'
         // sumLove += input.value.lovelaces();
         sumLove += tx.fee;
+    }
+
+    if( true ) doStuff();
+
+    match( purpose )
+    {
+        Spend{ ref } => {}
+        Minting{} => {}
+        _ => fail;
     }
 
     assert tx.outputs.length() === 1 else "only one output allowed";

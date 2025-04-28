@@ -2,7 +2,7 @@ import { ReturnStmt } from "../../../../ast/nodes/statements/ReturnStmt";
 import { DiagnosticCode } from "../../../../diagnostics/diagnosticMessages.generated";
 import { TirLitVoidExpr } from "../../../tir/expressions/litteral/TirLitVoidExpr";
 import { TirReturnStmt } from "../../../tir/statements/TirReturnStmt";
-import { canAssignTo } from "../../../tir/types/type-check-utils/canAssignTo";
+import { canAssignTo } from "../../../tir/types/utils/canAssignTo";
 import { AstCompilationCtx } from "../../AstCompilationCtx";
 import { _compileExpr } from "../exprs/_compileExpr";
 

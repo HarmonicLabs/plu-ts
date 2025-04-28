@@ -1,7 +1,7 @@
 import { WhileStmt } from "../../../../ast/nodes/statements/WhileStmt";
 import { DiagnosticCode } from "../../../../diagnostics/diagnosticMessages.generated";
 import { TirWhileStmt } from "../../../tir/statements/TirWhileStmt";
-import { canAssignTo } from "../../../tir/types/type-check-utils/canAssignTo";
+import { canAssignTo } from "../../../tir/types/utils/canAssignTo";
 import { AstCompilationCtx } from "../../AstCompilationCtx";
 import { bool_t, any_optional_t } from "../../scope/stdScope/stdScope";
 import { wrapManyStatements } from "../../utils/wrapManyStatementsOrReturnSame";

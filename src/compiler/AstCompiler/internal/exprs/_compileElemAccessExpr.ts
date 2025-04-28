@@ -3,8 +3,8 @@ import { DiagnosticCode } from "../../../../diagnostics/diagnosticMessages.gener
 import { TirElemAccessExpr } from "../../../tir/expressions/TirElemAccessExpr";
 import { TirListT } from "../../../tir/types/TirNativeType";
 import { TirType } from "../../../tir/types/TirType";
-import { canAssignTo } from "../../../tir/types/type-check-utils/canAssignTo";
-import { getListTypeArg } from "../../../tir/types/type-check-utils/getListTypeArg";
+import { canAssignTo } from "../../../tir/types/utils/canAssignTo";
+import { getListTypeArg } from "../../../tir/types/utils/getListTypeArg";
 import { AstCompilationCtx } from "../../AstCompilationCtx";
 import { int_t } from "../../scope/stdScope/stdScope";
 import { _compileExpr } from "./_compileExpr";

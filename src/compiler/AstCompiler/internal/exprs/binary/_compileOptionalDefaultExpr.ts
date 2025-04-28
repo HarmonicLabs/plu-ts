@@ -3,8 +3,8 @@ import { DiagnosticCode } from "../../../../../diagnostics/diagnosticMessages.ge
 import { TirOptionalDefaultExpr } from "../../../../tir/expressions/binary/TirBinaryExpr";
 import { TirOptT } from "../../../../tir/types/TirNativeType";
 import { TirType } from "../../../../tir/types/TirType";
-import { canAssignTo } from "../../../../tir/types/type-check-utils/canAssignTo";
-import { getOptTypeArg } from "../../../../tir/types/type-check-utils/getOptTypeArg";
+import { canAssignTo } from "../../../../tir/types/utils/canAssignTo";
+import { getOptTypeArg } from "../../../../tir/types/utils/getOptTypeArg";
 import { AstCompilationCtx } from "../../../AstCompilationCtx";
 import { _compileExpr } from "../_compileExpr";
 

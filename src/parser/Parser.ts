@@ -2875,7 +2875,6 @@ export class Parser extends DiagnosticEmitter
         }
         if( !statement ) { // has been reported
             tn.reset(state);
-            console.log(Token[token]);
             this.error(
                 DiagnosticCode.Statement_expected,
                 tn.range()
@@ -3394,6 +3393,7 @@ export class Parser extends DiagnosticEmitter
     parseAssertStatement(): AssertStmt | undefined
     {
         const tn = this.tn;
+        const startPos = tn.tokenPos;
 
         // at 'assert': Expression (else Expression)? ';'?
 
@@ -3426,7 +3426,7 @@ export class Parser extends DiagnosticEmitter
         return new AssertStmt(
             condition,
             message,
-            tn.range()
+            tn.range( startPos, startPos + 6)
         );
     }
 

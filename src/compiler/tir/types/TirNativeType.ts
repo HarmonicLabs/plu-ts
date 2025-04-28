@@ -1,9 +1,10 @@
 import { isObject } from "@harmoniclabs/obj-utils";
 import { getAppliedTypeInternalName } from "../../AstCompiler/scope/Scope";
 import { TirType } from "./TirType";
+import { StructFlags } from "./TirStructType";
 
 export type TirNativeType
-    = TirVoidT 
+    = TirVoidT
     | TirBoolT
     | TirIntT
     | TirBytesT
@@ -27,7 +28,7 @@ export function isTirNativeType( t: any ): t is TirNativeType
         || t instanceof TirOptT
         || t instanceof TirListT
         || t instanceof TirLinearMapT
-        || t instanceof TirFuncT
+        || t instanceof TirFuncT // =>
     );
 }
 
@@ -84,7 +85,8 @@ export class TirDataT {
 export class TirOptT<T extends TirType = TirType>
 {
     constructor(
-        readonly typeArg: T
+        readonly typeArg: T,
+        readonly flags: StructFlags
     ) {}
 
     toString(): string {
@@ -107,10 +109,39 @@ export class TirOptT<T extends TirType = TirType>
 
     clone(): TirOptT<T> {
         const result = new TirOptT(
-            this.typeArg.clone()
+            this.typeArg.clone(),
+            this.flags
         ) as TirOptT<T>;
         result._isConcrete = this._isConcrete;
         return result;
+    }
+
+    /**
+     * still allows SoP (unless `onlyData` is set)
+     * 
+     * of course if `onlySoP` is set, then this doesn't matter,
+     * but still not an error, just useless
+     */
+    taggedDataEncoding(): boolean {
+        return (this.flags & StructFlags.taggedDataEncoding) !== 0;
+    }
+
+    onlyData(): boolean {
+        return (this.flags & StructFlags.onlyData) !== 0;
+    }
+
+    onlySoP(): boolean {
+        return (this.flags & StructFlags.onlySoP) !== 0;
+    }
+
+    allowsDataEncoding(): boolean {
+        // return !this.onlySoP();
+        return (this.flags & StructFlags.onlySoP) === 0;
+    }
+
+    allowsSoPEncoding(): boolean {
+        // return !this.onlyData();
+        return (this.flags & StructFlags.onlyData) === 0;
     }
 }
 

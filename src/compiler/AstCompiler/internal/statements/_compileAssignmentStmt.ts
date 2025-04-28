@@ -8,7 +8,7 @@ import { TirExpr } from "../../../tir/expressions/TirExpr";
 import { TirVariableAccessExpr } from "../../../tir/expressions/TirVariableAccessExpr";
 import { TirAssignmentStmt } from "../../../tir/statements/TirAssignmentStmt";
 import { TirType } from "../../../tir/types/TirType";
-import { canAssignTo } from "../../../tir/types/type-check-utils/canAssignTo";
+import { canAssignTo } from "../../../tir/types/utils/canAssignTo";
 import { AstCompilationCtx } from "../../AstCompilationCtx";
 import { int_t, bytes_t, bool_t } from "../../scope/stdScope/stdScope";
 import { _compileExpr } from "../exprs/_compileExpr";

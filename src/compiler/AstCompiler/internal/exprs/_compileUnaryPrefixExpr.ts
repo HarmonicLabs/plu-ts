@@ -10,7 +10,7 @@ import { TirUnaryPlus } from "../../../tir/expressions/unary/TirUnaryPlus";
 import { TirUnaryPrefixExpr } from "../../../tir/expressions/unary/TirUnaryPrefixExpr";
 import { TirUnaryTilde } from "../../../tir/expressions/unary/TirUnaryTilde";
 import { TirType } from "../../../tir/types/TirType";
-import { canAssignTo } from "../../../tir/types/type-check-utils/canAssignTo";
+import { canAssignTo } from "../../../tir/types/utils/canAssignTo";
 import { AstCompilationCtx } from "../../AstCompilationCtx";
 import { bool_t, any_optional_t, int_t, bytes_t } from "../../scope/stdScope/stdScope";
 import { _compileExpr } from "./_compileExpr";

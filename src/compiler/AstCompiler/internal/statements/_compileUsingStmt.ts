@@ -1,6 +1,6 @@
 import { UsingStmt } from "../../../../ast/nodes/statements/UsingStmt";
 import { DiagnosticCode } from "../../../../diagnostics/diagnosticMessages.generated";
-import { getStructType } from "../../../tir/types/type-check-utils/canAssignTo";
+import { getStructType } from "../../../tir/types/utils/canAssignTo";
 import { AstCompilationCtx } from "../../AstCompilationCtx";
 import { _compileConcreteTypeExpr } from "../types/_compileConcreteTypeExpr";
 

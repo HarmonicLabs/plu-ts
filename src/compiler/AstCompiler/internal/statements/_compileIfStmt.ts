@@ -2,7 +2,7 @@ import { IfStmt } from "../../../../ast/nodes/statements/IfStmt";
 import { DiagnosticCode } from "../../../../diagnostics/diagnosticMessages.generated";
 import { TirIfStmt } from "../../../tir/statements/TirIfStmt";
 import { TirStmt } from "../../../tir/statements/TirStmt";
-import { canAssignTo } from "../../../tir/types/type-check-utils/canAssignTo";
+import { canAssignTo } from "../../../tir/types/utils/canAssignTo";
 import { AstCompilationCtx } from "../../AstCompilationCtx";
 import { bool_t, any_optional_t } from "../../scope/stdScope/stdScope";
 import { wrapManyStatements } from "../../utils/wrapManyStatementsOrReturnSame";

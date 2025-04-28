@@ -97,6 +97,7 @@ export struct ScriptPurpose {
     Mint { policy: PolicyId }
     Spend {
         ref: TxOutRef,
+        optionalDatum: Optional<data>
     }
     Withdraw {
         credential: Credential

@@ -1,8 +1,8 @@
 import { ForOfStmt } from "../../../../ast/nodes/statements/ForOfStmt";
 import { DiagnosticCode } from "../../../../diagnostics/diagnosticMessages.generated";
 import { TirForOfStmt } from "../../../tir/statements/TirForOfStmt";
-import { canAssignTo } from "../../../tir/types/type-check-utils/canAssignTo";
-import { getListTypeArg } from "../../../tir/types/type-check-utils/getListTypeArg";
+import { canAssignTo } from "../../../tir/types/utils/canAssignTo";
+import { getListTypeArg } from "../../../tir/types/utils/getListTypeArg";
 import { AstCompilationCtx } from "../../AstCompilationCtx";
 import { any_list_t } from "../../scope/stdScope/stdScope";
 import { wrapManyStatements } from "../../utils/wrapManyStatementsOrReturnSame";

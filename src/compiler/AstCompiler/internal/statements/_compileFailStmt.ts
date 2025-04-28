@@ -2,7 +2,7 @@ import { FailStmt } from "../../../../ast/nodes/statements/FailStmt";
 import { DiagnosticCode } from "../../../../diagnostics/diagnosticMessages.generated";
 import { TirExpr } from "../../../tir/expressions/TirExpr";
 import { TirFailStmt } from "../../../tir/statements/TirFailStmt";
-import { canAssignTo } from "../../../tir/types/type-check-utils/canAssignTo";
+import { canAssignTo } from "../../../tir/types/utils/canAssignTo";
 import { AstCompilationCtx } from "../../AstCompilationCtx";
 import { string_t } from "../../scope/stdScope/stdScope";
 import { _compileExpr } from "../exprs/_compileExpr";

@@ -10,7 +10,7 @@ import { TirSimpleVarDecl } from "../../../tir/statements/TirVarDecl/TirSimpleVa
 import { TirFuncT } from "../../../tir/types/TirNativeType";
 import { TirType } from "../../../tir/types/TirType";
 import { TirTypeParam } from "../../../tir/types/TirTypeParam";
-import { getUnaliased } from "../../../tir/types/type-check-utils/getUnaliased";
+import { getUnaliased } from "../../../tir/types/utils/getUnaliased";
 import { AstCompilationCtx } from "../../AstCompilationCtx";
 import { PebbleValueSym } from "../../scope/symbols/PebbleSym";
 import { _compileBlockStmt } from "../statements/_compileBlockStmt";
@@ -63,7 +63,7 @@ export function _compileFuncExpr(
             params.push( tirParam );
             continue;
         }
-        // else move destructuring in the body
+        // else move destructuring in the body (uplc has only simple params)
 
         const uniqueName = getInternalVarName(
             tirParam.type.toString().toLocaleLowerCase()

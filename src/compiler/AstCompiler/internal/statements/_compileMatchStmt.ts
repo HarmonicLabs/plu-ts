@@ -7,7 +7,7 @@ import { DiagnosticCode } from "../../../../diagnostics/diagnosticMessages.gener
 import { TirMatchStmt, TirMatchStmtCase } from "../../../tir/statements/TirMatchStmt";
 import { TirDataT, TirOptT, TirListT, TirLinearMapT } from "../../../tir/types/TirNativeType";
 import { TirStructType } from "../../../tir/types/TirStructType";
-import { getDeconstructableType, DeconstructableTirType } from "../../../tir/types/type-check-utils/getDeconstructableType";
+import { getDeconstructableType, DeconstructableTirType } from "../../../tir/types/utils/getDeconstructableType";
 import { AstCompilationCtx } from "../../AstCompilationCtx";
 import { wrapManyStatements } from "../../utils/wrapManyStatementsOrReturnSame";
 import { _compileExpr } from "../exprs/_compileExpr";

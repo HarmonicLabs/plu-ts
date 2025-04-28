@@ -5,7 +5,7 @@ import { parseFile } from "../parseFile";
 
 describe("parseMain", () => {
 
-    test("parseMain", () => {
+    test.only("parseMain", () => {
     
         const fileName = "test.pebble";
         const srcText = `
@@ -51,10 +51,11 @@ describe("parseMain", () => {
         let diagnosticMessages!: DiagnosticMessage[];
         expect(() => [ src, diagnosticMessages ] = parseFile( fileName, srcText )).not.toThrow();
     
-        // console.log( src.statements );
+        console.log( (src.statements as any)[2].expr.body.stmts[3] );
+
     });
     
-    test.only("parseMain as MyDataum", () => {
+    test.skip("parseMain as MyDataum", () => {
     
         const fileName = "test.pebble";
         const srcText = `
