@@ -64,6 +64,14 @@ export function completeUplcOptimizations(
 
 export interface CompilerOptions {
     /**
+     * path to the entry file
+     */
+    readonly entry: string;
+    /**
+     * path of the root of the project
+     */
+    readonly root: string;
+    /**
      * uplc version (encoded in the script)
      */
     targetUplcVersion: UPLCVersion;
@@ -104,6 +112,8 @@ export interface CompilerOptions {
 }
 
 export const extremeOptions: CompilerOptions = Object.freeze({
+    entry: "./src/index.pebble",
+    root: ".",
     targetUplcVersion: defaultUplcVersion,
     removeTraces: true,
     delayHoists: true,
@@ -112,6 +122,8 @@ export const extremeOptions: CompilerOptions = Object.freeze({
 });
 
 export const productionOptions: CompilerOptions = Object.freeze({
+    entry: "./src/index.pebble",
+    root: ".",
     targetUplcVersion: defaultUplcVersion,
     removeTraces: true,
     delayHoists: true,
@@ -120,6 +132,8 @@ export const productionOptions: CompilerOptions = Object.freeze({
 });
 
 export const debugOptions: CompilerOptions = Object.freeze({
+    entry: "./src/index.pebble",
+    root: ".",
     targetUplcVersion: defaultUplcVersion,
     removeTraces: false,
     delayHoists: false,
@@ -162,6 +176,7 @@ export function completeCompilerOptions(
     // console.log( "uplcOptimizations", uplcOptimizations );
     // console.log( "completeUplcOptimizations( uplcOptimizations )",completeUplcOptimizations( uplcOptimizations ))
     return {
+        ...complete,
         targetUplcVersion,
         removeTraces: options.removeTraces ?? complete.removeTraces,
         delayHoists: options.delayHoists ?? complete.delayHoists,

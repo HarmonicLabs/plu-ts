@@ -7,5 +7,5 @@ export function compileTirFuncExpr(
     func: TirFuncExpr
 ): IRTerm
 {
-    
+    throw new Error("not implemented");
 }

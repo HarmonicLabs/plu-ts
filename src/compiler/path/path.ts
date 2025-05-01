@@ -17,6 +17,7 @@ const separator = CharCode.Slash;
 export type Path = string;
 export type InternalPath = string;
 
+
 export function getInternalPath( path: string ): InternalPath
 {
     return mangleInternalPath( removeSingleDotDirsFromPath( path ) );

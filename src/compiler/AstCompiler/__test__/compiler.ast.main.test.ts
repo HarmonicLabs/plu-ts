@@ -72,9 +72,11 @@ function main( param: Stuff, ctx: ScriptContext ): void
         `;
 
         const complier = new AstCompiler(
-            fileName,
-            defaultOptions,
-            "/",
+            {
+                ...defaultOptions,
+                entry: fileName,
+                root: "/"
+            },
             createMemoryCompilerIoApi({
                 sources: new Map([
                     [fileName, srcText],

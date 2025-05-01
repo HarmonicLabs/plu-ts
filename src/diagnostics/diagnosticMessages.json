@@ -77,7 +77,10 @@
   "'export' keyword cannot be used here.": 275,
   "Only constants can be declared outside of a function.": 276,
   "Only function declarations and constants can be exported.": 277,
+  "function declarations are only allowed at the top level.": 278,
+  "type declarations and interfaces are only allowed at the top level.": 279,
 
+  
   "Importing the table disables some indirect call optimizations.": 901,
   "Exporting the table disables some indirect call optimizations.": 902,
   "Expression compiles to a dynamic check at runtime.": 903,

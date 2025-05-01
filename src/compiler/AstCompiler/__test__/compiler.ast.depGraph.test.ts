@@ -2,7 +2,7 @@ import { Source, SourceKind } from "../../../ast/Source/Source";
 import { defaultOptions } from "../../../IR/toUPLC/CompilerOptions";
 import { createMemoryCompilerIoApi } from "../../io/CompilerIoApi";
 import { AstCompiler } from "../AstCompiler";
-import { ResolveStackNode } from "../ResolveStackNode";
+import { ResolveStackNode } from "../utils/deps/ResolveStackNode";
 
 const aSrcText =
 `import { b } from "./b";
@@ -49,9 +49,11 @@ const gSrcText =
 `export const g = 5;`;
 
 const complier = new AstCompiler(
-    "a.pebble",
-    defaultOptions,
-    "/",
+    {
+        ...defaultOptions,
+        entry: "a.pebble",
+        root: "/",
+    },
     createMemoryCompilerIoApi({
         sources: new Map([
             ["a.pebble", aSrcText],

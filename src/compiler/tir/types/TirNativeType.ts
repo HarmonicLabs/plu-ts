@@ -86,7 +86,7 @@ export class TirOptT<T extends TirType = TirType>
 {
     constructor(
         readonly typeArg: T,
-        readonly flags: StructFlags
+        readonly flags: StructFlags = StructFlags.None
     ) {}
 
     toString(): string {

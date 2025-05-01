@@ -192,10 +192,13 @@ export class AstCompiler extends DiagnosticEmitter
     readonly program: TirProgram;
     readonly parsedAstSources: Map<InternalPath, Source> = new Map();
 
+    get rootPath(): string
+    {
+        return this.cfg.root;
+    }
+
     constructor(
-        entry: string,
         readonly cfg: CompilerOptions,
-        readonly rootPath: string = "/",
         readonly io: CompilerIoApi = createMemoryCompilerIoApi({ useConsoleAsOutput: true }),
         diagnostics?: DiagnosticMessage[]
     )
@@ -203,8 +206,19 @@ export class AstCompiler extends DiagnosticEmitter
         super( diagnostics );
         this.preludeScope = preludeScope.clone();
         this.preludeScope.readonly();
-        entry = resolveProjAbsolutePath( getInternalPath( entry ), rootPath )!;
+        const entry = resolveProjAbsolutePath( getInternalPath( cfg.entry ), cfg.root )!;
         this.program = new TirProgram( entry );
+    }
+
+    /**
+     * 
+     * @returns an unique absolute path for the file
+     * 
+     * if the path is already absolute, the function should not modify it.
+     */
+    projectAbsolutePath( path: string ): string
+    {
+        return resolveProjAbsolutePath( getInternalPath( path ), this.rootPath )!;
     }
 
     async compileFile( path: string )

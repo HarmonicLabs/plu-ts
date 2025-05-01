@@ -2,6 +2,7 @@ import { OptionalDefaultExpr } from "../../../../../ast/nodes/expr/binary/Binary
 import { DiagnosticCode } from "../../../../../diagnostics/diagnosticMessages.generated";
 import { TirOptionalDefaultExpr } from "../../../../tir/expressions/binary/TirBinaryExpr";
 import { TirOptT } from "../../../../tir/types/TirNativeType";
+import { StructFlags } from "../../../../tir/types/TirStructType";
 import { TirType } from "../../../../tir/types/TirType";
 import { canAssignTo } from "../../../../tir/types/utils/canAssignTo";
 import { getOptTypeArg } from "../../../../tir/types/utils/getOptTypeArg";
@@ -15,13 +16,13 @@ export function _compileOptionalDefaultExpr(
     typeHint: TirType | undefined
 ): TirOptionalDefaultExpr | undefined
 {
-    const left = _compileExpr( ctx, expr.left, typeHint ? new TirOptT( typeHint ) : undefined );
+    const left = _compileExpr( ctx, expr.left, typeHint ? new TirOptT( typeHint, StructFlags.None ) : undefined );
     if( !left ) return undefined;
 
     const leftType = left.type;
     const leftOptArg = getOptTypeArg( leftType );
     const returnType = leftOptArg ?? leftType;
-    const optReturnType = new TirOptT( returnType );
+    const optReturnType = new TirOptT( returnType, StructFlags.None );
 
     if( !leftOptArg ) return ctx.warning(
         DiagnosticCode.Left_side_of_opeartor_is_not_optional_right_side_is_unused,

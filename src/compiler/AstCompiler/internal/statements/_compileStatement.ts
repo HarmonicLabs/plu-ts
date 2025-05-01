@@ -23,6 +23,7 @@ import { TypeImplementsStmt } from "../../../../ast/nodes/statements/TypeImpleme
 import { UsingStmt } from "../../../../ast/nodes/statements/UsingStmt";
 import { VarStmt } from "../../../../ast/nodes/statements/VarStmt";
 import { WhileStmt } from "../../../../ast/nodes/statements/WhileStmt";
+import { DiagnosticCode } from "../../../../diagnostics/diagnosticMessages.generated";
 import { TirSource } from "../../../tir/program/TirSource";
 import { ImportStarStmt } from "../../../tir/statements/TirImportStarStmt";
 import { TirStmt } from "../../../tir/statements/TirStmt";
@@ -71,10 +72,23 @@ export function _compileStatement(
     if(
         isPebbleAstTypeDecl( stmt )
         || stmt instanceof TypeImplementsStmt
-    ) throw new Error(
-        "type declarations and interface implementations should be " +
-        "handled separately, not in _compileStatement"
-    );
+    ) {
+        ctx.error(
+            DiagnosticCode.type_declarations_and_interfaces_are_only_allowed_at_the_top_level,
+            stmt.range,
+        );
+        return [];
+    };
+
+    // if( stmt instanceof FuncDecl ) return _compileFuncDecl( ctx, stmt );
+    if( stmt instanceof FuncDecl )
+    {
+        ctx.error(
+            DiagnosticCode.function_declarations_are_only_allowed_at_the_top_level,
+            stmt.range,
+        );
+        return [];``
+    }
 
     if( stmt instanceof ExportStmt ) return _compileExportStmt( ctx, stmt, tirSource );
     
@@ -95,7 +109,6 @@ export function _compileStatement(
     if( isAssignmentStmt( stmt ) ) return _compileAssignmentStmt( ctx, stmt );
     if( stmt instanceof ExprStmt ) return _compileExprStmt( ctx, stmt );
     if( stmt instanceof UsingStmt ) return _compileUsingStmt( ctx, stmt );
-    if( stmt instanceof FuncDecl ) return _compileFuncDecl( ctx, stmt );
 
     console.error( stmt );
     throw new Error("unreachable::AstCompiler::_compileStatement");

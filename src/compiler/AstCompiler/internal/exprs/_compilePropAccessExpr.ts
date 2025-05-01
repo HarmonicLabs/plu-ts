@@ -3,6 +3,7 @@ import { NonNullExpr } from "../../../../ast/nodes/expr/unary/NonNullExpr";
 import { DiagnosticCode } from "../../../../diagnostics/diagnosticMessages.generated";
 import { TirPropAccessExpr, TirOptionalPropAccessExpr, TirDotPropAccessExpr } from "../../../tir/expressions/TirPropAccessExpr";
 import { TirOptT } from "../../../tir/types/TirNativeType";
+import { StructFlags } from "../../../tir/types/TirStructType";
 import { TirType } from "../../../tir/types/TirType";
 import { AstCompilationCtx } from "../../AstCompilationCtx";
 import { getPropAccessReturnType } from "../../utils/getPropAccessReturnType";
@@ -39,7 +40,7 @@ export function _compileOptionalPropAccessExpr(
         expr.prop.range, expr.prop.text, objType.toString()
     );
 
-    const optionalType = new TirOptT( returnType );
+    const optionalType = new TirOptT( returnType, StructFlags.None );
 
     return new TirOptionalPropAccessExpr(
         objExpr,
