@@ -1,12 +1,10 @@
 import { Scope } from "../../AstCompiler/scope/Scope";
-import { PebbleSym } from "../../AstCompiler/scope/symbols/PebbleSym";
-import { InternalPath } from "../../path/path";
 import { TirStmt } from "../statements/TirStmt";
 
 
 export class TirSource
 {
-    readonly internalPath: InternalPath;
+    readonly internalPath: string;
 
     /**
      * all the symbols at the top-level 
@@ -21,7 +19,7 @@ export class TirSource
         return this.scope.parent!;
     }
 
-    readonly importedInternalPaths: Set<InternalPath> = new Set();
+    readonly importedInternalPaths: Set<string> = new Set();
     /**
      * all the *exported* values (to be used with `scope`)
     **/
@@ -36,7 +34,7 @@ export class TirSource
     public compiled: boolean = false;
 
     constructor(
-        internalPath: InternalPath,
+        internalPath: string,
         preambleScope: Scope,
     ) {
         this.internalPath = internalPath;

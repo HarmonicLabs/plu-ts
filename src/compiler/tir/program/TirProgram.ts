@@ -1,15 +1,14 @@
-import { InternalPath } from "../../path/path";
 import { TirSource } from "./TirSource";
 
 
 export class TirProgram
 {
     /** all the files in the program */
-    readonly files: Map<InternalPath, TirSource> = new Map();
-    readonly entry: InternalPath;
+    readonly files: Map<string, TirSource> = new Map();
+    readonly entry: string;
 
     constructor(
-        entry: InternalPath,
+        entry: string,
     ) {
         this.files = new Map();
         this.entry = entry;

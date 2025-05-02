@@ -14,32 +14,104 @@ import {
 
 const separator = CharCode.Slash;
 
-export type Path = string;
-export type InternalPath = string;
+type Path = string;
+type InternalPath = string;
 
-
-export function getInternalPath( path: string ): InternalPath
+function getAbsolutePath( path: string, requestingPath: string ): string | undefined
 {
-    return mangleInternalPath( removeSingleDotDirsFromPath( path ) );
+    if( typeof requestingPath !== "string" || requestingPath === "" ) return undefined;
+    const internalPath = getInternalPath( path );
+    const resolved = resolveProjAbsolutePath( internalPath, requestingPath );
+    if( typeof resolved !== "string" ) return undefined;
+    return adjustPathEnd( resolved );
 }
 
-/** Mangles an external to an internal path. */
-export function mangleInternalPath(path: string): string {
-    if (path.endsWith( extension ))
-        path = path.substring( 0, path.length - extension.length );
-    if (path.endsWith("/")) {
-        path += "index";
-    } else if (path.endsWith(extension)) {
-        path = path.substring(0, path.length - extension.length);
-    }
+function getInternalPath( path: string ): InternalPath
+{
+    return removeSingleDotDirsFromPath( path ).trim();
+}
+
+function adjustPathEnd(path: string): string {
+    if (path.endsWith("/")) return path + "index" + extension;
+
+    if( !path.endsWith( extension ) ) path = path + extension;
     return path;
 }
+
+/** Resolves the specified path relative to the specified origin. */
+function resolveProjAbsolutePath( toResolve: string, fromPath: string ): string | undefined
+{
+    const fromDirname = dirname( fromPath )
+    toResolve = removeSingleDotDirsFromPath( toResolve );
+
+    const fromDirs = fromDirname.split( PATH_DELIMITER ).filter( d => d !== "" );
+    const toDirs = toResolve.split( PATH_DELIMITER ).filter( d => d !== "" );
+
+    for( let i = 0; i < toDirs.length; i++ )
+    {
+        const dir = toDirs[i];
+        if( dir === ".." )
+        {
+            fromDirs.pop();
+            if( fromDirs.length === 0 )
+            {
+                if( toDirs.length === 0 ) return undefined;
+                if( toDirs[0] === ".." ) return undefined; // out of project root
+            }
+            toDirs.splice( i--, 1 );
+        }
+        else if( dir !== "." )
+        {
+            fromDirs.push( dir );
+        }
+    }
+
+    let result = removeSingleDotDirsFromPath(
+        fromDirs.join( PATH_DELIMITER )
+    );
+    // result = result === "." || result.endsWith( fromDirname.slice( 0, fromDirname.length - 1 ) ) ?
+    //     result + PATH_DELIMITER :
+    //     result;
+    
+    // result = result.startsWith("/") ? result : "/" + result;
+
+    result = result.replace("//", "/");
+    if( result.startsWith("./") ) return result.slice(1);
+    if( !result.startsWith("/") ) return "/" + result;
+    return result;
+}
+
+/** Obtains the directory portion of a normalized path. */
+function dirname( path: string ): string {
+    const wasEndingWithSlash = path.endsWith( PATH_DELIMITER );
+    path = removeSingleDotDirsFromPath( path );
+    if( !path.endsWith( PATH_DELIMITER ) && wasEndingWithSlash ) path += PATH_DELIMITER;
+
+    let pos = path.length;
+    if (pos <= 1) {
+        if (pos === 0) return ".";
+        if (path.charCodeAt(0) === separator) {
+            path = path.endsWith( PATH_DELIMITER ) ? path : path + PATH_DELIMITER;
+            return path;
+        }
+    }
+
+    while (--pos > 0) {
+        if (path.charCodeAt(pos) === separator) {
+            path = path.substring(0, pos);
+            return path.endsWith( PATH_DELIMITER ) ? path : path + PATH_DELIMITER;
+        }
+    }
+    return "./";
+}
+
+
 
 /**
  * Normalizes the specified path, removing interior placeholders.
  * Expects a posix-compatible relative path (not Windows compatible).
  */
-export function removeSingleDotDirsFromPath(path: string): string {
+function removeSingleDotDirsFromPath(path: string): string {
     let pos = 0;
     let len = path.length;
 
@@ -128,68 +200,4 @@ export function removeSingleDotDirsFromPath(path: string): string {
     }
     // path = path.endsWith( PATH_DELIMITER ) ? path.substring(0, len - 1) : path;
     return len > 0 ? path : ".";
-}
-
-/** Resolves the specified path relative to the specified origin. */
-export function resolveProjAbsolutePath( toResolve: string, fromPath: string ): string | undefined
-{
-    const fromDirname = dirname( fromPath )
-    toResolve = removeSingleDotDirsFromPath( toResolve );
-
-    const fromDirs = fromDirname.split( PATH_DELIMITER );
-    const toDirs = toResolve.split( PATH_DELIMITER );
-
-    for( let i = 0; i < toDirs.length; i++ )
-    {
-        const dir = toDirs[i];
-        if( dir === ".." )
-        {
-            fromDirs.pop();
-            toDirs.splice( i--, 1 );
-            if( fromDirs.length === 0 )
-            {
-                if( toDirs.length === 0 ) continue;
-                if( toDirs[0] === ".." ) return undefined; // out of project root
-            }
-        }
-        else if( dir !== "." )
-        {
-            fromDirs.push( dir );
-        }
-    }
-
-    let result = removeSingleDotDirsFromPath(
-        fromDirs.join( PATH_DELIMITER )
-    );
-    // result = result === "." || result.endsWith( fromDirname.slice( 0, fromDirname.length - 1 ) ) ?
-    //     result + PATH_DELIMITER :
-    //     result;
-    
-    // result = result.startsWith("/") ? result : "/" + result;
-
-    return result.replace("//", "/");
-}
-
-/** Obtains the directory portion of a normalized path. */
-export function dirname( path: string ): string {
-    const wasEndingWithSlash = path.endsWith( PATH_DELIMITER );
-    path = removeSingleDotDirsFromPath( path );
-    if( !path.endsWith( PATH_DELIMITER ) && wasEndingWithSlash ) path += PATH_DELIMITER;
-
-    let pos = path.length;
-    if (pos <= 1) {
-        if (pos === 0) return ".";
-        if (path.charCodeAt(0) === separator) {
-            path = path.endsWith( PATH_DELIMITER ) ? path : path + PATH_DELIMITER;
-            return path;
-        }
-    }
-
-    while (--pos > 0) {
-        if (path.charCodeAt(pos) === separator) {
-            path = path.substring(0, pos);
-            return path.endsWith( PATH_DELIMITER ) ? path : path + PATH_DELIMITER;
-        }
-    }
-    return "./";
 }

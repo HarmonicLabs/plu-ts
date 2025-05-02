@@ -98,7 +98,7 @@ export class DiagnosticMessage {
         let message = this.message;
         if (range) {
             let source = range.source;
-            let path = source.normalizedPath;
+            let path = source.absoluteProjPath;
             let line = source.lineAt(range.start);
             let column = source.columnAt();
             let len = range.end - range.start;
@@ -160,7 +160,7 @@ export function formatDiagnosticMessage(
             sb.push(formatDiagnosticContext(range, minLine));
         } else {
             sb.push("\n in ");
-            sb.push(source.normalizedPath);
+            sb.push(source.absoluteProjPath);
         }
         sb.push("(");
         sb.push(source.lineAt(range.start).toString());
@@ -175,7 +175,7 @@ export function formatDiagnosticMessage(
                 sb.push(formatDiagnosticContext(relatedRange, minLine));
             } else {
                 sb.push("\n in ");
-                sb.push(relatedSource.normalizedPath);
+                sb.push(relatedSource.absoluteProjPath);
             }
             sb.push("(");
             sb.push(relatedSource.lineAt(relatedRange.start).toString());
@@ -247,7 +247,7 @@ function formatDiagnosticContext(range: SourceRange, minLine: number = 0): strin
     sb.push("\n ");
     sb.push(lineSpace);
     sb.push(" └─ in ");
-    sb.push(source.normalizedPath);
+    sb.push(source.absoluteProjPath);
     return sb.join("");
 }
 

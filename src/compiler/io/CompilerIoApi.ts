@@ -2,7 +2,7 @@ import { toUtf8 } from "@harmoniclabs/uint8array-utils";
 import { DiagnosticMessage } from "../../diagnostics/DiagnosticMessage";
 import { MaybePromise } from "../../utils/MaybePromise";
 import { ConsoleErrorStream, ConsoleLogStream, IOutputStream, MemoryStream } from "./IOutputStream";
-import { removeSingleDotDirsFromPath } from "../path/path";
+import { getAbsolutePath } from "../path/getAbsolutePath";
 
 /** Compiler API options. */
 export interface CompilerIoApi {
@@ -66,7 +66,8 @@ function defaultReportDiagnostic(this: MemoryStream, diagnostic: DiagnosticMessa
 
 function memoryFsAdaptFilename( filename: string ): string
 {
-    filename = removeSingleDotDirsFromPath( filename );
+    filename = getAbsolutePath( filename, "/" )!;
+    if( typeof filename !== "string" ) return "";
     // filename = filename.replace( /\\/g, "/" );
     filename = filename.startsWith( "/" ) ? filename.slice( 1 ) : filename; 
     return filename;

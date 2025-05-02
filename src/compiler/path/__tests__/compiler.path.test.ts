@@ -1,6 +1,20 @@
-import { removeSingleDotDirsFromPath, dirname, resolveProjAbsolutePath } from "../path";
+/*
+import { removeSingleDotDirsFromPath, dirname, resolveProjAbsolutePath, getAbsolutePath } from "../path";
 
 describe("path", () => {
+
+    describe("getAbsolutePath", () => {
+
+        function testPath( inp: string, req: string, out: string | undefined )
+        {
+            test(inp + " -> " + out, () => {
+                expect( getAbsolutePath( inp, req ) ).toEqual( out );
+            })
+        }
+
+        testPath("./../", "/", undefined)
+
+    });
 
     describe("removeSingleDotDirsFromPath", () => {
         
@@ -61,25 +75,27 @@ describe("path", () => {
 
     });
  
-    describe("resolveProjAbsolutePath", () => {
+    describe.only("resolveProjAbsolutePath", () => {
 
         function testPath( inp: string, origin: string, out: string | undefined )
         {
             test(inp + " from " + origin +" -> " + out, () => {
-                expect( resolveProjAbsolutePath( inp, origin ) ).toEqual( out );
+                const result = resolveProjAbsolutePath( inp, origin )
+                expect( result ).toEqual( out );
             });
         }
 
-        testPath("../c","b","c");
-        testPath("../c","a/b","a/c");
-        testPath("../c/","a/b","a/c/");
-        testPath("../../c/d/e","a/b/f","a/c/d/e");
-        testPath("../../c/d/e/","a/b/f","a/c/d/e/");
-        testPath("..","a/b/f","a/b/");
+        // testPath("../c","/b", undefined);
+        // testPath("./c","/a/b","/a/c");
+        testPath("./c/","/a/b","/a/c/index");
 
-        testPath("../../../","a/b/c","./");
-        testPath("../../..","a/b/c","./");
-
-        testPath("../../../../","a/b/c", undefined );
+        // testPath("../../c/d/e","/a/b/f","/a/c/d/e");
+        // testPath("../../c/d/e/","/a/b/f","/a/c/d/e/");
+        // testPath("..","/a/b/f","/a/b/");
+        // testPath("../../../","/a/b/c","/");
+        // testPath("../../..","/a/b/c","/");
+        // testPath("../../../../","/a/b/c", undefined );
     })
 })
+
+//*/

@@ -1,11 +1,9 @@
-import { FuncDecl } from "../../ast/nodes/statements/declarations/FuncDecl";
 import { StructDecl } from "../../ast/nodes/statements/declarations/StructDecl";
 import { TypeAliasDecl } from "../../ast/nodes/statements/declarations/TypeAliasDecl";
 import { ExportStarStmt } from "../../ast/nodes/statements/ExportStarStmt";
 import { ImportStarStmt } from "../../ast/nodes/statements/ImportStarStmt";
 import { ImportStmt } from "../../ast/nodes/statements/ImportStmt";
 import { PebbleStmt } from "../../ast/nodes/statements/PebbleStmt";
-import { TypeImplementsStmt } from "../../ast/nodes/statements/TypeImplementsStmt";
 import { Source, SourceKind } from "../../ast/Source/Source";
 import { SourceRange } from "../../ast/Source/SourceRange";
 import { extension } from "../../common";
@@ -16,140 +14,20 @@ import { CompilerOptions } from "../../IR/toUPLC/CompilerOptions";
 import { Parser } from "../../parser/Parser";
 import { CompilerIoApi, createMemoryCompilerIoApi } from "../io/CompilerIoApi";
 import { IPebbleCompiler } from "../IPebbleCompiler";
-import { getInternalPath, InternalPath, resolveProjAbsolutePath } from "../path/path";
-import { getAppliedTypeInternalName, Scope, ScopeInfos } from "./scope/Scope";
+import { Scope } from "./scope/Scope";
 import { TirProgram } from "../tir/program/TirProgram";
-import { any_list_t, any_optional_t, bool_t, bytes_t, int_t, preludeScope, string_t, void_t } from "./scope/stdScope/stdScope";
+import { preludeScope } from "./scope/stdScope/stdScope";
 import { TirSource } from "../tir/program/TirSource";
-import { TirStmt } from "../tir/statements/TirStmt";
-import { isTirExpr, TirExpr } from "../tir/expressions/TirExpr";
-import { UnaryExclamation } from "../../ast/nodes/expr/unary/UnaryExclamation";
-import { TirUnaryExclamation } from "../tir/expressions/unary/TirUnaryExclamation";
-import { TirDataT, TirFuncT, TirLinearMapT, TirListT, TirOptT } from "../tir/types/TirNativeType";
-import { canAssignTo, getNamedDestructableType, getStructType, isStructOrStructAlias } from "../tir/types/utils/canAssignTo";
-import { UnaryPlus } from "../../ast/nodes/expr/unary/UnaryPlus";
-import { UnaryMinus } from "../../ast/nodes/expr/unary/UnaryMinus";
-import { TirUnaryPlus } from "../tir/expressions/unary/TirUnaryPlus";
-import { TirUnaryMinus } from "../tir/expressions/unary/TirUnaryMinus";
-import { UnaryTilde } from "../../ast/nodes/expr/unary/UnaryTilde";
-import { TirUnaryTilde } from "../tir/expressions/unary/TirUnaryTilde";
-import { isLitteralExpr, LitteralExpr } from "../../ast/nodes/expr/litteral/LitteralExpr";
-import { LitVoidExpr } from "../../ast/nodes/expr/litteral/LitVoidExpr";
-import { TirLitVoidExpr } from "../tir/expressions/litteral/TirLitVoidExpr";
-import { LitTrueExpr } from "../../ast/nodes/expr/litteral/LitTrueExpr";
-import { TirLitTrueExpr } from "../tir/expressions/litteral/TirLitTrueExpr";
-import { TirLitFalseExpr } from "../tir/expressions/litteral/TirLitFalseExpr";
-import { LitFalseExpr } from "../../ast/nodes/expr/litteral/LitFalseExpr";
-import { LitStrExpr } from "../../ast/nodes/expr/litteral/LitStrExpr";
-import { TirLitStrExpr } from "../tir/expressions/litteral/TirLitStrExpr";
-import { LitIntExpr } from "../../ast/nodes/expr/litteral/LitIntExpr";
-import { TirLitIntExpr } from "../tir/expressions/litteral/TirLitIntExpr";
-import { LitHexBytesExpr } from "../../ast/nodes/expr/litteral/LitHexBytesExpr";
-import { TirLitHexBytesExpr } from "../tir/expressions/litteral/TirLitHexBytesExpr";
-import { LitThisExpr } from "../../ast/nodes/expr/litteral/LitThisExpr";
-import { TirLitThisExpr } from "../tir/expressions/litteral/TirLitThisExpr";
-import { LitArrExpr } from "../../ast/nodes/expr/litteral/LitArrExpr";
-import { PebbleAnyTypeSym, PebbleConcreteTypeSym, PebbleGenericSym, PebbleValueSym } from "./scope/symbols/PebbleSym";
-import { TirLitArrExpr } from "../tir/expressions/litteral/TirLitArrExpr";
+import { PebbleAnyTypeSym, PebbleConcreteTypeSym } from "./scope/symbols/PebbleSym";
 import { TirAliasType } from "../tir/types/TirAliasType";
-import { isTirType, TirType } from "../tir/types/TirType";
-import { getListTypeArg } from "../tir/types/utils/getListTypeArg";
-import { LitObjExpr } from "../../ast/nodes/expr/litteral/LitObjExpr";
-import { LitUndefExpr } from "../../ast/nodes/expr/litteral/LitUndefExpr";
-import { LitNamedObjExpr } from "../../ast/nodes/expr/litteral/LitNamedObjExpr";
-import { TirLitUndefExpr } from "../tir/expressions/litteral/TirLitUndefExpr";
-import { TirLitObjExpr } from "../tir/expressions/litteral/TirLitObjExpr";
-import { TirLitNamedObjExpr } from "../tir/expressions/litteral/TirLitNamedObjExpr";
 import { StructFlags, TirStructConstr, TirStructField, TirStructType } from "../tir/types/TirStructType";
-import { ParentesizedExpr } from "../../ast/nodes/expr/ParentesizedExpr";
-import { FuncExpr } from "../../ast/nodes/expr/functions/FuncExpr";
-import { CallExpr } from "../../ast/nodes/expr/functions/CallExpr";
-import { IsExpr } from "../../ast/nodes/expr/IsExpr";
-import { ElemAccessExpr } from "../../ast/nodes/expr/ElemAccessExpr";
-import { TernaryExpr } from "../../ast/nodes/expr/TernaryExpr";
-import { DotPropAccessExpr, isPropAccessExpr, NonNullPropAccessExpr, OptionalPropAccessExpr, PropAccessExpr } from "../../ast/nodes/expr/PropAccessExpr";
-import { CaseExpr, CaseExprMatcher } from "../../ast/nodes/expr/CaseExpr";
-import { TypeConversionExpr } from "../../ast/nodes/expr/TypeConversionExpr";
-import { NonNullExpr } from "../../ast/nodes/expr/unary/NonNullExpr";
-import { IfStmt } from "../../ast/nodes/statements/IfStmt";
-import { TirIfStmt } from "../tir/statements/TirIfStmt";
-import { VarStmt } from "../../ast/nodes/statements/VarStmt";
-import { ForStmt } from "../../ast/nodes/statements/ForStmt";
-import { ForOfStmt } from "../../ast/nodes/statements/ForOfStmt";
-import { BlockStmt } from "../../ast/nodes/statements/BlockStmt";
-import { AssertStmt } from "../../ast/nodes/statements/AssertStmt";
-import { BreakStmt } from "../../ast/nodes/statements/BreakStmt";
-import { ContinueStmt } from "../../ast/nodes/statements/ContinueStmt";
-import { EmptyStmt } from "../../ast/nodes/statements/EmptyStmt";
-import { FailStmt } from "../../ast/nodes/statements/FailStmt";
-import { MatchStmt, MatchStmtCase } from "../../ast/nodes/statements/MatchStmt";
-import { ReturnStmt } from "../../ast/nodes/statements/ReturnStmt";
-import { TestStmt } from "../../ast/nodes/statements/TestStmt";
-import { WhileStmt } from "../../ast/nodes/statements/WhileStmt";
-import { ExportImportStmt } from "../../ast/nodes/statements/ExportImportStmt";
-import { AddAssignmentStmt, AssignmentStmt, BitwiseAndAssignmentStmt, BitwiseOrAssignmentStmt, BitwiseXorAssignmentStmt, DivAssignmentStmt, ExpAssignmentStmt, ExplicitAssignmentStmt, isAssignmentStmt, isExplicitAssignmentStmt, LogicalAndAssignmentStmt, LogicalOrAssignmentStmt, ModuloAssignmentStmt, MultAssignmentStmt, ShiftLeftAssignmentStmt, ShiftRightAssignmentStmt, SimpleAssignmentStmt, SubAssignmentStmt } from "../../ast/nodes/statements/AssignmentStmt";
-import { ExprStmt } from "../../ast/nodes/statements/ExprStmt";
-import { VarDecl } from "../../ast/nodes/statements/declarations/VarDecl/VarDecl";
-import { SimpleVarDecl } from "../../ast/nodes/statements/declarations/VarDecl/SimpleVarDecl";
-import { NamedDeconstructVarDecl } from "../../ast/nodes/statements/declarations/VarDecl/NamedDeconstructVarDecl";
-import { ISingleDeconstructVarDecl, SingleDeconstructVarDecl } from "../../ast/nodes/statements/declarations/VarDecl/SingleDeconstructVarDecl";
-import { ArrayLikeDeconstr } from "../../ast/nodes/statements/declarations/VarDecl/ArrayLikeDeconstr";
-import { AstTypeExpr } from "../../ast/nodes/types/AstTypeExpr";
-import { AstBooleanType, AstBytesType, AstFuncType, AstIntType, AstLinearMapType, AstListType, AstNativeOptionalType, AstVoidType, isAstNativeTypeExpr } from "../../ast/nodes/types/AstNativeTypeExpr";
-import { TirSimpleVarDecl } from "../tir/statements/TirVarDecl/TirSimpleVarDecl";
-import { TirNamedDeconstructVarDecl } from "../tir/statements/TirVarDecl/TirNamedDeconstructVarDecl";
-import { TirSingleDeconstructVarDecl } from "../tir/statements/TirVarDecl/TirSingleDeconstructVarDecl";
-import { TirArrayLikeDeconstr } from "../tir/statements/TirVarDecl/TirArrayLikeDeconstr";
-import { Identifier } from "../../ast/nodes/common/Identifier";
-import { isTirVarDecl, TirVarDecl } from "../tir/statements/TirVarDecl/TirVarDecl";
-import { TirForStmt } from "../tir/statements/TirForStmt";
-import { IncrStmt } from "../../ast/nodes/statements/IncrStmt";
-import { DecrStmt } from "../../ast/nodes/statements/DecrStmt";
-import { TirAssignmentStmt } from "../tir/statements/TirAssignmentStmt";
-import { TirAddExpr, TirBinaryExpr, TirBitwiseAndExpr, TirBitwiseOrExpr, TirBitwiseXorExpr, TirDivExpr, TirEqualExpr, TirExponentiationExpr, TirGreaterThanEqualExpr, TirGreaterThanExpr, TirLessThanEqualExpr, TirLessThanExpr, TirLogicalAndExpr, TirLogicalOrExpr, TirModuloExpr, TirMultExpr, TirNotEqualExpr, TirOptionalDefaultExpr, TirShiftLeftExpr, TirShiftRightExpr, TirSubExpr } from "../tir/expressions/binary/TirBinaryExpr";
-import { TirVariableAccessExpr } from "../tir/expressions/TirVariableAccessExpr";
-import { TirForOfStmt } from "../tir/statements/TirForOfStmt";
-import { TirWhileStmt } from "../tir/statements/TirWhileStmt";
-import { TirReturnStmt } from "../tir/statements/TirReturnStmt";
-import { TirBlockStmt } from "../tir/statements/TirBlockStmt";
-import { TirBreakStmt } from "../tir/statements/TirBreakStmt";
-import { TirContinueStmt } from "../tir/statements/TirContinueStmt";
-import { TirFailStmt } from "../tir/statements/TirFailStmt";
-import { TirAssertStmt } from "../tir/statements/TirAssertStmt";
-import { TirTestStmt } from "../tir/statements/TirTestStmt";
-import { TirMatchStmt, TirMatchStmtCase } from "../tir/statements/TirMatchStmt";
-import { DeconstructableTirType, getDeconstructableType } from "../tir/types/utils/getDeconstructableType";
-import { UsingStmt } from "../../ast/nodes/statements/UsingStmt";
-import { isPebbleAstTypeDecl } from "../../ast/nodes/statements/declarations/PebbleAstTypeDecl";
-import { TirExprStmt } from "../tir/statements/TirExprStmt";
-import { TirFuncDecl } from "../tir/statements/TirFuncDecl";
-import { PebbleExpr } from "../../ast/nodes/expr/PebbleExpr";
-import { isUnaryPrefixExpr, UnaryPrefixExpr } from "../../ast/nodes/expr/unary/UnaryPrefixExpr";
-import { TirUnaryPrefixExpr } from "../tir/expressions/unary/TirUnaryPrefixExpr";
-import { TirNonNullExpr } from "../tir/expressions/TirNonNullExpr";
-import { getOptTypeArg } from "../tir/types/utils/getOptTypeArg";
-import { TirFuncExpr } from "../tir/expressions/TirFuncExpr";
-import { getUnaliased } from "../tir/types/utils/getUnaliased";
-import { TirTypeParam } from "../tir/types/TirTypeParam";
-import { getInternalVarName } from "../internalVar";
-import { TirCallExpr } from "../tir/expressions/TirCallExpr";
-import { TirCaseExpr, TirCaseExprMatcher } from "../tir/expressions/TirCaseExpr";
-import { TirTypeConversionExpr } from "../tir/expressions/TirTypeConversionExpr";
-import { canCastTo, canCastToData } from "../tir/types/utils/canCastTo";
-import { TirIsExpr } from "../tir/expressions/TirIsExpr";
-import { TirElemAccessExpr } from "../tir/expressions/TirElemAccessExpr";
-import { TirTernaryExpr } from "../tir/expressions/TirTernaryExpr";
-import { TirDotPropAccessExpr, TirOptionalPropAccessExpr, TirPropAccessExpr } from "../tir/expressions/TirPropAccessExpr";
-import { AstNamedTypeExpr } from "../../ast/nodes/types/AstNamedTypeExpr";
-import { AddExpr, BinaryExpr, BitwiseAndExpr, BitwiseOrExpr, BitwiseXorExpr, DivExpr, EqualExpr, ExponentiationExpr, GreaterThanEqualExpr, GreaterThanExpr, isBinaryExpr, LessThanEqualExpr, LessThanExpr, LogicalAndExpr, LogicalOrExpr, ModuloExpr, MultExpr, NotEqualExpr, OptionalDefaultExpr, ShiftLeftExpr, ShiftRightExpr, SubExpr } from "../../ast/nodes/expr/binary/BinaryExpr";
 import { ExportStmt } from "../../ast/nodes/statements/ExportStmt";
 import { ResolveStackNode } from "./utils/deps/ResolveStackNode";
-import { getPropAccessReturnType } from "./utils/getPropAccessReturnType";
-import { wrapManyStatements } from "./utils/wrapManyStatementsOrReturnSame";
 import { AstCompilationCtx } from "./AstCompilationCtx";
 import { _compileStatement } from "./internal/statements/_compileStatement";
 import { _compileExpr } from "./internal/exprs/_compileExpr";
 import { _compileConcreteTypeExpr } from "./internal/types/_compileConcreteTypeExpr";
+import { getAbsolutePath } from "../path/getAbsolutePath";
 
 /*
 Handling type expressions that depend on other types 
@@ -190,7 +68,7 @@ export class AstCompiler extends DiagnosticEmitter
     **/
     readonly preludeScope: Scope;
     readonly program: TirProgram;
-    readonly parsedAstSources: Map<InternalPath, Source> = new Map();
+    readonly parsedAstSources: Map<string, Source> = new Map();
 
     get rootPath(): string
     {
@@ -206,24 +84,13 @@ export class AstCompiler extends DiagnosticEmitter
         super( diagnostics );
         this.preludeScope = preludeScope.clone();
         this.preludeScope.readonly();
-        const entry = resolveProjAbsolutePath( getInternalPath( cfg.entry ), cfg.root )!;
+        const entry = getAbsolutePath( cfg.entry, cfg.root )!;
         this.program = new TirProgram( entry );
-    }
-
-    /**
-     * 
-     * @returns an unique absolute path for the file
-     * 
-     * if the path is already absolute, the function should not modify it.
-     */
-    projectAbsolutePath( path: string ): string
-    {
-        return resolveProjAbsolutePath( getInternalPath( path ), this.rootPath )!;
     }
 
     async compileFile( path: string )
     {
-        const src = await this.sourceFromInternalPath( getInternalPath( path ) );
+        const src = await this.sourceFromInternalPath( path );
         if( !src ) return this.diagnostics;
         await this.parseAllImportedFiles(
             ResolveStackNode.entry( src )
@@ -242,13 +109,13 @@ export class AstCompiler extends DiagnosticEmitter
         if( src.statements.length === 0 ) return this.diagnostics;
 
         const tirSource = new TirSource(
-            resolveProjAbsolutePath( src.internalPath, this.rootPath )!,
+            getAbsolutePath( src.absoluteProjPath, this.rootPath )!,
             preludeScope
         );
         this._compileSourceStatements( tirSource, src.statements )
 
         this.program.files.set(
-            src.internalPath,
+            src.absoluteProjPath,
             tirSource
         );
 
@@ -415,7 +282,7 @@ export class AstCompiler extends DiagnosticEmitter
                 stmt instanceof ImportStmt
             )) continue;
 
-            const projAbsoultePath = getInternalPath( resolveProjAbsolutePath( stmt.fromPath.string, this.rootPath ) ?? "" );
+            const projAbsoultePath = getAbsolutePath( stmt.fromPath.string, this.rootPath ) ?? "";
             // console.log(projAbsoultePath, [ ...this.program.files.keys() ]);
             const importedSource = this.program.files.get( projAbsoultePath );
             if( !importedSource )
@@ -510,28 +377,28 @@ export class AstCompiler extends DiagnosticEmitter
     /** MUST NOT be used as a "seen" log */
     private readonly _sourceCache = new Map<string, Source>();
     async sourceFromInternalPath(
-        internalPath: string
+        absoluteProjPath: string
     ): Promise<Source | undefined>
     {
-        const cached = this.parsedAstSources.get( internalPath ) ?? this._sourceCache.get( internalPath );
+        const cached = this.parsedAstSources.get( absoluteProjPath ) ?? this._sourceCache.get( absoluteProjPath );
         if( cached ) return cached;
 
-        const srcText = await this.io.readFile( internalPath + extension, this.rootPath );
+        const srcText = await this.io.readFile( absoluteProjPath + extension, this.rootPath );
         if( !srcText )
         {
-            console.log( internalPath );
+            console.log( absoluteProjPath );
             return this.error(
                 DiagnosticCode.File_0_not_found,
-                undefined, internalPath
+                undefined, absoluteProjPath
             );
         }
 
         const src = new Source(
             SourceKind.User,
-            internalPath,
+            absoluteProjPath,
             srcText
         );
-        this._sourceCache.set( internalPath, src );
+        this._sourceCache.set( absoluteProjPath, src );
         return src;
     }
 
@@ -545,7 +412,7 @@ export class AstCompiler extends DiagnosticEmitter
         const src = _resolveStackNode.dependent; // resolveStackNode instanceof ResolveStackNode ? source.dependent : source;
         const resolveStack = _resolveStackNode; // source instanceof ResolveStackNode ? source : new ResolveStackNode( undefined, src );
 
-        const isCycle = resolveStack.parent?.includesInternalPath( src.internalPath ) ?? false;
+        const isCycle = resolveStack.parent?.includesInternalPath( src.absoluteProjPath ) ?? false;
 
         if( isCycle )
         {
@@ -553,16 +420,16 @@ export class AstCompiler extends DiagnosticEmitter
             return false;
         }
 
-        if( this.parsedAstSources.has( src.internalPath ) ) return true;
+        if( this.parsedAstSources.has( src.absoluteProjPath ) ) return true;
         Parser.parseSource( src, this.diagnostics );
-        this.parsedAstSources.set( src.internalPath, src );
+        this.parsedAstSources.set( src.absoluteProjPath, src );
 
         if( this.diagnostics.length > 0 ) return false;
 
         // get all imports to parse recursively
         const imports = src.statements.filter( isImportStmtLike );
 
-        const srcPath = resolveStack.dependent.internalPath;
+        const srcPath = resolveStack.dependent.absoluteProjPath;
         const paths = this.importPathsFromStmts( imports, srcPath );
         const sources = await Promise.all(
             paths.map( this.sourceFromInternalPath.bind( this ) )
@@ -589,11 +456,11 @@ export class AstCompiler extends DiagnosticEmitter
     {
         return stmts
         .map( imp => {
-            const internalPath = resolveProjAbsolutePath(
+            const absoluteProjPath = getAbsolutePath(
                 imp.fromPath.string,
                 requestingPath
             );
-            if( !internalPath )
+            if( !absoluteProjPath )
             {
                 this.error(
                     DiagnosticCode.File_0_not_found,
@@ -601,7 +468,7 @@ export class AstCompiler extends DiagnosticEmitter
                 );
                 return "";
             }
-            return getInternalPath( internalPath );
+            return absoluteProjPath;
         })
         .filter( path => path !== "" );
     }
@@ -611,7 +478,7 @@ export class AstCompiler extends DiagnosticEmitter
         resolveStack: ResolveStackNode
     ): void
     {
-        const offendingPath = src.internalPath;
+        const offendingPath = src.absoluteProjPath;
         let prevPath = offendingPath;
         let req: ResolveStackNode = resolveStack;
         const pathsInCycle: string[] = [];
@@ -623,16 +490,16 @@ export class AstCompiler extends DiagnosticEmitter
             const importStmt = req.dependent.statements.find( stmt => {
                 if( !isImportStmtLike( stmt ) ) return false;
 
-                const asRootPath = resolveProjAbsolutePath(
+                const asRootPath = getAbsolutePath(
                     stmt.fromPath.string,
-                    req.dependent.internalPath
+                    req.dependent.absoluteProjPath
                 );
                 if( !asRootPath ) return false;
 
                 return asRootPath === prevPath
             }) as ImportStmtLike | undefined;
 
-            prevPath = getInternalPath( req.dependent.internalPath ); 
+            prevPath = req.dependent.absoluteProjPath; 
             if( !importStmt )
             {
                 this.error(

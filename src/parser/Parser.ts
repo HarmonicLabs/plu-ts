@@ -72,7 +72,6 @@ import { makeBinaryExpr } from "../ast/nodes/expr/binary/BinaryExpr";
 import { AssignmentStmt, isAssignmentStmt, makeAssignmentStmt } from "../ast/nodes/statements/AssignmentStmt";
 import { ExprStmt } from "../ast/nodes/statements/ExprStmt";
 import { AstTypeExpr } from "../ast/nodes/types/AstTypeExpr";
-import { getInternalPath } from "../compiler/path/path";
 import { IsExpr } from "../ast/nodes/expr/IsExpr";
 import { hoistStatementsInplace } from "./hoistStatementsInplace";
 import { UsingStmt, UsingStmtDeclaredConstructor } from "../ast/nodes/statements/UsingStmt";
@@ -103,7 +102,7 @@ export class Parser extends DiagnosticEmitter
         isEntry: boolean = false
     ): [ Source, DiagnosticMessage[] ]
     {
-        const internalPath = getInternalPath( path );
+        const internalPath = path; // getInternalPath( path );
     
         const kind = (
             isEntry

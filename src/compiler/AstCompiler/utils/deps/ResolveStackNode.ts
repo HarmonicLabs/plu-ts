@@ -1,5 +1,4 @@
 import { Source } from "../../../../ast/Source/Source";
-import { Path } from "../../../path/path";
 
 export class ResolveStackNode {
     constructor(
@@ -17,12 +16,12 @@ export class ResolveStackNode {
         return new ResolveStackNode( this, dependent );
     }
 
-    includesInternalPath( path: Path ): boolean
+    includesInternalPath( path: string ): boolean
     {
         let req: ResolveStackNode | undefined = this;
         while( req )
         {
-            if( req.dependent.internalPath === path ) return true;
+            if( req.dependent.absoluteProjPath === path ) return true;
             req = req.parent;
         }
         return false;
@@ -31,13 +30,13 @@ export class ResolveStackNode {
      * 
      * @returns an array of paths from the last path to the first.
      */
-    toArray(): Path[]
+    toArray(): string[]
     {
-        const arr: Path[] = [];
+        const arr: string[] = [];
         let req: ResolveStackNode | undefined = this;
         while( req )
         {
-            arr.push( req.dependent.internalPath );
+            arr.push( req.dependent.absoluteProjPath );
             req = req.parent;
         }
         return arr;

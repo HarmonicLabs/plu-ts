@@ -1,5 +1,4 @@
 import { LIBRARY_PREFIX, PATH_DELIMITER, LIBRARY_SUBST } from "../../common";
-import { getInternalPath } from "../../compiler/path/path";
 import { CharCode } from "../../utils/CharCode";
 import { PebbleStmt } from "../nodes/statements/PebbleStmt";
 import { SourceRange } from "./SourceRange";
@@ -35,33 +34,16 @@ export class Source {
         /** Source kind. */
         public sourceKind: SourceKind,
         /** Normalized path with file extension. */
-        public normalizedPath: string,
+        public absoluteProjPath: string,
         /** Full source text. */
         public text: string
     ) {
-        let internalPath = getInternalPath( normalizedPath );
-        this.internalPath = internalPath;
-        let pos = internalPath.lastIndexOf(PATH_DELIMITER);
-        this.simplePath = pos >= 0 ? internalPath.substring(pos + 1) : internalPath;
         this.range = new SourceRange(this, 0, text.length);
         this.statements = new Array();
     }
 
-    /** Path used internally. */
-    internalPath: string;
-    /** Simple path (last part without extension). */
-    simplePath: string;
     /** Contained statements. */
     statements: PebbleStmt[];
-    /** Source map index. */
-    // debugInfoIndex: number = -1;
-    /** Re-exported sources. */
-    // exportPaths: string[] | undefined = undefined;
-
-    /** Checks if this source represents native code. */
-    isNative(): boolean {
-        return this.internalPath === LIBRARY_SUBST;
-    }
 
     /** Checks if this source is part of the (standard) library. */
     isLibrary(): boolean {
