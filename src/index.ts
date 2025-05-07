@@ -10,3 +10,4 @@ export * from "@harmoniclabs/uplc";
 export * from "./pluts";
 export * from "./IR";
 export * from "./parser";
+export * from "./compiler";

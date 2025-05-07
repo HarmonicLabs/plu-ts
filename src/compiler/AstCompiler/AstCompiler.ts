@@ -100,6 +100,21 @@ export class AstCompiler extends DiagnosticEmitter
         return this._compileParsedSource( src );
     }
 
+    async compileSource( path: string, srcText: string )
+    {
+        const src = new Source(
+            SourceKind.User,
+            path,
+            srcText
+        );
+        await this.parseAllImportedFiles(
+            ResolveStackNode.entry( src )
+        );
+        if( this.diagnostics.length > 0 ) return this.diagnostics;
+
+        return this._compileParsedSource( src );
+    }
+
     /**
      * translates the source AST statements
      * to TIR statements; and saves the result in `this.program`
