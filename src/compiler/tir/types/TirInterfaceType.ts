@@ -1,17 +1,15 @@
 import { TirFuncT } from "./TirNativeType";
-import { TirType } from "./TirType";
 
+/**
+ * represents interface declaraions
+ */
 export class TirInterfaceType
 {
     constructor(
         // anonymous interface for custom type methods
-        readonly name: string | undefined,
+        readonly name:  string,
         readonly methods: TirInterfaceMethod[]
     ) {
-        for( const method of methods )
-        {
-            method.parentInterface = this;
-        }
     }
 
     clone(): TirInterfaceType
@@ -23,30 +21,26 @@ export class TirInterfaceType
     }
 }
 
+/**
+ * only represents the method signature declared in the interface
+ * 
+ * this is not the method implementation
+ */
 export class TirInterfaceMethod
 {
     constructor(
-        public parentInterface: TirInterfaceType,
-        readonly name: string,
-        readonly params: TirType[],
-        readonly returnType: TirType
+        /**
+         * method name used by the developer
+         */
+        readonly frontendName: string,
+        readonly funcSingature: TirFuncT,
     ) {}
-
-    type(): TirFuncT
-    {
-        return new TirFuncT(
-            this.params,
-            this.returnType
-        );
-    }
 
     clone(): TirInterfaceMethod
     {
         return new TirInterfaceMethod(
-            this.parentInterface,
-            this.name,
-            this.params.map( p => p.clone() ),
-            this.returnType.clone()
+            this.frontendName,
+            this.funcSingature.clone()
         );
     }
 }

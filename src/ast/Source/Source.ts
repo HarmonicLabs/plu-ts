@@ -20,14 +20,6 @@ Object.freeze(SourceKind);
 /** A top-level source node. */
 export class Source {
 
-    /** Gets the special native source. */
-    static native(): Source {
-        let source = Source._native;
-        if (!source) Source._native = source = new Source(SourceKind.LibraryEntry, LIBRARY_PREFIX + "native.pebble", "[native code]");
-        return source;
-    }
-    private static _native: Source | undefined = undefined;
-
     readonly range: SourceRange;
 
     constructor(
@@ -35,6 +27,8 @@ export class Source {
         public sourceKind: SourceKind,
         /** Normalized path with file extension. */
         public absoluteProjPath: string,
+        /** unique identifier for the source */
+        readonly uid: string,
         /** Full source text. */
         public text: string
     ) {

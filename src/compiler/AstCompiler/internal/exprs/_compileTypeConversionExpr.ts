@@ -4,7 +4,7 @@ import { TirTypeConversionExpr } from "../../../tir/expressions/TirTypeConversio
 import { TirType } from "../../../tir/types/TirType";
 import { canCastTo } from "../../../tir/types/utils/canCastTo";
 import { AstCompilationCtx } from "../../AstCompilationCtx";
-import { _compileConcreteTypeExpr } from "../types/_compileConcreteTypeExpr";
+import { _compileConcreteTypeExpr } from "../types/_compileDataEncodedConcreteType";
 import { _compileExpr } from "./_compileExpr";
 
 export function _compileTypeConversionExpr(

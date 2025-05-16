@@ -56,7 +56,7 @@
     "@harmoniclabs/pair": "^1.0.0",
     "@harmoniclabs/plutus-data": "^1.2.4",
     "@harmoniclabs/plutus-machine": "^2.1.0",
-    "@harmoniclabs/uint8array-utils": "^1.0.3",
+    "@harmoniclabs/uint8array-utils": "^1.0.4",
     "@harmoniclabs/uplc": "^1.4.0"
   },
   "devDependencies": {

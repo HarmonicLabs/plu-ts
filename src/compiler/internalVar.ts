@@ -1,49 +1,72 @@
 import { isObject } from "@harmoniclabs/obj-utils";
-import { toHex } from "@harmoniclabs/uint8array-utils";
+import { toHex, toBase64 } from "@harmoniclabs/uint8array-utils";
 
 /** invalid char for normal js identifiers */
 export const PEBBLE_INTERNAL_IDENTIFIER_PREFIX = "§";
 /** invalid char for normal js identifiers */
 export const PEBBLE_INTERNAL_IDENTIFIER_SEPARATOR = "#";
 
-const internalNamesUsed = new Set<string>();
-
-let getRandomBytes = ( bytes: Uint8Array ) => {
-    for ( let i = 0; i < bytes.length; i++ )
+// Keep getRandomBytes outside the class as requested
+let getRandomBytes = (bytes: Uint8Array) => {
+    for (let i = 0; i < bytes.length; i++)
         bytes[i] = ((Math.random() * 0x100) >>> 0);
     return bytes;
 }
+
 try {
-    if(
+    if (
         typeof globalThis !== "undefined"
         && typeof globalThis.crypto !== "undefined"
-        && isObject( globalThis.crypto )
+        && isObject(globalThis.crypto)
         && typeof globalThis.crypto.getRandomValues === "function"
-    ) getRandomBytes = globalThis.crypto.getRandomValues.bind( globalThis.crypto );
+    ) getRandomBytes = globalThis.crypto.getRandomValues.bind(globalThis.crypto);
 } catch {}
 
-
-export function getInternalVarName( name: string ): string
+/**
+ * Creates and tracks unique internal variable names for the Pebble compiler
+ */
+export class UidGenerator
 {
-    if( typeof name !== "string" || name.length === 0 ) name = PEBBLE_INTERNAL_IDENTIFIER_PREFIX;
-
-    name = name.startsWith( PEBBLE_INTERNAL_IDENTIFIER_PREFIX ) ? name :
-        PEBBLE_INTERNAL_IDENTIFIER_PREFIX + name;
-
-    const originalName = name;
-
-    if( internalNamesUsed.has( name ) || name === PEBBLE_INTERNAL_IDENTIFIER_PREFIX )
-    {
-        const bytes = new Uint8Array( Math.max( 1, Math.log1p( internalNamesUsed.size ) >>> 0 ) );
-        do {
-            name = originalName + toHex( getRandomBytes( bytes ) );
-        } while( internalNamesUsed.has( name ) );
+    constructor() {
+        this.uids = new Set<string>();
     }
-    internalNamesUsed.add( name );
-    return name;
+
+    private readonly uids: Set<string>;
+
+    getUid(): string {
+        const bytes = new Uint8Array(Math.max(1, Math.log1p(this.uids.size) >>> 0));
+        let uid: string;
+        do {
+            uid = toHex(getRandomBytes(bytes));
+        } while (this.uids.has(uid));
+        this.uids.add(uid);
+        return uid;
+    }
+
+    /**
+     * Generates a unique internal variable name
+     */
+    getUniqueInternalName(name: string): string {
+        if (typeof name !== "string" || name.length === 0) name = PEBBLE_INTERNAL_IDENTIFIER_PREFIX;
+
+        name = name.startsWith(PEBBLE_INTERNAL_IDENTIFIER_PREFIX) ? name :
+            PEBBLE_INTERNAL_IDENTIFIER_PREFIX + name;
+
+        return name + "_" + this.getUid();
+    }
+
+    public unsafe_evil_forgetEverything_explain_use_with_comment(): void {
+        this.uids.clear();
+    }
 }
+
+// Create a default instance for backward compatibility
+export const defaultSymbolForge = new UidGenerator();
+
+// Export the original functions for backward compatibility
+export const getUniqueInternalName = defaultSymbolForge.getUniqueInternalName.bind(defaultSymbolForge);
 
 export function isInternalName( name: string ): boolean
 {
-    return name.startsWith( PEBBLE_INTERNAL_IDENTIFIER_PREFIX ); // && isIdentifier( name.slice( 1 ) );
+    return name.startsWith( PEBBLE_INTERNAL_IDENTIFIER_PREFIX );
 }

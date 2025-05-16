@@ -1,28 +1,47 @@
-import { getAppliedTypeInternalName } from "../../AstCompiler/scope/Scope";
+import { isObject } from "@harmoniclabs/obj-utils";
 import { TirInterfaceImpl } from "./TirInterfaceImpl";
 import { TirType } from "./TirType";
 
-export enum StructFlags {
-    None = 0,
-    /**
-     * tags single constructor structs
-     * 
-     * by default, single constructor structs are encoded only as lists
-     */
-    taggedDataEncoding = 1 << 0,
-    onlyData = 1 << 1,
-    onlySoP = 1 << 2,
+export interface ITirStructType {
+    readonly name: string;
+    readonly fileUid: string;
+    readonly constructors: TirStructConstr[];
+    /** points to an array possibly shared with alternative encoding types */
+    readonly implsPtr: TirInterfaceImpl[];
 }
-Object.freeze( StructFlags );
 
-export class TirStructType
+export type TirStructType
+    = TirDataStructType
+    | TirSoPStructType
+    ;
+
+export function isTirStructType( thing: any ): thing is TirStructType
+{
+    return isObject( thing ) && (
+        thing instanceof TirDataStructType
+        || thing instanceof TirSoPStructType
+    );
+}
+
+export class TirDataStructType
+    implements ITirStructType
 {
     constructor(
         readonly name: string,
+        readonly fileUid: string,
         readonly constructors: TirStructConstr[],
-        readonly impls: TirInterfaceImpl[],
-        public flags: StructFlags
+        /** points to an array possibly shared with alternative encoding types */
+        readonly implsPtr: TirInterfaceImpl[],
     ) {}
+
+    hasDataEncoding(): boolean { return true; }
+
+    toTirTypeKey(): string {
+        return "data_" + this.name + "_" + this.fileUid;
+    }
+    toConcreteTirTypeName(): string {
+        return this.toTirTypeKey();
+    }
 
     isSingleConstr(): boolean {
         return this.constructors.length === 1;
@@ -30,18 +49,6 @@ export class TirStructType
 
     toString(): string {
         return this.name;
-    }
-
-    toInternalName(): string {
-        return getAppliedTypeInternalName(
-            "Struct",
-            [
-                this.name,
-                ...this.constructors.map( c => 
-                    c.fields.map( f => f.type.toInternalName() )
-                ).flat( Infinity ) as string[]
-            ]
-        );
     }
 
     private _isConcrete: boolean | undefined = undefined;
@@ -53,44 +60,66 @@ export class TirStructType
         return this._isConcrete;
     }
 
-    clone(): TirStructType
+    clone(): TirDataStructType
     {
-        const result = new TirStructType(
+        const result = new TirDataStructType(
             this.name,
+            this.fileUid,
             this.constructors.map( c => c.clone() ),
-            this.impls.map( i => i.clone() ),
-            this.flags
+            this.implsPtr
         );
         result._isConcrete = this._isConcrete;
         return result;
     }
+}
 
-    /**
-     * still allows SoP (unless `onlyData` is set)
-     * 
-     * of course if `onlySoP` is set, then this doesn't matter,
-     * but still not an error, just useless
-     */
-    taggedDataEncoding(): boolean {
-        return (this.flags & StructFlags.taggedDataEncoding) !== 0;
+export class TirSoPStructType
+    implements ITirStructType
+{
+    constructor(
+        readonly name: string,
+        readonly fileUid: string,
+        readonly constructors: TirStructConstr[],
+        /** points to an array possibly shared with alternative encoding types */
+        readonly implsPtr: TirInterfaceImpl[],
+    ) {}
+
+    hasDataEncoding(): boolean { return false; }
+
+    toTirTypeKey(): string {
+        return "sop_" + this.name + "_" + this.fileUid;
+    }
+    toConcreteTirTypeName(): string {
+        return this.toTirTypeKey();
     }
 
-    onlyData(): boolean {
-        return (this.flags & StructFlags.onlyData) !== 0;
+    isSingleConstr(): boolean {
+        return this.constructors.length === 1;
     }
 
-    onlySoP(): boolean {
-        return (this.flags & StructFlags.onlySoP) !== 0;
+    toString(): string {
+        return this.name;
     }
 
-    allowsDataEncoding(): boolean {
-        // return !this.onlySoP();
-        return (this.flags & StructFlags.onlySoP) === 0;
+    private _isConcrete: boolean | undefined = undefined;
+    isConcrete(): boolean {
+        if( typeof this._isConcrete !== "boolean" )
+            this._isConcrete = this.constructors.every(
+                c => c.isConcrete()
+            );
+        return this._isConcrete;
     }
 
-    allowsSoPEncoding(): boolean {
-        // return !this.onlyData();
-        return (this.flags & StructFlags.onlyData) === 0;
+    clone(): TirSoPStructType
+    {
+        const result = new TirSoPStructType(
+            this.name,
+            this.fileUid,
+            this.constructors.map( c => c.clone() ),
+            this.implsPtr
+        );
+        result._isConcrete = this._isConcrete;
+        return result;
     }
 }
 

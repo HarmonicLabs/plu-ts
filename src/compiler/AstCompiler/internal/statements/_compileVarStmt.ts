@@ -22,7 +22,7 @@ import { canCastToData } from "../../../tir/types/utils/canCastTo";
 import { getListTypeArg } from "../../../tir/types/utils/getListTypeArg";
 import { AstCompilationCtx } from "../../AstCompilationCtx";
 import { _compileExpr } from "../exprs/_compileExpr";
-import { _compileConcreteTypeExpr } from "../types/_compileConcreteTypeExpr";
+import { _compileConcreteTypeExpr } from "../types/_compileDataEncodedConcreteType";
 
 export function _compileVarStmt(
     ctx: AstCompilationCtx,

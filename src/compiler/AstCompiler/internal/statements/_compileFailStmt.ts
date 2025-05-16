@@ -4,7 +4,7 @@ import { TirExpr } from "../../../tir/expressions/TirExpr";
 import { TirFailStmt } from "../../../tir/statements/TirFailStmt";
 import { canAssignTo } from "../../../tir/types/utils/canAssignTo";
 import { AstCompilationCtx } from "../../AstCompilationCtx";
-import { string_t } from "../../scope/stdScope/stdScope";
+import { string_t } from "../../../tir/program/stdScope/stdScope";
 import { _compileExpr } from "../exprs/_compileExpr";
 
 export function _compileFailStmt(

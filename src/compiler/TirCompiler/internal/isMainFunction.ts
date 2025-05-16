@@ -1,4 +1,4 @@
-import { scriptContext_t, void_t } from "../../AstCompiler/scope/stdScope/stdScope";
+import { scriptContext_t, void_t } from "../../tir/program/stdScope/stdScope";
 import { TirFuncDecl } from "../../tir/statements/TirFuncDecl";
 import { TirStmt } from "../../tir/statements/TirStmt";
 import { TirSimpleVarDecl } from "../../tir/statements/TirVarDecl/TirSimpleVarDecl";

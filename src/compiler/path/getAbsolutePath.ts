@@ -61,6 +61,25 @@ function addExtension(path: string, endsWithSlash: boolean): string {
     return path + extension;
 }
 
+export function getEnvRelativePath( filePath: string, projectRoot: string ): string | undefined
+{
+    if(!(
+        typeof filePath === 'string' &&
+        typeof projectRoot === 'string'
+    )) return undefined;
+
+    projectRoot = projectRoot.trim();
+    filePath = getAbsolutePath( filePath.trim(), projectRoot )!;
+    if( !filePath ) return undefined;
+    
+    if( !projectRoot.endsWith(PATH_DELIMITER) )
+        projectRoot = projectRoot + PATH_DELIMITER;
+
+    while( filePath.startsWith(PATH_DELIMITER) ) filePath = filePath.slice( PATH_DELIMITER.length );
+
+    return projectRoot + filePath;
+}
+
 /**
  * Takes a relative path and an absolute path, and returns the absolute path
  * corresponding to the relative path starting from the absolute path.

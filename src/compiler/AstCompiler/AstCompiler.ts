@@ -1,4 +1,4 @@
-import { StructDecl } from "../../ast/nodes/statements/declarations/StructDecl";
+import { StructDecl, StructDeclAstFlags } from "../../ast/nodes/statements/declarations/StructDecl";
 import { TypeAliasDecl } from "../../ast/nodes/statements/declarations/TypeAliasDecl";
 import { ExportStarStmt } from "../../ast/nodes/statements/ExportStarStmt";
 import { ImportStarStmt } from "../../ast/nodes/statements/ImportStarStmt";
@@ -14,20 +14,27 @@ import { CompilerOptions } from "../../IR/toUPLC/CompilerOptions";
 import { Parser } from "../../parser/Parser";
 import { CompilerIoApi, createMemoryCompilerIoApi } from "../io/CompilerIoApi";
 import { IPebbleCompiler } from "../IPebbleCompiler";
-import { Scope } from "./scope/Scope";
+import { PossibleTirTypes, Scope } from "./scope/Scope";
 import { TirProgram } from "../tir/program/TirProgram";
-import { preludeScope } from "./scope/stdScope/stdScope";
-import { TirSource } from "../tir/program/TirSource";
 import { PebbleAnyTypeSym, PebbleConcreteTypeSym } from "./scope/symbols/PebbleSym";
 import { TirAliasType } from "../tir/types/TirAliasType";
-import { StructFlags, TirStructConstr, TirStructField, TirStructType } from "../tir/types/TirStructType";
+import { TirDataStructType, TirSoPStructType, TirStructConstr, TirStructField, TirStructType } from "../tir/types/TirStructType";
 import { ExportStmt } from "../../ast/nodes/statements/ExportStmt";
 import { ResolveStackNode } from "./utils/deps/ResolveStackNode";
 import { AstCompilationCtx } from "./AstCompilationCtx";
 import { _compileStatement } from "./internal/statements/_compileStatement";
 import { _compileExpr } from "./internal/exprs/_compileExpr";
-import { _compileConcreteTypeExpr } from "./internal/types/_compileConcreteTypeExpr";
-import { getAbsolutePath } from "../path/getAbsolutePath";
+import { _compileDataEncodedConcreteType } from "./internal/types/_compileDataEncodedConcreteType";
+import { getAbsolutePath, getEnvRelativePath } from "../path/getAbsolutePath";
+import { isTirType, TirType } from "../tir/types/TirType";
+import { TirInterfaceImpl } from "../tir/types/TirInterfaceImpl";
+import { _compileSopEncodedConcreteType } from "./internal/types/_compileSopEncodedConcreteType";
+import { InterfaceDecl } from "../../ast/nodes/statements/declarations/InterfaceDecl";
+import { AstTypeExpr } from "../../ast/nodes/types/AstTypeExpr";
+import { AstFuncType } from "../../ast/nodes/types/AstNativeTypeExpr";
+import { FuncDecl } from "../../ast/nodes/statements/declarations/FuncDecl";
+import { isVarStmt, VarStmt } from "../../ast/nodes/statements/VarStmt";
+import { getFuncSignatureTirVariants } from "./utils/getFuncSignatureTirVariants/getFuncSignatureTirVariants";
 
 /*
 Handling type expressions that depend on other types 
@@ -45,16 +52,16 @@ This typically involves a two-pass system:
 */
  
 /**
- * compiles Pebble AST to Typed IR.
+ * compiles Pebble AST to a Typed IR program (TirProgram).
  * 
- * AST -> TIR
+ * AST -> TirProgram (astCompiler.program)
  * 
  * The AST is simply the result of tokenization and parsing.
  * 
  * Therefore the AST is only syntactically correct, but not necessarily semantically correct.
  * 
  * During the compilation from AST to TIR,
- * missign types are inferred and the resulting TIR is checked for semantic correctness.
+ * missing types are inferred and the resulting TIR is checked for semantic correctness.
  * 
  * In short, here is where type checking happens.
  */
@@ -82,84 +89,119 @@ export class AstCompiler extends DiagnosticEmitter
     )
     {
         super( diagnostics );
-        this.preludeScope = preludeScope.clone();
-        this.preludeScope.readonly();
-        const entry = getAbsolutePath( cfg.entry, cfg.root )!;
-        this.program = new TirProgram( entry );
+        this.program = new TirProgram( this.diagnostics );
     }
 
-    async compileFile( path: string )
+    /**
+     * compiles the entry file specified in the config
+     * 
+     * the result is store in `this.program`
+     */
+    async compile(): Promise<TirProgram>
     {
-        const src = await this.sourceFromInternalPath( path );
-        if( !src ) return this.diagnostics;
-        await this.parseAllImportedFiles(
+        const filePath = this.cfg.entry; // getEnvRelativePath( this.cfg.entry, this.rootPath );
+        if( !filePath )
+        {
+            this.error(
+                DiagnosticCode.File_0_not_found,
+                undefined, this.cfg.entry
+            );
+            throw new Error("entry file not found");
+        }
+
+        await this.compileFile( filePath );
+        if( this.diagnostics.length > 0 )
+            throw new Error("compilation failed");
+
+        return this.program;
+    }
+
+    // mutually recursive
+    async compileFile( path: string ): Promise<void>
+    {
+        const src = await this.getAbsoulteProjPathSource( path );
+        if( !src ) return;
+
+        // parse imports first
+        await this.compileAllDeps(
             ResolveStackNode.entry( src )
         );
-        if( this.diagnostics.length > 0 ) return this.diagnostics;
+        
+        // if there were errors
+        if( this.diagnostics.length > 0 ) return;
 
         return this._compileParsedSource( src );
     }
 
+    private readonly _srcDonelogUids = new Set<string>();
     /**
      * translates the source AST statements
      * to TIR statements; and saves the result in `this.program`
      */
-    private async _compileParsedSource( src: Source ): Promise<DiagnosticMessage[]>
+    private async _compileParsedSource( src: Source ): Promise<void>
     {
-        if( src.statements.length === 0 ) return this.diagnostics;
-
-        const tirSource = new TirSource(
-            getAbsolutePath( src.absoluteProjPath, this.rootPath )!,
-            preludeScope
-        );
-        this._compileSourceStatements( tirSource, src.statements )
-
-        this.program.files.set(
-            src.absoluteProjPath,
-            tirSource
-        );
-
-        return this.diagnostics;
-    }
-    private _compileSourceStatements( tirSource: TirSource, stmts: PebbleStmt[] ): void
-    {
-        if( tirSource.compiled ) return;
+        if( this._srcDonelogUids.has( src.uid ) ) return;
 
         // clone array so we don't remove stmts from the original AST
-        stmts = stmts.slice();
+        const stmts = src.statements.slice();
+
+        const importsScope = this.preludeScope.newChildScope({ isFunctionDeclScope: false });
 
         // defines imported symbols on top level scope, modifies stmts array
-        this._collectImports( tirSource, stmts );
+        this._consumeImportsAddSymsInScope( stmts, src.absoluteProjPath, importsScope );
+
+        const topLevelScope = importsScope.newChildScope({ isFunctionDeclScope: false });
+
+        const srcExports = this.preludeScope.newChildScope({ isFunctionDeclScope: false });
 
         // collect top level **type** (struct and aliases) declarations
-        this._collectTypeDeclarations( tirSource, stmts );
+        this._collectTypeDeclarations(
+            stmts,
+            src.uid,
+            topLevelScope,
+            srcExports
+        );
 
-        // collect top level **interface** declarations
-        // this._collectInterfaceDeclarations( tirSource, stmts );
+        // collect top level **interface** declarations (NOT implementations)
+        this._collectInterfaceDeclarations(
+            stmts,
+            topLevelScope,
+            srcExports,
+        );
 
         // adds interface **implementations** to types declared in this file
-        // this._applyInterfaceImplementations( tirSource, stmts );
+        this._applyInterfaceImplementations(
+            stmts,
+            src.uid,
+            topLevelScope
+        );
 
-        // compile statements
-        const srcCompileCtx = AstCompilationCtx.fromScopeOnly( tirSource.scope, this.diagnostics );
-        const nAstStmts = stmts.length;
-        for( let i = 0; i < nAstStmts; i++ )
-        {
-            const stmt = stmts[i];
-            const tirStmts = _compileStatement( srcCompileCtx, stmt, tirSource );
+        this._compileTopLevelFunctionsAndConsts(
+            stmts,
+            src.uid,
+            topLevelScope,
+            srcExports
+        );
 
-            // if statement compilation failed, skip to next statement
-            if( !Array.isArray( tirStmts ) ) continue;
+        this._handleReExports(
+            stmts,
+            srcExports
+        );
 
-            tirSource.statements.push(
-                ...tirStmts
-            );
-        }
+        this.program.setExportedSymbols(
+            src.absoluteProjPath,
+            srcExports
+        );
 
-        tirSource.compiled = true;
+        this._srcDonelogUids.add( src.uid );
     }
 
-    private _collectTypeDeclarations( tirSource: TirSource, stmts: PebbleStmt[] ): void
+    private _compileTopLevelFunctionsAndConsts(
+        stmts: PebbleStmt[],
+        srcUid: string,
+        topLevelScope: Scope,
+        srcExports: Scope
+    ): void
     {
         for( let i = 0; i < stmts.length; i++ )
         {
@@ -170,103 +212,323 @@ export class AstCompiler extends DiagnosticEmitter
                 exported = true;
                 stmt = stmt.stmt;
             }
-            if(
-                stmt instanceof StructDecl
-                || stmt instanceof TypeAliasDecl
-            ) {
-                const typeSym = stmt instanceof StructDecl
-                    ? this._compileStructDecl( tirSource, stmt )
-                    : this._compileTypeAliasDecl( tirSource, stmt );
+            
+            if( stmt instanceof FuncDecl ) this._compileTopLevelFuncDecl(
+                stmt,
+                exported,
+                srcUid,
+                topLevelScope,
+                srcExports
+            );
 
-                if( !typeSym ) continue;
-
-                if( !tirSource.scope.defineType( typeSym ) ) this.error(
-                    DiagnosticCode._0_is_already_defined,
-                    stmt.name.range,
-                    stmt.name.text
-                );
-
-                if( exported )
+            if( stmt instanceof VarStmt )
+            {
+                for( const decl of stmt.declarations )
                 {
-                    if( tirSource.exportedTypeNames.has( stmt.name.text ) ) this.error(
-                        DiagnosticCode._0_is_already_exported,
-                        stmt.name.range,
-                        stmt.name.text
+                    if( !decl.isConst() ) this.error(
+                        DiagnosticCode.Only_constants_can_be_declared_outside_of_a_function,
+                        decl.range
                     );
-                    else void tirSource.exportedTypeNames.add( stmt.name.text );
+                    this._compileTopLevelConst(
+                        decl,
+                        exported,
+                        srcUid,
+                        topLevelScope,
+                        srcExports
+                    );
                 }
-
-                // remove from array so we don't process it again
-                void stmts.splice( i, 1 );
-                i--;
             }
         }
     }
 
-    private _compileStructDecl( tirSource: TirSource, stmt: StructDecl ): PebbleAnyTypeSym
+    private _compileTopLevelFuncDecl(
+        stmt: FuncDecl,
+        exported: boolean,
+        srcUid: string,
+        topLevelScope: Scope,
+        srcExports: Scope
+    ): void
+    {
+        const func = stmt.expr;
+        const funcName = func.name.text;
+        const funcAstType = func.signature;
+
+        const variants = getFuncSignatureTirVariants(
+            funcAstType,
+            AstCompilationCtx.fromScope( this.program, topLevelScope )
+        );
+    }
+
+    private _collectInterfaceDeclarations(
+        stmts: PebbleStmt[],
+        topLevelScope: Scope,
+        srcExports: Scope
+    ): void
+    {
+        for( let i = 0; i < stmts.length; i++ )
+        {
+            let stmt = stmts[i];
+            let exported = false;
+            if( stmt instanceof ExportStmt )
+            {
+                exported = true;
+                stmt = stmt.stmt;
+            }
+            if(!(
+                stmt instanceof InterfaceDecl
+            )) continue;
+
+            const isGeneric = stmt.typeParams.length > 0;
+            if( isGeneric ) throw new Error("not implemented; generic interfaces");
+
+            const methods: Map<string, AstFuncType> = new Map();
+            for( const astMethod of stmt.methods ) {
+                if( astMethod.body ) this.warning(
+                    DiagnosticCode.Default_method_implementatitons_are_not_supported_defaullt_implementation_will_be_ignored,
+                    astMethod.body.range
+                );
+                methods.set( astMethod.name.text, astMethod.signature )
+            }
+
+            topLevelScope.interfaces.set( stmt.name.text, methods );
+
+            if( exported ) srcExports.interfaces.set( stmt.name.text, new Map( methods ) );
+
+            // remove from array so we don't process it again
+            void stmts.splice( i, 1 );
+            i--;
+        }
+    }
+
+    private _collectTypeDeclarations(
+        stmts: PebbleStmt[],
+        srcUid: string,
+        topLevelScope: Scope,
+        srcExports: Scope
+    ): void
+    {
+        for( let i = 0; i < stmts.length; i++ )
+        {
+            let stmt = stmts[i];
+            let exported = false;
+            if( stmt instanceof ExportStmt )
+            {
+                exported = true;
+                stmt = stmt.stmt;
+            }
+            if(!(
+                stmt instanceof StructDecl
+                || stmt instanceof TypeAliasDecl
+            )) continue;
+
+            const isGeneric = stmt.typeParams.length > 0;
+
+            const tirTypes = stmt instanceof StructDecl
+                ? this._compileStructDecl( stmt, srcUid, topLevelScope )
+                : this._compileTypeAliasDecl( stmt, srcUid, topLevelScope );
+
+            if(
+                !tirTypes // undefined
+                || !(tirTypes.sop || tirTypes.data) // or both undefined
+            ) continue; // ignore type decl
+
+            // define on program
+            if( tirTypes.sop  ) this.program.types.set( tirTypes.sop.toConcreteTirTypeName(), tirTypes.sop );
+            if( tirTypes.data ) this.program.types.set( tirTypes.data.toConcreteTirTypeName(), tirTypes.data );
+
+            const sopTirName = tirTypes.sop?.toTirTypeKey() ?? tirTypes.data!.toTirTypeKey();
+            const dataTirName = tirTypes.data?.toTirTypeKey();
+
+            const possibleTirTypes: PossibleTirTypes = Object.freeze({
+                sopTirName,
+                dataTirName,
+                allTirNames: new Set([
+                    sopTirName,
+                    dataTirName,
+                ].filter( str => typeof str === "string" )),
+                isGeneric,
+            });
+
+            // define on scope
+            void topLevelScope.defineType(
+                stmt.name.text,
+                possibleTirTypes
+            );
+
+            if( exported )
+            {
+                if( srcExports.types.has( stmt.name.text ) ) this.error(
+                    DiagnosticCode._0_is_already_exported,
+                    stmt.name.range,
+                    stmt.name.text
+                );
+                else if( isGeneric ) {
+                    this.error(
+                        DiagnosticCode.Not_implemented_0,
+                        stmt.name.range,
+                        "typeParams"
+                    );
+                    continue;
+                }
+                else {
+                    void srcExports.types.set(
+                        stmt.name.text,
+                        possibleTirTypes
+                    );
+                }
+            }
+
+            // remove from array so we don't process it again
+            void stmts.splice( i, 1 );
+            i--;
+        }
+    }
+
+    private _compileStructDecl(
+        stmt: StructDecl,
+        srcUid: string,
+        topLevelScope: Scope
+    ): { sop: TirSoPStructType | undefined, data: TirDataStructType | undefined } | undefined
     {
         if( stmt.typeParams.length > 0 ) throw new Error("not_implemented::AstCompiler::_compileStructDecl::typeParams");
-        const self = this;
-        const structType = new TirStructType(
-            stmt.name.text,
-            stmt.constrs.map( ctor =>
-                new TirStructConstr(
-                    ctor.name.text,
-                    ctor.fields.map( f => {
+        const compiler = this;
 
-                        if( !f.type ) return self.error(
-                            DiagnosticCode._0_is_not_defined,
-                            f.name.range, f.name.text
-                        );
+        const typeImpls: TirInterfaceImpl[] = [];
 
-                        // TODO: recursive struct definitions
-                        const fieldType  = _compileConcreteTypeExpr(
-                            AstCompilationCtx.fromScopeOnly( tirSource.scope, this.diagnostics ),
-                            f.type
-                        );
-                        if( !fieldType ) return undefined;
+        let sop: TirSoPStructType | undefined = undefined;
+        let data: TirDataStructType | undefined = undefined;
 
-                        return new TirStructField(
-                            f.name.text,
-                            fieldType
-                        );
-                    })
-                    .filter( f => f instanceof TirStructField ) as TirStructField[]
+        // sop encoded type
+        if( !stmt.hasFlag( StructDeclAstFlags.onlyDataEncoding ) )
+        {
+            sop = (
+                new TirSoPStructType(
+                    stmt.name.text,
+                    srcUid,
+                    stmt.constrs.map( ctor =>
+                        new TirStructConstr(
+                            ctor.name.text,
+                            ctor.fields.map( field => {
+                                if( !field.type ) return compiler.error(
+                                    DiagnosticCode.Type_expected,
+                                    field.name.range.atEnd()
+                                );
+
+                                // TODO: recursive struct definitions
+                                const fieldType  = _compileSopEncodedConcreteType(
+                                    AstCompilationCtx.fromScope( compiler.program, topLevelScope ),
+                                    field.type
+                                );
+                                if( !fieldType ) return undefined
+
+                                return new TirStructField(
+                                    field.name.text,
+                                    fieldType
+                                );
+                            })
+                            .filter( f => f instanceof TirStructField ) as TirStructField[]
+                        )
+                    ),
+                    typeImpls
                 )
-            ),
-            [], // impls
-            // TODO: handle struct flags
-            StructFlags.None
-        );
-        return new PebbleConcreteTypeSym({
-            name: stmt.name.text,
-            concreteType: structType,
-        });
+            );
+        }
+
+        // data encoded type
+        if( !stmt.hasFlag( StructDeclAstFlags.onlySopEncoding ) )
+        {
+            let canEncodeToData = true;
+            const dataType = new TirDataStructType(
+                stmt.name.text,
+                srcUid,
+                stmt.constrs.map( ctor =>
+                    new TirStructConstr(
+                        ctor.name.text,
+                        ctor.fields.map( field => {
+                            if( !field.type ) return compiler.error(
+                                DiagnosticCode.Type_expected,
+                                field.name.range.atEnd()
+                            );
+                            if( !canEncodeToData ) return undefined;
+
+                            // TODO: recursive struct definitions
+                            const fieldType  = _compileDataEncodedConcreteType(
+                                AstCompilationCtx.fromScope( compiler.program, topLevelScope ),
+                                field.type
+                            );
+                            if( !fieldType ) {
+                                canEncodeToData = false;
+                                return undefined;
+                            }
+
+                            return new TirStructField(
+                                field.name.text,
+                                fieldType
+                            );
+                        })
+                        .filter( f => f instanceof TirStructField ) as TirStructField[]
+                    )
+                ),
+                typeImpls
+            );
+
+            if( canEncodeToData ) data = dataType;
+            else if( stmt.hasFlag( StructDeclAstFlags.onlyDataEncoding ) )
+                this.error(
+                    DiagnosticCode.Type_0_cannot_be_encoded_as_data,
+                    stmt.name.range,
+                    stmt.name.text
+                );
+            else
+                this.warning(
+                    DiagnosticCode.Type_0_cannot_be_encoded_as_data_but_it_has_a_runtime_encoding_Use_runtime_keyword_modifier_for_the_declaration,
+                    stmt.range,
+                    stmt.name.text
+                );
+        }
+
+        return sop || data ? { sop, data } : undefined;
     }
 
-    private _compileTypeAliasDecl( tirSource: TirSource, stmt: TypeAliasDecl ): PebbleAnyTypeSym | undefined
+    private _compileTypeAliasDecl(
+        stmt: TypeAliasDecl,
+        srcUid: string,
+        topLevelScope: Scope
+    ): { sop: TirType | undefined, data: TirType | undefined } | undefined
     {
         if( stmt.typeParams.length > 0 ) throw new Error("not_implemented::AstCompiler::_compileTypeAliasDecl::typeParams");
-        const self = this;
-        const aliasedType = _compileConcreteTypeExpr(
-            AstCompilationCtx.fromScopeOnly( tirSource.scope, this.diagnostics ),
+        const compiler = this;
+        const sopAliasedT = _compileSopEncodedConcreteType(
+            AstCompilationCtx.fromScope( compiler.program, topLevelScope ),
             stmt.aliasedType
         );
-        if( !aliasedType ) return undefined;
-        const aliasType = new TirAliasType(
-            stmt.name.text,
-            aliasedType,
-            [] // interface implementations
+        const dataAliasedT = _compileDataEncodedConcreteType(
+            AstCompilationCtx.fromScope( compiler.program, topLevelScope ),
+            stmt.aliasedType
         );
-        return new PebbleConcreteTypeSym({
-            name: stmt.name.text,
-            concreteType: aliasType
-        })
+
+        const sop = sopAliasedT ? new TirAliasType(
+            stmt.name.text,
+            srcUid,
+            sopAliasedT,
+            [] // interface implementations
+        ) : undefined;
+        const data = dataAliasedT ? new TirAliasType(
+            stmt.name.text,
+            srcUid,
+            dataAliasedT,
+            [] // interface implementations
+        ) : undefined;
+
+        return sop || data ? { sop, data } : undefined;
     }
 
-    private _collectImports( tirSource: TirSource, stmts: PebbleStmt[] ): void
+    private _consumeImportsAddSymsInScope(
+        stmts: PebbleStmt[],
+        srcAbsPath: string,
+        srcImportsScope: Scope
+    ): void
     {
-        const srcPath = tirSource.internalPath + extension;
         for( let i = 0; i < stmts.length; i++ )
         {
             const stmt = stmts[i];
@@ -282,37 +544,32 @@ export class AstCompiler extends DiagnosticEmitter
                 stmt instanceof ImportStmt
             )) continue;
 
-            const projAbsoultePath = getAbsolutePath( stmt.fromPath.string, this.rootPath ) ?? "";
+            const importAbsPath = getAbsolutePath( stmt.fromPath.string, srcAbsPath ) ?? "";
             // console.log(projAbsoultePath, [ ...this.program.files.keys() ]);
-            const importedSource = this.program.files.get( projAbsoultePath );
-            if( !importedSource )
+            const importedSymbols = this.program.getExportedSymbols( importAbsPath );
+            if( !importedSymbols )
             {
                 return this.error(
                     DiagnosticCode.File_0_not_found,
                     stmt.fromPath.range,
-                    stmt.fromPath.string
+                    importAbsPath // stmt.fromPath.string
                 );
-            }
-
-            if(
-                importedSource.exportedValueNames.size === 0
-                && importedSource.exportedTypeNames.size === 0
-            ) {
-                this.error(
-                    DiagnosticCode.File_0_has_no_exports,
-                    stmt.fromPath.range,
-                    stmt.fromPath.string
-                );
-                continue;
             }
 
             for( const importDecl of stmt.members )
             {
                 const declName = importDecl.identifier.text;
-                const isValue = importedSource.exportedValueNames.has( declName );
-                const isType = importedSource.exportedTypeNames.has( declName );
+                const isValue = importedSymbols.variables.has( declName );
+                const isType = importedSymbols.types.has( declName );
+                const isFunction = importedSymbols.functions.has( declName );
+                const isInterface = importedSymbols.interfaces.has( declName );
 
-                if( !isValue && !isType ) {
+                if(!(
+                    isValue
+                    || isType
+                    || isFunction
+                    || isInterface
+                )) {
                     this.error(
                         DiagnosticCode.Module_0_has_no_exported_member_1,
                         importDecl.identifier.range,
@@ -323,29 +580,10 @@ export class AstCompiler extends DiagnosticEmitter
                 }
 
                 // define on source top level scope
-                if( isValue )
-                {
-                    const result = importedSource.scope.resolveValue( declName );
-                    if( !result ) throw new Error("unreachable::AstCompiler::_compileSourceStatements::importedSource.scope.resolveValue");
-                    const valueSym = result[0];
-
-                    if( !tirSource.importsScope.defineValue( valueSym ) ) this.error(
-                        DiagnosticCode._0_is_already_defined,
-                        importDecl.identifier.range,
-                        declName
-                    );
-                }
-                if( isType )
-                {
-                    const typeSym = importedSource.scope.resolveType( declName );
-                    if( !typeSym ) throw new Error("unreachable::AstCompiler::_compileSourceStatements::importedSource.scope.resolveType");
-                    
-                    if( !tirSource.importsScope.defineType( typeSym ) ) this.error(
-                        DiagnosticCode._0_is_already_defined,
-                        importDecl.identifier.range,
-                        declName
-                    );
-                }
+                if( isValue ) srcImportsScope.variables.set( declName, importedSymbols.variables.get( declName )! );
+                if( isFunction ) srcImportsScope.functions.set( declName, importedSymbols.functions.get( declName )! );
+                if( isType ) srcImportsScope.types.set( declName, importedSymbols.types.get( declName )! );
+                if( isInterface ) srcImportsScope.interfaces.set( declName, importedSymbols.interfaces.get( declName )! )
             }
 
             // remove from array so we don't process it again
@@ -354,48 +592,31 @@ export class AstCompiler extends DiagnosticEmitter
         }
     }
 
-    /**
-     * Collect all imported types
-     */
-    collectImportedTypes( ctx: AstCompilationCtx, imports: PebbleStmt[] ): void
+    private async _readFile( path: string ): Promise<string | undefined>
     {
-        for( const stmt of imports )
-        {
-            if( stmt instanceof ImportStmt )
-            {
-                const importPath = stmt.fromPath.string;
-                continue;
-            }
-            if( stmt instanceof ImportStarStmt )
-            {
-                const importPath = stmt.fromPath.string;
-                continue;
-            }
-        }
+        path = getEnvRelativePath( path, this.rootPath )!;
+        if( typeof path !== "string" ) return undefined;
+        return await this.io.readFile( path, this.rootPath );
     }
-
     /** MUST NOT be used as a "seen" log */
     private readonly _sourceCache = new Map<string, Source>();
-    async sourceFromInternalPath(
+    async getAbsoulteProjPathSource(
         absoluteProjPath: string
     ): Promise<Source | undefined>
     {
         const cached = this.parsedAstSources.get( absoluteProjPath ) ?? this._sourceCache.get( absoluteProjPath );
         if( cached ) return cached;
 
-        const srcText = await this.io.readFile( absoluteProjPath + extension, this.rootPath );
-        if( !srcText )
-        {
-            console.log( absoluteProjPath );
-            return this.error(
-                DiagnosticCode.File_0_not_found,
-                undefined, absoluteProjPath
-            );
-        }
+        const srcText = await this._readFile( absoluteProjPath );
+        if( !srcText ) return this.error(
+            DiagnosticCode.File_0_not_found,
+            undefined, absoluteProjPath
+        );
 
         const src = new Source(
             SourceKind.User,
             absoluteProjPath,
+            this.program.getFilePrefix( absoluteProjPath ),
             srcText
         );
         this._sourceCache.set( absoluteProjPath, src );
@@ -405,7 +626,7 @@ export class AstCompiler extends DiagnosticEmitter
     /**
      * @returns `true` if there were no errors. `false` otherwise.
      */
-    async parseAllImportedFiles(
+    async compileAllDeps(
         _resolveStackNode: ResolveStackNode
     ): Promise<boolean>
     {
@@ -420,7 +641,9 @@ export class AstCompiler extends DiagnosticEmitter
             return false;
         }
 
+        // if already parsed
         if( this.parsedAstSources.has( src.absoluteProjPath ) ) return true;
+
         Parser.parseSource( src, this.diagnostics );
         this.parsedAstSources.set( src.absoluteProjPath, src );
 
@@ -431,17 +654,17 @@ export class AstCompiler extends DiagnosticEmitter
 
         const srcPath = resolveStack.dependent.absoluteProjPath;
         const paths = this.importPathsFromStmts( imports, srcPath );
-        const sources = await Promise.all(
-            paths.map( this.sourceFromInternalPath.bind( this ) )
+        const importedSources = await Promise.all(
+            paths.map( this.getAbsoulteProjPathSource.bind( this ) )
         );
         
-        for( const src of sources )
+        for( const src of importedSources )
         {
             if( !src ) continue; // error already reported in `importPathsFromStmts`
 
             const nextStack = new ResolveStackNode( resolveStack, src );
             // recursively parse imported files
-            if( !await this.parseAllImportedFiles( nextStack ) ) return false;
+            if( !await this.compileAllDeps( nextStack ) ) return false;
         }
 
         this._compileParsedSource( src );

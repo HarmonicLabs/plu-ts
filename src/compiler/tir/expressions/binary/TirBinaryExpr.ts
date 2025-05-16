@@ -4,7 +4,7 @@ import { SourceRange } from "../../../../ast/Source/SourceRange";
 import { HasSourceRange } from "../../../../ast/nodes/HasSourceRange";
 import { ITirExpr } from "../ITirExpr";
 import { TirType } from "../../types/TirType";
-import { bool_t, bytes_t, int_t } from "../../../AstCompiler/scope/stdScope/stdScope";
+import { bool_t, bytes_t, int_t } from "../../program/stdScope/stdScope";
 
 
 export type TirBinaryExpr

@@ -10,6 +10,15 @@ export class TirTypeParam
         if( typeof symbol !== "symbol" ) this.symbol = Symbol(name);
     }
 
+    hasDataEncoding(): boolean { return false; }
+
+    toTirTypeKey(): string {
+        throw new Error("`toTirTypeKey` called on TirTypeParam; tir cannot have ambiguous types");
+    }
+    toConcreteTirTypeName(): string {
+        throw new Error("`toConcreteTirTypeName` called on TirTypeParam; tir cannot have ambiguous types");
+    }
+
     toString(): string
     {
         return this.name;

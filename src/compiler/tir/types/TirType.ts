@@ -1,6 +1,6 @@
 import { isObject } from "@harmoniclabs/obj-utils";
 import { TirAliasType } from "./TirAliasType";
-import { TirStructType } from "./TirStructType";
+import { isTirStructType, TirStructType } from "./TirStructType";
 import { isTirNamedDestructableNativeType, isTirNativeType, TirNamedDestructableNativeType, TirNativeType } from "./TirNativeType";
 import { TirTypeParam } from "./TirTypeParam";
 
@@ -27,7 +27,7 @@ export function isTirCustomType( thing: any ): thing is TirCustomType
 {
     return isObject( thing ) && (
         thing instanceof TirAliasType
-        || thing instanceof TirStructType
+        || isTirStructType( thing )
     );
 }
 
@@ -39,7 +39,7 @@ export type TirNamedDestructableType
 export function isTirNamedDestructableType( thing: any ): thing is TirNamedDestructableType
 {
     return isObject( thing ) && (
-        thing instanceof TirStructType
+        isTirStructType( thing )
         || isTirNamedDestructableNativeType( thing )
     );
 }

@@ -4,7 +4,7 @@ import { TirMultExpr } from "../../../../tir/expressions/binary/TirBinaryExpr";
 import { TirType } from "../../../../tir/types/TirType";
 import { canAssignTo } from "../../../../tir/types/utils/canAssignTo";
 import { AstCompilationCtx } from "../../../AstCompilationCtx";
-import { int_t } from "../../../scope/stdScope/stdScope";
+import { int_t } from "../../../../tir/program/stdScope/stdScope";
 import { _compileExpr } from "../_compileExpr";
 
 export function _compileMultExpr(

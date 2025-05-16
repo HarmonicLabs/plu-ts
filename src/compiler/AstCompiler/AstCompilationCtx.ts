@@ -1,5 +1,6 @@
 import { DiagnosticEmitter } from "../../diagnostics/DiagnosticEmitter";
 import { DiagnosticMessage } from "../../diagnostics/DiagnosticMessage";
+import { TirProgram } from "../tir/program/TirProgram";
 import { TirType } from "../tir/types/TirType";
 import { Scope, ScopeInfos } from "./scope/Scope";
 
@@ -31,6 +32,7 @@ export class AstCompilationCtx extends DiagnosticEmitter
     implements IAstCompilationCtx
 {
     constructor(
+        readonly program: TirProgram,
         readonly scope: Scope,
         readonly functionCtx: AstCompilationCtxFuncInfo | undefined,
         readonly isLoop: boolean,
@@ -45,6 +47,7 @@ export class AstCompilationCtx extends DiagnosticEmitter
     ): AstCompilationCtx
     {
         return new AstCompilationCtx(
+            this.program,
             this.scope.newChildScope( childScopeInfos ),
             this.functionCtx,
             isLoop,
@@ -55,6 +58,7 @@ export class AstCompilationCtx extends DiagnosticEmitter
     newFunctionChildScope( funcName: string ): AstCompilationCtx
     {
         return new AstCompilationCtx(
+            this.program,
             this.scope.newChildScope({
                 ...this.scope.infos,
                 isFunctionDeclScope: true
@@ -89,13 +93,17 @@ export class AstCompilationCtx extends DiagnosticEmitter
         );
     }
 
-    static fromScopeOnly( scope: Scope, diagnostics: DiagnosticMessage[] ): AstCompilationCtx
+    static fromScope(
+        program: TirProgram,
+        scope: Scope
+    ): AstCompilationCtx
     {
         return new AstCompilationCtx(
+            program,
             scope,
             undefined,
             false,
-            diagnostics
+            program.diagnostics
         );
     }
 }

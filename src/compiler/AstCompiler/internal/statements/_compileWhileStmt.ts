@@ -3,7 +3,7 @@ import { DiagnosticCode } from "../../../../diagnostics/diagnosticMessages.gener
 import { TirWhileStmt } from "../../../tir/statements/TirWhileStmt";
 import { canAssignTo } from "../../../tir/types/utils/canAssignTo";
 import { AstCompilationCtx } from "../../AstCompilationCtx";
-import { bool_t, any_optional_t } from "../../scope/stdScope/stdScope";
+import { bool_t, any_optional_t } from "../../../tir/program/stdScope/stdScope";
 import { wrapManyStatements } from "../../utils/wrapManyStatementsOrReturnSame";
 import { _compileExpr } from "../exprs/_compileExpr";
 import { _compileStatement } from "./_compileStatement";

@@ -19,7 +19,7 @@ export enum CommonFlags {
     Static = 1 << 7,
     
     /** Has `tagged` struct modifier */
-    taggedModifier = 1 << 8,
+    // taggedModifier = 1 << 8,
     /** Has a `data` struct modifier. */
     dataModifier = 1 << 9,
     /** Has a `runtime` struct modifier. */

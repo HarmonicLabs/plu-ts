@@ -79,7 +79,9 @@
   "Only function declarations and constants can be exported.": 277,
   "function declarations are only allowed at the top level.": 278,
   "type declarations and interfaces are only allowed at the top level.": 279,
-
+  "Type '{0}' cannot be encoded as data": 280,
+  "Type '{0}' cannot be encoded as data, but it has a runtime encoding. Use `runtime` keyword modifier for the declaration.": 281,
+  "Default method implementatitons are not supported. defaullt implementation will be ignored.": 282,
   
   "Importing the table disables some indirect call optimizations.": 901,
   "Exporting the table disables some indirect call optimizations.": 902,

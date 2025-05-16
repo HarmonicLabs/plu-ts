@@ -1,7 +1,7 @@
 import { isObject } from "@harmoniclabs/obj-utils";
-import { getAppliedTypeInternalName } from "../../AstCompiler/scope/Scope";
 import { TirType } from "./TirType";
-import { StructFlags } from "./TirStructType";
+import { PEBBLE_INTERNAL_IDENTIFIER_PREFIX } from "../../internalVar";
+import { getAppliedTirTypeName } from "../program/TirProgram";
 
 export type TirNativeType
     = TirVoidT
@@ -10,7 +10,8 @@ export type TirNativeType
     | TirBytesT
     | TirStringT
     | TirDataT
-    | TirOptT<TirType>
+    | TirDataOptT<TirType>
+    | TirSopOptT<TirType>
     | TirListT<TirType>
     | TirLinearMapT<TirType,TirType>
     | TirFuncT
@@ -25,23 +26,11 @@ export function isTirNativeType( t: any ): t is TirNativeType
         || t instanceof TirBytesT
         || t instanceof TirStringT
         || t instanceof TirDataT
-        || t instanceof TirOptT
+        || t instanceof TirDataOptT
+        || t instanceof TirSopOptT
         || t instanceof TirListT
         || t instanceof TirLinearMapT
         || t instanceof TirFuncT // =>
-    );
-}
-
-export type TirNamedDestructableNativeType
-    = TirDataT
-    | TirOptT<TirType>
-    ;
-
-export function isTirNamedDestructableNativeType( t: any ): t is TirNamedDestructableNativeType
-{
-    return isObject( t ) && (
-        t instanceof TirDataT
-        || t instanceof TirOptT
     );
 }
 
@@ -49,99 +38,145 @@ export class TirVoidT {
     clone(): TirVoidT { return new TirVoidT(); }
     isConcrete(): boolean { return true; }
     toString(): string { return "void"; }
-    toInternalName(): string { return "void"; }
+    static toTirTypeKey(): string { return "void"; }
+    toTirTypeKey(): string { return TirVoidT.toTirTypeKey(); }
+    toConcreteTirTypeName(): string { return this.toTirTypeKey(); }
+    hasDataEncoding(): boolean { return true; }
 }
 export class TirBoolT {
     clone(): TirBoolT { return new TirBoolT(); }
     isConcrete(): boolean { return true; }
     toString(): string { return "boolean"; }
-    toInternalName(): string { return "boolean"; }
+    static toTirTypeKey(): string { return "boolean"; }
+    toTirTypeKey(): string { return TirBoolT.toTirTypeKey(); }
+    toConcreteTirTypeName(): string { return this.toTirTypeKey(); }
+    hasDataEncoding(): boolean { return true; }
 }
 export class TirIntT {
     clone(): TirIntT { return new TirIntT(); }
     isConcrete(): boolean { return true; }
     toString(): string { return "int"; }
-    toInternalName(): string { return "int"; }
+    static toTirTypeKey(): string { return "int"; }
+    toTirTypeKey(): string { return TirIntT.toTirTypeKey(); }
+    toConcreteTirTypeName(): string { return this.toTirTypeKey(); }
+    hasDataEncoding(): boolean { return true; }
 }
 export class TirBytesT {
     clone(): TirBytesT { return new TirBytesT(); }
     isConcrete(): boolean { return true; }
     toString(): string { return "bytes"; }
-    toInternalName(): string { return "bytes"; }
+    static toTirTypeKey(): string { return "bytes"; }
+    toTirTypeKey(): string { return TirBytesT.toTirTypeKey(); }
+    toConcreteTirTypeName(): string { return this.toTirTypeKey(); }
+    hasDataEncoding(): boolean { return true; }
 }
 export class TirStringT {
     clone(): TirStringT { return new TirStringT(); }
     isConcrete(): boolean { return true; }
     toString(): string { return "string"; }
-    toInternalName(): string { return "string"; }
+    static toTirTypeKey(): string { return "string"; }
+    toTirTypeKey(): string { return TirStringT.toTirTypeKey(); }
+    toConcreteTirTypeName(): string { return this.toTirTypeKey(); }
+    hasDataEncoding(): boolean { return true; }
 }
 export class TirDataT {
     clone(): TirDataT { return new TirDataT(); }
     isConcrete(): boolean { return true; }
     toString(): string { return "data"; }
-    toInternalName(): string { return "data"; }
+    static toTirTypeKey(): string { return "data"; }
+    toTirTypeKey(): string { return TirDataT.toTirTypeKey(); }
+    toConcreteTirTypeName(): string { return this.toTirTypeKey(); }
+    hasDataEncoding(): boolean { return true; }
 }
 
-export class TirOptT<T extends TirType = TirType>
+export class TirDataOptT<T extends TirType = TirType>
 {
     constructor(
-        readonly typeArg: T,
-        readonly flags: StructFlags = StructFlags.None
+        readonly typeArg: T
     ) {}
 
-    toString(): string {
-        return `Optional<${this.typeArg.toString()}>`;
+    hasDataEncoding(): boolean { return this.typeArg.hasDataEncoding(); }
+
+    toAstName(): string {
+        return "Optional"
     }
 
-    toInternalName(): string {
-        return getAppliedTypeInternalName(
-            "Optional",
-            [ this.typeArg.toInternalName() ]
-        )
+    toString(): string {
+        return `${this.toAstName()}<${this.typeArg.toString()}>`;
+    }
+
+    static toTirTypeKey(): string {
+        return "data_opt";
+    }
+    toTirTypeKey(): string {
+        return TirDataOptT.toTirTypeKey();
+    }
+
+    toConcreteTirTypeName(): string {
+        return getAppliedTirTypeName(
+            this.toTirTypeKey(),
+            [ this.typeArg.toConcreteTirTypeName() ]
+        );
     }
 
     private _isConcrete: boolean | undefined = undefined;
     isConcrete(): boolean {
         if( typeof this._isConcrete !== "boolean" )
             this._isConcrete = this.typeArg.isConcrete();
-        return this._isConcrete;
+        return this._isConcrete!;
     }
 
-    clone(): TirOptT<T> {
-        const result = new TirOptT(
-            this.typeArg.clone(),
-            this.flags
-        ) as TirOptT<T>;
+    clone(): TirDataOptT<T> {
+        const result = new TirDataOptT(
+            this.typeArg.clone()
+        ) as TirDataOptT<T>;
         result._isConcrete = this._isConcrete;
         return result;
     }
+}
+export class TirSopOptT<T extends TirType = TirType>
+{
+    constructor(
+        readonly typeArg: T
+    ) {}
 
-    /**
-     * still allows SoP (unless `onlyData` is set)
-     * 
-     * of course if `onlySoP` is set, then this doesn't matter,
-     * but still not an error, just useless
-     */
-    taggedDataEncoding(): boolean {
-        return (this.flags & StructFlags.taggedDataEncoding) !== 0;
+    hasDataEncoding(): boolean { return false; }
+
+    toAstName(): string {
+        return "Optional"
     }
 
-    onlyData(): boolean {
-        return (this.flags & StructFlags.onlyData) !== 0;
+    toString(): string {
+        return `${this.toAstName()}<${this.typeArg.toString()}>`;
     }
 
-    onlySoP(): boolean {
-        return (this.flags & StructFlags.onlySoP) !== 0;
+    static toTirTypeKey(): string {
+        return "sop_opt";
+    }
+    toTirTypeKey(): string {
+        return TirSopOptT.toTirTypeKey();
     }
 
-    allowsDataEncoding(): boolean {
-        // return !this.onlySoP();
-        return (this.flags & StructFlags.onlySoP) === 0;
+    toConcreteTirTypeName(): string {
+        return getAppliedTirTypeName(
+            this.toTirTypeKey(),
+            [ this.typeArg.toConcreteTirTypeName() ]
+        );
     }
 
-    allowsSoPEncoding(): boolean {
-        // return !this.onlyData();
-        return (this.flags & StructFlags.onlyData) === 0;
+    private _isConcrete: boolean | undefined = undefined;
+    isConcrete(): boolean {
+        if( typeof this._isConcrete !== "boolean" )
+            this._isConcrete = this.typeArg.isConcrete();
+        return this._isConcrete!;
+    }
+
+    clone(): TirSopOptT<T> {
+        const result = new TirSopOptT(
+            this.typeArg.clone()
+        ) as TirSopOptT<T>;
+        result._isConcrete = this._isConcrete;
+        return result;
     }
 }
 
@@ -151,15 +186,24 @@ export class TirListT<T extends TirType = TirType>
         readonly typeArg: T
     ) {}
 
-    toString(): string {
-        return `List<${this.typeArg.toString()}>`;
+    hasDataEncoding(): boolean { return this.typeArg.hasDataEncoding(); }
+
+    static toTirTypeKey(): string {
+        return "List";
+    }
+    toTirTypeKey(): string {
+        return TirListT.toTirTypeKey();
     }
 
-    toInternalName(): string {
-        return getAppliedTypeInternalName(
-            "List",
-            [ this.typeArg.toInternalName() ]
-        )
+    toConcreteTirTypeName(): string {
+        return getAppliedTirTypeName(
+            this.toTirTypeKey(),
+            [ this.typeArg.toConcreteTirTypeName() ]
+        );
+    }
+
+    toString(): string {
+        return `${this.toTirTypeKey()}<${this.typeArg.toString()}>`;
     }
 
     private _isConcrete: boolean | undefined = undefined;
@@ -178,49 +222,6 @@ export class TirListT<T extends TirType = TirType>
     }
 }
 
-/**
- * TODO:
- * 
- * add in native types and export class 
- */
-class TirLinearMapEntry<K extends TirType,V extends TirType = TirType>
-{
-    constructor(
-        readonly keyTypeArg: K,
-        readonly valTypeArg: V
-    ) {}
-
-    toString(): string {
-        return `LinearMapEntry<${this.keyTypeArg.toString()},${this.valTypeArg.toString()}>`;
-    }
-
-    toInternalName(): string {
-        return getAppliedTypeInternalName(
-            "LinearMapEntry",
-            [ this.keyTypeArg.toInternalName(), this.valTypeArg.toInternalName() ]
-        );
-    }
-
-    private _isConcrete: boolean | undefined = undefined;
-    isConcrete(): boolean {
-        if( typeof this._isConcrete !== "boolean" )
-            this._isConcrete = (
-                this.keyTypeArg.isConcrete()
-                && this.valTypeArg.isConcrete()
-            );
-        return this._isConcrete;
-    }
-
-    clone(): TirLinearMapEntry<K,V> {
-        const result = new TirLinearMapEntry(
-            this.keyTypeArg.clone(),
-            this.valTypeArg.clone()
-        ) as TirLinearMapEntry<K,V>;
-        result._isConcrete = this._isConcrete;
-        return result;
-    }
-}
-
 export class TirLinearMapT<K extends TirType = TirType,V extends TirType = TirType>
 {
     constructor(
@@ -228,15 +229,27 @@ export class TirLinearMapT<K extends TirType = TirType,V extends TirType = TirTy
         readonly valTypeArg: V
     ) {}
 
-    toString(): string {
-        return `LinearMap<${this.keyTypeArg.toString()},${this.valTypeArg.toString()}>`;
+    hasDataEncoding(): boolean { return this.keyTypeArg.hasDataEncoding() && this.valTypeArg.hasDataEncoding(); }
+
+    static toTirTypeKey(): string {
+        return "list_pair_data";
+    }
+    toTirTypeKey(): string {
+        return TirLinearMapT.toTirTypeKey();
     }
 
-    toInternalName(): string {
-        return getAppliedTypeInternalName(
-            "LinearMap",
-            [ this.keyTypeArg.toInternalName(), this.valTypeArg.toInternalName() ]
+    toConcreteTirTypeName(): string {
+        return getAppliedTirTypeName(
+            this.toTirTypeKey(),
+            [ 
+                this.keyTypeArg.toConcreteTirTypeName(),
+                this.valTypeArg.toConcreteTirTypeName()
+            ]
         );
+    }
+
+    toString(): string {
+        return `${this.toTirTypeKey()}<${this.keyTypeArg.toString()},${this.valTypeArg.toString()}>`;
     }
 
     private _isConcrete: boolean | undefined = undefined;
@@ -267,18 +280,17 @@ export class TirFuncT
         readonly returnType: TirType
     ) {}
 
-    toString(): string {
-        return `(${this.argTypes.map( t => t.toString() ).join(",")}) => ${this.returnType.toString()}`;
+    hasDataEncoding(): boolean { return false; }
+
+    toTirTypeKey(): string {
+        return "func_" + this.argTypes.map( t => t.toConcreteTirTypeName() ).join("_") + "_" + this.returnType.toConcreteTirTypeName();
+    }
+    toConcreteTirTypeName(): string {
+        return this.toTirTypeKey();
     }
 
-    toInternalName(): string {
-        return getAppliedTypeInternalName(
-            "Func",
-            [
-                ...this.argTypes.map( t => t.toInternalName() ),
-                this.returnType.toInternalName()
-            ]
-        );
+    toString(): string {
+        return `(${this.argTypes.map( t => t.toString() ).join(",")}) => ${this.returnType.toString()}`;
     }
 
     private _isConcrete: boolean | undefined = undefined;

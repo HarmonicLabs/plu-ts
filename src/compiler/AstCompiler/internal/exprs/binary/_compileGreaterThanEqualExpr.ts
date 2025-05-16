@@ -5,7 +5,7 @@ import { TirAliasType } from "../../../../tir/types/TirAliasType";
 import { TirType } from "../../../../tir/types/TirType";
 import { canAssignTo } from "../../../../tir/types/utils/canAssignTo";
 import { AstCompilationCtx } from "../../../AstCompilationCtx";
-import { int_t, bytes_t } from "../../../scope/stdScope/stdScope";
+import { int_t, bytes_t } from "../../../../tir/program/stdScope/stdScope";
 import { _compileExpr } from "../_compileExpr";
 
 // only aviable for ints and bytes

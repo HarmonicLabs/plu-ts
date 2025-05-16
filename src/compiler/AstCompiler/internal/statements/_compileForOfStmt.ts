@@ -4,7 +4,7 @@ import { TirForOfStmt } from "../../../tir/statements/TirForOfStmt";
 import { canAssignTo } from "../../../tir/types/utils/canAssignTo";
 import { getListTypeArg } from "../../../tir/types/utils/getListTypeArg";
 import { AstCompilationCtx } from "../../AstCompilationCtx";
-import { any_list_t } from "../../scope/stdScope/stdScope";
+import { any_list_t } from "../../../tir/program/stdScope/stdScope";
 import { wrapManyStatements } from "../../utils/wrapManyStatementsOrReturnSame";
 import { _compileExpr } from "../exprs/_compileExpr";
 import { _compileStatement } from "./_compileStatement";

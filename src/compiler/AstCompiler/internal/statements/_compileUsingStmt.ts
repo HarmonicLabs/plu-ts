@@ -2,7 +2,7 @@ import { UsingStmt } from "../../../../ast/nodes/statements/UsingStmt";
 import { DiagnosticCode } from "../../../../diagnostics/diagnosticMessages.generated";
 import { getStructType } from "../../../tir/types/utils/canAssignTo";
 import { AstCompilationCtx } from "../../AstCompilationCtx";
-import { _compileConcreteTypeExpr } from "../types/_compileConcreteTypeExpr";
+import { _compileConcreteTypeExpr } from "../types/_compileDataEncodedConcreteType";
 
 /**
  * `using` only introduces symbols in scope

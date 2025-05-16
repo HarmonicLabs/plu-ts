@@ -13,4 +13,6 @@ export class AstNamedTypeExpr implements HasSourceRange
         readonly tyArgs: AstTypeExpr[],
         readonly range: SourceRange
     ) {}
+
+    toAstName() { return this.name.text; }
 }

@@ -1,3 +1,4 @@
+import { TirBoolT, TirBytesT, TirIntT, TirVoidT } from "../../../compiler/tir/types/TirNativeType";
 import { SourceRange } from "../../Source/SourceRange";
 import { HasSourceRange } from "../HasSourceRange";
 import { VarDecl } from "../statements/declarations/VarDecl/VarDecl";
@@ -35,6 +36,8 @@ export class AstVoidType implements HasSourceRange
     constructor(
         readonly range: SourceRange
     ) {}
+
+    toAstName() { return TirVoidT.toTirTypeKey(); }
 }
 
 export class AstBooleanType implements HasSourceRange
@@ -42,6 +45,8 @@ export class AstBooleanType implements HasSourceRange
     constructor(
         readonly range: SourceRange
     ) {}
+
+    toAstName() { return TirBoolT.toTirTypeKey(); }
 }
 
 export class AstIntType implements HasSourceRange
@@ -49,6 +54,8 @@ export class AstIntType implements HasSourceRange
     constructor(
         readonly range: SourceRange
     ) {}
+
+    toAstName() { return TirIntT.toTirTypeKey(); }
 }
 
 export class AstBytesType implements HasSourceRange
@@ -56,6 +63,8 @@ export class AstBytesType implements HasSourceRange
     constructor(
         readonly range: SourceRange
     ) {}
+
+    toAstName() { return TirBytesT.toTirTypeKey(); }
 }
 
 export class AstNativeOptionalType<TArg extends AstTypeExpr> implements HasSourceRange
@@ -64,6 +73,8 @@ export class AstNativeOptionalType<TArg extends AstTypeExpr> implements HasSourc
         readonly typeArg: TArg,
         readonly range: SourceRange
     ) {}
+
+    toAstName() { return "Optional"; }
 }
 
 export class AstListType<TArg extends AstTypeExpr> implements HasSourceRange
@@ -72,6 +83,8 @@ export class AstListType<TArg extends AstTypeExpr> implements HasSourceRange
         readonly typeArg: TArg,
         readonly range: SourceRange
     ) {}
+
+    toAstName() { return "List"; }
 }
 
 export class AstLinearMapType<KT extends AstTypeExpr, VT extends AstTypeExpr> implements HasSourceRange
@@ -81,6 +94,8 @@ export class AstLinearMapType<KT extends AstTypeExpr, VT extends AstTypeExpr> im
         readonly valTypeArg: VT,
         readonly range: SourceRange
     ) {}
+
+    toAstName() { return "LinearMap"; }
 }
 
 export class AstFuncType implements HasSourceRange
@@ -90,24 +105,6 @@ export class AstFuncType implements HasSourceRange
         readonly returnType: AstTypeExpr | undefined,
         readonly range: SourceRange
     ) {}
-}
 
-/*
-export class AstAsSopType implements HasSourceRange
-{
-    constructor(
-        // AsSop only takes structs or aliases of structs
-        readonly tyParams: AstNamedTypeExpr,
-        readonly range: SourceRange
-    ) {}
+    toAstName() { return "Function"; }
 }
-
-export class AstAsDataType implements HasSourceRange
-{
-    constructor(
-        // AsData only takes structs or aliases of structs
-        readonly tyParams: AstNamedTypeExpr,
-        readonly range: SourceRange
-    ) {}
-}
-//*/

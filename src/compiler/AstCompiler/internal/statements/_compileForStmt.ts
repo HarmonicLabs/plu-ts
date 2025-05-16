@@ -3,7 +3,7 @@ import { ForStmt } from "../../../../ast/nodes/statements/ForStmt";
 import { TirAssignmentStmt } from "../../../tir/statements/TirAssignmentStmt";
 import { TirForStmt } from "../../../tir/statements/TirForStmt";
 import { AstCompilationCtx } from "../../AstCompilationCtx";
-import { bool_t } from "../../scope/stdScope/stdScope";
+import { bool_t } from "../../../tir/program/stdScope/stdScope";
 import { wrapManyStatements } from "../../utils/wrapManyStatementsOrReturnSame";
 import { _compileExpr } from "../exprs/_compileExpr";
 import { _compileAssignmentStmt } from "./_compileAssignmentStmt";

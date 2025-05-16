@@ -4,7 +4,7 @@ import { TirTernaryExpr } from "../../../tir/expressions/TirTernaryExpr";
 import { TirType } from "../../../tir/types/TirType";
 import { canAssignTo } from "../../../tir/types/utils/canAssignTo";
 import { AstCompilationCtx } from "../../AstCompilationCtx";
-import { bool_t } from "../../scope/stdScope/stdScope";
+import { bool_t } from "../../../tir/program/stdScope/stdScope";
 import { _compileExpr } from "./_compileExpr";
 
 export function _compileTernaryExpr(

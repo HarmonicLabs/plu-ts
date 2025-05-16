@@ -1,3 +1,4 @@
+/*
 export const preludeTypesSrc = 
 `export type Hash32 = bytes;
 export type Hash28 = bytes;
@@ -284,3 +285,4 @@ export struct ScriptContext {
     redeemer: data,
     purpose: ScriptInfo
 }`;
+//*/

@@ -1,7 +1,7 @@
 import { ITirExpr } from "../ITirExpr";
 import { SourceRange } from "../../../../ast/Source/SourceRange";
 import { TirType } from "../../types/TirType";
-import { bool_t } from "../../../AstCompiler/scope/stdScope/stdScope";
+import { bool_t } from "../../program/stdScope/stdScope";
 
 export class TirLitFalseExpr implements ITirExpr
 {

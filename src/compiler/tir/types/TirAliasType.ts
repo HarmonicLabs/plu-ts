@@ -1,4 +1,3 @@
-import { getAppliedTypeInternalName } from "../../AstCompiler/scope/Scope";
 import { TirInterfaceImpl } from "./TirInterfaceImpl";
 import { TirType } from "./TirType";
 
@@ -6,19 +5,24 @@ export class TirAliasType<AliasedT extends  TirType = TirType>
 {
     constructor(
         readonly name: string,
+        readonly fileUid: string,
         readonly aliased: AliasedT,
         readonly impls: TirInterfaceImpl[]
     ) {}
 
-    toString(): string {
-        return this.name;
+    hasDataEncoding(): boolean {
+        return this.aliased.hasDataEncoding();
     }
 
-    toInternalName(): string {
-        return getAppliedTypeInternalName(
-            "Alias",
-            [ this.aliased.toInternalName() ]
-        );
+    toTirTypeKey(): string {
+        return this.name + "_" + this.fileUid;
+    }
+    toConcreteTirTypeName(): string {
+        return this.toTirTypeKey();
+    }
+
+    toString(): string {
+        return this.name;
     }
 
     private _isConcrete: boolean | undefined = undefined;
@@ -32,6 +36,7 @@ export class TirAliasType<AliasedT extends  TirType = TirType>
     {
         return new TirAliasType(
             this.name,
+            this.fileUid,
             this.aliased.clone(),
             this.impls.map( i => i.clone() )
         ) as TirAliasType<AliasedT>;

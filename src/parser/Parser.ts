@@ -54,7 +54,7 @@ import { TestStmt } from "../ast/nodes/statements/TestStmt";
 import { MatchStmt, MatchStmtCase } from "../ast/nodes/statements/MatchStmt";
 import { WhileStmt } from "../ast/nodes/statements/WhileStmt";
 import { CaseExpr, CaseExprMatcher } from "../ast/nodes/expr/CaseExpr";
-import { StructConstrDecl, StructDecl } from "../ast/nodes/statements/declarations/StructDecl";
+import { StructConstrDecl, StructDecl, StructDeclAstFlags } from "../ast/nodes/statements/declarations/StructDecl";
 import { InterfaceDecl, InterfaceDeclMethod } from "../ast/nodes/statements/declarations/InterfaceDecl";
 import { ImportStarStmt } from "../ast/nodes/statements/ImportStarStmt";
 import { ImportDecl, ImportStmt } from "../ast/nodes/statements/ImportStmt";
@@ -213,18 +213,41 @@ export class Parser extends DiagnosticEmitter
                 // decorators = undefined;
                 break;
             }
-            case Token.taggedModifier: {
-                throw new Error("not_implemented::taggedModifier");
-            }
             case Token.Data: {
-                throw new Error("not_implemented::dataModifier");
+                // skips `data` keyword
+                // positions on (expected) `struct` keyword
+                if( tn.next() !== Token.Struct )
+                return this.error(
+                    DiagnosticCode._0_expected,
+                    tn.range(), "struct"
+                );
+                tn.next(); // skip `struct`
+                statement = this.parseStruct(
+                    StructDeclAstFlags.onlyDataEncoding,
+                    flags,
+                    startPos
+                );
+                break;
             }
             case Token.Runtime: {
-                throw new Error("not_implemented::runtimeModifier");
+                // skips `runtime` keyword
+                // positions on (expected) `struct` keyword
+                if( tn.next() !== Token.Struct )
+                return this.error(
+                    DiagnosticCode._0_expected,
+                    tn.range(), "struct"
+                );
+                tn.next(); // skip `struct`
+                statement = this.parseStruct(
+                    StructDeclAstFlags.onlySopEncoding,
+                    flags,
+                    startPos
+                );
+                break;
             }
             case Token.Struct: {
                 tn.next();
-                statement = this.parseStruct(flags, startPos);
+                statement = this.parseStruct( StructDeclAstFlags.none, flags, startPos );
                 break;
             }
             case Token.Interface: {
@@ -792,6 +815,7 @@ export class Parser extends DiagnosticEmitter
     }
 
     parseStruct(
+        structDeclFlags: StructDeclAstFlags,
         flags = CommonFlags.Const,
         startPos?: number
     ): StructDecl | undefined
@@ -849,6 +873,7 @@ export class Parser extends DiagnosticEmitter
                         range
                     )
                 ],
+                structDeclFlags & StructDeclAstFlags.untaggedSingleConstructor,
                 range.clone()
             );
         }
@@ -891,6 +916,7 @@ export class Parser extends DiagnosticEmitter
                         tn.range( startPos, tn.pos )
                     )
                 ],
+                structDeclFlags & StructDeclAstFlags.untaggedSingleConstructor,
                 tn.range( startPos, tn.pos )
             );
         }
@@ -942,6 +968,7 @@ export class Parser extends DiagnosticEmitter
             name,
             typeParams,
             constrs,
+            structDeclFlags,
             tn.range( startPos, tn.pos )
         );
     }

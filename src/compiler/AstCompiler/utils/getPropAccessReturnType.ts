@@ -5,7 +5,7 @@ import { TirVoidT, TirBoolT, TirIntT, TirBytesT, TirStringT, TirDataT, TirOptT, 
 import { TirStructType } from "../../tir/types/TirStructType";
 import { TirType } from "../../tir/types/TirType";
 import { TirTypeParam } from "../../tir/types/TirTypeParam";
-import { int_t, bytes_t, bool_t, string_t } from "../scope/stdScope/stdScope";
+import { int_t, bytes_t, bool_t, string_t } from "../../tir/program/stdScope/stdScope";
 
 export function getPropAccessReturnType(
     objType: TirType,

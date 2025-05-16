@@ -2,7 +2,7 @@ import { FuncExpr } from "../../../../ast/nodes/expr/functions/FuncExpr";
 import { BlockStmt } from "../../../../ast/nodes/statements/BlockStmt";
 import { ReturnStmt } from "../../../../ast/nodes/statements/ReturnStmt";
 import { DiagnosticCode } from "../../../../diagnostics/diagnosticMessages.generated";
-import { getInternalVarName } from "../../../internalVar";
+import { getUniqueInternalName } from "../../../internalVar";
 import { TirFuncExpr } from "../../../tir/expressions/TirFuncExpr";
 import { TirVariableAccessExpr } from "../../../tir/expressions/TirVariableAccessExpr";
 import { TirStmt } from "../../../tir/statements/TirStmt";
@@ -15,7 +15,7 @@ import { AstCompilationCtx } from "../../AstCompilationCtx";
 import { PebbleValueSym } from "../../scope/symbols/PebbleSym";
 import { _compileBlockStmt } from "../statements/_compileBlockStmt";
 import { _compileVarDecl } from "../statements/_compileVarStmt";
-import { _compileConcreteTypeExpr } from "../types/_compileConcreteTypeExpr";
+import { _compileConcreteTypeExpr } from "../types/_compileDataEncodedConcreteType";
 import { _hasDuplicateTypeParams } from "./_hasDuplicateTypeParams";
 
 export function _compileFuncExpr(
@@ -65,7 +65,7 @@ export function _compileFuncExpr(
         }
         // else move destructuring in the body (uplc has only simple params)
 
-        const uniqueName = getInternalVarName(
+        const uniqueName = getUniqueInternalName(
             tirParam.type.toString().toLocaleLowerCase()
         );
 

@@ -1,5 +1,5 @@
 import { SourceRange } from "../../../../ast/Source/SourceRange";
-import { void_t } from "../../../AstCompiler/scope/stdScope/stdScope";
+import { void_t } from "../../program/stdScope/stdScope";
 import { TirType } from "../../types/TirType";
 import { ITirExpr } from "../ITirExpr";
 
