@@ -10,7 +10,6 @@ import { TirAssignmentStmt } from "../../../tir/statements/TirAssignmentStmt";
 import { TirType } from "../../../tir/types/TirType";
 import { canAssignTo } from "../../../tir/types/utils/canAssignTo";
 import { AstCompilationCtx } from "../../AstCompilationCtx";
-import { int_t, bytes_t, bool_t } from "../../../tir/program/stdScope/stdScope";
 import { _compileExpr } from "../exprs/_compileExpr";
 
 export function _compileAssignmentStmt(
@@ -18,6 +17,10 @@ export function _compileAssignmentStmt(
     stmt: AssignmentStmt
 ): [ TirAssignmentStmt ] | undefined
 {
+    const int_t = ctx.program.stdTypes.int;
+    const bytes_t = ctx.program.stdTypes.bytes;
+    const bool_t = ctx.program.stdTypes.bool;
+    
     if(
         stmt instanceof IncrStmt
         || stmt instanceof DecrStmt

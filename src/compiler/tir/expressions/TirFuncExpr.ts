@@ -18,7 +18,6 @@ export class TirFuncExpr
     }
     constructor(
         readonly name: string,
-        readonly typeParams: TirTypeParam[],
         // deconstructions are inlined in the body
         readonly params: TirSimpleVarDecl[],
         // initialized to symbol while inferring
@@ -42,11 +41,17 @@ export class TirFuncExpr
 
     isGeneric(): boolean
     {
-        return this.typeParams.length > 0;
+        return false;
+        // return this.typeParams.length > 0;
     }
 
     isAnonymous(): boolean
     {
         return this.name === "";
+    }
+
+    signature(): TirFuncT
+    {
+        return this.type;
     }
 }

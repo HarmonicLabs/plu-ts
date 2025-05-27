@@ -24,7 +24,6 @@ import { UsingStmt } from "../../../../ast/nodes/statements/UsingStmt";
 import { VarStmt } from "../../../../ast/nodes/statements/VarStmt";
 import { WhileStmt } from "../../../../ast/nodes/statements/WhileStmt";
 import { DiagnosticCode } from "../../../../diagnostics/diagnosticMessages.generated";
-import { TirSource } from "../../../tir/program/TirSource";
 import { ImportStarStmt } from "../../../tir/statements/TirImportStarStmt";
 import { TirStmt } from "../../../tir/statements/TirStmt";
 import { AstCompilationCtx } from "../../AstCompilationCtx";

@@ -17,12 +17,12 @@ import { TirTestStmt } from "./TirTestStmt";
 import { TirWhileStmt } from "./TirWhileStmt";
 import { TirExprStmt } from "./TirExprStmt";
 import { TirVarDecl, isTirVarDecl } from "./TirVarDecl/TirVarDecl";
-import { TirFuncDecl } from "./TirFuncDecl";
+import { TirFuncExpr } from "../expressions/TirFuncExpr";
 
 export type TirStmt
     = TirIfStmt
     | TirVarDecl
-    | TirFuncDecl
+    | TirFuncExpr
     // destructured params are immediately replaced at translation
     // TIR only has simple parameters
     // AST destructured params just become
@@ -58,7 +58,7 @@ export function isTirStmt( thing: any ): thing is TirStmt
     return isObject( thing ) && (
         thing instanceof TirIfStmt
         || isTirVarDecl( thing)
-        || thing instanceof TirFuncDecl
+        || thing instanceof TirFuncExpr
         || thing instanceof TirForStmt
         || thing instanceof TirForOfStmt
         || thing instanceof TirWhileStmt

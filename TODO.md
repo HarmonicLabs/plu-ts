@@ -1,5 +1,14 @@
 of course `Optional` here is not the best type for examples, because `Optional` will have first class support.
 
+- match expressions (expr quivalent of match stmts)
+```ts
+let result = value ::
+    Constructor1(x) => x * 2,
+    Constructor2(y, z) => y + z,
+    _ => 0;
+```
+double colon (`::`); cases separed by commas (`,`)
+
 - add `using` to declare constructors in a scope
     ```ts
     function maybeSomething(): Optional<int>
@@ -28,4 +37,3 @@ of course `Optional` here is not the best type for examples, because `Optional` 
         return Some{ value: 42 } as Optional<int>;
     }
     ```
-    

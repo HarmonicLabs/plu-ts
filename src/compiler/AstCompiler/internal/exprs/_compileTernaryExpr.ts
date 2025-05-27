@@ -4,7 +4,6 @@ import { TirTernaryExpr } from "../../../tir/expressions/TirTernaryExpr";
 import { TirType } from "../../../tir/types/TirType";
 import { canAssignTo } from "../../../tir/types/utils/canAssignTo";
 import { AstCompilationCtx } from "../../AstCompilationCtx";
-import { bool_t } from "../../../tir/program/stdScope/stdScope";
 import { _compileExpr } from "./_compileExpr";
 
 export function _compileTernaryExpr(
@@ -13,6 +12,8 @@ export function _compileTernaryExpr(
     typeHint: TirType | undefined
 ): TirTernaryExpr | undefined
 {
+    const bool_t = ctx.program.stdTypes.bool;
+    
     const cond = _compileExpr( ctx, expr.condition, bool_t );
     if( !cond ) return undefined;
     if( !canAssignTo( cond.type, bool_t ) ) return ctx.error(

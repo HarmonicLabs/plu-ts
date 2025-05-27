@@ -5,7 +5,6 @@ import { TirAliasType } from "../../../../tir/types/TirAliasType";
 import { TirType } from "../../../../tir/types/TirType";
 import { canAssignTo } from "../../../../tir/types/utils/canAssignTo";
 import { AstCompilationCtx } from "../../../AstCompilationCtx";
-import { int_t, bytes_t } from "../../../../tir/program/stdScope/stdScope";
 import { _compileExpr } from "../_compileExpr";
 
 
@@ -15,6 +14,9 @@ export function _compileLessThanExpr(
     typeHint: TirType | undefined
 ): TirLessThanExpr | undefined
 {
+    const int_t = ctx.program.stdTypes.int;
+    const bytes_t = ctx.program.stdTypes.bytes;
+
     const left = _compileExpr( ctx, expr.left, typeHint );
     if( !left ) return undefined;
 

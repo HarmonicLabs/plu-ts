@@ -1,12 +1,17 @@
 import { TirBoolT, TirBytesT, TirDataT, TirLinearMapT, TirListT, TirIntT, TirVoidT, TirStringT, TirDataOptT, TirSopOptT } from "../../types/TirNativeType";
-import { Scope } from "../../../AstCompiler/scope/Scope";
+import { AstFuncName, Scope, TirFuncName } from "../../../AstCompiler/scope/Scope";
 import { TirNativeType } from "../../types/TirNativeType";
-import { PebbleConcreteTypeSym } from "../../../AstCompiler/scope/symbols/PebbleSym";
 import { TirAliasType } from "../../types/TirAliasType";
 import { TirDataStructType, TirSoPStructType, TirStructConstr, TirStructField, TirStructType } from "../../types/TirStructType";
 import { TirProgram } from "../TirProgram";
 import { TirType } from "../../types/TirType";
 
+export const void_t = new TirVoidT();
+export const int_t = new TirIntT();
+export const string_t = new TirStringT();
+export const bytes_t = new TirBytesT();
+export const bool_t = new TirBoolT();
+export const data_t = new TirDataT();
 
 export function populateStdScope( program: TirProgram ): void
 {
@@ -16,15 +21,15 @@ export function populateStdScope( program: TirProgram ): void
     {
         const name = t.toTirTypeKey();
         program.types.set( name, t );
-        stdScope.defineUnambigousType( name, name, true );
+        stdScope.defineUnambigousType( name, name, true, new Map() );
     }
 
-    _defineStdUnambigous( new TirVoidT() );
-    _defineStdUnambigous( new TirBoolT() );
-    _defineStdUnambigous( new TirIntT() );
-    _defineStdUnambigous( new TirBytesT() );
-    _defineStdUnambigous( new TirStringT() );
-    _defineStdUnambigous( new TirDataT() );
+    _defineStdUnambigous( void_t );
+    _defineStdUnambigous( bool_t );
+    _defineStdUnambigous( int_t );
+    _defineStdUnambigous( bytes_t );
+    _defineStdUnambigous( string_t );
+    _defineStdUnambigous( data_t );
 
     const opt_data_name = TirDataOptT.toTirTypeKey();
     program.defineGenericType(
@@ -49,6 +54,7 @@ export function populateStdScope( program: TirProgram ): void
                 opt_data_name,
                 opt_sop_name,
             ]),
+            methodsNames: new Map(),
             isGeneric: true
         }
     );
@@ -67,6 +73,7 @@ export function populateStdScope( program: TirProgram ): void
             allTirNames: new Set([
                 list_name
             ]),
+            methodsNames: new Map(),
             isGeneric: true
         }
     );
@@ -85,6 +92,7 @@ export function populateStdScope( program: TirProgram ): void
             allTirNames: new Set([
                 linearMap_name
             ]),
+            methodsNames: new Map(),
             isGeneric: true
         }
     );
@@ -120,21 +128,23 @@ export function populatePreludeScope( program: TirProgram ): void
 
     function _defineUnambigousAlias(
         astName: string,
-        tirType: TirType
+        tirType: TirType,
+        methodsNames: Map<AstFuncName, TirFuncName> = new Map()
     )
     {
         const t = new TirAliasType(
             astName,
             preludeFileUid,
             tirType,
-            []
+            methodsNames
         );
         const tir_key = t.toTirTypeKey();
         program.types.set( tir_key, t );
         preludeScope.defineUnambigousType(
             astName,
             tir_key,
-            t.hasDataEncoding()
+            t.hasDataEncoding(),
+            methodsNames
         );
         return t;
     }
@@ -149,7 +159,8 @@ export function populatePreludeScope( program: TirProgram ): void
     
     function mkSingleConstructorStruct(
         name: string,
-        fields: { [x: string]: TirType }
+        fields: { [x: string]: TirType },
+        methodNames: Map<AstFuncName, TirFuncName> = new Map()
     ): { sop: TirSoPStructType, data: TirDataStructType }
     {
         const sop = new TirSoPStructType(
@@ -163,7 +174,7 @@ export function populatePreludeScope( program: TirProgram ): void
                     )
                 )
             ],
-            []
+            methodNames
         );
         const data = new TirDataStructType(
             name,
@@ -176,7 +187,7 @@ export function populatePreludeScope( program: TirProgram ): void
                     )
                 )
             ],
-            []
+            methodNames
         );
         return { sop, data };
     }
@@ -187,7 +198,8 @@ export function populatePreludeScope( program: TirProgram ): void
     function defineSingleConstructorStruct(
         name: string,
         fields: { [x: string]: TirType },
-        opts: DefineStructOpts
+        opts: DefineStructOpts,
+        methodsNames: Map<AstFuncName, TirFuncName> = new Map()
     ): { sop: TirSoPStructType, data: TirDataStructType }
     {
         const { sop, data } = mkSingleConstructorStruct( name, fields );
@@ -204,6 +216,7 @@ export function populatePreludeScope( program: TirProgram ): void
                     sop_key,
                     opts.data ? data_key : undefined
                 ].filter( x => typeof x === "string" )),
+                methodsNames,
                 isGeneric: false
             }
         );
@@ -212,7 +225,8 @@ export function populatePreludeScope( program: TirProgram ): void
     
     function mkMultiConstructorStruct(
         name: string,
-        constrs: { [x: string]: { [x: string]: TirNativeType } }
+        constrs: { [x: string]: { [x: string]: TirNativeType } },
+        methodNames: Map<AstFuncName, TirFuncName> = new Map()
     ): { sop: TirSoPStructType, data: TirDataStructType }
     {
         const sop = new TirSoPStructType(
@@ -226,7 +240,7 @@ export function populatePreludeScope( program: TirProgram ): void
                     )
                 )
             ),
-            [],
+            methodNames
         );
         const data = new TirDataStructType(
             name,
@@ -239,14 +253,15 @@ export function populatePreludeScope( program: TirProgram ): void
                     )
                 )
             ),
-            [],
+            methodNames
         );
         return { sop, data };
     }
     function defineMultiConstructorStruct(
         name: string,
         constrs: { [x: string]: { [x: string]: TirNativeType } },
-        opts: DefineStructOpts
+        opts: DefineStructOpts,
+        methodsNames: Map<AstFuncName, TirFuncName> = new Map()
     ): { sop: TirSoPStructType, data: TirDataStructType }
     {
         const { sop, data } = mkMultiConstructorStruct( name, constrs );
@@ -263,6 +278,7 @@ export function populatePreludeScope( program: TirProgram ): void
                     sop_key,
                     opts.data ? data_key : undefined
                 ].filter( x => typeof x === "string" )),
+                methodsNames,
                 isGeneric: false
             }
         );

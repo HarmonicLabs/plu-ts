@@ -1,9 +1,11 @@
+import { FuncExpr } from "../../../ast/nodes/expr/functions/FuncExpr";
 import { DiagnosticEmitter } from "../../../diagnostics/DiagnosticEmitter";
 import { DiagnosticMessage } from "../../../diagnostics/DiagnosticMessage";
+import { AstCompilationCtx } from "../../AstCompiler/AstCompilationCtx";
 import { Scope } from "../../AstCompiler/scope/Scope";
+import { TirFuncSigTreeRoot } from "../../AstCompiler/utils/getTirFuncSigTree/TirFuncSigTree";
 import { UidGenerator } from "../../internalVar";
 import { TirStmt } from "../statements/TirStmt";
-import { TirBoolT, TirBytesT, TirDataT, TirIntT, TirStringT, TirVoidT } from "../types/TirNativeType";
 import { isTirType, TirType } from "../types/TirType";
 import { populatePreludeScope, populateStdScope } from "./stdScope/stdScope";
 import { StdTypes } from "./stdScope/StdTypes";
@@ -11,6 +13,33 @@ import { StdTypes } from "./stdScope/StdTypes";
 export interface IGenericType {
     arity: number;
     apply: ( argsTirNames: string[] ) => (TirType | undefined);
+}
+
+export interface ITirFuncFEFInfos {
+    /**
+     * TODO
+     * 
+     * not a simple signature,
+     * but also how to get to the extracted parameters
+     * from the original ones (so extraction path included)
+     */
+    fullyExtractedSignature: any;
+    tirName: string;
+}
+
+export interface ITirFuncitonInfos {
+    // sigRoot: TirFuncSigTreeRoot; // includes all overloads
+    /**
+     * tir name of the function declaration,
+     * used to access the function in the program,
+     * useful to understad if the function is recursive
+    **/
+    tirSigName: string;
+    declContext: AstCompilationCtx;
+    astDecl: FuncExpr; // ast signature and body
+    fullyExtractedForm: ITirFuncFEFInfos | undefined;
+    concreteInstantiations: Set<string>
+    isMethod: boolean;
 }
 
 /**
@@ -22,12 +51,16 @@ export class TirProgram extends DiagnosticEmitter
 {
     readonly values: Map<string, TirStmt>;
     readonly types: Map<string, TirType>;
+    readonly funcSigs: Map<string, ITirFuncitonInfos>;
     private readonly genericTypes: Map<string, IGenericType>;
+
+    /** main */
+    public contractTirFuncName: string = "";
 
     readonly stdTypes: StdTypes;
 
     /** to every file is assigned a unique string used to prefix exported value,
-     * to guarantee we have unique keys in the `this.values` map 
+     * to guarantee we have unique keys in the `this.constants` map 
     **/
     readonly filePrefix: Map<string, string>;
 
@@ -47,12 +80,12 @@ export class TirProgram extends DiagnosticEmitter
         this.types = new Map();
         this.filePrefix = new Map();
 
-        this.stdScope = new Scope( undefined, { isFunctionDeclScope: false } );
+        this.stdScope = new Scope( undefined, { isFunctionDeclScope: false, isMethodScope: false } );
         populateStdScope( this );
 
         this.stdTypes = new StdTypes( this );
 
-        this.preludeScope = new Scope( this.stdScope, { isFunctionDeclScope: false } );
+        this.preludeScope = new Scope( this.stdScope, { isFunctionDeclScope: false, isMethodScope: false } );
         populatePreludeScope( this );
     }
 

@@ -7,17 +7,12 @@ import { Scope, ScopeInfos } from "./scope/Scope";
 
 export interface AstCompilationCtxFuncInfo {
     /** present where the function definition is inside
-     * an other funciton definiton (closure)
+     * an other function definiton (closure)
      * 
      * in which case, only constants from the parent funciton can be used
     **/
     parentFunctionCtx: AstCompilationCtxFuncInfo | undefined;
-    returnHints: {
-        type: TirType | undefined;
-        isInferred: boolean;
-    };
-    /** to check for recursive functions while inferring return type */
-    funcName: string;
+    returnType: TirType
 }
 
 export interface IAstCompilationCtx {
@@ -55,21 +50,18 @@ export class AstCompilationCtx extends DiagnosticEmitter
         );
     }
 
-    newFunctionChildScope( funcName: string ): AstCompilationCtx
+    newFunctionChildScope( returnType: TirType, isMethod: boolean ): AstCompilationCtx
     {
         return new AstCompilationCtx(
             this.program,
             this.scope.newChildScope({
                 ...this.scope.infos,
-                isFunctionDeclScope: true
+                isFunctionDeclScope: true,
+                isMethodScope: isMethod
             }),
             { // function ctx
-                funcName,
                 parentFunctionCtx: this.functionCtx,
-                returnHints: {
-                    type: undefined,
-                    isInferred: false
-                }
+                returnType
             },
             false, // isLoop
             this.diagnostics

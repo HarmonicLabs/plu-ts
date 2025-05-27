@@ -12,7 +12,6 @@ import { TirUnaryTilde } from "../../../tir/expressions/unary/TirUnaryTilde";
 import { TirType } from "../../../tir/types/TirType";
 import { canAssignTo } from "../../../tir/types/utils/canAssignTo";
 import { AstCompilationCtx } from "../../AstCompilationCtx";
-import { bool_t, any_optional_t, int_t, bytes_t } from "../../../tir/program/stdScope/stdScope";
 import { _compileExpr } from "./_compileExpr";
 
 export function _compileUnaryPrefixExpr(
@@ -21,6 +20,10 @@ export function _compileUnaryPrefixExpr(
     _typeHint: TirType | undefined
 ): TirUnaryPrefixExpr | undefined
 {
+    const bool_t = ctx.program.stdTypes.bool;
+    const int_t = ctx.program.stdTypes.int;
+    const bytes_t = ctx.program.stdTypes.bytes;
+        
     if( expr instanceof UnaryExclamation )
     {
         const operand = _compileExpr( ctx, expr.operand, bool_t );

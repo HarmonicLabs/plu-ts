@@ -4,7 +4,6 @@ import { TirBitwiseAndExpr } from "../../../../tir/expressions/binary/TirBinaryE
 import { TirType } from "../../../../tir/types/TirType";
 import { canAssignTo } from "../../../../tir/types/utils/canAssignTo";
 import { AstCompilationCtx } from "../../../AstCompilationCtx";
-import { bytes_t } from "../../../../tir/program/stdScope/stdScope";
 import { _compileExpr } from "../_compileExpr";
 
 export function _compileBitwiseAndExpr(
@@ -13,6 +12,8 @@ export function _compileBitwiseAndExpr(
     _typeHint: TirType | undefined
 ): TirBitwiseAndExpr | undefined
 {
+    const bytes_t = ctx.program.stdTypes.bytes;
+    
     const left = _compileExpr( ctx, expr.left, bytes_t );
     if( !left ) return undefined;
 

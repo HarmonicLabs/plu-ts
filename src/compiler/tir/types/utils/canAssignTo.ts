@@ -1,9 +1,10 @@
 import { TirAliasType } from "../TirAliasType";
-import { TirBoolT, TirBytesT, TirDataT, TirIntT, TirLinearMapT, TirListT, TirOptT, TirStringT, TirVoidT, TirFuncT } from "../TirNativeType";
+import { TirBoolT, TirBytesT, TirDataT, TirIntT, TirLinearMapT, TirListT, TirOptT, TirStringT, TirVoidT, TirFuncT, TirSopOptT, TirDataOptT } from "../TirNativeType";
 import { StructFlags, TirStructConstr, TirStructType } from "../TirStructType";
 import { isTirNamedDestructableType, TirNamedDestructableType, TirType } from "../TirType";
 import { TirTypeParam } from "../TirTypeParam";
 import { canCastToData } from "./canCastTo";
+import { getUnaliased } from "./getUnaliased";
 
 export enum CanAssign { 
     LeftArgIsNotConcrete = -1,
@@ -36,6 +37,15 @@ export function getNamedDestructableType( type: TirType | undefined ): TirNamedD
     return type;
 }
 
+export function canAssignToOptional( type: TirType ): boolean
+{
+    type = getUnaliased( type );
+
+    return (
+        type instanceof TirDataOptT
+        || type instanceof TirSopOptT
+    );
+}
 
 /**
  * @returns `true` if `a` can be assigned to `b` **without** explicit cast

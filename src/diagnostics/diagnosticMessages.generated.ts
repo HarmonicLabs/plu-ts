@@ -3,6 +3,7 @@
 /** Enum of available diagnostic codes. */
 export enum DiagnosticCode {
     Not_implemented_0 = 100,
+    Main_function_is_missing = 101,
     Conversion_from_type_0_to_1_requires_an_explicit_cast = 200,
     Conversion_from_type_0_to_1_will_require_an_explicit_cast_when_switching_between_32_64_bit = 201,
     Type_0_cannot_be_changed_to_type_1 = 202,
@@ -83,7 +84,13 @@ export enum DiagnosticCode {
     type_declarations_and_interfaces_are_only_allowed_at_the_top_level = 279,
     Type_0_cannot_be_encoded_as_data = 280,
     Type_0_cannot_be_encoded_as_data_but_it_has_a_runtime_encoding_Use_runtime_keyword_modifier_for_the_declaration = 281,
-    Default_method_implementatitons_are_not_supported_defaullt_implementation_will_be_ignored = 282,
+    Default_method_implementatitons_are_not_supported_default_implementation_will_be_ignored = 282,
+    Interface_implementations_cannot_be_exported = 282,
+    Method_implementations_are_only_allowed_for_types_declared_locally = 283,
+    Method_0_is_already_implemented = 283,
+    While_compiling_function_expression_expected_type_was_not_a_function = 284,
+    Could_not_infer_function_signature_parameter_type_is_missing = 285,
+    Could_not_infer_function_signature_return_type_is_missing = 286,
     Importing_the_table_disables_some_indirect_call_optimizations = 901,
     Exporting_the_table_disables_some_indirect_call_optimizations = 902,
     Expression_compiles_to_a_dynamic_check_at_runtime = 903,
@@ -268,6 +275,7 @@ export enum DiagnosticCode {
 export function diagnosticCodeToString(code: DiagnosticCode): string {
     switch (code) {
         case 100: return "Not implemented: {0}";
+        case 101: return "Main function is missing";
         case 200: return "Conversion from type '{0}' to '{1}' requires an explicit cast.";
         case 201: return "Conversion from type '{0}' to '{1}' will require an explicit cast when switching between 32/64-bit.";
         case 202: return "Type '{0}' cannot be changed to type '{1}'.";
@@ -348,7 +356,13 @@ export function diagnosticCodeToString(code: DiagnosticCode): string {
         case 279: return "type declarations and interfaces are only allowed at the top level.";
         case 280: return "Type '{0}' cannot be encoded as data";
         case 281: return "Type '{0}' cannot be encoded as data, but it has a runtime encoding. Use `runtime` keyword modifier for the declaration.";
-        case 282: return "Default method implementatitons are not supported. defaullt implementation will be ignored.";
+        case 282: return "Default method implementatitons are not supported. default implementation will be ignored.";
+        case 282: return "Interface implementations cannot be exported.";
+        case 283: return "Method implementations are only allowed for types declared locally.";
+        case 283: return "Method '{0}' is already implemented.";
+        case 284: return "While compiling function expression; expected type was not a function.";
+        case 285: return "Could not infer function signature, parameter type is missing.";
+        case 286: return "Could not infer function signature, return type is missing.";
         case 901: return "Importing the table disables some indirect call optimizations.";
         case 902: return "Exporting the table disables some indirect call optimizations.";
         case 903: return "Expression compiles to a dynamic check at runtime.";

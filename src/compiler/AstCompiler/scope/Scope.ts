@@ -1,15 +1,36 @@
 import { AstFuncType } from "../../../ast/nodes/types/AstNativeTypeExpr";
-import { AstTypeExpr } from "../../../ast/nodes/types/AstTypeExpr";
-import { PEBBLE_INTERNAL_IDENTIFIER_PREFIX, PEBBLE_INTERNAL_IDENTIFIER_SEPARATOR } from "../../internalVar";
-import { TirProgram } from "../../tir/program/TirProgram";
-import { TirFuncT } from "../../tir/types/TirNativeType";
 import { TirType } from "../../tir/types/TirType";
 import { getStructType } from "../../tir/types/utils/canAssignTo";
-import { PebbleConcreteTypeSym, PebbleGenericSym } from "./symbols/PebbleSym";
 
 export interface ScopeInfos {
     isFunctionDeclScope: boolean;
+    isMethodScope: boolean;
 }
+
+const defauldScopeInfos: ScopeInfos = Object.freeze({
+    isFunctionDeclScope: false,
+    isMethodScope: false
+});
+
+function normalizeScopeInfos( infos: Partial<ScopeInfos> ): ScopeInfos
+{
+    const result = {
+        ...defauldScopeInfos,
+        ...infos
+    };
+
+    result.isFunctionDeclScope = !!result.isFunctionDeclScope;
+    result.isMethodScope = !!result.isMethodScope;
+
+    // method scope == true
+    // implies function decl scope also == true
+    result.isFunctionDeclScope = result.isFunctionDeclScope || result.isMethodScope;
+
+    return result;
+}
+
+export type AstFuncName = string;
+export type TirFuncName = string;
 
 const invalidSymbolNames = new Set([
     "this"
@@ -40,6 +61,7 @@ export interface PossibleTirTypes {
     sopTirName: string;
     dataTirName: string | undefined;
     allTirNames: Set<string>;
+    methodsNames: Map<AstFuncName, TirFuncName>;
     isGeneric: boolean;
 }
 
@@ -59,14 +81,20 @@ export class Scope
      */
     readonly interfaces: Map<string, Map<string, AstFuncType>> = new Map();
     /**
-     * ast name -> Set<tir name>
+     * ast name -> tir name
      * 
-     * we support overload
+     * the process is:
+     * (->) 1 to 1
+     * (=>) 1 to many
      * 
-     * (not only for explicit overload,
-     * but also for implicit ones where ambiguous structs are used)
+     * ast name
+     * -> tir name (in program)
+     * => signatures (different encodings) (ast node saved here)
+     * => func values (registered in the program)
+     * 
+     * user overloads NOT SUPPORTED
      **/
-    readonly functions: Map<string, Set<string>> = new Map();
+    readonly functions: Map<AstFuncName, TirFuncName> = new Map();
     /**
      * ast name -> variable infos (name, type, isConstant)
      */
@@ -74,11 +102,13 @@ export class Scope
     readonly aviableConstructors: Map<string, IAvaiableConstructor> = new Map();
 
     private _isReadonly = false;
-
+    readonly infos: ScopeInfos;
+    
     constructor(
         parent: Scope | undefined,
-        readonly infos: ScopeInfos,
+        infos: Partial<ScopeInfos>,
     ) {
+        this.infos = normalizeScopeInfos( infos );
         this._isReadonly = false;
 
         this.parent = parent;
@@ -87,7 +117,8 @@ export class Scope
     defineUnambigousType(
         astName: string,
         tirTypeKey: string,
-        allowsDataEncoding: boolean
+        allowsDataEncoding: boolean,
+        methodsNames: Map<AstFuncName, TirFuncName>
     ): boolean
     {
         if( this._isReadonly ) return false;
@@ -99,6 +130,7 @@ export class Scope
             sopTirName: tirTypeKey,
             dataTirName: allowsDataEncoding ? undefined : tirTypeKey,
             allTirNames: new Set([ tirTypeKey ]),
+            methodsNames,
             isGeneric: false
         });
         return true;
@@ -118,12 +150,19 @@ export class Scope
         return true;
     }
 
+    resolveLocalType(
+        astName: string
+    ): PossibleTirTypes | undefined
+    {
+        return this.types.get( astName );
+    }
+    
     resolveType(
         astName: string
     ): PossibleTirTypes | undefined
     {
         return (
-            this.types.get( astName )
+            this.resolveLocalType( astName )
             ?? this.parent?.resolveType( astName )
         );
     }
@@ -156,7 +195,7 @@ export class Scope
 
     readonly(): void { this._isReadonly = true; }
 
-    newChildScope( infos: ScopeInfos ): Scope
+    newChildScope( infos: Partial<ScopeInfos> ): Scope
     {
         return new Scope( this, infos );
     }
@@ -212,7 +251,7 @@ export class Scope
         for( const [key, value] of this.functions )
             cloned.functions.set(
                 key,
-                new Set( value )
+                value
             );
 
         for( const [key, value] of this.types )
@@ -235,16 +274,4 @@ export class Scope
 
         return cloned;
     }
-}
-
-function applyGenericType( 
-    genericSym: PebbleGenericSym,
-    argsSyms: PebbleConcreteTypeSym[]
-): TirType | undefined
-{
-    if( argsSyms.length !== genericSym.nTypeParameters )
-        return undefined;
-
-    const args = argsSyms.map( arg => arg.concreteType );
-    return genericSym.getConcreteType( ...args );
 }

@@ -1,13 +1,14 @@
 import { isObject } from "@harmoniclabs/obj-utils";
 import { TirInterfaceImpl } from "./TirInterfaceImpl";
 import { TirType } from "./TirType";
+import { AstFuncName, TirFuncName } from "../../AstCompiler/scope/Scope";
 
 export interface ITirStructType {
     readonly name: string;
     readonly fileUid: string;
     readonly constructors: TirStructConstr[];
     /** points to an array possibly shared with alternative encoding types */
-    readonly implsPtr: TirInterfaceImpl[];
+    readonly methodNamesPtr: Map<AstFuncName, TirFuncName>,
 }
 
 export type TirStructType
@@ -31,7 +32,7 @@ export class TirDataStructType
         readonly fileUid: string,
         readonly constructors: TirStructConstr[],
         /** points to an array possibly shared with alternative encoding types */
-        readonly implsPtr: TirInterfaceImpl[],
+        readonly methodNamesPtr: Map<AstFuncName, TirFuncName>,
     ) {}
 
     hasDataEncoding(): boolean { return true; }
@@ -66,7 +67,7 @@ export class TirDataStructType
             this.name,
             this.fileUid,
             this.constructors.map( c => c.clone() ),
-            this.implsPtr
+            this.methodNamesPtr
         );
         result._isConcrete = this._isConcrete;
         return result;
@@ -81,7 +82,7 @@ export class TirSoPStructType
         readonly fileUid: string,
         readonly constructors: TirStructConstr[],
         /** points to an array possibly shared with alternative encoding types */
-        readonly implsPtr: TirInterfaceImpl[],
+        readonly methodNamesPtr: Map<AstFuncName, TirFuncName>,
     ) {}
 
     hasDataEncoding(): boolean { return false; }
@@ -116,7 +117,7 @@ export class TirSoPStructType
             this.name,
             this.fileUid,
             this.constructors.map( c => c.clone() ),
-            this.implsPtr
+            this.methodNamesPtr
         );
         result._isConcrete = this._isConcrete;
         return result;

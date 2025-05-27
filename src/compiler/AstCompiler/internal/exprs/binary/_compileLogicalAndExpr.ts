@@ -4,7 +4,6 @@ import { TirLogicalAndExpr } from "../../../../tir/expressions/binary/TirBinaryE
 import { TirType } from "../../../../tir/types/TirType";
 import { canAssignTo } from "../../../../tir/types/utils/canAssignTo";
 import { AstCompilationCtx } from "../../../AstCompilationCtx";
-import { bool_t } from "../../../../tir/program/stdScope/stdScope";
 import { _compileExpr } from "../_compileExpr";
 
 export function _compileLogicalAndExpr(
@@ -13,6 +12,8 @@ export function _compileLogicalAndExpr(
     _typeHint: TirType | undefined
 ): TirLogicalAndExpr | undefined
 {
+    const bool_t = ctx.program.stdTypes.bool;
+
     const left = _compileExpr( ctx, expr.left, bool_t );
     if( !left ) return undefined;
 

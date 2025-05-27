@@ -12,6 +12,8 @@ export function _compileIsExpr(
     _typeHint: TirType | undefined
 ): TirIsExpr | undefined
 {
+    const bool_t = ctx.program.stdTypes.bool;
+    
     const target = _compileExpr( ctx, expr.instanceExpr, undefined );
     if( !target ) return undefined;
 

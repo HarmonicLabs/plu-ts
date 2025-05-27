@@ -2,14 +2,15 @@ import { AstNamedTypeExpr } from "../../../../ast/nodes/types/AstNamedTypeExpr";
 import { AstVoidType, AstBooleanType, AstIntType, AstBytesType, AstNativeOptionalType, AstListType, AstLinearMapType, AstFuncType } from "../../../../ast/nodes/types/AstNativeTypeExpr";
 import { AstTypeExpr } from "../../../../ast/nodes/types/AstTypeExpr";
 import { DiagnosticCode } from "../../../../diagnostics/diagnosticMessages.generated";
-import { TirListT, TirLinearMapT, TirDataOptT } from "../../../tir/types/TirNativeType";
+import { TirListT, TirLinearMapT, TirDataOptT, TirSopOptT } from "../../../tir/types/TirNativeType";
 import { TirType } from "../../../tir/types/TirType";
 import { AstCompilationCtx } from "../../AstCompilationCtx";
 
 
 export function _compileDataEncodedConcreteType(
     ctx: AstCompilationCtx,
-    typeExpr: AstTypeExpr
+    typeExpr: AstTypeExpr,
+    optionalsAsSop: boolean = false
 ): TirType | undefined
 {
     if( typeExpr instanceof AstVoidType ) return ctx.program.stdTypes.void;
@@ -26,7 +27,7 @@ export function _compileDataEncodedConcreteType(
         )) return undefined;
 
         return ctx.program.getAppliedGeneric(
-            TirDataOptT.toTirTypeKey(),
+            optionalsAsSop ? TirSopOptT.toTirTypeKey() : TirDataOptT.toTirTypeKey(),
             [ compiledArg ]
         );
     }

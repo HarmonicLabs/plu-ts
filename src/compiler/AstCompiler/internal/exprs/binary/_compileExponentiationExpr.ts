@@ -4,7 +4,6 @@ import { TirExponentiationExpr } from "../../../../tir/expressions/binary/TirBin
 import { TirType } from "../../../../tir/types/TirType";
 import { canAssignTo } from "../../../../tir/types/utils/canAssignTo";
 import { AstCompilationCtx } from "../../../AstCompilationCtx";
-import { int_t } from "../../../../tir/program/stdScope/stdScope";
 import { _compileExpr } from "../_compileExpr";
 
 export function _compileExponentiationExpr(
@@ -13,6 +12,8 @@ export function _compileExponentiationExpr(
     _typeHint: TirType | undefined
 ): TirExponentiationExpr | undefined
 {
+    const int_t = ctx.program.stdTypes.int;
+
     const left = _compileExpr( ctx, expr.left, int_t );
     if( !left ) return undefined;
 

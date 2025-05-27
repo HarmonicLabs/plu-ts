@@ -6,7 +6,6 @@ import { ImportStmt } from "../../ast/nodes/statements/ImportStmt";
 import { PebbleStmt } from "../../ast/nodes/statements/PebbleStmt";
 import { Source, SourceKind } from "../../ast/Source/Source";
 import { SourceRange } from "../../ast/Source/SourceRange";
-import { extension } from "../../common";
 import { DiagnosticEmitter } from "../../diagnostics/DiagnosticEmitter";
 import { DiagnosticMessage } from "../../diagnostics/DiagnosticMessage";
 import { DiagnosticCode } from "../../diagnostics/diagnosticMessages.generated";
@@ -14,11 +13,10 @@ import { CompilerOptions } from "../../IR/toUPLC/CompilerOptions";
 import { Parser } from "../../parser/Parser";
 import { CompilerIoApi, createMemoryCompilerIoApi } from "../io/CompilerIoApi";
 import { IPebbleCompiler } from "../IPebbleCompiler";
-import { PossibleTirTypes, Scope } from "./scope/Scope";
+import { AstFuncName, PossibleTirTypes, Scope, TirFuncName } from "./scope/Scope";
 import { TirProgram } from "../tir/program/TirProgram";
-import { PebbleAnyTypeSym, PebbleConcreteTypeSym } from "./scope/symbols/PebbleSym";
 import { TirAliasType } from "../tir/types/TirAliasType";
-import { TirDataStructType, TirSoPStructType, TirStructConstr, TirStructField, TirStructType } from "../tir/types/TirStructType";
+import { TirDataStructType, TirSoPStructType, TirStructConstr, TirStructField } from "../tir/types/TirStructType";
 import { ExportStmt } from "../../ast/nodes/statements/ExportStmt";
 import { ResolveStackNode } from "./utils/deps/ResolveStackNode";
 import { AstCompilationCtx } from "./AstCompilationCtx";
@@ -26,16 +24,29 @@ import { _compileStatement } from "./internal/statements/_compileStatement";
 import { _compileExpr } from "./internal/exprs/_compileExpr";
 import { _compileDataEncodedConcreteType } from "./internal/types/_compileDataEncodedConcreteType";
 import { getAbsolutePath, getEnvRelativePath } from "../path/getAbsolutePath";
-import { isTirType, TirType } from "../tir/types/TirType";
+import { TirType } from "../tir/types/TirType";
 import { TirInterfaceImpl } from "../tir/types/TirInterfaceImpl";
 import { _compileSopEncodedConcreteType } from "./internal/types/_compileSopEncodedConcreteType";
 import { InterfaceDecl } from "../../ast/nodes/statements/declarations/InterfaceDecl";
-import { AstTypeExpr } from "../../ast/nodes/types/AstTypeExpr";
 import { AstFuncType } from "../../ast/nodes/types/AstNativeTypeExpr";
 import { FuncDecl } from "../../ast/nodes/statements/declarations/FuncDecl";
-import { isVarStmt, VarStmt } from "../../ast/nodes/statements/VarStmt";
-import { getFuncSignatureTirVariants } from "./utils/getFuncSignatureTirVariants/getFuncSignatureTirVariants";
+import { VarStmt } from "../../ast/nodes/statements/VarStmt";
+import { getTirFuncSigTree } from "./utils/getTirFuncSigTree/getTirFuncSigTree";
+import { InterfaceMethodImpl, TypeImplementsStmt } from "../../ast/nodes/statements/TypeImplementsStmt";
+import { PEBBLE_INTERNAL_IDENTIFIER_PREFIX } from "../internalVar";
+import { AstNamedTypeExpr } from "../../ast/nodes/types/AstNamedTypeExpr";
+import { FuncExpr } from "../../ast/nodes/expr/functions/FuncExpr";
+import { CommonFlags } from "../../common";
+import { SimpleVarDecl } from "../../ast/nodes/statements/declarations/VarDecl/SimpleVarDecl";
+import { Identifier } from "../../ast/nodes/common/Identifier";
+import { ArrowKind } from "../../ast/nodes/expr/functions/ArrowKind";
+import { _compileFuncExpr } from "./internal/exprs/_compileFuncExpr";
 
+export interface AstTypeDefCompilationResult {
+    sop: TirType | undefined,
+    data: TirType | undefined
+    methodsNames: Map<AstFuncName, TirFuncName>
+}
 /*
 Handling type expressions that depend on other types 
 (such as generics, function return types, and inferred types from complex expressions)
@@ -109,15 +120,24 @@ export class AstCompiler extends DiagnosticEmitter
             throw new Error("entry file not found");
         }
 
-        await this.compileFile( filePath );
+        await this.compileFile( filePath, true );
         if( this.diagnostics.length > 0 )
             throw new Error("compilation failed");
+
+        const mainFuncExpr = this.program.funcSigs.get( this.program.contractTirFuncName );
+        if( this.program.contractTirFuncName === "" || !mainFuncExpr ) {
+            this.error(
+                DiagnosticCode.Main_function_is_missing,
+                undefined
+            );
+            return this.program;
+        }
 
         return this.program;
     }
 
     // mutually recursive
-    async compileFile( path: string ): Promise<void>
+    async compileFile( path: string, isMain = false ): Promise<void>
     {
         const src = await this.getAbsoulteProjPathSource( path );
         if( !src ) return;
@@ -130,7 +150,7 @@ export class AstCompiler extends DiagnosticEmitter
         // if there were errors
         if( this.diagnostics.length > 0 ) return;
 
-        return this._compileParsedSource( src );
+        return this._compileParsedSource( src, isMain );
     }
 
     private readonly _srcDonelogUids = new Set<string>();
@@ -138,7 +158,7 @@ export class AstCompiler extends DiagnosticEmitter
      * translates the source AST statements
      * to TIR statements; and saves the result in `this.program`
      */
-    private async _compileParsedSource( src: Source ): Promise<void>
+    private async _compileParsedSource( src: Source, isMain = false ): Promise<void>
     {
         if( this._srcDonelogUids.has( src.uid ) ) return;
 
@@ -169,24 +189,23 @@ export class AstCompiler extends DiagnosticEmitter
             srcExports,
         );
 
-        // adds interface **implementations** to types declared in this file
-        this._applyInterfaceImplementations(
+        // collects top level functions, methods (interface impls), and consts types
+        this._collectAllTopLevelSignatures(
             stmts,
             src.uid,
-            topLevelScope
+            topLevelScope,
+            srcExports,
+            isMain
         );
 
+        /*
         this._compileTopLevelFunctionsAndConsts(
             stmts,
             src.uid,
             topLevelScope,
             srcExports
         );
-
-        this._handleReExports(
-            stmts,
-            srcExports
-        );
+        //*/
 
         this.program.setExportedSymbols(
             src.absoluteProjPath,
@@ -196,67 +215,231 @@ export class AstCompiler extends DiagnosticEmitter
         this._srcDonelogUids.add( src.uid );
     }
 
-    private _compileTopLevelFunctionsAndConsts(
+    private _collectAllTopLevelSignatures(
         stmts: PebbleStmt[],
         srcUid: string,
         topLevelScope: Scope,
-        srcExports: Scope
+        srcExports: Scope,
+        isMain: boolean = false
     ): void
     {
         for( let i = 0; i < stmts.length; i++ )
         {
             let stmt = stmts[i];
             let exported = false;
+            let exportRange: SourceRange | undefined = undefined;
             if( stmt instanceof ExportStmt )
             {
                 exported = true;
+                exportRange = stmt.range;
                 stmt = stmt.stmt;
             }
-            
-            if( stmt instanceof FuncDecl ) this._compileTopLevelFuncDecl(
-                stmt,
-                exported,
-                srcUid,
-                topLevelScope,
-                srcExports
+
+            if(!(
+                stmt instanceof FuncDecl
+                || stmt instanceof TypeImplementsStmt
+            )) continue;
+
+            if( exported && stmt instanceof TypeImplementsStmt )
+            this.error(
+                DiagnosticCode.Interface_implementations_cannot_be_exported,
+                exportRange ?? stmt.range,
             );
 
-            if( stmt instanceof VarStmt )
-            {
-                for( const decl of stmt.declarations )
-                {
-                    if( !decl.isConst() ) this.error(
-                        DiagnosticCode.Only_constants_can_be_declared_outside_of_a_function,
-                        decl.range
-                    );
-                    this._compileTopLevelConst(
-                        decl,
-                        exported,
-                        srcUid,
-                        topLevelScope,
-                        srcExports
-                    );
-                }
-            }
+            if( stmt instanceof FuncDecl )
+            this._collectTopLevelFuncDeclSig(
+                stmt,
+                srcUid,
+                topLevelScope,
+                srcExports,
+                exportRange,
+                isMain
+            );
+            else
+            this._collectInterfaceImplSigs(
+                stmt,
+                srcUid,
+                topLevelScope
+            );
+
+            // remove from array so we don't process it again
+            void stmts.splice( i, 1 );
+            i--;
         }
     }
 
-    private _compileTopLevelFuncDecl(
-        stmt: FuncDecl,
-        exported: boolean,
+    private _collectInterfaceImplSigs(
+        stmt: TypeImplementsStmt,
         srcUid: string,
-        topLevelScope: Scope,
-        srcExports: Scope
+        topLevelScope: Scope
     ): void
     {
-        const func = stmt.expr;
-        const funcName = func.name.text;
-        const funcAstType = func.signature;
+        stmt.typeIdentifier;
+        stmt.interfaceType;
+        stmt.methodImplementations;
+        // stmt.range;
 
-        const variants = getFuncSignatureTirVariants(
-            funcAstType,
-            AstCompilationCtx.fromScope( this.program, topLevelScope )
+        if(
+            stmt.typeIdentifier instanceof AstNamedTypeExpr
+            && stmt.typeIdentifier.tyArgs.length > 0
+        ) return this.error(
+            DiagnosticCode.Not_implemented_0,
+            stmt.typeIdentifier.range,
+            "generic types interface implementations"
         );
+
+        const typeAstName = stmt.typeIdentifier.toAstName();
+        const possibleTirTypes = topLevelScope.resolveLocalType( typeAstName );
+        if( !possibleTirTypes )
+        return this.error(
+            DiagnosticCode.Method_implementations_are_only_allowed_for_types_declared_locally,
+            stmt.typeIdentifier.range
+        );
+
+        const uniqueTypeAstName = PEBBLE_INTERNAL_IDENTIFIER_PREFIX + typeAstName + "_" + srcUid;
+        const typeMethodsMap = possibleTirTypes.methodsNames;
+
+        for( const method of stmt.methodImplementations )
+        {
+            if(!( method instanceof InterfaceMethodImpl )) continue;
+
+            if( method.typeParameters.length > 0 )
+            {
+                this.error(
+                    DiagnosticCode.Not_implemented_0,
+                    method.methodName.range,
+                    "generic methods"
+                );
+                continue;
+            }
+
+            const astMethodName = method.methodName.text;
+            const tirMethodName = uniqueTypeAstName + "." + uniqueTypeAstName;
+
+            if( typeMethodsMap.has( astMethodName ) )
+            {
+                this.error(
+                    DiagnosticCode.Method_0_is_already_implemented,
+                    method.methodName.range,
+                    astMethodName
+                );
+                continue;
+            }
+            typeMethodsMap.set( astMethodName, tirMethodName );
+
+            const completeSig = new AstFuncType([
+                    new SimpleVarDecl(
+                        new Identifier("this", stmt.typeIdentifier.range),
+                        stmt.typeIdentifier,
+                        undefined, // initExpr
+                        CommonFlags.None,
+                        stmt.typeIdentifier.range
+                    ),
+                    ...method.signature.params
+                ],
+                method.signature.returnType,
+                method.signature.range,
+            );
+            const funcExpr = new FuncExpr(
+                method.methodName,
+                CommonFlags.None,
+                [], // method.typeParameters,
+                completeSig,
+                method.body,
+                ArrowKind.None,
+                method.range
+            );
+
+            const declContext = AstCompilationCtx.fromScope( this.program, topLevelScope )
+            // const sigRoot = getTirFuncSigTree(
+            //     completeSig,
+            //     declContext
+            // );
+
+            this.program.funcSigs.set(
+                tirMethodName,
+                {
+                    // sigRoot,
+                    tirSigName: tirMethodName,
+                    astDecl: funcExpr,
+                    concreteInstantiations: new Set(),
+                    declContext,
+                    fullyExtractedForm: undefined,
+                    isMethod: true
+                }
+            );
+        }
+
+    }
+
+    private _collectTopLevelFuncDeclSig(
+        stmt: FuncDecl,
+        srcUid: string,
+        topLevelScope: Scope,
+        srcExports: Scope | undefined = undefined,
+        exportRange: SourceRange | undefined = undefined,
+        isMain: boolean = false
+    ): void
+    {
+        const funcExpr = stmt.expr;
+        const astFuncName = funcExpr.name.text;
+        const tirFuncName = PEBBLE_INTERNAL_IDENTIFIER_PREFIX + astFuncName + "_" + srcUid;
+        
+        const declContext = AstCompilationCtx.fromScope( this.program, topLevelScope );
+        
+        this.program.funcSigs.set(
+            tirFuncName,
+            {
+                // sigRoot,
+                tirSigName: tirFuncName,
+                astDecl: funcExpr,
+                concreteInstantiations: new Set(),
+                declContext,
+                fullyExtractedForm: undefined,
+                isMethod: false
+            }
+        );
+
+        if(
+            topLevelScope.variables.has( astFuncName )
+            || topLevelScope.functions.has( astFuncName )
+        )
+        return this.error(
+            DiagnosticCode._0_is_already_defined,
+            funcExpr.name.range,
+            astFuncName
+        );
+
+        topLevelScope.functions.set(
+            astFuncName,
+            tirFuncName
+        );
+
+        if( exportRange && srcExports )
+        {
+            if(
+                srcExports.functions.has( astFuncName )
+                || srcExports.variables.has( astFuncName )
+            )
+            return this.error(
+                DiagnosticCode._0_is_already_exported,
+                exportRange,
+                astFuncName
+            );
+            else
+            {
+                srcExports.functions.set(
+                    astFuncName,
+                    tirFuncName
+                );
+            }
+        }
+
+        if(
+            isMain
+            && this.program.contractTirFuncName === ""
+            && funcExpr.name.text === "main"
+        ) this.program.contractTirFuncName = tirFuncName;
     }
 
     private _collectInterfaceDeclarations(
@@ -284,7 +467,7 @@ export class AstCompiler extends DiagnosticEmitter
             const methods: Map<string, AstFuncType> = new Map();
             for( const astMethod of stmt.methods ) {
                 if( astMethod.body ) this.warning(
-                    DiagnosticCode.Default_method_implementatitons_are_not_supported_defaullt_implementation_will_be_ignored,
+                    DiagnosticCode.Default_method_implementatitons_are_not_supported_default_implementation_will_be_ignored,
                     astMethod.body.range
                 );
                 methods.set( astMethod.name.text, astMethod.signature )
@@ -345,9 +528,10 @@ export class AstCompiler extends DiagnosticEmitter
                 allTirNames: new Set([
                     sopTirName,
                     dataTirName,
-                ].filter( str => typeof str === "string" )),
+                ].filter( str => typeof str === "string" )) as Set<string>,
+                methodsNames: tirTypes.methodsNames,
                 isGeneric,
-            });
+            } as PossibleTirTypes);
 
             // define on scope
             void topLevelScope.defineType(
@@ -388,12 +572,12 @@ export class AstCompiler extends DiagnosticEmitter
         stmt: StructDecl,
         srcUid: string,
         topLevelScope: Scope
-    ): { sop: TirSoPStructType | undefined, data: TirDataStructType | undefined } | undefined
+    ): AstTypeDefCompilationResult | undefined
     {
         if( stmt.typeParams.length > 0 ) throw new Error("not_implemented::AstCompiler::_compileStructDecl::typeParams");
         const compiler = this;
 
-        const typeImpls: TirInterfaceImpl[] = [];
+        const methodsNames: Map<AstFuncName, TirFuncName> = new Map();
 
         let sop: TirSoPStructType | undefined = undefined;
         let data: TirDataStructType | undefined = undefined;
@@ -429,7 +613,7 @@ export class AstCompiler extends DiagnosticEmitter
                             .filter( f => f instanceof TirStructField ) as TirStructField[]
                         )
                     ),
-                    typeImpls
+                    methodsNames
                 )
             );
         }
@@ -469,7 +653,7 @@ export class AstCompiler extends DiagnosticEmitter
                         .filter( f => f instanceof TirStructField ) as TirStructField[]
                     )
                 ),
-                typeImpls
+                methodsNames
             );
 
             if( canEncodeToData ) data = dataType;
@@ -487,14 +671,14 @@ export class AstCompiler extends DiagnosticEmitter
                 );
         }
 
-        return sop || data ? { sop, data } : undefined;
+        return sop || data ? { sop, data, methodsNames } : undefined;
     }
 
     private _compileTypeAliasDecl(
         stmt: TypeAliasDecl,
         srcUid: string,
         topLevelScope: Scope
-    ): { sop: TirType | undefined, data: TirType | undefined } | undefined
+    ): AstTypeDefCompilationResult | undefined
     {
         if( stmt.typeParams.length > 0 ) throw new Error("not_implemented::AstCompiler::_compileTypeAliasDecl::typeParams");
         const compiler = this;
@@ -507,20 +691,22 @@ export class AstCompiler extends DiagnosticEmitter
             stmt.aliasedType
         );
 
+        const methodsNames: Map<AstFuncName, TirFuncName> = new Map();
+
         const sop = sopAliasedT ? new TirAliasType(
             stmt.name.text,
             srcUid,
             sopAliasedT,
-            [] // interface implementations
+            methodsNames // interface implementations
         ) : undefined;
         const data = dataAliasedT ? new TirAliasType(
             stmt.name.text,
             srcUid,
             dataAliasedT,
-            [] // interface implementations
+            methodsNames // interface implementations
         ) : undefined;
 
-        return sop || data ? { sop, data } : undefined;
+        return sop || data ? { sop, data, methodsNames } : undefined;
     }
 
     private _consumeImportsAddSymsInScope(

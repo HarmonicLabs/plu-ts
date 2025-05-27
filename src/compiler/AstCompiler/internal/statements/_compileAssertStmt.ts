@@ -3,9 +3,8 @@ import { DiagnosticCode } from "../../../../diagnostics/diagnosticMessages.gener
 import { TirExpr } from "../../../tir/expressions/TirExpr";
 import { TirTypeConversionExpr } from "../../../tir/expressions/TirTypeConversionExpr";
 import { TirAssertStmt } from "../../../tir/statements/TirAssertStmt";
-import { canAssignTo } from "../../../tir/types/utils/canAssignTo";
+import { canAssignTo, canAssignToOptional } from "../../../tir/types/utils/canAssignTo";
 import { AstCompilationCtx } from "../../AstCompilationCtx";
-import { bool_t, any_optional_t, string_t, bytes_t } from "../../../tir/program/stdScope/stdScope";
 import { _compileExpr } from "../exprs/_compileExpr";
 
 export function _compileAssertStmt(
@@ -13,11 +12,15 @@ export function _compileAssertStmt(
     stmt: AssertStmt
 ): [ TirAssertStmt ] | undefined
 {
+    const bool_t = ctx.program.stdTypes.bool;
+    const string_t = ctx.program.stdTypes.string;
+    const bytes_t = ctx.program.stdTypes.bytes;
+
     const tirCond = _compileExpr( ctx, stmt.condition, bool_t );
     if( !tirCond ) return undefined;
     if(
         !canAssignTo( tirCond.type, bool_t )
-        && !canAssignTo( tirCond.type, any_optional_t )
+        && !canAssignToOptional( tirCond.type )
     ) {
         return ctx.error(
             DiagnosticCode.Type_0_is_not_assignable_to_type_1,

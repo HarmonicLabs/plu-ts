@@ -1,5 +1,6 @@
 {
   "Not implemented: {0}": 100,
+  "Main function is missing": 101,
 
   "Conversion from type '{0}' to '{1}' requires an explicit cast.": 200,
   "Conversion from type '{0}' to '{1}' will require an explicit cast when switching between 32/64-bit.": 201,
@@ -81,7 +82,13 @@
   "type declarations and interfaces are only allowed at the top level.": 279,
   "Type '{0}' cannot be encoded as data": 280,
   "Type '{0}' cannot be encoded as data, but it has a runtime encoding. Use `runtime` keyword modifier for the declaration.": 281,
-  "Default method implementatitons are not supported. defaullt implementation will be ignored.": 282,
+  "Default method implementatitons are not supported. default implementation will be ignored.": 282,
+  "Interface implementations cannot be exported.": 282,
+  "Method implementations are only allowed for types declared locally.": 283,
+  "Method '{0}' is already implemented.": 283,
+  "While compiling function expression; expected type was not a function.": 284,
+  "Could not infer function signature, parameter type is missing.": 285,
+  "Could not infer function signature, return type is missing.": 286,
   
   "Importing the table disables some indirect call optimizations.": 901,
   "Exporting the table disables some indirect call optimizations.": 902,
@@ -90,7 +97,7 @@
   "Explicitly returning constructor drops 'this' allocation.": 905,
   "Unnecessary definite assignment.": 906,
   "'NaN' does not compare equal to any other value including itself. Use isNaN(x) instead.": 907,
-  "Comparison with -0.0 is sign insensitive. Use Object.is(x, -0.0) if the sign matters.": 908,
+  "Comparison with -0.0 is sign insensitive. Use Object.is(x, -0.0) if the sign matters.": 908,  
 
 
   "Unterminated string literal.": 1002,

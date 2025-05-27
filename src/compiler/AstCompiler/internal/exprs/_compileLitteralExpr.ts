@@ -29,7 +29,6 @@ import { TirType, isTirType } from "../../../tir/types/TirType";
 import { canAssignTo, isStructOrStructAlias, getStructType } from "../../../tir/types/utils/canAssignTo";
 import { getListTypeArg } from "../../../tir/types/utils/getListTypeArg";
 import { AstCompilationCtx } from "../../AstCompilationCtx";
-import { any_optional_t, any_list_t } from "../../../tir/program/stdScope/stdScope";
 import { _compileExpr } from "./_compileExpr";
 
 export function _compileLitteralExpr(

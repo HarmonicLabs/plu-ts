@@ -1,3 +1,4 @@
+import { AstFuncName, TirFuncName } from "../../AstCompiler/scope/Scope";
 import { TirInterfaceImpl } from "./TirInterfaceImpl";
 import { TirType } from "./TirType";
 
@@ -7,7 +8,7 @@ export class TirAliasType<AliasedT extends  TirType = TirType>
         readonly name: string,
         readonly fileUid: string,
         readonly aliased: AliasedT,
-        readonly impls: TirInterfaceImpl[]
+        readonly methodsNamesPtr: Map<AstFuncName, TirFuncName>,
     ) {}
 
     hasDataEncoding(): boolean {
@@ -38,7 +39,7 @@ export class TirAliasType<AliasedT extends  TirType = TirType>
             this.name,
             this.fileUid,
             this.aliased.clone(),
-            this.impls.map( i => i.clone() )
+            this.methodsNamesPtr
         ) as TirAliasType<AliasedT>;
     }
 }

@@ -4,7 +4,6 @@ import { TirShiftLeftExpr } from "../../../../tir/expressions/binary/TirBinaryEx
 import { TirType } from "../../../../tir/types/TirType";
 import { canAssignTo } from "../../../../tir/types/utils/canAssignTo";
 import { AstCompilationCtx } from "../../../AstCompilationCtx";
-import { bytes_t, int_t } from "../../../../tir/program/stdScope/stdScope";
 import { _compileExpr } from "../_compileExpr";
 
 export function _compileShiftLeftExpr(
@@ -13,6 +12,9 @@ export function _compileShiftLeftExpr(
     _typeHint: TirType | undefined
 ): TirShiftLeftExpr | undefined
 {
+    const int_t = ctx.program.stdTypes.int;
+    const bytes_t = ctx.program.stdTypes.bytes;
+
     const left = _compileExpr( ctx, expr.left, bytes_t );
     if( !left ) return undefined;
 
