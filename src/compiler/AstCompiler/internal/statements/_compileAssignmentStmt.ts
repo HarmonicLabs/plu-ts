@@ -18,8 +18,6 @@ export function _compileAssignmentStmt(
 ): [ TirAssignmentStmt ] | undefined
 {
     const int_t = ctx.program.stdTypes.int;
-    const bytes_t = ctx.program.stdTypes.bytes;
-    const bool_t = ctx.program.stdTypes.bool;
     
     if(
         stmt instanceof IncrStmt
@@ -75,6 +73,10 @@ export function _compileExplicitAssignmentStmt(
     stmt: ExplicitAssignmentStmt
 ): TirAssignmentStmt | undefined
 {
+    const int_t = ctx.program.stdTypes.int;
+    const bytes_t = ctx.program.stdTypes.bytes;
+    const bool_t = ctx.program.stdTypes.bool;
+
     const scope = ctx.scope;
     const resovleResult = scope.resolveValue( stmt.varIdentifier.text );
     if( !resovleResult ) return ctx.error(

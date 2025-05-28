@@ -10,7 +10,7 @@ import { TirUnaryPlus } from "../../../tir/expressions/unary/TirUnaryPlus";
 import { TirUnaryPrefixExpr } from "../../../tir/expressions/unary/TirUnaryPrefixExpr";
 import { TirUnaryTilde } from "../../../tir/expressions/unary/TirUnaryTilde";
 import { TirType } from "../../../tir/types/TirType";
-import { canAssignTo } from "../../../tir/types/utils/canAssignTo";
+import { canAssignTo, canAssignToOptional } from "../../../tir/types/utils/canAssignTo";
 import { AstCompilationCtx } from "../../AstCompilationCtx";
 import { _compileExpr } from "./_compileExpr";
 
@@ -31,7 +31,7 @@ export function _compileUnaryPrefixExpr(
         const operandType = operand.type;
         if(!(
             canAssignTo( operandType, bool_t )
-            || canAssignTo( operandType, any_optional_t )
+            || canAssignToOptional( operandType )
         )) {
             return ctx.error(
                 DiagnosticCode.Type_0_is_not_assignable_to_type_1,

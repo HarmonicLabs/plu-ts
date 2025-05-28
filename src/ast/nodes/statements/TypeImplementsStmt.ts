@@ -22,7 +22,7 @@ export class InterfaceMethodImpl
 {
     constructor(
         readonly methodName: Identifier,
-        readonly typeParameters: AstTypeExpr[],
+        readonly typeParameters: Identifier[],
         readonly signature: AstFuncType,
         readonly body: BlockStmt,
         readonly range: SourceRange,

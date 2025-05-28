@@ -14,7 +14,7 @@ import { TirNamedDeconstructVarDecl } from "../../../tir/statements/TirVarDecl/T
 import { TirSimpleVarDecl } from "../../../tir/statements/TirVarDecl/TirSimpleVarDecl";
 import { TirSingleDeconstructVarDecl } from "../../../tir/statements/TirVarDecl/TirSingleDeconstructVarDecl";
 import { TirVarDecl } from "../../../tir/statements/TirVarDecl/TirVarDecl";
-import { TirOptT, TirDataT } from "../../../tir/types/TirNativeType";
+import { TirDataT } from "../../../tir/types/TirNativeType";
 import { TirStructType, TirStructConstr, TirStructField } from "../../../tir/types/TirStructType";
 import { TirType } from "../../../tir/types/TirType";
 import { getNamedDestructableType, getStructType, canAssignTo } from "../../../tir/types/utils/canAssignTo";
@@ -22,7 +22,6 @@ import { canCastToData } from "../../../tir/types/utils/canCastTo";
 import { getListTypeArg } from "../../../tir/types/utils/getListTypeArg";
 import { AstCompilationCtx } from "../../AstCompilationCtx";
 import { _compileExpr } from "../exprs/_compileExpr";
-import { _compileConcreteTypeExpr } from "../types/_compileDataEncodedConcreteType";
 
 export function _compileVarStmt(
     ctx: AstCompilationCtx,

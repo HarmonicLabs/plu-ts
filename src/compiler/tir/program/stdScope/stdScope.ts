@@ -215,7 +215,7 @@ export function populatePreludeScope( program: TirProgram ): void
                 allTirNames: new Set([
                     sop_key,
                     opts.data ? data_key : undefined
-                ].filter( x => typeof x === "string" )),
+                ].filter( x => typeof x === "string" )) as Set<string>,
                 methodsNames,
                 isGeneric: false
             }
@@ -277,7 +277,7 @@ export function populatePreludeScope( program: TirProgram ): void
                 allTirNames: new Set([
                     sop_key,
                     opts.data ? data_key : undefined
-                ].filter( x => typeof x === "string" )),
+                ].filter( x => typeof x === "string" )) as Set<string>,
                 methodsNames,
                 isGeneric: false
             }

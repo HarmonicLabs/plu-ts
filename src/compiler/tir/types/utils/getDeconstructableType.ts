@@ -1,19 +1,22 @@
 import { TirAliasType } from "../TirAliasType";
-import { TirDataT, TirLinearMapT, TirListT, TirOptT } from "../TirNativeType";
-import { TirStructType } from "../TirStructType";
+import { TirDataOptT, TirDataT, TirLinearMapT, TirListT, TirSopOptT } from "../TirNativeType";
+import { isTirStructType, TirStructType } from "../TirStructType";
 import { TirType } from "../TirType";
 
-export type DeconstructableTirType = TirStructType | TirOptT | TirListT | TirLinearMapT | TirDataT;
+export type DeconstructableTirType = TirStructType | TirSopOptT | TirDataOptT | TirListT | TirLinearMapT | TirDataT;
 
 export function getDeconstructableType(
     type: TirType
 ): DeconstructableTirType | undefined
 {
     while( type instanceof TirAliasType ) type = type.aliased;
-    if( type instanceof TirStructType ) return type;
-    if( type instanceof TirOptT ) return type;
-    if( type instanceof TirListT ) return type;
-    if( type instanceof TirLinearMapT ) return type;
-    if( type instanceof TirDataT ) return type; // builtin choose data
+    if(
+        isTirStructType( type )
+        || type instanceof TirSopOptT
+        || type instanceof TirDataOptT
+        || type instanceof TirListT
+        || type instanceof TirLinearMapT
+        || type instanceof TirDataT // builtin choose data
+    ) return type;
     return undefined;
 }

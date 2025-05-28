@@ -19,8 +19,10 @@ export function getPropAccessReturnType(
         || objType instanceof TirTypeParam
     ) {
         if( objType instanceof TirTypeParam ) return undefined;
+
         const result = findPropInImpls( objType.impls, propName );
         if( result ) return result;
+        
         objType = objType.aliased;
     }
     // if( objType instanceof TirAliasType ) return findPropInImpls( objType.impls, propName ) ?? getPropAccessReturnType( objType.aliased, propId );

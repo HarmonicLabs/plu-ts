@@ -1,10 +1,15 @@
 import { TirAliasType } from "../TirAliasType";
-import { TirListT, TirOptT } from "../TirNativeType";
+import { TirDataOptT, TirSopOptT } from "../TirNativeType";
 import { TirType } from "../TirType";
 
-export function getOptTypeArg( list_t: TirType ): TirType | undefined
+export function getOptTypeArg( opt_t: TirType ): TirType | undefined
 {
-    while( list_t instanceof TirAliasType ) list_t = list_t.aliased;
-    if( list_t instanceof TirOptT ) return list_t.typeArg;
+    while( opt_t instanceof TirAliasType ) opt_t = opt_t.aliased;
+
+    if(
+        opt_t instanceof TirSopOptT
+        || opt_t instanceof TirDataOptT
+    ) return opt_t.typeArg;
+    
     return undefined;
 }

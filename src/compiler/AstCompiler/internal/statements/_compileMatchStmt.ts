@@ -5,8 +5,8 @@ import { SingleDeconstructVarDecl } from "../../../../ast/nodes/statements/decla
 import { MatchStmt, MatchStmtCase } from "../../../../ast/nodes/statements/MatchStmt";
 import { DiagnosticCode } from "../../../../diagnostics/diagnosticMessages.generated";
 import { TirMatchStmt, TirMatchStmtCase } from "../../../tir/statements/TirMatchStmt";
-import { TirDataT, TirOptT, TirListT, TirLinearMapT } from "../../../tir/types/TirNativeType";
-import { TirStructType } from "../../../tir/types/TirStructType";
+import { TirDataT, TirListT, TirLinearMapT, TirSopOptT, TirDataOptT } from "../../../tir/types/TirNativeType";
+import { isTirStructType, TirDataStructType, TirSoPStructType } from "../../../tir/types/TirStructType";
 import { getDeconstructableType, DeconstructableTirType } from "../../../tir/types/utils/getDeconstructableType";
 import { AstCompilationCtx } from "../../AstCompilationCtx";
 import { wrapManyStatements } from "../../utils/wrapManyStatementsOrReturnSame";
@@ -121,10 +121,13 @@ export function _compileTirMatchStmtCase(
                 matchCase.range
             );
         }
-        else if( deconstructableType instanceof TirOptT )
+        else if(
+            deconstructableType instanceof TirSopOptT
+            || deconstructableType instanceof TirDataOptT
+        )
         {
             if(!(
-                    deconstructedCtorName === "Some"     // { value, ...rest }
+                   deconstructedCtorName === "Some"     // { value, ...rest }
                 || deconstructedCtorName === "None"     // { ...rest }
             )) return ctx.error(
                 DiagnosticCode.Unknown_0_constructor_1,
@@ -154,7 +157,10 @@ export function _compileTirMatchStmtCase(
                 matchCase.range
             );
         }
-        else if( deconstructableType instanceof TirStructType )
+        else if(
+            deconstructableType instanceof TirSoPStructType
+            || deconstructableType instanceof TirDataStructType
+        )
         {
             const ctorDef = deconstructableType.constructors.find( c => c.name === deconstructedCtorName );
             if( !ctorDef ) return ctx.error(
@@ -194,7 +200,7 @@ export function _compileTirMatchStmtCase(
     }
     else if( pattern instanceof SingleDeconstructVarDecl )
     {
-        if(!( deconstructableType instanceof TirStructType ))
+        if( !isTirStructType( deconstructableType ) )
         return ctx.error(
             DiagnosticCode.A_value_of_type_0_cannot_be_deconstructed_as_unnamed_object,
             matchCase.pattern.range, deconstructableType.toString()

@@ -47,6 +47,16 @@ export function canAssignToOptional( type: TirType ): boolean
     );
 }
 
+export function canAssignToList( type: TirType ): boolean
+{
+    type = getUnaliased( type );
+
+    return (
+        type instanceof TirListT
+        // || type instanceof TirLinearMapT
+    );
+}
+
 /**
  * @returns `true` if `a` can be assigned to `b` **without** explicit cast
  * 

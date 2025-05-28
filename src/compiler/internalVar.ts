@@ -27,8 +27,10 @@ try {
  */
 export class UidGenerator
 {
-    constructor() {
-        this.uids = new Set<string>();
+    constructor(
+        uids: Set<string> = defaultSymbolForge.uids
+    ) {
+        this.uids = uids;
     }
 
     private readonly uids: Set<string>;
@@ -61,7 +63,7 @@ export class UidGenerator
 }
 
 // Create a default instance for backward compatibility
-export const defaultSymbolForge = new UidGenerator();
+export const defaultSymbolForge = new UidGenerator( new Set<string>() );
 
 // Export the original functions for backward compatibility
 export const getUniqueInternalName = defaultSymbolForge.getUniqueInternalName.bind(defaultSymbolForge);

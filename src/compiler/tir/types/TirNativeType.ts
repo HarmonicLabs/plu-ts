@@ -1,7 +1,24 @@
-import { isObject } from "@harmoniclabs/obj-utils";
 import { TirType } from "./TirType";
-import { PEBBLE_INTERNAL_IDENTIFIER_PREFIX } from "../../internalVar";
 import { getAppliedTirTypeName } from "../program/TirProgram";
+
+export type TirNamedDestructableNativeType
+    = TirDataT
+    | TirDataOptT<TirType>
+    | TirSopOptT<TirType>
+    | TirListT<TirType>
+    | TirLinearMapT<TirType,TirType>
+    ;
+
+export function isTirNamedDestructableNativeType( t: any ): t is TirNamedDestructableNativeType
+{
+    return (
+        t instanceof TirDataT
+        || t instanceof TirDataOptT
+        || t instanceof TirSopOptT
+        || t instanceof TirListT
+        || t instanceof TirLinearMapT
+    );
+}
 
 export type TirNativeType
     = TirVoidT

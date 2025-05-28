@@ -1,9 +1,9 @@
 import { AstFuncType } from "../../../../ast/nodes/types/AstNativeTypeExpr";
 import { AstTypeExpr } from "../../../../ast/nodes/types/AstTypeExpr";
 import { TirFuncT } from "../../../tir/types/TirNativeType";
-import { TirType } from "../../../tir/types/TirType";
+import { isTirType, TirType } from "../../../tir/types/TirType";
 import { AstCompilationCtx } from "../../AstCompilationCtx";
-import { TirFuncSigTree, TirFuncSigTreeLeaf, TirFuncSigTreeNode, TirFuncSigTreeRoot } from "./TirFuncSigTree";
+import { TirFuncSigTree, TirFuncSigTreeElem, TirFuncSigTreeLeaf, TirFuncSigTreeNode, TirFuncSigTreeRoot } from "./TirFuncSigTree";
 
 export function getTirFuncSigTree(
     signature: AstFuncType,
@@ -27,7 +27,7 @@ export function getTirFuncSigTree(
     const returnType = resolveReturnType( astReturnType, ctx );
     if( !returnType ) throw new Error( "Could not resolve return type" );
 
-    let treeBranches: TirFuncSigTree[] = [
+    let treeBranches: TirFuncSigTreeElem[] = [
         new TirFuncSigTreeLeaf(
             returnType
         )
@@ -77,5 +77,5 @@ function resolveParamType(
 
     return [ possibleTypes.sopTirName, possibleTypes.dataTirName ]
         .map( tirName => tirName ? ctx.program.types.get( tirName ) : undefined)
-        .filter( t => !!t );
+        .filter( isTirType ) as TirType[];
 }

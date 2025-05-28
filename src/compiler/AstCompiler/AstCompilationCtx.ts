@@ -85,6 +85,13 @@ export class AstCompilationCtx extends DiagnosticEmitter
         );
     }
 
+    resolveValue(
+        identifier: string
+    )
+    {
+        const thing = this.scope.variables.get( identifier );
+    }
+
     static fromScope(
         program: TirProgram,
         scope: Scope

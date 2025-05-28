@@ -2,9 +2,9 @@ import { IfStmt } from "../../../../ast/nodes/statements/IfStmt";
 import { DiagnosticCode } from "../../../../diagnostics/diagnosticMessages.generated";
 import { TirIfStmt } from "../../../tir/statements/TirIfStmt";
 import { TirStmt } from "../../../tir/statements/TirStmt";
-import { canAssignTo } from "../../../tir/types/utils/canAssignTo";
+import { canAssignTo, canAssignToOptional } from "../../../tir/types/utils/canAssignTo";
 import { AstCompilationCtx } from "../../AstCompilationCtx";
-import { bool_t, any_optional_t } from "../../../tir/program/stdScope/stdScope";
+import { bool_t } from "../../../tir/program/stdScope/stdScope";
 import { wrapManyStatements } from "../../utils/wrapManyStatementsOrReturnSame";
 import { _compileExpr } from "../exprs/_compileExpr";
 import { _compileStatement } from "./_compileStatement";
@@ -18,7 +18,7 @@ export function _compileIfStmt(
     if( !coditionExpr ) return undefined;
     if(
         !canAssignTo( coditionExpr.type, bool_t )
-        && !canAssignTo( coditionExpr.type, any_optional_t )
+        && !canAssignToOptional( coditionExpr.type )
     ) return ctx.error(
         DiagnosticCode.Type_0_is_not_assignable_to_type_1,
         stmt.condition.range, coditionExpr.type.toString(), "boolean | Optional<T>"

@@ -2,7 +2,8 @@ import { UsingStmt } from "../../../../ast/nodes/statements/UsingStmt";
 import { DiagnosticCode } from "../../../../diagnostics/diagnosticMessages.generated";
 import { getStructType } from "../../../tir/types/utils/canAssignTo";
 import { AstCompilationCtx } from "../../AstCompilationCtx";
-import { _compileConcreteTypeExpr } from "../types/_compileDataEncodedConcreteType";
+import { _compileDataEncodedConcreteType } from "../types/_compileDataEncodedConcreteType";
+import { _compileSopEncodedConcreteType } from "../types/_compileSopEncodedConcreteType";
 
 /**
  * `using` only introduces symbols in scope
@@ -21,7 +22,10 @@ export function _compileUsingStmt(
     stmt.structTypeExpr;
     stmt.range;
 
-    const structOrAliasType = _compileConcreteTypeExpr( ctx, stmt.structTypeExpr );
+    const structOrAliasType = (
+        _compileSopEncodedConcreteType( ctx, stmt.structTypeExpr )
+        ?? _compileDataEncodedConcreteType( ctx, stmt.structTypeExpr )
+    );
     if( !structOrAliasType ) return undefined;
 
     // un-alias

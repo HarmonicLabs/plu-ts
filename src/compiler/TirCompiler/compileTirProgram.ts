@@ -1,9 +1,7 @@
 import { IRTerm } from "../../IR";
 import { CompilerOptions } from "../../IR/toUPLC/CompilerOptions";
 import { TirProgram } from "../tir/program/TirProgram";
-import { compileTirFuncDecl } from "./internal/compileTirFuncDecl";
 import { compileTirFuncExpr } from "./internal/compileTirFuncExpr";
-import { isMainFunction } from "./internal/isMainFunction";
 import { TirCompilerCtx } from "./TirCompilerCtx";
 
 /**

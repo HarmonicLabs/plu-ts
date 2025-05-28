@@ -2,7 +2,7 @@ import { TirAliasType } from "../TirAliasType";
 import { TirDataT, TirVoidT, TirBoolT, TirIntT, TirOptT, TirBytesT, TirStringT, TirListT, TirLinearMapT, TirFuncT } from "../TirNativeType";
 import { TirStructType, StructFlags } from "../TirStructType";
 import { TirType } from "../TirType";
-import { canAssignTo, CanAssign, getCanAssign } from "./canAssignTo";
+import { CanAssign, getCanAssign } from "./canAssignTo";
 
 export function canCastTo( a: TirType, b: TirType ): boolean
 {

@@ -15,23 +15,19 @@ export function _compileReturnStmt(
         DiagnosticCode.A_return_statement_can_only_be_used_within_a_function_body,
         stmt.range
     );
-    const hintReturn = ctx.functionCtx.returnHints;
+    const hintReturn = ctx.functionCtx.returnType;
     const expr = stmt.value ?
     _compileExpr(
         ctx,
         stmt.value,
-        hintReturn.type
+        hintReturn
     ) : new TirLitVoidExpr( stmt.range );
     if( !expr ) return undefined;
 
-    if( !hintReturn.type ) {
-        hintReturn.type = expr.type;
-        hintReturn.isInferred = true;
-    }
 
-    if( !canAssignTo( expr.type, hintReturn.type ) ) return ctx.error(
+    if( !canAssignTo( expr.type, hintReturn ) ) return ctx.error(
         DiagnosticCode.Type_0_is_not_assignable_to_type_1,
-        stmt.value?.range ?? stmt.range, expr.type.toString(), hintReturn.type.toString()
+        stmt.value?.range ?? stmt.range, expr.type.toString(), hintReturn.toString()
     );
 
     return [ new TirReturnStmt( expr, stmt.range ) ];

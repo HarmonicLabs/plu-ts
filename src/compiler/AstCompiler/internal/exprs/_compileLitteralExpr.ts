@@ -26,7 +26,7 @@ import { TirExpr, isTirExpr } from "../../../tir/expressions/TirExpr";
 import { TirListT } from "../../../tir/types/TirNativeType";
 import { TirStructType } from "../../../tir/types/TirStructType";
 import { TirType, isTirType } from "../../../tir/types/TirType";
-import { canAssignTo, isStructOrStructAlias, getStructType } from "../../../tir/types/utils/canAssignTo";
+import { canAssignTo, isStructOrStructAlias, getStructType, canAssignToOptional, canAssignToList } from "../../../tir/types/utils/canAssignTo";
 import { getListTypeArg } from "../../../tir/types/utils/getListTypeArg";
 import { AstCompilationCtx } from "../../AstCompilationCtx";
 import { _compileExpr } from "./_compileExpr";
@@ -46,11 +46,18 @@ export function _compileLitteralExpr(
     if( expr instanceof LitHexBytesExpr ) return new TirLitHexBytesExpr( expr.bytes, expr.range );
     if( expr instanceof LitThisExpr )
     {
-        const this_t = ctx.scope.getThisType();
+        const this_tir_name = ctx.scope.resolveType("this")?.sopTirName;
+        if( !this_tir_name ) return ctx.error(
+            DiagnosticCode._this_cannot_be_referenced_in_current_location,
+            expr.range
+        );
+
+        const this_t = ctx.program.types.get( this_tir_name )
         if( !this_t ) return ctx.error(
             DiagnosticCode._this_cannot_be_referenced_in_current_location,
             expr.range
         );
+
         return new TirLitThisExpr(
             this_t,
             expr.range
@@ -78,7 +85,7 @@ export function _compileLitteralUndefExpr(
             expr.range
         );
     }
-    if( !canAssignTo( typeHint, any_optional_t ) )
+    if( !canAssignToOptional( typeHint ) )
     {
         return ctx.error(
             DiagnosticCode.Type_0_is_not_assignable_to_type_1,
@@ -212,7 +219,7 @@ export function __commonCompileStructFieldValues(
     {
         if( !constructorDef.fields.some( realField => realField.name === exprField.text ) )
         {
-            return ctx.error(
+            return ctx.error<string, string, TirStructType>(
                 DiagnosticCode.Field_0_is_not_part_of_the_1_constructor_for_2_struct,
                 exprField.range, exprField.text, constructorDef.name, structType
             );
@@ -232,7 +239,7 @@ export function __commonCompileStructFieldValues(
         const initAstExprIdx = expr.fieldNames.findIndex( name => name.text === fieldDef.name );
         if( initAstExprIdx === -1 )
         {
-            return ctx.error(
+            return ctx.error<string, string, TirStructType>(
                 DiagnosticCode.Field_0_is_missing_but_required_by_the_1_constructor_of_the_2_struct,
                 expr.range, fieldDef.name, constructorDef.name, structType
             );
@@ -261,7 +268,7 @@ export function _compileLitteralArrayExpr(
     let elemsType: TirType | undefined = undefined;
     if( listType )
     {
-        if( !canAssignTo( listType, any_list_t ) )
+        if( !canAssignToList( listType ) )
             return ctx.error(
                 DiagnosticCode.Type_0_is_not_assignable_to_type_1,
                 expr.range, "List<T>", listType.toString()

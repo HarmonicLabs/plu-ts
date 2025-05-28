@@ -40,7 +40,6 @@ import { CallExpr } from "../ast/nodes/expr/functions/CallExpr";
 import { BlockStmt } from "../ast/nodes/statements/BlockStmt";
 import { BreakStmt } from "../ast/nodes/statements/BreakStmt";
 import { ContinueStmt } from "../ast/nodes/statements/ContinueStmt";
-import { DoWhileStmt } from "../ast/nodes/statements/DoWhileStmt";
 import { ForStmt } from "../ast/nodes/statements/ForStmt";
 import { ForOfStmt } from "../ast/nodes/statements/ForOfStmt";
 import { IfStmt } from "../ast/nodes/statements/IfStmt";
@@ -78,6 +77,7 @@ import { UsingStmt, UsingStmtDeclaredConstructor } from "../ast/nodes/statements
 import { IncrStmt } from "../ast/nodes/statements/IncrStmt";
 import { DecrStmt } from "../ast/nodes/statements/DecrStmt";
 import { ExportStmt } from "../ast/nodes/statements/ExportStmt";
+import { defaultSymbolForge } from "../compiler/internalVar";
 
 interface ParseStmtOpts {
     isExport?: boolean;
@@ -99,6 +99,7 @@ export class Parser extends DiagnosticEmitter
     static parseFile(
         path: string,
         src: string,
+        getUid: () => string = defaultSymbolForge.getUid.bind( defaultSymbolForge ),
         isEntry: boolean = false
     ): [ Source, DiagnosticMessage[] ]
     {
@@ -117,6 +118,7 @@ export class Parser extends DiagnosticEmitter
         const source = new Source(
             kind,
             internalPath,
+            getUid(),
             src
         );
 
@@ -1027,7 +1029,7 @@ export class Parser extends DiagnosticEmitter
     private parseNamedFuncSig(
         flags: CommonFlags = CommonFlags.None,
         startPos?: number
-    ): [ Identifier, AstTypeExpr[] | undefined, AstFuncType ] | undefined
+    ): [ Identifier, Identifier[] | undefined, AstFuncType ] | undefined
     {
         const tn = this.tn;
 
@@ -1042,7 +1044,7 @@ export class Parser extends DiagnosticEmitter
         const name = new Identifier( tn.readIdentifier(), tn.range() );
         let sigStart = -1;
 
-        let typeParams: AstTypeExpr[] | undefined = undefined;
+        let typeParams: Identifier[] | undefined = undefined;
         if( tn.skip( Token.LessThan ) )
         {
             sigStart = tn.tokenPos;
