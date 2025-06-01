@@ -220,7 +220,6 @@ function uncheckedGetCanAssign(
     return CanAssign.No;
 }
 
-
 function canAssignStruct(
     a: TirStructType | TirAliasType<TirStructType>,
     b: TirStructType | TirAliasType<TirStructType>,
