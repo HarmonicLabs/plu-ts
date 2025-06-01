@@ -51,9 +51,14 @@ export interface JsonScope {
     child: JsonScope | undefined;
 }
 
+export interface ResolveValueResult {
+    variableInfos: IVariableInfos;
+    isDefinedOutsideFuncScope: boolean;
+}
+
 export interface IVariableInfos {
-    tirName: string;
-    tirTypeName: string;
+    astName: string;
+    type: TirType;
     isConstant: boolean;
 }
 
@@ -114,6 +119,42 @@ export class Scope
         this.parent = parent;
     }
 
+    defineValue( valueInfos: IVariableInfos ): boolean
+    {
+        if( this._isReadonly ) return false;
+
+        if(
+            invalidSymbolNames.has( valueInfos.astName )
+            && !( valueInfos.astName === "this" && this.infos.isMethodScope )
+        ) return false;
+        if( this.variables.has( valueInfos.astName ) ) return false; // already defined
+
+        this.variables.set( valueInfos.astName, valueInfos );
+        return true;
+    }
+
+    resolveValue( astName: string ): ResolveValueResult | undefined
+    {
+        const localValue = this.variables.get( astName );
+        if( localValue ) return {
+            variableInfos: localValue,
+            isDefinedOutsideFuncScope: false
+        };
+
+        if( this.parent )
+        {
+            const parentValue = this.parent.resolveValue( astName );
+            if( !parentValue ) return undefined;
+
+            return {
+                variableInfos: parentValue.variableInfos,
+                isDefinedOutsideFuncScope: parentValue.isDefinedOutsideFuncScope || this.infos.isFunctionDeclScope
+            };
+        }
+
+        return undefined;
+    }
+
     defineUnambigousType(
         astName: string,
         tirTypeKey: string,
@@ -171,7 +212,7 @@ export class Scope
     toJson( child: JsonScope | undefined = undefined ): JsonScope
     {
         const localValues: { [x: string]: string } = {};
-        for( const [key, value] of this.variables ) localValues[key] = value.tirTypeName;
+        for( const [key, value] of this.variables ) localValues[key] = value.type.toConcreteTirTypeName();
 
         const localFunctions: { [x: string]: string } = {};
         for( const [_key, value] of this.functions )

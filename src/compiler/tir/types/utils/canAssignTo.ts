@@ -1,6 +1,6 @@
 import { TirAliasType } from "../TirAliasType";
-import { TirBoolT, TirBytesT, TirDataT, TirIntT, TirLinearMapT, TirListT, TirOptT, TirStringT, TirVoidT, TirFuncT, TirSopOptT, TirDataOptT } from "../TirNativeType";
-import { StructFlags, TirStructConstr, TirStructType } from "../TirStructType";
+import { TirBoolT, TirBytesT, TirDataT, TirIntT, TirLinearMapT, TirListT, TirStringT, TirVoidT, TirFuncT, TirSopOptT, TirDataOptT } from "../TirNativeType";
+import { isTirStructType, TirDataStructType, TirSoPStructType, TirStructConstr, TirStructType } from "../TirStructType";
 import { isTirNamedDestructableType, TirNamedDestructableType, TirType } from "../TirType";
 import { TirTypeParam } from "../TirTypeParam";
 import { canCastToData } from "./canCastTo";
@@ -21,13 +21,13 @@ Object.freeze( CanAssign );
 export function isStructOrStructAlias( type: TirType ): boolean
 {
     while( type instanceof TirAliasType ) type = type.aliased;
-    return type instanceof TirStructType;
+    return isTirStructType( type );
 }
 
 export function getStructType( type: TirType | undefined ): TirStructType | undefined
 {
     while( type instanceof TirAliasType ) type = type.aliased;
-    return type instanceof TirStructType ? type : undefined;
+    return isTirStructType( type ) ? type : undefined;
 }
 
 export function getNamedDestructableType( type: TirType | undefined ): TirNamedDestructableType | undefined
@@ -129,9 +129,10 @@ function uncheckedGetCanAssign(
         return CanAssign.No;
     }
 
-    if( b instanceof TirOptT )
+    if( b instanceof TirSopOptT )
     {
-        if( a instanceof TirOptT ) return uncheckedGetCanAssign( a.typeArg, b.typeArg, symbols );
+        if( a instanceof TirSopOptT ) return uncheckedGetCanAssign( a.typeArg, b.typeArg, symbols );
+        if( a instanceof TirDataOptT ) return canAssignTo( a.typeArg, b.typeArg ) ? CanAssign.RequiresExplicitCast : CanAssign.No;
         if( a instanceof TirDataT ) return CanAssign.RequiresExplicitCast;
 
         const canAssingToDefined = uncheckedGetCanAssign( a, b.typeArg, symbols );
@@ -173,8 +174,9 @@ function uncheckedGetCanAssign(
     if( b instanceof TirDataT )
     {
         if( a instanceof TirDataT ) return CanAssign.Yes;
-        if( a instanceof TirStructType )
-            return a.allowsDataEncoding() ? CanAssign.RequiresExplicitCast : CanAssign.No;
+        if( a instanceof TirDataStructType ) return CanAssign.RequiresExplicitCast;
+        if( a instanceof TirSoPStructType ) return CanAssign.No;
+
         // int, bytes, string, bool, even void
         // optionals (part of the standard ledger API) as long as the type argument can too
         // structs that allow data encoding
@@ -182,13 +184,19 @@ function uncheckedGetCanAssign(
         // can all cast to data
         return canCastToData( a ) ? CanAssign.RequiresExplicitCast : CanAssign.No;
     }
-    if( b instanceof TirStructType )
+    if( b instanceof TirDataStructType )
     {
-        if( a instanceof TirStructType ) return canAssignStruct( a, b, symbols );
-        if( a instanceof TirDataT && b.allowsDataEncoding() ) return CanAssign.RequiresExplicitCast;
+        if( a instanceof TirDataStructType ) return canAssignStruct( a, b, symbols );
+        if( a instanceof TirSoPStructType ) return CanAssign.No;
+        if( a instanceof TirDataT ) return CanAssign.RequiresExplicitCast;
         return CanAssign.No;
     }
-    if( a instanceof TirStructType ) return CanAssign.No;
+    if( b instanceof TirSoPStructType )
+    {
+        if( a instanceof TirSoPStructType ) return canAssignStruct( a, b, symbols );
+        return CanAssign.No;
+    }
+    if( isTirStructType( a ) ) return CanAssign.No;
 
     if( b instanceof TirFuncT )
     {

@@ -14,25 +14,25 @@ import { TirNamedDeconstructVarDecl } from "../../../tir/statements/TirVarDecl/T
 import { TirSimpleVarDecl } from "../../../tir/statements/TirVarDecl/TirSimpleVarDecl";
 import { TirSingleDeconstructVarDecl } from "../../../tir/statements/TirVarDecl/TirSingleDeconstructVarDecl";
 import { TirVarDecl } from "../../../tir/statements/TirVarDecl/TirVarDecl";
-import { TirDataT } from "../../../tir/types/TirNativeType";
-import { TirStructType, TirStructConstr, TirStructField } from "../../../tir/types/TirStructType";
+import { isTirOptType, TirDataT, TirSopOptT } from "../../../tir/types/TirNativeType";
+import { isTirStructType, TirStructConstr, TirStructField } from "../../../tir/types/TirStructType";
 import { TirType } from "../../../tir/types/TirType";
 import { getNamedDestructableType, getStructType, canAssignTo } from "../../../tir/types/utils/canAssignTo";
 import { canCastToData } from "../../../tir/types/utils/canCastTo";
 import { getListTypeArg } from "../../../tir/types/utils/getListTypeArg";
 import { AstCompilationCtx } from "../../AstCompilationCtx";
 import { _compileExpr } from "../exprs/_compileExpr";
+import { _compileSopEncodedConcreteType } from "../types/_compileSopEncodedConcreteType";
 
 export function _compileVarStmt(
     ctx: AstCompilationCtx,
-    stmt: VarStmt,
-    isTopLevel: boolean
+    stmt: VarStmt
 ): TirVarDecl[] | undefined
 {
     const tirVarDecls: TirVarDecl[] = [];
     for( const decl of stmt.declarations )
     {
-        const tirDecl = _compileVarDecl( ctx, decl, undefined, isTopLevel );
+        const tirDecl = _compileVarDecl( ctx, decl, undefined );
         if( !tirDecl ) return undefined;
         tirVarDecls.push( tirDecl );
     }
@@ -42,25 +42,17 @@ export function _compileVarDecl(
     ctx: AstCompilationCtx,
     decl: VarDecl,
     typeHint: TirType | undefined, // coming from deconstructing
-    isTopLevel: boolean = false
-    // useful to infer variable type by usage
-    // sameLevelStmts: readonly PebbleStmt[],
-    // stmtIdx: number
 ): TirVarDecl | undefined
 {
-    if(
-        isTopLevel &&
-        !decl.isConst()
-    ) return ctx.error(
-        DiagnosticCode.Only_constants_can_be_declared_outside_of_a_function,
-        decl.range
-    );
     if( decl instanceof SimpleVarDecl )
         return _compileSimpleVarDecl( ctx, decl, typeHint );
+
     if( decl instanceof NamedDeconstructVarDecl )
         return _compileNamedDeconstructVarDecl( ctx, decl, typeHint );
+
     if( decl instanceof SingleDeconstructVarDecl )
         return _compileSingleDeconstructVarDecl( ctx, decl, typeHint );
+
     if( decl instanceof ArrayLikeDeconstr )
         return _compileArrayLikeDeconstr( ctx, decl, typeHint );
 
@@ -81,7 +73,7 @@ export function _compileSimpleVarDecl(
     const [ finalVarType, initExpr ] = typeAndExpr;
 
     const success = ctx.scope.defineValue({
-        name: decl.name.text,
+        astName: decl.name.text,
         type: finalVarType,
         isConstant: decl.isConst()
     });
@@ -135,7 +127,7 @@ export function _compileNamedDeconstructVarDecl(
         decl.range
     );
 
-    if( namedDestructableType instanceof TirStructType )
+    if( isTirStructType( namedDestructableType ) )
     {
         const finalConstructorDef = namedDestructableType.constructors.find( ctor =>
             ctor.name === decl.name.text
@@ -164,7 +156,7 @@ export function _compileNamedDeconstructVarDecl(
             decl.range
         );
     }
-    if( namedDestructableType instanceof TirOptT )
+    if( isTirOptType( namedDestructableType ) )
     {
         const optConstrName = decl.name.text;
         if(!(
@@ -212,7 +204,7 @@ export function _compileSingleDeconstructVarDecl(
     // stmtIdx: number
 ): TirVarDecl | undefined
 {
-    const typeAndExpr = _getVarDeclTypeAndExpr( ctx, decl, typeHint  );
+    const typeAndExpr = _getVarDeclTypeAndExpr( ctx, decl, typeHint );
     if( !typeAndExpr ) return undefined;
     const [ finalVarType, initExpr ] = typeAndExpr;
 
@@ -283,7 +275,7 @@ export function _compileArrayLikeDeconstr(
     {
         rest = decl.rest.text;
         const success = ctx.scope.defineValue({
-            name: rest,
+            astName: rest,
             type: finalVarType, // same list type
             isConstant: decl.isConst()
         });
@@ -359,7 +351,7 @@ export function _getVarDeclTypeAndExpr(
     varInitExpr: TirExpr | undefined // undefined in case of deconstruction
 ] | undefined
 {
-    const declarationType = decl.type ? _compileConcreteTypeExpr( ctx, decl.type ) : undefined;
+    const declarationType = decl.type ? _compileSopEncodedConcreteType( ctx, decl.type ) : undefined;
     // const typeHint = (
     //     declarationType ??
     //     undefined

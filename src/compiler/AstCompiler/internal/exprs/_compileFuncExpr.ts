@@ -21,6 +21,54 @@ import { _compileDataEncodedConcreteType } from "../types/_compileDataEncodedCon
 import { _compileSopEncodedConcreteType } from "../types/_compileSopEncodedConcreteType";
 import { _hasDuplicateTypeParams } from "./_hasDuplicateTypeParams";
 
+/*
+- add "self" as first parameter
+- replace `node( arg )` as `self( Node{ arg } )`
+
+```
+function isOdd( n: int ): boolean
+{
+    return n == 1 || !isEven( n - 1 );
+}
+
+function isEven( n: int ): boolean
+{
+    return n == 0 || !isOdd( n - 1 );
+}
+```
+
+becomes
+
+```
+runtime struct _Choice {
+    IsOdd{ n: int },
+    IsEven{ n: int },
+}
+
+function _isOdd( mutual_chooser: any, n: int ): boolean
+{
+    return n == 1 || !mutual_chooser( IsEven{ n: n - 1 } );
+}
+
+function _isEven( mutual_chooser: any, n: int ): boolean
+{
+    return n == 0 || !mutual_chooser( IsOdd{ n: n - 1 } );
+}
+
+function _isOdd_isEven( choice: _Choice ): boolean
+{
+    return case choice
+        is IsOdd{ _ } => _isOdd( _isOdd_isEven, ...choice ),
+        is IsEven{ _ } => _isEven( _isOdd_isEven, ...choice ),
+        ;
+}
+
+// partial application
+const isOdd = _isOdd( _isOdd_isEven );
+const isEven = _isEven( _isOdd_isEven );
+```
+*/
+
 export function _compileFuncDecl(
     ctx: AstCompilationCtx,
     funcInfos: ITirFuncitonInfos
@@ -75,7 +123,7 @@ export function _compileFuncExpr(
     }
     else
     {
-        expectedFuncType = _getDataFuncSignature(
+        expectedFuncType = getDataFuncSignature(
             ctx,
             expr.signature
         );
@@ -194,7 +242,7 @@ function _getDestructuredParamsAsVarDecls(
  * TODO: in the future we should implement a "fully extracted form" (FEF)
  * so that we don't care about data or sop. (only exception is if the function calls `equalsData` builtin)
     **/
-function _getDataFuncSignature(
+export function getDataFuncSignature(
     ctx: AstCompilationCtx,
     signature: AstFuncType
 ): TirFuncT | undefined
@@ -223,7 +271,7 @@ function _getDataFuncSignature(
     );
 
     const returnType = signature.returnType instanceof AstFuncType ?
-    _getDataFuncSignature(
+    getDataFuncSignature(
         ctx,
         signature.returnType
     ) :

@@ -33,7 +33,7 @@ export function _compileOptionalPropAccessExpr(
     if( !objExpr ) return undefined;
 
     const objType = objExpr.type;
-    const returnType = getPropAccessReturnType( objType, expr.prop );
+    const returnType = getPropAccessReturnType( ctx, objType, expr.prop );
     if( !returnType ) return ctx.error(
         DiagnosticCode.Property_0_does_not_exist_on_type_1,
         expr.prop.range, expr.prop.text, objType.toString()
@@ -78,7 +78,7 @@ export function _compileDotPropAccessExpr(
     if( !objExpr ) return undefined;
 
     const objType = objExpr.type;
-    const returnType = getPropAccessReturnType( objType, expr.prop );
+    const returnType = getPropAccessReturnType( ctx, objType, expr.prop );
     if( !returnType ) return ctx.error(
         DiagnosticCode.Property_0_does_not_exist_on_type_1,
         expr.prop.range, expr.prop.text, objType.toString()

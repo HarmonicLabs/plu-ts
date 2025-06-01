@@ -106,6 +106,15 @@ export class TirDataT {
     hasDataEncoding(): boolean { return true; }
 }
 
+
+export function isTirOptType( t: any ): t is TirDataOptT<TirType> | TirSopOptT<TirType>
+{
+    return (
+        t instanceof TirDataOptT
+        || t instanceof TirSopOptT
+    );
+}
+
 export class TirDataOptT<T extends TirType = TirType>
 {
     constructor(

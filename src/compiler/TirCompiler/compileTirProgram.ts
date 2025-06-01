@@ -19,17 +19,5 @@ export function compileTirProgram(
         tirProgram,
     );
 
-    const entrySource = tirProgram.files.get( tirProgram.entry );
-    if( !entrySource )
-    throw new Error(
-        `TirProgram does not contain entry file ${tirProgram.entry}`
-    );
-
-    const main = entrySource.statements.find( isMainFunction );
-    if( !main )
-    throw new Error(
-        `entry file does not have a main function`
-    );
-
-    return compileTirFuncExpr( ctx, main.expr );
+    return {} as IRTerm;
 }

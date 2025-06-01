@@ -1,6 +1,6 @@
 import { TirAliasType } from "../TirAliasType";
-import { TirDataT, TirVoidT, TirBoolT, TirIntT, TirOptT, TirBytesT, TirStringT, TirListT, TirLinearMapT, TirFuncT } from "../TirNativeType";
-import { TirStructType, StructFlags } from "../TirStructType";
+import { TirDataT, TirVoidT, TirBoolT, TirIntT, TirBytesT, TirStringT, TirListT, TirLinearMapT, TirFuncT, TirSopOptT, TirDataOptT } from "../TirNativeType";
+import { isTirStructType, TirDataStructType, TirStructType } from "../TirStructType";
 import { TirType } from "../TirType";
 import { CanAssign, getCanAssign } from "./canAssignTo";
 
@@ -18,7 +18,7 @@ export function canCastTo( a: TirType, b: TirType ): boolean
     {
         return canCastToData( a );
     }
-    if( b instanceof TirStructType )
+    if( isTirStructType( b ) )
     {
         switch( getCanAssign( a, b ) ) {
             case CanAssign.Yes:
@@ -45,7 +45,8 @@ export function canCastTo( a: TirType, b: TirType ): boolean
             a instanceof TirBoolT
             || a instanceof TirDataT
             || a instanceof TirIntT
-            || a instanceof TirOptT
+            || a instanceof TirSopOptT
+            || a instanceof TirDataOptT
         );
     }
     if( b instanceof TirIntT )
@@ -74,9 +75,15 @@ export function canCastTo( a: TirType, b: TirType ): boolean
         if( a instanceof TirBytesT ) return true; // bytes -> string // encode utf8
         return false;
     }
-    if( b instanceof TirOptT )
+    if(
+        b instanceof TirDataOptT
+        || b instanceof TirSopOptT
+    )
     {
-        if( a instanceof TirOptT ) return canCastTo( a.typeArg, b.typeArg );
+        if(
+            a instanceof TirDataOptT
+            || a instanceof TirSopOptT
+        ) return canCastTo( a.typeArg, b.typeArg );
         if( a instanceof TirDataT ) return true;
         return false;
     }
@@ -130,12 +137,16 @@ export function canCastToData( a: TirType ): boolean
 {
     while(
         a instanceof TirAliasType
-        || a instanceof TirOptT
+        || a instanceof TirSopOptT
+        || a instanceof TirDataOptT
         || a instanceof TirListT
     ) {
         if( a instanceof TirAliasType ) a = a.aliased;
-        if( a instanceof TirOptT ) a = a.typeArg;
-        if( a instanceof TirListT ) a = a.typeArg;
+        if(
+            a instanceof TirListT
+            || a instanceof TirSopOptT
+            || a instanceof TirDataOptT
+        ) a = a.typeArg;
     }
     if(
         a instanceof TirDataT
@@ -146,41 +157,14 @@ export function canCastToData( a: TirType ): boolean
         || a instanceof TirBoolT
     ) return true;
 
-    if( a instanceof TirStructType ) return a.allowsDataEncoding() && structCanCastToData( a );
+    if( a instanceof TirDataStructType ) return true;
     if( a instanceof TirLinearMapT ) {
         const key = canCastToData( a.keyTypeArg );
         const value = canCastToData( a.valTypeArg );
         return key && value;
     }
 
-    // TirFuncT | TirTypeParam
+    // TirFuncT | TirSoPStructType | TirTypeParam
     // a;
-
     return false;
-}
-
-/**
- * double checks that the definition
- * does containg only types that can cast to data too
- * 
- * _if_ it cannot be cast to data (ie. this function returns false),
- * `onlySoP` is set to true
- */
-function structCanCastToData( struct: TirStructType ): boolean
-{
-    if( !struct.allowsDataEncoding() ) return false;
-
-    for( const ctor of struct.constructors )
-    {
-        for( const field of ctor.fields )
-        {
-            if( !canCastToData( field.type ) )
-            {
-                struct.flags |= StructFlags.onlySoP;
-                return false;
-            }
-        }
-    }
-
-    return true;
 }

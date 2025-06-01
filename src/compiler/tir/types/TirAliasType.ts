@@ -8,6 +8,12 @@ export class TirAliasType<AliasedT extends  TirType = TirType>
         readonly name: string,
         readonly fileUid: string,
         readonly aliased: AliasedT,
+        /**
+         * Maps AstFuncName to TirFuncName for methods defined in this alias type.
+         * This is used to resolve method calls on the aliased type.
+         * 
+         * @type {Map<AstFuncName, TirFuncName>}
+         */
         readonly methodsNamesPtr: Map<AstFuncName, TirFuncName>,
     ) {}
 

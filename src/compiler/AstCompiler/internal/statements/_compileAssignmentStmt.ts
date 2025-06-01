@@ -29,8 +29,8 @@ export function _compileAssignmentStmt(
             DiagnosticCode._0_is_not_defined,
             stmt.varIdentifier.range, stmt.varIdentifier.text
         );
-        const [ varSym, isDefinedOutsideFuncScope ] =  resolvedValue;
-        const varType = varSym.type;
+        const { variableInfos, isDefinedOutsideFuncScope } =  resolvedValue;
+        const varType = variableInfos.type;
         if( !canAssignTo( varType, int_t ) ) return ctx.error(
             DiagnosticCode.Type_0_is_not_assignable_to_type_1,
             stmt.varIdentifier.range, varType.toString(), int_t.toString()
@@ -83,12 +83,12 @@ export function _compileExplicitAssignmentStmt(
         DiagnosticCode._0_is_not_defined,
         stmt.range, stmt.varIdentifier.text
     );
-    const [ varSym, isDefinedOutsideFuncScope ] = resovleResult;
-    if( varSym.isConstant ) return ctx.error(
+    const { variableInfos, isDefinedOutsideFuncScope } = resovleResult;
+    if( variableInfos.isConstant ) return ctx.error(
         DiagnosticCode.Cannot_assign_to_0_because_it_is_a_constant,
         stmt.varIdentifier.range, stmt.varIdentifier.text
     );
-    const varType = varSym.type;
+    const varType = variableInfos.type;
     
     const varAccessExpr = new TirVariableAccessExpr(
         stmt.varIdentifier.text,

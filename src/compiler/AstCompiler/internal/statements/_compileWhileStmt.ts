@@ -1,9 +1,9 @@
 import { WhileStmt } from "../../../../ast/nodes/statements/WhileStmt";
 import { DiagnosticCode } from "../../../../diagnostics/diagnosticMessages.generated";
 import { TirWhileStmt } from "../../../tir/statements/TirWhileStmt";
-import { canAssignTo } from "../../../tir/types/utils/canAssignTo";
+import { canAssignTo, canAssignToOptional } from "../../../tir/types/utils/canAssignTo";
 import { AstCompilationCtx } from "../../AstCompilationCtx";
-import { bool_t, any_optional_t } from "../../../tir/program/stdScope/stdScope";
+import { bool_t } from "../../../tir/program/stdScope/stdScope";
 import { wrapManyStatements } from "../../utils/wrapManyStatementsOrReturnSame";
 import { _compileExpr } from "../exprs/_compileExpr";
 import { _compileStatement } from "./_compileStatement";
@@ -17,7 +17,7 @@ export function _compileWhileStmt(
     if( !tirCond ) return undefined;
     if(
         !canAssignTo( tirCond.type, bool_t )
-        && !canAssignTo( tirCond.type, any_optional_t )
+        && !canAssignToOptional( tirCond.type )
     ) return ctx.error(
         DiagnosticCode.Type_0_is_not_assignable_to_type_1,
         stmt.condition.range, tirCond.type.toString(), bool_t.toString()

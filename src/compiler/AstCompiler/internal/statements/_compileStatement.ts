@@ -53,10 +53,7 @@ import { _compileWhileStmt } from "./_compileWhileStmt";
 **/
 export function _compileStatement(
     ctx: AstCompilationCtx,
-    stmt: PebbleStmt,
-    // only passed for top level statements
-    // where exports are expected
-    tirSource: TirSource | undefined = undefined
+    stmt: PebbleStmt
 ): TirStmt[] | undefined
 {
     if(
@@ -86,11 +83,9 @@ export function _compileStatement(
         );
         return [];``
     }
-
-    if( stmt instanceof ExportStmt ) return _compileExportStmt( ctx, stmt, tirSource );
     
     if( stmt instanceof IfStmt ) return _compileIfStmt( ctx, stmt );
-    if( stmt instanceof VarStmt ) return _compileVarStmt( ctx, stmt, !!tirSource );
+    if( stmt instanceof VarStmt ) return _compileVarStmt( ctx, stmt );
     if( stmt instanceof ForStmt ) return _compileForStmt( ctx, stmt );
     if( stmt instanceof ForOfStmt ) return _compileForOfStmt( ctx, stmt );
     if( stmt instanceof WhileStmt ) return _compileWhileStmt( ctx, stmt );

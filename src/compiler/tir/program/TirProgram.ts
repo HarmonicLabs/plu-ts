@@ -6,6 +6,7 @@ import { Scope } from "../../AstCompiler/scope/Scope";
 import { TirFuncSigTreeRoot } from "../../AstCompiler/utils/getTirFuncSigTree/TirFuncSigTree";
 import { UidGenerator } from "../../internalVar";
 import { TirStmt } from "../statements/TirStmt";
+import { TirFuncT } from "../types/TirNativeType";
 import { isTirType, TirType } from "../types/TirType";
 import { populatePreludeScope, populateStdScope } from "./stdScope/stdScope";
 import { StdTypes } from "./stdScope/StdTypes";
@@ -29,6 +30,7 @@ export interface ITirFuncFEFInfos {
 
 export interface ITirFuncitonInfos {
     // sigRoot: TirFuncSigTreeRoot; // includes all overloads
+    dataFuncSig: TirFuncT;
     /**
      * tir name of the function declaration,
      * used to access the function in the program,

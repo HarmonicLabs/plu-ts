@@ -25,13 +25,10 @@ import { _compileExpr } from "./internal/exprs/_compileExpr";
 import { _compileDataEncodedConcreteType } from "./internal/types/_compileDataEncodedConcreteType";
 import { getAbsolutePath, getEnvRelativePath } from "../path/getAbsolutePath";
 import { TirType } from "../tir/types/TirType";
-import { TirInterfaceImpl } from "../tir/types/TirInterfaceImpl";
 import { _compileSopEncodedConcreteType } from "./internal/types/_compileSopEncodedConcreteType";
 import { InterfaceDecl } from "../../ast/nodes/statements/declarations/InterfaceDecl";
 import { AstFuncType } from "../../ast/nodes/types/AstNativeTypeExpr";
 import { FuncDecl } from "../../ast/nodes/statements/declarations/FuncDecl";
-import { VarStmt } from "../../ast/nodes/statements/VarStmt";
-import { getTirFuncSigTree } from "./utils/getTirFuncSigTree/getTirFuncSigTree";
 import { InterfaceMethodImpl, TypeImplementsStmt } from "../../ast/nodes/statements/TypeImplementsStmt";
 import { PEBBLE_INTERNAL_IDENTIFIER_PREFIX } from "../internalVar";
 import { AstNamedTypeExpr } from "../../ast/nodes/types/AstNamedTypeExpr";
@@ -40,7 +37,7 @@ import { CommonFlags } from "../../common";
 import { SimpleVarDecl } from "../../ast/nodes/statements/declarations/VarDecl/SimpleVarDecl";
 import { Identifier } from "../../ast/nodes/common/Identifier";
 import { ArrowKind } from "../../ast/nodes/expr/functions/ArrowKind";
-import { _compileFuncExpr } from "./internal/exprs/_compileFuncExpr";
+import { _compileFuncDecl, _compileFuncExpr, getDataFuncSignature } from "./internal/exprs/_compileFuncExpr";
 
 export interface AstTypeDefCompilationResult {
     sop: TirType | undefined,
@@ -132,6 +129,15 @@ export class AstCompiler extends DiagnosticEmitter
             );
             return this.program;
         }
+
+        if( !_compileFuncDecl(
+            mainFuncExpr.declContext,
+            mainFuncExpr
+        )) this.error(
+            DiagnosticCode._0_is_not_defined,
+            mainFuncExpr.astDecl.range,
+            "main"
+        );
 
         return this.program;
     }
@@ -314,7 +320,7 @@ export class AstCompiler extends DiagnosticEmitter
             }
 
             const astMethodName = method.methodName.text;
-            const tirMethodName = uniqueTypeAstName + "." + uniqueTypeAstName;
+            const tirMethodName = uniqueTypeAstName + "." + astMethodName;
 
             if( typeMethodsMap.has( astMethodName ) )
             {
@@ -356,10 +362,17 @@ export class AstCompiler extends DiagnosticEmitter
             //     declContext
             // );
 
+            const dataFuncSig = getDataFuncSignature(
+                declContext,
+                funcExpr.signature
+            );
+            if( !dataFuncSig ) return undefined;
+
             this.program.funcSigs.set(
                 tirMethodName,
                 {
                     // sigRoot,
+                    dataFuncSig,
                     tirSigName: tirMethodName,
                     astDecl: funcExpr,
                     concreteInstantiations: new Set(),
@@ -387,10 +400,17 @@ export class AstCompiler extends DiagnosticEmitter
         
         const declContext = AstCompilationCtx.fromScope( this.program, topLevelScope );
         
+        const dataFuncSig = getDataFuncSignature(
+            declContext,
+            funcExpr.signature
+        );
+        if( !dataFuncSig ) return undefined;
+
         this.program.funcSigs.set(
             tirFuncName,
             {
                 // sigRoot,
+                dataFuncSig,
                 tirSigName: tirFuncName,
                 astDecl: funcExpr,
                 concreteInstantiations: new Set(),

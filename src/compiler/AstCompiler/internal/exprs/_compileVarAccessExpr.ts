@@ -15,10 +15,10 @@ export function _compileVarAccessExpr(
         DiagnosticCode._0_is_not_defined,
         expr.range, expr.text
     );
-    const [ varSym, isDefinedOutsideFuncScope ] = resolvedValue;
+    const { variableInfos, isDefinedOutsideFuncScope } = resolvedValue;
     return new TirVariableAccessExpr(
         expr.text,
-        varSym.type,
+        variableInfos.type,
         expr.range
     );
 }
