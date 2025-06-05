@@ -1,18 +1,19 @@
 import { isVarDecl, VarDecl } from "./nodes/statements/declarations/VarDecl/VarDecl";
 import { Identifier } from "./nodes/common/Identifier";
 import { isPebbleExpr, PebbleExpr } from "./nodes/expr/PebbleExpr";
-import { isPebbleStmt, PebbleStmt } from "./nodes/statements/PebbleStmt";
 import { isAstTypeExpr, AstTypeExpr } from "./nodes/types/AstTypeExpr";
-import { isPebbleAstTypeDecl, PebbleAstTypeDecl } from "./nodes/statements/declarations/PebbleAstTypeDecl";
+import { BodyStmt, isBodyStmt, isTopLevelStmt, TopLevelStmt } from "./nodes/statements/PebbleStmt";
+import { isPebbleTypeDecl, PebbleTypeDecl } from "./nodes/statements/declarations/PebbleTypeDecl";
 
 
 export type PebbleAst
     = VarDecl
-    | PebbleStmt
+    | TopLevelStmt
+    | BodyStmt
     | PebbleExpr
     | AstTypeExpr
     | Identifier
-    | PebbleAstTypeDecl
+    | PebbleTypeDecl
     ;
 
 export function isPebbleAst( thing: any ): thing is PebbleAst
@@ -20,9 +21,10 @@ export function isPebbleAst( thing: any ): thing is PebbleAst
     return (
         thing instanceof Identifier
         || isVarDecl( thing )
-        || isPebbleStmt( thing )
+        || isTopLevelStmt( thing )
+        || isBodyStmt( thing )
         || isPebbleExpr( thing )
         || isAstTypeExpr( thing )
-        || isPebbleAstTypeDecl( thing )
+        || isPebbleTypeDecl( thing )
     );
 }

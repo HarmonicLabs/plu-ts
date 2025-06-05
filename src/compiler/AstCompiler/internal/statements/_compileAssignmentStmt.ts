@@ -36,9 +36,8 @@ export function _compileAssignmentStmt(
             stmt.varIdentifier.range, varType.toString(), int_t.toString()
         );
         const varAccessExpr = new TirVariableAccessExpr(
-            stmt.varIdentifier.text,
-            varType,
-            stmt.varIdentifier.range
+            resolvedValue,
+            stmt.varIdentifier.range,
         );
         return ([ new TirAssignmentStmt(
             varAccessExpr,
@@ -91,8 +90,7 @@ export function _compileExplicitAssignmentStmt(
     const varType = variableInfos.type;
     
     const varAccessExpr = new TirVariableAccessExpr(
-        stmt.varIdentifier.text,
-        varType,
+        resovleResult,
         stmt.varIdentifier.range
     );
 

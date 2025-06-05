@@ -2,7 +2,7 @@ import { SourceRange } from "../../Source/SourceRange";
 import { PebbleExpr } from "../expr/PebbleExpr";
 import { HasSourceRange } from "../HasSourceRange";
 import { AssignmentStmt } from "./AssignmentStmt";
-import { PebbleStmt } from "./PebbleStmt";
+import { BodyStmt } from "./PebbleStmt";
 import { VarStmt } from "./VarStmt";
 
 /**
@@ -17,7 +17,7 @@ export class ForStmt
         readonly init: VarStmt | undefined,
         readonly condition: PebbleExpr | undefined,
         readonly updates: AssignmentStmt[],
-        readonly body: PebbleStmt,
+        readonly body: BodyStmt,
         readonly range: SourceRange,
     ) {}
 }

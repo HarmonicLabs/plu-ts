@@ -1,12 +1,12 @@
 import { SourceRange } from "../../Source/SourceRange";
 import { HasSourceRange } from "../HasSourceRange";
-import { PebbleStmt } from "./PebbleStmt";
+import { BodyStmt } from "./PebbleStmt";
 
 export class BlockStmt
     implements HasSourceRange
 {
     constructor(
-        readonly stmts: PebbleStmt[],
+        readonly stmts: BodyStmt[],
         readonly range: SourceRange
     ) {}
 }

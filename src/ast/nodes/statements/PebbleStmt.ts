@@ -2,7 +2,7 @@ import { AssertStmt } from "./AssertStmt";
 import { BlockStmt } from "./BlockStmt";
 import { BreakStmt } from "./BreakStmt";
 import { ContinueStmt } from "./ContinueStmt";
-import { isPebbleAstTypeDecl, PebbleAstTypeDecl } from "./declarations/PebbleAstTypeDecl";
+import { isPebbleTypeDecl, PebbleTypeDecl } from "./declarations/PebbleTypeDecl";
 import { DoWhileStmt } from "./DoWhileStmt";
 import { EmptyStmt } from "./EmptyStmt";
 import { TypeImplementsStmt } from "./TypeImplementsStmt";
@@ -26,8 +26,9 @@ import { DecrStmt } from "./DecrStmt";
 import { UsingStmt } from "./UsingStmt";
 import { FuncDecl } from "./declarations/FuncDecl";
 import { ExportStmt } from "./ExportStmt";
+import { InterfaceDecl } from "./declarations/InterfaceDecl";
 
-/**
+/* *
  * An expression is a piece of code
  * that evaluates to a value,
  * 
@@ -36,16 +37,16 @@ import { ExportStmt } from "./ExportStmt";
  * does not return a value.
  * 
  * in some sense, a statement
- * is the only thing that can do side effects
+ * is the only thing that can have side effects
  * (at least in pebble)
  */
+/*
 export type PebbleStmt
     = IfStmt
     | VarStmt
     | ForStmt
     | ForOfStmt
     | WhileStmt
-    // | DoWhileStmt
     | ReturnStmt
     | BlockStmt
     | BreakStmt
@@ -55,14 +56,14 @@ export type PebbleStmt
     | AssertStmt
     | TestStmt
     | MatchStmt
-    | PebbleAstTypeDecl
+    | PebbleTypeDecl
     | ExportStarStmt
     | ImportStarStmt
     | ExportImportStmt
     | ImportStmt
     | TypeImplementsStmt
     | AssignmentStmt
-    | ExprStmt // function calls with side effects (void functions) (error, traces, etc.)
+    | ExprStmt // function calls with native side effects (error and/or traces)
     | UsingStmt
     | FuncDecl
     | ExportStmt
@@ -87,7 +88,7 @@ export function isPebbleStmt( stmt: any ): stmt is PebbleStmt
         || stmt instanceof AssertStmt
         || stmt instanceof TestStmt
         || stmt instanceof MatchStmt
-        || isPebbleAstTypeDecl( stmt )
+        || isPebbleTypeDecl( stmt )
         || stmt instanceof ExportStarStmt
         || stmt instanceof ImportStarStmt
         || stmt instanceof ExportImportStmt
@@ -100,5 +101,88 @@ export function isPebbleStmt( stmt: any ): stmt is PebbleStmt
         || stmt instanceof UsingStmt
         || stmt instanceof FuncDecl
         || stmt instanceof ExportStmt
+    );
+}
+//*/
+
+
+export type TopLevelStmt
+    = EmptyStmt
+    | VarStmt
+    // | EnumDecl
+    // | StructDecl
+    // | TypeAliasDecl
+    | PebbleTypeDecl
+    | InterfaceDecl
+    | FuncDecl
+    | TestStmt
+    | ExportStmt
+    | ExportStarStmt
+    | ExportImportStmt
+    | ImportStmt
+    | ImportStarStmt
+    | TypeImplementsStmt
+    | UsingStmt
+    ;
+
+export function isTopLevelStmt( stmt: any ): stmt is TopLevelStmt
+{
+    return (
+           stmt instanceof EmptyStmt
+        || stmt instanceof VarStmt
+        || isPebbleTypeDecl( stmt )
+        || stmt instanceof FuncDecl
+        || stmt instanceof TestStmt
+        || stmt instanceof ExportStmt
+        || stmt instanceof ExportStarStmt
+        || stmt instanceof ExportImportStmt
+        || stmt instanceof ImportStmt
+        || stmt instanceof ImportStarStmt
+        || stmt instanceof TypeImplementsStmt
+        || stmt instanceof UsingStmt
+    );
+}
+
+export type BodyStmt
+    = IfStmt
+    | VarStmt
+    | ForStmt
+    | ForOfStmt
+    | WhileStmt
+    | ReturnStmt
+    | BlockStmt
+    | BreakStmt
+    | ContinueStmt
+    | EmptyStmt
+    | FailStmt
+    | AssertStmt
+    | MatchStmt
+    | AssignmentStmt
+    | ExprStmt // function calls with native side effects (error and/or traces)
+    | UsingStmt
+    ;
+
+export function isBodyStmt( stmt: any ): stmt is BodyStmt
+{
+    return (
+           stmt instanceof IfStmt
+        || stmt instanceof VarStmt
+        || stmt instanceof ForStmt
+        || stmt instanceof ForOfStmt
+        || stmt instanceof WhileStmt
+        || stmt instanceof DoWhileStmt
+        || stmt instanceof ReturnStmt
+        || stmt instanceof BlockStmt
+        || stmt instanceof BreakStmt
+        || stmt instanceof ContinueStmt
+        || stmt instanceof EmptyStmt
+        || stmt instanceof FailStmt
+        || stmt instanceof AssertStmt
+        || stmt instanceof MatchStmt
+        || isAssignmentStmt( stmt )
+        || stmt instanceof ExprStmt
+        || stmt instanceof IncrStmt
+        || stmt instanceof DecrStmt
+        || stmt instanceof UsingStmt
     );
 }

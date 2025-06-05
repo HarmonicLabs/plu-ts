@@ -4,7 +4,7 @@ import { BlockStmt } from "../../../../ast/nodes/statements/BlockStmt";
 import { BreakStmt } from "../../../../ast/nodes/statements/BreakStmt";
 import { ContinueStmt } from "../../../../ast/nodes/statements/ContinueStmt";
 import { FuncDecl } from "../../../../ast/nodes/statements/declarations/FuncDecl";
-import { isPebbleAstTypeDecl } from "../../../../ast/nodes/statements/declarations/PebbleAstTypeDecl";
+import { isPebbleTypeDecl } from "../../../../ast/nodes/statements/declarations/PebbleTypeDecl";
 import { EmptyStmt } from "../../../../ast/nodes/statements/EmptyStmt";
 import { ExportImportStmt } from "../../../../ast/nodes/statements/ExportImportStmt";
 import { ExportStarStmt } from "../../../../ast/nodes/statements/ExportStarStmt";
@@ -16,7 +16,7 @@ import { ForStmt } from "../../../../ast/nodes/statements/ForStmt";
 import { IfStmt } from "../../../../ast/nodes/statements/IfStmt";
 import { ImportStmt } from "../../../../ast/nodes/statements/ImportStmt";
 import { MatchStmt } from "../../../../ast/nodes/statements/MatchStmt";
-import { PebbleStmt } from "../../../../ast/nodes/statements/PebbleStmt";
+import { BodyStmt } from "../../../../ast/nodes/statements/PebbleStmt";
 import { ReturnStmt } from "../../../../ast/nodes/statements/ReturnStmt";
 import { TestStmt } from "../../../../ast/nodes/statements/TestStmt";
 import { TypeImplementsStmt } from "../../../../ast/nodes/statements/TypeImplementsStmt";
@@ -53,37 +53,9 @@ import { _compileWhileStmt } from "./_compileWhileStmt";
 **/
 export function _compileStatement(
     ctx: AstCompilationCtx,
-    stmt: PebbleStmt
+    stmt: BodyStmt
 ): TirStmt[] | undefined
 {
-    if(
-        stmt instanceof ExportStarStmt
-        || stmt instanceof ImportStarStmt
-        || stmt instanceof ExportImportStmt
-        || stmt instanceof ImportStmt
-    ) throw new Error("export/import statements should be handled separately, not in _compileStatement");
-
-    if(
-        isPebbleAstTypeDecl( stmt )
-        || stmt instanceof TypeImplementsStmt
-    ) {
-        ctx.error(
-            DiagnosticCode.type_declarations_and_interfaces_are_only_allowed_at_the_top_level,
-            stmt.range,
-        );
-        return [];
-    };
-
-    // if( stmt instanceof FuncDecl ) return _compileFuncDecl( ctx, stmt );
-    if( stmt instanceof FuncDecl )
-    {
-        ctx.error(
-            DiagnosticCode.function_declarations_are_only_allowed_at_the_top_level,
-            stmt.range,
-        );
-        return [];``
-    }
-    
     if( stmt instanceof IfStmt ) return _compileIfStmt( ctx, stmt );
     if( stmt instanceof VarStmt ) return _compileVarStmt( ctx, stmt );
     if( stmt instanceof ForStmt ) return _compileForStmt( ctx, stmt );

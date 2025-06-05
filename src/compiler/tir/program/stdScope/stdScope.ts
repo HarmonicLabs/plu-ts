@@ -1,9 +1,9 @@
 import { TirBoolT, TirBytesT, TirDataT, TirLinearMapT, TirListT, TirIntT, TirVoidT, TirStringT, TirDataOptT, TirSopOptT } from "../../types/TirNativeType";
-import { AstFuncName, Scope, TirFuncName } from "../../../AstCompiler/scope/Scope";
+import { AstFuncName, AstScope, TirFuncName } from "../../../AstCompiler/scope/AstScope";
 import { TirNativeType } from "../../types/TirNativeType";
 import { TirAliasType } from "../../types/TirAliasType";
 import { TirDataStructType, TirSoPStructType, TirStructConstr, TirStructField, TirStructType } from "../../types/TirStructType";
-import { TirProgram } from "../TirProgram";
+import { TypedProgram } from "../TypedProgram";
 import { TirType } from "../../types/TirType";
 
 export const void_t = new TirVoidT();
@@ -13,7 +13,7 @@ export const bytes_t = new TirBytesT();
 export const bool_t = new TirBoolT();
 export const data_t = new TirDataT();
 
-export function populateStdScope( program: TirProgram ): void
+export function populateStdScope( program: TypedProgram ): void
 {
     const stdScope = program.stdScope;
 
@@ -100,7 +100,7 @@ export function populateStdScope( program: TirProgram ): void
     stdScope.readonly();
 }
 
-export function populatePreludeScope( program: TirProgram ): void
+export function populatePreludeScope( program: TypedProgram ): void
 {
     const preludeScope = program.preludeScope;
     // empty string will be never generated as uid,

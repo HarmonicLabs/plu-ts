@@ -1,7 +1,7 @@
-import { Scope } from "../../../AstCompiler/scope/Scope"
+import { AstScope } from "../../../AstCompiler/scope/AstScope"
 import { TirVoidT, TirBoolT, TirIntT, TirBytesT, TirStringT, TirDataT, TirDataOptT, TirSopOptT, TirListT, TirLinearMapT } from "../../types/TirNativeType"
 import { TirType } from "../../types/TirType"
-import { TirProgram } from "../TirProgram"
+import { TypedProgram } from "../TypedProgram"
 
 export interface IStdTypes {
     readonly void: TirVoidT
@@ -27,7 +27,7 @@ export class StdTypes
     readonly data: TirDataT
 
     constructor(
-        readonly program: TirProgram
+        readonly program: TypedProgram
     ) {
         this.void = program.types.get( TirVoidT.toTirTypeKey() )!;
         this.bool = program.types.get( TirBoolT.toTirTypeKey() )!;

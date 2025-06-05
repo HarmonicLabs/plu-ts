@@ -1,12 +1,9 @@
-import { FuncExpr } from "../../../ast/nodes/expr/functions/FuncExpr";
 import { DiagnosticEmitter } from "../../../diagnostics/DiagnosticEmitter";
 import { DiagnosticMessage } from "../../../diagnostics/DiagnosticMessage";
-import { AstCompilationCtx } from "../../AstCompiler/AstCompilationCtx";
-import { Scope } from "../../AstCompiler/scope/Scope";
-import { TirFuncSigTreeRoot } from "../../AstCompiler/utils/getTirFuncSigTree/TirFuncSigTree";
+import { AstScope } from "../../AstCompiler/scope/AstScope";
 import { UidGenerator } from "../../internalVar";
-import { TirStmt } from "../statements/TirStmt";
-import { TirFuncT } from "../types/TirNativeType";
+import { TirExpr } from "../expressions/TirExpr";
+import { TirFuncExpr } from "../expressions/TirFuncExpr";
 import { isTirType, TirType } from "../types/TirType";
 import { populatePreludeScope, populateStdScope } from "./stdScope/stdScope";
 import { StdTypes } from "./stdScope/StdTypes";
@@ -16,44 +13,18 @@ export interface IGenericType {
     apply: ( argsTirNames: string[] ) => (TirType | undefined);
 }
 
-export interface ITirFuncFEFInfos {
-    /**
-     * TODO
-     * 
-     * not a simple signature,
-     * but also how to get to the extracted parameters
-     * from the original ones (so extraction path included)
-     */
-    fullyExtractedSignature: any;
-    tirName: string;
-}
-
-export interface ITirFuncitonInfos {
-    // sigRoot: TirFuncSigTreeRoot; // includes all overloads
-    dataFuncSig: TirFuncT;
-    /**
-     * tir name of the function declaration,
-     * used to access the function in the program,
-     * useful to understad if the function is recursive
-    **/
-    tirSigName: string;
-    declContext: AstCompilationCtx;
-    astDecl: FuncExpr; // ast signature and body
-    fullyExtractedForm: ITirFuncFEFInfos | undefined;
-    concreteInstantiations: Set<string>
-    isMethod: boolean;
-}
-
 /**
  * for now we only care about "executables"
  * 
  * TODO: support libraries
  */
-export class TirProgram extends DiagnosticEmitter
+export class TypedProgram extends DiagnosticEmitter
 {
-    readonly values: Map<string, TirStmt>;
+    readonly constants: Map<string, TirExpr>;
+
+    readonly functions: Map<string, TirFuncExpr>;
+
     readonly types: Map<string, TirType>;
-    readonly funcSigs: Map<string, ITirFuncitonInfos>;
     private readonly genericTypes: Map<string, IGenericType>;
 
     /** main */
@@ -68,8 +39,8 @@ export class TirProgram extends DiagnosticEmitter
 
     readonly uid: UidGenerator
 
-    readonly stdScope: Scope;
-    readonly preludeScope: Scope;
+    readonly stdScope: AstScope;
+    readonly preludeScope: AstScope;
 
     constructor(
         diagnostics: DiagnosticMessage[] = []
@@ -78,16 +49,22 @@ export class TirProgram extends DiagnosticEmitter
         super( diagnostics );
         
         this.uid = new UidGenerator();
-        this.values = new Map();  
+
+        this.constants = new Map();
+
+        this.functions = new Map();
+        
         this.types = new Map();
+        this.genericTypes = new Map();
+
         this.filePrefix = new Map();
 
-        this.stdScope = new Scope( undefined, { isFunctionDeclScope: false, isMethodScope: false } );
+        this.stdScope = new AstScope( undefined, { isFunctionDeclScope: false, isMethodScope: false } );
         populateStdScope( this );
 
         this.stdTypes = new StdTypes( this );
 
-        this.preludeScope = new Scope( this.stdScope, { isFunctionDeclScope: false, isMethodScope: false } );
+        this.preludeScope = new AstScope( this.stdScope, { isFunctionDeclScope: false, isMethodScope: false } );
         populatePreludeScope( this );
     }
 
@@ -149,12 +126,12 @@ export class TirProgram extends DiagnosticEmitter
         };
     }
 
-    private _fileExports: Map<string, Scope> = new Map();
-    getExportedSymbols( srcAbsPathsrcAbsPath: string ): Scope | undefined
+    private _fileExports: Map<string, AstScope> = new Map();
+    getExportedSymbols( srcAbsPathsrcAbsPath: string ): AstScope | undefined
     {
         return this._fileExports.get( srcAbsPathsrcAbsPath );
     }
-    setExportedSymbols( srcAbsPathsrcAbsPath: string, scope: Scope ): void
+    setExportedSymbols( srcAbsPathsrcAbsPath: string, scope: AstScope ): void
     {
         this._fileExports.set( srcAbsPathsrcAbsPath, scope );
     }
@@ -174,7 +151,7 @@ export function getAppliedTirTypeName(
 }
 
 interface GenericInfosApplyScope {
-    program: TirProgram;
+    program: TypedProgram;
     tirKey: string;
     arity: number;
     mkApplied: ( tyArgs: TirType[] ) => TirType;

@@ -7,11 +7,11 @@ import { ExportStarStmt } from "../ast/nodes/statements/ExportStarStmt";
 import { ExportImportStmt } from "../ast/nodes/statements/ExportImportStmt";
 import { ImportStarStmt } from "../ast/nodes/statements/ImportStarStmt";
 import { ImportStmt } from "../ast/nodes/statements/ImportStmt";
-import { PebbleStmt } from "../ast/nodes/statements/PebbleStmt";
 import { TypeImplementsStmt } from "../ast/nodes/statements/TypeImplementsStmt";
 import { isVarStmt } from "../ast/nodes/statements/VarStmt";
+import { TopLevelStmt } from "../ast/nodes/statements/PebbleStmt";
 
-function moveStmt( stmts: PebbleStmt[], fromIdx: number, toIdx: number )
+function moveStmt( stmts: TopLevelStmt[], fromIdx: number, toIdx: number )
 {
     if( fromIdx === toIdx ) return;
     // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/splice
@@ -34,7 +34,7 @@ function moveStmt( stmts: PebbleStmt[], fromIdx: number, toIdx: number )
  * 7. function declarations and var declarations
  * 8. all other statements
  */
-export function hoistStatementsInplace( stmts: PebbleStmt[] ): void
+export function hoistStatementsInplace( stmts: TopLevelStmt[] ): void
 {
     const nStmts = stmts.length;
     let lastSortedIdx = 0;

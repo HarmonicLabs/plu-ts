@@ -1,5 +1,5 @@
 import { SourceRange } from "../../../ast/Source/SourceRange";
-import { ResolveValueResult } from "../../AstCompiler/scope/Scope";
+import { ResolveValueResult } from "../../AstCompiler/scope/AstScope";
 import { TirType } from "../types/TirType";
 import { ITirExpr } from "./ITirExpr";
 

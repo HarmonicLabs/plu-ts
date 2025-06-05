@@ -27,7 +27,6 @@ import { LitTrueExpr } from "../ast/nodes/expr/litteral/LitTrueExpr";
 import { ParentesizedExpr } from "../ast/nodes/expr/ParentesizedExpr";
 import { ArrowKind } from "../ast/nodes/expr/functions/ArrowKind";
 import { FuncExpr } from "../ast/nodes/expr/functions/FuncExpr";
-import { PebbleStmt } from "../ast/nodes/statements/PebbleStmt";
 import { AstBooleanType, AstBytesType, AstListType, AstIntType, AstNativeOptionalType, AstVoidType, AstLinearMapType, AstFuncType } from "../ast/nodes/types/AstNativeTypeExpr";
 import { AstNamedTypeExpr } from "../ast/nodes/types/AstNamedTypeExpr";
 import { LitArrExpr } from "../ast/nodes/expr/litteral/LitArrExpr";
@@ -78,6 +77,7 @@ import { IncrStmt } from "../ast/nodes/statements/IncrStmt";
 import { DecrStmt } from "../ast/nodes/statements/DecrStmt";
 import { ExportStmt } from "../ast/nodes/statements/ExportStmt";
 import { defaultSymbolForge } from "../compiler/internalVar";
+import { BodyStmt, TopLevelStmt } from "../ast/nodes/statements/PebbleStmt";
 
 interface ParseStmtOpts {
     isExport?: boolean;
@@ -158,7 +158,7 @@ export class Parser extends DiagnosticEmitter
         return this.diagnostics;
     }
 
-    parseTopLevelStatement(): PebbleStmt | undefined
+    parseTopLevelStatement(): TopLevelStmt | undefined
     {
         const tn = this.tn;
         
@@ -2749,14 +2749,14 @@ export class Parser extends DiagnosticEmitter
             topLevel: false,
             isExport: false
         }
-    ): PebbleStmt | undefined
+    ): BodyStmt | undefined
     {
         const tn = this.tn;
         // at previous token
 
         const state = tn.mark();
         const token = tn.next();
-        let statement: PebbleStmt | undefined = undefined;
+        let statement: BodyStmt | undefined = undefined;
         switch (token) {
             case Token.Break: {
                 statement = this.parseBreak();
@@ -2989,7 +2989,7 @@ export class Parser extends DiagnosticEmitter
         // at '{': PebbleStmt* '}' ';'?
 
         const startPos = tn.tokenPos;
-        const statements = new Array<PebbleStmt>();
+        const statements = new Array<BodyStmt>();
 
         while( !tn.skip( Token.CloseBrace ) )
         {
@@ -3189,7 +3189,7 @@ export class Parser extends DiagnosticEmitter
             );
         }
 
-        let update: PebbleStmt | undefined = undefined;
+        let update: BodyStmt | undefined = undefined;
         const updates: (AssignmentStmt | IncrStmt | DecrStmt)[] = [];
         if( !tn.skip( Token.CloseParen ) )
         {
@@ -3255,7 +3255,7 @@ export class Parser extends DiagnosticEmitter
         let thenStatement = this.parseStatement();
         if (!thenStatement) return undefined;
 
-        let elseStatement: PebbleStmt | undefined = undefined;
+        let elseStatement: BodyStmt | undefined = undefined;
         if( tn.skip( Token.Else ) )
         {
             elseStatement = this.parseStatement();

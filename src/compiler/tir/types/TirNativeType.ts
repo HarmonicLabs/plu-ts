@@ -1,5 +1,5 @@
 import { TirType } from "./TirType";
-import { getAppliedTirTypeName } from "../program/TirProgram";
+import { getAppliedTirTypeName } from "../program/TypedProgram";
 
 export type TirNamedDestructableNativeType
     = TirDataT

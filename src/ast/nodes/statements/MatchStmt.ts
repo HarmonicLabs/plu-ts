@@ -2,7 +2,7 @@ import { SourceRange } from "../../Source/SourceRange";
 import { VarDecl } from "./declarations/VarDecl/VarDecl";
 import { PebbleExpr } from "../expr/PebbleExpr";
 import { HasSourceRange } from "../HasSourceRange";
-import { PebbleStmt } from "./PebbleStmt";
+import { BodyStmt } from "./PebbleStmt";
 
 export class MatchStmt
     implements HasSourceRange
@@ -19,7 +19,7 @@ export class MatchStmtCase
 {
     constructor(
         readonly pattern: VarDecl,
-        readonly body: PebbleStmt,
+        readonly body: BodyStmt,
         readonly range: SourceRange,
     ) {}
 }

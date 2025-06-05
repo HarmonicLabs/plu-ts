@@ -7,7 +7,6 @@ import { DiagnosticCode } from "../../../../diagnostics/diagnosticMessages.gener
 import { getUniqueInternalName } from "../../../internalVar";
 import { TirFuncExpr } from "../../../tir/expressions/TirFuncExpr";
 import { TirVariableAccessExpr } from "../../../tir/expressions/TirVariableAccessExpr";
-import { ITirFuncitonInfos } from "../../../tir/program/TirProgram";
 import { TirStmt } from "../../../tir/statements/TirStmt";
 import { TirSimpleVarDecl } from "../../../tir/statements/TirVarDecl/TirSimpleVarDecl";
 import { TirFuncT } from "../../../tir/types/TirNativeType";
@@ -69,42 +68,6 @@ const isEven = _isEven( _isOdd_isEven );
 ```
 */
 
-export function _compileFuncDecl(
-    ctx: AstCompilationCtx,
-    funcInfos: ITirFuncitonInfos
-): boolean
-{
-    const {
-        astDecl,
-        concreteInstantiations,
-        tirSigName,
-        declContext,
-        isMethod,
-        fullyExtractedForm,
-    } = funcInfos;
-
-    const funcExpr = _compileFuncExpr(
-        ctx,
-        astDecl,
-        undefined, // signature
-        isMethod
-    );
-    if( !funcExpr ) return false;
-
-    const sig = funcExpr.signature();
-    const tirValueName = tirSigName + sig.toConcreteTirTypeName();
-
-    const program = ctx.program;
-    program.values.set(
-        tirValueName,
-        funcExpr
-    );
-
-    concreteInstantiations.add( tirValueName );
-
-    return true;
-}
-
 export function _compileFuncExpr(
     ctx: AstCompilationCtx,
     expr: FuncExpr,
@@ -125,7 +88,7 @@ export function _compileFuncExpr(
     {
         expectedFuncType = (
             isMethod ? undefined :
-            ctx.program.funcSigs.get( expr.name.text )?.dataFuncSig
+            ctx.program.functions.get( expr.name.text )?.sig()
         ) ?? getDataFuncSignature(
             ctx,
             expr.signature

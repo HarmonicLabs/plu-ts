@@ -7,7 +7,7 @@ import { TirType } from "../../tir/types/TirType";
 import { TirTypeParam } from "../../tir/types/TirTypeParam";
 import { int_t, bytes_t, bool_t, string_t } from "../../tir/program/stdScope/stdScope";
 import { AstCompilationCtx } from "../AstCompilationCtx";
-import { AstFuncName, TirFuncName } from "../scope/Scope";
+import { AstFuncName, TirFuncName } from "../scope/AstScope";
 
 export function getPropAccessReturnType(
     ctx: AstCompilationCtx,
@@ -119,10 +119,10 @@ function findPropInImpls(
     const tirFuncName = methodsNamesPtr.get( propName );
     if( !tirFuncName ) return undefined;
 
-    const funcInfos = ctx.program.funcSigs.get( tirFuncName );
+    const funcInfos = ctx.program.functions.get( tirFuncName );
     if( !funcInfos ) return undefined;
 
-    const fullSig = funcInfos.dataFuncSig;
+    const fullSig = funcInfos.sig();
     const methodSig = new TirFuncT(
         fullSig.argTypes.slice( 1 ),
         fullSig.returnType

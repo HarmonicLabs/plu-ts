@@ -3,7 +3,6 @@ import { TypeAliasDecl } from "../../ast/nodes/statements/declarations/TypeAlias
 import { ExportStarStmt } from "../../ast/nodes/statements/ExportStarStmt";
 import { ImportStarStmt } from "../../ast/nodes/statements/ImportStarStmt";
 import { ImportStmt } from "../../ast/nodes/statements/ImportStmt";
-import { PebbleStmt } from "../../ast/nodes/statements/PebbleStmt";
 import { Source, SourceKind } from "../../ast/Source/Source";
 import { SourceRange } from "../../ast/Source/SourceRange";
 import { DiagnosticEmitter } from "../../diagnostics/DiagnosticEmitter";
@@ -13,8 +12,8 @@ import { CompilerOptions } from "../../IR/toUPLC/CompilerOptions";
 import { Parser } from "../../parser/Parser";
 import { CompilerIoApi, createMemoryCompilerIoApi } from "../io/CompilerIoApi";
 import { IPebbleCompiler } from "../IPebbleCompiler";
-import { AstFuncName, PossibleTirTypes, Scope, TirFuncName } from "./scope/Scope";
-import { TirProgram } from "../tir/program/TirProgram";
+import { AstFuncName, PossibleTirTypes, AstScope, TirFuncName } from "./scope/AstScope";
+import { TypedProgram } from "../tir/program/TypedProgram";
 import { TirAliasType } from "../tir/types/TirAliasType";
 import { TirDataStructType, TirSoPStructType, TirStructConstr, TirStructField } from "../tir/types/TirStructType";
 import { ExportStmt } from "../../ast/nodes/statements/ExportStmt";
@@ -37,7 +36,8 @@ import { CommonFlags } from "../../common";
 import { SimpleVarDecl } from "../../ast/nodes/statements/declarations/VarDecl/SimpleVarDecl";
 import { Identifier } from "../../ast/nodes/common/Identifier";
 import { ArrowKind } from "../../ast/nodes/expr/functions/ArrowKind";
-import { _compileFuncDecl, _compileFuncExpr, getDataFuncSignature } from "./internal/exprs/_compileFuncExpr";
+import { _compileFuncExpr } from "./internal/exprs/_compileFuncExpr";
+import { TopLevelStmt } from "../../ast/nodes/statements/PebbleStmt";
 
 export interface AstTypeDefCompilationResult {
     sop: TirType | undefined,
@@ -60,9 +60,9 @@ This typically involves a two-pass system:
 */
  
 /**
- * compiles Pebble AST to a Typed IR program (TirProgram).
+ * compiles Pebble AST to a Typed IR program (TypedProgram).
  * 
- * AST -> TirProgram (astCompiler.program)
+ * AST -> TypedProgram (astCompiler.program)
  * 
  * The AST is simply the result of tokenization and parsing.
  * 
@@ -81,8 +81,8 @@ export class AstCompiler extends DiagnosticEmitter
      * 
      * (ScriptContext, built-in functions, etc.)
     **/
-    readonly preludeScope: Scope;
-    readonly program: TirProgram;
+    readonly preludeScope: AstScope;
+    readonly program: TypedProgram;
     readonly parsedAstSources: Map<string, Source> = new Map();
 
     get rootPath(): string
@@ -97,7 +97,7 @@ export class AstCompiler extends DiagnosticEmitter
     )
     {
         super( diagnostics );
-        this.program = new TirProgram( this.diagnostics );
+        this.program = new TypedProgram( this.diagnostics );
     }
 
     /**
@@ -105,7 +105,7 @@ export class AstCompiler extends DiagnosticEmitter
      * 
      * the result is store in `this.program`
      */
-    async compile(): Promise<TirProgram>
+    async compile(): Promise<TypedProgram>
     {
         const filePath = this.cfg.entry; // getEnvRelativePath( this.cfg.entry, this.rootPath );
         if( !filePath )
@@ -117,11 +117,11 @@ export class AstCompiler extends DiagnosticEmitter
             throw new Error("entry file not found");
         }
 
-        await this.compileFile( filePath, true );
-        if( this.diagnostics.length > 0 )
+        const entrySrc = await this.compileFile( filePath, true );
+        if( this.diagnostics.length > 0 || !entrySrc )
             throw new Error("compilation failed");
 
-        const mainFuncExpr = this.program.funcSigs.get( this.program.contractTirFuncName );
+        const mainFuncExpr = this.program.functions.get( this.program.contractTirFuncName );
         if( this.program.contractTirFuncName === "" || !mainFuncExpr ) {
             this.error(
                 DiagnosticCode.Main_function_is_missing,
@@ -130,12 +130,9 @@ export class AstCompiler extends DiagnosticEmitter
             return this.program;
         }
 
-        if( !_compileFuncDecl(
-            mainFuncExpr.declContext,
-            mainFuncExpr
-        )) this.error(
+        if( !mainFuncExpr ) this.error(
             DiagnosticCode._0_is_not_defined,
-            mainFuncExpr.astDecl.range,
+            entrySrc.range.atStart(),
             "main"
         );
 
@@ -143,7 +140,7 @@ export class AstCompiler extends DiagnosticEmitter
     }
 
     // mutually recursive
-    async compileFile( path: string, isMain = false ): Promise<void>
+    async compileFile( path: string, isMain = false ): Promise<Source | undefined>
     {
         const src = await this.getAbsoulteProjPathSource( path );
         if( !src ) return;
@@ -156,7 +153,9 @@ export class AstCompiler extends DiagnosticEmitter
         // if there were errors
         if( this.diagnostics.length > 0 ) return;
 
-        return this._compileParsedSource( src, isMain );
+        await this._compileParsedSource( src, isMain );
+
+        return src;
     }
 
     private readonly _srcDonelogUids = new Set<string>();
@@ -222,10 +221,10 @@ export class AstCompiler extends DiagnosticEmitter
     }
 
     private _collectAllTopLevelSignatures(
-        stmts: PebbleStmt[],
+        stmts: TopLevelStmt[],
         srcUid: string,
-        topLevelScope: Scope,
-        srcExports: Scope,
+        topLevelScope: AstScope,
+        srcExports: AstScope,
         isMain: boolean = false
     ): void
     {
@@ -277,7 +276,7 @@ export class AstCompiler extends DiagnosticEmitter
     private _collectInterfaceImplSigs(
         stmt: TypeImplementsStmt,
         srcUid: string,
-        topLevelScope: Scope
+        topLevelScope: AstScope
     ): void
     {
         stmt.typeIdentifier;
@@ -346,7 +345,7 @@ export class AstCompiler extends DiagnosticEmitter
                 method.signature.returnType,
                 method.signature.range,
             );
-            const funcExpr = new FuncExpr(
+            const astFuncExpr = new FuncExpr(
                 method.methodName,
                 CommonFlags.None,
                 [], // method.typeParameters,
@@ -356,30 +355,17 @@ export class AstCompiler extends DiagnosticEmitter
                 method.range
             );
 
-            const declContext = AstCompilationCtx.fromScope( this.program, topLevelScope )
-            // const sigRoot = getTirFuncSigTree(
-            //     completeSig,
-            //     declContext
-            // );
-
-            const dataFuncSig = getDataFuncSignature(
-                declContext,
-                funcExpr.signature
+            const funcExpr = _compileFuncExpr(
+                AstCompilationCtx.fromScope( this.program, topLevelScope ),
+                astFuncExpr,
+                undefined,
+                true, // isMethod
             );
-            if( !dataFuncSig ) return undefined;
+            if( !funcExpr ) return undefined;
 
-            this.program.funcSigs.set(
+            this.program.functions.set(
                 tirMethodName,
-                {
-                    // sigRoot,
-                    dataFuncSig,
-                    tirSigName: tirMethodName,
-                    astDecl: funcExpr,
-                    concreteInstantiations: new Set(),
-                    declContext,
-                    fullyExtractedForm: undefined,
-                    isMethod: true
-                }
+                funcExpr
             );
         }
 
@@ -388,45 +374,35 @@ export class AstCompiler extends DiagnosticEmitter
     private _collectTopLevelFuncDeclSig(
         stmt: FuncDecl,
         srcUid: string,
-        topLevelScope: Scope,
-        srcExports: Scope | undefined = undefined,
+        topLevelScope: AstScope,
+        srcExports: AstScope | undefined = undefined,
         exportRange: SourceRange | undefined = undefined,
         isMain: boolean = false
     ): void
     {
-        const funcExpr = stmt.expr;
-        const astFuncName = funcExpr.name.text;
+        const astFuncExpr = stmt.expr;
+        const astFuncName = astFuncExpr.name.text;
         const tirFuncName = PEBBLE_INTERNAL_IDENTIFIER_PREFIX + astFuncName + "_" + srcUid;
         
         const declContext = AstCompilationCtx.fromScope( this.program, topLevelScope );
-        
-        const dataFuncSig = getDataFuncSignature(
+
+        const funcExpr = _compileFuncExpr(
             declContext,
-            funcExpr.signature
+            astFuncExpr,
+            undefined, // sig
+            false // isMethod
         );
-        if( !dataFuncSig ) return undefined;
-
-        this.program.funcSigs.set(
+        if( !funcExpr ) return undefined;
+        
+        this.program.functions.set(
             tirFuncName,
-            {
-                // sigRoot,
-                dataFuncSig,
-                tirSigName: tirFuncName,
-                astDecl: funcExpr,
-                concreteInstantiations: new Set(),
-                declContext,
-                fullyExtractedForm: undefined,
-                isMethod: false
-            }
+            funcExpr
         );
 
-        if(
-            topLevelScope.variables.has( astFuncName )
-            || topLevelScope.functions.has( astFuncName )
-        )
+        if( topLevelScope.functions.has( astFuncName ) )
         return this.error(
             DiagnosticCode._0_is_already_defined,
-            funcExpr.name.range,
+            astFuncExpr.name.range,
             astFuncName
         );
 
@@ -458,14 +434,14 @@ export class AstCompiler extends DiagnosticEmitter
         if(
             isMain
             && this.program.contractTirFuncName === ""
-            && funcExpr.name.text === "main"
+            && astFuncExpr.name.text === "main"
         ) this.program.contractTirFuncName = tirFuncName;
     }
 
     private _collectInterfaceDeclarations(
-        stmts: PebbleStmt[],
-        topLevelScope: Scope,
-        srcExports: Scope
+        stmts: TopLevelStmt[],
+        topLevelScope: AstScope,
+        srcExports: AstScope
     ): void
     {
         for( let i = 0; i < stmts.length; i++ )
@@ -504,10 +480,10 @@ export class AstCompiler extends DiagnosticEmitter
     }
 
     private _collectTypeDeclarations(
-        stmts: PebbleStmt[],
+        stmts: TopLevelStmt[],
         srcUid: string,
-        topLevelScope: Scope,
-        srcExports: Scope
+        topLevelScope: AstScope,
+        srcExports: AstScope
     ): void
     {
         for( let i = 0; i < stmts.length; i++ )
@@ -591,7 +567,7 @@ export class AstCompiler extends DiagnosticEmitter
     private _compileStructDecl(
         stmt: StructDecl,
         srcUid: string,
-        topLevelScope: Scope
+        topLevelScope: AstScope
     ): AstTypeDefCompilationResult | undefined
     {
         if( stmt.typeParams.length > 0 ) throw new Error("not_implemented::AstCompiler::_compileStructDecl::typeParams");
@@ -697,7 +673,7 @@ export class AstCompiler extends DiagnosticEmitter
     private _compileTypeAliasDecl(
         stmt: TypeAliasDecl,
         srcUid: string,
-        topLevelScope: Scope
+        topLevelScope: AstScope
     ): AstTypeDefCompilationResult | undefined
     {
         if( stmt.typeParams.length > 0 ) throw new Error("not_implemented::AstCompiler::_compileTypeAliasDecl::typeParams");
@@ -730,9 +706,9 @@ export class AstCompiler extends DiagnosticEmitter
     }
 
     private _consumeImportsAddSymsInScope(
-        stmts: PebbleStmt[],
+        stmts: TopLevelStmt[],
         srcAbsPath: string,
-        srcImportsScope: Scope
+        srcImportsScope: AstScope
     ): void
     {
         for( let i = 0; i < stmts.length; i++ )

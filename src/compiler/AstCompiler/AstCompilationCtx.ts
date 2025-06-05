@@ -1,8 +1,8 @@
 import { DiagnosticEmitter } from "../../diagnostics/DiagnosticEmitter";
 import { DiagnosticMessage } from "../../diagnostics/DiagnosticMessage";
-import { TirProgram } from "../tir/program/TirProgram";
+import { TypedProgram } from "../tir/program/TypedProgram";
 import { TirType } from "../tir/types/TirType";
-import { Scope, ScopeInfos } from "./scope/Scope";
+import { AstScope, ScopeInfos } from "./scope/AstScope";
 
 
 export interface AstCompilationCtxFuncInfo {
@@ -16,7 +16,7 @@ export interface AstCompilationCtxFuncInfo {
 }
 
 export interface IAstCompilationCtx {
-    scope: Scope;
+    scope: AstScope;
     /** present if the statement is in a function body */
     functionCtx: AstCompilationCtxFuncInfo | undefined;
     /** to check if `continue` and `break` are valid in this context */
@@ -27,8 +27,8 @@ export class AstCompilationCtx extends DiagnosticEmitter
     implements IAstCompilationCtx
 {
     constructor(
-        readonly program: TirProgram,
-        readonly scope: Scope,
+        readonly program: TypedProgram,
+        readonly scope: AstScope,
         readonly functionCtx: AstCompilationCtxFuncInfo | undefined,
         readonly isLoop: boolean,
         public diagnostics: DiagnosticMessage[]
@@ -93,8 +93,8 @@ export class AstCompilationCtx extends DiagnosticEmitter
     }
 
     static fromScope(
-        program: TirProgram,
-        scope: Scope
+        program: TypedProgram,
+        scope: AstScope
     ): AstCompilationCtx
     {
         return new AstCompilationCtx(

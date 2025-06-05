@@ -1,7 +1,7 @@
 import { isObject } from "@harmoniclabs/obj-utils";
 import { TirInterfaceImpl } from "./TirInterfaceImpl";
 import { TirType } from "./TirType";
-import { AstFuncName, TirFuncName } from "../../AstCompiler/scope/Scope";
+import { AstFuncName, TirFuncName } from "../../AstCompiler/scope/AstScope";
 
 export interface ITirStructType {
     readonly name: string;

@@ -1,10 +1,10 @@
 import { CompilerOptions } from "../../IR/toUPLC/CompilerOptions";
-import { TirProgram } from "../tir/program/TirProgram";
+import { TypedProgram } from "../tir/program/TypedProgram";
 
 export class TirCompilerCtx
 {
     constructor(
         readonly cfg: CompilerOptions,
-        readonly program: TirProgram,
+        readonly program: TypedProgram,
     ) {}
 }

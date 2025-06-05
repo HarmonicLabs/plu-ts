@@ -1,6 +1,6 @@
 import { SourceRange } from "../../Source/SourceRange";
 import { HasSourceRange } from "../HasSourceRange";
-import { PebbleStmt } from "./PebbleStmt";
+import { BodyStmt } from "./PebbleStmt";
 
 /**
  * ```ts
@@ -11,7 +11,7 @@ export class ExportStmt
     implements HasSourceRange
 {
     constructor(
-        readonly stmt: PebbleStmt,
+        readonly stmt: BodyStmt,
         readonly range: SourceRange,
     ) {}
 }

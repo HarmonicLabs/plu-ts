@@ -4,12 +4,15 @@ import { TirSimpleVarDecl } from "../statements/TirVarDecl/TirSimpleVarDecl";
 import { TirType } from "../types/TirType";
 import { TirBlockStmt } from "../statements/TirBlockStmt";
 import { TirFuncT } from "../types/TirNativeType";
-import { TirTypeParam } from "../types/TirTypeParam";
 
 export class TirFuncExpr
     implements ITirExpr
 { 
     get type(): TirFuncT
+    {
+        return this.sig();
+    }
+    sig(): TirFuncT
     {
         return new TirFuncT(
             this.params.map( p => p.type ),

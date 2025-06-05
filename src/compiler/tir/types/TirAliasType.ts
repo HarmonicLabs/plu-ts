@@ -1,4 +1,4 @@
-import { AstFuncName, TirFuncName } from "../../AstCompiler/scope/Scope";
+import { AstFuncName, TirFuncName } from "../../AstCompiler/scope/AstScope";
 import { TirInterfaceImpl } from "./TirInterfaceImpl";
 import { TirType } from "./TirType";
 

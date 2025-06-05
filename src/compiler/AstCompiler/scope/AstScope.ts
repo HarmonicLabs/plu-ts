@@ -70,9 +70,9 @@ export interface PossibleTirTypes {
     isGeneric: boolean;
 }
 
-export class Scope
+export class AstScope
 {
-    readonly parent: Scope | undefined;
+    readonly parent: AstScope | undefined;
     /**
      * ast name -> Set<tir name>
      * 
@@ -110,7 +110,7 @@ export class Scope
     readonly infos: ScopeInfos;
     
     constructor(
-        parent: Scope | undefined,
+        parent: AstScope | undefined,
         infos: Partial<ScopeInfos>,
     ) {
         this.infos = normalizeScopeInfos( infos );
@@ -236,9 +236,9 @@ export class Scope
 
     readonly(): void { this._isReadonly = true; }
 
-    newChildScope( infos: Partial<ScopeInfos> ): Scope
+    newChildScope( infos: Partial<ScopeInfos> ): AstScope
     {
-        return new Scope( this, infos );
+        return new AstScope( this, infos );
     }
 
     /**
@@ -277,9 +277,9 @@ export class Scope
         );
     }
 
-    clone(): Scope
+    clone(): AstScope
     {
-        const cloned = new Scope(
+        const cloned = new AstScope(
             this.parent,
             this.infos
         );

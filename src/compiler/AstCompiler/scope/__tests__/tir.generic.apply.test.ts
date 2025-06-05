@@ -1,13 +1,13 @@
 import { TirAliasType } from "../../../tir/types/TirAliasType";
 import { TirBytesT, TirOptT } from "../../../tir/types/TirNativeType";
-import { Scope } from "../Scope";
+import { AstScope } from "../AstScope";
 import { PebbleConcreteTypeSym, PebbleGenericSym } from "../symbols/PebbleSym";
 
 
 describe("apply generic", () => {
     
     test("Optional<ScriptHash>", () => {
-        const stdScope = new Scope( undefined );
+        const stdScope = new AstScope( undefined );
         stdScope.defineType(
             new PebbleGenericSym({
                 name: "Optional",
@@ -20,7 +20,7 @@ describe("apply generic", () => {
             })
         );
         const bytes_t = new TirBytesT();
-        const preludeScope = new Scope( stdScope );
+        const preludeScope = new AstScope( stdScope );
         // export type Hash28 = bytes;
         const hash28_t = new TirAliasType(
             "Hash28",

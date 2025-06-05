@@ -1,6 +1,6 @@
 import { IRTerm } from "../../IR";
 import { CompilerOptions } from "../../IR/toUPLC/CompilerOptions";
-import { TirProgram } from "../tir/program/TirProgram";
+import { TypedProgram } from "../tir/program/TypedProgram";
 import { compileTirFuncExpr } from "./internal/compileTirFuncExpr";
 import { TirCompilerCtx } from "./TirCompilerCtx";
 
@@ -9,9 +9,9 @@ import { TirCompilerCtx } from "./TirCompilerCtx";
  * 
  * TIR -> IRTerm
  */
-export function compileTirProgram(
+export function compileTypedProgram(
     cfg: CompilerOptions,
-    tirProgram: TirProgram
+    tirProgram: TypedProgram
 ): IRTerm
 {
     const ctx = new TirCompilerCtx(

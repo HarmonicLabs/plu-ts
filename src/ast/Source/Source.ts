@@ -1,6 +1,5 @@
-import { LIBRARY_PREFIX, PATH_DELIMITER, LIBRARY_SUBST } from "../../common";
 import { CharCode } from "../../utils/CharCode";
-import { PebbleStmt } from "../nodes/statements/PebbleStmt";
+import { TopLevelStmt } from "../nodes/statements/PebbleStmt";
 import { SourceRange } from "./SourceRange";
 
 /** Indicates the specific kind of a source. */
@@ -37,7 +36,7 @@ export class Source {
     }
 
     /** Contained statements. */
-    statements: PebbleStmt[];
+    statements: TopLevelStmt[];
 
     /** Checks if this source is part of the (standard) library. */
     isLibrary(): boolean {
