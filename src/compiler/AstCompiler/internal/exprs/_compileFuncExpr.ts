@@ -123,7 +123,10 @@ export function _compileFuncExpr(
     }
     else
     {
-        expectedFuncType = getDataFuncSignature(
+        expectedFuncType = (
+            isMethod ? undefined :
+            ctx.program.funcSigs.get( expr.name.text )?.dataFuncSig
+        ) ?? getDataFuncSignature(
             ctx,
             expr.signature
         );
@@ -212,8 +215,14 @@ function _getDestructuredParamsAsVarDecls(
 
         // tirParam destructures simpleParam added to the block init stmts
         tirParam.initExpr = new TirVariableAccessExpr(
-            simpleParam.name,
-            simpleParam.type,
+            {
+                variableInfos: {
+                    astName: simpleParam.name,
+                    type: simpleParam.type,
+                    isConstant: true
+                },
+                isDefinedOutsideFuncScope: false,
+            },
             tirParam.range
         );
 

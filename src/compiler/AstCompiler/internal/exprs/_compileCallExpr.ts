@@ -15,9 +15,9 @@ export function _compileCallExpr(
 ): TirCallExpr | undefined
 {
     // TODO: expr.genericTypeArgs
-    expr.funcExpr;
-    expr.args;
-    expr.range;
+    // expr.funcExpr;
+    // expr.args;
+    // expr.range;
 
     if(!( typeHint instanceof TirFuncT )) typeHint = undefined;
 
