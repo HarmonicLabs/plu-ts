@@ -1,12 +1,13 @@
-import { HasSourceRange } from "../../../../ast/nodes/HasSourceRange";
 import { SourceRange } from "../../../../ast/Source/SourceRange";
 import { CommonFlags } from "../../../../common";
+import { mergeSortedStrArrInplace } from "../../../../utils/array/mergeSortedStrArrInplace";
 import { TirExpr } from "../../expressions/TirExpr";
 import { TirType } from "../../types/TirType";
+import { ITirStmt } from "../TirStmt";
 import { TirVarDecl } from "./TirVarDecl";
 
 export class TirSingleDeconstructVarDecl
-    implements HasSourceRange
+    implements ITirStmt
 {
     constructor(
         readonly fields: Map<string, TirVarDecl>,
@@ -16,4 +17,26 @@ export class TirSingleDeconstructVarDecl
         public flags: CommonFlags,
         readonly range: SourceRange,
     ) {}
+
+    hasReturnStmt(): boolean
+    {
+        return false;
+    }
+
+    deps(): string[]
+    {
+        return this.initExpr?.deps() ?? [];
+    }
+
+    definitelyTerminates(): boolean { return false; }
+
+    introducedVars(): string[]
+    {
+        const introducedVars: string[] = [];
+        for (const field of this.fields.values()) {
+            mergeSortedStrArrInplace( introducedVars, field.introducedVars() );
+        }
+        if( this.rest ) mergeSortedStrArrInplace( introducedVars, [ this.rest ] ); 
+        return introducedVars;
+    }
 }

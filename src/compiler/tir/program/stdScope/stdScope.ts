@@ -127,13 +127,13 @@ export function populatePreludeScope( program: TypedProgram ): void
     )) throw new Error("stdScope uninitialized");
 
     function _defineUnambigousAlias(
-        astName: string,
+        name: string,
         tirType: TirType,
         methodsNames: Map<AstFuncName, TirFuncName> = new Map()
     )
     {
         const t = new TirAliasType(
-            astName,
+            name,
             preludeFileUid,
             tirType,
             methodsNames
@@ -141,7 +141,7 @@ export function populatePreludeScope( program: TypedProgram ): void
         const tir_key = t.toTirTypeKey();
         program.types.set( tir_key, t );
         preludeScope.defineUnambigousType(
-            astName,
+            name,
             tir_key,
             t.hasDataEncoding(),
             methodsNames

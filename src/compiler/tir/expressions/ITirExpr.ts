@@ -3,5 +3,6 @@ import { TirType } from "../types/TirType";
 
 
 export interface ITirExpr extends HasSourceRange {
-    readonly type: TirType,
+    readonly type: TirType;
+    deps: () => string[];
 }

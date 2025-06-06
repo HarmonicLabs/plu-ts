@@ -1,14 +1,15 @@
-import { HasSourceRange } from "../../../ast/nodes/HasSourceRange";
 import { SourceRange } from "../../../ast/Source/SourceRange";
+import { filterSortedStrArrInplace } from "../../../utils/array/filterSortedStrArrInplace";
+import { mergeSortedStrArrInplace } from "../../../utils/array/mergeSortedStrArrInplace";
 import { TirExpr } from "../expressions/TirExpr";
-import { TirStmt } from "./TirStmt";
+import { ITirStmt, TirStmt } from "./TirStmt";
 import { TirVarDecl } from "./TirVarDecl/TirVarDecl";
 
 /**
  * for( `elemDeclaration` of iterable ) body
  */
 export class TirForOfStmt
-    implements HasSourceRange
+    implements ITirStmt
 {
     constructor(
         readonly elemDeclaration: TirVarDecl,
@@ -16,4 +17,26 @@ export class TirForOfStmt
         readonly body: TirStmt,
         readonly range: SourceRange,
     ) {}
+
+    hasReturnStmt(): boolean {
+        return this.body.hasReturnStmt();
+    }
+
+    definitelyTerminates(): boolean {
+        return this.body.definitelyTerminates();
+    }
+
+    deps(): string[]
+    {
+        const deps = this.iterable.deps();
+        const introducedVars = this.elemDeclaration.introducedVars();
+
+        return mergeSortedStrArrInplace(
+            deps,
+            filterSortedStrArrInplace(
+                this.body.deps(),
+                introducedVars
+            )
+        );
+    }
 }

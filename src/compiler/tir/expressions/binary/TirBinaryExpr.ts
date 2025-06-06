@@ -4,6 +4,7 @@ import { SourceRange } from "../../../../ast/Source/SourceRange";
 import { ITirExpr } from "../ITirExpr";
 import { TirType } from "../../types/TirType";
 import { bool_t, bytes_t, int_t } from "../../program/stdScope/stdScope";
+import { mergeSortedStrArrInplace } from "../../../../utils/array/mergeSortedStrArrInplace";
 
 
 export type TirBinaryExpr
@@ -70,6 +71,13 @@ export class TirExponentiationExpr
         readonly right: TirExpr,
         readonly range: SourceRange
     ) {}
+
+    deps(): string[]
+    {
+        const deps = this.left.deps();
+        mergeSortedStrArrInplace( deps, this.right.deps() );
+        return deps;
+    }
 }
 
 export class TirLessThanExpr
@@ -81,6 +89,13 @@ export class TirLessThanExpr
         readonly right: TirExpr,
         readonly range: SourceRange
     ) {}
+
+    deps(): string[]
+    {
+        const deps = this.left.deps();
+        mergeSortedStrArrInplace( deps, this.right.deps() );
+        return deps;
+    }
 }
 
 export class TirGreaterThanExpr
@@ -92,6 +107,13 @@ export class TirGreaterThanExpr
         readonly right: TirExpr,
         readonly range: SourceRange
     ) {}
+
+    deps(): string[]
+    {
+        const deps = this.left.deps();
+        mergeSortedStrArrInplace( deps, this.right.deps() );
+        return deps;
+    }
 }
 
 export class TirLessThanEqualExpr
@@ -103,6 +125,13 @@ export class TirLessThanEqualExpr
         readonly right: TirExpr,
         readonly range: SourceRange
     ) {}
+
+    deps(): string[]
+    {
+        const deps = this.left.deps();
+        mergeSortedStrArrInplace( deps, this.right.deps() );
+        return deps;
+    }
 }
 
 export class TirGreaterThanEqualExpr
@@ -114,6 +143,13 @@ export class TirGreaterThanEqualExpr
         readonly right: TirExpr,
         readonly range: SourceRange
     ) {}
+
+    deps(): string[]
+    {
+        const deps = this.left.deps();
+        mergeSortedStrArrInplace( deps, this.right.deps() );
+        return deps;
+    }
 }
 
 export class TirEqualExpr
@@ -125,6 +161,13 @@ export class TirEqualExpr
         readonly right: TirExpr,
         readonly range: SourceRange
     ) {}
+
+    deps(): string[]
+    {
+        const deps = this.left.deps();
+        mergeSortedStrArrInplace( deps, this.right.deps() );
+        return deps;
+    }
 }
 
 export class TirNotEqualExpr
@@ -136,6 +179,13 @@ export class TirNotEqualExpr
         readonly right: TirExpr,
         readonly range: SourceRange
     ) {}
+
+    deps(): string[]
+    {
+        const deps = this.left.deps();
+        mergeSortedStrArrInplace( deps, this.right.deps() );
+        return deps;
+    }
 }
 
 export class TirAddExpr
@@ -147,6 +197,13 @@ export class TirAddExpr
         readonly right: TirExpr,
         readonly range: SourceRange
     ) {}
+
+    deps(): string[]
+    {
+        const deps = this.left.deps();
+        mergeSortedStrArrInplace( deps, this.right.deps() );
+        return deps;
+    }
 }
 
 export class TirSubExpr
@@ -158,6 +215,13 @@ export class TirSubExpr
         readonly right: TirExpr,
         readonly range: SourceRange
     ) {}
+
+    deps(): string[]
+    {
+        const deps = this.left.deps();
+        mergeSortedStrArrInplace( deps, this.right.deps() );
+        return deps;
+    }
 }
 
 export class TirMultExpr
@@ -169,6 +233,13 @@ export class TirMultExpr
         readonly right: TirExpr,
         readonly range: SourceRange
     ) {}
+
+    deps(): string[]
+    {
+        const deps = this.left.deps();
+        mergeSortedStrArrInplace( deps, this.right.deps() );
+        return deps;
+    }
 }
 
 export class TirDivExpr 
@@ -180,6 +251,13 @@ export class TirDivExpr
         readonly right: TirExpr,
         readonly range: SourceRange
     ) {}
+
+    deps(): string[]
+    {
+        const deps = this.left.deps();
+        mergeSortedStrArrInplace( deps, this.right.deps() );
+        return deps;
+    }
 }
 
 export class TirModuloExpr
@@ -191,6 +269,13 @@ export class TirModuloExpr
         readonly right: TirExpr,
         readonly range: SourceRange
     ) {}
+
+    deps(): string[]
+    {
+        const deps = this.left.deps();
+        mergeSortedStrArrInplace( deps, this.right.deps() );
+        return deps;
+    }
 }
 
 export class TirShiftLeftExpr
@@ -202,6 +287,13 @@ export class TirShiftLeftExpr
         readonly right: TirExpr,
         readonly range: SourceRange
     ) {}
+
+    deps(): string[]
+    {
+        const deps = this.left.deps();
+        mergeSortedStrArrInplace( deps, this.right.deps() );
+        return deps;
+    }
 }
 
 export class TirShiftRightExpr
@@ -213,6 +305,13 @@ export class TirShiftRightExpr
         readonly right: TirExpr,
         readonly range: SourceRange
     ) {}
+
+    deps(): string[]
+    {
+        const deps = this.left.deps();
+        mergeSortedStrArrInplace( deps, this.right.deps() );
+        return deps;
+    }
 }
 
 export class TirBitwiseAndExpr
@@ -224,6 +323,13 @@ export class TirBitwiseAndExpr
         readonly right: TirExpr,
         readonly range: SourceRange
     ) {}
+
+    deps(): string[]
+    {
+        const deps = this.left.deps();
+        mergeSortedStrArrInplace( deps, this.right.deps() );
+        return deps;
+    }
 }
 
 export class TirBitwiseXorExpr
@@ -235,6 +341,13 @@ export class TirBitwiseXorExpr
         readonly right: TirExpr,
         readonly range: SourceRange
     ) {}
+
+    deps(): string[]
+    {
+        const deps = this.left.deps();
+        mergeSortedStrArrInplace( deps, this.right.deps() );
+        return deps;
+    }
 }
 
 export class TirBitwiseOrExpr
@@ -246,6 +359,13 @@ export class TirBitwiseOrExpr
         readonly right: TirExpr,
         readonly range: SourceRange
     ) {}
+
+    deps(): string[]
+    {
+        const deps = this.left.deps();
+        mergeSortedStrArrInplace( deps, this.right.deps() );
+        return deps;
+    }
 }
 
 export class TirLogicalAndExpr
@@ -257,6 +377,13 @@ export class TirLogicalAndExpr
         readonly right: TirExpr,
         readonly range: SourceRange
     ) {}
+
+    deps(): string[]
+    {
+        const deps = this.left.deps();
+        mergeSortedStrArrInplace( deps, this.right.deps() );
+        return deps;
+    }
 }
 
 export class TirLogicalOrExpr
@@ -268,6 +395,13 @@ export class TirLogicalOrExpr
         readonly right: TirExpr,
         readonly range: SourceRange
     ) {}
+
+    deps(): string[]
+    {
+        const deps = this.left.deps();
+        mergeSortedStrArrInplace( deps, this.right.deps() );
+        return deps;
+    }
 }
 
 /** `??` */
@@ -280,4 +414,11 @@ export class TirOptionalDefaultExpr
         readonly type: TirType,
         readonly range: SourceRange
     ) {}
+
+    deps(): string[]
+    {
+        const deps = this.left.deps();
+        mergeSortedStrArrInplace( deps, this.right.deps() );
+        return deps;
+    }
 }

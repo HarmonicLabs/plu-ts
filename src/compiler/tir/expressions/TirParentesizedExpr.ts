@@ -12,4 +12,9 @@ export class TirParentesizedExpr
         readonly type: TirType,
         readonly range: SourceRange
     ) {}
+
+    deps(): string[]
+    {
+        return this.expr.deps();
+    }
 }

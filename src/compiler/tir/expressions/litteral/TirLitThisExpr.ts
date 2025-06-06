@@ -8,4 +8,6 @@ export class TirLitThisExpr implements ITirExpr
         readonly type: TirType,
         readonly range: SourceRange
     ) {}
+
+    deps(): string[] { return []; }
 }

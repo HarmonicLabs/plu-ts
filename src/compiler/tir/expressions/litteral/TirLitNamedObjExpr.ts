@@ -4,6 +4,7 @@ import { SourceRange } from "../../../../ast/Source/SourceRange";
 import { TirExpr } from "../TirExpr";
 import { ITirLitObjExpr } from "./TirLitObjExpr";
 import { TirType } from "../../types/TirType";
+import { mergeSortedStrArrInplace } from "../../../../utils/array/mergeSortedStrArrInplace";
 
 export class TirLitNamedObjExpr
     implements ITirExpr, ITirLitObjExpr
@@ -15,4 +16,13 @@ export class TirLitNamedObjExpr
         readonly type: TirType,
         readonly range: SourceRange
     ) {}
+
+    deps(): string[]
+    {
+        return this.values.reduce((deps, value) => {
+            const valueDeps = value.deps();
+            mergeSortedStrArrInplace( deps, valueDeps );
+            return deps;
+        }, []);
+    }
 }

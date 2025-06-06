@@ -9,4 +9,6 @@ export class TirLitUndefExpr implements ITirExpr
         readonly type: TirType,
         readonly range: SourceRange
     ) {}
+
+    deps(): string[] { return []; }
 }

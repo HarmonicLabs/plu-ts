@@ -13,4 +13,9 @@ export class TirVariableAccessExpr
         readonly resolvedValue: ResolveValueResult, 
         readonly range: SourceRange
     ) {}
+
+    deps(): string[]
+    {
+        return [ this.resolvedValue.variableInfos.name ];
+    }
 }

@@ -132,13 +132,15 @@ export function _compileFuncExpr(
 
     body.stmts.unshift( ...blockInitStmts );
 
-    return new TirFuncExpr(
+    const funcExpr = new TirFuncExpr(
         expr.name.text,
         params,
         returnType,
         body,
         expr.range
     );
+
+    return funcExpr;
 }
 
 function _getDestructuredParamsAsVarDecls(
@@ -180,7 +182,7 @@ function _getDestructuredParamsAsVarDecls(
         tirParam.initExpr = new TirVariableAccessExpr(
             {
                 variableInfos: {
-                    astName: simpleParam.name,
+                    name: simpleParam.name,
                     type: simpleParam.type,
                     isConstant: true
                 },

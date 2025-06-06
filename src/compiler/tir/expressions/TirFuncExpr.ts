@@ -4,6 +4,8 @@ import { TirSimpleVarDecl } from "../statements/TirVarDecl/TirSimpleVarDecl";
 import { TirType } from "../types/TirType";
 import { TirBlockStmt } from "../statements/TirBlockStmt";
 import { TirFuncT } from "../types/TirNativeType";
+import { mergeSortedStrArrInplace } from "../../../utils/array/mergeSortedStrArrInplace";
+import { filterSortedStrArrInplace } from "../../../utils/array/filterSortedStrArrInplace";
 
 export class TirFuncExpr
     implements ITirExpr
@@ -42,19 +44,42 @@ export class TirFuncExpr
      */
     readonly isRecoverable: boolean = false;
 
-    isGeneric(): boolean
-    {
-        return false;
-        // return this.typeParams.length > 0;
-    }
-
     isAnonymous(): boolean
     {
         return this.name === "";
     }
-
-    signature(): TirFuncT
+    
+    private _deps: string[] | undefined = undefined;
+    private _defineDeps(): void
     {
-        return this.type;
+        if( Array.isArray( this._deps ) ) return;
+
+        const { introducedVars, deps } = this.params.reduce(( acc, param ) => {
+            mergeSortedStrArrInplace(
+                acc.deps,
+                filterSortedStrArrInplace(
+                    param.deps(),
+                    acc.introducedVars
+                )
+            );
+            mergeSortedStrArrInplace( acc.introducedVars, param.introducedVars() );
+            return acc;
+        }, { introducedVars: [], deps: [] });
+
+        mergeSortedStrArrInplace( deps, this.body.deps() );
+        filterSortedStrArrInplace( deps, introducedVars );
+
+        this._deps = deps;
+    }
+    deps(): string[]
+    {
+        this._defineDeps();
+        return this._deps!.slice();
+    }
+
+    isRecursive(): boolean
+    {
+        this._defineDeps();
+        return this._deps!.includes( this.name );
     }
 }

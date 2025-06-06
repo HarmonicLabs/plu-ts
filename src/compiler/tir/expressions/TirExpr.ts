@@ -13,6 +13,7 @@ import { isTirBinaryExpr, TirBinaryExpr } from "./binary/TirBinaryExpr";
 import { TirVariableAccessExpr } from "./TirVariableAccessExpr";
 import { TirNonNullExpr } from "./TirNonNullExpr";
 import { TirTypeConversionExpr } from "./TirTypeConversionExpr";
+import { HasSourceRange } from "../../../ast/nodes/HasSourceRange";
 
 export type TirExpr
     =( TirUnaryPrefixExpr

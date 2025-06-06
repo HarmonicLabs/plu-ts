@@ -11,4 +11,6 @@ export class TirLitHexBytesExpr
         readonly bytes: Uint8Array,
         readonly range: SourceRange
     ) {}
+
+    deps(): string[] { return []; }
 }

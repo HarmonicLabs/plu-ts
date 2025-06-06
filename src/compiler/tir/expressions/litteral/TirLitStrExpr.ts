@@ -12,4 +12,6 @@ export class TirLitStrExpr
         readonly string: string,
         readonly range: SourceRange
     ) {}
+
+    deps(): string[] { return []; }
 }

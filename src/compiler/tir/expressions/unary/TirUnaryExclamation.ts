@@ -12,4 +12,9 @@ export class TirUnaryExclamation
         readonly type: TirType,
         readonly range: SourceRange
     ) {}
+
+    deps(): string[]
+    {
+        return this.operand.deps();
+    }
 }

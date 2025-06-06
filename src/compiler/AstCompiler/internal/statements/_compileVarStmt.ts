@@ -73,7 +73,7 @@ export function _compileSimpleVarDecl(
     const [ finalVarType, initExpr ] = typeAndExpr;
 
     const success = ctx.scope.defineValue({
-        astName: decl.name.text,
+        name: decl.name.text,
         type: finalVarType,
         isConstant: decl.isConst()
     });
@@ -275,7 +275,7 @@ export function _compileArrayLikeDeconstr(
     {
         rest = decl.rest.text;
         const success = ctx.scope.defineValue({
-            astName: rest,
+            name: rest,
             type: finalVarType, // same list type
             isConstant: decl.isConst()
         });

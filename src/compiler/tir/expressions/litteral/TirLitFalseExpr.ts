@@ -9,4 +9,6 @@ export class TirLitFalseExpr implements ITirExpr
     constructor(
         readonly range: SourceRange
     ) {}
+
+    deps(): string[] { return []; }
 }

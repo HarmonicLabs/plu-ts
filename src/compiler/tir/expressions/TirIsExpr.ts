@@ -14,4 +14,9 @@ export class TirIsExpr
         readonly type: TirType,
         readonly range: SourceRange
     ) {}
+
+    deps(): string[]
+    {
+        return this.instanceExpr.deps();
+    }
 }

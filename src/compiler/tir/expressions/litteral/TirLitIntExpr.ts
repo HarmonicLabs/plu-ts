@@ -11,4 +11,6 @@ export class TirLitIntExpr
         readonly integer: bigint,
         readonly range: SourceRange
     ) {}
+
+    deps(): string[] { return []; }
 }

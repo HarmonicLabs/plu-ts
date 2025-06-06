@@ -57,7 +57,7 @@ export interface ResolveValueResult {
 }
 
 export interface IVariableInfos {
-    astName: string;
+    name: string;
     type: TirType;
     isConstant: boolean;
 }
@@ -124,18 +124,18 @@ export class AstScope
         if( this._isReadonly ) return false;
 
         if(
-            invalidSymbolNames.has( valueInfos.astName )
-            && !( valueInfos.astName === "this" && this.infos.isMethodScope )
+            invalidSymbolNames.has( valueInfos.name )
+            && !( valueInfos.name === "this" && this.infos.isMethodScope )
         ) return false;
-        if( this.variables.has( valueInfos.astName ) ) return false; // already defined
+        if( this.variables.has( valueInfos.name ) ) return false; // already defined
 
-        this.variables.set( valueInfos.astName, valueInfos );
+        this.variables.set( valueInfos.name, valueInfos );
         return true;
     }
 
-    resolveValue( astName: string ): ResolveValueResult | undefined
+    resolveValue( name: string ): ResolveValueResult | undefined
     {
-        const localValue = this.variables.get( astName );
+        const localValue = this.variables.get( name );
         if( localValue ) return {
             variableInfos: localValue,
             isDefinedOutsideFuncScope: false
@@ -143,7 +143,7 @@ export class AstScope
 
         if( this.parent )
         {
-            const parentValue = this.parent.resolveValue( astName );
+            const parentValue = this.parent.resolveValue( name );
             if( !parentValue ) return undefined;
 
             return {
@@ -156,7 +156,7 @@ export class AstScope
     }
 
     defineUnambigousType(
-        astName: string,
+        name: string,
         tirTypeKey: string,
         allowsDataEncoding: boolean,
         methodsNames: Map<AstFuncName, TirFuncName>
@@ -164,10 +164,10 @@ export class AstScope
     {
         if( this._isReadonly ) return false;
 
-        if( invalidSymbolNames.has( astName ) ) return false;
-        if( this.types.has( astName ) ) return false; // already defined
+        if( invalidSymbolNames.has( name ) ) return false;
+        if( this.types.has( name ) ) return false; // already defined
 
-        this.types.set( astName, {
+        this.types.set( name, {
             sopTirName: tirTypeKey,
             dataTirName: allowsDataEncoding ? undefined : tirTypeKey,
             allTirNames: new Set([ tirTypeKey ]),
@@ -178,33 +178,33 @@ export class AstScope
     }
 
     defineType(
-        astName: string,
+        name: string,
         possibleTirTypes: PossibleTirTypes
     ): boolean
     {
         if( this._isReadonly ) return false;
 
-        if( invalidSymbolNames.has( astName ) ) return false;
-        if( this.types.has( astName ) ) return false; // already defined
+        if( invalidSymbolNames.has( name ) ) return false;
+        if( this.types.has( name ) ) return false; // already defined
 
-        this.types.set( astName, possibleTirTypes );
+        this.types.set( name, possibleTirTypes );
         return true;
     }
 
     resolveLocalType(
-        astName: string
+        name: string
     ): PossibleTirTypes | undefined
     {
-        return this.types.get( astName );
+        return this.types.get( name );
     }
     
     resolveType(
-        astName: string
+        name: string
     ): PossibleTirTypes | undefined
     {
         return (
-            this.resolveLocalType( astName )
-            ?? this.parent?.resolveType( astName )
+            this.resolveLocalType( name )
+            ?? this.parent?.resolveType( name )
         );
     }
 
@@ -310,8 +310,8 @@ export class AstScope
                 }
             );
 
-        for( const [ astName, methods ] of this.interfaces )
-            cloned.interfaces.set( astName, new Map( methods ) );
+        for( const [ name, methods ] of this.interfaces )
+            cloned.interfaces.set( name, new Map( methods ) );
 
         return cloned;
     }

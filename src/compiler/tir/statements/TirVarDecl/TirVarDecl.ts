@@ -4,6 +4,10 @@ import { TirSingleDeconstructVarDecl } from "./TirSingleDeconstructVarDecl";
 import { TirArrayLikeDeconstr } from "./TirArrayLikeDeconstr";
 import { isObject } from "@harmoniclabs/obj-utils";
 
+export interface ITirVarDecl {
+    introducedVars: () => string[];
+}
+
 export type TirVarDecl
     = TirSimpleVarDecl
     | TirNamedDeconstructVarDecl
