@@ -1,0 +1,81 @@
+import { TirHoistedExpr } from "../../tir/expressions/TirHoistedExpr";
+import { TirNativeFuncExpr } from "../../tir/expressions/TirNativeFuncExpr";
+import { TypedProgram } from "../../tir/program/TypedProgram";
+import { expressify } from "../expressify/expressify";
+import { ExpressifyCtx } from "../expressify/ExpressifyCtx";
+import { expressifyVars } from "../expressify/expressifyVars";
+import { DepsNode } from "./deps/DepsNode";
+
+export function _compileHoistedDeps(
+    program: TypedProgram,
+    hoistedMap: Map<string, TirHoistedExpr | TirNativeFuncExpr>,
+    deps: string[],
+    depsStack: DepsNode
+): void
+{
+    let depName: string;
+    if(
+        deps.some( dep => depsStack.includes( dep ) )
+    ) throw new Error("Circular dependency in hoisted expressions NOT YET IMPLEMENTED");
+
+    while( depName = deps.pop()! )
+    {
+        const funcDecl = program.functions.get( depName );
+        if( funcDecl )
+        {
+            _compileHoistedDeps(
+                program,
+                hoistedMap,
+                funcDecl.deps(),
+                depsStack.getNext( depName )
+            );
+            const funcExpr = expressify(
+                funcDecl,
+                new ExpressifyCtx(
+                    undefined,
+                    funcDecl.returnType,
+                    hoistedMap
+                )
+            );
+            const hoistedExpr = new TirHoistedExpr(
+                depName,
+                funcDecl
+            );
+            hoistedMap.set( depName, hoistedExpr );
+            continue;
+        }
+
+        const constDecl = program.constants.get( depName );
+        if( constDecl )
+        {
+            _compileHoistedDeps(
+                program,
+                hoistedMap,
+                constDecl.deps(),
+                depsStack.getNext( depName )
+            );
+            const { modifiedExpr: expr, requiredSopExtractions } = expressifyVars(
+                new ExpressifyCtx(
+                    undefined,
+                    constDecl.type,
+                    hoistedMap
+                ),
+                constDecl
+            );
+            if( requiredSopExtractions.length > 0 )
+            {
+                throw new Error("SOP extractions in hoisted dependencies are not supported yet");
+            }
+            const hoistedExpr = new TirHoistedExpr(
+                depName,
+                expr
+            );
+            hoistedMap.set( depName, hoistedExpr );
+            continue;
+        }
+
+        throw new Error(
+            `Hoisted dependency "${depName}" not found in program`
+        );
+    }
+}

@@ -4,7 +4,6 @@ import { CaseExpr } from "../../../../ast/nodes/expr/CaseExpr";
 import { ElemAccessExpr } from "../../../../ast/nodes/expr/ElemAccessExpr";
 import { CallExpr } from "../../../../ast/nodes/expr/functions/CallExpr";
 import { FuncExpr } from "../../../../ast/nodes/expr/functions/FuncExpr";
-import { IsExpr } from "../../../../ast/nodes/expr/IsExpr";
 import { isLitteralExpr } from "../../../../ast/nodes/expr/litteral/LitteralExpr";
 import { ParentesizedExpr } from "../../../../ast/nodes/expr/ParentesizedExpr";
 import { PebbleExpr } from "../../../../ast/nodes/expr/PebbleExpr";
@@ -21,7 +20,6 @@ import { _compileCallExpr } from "./_compileCallExpr";
 import { _compileCaseExpr } from "./_compileCaseExpr";
 import { _compileElemAccessExpr } from "./_compileElemAccessExpr";
 import { _compileFuncExpr } from "./_compileFuncExpr";
-import { _compileIsExpr } from "./_compileIsExpr";
 import { _compileLitteralExpr } from "./_compileLitteralExpr";
 import { _compileNonNullExpr } from "./_compileNonNullExpr";
 import { _compilePropAccessExpr } from "./_compilePropAccessExpr";
@@ -61,15 +59,18 @@ export function _compileExpr(
     if( expr instanceof CaseExpr ) return _compileCaseExpr( ctx, expr, typeHint );
     if( expr instanceof TypeConversionExpr ) return _compileTypeConversionExpr( ctx, expr, typeHint );
     if( expr instanceof NonNullExpr ) return _compileNonNullExpr( ctx, expr, typeHint );
-    if( expr instanceof IsExpr ) return _compileIsExpr( ctx, expr, typeHint );
+    // if( expr instanceof IsExpr ) return _compileIsExpr( ctx, expr, typeHint );
     if( expr instanceof ElemAccessExpr ) return _compileElemAccessExpr( ctx, expr, typeHint );
     if( expr instanceof TernaryExpr ) return _compileTernaryExpr( ctx, expr, typeHint );
     if( isPropAccessExpr( expr ) ) return _compilePropAccessExpr( ctx, expr, typeHint );
     if( isBinaryExpr( expr ) ) return _compileBinaryExpr( ctx, expr, typeHint );
     //*/
 
-    if( isLitteralExpr( expr ) ) return _compileLitteralExpr( ctx, expr, typeHint );
+    if(
+        isLitteralExpr( expr )
+    ) return _compileLitteralExpr( ctx, expr, typeHint );
 
+    const tsEnsureExsautstiveCheck: never = expr;
     console.error( expr );
     throw new Error("unreachable::AstCompiler::_compileExpr");
 }

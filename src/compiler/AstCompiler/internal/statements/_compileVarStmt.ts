@@ -56,6 +56,7 @@ export function _compileVarDecl(
     if( decl instanceof ArrayLikeDeconstr )
         return _compileArrayLikeDeconstr( ctx, decl, typeHint );
 
+    const tsEnsureExsautstiveCheck: never = decl;
     console.error( decl );
     throw new Error("unreachable::AstCompiler::_compileVarDecl");
 }
@@ -87,6 +88,7 @@ export function _compileSimpleVarDecl(
         decl.name.text,
         finalVarType,
         initExpr,
+        decl.isConst(),
         decl.range
     );
 }
@@ -152,7 +154,7 @@ export function _compileNamedDeconstructVarDecl(
             rest,
             finalVarType,
             initExpr,
-            decl.flags,
+            decl.isConst(),
             decl.range
         );
     }
@@ -190,7 +192,7 @@ export function _compileNamedDeconstructVarDecl(
             rest,
             finalVarType,
             initExpr,
-            decl.flags,
+            decl.isConst(),
             decl.range
         );
     }
@@ -233,7 +235,7 @@ export function _compileSingleDeconstructVarDecl(
         rest,
         finalVarType,
         initExpr,
-        decl.flags,
+        decl.isConst(),
         decl.range
     );
 }
@@ -290,7 +292,7 @@ export function _compileArrayLikeDeconstr(
         rest,
         finalVarType,
         initExpr,
-        decl.flags,
+        decl.isConst(),
         decl.range
     );
 }

@@ -217,6 +217,7 @@ function uncheckedGetCanAssign(
         return currentDecision;
     }
 
+    const tsEnsureExsautstiveCheck: never = b;
     return CanAssign.No;
 }
 

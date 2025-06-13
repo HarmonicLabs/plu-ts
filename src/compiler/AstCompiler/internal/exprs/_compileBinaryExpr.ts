@@ -1,5 +1,6 @@
 import { BinaryExpr, ExponentiationExpr, LessThanExpr, GreaterThanExpr, LessThanEqualExpr, GreaterThanEqualExpr, EqualExpr, NotEqualExpr, AddExpr, SubExpr, MultExpr, DivExpr, ModuloExpr, ShiftLeftExpr, ShiftRightExpr, BitwiseAndExpr, BitwiseXorExpr, BitwiseOrExpr, LogicalAndExpr, LogicalOrExpr, OptionalDefaultExpr } from "../../../../ast/nodes/expr/binary/BinaryExpr";
 import { TirBinaryExpr } from "../../../tir/expressions/binary/TirBinaryExpr";
+import { TirExpr } from "../../../tir/expressions/TirExpr";
 import { TirType } from "../../../tir/types/TirType";
 import { AstCompilationCtx } from "../../AstCompilationCtx";
 import { _compileAddExpr } from "./binary/_compileAddExpr";
@@ -28,7 +29,7 @@ export function _compileBinaryExpr(
     ctx: AstCompilationCtx,
     expr: BinaryExpr,
     typeHint: TirType | undefined
-): TirBinaryExpr | undefined
+): TirExpr | undefined
 {
     if( expr instanceof ExponentiationExpr ) return _compileExponentiationExpr( ctx, expr, typeHint );
     if( expr instanceof LessThanExpr ) return _compileLessThanExpr( ctx, expr, typeHint );
@@ -51,6 +52,7 @@ export function _compileBinaryExpr(
     if( expr instanceof LogicalOrExpr ) return _compileLogicalOrExpr( ctx, expr, typeHint );
     if( expr instanceof OptionalDefaultExpr ) return _compileOptionalDefaultExpr( ctx, expr, typeHint );
 
+    const tsEnsureExsautstiveCheck: never = expr;
     console.error( expr );
     throw new Error("unreachable::AstCompiler::_compileBinaryExpr");
 }

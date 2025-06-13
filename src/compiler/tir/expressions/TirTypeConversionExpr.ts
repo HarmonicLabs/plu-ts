@@ -7,7 +7,7 @@ export class TirTypeConversionExpr
     implements ITirExpr
 {
     constructor(
-        readonly expr: TirExpr,
+        public expr: TirExpr,
         readonly type: TirType,
         readonly range: SourceRange
     ) {}

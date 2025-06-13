@@ -75,6 +75,7 @@ export function _compileUnaryPrefixExpr(
         return new TirUnaryTilde( operand, int_t, expr.range );
     }
 
+    const tsEnsureExsautstiveCheck: never = expr;
     console.error( expr );
     throw new Error("unreachable::AstCompiler::_compileUnaryPrefixExpr");
 }

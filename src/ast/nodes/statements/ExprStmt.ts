@@ -9,6 +9,7 @@ import { HasSourceRange } from "../HasSourceRange";
  * and function calls that do have side effects
  * (traces (if allowed), assertions and failing operations)
 **/
+/*
 export class ExprStmt
     implements HasSourceRange
 {
@@ -17,3 +18,4 @@ export class ExprStmt
         readonly range: SourceRange
     ) {}
 }
+    //*/

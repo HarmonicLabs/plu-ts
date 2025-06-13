@@ -20,6 +20,15 @@ export class SourceRange
         this.source = source;
     }
 
+    static get mock(): SourceRange
+    {
+        return new SourceRange(
+            Source.mock,
+            0,
+            0
+        );
+    }
+
     clone(): SourceRange
     {
         return new SourceRange(this.source, this.start, this.end);

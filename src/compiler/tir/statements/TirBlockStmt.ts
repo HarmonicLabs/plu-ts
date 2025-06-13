@@ -8,7 +8,7 @@ export class TirBlockStmt
     implements ITirStmt
 {
     constructor(
-        readonly stmts: TirStmt[],
+        public stmts: TirStmt[],
         readonly range: SourceRange
     ) {}
 

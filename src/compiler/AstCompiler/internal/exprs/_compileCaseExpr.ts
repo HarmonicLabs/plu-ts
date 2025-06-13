@@ -1,6 +1,7 @@
-import { CaseExpr, CaseExprMatcher } from "../../../../ast/nodes/expr/CaseExpr";
+import { CaseExpr, CaseExprMatcher, CaseWildcardMatcher } from "../../../../ast/nodes/expr/CaseExpr";
 import { DiagnosticCode } from "../../../../diagnostics/diagnosticMessages.generated";
-import { TirCaseExpr, TirCaseExprMatcher } from "../../../tir/expressions/TirCaseExpr";
+import { TirCaseExpr, TirCaseMatcher, TirWildcardCaseMatcher } from "../../../tir/expressions/TirCaseExpr";
+import { TirSimpleVarDecl } from "../../../tir/statements/TirVarDecl/TirSimpleVarDecl";
 import { TirType } from "../../../tir/types/TirType";
 import { canAssignTo } from "../../../tir/types/utils/canAssignTo";
 import { AstCompilationCtx } from "../../AstCompilationCtx";
@@ -23,7 +24,7 @@ export function _compileCaseExpr(
             matchExpr.type,
             typeHint
         )
-    ) as TirCaseExprMatcher[]; // we early return in case of undefined so this is safe
+    ) as TirCaseMatcher[]; // we early return in case of undefined so this is safe
     if( cases.some( c => !c ) ) return undefined;
 
     const returnType = cases[0]?.body.type ?? typeHint;
@@ -32,9 +33,26 @@ export function _compileCaseExpr(
         expr.range
     );
 
+    if( !expr.wildcardCase )
     return new TirCaseExpr(
         matchExpr,
         cases,
+        undefined,
+        returnType,
+        expr.range
+    );
+
+    const wildcardCase = _compileCaseWildcardMatcher(
+        ctx,
+        expr.wildcardCase,
+        returnType
+    );
+    if( !wildcardCase ) return undefined;
+
+    return new TirCaseExpr(
+        matchExpr,
+        cases,
+        wildcardCase,
         returnType,
         expr.range
     );
@@ -45,10 +63,16 @@ export function _compileCaseExprMatcher(
     matcher: CaseExprMatcher,
     patternType: TirType,
     returnTypeHint: TirType | undefined
-): TirCaseExprMatcher | undefined
+): TirCaseMatcher | undefined
 {
     const pattern = _compileVarDecl( ctx, matcher.pattern, patternType );
     if( !pattern ) return undefined;
+
+    if( pattern instanceof TirSimpleVarDecl ) return ctx.error(
+        DiagnosticCode._case_expression_must_decontructed_the_inspected_value,
+        matcher.pattern.range
+    );
+
     if( !canAssignTo( pattern.type, patternType ) ) return ctx.error(
         DiagnosticCode.Type_0_is_not_assignable_to_type_1,
         matcher.pattern.range, pattern.type.toString(), patternType.toString()
@@ -61,9 +85,24 @@ export function _compileCaseExprMatcher(
         matcher.body.range, body.type.toString(), returnTypeHint.toString()
     );
 
-    return new TirCaseExprMatcher(
+    return new TirCaseMatcher(
         pattern,
         body,
         matcher.range
+    );
+}
+
+function _compileCaseWildcardMatcher(
+    ctx: AstCompilationCtx,
+    wildcardCase: CaseWildcardMatcher,
+    returnTypeHint: TirType | undefined
+): TirWildcardCaseMatcher | undefined
+{
+    const bodyExpr = _compileExpr( ctx, wildcardCase.body, returnTypeHint );
+    if( !bodyExpr ) return undefined;
+
+    return new TirWildcardCaseMatcher(
+        bodyExpr,
+        wildcardCase.range
     );
 }

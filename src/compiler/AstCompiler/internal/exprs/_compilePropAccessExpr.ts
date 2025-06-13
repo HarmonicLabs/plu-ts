@@ -1,24 +1,34 @@
+import { kMaxLength } from "buffer";
 import { PropAccessExpr, OptionalPropAccessExpr, NonNullPropAccessExpr, DotPropAccessExpr } from "../../../../ast/nodes/expr/PropAccessExpr";
 import { NonNullExpr } from "../../../../ast/nodes/expr/unary/NonNullExpr";
 import { DiagnosticCode } from "../../../../diagnostics/diagnosticMessages.generated";
-import { TirPropAccessExpr, TirOptionalPropAccessExpr, TirDotPropAccessExpr } from "../../../tir/expressions/TirPropAccessExpr";
+import { TirCaseExpr, TirCaseMatcher } from "../../../tir/expressions/TirCaseExpr";
+import { TirExpr } from "../../../tir/expressions/TirExpr";
+import { TirPropAccessExpr } from "../../../tir/expressions/TirPropAccessExpr";
+import { TirVariableAccessExpr } from "../../../tir/expressions/TirVariableAccessExpr";
+import { TirNamedDeconstructVarDecl } from "../../../tir/statements/TirVarDecl/TirNamedDeconstructVarDecl";
+import { TirSimpleVarDecl } from "../../../tir/statements/TirVarDecl/TirSimpleVarDecl";
 import { TirSopOptT } from "../../../tir/types/TirNativeType";
 import { TirType } from "../../../tir/types/TirType";
+import { getOptTypeArg } from "../../../tir/types/utils/getOptTypeArg";
 import { AstCompilationCtx } from "../../AstCompilationCtx";
 import { getPropAccessReturnType } from "../../utils/getPropAccessReturnType";
 import { _compileExpr } from "./_compileExpr";
 import { _compileNonNullExpr } from "./_compileNonNullExpr";
+import { TirLitNamedObjExpr } from "../../../tir/expressions/litteral/TirLitNamedObjExpr";
+import { Identifier } from "../../../../ast/nodes/common/Identifier";
 
 export function _compilePropAccessExpr(
     ctx: AstCompilationCtx,
     expr: PropAccessExpr,
     typeHint: TirType | undefined
-): TirPropAccessExpr | undefined
+): TirExpr | undefined
 {
     if( expr instanceof OptionalPropAccessExpr ) return _compileOptionalPropAccessExpr( ctx, expr, typeHint );
     if( expr instanceof NonNullPropAccessExpr ) return _compileNonNullPropAccessExpr( ctx, expr, typeHint );
     if( expr instanceof DotPropAccessExpr ) return _compileDotPropAccessExpr( ctx, expr, typeHint );
 
+    const tsEnsureExsautstiveCheck: never = expr;
     console.error( expr );
     throw new Error("unreachable::AstCompiler::_compilePropAccessExpr");
 }
@@ -27,24 +37,110 @@ export function _compileOptionalPropAccessExpr(
     ctx: AstCompilationCtx,
     expr: OptionalPropAccessExpr,
     _typeHint: TirType | undefined
-): TirOptionalPropAccessExpr | undefined
+): TirExpr | undefined
 {
-    const objExpr = _compileExpr( ctx, expr.object, undefined );
-    if( !objExpr ) return undefined;
+    const optionalObjExpr = _compileExpr( ctx, expr.object, undefined );
+    if( !optionalObjExpr ) return undefined;
 
-    const objType = objExpr.type;
+    const optionalObjType = optionalObjExpr.type;
+    const objType = getOptTypeArg( optionalObjType );
+
+    if( !objType ) {
+        // object type is not optional, compile as a normal prop access
+
+        const returnType = getPropAccessReturnType( ctx, optionalObjType, expr.prop );
+        if( !returnType ) return ctx.error(
+            DiagnosticCode.Property_0_does_not_exist_on_type_1,
+            expr.prop.range, expr.prop.text, optionalObjType.toString()
+        );
+
+        return new TirPropAccessExpr(
+            optionalObjExpr,
+            expr.prop,
+            returnType,
+            expr.range
+        );
+    }
+
     const returnType = getPropAccessReturnType( ctx, objType, expr.prop );
     if( !returnType ) return ctx.error(
         DiagnosticCode.Property_0_does_not_exist_on_type_1,
         expr.prop.range, expr.prop.text, objType.toString()
     );
 
-    const optionalType = new TirSopOptT( returnType );
+    const optionalReturnType = new TirSopOptT( returnType );
 
-    return new TirOptionalPropAccessExpr(
-        objExpr,
-        expr.prop,
-        optionalType,
+    /*
+    `obj?.prop` is compiled as:
+    ```
+    case obj
+    is Some{ value } => value.prop
+    is None => None
+    ```
+    */
+    return new TirCaseExpr(
+        optionalObjExpr,
+        [
+            // is Some{ value } => value.prop
+            new TirCaseMatcher(
+                // Some{ value }
+                new TirNamedDeconstructVarDecl(
+                    "Some",
+                    new Map([
+                        [ "value", new TirSimpleVarDecl("value", objType, undefined, true, optionalObjExpr.range ) ]
+                    ]),
+                    undefined, // rest
+                    optionalObjType,
+                    undefined, // no init expr
+                    true, // constant
+                    expr.range.atEnd()
+                ),
+                // value.prop
+                new TirPropAccessExpr(
+                    // value
+                    new TirVariableAccessExpr(
+                        {
+                            variableInfos: {
+                                isConstant: true,
+                                name: "value",
+                                type: objType,
+                            },
+                            isDefinedOutsideFuncScope: false,
+                        },
+                        optionalObjExpr.range
+                    ),
+                    // .prop
+                    expr.prop,
+                    returnType,
+                    expr.range
+                ),
+                expr.range
+            ),
+            // is None => None
+            new TirCaseMatcher(
+                // is None
+                new TirNamedDeconstructVarDecl(
+                    "None",
+                    new Map(),
+                    undefined, // rest
+                    optionalObjType,
+                    undefined, // no init expr
+                    true, // constant
+                    expr.range
+                ),
+                // => None
+                new TirLitNamedObjExpr(
+                    new Identifier("None", optionalObjExpr.range.atEnd()),
+                    [],
+                    [],
+                    optionalObjExpr.type,
+                    optionalObjExpr.range.atEnd()
+                ),
+                optionalObjExpr.range.atEnd()
+            )
+        ],
+        undefined, // no wildcard case
+        optionalReturnType,
         expr.range
     );
 }
@@ -53,17 +149,17 @@ export function _compileNonNullPropAccessExpr(
     ctx: AstCompilationCtx,
     expr: NonNullPropAccessExpr,
     _typeHint: TirType | undefined
-): TirDotPropAccessExpr | undefined
+): TirPropAccessExpr | undefined
 {
-    const nonNullObj = _compileNonNullExpr(
+    const nonNullObjExpr = _compileNonNullExpr(
         ctx,
         new NonNullExpr( expr.object, expr.object.range ),
         undefined
     );
-    if( !nonNullObj ) return undefined;
+    if( !nonNullObjExpr ) return undefined;
     return _compileDotPropAccessExpr(
         ctx,
-        new DotPropAccessExpr( nonNullObj, expr.prop, expr.range ),
+        new DotPropAccessExpr( nonNullObjExpr, expr.prop, expr.range ),
         _typeHint
     );
 }
@@ -72,7 +168,7 @@ export function _compileDotPropAccessExpr(
     ctx: AstCompilationCtx,
     expr: DotPropAccessExpr,
     _typeHint: TirType | undefined
-): TirDotPropAccessExpr | undefined
+): TirPropAccessExpr | undefined
 {
     const objExpr = _compileExpr( ctx, expr.object, undefined );
     if( !objExpr ) return undefined;
@@ -84,7 +180,7 @@ export function _compileDotPropAccessExpr(
         expr.prop.range, expr.prop.text, objType.toString()
     );
 
-    return new TirDotPropAccessExpr(
+    return new TirPropAccessExpr(
         objExpr,
         expr.prop,
         returnType,

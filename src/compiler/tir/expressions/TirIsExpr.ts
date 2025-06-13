@@ -5,6 +5,7 @@ import { TirType } from "../types/TirType";
 import { TirExpr } from "./TirExpr";
 
 
+/*
 export class TirIsExpr
     implements HasSourceRange
 {
@@ -20,3 +21,4 @@ export class TirIsExpr
         return this.instanceExpr.deps();
     }
 }
+//*/

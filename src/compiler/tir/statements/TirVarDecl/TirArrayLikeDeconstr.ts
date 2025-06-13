@@ -13,7 +13,7 @@ export class TirArrayLikeDeconstr
         readonly rest: string | undefined,
         public type: TirType,
         public initExpr: TirExpr | undefined,
-        public flags: number,
+        public isConst: boolean,
         readonly range: SourceRange,
     ) {}
 

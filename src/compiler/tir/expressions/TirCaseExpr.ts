@@ -2,7 +2,9 @@ import { HasSourceRange } from "../../../ast/nodes/HasSourceRange";
 import { SourceRange } from "../../../ast/Source/SourceRange";
 import { filterSortedStrArrInplace } from "../../../utils/array/filterSortedStrArrInplace";
 import { mergeSortedStrArrInplace } from "../../../utils/array/mergeSortedStrArrInplace";
-import { TirVarDecl } from "../statements/TirVarDecl/TirVarDecl";
+import { TirArrayLikeDeconstr } from "../statements/TirVarDecl/TirArrayLikeDeconstr";
+import { TirNamedDeconstructVarDecl } from "../statements/TirVarDecl/TirNamedDeconstructVarDecl";
+import { TirSingleDeconstructVarDecl } from "../statements/TirVarDecl/TirSingleDeconstructVarDecl";
 import { TirType } from "../types/TirType";
 import { ITirExpr } from "./ITirExpr";
 import { TirExpr } from "./TirExpr";
@@ -11,8 +13,9 @@ export class TirCaseExpr
     implements ITirExpr
 {
     constructor(
-        readonly matchExpr: TirExpr,
-        readonly cases: TirCaseExprMatcher[],
+        public matchExpr: TirExpr,
+        readonly cases: TirCaseMatcher[],
+        readonly wildcardCase: TirWildcardCaseMatcher | undefined,
         readonly type: TirType,
         readonly range: SourceRange,
     ) {}
@@ -20,19 +23,26 @@ export class TirCaseExpr
     deps(): string[]
     {
         const deps: string[] = this.matchExpr.deps();
-        for (const matcher of this.cases) {
+        for( const matcher of this.cases ) {
             mergeSortedStrArrInplace( deps, matcher.deps() );
         }
+        if( this.wildcardCase ) mergeSortedStrArrInplace( deps, this.wildcardCase.deps() );
         return deps;
     }
 }
 
-export class TirCaseExprMatcher
+export type TirCasePattern
+    = TirNamedDeconstructVarDecl
+    | TirSingleDeconstructVarDecl
+    | TirArrayLikeDeconstr
+    ;
+
+export class TirCaseMatcher
     implements HasSourceRange
 {
     constructor(
-        readonly pattern: TirVarDecl,
-        readonly body: TirExpr,
+        readonly pattern: TirCasePattern,
+        public body: TirExpr,
         readonly range: SourceRange,
     ) {}
 
@@ -42,5 +52,19 @@ export class TirCaseExprMatcher
         const deps: string[] = this.body.deps();
         filterSortedStrArrInplace( deps, nonDeps );
         return deps;
+    }
+}
+
+export class TirWildcardCaseMatcher
+    implements HasSourceRange
+{
+    constructor(
+        public body: TirExpr,
+        readonly range: SourceRange,
+    ) {}
+
+    deps(): string[]
+    {
+        return this.body.deps();
     }
 }

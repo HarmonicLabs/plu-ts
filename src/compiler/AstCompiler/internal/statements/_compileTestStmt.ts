@@ -1,11 +1,11 @@
 import { TestStmt } from "../../../../ast/nodes/statements/TestStmt";
 import { DiagnosticCode } from "../../../../diagnostics/diagnosticMessages.generated";
 import { TirBlockStmt } from "../../../tir/statements/TirBlockStmt";
-import { TirTestStmt } from "../../../tir/statements/TirTestStmt";
 import { AstCompilationCtx } from "../../AstCompilationCtx";
 import { wrapManyStatements } from "../../utils/wrapManyStatementsOrReturnSame";
 import { _compileStatement } from "./_compileStatement";
 
+/*
 export function _compileTestStmt(
     ctx: AstCompilationCtx,
     stmt: TestStmt
@@ -35,3 +35,4 @@ export function _compileTestStmt(
         stmt.range
     ) ];
 }
+//*/

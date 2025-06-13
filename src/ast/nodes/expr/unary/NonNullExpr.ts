@@ -7,7 +7,7 @@ export class NonNullExpr
     implements HasSourceRange
 {
     constructor(
-        readonly operand: PebbleExpr,
+        public operand: PebbleExpr,
         readonly range: SourceRange
     ) {}
 }

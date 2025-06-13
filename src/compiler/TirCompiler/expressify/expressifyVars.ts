@@ -1,0 +1,373 @@
+import { isUnaryPrefixExpr } from "../../../ast/nodes/expr/unary/UnaryPrefixExpr";
+import { isTirBinaryExpr, TirExponentiationExpr } from "../../tir/expressions/binary/TirBinaryExpr";
+import { TirLitArrExpr } from "../../tir/expressions/litteral/TirLitArrExpr";
+import { TirLitFalseExpr } from "../../tir/expressions/litteral/TirLitFalseExpr";
+import { TirLitHexBytesExpr } from "../../tir/expressions/litteral/TirLitHexBytesExpr";
+import { TirLitIntExpr } from "../../tir/expressions/litteral/TirLitIntExpr";
+import { TirLitNamedObjExpr } from "../../tir/expressions/litteral/TirLitNamedObjExpr";
+import { TirLitObjExpr } from "../../tir/expressions/litteral/TirLitObjExpr";
+import { TirLitStrExpr } from "../../tir/expressions/litteral/TirLitStrExpr";
+import { isTirLitteralExpr } from "../../tir/expressions/litteral/TirLitteralExpr";
+import { TirLitThisExpr } from "../../tir/expressions/litteral/TirLitThisExpr";
+import { TirLitTrueExpr } from "../../tir/expressions/litteral/TirLitTrueExpr";
+import { TirLitUndefExpr } from "../../tir/expressions/litteral/TirLitUndefExpr";
+import { TirLitVoidExpr } from "../../tir/expressions/litteral/TirLitVoidExpr";
+import { TirCallExpr } from "../../tir/expressions/TirCallExpr";
+import { TirCaseExpr, TirCaseMatcher } from "../../tir/expressions/TirCaseExpr";
+import { TirElemAccessExpr } from "../../tir/expressions/TirElemAccessExpr";
+import { TirExpr } from "../../tir/expressions/TirExpr";
+import { TirFailExpr } from "../../tir/expressions/TirFailExpr";
+import { TirFromDataExpr } from "../../tir/expressions/TirFromDataExpr";
+import { TirFuncExpr } from "../../tir/expressions/TirFuncExpr";
+import { TirHoistedExpr } from "../../tir/expressions/TirHoistedExpr";
+import { TirLettedExpr } from "../../tir/expressions/TirLettedExpr";
+import { TirNativeFuncExpr } from "../../tir/expressions/TirNativeFuncExpr";
+import { TirParentesizedExpr } from "../../tir/expressions/TirParentesizedExpr";
+import { TirPropAccessExpr } from "../../tir/expressions/TirPropAccessExpr";
+import { TirTernaryExpr } from "../../tir/expressions/TirTernaryExpr";
+import { TirTypeConversionExpr } from "../../tir/expressions/TirTypeConversionExpr";
+import { TirVariableAccessExpr } from "../../tir/expressions/TirVariableAccessExpr";
+import { TirUnaryExclamation } from "../../tir/expressions/unary/TirUnaryExclamation";
+import { TirUnaryMinus } from "../../tir/expressions/unary/TirUnaryMinus";
+import { TirUnaryPlus } from "../../tir/expressions/unary/TirUnaryPlus";
+import { TirUnaryTilde } from "../../tir/expressions/unary/TirUnaryTilde";
+import { TirBlockStmt } from "../../tir/statements/TirBlockStmt";
+import { TirReturnStmt } from "../../tir/statements/TirReturnStmt";
+import { TirStmt } from "../../tir/statements/TirStmt";
+import { TirArrayLikeDeconstr } from "../../tir/statements/TirVarDecl/TirArrayLikeDeconstr";
+import { TirNamedDeconstructVarDecl } from "../../tir/statements/TirVarDecl/TirNamedDeconstructVarDecl";
+import { TirSimpleVarDecl } from "../../tir/statements/TirVarDecl/TirSimpleVarDecl";
+import { TirSoPStructType } from "../../tir/types/TirStructType";
+import { getUnaliased } from "../../tir/types/utils/getUnaliased";
+import { expressify, expressifyFuncBody } from "./expressify";
+import { ExpressifyCtx, isExpressifyFuncParam } from "./ExpressifyCtx";
+import { flattenSopNamedDeconstructInplace_addTopDestructToCtx_getNestedDeconstruct } from "./flattenSopNamedDeconstructInplace_addTopDestructToCtx_getNestedDeconstruct";
+import { isSingleConstrStruct } from "./isSingleConstrStruct";
+import { toNamedDeconstructVarDecl } from "./toNamedDeconstructVarDecl";
+
+/**
+ * Side effect: modifies the expression in place if possible.
+ * 
+ * **ASSUME THE INPUT EXPRESSION IS INVALID AFTER THIS FUNCTION CALL.**
+ * 
+ * @returns a the modified expression
+**/
+export function expressifyVars(
+    ctx: ExpressifyCtx,
+    expr: TirExpr
+): TirExpr
+{
+    if(
+        // isTirLitteralExpr( expr )
+        expr instanceof TirLitVoidExpr
+        || expr instanceof TirLitUndefExpr
+        || expr instanceof TirLitTrueExpr
+        || expr instanceof TirLitFalseExpr
+        || expr instanceof TirLitThisExpr
+        || expr instanceof TirLitArrExpr
+        || expr instanceof TirLitObjExpr
+        || expr instanceof TirLitNamedObjExpr
+        || expr instanceof TirLitStrExpr
+        || expr instanceof TirLitIntExpr
+        || expr instanceof TirLitHexBytesExpr
+        || expr instanceof TirNativeFuncExpr
+        // hoisted expressions are necessarily closed, so no external variables
+        || expr instanceof TirHoistedExpr
+    ) return expr; 
+
+    // every property access must be replaced with a variable access (or similar)
+    // that is either letted/hoisted/nativeFunc/varAccess expression
+    //
+    // we don't have property access in TermIR (or UPLC)
+    if( expr instanceof TirPropAccessExpr ) {
+        const objectExpr = expressifyVars( ctx, expr.object );
+        expr.object = objectExpr;
+        return getVarAccessFromPropAccess( ctx, expr );
+    }
+
+    if( expr instanceof TirVariableAccessExpr ) {
+        const originalVarName = expr.resolvedValue.variableInfos.name;
+        const resolvedVariable = ctx.getVariable( originalVarName );
+        
+        if( !resolvedVariable ) return expr; // variable not found, keep the original expression
+        
+        if( isExpressifyFuncParam( resolvedVariable ) ) {
+            // variable was shadowed
+            expr.resolvedValue.variableInfos.name = resolvedVariable.name;
+            return expr;
+        }
+
+        // resovledVariable instanceof TirVariableAccessExpr
+        return resolvedVariable;
+    }
+
+    if( isUnaryPrefixExpr( expr ) ) {
+        const modifiedExpr = expressifyVars( ctx, expr.operand );
+        expr.operand = modifiedExpr;
+        return expr;
+    }
+    if(
+        expr instanceof TirParentesizedExpr
+        || expr instanceof TirTypeConversionExpr
+    ) {
+        const modifiedExpr = expressifyVars( ctx, expr.expr );
+        expr.expr = modifiedExpr;
+        return expr;
+    }
+    if( expr instanceof TirFuncExpr ) {
+        expressify( expr, ctx );
+        return expr;
+    }
+    if( expr instanceof TirCallExpr ) {
+        const func = expressifyVars( ctx, expr.func );
+        expr.func = func;
+        for( let i = 0; i < expr.args.length; i++ ) {
+            const arg = expressifyVars( ctx, expr.args[i] );
+            expr.args[i] = arg;
+        }
+        return expr;
+    }
+    if( expr instanceof TirCaseExpr ) {
+        const matchExpr = expressifyVars( ctx, expr.matchExpr );
+        expr.matchExpr = matchExpr;
+        for( let i = 0; i < expr.cases.length; i++ ) {
+            const c = expr.cases[i];
+            const branchCtx = ctx.newChild();
+
+            if( c.pattern instanceof TirArrayLikeDeconstr )
+            throw new Error(
+                "case expression not yet supported for array-like deconstruction"
+            );
+
+            const pattern = toNamedDeconstructVarDecl( c.pattern );
+
+            const branchBodyStmts: TirStmt[] = flattenSopNamedDeconstructInplace_addTopDestructToCtx_getNestedDeconstruct(
+                pattern,
+                branchCtx,
+            );
+            branchBodyStmts.push(
+                new TirReturnStmt( c.body, c.body.range )
+            );
+
+            c.body = expressifyFuncBody( branchCtx, branchBodyStmts );
+        }
+        return expr;
+    }
+    if( expr instanceof TirElemAccessExpr ) {
+        const arrExpr = expressifyVars( ctx, expr.arrLikeExpr );
+        const indexExpr = expressifyVars( ctx, expr.indexExpr );
+        expr.arrLikeExpr = arrExpr;
+        expr.indexExpr = indexExpr;
+        return expr;
+    }
+    if( expr instanceof TirTernaryExpr ) {
+        const condition = expressifyVars( ctx, expr.condition );
+        const ifTrue = expressifyVars( ctx, expr.ifTrue );
+        const ifFalse = expressifyVars( ctx, expr.ifFalse );
+        expr.condition = condition;
+        expr.ifTrue = ifTrue;
+        expr.ifFalse = ifFalse;
+        return expr;
+    }
+
+    if( isTirBinaryExpr( expr ) ) {
+        const left = expressifyVars( ctx, expr.left );
+        const right = expressifyVars( ctx, expr.right );
+        expr.left = left;
+        expr.right = right;
+        return expr;
+    }
+
+    if( expr instanceof TirLettedExpr ) {
+        const modifiedExpr = expressifyVars( ctx, expr.expr );
+        expr.expr = modifiedExpr;
+        return expr;
+    }
+
+    if( expr instanceof TirFromDataExpr ) {
+        const modifiedExpr = expressifyVars( ctx, expr.dataExpr );
+        expr.dataExpr = modifiedExpr;
+        return expr;
+    }
+
+    if( expr instanceof TirFailExpr ) {
+        let requiredSopExtractions: TirNamedDeconstructVarDecl[] = [];
+        if( expr.failMsgExpr ) {
+            const modifiedExpr = expressifyVars( ctx, expr.failMsgExpr );
+            expr.failMsgExpr = modifiedExpr;
+        }
+        return expr;
+    }
+
+    const tsEnsureExsautstiveCheck: never = expr;
+    console.error( expr );
+    throw new Error("unreachable::expressifyVars");
+}
+
+function getVarAccessFromPropAccess(
+    ctx: ExpressifyCtx,
+    propAccessExpr: TirPropAccessExpr
+): TirExpr
+{
+    const requiredSopExtractions: TirNamedDeconstructVarDecl[] = [];
+    let expr = propAccessExpr.object;
+    const prop = propAccessExpr.prop.text;
+
+    while( expr instanceof TirParentesizedExpr ) expr = expr.expr;
+
+    if(
+        expr instanceof TirLitVoidExpr
+        || expr instanceof TirLitUndefExpr
+        || expr instanceof TirLitTrueExpr
+        || expr instanceof TirLitFalseExpr
+        // methods on these should have already been converted to functions
+        || expr instanceof TirLitArrExpr
+        || expr instanceof TirLitStrExpr
+        || expr instanceof TirLitIntExpr
+        || expr instanceof TirLitHexBytesExpr
+        || expr instanceof TirNativeFuncExpr
+        || expr instanceof TirPropAccessExpr // `expressifyVars` is called recursively on the object before this check
+        // these result to native types
+        || expr instanceof TirUnaryExclamation // boolean
+        || expr instanceof TirUnaryPlus // int
+        || expr instanceof TirUnaryMinus // int
+        || expr instanceof TirUnaryTilde // bytes
+        || expr instanceof TirFuncExpr // functions have no properties
+        || expr instanceof TirParentesizedExpr // typescript being stupid
+        || isTirBinaryExpr( expr ) // all of these return either int, bytes or boolean
+    ) throw new Error( "Invalid property access expression" );
+
+    if( expr instanceof TirLitThisExpr ) {
+        let varName = ctx.properties.get( "this" )?.get( prop );
+        if( !varName ) throw new Error(
+            `Property '${prop}' does not exist on 'this'`
+        );
+        varName = ctx.variables.get( varName )?.latestName ?? varName;
+
+        const expr = ctx.getVariable( varName );
+        if( isExpressifyFuncParam( expr ) ) {
+            return new TirVariableAccessExpr(
+                {
+                    variableInfos: {
+                        name: expr.name,
+                        type: expr.type,
+                        isConstant: true,
+                    },
+                    isDefinedOutsideFuncScope: false,
+                },
+                propAccessExpr.range
+            )
+        }
+
+        return expr;
+    }
+
+    if( 
+        expr instanceof TirLitObjExpr 
+        || expr instanceof TirLitNamedObjExpr 
+    ) {
+        const valIdx = expr.fieldNames.findIndex( f => f.text === prop );
+        if( valIdx < 0 ) throw new Error(
+            `Property '${prop}' does not exist on object literal`
+        );
+        return expr.values[valIdx];
+    }
+
+    if(
+        expr instanceof TirHoistedExpr
+        || expr instanceof TirLettedExpr
+        || expr instanceof TirVariableAccessExpr
+        // all of these are valid property access expressions
+        // and we need to inspect the return type to check if the property exists
+        || expr instanceof TirCallExpr
+        || expr instanceof TirCaseExpr
+        || expr instanceof TirTypeConversionExpr 
+        || expr instanceof TirElemAccessExpr
+        || expr instanceof TirTernaryExpr 
+        || expr instanceof TirFromDataExpr
+        || expr instanceof TirFailExpr
+    ) {
+
+        if(
+            expr instanceof TirHoistedExpr
+            || expr instanceof TirLettedExpr
+            || expr instanceof TirVariableAccessExpr
+        ) {
+            let varName = ctx.properties.get( expr.varName )?.get( prop );
+            if( varName ) {
+                varName = ctx.variables.get( varName )?.latestName ?? varName;
+    
+                const result = ctx.getVariable( varName );
+                if( isExpressifyFuncParam( result ) ) {
+                    return new TirVariableAccessExpr(
+                        {
+                            variableInfos: {
+                                name: result.name,
+                                type: result.type,
+                                isConstant: true,
+                            },
+                            isDefinedOutsideFuncScope: false,
+                        },
+                        propAccessExpr.range
+                    )
+                }
+    
+                return result;
+            }
+
+            // if there is no property in the context
+            // we extract the property inplace below
+        }
+
+        const objType = getUnaliased( expr.type );
+
+        if( !isSingleConstrStruct( objType ) )
+        throw new Error("cannot access property on non-struct type");
+
+        const ctor = objType.constructors[0];
+        const fIdx = ctor.fields.findIndex( f => f.name === prop );
+        if( fIdx < 0 ) throw new Error(
+            `Property '${prop}' does not exist on type '${objType.toString()}'`
+        );
+
+        const fName = ctor.fields[fIdx].name;
+        const fType = ctor.fields[fIdx].type;
+
+        return new TirCaseExpr(
+            expr,
+            [
+                new TirCaseMatcher(
+                    new TirNamedDeconstructVarDecl(
+                        ctor.name,
+                        new Map([
+                            [ fName, new TirSimpleVarDecl( fName, fType, undefined, true, propAccessExpr.range ) ]
+                        ]),
+                        undefined, // rest
+                        expr.type,
+                        undefined, // init expr
+                        true, // isConst
+                        propAccessExpr.range
+                    ),
+                    new TirVariableAccessExpr(
+                        {
+                            variableInfos: {
+                                name: fName,
+                                type: fType,
+                                isConstant: true,
+                            },
+                            isDefinedOutsideFuncScope: false,
+                        },
+                        propAccessExpr.range
+                    ),
+                    propAccessExpr.range
+                )
+            ],
+            undefined, // wildcard case
+            fType,
+            propAccessExpr.range
+        );
+    };
+
+    const tsEnsureExsautstiveCheck: never = expr;
+    throw new Error("Invalid property access expression");
+}

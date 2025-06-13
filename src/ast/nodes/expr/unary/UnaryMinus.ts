@@ -7,7 +7,7 @@ export class UnaryMinus
     implements HasSourceRange, IUnaryExpression
 {
     constructor(
-        readonly operand: PebbleExpr,
+        public operand: PebbleExpr,
         readonly range: SourceRange
     ) {}
 }

@@ -8,7 +8,7 @@ export class TirUnaryPlus
     implements ITirExpr, ITirUnaryExpression
 {
     constructor(
-        readonly operand: TirExpr,
+        public operand: TirExpr,
         readonly type: TirType,
         readonly range: SourceRange
     ) {}

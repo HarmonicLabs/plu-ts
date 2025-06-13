@@ -16,7 +16,7 @@ export class TirNamedDeconstructVarDecl
         readonly rest: string | undefined,
         readonly type: TirType,
         public initExpr: TirExpr | undefined,
-        public flags: CommonFlags,
+        public isConst: boolean,
         readonly range: SourceRange,
     ) {}
 

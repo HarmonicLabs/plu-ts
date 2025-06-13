@@ -9,6 +9,7 @@ export class CaseExpr
     constructor(
         readonly matchExpr: PebbleExpr,
         readonly cases: CaseExprMatcher[],
+        readonly wildcardCase: CaseWildcardMatcher | undefined,
         readonly range: SourceRange,
     ) {}
 }
@@ -18,6 +19,15 @@ export class CaseExprMatcher
 {
     constructor(
         readonly pattern: VarDecl,
+        readonly body: PebbleExpr,
+        readonly range: SourceRange,
+    ) {}
+}
+
+export class CaseWildcardMatcher
+    implements HasSourceRange
+{
+    constructor(
         readonly body: PebbleExpr,
         readonly range: SourceRange,
     ) {}

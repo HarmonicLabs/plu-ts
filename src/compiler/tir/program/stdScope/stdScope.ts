@@ -610,15 +610,33 @@ export function populatePreludeScope( program: TypedProgram ): void
     const value_t = _defineUnambigousAlias( "Value", map_policyId_map_tokenName_int_t );
     
     /* // TODO
+    untagged struct FlatValueEntry {
+        policy: PolicyId,
+        name: bytes,
+        amount: int
+    }
+
+    type FlatValue = List<FlatValueEntry>;
+
     type Value implements {
         amountOf( policy: PolicyId, name: bytes ): int
         {
-            // todo
-            fail;
+            return native.valueAmountOf( this, policy, name );
         }
         lovelaces(): int
         {
             return this.amountOf( #, # );
+        }
+        flatten(): FlatValue
+        {
+            return native.flattenValue( this );
+        }
+    }
+
+    type FlatValue implements {
+        unflatten(): Value
+        {
+            return native.unflattenValue( this );
         }
     }
     */

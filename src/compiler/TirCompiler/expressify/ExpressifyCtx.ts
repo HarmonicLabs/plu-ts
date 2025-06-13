@@ -1,0 +1,583 @@
+import { isObject } from "@harmoniclabs/obj-utils";
+import { SourceRange } from "../../../ast/Source/SourceRange";
+import { str } from "../../../type_system";
+import { getUniqueInternalName } from "../../internalVar";
+import { TirEqualExpr } from "../../tir/expressions/binary/TirBinaryExpr";
+import { TirLitIntExpr } from "../../tir/expressions/litteral/TirLitIntExpr";
+import { TirCallExpr } from "../../tir/expressions/TirCallExpr";
+import { TirElemAccessExpr } from "../../tir/expressions/TirElemAccessExpr";
+import { TirExpr } from "../../tir/expressions/TirExpr";
+import { TirFromDataExpr } from "../../tir/expressions/TirFromDataExpr";
+import { TirHoistedExpr } from "../../tir/expressions/TirHoistedExpr";
+import { TirLettedExpr } from "../../tir/expressions/TirLettedExpr";
+import { TirNativeFuncExpr } from "../../tir/expressions/TirNativeFuncExpr";
+import { TirVariableAccessExpr } from "../../tir/expressions/TirVariableAccessExpr";
+import { data_t, int_t } from "../../tir/program/stdScope/stdScope";
+import { TirAssertStmt } from "../../tir/statements/TirAssertStmt";
+import { TirArrayLikeDeconstr } from "../../tir/statements/TirVarDecl/TirArrayLikeDeconstr";
+import { TirNamedDeconstructVarDecl } from "../../tir/statements/TirVarDecl/TirNamedDeconstructVarDecl";
+import { TirSimpleVarDecl } from "../../tir/statements/TirVarDecl/TirSimpleVarDecl";
+import { TirSingleDeconstructVarDecl } from "../../tir/statements/TirVarDecl/TirSingleDeconstructVarDecl";
+import { TirListT, TirUnConstrDataResultT } from "../../tir/types/TirNativeType";
+import { TirDataStructType } from "../../tir/types/TirStructType";
+import { isTirType, TirType } from "../../tir/types/TirType";
+import { getListTypeArg } from "../../tir/types/utils/getListTypeArg";
+import { toNamedDeconstructVarDecl } from "./toNamedDeconstructVarDecl";
+
+/**
+ * Static Single Assignment (SSA) variable name.
+ * 
+ * while expressifying, we convert mutable variables to constants,
+ * where the latest shadows the previous ones.
+ * 
+ * each new constant introduced is given a new name, added to the context map, pointing to the same `LatestVarNameSSA`.
+ * any following variable access that refers to the same variable, will be replaced to the latest name.
+ */
+export interface LatestVarNameSSA {
+    latestName: string;
+}
+
+export interface ExpressifyFuncParam {
+    name: string;
+    type: TirType;
+}
+
+export function isExpressifyFuncParam( thing: any ): thing is ExpressifyFuncParam
+{
+    return isObject( thing ) && (
+        typeof thing.name === "string"
+        && isTirType( thing.type )
+    );
+}
+
+export class ExpressifyCtx
+{
+    readonly hoisted: Map<string, TirHoistedExpr | TirNativeFuncExpr> = new Map();
+
+    constructor(
+        readonly parent: ExpressifyCtx | undefined,
+        readonly returnType: TirType,
+        hoisted?: Map<string, TirHoistedExpr | TirNativeFuncExpr>,
+        /** var name -> latest constant name */
+        readonly variables: Map<string, LatestVarNameSSA> = new Map(),
+        /** constant name -> func param name (to build var access) */
+        readonly funcParams: Map<string, ExpressifyFuncParam> = new Map(),
+        /** constant name -> letted expr */
+        readonly lettedConstants: Map<string, TirLettedExpr> = new Map(),
+        /** var name -> prop name -> constant name (letted field extraction expr or var access for SoP)*/
+        readonly properties: Map<string, Map<string, string>> = new Map(),
+    ) {
+        this.hoisted = hoisted ?? this.parent?.hoisted!;
+        if( !this.hoisted )
+        throw new Error("hoisted map is not defined in expressify context");
+    }
+
+    newChild(): ExpressifyCtx
+    {
+        return new ExpressifyCtx( this, this.returnType );
+    }
+
+    setFuncParam(
+        name: string,
+        type: TirType
+    ): void
+    {
+        this.variables.set( name, { latestName: name } );
+        this.funcParams.set( name, { name, type } );
+    }
+
+    /**
+     * `undefined` means the variable is not in the local context.
+     */
+    getLocalVariable( name: string ): TirLettedExpr | ExpressifyFuncParam | undefined
+    {
+        // declared as constant shortcut
+        const constResult = this.lettedConstants.get( name );
+        if( constResult ) return constResult;
+
+        // declared as variable or param
+        const latestConstName = this.variables.get( name )?.latestName;
+        // no such variable
+        if( !latestConstName ) return undefined;
+
+        return (
+            this.lettedConstants.get( latestConstName )
+            ?? this.funcParams.get( latestConstName )
+        );
+    }
+
+    /**
+     * 
+     * `undefined` means the variable is not in the function context.
+     * 
+     * so it is assumed to be an external (hoisted) variable.
+     */
+    private _getNonHoistedVariable( name: string ): TirLettedExpr | ExpressifyFuncParam | undefined
+    {
+        return (
+            this.getLocalVariable( name )
+            ?? this.parent?._getNonHoistedVariable( name )
+        );
+    }
+
+    getVariable(
+        name: string
+    ): ExpressifyFuncParam | TirHoistedExpr | TirNativeFuncExpr | TirLettedExpr
+    {
+        const result = (
+            this._getNonHoistedVariable( name )
+            ?? this.hoisted.get( name )
+        );
+        if( !result ) throw new Error(`variable '${name}' not found in the context`);
+        return result;
+    }
+
+    introduceFuncParams(
+        params: readonly TirSimpleVarDecl[]
+    ): void
+    {
+        for( const param of params ) {
+            param.isConst = true;
+            this.setFuncParam( param.name, param.type );
+        }
+    }
+
+    introduceLettedConstant(
+        name: string,
+        lettedExpr: TirExpr,
+        declRange: SourceRange
+    ): TirLettedExpr
+    {
+        const result = new TirLettedExpr(
+            name,
+            lettedExpr,
+            declRange
+        );
+        this.lettedConstants.set(
+            name,
+            result
+        );
+        return result.unsafeClone();
+    }
+
+    introduceSopConstrFieldsAsProperties(
+        sopName: string,
+        destructuredPattern: TirNamedDeconstructVarDecl,
+    ): void
+    {
+        const fieldsMap: Map<string, string> = new Map();
+        for( const [ fName, varDecl ] of destructuredPattern.fields )
+        {
+            if(!( varDecl instanceof TirSimpleVarDecl ))
+            throw new Error("expected simple var decl in single constr field extraction");
+
+            this.setFuncParam(
+                varDecl.name,
+                varDecl.type
+            );
+            fieldsMap.set(
+                fName,
+                varDecl.name
+            );
+        }
+        this.properties.set(
+            sopName,
+            fieldsMap
+        );
+    }
+
+    introduceSopConstrFieldsAsParamsOnly(
+        destructuredPattern: TirNamedDeconstructVarDecl
+    ): void
+    {
+        for( const [ fName, varDecl ] of destructuredPattern.fields )
+        {
+            if(!( varDecl instanceof TirSimpleVarDecl ))
+            throw new Error("expected simple var decl in single constr field extraction");
+
+            this.setFuncParam(
+                varDecl.name,
+                varDecl.type
+            );
+        }
+    }
+
+    introduceSingleConstrDataLettedFields(
+        varName: string,
+        structExpr: TirExpr,
+        structType: TirDataStructType
+    ): void
+    {
+        const constr = structType.constructors[0];
+        if( constr.fields.length === 0 ) return; // no fields to extract
+
+        const lettedRawFieldsName = getUniqueInternalName(`${varName}_fields`);
+        const lettedFields = this.introduceLettedConstant(
+            lettedRawFieldsName,
+            new TirCallExpr(
+                TirNativeFuncExpr.constrRawFields,
+                [ structExpr ],
+                new TirListT( data_t ),
+                structExpr.range
+            ),
+            structExpr.range
+        );
+
+        const fieldsMap: Map<string, string> = new Map();
+        for( let i = 0; i < constr.fields.length; i++ )
+        {
+            const field = constr.fields[i];
+            const fieldName = field.name;
+            const fieldVarName = getUniqueInternalName(`${varName}_${fieldName}`);
+            const fieldType = field.type;
+
+            const lettedField = this.introduceLettedConstant(
+                fieldVarName,
+                // FieldType.fromData( lettedFields[i] )
+                new TirFromDataExpr(
+                    new TirElemAccessExpr(
+                        lettedFields,
+                        new TirLitIntExpr(
+                            BigInt(i),
+                            structExpr.range
+                        ),
+                        data_t,
+                        structExpr.range
+                    ),
+                    fieldType,
+                    structExpr.range
+                ),
+                structExpr.range,
+            );
+
+            fieldsMap.set(
+                fieldName,
+                fieldVarName
+            );
+
+            // data structs cannot have sop-encoded fields (thanks god)
+            // recursively introduce letted fields for nested single-constructor data structs
+            if(
+                fieldType instanceof TirDataStructType
+                && fieldType.constructors.length === 1
+            )
+            {
+                this.introduceSingleConstrDataLettedFields(
+                    fieldVarName,
+                    lettedField,
+                    fieldType
+                );
+            }
+        }
+
+        this.properties.set(
+            varName,
+            fieldsMap
+        );
+    }
+
+    introduceDeconstrDataLettedFields(
+        stmt: TirNamedDeconstructVarDecl
+    ): TirAssertStmt[]
+    {
+        const structType = stmt.type;
+        if(!( stmt.initExpr )) throw new Error("expected init expr in deconstruct data statement");
+        if(!( structType instanceof TirDataStructType )) throw new Error("expected data struct type in deconstruct data statement");
+
+        const varName = getUniqueInternalName( structType.toString().toLowerCase() );
+
+        const constrName = stmt.constrName;
+        const constrIdx = structType.constructors.findIndex( c => c.name === constrName );
+        if( constrIdx < 0 ) throw new Error(`constructor ${constrName} not found in data struct ${structType.name}`);
+
+        const constr = structType.constructors[constrIdx];
+        if( constr.fields.length === 0 ) return []; // no fields to extract, no assertions
+
+        const structExpr = stmt.initExpr;
+
+        const lettedUnconstrName = getUniqueInternalName(`${varName}_unconstrPair`);
+        const lettedUnconstr = this.introduceLettedConstant(
+            lettedUnconstrName,
+            new TirCallExpr(
+                TirNativeFuncExpr.unBytesData,
+                [ stmt.initExpr ],
+                new TirUnConstrDataResultT(),
+                stmt.range
+            ),
+            stmt.range
+        );
+
+        const assertions: TirAssertStmt[] = [];
+
+        if( structType.constructors.length > 0 )
+        assertions.push( 
+            new TirAssertStmt(
+                new TirEqualExpr(
+                    new TirCallExpr(
+                        TirNativeFuncExpr.unConstrDataResultIndex,
+                        [ lettedUnconstr ],
+                        int_t,
+                        stmt.range
+                    ),
+                    new TirLitIntExpr(
+                        BigInt(constrIdx),
+                        stmt.range
+                    ),
+                    stmt.range
+                ),
+                undefined, // no trace message
+                stmt.range
+            )
+        );
+
+        const lettedRawFieldsName = getUniqueInternalName(`${varName}_fields`);
+        const lettedFields = this.introduceLettedConstant(
+            lettedRawFieldsName,
+            new TirCallExpr(
+                TirNativeFuncExpr.unConstrDataResultFields,
+                [ lettedUnconstr ],
+                new TirListT( data_t ),
+                stmt.range
+            ),
+            stmt.range
+        );
+
+        const fieldsToIntroduce: string[] = [ ...stmt.fields.keys() ]
+        const hasRest = typeof stmt.rest === "string";
+
+        const fieldsMap: Map<string, string> = new Map();
+        for( let i = 0; i < constr.fields.length; i++ )
+        {
+            const field = constr.fields[i];
+            const fieldName = field.name;
+            const fieldType = field.type;
+
+            const isFieldToIntroduce = fieldsToIntroduce.includes( fieldName )
+            if( !hasRest && !isFieldToIntroduce ) continue; // skip unused field
+
+            const fieldVarDecl = stmt.fields.get( fieldName );
+
+            const fieldVarName = getUniqueInternalName(`${varName}_${fieldName}`);
+            
+            const lettedField = this.introduceLettedConstant(
+                fieldVarName,
+                // FieldType.fromData( lettedFields[i] )
+                new TirFromDataExpr(
+                    new TirElemAccessExpr(
+                        lettedFields,
+                        new TirLitIntExpr(
+                            BigInt(i),
+                            structExpr.range
+                        ),
+                        data_t,
+                        structExpr.range
+                    ),
+                    fieldType,
+                    structExpr.range
+                ),
+                structExpr.range,
+            );
+
+            if( hasRest )
+            fieldsMap.set(
+                fieldName,
+                fieldVarName
+            );
+
+            if( !isFieldToIntroduce ) {
+                continue; // we only needed to add it as "rest"
+            }
+            if( !fieldVarDecl )
+            throw new Error(`field '${fieldName}' not found in deconstruct data statement`);
+ 
+            if( fieldVarDecl instanceof TirSimpleVarDecl )
+            {
+                this.variables.set(
+                    fieldVarDecl.name,
+                    { latestName: lettedField.varName }
+                );
+            }
+
+            // data structs cannot have sop-encoded fields (thanks god)
+            // recursively introduce letted fields for nested single-constructor data structs
+            if(!( fieldType instanceof TirDataStructType )) continue; 
+
+            // if the field is simply introduced but still a single constr struct
+            // we need to introduce its fields as well
+            if(
+                fieldVarDecl instanceof TirSimpleVarDecl
+                && fieldType.constructors.length === 1
+            )
+            {
+                this.introduceSingleConstrDataLettedFields(
+                    fieldVarName,
+                    lettedField,
+                    fieldType
+                );
+            }
+            else if(
+                fieldVarDecl instanceof TirNamedDeconstructVarDecl
+                || fieldVarDecl instanceof TirSingleDeconstructVarDecl
+            )
+            {
+                // if the field is destructured, we need to introduce its fields as well
+                const namedVarDecl = toNamedDeconstructVarDecl( fieldVarDecl );
+                namedVarDecl.initExpr = lettedField;
+                assertions.push(
+                    ...this.introduceDeconstrDataLettedFields(
+                        namedVarDecl
+                    )
+                );
+            }
+            else if( fieldVarDecl instanceof TirArrayLikeDeconstr )
+            {
+                fieldVarDecl.initExpr = lettedField;
+                assertions.push(
+                    ...this.introduceArrayDeconstr(
+                        fieldVarDecl,
+                        true // is destructured field
+                    )
+                );
+            }
+        }
+
+        if( hasRest )
+        this.properties.set(
+            stmt.rest,
+            fieldsMap
+        );
+
+        return assertions;
+    }
+
+    introduceArrayDeconstr(
+        stmt: TirArrayLikeDeconstr,
+        isDestructuredField: boolean = false
+    ): TirAssertStmt[]
+    {
+        if(!( stmt.initExpr )) throw new Error("expected init expr in array-like deconstruct statement");
+
+        const elemsType = getListTypeArg( stmt.type );
+        if( !elemsType )
+        throw new Error("expected list type in array-like deconstruct statement");
+
+
+        let lettedArrayExpr: TirLettedExpr;
+        if( stmt.initExpr instanceof TirLettedExpr )
+        {
+            lettedArrayExpr = stmt.initExpr;
+        }
+        else
+        {
+            const lettedArrayName = getUniqueInternalName( stmt.type.toString().toLowerCase() );
+            lettedArrayExpr = this.introduceLettedConstant(
+                lettedArrayName,
+                stmt.initExpr,
+                stmt.range
+            );
+        }
+
+        const assertions: TirAssertStmt[] = [];
+
+        const nElems = stmt.elements.length;
+        for( let i = 0; i < nElems; i++ )
+        {
+            const elemVarDecl = stmt.elements[i];
+
+            const lettedElemName = getUniqueInternalName(`${lettedArrayExpr.varName}_elem_${i}`);
+            let lettedExpr: TirExpr = new TirElemAccessExpr(
+                lettedArrayExpr,
+                new TirLitIntExpr(
+                    BigInt(i),
+                    elemVarDecl.range
+                ),
+                isDestructuredField ? data_t : elemVarDecl.type,
+                elemVarDecl.range
+            );
+            if( isDestructuredField )
+            lettedExpr = new TirFromDataExpr(
+                lettedExpr,
+                elemVarDecl.type,
+                elemVarDecl.range
+            );
+            const lettedElem = this.introduceLettedConstant(
+                lettedElemName,
+                lettedExpr,
+                elemVarDecl.range
+            );
+
+            if( elemVarDecl instanceof TirSimpleVarDecl )
+            {
+                this.variables.set(
+                    elemVarDecl.name,
+                    { latestName: lettedElem.varName }
+                );
+
+                if(
+                    lettedElem.type instanceof TirDataStructType
+                    && lettedElem.type.constructors.length === 1
+                ) 
+                {
+                    // if the element is a single-constructor data struct,
+                    // we need to introduce its fields as well
+                    this.introduceSingleConstrDataLettedFields(
+                        elemVarDecl.name,
+                        lettedElem,
+                        lettedElem.type
+                    );
+                }
+            }
+            else if(
+                elemVarDecl instanceof TirNamedDeconstructVarDecl
+                || elemVarDecl instanceof TirSingleDeconstructVarDecl
+            )
+            {
+                const namedVarDecl = toNamedDeconstructVarDecl( elemVarDecl );
+                namedVarDecl.initExpr = lettedElem;
+                assertions.push(
+                    ...this.introduceDeconstrDataLettedFields(
+                        namedVarDecl
+                    )
+                );
+            }
+            else if( elemVarDecl instanceof TirArrayLikeDeconstr )
+            {
+                elemVarDecl.initExpr = lettedElem;
+                assertions.push(
+                    ...this.introduceArrayDeconstr(
+                        elemVarDecl,
+                        true // is destructured field
+                    )
+                );
+            }
+        }
+
+        if( stmt.rest )
+        {
+            if( isDestructuredField )
+            throw new Error(
+                "rest is not implemented in destructured field array-like deconstruct. TODO: map data elems to elem type"
+            );
+
+
+            const lettedRest = this.introduceLettedConstant(
+                stmt.rest,
+                new TirCallExpr(
+                    TirNativeFuncExpr.dropListOf( elemsType ),
+                    [
+                        new TirLitIntExpr(
+                            BigInt(nElems),
+                            stmt.range
+                        ),
+                        lettedArrayExpr
+                    ],
+                    new TirListT( elemsType ),
+                    stmt.range
+                ),
+                stmt.range
+            );
+        }
+
+        return assertions;
+    }
+}

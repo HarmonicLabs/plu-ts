@@ -10,11 +10,12 @@ import { ITirStmt } from "./TirStmt";
  * and function calls that do have side effects
  * (traces (if allowed), assertions and failing operations)
 **/
+/*
 export class TirExprStmt
     implements ITirStmt
 {
     constructor(
-        readonly expr: TirExpr,
+        public expr: TirExpr,
         readonly range: SourceRange
     ) {}
 
@@ -27,3 +28,4 @@ export class TirExprStmt
         return this.expr.deps();
     }
 }
+//*/

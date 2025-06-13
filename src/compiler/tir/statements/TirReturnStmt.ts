@@ -6,7 +6,7 @@ export class TirReturnStmt
     implements ITirStmt
 {
     constructor(
-        readonly value: TirExpr | undefined,
+        public value: TirExpr | undefined,
         readonly range: SourceRange,
     ) {}
 

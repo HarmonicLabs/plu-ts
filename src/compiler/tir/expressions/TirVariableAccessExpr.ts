@@ -14,8 +14,12 @@ export class TirVariableAccessExpr
         readonly range: SourceRange
     ) {}
 
+    get varName(): string {
+        return this.resolvedValue.variableInfos.name;
+    }
+
     deps(): string[]
     {
-        return [ this.resolvedValue.variableInfos.name ];
+        return [ this.varName ];
     }
 }

@@ -13,6 +13,7 @@ export enum IRNodeKind {
     Constr = 10,
     Case = 11,
     Recursive = 12,
-    SelfCall = 13
+    SelfCall = 13,
+    SopDeconstr = 14,
 }
 Object.freeze( IRNodeKind );

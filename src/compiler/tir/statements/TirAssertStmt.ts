@@ -8,9 +8,9 @@ export class TirAssertStmt
 {
     constructor(
         /** must be boolean or Optional */
-        readonly condition: TirExpr,
+        public condition: TirExpr,
         /** must be string */
-        readonly elseExpr: TirExpr | undefined,
+        public elseExpr: TirExpr | undefined,
         readonly range: SourceRange,
     ) {}
 

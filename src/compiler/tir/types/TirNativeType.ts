@@ -32,6 +32,8 @@ export type TirNativeType
     | TirListT<TirType>
     | TirLinearMapT<TirType,TirType>
     | TirFuncT
+    | TirUnConstrDataResultT
+    | TirPairDataT
     ;
 
 export function isTirNativeType( t: any ): t is TirNativeType
@@ -48,6 +50,8 @@ export function isTirNativeType( t: any ): t is TirNativeType
         || t instanceof TirListT
         || t instanceof TirLinearMapT
         || t instanceof TirFuncT // =>
+        || t instanceof TirUnConstrDataResultT
+        || t instanceof TirPairDataT
     );
 }
 
@@ -204,6 +208,62 @@ export class TirSopOptT<T extends TirType = TirType>
         result._isConcrete = this._isConcrete;
         return result;
     }
+}
+
+export class TirUnConstrDataResultT
+{
+    constructor() {}
+
+    hasDataEncoding(): boolean { return false; }
+
+    static toTirTypeKey(): string {
+        return "#un_constr_data_result#";
+    }
+    toTirTypeKey(): string {
+        return TirUnConstrDataResultT.toTirTypeKey();
+    }
+
+    toConcreteTirTypeName(): string {
+        return this.toTirTypeKey();
+    }
+
+    toString(): string {
+        return this.toTirTypeKey();
+    }
+
+    isConcrete(): boolean { return true; }
+
+    clone(): TirUnConstrDataResultT {
+        return new TirUnConstrDataResultT();
+    }
+}
+
+export class TirPairDataT
+{
+    constructor() {}
+
+    hasDataEncoding(): boolean { return false; }
+    static toTirTypeKey(): string {
+        return "#pair_data";
+    }
+
+    toTirTypeKey(): string {
+        return TirPairDataT.toTirTypeKey();
+    }
+    toConcreteTirTypeName(): string {
+        return this.toTirTypeKey();
+    }
+
+    toString(): string {
+        return this.toTirTypeKey();
+    }
+
+    isConcrete(): boolean { return true; }
+
+    clone(): TirPairDataT {
+        return new TirPairDataT();
+    }
+
 }
 
 export class TirListT<T extends TirType = TirType>

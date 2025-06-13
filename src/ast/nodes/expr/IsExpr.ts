@@ -5,6 +5,7 @@ import { PebbleExpr } from "./PebbleExpr";
 
 // TODO:
 // should optionally check for destructuring 
+/*
 export class IsExpr
     implements HasSourceRange
 {
@@ -14,3 +15,4 @@ export class IsExpr
         readonly range: SourceRange
     ) {}
 }
+    //*/

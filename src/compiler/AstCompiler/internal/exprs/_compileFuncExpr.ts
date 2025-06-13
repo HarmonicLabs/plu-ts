@@ -170,11 +170,14 @@ function _getDestructuredParamsAsVarDecls(
             tirParam.type.toString().toLowerCase()
         );
 
+        const isConst = tirParam.isConst;
+
         // function param as simple var decl
         const simpleParam = new TirSimpleVarDecl(
             uniqueName,
             tirParam.type,
             tirParam.initExpr,
+            isConst,
             tirParam.range
         );
 

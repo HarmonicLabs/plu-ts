@@ -9,9 +9,9 @@ export class TirTernaryExpr
     implements ITirExpr
 {
     constructor(
-        readonly condition: TirExpr,
-        readonly ifTrue: TirExpr,
-        readonly ifFalse: TirExpr,
+        public condition: TirExpr,
+        public ifTrue: TirExpr,
+        public ifFalse: TirExpr,
         readonly type: TirType,
         readonly range: SourceRange
     ) {}

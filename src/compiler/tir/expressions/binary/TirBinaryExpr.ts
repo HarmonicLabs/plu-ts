@@ -27,39 +27,37 @@ export type TirBinaryExpr
     | TirBitwiseOrExpr
     | TirLogicalAndExpr
     | TirLogicalOrExpr
-    | TirOptionalDefaultExpr
     ;
 
 export function isTirBinaryExpr( thing: any ): thing is TirBinaryExpr
 {
     return isObject( thing ) && (
-        thing instanceof TirExponentiationExpr
-        || thing instanceof TirLessThanExpr
-        || thing instanceof TirGreaterThanExpr
-        || thing instanceof TirLessThanEqualExpr
-        || thing instanceof TirGreaterThanEqualExpr
-        || thing instanceof TirEqualExpr
-        || thing instanceof TirNotEqualExpr
-        || thing instanceof TirAddExpr
-        || thing instanceof TirSubExpr
-        || thing instanceof TirMultExpr
-        || thing instanceof TirDivExpr 
-        || thing instanceof TirModuloExpr
-        || thing instanceof TirShiftLeftExpr
-        || thing instanceof TirShiftRightExpr
-        || thing instanceof TirBitwiseAndExpr
-        || thing instanceof TirBitwiseXorExpr
-        || thing instanceof TirBitwiseOrExpr
-        || thing instanceof TirLogicalAndExpr
-        || thing instanceof TirLogicalOrExpr
-        || thing instanceof TirOptionalDefaultExpr
+        thing instanceof TirExponentiationExpr // int
+        || thing instanceof TirLessThanExpr // bool
+        || thing instanceof TirGreaterThanExpr // bool
+        || thing instanceof TirLessThanEqualExpr // bool
+        || thing instanceof TirGreaterThanEqualExpr // bool
+        || thing instanceof TirEqualExpr // bool
+        || thing instanceof TirNotEqualExpr // bool
+        || thing instanceof TirAddExpr // int
+        || thing instanceof TirSubExpr // int
+        || thing instanceof TirMultExpr // int
+        || thing instanceof TirDivExpr // int
+        || thing instanceof TirModuloExpr // int
+        || thing instanceof TirShiftLeftExpr // bytes
+        || thing instanceof TirShiftRightExpr // bytes
+        || thing instanceof TirBitwiseAndExpr // bytes
+        || thing instanceof TirBitwiseXorExpr // bytes
+        || thing instanceof TirBitwiseOrExpr // bytes
+        || thing instanceof TirLogicalAndExpr // bool
+        || thing instanceof TirLogicalOrExpr // bool
     );
 }
 
 export interface ITirBinaryExpr extends ITirExpr
 {
-    readonly left: TirExpr;
-    readonly right: TirExpr;
+    left: TirExpr;
+    right: TirExpr;
 }
 
 export class TirExponentiationExpr
@@ -67,8 +65,8 @@ export class TirExponentiationExpr
 {
     readonly type: TirType = int_t;
     constructor(
-        readonly left: TirExpr,
-        readonly right: TirExpr,
+        public left: TirExpr,
+        public right: TirExpr,
         readonly range: SourceRange
     ) {}
 
@@ -85,8 +83,8 @@ export class TirLessThanExpr
 {
     readonly type: TirType = bool_t;
     constructor(
-        readonly left: TirExpr,
-        readonly right: TirExpr,
+        public left: TirExpr,
+        public right: TirExpr,
         readonly range: SourceRange
     ) {}
 
@@ -103,8 +101,8 @@ export class TirGreaterThanExpr
 {
     readonly type: TirType = bool_t;
     constructor(
-        readonly left: TirExpr,
-        readonly right: TirExpr,
+        public left: TirExpr,
+        public right: TirExpr,
         readonly range: SourceRange
     ) {}
 
@@ -121,8 +119,8 @@ export class TirLessThanEqualExpr
 {
     readonly type: TirType = bool_t;
     constructor(
-        readonly left: TirExpr,
-        readonly right: TirExpr,
+        public left: TirExpr,
+        public right: TirExpr,
         readonly range: SourceRange
     ) {}
 
@@ -139,8 +137,8 @@ export class TirGreaterThanEqualExpr
 {
     readonly type: TirType = bool_t;
     constructor(
-        readonly left: TirExpr,
-        readonly right: TirExpr,
+        public left: TirExpr,
+        public right: TirExpr,
         readonly range: SourceRange
     ) {}
 
@@ -157,8 +155,8 @@ export class TirEqualExpr
 {
     readonly type: TirType = bool_t;
     constructor(
-        readonly left: TirExpr,
-        readonly right: TirExpr,
+        public left: TirExpr,
+        public right: TirExpr,
         readonly range: SourceRange
     ) {}
 
@@ -175,8 +173,8 @@ export class TirNotEqualExpr
 {
     readonly type: TirType = bool_t;
     constructor(
-        readonly left: TirExpr,
-        readonly right: TirExpr,
+        public left: TirExpr,
+        public right: TirExpr,
         readonly range: SourceRange
     ) {}
 
@@ -193,8 +191,8 @@ export class TirAddExpr
 {
     readonly type: TirType = int_t;
     constructor(
-        readonly left: TirExpr,
-        readonly right: TirExpr,
+        public left: TirExpr,
+        public right: TirExpr,
         readonly range: SourceRange
     ) {}
 
@@ -211,8 +209,8 @@ export class TirSubExpr
 {
     readonly type: TirType = int_t;
     constructor(
-        readonly left: TirExpr,
-        readonly right: TirExpr,
+        public left: TirExpr,
+        public right: TirExpr,
         readonly range: SourceRange
     ) {}
 
@@ -229,8 +227,8 @@ export class TirMultExpr
 {
     readonly type: TirType = int_t;
     constructor(
-        readonly left: TirExpr,
-        readonly right: TirExpr,
+        public left: TirExpr,
+        public right: TirExpr,
         readonly range: SourceRange
     ) {}
 
@@ -247,8 +245,8 @@ export class TirDivExpr
 {
     readonly type: TirType = int_t;
     constructor(
-        readonly left: TirExpr,
-        readonly right: TirExpr,
+        public left: TirExpr,
+        public right: TirExpr,
         readonly range: SourceRange
     ) {}
 
@@ -265,8 +263,8 @@ export class TirModuloExpr
 {
     readonly type: TirType = int_t;
     constructor(
-        readonly left: TirExpr,
-        readonly right: TirExpr,
+        public left: TirExpr,
+        public right: TirExpr,
         readonly range: SourceRange
     ) {}
 
@@ -283,8 +281,8 @@ export class TirShiftLeftExpr
 {
     readonly type: TirType = bytes_t;
     constructor(
-        readonly left: TirExpr,
-        readonly right: TirExpr,
+        public left: TirExpr,
+        public right: TirExpr,
         readonly range: SourceRange
     ) {}
 
@@ -301,8 +299,8 @@ export class TirShiftRightExpr
 {
     readonly type: TirType = bytes_t;
     constructor(
-        readonly left: TirExpr,
-        readonly right: TirExpr,
+        public left: TirExpr,
+        public right: TirExpr,
         readonly range: SourceRange
     ) {}
 
@@ -319,8 +317,8 @@ export class TirBitwiseAndExpr
 {
     readonly type: TirType = bytes_t;
     constructor(
-        readonly left: TirExpr,
-        readonly right: TirExpr,
+        public left: TirExpr,
+        public right: TirExpr,
         readonly range: SourceRange
     ) {}
 
@@ -337,8 +335,8 @@ export class TirBitwiseXorExpr
 {
     readonly type: TirType = bytes_t;
     constructor(
-        readonly left: TirExpr,
-        readonly right: TirExpr,
+        public left: TirExpr,
+        public right: TirExpr,
         readonly range: SourceRange
     ) {}
 
@@ -355,8 +353,8 @@ export class TirBitwiseOrExpr
 {
     readonly type: TirType = bytes_t;
     constructor(
-        readonly left: TirExpr,
-        readonly right: TirExpr,
+        public left: TirExpr,
+        public right: TirExpr,
         readonly range: SourceRange
     ) {}
 
@@ -373,8 +371,8 @@ export class TirLogicalAndExpr
 {
     readonly type: TirType = bool_t;
     constructor(
-        readonly left: TirExpr,
-        readonly right: TirExpr,
+        public left: TirExpr,
+        public right: TirExpr,
         readonly range: SourceRange
     ) {}
 
@@ -391,27 +389,8 @@ export class TirLogicalOrExpr
 {
     readonly type: TirType = bool_t;
     constructor(
-        readonly left: TirExpr,
-        readonly right: TirExpr,
-        readonly range: SourceRange
-    ) {}
-
-    deps(): string[]
-    {
-        const deps = this.left.deps();
-        mergeSortedStrArrInplace( deps, this.right.deps() );
-        return deps;
-    }
-}
-
-/** `??` */
-export class TirOptionalDefaultExpr
-    implements ITirBinaryExpr
-{
-    constructor(
-        readonly left: TirExpr,
-        readonly right: TirExpr,
-        readonly type: TirType,
+        public left: TirExpr,
+        public right: TirExpr,
         readonly range: SourceRange
     ) {}
 

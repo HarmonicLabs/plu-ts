@@ -4,32 +4,38 @@ import { TirCallExpr } from "./TirCallExpr";
 import { TirCaseExpr } from "./TirCaseExpr";
 import { TirElemAccessExpr } from "./TirElemAccessExpr";
 import { TirFuncExpr } from "./TirFuncExpr";
-import { TirIsExpr } from "./TirIsExpr";
 import { TirParentesizedExpr } from "./TirParentesizedExpr";
-import { isTirPropAccessExpr, TirPropAccessExpr } from "./TirPropAccessExpr";
+import { TirPropAccessExpr } from "./TirPropAccessExpr";
 import { TirTernaryExpr } from "./TirTernaryExpr";
 import { isTirUnaryPrefixExpr, TirUnaryPrefixExpr } from "./unary/TirUnaryPrefixExpr";
 import { isTirBinaryExpr, TirBinaryExpr } from "./binary/TirBinaryExpr";
 import { TirVariableAccessExpr } from "./TirVariableAccessExpr";
-import { TirNonNullExpr } from "./TirNonNullExpr";
 import { TirTypeConversionExpr } from "./TirTypeConversionExpr";
-import { HasSourceRange } from "../../../ast/nodes/HasSourceRange";
+import { TirLettedExpr } from "./TirLettedExpr";
+import { TirNativeFuncExpr } from "./TirNativeFuncExpr";
+import { TirFromDataExpr } from "./TirFromDataExpr";
+import { TirFailExpr } from "./TirFailExpr";
+import { TirHoistedExpr } from "./TirHoistedExpr";
 
 export type TirExpr
     =( TirUnaryPrefixExpr
-    | TirNonNullExpr
     | TirLitteralExpr
     | TirParentesizedExpr
     | TirFuncExpr
     | TirCallExpr
     | TirCaseExpr
     | TirTypeConversionExpr
-    | TirIsExpr // ( purpose is Spending )
+    // | TirIsExpr // ( purpose is Spending )
     | TirElemAccessExpr // arr[idx]
     | TirTernaryExpr
     | TirPropAccessExpr
     | TirBinaryExpr
     | TirVariableAccessExpr
+    | TirLettedExpr
+    | TirNativeFuncExpr
+    | TirFromDataExpr
+    | TirFailExpr
+    | TirHoistedExpr
     )
     // & ITirExpr
     ;
@@ -44,11 +50,16 @@ export function isTirExpr( thing: any ): thing is TirExpr
         || thing instanceof TirCallExpr
         || thing instanceof TirCaseExpr
         || thing instanceof TirTypeConversionExpr
-        || thing instanceof TirIsExpr
+        // || thing instanceof TirIsExpr
         || thing instanceof TirElemAccessExpr
         || thing instanceof TirTernaryExpr
-        || isTirPropAccessExpr( thing )
+        || thing instanceof TirPropAccessExpr
         || isTirBinaryExpr( thing )
         || thing instanceof TirVariableAccessExpr
+        || thing instanceof TirLettedExpr
+        || thing instanceof TirNativeFuncExpr
+        || thing instanceof TirFromDataExpr
+        || thing instanceof TirFailExpr
+        || thing instanceof TirHoistedExpr
     );
 }

@@ -22,7 +22,7 @@ export function isUnaryPrefixExpr( thing: any ): thing is UnaryPrefixExpr
         thing instanceof UnaryPlus          ||
         thing instanceof UnaryMinus         ||
         thing instanceof UnaryTilde         ||
-        thing instanceof IncrStmt     ||
+        thing instanceof IncrStmt           ||
         thing instanceof DecrStmt
     );
 }

@@ -1,9 +1,8 @@
-import { ExprStmt } from "../../../../ast/nodes/statements/ExprStmt";
-import { TirExprStmt } from "../../../tir/statements/TirExprStmt";
 import { AstCompilationCtx } from "../../AstCompilationCtx";
 import { void_t } from "../../../tir/program/stdScope/stdScope";
 import { _compileExpr } from "../exprs/_compileExpr";
 
+/*
 export function _compileExprStmt(
     ctx: AstCompilationCtx,
     stmt: ExprStmt
@@ -13,3 +12,4 @@ export function _compileExprStmt(
     if( !expr ) return undefined;
     return [ new TirExprStmt( expr, stmt.range ) ];
 }
+    //*/

@@ -9,7 +9,7 @@ export class TirIfStmt
     constructor(
         readonly condition: TirExpr,
         readonly thenBranch: TirStmt,
-        readonly elseBranch: TirStmt | undefined,
+        public elseBranch: TirStmt | undefined,
         readonly range: SourceRange,
     ) {}
 

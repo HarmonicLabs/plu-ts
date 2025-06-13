@@ -87,7 +87,6 @@ export function mockPAliasMethods<
 
     if( originalType[0] !== PrimType.Alias )
     {
-        console.error( originalType );
         try {
             console.error( termTypeToString( originalType ) )
         }

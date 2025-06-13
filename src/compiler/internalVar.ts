@@ -22,15 +22,15 @@ try {
     ) getRandomBytes = globalThis.crypto.getRandomValues.bind(globalThis.crypto);
 } catch {}
 
+const uidSet = new Set<string>();
+
 /**
  * Creates and tracks unique internal variable names for the Pebble compiler
  */
 export class UidGenerator
 {
-    constructor(
-        uids: Set<string> = defaultSymbolForge.uids
-    ) {
-        this.uids = uids;
+    constructor() {
+        this.uids = uidSet;
     }
 
     private readonly uids: Set<string>;
@@ -40,7 +40,7 @@ export class UidGenerator
         let uid: string;
         do {
             uid = toHex(getRandomBytes(bytes));
-        } while (this.uids.has(uid));
+        } while( this.uids.has( uid ) );
         this.uids.add(uid);
         return uid;
     }
@@ -48,7 +48,7 @@ export class UidGenerator
     /**
      * Generates a unique internal variable name
      */
-    getUniqueInternalName(name: string): string {
+    getUniqueInternalName( name: string ): string {
         if (typeof name !== "string" || name.length === 0) name = PEBBLE_INTERNAL_IDENTIFIER_PREFIX;
 
         name = name.startsWith(PEBBLE_INTERNAL_IDENTIFIER_PREFIX) ? name :
@@ -56,17 +56,13 @@ export class UidGenerator
 
         return name + "_" + this.getUid();
     }
-
-    public unsafe_evil_forgetEverything_explain_use_with_comment(): void {
-        this.uids.clear();
-    }
 }
 
 // Create a default instance for backward compatibility
-export const defaultSymbolForge = new UidGenerator( new Set<string>() );
+export const defaultSymbolForge = new UidGenerator();
 
 // Export the original functions for backward compatibility
-export const getUniqueInternalName = defaultSymbolForge.getUniqueInternalName.bind(defaultSymbolForge);
+export const getUniqueInternalName = defaultSymbolForge.getUniqueInternalName.bind( defaultSymbolForge );
 
 export function isInternalName( name: string ): boolean
 {

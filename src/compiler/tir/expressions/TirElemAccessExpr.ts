@@ -12,8 +12,8 @@ export class TirElemAccessExpr
     implements ITirExpr
 {
     constructor(
-        readonly arrLikeExpr: TirExpr,
-        readonly indexExpr: TirExpr,
+        public arrLikeExpr: TirExpr,
+        public indexExpr: TirExpr,
         readonly type: TirType,
         readonly range: SourceRange
     ) {}

@@ -10,9 +10,7 @@ import { TirForStmt } from "./TirForStmt";
 import { TirIfStmt } from "./TirIfStmt";
 import { TirMatchStmt } from "./TirMatchStmt";
 import { TirReturnStmt } from "./TirReturnStmt";
-import { TirTestStmt } from "./TirTestStmt";
 import { TirWhileStmt } from "./TirWhileStmt";
-import { TirExprStmt } from "./TirExprStmt";
 import { TirVarDecl, isTirVarDecl } from "./TirVarDecl/TirVarDecl";
 import { HasSourceRange } from "../../../ast/nodes/HasSourceRange";
 
@@ -29,8 +27,8 @@ export interface ITirStmt extends HasSourceRange {
 }
 
 export type TirStmt
-    = TirIfStmt
-    | TirVarDecl
+    = TirVarDecl
+    | TirIfStmt
     // destructured params are immediately replaced at translation
     // TIR only has simple parameters
     // AST destructured params just become
@@ -51,10 +49,10 @@ export type TirStmt
     | TirContinueStmt
     | TirFailStmt
     | TirAssertStmt
-    | TirTestStmt
+    // | TirTestStmt
     | TirMatchStmt
     | TirAssignmentStmt
-    | TirExprStmt
+    // | TirExprStmt
     ;
 
 export function isTirStmt( thing: any ): thing is TirStmt
@@ -71,9 +69,9 @@ export function isTirStmt( thing: any ): thing is TirStmt
         || thing instanceof TirContinueStmt
         || thing instanceof TirFailStmt
         || thing instanceof TirAssertStmt
-        || thing instanceof TirTestStmt
+        // || thing instanceof TirTestStmt
         || thing instanceof TirMatchStmt
         || thing instanceof TirAssignmentStmt
-        || thing instanceof TirExprStmt
+        // || thing instanceof TirExprStmt
     );
 }

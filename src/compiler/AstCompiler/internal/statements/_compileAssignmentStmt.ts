@@ -63,6 +63,7 @@ export function _compileAssignmentStmt(
     }
     else
     {
+        const tsEnsureExsautstiveCheck: never = stmt;
         console.error( stmt );
         throw new Error("unreachable::AstCompiler::_compileForUpdateStmts");
     }
@@ -235,6 +236,7 @@ export function _compileExplicitAssignmentStmt(
         );
     }
     else {
+        const tsEnsureExsautstiveCheck: never = stmt;
         console.error( stmt );
         throw new Error("unreachable::AstCompiler::_compileExplicitAssignmentStmt");
     }

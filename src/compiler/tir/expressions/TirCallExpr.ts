@@ -7,7 +7,7 @@ import { TirExpr } from "./TirExpr";
 export class TirCallExpr implements ITirExpr
 {
     constructor(
-        readonly func: TirExpr,
+        public func: TirExpr,
         readonly args: TirExpr[],
         readonly type: TirType,
         readonly range: SourceRange

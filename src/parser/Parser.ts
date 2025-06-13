@@ -68,9 +68,7 @@ import { TernaryExpr } from "../ast/nodes/expr/TernaryExpr";
 import { makePropAccessExpr } from "../ast/nodes/expr/PropAccessExpr";
 import { makeBinaryExpr } from "../ast/nodes/expr/binary/BinaryExpr";
 import { AssignmentStmt, isAssignmentStmt, makeAssignmentStmt } from "../ast/nodes/statements/AssignmentStmt";
-import { ExprStmt } from "../ast/nodes/statements/ExprStmt";
 import { AstTypeExpr } from "../ast/nodes/types/AstTypeExpr";
-import { IsExpr } from "../ast/nodes/expr/IsExpr";
 import { hoistStatementsInplace } from "./hoistStatementsInplace";
 import { UsingStmt, UsingStmtDeclaredConstructor } from "../ast/nodes/statements/UsingStmt";
 import { IncrStmt } from "../ast/nodes/statements/IncrStmt";
@@ -1826,6 +1824,7 @@ export class Parser extends DiagnosticEmitter
                     expr = this.tryParseCallExprOrReturnSame( expr );
                     break;
                 }
+                /*
                 case Token.Is: {
                     // TODO:
                     // should optionally check for destructuring 
@@ -1846,6 +1845,7 @@ export class Parser extends DiagnosticEmitter
                     );
                     break;
                 }
+                //*/
                 case Token.OpenBracket: { // [ // accessing list element
                     const idxExpr = this.parseExpr();
                     if( !idxExpr ) return undefined;
@@ -2425,6 +2425,7 @@ export class Parser extends DiagnosticEmitter
         return new CaseExpr(
             expr,
             cases,
+            undefined, // wildcard case
             finalRange
         );
     }
@@ -2499,9 +2500,9 @@ export class Parser extends DiagnosticEmitter
         // at '(': (Parameter (',' Parameter)*)? ')'
         let parameters = new Array<VarDecl>();
 
-        while (!tn.skip( Token.CloseParen))
+        while( !tn.skip( Token.CloseParen ) )
         {
-            let param = this.parseParameter( CommonFlags.Const );
+            let param = this.parseParameter( tn.skip( Token.Let ) ? CommonFlags.Let : CommonFlags.Const );
             if (!param) return undefined;
             parameters.push(param);
 
@@ -2914,6 +2915,7 @@ export class Parser extends DiagnosticEmitter
         return statement;
     }
 
+    /*
     parseExprStmt(): ExprStmt | undefined
     {
         const tn = this.tn;
@@ -2924,6 +2926,7 @@ export class Parser extends DiagnosticEmitter
         
         return new ExprStmt(expr, tn.range(startPos, tn.pos));
     }
+    //*/
 
     parseAssignmentStatement(): AssignmentStmt | undefined
     {

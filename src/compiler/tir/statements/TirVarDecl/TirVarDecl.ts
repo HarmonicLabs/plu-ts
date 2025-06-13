@@ -6,6 +6,7 @@ import { isObject } from "@harmoniclabs/obj-utils";
 
 export interface ITirVarDecl {
     introducedVars: () => string[];
+    readonly isConst: boolean;
 }
 
 export type TirVarDecl

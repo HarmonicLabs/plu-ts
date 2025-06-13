@@ -2,6 +2,7 @@ import { SourceRange } from "../../../ast/Source/SourceRange";
 import { TirBlockStmt } from "./TirBlockStmt";
 import { ITirStmt } from "./TirStmt";
 
+/*
 export class TirTestStmt
     implements ITirStmt
 {
@@ -20,3 +21,4 @@ export class TirTestStmt
         return this.body.deps();
     }
 }
+//*/

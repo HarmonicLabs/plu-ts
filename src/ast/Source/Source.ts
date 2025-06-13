@@ -1,3 +1,4 @@
+import { getUniqueInternalName } from "../../compiler/internalVar";
 import { CharCode } from "../../utils/CharCode";
 import { TopLevelStmt } from "../nodes/statements/PebbleStmt";
 import { SourceRange } from "./SourceRange";
@@ -33,6 +34,15 @@ export class Source {
     ) {
         this.range = new SourceRange(this, 0, text.length);
         this.statements = new Array();
+    }
+
+    static get mock(): Source {
+        return new Source(
+            SourceKind.LibraryEntry,
+            "mock.pebble",
+            getUniqueInternalName("mock"),
+            ""
+        );
     }
 
     /** Contained statements. */

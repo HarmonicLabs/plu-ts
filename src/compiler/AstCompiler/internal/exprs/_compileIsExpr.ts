@@ -1,11 +1,10 @@
-import { IsExpr } from "../../../../ast/nodes/expr/IsExpr";
 import { DiagnosticCode } from "../../../../diagnostics/diagnosticMessages.generated";
-import { TirIsExpr } from "../../../tir/expressions/TirIsExpr";
 import { TirType } from "../../../tir/types/TirType";
 import { getStructType } from "../../../tir/types/utils/canAssignTo";
 import { AstCompilationCtx } from "../../AstCompilationCtx";
 import { _compileExpr } from "./_compileExpr";
 
+/*
 export function _compileIsExpr(
     ctx: AstCompilationCtx,
     expr: IsExpr,
@@ -46,3 +45,4 @@ export function _compileIsExpr(
         expr.range
     );
 }
+    //*/

@@ -1,7 +1,7 @@
 import { Identifier } from "../../../ast/nodes/common/Identifier";
 import { TirAliasType } from "../../tir/types/TirAliasType";
 import { TirInterfaceImpl } from "../../tir/types/TirInterfaceImpl";
-import { TirVoidT, TirBoolT, TirIntT, TirBytesT, TirStringT, TirDataT, TirFuncT, TirListT, TirLinearMapT, isTirOptType, TirSopOptT } from "../../tir/types/TirNativeType";
+import { TirVoidT, TirBoolT, TirIntT, TirBytesT, TirStringT, TirDataT, TirFuncT, TirListT, TirLinearMapT, isTirOptType, TirSopOptT, TirUnConstrDataResultT, TirPairDataT } from "../../tir/types/TirNativeType";
 import { isTirStructType, TirStructType } from "../../tir/types/TirStructType";
 import { TirType } from "../../tir/types/TirType";
 import { TirTypeParam } from "../../tir/types/TirTypeParam";
@@ -41,7 +41,10 @@ export function getPropAccessReturnType(
     if( objType instanceof TirFuncT ) return undefined;
     if( objType instanceof TirListT ) return getListMethods( objType.typeArg )[propName];
     if( objType instanceof TirLinearMapT ) return getLinearMapMethods( objType.keyTypeArg, objType.valTypeArg )[propName];
+    if( objType instanceof TirUnConstrDataResultT ) return undefined;
+    if( objType instanceof TirPairDataT ) return undefined;
 
+    const tsEnsureExhaustiveCheck: never = objType;
     console.error( objType );
     throw new Error("unreachable::getPropAccessReturnType");
 }

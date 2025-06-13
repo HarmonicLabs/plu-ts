@@ -20,7 +20,6 @@ import { TestStmt } from "./TestStmt";
 import { VarStmt } from "./VarStmt";
 import { WhileStmt } from "./WhileStmt";
 import { AssignmentStmt, isAssignmentStmt } from "./AssignmentStmt";
-import { ExprStmt } from "./ExprStmt";
 import { IncrStmt } from "./IncrStmt";
 import { DecrStmt } from "./DecrStmt";
 import { UsingStmt } from "./UsingStmt";
@@ -158,7 +157,7 @@ export type BodyStmt
     | AssertStmt
     | MatchStmt
     | AssignmentStmt
-    | ExprStmt // function calls with native side effects (error and/or traces)
+    // | ExprStmt // function calls with native side effects (error and/or traces)
     | UsingStmt
     ;
 
@@ -180,7 +179,7 @@ export function isBodyStmt( stmt: any ): stmt is BodyStmt
         || stmt instanceof AssertStmt
         || stmt instanceof MatchStmt
         || isAssignmentStmt( stmt )
-        || stmt instanceof ExprStmt
+        // || stmt instanceof ExprStmt
         || stmt instanceof IncrStmt
         || stmt instanceof DecrStmt
         || stmt instanceof UsingStmt
