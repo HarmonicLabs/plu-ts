@@ -54,7 +54,7 @@ export function _compileHoistedDeps(
                 constDecl.deps(),
                 depsStack.getNext( depName )
             );
-            const { modifiedExpr: expr, requiredSopExtractions } = expressifyVars(
+            const expr = expressifyVars(
                 new ExpressifyCtx(
                     undefined,
                     constDecl.type,
@@ -62,10 +62,6 @@ export function _compileHoistedDeps(
                 ),
                 constDecl
             );
-            if( requiredSopExtractions.length > 0 )
-            {
-                throw new Error("SOP extractions in hoisted dependencies are not supported yet");
-            }
             const hoistedExpr = new TirHoistedExpr(
                 depName,
                 expr

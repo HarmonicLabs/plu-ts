@@ -1,5 +1,5 @@
 import { TirAliasType } from "../TirAliasType";
-import { TirBoolT, TirBytesT, TirDataT, TirIntT, TirLinearMapT, TirListT, TirStringT, TirVoidT, TirFuncT, TirSopOptT, TirDataOptT } from "../TirNativeType";
+import { TirBoolT, TirBytesT, TirDataT, TirIntT, TirLinearMapT, TirListT, TirStringT, TirVoidT, TirFuncT, TirSopOptT, TirDataOptT, TirUnConstrDataResultT, TirPairDataT } from "../TirNativeType";
 import { isTirStructType, TirDataStructType, TirSoPStructType, TirStructConstr, TirStructType } from "../TirStructType";
 import { isTirNamedDestructableType, TirNamedDestructableType, TirType } from "../TirType";
 import { TirTypeParam } from "../TirTypeParam";
@@ -128,6 +128,14 @@ function uncheckedGetCanAssign(
         if( a instanceof TirDataT ) return CanAssign.RequiresExplicitCast;
         return CanAssign.No;
     }
+    if( b instanceof TirUnConstrDataResultT )
+    {
+        return a instanceof TirUnConstrDataResultT ? CanAssign.Yes : CanAssign.No;
+    }
+    if( b instanceof TirPairDataT )
+    {
+        return a instanceof TirPairDataT ? CanAssign.Yes : CanAssign.No;
+    }
 
     if( b instanceof TirSopOptT )
     {
@@ -152,6 +160,15 @@ function uncheckedGetCanAssign(
 
         return CanAssign.No; 
     }
+    if( b instanceof TirDataOptT )
+    {
+        if( a instanceof TirSopOptT ) return uncheckedGetCanAssign( a.typeArg, b.typeArg, symbols );
+        if( a instanceof TirDataOptT ) return canAssignTo( a.typeArg, b.typeArg ) ? CanAssign.RequiresExplicitCast : CanAssign.No;
+        if( a instanceof TirDataT ) return CanAssign.RequiresExplicitCast;
+
+        return CanAssign.No;
+    }
+
     if( b instanceof TirListT )
     {
         if( a instanceof TirListT ) return uncheckedGetCanAssign( a.typeArg, b.typeArg, symbols );
