@@ -1,7 +1,7 @@
 import { SourceRange } from "../../../../ast/Source/SourceRange";
 import { TirExpr } from "../../expressions/TirExpr";
 import { TirType } from "../../types/TirType";
-import { ITirStmt } from "../TirStmt";
+import { ITirStmt, Termination } from "../TirStmt";
 import { ITirVarDecl } from "./TirVarDecl";
 
 export class TirSimpleVarDecl
@@ -14,11 +14,6 @@ export class TirSimpleVarDecl
         public isConst: boolean,
         readonly range: SourceRange,
     ) {}
-
-    hasReturnStmt(): boolean
-    {
-        return false;
-    }
 
     deps(): string[]
     {

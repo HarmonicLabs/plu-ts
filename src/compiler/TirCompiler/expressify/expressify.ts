@@ -23,7 +23,6 @@ import { TirArrayLikeDeconstr } from "../../tir/statements/TirVarDecl/TirArrayLi
 import { TirNamedDeconstructVarDecl } from "../../tir/statements/TirVarDecl/TirNamedDeconstructVarDecl";
 import { TirSimpleVarDecl } from "../../tir/statements/TirVarDecl/TirSimpleVarDecl";
 import { TirSingleDeconstructVarDecl } from "../../tir/statements/TirVarDecl/TirSingleDeconstructVarDecl";
-import { isTirVarDecl, TirVarDecl } from "../../tir/statements/TirVarDecl/TirVarDecl";
 import { TirWhileStmt } from "../../tir/statements/TirWhileStmt";
 import { TirDataStructType, TirSoPStructType } from "../../tir/types/TirStructType";
 import { ExpressifyCtx } from "./ExpressifyCtx";
@@ -32,10 +31,20 @@ import { isSingleConstrStruct } from "./isSingleConstrStruct";
 import { expressifyVars } from "./expressifyVars";
 import { toNamedDeconstructVarDecl } from "./toNamedDeconstructVarDecl";
 import { flattenSopNamedDeconstructInplace_addTopDestructToCtx_getNestedDeconstruct } from "./flattenSopNamedDeconstructInplace_addTopDestructToCtx_getNestedDeconstruct";
+import { TirAssertAndContinueExpr } from "../../tir/expressions/TirAssertAndContinueExpr";
+import { expressifyTerminatingIfStmt } from "./expressifyTerminatingIfStmt";
+import { determineReassignedVariablesAndFlowInfos, determineReassignedVariablesAndReturn, getBodyStateType, getBranchStmtReturnType, ReassignedVariablesAndReturn } from "./determineReassignedVariablesAndReturn";
+import { TernaryExpr } from "../../../ast/nodes/expr/TernaryExpr";
+import { TirTernaryExpr } from "../../tir/expressions/TirTernaryExpr";
+import { TirLitNamedObjExpr } from "../../tir/expressions/litteral/TirLitNamedObjExpr";
+import { expressifyIfBranch } from "./expressifyIfBranch";
+import { expressifyForStmt, whileToFor } from "./expressifyForStmt";
+import { compile } from "../../../pluts";
 
 export function expressify(
     func: TirFuncExpr,
-    parentCtx: ExpressifyCtx | undefined = undefined
+    loopReplacements: LoopReplacements | undefined,
+    parentCtx: ExpressifyCtx | undefined = undefined,
 ): void
 {
     const ctx = new ExpressifyCtx( parentCtx, func.returnType );
@@ -44,26 +53,67 @@ export function expressify(
 
     func.body.stmts = [
         new TirReturnStmt(
-            expressifyFuncBody( ctx, func.body.stmts ),
+            expressifyFuncBody( ctx, func.body.stmts, loopReplacements ),
             func.body.range
         )
     ];
 }
 
+export interface LoopReplacements {
+    readonly replaceReturnValue   : ( ctx: ExpressifyCtx, stmt: TirReturnStmt ) => TirExpr;
+    readonly compileBreak    : ( ctx: ExpressifyCtx, stmt: TirBreakStmt      ) => TirExpr;
+    readonly compileContinue : ( ctx: ExpressifyCtx, stmt: TirContinueStmt   ) => TirExpr;
+}
+
 export function expressifyFuncBody(
     ctx: ExpressifyCtx,
     bodyStmts: TirStmt[],
-    assertions: TirAssertStmt[] = []
+    // passed when compiling loops
+    loopReplacements: LoopReplacements | undefined,
+    assertions: TirAssertStmt[] = [],
 ): TirExpr
 {
     bodyStmts = bodyStmts.slice();
     let stmt: TirStmt;
     while( stmt = bodyStmts.pop()! ) {
 
+
+        if( stmt instanceof TirBreakStmt ) {
+            if( typeof loopReplacements?.compileBreak !== "function" ) throw new Error("break statement in function body.");
+            return TirAssertAndContinueExpr.fromStmtsAndContinuation(
+                assertions,
+                loopReplacements.compileBreak( ctx, stmt )
+            );
+        }
+        else if( stmt instanceof TirContinueStmt ) {
+            if( typeof loopReplacements?.compileContinue !== "function" ) throw new Error("continue statement in function body.");
+            return TirAssertAndContinueExpr.fromStmtsAndContinuation(
+                assertions,
+                loopReplacements.compileContinue( ctx, stmt )
+            );
+        }
+        else if( stmt instanceof TirReturnStmt ) {
+            if( stmt.value ) {
+                let modifiedExpr = expressifyVars( ctx, stmt.value, loopReplacements );
+                if( typeof loopReplacements?.replaceReturnValue === "function" ) {
+                    modifiedExpr = loopReplacements.replaceReturnValue( ctx, stmt );
+                }
+                stmt.value = modifiedExpr;
+
+                return TirAssertAndContinueExpr.fromStmtsAndContinuation(
+                    assertions,
+                    modifiedExpr
+                );
+            }
+            else return TirAssertAndContinueExpr.fromStmtsAndContinuation(
+                assertions,
+                new TirLitVoidExpr( stmt.range )
+            );
+        }
         // if( isTirVarDecl( stmt ) ) expressifyVarDecl( ctx, stmt );
-        if( stmt instanceof TirSimpleVarDecl ) {
+        else if( stmt instanceof TirSimpleVarDecl ) {
             if( !stmt.initExpr ) throw new Error("simple var decl without init expr");
-            const initExpr = expressifyVars( ctx, stmt.initExpr );
+            const initExpr = expressifyVars( ctx, stmt.initExpr, loopReplacements );
             stmt.initExpr = initExpr;
 
             const lettedExpr = ctx.introduceLettedConstant(
@@ -91,20 +141,24 @@ export function expressifyFuncBody(
                 // nested single constr structs
                 // are added as destructed variables in the matcher body
                 // using `getNestedDestructsInSingleSopDestructPattern`
-                return new TirCaseExpr(
-                    lettedExpr,
-                    [ new TirCaseMatcher(
-                        pattern,
-                        expressifyFuncBody(
-                            ctx,
-                            (getNestedDestructsInSingleSopDestructPattern( pattern ) as TirStmt[])
-                            .concat( bodyStmts )
-                        ),
+                return TirAssertAndContinueExpr.fromStmtsAndContinuation(
+                    assertions,
+                    new TirCaseExpr(
+                        lettedExpr,
+                        [ new TirCaseMatcher(
+                            pattern,
+                            expressifyFuncBody(
+                                ctx,
+                                (getNestedDestructsInSingleSopDestructPattern( pattern ) as TirStmt[])
+                                .concat( bodyStmts ),
+                                loopReplacements
+                            ),
+                            stmt.range
+                        ) ],
+                        undefined, // no wildcard case
+                        ctx.returnType,
                         stmt.range
-                    ) ],
-                    undefined, // no wildcard case
-                    ctx.returnType,
-                    stmt.range
+                    )
                 );
             }
             else if( stmt.type instanceof TirDataStructType )
@@ -118,8 +172,6 @@ export function expressifyFuncBody(
             }
             continue;
         }
-        else if( stmt instanceof TirBreakStmt ) throw new Error("break statement in function body.");
-        else if( stmt instanceof TirContinueStmt ) throw new Error("continue statement in function body.");
         else if(
             stmt instanceof TirSingleDeconstructVarDecl
             || stmt instanceof TirNamedDeconstructVarDecl
@@ -132,7 +184,7 @@ export function expressifyFuncBody(
             else if( stmt instanceof TirSingleDeconstructVarDecl ) throw new Error("unreachable");
 
             if( !stmt.initExpr ) throw new Error("simple var decl without init expr");
-            const initExpr = expressifyVars( ctx, stmt.initExpr );
+            const initExpr = expressifyVars( ctx, stmt.initExpr, loopReplacements );
             stmt.initExpr = initExpr;
 
             const lettedName = getUniqueInternalName( stmt.type.toString().toLowerCase() );
@@ -151,42 +203,38 @@ export function expressifyFuncBody(
                 // nested single constr structs
                 // are added as destructed variables in the matcher body
                 // using `getNestedDestructsInSingleSopDestructPattern`
-                return new TirCaseExpr(
-                    lettedExpr,
-                    [ new TirCaseMatcher(
-                        stmt,
-                        expressifyFuncBody(
-                            ctx,
-                            (nestedDeconstructs as TirStmt[])
-                            .concat( bodyStmts )
+                return TirAssertAndContinueExpr.fromStmtsAndContinuation(
+                    assertions,
+                    new TirCaseExpr(
+                        lettedExpr,
+                        [ new TirCaseMatcher(
+                            stmt,
+                            expressifyFuncBody(
+                                ctx,
+                                (nestedDeconstructs as TirStmt[])
+                                .concat( bodyStmts ),
+                                loopReplacements
+                            ),
+                            stmt.range
+                        ) ],
+                        new TirWildcardCaseMatcher(
+                            new TirFailExpr( undefined, ctx.returnType, stmt.range ),
+                            stmt.range
                         ),
+                        ctx.returnType,
                         stmt.range
-                    ) ],
-                    new TirWildcardCaseMatcher(
-                        new TirFailExpr( undefined, ctx.returnType, stmt.range ),
-                        stmt.range
-                    ),
-                    ctx.returnType,
-                    stmt.range
+                    )
                 );
             }
             else if( stmt.type instanceof TirDataStructType ) {
-                
+                todo
             }
         }
         else if( stmt instanceof TirArrayLikeDeconstr ) {
-            
+            todo
         }
         else if( stmt instanceof TirAssignmentStmt ) bodyStmts.unshift( expressifyVarAssignmentStmt( ctx, stmt ) );
-        else if( stmt instanceof TirReturnStmt ) {
-            if( stmt.value ) {
-                const modifiedExpr =  expressifyVars( ctx, stmt.value );
-                stmt.value = modifiedExpr;
-
-                return modifiedExpr;
-            }
-            else return new TirLitVoidExpr( stmt.range );
-        }
+        
         else if( stmt instanceof TirBlockStmt ) {
             // inline the block
             bodyStmts = stmt.stmts.concat( bodyStmts );
@@ -194,23 +242,29 @@ export function expressifyFuncBody(
         }
         else if( stmt instanceof TirFailStmt ) {
             if( stmt.failMsgExpr ) {
-                const modifiedExpr = expressifyVars( ctx, stmt.failMsgExpr );
+                const modifiedExpr = expressifyVars( ctx, stmt.failMsgExpr, loopReplacements );
                 stmt.failMsgExpr = modifiedExpr;
 
-                return new TirFailExpr(
-                    modifiedExpr,
-                    ctx.returnType,
-                    stmt.range
+                return TirAssertAndContinueExpr.fromStmtsAndContinuation(
+                    assertions,
+                    new TirFailExpr(
+                        modifiedExpr,
+                        ctx.returnType,
+                        stmt.range
+                    )
                 );
             }
-            else return new TirFailExpr( undefined, ctx.returnType, stmt.range );
+            else return TirAssertAndContinueExpr.fromStmtsAndContinuation(
+                assertions,
+                new TirFailExpr( undefined, ctx.returnType, stmt.range )
+            );
         }
         else if( stmt instanceof TirAssertStmt ) {
-            const condition = expressifyVars( ctx, stmt.condition );
+            const condition = expressifyVars( ctx, stmt.condition, loopReplacements );
             stmt.condition = condition;
 
             if( stmt.elseExpr ) {
-                const elseExpr = expressifyVars( ctx, stmt.elseExpr );
+                const elseExpr = expressifyVars( ctx, stmt.elseExpr, loopReplacements );
                 stmt.elseExpr = elseExpr;
             }
 
@@ -238,18 +292,231 @@ export function expressifyFuncBody(
                     elseBranchStmts,
                     stmt.elseBranch?.range ?? stmt.thenBranch.range
                 );
+
+                return TirAssertAndContinueExpr.fromStmtsAndContinuation(
+                    assertions,
+                    expressifyTerminatingIfStmt( ctx, stmt, loopReplacements )
+                );
             }
+            else if( stmt.elseBranch && stmt.elseBranch.definitelyTerminates() ) {
+                const thenBranchStmts: TirStmt[] = [];
+                if( stmt.thenBranch instanceof TirBlockStmt ) {
+                    thenBranchStmts.push( ...stmt.thenBranch.stmts );
+                }
+                else {
+                    thenBranchStmts.push( stmt.thenBranch );
+                }
+
+                // move the rest of the body into the then branch
+                thenBranchStmts.push(
+                    ...bodyStmts
+                );
+                stmt.thenBranch = new TirBlockStmt(
+                    thenBranchStmts,
+                    stmt.thenBranch.range
+                );
+
+                return TirAssertAndContinueExpr.fromStmtsAndContinuation(
+                    assertions,
+                    expressifyTerminatingIfStmt( ctx, stmt, loopReplacements )
+                );
+            }
+
+            // determine affected variables
+            // determine if we have an early return
+            const reassignsAndReturns = determineReassignedVariablesAndReturn( stmt );
+
+            // build a SoP type to return
+            const { sop, initState } = getBranchStmtReturnType( reassignsAndReturns, ctx, stmt.range );
+
+            const condition = expressifyVars( ctx, stmt.condition, loopReplacements );
+
+            const stmtExpr = new TirTernaryExpr(
+                condition,
+                expressifyIfBranch(
+                    ctx.newChild(),
+                    stmt.thenBranch,
+                    reassignsAndReturns.reassigned,
+                    sop,
+                    loopReplacements
+                ),
+                stmt.elseBranch ? expressifyIfBranch(
+                    ctx.newChild(),
+                    stmt.elseBranch,
+                    reassignsAndReturns.reassigned,
+                    sop,
+                    loopReplacements
+                ) : initState, // no else branch means the variables stay unchanged
+                sop,
+                stmt.range
+            );
+
+            // expressify as ternary that returns the SoP type
+            return TirAssertAndContinueExpr.fromStmtsAndContinuation(
+                assertions,
+                getFinalStmtCaseExpr(
+                    stmtExpr,
+                    sop,
+                    ctx,
+                    stmt.range,
+                    reassignsAndReturns,
+                    bodyStmts,
+                    loopReplacements
+                )
+            );
         }
         else if( stmt instanceof TirMatchStmt ) {
 
-        }
-        else if( stmt instanceof TirForStmt ) {
+            /**
+             * index of the **only** case that does not terminate
+             * 
+             * if it is undefined, then all cases terminate
+             * if it is negative, then more than one case does not terminate
+             * if it is positive, then only one case does not terminate and this is the index
+            **/
+            let doesNotTerminateIdx: number | undefined = undefined;
+            for( let i = 0; i < stmt.cases.length; i++ )
+            {
+                const _case = stmt.cases[i];
+                if( _case.body.definitelyTerminates() ) continue;
+
+                if( typeof doesNotTerminateIdx !== "number" )
+                    doesNotTerminateIdx = i;
+                else {
+                    doesNotTerminateIdx = -1; // more than one case does not terminate
+                    break;
+                }
+            }
+
+            const onlyOneCaseDoesNotTerminate = typeof doesNotTerminateIdx === "number" && doesNotTerminateIdx >= 0;
+            if( onlyOneCaseDoesNotTerminate )
+            {
+                const theDude = stmt.cases[doesNotTerminateIdx!];
+                
+                theDude.body = theDude.body instanceof TirBlockStmt ? theDude.body : new TirBlockStmt(
+                    [ theDude.body ],
+                    theDude.body.range
+                );
+                (theDude.body as TirBlockStmt).stmts.push(
+                    ...bodyStmts
+                );
+            }
+            
+            const isDirectReturn =
+                typeof doesNotTerminateIdx !== "number" // all cases terminate
+                || onlyOneCaseDoesNotTerminate;
+
+            const reassignsAndReturns = determineReassignedVariablesAndReturn( stmt );
+
+            if( isDirectReturn )
+            {
+                // build a SoP type to return
+                const { sop, initState } = getBranchStmtReturnType( reassignsAndReturns, ctx, stmt.range );
+
+                // expressify as ternary that returns the SoP type
+                return TirAssertAndContinueExpr.fromStmtsAndContinuation(
+                    assertions,
+                    getFinalStmtCaseExpr(
+                        new TirCaseExpr(
+                            expressifyVars( ctx, stmt.matchExpr, loopReplacements ),
+                            stmt.cases.map( _case => {
+                                if( _case.pattern instanceof TirArrayLikeDeconstr )
+                                throw new Error("array-like deconstruction in match statement is not supported");
+
+                                _case.pattern = toNamedDeconstructVarDecl( _case.pattern );
+
+                                const caseCtx = ctx.newChild();
+
+                                flattenSopNamedDeconstructInplace_addTopDestructToCtx_getNestedDeconstruct(
+                                    _case.pattern,
+                                    caseCtx
+                                );
+
+                                const caseBody = expressifyFuncBody(
+                                    caseCtx,
+                                    _case.body instanceof TirBlockStmt
+                                        ? _case.body.stmts
+                                        : [ _case.body ],
+                                    loopReplacements,
+                                    assertions
+                                );
+
+                                return new TirCaseMatcher(
+                                    _case.pattern,
+                                    caseBody,
+                                    _case.range
+                                );
+                            }),
+                            stmt.wildcardCase ? new TirWildcardCaseMatcher(
+                                expressifyFuncBody(
+                                    ctx.newChild(),
+                                    stmt.wildcardCase.body instanceof TirBlockStmt
+                                        ? stmt.wildcardCase.body.stmts
+                                        : [ stmt.wildcardCase.body ],
+                                    loopReplacements,
+                                    [], // no assertions
+                                ),
+                                stmt.wildcardCase.range
+                            ) : undefined,
+                            ctx.returnType,
+                            stmt.range
+                        ),
+                        sop,
+                        ctx,
+                        stmt.range,
+                        reassignsAndReturns,
+                        bodyStmts,
+                        loopReplacements
+                    )
+                );
+            }
 
         }
         else if( stmt instanceof TirForOfStmt ) {
 
+            // determine affected variables
+            // determine if we may have an early return
+            // determine if we can break or continue
+            const reassignedAndFlow = determineReassignedVariablesAndFlowInfos( stmt );
+            const {
+                reassigned,
+                returns,
+                canBreak,
+                canContinue
+            } = reassignedAndFlow;
+            const { sop, initState } = getBranchStmtReturnType( reassignedAndFlow, ctx, stmt.range );
+
+            if(
+                !returns
+                && !canBreak
+                // && !canContinue
+            ) {
+                // **only for...of** can be optimized as a simple `.reduce`
+                // producing the new state in this case
+                // (`.reduce` has no way to break or early return (efficiently))
+                // continue is ok, because we only need to pass the state up to that point
+            }
+
         }
-        else if( stmt instanceof TirWhileStmt ) {
+        else if(
+            stmt instanceof TirForStmt
+            || stmt instanceof TirWhileStmt
+        )
+        {
+            const reassignedAndFlow = determineReassignedVariablesAndFlowInfos( stmt );
+            const returnTypeAndInvalidInit = getBranchStmtReturnType( reassignedAndFlow, ctx, stmt.range );
+            const forStmt = whileToFor( stmt );
+            const { bodyStateType, initState } = getBodyStateType(
+                returnTypeAndInvalidInit,
+                forStmt
+            );
+            const loopExpr = expressifyForStmt(
+                ctx.newChild(),
+                forStmt,
+                returnTypeAndInvalidInit.sop,
+                bodyStateType,
+                initState
+            );
 
         }
         else {
@@ -259,9 +526,11 @@ export function expressifyFuncBody(
         }
     }
 
-    return new TirLitVoidExpr( SourceRange.mock );
+    return TirAssertAndContinueExpr.fromStmtsAndContinuation(
+        assertions,
+        new TirLitVoidExpr( SourceRange.mock )
+    );
 }
-
 
 
 function getConstrDestructPattern(
@@ -336,3 +605,111 @@ function getNestedDestructsInSingleSopDestructPattern(
     return result;
 }
 
+function getFinalStmtCaseExpr(
+    finalStmtExpr: TirExpr,
+    sop: TirSoPStructType,
+    ctx: ExpressifyCtx,
+    stmtRange: SourceRange,
+    reassignsAndReturns: ReassignedVariablesAndReturn,
+    nextBodyStmts: TirStmt[],
+    loopReplacements: LoopReplacements | undefined
+): TirCaseExpr
+{
+    const continuations: TirCaseMatcher[] = [];
+
+    const contBranchCtx = ctx.newChild();
+    const contConstr = sop.constructors[0];
+    const contFields = contConstr.fields;
+
+    const contPattern = new TirNamedDeconstructVarDecl(
+        sop.constructors[0].name,
+        new Map(
+            contFields.map(( f, i ) => [
+                f.name,
+                new TirSimpleVarDecl(
+                    getUniqueInternalName( f.name ),
+                    f.type,
+                    undefined, // no init expr (pattern is used as case matcher)
+                    false, // not a constant
+                    stmtRange
+                )
+            ])
+        ),
+        undefined, // no rest
+        sop,
+        undefined, // no init expr
+        false, // not a constant
+        stmtRange
+    );
+
+    const nestedDeconstructs = flattenSopNamedDeconstructInplace_addTopDestructToCtx_getNestedDeconstruct(
+        contPattern,
+        contBranchCtx
+    );
+
+    continuations.push(
+        new TirCaseMatcher(
+            contPattern,
+            expressifyFuncBody(
+                contBranchCtx,
+                (nestedDeconstructs as TirStmt[])
+                .concat( nextBodyStmts ),
+                loopReplacements,
+                [] // assertions are added before if statement exectution
+            ),
+            stmtRange
+        )
+    );
+
+    if( reassignsAndReturns.returns ) {
+        const earlyRetConstr = sop.constructors[1];
+        const earlyRetField = earlyRetConstr.fields[0];
+        const uniqueFieldName = getUniqueInternalName( earlyRetField.name );
+        const earlyRetPattern = new TirNamedDeconstructVarDecl(
+            earlyRetConstr.name,
+            new Map([
+                [
+                    earlyRetField.name,
+                    new TirSimpleVarDecl(
+                        uniqueFieldName,
+                        earlyRetField.type,
+                        undefined, // no init expr (pattern is used as case matcher)
+                        false, // not a constant
+                        stmtRange
+                    )
+                ]
+            ]),
+            undefined, // no rest
+            sop,
+            undefined, // no init expr
+            false, // not a constant
+            stmtRange
+        );
+        continuations.push(
+            new TirCaseMatcher(
+                earlyRetPattern,
+                new TirVariableAccessExpr(
+                    {
+                        variableInfos: {
+                            name: uniqueFieldName,
+                            type: earlyRetField.type,
+                            isConstant: true,
+                        },
+                        isDefinedOutsideFuncScope: false,
+                    },
+                    stmtRange
+                ),
+                stmtRange
+            )
+        );
+    }
+
+    // expressify as ternary that returns the SoP type
+    return new TirCaseExpr(
+        finalStmtExpr,
+        continuations,
+        undefined, // no wildcard case
+        ctx.returnType,
+        stmtRange
+    );
+}

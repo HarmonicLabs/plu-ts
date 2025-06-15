@@ -14,13 +14,9 @@ export class TirForOfStmt
     constructor(
         readonly elemDeclaration: TirVarDecl,
         readonly iterable: TirExpr,
-        readonly body: TirStmt,
+        public body: TirStmt,
         readonly range: SourceRange,
     ) {}
-
-    hasReturnStmt(): boolean {
-        return this.body.hasReturnStmt();
-    }
 
     definitelyTerminates(): boolean {
         return this.body.definitelyTerminates();

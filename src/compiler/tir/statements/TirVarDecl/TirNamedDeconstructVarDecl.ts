@@ -3,7 +3,7 @@ import { CommonFlags } from "../../../../common";
 import { mergeSortedStrArrInplace } from "../../../../utils/array/mergeSortedStrArrInplace";
 import { TirExpr } from "../../expressions/TirExpr";
 import { TirType } from "../../types/TirType";
-import { ITirStmt } from "../TirStmt";
+import { ITirStmt, Termination } from "../TirStmt";
 import { ITirVarDecl, TirVarDecl } from "./TirVarDecl";
 
 export class TirNamedDeconstructVarDecl
@@ -19,11 +19,6 @@ export class TirNamedDeconstructVarDecl
         public isConst: boolean,
         readonly range: SourceRange,
     ) {}
-
-    hasReturnStmt(): boolean
-    {
-        return false;
-    }
 
     deps(): string[]
     {

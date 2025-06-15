@@ -6,11 +6,9 @@ export class TirReturnStmt
     implements ITirStmt
 {
     constructor(
-        public value: TirExpr | undefined,
+        public value: TirExpr,
         readonly range: SourceRange,
     ) {}
-
-    hasReturnStmt(): boolean { return true; }
 
     definitelyTerminates(): boolean { return true; }
 

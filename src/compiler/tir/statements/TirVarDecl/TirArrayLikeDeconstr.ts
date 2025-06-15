@@ -2,7 +2,7 @@ import { SourceRange } from "../../../../ast/Source/SourceRange";
 import { mergeSortedStrArrInplace } from "../../../../utils/array/mergeSortedStrArrInplace";
 import { TirExpr } from "../../expressions/TirExpr";
 import { TirType } from "../../types/TirType";
-import { ITirStmt } from "../TirStmt";
+import { ITirStmt, Termination } from "../TirStmt";
 import { TirVarDecl } from "./TirVarDecl";
 
 export class TirArrayLikeDeconstr
@@ -16,11 +16,6 @@ export class TirArrayLikeDeconstr
         public isConst: boolean,
         readonly range: SourceRange,
     ) {}
-
-    hasReturnStmt(): boolean
-    {
-        return false;
-    }
 
     deps(): string[]
     {

@@ -12,8 +12,6 @@ export class TirFailStmt
         readonly range: SourceRange,
     ) {}
 
-    hasReturnStmt(): boolean { return false; }
-
     definitelyTerminates(): boolean { return true; }
 
     deps(): string[]

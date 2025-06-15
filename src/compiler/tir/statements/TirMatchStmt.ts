@@ -2,23 +2,18 @@ import { HasSourceRange } from "../../../ast/nodes/HasSourceRange";
 import { SourceRange } from "../../../ast/Source/SourceRange";
 import { filterSortedStrArrInplace } from "../../../utils/array/filterSortedStrArrInplace";
 import { mergeSortedStrArrInplace } from "../../../utils/array/mergeSortedStrArrInplace";
+import { TirCasePattern } from "../expressions/TirCaseExpr";
 import { TirExpr } from "../expressions/TirExpr";
 import { ITirStmt, TirStmt } from "./TirStmt";
-import { TirVarDecl } from "./TirVarDecl/TirVarDecl";
-
 export class TirMatchStmt
     implements ITirStmt
 {
     constructor(
         readonly matchExpr: TirExpr,
         readonly cases: TirMatchStmtCase[],
+        public wildcardCase: TirMatchStmtWildcardCase | undefined,
         readonly range: SourceRange,
     ) {}
-
-    hasReturnStmt(): boolean
-    {
-        return this.cases.some(({ body }) => body.hasReturnStmt());
-    }
 
     definitelyTerminates(): boolean
     {
@@ -34,6 +29,10 @@ export class TirMatchStmt
                 caseStmt.deps()
             );
         }
+        if( this.wildcardCase ) mergeSortedStrArrInplace(
+            deps,
+            this.wildcardCase.deps()
+        );
         return deps;
     }
 }
@@ -42,8 +41,8 @@ export class TirMatchStmtCase
     implements HasSourceRange
 {
     constructor(
-        readonly pattern: TirVarDecl,
-        readonly body: TirStmt,
+        public pattern: TirCasePattern,
+        public body: TirStmt,
         readonly range: SourceRange,
     ) {}
 
@@ -54,5 +53,19 @@ export class TirMatchStmtCase
             this.body.deps(),
             introducedVars
         );
+    }
+}
+
+export class TirMatchStmtWildcardCase
+    implements HasSourceRange
+{
+    constructor(
+        public body: TirStmt,
+        readonly range: SourceRange,
+    ) {}
+
+    deps(): string[]
+    {
+        return this.body.deps();
     }
 }

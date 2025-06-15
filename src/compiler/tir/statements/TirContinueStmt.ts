@@ -8,9 +8,10 @@ export class TirContinueStmt
         readonly range: SourceRange,
     ) {}
 
-    hasReturnStmt(): boolean { return false; }
-
-    definitelyTerminates(): boolean { return false; }
+    // loops are transoformed into recursive functions
+    // and continue statements are transformed into return statements
+    // so this statement does terminate the function
+    definitelyTerminates(): boolean { return true; }
 
     deps(): string[]
     {

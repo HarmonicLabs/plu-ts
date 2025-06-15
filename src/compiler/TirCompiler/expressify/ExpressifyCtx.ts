@@ -56,7 +56,7 @@ export class ExpressifyCtx
 
     constructor(
         readonly parent: ExpressifyCtx | undefined,
-        readonly returnType: TirType,
+        public returnType: TirType,
         hoisted?: Map<string, TirHoistedExpr | TirNativeFuncExpr>,
         /** var name -> latest constant name */
         readonly variables: Map<string, LatestVarNameSSA> = new Map(),

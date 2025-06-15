@@ -12,16 +12,6 @@ export class TirBlockStmt
         readonly range: SourceRange
     ) {}
 
-    hasReturnStmt(): boolean
-    {
-        // start from the end as it is more likely to have a return statement there
-        for( let i = this.stmts.length - 1; i >= 0; i-- )
-        {
-            if( this.stmts[i].hasReturnStmt() ) return true;
-        }
-        return false;
-    }
-
     definitelyTerminates(): boolean
     {
         return this.stmts.some( stmt => stmt.definitelyTerminates() );

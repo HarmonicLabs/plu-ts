@@ -7,14 +7,9 @@ export class TirWhileStmt
 {
     constructor(
         readonly condition: TirExpr,
-        readonly body: TirStmt,
+        public body: TirStmt,
         readonly range: SourceRange,
     ) {}
-
-    hasReturnStmt(): boolean
-    {
-        return this.body.hasReturnStmt();
-    }
 
     definitelyTerminates(): boolean
     {

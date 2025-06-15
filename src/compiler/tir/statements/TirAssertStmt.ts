@@ -2,6 +2,7 @@ import { SourceRange } from "../../../ast/Source/SourceRange";
 import { mergeSortedStrArrInplace } from "../../../utils/array/mergeSortedStrArrInplace";
 import { TirExpr } from "../expressions/TirExpr";
 import { ITirStmt } from "./TirStmt";
+import { TirTraceIfFalseExpr } from "./TirTraceIfFalseExpr";
 
 export class TirAssertStmt
     implements ITirStmt
@@ -14,8 +15,6 @@ export class TirAssertStmt
         readonly range: SourceRange,
     ) {}
 
-    hasReturnStmt(): boolean { return false; }
-
     definitelyTerminates(): boolean { return false; }
 
     deps(): string[]
@@ -25,5 +24,16 @@ export class TirAssertStmt
             mergeSortedStrArrInplace( deps, this.elseExpr.deps() );
         }
         return deps;
+    }
+
+    toSafeCondition(): TirExpr
+    {
+        if( !this.elseExpr ) return this.condition;
+
+        return new TirTraceIfFalseExpr(
+            this.condition,
+            this.elseExpr,
+            this.range
+        );
     }
 }

@@ -4,6 +4,7 @@ import { filterSortedStrArrInplace } from "../../../utils/array/filterSortedStrA
 import { mergeSortedStrArrInplace } from "../../../utils/array/mergeSortedStrArrInplace";
 import { TirExpr } from "../expressions/TirExpr";
 import { ITirStmt, TirStmt } from "./TirStmt";
+import { TirSimpleVarDecl } from "./TirVarDecl/TirSimpleVarDecl";
 import { TirVarDecl } from "./TirVarDecl/TirVarDecl";
 
 /**
@@ -15,17 +16,12 @@ export class TirForStmt
     implements ITirStmt
 {
     constructor(
-        readonly init: TirVarDecl[],
+        readonly init: TirSimpleVarDecl[],
         readonly condition: TirExpr | undefined,
         readonly update: TirStmt[] | undefined,
-        readonly body: TirStmt,
+        public body: TirStmt,
         readonly range: SourceRange,
     ) {}
-
-    hasReturnStmt(): boolean
-    {
-        return this.body.hasReturnStmt();
-    }
 
     definitelyTerminates(): boolean
     {

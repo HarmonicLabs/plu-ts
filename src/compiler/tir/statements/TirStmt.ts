@@ -14,8 +14,15 @@ import { TirWhileStmt } from "./TirWhileStmt";
 import { TirVarDecl, isTirVarDecl } from "./TirVarDecl/TirVarDecl";
 import { HasSourceRange } from "../../../ast/nodes/HasSourceRange";
 
+export enum Termination {
+    Conditinal = -1, // the statement may conditionally terminate or not, we need to check the condition
+    NoTermination  = 0, // the statement does not terminate the function
+    Return = 1, // guaranteed to return
+    Fail = 2, // guaranteed to fail (we can treat the condition as an assertion)
+}
+Object.freeze( Termination );
+
 export interface ITirStmt extends HasSourceRange {
-    hasReturnStmt: () => boolean;
     deps: () => string[];
     /**
      * @returns true if the statement is guaranteed to terminate the function
