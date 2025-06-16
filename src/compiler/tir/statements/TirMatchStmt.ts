@@ -5,6 +5,7 @@ import { mergeSortedStrArrInplace } from "../../../utils/array/mergeSortedStrArr
 import { TirCasePattern } from "../expressions/TirCaseExpr";
 import { TirExpr } from "../expressions/TirExpr";
 import { ITirStmt, TirStmt } from "./TirStmt";
+import { TirNamedDeconstructVarDecl } from "./TirVarDecl/TirNamedDeconstructVarDecl";
 export class TirMatchStmt
     implements ITirStmt
 {
@@ -41,7 +42,7 @@ export class TirMatchStmtCase
     implements HasSourceRange
 {
     constructor(
-        public pattern: TirCasePattern,
+        public pattern: TirNamedDeconstructVarDecl,
         public body: TirStmt,
         readonly range: SourceRange,
     ) {}

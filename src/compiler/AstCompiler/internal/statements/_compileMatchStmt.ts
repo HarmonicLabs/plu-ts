@@ -4,7 +4,8 @@ import { SimpleVarDecl } from "../../../../ast/nodes/statements/declarations/Var
 import { SingleDeconstructVarDecl } from "../../../../ast/nodes/statements/declarations/VarDecl/SingleDeconstructVarDecl";
 import { MatchStmt, MatchStmtCase } from "../../../../ast/nodes/statements/MatchStmt";
 import { DiagnosticCode } from "../../../../diagnostics/diagnosticMessages.generated";
-import { TirMatchStmt, TirMatchStmtCase } from "../../../tir/statements/TirMatchStmt";
+import { TirMatchStmt, TirMatchStmtCase, TirMatchStmtWildcardCase } from "../../../tir/statements/TirMatchStmt";
+import { TirNamedDeconstructVarDecl } from "../../../tir/statements/TirVarDecl/TirNamedDeconstructVarDecl";
 import { TirDataT, TirListT, TirLinearMapT, TirSopOptT, TirDataOptT } from "../../../tir/types/TirNativeType";
 import { isTirStructType, TirDataStructType, TirSoPStructType } from "../../../tir/types/TirStructType";
 import { getDeconstructableType, DeconstructableTirType } from "../../../tir/types/utils/getDeconstructableType";
@@ -34,12 +35,27 @@ export function _compileMatchStmt(
         stmt.matchExpr.range, matchExprType.toString()
     );
 
+    // TODO: add support for all deconstructable types
+    if( !isTirStructType( deconstructableType ) )
+    {
+        return ctx.error(
+            DiagnosticCode.Not_implemented_0,
+            stmt.matchExpr.range,
+            "only structs supported for now, sorry!"
+        );
+    }
+
+    const ctors = deconstructableType.constructors;
+    const ctorNames = ctors.map( c => c.name );
+    const missingCtors = ctorNames.slice();
+
     if( stmt.cases.length === 0 ) return ctx.error(
         DiagnosticCode.A_match_statement_must_have_at_least_one_case,
         stmt.range
     );
 
     const cases: TirMatchStmtCase[] = [];
+    let wildcardCase: TirMatchStmtWildcardCase | undefined = undefined;
     const constrNamesAlreadySpecified: string[] = [];
     for( const matchCase of stmt.cases )
     {
@@ -50,12 +66,36 @@ export function _compileMatchStmt(
             constrNamesAlreadySpecified
         );
         if( !branch ) return undefined;
+        
+        if( branch instanceof TirMatchStmtWildcardCase )
+        {
+            wildcardCase = branch;
+            break; // wildcard case catches any branch specified after it
+        }
+        const indexOfCtor = missingCtors.indexOf( branch.pattern.constrName );
+        if( indexOfCtor === -1 )
+        {
+            return ctx.error(
+                DiagnosticCode.Unknown_0_constructor_1,
+                branch.pattern.range, deconstructableType.toString(), branch.pattern.constrName
+            );
+        }
+        missingCtors.splice( indexOfCtor, 1 );
         cases.push( branch );
+    }
+
+    if( !wildcardCase && cases.length < ctors.length )
+    {
+        return ctx.error(
+            DiagnosticCode.Match_cases_are_not_exhaustive,
+            stmt.range
+        );
     }
 
     return [ new TirMatchStmt(
         matchExpr,
         cases,
+        wildcardCase,
         stmt.range
     ) ];
 }
@@ -64,16 +104,32 @@ export function _compileTirMatchStmtCase(
     matchCase: MatchStmtCase,
     deconstructableType: DeconstructableTirType,
     constrNamesAlreadySpecified: string[]
-): TirMatchStmtCase | undefined
+): TirMatchStmtCase | TirMatchStmtWildcardCase | undefined
 {
     const pattern = _compileVarDecl( ctx, matchCase.pattern, deconstructableType );
     if( !pattern ) return undefined;
 
-    if( pattern instanceof SimpleVarDecl ) 
+    if( pattern instanceof SimpleVarDecl ) {
+        if( pattern.name.text === "_" ) {
+            const branchCtx = ctx.newBranchChildScope();
+            const branchBody = wrapManyStatements(
+                _compileStatement(
+                    branchCtx,
+                    matchCase.body
+                ),
+                matchCase.body.range
+            );
+            if( !branchBody ) return undefined;
+            return new TirMatchStmtWildcardCase(
+                branchBody,
+                matchCase.range
+            );
+        }
         return ctx.error(
             DiagnosticCode.The_argument_of_a_match_statement_branch_must_be_deconstructed,
             matchCase.pattern.range
         );
+    }
     else if( pattern instanceof NamedDeconstructVarDecl ) {
         const deconstructedCtorIdentifier = pattern.name;
         const deconstructedCtorName = deconstructedCtorIdentifier.text;
@@ -88,7 +144,7 @@ export function _compileTirMatchStmtCase(
         if( deconstructableType instanceof TirDataT )
         {
             if(!(
-                    deconstructedCtorName === "Constr"   // { index, fields, ...rest }
+                   deconstructedCtorName === "Constr"   // { index, fields, ...rest }
                 || deconstructedCtorName === "Map"      // { map, ...rest }
                 || deconstructedCtorName === "List"     // { list, ...rest }
                 || deconstructedCtorName === "B"        // { bytes, ...rest }
@@ -220,6 +276,14 @@ export function _compileTirMatchStmtCase(
             deconstructableType
         );
         if( !branchArg ) return undefined;
+        if(!( branchArg instanceof TirNamedDeconstructVarDecl )) {
+            return ctx.error(
+                DiagnosticCode.Not_implemented_0,
+                matchCase.pattern.range, 
+                "only structs supported for now, sorry!"
+            );
+        }
+
         const branchBody = wrapManyStatements(
             _compileStatement(
                 branchCtx,
@@ -237,6 +301,13 @@ export function _compileTirMatchStmtCase(
     }
     else if( pattern instanceof ArrayLikeDeconstr )
     {
+        return ctx.error(
+            DiagnosticCode.Not_implemented_0,
+            pattern.range, 
+            "only structs supported for now, sorry!"
+        );
+
+        /*
         if(!(
             deconstructableType instanceof TirListT
             || deconstructableType instanceof TirLinearMapT
@@ -267,5 +338,6 @@ export function _compileTirMatchStmtCase(
             branchBody,
             matchCase.range
         );
+        //*/
     }
-    }
+}

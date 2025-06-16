@@ -31,6 +31,7 @@ export function _compileHoistedDeps(
             );
             const funcExpr = expressify(
                 funcDecl,
+                undefined, // loopReplacements
                 new ExpressifyCtx(
                     undefined,
                     funcDecl.returnType,
@@ -60,7 +61,7 @@ export function _compileHoistedDeps(
                     constDecl.type,
                     hoistedMap
                 ),
-                constDecl
+                constDecl,
             );
             const hoistedExpr = new TirHoistedExpr(
                 depName,

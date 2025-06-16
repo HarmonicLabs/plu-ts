@@ -25,7 +25,7 @@ export function expressifyTerminatingIfStmt(
         [ stmt.elseBranch ]
 
     return new TirTernaryExpr(
-        expressifyVars( parentCtx, stmt.condition, loopReplacements ),
+        expressifyVars( parentCtx, stmt.condition ),
         expressifyFuncBody( parentCtx.newChild(), thenBranch, loopReplacements ),
         expressifyFuncBody( parentCtx.newChild(), elseBranch, loopReplacements ),
         parentCtx.returnType,

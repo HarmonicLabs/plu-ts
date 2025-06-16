@@ -90,6 +90,8 @@
   "Could not infer function signature, parameter type is missing.": 285,
   "Could not infer function signature, return type is missing.": 286,
   "'case' expression must decontructed the inspected value.": 287,
+  "for loop initialization variables cannot be destructured. Declare it as a simple variable and move the destructuring in the loop body": 288,
+  "Match cases are not exhaustive": 289,
   
   "Importing the table disables some indirect call optimizations.": 901,
   "Exporting the table disables some indirect call optimizations.": 902,

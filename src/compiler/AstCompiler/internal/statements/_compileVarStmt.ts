@@ -29,12 +29,13 @@ export function _compileVarStmt(
     stmt: VarStmt
 ): TirVarDecl[] | undefined
 {
-    const tirVarDecls: TirVarDecl[] = [];
-    for( const decl of stmt.declarations )
+    const tirVarDecls: TirVarDecl[] = new Array( stmt.declarations.length );
+    for( let i = 0; i < stmt.declarations.length; i++ )
     {
+        const decl = stmt.declarations[i];
         const tirDecl = _compileVarDecl( ctx, decl, undefined );
         if( !tirDecl ) return undefined;
-        tirVarDecls.push( tirDecl );
+        tirVarDecls[i] = tirDecl;
     }
     return tirVarDecls;
 }

@@ -9,6 +9,8 @@ import { _compileExpr } from "../exprs/_compileExpr";
 import { _compileAssignmentStmt } from "./_compileAssignmentStmt";
 import { _compileStatement } from "./_compileStatement";
 import { _compileVarStmt } from "./_compileVarStmt";
+import { TirSimpleVarDecl } from "../../../tir/statements/TirVarDecl/TirSimpleVarDecl";
+import { DiagnosticCode } from "../../../../diagnostics/diagnosticMessages.generated";
 
 export function _compileForStmt(
     ctx: AstCompilationCtx,
@@ -17,8 +19,22 @@ export function _compileForStmt(
 {
     const loopScope = ctx.newLoopChildScope();
 
-    const tirInit = stmt.init ? _compileVarStmt( loopScope, stmt.init ) : undefined;
-    if( !tirInit ) return undefined;
+    const _tirInit = stmt.init ? _compileVarStmt( loopScope, stmt.init ) : undefined;
+    if( !_tirInit ) return undefined;
+    const nonSimpleDecl = _tirInit.filter( s => !(s instanceof TirSimpleVarDecl) );
+    if( nonSimpleDecl.length > 0 )
+    {
+        for( const decl of nonSimpleDecl )
+        {
+            ctx.error(
+                DiagnosticCode.for_loop_initialization_variables_cannot_be_destructured_Declare_it_as_a_simple_variable_and_move_the_destructuring_in_the_loop_body,
+                decl.range,
+            );
+        }
+        return undefined;
+    }
+
+    const tirInit: TirSimpleVarDecl[] = _tirInit as TirSimpleVarDecl[];
 
     const tirCond = stmt.condition ? _compileExpr( loopScope, stmt.condition, bool_t ) : undefined;
     if( !tirCond ) return undefined;

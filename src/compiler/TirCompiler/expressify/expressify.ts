@@ -100,7 +100,7 @@ export function expressifyFuncBody(
         }
         else if( stmt instanceof TirReturnStmt ) {
             if( stmt.value ) {
-                let modifiedExpr = expressifyVars( ctx, stmt.value, loopReplacements );
+                let modifiedExpr = expressifyVars( ctx, stmt.value );
                 if( typeof loopReplacements?.replaceReturnValue === "function" ) {
                     modifiedExpr = loopReplacements.replaceReturnValue( ctx, stmt );
                 }
@@ -119,7 +119,7 @@ export function expressifyFuncBody(
         // if( isTirVarDecl( stmt ) ) expressifyVarDecl( ctx, stmt );
         else if( stmt instanceof TirSimpleVarDecl ) {
             if( !stmt.initExpr ) throw new Error("simple var decl without init expr");
-            const initExpr = expressifyVars( ctx, stmt.initExpr, loopReplacements );
+            const initExpr = expressifyVars( ctx, stmt.initExpr );
             stmt.initExpr = initExpr;
 
             const lettedExpr = ctx.introduceLettedConstant(
@@ -190,7 +190,7 @@ export function expressifyFuncBody(
             else if( stmt instanceof TirSingleDeconstructVarDecl ) throw new Error("unreachable");
 
             if( !stmt.initExpr ) throw new Error("simple var decl without init expr");
-            const initExpr = expressifyVars( ctx, stmt.initExpr, loopReplacements );
+            const initExpr = expressifyVars( ctx, stmt.initExpr );
             stmt.initExpr = initExpr;
 
             const lettedName = getUniqueInternalName( stmt.type.toString().toLowerCase() );
@@ -252,7 +252,7 @@ export function expressifyFuncBody(
             const uniqueArrName = getUniqueInternalName("deconstructed_list_0");
             let lettedArr = ctx.introduceLettedConstant(
                 uniqueArrName,
-                expressifyVars( ctx, stmt.initExpr, loopReplacements ),
+                expressifyVars( ctx, stmt.initExpr ),
                 stmt.range
             );
 
@@ -343,7 +343,7 @@ export function expressifyFuncBody(
         }
         else if( stmt instanceof TirFailStmt ) {
             if( stmt.failMsgExpr ) {
-                const modifiedExpr = expressifyVars( ctx, stmt.failMsgExpr, loopReplacements );
+                const modifiedExpr = expressifyVars( ctx, stmt.failMsgExpr );
                 stmt.failMsgExpr = modifiedExpr;
 
                 return TirAssertAndContinueExpr.fromStmtsAndContinuation(
@@ -361,11 +361,11 @@ export function expressifyFuncBody(
             );
         }
         else if( stmt instanceof TirAssertStmt ) {
-            const condition = expressifyVars( ctx, stmt.condition, loopReplacements );
+            const condition = expressifyVars( ctx, stmt.condition );
             stmt.condition = condition;
 
             if( stmt.elseExpr ) {
-                const elseExpr = expressifyVars( ctx, stmt.elseExpr, loopReplacements );
+                const elseExpr = expressifyVars( ctx, stmt.elseExpr );
                 stmt.elseExpr = elseExpr;
             }
 
@@ -430,7 +430,7 @@ export function expressifyFuncBody(
             // build a SoP type to return
             const { sop, initState } = getBranchStmtReturnType( reassignsAndReturns, ctx, stmt.range );
 
-            const condition = expressifyVars( ctx, stmt.condition, loopReplacements );
+            const condition = expressifyVars( ctx, stmt.condition );
 
             const stmtExpr = new TirTernaryExpr(
                 condition,
@@ -519,7 +519,7 @@ export function expressifyFuncBody(
                     assertions,
                     getFinalStmtCaseExpr(
                         new TirCaseExpr(
-                            expressifyVars( ctx, stmt.matchExpr, loopReplacements ),
+                            expressifyVars( ctx, stmt.matchExpr ),
                             stmt.cases.map( _case => {
                                 if( _case.pattern instanceof TirArrayLikeDeconstr )
                                 throw new Error("array-like deconstruction in match statement is not supported");

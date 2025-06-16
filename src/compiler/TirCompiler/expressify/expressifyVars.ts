@@ -53,8 +53,7 @@ import { toNamedDeconstructVarDecl } from "./toNamedDeconstructVarDecl";
 **/
 export function expressifyVars(
     ctx: ExpressifyCtx,
-    expr: TirExpr,
-    loopReplacements: LoopReplacements | undefined
+    expr: TirExpr
 ): TirExpr
 {
     if(
@@ -80,7 +79,7 @@ export function expressifyVars(
     //
     // we don't have property access in TermIR (or UPLC)
     if( expr instanceof TirPropAccessExpr ) {
-        const objectExpr = expressifyVars( ctx, expr.object, loopReplacements );
+        const objectExpr = expressifyVars( ctx, expr.object );
         expr.object = objectExpr;
         return getVarAccessFromPropAccess( ctx, expr );
     }
@@ -102,7 +101,7 @@ export function expressifyVars(
     }
 
     if( isUnaryPrefixExpr( expr ) ) {
-        const modifiedExpr = expressifyVars( ctx, expr.operand, loopReplacements );
+        const modifiedExpr = expressifyVars( ctx, expr.operand );
         expr.operand = modifiedExpr;
         return expr;
     }
@@ -110,25 +109,25 @@ export function expressifyVars(
         expr instanceof TirParentesizedExpr
         || expr instanceof TirTypeConversionExpr
     ) {
-        const modifiedExpr = expressifyVars( ctx, expr.expr, loopReplacements );
+        const modifiedExpr = expressifyVars( ctx, expr.expr );
         expr.expr = modifiedExpr;
         return expr;
     }
     if( expr instanceof TirFuncExpr ) {
-        expressify( expr, loopReplacements, ctx );
+        expressify( expr, undefined, ctx );
         return expr;
     }
     if( expr instanceof TirCallExpr ) {
-        const func = expressifyVars( ctx, expr.func, loopReplacements );
+        const func = expressifyVars( ctx, expr.func );
         expr.func = func;
         for( let i = 0; i < expr.args.length; i++ ) {
-            const arg = expressifyVars( ctx, expr.args[i], loopReplacements );
+            const arg = expressifyVars( ctx, expr.args[i] );
             expr.args[i] = arg;
         }
         return expr;
     }
     if( expr instanceof TirCaseExpr ) {
-        const matchExpr = expressifyVars( ctx, expr.matchExpr, loopReplacements );
+        const matchExpr = expressifyVars( ctx, expr.matchExpr );
         expr.matchExpr = matchExpr;
         for( let i = 0; i < expr.cases.length; i++ ) {
             const c = expr.cases[i];
@@ -149,21 +148,21 @@ export function expressifyVars(
                 new TirReturnStmt( c.body, c.body.range )
             );
 
-            c.body = expressifyFuncBody( branchCtx, branchBodyStmts, loopReplacements );
+            c.body = expressifyFuncBody( branchCtx, branchBodyStmts, undefined );
         }
         return expr;
     }
     if( expr instanceof TirElemAccessExpr ) {
-        const arrExpr = expressifyVars( ctx, expr.arrLikeExpr, loopReplacements );
-        const indexExpr = expressifyVars( ctx, expr.indexExpr, loopReplacements );
+        const arrExpr = expressifyVars( ctx, expr.arrLikeExpr );
+        const indexExpr = expressifyVars( ctx, expr.indexExpr );
         expr.arrLikeExpr = arrExpr;
         expr.indexExpr = indexExpr;
         return expr;
     }
     if( expr instanceof TirTernaryExpr ) {
-        const condition = expressifyVars( ctx, expr.condition, loopReplacements );
-        const ifTrue = expressifyVars( ctx, expr.ifTrue, loopReplacements );
-        const ifFalse = expressifyVars( ctx, expr.ifFalse, loopReplacements);
+        const condition = expressifyVars( ctx, expr.condition );
+        const ifTrue = expressifyVars( ctx, expr.ifTrue );
+        const ifFalse = expressifyVars( ctx, expr.ifFalse );
         expr.condition = condition;
         expr.ifTrue = ifTrue;
         expr.ifFalse = ifFalse;
@@ -171,21 +170,21 @@ export function expressifyVars(
     }
 
     if( isTirBinaryExpr( expr ) ) {
-        const left = expressifyVars( ctx, expr.left, loopReplacements );
-        const right = expressifyVars( ctx, expr.right, loopReplacements );
+        const left = expressifyVars( ctx, expr.left );
+        const right = expressifyVars( ctx, expr.right );
         expr.left = left;
         expr.right = right;
         return expr;
     }
 
     if( expr instanceof TirLettedExpr ) {
-        const modifiedExpr = expressifyVars( ctx, expr.expr, loopReplacements );
+        const modifiedExpr = expressifyVars( ctx, expr.expr );
         expr.expr = modifiedExpr;
         return expr;
     }
 
     if( expr instanceof TirFromDataExpr ) {
-        const modifiedExpr = expressifyVars( ctx, expr.dataExpr, loopReplacements );
+        const modifiedExpr = expressifyVars( ctx, expr.dataExpr );
         expr.dataExpr = modifiedExpr;
         return expr;
     }
@@ -193,7 +192,7 @@ export function expressifyVars(
     if( expr instanceof TirFailExpr ) {
         let requiredSopExtractions: TirNamedDeconstructVarDecl[] = [];
         if( expr.failMsgExpr ) {
-            const modifiedExpr = expressifyVars( ctx, expr.failMsgExpr, loopReplacements );
+            const modifiedExpr = expressifyVars( ctx, expr.failMsgExpr );
             expr.failMsgExpr = modifiedExpr;
         }
         return expr;
