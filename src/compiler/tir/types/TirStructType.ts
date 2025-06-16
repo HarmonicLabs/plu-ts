@@ -33,6 +33,7 @@ export class TirDataStructType
         readonly constructors: TirStructConstr[],
         /** points to an array possibly shared with alternative encoding types */
         readonly methodNamesPtr: Map<AstFuncName, TirFuncName>,
+        readonly untagged: boolean = false,
     ) {}
 
     hasDataEncoding(): boolean { return true; }

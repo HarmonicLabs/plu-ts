@@ -40,6 +40,12 @@ import { TirLitNamedObjExpr } from "../../tir/expressions/litteral/TirLitNamedOb
 import { expressifyIfBranch } from "./expressifyIfBranch";
 import { expressifyForStmt, whileToFor } from "./expressifyForStmt";
 import { compile } from "../../../pluts";
+import { getListTypeArg } from "../../tir/types/utils/getListTypeArg";
+import { TirElemAccessExpr } from "../../tir/expressions/TirElemAccessExpr";
+import { TirLitIntExpr } from "../../tir/expressions/litteral/TirLitIntExpr";
+import { TirVarDecl } from "../../tir/statements/TirVarDecl/TirVarDecl";
+import { TirCallExpr } from "../../tir/expressions/TirCallExpr";
+import { TirNativeFuncExpr } from "../../tir/expressions/TirNativeFuncExpr";
 
 export function expressify(
     func: TirFuncExpr,
@@ -227,11 +233,106 @@ export function expressifyFuncBody(
                 );
             }
             else if( stmt.type instanceof TirDataStructType ) {
-                todo
+                assertions.push(
+                    ...ctx.introduceDeconstrDataLettedFields(
+                        toNamedDeconstructVarDecl( stmt )
+                    )
+                );
+                continue;
             }
         }
         else if( stmt instanceof TirArrayLikeDeconstr ) {
-            todo
+
+            if( !stmt.initExpr ) throw new Error("array-like deconstruction with init expr is not supported");
+            
+            const listType = stmt.type;
+            const elemType = getListTypeArg( stmt.type );
+            if( !elemType ) throw new Error("array-like deconstruction without element type is not supported");
+
+            const uniqueArrName = getUniqueInternalName("deconstructed_list_0");
+            let lettedArr = ctx.introduceLettedConstant(
+                uniqueArrName,
+                expressifyVars( ctx, stmt.initExpr, loopReplacements ),
+                stmt.range
+            );
+
+            const modTails = 3;
+            const nextDeclarations: TirVarDecl[] = [];
+
+            for( let i = 0; i < stmt.elements.length; i++ )
+            {
+                const elem = stmt.elements[i];
+                const uniqueVarName = getUniqueInternalName("elem_" + i.toString());
+
+                const nTails = i % modTails; // every 3 we hoist the intermediate list
+
+                let lettedElem: TirLettedExpr;
+                if( nTails === 0 && i > 0 ) {
+                    // hoist the list
+                    lettedArr = ctx.introduceLettedConstant(
+                        uniqueArrName,
+                        new TirElemAccessExpr(
+                            lettedArr,
+                            new TirLitIntExpr( BigInt( modTails ), elem.range ),
+                            listType,
+                            elem.range
+                        ),
+                        stmt.range
+                    );
+                    lettedElem = ctx.introduceLettedConstant(
+                        uniqueVarName,
+                        new TirElemAccessExpr(
+                            lettedArr,
+                            new TirLitIntExpr( BigInt(0), elem.range ),
+                            elemType,
+                            elem.range
+                        ),
+                        elem.range
+                    );
+                }
+                else {
+                    lettedElem = ctx.introduceLettedConstant(
+                        uniqueVarName,
+                        new TirElemAccessExpr(
+                            lettedArr,
+                            new TirLitIntExpr( BigInt( nTails ), elem.range ),
+                            elemType,
+                            elem.range
+                        ),
+                        elem.range
+                    );
+                }
+
+                if( elem instanceof TirSimpleVarDecl )
+                {
+                    ctx.setNewVariableName( elem.name, uniqueVarName );
+                }
+                else {
+                    elem.initExpr = lettedElem;
+                    nextDeclarations.push( elem );
+                }
+            }
+
+            if( stmt.rest ) {
+                const uniqueRestName = getUniqueInternalName( stmt.rest );
+                const restLetted = ctx.introduceLettedConstant(
+                    uniqueRestName,
+                    new TirCallExpr(
+                        TirNativeFuncExpr.dropListOf( elemType ),
+                        [
+                            new TirLitIntExpr( BigInt( stmt.elements.length % modTails ), stmt.range ),
+                            lettedArr
+                        ],
+                        listType,
+                        stmt.range
+                    ),
+                    stmt.range
+                );
+                ctx.setNewVariableName( stmt.rest, uniqueRestName );
+            }
+
+            bodyStmts.push( ...nextDeclarations );
+            continue;
         }
         else if( stmt instanceof TirAssignmentStmt ) bodyStmts.unshift( expressifyVarAssignmentStmt( ctx, stmt ) );
         

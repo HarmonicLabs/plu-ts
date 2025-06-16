@@ -77,6 +77,16 @@ export class ExpressifyCtx
         return new ExpressifyCtx( this, this.returnType );
     }
 
+    setNewVariableName(
+        oldName: string,
+        newName: string
+    ): void
+    {
+        let latestNameSSA = this.variables.get( oldName );
+        if( !latestNameSSA ) this.variables.set( oldName, { latestName: newName } );
+        else latestNameSSA.latestName = newName;
+    }
+
     setFuncParam(
         name: string,
         type: TirType

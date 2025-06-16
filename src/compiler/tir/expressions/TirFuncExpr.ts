@@ -31,7 +31,8 @@ export class TirFuncExpr
         // this is just a return statement wrapped in a block
         // (with decosntructed arguments if any) 
         readonly body: TirBlockStmt,
-        readonly range: SourceRange
+        readonly range: SourceRange,
+        private readonly _isLoop: boolean = false,
     ) {}
 
     /**
@@ -79,6 +80,7 @@ export class TirFuncExpr
 
     isRecursive(): boolean
     {
+        if( this._isLoop ) return true;
         this._defineDeps();
         return this._deps!.includes( this.name );
     }

@@ -170,16 +170,13 @@ export function expressifyForStmt(
     return new TirCallExpr(
         new TirFuncExpr(
             loopFuncName,
-            bodyStateType.constructors[0].fields.map( f => {
-
-                return new TirSimpleVarDecl(
-                    f.name,
-                    f.type,
-                    undefined, // no initial value
-                    false, // is constant
-                    stmt.range
-                )
-            }),
+            bodyStateType.constructors[0].fields.map( f => new TirSimpleVarDecl(
+                f.name,
+                f.type,
+                undefined, // no initial value
+                false, // is constant
+                stmt.range
+            )),
             returnType,
             new TirBlockStmt([
                 new TirReturnStmt(
@@ -187,13 +184,14 @@ export function expressifyForStmt(
                         loopCompilationCtx,
                         loopBody.stmts,
                         loopReplacements,
-                        [], // assertions
+                        [] // assertions
                     ),
                     stmt.range
                 )
             ], stmt.range
             ),
-            stmt.range
+            stmt.range,
+            true // is loop
         ),
         initState.values,
         returnType,
