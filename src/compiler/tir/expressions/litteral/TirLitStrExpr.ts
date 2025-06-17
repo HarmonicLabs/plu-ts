@@ -2,11 +2,15 @@ import { ITirExpr } from "../ITirExpr";
 import { SourceRange } from "../../../../ast/Source/SourceRange";
 import { TirType } from "../../types/TirType";
 import { bytes_t } from "../../program/stdScope/stdScope";
+import { ToIRTermCtx } from "../ToIRTermCtx";
+import { IRConst, IRTerm } from "../../../../IR";
+import { fromUtf8 } from "@harmoniclabs/uint8array-utils";
 
 export class TirLitStrExpr
     implements ITirExpr
 {
-    readonly type: TirType = bytes_t
+    readonly type: TirType = bytes_t;
+    readonly isConstant: boolean = true;
     
     constructor(
         readonly string: string,
@@ -14,4 +18,9 @@ export class TirLitStrExpr
     ) {}
 
     deps(): string[] { return []; }
+
+    toIR( ctx: ToIRTermCtx ): IRTerm
+    {
+        return IRConst.byteString( fromUtf8( this.string ) );
+    }
 }

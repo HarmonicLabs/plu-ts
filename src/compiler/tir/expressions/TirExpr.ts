@@ -16,6 +16,7 @@ import { TirNativeFuncExpr } from "./TirNativeFuncExpr";
 import { TirFromDataExpr } from "./TirFromDataExpr";
 import { TirFailExpr } from "./TirFailExpr";
 import { TirHoistedExpr } from "./TirHoistedExpr";
+import { TirToDataExpr } from "./TirToDataExpr";
 
 export type TirExpr
     =( TirUnaryPrefixExpr
@@ -33,9 +34,10 @@ export type TirExpr
     | TirVariableAccessExpr
     | TirLettedExpr
     | TirNativeFuncExpr
-    | TirFromDataExpr
     | TirFailExpr
     | TirHoistedExpr
+    | TirFromDataExpr
+    | TirToDataExpr
     )
     // & ITirExpr
     ;
@@ -58,8 +60,9 @@ export function isTirExpr( thing: any ): thing is TirExpr
         || thing instanceof TirVariableAccessExpr
         || thing instanceof TirLettedExpr
         || thing instanceof TirNativeFuncExpr
-        || thing instanceof TirFromDataExpr
         || thing instanceof TirFailExpr
         || thing instanceof TirHoistedExpr
+        || thing instanceof TirFromDataExpr
+        || thing instanceof TirToDataExpr
     );
 }

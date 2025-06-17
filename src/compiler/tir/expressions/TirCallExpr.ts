@@ -1,8 +1,10 @@
 import { SourceRange } from "../../../ast/Source/SourceRange";
+import { IRTerm } from "../../../IR";
 import { mergeSortedStrArrInplace } from "../../../utils/array/mergeSortedStrArrInplace";
 import { TirType } from "../types/TirType";
 import { ITirExpr } from "./ITirExpr";
 import { TirExpr } from "./TirExpr";
+import { ToIRTermCtx } from "./ToIRTermCtx";
 
 export class TirCallExpr implements ITirExpr
 {
@@ -20,5 +22,9 @@ export class TirCallExpr implements ITirExpr
             mergeSortedStrArrInplace( deps, arg.deps() );
         }
         return deps;
+    }
+
+    toIR( ctx: ToIRTermCtx ): IRTerm
+    {
     }
 }

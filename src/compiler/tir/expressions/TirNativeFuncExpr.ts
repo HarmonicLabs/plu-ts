@@ -11,9 +11,13 @@ export enum TirNativeFuncExprKind {
     unBytesData,
     unIntData,
 
+    constrData, // int => List<data> => data
+    mapData, // LinearMap<data> => data
+    listData, // List<data> => data
+
     unConstrDataResultIndex, // TirUnConstrDataResultT => int
     unConstrDataResultFields, // TirUnConstrDataResultT => List<data>
-    constrDataRawFields, // data => List<data>
+    rawFields, // data => List<data>
 
     pairDataFst, // pairData => data
     pairDataSnd, // pairData => data
@@ -73,6 +77,25 @@ export class TirNativeFuncExpr
         );
     }
 
+    static get constrData(): TirNativeFuncExpr {
+        return new TirNativeFuncExpr(
+            TirNativeFuncExprKind.constrData,
+            new TirFuncT([ int_t, new TirListT( data_t ) ], data_t )
+        );
+    }
+    static get mapData(): TirNativeFuncExpr {
+        return new TirNativeFuncExpr(
+            TirNativeFuncExprKind.mapData,
+            new TirFuncT([ new TirLinearMapT( data_t, data_t ) ], data_t )
+        );
+    }
+    static get listData(): TirNativeFuncExpr {
+        return new TirNativeFuncExpr(
+            TirNativeFuncExprKind.listData,
+            new TirFuncT([ new TirListT( data_t ) ], data_t )
+        );
+    }
+
     static get unConstrDataResultIndex(): TirNativeFuncExpr {
         return new TirNativeFuncExpr(
             TirNativeFuncExprKind.unConstrDataResultIndex,
@@ -85,9 +108,9 @@ export class TirNativeFuncExpr
             new TirFuncT([ new TirUnConstrDataResultT() ], new TirListT( data_t ) )
         );
     }
-    static get constrDataRawFields(): TirNativeFuncExpr {
+    static get rawFields(): TirNativeFuncExpr {
         return new TirNativeFuncExpr(
-            TirNativeFuncExprKind.constrDataRawFields,
+            TirNativeFuncExprKind.rawFields,
             new TirFuncT([ data_t ], new TirListT( data_t ) )
         );
     }
