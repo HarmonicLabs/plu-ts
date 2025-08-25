@@ -1,9 +1,10 @@
 import { isObject } from "@harmoniclabs/obj-utils";
 import { TirInterfaceImpl } from "./TirInterfaceImpl";
-import { TirType } from "./TirType";
+import { ITirType, TirType } from "./TirType";
 import { AstFuncName, TirFuncName } from "../../AstCompiler/scope/AstScope";
+import { constT, ConstType } from "@harmoniclabs/uplc";
 
-export interface ITirStructType {
+export interface ITirStructType extends ITirType {
     readonly name: string;
     readonly fileUid: string;
     readonly constructors: TirStructConstr[];
@@ -52,6 +53,9 @@ export class TirDataStructType
     toString(): string {
         return this.name;
     }
+    toAstName(): string {
+        return this.toString();
+    }
 
     private _isConcrete: boolean | undefined = undefined;
     isConcrete(): boolean {
@@ -72,6 +76,10 @@ export class TirDataStructType
         );
         result._isConcrete = this._isConcrete;
         return result;
+    }
+
+    toUplcConstType(): ConstType {
+        return constT.data
     }
 }
 
@@ -102,6 +110,9 @@ export class TirSoPStructType
     toString(): string {
         return this.name;
     }
+    toAstName(): string {
+        return this.toString();
+    }
 
     private _isConcrete: boolean | undefined = undefined;
     isConcrete(): boolean {
@@ -122,6 +133,10 @@ export class TirSoPStructType
         );
         result._isConcrete = this._isConcrete;
         return result;
+    }
+
+    toUplcConstType(): ConstType {
+        throw new Error("SoP struct cannot be represented as uplc constants.");
     }
 }
 

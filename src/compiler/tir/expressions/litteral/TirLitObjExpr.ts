@@ -27,6 +27,11 @@ export interface ITirLitObjExpr {
 export class TirLitObjExpr
     implements ITirExpr, ITirLitObjExpr
 {
+    get isConstant(): boolean
+    {
+        return this.values.every( value => value.isConstant );
+    }
+    
     constructor(
         readonly fieldNames: Identifier[],
         readonly values: TirExpr[],

@@ -11,7 +11,6 @@ export const PCredential = pstruct({
     PScriptCredential: { valHash: PValidatorHash.type },
 },
 ( self_t ) => {
-
     const pcredHash = phoist(
         pfn([ self_t ], bs )
         ( self => punBData.$( self.raw.fields.head ) )

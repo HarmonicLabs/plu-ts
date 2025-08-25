@@ -1,9 +1,13 @@
 import { SourceRange } from "../../../ast/Source/SourceRange";
+import { IRError, IRNative, IRTerm } from "../../../IR";
+import { _ir_apps } from "../../../IR/tree_utils/_ir_apps";
 import { mergeSortedStrArrInplace } from "../../../utils/array/mergeSortedStrArrInplace";
 import { TirAssertStmt } from "../statements/TirAssertStmt";
 import { TirType } from "../types/TirType";
 import { ITirExpr } from "./ITirExpr";
+import { TirCallExpr } from "./TirCallExpr";
 import { TirExpr } from "./TirExpr";
+import { ToIRTermCtx } from "./ToIRTermCtx";
 
 export class TirAssertAndContinueExpr
     implements ITirExpr
@@ -13,21 +17,10 @@ export class TirAssertAndContinueExpr
         return this.continuation.type;
     }
     constructor(
-        readonly conditions: ITirExpr[],
+        readonly conditions: TirExpr[],
         readonly continuation: ITirExpr,
         readonly range: SourceRange
     ) {}
-
-    deps(): string[]
-    {
-        return (
-            this.conditions
-            .reduce(( accum, cond ) => 
-                mergeSortedStrArrInplace( accum, cond.deps() ),
-                this.continuation.deps()
-            )
-        );
-    }
 
     static fromStmtsAndContinuation(
         assertions: TirAssertStmt[],
@@ -42,4 +35,40 @@ export class TirAssertAndContinueExpr
             continuation.range
         );
     }
+
+    deps(): string[]
+    {
+        return (
+            this.conditions
+            .reduce(( accum, cond ) => 
+                mergeSortedStrArrInplace( accum, cond.deps() ),
+                this.continuation.deps()
+            )
+        );
+    }
+
+    get isConstant(): boolean { return this.continuation.isConstant; }
+
+    toIR( ctx: ToIRTermCtx ): IRTerm
+    {
+        const irContinuation = this.continuation.toIR( ctx );
+        
+        if( this.conditions.length <= 0 ) return irContinuation;
+
+        let irConditions: IRTerm = this.conditions.pop()!.toIR( ctx );
+
+        irConditions = this.conditions.reduce(( ir, cond ) => _ir_apps(
+            IRNative._strictAnd,
+            ir,
+            cond.toIR( ctx ),
+        ), irConditions );
+
+        return _ir_apps(
+            IRNative._lazyIfThenElse,
+            irConditions,
+            irContinuation,
+            new IRError()
+        );
+    }
+    
 }

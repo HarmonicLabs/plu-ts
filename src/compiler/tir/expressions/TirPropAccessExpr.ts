@@ -7,6 +7,8 @@ import { TirCallExpr } from "./TirCallExpr";
 import { ITirExpr } from "./ITirExpr";
 import { TirType } from "../types/TirType";
 import { mergeSortedStrArrInplace } from "../../../utils/array/mergeSortedStrArrInplace";
+import { IRTerm } from "../../../IR";
+import { ToIRTermCtx } from "./ToIRTermCtx";
 
 export class TirPropAccessExpr
     implements ITirExpr
@@ -27,5 +29,12 @@ export class TirPropAccessExpr
             mergeSortedStrArrInplace( deps, this.prop.deps() );
         }
         return deps;
+    }
+
+    get isConstant(): boolean { return false; }
+    
+    toIR( ctx: ToIRTermCtx ): IRTerm
+    {
+        throw new Error("property access cannot be translated to IR");
     }
 }

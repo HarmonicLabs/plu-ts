@@ -1,5 +1,6 @@
 import { SourceRange } from "../../../ast/Source/SourceRange";
 import { IRTerm } from "../../../IR";
+import { _ir_apps } from "../../../IR/tree_utils/_ir_apps";
 import { mergeSortedStrArrInplace } from "../../../utils/array/mergeSortedStrArrInplace";
 import { TirType } from "../types/TirType";
 import { ITirExpr } from "./ITirExpr";
@@ -24,7 +25,13 @@ export class TirCallExpr implements ITirExpr
         return deps;
     }
 
+    get isConstant(): boolean { return false; }
+
     toIR( ctx: ToIRTermCtx ): IRTerm
     {
+        return _ir_apps(
+            this.func.toIR( ctx ),
+            ...(this.args.map( arg => arg.toIR( ctx ) ) as [ IRTerm ]),
+        );
     }
 }

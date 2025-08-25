@@ -17,4 +17,11 @@ export class TirUnaryPlus
     {
         return this.operand.deps();
     }
+
+    get isConstant(): boolean { return this.operand.isConstant; }
+
+    toIR( ctx: any ): any
+    {
+        return this.operand.toIR( ctx );
+    }
 }

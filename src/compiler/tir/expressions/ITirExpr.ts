@@ -9,4 +9,5 @@ export interface ITirExpr extends HasSourceRange {
     readonly isConstant: boolean;
     deps: () => string[];
     toIR: ( ctx: ToIRTermCtx ) => IRTerm;
+    clone: () => ITirExpr;
 }

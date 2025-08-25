@@ -12,11 +12,13 @@ import { isTirBinaryExpr, TirBinaryExpr } from "./binary/TirBinaryExpr";
 import { TirVariableAccessExpr } from "./TirVariableAccessExpr";
 import { TirTypeConversionExpr } from "./TirTypeConversionExpr";
 import { TirLettedExpr } from "./TirLettedExpr";
-import { TirNativeFuncExpr } from "./TirNativeFuncExpr";
 import { TirFromDataExpr } from "./TirFromDataExpr";
 import { TirFailExpr } from "./TirFailExpr";
 import { TirHoistedExpr } from "./TirHoistedExpr";
 import { TirToDataExpr } from "./TirToDataExpr";
+import { TirAssertAndContinueExpr } from "./TirAssertAndContinueExpr";
+import { TirTraceIfFalseExpr } from "./TirTraceIfFalseExpr";
+import { TirNativeFunc } from "./TirNativeFunc";
 
 export type TirExpr
     =( TirUnaryPrefixExpr
@@ -33,11 +35,13 @@ export type TirExpr
     | TirBinaryExpr
     | TirVariableAccessExpr
     | TirLettedExpr
-    | TirNativeFuncExpr
+    | TirNativeFunc
     | TirFailExpr
     | TirHoistedExpr
     | TirFromDataExpr
     | TirToDataExpr
+    | TirAssertAndContinueExpr
+    | TirTraceIfFalseExpr
     )
     // & ITirExpr
     ;
@@ -59,10 +63,12 @@ export function isTirExpr( thing: any ): thing is TirExpr
         || isTirBinaryExpr( thing )
         || thing instanceof TirVariableAccessExpr
         || thing instanceof TirLettedExpr
-        || thing instanceof TirNativeFuncExpr
+        || thing instanceof TirNativeFunc
         || thing instanceof TirFailExpr
         || thing instanceof TirHoistedExpr
         || thing instanceof TirFromDataExpr
         || thing instanceof TirToDataExpr
+        || thing instanceof TirAssertAndContinueExpr
+        || thing instanceof TirTraceIfFalseExpr
     );
 }

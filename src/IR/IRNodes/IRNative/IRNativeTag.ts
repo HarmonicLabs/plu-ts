@@ -95,6 +95,19 @@ export const enum IRNativeTag {
     // bitwise
     integerToByteString             = 73,
     byteStringToInteger             = 74,
+    // plomin (batch 5)
+    andByteString                   = 75,
+    orByteString                    = 76,
+    xorByteString                   = 77,
+    complementByteString            = 78,
+    readBit                         = 79,
+    writeBits                       = 80,
+    replicateByte                   = 81,
+    shiftByteString                 = 82,
+    rotateByteString                = 83,
+    countSetBits                    = 84,
+    findFirstSetBit                 = 85,
+    ripemd_160                      = 86,
 
     ////////////////////////////////////////////////////////////////////////////////
     // -------------------------------------------------------------------------- //
@@ -104,13 +117,15 @@ export const enum IRNativeTag {
 
     /** @deprecated */
     z_comb              = -1, // useful to understand when we are going recursive during optimizations
+    /** @deprecated */
     _matchList          = -2,
+    /** @deprecated */
     _recursiveList      = -3,
     _dropList          = -4,
     _indexList          = -5,
     _foldr              = -6,
     _foldl              = -7,
-    _mkFindData               = -8,
+    _mkFindDataOptional               = -8,
     _length             = -9,
     _some               = -10,
     _every              = -11,
@@ -131,10 +146,16 @@ export const enum IRNativeTag {
     _pairDataToData         = -26,
     _strFromData        = -27,
     _pairDataFromData       = -28,
-    /** @deprecated */
-    _lazyChooseList     = -29,
-    /** @deprecated */
-    _lazyIfThenElse     = -30
+    _mkEqualsList           = -31,
+    _equalPairData          = -32,
+    /** 
+     * function eqBool( a: boolean, b: boolean ): boolean
+     * {
+     *    return a ? ( b ? true : false ) : ( b ? false : true );
+     * }
+    **/
+    _equalBoolean           = -33,
+    _negateInt              = -34,
 }
 
 export function nativeTagToString( nativeTag: IRNativeTag ): string
@@ -149,7 +170,7 @@ export function nativeTagToString( nativeTag: IRNativeTag ): string
         case IRNativeTag._indexList     : return "indexList";
         case IRNativeTag._foldr         : return "foldr";
         case IRNativeTag._foldl         : return "foldl";
-        case IRNativeTag._mkFindData          : return "mkFind";
+        case IRNativeTag._mkFindDataOptional          : return "mkFind";
         case IRNativeTag._length        : return "length";
         case IRNativeTag._some          : return "some";
         case IRNativeTag._every         : return "every";
@@ -170,8 +191,9 @@ export function nativeTagToString( nativeTag: IRNativeTag ): string
         case IRNativeTag._pairDataToData    : return "pairToData";
         case IRNativeTag._strFromData   : return "strFromData";
         case IRNativeTag._pairDataFromData  : return "pairFromData";
-        case IRNativeTag._lazyChooseList: return "lazyChooseList";
-
+        case IRNativeTag._mkEqualsList  : return "mkEqualsList";
+        case IRNativeTag._equalPairData : return "equalPairData";
+        case IRNativeTag._equalBoolean  : return "equalBoolean";
 
         default: return ""
     }

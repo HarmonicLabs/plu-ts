@@ -4,7 +4,8 @@ import { TirType } from "../../types/TirType";
 import { ToIRTermCtx } from "../ToIRTermCtx";
 import { IRTerm, IRVar } from "../../../../IR";
 
-export class TirLitThisExpr implements ITirExpr
+export class TirLitThisExpr
+    implements ITirExpr
 {
     readonly isConstant: boolean = false;
     

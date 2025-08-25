@@ -225,10 +225,15 @@ export class ExpressifyCtx
         const lettedFields = this.introduceLettedConstant(
             lettedRawFieldsName,
             new TirCallExpr(
-                TirNativeFuncExpr.constrRawFields,
-                [ structExpr ],
+                TirNativeFuncExpr.unConstrDataResultFields,
+                [new TirCallExpr(
+                    TirNativeFuncExpr.unConstrData,
+                    [ structExpr ],
+                    new TirUnConstrDataResultT(),
+                    structExpr.range
+                )],
                 new TirListT( data_t ),
-                structExpr.range
+                structExpr.range,
             ),
             structExpr.range
         );

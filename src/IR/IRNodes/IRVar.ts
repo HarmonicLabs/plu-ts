@@ -121,21 +121,24 @@ export class IRVar
     }
 }
 
-const bdnVarHashCache: IRHash[] = []; 
+const _bdnVarHashCache: Map<number, WeakRef<IRHash>> = new Map();
 
 function getVarHashAtDbn( dbn: number )
 {
-    while( (bdnVarHashCache.length - 1) < dbn )
-    {
-        bdnVarHashCache.push(
-            hashIrData(
-                concatUint8Arr(
-                    IRVar.tag,
-                    positiveIntAsBytes( bdnVarHashCache.length )
-                )
-            )
-        );
-    }
+    const cached = _bdnVarHashCache.get( dbn )?.deref();
+    if( isIRHash( cached ) ) return cached;
 
-    return bdnVarHashCache[ dbn ];
+    const hash = hashIrData(
+        concatUint8Arr(
+            IRVar.tag,
+            positiveIntAsBytes( dbn )
+        )
+    );
+
+    _bdnVarHashCache.set(
+            dbn,
+            new WeakRef<IRHash>( hash )
+        );
+
+    return hash;
 }

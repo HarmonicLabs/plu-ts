@@ -6,6 +6,10 @@ import { TirBlockStmt } from "../statements/TirBlockStmt";
 import { TirFuncT } from "../types/TirNativeType";
 import { mergeSortedStrArrInplace } from "../../../utils/array/mergeSortedStrArrInplace";
 import { filterSortedStrArrInplace } from "../../../utils/array/filterSortedStrArrInplace";
+import { IRFunc, IRTerm } from "../../../IR";
+import { ToIRTermCtx } from "./ToIRTermCtx";
+import { IRRecursive } from "../../../IR/IRNodes/IRRecursive";
+import { TirReturnStmt } from "../statements/TirReturnStmt";
 
 export class TirFuncExpr
     implements ITirExpr
@@ -78,10 +82,30 @@ export class TirFuncExpr
         return this._deps!.slice();
     }
 
+    private _isRecursive: boolean = false;
     isRecursive(): boolean
     {
-        if( this._isLoop ) return true;
+        if( this._isLoop || this._isRecursive ) return true;
         this._defineDeps();
-        return this._deps!.includes( this.name );
+        this._isRecursive = this._deps!.includes( this.name );
+        return this._isRecursive;
+    }
+
+    readonly isConstant: boolean = false;
+
+    toIR(ctx: ToIRTermCtx): IRTerm
+    {
+        const arity = this.params.length;
+
+        const returnStmt = this.body.stmts[0];
+        if(!( returnStmt instanceof TirReturnStmt ))
+        throw new Error("function must be expressified before being converted to IR");
+
+        const expr = returnStmt.value;
+
+        let irFunc: IRTerm = new IRFunc( arity, expr.toIR( ctx ), this.name );
+        if( this.isRecursive() ) irFunc = new IRRecursive( irFunc, this.name );
+
+        return irFunc;
     }
 }

@@ -1,5 +1,6 @@
-import { TirType } from "./TirType";
+import { ITirType, TirType } from "./TirType";
 import { getAppliedTirTypeName } from "../program/TypedProgram";
+import { constT, ConstType } from "@harmoniclabs/uplc";
 
 export type TirNamedDestructableNativeType
     = TirDataT
@@ -55,59 +56,83 @@ export function isTirNativeType( t: any ): t is TirNativeType
     );
 }
 
-export class TirVoidT {
+export class TirVoidT
+    implements ITirType
+{
     clone(): TirVoidT { return new TirVoidT(); }
     isConcrete(): boolean { return true; }
     toString(): string { return "void"; }
+    toAstName(): string { return "void"; }
     static toTirTypeKey(): string { return "void"; }
     toTirTypeKey(): string { return TirVoidT.toTirTypeKey(); }
     toConcreteTirTypeName(): string { return this.toTirTypeKey(); }
     hasDataEncoding(): boolean { return true; }
+    toUplcConstType(): ConstType { return constT.unit; }
 }
-export class TirBoolT {
+export class TirBoolT
+    implements ITirType
+{
     clone(): TirBoolT { return new TirBoolT(); }
     isConcrete(): boolean { return true; }
     toString(): string { return "boolean"; }
+    toAstName(): string { return "boolean"; }
     static toTirTypeKey(): string { return "boolean"; }
     toTirTypeKey(): string { return TirBoolT.toTirTypeKey(); }
     toConcreteTirTypeName(): string { return this.toTirTypeKey(); }
     hasDataEncoding(): boolean { return true; }
+    toUplcConstType(): ConstType { return constT.bool; }
 }
-export class TirIntT {
+export class TirIntT
+    implements ITirType
+{
     clone(): TirIntT { return new TirIntT(); }
     isConcrete(): boolean { return true; }
     toString(): string { return "int"; }
+    toAstName(): string { return "int"; }
     static toTirTypeKey(): string { return "int"; }
     toTirTypeKey(): string { return TirIntT.toTirTypeKey(); }
     toConcreteTirTypeName(): string { return this.toTirTypeKey(); }
     hasDataEncoding(): boolean { return true; }
+    toUplcConstType(): ConstType { return constT.int; }
 }
-export class TirBytesT {
+export class TirBytesT
+    implements ITirType
+{
     clone(): TirBytesT { return new TirBytesT(); }
     isConcrete(): boolean { return true; }
     toString(): string { return "bytes"; }
+    toAstName(): string { return "bytes"; }
     static toTirTypeKey(): string { return "bytes"; }
     toTirTypeKey(): string { return TirBytesT.toTirTypeKey(); }
     toConcreteTirTypeName(): string { return this.toTirTypeKey(); }
     hasDataEncoding(): boolean { return true; }
+    toUplcConstType(): ConstType { return constT.byteStr; }
 }
-export class TirStringT {
+export class TirStringT
+    implements ITirType
+{
     clone(): TirStringT { return new TirStringT(); }
     isConcrete(): boolean { return true; }
     toString(): string { return "string"; }
+    toAstName(): string { return "string"; }
     static toTirTypeKey(): string { return "string"; }
     toTirTypeKey(): string { return TirStringT.toTirTypeKey(); }
     toConcreteTirTypeName(): string { return this.toTirTypeKey(); }
     hasDataEncoding(): boolean { return true; }
+    toUplcConstType(): ConstType { return constT.str; }
 }
-export class TirDataT {
+export class TirDataT
+    implements ITirType
+{
     clone(): TirDataT { return new TirDataT(); }
     isConcrete(): boolean { return true; }
     toString(): string { return "data"; }
+    toAstName(): string { return "data"; }
     static toTirTypeKey(): string { return "data"; }
     toTirTypeKey(): string { return TirDataT.toTirTypeKey(); }
     toConcreteTirTypeName(): string { return this.toTirTypeKey(); }
     hasDataEncoding(): boolean { return true; }
+    toUplcConstType(): ConstType { return constT.data; }
 }
 
 
@@ -120,6 +145,7 @@ export function isTirOptType( t: any ): t is TirDataOptT<TirType> | TirSopOptT<T
 }
 
 export class TirDataOptT<T extends TirType = TirType>
+    implements ITirType
 {
     constructor(
         readonly typeArg: T
@@ -163,8 +189,11 @@ export class TirDataOptT<T extends TirType = TirType>
         result._isConcrete = this._isConcrete;
         return result;
     }
+
+    toUplcConstType(): ConstType { return constT.data; }
 }
 export class TirSopOptT<T extends TirType = TirType>
+    implements ITirType
 {
     constructor(
         readonly typeArg: T
@@ -208,9 +237,14 @@ export class TirSopOptT<T extends TirType = TirType>
         result._isConcrete = this._isConcrete;
         return result;
     }
+
+    toUplcConstType(): ConstType {
+        throw new Error("SoP encoded optional cannot be represented as uplc const");
+    }
 }
 
 export class TirUnConstrDataResultT
+    implements ITirType
 {
     constructor() {}
 
@@ -231,14 +265,26 @@ export class TirUnConstrDataResultT
         return this.toTirTypeKey();
     }
 
+    toAstName(): string {
+        return this.toTirTypeKey();
+    }
+
     isConcrete(): boolean { return true; }
 
     clone(): TirUnConstrDataResultT {
         return new TirUnConstrDataResultT();
     }
+
+    toUplcConstType(): ConstType {
+        return constT.pairOf(
+            constT.int,
+            constT.listOf( constT.data )
+        );
+    }
 }
 
 export class TirPairDataT
+    implements ITirType
 {
     constructor() {}
 
@@ -258,15 +304,26 @@ export class TirPairDataT
         return this.toTirTypeKey();
     }
 
+    toAstName(): string {
+        return this.toTirTypeKey();
+    }
+
     isConcrete(): boolean { return true; }
 
     clone(): TirPairDataT {
         return new TirPairDataT();
     }
 
+    toUplcConstType(): ConstType {
+        return constT.pairOf(
+            constT.data,
+            constT.data
+        );
+    }
 }
 
 export class TirListT<T extends TirType = TirType>
+    implements ITirType
 {
     constructor(
         readonly typeArg: T
@@ -292,6 +349,10 @@ export class TirListT<T extends TirType = TirType>
         return `${this.toTirTypeKey()}<${this.typeArg.toString()}>`;
     }
 
+    toAstName(): string {
+        return this.toTirTypeKey();
+    }
+
     private _isConcrete: boolean | undefined = undefined;
     isConcrete(): boolean {
         if( typeof this._isConcrete !== "boolean" )
@@ -306,9 +367,16 @@ export class TirListT<T extends TirType = TirType>
         result._isConcrete = this._isConcrete;
         return result;
     }
+
+    toUplcConstType(): ConstType {
+        return constT.listOf(
+            this.typeArg.toUplcConstType()
+        );
+    }
 }
 
 export class TirLinearMapT<K extends TirType = TirType,V extends TirType = TirType>
+    implements ITirType
 {
     constructor(
         readonly keyTypeArg: K,
@@ -322,6 +390,10 @@ export class TirLinearMapT<K extends TirType = TirType,V extends TirType = TirTy
     }
     toTirTypeKey(): string {
         return TirLinearMapT.toTirTypeKey();
+    }
+
+    toAstName(): string {
+        return this.toTirTypeKey();
     }
 
     toConcreteTirTypeName(): string {
@@ -356,9 +428,19 @@ export class TirLinearMapT<K extends TirType = TirType,V extends TirType = TirTy
         result._isConcrete = this._isConcrete;
         return result;
     }
+
+    toUplcConstType(): ConstType {
+        return constT.listOf(
+            constT.pairOf(
+                constT.data,
+                constT.data
+            )
+        );
+    }
 }
 
 export class TirFuncT
+    implements ITirType
 {
     constructor(
         // readonly genericTyArgsName: TirTypeParam[],
@@ -372,6 +454,10 @@ export class TirFuncT
         return "func_" + this.argTypes.map( t => t.toConcreteTirTypeName() ).join("_") + "_" + this.returnType.toConcreteTirTypeName();
     }
     toConcreteTirTypeName(): string {
+        return this.toTirTypeKey();
+    }
+
+    toAstName(): string {
         return this.toTirTypeKey();
     }
 
@@ -396,5 +482,9 @@ export class TirFuncT
         );
         result._isConcrete = this._isConcrete;
         return result;
+    }
+
+    toUplcConstType(): ConstType {
+        throw new Error("TirFuncT cannot be represented as uplc const type");
     }
 }

@@ -5,6 +5,13 @@ import { ITirExpr } from "../ITirExpr";
 import { TirType } from "../../types/TirType";
 import { bool_t, bytes_t, int_t } from "../../program/stdScope/stdScope";
 import { mergeSortedStrArrInplace } from "../../../../utils/array/mergeSortedStrArrInplace";
+import { ToIRTermCtx } from "../ToIRTermCtx";
+import { compileIRToUPLC, IRConst, IRNative, IRTerm } from "../../../../IR";
+import { _ir_apps } from "../../../../IR/tree_utils/_ir_apps";
+import { TirBytesT, TirDataOptT, TirDataT, TirIntT, TirStringT } from "../../types/TirNativeType";
+import { TirDataStructType } from "../../types/TirStructType";
+import { getUnaliased } from "../../types/utils/getUnaliased";
+import { CEKConst, isCEKValue, Machine } from "@harmoniclabs/plutus-machine";
 
 
 export type TirBinaryExpr
@@ -54,7 +61,8 @@ export function isTirBinaryExpr( thing: any ): thing is TirBinaryExpr
     );
 }
 
-export interface ITirBinaryExpr extends ITirExpr
+export interface ITirBinaryExpr
+    extends ITirExpr
 {
     left: TirExpr;
     right: TirExpr;
@@ -69,6 +77,17 @@ export class TirExponentiationExpr
         public right: TirExpr,
         readonly range: SourceRange
     ) {}
+
+    get isConstant(): boolean { return this.left.isConstant && this.right.isConstant; }
+    
+    toIR( ctx: ToIRTermCtx ): IRTerm
+    {
+        return _ir_apps(
+            irFunc,
+            this.left.toIR( ctx ),
+            this.right.toIR( ctx ),
+        );
+    }
 
     deps(): string[]
     {
@@ -88,6 +107,24 @@ export class TirLessThanExpr
         readonly range: SourceRange
     ) {}
 
+    get isConstant(): boolean { return this.left.isConstant && this.right.isConstant; }
+
+    toIR( ctx: ToIRTermCtx ): IRTerm
+    {
+        const type = getUnaliased( this.left.type );
+        const irFunc = (
+            type instanceof TirIntT ? IRNative.lessThanInteger :
+            type instanceof TirBytesT ? IRNative.lessThanByteString :
+            undefined
+        );
+        if( !irFunc ) throw new Error("invalid left type for TirLessThanExpr");
+        return _ir_apps(
+            irFunc,
+            this.left.toIR( ctx ),
+            this.right.toIR( ctx ),
+        );
+    }
+
     deps(): string[]
     {
         const deps = this.left.deps();
@@ -105,6 +142,25 @@ export class TirGreaterThanExpr
         public right: TirExpr,
         readonly range: SourceRange
     ) {}
+
+    get isConstant(): boolean { return this.left.isConstant && this.right.isConstant; }
+    
+    toIR( ctx: ToIRTermCtx ): IRTerm
+    {
+        const type = getUnaliased( this.left.type );
+        const irFunc = (
+            type instanceof TirIntT ? IRNative.lessThanInteger :
+            type instanceof TirBytesT ? IRNative.lessThanByteString :
+            undefined
+        );
+        if( !irFunc ) throw new Error("invalid left type for TirLessThanExpr");
+        return _ir_apps(
+            irFunc,
+            // invert because we only have lessThan
+            this.right.toIR( ctx ),
+            this.left.toIR( ctx ),
+        );
+    }
 
     deps(): string[]
     {
@@ -124,6 +180,24 @@ export class TirLessThanEqualExpr
         readonly range: SourceRange
     ) {}
 
+    get isConstant(): boolean { return this.left.isConstant && this.right.isConstant; }
+    
+    toIR( ctx: ToIRTermCtx ): IRTerm
+    {
+        const type = getUnaliased( this.left.type );
+        const irFunc = (
+            type instanceof TirIntT ? IRNative.lessThanEqualInteger :
+            type instanceof TirBytesT ? IRNative.lessThanEqualsByteString :
+            undefined
+        );
+        if( !irFunc ) throw new Error("invalid left type for TirLessThanExpr");
+        return _ir_apps(
+            irFunc,
+            this.left.toIR( ctx ),
+            this.right.toIR( ctx ),
+        );
+    }
+
     deps(): string[]
     {
         const deps = this.left.deps();
@@ -141,6 +215,25 @@ export class TirGreaterThanEqualExpr
         public right: TirExpr,
         readonly range: SourceRange
     ) {}
+
+    get isConstant(): boolean { return this.left.isConstant && this.right.isConstant; }
+    
+    toIR( ctx: ToIRTermCtx ): IRTerm
+    {
+        const type = getUnaliased( this.left.type );
+        const irFunc = (
+            type instanceof TirIntT ? IRNative.lessThanEqualInteger :
+            type instanceof TirBytesT ? IRNative.lessThanEqualsByteString :
+            undefined
+        );
+        if( !irFunc ) throw new Error("invalid left type for TirLessThanExpr");
+        return _ir_apps(
+            irFunc,
+            // invert because we only have lessThanEqual
+            this.right.toIR( ctx ),
+            this.left.toIR( ctx ),
+        );
+    }
 
     deps(): string[]
     {
@@ -160,6 +253,17 @@ export class TirEqualExpr
         readonly range: SourceRange
     ) {}
 
+    get isConstant(): boolean { return this.left.isConstant && this.right.isConstant; }
+    
+    toIR( ctx: ToIRTermCtx ): IRTerm
+    {
+        return _ir_apps(
+            IRNative.equals( this.left.type ),
+            this.left.toIR( ctx ),
+            this.right.toIR( ctx ),
+        );
+    }
+
     deps(): string[]
     {
         const deps = this.left.deps();
@@ -178,6 +282,20 @@ export class TirNotEqualExpr
         readonly range: SourceRange
     ) {}
 
+    get isConstant(): boolean { return this.left.isConstant && this.right.isConstant; }
+    
+    toIR( ctx: ToIRTermCtx ): IRTerm
+    {
+        return _ir_apps(
+            IRNative._not,
+            _ir_apps(
+                IRNative.equals( this.left.type ),
+                this.left.toIR( ctx ),
+                this.right.toIR( ctx ),
+            )
+        );
+    }
+
     deps(): string[]
     {
         const deps = this.left.deps();
@@ -189,12 +307,38 @@ export class TirNotEqualExpr
 export class TirAddExpr
     implements ITirBinaryExpr
 {
-    readonly type: TirType = int_t;
+    get type(): TirType
+    {
+        const leftType = getUnaliased( this.left.type );
+        if(
+            leftType instanceof TirIntT
+            || leftType instanceof TirBytesT
+        ) return this.type;
+        throw new Error("invalid type for addition");
+    }
     constructor(
         public left: TirExpr,
         public right: TirExpr,
         readonly range: SourceRange
     ) {}
+
+    get isConstant(): boolean { return this.left.isConstant && this.right.isConstant; }
+    
+    toIR( ctx: ToIRTermCtx ): IRTerm
+    {
+        const type = getUnaliased( this.left.type );
+        const irFunc = (
+            type instanceof TirIntT ? IRNative.addInteger :
+            type instanceof TirBytesT ? IRNative.appendByteString :
+            undefined
+        );
+        if( !irFunc ) throw new Error("invalid left type for TirAddExpr");
+        return _ir_apps(
+            irFunc,
+            this.left.toIR( ctx ),
+            this.right.toIR( ctx ),
+        );
+    }
 
     deps(): string[]
     {
@@ -214,6 +358,17 @@ export class TirSubExpr
         readonly range: SourceRange
     ) {}
 
+    get isConstant(): boolean { return this.left.isConstant && this.right.isConstant; }
+    
+    toIR( ctx: ToIRTermCtx ): IRTerm
+    {
+        return _ir_apps(
+            IRNative.subtractInteger,
+            this.left.toIR( ctx ),
+            this.right.toIR( ctx ),
+        );
+    }
+
     deps(): string[]
     {
         const deps = this.left.deps();
@@ -231,6 +386,17 @@ export class TirMultExpr
         public right: TirExpr,
         readonly range: SourceRange
     ) {}
+
+    get isConstant(): boolean { return this.left.isConstant && this.right.isConstant; }
+    
+    toIR( ctx: ToIRTermCtx ): IRTerm
+    {
+        return _ir_apps(
+            IRNative.multiplyInteger,
+            this.left.toIR( ctx ),
+            this.right.toIR( ctx ),
+        );
+    }
 
     deps(): string[]
     {
@@ -250,6 +416,17 @@ export class TirDivExpr
         readonly range: SourceRange
     ) {}
 
+    get isConstant(): boolean { return this.left.isConstant && this.right.isConstant; }
+    
+    toIR( ctx: ToIRTermCtx ): IRTerm
+    {
+        return _ir_apps(
+            IRNative.divideInteger,
+            this.left.toIR( ctx ),
+            this.right.toIR( ctx ),
+        );
+    }
+
     deps(): string[]
     {
         const deps = this.left.deps();
@@ -267,6 +444,17 @@ export class TirModuloExpr
         public right: TirExpr,
         readonly range: SourceRange
     ) {}
+
+    get isConstant(): boolean { return this.left.isConstant && this.right.isConstant; }
+    
+    toIR( ctx: ToIRTermCtx ): IRTerm
+    {
+        return _ir_apps(
+            IRNative.moduloInteger,
+            this.left.toIR( ctx ),
+            this.right.toIR( ctx ),
+        );
+    }
 
     deps(): string[]
     {
@@ -286,6 +474,18 @@ export class TirShiftLeftExpr
         readonly range: SourceRange
     ) {}
 
+    get isConstant(): boolean { return this.left.isConstant && this.right.isConstant; }
+    
+    toIR( ctx: ToIRTermCtx ): IRTerm
+    {
+        return _ir_apps(
+            // positive shift implies left
+            IRNative.shiftByteString,
+            this.left.toIR( ctx ),
+            this.right.toIR( ctx ),
+        );
+    }
+
     deps(): string[]
     {
         const deps = this.left.deps();
@@ -303,6 +503,48 @@ export class TirShiftRightExpr
         public right: TirExpr,
         readonly range: SourceRange
     ) {}
+
+    get isConstant(): boolean { return this.left.isConstant && this.right.isConstant; }
+    
+    toIR( ctx: ToIRTermCtx ): IRTerm
+    {
+        let nIr: IRTerm = this.right.toIR( ctx );
+        if( this.right.isConstant )
+        {
+            const result = Machine.evalSimple( compileIRToUPLC( nIr ) );
+            if(
+                result instanceof CEKConst
+                && (typeof result.value === "bigint"
+                || typeof result.value === "number")
+            ) {
+                const n = BigInt( result.value );
+                // positive shift implies left
+                if( n >= 0n ) {
+                    nIr = IRConst.int( -n );
+                }
+                else {
+                    nIr = _ir_apps(
+                        IRNative._negateInt,
+                        nIr
+                    );
+                }
+            }
+            else nIr = _ir_apps(
+                IRNative._negateInt,
+                nIr
+            );
+        }
+        else nIr = _ir_apps(
+            IRNative._negateInt,
+            nIr
+        );
+
+        return _ir_apps(
+            IRNative.shiftByteString,
+            this.left.toIR( ctx ),
+            nIr,
+        );
+    }
 
     deps(): string[]
     {
@@ -322,6 +564,17 @@ export class TirBitwiseAndExpr
         readonly range: SourceRange
     ) {}
 
+    get isConstant(): boolean { return this.left.isConstant && this.right.isConstant; }
+    
+    toIR( ctx: ToIRTermCtx ): IRTerm
+    {
+        return _ir_apps(
+            IRNative.andByteString,
+            this.left.toIR( ctx ),
+            this.right.toIR( ctx ),
+        );
+    }
+
     deps(): string[]
     {
         const deps = this.left.deps();
@@ -339,6 +592,17 @@ export class TirBitwiseXorExpr
         public right: TirExpr,
         readonly range: SourceRange
     ) {}
+
+    get isConstant(): boolean { return this.left.isConstant && this.right.isConstant; }
+    
+    toIR( ctx: ToIRTermCtx ): IRTerm
+    {
+        return _ir_apps(
+            IRNative.xorByteString,
+            this.left.toIR( ctx ),
+            this.right.toIR( ctx ),
+        );
+    }
 
     deps(): string[]
     {
@@ -358,6 +622,17 @@ export class TirBitwiseOrExpr
         readonly range: SourceRange
     ) {}
 
+    get isConstant(): boolean { return this.left.isConstant && this.right.isConstant; }
+    
+    toIR( ctx: ToIRTermCtx ): IRTerm
+    {
+        return _ir_apps(
+            IRNative.orByteString,
+            this.left.toIR( ctx ),
+            this.right.toIR( ctx ),
+        );
+    }
+
     deps(): string[]
     {
         const deps = this.left.deps();
@@ -376,6 +651,17 @@ export class TirLogicalAndExpr
         readonly range: SourceRange
     ) {}
 
+    get isConstant(): boolean { return this.left.isConstant && this.right.isConstant; }
+    
+    toIR( ctx: ToIRTermCtx ): IRTerm
+    {
+        return _ir_apps(
+            IRNative._and,
+            this.left.toIR( ctx ),
+            this.right.toIR( ctx ),
+        );
+    }
+
     deps(): string[]
     {
         const deps = this.left.deps();
@@ -393,6 +679,17 @@ export class TirLogicalOrExpr
         public right: TirExpr,
         readonly range: SourceRange
     ) {}
+
+    get isConstant(): boolean { return this.left.isConstant && this.right.isConstant; }
+    
+    toIR( ctx: ToIRTermCtx ): IRTerm
+    {
+        return _ir_apps(
+            IRNative._or,
+            this.left.toIR( ctx ),
+            this.right.toIR( ctx ),
+        );
+    }
 
     deps(): string[]
     {

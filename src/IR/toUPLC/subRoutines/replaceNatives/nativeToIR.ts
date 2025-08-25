@@ -93,21 +93,6 @@ const hoisted_matchList = new IRHoisted(
 );
 hoisted_matchList.hash;
 
-//*
-const hoisted_lazyIfThenElse = new IRHoisted(
-    new IRFunc( 3, // condition, delayed_caseTrue, delayed_caseFalse
-        new IRForced(
-            _ir_apps(
-                IRNative.strictIfThenElse,
-                new IRVar( 2 ), // condition
-                new IRVar( 1 ), // delayed_caseTrue
-                new IRVar( 0 )  // delayed_caseFalse
-            )
-        )
-    )
-);
-hoisted_lazyIfThenElse.hash;
-
 const hosited_lazyChooseList = new IRHoisted(
     new IRFunc( 3, // list, delayed_caseNil, delayed_caseCons
         new IRForced(
@@ -299,7 +284,7 @@ export function nativeToIR( native: IRNative ): IRTerm
                 )
             );
         break;
-        case IRNativeTag._mkFindData          :
+        case IRNativeTag._mkFindDataOptional          :
             return new IRHoisted(
                 new IRFunc( 2, // elemToData (4), predicate (3)
                     new IRRecursive( // self (2)

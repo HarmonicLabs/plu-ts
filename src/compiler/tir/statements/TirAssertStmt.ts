@@ -2,7 +2,7 @@ import { SourceRange } from "../../../ast/Source/SourceRange";
 import { mergeSortedStrArrInplace } from "../../../utils/array/mergeSortedStrArrInplace";
 import { TirExpr } from "../expressions/TirExpr";
 import { ITirStmt } from "./TirStmt";
-import { TirTraceIfFalseExpr } from "./TirTraceIfFalseExpr";
+import { TirTraceIfFalseExpr } from "../expressions/TirTraceIfFalseExpr";
 
 export class TirAssertStmt
     implements ITirStmt

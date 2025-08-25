@@ -9,7 +9,7 @@
     "node:fs": false,
     "fs": false
   },
-  "type": "commonjs",
+  "type": "module",
   "files": [
     "dist"
   ],

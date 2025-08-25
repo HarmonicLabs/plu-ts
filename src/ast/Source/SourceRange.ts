@@ -20,12 +20,16 @@ export class SourceRange
         this.source = source;
     }
 
+    static get unknown(): SourceRange
+    {
+        return SourceRange.mock;
+    }
     static get mock(): SourceRange
     {
         return new SourceRange(
             Source.mock,
-            0,
-            0
+            -1,
+            -1
         );
     }
 

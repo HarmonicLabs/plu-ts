@@ -145,7 +145,6 @@ export function canCastToData( a: TirType ): boolean
         if(
             a instanceof TirListT
             || a instanceof TirSopOptT
-            || a instanceof TirDataOptT
         ) a = a.typeArg;
     }
     if(
@@ -155,9 +154,9 @@ export function canCastToData( a: TirType ): boolean
         || a instanceof TirBytesT
         || a instanceof TirStringT
         || a instanceof TirBoolT
+        || a instanceof TirDataOptT
+        || a instanceof TirDataStructType
     ) return true;
-
-    if( a instanceof TirDataStructType ) return true;
     if( a instanceof TirLinearMapT ) {
         const key = canCastToData( a.keyTypeArg );
         const value = canCastToData( a.valTypeArg );
@@ -165,6 +164,6 @@ export function canCastToData( a: TirType ): boolean
     }
 
     // TirFuncT | TirSoPStructType | TirTypeParam
-    // a;
+    a;
     return false;
 }

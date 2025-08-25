@@ -214,7 +214,7 @@ export enum Token {
     IntegerLiteral,
     // FloatLiteral,
     StringTemplateLiteralQuote,
-  
+
     // meta
   
     Invalid,

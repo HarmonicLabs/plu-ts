@@ -20,6 +20,6 @@ export class TirLitHexBytesExpr
 
     toIR( ctx: ToIRTermCtx ): IRTerm
     {
-        return IRConst.byteString( this.bytes );
+        return IRConst.bytes( this.bytes );
     }
 }

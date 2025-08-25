@@ -1,8 +1,10 @@
+import { ConstType } from "@harmoniclabs/uplc";
 import { AstFuncName, TirFuncName } from "../../AstCompiler/scope/AstScope";
 import { TirInterfaceImpl } from "./TirInterfaceImpl";
-import { TirType } from "./TirType";
+import { ITirType, TirType } from "./TirType";
 
 export class TirAliasType<AliasedT extends  TirType = TirType>
+    implements ITirType
 {
     constructor(
         readonly name: string,
@@ -31,6 +33,9 @@ export class TirAliasType<AliasedT extends  TirType = TirType>
     toString(): string {
         return this.name;
     }
+    toAstName(): string {
+        return this.toString();
+    }
 
     private _isConcrete: boolean | undefined = undefined;
     isConcrete(): boolean {
@@ -47,5 +52,11 @@ export class TirAliasType<AliasedT extends  TirType = TirType>
             this.aliased.clone(),
             this.methodsNamesPtr
         ) as TirAliasType<AliasedT>;
+    }
+
+    toUplcConstType(): ConstType {
+        let t: TirType = this.aliased;
+        while( t instanceof TirAliasType ) t = t.aliased; s
+        return t.toUplcConstType();
     }
 }

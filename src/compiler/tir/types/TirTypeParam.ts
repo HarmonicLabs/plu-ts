@@ -1,5 +1,8 @@
+import { ConstType } from "@harmoniclabs/uplc";
+import { ITirType } from "./TirType";
 
 export class TirTypeParam
+    implements ITirType
 {
     readonly symbol: symbol;
     constructor(
@@ -23,6 +26,9 @@ export class TirTypeParam
     {
         return this.name;
     }
+    toAstName(): string {
+        return this.toString();
+    }
 
     toInternalName(): string
     {
@@ -44,5 +50,9 @@ export class TirTypeParam
     static eq( a: TirTypeParam, b: TirTypeParam ): boolean
     {
         return a.symbol === b.symbol
+    }
+
+    toUplcConstType(): ConstType {
+        throw new Error("type parameters cannot be represented as uplc constants.");
     }
 }

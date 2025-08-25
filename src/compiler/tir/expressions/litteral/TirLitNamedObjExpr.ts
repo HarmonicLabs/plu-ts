@@ -28,7 +28,7 @@ export class TirLitNamedObjExpr
     {
         return this.values.every( value => value.isConstant );
     }
-    
+
     constructor(
         readonly name: Identifier,
         readonly fieldNames: Identifier[],
@@ -124,9 +124,7 @@ export class TirLitNamedObjExpr
         return ( type.untagged ?
             new TirCallExpr(
                 TirNativeFuncExpr.listData,
-                [
-                    new TirLitArrExpr( exprsAsData, new TirListT( data_t ), this.range ),
-                ],
+                [ fieldsAsListOfData],
                 data_t,
                 this.range
             ).toIR( ctx ) :
@@ -134,11 +132,7 @@ export class TirLitNamedObjExpr
                 TirNativeFuncExpr.constrData,
                 [
                     new TirLitIntExpr( BigInt(ctorIdx), this.range ),
-                    new TirLitArrExpr(
-                        exprsAsData,
-                        new TirListT( data_t ),
-                        this.range
-                    )
+                    fieldsAsListOfData
                 ],
                 data_t,
                 this.range

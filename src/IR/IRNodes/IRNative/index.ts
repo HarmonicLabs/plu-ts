@@ -12,6 +12,16 @@ import { ToJson } from "../../../utils/ToJson";
 import { hashIrData, IRHash } from "../../IRHash";
 import { isObject } from "@harmoniclabs/obj-utils";
 import { IRNodeKind } from "../../IRNodeKind";
+import { TirType } from "../../../compiler/tir/types/TirType";
+import { IRConst, IRFunc, IRHoisted, IRVar } from "..";
+import { _ir_apps } from "../../tree_utils/_ir_apps";
+import { IRTerm } from "../../IRTerm";
+import { getUnaliased } from "../../../compiler/tir/types/utils/getUnaliased";
+import { TirIntT, TirBytesT, TirStringT, TirDataT, TirDataOptT, TirBoolT, TirListT, TirLinearMapT, TirPairDataT, TirUnConstrDataResultT, TirVoidT, TirSopOptT, TirFuncT } from "../../../compiler/tir/types/TirNativeType";
+import { TirDataStructType, TirSoPStructType } from "../../../compiler/tir/types/TirStructType";
+import { TirAliasType } from "../../../compiler/tir/types/TirAliasType";
+import { getListTypeArg } from "../../../compiler/tir/types/utils/getListTypeArg";
+import { TirTypeParam } from "../../../compiler/tir/types/TirTypeParam";
 
 /**
  * we might not need all the hashes
@@ -23,7 +33,7 @@ const nativeHashesCache: { [n: number/*IRNativeTag*/]: IRHash } = {} as any;
 export interface IRNativeMetadata extends BaseIRMetadata {}
 
 /**
- * `IRNative` ⊇ `Builtins` + `std::fn`
+ * `IRNative` ⊇ (`Builtins` + `std::fn`)
 **/
 export class IRNative
     implements Cloneable<IRNative>, IHash, IIRParent, ToJson
@@ -174,6 +184,19 @@ export class IRNative
     static get blake2b_224() { return new IRNative( IRNativeTag.blake2b_224 ); }
     static get integerToByteString() { return new IRNative( IRNativeTag.integerToByteString ); }
     static get byteStringToInteger() { return new IRNative( IRNativeTag.byteStringToInteger ); }
+    // plomin (batch 5)
+    static get andByteString() { return new IRNative( IRNativeTag.andByteString ); }
+    static get orByteString() { return new IRNative( IRNativeTag.orByteString ); }
+    static get xorByteString() { return new IRNative( IRNativeTag.xorByteString ); }
+    static get complementByteString() { return new IRNative( IRNativeTag.complementByteString ); }
+    static get readBit() { return new IRNative( IRNativeTag.readBit ); }
+    static get writeBits() { return new IRNative( IRNativeTag.writeBits ); }
+    static get replicateByte() { return new IRNative( IRNativeTag.replicateByte ); }
+    static get shiftByteString() { return new IRNative( IRNativeTag.shiftByteString ); }
+    static get rotateByteString() { return new IRNative( IRNativeTag.rotateByteString ); }
+    static get countSetBits() { return new IRNative( IRNativeTag.countSetBits ); }
+    static get findFirstSetBit() { return new IRNative( IRNativeTag.findFirstSetBit ); }
+    static get ripemd_160() { return new IRNative( IRNativeTag.ripemd_160 ); }
 
     static get z_comb() { return new IRNative( IRNativeTag.z_comb ); }
     static get _matchList() { return new IRNative( IRNativeTag._matchList ); }
@@ -182,7 +205,7 @@ export class IRNative
     static get _indexList() { return new IRNative( IRNativeTag._indexList ); }
     static get _foldr() { return new IRNative( IRNativeTag._foldr ); }
     static get _foldl() { return new IRNative( IRNativeTag._foldl ); }
-    static get _mkFindData() { return new IRNative( IRNativeTag._mkFindData ); }
+    static get _mkFindDataOptional() { return new IRNative( IRNativeTag._mkFindDataOptional ); }
     static get _length() { return new IRNative( IRNativeTag._length ); }
     static get _some() { return new IRNative( IRNativeTag._some ); }
     static get _every() { return new IRNative( IRNativeTag._every ); }
@@ -205,4 +228,51 @@ export class IRNative
     static get _pairDataFromData() { return new IRNative( IRNativeTag._pairDataFromData ); }
     static get _lazyChooseList() { return new IRNative( IRNativeTag._lazyChooseList ); }
     static get _lazyIfThenElse() { return new IRNative( IRNativeTag._lazyIfThenElse ); }
+    static get _mkEqualsList() { return new IRNative( IRNativeTag._mkEqualsList ); }
+    static get _equalPairData() { return new IRNative( IRNativeTag._equalPairData ); }
+    static get _equalBoolean() { return new IRNative( IRNativeTag._equalBoolean ); }
+    static get _negateInt() { return new IRNative( IRNativeTag._negateInt ); }
+
+    static equals( type: TirType ): IRTerm
+    {
+        type = getUnaliased( type );
+        if( type instanceof TirAliasType ) throw new Error("unreachable")
+        if( type instanceof TirIntT ) return IRNative.equalsInteger;
+        if( type instanceof TirBytesT ) return IRNative.equalsByteString;
+        if( type instanceof TirStringT ) return IRNative.equalsString;
+        if( type instanceof TirBoolT ) return IRNative._equalBoolean;
+        if( type instanceof TirPairDataT ) return IRNative._equalPairData;
+        if(
+            type instanceof TirDataT
+            || type instanceof TirDataOptT 
+            || type instanceof TirDataStructType 
+        ) return IRNative.equalsData;
+        if( type instanceof TirListT ) return IRNative.equalListOf( getListTypeArg( type )! );
+        if( type instanceof TirLinearMapT ) return IRNative.equalListOf( new TirPairDataT() );
+        if( type instanceof TirLinearMapT ) return IRNative.equalListOf( new TirPairDataT() );
+        if( type instanceof TirUnConstrDataResultT ) return new IRHoisted(
+            new IRFunc( 2,
+                _ir_apps(
+                    IRNative.equalsData,
+                    _ir_apps( IRNative.constrData, new IRVar( 0 ) ),
+                    _ir_apps( IRNative.constrData, new IRVar( 1 ) ),
+                )
+            )
+        );
+        // don't even hoist, who is even going to use this?
+        if( type instanceof TirVoidT ) return new IRFunc( 2, IRConst.bool( true ) )
+
+        const tsEnsureExsaustiveCheck: TirSopOptT | TirFuncT | TirSoPStructType | TirTypeParam = type;
+        throw new Error("invalid type for std equality");
+    }
+    static equalListOf( type: TirType ): IRHoisted
+    {
+        return new IRHoisted(
+            _ir_apps(
+                IRNative._mkEqualsList,
+                IRNative.equals( type )
+            ),
+            { forceHoist: false, name: `equalsListOf_${type.toString()}` }
+        )
+    }
 }

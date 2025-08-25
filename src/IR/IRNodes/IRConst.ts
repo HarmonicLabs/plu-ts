@@ -1,9 +1,8 @@
-import { ByteString } from "@harmoniclabs/bytestring";
+import {  } from "@harmoniclabs/bytestring";
 import { Cloneable } from "@harmoniclabs/cbor/dist/utils/Cloneable";
 import { Pair } from "@harmoniclabs/pair";
 import { Data, isData, dataToCbor } from "@harmoniclabs/plutus-data";
 import { fromUtf8, toHex } from "@harmoniclabs/uint8array-utils";
-import { isConstValueInt } from "@harmoniclabs/uplc";
 import { BasePlutsError } from "../../utils/BasePlutsError";
 import { ToJson } from "../../utils/ToJson";
 import UPLCFlatUtils from "../../utils/UPLCFlatUtils";
@@ -16,16 +15,37 @@ import { _modifyChildFromTo } from "../toUPLC/_internal/_modifyChildFromTo";
 import { BaseIRMetadata } from "./BaseIRMetadata";
 import { hashIrData, IRHash, isIRHash } from "../IRHash";
 import { IRNodeKind } from "../IRNodeKind";
-import { TermType, isWellFormedType, typeExtends, lam, tyVar, delayed, termTypeToString, unit, bool, bs, int, str, data, list, pair, GenericTermType, PrimType } from "../../type_system";
 import { termTyToConstTy } from "../../type_system/termTyToConstTy";
+import { TirType } from "../../compiler/tir/types/TirType";
+import { bool_t, bytes_t, data_t, int_t, string_t, void_t } from "../../compiler/tir/program/stdScope/stdScope";
+import { TirBoolT, TirBytesT, TirDataOptT, TirDataT, TirFuncT, TirIntT, TirLinearMapT, TirListT, TirPairDataT, TirSopOptT, TirStringT, TirUnConstrDataResultT, TirVoidT } from "../../compiler/tir/types/TirNativeType";
+import { getUnaliased } from "../../compiler/tir/types/utils/getUnaliased";
+import { TirAliasType } from "../../compiler/tir/types/TirAliasType";
+import { TirDataStructType, TirSoPStructType } from "../../compiler/tir/types/TirStructType";
+import { getListTypeArg } from "../../compiler/tir/types/utils/getListTypeArg";
+import { TirTypeParam } from "../../compiler/tir/types/TirTypeParam";
+
+export interface IRConstPair {
+    fst: IRConstValue;
+    snd: IRConstValue;
+}
+
+export function isIRConstPair( value: any ): value is IRConstPair
+{
+    return (
+        value instanceof Pair &&
+        isIRConstValue( value.fst ) &&
+        isIRConstValue( value.snd )
+    );
+}
 
 export type IRConstValue
-    = CanBeUInteger
-    | ByteString | Uint8Array
+    = bigint
+    | Uint8Array
     | string
     | boolean
     | IRConstValue[]
-    | Pair<IRConstValue, IRConstValue>
+    | IRConstPair
     | Data
     | undefined;
 
@@ -38,51 +58,21 @@ export class IRConst
     get kind(): IRNodeKind.Const { return IRConst.kind; }
     static get tag(): Uint8Array { return new Uint8Array([ IRConst.kind ]); }
 
-    constructor( t: TermType, v: IRConstValue, _unsafeHash?: IRHash )
+    constructor(
+        readonly type: TirType,
+        readonly value: IRConstValue,
+        _unsafeHash?: IRHash
+    )
     {
-        if(
-            !isWellFormedType( t ) ||
-            typeExtends( t, lam( tyVar(), tyVar() ) ) ||
-            typeExtends( t, delayed( tyVar() ) )
-        )
-        {
-            throw new BasePlutsError(
-                "invalid type for IR constant"
-            );
-        }
         if(!(
-            isIRConstValueAssignableToType( v, t )
-        ))
-        {
-            console.log( v )
-            throw new BasePlutsError(
-                "invalid IR constant value for type " + termTypeToString( t )
-            );
-        }
-
-        Object.defineProperties(
-            this, {
-                type: {
-                    value: t,
-                    writable: false,
-                    enumerable: true,
-                    configurable: false
-                },
-                value: {
-                    value: v,
-                    writable: false,
-                    enumerable: true,
-                    configurable: false
-                }
-            }
+            isValueAssignableToType( value, type )
+        )) throw new BasePlutsError(
+            "invalid IR constant value for type " + type.toString()
         );
 
         this._parent = undefined;
         this._hash = isIRHash( _unsafeHash ) ? _unsafeHash : undefined;
     }
-
-    readonly type!: TermType
-    readonly value!: IRConstValue
 
     private _hash: IRHash | undefined;
     get hash(): IRHash
@@ -92,7 +82,7 @@ export class IRConst
             this._hash = hashIrData(
                 concatUint8Arr(
                     IRConst.tag,
-                    new Uint8Array( termTyToConstTy( this.type ) ),
+                    new Uint8Array( this.type.toUplcConstType() ),
                     serializeIRConstValue( this.value, this.type )
                 )
             )
@@ -139,211 +129,211 @@ export class IRConst
     {
         return {
             type: "IRConst",
-            constType: termTypeToString( this.type ),
+            constType: this.type.toString(),
             value: constValueToJson( this.value )
         }
     }
 
     static get unit(): IRConst
     {
-        return new IRConst( unit, undefined );
+        return new IRConst( void_t, undefined );
     }
 
     static bool( b: boolean ): IRConst
     {
-        return new IRConst( bool, b );
+        return new IRConst( bool_t, b );
     }
 
-    static byteString( b: ByteString | Uint8Array ): IRConst
+    static bytes( b:  | Uint8Array ): IRConst
     {
-        return new IRConst( bs, b );
+        return new IRConst( bytes_t, b );
     }
 
     static int( n: number | bigint ): IRConst
     {
-        return new IRConst( int, n );
+        return new IRConst( int_t, BigInt(n) );
     }
 
     static str( string: string ): IRConst
     {
-        return new IRConst( str, string );
+        return new IRConst( string_t, string );
     }
 
     static data( d: Data ): IRConst
     {
-        return new IRConst( data, d );
+        return new IRConst( data_t, d );
     }
 
-    static listOf( t: TermType ): ( vals: IRConstValue[] ) => IRConst
+    static listOf( t: TirType ): ( vals: IRConstValue[] ) => IRConst
     {
-        return ( vals: IRConstValue[] ) => new IRConst( list( t ), vals );
+        return ( vals: IRConstValue[] ) => new IRConst( new TirListT( t ), vals );
     }
-
-    static pairOf( a: TermType, b: TermType ): ( fst: IRConstValue, snd: IRConstValue ) => IRConst
-    {
-        return ( fst: IRConstValue, snd: IRConstValue ) => new IRConst( pair( a, b ), new Pair( fst, snd ) )
-    }
-}
-
-
-function inferConstValueT( value: IRConstValue ): GenericTermType
-{
-    if( typeof value === "undefined" || value === null ) return unit;
-    if( isConstValueInt( value ) || canBeUInteger( value ) ) return int;
-
-    if(
-        value instanceof Uint8Array ||
-        value instanceof ByteString
-    ) return bs;
-
-    if( typeof value === "string" ) return str;
-    if( typeof value === "boolean" ) return bool;
-
-    if( isIRConstValueList( value ) )
-    {
-        if( value.length === 0 ) return list( tyVar() );
-
-        return list( inferConstValueT( value[0] ) )
-    }
-
-    if( value instanceof Pair )
-    {
-        return pair( inferConstValueT( value.fst ), inferConstValueT( value.snd ) );
-    }
-
-    if( isData( value ) ) return data
-
-    throw new BasePlutsError(
-        "invalid IRConstValue passed to inferConstValueT"
-    );
 }
 
 function isIRConstValueList( value: any ): value is IRConstValue[]
 {
     if(!Array.isArray( value )) return false;
-
     if( value.length === 0 ) return true;
 
-    const elemsT = inferConstValueT( value[0] );
-
-    return value.every( elem => isIRConstValueAssignableToType( elem, elemsT ) )
+    return value.every( isIRConstValue )
 }
 
-function isIRConstValueAssignableToType( value: IRConstValue, t: GenericTermType ): boolean
+function isValueAssignableToType( value: IRConstValue, type: TirType ): boolean
 {
-    if( t[0] === PrimType.Alias ) return isIRConstValueAssignableToType( value, t[1] ); 
-    if(
-        t[0] === PrimType.AsData ||
-        t[0] === PrimType.Struct ||
-        t[0] === PrimType.Data
-    ) return isData( value );
+    type = getUnaliased( type );
 
-    if( t[0] === PrimType.List )
-    {
+    if(
+        // so that typescirpt is happy
+        type instanceof TirAliasType
+        || type instanceof TirFuncT
+        || type instanceof TirSopOptT
+        || type instanceof TirSoPStructType
+        || type instanceof TirTypeParam
+    ) return false;
+
+    if( type instanceof TirVoidT ) return value === undefined;
+    if( type instanceof TirBoolT ) return typeof value === "boolean";
+    if( type instanceof TirIntT ) return typeof value === "bigint";
+    if( type instanceof TirBytesT ) return value instanceof Uint8Array;
+    if( type instanceof TirStringT ) return typeof value === "string";
+    if( type instanceof TirPairDataT ) return (
+        isIRConstPair( value ) 
+        && isValueAssignableToType( value.fst, data_t )
+        && isValueAssignableToType( value.snd, data_t )
+    );
+
+    if( type instanceof TirLinearMapT ) {
         return (
-            Array.isArray( value ) &&
-            value.every( v => isIRConstValueAssignableToType( v, t[1] ) )
+            Array.isArray( value ) 
+            && value.every(
+                v => isValueAssignableToType( v, new TirPairDataT )
+            )
         );
     }
 
-    if( t[0] === PrimType.Pair )
+    if( type instanceof TirUnConstrDataResultT ) return (
+        isIRConstPair( value ) 
+        && isValueAssignableToType( value.fst, int_t )
+        && isValueAssignableToType( value.snd, new TirListT( data_t ) )
+    );
+
+    if(
+        type instanceof TirDataT
+        || type instanceof TirDataOptT
+        || type instanceof TirDataStructType
+    ) return isData( value );
+
+    if( type instanceof TirListT )
     {
+        const elemsT = getListTypeArg( type )!;
         return (
-            value instanceof Pair &&
-            isIRConstValueAssignableToType( value.fst, t[1] ) &&
-            isIRConstValueAssignableToType( value.snd, t[2] )
-        )
+            Array.isArray( value ) &&
+            value.every( v => isValueAssignableToType( v, elemsT ) )
+        );
     }
     
-    return typeExtends(
-        inferConstValueT( value ),
-        t
-    )
+    const tsEnsureExsaustiveCheck: never = type;
+    return false;
 }
 
-export function isIRConstValue( value: any ): boolean
+export function isIRConstValue( value: any ): value is IRConstValue
 {
     return (
-        typeof value === "undefined" ||
-        canBeUInteger( value ) ||
-        value instanceof Uint8Array ||
-        value instanceof ByteString ||
-        typeof value === "string" ||
-        typeof value === "boolean" ||
-        isIRConstValueList( value ) ||
-        (
-            value instanceof Pair &&
-            isIRConstValue( value.fst ) &&
-            isIRConstValue( value.snd )
-        ) || 
-        isData( value )
+        typeof value === "bigint"
+        || value instanceof Uint8Array
+        || typeof value === "string"
+        || typeof value === "boolean"
+        || isIRConstValueList( value )
+        || isIRConstPair( value )
+        || isData( value )
+        || typeof value === "undefined"
     );
 }
 
-function constValueToJson( value: any ): any
+function serializeIRConstValue( value: any, type: TirType ): Uint8Array
 {
-    if( canBeUInteger( value ) ) return forceBigUInt( value ).toString();
-    if( value instanceof Uint8Array ) return toHex( value );
-    if( value instanceof ByteString ) return value.toString();
-    if( isIRConstValueList( value ) ) return value.map( constValueToJson );
-    if( value instanceof Pair ) return { fst: constValueToJson( value.fst ), snd: constValueToJson( value.snd ) };
-    if( isData( value ) ) return value.toJson();
+    type = getUnaliased( type );
 
-    return value;
-}
+    if( type instanceof TirAliasType ) throw new Error("unreachable");
 
-function serializeIRConstValue( value: any, t: TermType ): Uint8Array
-{
-    if( t[0] === PrimType.Alias ) return serializeIRConstValue( value, t[1] );
-    if( value === undefined || t[0] === PrimType.Unit ) return new Uint8Array(0);
-    if( t[0] === PrimType.Int )
+    if( type instanceof TirVoidT ) return new Uint8Array(0);
+    if( type instanceof TirIntT )
     {
         return positiveBigIntAsBytes(
-            // forceBigUInt(
-                UPLCFlatUtils.zigzagBigint(
-                    BigInt( value )
-                )
-            // )
+            UPLCFlatUtils.zigzagBigint(
+                BigInt( value )
+            )
         )
     }
-
-    if( t[0] === PrimType.BS )
+    if( type instanceof TirStringT ) return fromUtf8( value );
+    if( type instanceof TirBytesT )
     {
         if( value instanceof Uint8Array ) return value.slice();
-        if( value instanceof ByteString ) return value.toBuffer();
+        throw new Error("invalid value");
     }
-
-    if( t[0] === PrimType.Str ) return fromUtf8( value );
-
-    if( t[0] === PrimType.Bool ) return new Uint8Array([value ? 1 : 0]);
-
-    if( t[0] === PrimType.List )
-    return concatUint8Arr(
-        ...(value as any[]).map( stuff =>
-            serializeIRConstValue( stuff, t[1] )
-        )
-    );
-
-    if( t[0] === PrimType.Pair )
+    if( type instanceof TirBoolT ) return new Uint8Array([value ? 1 : 0]);
+    if( type instanceof TirListT ) {
+        const elemsT = getListTypeArg( type )!;
+        return concatUint8Arr(
+            ...(value as any[]).map( stuff =>
+                serializeIRConstValue( stuff, elemsT )
+            )
+        );
+    }
+    if( type instanceof TirLinearMapT )
     {
         return concatUint8Arr(
-            serializeIRConstValue( value.fst, t[1] ),
-            serializeIRConstValue( value.snd, t[2] ),
-        )
+            ...(value as any[]).map( stuff =>
+                serializeIRConstValue( stuff, new TirPairDataT() )
+            )
+        );
     }
-
-    if( typeExtends( t, data ) ) // include structs or `asData`
+    if( type instanceof TirPairDataT )
     {
-        return dataToCbor( value ).toBuffer();
+        return concatUint8Arr(
+            serializeIRConstValue( value.fst, data_t ),
+            serializeIRConstValue( value.snd, data_t ),
+        );
     }
+    if( type instanceof TirUnConstrDataResultT )
+    {
+        return concatUint8Arr(
+            serializeIRConstValue( BigInt( value.fst ), int_t ),
+            serializeIRConstValue( value.snd, new TirListT( data_t ) )
+        );
+    }
+    if(
+        type instanceof TirDataT
+        || type instanceof TirDataOptT
+        || type instanceof TirDataStructType
+    ) return dataToCbor( value ).toBuffer();
 
-    console.log( "unexpected value calling 'serializeIRConstValue'", value );
-    console.log( termTypeToString( t ) )
-    console.log( value );
-    console.log( value instanceof ByteString );
-    console.log( value instanceof Uint8Array );
-    throw "hello";
-    throw new BasePlutsError(
-        "unexpected value calling 'serializeIRConstValue'"
-    );
+    if(
+        type instanceof TirFuncT
+        || type instanceof TirSopOptT
+        || type instanceof TirSoPStructType
+        || type instanceof TirTypeParam
+    ) throw new Error("invalid uplc const type");
+
+    const tsEnsureExsaustiveCheck: never = type;
+    throw new Error("unreachable");
+}
+
+export function constValueToJson( value: IRConstValue ): any
+{
+    if( typeof value === "bigint" ) return value.toString();
+    if( value instanceof Uint8Array ) return toHex( value );
+    if( typeof value === "string" ) return value;
+    if( typeof value === "boolean" ) return value;
+    if( isIRConstValueList( value ) )
+        return value.map( constValueToJson );
+    if( isIRConstPair( value ) )
+        return {
+            fst: constValueToJson( value.fst ),
+            snd: constValueToJson( value.snd )
+        };
+    if( isData( value ) ) return dataToCbor( value ).toString();
+    if( typeof value === "undefined" ) return null;
+
+    throw new Error("unreachable");
 }

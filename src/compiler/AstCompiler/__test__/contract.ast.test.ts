@@ -34,39 +34,49 @@ struct Animal {
         const srcText = `
 import { MyDatum } from "./${myDatumPath}";
 
-function main( param: Stuff, ctx: ScriptContext ): void
-{
-    const { tx, purpose } = ctx;
-
-    const [ a, b, ...rest ] = tx.inputs;
-
-    const Spend{
-        ref, 
-        optionalDatum: Some{ 
-            value: datum as MyDatum
-        }
-    } = purpose;
-
-    let sumLove = 0;
-
-    for( const { resolved: input } of tx.inputs )
-    {
-        // TODO: add implementation on value
-        // Property 'lovelaces' does not exist on type 'Value'
-        // sumLove += input.value.lovelaces();
-        sumLove += tx.fee;
-    }
-    if( true ) doStuff();
-
-    match( purpose )
-    {
-        Spend{ ref } => {}
-        Minting{} => {}
-        _ => fail;
+contract MyContract {
+    
+    param ownerPkh: bytes;
+    
+    constructor(
+        ownerPkh: bytes
+    ) {
+        this.ownerPkh = ownerPkh;
     }
 
-    assert tx.outputs.length() === 1 else "only one output allowed";
-    assert sumLove >= 1000_000_000;
+    spend sendToOwner()
+    {
+        const { tx, puropse, redeemer } = context;
+
+        assert tx.outputs.length() === 1;
+        
+        const output = tx.outputs[0];
+        assert output.address.credential.hash() === this.ownerPkh;
+    }
+
+    spend accumulate()
+    {
+        assert tx.outputs.length() === 1;
+        
+        const output = tx.outputs[0];
+        assert output.address.credential.hash() === this.ownHash;
+    }
+
+    mint creteToken()
+    {
+    }
+
+    mint burnToken()
+    {
+    }
+
+    certify certify() {}
+
+    withdraw withdraw() {}
+
+    propose propose() {}
+
+    vote vote() {}
 }
         `;
 
@@ -88,39 +98,7 @@ function main( param: Stuff, ctx: ScriptContext ): void
         const diagnostics = await complier.compileFile( fileName );
 
         // console.log( diagnostics );
-        expect( diagnostics?.statements.length ).toBe( 0 );
+        expect( diagnostics.length ).toBe( 0 );
     });
     
 });
-
-`
-contract MyContract {
-
-    param owner: PubKeyHash;
-    param txOutRef: TxOutRef;
-
-    spend sendToOwner()
-    {
-        const { tx, purpose } = context;
-
-        assert tx.outputs.length() == 1 else "only one output allowed";
-        assert tx.outputs[0].address.credential.hash === this.owner;
-    }
-        
-    spend sendToSomeone( someone: PubKeyHash ) {
-    }
-
-    mint oneShotMint( quantity: int )
-    {
-        const { tx } = context;
-    }
-
-    certify doStuff() {}
-
-    withdraw withdrawFunds() {}
-
-    propose newConstitution() {}
-
-    vote alwaysNo() {}
-}
-`
