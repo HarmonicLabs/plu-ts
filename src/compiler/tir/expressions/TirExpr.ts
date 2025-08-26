@@ -19,6 +19,7 @@ import { TirToDataExpr } from "./TirToDataExpr";
 import { TirAssertAndContinueExpr } from "./TirAssertAndContinueExpr";
 import { TirTraceIfFalseExpr } from "./TirTraceIfFalseExpr";
 import { TirNativeFunc } from "./TirNativeFunc";
+import { TirInlineClosedIR } from "./TirInlineClosedIR";
 
 export type TirExpr
     =( TirUnaryPrefixExpr
@@ -42,6 +43,7 @@ export type TirExpr
     | TirToDataExpr
     | TirAssertAndContinueExpr
     | TirTraceIfFalseExpr
+    | TirInlineClosedIR
     )
     // & ITirExpr
     ;
@@ -70,5 +72,6 @@ export function isTirExpr( thing: any ): thing is TirExpr
         || thing instanceof TirToDataExpr
         || thing instanceof TirAssertAndContinueExpr
         || thing instanceof TirTraceIfFalseExpr
+        || thing instanceof TirInlineClosedIR
     );
 }

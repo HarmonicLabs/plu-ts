@@ -651,11 +651,9 @@ export function nativeToIR( native: IRNative ): IRTerm
                 )
             );
         break;
-        case IRNativeTag._lazyChooseList:
-            return hosited_lazyChooseList.clone();
-        break;
-        case IRNativeTag._lazyIfThenElse:
-            return hoisted_lazyIfThenElse.clone()
+        case IRNativeTag._mapList: {
+            throw new Error("TODO: Implement nativeToIR for IRNativeTag._mapList");
+        }
         break;
 
         default: throw new Error("unknown (negative) native calling 'nativeToIR'")

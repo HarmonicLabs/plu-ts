@@ -22,8 +22,16 @@ export class TirTypeConversionExpr
 
     get isConstant(): boolean { return this.expr.isConstant; }
 
+    clone(): TirTypeConversionExpr
+    {
+        return new TirTypeConversionExpr(
+            this.expr.clone(),
+            this.type.clone(),
+            this.range.clone()
+        );
+    }
+
     toIR( ctx: ToIRTermCtx ): IRTerm
     {
-        throw new Error("TODO: Implement TirTypeConversionExpr.toIR");
     }
 }

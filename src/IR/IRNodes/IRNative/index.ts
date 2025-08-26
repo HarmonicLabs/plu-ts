@@ -226,12 +226,11 @@ export class IRNative
     static get _pairDataToData() { return new IRNative( IRNativeTag._pairDataToData ); }
     static get _strFromData() { return new IRNative( IRNativeTag._strFromData ); }
     static get _pairDataFromData() { return new IRNative( IRNativeTag._pairDataFromData ); }
-    static get _lazyChooseList() { return new IRNative( IRNativeTag._lazyChooseList ); }
-    static get _lazyIfThenElse() { return new IRNative( IRNativeTag._lazyIfThenElse ); }
     static get _mkEqualsList() { return new IRNative( IRNativeTag._mkEqualsList ); }
     static get _equalPairData() { return new IRNative( IRNativeTag._equalPairData ); }
     static get _equalBoolean() { return new IRNative( IRNativeTag._equalBoolean ); }
     static get _negateInt() { return new IRNative( IRNativeTag._negateInt ); }
+    static get _mapList() { return new IRNative( IRNativeTag._mapList ); }
 
     static equals( type: TirType ): IRTerm
     {

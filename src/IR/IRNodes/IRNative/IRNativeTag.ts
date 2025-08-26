@@ -156,6 +156,8 @@ export const enum IRNativeTag {
     **/
     _equalBoolean           = -33,
     _negateInt              = -34,
+
+    _mapList               = -35,
 }
 
 export function nativeTagToString( nativeTag: IRNativeTag ): string

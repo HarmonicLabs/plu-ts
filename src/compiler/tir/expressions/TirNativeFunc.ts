@@ -19,6 +19,10 @@ export class TirNativeFunc
         return new IRNative(this.tag);
     }
 
+    clone(): TirNativeFunc {
+        return new TirNativeFunc(this.tag, this.type);
+    }
+
     get range(): SourceRange { return SourceRange.unknown; }
 
     deps(): string[] { return []; }
