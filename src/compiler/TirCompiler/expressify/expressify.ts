@@ -45,7 +45,7 @@ import { TirElemAccessExpr } from "../../tir/expressions/TirElemAccessExpr";
 import { TirLitIntExpr } from "../../tir/expressions/litteral/TirLitIntExpr";
 import { TirVarDecl } from "../../tir/statements/TirVarDecl/TirVarDecl";
 import { TirCallExpr } from "../../tir/expressions/TirCallExpr";
-import { TirNativeFuncExpr } from "../../tir/expressions/TirNativeFuncExpr";
+import { TirNativeFunc } from "../../tir/expressions/TirNativeFunc";
 
 export function expressify(
     func: TirFuncExpr,
@@ -318,7 +318,7 @@ export function expressifyFuncBody(
                 const restLetted = ctx.introduceLettedConstant(
                     uniqueRestName,
                     new TirCallExpr(
-                        TirNativeFuncExpr.dropListOf( elemType ),
+                        TirNativeFunc._dropList( elemType ),
                         [
                             new TirLitIntExpr( BigInt( stmt.elements.length % modTails ), stmt.range ),
                             lettedArr

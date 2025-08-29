@@ -1,9 +1,14 @@
 import { SourceRange } from "../../../ast/Source/SourceRange";
-import { IRTerm } from "../../../IR";
+import { IRNative, IRTerm } from "../../../IR";
 import { _ir_apps } from "../../../IR/tree_utils/_ir_apps";
+import { TirBoolT, TirBytesT, TirDataOptT, TirDataT, TirIntT } from "../types/TirNativeType";
+import { TirDataStructType } from "../types/TirStructType";
 import { TirType } from "../types/TirType";
+import { getUnaliased } from "../types/utils/getUnaliased";
 import { ITirExpr } from "./ITirExpr";
 import { TirExpr } from "./TirExpr";
+import { _inlineFromData } from "./TirFromDataExpr";
+import { _inlineToData } from "./TirToDataExpr";
 import { ToIRTermCtx } from "./ToIRTermCtx";
 
 export class TirTypeConversionExpr
@@ -33,5 +38,53 @@ export class TirTypeConversionExpr
 
     toIR( ctx: ToIRTermCtx ): IRTerm
     {
+        const from_t = getUnaliased( this.expr.type );
+        const to_t = getUnaliased( this.type );
+        const exprIR = this.expr.toIR( ctx );
+
+        if(
+            from_t instanceof TirDataT
+            || from_t instanceof TirDataOptT
+            || from_t instanceof TirDataStructType
+        ) return _inlineFromData( to_t, exprIR );
+        if( 
+            to_t instanceof TirDataT
+            || to_t instanceof TirDataOptT
+            || to_t instanceof TirDataStructType
+        ) return _inlineToData( from_t, exprIR );
+
+        if( to_t instanceof TirIntT )
+        {
+            if( from_t instanceof TirIntT ) return exprIR;
+            if( from_t instanceof TirBytesT ) return _ir_apps(
+                IRNative._bytesToIntBE,
+                exprIR
+            );
+            if( from_t instanceof TirBoolT ) return _ir_apps(
+                IRNative._boolToInt,
+                exprIR
+            );
+            throw new Error(`Cannot convert from ${from_t.toString()} to ${to_t.toString()}`);
+        }
+        if( to_t instanceof TirBytesT )
+        {
+            if( from_t instanceof TirBytesT ) return exprIR;
+            if( from_t instanceof TirIntT ) return _ir_apps(
+                IRNative._intToBytesBE, // internally handles int size
+                exprIR
+            );
+            throw new Error(`Cannot convert from ${from_t.toString()} to ${to_t.toString()}`);
+        }
+        if( to_t instanceof TirBoolT )
+        {
+            if( from_t instanceof TirBoolT ) return exprIR;
+            if( from_t instanceof TirIntT ) return _ir_apps(
+                IRNative._intToBool,
+                exprIR
+            );
+            throw new Error(`Cannot convert from ${from_t.toString()} to ${to_t.toString()}`);
+        }
+
+        throw new Error(`Cannot convert from ${from_t.toString()} to ${to_t.toString()}`);
     }
 }

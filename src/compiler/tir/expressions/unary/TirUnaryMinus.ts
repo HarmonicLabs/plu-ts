@@ -16,6 +16,15 @@ export class TirUnaryMinus
         readonly range: SourceRange
     ) {}
 
+    clone(): TirUnaryMinus
+    {
+        return new TirUnaryMinus(
+            this.operand.clone(),
+            this.type.clone(),
+            this.range.clone()
+        );
+    }
+
     deps(): string[]
     {
         return this.operand.deps();

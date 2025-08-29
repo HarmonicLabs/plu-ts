@@ -16,6 +16,14 @@ export class TirLitHexBytesExpr
         readonly range: SourceRange
     ) {}
 
+    clone(): TirLitHexBytesExpr
+    {
+        return new TirLitHexBytesExpr(
+            new Uint8Array(this.bytes),
+            this.range.clone()
+        );
+    }
+
     deps(): string[] { return []; }
 
     toIR( ctx: ToIRTermCtx ): IRTerm

@@ -23,6 +23,15 @@ export class TirLettedExpr
         return this.expr.deps();
     }
 
+    clone(): TirLettedExpr
+    {
+        return new TirLettedExpr(
+            this.varName,
+            this.expr.clone(),
+            this.range.clone()
+        );
+    }
+    
     unsafeClone(): TirLettedExpr
     {
         return new TirLettedExpr(

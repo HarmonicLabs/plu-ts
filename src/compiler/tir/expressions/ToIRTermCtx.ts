@@ -46,4 +46,19 @@ export class ToIRTermCtx
         if( typeof declDbn !== "bigint" ) return undefined;
         return this.dbn - ( declDbn + _1n );
     }
+
+    defineVar( name: string ): void {
+        if( this.variableToCtx.has( name ) ) {
+            const ctx = this.variableToCtx.get( name )!;
+            if( ctx.localVarDbn( name ) !== undefined ) {
+                throw new Error(`variable '${name}' already defined in the current scope`);
+            }
+        }
+        this.variables.push( name );
+        this.variableToCtx.set( name, this );
+    }
+
+    pushUnusedVar(): void {
+        this.variables.push( "" ); // just to increment dbn
+    }
 }

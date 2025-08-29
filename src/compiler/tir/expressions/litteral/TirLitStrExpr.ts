@@ -17,10 +17,18 @@ export class TirLitStrExpr
         readonly range: SourceRange
     ) {}
 
+    clone(): TirLitStrExpr
+    {
+        return new TirLitStrExpr(
+            this.string,
+            this.range.clone()
+        );
+    }
+
     deps(): string[] { return []; }
 
     toIR( ctx: ToIRTermCtx ): IRTerm
     {
-        return IRConst.byteString( fromUtf8( this.string ) );
+        return IRConst.bytes( fromUtf8( this.string ) );
     }
 }

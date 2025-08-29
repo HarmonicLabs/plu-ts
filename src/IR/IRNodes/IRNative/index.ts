@@ -198,11 +198,7 @@ export class IRNative
     static get findFirstSetBit() { return new IRNative( IRNativeTag.findFirstSetBit ); }
     static get ripemd_160() { return new IRNative( IRNativeTag.ripemd_160 ); }
 
-    static get z_comb() { return new IRNative( IRNativeTag.z_comb ); }
-    static get _matchList() { return new IRNative( IRNativeTag._matchList ); }
-    static get _recursiveList() { return new IRNative( IRNativeTag._recursiveList ); }
     static get _dropList() { return new IRNative( IRNativeTag._dropList ); }
-    static get _indexList() { return new IRNative( IRNativeTag._indexList ); }
     static get _foldr() { return new IRNative( IRNativeTag._foldr ); }
     static get _foldl() { return new IRNative( IRNativeTag._foldl ); }
     static get _mkFindDataOptional() { return new IRNative( IRNativeTag._mkFindDataOptional ); }

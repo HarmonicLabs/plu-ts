@@ -16,6 +16,15 @@ export class TirFailExpr
         readonly range: SourceRange,
     ) {}
 
+    clone(): TirFailExpr
+    {
+        return new TirFailExpr(
+            this.failMsgExpr?.clone(),
+            this.type.clone(),
+            this.range.clone()
+        );
+    }
+
     deps(): string[]
     {
         return this.failMsgExpr?.deps() ?? []

@@ -38,13 +38,16 @@ export class TirToDataExpr
         readonly range: SourceRange
     ) {}
 
-    get isConstant(): boolean { return this.expr.isConstant; }
-    get type(): TirDataT { return data_t; }
-
     clone(): TirToDataExpr
     {
-        return new TirToDataExpr( this.expr, this.range );
+        return new TirToDataExpr(
+            this.expr.clone(),
+            this.range.clone()
+        );
     }
+
+    get isConstant(): boolean { return this.expr.isConstant; }
+    get type(): TirDataT { return data_t; }
 
     deps(): string[]
     {
@@ -60,7 +63,7 @@ export class TirToDataExpr
     }
 }
 
-function _inlineToData(
+export function _inlineToData(
     origin_t: TirType,
     exprIR: IRTerm
 ): IRTerm
@@ -136,7 +139,7 @@ function _inlineToData(
     );
 }
 
-function _toDataUplcFunc( origin_t: TirType ): IRTerm
+export function _toDataUplcFunc( origin_t: TirType ): IRTerm
 {
     const from_t = getUnaliased( origin_t );
 
@@ -225,7 +228,7 @@ const _strToData = new IRHoisted( new IRFunc(
     "~_strToData"
 ));
 
-function _inlineSingleSopConstrToData(
+export function _inlineSingleSopConstrToData(
     sop_t: TirSoPStructType,
     exprIR: IRTerm
 ): IRTerm
@@ -288,7 +291,7 @@ function _inlineSingleSopConstrToData(
     );
 }
 
-function _inlineMultiSopConstrToData(
+export function _inlineMultiSopConstrToData(
     sop_t: TirSoPStructType,
     exprIR: IRTerm
 ): IRTerm

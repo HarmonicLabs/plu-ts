@@ -15,6 +15,14 @@ export class TirLitUndefExpr implements ITirExpr
         readonly range: SourceRange
     ) {}
 
+    clone(): TirLitUndefExpr
+    {
+        return new TirLitUndefExpr(
+            this.type.clone(),
+            this.range.clone()
+        );
+    }
+
     deps(): string[] { return []; }
 
     toIR( ctx: ToIRTermCtx ): IRTerm

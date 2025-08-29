@@ -14,6 +14,14 @@ export class TirLitThisExpr
         readonly range: SourceRange
     ) {}
 
+    clone(): TirLitThisExpr
+    {
+        return new TirLitThisExpr(
+            this.type.clone(),
+            this.range.clone()
+        );
+    }
+
     deps(): string[] { return []; }
 
     toIR( ctx: ToIRTermCtx ): IRTerm

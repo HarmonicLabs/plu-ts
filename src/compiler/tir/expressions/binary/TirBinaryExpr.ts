@@ -77,13 +77,22 @@ export class TirExponentiationExpr
         public right: TirExpr,
         readonly range: SourceRange
     ) {}
+    
+    clone(): TirExpr
+    {
+        return new TirExponentiationExpr(
+        	this.left.clone(),
+        	this.right.clone(),
+        	this.range.clone()
+        );
+    }
 
     get isConstant(): boolean { return this.left.isConstant && this.right.isConstant; }
     
     toIR( ctx: ToIRTermCtx ): IRTerm
     {
         return _ir_apps(
-            irFunc,
+            IRNative._exponentiateInteger,
             this.left.toIR( ctx ),
             this.right.toIR( ctx ),
         );
@@ -106,6 +115,15 @@ export class TirLessThanExpr
         public right: TirExpr,
         readonly range: SourceRange
     ) {}
+    
+    clone(): TirExpr
+    {
+        return new TirLessThanExpr(
+        	this.left.clone(),
+        	this.right.clone(),
+        	this.range.clone()
+        );
+    }
 
     get isConstant(): boolean { return this.left.isConstant && this.right.isConstant; }
 
@@ -142,6 +160,15 @@ export class TirGreaterThanExpr
         public right: TirExpr,
         readonly range: SourceRange
     ) {}
+    
+    clone(): TirExpr
+    {
+        return new TirGreaterThanExpr(
+        	this.left.clone(),
+        	this.right.clone(),
+        	this.range.clone()
+        );
+    }
 
     get isConstant(): boolean { return this.left.isConstant && this.right.isConstant; }
     
@@ -179,6 +206,15 @@ export class TirLessThanEqualExpr
         public right: TirExpr,
         readonly range: SourceRange
     ) {}
+    
+    clone(): TirExpr
+    {
+        return new TirLessThanEqualExpr(
+        	this.left.clone(),
+        	this.right.clone(),
+        	this.range.clone()
+        );
+    }
 
     get isConstant(): boolean { return this.left.isConstant && this.right.isConstant; }
     
@@ -215,6 +251,15 @@ export class TirGreaterThanEqualExpr
         public right: TirExpr,
         readonly range: SourceRange
     ) {}
+    
+    clone(): TirExpr
+    {
+        return new TirGreaterThanEqualExpr(
+        	this.left.clone(),
+        	this.right.clone(),
+        	this.range.clone()
+        );
+    }
 
     get isConstant(): boolean { return this.left.isConstant && this.right.isConstant; }
     
@@ -252,6 +297,15 @@ export class TirEqualExpr
         public right: TirExpr,
         readonly range: SourceRange
     ) {}
+    
+    clone(): TirExpr
+    {
+        return new TirEqualExpr(
+        	this.left.clone(),
+        	this.right.clone(),
+        	this.range.clone()
+        );
+    }
 
     get isConstant(): boolean { return this.left.isConstant && this.right.isConstant; }
     
@@ -281,6 +335,15 @@ export class TirNotEqualExpr
         public right: TirExpr,
         readonly range: SourceRange
     ) {}
+    
+    clone(): TirExpr
+    {
+        return new TirNotEqualExpr(
+        	this.left.clone(),
+        	this.right.clone(),
+        	this.range.clone()
+        );
+    }
 
     get isConstant(): boolean { return this.left.isConstant && this.right.isConstant; }
     
@@ -321,6 +384,15 @@ export class TirAddExpr
         public right: TirExpr,
         readonly range: SourceRange
     ) {}
+    
+    clone(): TirExpr
+    {
+        return new TirAddExpr(
+        	this.left.clone(),
+        	this.right.clone(),
+        	this.range.clone()
+        );
+    }
 
     get isConstant(): boolean { return this.left.isConstant && this.right.isConstant; }
     
@@ -357,6 +429,15 @@ export class TirSubExpr
         public right: TirExpr,
         readonly range: SourceRange
     ) {}
+    
+    clone(): TirExpr
+    {
+        return new TirSubExpr(
+        	this.left.clone(),
+        	this.right.clone(),
+        	this.range.clone()
+        );
+    }
 
     get isConstant(): boolean { return this.left.isConstant && this.right.isConstant; }
     
@@ -386,6 +467,15 @@ export class TirMultExpr
         public right: TirExpr,
         readonly range: SourceRange
     ) {}
+    
+    clone(): TirExpr
+    {
+        return new TirMultExpr(
+        	this.left.clone(),
+        	this.right.clone(),
+        	this.range.clone()
+        );
+    }
 
     get isConstant(): boolean { return this.left.isConstant && this.right.isConstant; }
     
@@ -415,6 +505,15 @@ export class TirDivExpr
         public right: TirExpr,
         readonly range: SourceRange
     ) {}
+    
+    clone(): TirExpr
+    {
+        return new TirDivExpr(
+        	this.left.clone(),
+        	this.right.clone(),
+        	this.range.clone()
+        );
+    }
 
     get isConstant(): boolean { return this.left.isConstant && this.right.isConstant; }
     
@@ -444,13 +543,22 @@ export class TirModuloExpr
         public right: TirExpr,
         readonly range: SourceRange
     ) {}
+    
+    clone(): TirExpr
+    {
+        return new TirModuloExpr(
+        	this.left.clone(),
+        	this.right.clone(),
+        	this.range.clone()
+        );
+    }
 
     get isConstant(): boolean { return this.left.isConstant && this.right.isConstant; }
     
     toIR( ctx: ToIRTermCtx ): IRTerm
     {
         return _ir_apps(
-            IRNative.moduloInteger,
+            IRNative.modInteger,
             this.left.toIR( ctx ),
             this.right.toIR( ctx ),
         );
@@ -473,6 +581,15 @@ export class TirShiftLeftExpr
         public right: TirExpr,
         readonly range: SourceRange
     ) {}
+    
+    clone(): TirExpr
+    {
+        return new TirShiftLeftExpr(
+        	this.left.clone(),
+        	this.right.clone(),
+        	this.range.clone()
+        );
+    }
 
     get isConstant(): boolean { return this.left.isConstant && this.right.isConstant; }
     
@@ -503,6 +620,15 @@ export class TirShiftRightExpr
         public right: TirExpr,
         readonly range: SourceRange
     ) {}
+    
+    clone(): TirExpr
+    {
+        return new TirShiftRightExpr(
+        	this.left.clone(),
+        	this.right.clone(),
+        	this.range.clone()
+        );
+    }
 
     get isConstant(): boolean { return this.left.isConstant && this.right.isConstant; }
     
@@ -563,6 +689,15 @@ export class TirBitwiseAndExpr
         public right: TirExpr,
         readonly range: SourceRange
     ) {}
+    
+    clone(): TirExpr
+    {
+        return new TirBitwiseAndExpr(
+        	this.left.clone(),
+        	this.right.clone(),
+        	this.range.clone()
+        );
+    }
 
     get isConstant(): boolean { return this.left.isConstant && this.right.isConstant; }
     
@@ -592,6 +727,15 @@ export class TirBitwiseXorExpr
         public right: TirExpr,
         readonly range: SourceRange
     ) {}
+    
+    clone(): TirExpr
+    {
+        return new TirBitwiseXorExpr(
+        	this.left.clone(),
+        	this.right.clone(),
+        	this.range.clone()
+        );
+    }
 
     get isConstant(): boolean { return this.left.isConstant && this.right.isConstant; }
     
@@ -621,6 +765,15 @@ export class TirBitwiseOrExpr
         public right: TirExpr,
         readonly range: SourceRange
     ) {}
+    
+    clone(): TirExpr
+    {
+        return new TirBitwiseOrExpr(
+        	this.left.clone(),
+        	this.right.clone(),
+        	this.range.clone()
+        );
+    }
 
     get isConstant(): boolean { return this.left.isConstant && this.right.isConstant; }
     
@@ -650,6 +803,15 @@ export class TirLogicalAndExpr
         public right: TirExpr,
         readonly range: SourceRange
     ) {}
+    
+    clone(): TirExpr
+    {
+        return new TirLogicalAndExpr(
+        	this.left.clone(),
+        	this.right.clone(),
+        	this.range.clone()
+        );
+    }
 
     get isConstant(): boolean { return this.left.isConstant && this.right.isConstant; }
     
@@ -679,6 +841,15 @@ export class TirLogicalOrExpr
         public right: TirExpr,
         readonly range: SourceRange
     ) {}
+    
+    clone(): TirExpr
+    {
+        return new TirLogicalOrExpr(
+        	this.left.clone(),
+        	this.right.clone(),
+        	this.range.clone()
+        );
+    }
 
     get isConstant(): boolean { return this.left.isConstant && this.right.isConstant; }
     

@@ -9,6 +9,11 @@ export class Identifier
         readonly range: SourceRange,
     ) {}
 
+    clone(): Identifier
+    {
+        return new Identifier( this.text, this.range.clone() );
+    }
+
     /**
      * usually used for anonymous arrow functions
      */

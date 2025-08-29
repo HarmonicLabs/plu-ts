@@ -20,6 +20,16 @@ export class TirPropAccessExpr
         readonly range: SourceRange
     ) {}
 
+    clone(): TirPropAccessExpr
+    {
+        return new TirPropAccessExpr(
+            this.object.clone(),
+            this.prop.clone(),
+            this.type.clone(),
+            this.range.clone()
+        );
+    }
+
     deps(): string[]
     {
         const deps = this.object.deps();

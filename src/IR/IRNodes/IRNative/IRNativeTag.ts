@@ -115,14 +115,7 @@ export const enum IRNativeTag {
     // -------------------------------------------------------------------------- //
     ////////////////////////////////////////////////////////////////////////////////
 
-    /** @deprecated */
-    z_comb              = -1, // useful to understand when we are going recursive during optimizations
-    /** @deprecated */
-    _matchList          = -2,
-    /** @deprecated */
-    _recursiveList      = -3,
     _dropList          = -4,
-    _indexList          = -5,
     _foldr              = -6,
     _foldl              = -7,
     _mkFindDataOptional               = -8,

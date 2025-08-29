@@ -15,6 +15,15 @@ export class TirParentesizedExpr
         readonly range: SourceRange
     ) {}
 
+    clone(): TirParentesizedExpr
+    {
+        return new TirParentesizedExpr(
+            this.expr.clone(),
+            this.type.clone(),
+            this.range.clone()
+        );
+    }
+
     deps(): string[]
     {
         return this.expr.deps();

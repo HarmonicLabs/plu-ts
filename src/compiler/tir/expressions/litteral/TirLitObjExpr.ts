@@ -15,9 +15,9 @@ import { TirAliasType } from "../../types/TirAliasType";
 import { TirTypeParam } from "../../types/TirTypeParam";
 import { TirLitArrExpr } from "./TirLitArrExpr";
 import { TirCallExpr } from "../TirCallExpr";
-import { TirNativeFuncExpr } from "../TirNativeFuncExpr";
 import { TirLitIntExpr } from "./TirLitIntExpr";
 import { NamedExpr } from "../utils/NamedExpr";
+import { TirNativeFunc } from "../TirNativeFunc";
 
 export interface ITirLitObjExpr {
     fieldNames: Identifier[];
@@ -38,6 +38,16 @@ export class TirLitObjExpr
         readonly type: TirSoPStructType | TirDataStructType,
         readonly range: SourceRange
     ) {}
+
+    clone(): TirLitObjExpr
+    {
+        return new TirLitObjExpr(
+            this.fieldNames.map( f => f ),
+            this.values.map( v => v.clone() ),
+            this.type.clone(),
+            this.range.clone()
+        );
+    }
 
     deps(): string[]
     {
@@ -115,7 +125,6 @@ export class TirLitObjExpr
 
             return new TirToDataExpr(
                 expr,
-                data_t,
                 expr.range
             );
         });
@@ -124,15 +133,13 @@ export class TirLitObjExpr
 
         return ( type.untagged ?
             new TirCallExpr(
-                TirNativeFuncExpr.listData,
-                [
-                    new TirLitArrExpr( exprsAsData, new TirListT( data_t ), this.range ),
-                ],
+                TirNativeFunc.listData,
+                [ fieldsAsListOfData ],
                 data_t,
                 this.range
             ).toIR( ctx ) :
             new TirCallExpr(
-                TirNativeFuncExpr.constrData,
+                TirNativeFunc.constrData,
                 [
                     new TirLitIntExpr( BigInt(0), this.range ),
                     new TirLitArrExpr(

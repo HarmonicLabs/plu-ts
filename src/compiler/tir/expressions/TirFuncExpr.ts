@@ -39,6 +39,18 @@ export class TirFuncExpr
         private readonly _isLoop: boolean = false,
     ) {}
 
+    clone(): TirFuncExpr
+    {
+        return new TirFuncExpr(
+            this.name,
+            this.params.map( p => p.clone() ),
+            this.returnType.clone(),
+            this.body.clone(),
+            this.range.clone(),
+            this._isLoop
+        );
+    }
+
     /**
      * `true` if the function is guaranteed to never error
      */
@@ -95,16 +107,20 @@ export class TirFuncExpr
 
     toIR(ctx: ToIRTermCtx): IRTerm
     {
-        const arity = this.params.length;
-
         const returnStmt = this.body.stmts[0];
         if(!( returnStmt instanceof TirReturnStmt ))
         throw new Error("function must be expressified before being converted to IR");
-
         const expr = returnStmt.value;
 
-        let irFunc: IRTerm = new IRFunc( arity, expr.toIR( ctx ), this.name );
-        if( this.isRecursive() ) irFunc = new IRRecursive( irFunc, this.name );
+        const isRecursive = this.isRecursive();
+
+        ctx = ctx.newChild();
+        if( isRecursive ) ctx.defineVar( this.name );
+        this.params.forEach( param => ctx.defineVar( param.name ) );
+
+
+        let irFunc: IRTerm = new IRFunc( this.params.length, expr.toIR( ctx ), this.name );
+        if( isRecursive ) irFunc = new IRRecursive( irFunc, this.name );
 
         return irFunc;
     }

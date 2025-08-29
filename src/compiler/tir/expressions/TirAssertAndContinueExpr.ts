@@ -1,5 +1,5 @@
 import { SourceRange } from "../../../ast/Source/SourceRange";
-import { IRError, IRNative, IRTerm } from "../../../IR";
+import { IRDelayed, IRError, IRForced, IRNative, IRTerm } from "../../../IR";
 import { _ir_apps } from "../../../IR/tree_utils/_ir_apps";
 import { mergeSortedStrArrInplace } from "../../../utils/array/mergeSortedStrArrInplace";
 import { TirAssertStmt } from "../statements/TirAssertStmt";
@@ -18,13 +18,23 @@ export class TirAssertAndContinueExpr
     }
     constructor(
         readonly conditions: TirExpr[],
-        readonly continuation: ITirExpr,
+        readonly continuation: TirExpr,
         readonly range: SourceRange
     ) {}
 
+    /// @ts-ignore Return type annotation circularly references itself.
+    clone(): TirAssertAndContinueExpr
+    {
+        return new TirAssertAndContinueExpr(
+            this.conditions.map( c => c.clone() ),
+            this.continuation.clone(),
+            this.range.clone()
+        );
+    }
+
     static fromStmtsAndContinuation(
         assertions: TirAssertStmt[],
-        continuation: ITirExpr,
+        continuation: TirExpr,
     ): TirExpr
     {
         if( assertions.length <= 0 ) return continuation;
@@ -63,12 +73,12 @@ export class TirAssertAndContinueExpr
             cond.toIR( ctx ),
         ), irConditions );
 
-        return _ir_apps(
-            IRNative._lazyIfThenElse,
+        return new IRForced( _ir_apps(
+            IRNative.strictIfThenElse,
             irConditions,
-            irContinuation,
-            new IRError()
-        );
+            new IRDelayed( irContinuation ),
+            new IRDelayed( new IRError() )
+        ));
     }
     
 }

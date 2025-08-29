@@ -35,7 +35,9 @@ export class TirDataStructType
         /** points to an array possibly shared with alternative encoding types */
         readonly methodNamesPtr: Map<AstFuncName, TirFuncName>,
         readonly untagged: boolean = false,
-    ) {}
+    ) {
+        this.untagged = false; // always false for now
+    }
 
     hasDataEncoding(): boolean { return true; }
 

@@ -22,6 +22,14 @@ export class TirHoistedExpr
         public expr: TirExpr
     ) {}
 
+    clone(): TirHoistedExpr
+    {
+        return new TirHoistedExpr(
+            this.varName,
+            this.expr.clone(),
+        );
+    }
+
     deps(): string[] {
         return this.expr.deps();
     }

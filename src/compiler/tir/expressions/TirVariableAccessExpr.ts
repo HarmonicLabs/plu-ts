@@ -17,6 +17,14 @@ export class TirVariableAccessExpr
         readonly range: SourceRange
     ) {}
 
+    clone(): TirVariableAccessExpr
+    {
+        return new TirVariableAccessExpr(
+            this.resolvedValue,
+            this.range.clone()
+        );
+    }
+    
     get isConstant(): boolean { return false; }
 
     get varName(): string {

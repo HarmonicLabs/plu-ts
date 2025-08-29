@@ -16,6 +16,16 @@ export class TirUnaryExclamation
         readonly range: SourceRange
     ) {}
 
+    /// @ts-ignore Return type annotation circularly references itself
+    clone(): TirUnaryExclamation
+    {
+        return new TirUnaryExclamation(
+            this.operand.clone(),
+            this.type.clone(),
+            this.range.clone()
+        );
+    }
+
     deps(): string[]
     {
         return this.operand.deps();

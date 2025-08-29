@@ -14,6 +14,11 @@ export class TirLitFalseExpr implements ITirExpr
         readonly range: SourceRange
     ) {}
 
+    clone(): TirLitFalseExpr
+    {
+        return new TirLitFalseExpr(this.range.clone());
+    }
+
     deps(): string[] { return []; }
 
     toIR( ctx: ToIRTermCtx ): IRTerm

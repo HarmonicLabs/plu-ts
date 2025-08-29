@@ -21,6 +21,15 @@ export class TirTraceIfFalseExpr
         readonly range: SourceRange,
     ) {}
 
+    clone(): TirTraceIfFalseExpr
+    {
+        return new TirTraceIfFalseExpr(
+            this.condition.clone(),
+            this.traceStrExpr.clone(),
+            this.range.clone()
+        );
+    }
+
     toIR( ctx: ToIRTermCtx ): IRTerm
     {
         return new IRForced( _ir_apps(

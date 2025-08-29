@@ -16,6 +16,14 @@ export class TirLitIntExpr
         readonly range: SourceRange
     ) {}
 
+    clone(): TirLitIntExpr
+    {
+        return new TirLitIntExpr(
+            this.integer,
+            this.range.clone()
+        );
+    }
+
     deps(): string[] { return []; }
 
     toIR( ctx: ToIRTermCtx ): IRTerm

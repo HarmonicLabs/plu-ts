@@ -16,6 +16,16 @@ export class TirCallExpr implements ITirExpr
         readonly range: SourceRange
     ) {}
 
+    clone(): TirCallExpr
+    {
+        return new TirCallExpr(
+            this.func.clone(),
+            this.args.map( a => a.clone() ),
+            this.type.clone(),
+            this.range.clone()
+        );
+    }
+
     deps(): string[]
     {
         const deps: string[] = this.func.deps();

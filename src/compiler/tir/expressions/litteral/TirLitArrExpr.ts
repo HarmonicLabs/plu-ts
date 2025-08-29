@@ -12,9 +12,6 @@ import { TirExpr } from "../TirExpr";
 import { ToIRTermCtx } from "../ToIRTermCtx";
 import { getListTypeArg } from "../../types/utils/getListTypeArg";
 import { getUnaliased } from "../../types/utils/getUnaliased";
-import { TirCallExpr } from "../TirCallExpr";
-import { TirNativeFuncExpr } from "../TirNativeFuncExpr";
-import { TirListT } from "../../types/TirNativeType";
 import { _ir_apps } from "../../../../IR/tree_utils/_ir_apps";
 
 export class TirLitArrExpr
@@ -30,6 +27,15 @@ export class TirLitArrExpr
         readonly type: TirType,
         readonly range: SourceRange,
     ) {}
+
+    clone(): TirLitArrExpr
+    {
+        return new TirLitArrExpr(
+            this.elems.map( e => e.clone() ),
+            this.type.clone(),
+            this.range.clone()
+        );
+    }
 
     deps(): string[]
     {

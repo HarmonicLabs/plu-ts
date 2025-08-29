@@ -22,6 +22,16 @@ export class TirElemAccessExpr
         readonly range: SourceRange
     ) {}
 
+    clone(): TirElemAccessExpr
+    {
+        return new TirElemAccessExpr(
+            this.arrLikeExpr.clone(),
+            this.indexExpr.clone(),
+            this.type.clone(),
+            this.range.clone()
+        );
+    }
+
     deps(): string[]
     {
         const deps: string[] = this.arrLikeExpr.deps();
@@ -47,16 +57,22 @@ export class TirElemAccessExpr
                 ( result instanceof CEKConst )
                 && (typeof result.value === "number" || typeof result.value === "bigint" )
             ) return _ir_apps(
-                IRNative._indexList,
-                irArr,
-                IRConst.int( result.value ),
+                IRNative.headList,
+                _ir_apps(
+                    IRNative._dropList,
+                    IRConst.int( result.value ),
+                    irArr,
+                )
             );
         }
 
         return _ir_apps(
-            IRNative._indexList,
-            irArr,
-            irIndex
+            IRNative.headList,
+            _ir_apps(
+                IRNative._dropList,
+                irIndex,
+                irArr,
+            )
         );
     }
 }

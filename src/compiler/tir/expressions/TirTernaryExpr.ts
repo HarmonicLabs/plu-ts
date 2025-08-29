@@ -1,6 +1,6 @@
 import { HasSourceRange } from "../../../ast/nodes/HasSourceRange";
 import { SourceRange } from "../../../ast/Source/SourceRange";
-import { IRNative, IRTerm } from "../../../IR";
+import { IRDelayed, IRForced, IRNative, IRTerm } from "../../../IR";
 import { _ir_apps } from "../../../IR/tree_utils/_ir_apps";
 import { mergeSortedStrArrInplace } from "../../../utils/array/mergeSortedStrArrInplace";
 import { TirType } from "../types/TirType";
@@ -18,6 +18,17 @@ export class TirTernaryExpr
         readonly type: TirType,
         readonly range: SourceRange
     ) {}
+
+    clone(): TirTernaryExpr
+    {
+        return new TirTernaryExpr(
+            this.condition.clone(),
+            this.ifTrue.clone(),
+            this.ifFalse.clone(),
+            this.type.clone(),
+            this.range.clone()
+        );
+    }
 
     deps(): string[]
     {
@@ -38,11 +49,11 @@ export class TirTernaryExpr
 
     toIR( ctx: ToIRTermCtx ): IRTerm
     {
-        return _ir_apps(
-            IRNative._lazyIfThenElse,
+        return new IRForced( _ir_apps(
+            IRNative.strictIfThenElse,
             this.condition.toIR( ctx ),
-            this.ifTrue.toIR( ctx ),
-            this.ifFalse.toIR( ctx )
-        );
+            new IRDelayed( this.ifTrue.toIR( ctx ) ),
+            new IRDelayed( this.ifFalse.toIR( ctx ) )
+        ) );
     }
 }

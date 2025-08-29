@@ -1,9 +1,12 @@
 import { TirAliasType } from "../TirAliasType";
 import { TirDataOptT, TirSopOptT } from "../TirNativeType";
-import { TirType } from "../TirType";
+import { isTirType, TirType } from "../TirType";
 
 export function getOptTypeArg( opt_t: TirType ): TirType | undefined
 {
+    if( !isTirType( opt_t ) )
+    throw new Error("getOptTypeArg: not a TirType");
+
     while( opt_t instanceof TirAliasType ) opt_t = opt_t.aliased;
 
     if(
