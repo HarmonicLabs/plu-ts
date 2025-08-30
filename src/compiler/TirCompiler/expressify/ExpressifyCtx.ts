@@ -1,6 +1,5 @@
 import { isObject } from "@harmoniclabs/obj-utils";
 import { SourceRange } from "../../../ast/Source/SourceRange";
-import { str } from "../../../type_system";
 import { getUniqueInternalName } from "../../internalVar";
 import { TirEqualExpr } from "../../tir/expressions/binary/TirBinaryExpr";
 import { TirLitIntExpr } from "../../tir/expressions/litteral/TirLitIntExpr";

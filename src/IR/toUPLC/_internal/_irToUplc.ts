@@ -1,5 +1,3 @@
-import { toHex } from "@harmoniclabs/uint8array-utils";
-import { termTyToConstTy } from "../../../type_system/termTyToConstTy";
 import { IRApp } from "../../IRNodes/IRApp";
 import { IRConst } from "../../IRNodes/IRConst";
 import { IRFunc } from "../../IRNodes/IRFunc";
@@ -13,7 +11,7 @@ import { showIR } from "../../utils/showIR";
 import { IRError } from "../../IRNodes/IRError";
 import { IRForced } from "../../IRNodes/IRForced";
 import { IRDelayed } from "../../IRNodes/IRDelayed";
-import { UPLCTerm, UPLCVar, Lambda, Application, UPLCConst, Builtin, ErrorUPLC, Force, Delay, Constr, Case } from "@harmoniclabs/uplc";
+import { UPLCTerm, UPLCVar, Lambda, Application, Builtin, ErrorUPLC, Force, Delay, Constr, Case } from "@harmoniclabs/uplc";
 import { IRConstr } from "../../IRNodes/IRConstr";
 import { IRCase } from "../../IRNodes/IRCase";
 import { irHashToHex } from "../../IRHash";

@@ -34,12 +34,9 @@ import { flattenSopNamedDeconstructInplace_addTopDestructToCtx_getNestedDeconstr
 import { TirAssertAndContinueExpr } from "../../tir/expressions/TirAssertAndContinueExpr";
 import { expressifyTerminatingIfStmt } from "./expressifyTerminatingIfStmt";
 import { determineReassignedVariablesAndFlowInfos, determineReassignedVariablesAndReturn, getBodyStateType, getBranchStmtReturnType, ReassignedVariablesAndReturn } from "./determineReassignedVariablesAndReturn";
-import { TernaryExpr } from "../../../ast/nodes/expr/TernaryExpr";
 import { TirTernaryExpr } from "../../tir/expressions/TirTernaryExpr";
-import { TirLitNamedObjExpr } from "../../tir/expressions/litteral/TirLitNamedObjExpr";
 import { expressifyIfBranch } from "./expressifyIfBranch";
 import { expressifyForStmt, whileToFor } from "./expressifyForStmt";
-import { compile } from "../../../pluts";
 import { getListTypeArg } from "../../tir/types/utils/getListTypeArg";
 import { TirElemAccessExpr } from "../../tir/expressions/TirElemAccessExpr";
 import { TirLitIntExpr } from "../../tir/expressions/litteral/TirLitIntExpr";

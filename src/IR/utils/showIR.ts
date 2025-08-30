@@ -1,5 +1,5 @@
 import { IRApp } from "../IRNodes/IRApp";
-import { IRLetted, getLettedTerms } from "../IRNodes/IRLetted";
+import { IRLetted } from "../IRNodes/IRLetted";
 import { IRNative } from "../IRNodes/IRNative";
 import { nativeTagToString } from "../IRNodes/IRNative/IRNativeTag";
 import { IRTerm } from "../IRTerm";
@@ -10,7 +10,6 @@ import { IRDelayed } from "../IRNodes/IRDelayed";
 import { IRForced } from "../IRNodes/IRForced";
 import { IRError } from "../IRNodes/IRError";
 import { IRFunc } from "../IRNodes/IRFunc";
-import { termTypeToString } from "../../type_system/utils";
 import { showUPLCConstValue } from "@harmoniclabs/uplc";
 import { IRConstr } from "../IRNodes/IRConstr";
 import { IRCase } from "../IRNodes/IRCase";
