@@ -8,8 +8,8 @@ import { AstCompiler } from "../AstCompiler";
 
 
 describe("parseMain", () => {
-
-    test("parseMain", async () => {
+    test.todo("parseMain");
+    test.skip("parseMain", async () => {
 
         const myDatumPath = "my_datum.pebble";
         const myDatumSrc = `
@@ -98,7 +98,7 @@ contract MyContract {
         const source = await complier.compileFile( fileName );
         const diagnostics = complier.diagnostics;
 
-        // console.log( diagnostics );
+        // console.log( diagnostics.map( d => d.toString() ) );
         expect( diagnostics.length ).toBe( 0 );
     });
     

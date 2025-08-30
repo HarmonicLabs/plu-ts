@@ -81,7 +81,10 @@ export class AstCompiler extends DiagnosticEmitter
      * 
      * (ScriptContext, built-in functions, etc.)
     **/
-    readonly preludeScope: AstScope;
+    get preludeScope(): AstScope
+    {
+        return this.program.preludeScope;
+    }
     readonly program: TypedProgram;
     readonly parsedAstSources: Map<string, Source> = new Map();
 

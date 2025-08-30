@@ -102,7 +102,7 @@ export class DiagnosticMessage {
             let line = source.lineAt(range.start);
             let column = source.columnAt();
             let len = range.end - range.start;
-            return `${category} ${code}: "${message}" in ${path}(${line},${column}+${len})`;
+            return `${category} ${code}: "${message}" in ${path}:${line}:${column}`;
         }
         return `${category} ${code}: ${message}`;
     }

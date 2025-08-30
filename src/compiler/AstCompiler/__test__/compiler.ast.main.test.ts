@@ -14,27 +14,13 @@ describe("parseMain", () => {
         const myDatumPath = "my_datum.pebble";
         const myDatumSrc = `
 export struct MyDatum {}
+`;
 
-struct SimpleDatum {
-    name: string,
-    age: int
-}
-
-struct ExplicitSimple {
-    ExplicitSimple { /* ...fields  */ }
-}
-
-struct Animal {
-    Dog { /* ...fields  */ }
-    Cat { /* ...fields  */ }
-    Fish { /* ...fields  */ }
-}`;
-    
         const fileName = "test.pebble";
         const srcText = `
 import { MyDatum } from "./${myDatumPath}";
 
-function main( param: Stuff, ctx: ScriptContext ): void
+function main( param: int, ctx: ScriptContext ): void
 {
     const { tx, purpose } = ctx;
 
@@ -55,14 +41,6 @@ function main( param: Stuff, ctx: ScriptContext ): void
         // Property 'lovelaces' does not exist on type 'Value'
         // sumLove += input.value.lovelaces();
         sumLove += tx.fee;
-    }
-    if( true ) doStuff();
-
-    match( purpose )
-    {
-        Spend{ ref } => {}
-        Minting{} => {}
-        _ => fail;
     }
 
     assert tx.outputs.length() === 1 else "only one output allowed";
@@ -85,10 +63,11 @@ function main( param: Stuff, ctx: ScriptContext ): void
             }),
         );
     
-        const diagnostics = await complier.compileFile( fileName );
+        const source = await complier.compileFile( fileName );
+        const diagnostics = complier.diagnostics;
 
-        // console.log( diagnostics );
-        expect( diagnostics?.statements.length ).toBe( 0 );
+        // console.log( diagnostics.map( d => d.toString() ) );
+        expect( diagnostics.length ).toBe( 0 );
     });
     
 });

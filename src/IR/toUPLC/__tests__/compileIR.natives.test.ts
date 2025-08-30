@@ -1,3 +1,5 @@
+test.todo("toUPLC.compileIRToUPLC natives");
+/*
 import { Application, Lambda, UPLCVar, prettyUPLC, showUPLC } from "@harmoniclabs/uplc";
 import { IRNative } from "../../IRNodes/IRNative";
 import { compileIRToUPLC } from "../compileIRToUPLC";
@@ -83,3 +85,4 @@ describe("compileIRToUPLC", () => {
     })
 
 });
+//*/

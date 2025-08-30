@@ -1,6 +1,7 @@
 import { ForOfStmt } from "../../../../ast/nodes/statements/ForOfStmt";
 import { DiagnosticCode } from "../../../../diagnostics/diagnosticMessages.generated";
 import { TirForOfStmt } from "../../../tir/statements/TirForOfStmt";
+import { TirListT } from "../../../tir/types/TirNativeType";
 import { TirTypeParam } from "../../../tir/types/TirTypeParam";
 import { canAssignTo } from "../../../tir/types/utils/canAssignTo";
 import { getListTypeArg } from "../../../tir/types/utils/getListTypeArg";
@@ -15,7 +16,7 @@ export function _compileForOfStmt(
     stmt: ForOfStmt
 ): [ TirForOfStmt ] | undefined
 {
-    const any_list_t = ctx.program.stdTypes.list( new TirTypeParam("T") );
+    const any_list_t = new TirListT( new TirTypeParam("T") );
 
     const iterableExpr = _compileExpr(
         ctx,
