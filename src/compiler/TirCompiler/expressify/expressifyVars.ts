@@ -263,6 +263,10 @@ function getVarAccessFromPropAccess(
         || expr instanceof TirFuncExpr // functions have no properties
         || expr instanceof TirParentesizedExpr // typescript being stupid
         || isTirBinaryExpr( expr ) // all of these return either int, bytes or boolean
+        // TirAssertAndContinueExpr | TirTraceIfFalseExpr | TirInlineClosedIR
+        || expr instanceof TirAssertAndContinueExpr
+        || expr instanceof TirTraceIfFalseExpr
+        || expr instanceof TirInlineClosedIR
     ) throw new Error( "Invalid property access expression" );
 
     if( expr instanceof TirLitThisExpr ) {
@@ -314,6 +318,7 @@ function getVarAccessFromPropAccess(
         || expr instanceof TirTernaryExpr 
         || expr instanceof TirFromDataExpr
         || expr instanceof TirFailExpr
+        || expr instanceof TirToDataExpr
     ) {
 
         if(
@@ -344,7 +349,7 @@ function getVarAccessFromPropAccess(
             }
 
             // if there is no property in the context
-            // we extract the property inplace below
+            // we extract the property inplace below (outside this block)
         }
 
         const objType = getUnaliased( expr.type );

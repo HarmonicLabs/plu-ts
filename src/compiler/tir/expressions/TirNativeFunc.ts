@@ -429,6 +429,23 @@ export class TirNativeFunc
             ], new TirUnConstrDataResultT())
         );
     }
+    static get unConstrDataResultFields(): TirNativeFunc {
+        return new TirNativeFunc(
+            IRNativeTag.sndPair,
+            new TirFuncT([
+                new TirUnConstrDataResultT(),
+            ], new TirListT(data_t))
+        );
+    }
+    static get unConstrDataResultIndex(): TirNativeFunc {
+        return new TirNativeFunc(
+            IRNativeTag.fstPair,
+            new TirFuncT([
+                new TirUnConstrDataResultT(),
+            ], int_t)
+        );
+    }
+
     static get unMapData(): TirNativeFunc {
         return new TirNativeFunc(
             IRNativeTag.unMapData,

@@ -1,5 +1,5 @@
 import { TirHoistedExpr } from "../../tir/expressions/TirHoistedExpr";
-import { TirNativeFuncExpr } from "../../tir/expressions/TirNativeFuncExpr";
+import { TirNativeFunc } from "../../tir/expressions/TirNativeFunc";
 import { TypedProgram } from "../../tir/program/TypedProgram";
 import { expressify } from "../expressify/expressify";
 import { ExpressifyCtx } from "../expressify/ExpressifyCtx";
@@ -8,7 +8,7 @@ import { DepsNode } from "./deps/DepsNode";
 
 export function _compileHoistedDeps(
     program: TypedProgram,
-    hoistedMap: Map<string, TirHoistedExpr | TirNativeFuncExpr>,
+    hoistedMap: Map<string, TirHoistedExpr | TirNativeFunc>,
     deps: string[],
     depsStack: DepsNode
 ): void
