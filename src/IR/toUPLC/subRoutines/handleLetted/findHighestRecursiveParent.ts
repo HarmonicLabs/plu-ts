@@ -22,11 +22,6 @@ export function findHighestRecursiveParent( term: IRTerm, maxScope: IRTerm ): Re
 function isRecursiveNode( term: IRTerm ): term is RecursiveIRNode
 {
     return (
-        term instanceof IRRecursive ||
-        (
-            term instanceof IRApp &&
-            term.fn instanceof IRNative &&
-            term.fn.tag === IRNativeTag.z_comb 
-        )
+        term instanceof IRRecursive
     );
 }

@@ -59,7 +59,7 @@ export class TirDataStructType
         return this.toString();
     }
 
-    private _isConcrete: boolean | undefined = undefined;
+    protected _isConcrete: boolean | undefined = undefined;
     isConcrete(): boolean {
         if( typeof this._isConcrete !== "boolean" )
             this._isConcrete = this.constructors.every(
@@ -116,7 +116,7 @@ export class TirSoPStructType
         return this.toString();
     }
 
-    private _isConcrete: boolean | undefined = undefined;
+    protected _isConcrete: boolean | undefined = undefined;
     isConcrete(): boolean {
         if( typeof this._isConcrete !== "boolean" )
             this._isConcrete = this.constructors.every(

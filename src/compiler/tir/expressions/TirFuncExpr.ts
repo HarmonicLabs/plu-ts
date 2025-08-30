@@ -43,9 +43,9 @@ export class TirFuncExpr
     {
         return new TirFuncExpr(
             this.name,
-            this.params.map( p => p.clone() ),
+            this.params.slice(),
             this.returnType.clone(),
-            this.body.clone(),
+            this.body,
             this.range.clone(),
             this._isLoop
         );
@@ -115,7 +115,7 @@ export class TirFuncExpr
         const isRecursive = this.isRecursive();
 
         ctx = ctx.newChild();
-        if( isRecursive ) ctx.defineVar( this.name );
+        if( isRecursive ) ctx.defineRecursiveVar( this.name );
         this.params.forEach( param => ctx.defineVar( param.name ) );
 
 

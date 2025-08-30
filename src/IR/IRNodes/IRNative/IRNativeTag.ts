@@ -150,7 +150,12 @@ export const enum IRNativeTag {
     _equalBoolean           = -33,
     _negateInt              = -34,
 
-    _mapList               = -35,
+    _mkMapList               = -35,
+    _bytesToIntBE          = -36,
+    _boolToInt             = -37,
+    _intToBytesBE          = -38,
+    _intToBool             = -39,
+    _exponentiateInteger   = -40,
 }
 
 export function nativeTagToString( nativeTag: IRNativeTag ): string
@@ -158,11 +163,7 @@ export function nativeTagToString( nativeTag: IRNativeTag ): string
     if( nativeTag >= 0 ) return builtinTagToString( nativeTag as any );
     switch( nativeTag )
     {
-        case IRNativeTag.z_comb         : return "z_comb";
-        case IRNativeTag._matchList     : return "matchList";
-        case IRNativeTag._recursiveList : return "recursiveList";
         case IRNativeTag._dropList      : return "dropList";
-        case IRNativeTag._indexList     : return "indexList";
         case IRNativeTag._foldr         : return "foldr";
         case IRNativeTag._foldl         : return "foldl";
         case IRNativeTag._mkFindDataOptional          : return "mkFind";
@@ -189,6 +190,13 @@ export function nativeTagToString( nativeTag: IRNativeTag ): string
         case IRNativeTag._mkEqualsList  : return "mkEqualsList";
         case IRNativeTag._equalPairData : return "equalPairData";
         case IRNativeTag._equalBoolean  : return "equalBoolean";
+        case IRNativeTag._negateInt     : return "negateInt";
+        case IRNativeTag._mkMapList       : return "mapList";
+        case IRNativeTag._bytesToIntBE  : return "bytesToIntBE";
+        case IRNativeTag._boolToInt     : return "boolToInt";
+        case IRNativeTag._intToBytesBE  : return "intToBytesBE";
+        case IRNativeTag._intToBool     : return "intToBool";
+        case IRNativeTag._exponentiateInteger : return "exponentiateInteger";
 
         default: return ""
     }

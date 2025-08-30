@@ -37,7 +37,7 @@ export function getNamedDestructableType( type: TirType | undefined ): TirNamedD
     return type;
 }
 
-export function canAssignToOptional( type: TirType ): boolean
+export function canAssignToOptional( type: TirType ): type is TirDataOptT | TirSopOptT | TirAliasType<TirDataOptT | TirSopOptT>
 {
     type = getUnaliased( type );
 

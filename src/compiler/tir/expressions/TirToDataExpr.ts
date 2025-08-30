@@ -96,7 +96,8 @@ export function _inlineToData(
         );
 
         return _ir_apps(
-            IRNative._mapList,
+            IRNative._mkMapList,
+            IRConst.listOf( elems_t )([]),
             _toDataUplcFunc( elems_t ),
             exprIR
         );
@@ -174,7 +175,8 @@ export function _toDataUplcFunc( origin_t: TirType ): IRTerm
             _ir_apps(
                 IRNative.listData,
                 _ir_apps(
-                    IRNative._mapList,
+                    IRNative._mkMapList,
+                    IRConst.listOf( elems_t )([]),
                     _toDataUplcFunc( elems_t ),
                     new IRVar( 0 ) // list
                 )

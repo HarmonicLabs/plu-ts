@@ -1,4 +1,3 @@
-import {  } from "@harmoniclabs/bytestring";
 import { Cloneable } from "@harmoniclabs/cbor/dist/utils/Cloneable";
 import { Pair } from "@harmoniclabs/pair";
 import { Data, isData, dataToCbor } from "@harmoniclabs/plutus-data";
@@ -6,7 +5,6 @@ import { fromUtf8, toHex } from "@harmoniclabs/uint8array-utils";
 import { BasePlutsError } from "../../utils/BasePlutsError";
 import { ToJson } from "../../utils/ToJson";
 import UPLCFlatUtils from "../../utils/UPLCFlatUtils";
-import { CanBeUInteger, canBeUInteger, forceBigUInt } from "../../utils/ints";
 import { IHash, IIRParent } from "../interfaces";
 import { concatUint8Arr } from "../utils/concatUint8Arr";
 import { positiveBigIntAsBytes } from "../utils/positiveIntAsBytes";
@@ -15,7 +13,6 @@ import { _modifyChildFromTo } from "../toUPLC/_internal/_modifyChildFromTo";
 import { BaseIRMetadata } from "./BaseIRMetadata";
 import { hashIrData, IRHash, isIRHash } from "../IRHash";
 import { IRNodeKind } from "../IRNodeKind";
-import { termTyToConstTy } from "../../type_system/termTyToConstTy";
 import { TirType } from "../../compiler/tir/types/TirType";
 import { bool_t, bytes_t, data_t, int_t, string_t, void_t } from "../../compiler/tir/program/stdScope/stdScope";
 import { TirBoolT, TirBytesT, TirDataOptT, TirDataT, TirFuncT, TirIntT, TirLinearMapT, TirListT, TirPairDataT, TirSopOptT, TirStringT, TirUnConstrDataResultT, TirVoidT } from "../../compiler/tir/types/TirNativeType";
@@ -24,6 +21,7 @@ import { TirAliasType } from "../../compiler/tir/types/TirAliasType";
 import { TirDataStructType, TirSoPStructType } from "../../compiler/tir/types/TirStructType";
 import { getListTypeArg } from "../../compiler/tir/types/utils/getListTypeArg";
 import { TirTypeParam } from "../../compiler/tir/types/TirTypeParam";
+import { constT, ConstType, UPLCConst } from "@harmoniclabs/uplc";
 
 export interface IRConstPair {
     fst: IRConstValue;
@@ -72,6 +70,14 @@ export class IRConst
 
         this._parent = undefined;
         this._hash = isIRHash( _unsafeHash ) ? _unsafeHash : undefined;
+    }
+
+    toUPLC(): UPLCConst
+    {
+        return new UPLCConst(
+            tirTypeToUplcType( getUnaliased( this.type ) ),
+            this.value as any
+        );
     }
 
     private _hash: IRHash | undefined;
@@ -336,4 +342,42 @@ export function constValueToJson( value: IRConstValue ): any
     if( typeof value === "undefined" ) return null;
 
     throw new Error("unreachable");
+}
+
+export function tirTypeToUplcType( t: TirType ): ConstType
+{
+    t = getUnaliased( t );
+
+    if( t instanceof TirVoidT ) return constT.unit;
+    if( t instanceof TirBoolT ) return constT.bool;
+    if( t instanceof TirIntT ) return constT.int;
+    if( t instanceof TirBytesT ) return constT.byteStr;
+    if( t instanceof TirStringT ) return constT.str;
+
+    if( t instanceof TirListT )
+    {
+        const elemsT = tirTypeToUplcType( getListTypeArg( t )! );
+        return constT.listOf( elemsT );
+    }
+
+    if(
+        t instanceof TirDataT
+        || t instanceof TirDataOptT
+        || t instanceof TirDataStructType
+    ) return constT.data;
+
+    if( t instanceof TirPairDataT ) return constT.pairOf( constT.data, constT.data );
+    if( t instanceof TirLinearMapT ) return constT.listOf( constT.pairOf( constT.data, constT.data ) );
+    if( t instanceof TirUnConstrDataResultT ) return constT.pairOf( constT.int, constT.listOf( constT.data ) );
+
+    if(
+        t instanceof TirAliasType
+        || t instanceof TirFuncT
+        || t instanceof TirSopOptT
+        || t instanceof TirSoPStructType
+        || t instanceof TirTypeParam
+    ) throw new Error("invalid uplc const type");
+
+    const tsEnsureExsaustiveCheck: never = t;
+    throw new Error("tirTypeToUplcType: unreachable");
 }

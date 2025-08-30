@@ -1,3 +1,5 @@
+import { IRConst } from "../..";
+import { IRVar, IRError } from "../../IRNodes";
 import { IRApp } from "../../IRNodes/IRApp";
 import { IRCase } from "../../IRNodes/IRCase";
 import { IRConstr } from "../../IRNodes/IRConstr";
@@ -9,6 +11,7 @@ import { IRLetted } from "../../IRNodes/IRLetted";
 import { IRNative } from "../../IRNodes/IRNative";
 import { IRNativeTag } from "../../IRNodes/IRNative/IRNativeTag";
 import { IRRecursive } from "../../IRNodes/IRRecursive";
+import { IRSelfCall } from "../../IRNodes/IRSelfCall";
 import { IRTerm } from "../../IRTerm";
 
 type StackElem = {
@@ -71,43 +74,10 @@ export function markRecursiveHoistsAsForced( _term: IRTerm ): void
         }
 
         if(
-            t instanceof IRNative &&
-            t.tag === IRNativeTag.z_comb &&
-            stack.length > 0 && (stack[ stack.length - 1 ].isIRAppArg === true)
-        )
-        {
-            stack[ stack.length - 1 ].isInRecursiveTerm = true;
-            continue;
-        }
-
-        if(
             t instanceof IRHoisted || 
             t instanceof IRLetted
         )
         {
-            // if it is an hoisted/letted
-            // DIRECTLY applied to something that makes it recursive
-            if(
-                isIRAppArg && 
-                t.parent instanceof IRApp && 
-                t.parent.fn instanceof IRNative &&
-                t.parent.fn.tag === IRNativeTag.z_comb
-            )
-            {
-                // then check the hoisted/letted value instead of marking as hoisted
-                if( t instanceof IRLetted )
-                {
-                    stack.push({ term: t.value, isInRecursiveTerm });
-                    continue;
-                }
-                else // if( t instanceof IRHoisted )
-                {
-                    stack.push({ term: t.hoisted, isInRecursiveTerm });
-                    continue;
-                }
-                continue;
-            }
-
             if( isInRecursiveTerm )
             {
                 t.meta.forceHoist = true;
@@ -151,5 +121,7 @@ export function markRecursiveHoistsAsForced( _term: IRTerm ): void
             stack.push({ term: t.body, isInRecursiveTerm: true });
             continue;
         }
+
+        const tsEnsureExsaustiveCheck: IRVar | IRConst | IRNative | IRError | IRSelfCall = t;
     }
 }

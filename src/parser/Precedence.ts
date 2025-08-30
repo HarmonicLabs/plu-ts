@@ -1,4 +1,4 @@
-import { Token } from "../../tokenizer/Token";
+import { Token } from "../tokenizer/Token";
 
 /**
  * Operator precedence from least to largest.

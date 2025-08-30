@@ -1,6 +1,7 @@
 import { ITirType, TirType } from "./TirType";
 import { getAppliedTirTypeName } from "../program/TypedProgram";
 import { constT, ConstType } from "@harmoniclabs/uplc";
+import { TirDataStructType, TirSoPStructType, TirStructConstr, TirStructField } from "./TirStructType";
 
 export type TirNamedDestructableNativeType
     = TirDataT
@@ -145,11 +146,27 @@ export function isTirOptType( t: any ): t is TirDataOptT<TirType> | TirSopOptT<T
 }
 
 export class TirDataOptT<T extends TirType = TirType>
+    extends TirDataStructType
     implements ITirType
 {
     constructor(
         readonly typeArg: T
-    ) {}
+    ) {
+        super(
+            "Optional", // name
+            "", // fileUid
+            [
+                new TirStructConstr(
+                    "Some", // name
+                    [ // fields
+                        new TirStructField( "value", typeArg )
+                    ]
+                ),
+                new TirStructConstr( "None", [] ) // name, fields
+            ],
+            new Map() // methodNamesPtr
+        );
+    }
 
     hasDataEncoding(): boolean { return this.typeArg.hasDataEncoding(); }
 
@@ -175,7 +192,7 @@ export class TirDataOptT<T extends TirType = TirType>
         );
     }
 
-    private _isConcrete: boolean | undefined = undefined;
+    protected _isConcrete: boolean | undefined = undefined;
     isConcrete(): boolean {
         if( typeof this._isConcrete !== "boolean" )
             this._isConcrete = this.typeArg.isConcrete();
@@ -193,11 +210,27 @@ export class TirDataOptT<T extends TirType = TirType>
     toUplcConstType(): ConstType { return constT.data; }
 }
 export class TirSopOptT<T extends TirType = TirType>
+    extends TirSoPStructType
     implements ITirType
 {
     constructor(
         readonly typeArg: T
-    ) {}
+    ) {
+        super(
+            "Optional", // name
+            "", // fileUid
+            [
+                new TirStructConstr(
+                    "Some", // name
+                    [ // fields
+                        new TirStructField( "value", typeArg )
+                    ]
+                ),
+                new TirStructConstr( "None", [] ) // name, fields
+            ],
+            new Map() // methodNamesPtr
+        );
+    }
 
     hasDataEncoding(): boolean { return false; }
 
@@ -223,7 +256,7 @@ export class TirSopOptT<T extends TirType = TirType>
         );
     }
 
-    private _isConcrete: boolean | undefined = undefined;
+    protected _isConcrete: boolean | undefined = undefined;
     isConcrete(): boolean {
         if( typeof this._isConcrete !== "boolean" )
             this._isConcrete = this.typeArg.isConcrete();

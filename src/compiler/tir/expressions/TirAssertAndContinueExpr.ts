@@ -17,8 +17,8 @@ export class TirAssertAndContinueExpr
         return this.continuation.type;
     }
     constructor(
-        readonly conditions: TirExpr[],
-        readonly continuation: TirExpr,
+        public conditions: TirExpr[],
+        public continuation: TirExpr,
         readonly range: SourceRange
     ) {}
 

@@ -13,6 +13,112 @@ import { IRTerm } from "../../../IRTerm";
 import { _ir_apps } from "../../../tree_utils/_ir_apps";
 import { IRRecursive } from "../../../IRNodes/IRRecursive";
 import { IRSelfCall } from "../../../IRNodes/IRSelfCall";
+import { IRError } from "../../../IRNodes";
+import { _ir_let } from "../../../tree_utils/_ir_let";
+
+const hoisted_id = new IRHoisted(
+    new IRFunc( 1, new IRVar(0) )
+);
+hoisted_id.hash;
+
+const hoisted_not = new IRHoisted(
+    new IRFunc( 1, // someBool
+        _ir_apps(
+            IRNative.strictIfThenElse,
+            new IRVar( 0 ), // someBool
+            IRConst.bool( false ), // someBool == true  -> false
+            IRConst.bool( true  )  // someBool == false -> true 
+        )
+    )
+);
+hoisted_not.hash;
+
+const hoisted_drop2 = new IRHoisted(
+    new IRFunc( 1, // lst
+        _ir_apps(
+            IRNative.tailList,
+            _ir_apps(
+                IRNative.tailList,
+                new IRVar( 0 ) // lst
+            )
+        )
+    )
+);
+hoisted_drop2.hash;
+
+const hoisted_drop3 = new IRHoisted(
+    new IRFunc( 1, // lst
+        _ir_apps(
+            IRNative.tailList,
+            _ir_apps(
+                IRNative.tailList,
+                _ir_apps(
+                    IRNative.tailList,
+                    new IRVar( 0 ) // lst
+                )
+            )
+        )
+    )
+);
+hoisted_drop3.hash;
+
+const hoisted_drop4 = new IRHoisted(
+    new IRFunc( 1, // lst
+        _ir_apps(
+            IRNative.tailList,
+            _ir_apps(
+                IRNative.tailList,
+                _ir_apps(
+                    IRNative.tailList,
+                    _ir_apps(
+                        IRNative.tailList,
+                        new IRVar( 0 ) // lst
+                    )
+                )
+            )
+        )
+    )
+);
+hoisted_drop4.hash;
+
+const hoisted_drop8 = new IRHoisted(
+    new IRFunc( 1, // lst
+        _ir_apps(
+            hoisted_drop4.clone(),
+            _ir_apps(
+                hoisted_drop4.clone(),
+                new IRVar( 0 ) // lst
+            )
+        )
+    )
+);
+hoisted_drop8.hash;
+
+const hoisted_drop16 = new IRHoisted(
+    new IRFunc( 1, // lst
+        _ir_apps(
+            hoisted_drop8.clone(),
+            _ir_apps(
+                hoisted_drop8.clone(),
+                new IRVar( 0 ) // lst
+            )
+        )
+    )
+);
+hoisted_drop16.hash;
+
+const hoisted_drop32 = new IRHoisted(
+    new IRFunc( 1, // lst
+        _ir_apps(
+            hoisted_drop16.clone(),
+            _ir_apps(
+                hoisted_drop16.clone(),
+                new IRVar( 0 ) // lst
+            )
+        )
+    )
+);
+hoisted_drop32.hash;
 
 const hoisted_incr = new IRHoisted(
     new IRApp( IRNative.addInteger, IRConst.int( 1 ) )
@@ -28,6 +134,21 @@ const hoisted_isZero = new IRHoisted(
     new IRApp( IRNative.equalsInteger, IRConst.int( 0 ) )
 );
 hoisted_isZero.hash;
+
+const hoisted_isOne = new IRHoisted(
+    new IRApp( IRNative.equalsInteger, IRConst.int( 1 ) )
+);
+hoisted_isZero.hash;
+
+const hoisted_addOne = new IRHoisted(
+    new IRApp( IRNative.addInteger, IRConst.int( 1 ) )
+);
+hoisted_addOne.hash;
+
+const hoisted_subOne = new IRHoisted(
+    new IRApp( IRNative.addInteger, IRConst.int( -1 ) )
+);
+hoisted_subOne.hash;
 
 const hoisted_isPositive = new IRHoisted(
     new IRApp( IRNative.lessThanInteger, IRConst.int( 0 ) )
@@ -174,7 +295,7 @@ const hoisted_lazyOr = new IRHoisted(
             _ir_apps(
                 IRNative.strictIfThenElse,
                 new IRVar( 1 ), // a
-                new IRDelayed( new IRConst( bool, true ) ), // a == true  -> true // const 7 bits; var 8 bits
+                new IRDelayed( IRConst.bool( true ) ), // a == true  -> true // const 7 bits; var 8 bits
                 new IRVar( 0 )  // a == false -> whatever b is
             )
         )
@@ -189,7 +310,7 @@ const hoisted_lazyAnd = new IRHoisted(
                 IRNative.strictIfThenElse,
                 new IRVar( 1 ), // a
                 new IRVar( 0 ), // a == true  -> whatever b is
-                new IRDelayed( new IRConst( bool, false ) )  // a == false -> false
+                new IRDelayed( IRConst.bool( false ) )  // a == false -> false
             )
         )
     )
@@ -222,6 +343,62 @@ const hoisted_foldr = new IRHoisted(
 );
 hoisted_foldr.hash;
 
+const MAX_WORD4 = BigInt( 1 ) << BigInt( 32 );
+
+const hoisted_sizeofPositiveInt = new IRHoisted(
+    _ir_apps(
+        new IRRecursive( // self
+            new IRFunc( 2, // count_words, n
+                new IRForced(_ir_apps(
+                    IRNative.strictIfThenElse,
+                    _ir_apps(
+                        hoisted_isZero.clone(),
+                        new IRVar( 0 ) // n
+                    ),
+                    // then n === 0
+                    new IRDelayed(
+                        new IRForced(_ir_apps(
+                            IRNative.strictIfThenElse,
+                            _ir_apps(
+                                hoisted_isZero.clone(),
+                                new IRVar( 1 ) // count_words
+                            ),
+                            // then count_words === 0
+                            // at least one word is needed to represent 0, so we return 4 bytes (1 word)
+                            new IRDelayed( IRConst.int( 4 ) ),
+                            // else count_words > 0
+                            // return count_words * 4
+                            new IRDelayed(
+                                _ir_apps(
+                                    IRNative.multiplyInteger,
+                                    IRConst.int( 4 ),
+                                    new IRVar( 1 )
+                                )
+                            )
+                        ))
+                    ),
+                    // else n > 0
+                    new IRDelayed(
+                        _ir_apps(
+                            new IRSelfCall( 2 ), // self
+                            _ir_apps(
+                                hoisted_addOne.clone(),
+                                new IRVar( 1 ) // count_words
+                            ),
+                            _ir_apps(
+                                IRNative.divideInteger,
+                                new IRVar( 0 ), // n
+                                IRConst.int( MAX_WORD4 )
+                            )
+                        )
+                    )
+                ))
+            )
+        ),
+        IRConst.int( 0 ), // initial count_words
+    )
+);
+
 export function nativeToIR( native: IRNative ): IRTerm
 {
     // positive natives are translated to uplc builtins (no need to hoist)
@@ -229,6 +406,7 @@ export function nativeToIR( native: IRNative ): IRTerm
 
     switch( native.tag )
     {
+        /*
         case IRNativeTag.z_comb         :
             return hoisted_z_comb.clone();
         break;
@@ -255,6 +433,7 @@ export function nativeToIR( native: IRNative ): IRTerm
                 )
             );
         break;
+        //*/
         case IRNativeTag._foldr         :
             return hoisted_foldr.clone();
         break;
@@ -298,8 +477,7 @@ export function nativeToIR( native: IRNative ): IRTerm
                                     // then (caseNil)
                                     // Nothing data
                                     new IRDelayed(
-                                        new IRConst(
-                                            data,
+                                        IRConst.data(
                                             new DataConstr( 1, [] ) // Nothing is the second contructor
                                         )
                                     ),
@@ -318,7 +496,7 @@ export function nativeToIR( native: IRNative ): IRTerm
                                                         new IRDelayed(
                                                             _ir_apps(
                                                                 IRNative.constrData,
-                                                                new IRConst( int, 0 ), // just contructor
+                                                                IRConst.int( 0 ), // just contructor
                                                                 new IRApp(
                                                                     new IRVar( 4 ), // elemToData
                                                                     new IRVar( 0 )  // head
@@ -362,7 +540,7 @@ export function nativeToIR( native: IRNative ): IRTerm
                                     new IRVar( 0 )  // list
                                 ),
                                 // then
-                                new IRConst( int, 0 ),
+                                IRConst.int( 0 ),
                                 // else
                                 _ir_apps(
                                     hoisted_incr.clone(),
@@ -387,7 +565,7 @@ export function nativeToIR( native: IRNative ): IRTerm
                         hoisted_recursiveList.clone(),
                         new IRFunc( 1, // _self
                             new IRDelayed( // pdelay( pBool( true ) )
-                                new IRConst( bool, false ), // if empty then none of the list satisfies the predicate
+                                IRConst.bool( false ), // if empty then none of the list satisfies the predicate
                             )
                         ),
                         new IRFunc( 3, // self, head, tail
@@ -416,7 +594,7 @@ export function nativeToIR( native: IRNative ): IRTerm
                         hoisted_recursiveList.clone(),
                         new IRFunc( 1, // _self
                             new IRDelayed( // pdelay( pBool( true ) )
-                                new IRConst( bool, true ), // if empty then all elems of the list are satisfying the predicate
+                                IRConst.bool( true ), // if empty then all elems of the list are satisfying the predicate
                             )
                         ),
                         new IRFunc( 3, // self, head, tail
@@ -480,21 +658,10 @@ export function nativeToIR( native: IRNative ): IRTerm
         //     return new IRHoisted();
         // break;
         case IRNativeTag._id            :
-            return new IRHoisted(
-                new IRFunc( 1, new IRVar(0) )
-            );
+            return hoisted_id.clone();
         break;
         case IRNativeTag._not           :
-            return new IRHoisted(
-                new IRFunc( 1, // someBool
-                    _ir_apps(
-                        IRNative.strictIfThenElse,
-                        new IRVar( 0 ), // someBool
-                        new IRConst( bool, false ), // someBool == true  -> false
-                        new IRConst( bool, true  )  // someBool == false -> true 
-                    )
-                )
-            );
+            return hoisted_not.clone();
         break;
         case IRNativeTag._strictAnd     :
             return new IRHoisted(
@@ -503,7 +670,7 @@ export function nativeToIR( native: IRNative ): IRTerm
                         IRNative.strictIfThenElse,
                         new IRVar( 1 ), // a
                         new IRVar( 0 ), // a == true  -> whatever b is
-                        new IRConst( bool, false )  // a == false -> false
+                        IRConst.bool( false )  // a == false -> false
                     )
                 )
             );
@@ -517,7 +684,7 @@ export function nativeToIR( native: IRNative ): IRTerm
                     _ir_apps(
                         IRNative.strictIfThenElse,
                         new IRVar( 1 ), // a
-                        new IRConst( bool, true ), // a == true  -> true
+                        IRConst.bool( true ), // a == true  -> true
                         new IRVar( 0 )  // a == false -> whatever b is
                     )
                 )
@@ -602,7 +769,7 @@ export function nativeToIR( native: IRNative ): IRTerm
                                 ),
                                 new IRApp(
                                     IRNative.mkNilData,
-                                    new IRConst( unit, undefined )
+                                    IRConst.unit
                                 )
                             )
                         )
@@ -651,8 +818,201 @@ export function nativeToIR( native: IRNative ): IRTerm
                 )
             );
         break;
-        case IRNativeTag._mapList: {
-            throw new Error("TODO: Implement nativeToIR for IRNativeTag._mapList");
+        case IRNativeTag._mkMapList: {
+            return new IRHoisted(
+                new IRFunc( 2, // nilListOfType, mapFn
+                    new IRRecursive( // self
+                        new IRFunc( 1, // lst
+                            new IRForced(
+                                _ir_apps(
+                                    IRNative.strictChooseList,
+                                    new IRVar( 0 ), // lst
+                                    // case Nil
+                                    new IRDelayed( new IRVar( 3 ) ), // delay( nilListOfType )
+                                    // case Cons
+                                    new IRDelayed(
+                                        _ir_apps(
+                                            IRNative.mkCons,
+                                            _ir_apps(
+                                                new IRVar( 2 ), // mapFn
+                                                _ir_apps(
+                                                    IRNative.headList,
+                                                    new IRVar( 0 ) // lst
+                                                )
+                                            ),
+                                            _ir_apps(
+                                                new IRSelfCall( 1 ), // self
+                                                _ir_apps(
+                                                    IRNative.tailList,
+                                                    new IRVar( 0 ) // lst
+                                                )
+                                            )
+                                        )
+                                    )
+                                )
+                            )
+                        )
+                    )
+                )
+            )
+        }
+        break;
+        case IRNativeTag._equalBoolean: {
+            return new IRHoisted(
+                new IRFunc( 1,
+                    _ir_apps(
+                        IRNative.strictIfThenElse,
+                        new IRVar( 0 ), // a
+                        hoisted_id.clone(), // a == true  -> true
+                        hoisted_not.clone()  // a == false -> b ? false : true
+                    )
+                )
+            )
+        }
+        break;
+        case IRNativeTag._negateInt: {
+            return new IRHoisted(
+                _ir_apps(
+                    IRNative.subtractInteger,
+                    IRConst.int( 0 ),
+                )
+            );
+        }
+        break;
+        case IRNativeTag._bytesToIntBE: {
+            return new IRHoisted(
+                _ir_apps(
+                    IRNative.byteStringToInteger,
+                    IRConst.bool( true ) // big endian
+                )
+            );
+        }
+        break;
+        case IRNativeTag._boolToInt: {
+            return new IRHoisted(
+                new IRFunc( 1, // bool
+                    _ir_apps(
+                        IRNative.strictIfThenElse,
+                        new IRVar( 0 ), // bool
+                        IRConst.int( 1 ), // b == true  -> 1
+                        IRConst.int( 0 )  // b == false -> 0
+                    )
+                )
+            )
+        }
+        break;
+        case IRNativeTag._intToBytesBE: {
+            return new IRHoisted(
+                new IRFunc( 1, // int
+                    _ir_apps(
+                        IRNative.integerToByteString,
+                        IRConst.bool( true ), // big endian
+                        _ir_apps( // int size
+                            hoisted_sizeofPositiveInt.clone(),
+                            // integerToByteString fails for negative integers
+                            // so we don't bother converting negative to positive here
+                            new IRVar( 0 ) // int
+                        ),
+                        new IRVar( 0 )  // int
+                    )
+                )
+            );
+        }
+        break;
+        case IRNativeTag._intToBool: {
+            return hoisted_isNonNegative.clone();
+        }
+        break;
+        case IRNativeTag._exponentiateInteger: {
+            return new IRHoisted(
+                new IRFunc( 2, // base, exponent
+                    new IRForced(_ir_apps(
+                        IRNative.strictIfThenElse,
+                        _ir_apps(
+                            hoisted_isNonNegative.clone(),
+                            new IRVar( 0 ) // exponent
+                        ),
+                        // then, normal exponentiation
+                        new IRDelayed(
+                            new IRRecursive(new IRFunc(2, // expInt, x, n
+                                    new IRForced(_ir_apps(
+                                    IRNative.strictIfThenElse,
+                                    _ir_apps(
+                                        hoisted_isZero.clone(),
+                                        new IRVar( 0 ) // n
+                                    ),
+                                    // then (n == 0)
+                                    // yes, even `0 ** 0` is 1
+                                    // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Exponentiation#description
+                                    new IRDelayed( IRConst.int( 1 ) ), // return 1
+                                    // else (n > 0)
+                                    new IRDelayed(
+                                        new IRForced(_ir_apps(
+                                            IRNative.strictIfThenElse,
+                                            _ir_apps(
+                                                hoisted_isOne.clone(),
+                                                new IRVar( 0 ) // n
+                                            ),
+                                            // then (n == 1)
+                                            new IRDelayed( new IRVar( 1 ) ), // return x
+                                            // else (n > 1)
+                                            new IRDelayed(
+                                                new IRForced(_ir_apps(
+                                                    IRNative.strictIfThenElse,
+                                                    _ir_apps(
+                                                        hoisted_isZero.clone(),
+                                                        _ir_apps(
+                                                            IRNative.modInteger,
+                                                            new IRVar( 0 ), // exponent
+                                                            IRConst.int( 2 )
+                                                        )
+                                                    ),
+                                                    // then (exponent % 2 == 0)
+                                                    new IRDelayed(
+                                                        _ir_let(
+                                                            _ir_apps(
+                                                                new IRSelfCall( 2 ), // expInt
+                                                                new IRVar( 1 ), // x
+                                                                _ir_apps(
+                                                                    IRNative.divideInteger,
+                                                                    new IRVar( 0 ), // exponent
+                                                                    IRConst.int( 2 )
+                                                                )
+                                                            ), // half
+                                                            _ir_apps(
+                                                                IRNative.multiplyInteger,
+                                                                new IRVar( 0 ), // half
+                                                                new IRVar( 0 )  // half
+                                                            )
+                                                        )
+                                                    ),
+                                                    // else (exponent % 2 == 1)
+                                                    new IRDelayed(
+                                                        _ir_apps( // x * expInt( x, n - 1 )
+                                                            IRNative.multiplyInteger,
+                                                            new IRVar( 1 ), // x
+                                                            _ir_apps(
+                                                                new IRSelfCall( 2 ), // expInt
+                                                                new IRVar( 1 ), // x
+                                                                _ir_apps(
+                                                                    hoisted_subOne.clone(),
+                                                                    new IRVar( 0 ), // n
+                                                                )
+                                                            )
+                                                        )
+                                                    )
+                                                ))
+                                            )
+                                        ))
+                                    ),
+                                ))
+                            ))
+                        ),
+                        // else (exponent < 0) fails
+                        new IRDelayed( new IRError() )
+                    ))
+                )
+            );
         }
         break;
 

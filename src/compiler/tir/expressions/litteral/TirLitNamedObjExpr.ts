@@ -9,7 +9,7 @@ import { isObject } from "util";
 import { IRTerm, IRConstr } from "../../../../IR";
 import { data_t } from "../../program/stdScope/stdScope";
 import { TirAliasType } from "../../types/TirAliasType";
-import { TirSopOptT, TirFuncT, TirPairDataT, TirListT } from "../../types/TirNativeType";
+import { TirSopOptT, TirFuncT, TirPairDataT, TirListT, TirDataOptT } from "../../types/TirNativeType";
 import { TirDataStructType, TirSoPStructType } from "../../types/TirStructType";
 import { TirTypeParam } from "../../types/TirTypeParam";
 import { getUnaliased } from "../../types/utils/getUnaliased";
@@ -33,7 +33,7 @@ export class TirLitNamedObjExpr
         readonly name: Identifier,
         readonly fieldNames: Identifier[],
         readonly values: TirExpr[],
-        readonly type: TirSoPStructType | TirDataStructType,
+        readonly type: TirSoPStructType | TirDataStructType | TirSopOptT | TirDataOptT,
         readonly range: SourceRange
     ) {}
 

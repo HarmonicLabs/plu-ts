@@ -56,7 +56,7 @@ export class TirAliasType<AliasedT extends  TirType = TirType>
 
     toUplcConstType(): ConstType {
         let t: TirType = this.aliased;
-        while( t instanceof TirAliasType ) t = t.aliased; s
+        while( t instanceof TirAliasType ) t = t.aliased;
         return t.toUplcConstType();
     }
 }

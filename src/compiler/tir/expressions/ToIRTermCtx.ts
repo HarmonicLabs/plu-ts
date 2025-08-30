@@ -1,3 +1,5 @@
+import { IRVar } from "../../../IR";
+import { IRSelfCall } from "../../../IR/IRNodes/IRSelfCall";
 
 const _1n = BigInt(1);
 
@@ -10,6 +12,8 @@ export class ToIRTermCtx
         return this._parentDbn + BigInt(this.variables.length);
     }
 
+    private _firstVariableIsRecursive: boolean = false;
+
     constructor(
         readonly parent: ToIRTermCtx | undefined,
         /**
@@ -19,6 +23,7 @@ export class ToIRTermCtx
         private readonly variableToCtx: Map<string, ToIRTermCtx>
     ) {
         this._parentDbn = parent ? parent._parentDbn : BigInt(0);
+        this._firstVariableIsRecursive = false;
     }
 
     static root(): ToIRTermCtx {
@@ -47,6 +52,18 @@ export class ToIRTermCtx
         return this.dbn - ( declDbn + _1n );
     }
 
+    getVarAccessIR( name: string ): IRVar | IRSelfCall | undefined {
+        const accessDbn = this.getVarAccessDbn( name );
+        if( typeof accessDbn !== "bigint" ) return undefined;
+
+        if(
+            name === this.variables[0]
+            && this._firstVariableIsRecursive
+        ) return new IRSelfCall( accessDbn );
+        
+        return new IRVar( accessDbn );
+    }
+
     defineVar( name: string ): void {
         if( this.variableToCtx.has( name ) ) {
             const ctx = this.variableToCtx.get( name )!;
@@ -56,6 +73,14 @@ export class ToIRTermCtx
         }
         this.variables.push( name );
         this.variableToCtx.set( name, this );
+    }
+    defineRecursiveVar( name: string ): void {
+        if(
+            this.variables.length > 0
+            || this._firstVariableIsRecursive
+        ) throw new Error("recursive variable must be the first defined variable in the context");
+        this.defineVar( name );
+        this._firstVariableIsRecursive = true;
     }
 
     pushUnusedVar(): void {

@@ -226,7 +226,13 @@ export class IRNative
     static get _equalPairData() { return new IRNative( IRNativeTag._equalPairData ); }
     static get _equalBoolean() { return new IRNative( IRNativeTag._equalBoolean ); }
     static get _negateInt() { return new IRNative( IRNativeTag._negateInt ); }
-    static get _mapList() { return new IRNative( IRNativeTag._mapList ); }
+    static get _mkMapList() { return new IRNative( IRNativeTag._mkMapList ); }
+    static get _bytesToIntBE() { return new IRNative( IRNativeTag._bytesToIntBE ); }
+    static get _boolToInt() { return new IRNative( IRNativeTag._boolToInt ); }
+    /** internally handles int size */
+    static get _intToBytesBE() { return new IRNative( IRNativeTag._intToBytesBE ); }
+    static get _intToBool() { return new IRNative( IRNativeTag._intToBool ); }
+    static get _exponentiateInteger() { return new IRNative( IRNativeTag._exponentiateInteger ); }
 
     static equals( type: TirType ): IRTerm
     {

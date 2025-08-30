@@ -12,6 +12,7 @@ import { TirLitThisExpr } from "../../tir/expressions/litteral/TirLitThisExpr";
 import { TirLitTrueExpr } from "../../tir/expressions/litteral/TirLitTrueExpr";
 import { TirLitUndefExpr } from "../../tir/expressions/litteral/TirLitUndefExpr";
 import { TirLitVoidExpr } from "../../tir/expressions/litteral/TirLitVoidExpr";
+import { TirAssertAndContinueExpr } from "../../tir/expressions/TirAssertAndContinueExpr";
 import { TirCallExpr } from "../../tir/expressions/TirCallExpr";
 import { TirCaseExpr, TirCaseMatcher } from "../../tir/expressions/TirCaseExpr";
 import { TirElemAccessExpr } from "../../tir/expressions/TirElemAccessExpr";
@@ -20,11 +21,14 @@ import { TirFailExpr } from "../../tir/expressions/TirFailExpr";
 import { TirFromDataExpr } from "../../tir/expressions/TirFromDataExpr";
 import { TirFuncExpr } from "../../tir/expressions/TirFuncExpr";
 import { TirHoistedExpr } from "../../tir/expressions/TirHoistedExpr";
+import { TirInlineClosedIR } from "../../tir/expressions/TirInlineClosedIR";
 import { TirLettedExpr } from "../../tir/expressions/TirLettedExpr";
-import { TirNativeFuncExpr } from "../../tir/expressions/TirNativeFuncExpr";
+import { TirNativeFunc } from "../../tir/expressions/TirNativeFunc";
 import { TirParentesizedExpr } from "../../tir/expressions/TirParentesizedExpr";
 import { TirPropAccessExpr } from "../../tir/expressions/TirPropAccessExpr";
 import { TirTernaryExpr } from "../../tir/expressions/TirTernaryExpr";
+import { TirToDataExpr } from "../../tir/expressions/TirToDataExpr";
+import { TirTraceIfFalseExpr } from "../../tir/expressions/TirTraceIfFalseExpr";
 import { TirTypeConversionExpr } from "../../tir/expressions/TirTypeConversionExpr";
 import { TirVariableAccessExpr } from "../../tir/expressions/TirVariableAccessExpr";
 import { TirUnaryExclamation } from "../../tir/expressions/unary/TirUnaryExclamation";
@@ -69,7 +73,7 @@ export function expressifyVars(
         || expr instanceof TirLitStrExpr
         || expr instanceof TirLitIntExpr
         || expr instanceof TirLitHexBytesExpr
-        || expr instanceof TirNativeFuncExpr
+        || expr instanceof TirNativeFunc
         // hoisted expressions are necessarily closed, so no external variables
         || expr instanceof TirHoistedExpr
     ) return expr; 
@@ -190,13 +194,39 @@ export function expressifyVars(
     }
 
     if( expr instanceof TirFailExpr ) {
-        let requiredSopExtractions: TirNamedDeconstructVarDecl[] = [];
         if( expr.failMsgExpr ) {
             const modifiedExpr = expressifyVars( ctx, expr.failMsgExpr );
             expr.failMsgExpr = modifiedExpr;
         }
         return expr;
     }
+
+    //  TirInlineClosedIR
+    if( expr instanceof TirToDataExpr ) {
+        const modifiedExpr = expressifyVars( ctx, expr.expr );
+        expr.expr = modifiedExpr;
+        return expr;
+    }
+
+    if( expr instanceof TirAssertAndContinueExpr ) {
+        expr.conditions;
+        expr.continuation;
+        const modifiedConditions = expr.conditions.map( c => expressifyVars( ctx, c ) );
+        const modifiedContinuation = expressifyVars( ctx, expr.continuation );
+        expr.conditions = modifiedConditions;
+        expr.continuation = modifiedContinuation;
+        return expr;
+    }
+
+    if( expr instanceof TirTraceIfFalseExpr ) {
+        const modifiedCondition = expressifyVars( ctx, expr.condition );
+        const modifiedTraceStrExpr = expressifyVars( ctx, expr.traceStrExpr );
+        expr.condition = modifiedCondition;
+        expr.traceStrExpr = modifiedTraceStrExpr;
+        return expr;
+    }
+
+    if( expr instanceof TirInlineClosedIR ) return expr;
 
     const tsEnsureExsautstiveCheck: never = expr;
     console.error( expr );
@@ -208,7 +238,6 @@ function getVarAccessFromPropAccess(
     propAccessExpr: TirPropAccessExpr
 ): TirExpr
 {
-    const requiredSopExtractions: TirNamedDeconstructVarDecl[] = [];
     let expr = propAccessExpr.object;
     const prop = propAccessExpr.prop.text;
 
@@ -224,7 +253,7 @@ function getVarAccessFromPropAccess(
         || expr instanceof TirLitStrExpr
         || expr instanceof TirLitIntExpr
         || expr instanceof TirLitHexBytesExpr
-        || expr instanceof TirNativeFuncExpr
+        || expr instanceof TirNativeFunc
         || expr instanceof TirPropAccessExpr // `expressifyVars` is called recursively on the object before this check
         // these result to native types
         || expr instanceof TirUnaryExclamation // boolean

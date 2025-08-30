@@ -1,10 +1,6 @@
-import { Data } from "@harmoniclabs/plutus-data";
-import { Machine, CEKConst, CEKError } from "@harmoniclabs/plutus-machine";
-import { UPLCTerm, showUPLC } from "@harmoniclabs/uplc";
+import { Machine, CEKConst } from "@harmoniclabs/plutus-machine";
 import { SourceRange } from "../../../../ast/Source/SourceRange";
 import { compileIRToUPLC, IRConst, IRConstValue, IRNative, IRTerm } from "../../../../IR";
-import { pconstList, pprepend, addPListMethods } from "../../../../pluts";
-import { _papp } from "../../../../pluts/lib/std/data/conversion/minimal_common";
 import { mergeSortedStrArrInplace } from "../../../../utils/array/mergeSortedStrArrInplace";
 import { TirType } from "../../types/TirType";
 import { ITirExpr } from "../ITirExpr";

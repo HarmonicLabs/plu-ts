@@ -46,7 +46,7 @@ export type TirExpr
     | TirTraceIfFalseExpr
     | TirInlineClosedIR
     )
-    & ITirExpr
+    // & ITirExpr
     ;
 
 export function isTirExpr( thing: any ): thing is TirExpr

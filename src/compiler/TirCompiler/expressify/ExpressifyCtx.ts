@@ -10,8 +10,7 @@ import { TirExpr } from "../../tir/expressions/TirExpr";
 import { TirFromDataExpr } from "../../tir/expressions/TirFromDataExpr";
 import { TirHoistedExpr } from "../../tir/expressions/TirHoistedExpr";
 import { TirLettedExpr } from "../../tir/expressions/TirLettedExpr";
-import { TirNativeFuncExpr } from "../../tir/expressions/TirNativeFuncExpr";
-import { TirVariableAccessExpr } from "../../tir/expressions/TirVariableAccessExpr";
+import { TirNativeFunc } from "../../tir/expressions/TirNativeFunc";
 import { data_t, int_t } from "../../tir/program/stdScope/stdScope";
 import { TirAssertStmt } from "../../tir/statements/TirAssertStmt";
 import { TirArrayLikeDeconstr } from "../../tir/statements/TirVarDecl/TirArrayLikeDeconstr";
@@ -52,12 +51,12 @@ export function isExpressifyFuncParam( thing: any ): thing is ExpressifyFuncPara
 
 export class ExpressifyCtx
 {
-    readonly hoisted: Map<string, TirHoistedExpr | TirNativeFuncExpr> = new Map();
+    readonly hoisted: Map<string, TirHoistedExpr | TirNativeFunc> = new Map();
 
     constructor(
         readonly parent: ExpressifyCtx | undefined,
         public returnType: TirType,
-        hoisted?: Map<string, TirHoistedExpr | TirNativeFuncExpr>,
+        hoisted?: Map<string, TirHoistedExpr | TirNativeFunc>,
         /** var name -> latest constant name */
         readonly variables: Map<string, LatestVarNameSSA> = new Map(),
         /** constant name -> func param name (to build var access) */
@@ -132,7 +131,7 @@ export class ExpressifyCtx
 
     getVariable(
         name: string
-    ): ExpressifyFuncParam | TirHoistedExpr | TirNativeFuncExpr | TirLettedExpr
+    ): ExpressifyFuncParam | TirHoistedExpr | TirNativeFunc | TirLettedExpr
     {
         const result = (
             this._getNonHoistedVariable( name )
@@ -225,9 +224,9 @@ export class ExpressifyCtx
         const lettedFields = this.introduceLettedConstant(
             lettedRawFieldsName,
             new TirCallExpr(
-                TirNativeFuncExpr.unConstrDataResultFields,
+                TirNativeFunc.unConstrDataResultFields,
                 [new TirCallExpr(
-                    TirNativeFuncExpr.unConstrData,
+                    TirNativeFunc.unConstrData,
                     [ structExpr ],
                     new TirUnConstrDataResultT(),
                     structExpr.range
@@ -314,7 +313,7 @@ export class ExpressifyCtx
         const lettedUnconstr = this.introduceLettedConstant(
             lettedUnconstrName,
             new TirCallExpr(
-                TirNativeFuncExpr.unBytesData,
+                TirNativeFunc.unBData,
                 [ stmt.initExpr ],
                 new TirUnConstrDataResultT(),
                 stmt.range
@@ -329,7 +328,7 @@ export class ExpressifyCtx
             new TirAssertStmt(
                 new TirEqualExpr(
                     new TirCallExpr(
-                        TirNativeFuncExpr.unConstrDataResultIndex,
+                        TirNativeFunc.unConstrDataResultIndex,
                         [ lettedUnconstr ],
                         int_t,
                         stmt.range
@@ -349,7 +348,7 @@ export class ExpressifyCtx
         const lettedFields = this.introduceLettedConstant(
             lettedRawFieldsName,
             new TirCallExpr(
-                TirNativeFuncExpr.unConstrDataResultFields,
+                TirNativeFunc.unConstrDataResultFields,
                 [ lettedUnconstr ],
                 new TirListT( data_t ),
                 stmt.range
@@ -578,7 +577,7 @@ export class ExpressifyCtx
             const lettedRest = this.introduceLettedConstant(
                 stmt.rest,
                 new TirCallExpr(
-                    TirNativeFuncExpr.dropListOf( elemsType ),
+                    TirNativeFunc._dropList( elemsType ),
                     [
                         new TirLitIntExpr(
                             BigInt(nElems),

@@ -23,11 +23,12 @@ import { TirLitTrueExpr } from "../../../tir/expressions/litteral/TirLitTrueExpr
 import { TirLitUndefExpr } from "../../../tir/expressions/litteral/TirLitUndefExpr";
 import { TirLitVoidExpr } from "../../../tir/expressions/litteral/TirLitVoidExpr";
 import { TirExpr, isTirExpr } from "../../../tir/expressions/TirExpr";
-import { TirListT } from "../../../tir/types/TirNativeType";
-import { TirStructType } from "../../../tir/types/TirStructType";
+import { TirDataOptT, TirListT, TirSopOptT } from "../../../tir/types/TirNativeType";
+import { TirDataStructType, TirSoPStructType, TirStructType } from "../../../tir/types/TirStructType";
 import { TirType, isTirType } from "../../../tir/types/TirType";
 import { canAssignTo, isStructOrStructAlias, getStructType, canAssignToOptional, canAssignToList } from "../../../tir/types/utils/canAssignTo";
 import { getListTypeArg } from "../../../tir/types/utils/getListTypeArg";
+import { getUnaliased } from "../../../tir/types/utils/getUnaliased";
 import { AstCompilationCtx } from "../../AstCompilationCtx";
 import { _compileExpr } from "./_compileExpr";
 
@@ -85,14 +86,20 @@ export function _compileLitteralUndefExpr(
             expr.range
         );
     }
-    if( !canAssignToOptional( typeHint ) )
+    
+    typeHint = getUnaliased( typeHint );
+    if(!(
+        typeHint instanceof TirSopOptT
+        || typeHint instanceof TirDataOptT
+    ))
     {
         return ctx.error(
             DiagnosticCode.Type_0_is_not_assignable_to_type_1,
             expr.range, "Optional<T>", typeHint.toString()
         );
     }
-    return new  TirLitUndefExpr(
+
+    return new TirLitUndefExpr(
         typeHint,
         expr.range
     );
@@ -150,11 +157,23 @@ export function _compileLitteralNamedObjExpr(
     );
     if( !Array.isArray( fieldValues ) ) return undefined;
 
+    typeHint = getUnaliased( typeHint );
+    // TirDataStructType | TirSoPStructType
+    if(!(
+        typeHint instanceof TirDataStructType
+        || typeHint instanceof TirSoPStructType
+    )) {
+        return ctx.error(
+            DiagnosticCode.Named_object_litteral_is_not_assignable_to_0,
+            expr.range, typeHint.toString()
+        );
+    }
+
     return new TirLitNamedObjExpr(
         expr.name,
         expr.fieldNames,
         fieldValues,
-        typeHint!,
+        typeHint,
         expr.range
     );
 }
@@ -194,7 +213,20 @@ export function _compileLitteralObjExpr(
         structType,
         0
     );
-    if( !Array.isArray( fieldValues ) ) return undefined; 
+    if( !Array.isArray( fieldValues ) ) return undefined;
+
+    typeHint = getUnaliased( typeHint );
+    // TirDataStructType | TirSoPStructType
+    if(!(
+        typeHint instanceof TirDataStructType
+        || typeHint instanceof TirSoPStructType
+    )) {
+        return ctx.error(
+            DiagnosticCode.Named_object_litteral_is_not_assignable_to_0,
+            expr.range, typeHint.toString()
+        );
+    }
+
     return new TirLitObjExpr(
         expr.fieldNames,
         fieldValues,
@@ -302,7 +334,7 @@ export function _compileLitteralArrayExpr(
         );
     }
 
-    if( !listType  ) listType  = new TirListT( elemsType ); 
+    if( !listType  ) listType  = new TirListT( elemsType! ); 
 
     const restElems = expr.elems.slice( 1 );
     const compiledRestElems = restElems.map( elem => {

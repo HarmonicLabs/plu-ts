@@ -821,17 +821,6 @@ export class TirNativeFunc
             ], new TirListT(elemT))
         );
     }
-    static _indexList(elemT: TirType): TirNativeFunc {
-        return new TirNativeFunc(
-            IRNativeTag._indexList,
-            new TirFuncT([
-                // list
-                new TirListT(elemT),
-                // index
-                int_t
-            ], elemT)
-        );
-    }
     static _foldr(elemT: TirType, returnT: TirType): TirNativeFunc {
         return new TirNativeFunc(
             IRNativeTag._foldr,

@@ -1,7 +1,15 @@
-const fs = require("fs");
-const path = require("path");
+import * as fs from "fs";
+import * as path from "path";
 
-const dirname = __dirname;
+const dirname = ((path) => {
+    path = path.trim();
+    if (path.startsWith("file:")) path = path.slice("file:".length);
+    while( path.startsWith("/") ) path = path.slice(1);
+    path = path.trim();
+    path = "/" + path;
+    while( path.endsWith("/") ) path = path.slice(0, -1).trim();
+    return path.trim();
+})(globalThis.__dirname ?? path.dirname(import.meta.url));
 
 void function main() {
 
@@ -15,7 +23,12 @@ void function main() {
     out.push("export enum DiagnosticCode {\n");
 
     let first = true;
-    const messages = JSON.parse(fs.readFileSync(path.join(dirname, "..", "src", "diagnostics","diagnosticMessages.json")));
+    const messages = JSON.parse(
+        fs.readFileSync(
+            path.join(dirname, "..", "src", "diagnostics", "diagnosticMessages.json"),
+            "utf8"
+        )
+    );
     Object.keys(messages).forEach(text => {
         let key = makeKey(text);
         if (first)

@@ -50,10 +50,7 @@ export function _irToUplc(
     if( ir instanceof IRConst )
     {
         return {
-            term: new UPLCConst(
-                termTyToConstTy( ir.type ),
-                ir.value as any
-            ),
+            term: ir.toUPLC(),
             max_idx: node_index
         };
     }

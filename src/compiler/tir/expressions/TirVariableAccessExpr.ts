@@ -1,5 +1,6 @@
 import { SourceRange } from "../../../ast/Source/SourceRange";
 import { IRTerm } from "../../../IR";
+import { IRSelfCall } from "../../../IR/IRNodes/IRSelfCall";
 import { IRVar } from "../../../IR/IRNodes/IRVar";
 import { ResolveValueResult } from "../../AstCompiler/scope/AstScope";
 import { TirType } from "../types/TirType";
@@ -36,14 +37,13 @@ export class TirVariableAccessExpr
         return [ this.varName ];
     }
 
-    toIR( ctx: ToIRTermCtx ): IRTerm
+    toIR( ctx: ToIRTermCtx ): IRVar | IRSelfCall
     {
-        // TODO: handle recursive calls 
-        /*
-        const dbn = ctx.getVarAccessDbn( this.varName );
-        if( typeof dbn !== "bigint" )
-        throw new Error("Missing 'this' variable declaration in context");
-        return new IRVar( dbn );
-        //*/
+        const ir = ctx.getVarAccessIR( this.varName );
+        if(!(
+            ir instanceof IRVar
+            || ir instanceof IRSelfCall
+        )) throw new Error("Invalid variable access context");
+        return ir;
     }
 }

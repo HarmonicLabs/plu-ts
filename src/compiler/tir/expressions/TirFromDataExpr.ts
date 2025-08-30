@@ -97,7 +97,8 @@ export function _inlineFromData(
         ) return listOfDataExpr;
 
         return _ir_apps(
-            IRNative._mapList,
+            IRNative._mkMapList,
+            IRConst.listOf( elems_t )([]),
             _fromDataUplcFunc( elems_t ),
             listOfDataExpr
         );
@@ -188,7 +189,8 @@ export function _fromDataUplcFunc(
         return new IRHoisted( new IRFunc(
             1, // data ( representing list )
             _ir_apps(
-                IRNative._mapList,
+                IRNative._mkMapList,
+                IRConst.listOf( elems_t )([]),
                 _fromDataUplcFunc( elems_t ),
                 _ir_apps(
                     IRNative.unListData,

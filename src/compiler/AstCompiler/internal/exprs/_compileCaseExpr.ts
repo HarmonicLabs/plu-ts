@@ -1,6 +1,7 @@
 import { CaseExpr, CaseExprMatcher, CaseWildcardMatcher } from "../../../../ast/nodes/expr/CaseExpr";
 import { DiagnosticCode } from "../../../../diagnostics/diagnosticMessages.generated";
 import { TirCaseExpr, TirCaseMatcher, TirWildcardCaseMatcher } from "../../../tir/expressions/TirCaseExpr";
+import { TirNamedDeconstructVarDecl } from "../../../tir/statements/TirVarDecl/TirNamedDeconstructVarDecl";
 import { TirSimpleVarDecl } from "../../../tir/statements/TirVarDecl/TirSimpleVarDecl";
 import { TirType } from "../../../tir/types/TirType";
 import { canAssignTo } from "../../../tir/types/utils/canAssignTo";
@@ -83,6 +84,13 @@ export function _compileCaseExprMatcher(
     if( returnTypeHint && !canAssignTo( body.type, returnTypeHint ) ) return ctx.error(
         DiagnosticCode.Type_0_is_not_assignable_to_type_1,
         matcher.body.range, body.type.toString(), returnTypeHint.toString()
+    );
+
+    if(!(
+        pattern instanceof TirNamedDeconstructVarDecl
+    )) return ctx.error(
+        DiagnosticCode._case_expression_must_decontructed_the_inspected_value,
+        matcher.pattern.range
     );
 
     return new TirCaseMatcher(

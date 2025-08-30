@@ -133,7 +133,7 @@ export function _compileOptionalPropAccessExpr(
                     new Identifier("None", optionalObjExpr.range.atEnd()),
                     [],
                     [],
-                    optionalObjExpr.type,
+                    optionalObjType as TirSopOptT,
                     optionalObjExpr.range.atEnd()
                 ),
                 optionalObjExpr.range.atEnd()

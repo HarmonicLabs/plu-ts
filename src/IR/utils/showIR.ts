@@ -411,7 +411,7 @@ export function lettedToStr( ir: IRLetted ): string
 
 export function constToString( ir: IRConst ): string
 {
-    return `(const ${termTypeToString(ir.type, 2)} ${showUPLCConstValue(ir.value as any)})`;
+    return `(const ${ir.type.toString()} ${showUPLCConstValue(ir.value as any)})`;
 }
 
 export function prettyIRInline( _ir: IRTerm, _indent = 2 ): string

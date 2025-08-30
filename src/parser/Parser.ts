@@ -17,7 +17,6 @@ import { SourceRange } from "../ast/Source/SourceRange";
 import { SimpleVarDecl } from "../ast/nodes/statements/declarations/VarDecl/SimpleVarDecl";
 import { ArrayLikeDeconstr } from "../ast/nodes/statements/declarations/VarDecl/ArrayLikeDeconstr";
 import { IdentifierHandling } from "../tokenizer/IdentifierHandling";
-import { determinePrecedence, Precedence } from "../pluts/__tests__/Precedence";
 import { makeUnaryPrefixExpr } from "../ast/nodes/expr/unary/UnaryPrefixExpr";
 import { LitUndefExpr } from "../ast/nodes/expr/litteral/LitUndefExpr";
 import { LitVoidExpr } from "../ast/nodes/expr/litteral/LitVoidExpr";
@@ -76,6 +75,7 @@ import { DecrStmt } from "../ast/nodes/statements/DecrStmt";
 import { ExportStmt } from "../ast/nodes/statements/ExportStmt";
 import { defaultSymbolForge } from "../compiler/internalVar";
 import { BodyStmt, TopLevelStmt } from "../ast/nodes/statements/PebbleStmt";
+import { Precedence, determinePrecedence } from "./Precedence";
 
 interface ParseStmtOpts {
     isExport?: boolean;
