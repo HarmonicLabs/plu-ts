@@ -14,9 +14,8 @@ import { TirIfStmt } from "../../tir/statements/TirIfStmt";
 import { TirReturnStmt } from "../../tir/statements/TirReturnStmt";
 import { TirSimpleVarDecl } from "../../tir/statements/TirVarDecl/TirSimpleVarDecl";
 import { TirWhileStmt } from "../../tir/statements/TirWhileStmt";
-import { TirFuncT } from "../../tir/types/TirNativeType";
+import { TirFuncT } from "../../tir/types/TirNativeType/native/function";
 import { TirSoPStructType } from "../../tir/types/TirStructType";
-import { ReassignedVariablesAndFlowInfos } from "./determineReassignedVariablesAndReturn";
 import { expressifyFuncBody, LoopReplacements } from "./expressify";
 import { ExpressifyCtx, isExpressifyFuncParam } from "./ExpressifyCtx";
 

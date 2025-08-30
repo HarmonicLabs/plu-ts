@@ -3,13 +3,10 @@ import { ITirExpr } from "../ITirExpr";
 import { SourceRange } from "../../../../ast/Source/SourceRange";
 import { TirExpr } from "../TirExpr";
 import { ITirLitObjExpr } from "./TirLitObjExpr";
-import { TirType } from "../../types/TirType";
 import { mergeSortedStrArrInplace } from "../../../../utils/array/mergeSortedStrArrInplace";
-import { isObject } from "util";
 import { IRTerm, IRConstr } from "../../../../IR";
 import { data_t } from "../../program/stdScope/stdScope";
 import { TirAliasType } from "../../types/TirAliasType";
-import { TirSopOptT, TirFuncT, TirPairDataT, TirListT, TirDataOptT } from "../../types/TirNativeType";
 import { TirDataStructType, TirSoPStructType } from "../../types/TirStructType";
 import { TirTypeParam } from "../../types/TirTypeParam";
 import { getUnaliased } from "../../types/utils/getUnaliased";
@@ -20,6 +17,12 @@ import { TirLitArrExpr } from "./TirLitArrExpr";
 import { TirLitIntExpr } from "./TirLitIntExpr";
 import { NamedExpr } from "../utils/NamedExpr";
 import { TirNativeFunc } from "../TirNativeFunc";
+import { isObject } from "@harmoniclabs/obj-utils";
+import { TirPairDataT } from "../../types/TirNativeType";
+import { TirFuncT } from "../../types/TirNativeType/native/function";
+import { TirListT } from "../../types/TirNativeType/native/list";
+import { TirDataOptT } from "../../types/TirNativeType/native/Optional/data";
+import { TirSopOptT } from "../../types/TirNativeType/native/Optional/sop";
 
 export class TirLitNamedObjExpr
     implements ITirExpr, ITirLitObjExpr

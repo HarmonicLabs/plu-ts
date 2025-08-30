@@ -1,5 +1,7 @@
 import { TirAliasType } from "../../../tir/types/TirAliasType";
-import { TirDataOptT, TirFuncT, TirVoidT } from "../../../tir/types/TirNativeType";
+import { TirFuncT } from "../../../tir/types/TirNativeType/native/function";
+import { TirDataOptT } from "../../../tir/types/TirNativeType/native/Optional/data";
+import { TirVoidT } from "../../../tir/types/TirNativeType/native/void";
 import { TirDataStructType } from "../../../tir/types/TirStructType";
 import { TirType } from "../../../tir/types/TirType";
 import { TirTypeParam } from "../../../tir/types/TirTypeParam";

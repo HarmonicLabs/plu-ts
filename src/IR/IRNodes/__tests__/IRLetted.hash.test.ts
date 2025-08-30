@@ -1,6 +1,5 @@
 import { toHex } from "@harmoniclabs/uint8array-utils";
 import { IRApp, IRFunc, IRHoisted, IRNative } from "..";
-import { int } from "../../../type_system";
 import { IRTerm } from "../../IRTerm";
 import { IRConst } from "../IRConst";
 import { IRLetted, getNormalizedLettedArgs } from "../IRLetted";
@@ -36,7 +35,7 @@ describe("IRLetted.hash", () => {
 
     test("different dbn doesn't apply if letted value doesn't include vars", () => {
 
-        const value = new IRConst( int, 2 );
+        const value = IRConst.int( 2 );
 
         const a = new IRLetted( 1, value.clone() );
         const b = new IRLetted( 2, value.clone() );

@@ -17,11 +17,22 @@ import { IRConst, IRFunc, IRHoisted, IRVar } from "..";
 import { _ir_apps } from "../../tree_utils/_ir_apps";
 import { IRTerm } from "../../IRTerm";
 import { getUnaliased } from "../../../compiler/tir/types/utils/getUnaliased";
-import { TirIntT, TirBytesT, TirStringT, TirDataT, TirDataOptT, TirBoolT, TirListT, TirLinearMapT, TirPairDataT, TirUnConstrDataResultT, TirVoidT, TirSopOptT, TirFuncT } from "../../../compiler/tir/types/TirNativeType";
 import { TirDataStructType, TirSoPStructType } from "../../../compiler/tir/types/TirStructType";
 import { TirAliasType } from "../../../compiler/tir/types/TirAliasType";
 import { getListTypeArg } from "../../../compiler/tir/types/utils/getListTypeArg";
 import { TirTypeParam } from "../../../compiler/tir/types/TirTypeParam";
+import { TirPairDataT, TirUnConstrDataResultT } from "../../../compiler/tir/types/TirNativeType";
+import { TirBoolT } from "../../../compiler/tir/types/TirNativeType/native/bool";
+import { TirBytesT } from "../../../compiler/tir/types/TirNativeType/native/bytes";
+import { TirDataT } from "../../../compiler/tir/types/TirNativeType/native/data";
+import { TirFuncT } from "../../../compiler/tir/types/TirNativeType/native/function";
+import { TirIntT } from "../../../compiler/tir/types/TirNativeType/native/int";
+import { TirLinearMapT } from "../../../compiler/tir/types/TirNativeType/native/linearMap";
+import { TirListT } from "../../../compiler/tir/types/TirNativeType/native/list";
+import { TirDataOptT } from "../../../compiler/tir/types/TirNativeType/native/Optional/data";
+import { TirSopOptT } from "../../../compiler/tir/types/TirNativeType/native/Optional/sop";
+import { TirStringT } from "../../../compiler/tir/types/TirNativeType/native/string";
+import { TirVoidT } from "../../../compiler/tir/types/TirNativeType/native/void";
 
 /**
  * we might not need all the hashes

@@ -1,4 +1,4 @@
-import { TirFuncT } from "./TirNativeType";
+import { TirFuncT } from "./TirNativeType/native/function";
 
 /**
  * represents interface declaraions

@@ -8,7 +8,6 @@ import { TirPropAccessExpr } from "../../../tir/expressions/TirPropAccessExpr";
 import { TirVariableAccessExpr } from "../../../tir/expressions/TirVariableAccessExpr";
 import { TirNamedDeconstructVarDecl } from "../../../tir/statements/TirVarDecl/TirNamedDeconstructVarDecl";
 import { TirSimpleVarDecl } from "../../../tir/statements/TirVarDecl/TirSimpleVarDecl";
-import { TirSopOptT } from "../../../tir/types/TirNativeType";
 import { TirType } from "../../../tir/types/TirType";
 import { getOptTypeArg } from "../../../tir/types/utils/getOptTypeArg";
 import { AstCompilationCtx } from "../../AstCompilationCtx";
@@ -17,6 +16,7 @@ import { _compileExpr } from "./_compileExpr";
 import { _compileNonNullExpr } from "./_compileNonNullExpr";
 import { TirLitNamedObjExpr } from "../../../tir/expressions/litteral/TirLitNamedObjExpr";
 import { Identifier } from "../../../../ast/nodes/common/Identifier";
+import { TirSopOptT } from "../../../tir/types/TirNativeType/native/Optional/sop";
 
 export function _compilePropAccessExpr(
     ctx: AstCompilationCtx,

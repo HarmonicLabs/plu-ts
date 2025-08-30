@@ -1,4 +1,3 @@
-import { int } from "../../../type_system/types";
 import { IRApp } from "../IRApp";
 import { IRConst } from "../IRConst";
 import { IRDelayed } from "../IRDelayed";
@@ -18,10 +17,10 @@ describe("getLettedTerms", () => {
                         0,
                         new IRApp(
                             new IRNative( IRNativeTag.addInteger ),
-                            new IRConst( int, 2 )
+                            IRConst.int( 2 )
                         )
                     ),
-                    new IRConst( int, 2 )
+                    IRConst.int( 2 )
                 )
             )
         );

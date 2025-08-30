@@ -15,13 +15,24 @@ import { hashIrData, IRHash, isIRHash } from "../IRHash";
 import { IRNodeKind } from "../IRNodeKind";
 import { TirType } from "../../compiler/tir/types/TirType";
 import { bool_t, bytes_t, data_t, int_t, string_t, void_t } from "../../compiler/tir/program/stdScope/stdScope";
-import { TirBoolT, TirBytesT, TirDataOptT, TirDataT, TirFuncT, TirIntT, TirLinearMapT, TirListT, TirPairDataT, TirSopOptT, TirStringT, TirUnConstrDataResultT, TirVoidT } from "../../compiler/tir/types/TirNativeType";
 import { getUnaliased } from "../../compiler/tir/types/utils/getUnaliased";
 import { TirAliasType } from "../../compiler/tir/types/TirAliasType";
 import { TirDataStructType, TirSoPStructType } from "../../compiler/tir/types/TirStructType";
 import { getListTypeArg } from "../../compiler/tir/types/utils/getListTypeArg";
 import { TirTypeParam } from "../../compiler/tir/types/TirTypeParam";
 import { constT, ConstType, UPLCConst } from "@harmoniclabs/uplc";
+import { TirPairDataT, TirUnConstrDataResultT } from "../../compiler/tir/types/TirNativeType";
+import { TirBoolT } from "../../compiler/tir/types/TirNativeType/native/bool";
+import { TirBytesT } from "../../compiler/tir/types/TirNativeType/native/bytes";
+import { TirDataT } from "../../compiler/tir/types/TirNativeType/native/data";
+import { TirFuncT } from "../../compiler/tir/types/TirNativeType/native/function";
+import { TirIntT } from "../../compiler/tir/types/TirNativeType/native/int";
+import { TirLinearMapT } from "../../compiler/tir/types/TirNativeType/native/linearMap";
+import { TirListT } from "../../compiler/tir/types/TirNativeType/native/list";
+import { TirDataOptT } from "../../compiler/tir/types/TirNativeType/native/Optional/data";
+import { TirSopOptT } from "../../compiler/tir/types/TirNativeType/native/Optional/sop";
+import { TirStringT } from "../../compiler/tir/types/TirNativeType/native/string";
+import { TirVoidT } from "../../compiler/tir/types/TirNativeType/native/void";
 
 export interface IRConstPair {
     fst: IRConstValue;

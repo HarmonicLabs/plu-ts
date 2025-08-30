@@ -1,6 +1,5 @@
 import { IRApp } from "../IRNodes/IRApp";
 import { IRLetted } from "../IRNodes/IRLetted";
-import { IRNative } from "../IRNodes/IRNative";
 import { nativeTagToString } from "../IRNodes/IRNative/IRNativeTag";
 import { IRTerm } from "../IRTerm";
 import { IRHoisted, getHoistedTerms } from "../IRNodes/IRHoisted";
@@ -17,6 +16,7 @@ import { equalIrHash, IRHash, irHashToHex } from "../IRHash";
 import { stringify } from "../../utils/stringify";
 import { IRRecursive } from "../IRNodes/IRRecursive";
 import { IRSelfCall } from "../IRNodes/IRSelfCall";
+import { IRNative } from "../IRNodes/IRNative";
 
 const vars = "abcdefghilmopqrstuvzwxyjkABCDEFGHILJMNOPQRSTUVZWXYJK".split('');
 

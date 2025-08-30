@@ -1,23 +1,24 @@
 import { SourceRange } from "../../../ast/Source/SourceRange";
 import { IRApp, IRConst, IRConstr, IRDelayed, IRForced, IRFunc, IRHoisted, IRNative, IRTerm, IRVar } from "../../../IR";
-import { IRNativeTag } from "../../../IR/IRNodes/IRNative/IRNativeTag";
 import { _ir_apps } from "../../../IR/tree_utils/_ir_apps";
 import { _ir_let } from "../../../IR/tree_utils/_ir_let";
-import { bool_t, data_t, void_t } from "../program/stdScope/stdScope";
-import { TirAliasType } from "../types/TirAliasType";
-import { TirBoolT, TirBytesT, TirDataOptT, TirDataT, TirFuncT, TirIntT, TirLinearMapT, TirListT, TirSopOptT, TirStringT, TirVoidT } from "../types/TirNativeType";
+import { TirBoolT } from "../types/TirNativeType/native/bool";
+import { TirBytesT } from "../types/TirNativeType/native/bytes";
+import { TirDataT } from "../types/TirNativeType/native/data";
+import { TirIntT } from "../types/TirNativeType/native/int";
+import { TirLinearMapT } from "../types/TirNativeType/native/linearMap";
+import { TirListT } from "../types/TirNativeType/native/list";
+import { TirDataOptT } from "../types/TirNativeType/native/Optional/data";
+import { TirSopOptT } from "../types/TirNativeType/native/Optional/sop";
+import { TirStringT } from "../types/TirNativeType/native/string";
+import { TirVoidT } from "../types/TirNativeType/native/void";
 import { TirDataStructType, TirSoPStructType } from "../types/TirStructType";
 import { isTirType, TirType } from "../types/TirType";
-import { canAssignTo } from "../types/utils/canAssignTo";
-import { canCastToData } from "../types/utils/canCastTo";
 import { getListTypeArg } from "../types/utils/getListTypeArg";
 import { getOptTypeArg } from "../types/utils/getOptTypeArg";
 import { getUnaliased } from "../types/utils/getUnaliased";
 import { ITirExpr } from "./ITirExpr";
 import { TirExpr } from "./TirExpr";
-import { TirFuncExpr } from "./TirFuncExpr";
-import { TirInlineClosedIR } from "./TirInlineClosedIR";
-import { TirNativeFunc } from "./TirNativeFunc";
 import { ToIRTermCtx } from "./ToIRTermCtx";
 
 export class TirFromDataExpr

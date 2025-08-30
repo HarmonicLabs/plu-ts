@@ -6,7 +6,9 @@ import { MatchStmt, MatchStmtCase } from "../../../../ast/nodes/statements/Match
 import { DiagnosticCode } from "../../../../diagnostics/diagnosticMessages.generated";
 import { TirMatchStmt, TirMatchStmtCase, TirMatchStmtWildcardCase } from "../../../tir/statements/TirMatchStmt";
 import { TirNamedDeconstructVarDecl } from "../../../tir/statements/TirVarDecl/TirNamedDeconstructVarDecl";
-import { TirDataT, TirListT, TirLinearMapT, TirSopOptT, TirDataOptT } from "../../../tir/types/TirNativeType";
+import { TirDataT } from "../../../tir/types/TirNativeType/native/data";
+import { TirDataOptT } from "../../../tir/types/TirNativeType/native/Optional/data";
+import { TirSopOptT } from "../../../tir/types/TirNativeType/native/Optional/sop";
 import { isTirStructType, TirDataStructType, TirSoPStructType } from "../../../tir/types/TirStructType";
 import { getDeconstructableType, DeconstructableTirType } from "../../../tir/types/utils/getDeconstructableType";
 import { AstCompilationCtx } from "../../AstCompilationCtx";

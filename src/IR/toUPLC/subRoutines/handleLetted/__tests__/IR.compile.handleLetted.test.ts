@@ -1,5 +1,4 @@
 import { toHex } from "@harmoniclabs/uint8array-utils";
-import { data, int } from "../../../../../type_system/types";
 import { IRApp } from "../../../../IRNodes/IRApp";
 import { IRConst } from "../../../../IRNodes/IRConst";
 import { IRDelayed } from "../../../../IRNodes/IRDelayed";
@@ -17,9 +16,8 @@ import { compileIRToUPLC } from "../../../compileIRToUPLC";
 import { showUPLC } from "@harmoniclabs/uplc";
 import { DataI } from "@harmoniclabs/plutus-data";
 import { Machine } from "@harmoniclabs/plutus-machine";
-import { pInt } from "../../../../../pluts/lib/std/int/pInt";
-import { irHashToHex } from "../../../../IRHash";
 import { debugOptions, productionOptions } from "../../../CompilerOptions";
+import { data_t } from "../../../../../compiler/tir/program/stdScope/stdScope";
 
 describe("handleLettedAndReturnRoot", () => {
 
@@ -32,10 +30,10 @@ describe("handleLettedAndReturnRoot", () => {
                         0,
                         new IRApp(
                             new IRNative( IRNativeTag.addInteger ),
-                            new IRConst( int, 2 )
+                            IRConst.int( 2 )
                         )
                     ),
-                    new IRConst( int, 2 )
+                    IRConst.int( 2 )
                 )
             )
         );
@@ -51,9 +49,9 @@ describe("handleLettedAndReturnRoot", () => {
                 new IRApp(
                     new IRApp(
                         new IRNative( IRNativeTag.addInteger ),
-                        new IRConst( int, 2 )
+                        IRConst.int( 2 )
                     ),
-                    new IRConst( int, 2 )
+                    IRConst.int( 2 )
                 )
             )
         );
@@ -73,7 +71,7 @@ describe("handleLettedAndReturnRoot", () => {
             0,
             new IRApp(
                 new IRNative( IRNativeTag.addInteger ),
-                new IRConst( int, 2 )
+                IRConst.int( 2 )
             )
         );
 
@@ -83,7 +81,7 @@ describe("handleLettedAndReturnRoot", () => {
                     letted,
                     new IRApp(
                         letted.clone(),
-                        new IRConst( int, 2 )
+                        IRConst.int( 2 )
                     )
                 )
             )
@@ -104,7 +102,7 @@ describe("handleLettedAndReturnRoot", () => {
                         new IRHoisted(
                             letted.clone().value
                         ),
-                        new IRConst( int, 2 )
+                        IRConst.int( 2 )
                     )
                 )
             )
@@ -125,7 +123,7 @@ describe("handleLettedAndReturnRoot", () => {
         const letted = new IRLetted( 0,
             new IRApp(
                 new IRNative( IRNativeTag.addInteger ),
-                new IRConst( int, 2 )
+                IRConst.int( 2 )
             )
         );
 
@@ -140,9 +138,9 @@ describe("handleLettedAndReturnRoot", () => {
                     new IRApp(
                         new IRApp(
                             new IRFunc( 1, cloned ), // function to increment dbn
-                            new IRConst( int, 0 ) // useless argument
+                            IRConst.int( 0 ) // useless argument
                         ),
-                        new IRConst( int, 2 )
+                        IRConst.int( 2 )
                     )
                 )
             )
@@ -169,9 +167,9 @@ describe("handleLettedAndReturnRoot", () => {
                             new IRApp(
                                 new IRApp(
                                     new IRFunc( 1, new IRVar(1) ), // useless function
-                                    new IRConst( int, 0 )
+                                    IRConst.int( 0 )
                                 ),
-                                new IRConst( int, 2 )
+                                IRConst.int( 2 )
                             )
                         )
                     )
@@ -194,7 +192,7 @@ describe("handleLettedAndReturnRoot", () => {
             0,
             new IRApp(
                 new IRNative( IRNativeTag.addInteger ),
-                new IRConst( int, 2 )
+                IRConst.int( 2 )
             )
         );
 
@@ -207,7 +205,7 @@ describe("handleLettedAndReturnRoot", () => {
                 new IRNative( IRNativeTag.addInteger ),
                 new IRApp(
                     dep,
-                    new IRConst( int, 2 )
+                    IRConst.int( 2 )
                 )
             )
         );
@@ -219,7 +217,7 @@ describe("handleLettedAndReturnRoot", () => {
             new IRDelayed(
                 new IRApp(
                     lettedWithDep,
-                    new IRConst( int, 2 )
+                    IRConst.int( 2 )
                 )
             )
         );
@@ -241,12 +239,12 @@ describe("handleLettedAndReturnRoot", () => {
                         new IRApp(
                             new IRApp(
                                 new IRNative( IRNativeTag.addInteger ),
-                                new IRConst( int, 2 )
+                                IRConst.int( 2 )
                             ),
-                            new IRConst( int, 2 )
+                            IRConst.int( 2 )
                         )
                     ),
-                    new IRConst( int, 2 )
+                    IRConst.int( 2 )
                 )
             )
         );
@@ -268,7 +266,7 @@ describe("handleLettedAndReturnRoot", () => {
             0,
             new IRApp(
                 new IRNative( IRNativeTag.addInteger ),
-                new IRConst( int, 2 )
+                IRConst.int( 2 )
             )
         );
 
@@ -279,7 +277,7 @@ describe("handleLettedAndReturnRoot", () => {
                 new IRNative( IRNativeTag.addInteger ),
                 new IRApp(
                     dep,
-                    new IRConst( int, 2 )
+                    IRConst.int( 2 )
                 )
             )
         );
@@ -290,7 +288,7 @@ describe("handleLettedAndReturnRoot", () => {
                     lettedWithDep,
                     new IRApp(
                         dep.clone(), // clone is essential (we override `parent` otherwhise)
-                        new IRConst( int, 2 )
+                        IRConst.int( 2 )
                     )
                 )
             )
@@ -309,18 +307,18 @@ describe("handleLettedAndReturnRoot", () => {
                                 new IRNative( IRNativeTag.addInteger ),
                                 new IRApp(
                                     new IRVar(0),
-                                    new IRConst( int, 2 )
+                                    IRConst.int( 2 )
                                 )
                             ),
                             new IRApp(
                                 new IRVar( 0 ),
-                                new IRConst( int, 2 )
+                                IRConst.int( 2 )
                             )
                         )
                     ),
                     new IRApp(
                         new IRNative( IRNativeTag.addInteger ),
-                        new IRConst( int, 2 )
+                        IRConst.int( 2 )
                     )
                 )
             )
@@ -336,7 +334,7 @@ describe("handleLettedAndReturnRoot", () => {
 
     test("vars outside and inside", () => {
 
-        const letted = new IRLetted( 0, new IRConst( int, 2 ) );
+        const letted = new IRLetted( 0, IRConst.int( 2 ) );
         
         const root = new IRFunc( 2, // a, b
             new IRApp(
@@ -515,7 +513,7 @@ describe("handleLettedAndReturnRoot", () => {
 
         const appliedEdgeCase = new IRApp(
             edgeCase.clone(),
-            IRConst.listOf( data )([
+            IRConst.listOf( data_t )([
                 new DataI( 2 ),
                 new DataI( 3 )
             ])
@@ -531,7 +529,7 @@ describe("handleLettedAndReturnRoot", () => {
             )
         ).toEqual(
             Machine.evalSimple(
-                pInt( 7 )
+                IRConst.int( 7 )
             )
         );
 

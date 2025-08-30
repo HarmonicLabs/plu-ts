@@ -6,13 +6,13 @@ import { concatUint8Arr } from "../utils/concatUint8Arr";
 import { IRParentTerm, isIRParentTerm } from "../utils/isIRParentTerm";
 import { BaseIRMetadata } from "./BaseIRMetadata";
 import { mapArrayLike } from "./utils/mapArrayLike";
-import { isIRTerm } from "../utils";
 import { makeArrayLikeProxy } from "./utils/makeArrayLikeProxy";
 import { MutArrayLike } from "../utils/MutArrayLike";
 import { equalIrHash, hashIrData, IRHash, isIRHash } from "../IRHash";
 import { _modifyChildFromTo } from "../toUPLC/_internal/_modifyChildFromTo";
 import { shallowEqualIRTermHash } from "../utils/equalIRTerm";
 import { IRNodeKind } from "../IRNodeKind";
+import { isIRTerm } from "../utils/isIRTerm";
 
 export interface IRCaseMeta extends BaseIRMetadata {}
 

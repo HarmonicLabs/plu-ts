@@ -2,7 +2,7 @@ import { CallExpr } from "../../../../ast/nodes/expr/functions/CallExpr";
 import { DiagnosticCode } from "../../../../diagnostics/diagnosticMessages.generated";
 import { TirCallExpr } from "../../../tir/expressions/TirCallExpr";
 import { TirExpr } from "../../../tir/expressions/TirExpr";
-import { TirFuncT } from "../../../tir/types/TirNativeType";
+import { TirFuncT } from "../../../tir/types/TirNativeType/native/function";
 import { TirType } from "../../../tir/types/TirType";
 import { canAssignTo } from "../../../tir/types/utils/canAssignTo";
 import { AstCompilationCtx } from "../../AstCompilationCtx";

@@ -6,11 +6,11 @@ import { IRHoisted } from "../../IRNodes/IRHoisted";
 import { IRLetted } from "../../IRNodes/IRLetted";
 import { IRTerm } from "../../IRTerm";
 import { IRParentTerm } from "../../utils/isIRParentTerm";
-import { isIRTerm, prettyIRJsonStr } from "../../utils";
 import { IRConstr } from "../../IRNodes/IRConstr";
 import { IRCase } from "../../IRNodes/IRCase";
 import { equalIrHash, IRHash, irHashToHex, isIRHash } from "../../IRHash";
 import { IRRecursive } from "../../IRNodes/IRRecursive";
+import { isIRTerm } from "../../utils/isIRTerm";
 
 /**
  * 
@@ -77,11 +77,6 @@ export function _modifyChildFromTo(
         }
         else
         {
-            console.log(
-                "currentChild:", prettyIRJsonStr( currentChild as IRTerm, 2, { hoisted: false } ),
-                "\nfn :", prettyIRJsonStr( parent.fn , 2, { hoisted: false } ),
-                "\narg:", prettyIRJsonStr( parent.arg, 2, { hoisted: false } ),
-            );
             throw new Error(
                 "unknown 'IRApp' child to modify; given child to modify hash: " +
                 irHashToHex( currChildHash() ) +

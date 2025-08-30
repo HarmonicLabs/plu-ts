@@ -95,7 +95,8 @@ contract MyContract {
             }),
         );
     
-        const diagnostics = await complier.compileFile( fileName );
+        const source = await complier.compileFile( fileName );
+        const diagnostics = complier.diagnostics;
 
         // console.log( diagnostics );
         expect( diagnostics.length ).toBe( 0 );

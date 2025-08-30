@@ -1,4 +1,3 @@
-import { int } from "../../../../../type_system"
 import { IRConst } from "../../../../IRNodes/IRConst"
 import { IRDelayed } from "../../../../IRNodes/IRDelayed"
 import { IRForced } from "../../../../IRNodes/IRForced"
@@ -15,7 +14,7 @@ describe("_getMinUnboundDbn", () => {
             new IRDelayed(
                 new IRLetted(
                     0,
-                    new IRConst( int, 2 )
+                    IRConst.int( 2 )
                 )
             )
         );

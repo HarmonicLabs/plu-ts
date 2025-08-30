@@ -1,4 +1,3 @@
-import { int } from "../../../type_system/types";
 import { IRApp } from "../IRApp";
 import { IRConst } from "../IRConst";
 import { IRLetted, getLettedTerms, getSortedLettedSet, jsonLettedSetEntry } from "../IRLetted";
@@ -13,7 +12,7 @@ describe("IRLetted.dependencies", () => {
             0,
             new IRApp(
                 new IRNative( IRNativeTag.addInteger ),
-                new IRConst( int, 2 )
+                IRConst.int( 2 )
             )
         );
 
@@ -24,7 +23,7 @@ describe("IRLetted.dependencies", () => {
                 new IRNative( IRNativeTag.addInteger ),
                 new IRApp(
                     dep,
-                    new IRConst( int, 2 )
+                    IRConst.int( 2 )
                 )
             )
         );
@@ -39,7 +38,7 @@ describe("IRLetted.dependencies", () => {
             0,
             new IRApp(
                 new IRNative( IRNativeTag.addInteger ),
-                new IRConst( int, 2 )
+                IRConst.int( 2 )
             )
         );
 
@@ -50,7 +49,7 @@ describe("IRLetted.dependencies", () => {
                 new IRNative( IRNativeTag.addInteger ),
                 new IRApp(
                     dep,
-                    new IRConst( int, 2 )
+                    IRConst.int( 2 )
                 )
             )
         );

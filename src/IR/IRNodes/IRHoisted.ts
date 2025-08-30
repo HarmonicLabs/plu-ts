@@ -1,15 +1,13 @@
 import { IRDelayed } from "./IRDelayed";
 import { IRMetadata } from "../interfaces/IRMetadata";
-import { prettyIRJsonStr } from "../utils/showIR";
 import { Cloneable } from "@harmoniclabs/cbor/dist/utils/Cloneable";
-import { freezeAll, defineProperty } from "@harmoniclabs/obj-utils";
+import { freezeAll } from "@harmoniclabs/obj-utils";
 import { BasePlutsError } from "../../utils/BasePlutsError";
 import { ToJson } from "../../utils/ToJson";
 import { IRTerm } from "../IRTerm";
 import { IHash, IIRParent } from "../interfaces";
 import { concatUint8Arr } from "../utils/concatUint8Arr";
 import { isClosedIRTerm } from "../utils/isClosedIRTerm";
-import { isIRTerm } from "../utils/isIRTerm";
 import { IRApp } from "./IRApp";
 import { IRForced } from "./IRForced";
 import { IRFunc } from "./IRFunc";
@@ -64,11 +62,6 @@ export class IRHoisted
 
         if( !isClosedIRTerm( hoisted ) )
         {
-            console.log(
-                prettyIRJsonStr(
-                    hoisted
-                )
-            )
             throw new BasePlutsError(
                 "only closed terms can be hoisted"
             );

@@ -12,7 +12,7 @@ import { hashIrData, IRHash, isIRHash } from "../IRHash";
 import { IRNodeKind } from "../IRNodeKind";
 import { IRRecursive } from "./IRRecursive";
 import { IRTerm } from "../IRTerm";
-import { IRFunc } from ".";
+import { IRFunc } from "./IRFunc";
 
 export interface IRSelfCallMetadata extends BaseIRMetadata {}
 

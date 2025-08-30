@@ -9,7 +9,6 @@ import { IRConstr, IRTerm } from "../../../../IR";
 import { isObject } from "@harmoniclabs/obj-utils";
 import { TirToDataExpr } from "../TirToDataExpr";
 import { getUnaliased } from "../../types/utils/getUnaliased";
-import { TirBoolT, TirBytesT, TirDataT, TirFuncT, TirIntT, TirLinearMapT, TirListT, TirPairDataT, TirSopOptT, TirStringT, TirUnConstrDataResultT, TirVoidT } from "../../types/TirNativeType";
 import { data_t } from "../../program/stdScope/stdScope";
 import { TirAliasType } from "../../types/TirAliasType";
 import { TirTypeParam } from "../../types/TirTypeParam";
@@ -18,6 +17,10 @@ import { TirCallExpr } from "../TirCallExpr";
 import { TirLitIntExpr } from "./TirLitIntExpr";
 import { NamedExpr } from "../utils/NamedExpr";
 import { TirNativeFunc } from "../TirNativeFunc";
+import { TirPairDataT } from "../../types/TirNativeType";
+import { TirFuncT } from "../../types/TirNativeType/native/function";
+import { TirListT } from "../../types/TirNativeType/native/list";
+import { TirSopOptT } from "../../types/TirNativeType/native/Optional/sop";
 
 export interface ITirLitObjExpr {
     fieldNames: Identifier[];

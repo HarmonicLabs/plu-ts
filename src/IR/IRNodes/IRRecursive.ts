@@ -2,10 +2,10 @@ import { BasePlutsError } from "../../utils/BasePlutsError";
 import { IRHash, isIRHash, hashIrData } from "../IRHash";
 import { IRNodeKind } from "../IRNodeKind";
 import { IRTerm } from "../IRTerm";
-import { isIRTerm } from "../utils";
 import { concatUint8Arr } from "../utils/concatUint8Arr";
 import { shallowEqualIRTermHash } from "../utils/equalIRTerm";
 import { IRParentTerm, isIRParentTerm } from "../utils/isIRParentTerm";
+import { isIRTerm } from "../utils/isIRTerm";
 import { BaseIRMetadata } from "./BaseIRMetadata";
 
 export interface IRRecursiveMetadata extends BaseIRMetadata {}

@@ -1,9 +1,8 @@
 import { AstFuncType } from "../../../../ast/nodes/types/AstNativeTypeExpr";
 import { AstTypeExpr } from "../../../../ast/nodes/types/AstTypeExpr";
-import { TirFuncT } from "../../../tir/types/TirNativeType";
 import { isTirType, TirType } from "../../../tir/types/TirType";
 import { AstCompilationCtx } from "../../AstCompilationCtx";
-import { TirFuncSigTree, TirFuncSigTreeElem, TirFuncSigTreeLeaf, TirFuncSigTreeNode, TirFuncSigTreeRoot } from "./TirFuncSigTree";
+import { TirFuncSigTreeElem, TirFuncSigTreeLeaf, TirFuncSigTreeNode, TirFuncSigTreeRoot } from "./TirFuncSigTree";
 
 export function getTirFuncSigTree(
     signature: AstFuncType,

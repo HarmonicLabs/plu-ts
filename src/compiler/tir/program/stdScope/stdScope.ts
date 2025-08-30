@@ -1,10 +1,19 @@
-import { TirBoolT, TirBytesT, TirDataT, TirLinearMapT, TirListT, TirIntT, TirVoidT, TirStringT, TirDataOptT, TirSopOptT } from "../../types/TirNativeType";
-import { AstFuncName, AstScope, TirFuncName } from "../../../AstCompiler/scope/AstScope";
-import { TirNativeType } from "../../types/TirNativeType";
+import { AstFuncName, TirFuncName } from "../../../AstCompiler/scope/AstScope";
+import { TirNativeType } from "../../types/TirNativeType/TirNativeType";
 import { TirAliasType } from "../../types/TirAliasType";
 import { TirDataStructType, TirSoPStructType, TirStructConstr, TirStructField, TirStructType } from "../../types/TirStructType";
 import { TypedProgram } from "../TypedProgram";
 import { TirType } from "../../types/TirType";
+import { TirBoolT } from "../../types/TirNativeType/native/bool";
+import { TirBytesT } from "../../types/TirNativeType/native/bytes";
+import { TirDataT } from "../../types/TirNativeType/native/data";
+import { TirIntT } from "../../types/TirNativeType/native/int";
+import { TirLinearMapT } from "../../types/TirNativeType/native/linearMap";
+import { TirListT } from "../../types/TirNativeType/native/list";
+import { TirDataOptT } from "../../types/TirNativeType/native/Optional/data";
+import { TirSopOptT } from "../../types/TirNativeType/native/Optional/sop";
+import { TirStringT } from "../../types/TirNativeType/native/string";
+import { TirVoidT } from "../../types/TirNativeType/native/void";
 
 export const void_t = new TirVoidT();
 export const int_t = new TirIntT();

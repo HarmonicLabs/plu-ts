@@ -1,7 +1,7 @@
 import { ElemAccessExpr } from "../../../../ast/nodes/expr/ElemAccessExpr";
 import { DiagnosticCode } from "../../../../diagnostics/diagnosticMessages.generated";
 import { TirElemAccessExpr } from "../../../tir/expressions/TirElemAccessExpr";
-import { TirListT } from "../../../tir/types/TirNativeType";
+import { TirListT } from "../../../tir/types/TirNativeType/native/list";
 import { TirType } from "../../../tir/types/TirType";
 import { canAssignTo } from "../../../tir/types/utils/canAssignTo";
 import { getListTypeArg } from "../../../tir/types/utils/getListTypeArg";

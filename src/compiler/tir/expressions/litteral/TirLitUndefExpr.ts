@@ -2,8 +2,9 @@ import { ITirExpr } from "../ITirExpr";
 import { SourceRange } from "../../../../ast/Source/SourceRange";
 import { IRConst, IRConstr, IRTerm } from "../../../../IR";
 import { ToIRTermCtx } from "../ToIRTermCtx";
-import { TirDataOptT, TirSopOptT } from "../../types/TirNativeType";
 import { DataConstr } from "@harmoniclabs/plutus-data";
+import { TirDataOptT } from "../../types/TirNativeType/native/Optional/data";
+import { TirSopOptT } from "../../types/TirNativeType/native/Optional/sop";
 
 export class TirLitUndefExpr implements ITirExpr
 {

@@ -1,5 +1,5 @@
 import { TirAliasType } from "../TirAliasType";
-import { TirListT } from "../TirNativeType";
+import { TirListT } from "../TirNativeType/native/list";
 import { TirType } from "../TirType";
 
 export function getListTypeArg( list_t: TirType ): TirType | undefined

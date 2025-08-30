@@ -1,5 +1,4 @@
 import { TirAliasType } from "../TirAliasType";
-import { TirListT } from "../TirNativeType";
 import { isTirType, TirType } from "../TirType";
 
 export function getUnaliased( t: TirType ): Exclude<TirType, TirAliasType<any>>

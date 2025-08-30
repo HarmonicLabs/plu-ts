@@ -15,7 +15,6 @@ import { IRDelayed } from "./IRDelayed";
 import { IRForced } from "./IRForced";
 import { IRFunc } from "./IRFunc";
 import { IRHoisted } from "./IRHoisted";
-import { prettyIR, prettyIRJsonStr } from "../utils";
 import { IRParentTerm, isIRParentTerm } from "../utils/isIRParentTerm";
 import { _modifyChildFromTo } from "../toUPLC/_internal/_modifyChildFromTo";
 import { BaseIRMetadata } from "./BaseIRMetadata";
@@ -27,7 +26,6 @@ import { shallowEqualIRTermHash } from "../utils/equalIRTerm";
 import { IRNodeKind } from "../IRNodeKind";
 import { IRRecursive } from "./IRRecursive";
 import { IRSelfCall } from "./IRSelfCall";
-import { fromHex } from "@harmoniclabs/uint8array-utils";
 
 
 export type LettedSetEntry = {
@@ -48,7 +46,7 @@ export function expandedJsonLettedSetEntry( entry: LettedSetEntry )
 {
     return {
         letted: irHashToHex( entry.letted.hash ),
-        letted_value: prettyIR( entry.letted.value ).text.split("\n"),
+        // letted_value: prettyIR( entry.letted.value ).text.split("\n"),
         nReferences: entry.nReferences
     }
 }

@@ -9,7 +9,7 @@ import { TirFuncExpr } from "../../../tir/expressions/TirFuncExpr";
 import { TirVariableAccessExpr } from "../../../tir/expressions/TirVariableAccessExpr";
 import { TirStmt } from "../../../tir/statements/TirStmt";
 import { TirSimpleVarDecl } from "../../../tir/statements/TirVarDecl/TirSimpleVarDecl";
-import { TirFuncT } from "../../../tir/types/TirNativeType";
+import { TirFuncT } from "../../../tir/types/TirNativeType/native/function";
 import { TirType } from "../../../tir/types/TirType";
 import { TirTypeParam } from "../../../tir/types/TirTypeParam";
 import { getUnaliased } from "../../../tir/types/utils/getUnaliased";

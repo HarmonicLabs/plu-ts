@@ -2,7 +2,10 @@ import { AstNamedTypeExpr } from "../../../../ast/nodes/types/AstNamedTypeExpr";
 import { AstVoidType, AstBooleanType, AstIntType, AstBytesType, AstNativeOptionalType, AstListType, AstLinearMapType, AstFuncType } from "../../../../ast/nodes/types/AstNativeTypeExpr";
 import { AstTypeExpr } from "../../../../ast/nodes/types/AstTypeExpr";
 import { DiagnosticCode } from "../../../../diagnostics/diagnosticMessages.generated";
-import { TirListT, TirLinearMapT, TirDataOptT, TirSopOptT } from "../../../tir/types/TirNativeType";
+import { TirLinearMapT } from "../../../tir/types/TirNativeType/native/linearMap";
+import { TirListT } from "../../../tir/types/TirNativeType/native/list";
+import { TirDataOptT } from "../../../tir/types/TirNativeType/native/Optional/data";
+import { TirSopOptT } from "../../../tir/types/TirNativeType/native/Optional/sop";
 import { TirType } from "../../../tir/types/TirType";
 import { AstCompilationCtx } from "../../AstCompilationCtx";
 

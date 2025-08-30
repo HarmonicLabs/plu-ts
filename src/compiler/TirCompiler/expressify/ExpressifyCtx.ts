@@ -16,11 +16,12 @@ import { TirArrayLikeDeconstr } from "../../tir/statements/TirVarDecl/TirArrayLi
 import { TirNamedDeconstructVarDecl } from "../../tir/statements/TirVarDecl/TirNamedDeconstructVarDecl";
 import { TirSimpleVarDecl } from "../../tir/statements/TirVarDecl/TirSimpleVarDecl";
 import { TirSingleDeconstructVarDecl } from "../../tir/statements/TirVarDecl/TirSingleDeconstructVarDecl";
-import { TirListT, TirUnConstrDataResultT } from "../../tir/types/TirNativeType";
 import { TirDataStructType } from "../../tir/types/TirStructType";
 import { isTirType, TirType } from "../../tir/types/TirType";
 import { getListTypeArg } from "../../tir/types/utils/getListTypeArg";
 import { toNamedDeconstructVarDecl } from "./toNamedDeconstructVarDecl";
+import { TirUnConstrDataResultT } from "../../tir/types/TirNativeType";
+import { TirListT } from "../../tir/types/TirNativeType/native/list";
 
 /**
  * Static Single Assignment (SSA) variable name.

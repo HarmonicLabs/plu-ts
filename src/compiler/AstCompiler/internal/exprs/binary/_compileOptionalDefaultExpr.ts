@@ -8,7 +8,7 @@ import { TirFromDataExpr } from "../../../../tir/expressions/TirFromDataExpr";
 import { TirVariableAccessExpr } from "../../../../tir/expressions/TirVariableAccessExpr";
 import { TirNamedDeconstructVarDecl } from "../../../../tir/statements/TirVarDecl/TirNamedDeconstructVarDecl";
 import { TirSimpleVarDecl } from "../../../../tir/statements/TirVarDecl/TirSimpleVarDecl";
-import { TirSopOptT } from "../../../../tir/types/TirNativeType";
+import { TirSopOptT } from "../../../../tir/types/TirNativeType/native/Optional/sop";
 import { TirType } from "../../../../tir/types/TirType";
 import { canAssignTo } from "../../../../tir/types/utils/canAssignTo";
 import { getOptTypeArg } from "../../../../tir/types/utils/getOptTypeArg";

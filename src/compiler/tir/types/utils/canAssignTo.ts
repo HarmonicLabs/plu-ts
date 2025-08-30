@@ -1,5 +1,16 @@
 import { TirAliasType } from "../TirAliasType";
-import { TirBoolT, TirBytesT, TirDataT, TirIntT, TirLinearMapT, TirListT, TirStringT, TirVoidT, TirFuncT, TirSopOptT, TirDataOptT, TirUnConstrDataResultT, TirPairDataT } from "../TirNativeType";
+import { TirUnConstrDataResultT, TirPairDataT } from "../TirNativeType";
+import { TirBoolT } from "../TirNativeType/native/bool";
+import { TirBytesT } from "../TirNativeType/native/bytes";
+import { TirDataT } from "../TirNativeType/native/data";
+import { TirFuncT } from "../TirNativeType/native/function";
+import { TirIntT } from "../TirNativeType/native/int";
+import { TirLinearMapT } from "../TirNativeType/native/linearMap";
+import { TirListT } from "../TirNativeType/native/list";
+import { TirDataOptT } from "../TirNativeType/native/Optional/data";
+import { TirSopOptT } from "../TirNativeType/native/Optional/sop";
+import { TirStringT } from "../TirNativeType/native/string";
+import { TirVoidT } from "../TirNativeType/native/void";
 import { isTirStructType, TirDataStructType, TirSoPStructType, TirStructConstr, TirStructType } from "../TirStructType";
 import { isTirNamedDestructableType, TirNamedDestructableType, TirType } from "../TirType";
 import { TirTypeParam } from "../TirTypeParam";

@@ -3,13 +3,13 @@ import { ITirExpr } from "./ITirExpr";
 import { TirSimpleVarDecl } from "../statements/TirVarDecl/TirSimpleVarDecl";
 import { TirType } from "../types/TirType";
 import { TirBlockStmt } from "../statements/TirBlockStmt";
-import { TirFuncT } from "../types/TirNativeType";
 import { mergeSortedStrArrInplace } from "../../../utils/array/mergeSortedStrArrInplace";
 import { filterSortedStrArrInplace } from "../../../utils/array/filterSortedStrArrInplace";
 import { IRFunc, IRTerm } from "../../../IR";
 import { ToIRTermCtx } from "./ToIRTermCtx";
 import { IRRecursive } from "../../../IR/IRNodes/IRRecursive";
 import { TirReturnStmt } from "../statements/TirReturnStmt";
+import { TirFuncT } from "../types/TirNativeType/native/function";
 
 export class TirFuncExpr
     implements ITirExpr

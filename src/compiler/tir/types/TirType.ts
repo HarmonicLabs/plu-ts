@@ -1,7 +1,7 @@
 import { isObject } from "@harmoniclabs/obj-utils";
 import { TirAliasType } from "./TirAliasType";
 import { isTirStructType, TirStructType } from "./TirStructType";
-import { isTirNamedDestructableNativeType, isTirNativeType, TirNamedDestructableNativeType, TirNativeType } from "./TirNativeType";
+import { isTirNamedDestructableNativeType, isTirNativeType, TirNamedDestructableNativeType, TirNativeType } from "./TirNativeType/TirNativeType";
 import { TirTypeParam } from "./TirTypeParam";
 import { ConstType } from "@harmoniclabs/uplc";
 

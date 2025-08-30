@@ -1,13 +1,24 @@
 import { Identifier } from "../../../ast/nodes/common/Identifier";
 import { TirAliasType } from "../../tir/types/TirAliasType";
 import { TirInterfaceImpl } from "../../tir/types/TirInterfaceImpl";
-import { TirVoidT, TirBoolT, TirIntT, TirBytesT, TirStringT, TirDataT, TirFuncT, TirListT, TirLinearMapT, isTirOptType, TirSopOptT, TirUnConstrDataResultT, TirPairDataT } from "../../tir/types/TirNativeType";
 import { isTirStructType, TirStructType } from "../../tir/types/TirStructType";
 import { TirType } from "../../tir/types/TirType";
 import { TirTypeParam } from "../../tir/types/TirTypeParam";
 import { int_t, bytes_t, bool_t, string_t } from "../../tir/program/stdScope/stdScope";
 import { AstCompilationCtx } from "../AstCompilationCtx";
 import { AstFuncName, TirFuncName } from "../scope/AstScope";
+import { TirUnConstrDataResultT, TirPairDataT } from "../../tir/types/TirNativeType";
+import { TirBoolT } from "../../tir/types/TirNativeType/native/bool";
+import { TirBytesT } from "../../tir/types/TirNativeType/native/bytes";
+import { TirDataT } from "../../tir/types/TirNativeType/native/data";
+import { TirFuncT } from "../../tir/types/TirNativeType/native/function";
+import { TirIntT } from "../../tir/types/TirNativeType/native/int";
+import { TirLinearMapT } from "../../tir/types/TirNativeType/native/linearMap";
+import { TirListT } from "../../tir/types/TirNativeType/native/list";
+import { isTirOptType } from "../../tir/types/TirNativeType/native/Optional/isTirOptType";
+import { TirSopOptT } from "../../tir/types/TirNativeType/native/Optional/sop";
+import { TirStringT } from "../../tir/types/TirNativeType/native/string";
+import { TirVoidT } from "../../tir/types/TirNativeType/native/void";
 
 export function getPropAccessReturnType(
     ctx: AstCompilationCtx,

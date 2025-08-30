@@ -107,6 +107,7 @@ export class TypedProgram extends DiagnosticEmitter
         // `apply` also defines the applied concrete type
         const applied = apply( concreteArgsNames.map( t => typeof t === "string" ? t : t.toConcreteTirTypeName() ) );
         if( !applied ) return undefined;
+        return applied;
     }
 
     private  _mkGenericInfos(

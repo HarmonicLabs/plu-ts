@@ -5,10 +5,10 @@ import { IRFunc } from "../../../../IRNodes/IRFunc"
 import { IRLetted, getLettedTerms, getSortedLettedSet } from "../../../../IRNodes/IRLetted"
 import { IRVar } from "../../../../IRNodes/IRVar"
 import { groupByScope } from "../groupByScope"
-import { data, list } from "../../../../../type_system"
 import { DataI, dataFromCbor } from "@harmoniclabs/plutus-data"
 import { IRNative } from "../../../../IRNodes/IRNative"
 import { IRConst } from "../../../../IRNodes/IRConst"
+import { data_t } from "../../../../../compiler/tir/program/stdScope/stdScope"
 
 describe("groupByScope", () => {
 
@@ -96,7 +96,7 @@ describe("groupByScope", () => {
                     ),
                     lettedInFn.clone()
                 ),
-                IRConst.listOf( data )([ new DataI(0) ])
+                IRConst.listOf( data_t )([ new DataI(0) ])
             )
         );
 

@@ -23,7 +23,9 @@ import { TirLitTrueExpr } from "../../../tir/expressions/litteral/TirLitTrueExpr
 import { TirLitUndefExpr } from "../../../tir/expressions/litteral/TirLitUndefExpr";
 import { TirLitVoidExpr } from "../../../tir/expressions/litteral/TirLitVoidExpr";
 import { TirExpr, isTirExpr } from "../../../tir/expressions/TirExpr";
-import { TirDataOptT, TirListT, TirSopOptT } from "../../../tir/types/TirNativeType";
+import { TirListT } from "../../../tir/types/TirNativeType/native/list";
+import { TirDataOptT } from "../../../tir/types/TirNativeType/native/Optional/data";
+import { TirSopOptT } from "../../../tir/types/TirNativeType/native/Optional/sop";
 import { TirDataStructType, TirSoPStructType, TirStructType } from "../../../tir/types/TirStructType";
 import { TirType, isTirType } from "../../../tir/types/TirType";
 import { canAssignTo, isStructOrStructAlias, getStructType, canAssignToOptional, canAssignToList } from "../../../tir/types/utils/canAssignTo";

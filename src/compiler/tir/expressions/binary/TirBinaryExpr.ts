@@ -8,10 +8,10 @@ import { mergeSortedStrArrInplace } from "../../../../utils/array/mergeSortedStr
 import { ToIRTermCtx } from "../ToIRTermCtx";
 import { compileIRToUPLC, IRConst, IRNative, IRTerm } from "../../../../IR";
 import { _ir_apps } from "../../../../IR/tree_utils/_ir_apps";
-import { TirBytesT, TirDataOptT, TirDataT, TirIntT, TirStringT } from "../../types/TirNativeType";
-import { TirDataStructType } from "../../types/TirStructType";
 import { getUnaliased } from "../../types/utils/getUnaliased";
-import { CEKConst, isCEKValue, Machine } from "@harmoniclabs/plutus-machine";
+import { CEKConst, Machine } from "@harmoniclabs/plutus-machine";
+import { TirBytesT } from "../../types/TirNativeType/native/bytes";
+import { TirIntT } from "../../types/TirNativeType/native/int";
 
 
 export type TirBinaryExpr

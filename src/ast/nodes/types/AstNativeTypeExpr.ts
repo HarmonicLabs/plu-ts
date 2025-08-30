@@ -1,8 +1,9 @@
-import { TirBoolT, TirBytesT, TirIntT, TirVoidT } from "../../../compiler/tir/types/TirNativeType";
 import { SourceRange } from "../../Source/SourceRange";
 import { HasSourceRange } from "../HasSourceRange";
 import { VarDecl } from "../statements/declarations/VarDecl/VarDecl";
 import { AstTypeExpr } from "./AstTypeExpr";
+// causes circular dependency
+// import { TirVoidT, TirBoolT, TirIntT, TirBytesT } from "../../../compiler/tir/types/TirNativeType";
 
 export type AstNativeTypeExpr
     = AstVoidType
@@ -37,7 +38,8 @@ export class AstVoidType implements HasSourceRange
         readonly range: SourceRange
     ) {}
 
-    toAstName() { return TirVoidT.toTirTypeKey(); }
+    // toAstName() { return TirVoidT.toTirTypeKey(); }
+    toAstName() { return "void"; }
 }
 
 export class AstBooleanType implements HasSourceRange
@@ -46,7 +48,8 @@ export class AstBooleanType implements HasSourceRange
         readonly range: SourceRange
     ) {}
 
-    toAstName() { return TirBoolT.toTirTypeKey(); }
+    // toAstName() { return TirBoolT.toTirTypeKey(); }
+    toAstName() { return "boolean"; }
 }
 
 export class AstIntType implements HasSourceRange
@@ -55,7 +58,8 @@ export class AstIntType implements HasSourceRange
         readonly range: SourceRange
     ) {}
 
-    toAstName() { return TirIntT.toTirTypeKey(); }
+    // toAstName() { return TirIntT.toTirTypeKey(); }
+    toAstName() { return "int"; }
 }
 
 export class AstBytesType implements HasSourceRange
@@ -64,7 +68,8 @@ export class AstBytesType implements HasSourceRange
         readonly range: SourceRange
     ) {}
 
-    toAstName() { return TirBytesT.toTirTypeKey(); }
+    // toAstName() { return TirBytesT.toTirTypeKey(); }
+    toAstName() { return "bytes"; }
 }
 
 export class AstNativeOptionalType<TArg extends AstTypeExpr> implements HasSourceRange

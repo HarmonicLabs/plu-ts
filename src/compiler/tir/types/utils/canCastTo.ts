@@ -1,6 +1,16 @@
 import { TirAliasType } from "../TirAliasType";
-import { TirDataT, TirVoidT, TirBoolT, TirIntT, TirBytesT, TirStringT, TirListT, TirLinearMapT, TirFuncT, TirSopOptT, TirDataOptT } from "../TirNativeType";
-import { isTirStructType, TirDataStructType, TirStructType } from "../TirStructType";
+import { TirBoolT } from "../TirNativeType/native/bool";
+import { TirBytesT } from "../TirNativeType/native/bytes";
+import { TirDataT } from "../TirNativeType/native/data";
+import { TirFuncT } from "../TirNativeType/native/function";
+import { TirIntT } from "../TirNativeType/native/int";
+import { TirLinearMapT } from "../TirNativeType/native/linearMap";
+import { TirListT } from "../TirNativeType/native/list";
+import { TirDataOptT } from "../TirNativeType/native/Optional/data";
+import { TirSopOptT } from "../TirNativeType/native/Optional/sop";
+import { TirStringT } from "../TirNativeType/native/string";
+import { TirVoidT } from "../TirNativeType/native/void";
+import { isTirStructType, TirDataStructType } from "../TirStructType";
 import { TirType } from "../TirType";
 import { CanAssign, getCanAssign } from "./canAssignTo";
 

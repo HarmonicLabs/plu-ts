@@ -1,5 +1,9 @@
 import { TirAliasType } from "../TirAliasType";
-import { TirDataOptT, TirDataT, TirLinearMapT, TirListT, TirSopOptT } from "../TirNativeType";
+import { TirDataT } from "../TirNativeType/native/data";
+import { TirLinearMapT } from "../TirNativeType/native/linearMap";
+import { TirListT } from "../TirNativeType/native/list";
+import { TirDataOptT } from "../TirNativeType/native/Optional/data";
+import { TirSopOptT } from "../TirNativeType/native/Optional/sop";
 import { isTirStructType, TirStructType } from "../TirStructType";
 import { TirType } from "../TirType";
 

@@ -1,5 +1,6 @@
 import { TirAliasType } from "../TirAliasType";
-import { TirDataOptT, TirSopOptT } from "../TirNativeType";
+import { TirDataOptT } from "../TirNativeType/native/Optional/data";
+import { TirSopOptT } from "../TirNativeType/native/Optional/sop";
 import { isTirType, TirType } from "../TirType";
 
 export function getOptTypeArg( opt_t: TirType ): TirType | undefined

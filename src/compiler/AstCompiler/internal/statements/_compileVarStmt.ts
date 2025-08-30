@@ -14,7 +14,8 @@ import { TirNamedDeconstructVarDecl } from "../../../tir/statements/TirVarDecl/T
 import { TirSimpleVarDecl } from "../../../tir/statements/TirVarDecl/TirSimpleVarDecl";
 import { TirSingleDeconstructVarDecl } from "../../../tir/statements/TirVarDecl/TirSingleDeconstructVarDecl";
 import { TirVarDecl } from "../../../tir/statements/TirVarDecl/TirVarDecl";
-import { isTirOptType, TirDataT, TirSopOptT } from "../../../tir/types/TirNativeType";
+import { TirDataT } from "../../../tir/types/TirNativeType/native/data";
+import { isTirOptType } from "../../../tir/types/TirNativeType/native/Optional/isTirOptType";
 import { isTirStructType, TirStructConstr, TirStructField } from "../../../tir/types/TirStructType";
 import { TirType } from "../../../tir/types/TirType";
 import { getNamedDestructableType, getStructType, canAssignTo } from "../../../tir/types/utils/canAssignTo";

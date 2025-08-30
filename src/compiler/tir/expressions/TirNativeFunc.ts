@@ -1,11 +1,15 @@
 import { SourceRange } from "../../../ast/Source/SourceRange";
 import { ITirExpr } from "./ITirExpr";
 import { IRNativeTag } from "../../../IR/IRNodes/IRNative/IRNativeTag";
-import { IRFunc, IRNative, IRTerm } from "../../../IR";
-import { TirFuncT, TirLinearMapT, TirListT, TirUnConstrDataResultT, TirDataOptT, TirPairDataT } from "../types/TirNativeType";
-import { bool_t, bytes_t, data_t, int_t, string_t, void_t } from "../program/stdScope/stdScope";
+import { IRNative, IRTerm } from "../../../IR";
+import { bool_t, bytes_t, data_t, int_t, void_t } from "../program/stdScope/stdScope";
 import { TirType } from "../types/TirType";
 import { ToIRTermCtx } from "./ToIRTermCtx";
+import { TirUnConstrDataResultT, TirPairDataT } from "../types/TirNativeType";
+import { TirFuncT } from "../types/TirNativeType/native/function";
+import { TirLinearMapT } from "../types/TirNativeType/native/linearMap";
+import { TirListT } from "../types/TirNativeType/native/list";
+import { TirDataOptT } from "../types/TirNativeType/native/Optional/data";
 
 export class TirNativeFunc
     implements ITirExpr
