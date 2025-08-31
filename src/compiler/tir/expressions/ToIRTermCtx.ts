@@ -1,4 +1,4 @@
-import { IRVar } from "../../../IR";
+import { IRVar } from "../../../IR/IRNodes/IRVar";
 import { IRSelfCall } from "../../../IR/IRNodes/IRSelfCall";
 
 const _1n = BigInt(1);

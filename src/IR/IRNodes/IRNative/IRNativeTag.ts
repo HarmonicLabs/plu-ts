@@ -156,6 +156,9 @@ export const enum IRNativeTag {
     _intToBytesBE          = -38,
     _intToBool             = -39,
     _exponentiateInteger   = -40,
+    _amountOfValue        = -41,
+    _isZero               = -42,
+    _sortedValueLovelaces = -43,
 }
 
 export function nativeTagToString( nativeTag: IRNativeTag ): string
@@ -197,6 +200,9 @@ export function nativeTagToString( nativeTag: IRNativeTag ): string
         case IRNativeTag._intToBytesBE  : return "intToBytesBE";
         case IRNativeTag._intToBool     : return "intToBool";
         case IRNativeTag._exponentiateInteger : return "exponentiateInteger";
+        case IRNativeTag._amountOfValue : return "amountOfValue";
+        case IRNativeTag._isZero        : return "isZero";
+        case IRNativeTag._sortedValueLovelaces : return "sortedValueLovelaces";
 
         default: return ""
     }

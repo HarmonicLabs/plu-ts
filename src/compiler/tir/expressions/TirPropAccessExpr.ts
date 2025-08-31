@@ -1,13 +1,11 @@
-import { isObject } from "@harmoniclabs/obj-utils";
 import { TirExpr } from "./TirExpr";
-import { Token } from "../../../tokenizer/Token";
 import { Identifier } from "../../../ast/nodes/common/Identifier";
 import { SourceRange } from "../../../ast/Source/SourceRange";
 import { TirCallExpr } from "./TirCallExpr";
 import { ITirExpr } from "./ITirExpr";
 import { TirType } from "../types/TirType";
 import { mergeSortedStrArrInplace } from "../../../utils/array/mergeSortedStrArrInplace";
-import { IRTerm } from "../../../IR";
+import type { IRTerm } from "../../../IR/IRTerm";
 import { ToIRTermCtx } from "./ToIRTermCtx";
 
 export class TirPropAccessExpr

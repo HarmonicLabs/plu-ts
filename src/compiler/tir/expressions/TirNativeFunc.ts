@@ -1,7 +1,8 @@
 import { SourceRange } from "../../../ast/Source/SourceRange";
 import { ITirExpr } from "./ITirExpr";
 import { IRNativeTag } from "../../../IR/IRNodes/IRNative/IRNativeTag";
-import { IRNative, IRTerm } from "../../../IR";
+import { IRNative } from "../../../IR/IRNodes/IRNative";
+import type { IRTerm } from "../../../IR/IRTerm";
 import { bool_t, bytes_t, data_t, int_t, void_t } from "../program/stdScope/stdScope";
 import { TirType } from "../types/TirType";
 import { ToIRTermCtx } from "./ToIRTermCtx";

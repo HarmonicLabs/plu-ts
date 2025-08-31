@@ -1,4 +1,5 @@
 import { AstFuncType } from "../../../ast/nodes/types/AstNativeTypeExpr";
+import { TypedProgram } from "../../tir/program/TypedProgram";
 import { TirType } from "../../tir/types/TirType";
 import { getStructType } from "../../tir/types/utils/canAssignTo";
 
@@ -111,6 +112,7 @@ export class AstScope
     
     constructor(
         parent: AstScope | undefined,
+        readonly program: TypedProgram,
         infos: Partial<ScopeInfos>,
     ) {
         this.infos = normalizeScopeInfos( infos );
@@ -238,7 +240,7 @@ export class AstScope
 
     newChildScope( infos: Partial<ScopeInfos> ): AstScope
     {
-        return new AstScope( this, infos );
+        return new AstScope( this, this.program, infos );
     }
 
     /**
@@ -281,6 +283,7 @@ export class AstScope
     {
         const cloned = new AstScope(
             this.parent,
+            this.program,
             this.infos
         );
         for( const [key, value] of this.variables )

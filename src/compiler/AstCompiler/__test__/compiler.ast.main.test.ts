@@ -37,14 +37,11 @@ function main( param: int, ctx: ScriptContext ): void
 
     for( const { resolved: input } of tx.inputs )
     {
-        // TODO: add implementation on value
-        // Property 'lovelaces' does not exist on type 'Value'
-        // sumLove += input.value.lovelaces();
-        sumLove += tx.fee;
+        sumLove += input.value.lovelaces();
     }
 
     assert tx.outputs.length() === 1 else "only one output allowed";
-    assert sumLove >= 1000_000_000;
+    assert sumLove >= 1_000_000_000;
 }
         `;
 

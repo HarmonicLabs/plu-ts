@@ -14,7 +14,6 @@ import { BaseIRMetadata } from "./BaseIRMetadata";
 import { hashIrData, IRHash, isIRHash } from "../IRHash";
 import { IRNodeKind } from "../IRNodeKind";
 import { TirType } from "../../compiler/tir/types/TirType";
-import { bool_t, bytes_t, data_t, int_t, string_t, void_t } from "../../compiler/tir/program/stdScope/stdScope";
 import { getUnaliased } from "../../compiler/tir/types/utils/getUnaliased";
 import { TirAliasType } from "../../compiler/tir/types/TirAliasType";
 import { TirDataStructType, TirSoPStructType } from "../../compiler/tir/types/TirStructType";
@@ -153,32 +152,32 @@ export class IRConst
 
     static get unit(): IRConst
     {
-        return new IRConst( void_t, undefined );
+        return new IRConst( new TirVoidT(), undefined );
     }
 
     static bool( b: boolean ): IRConst
     {
-        return new IRConst( bool_t, b );
+        return new IRConst( new TirBoolT(), b );
     }
 
     static bytes( b:  | Uint8Array ): IRConst
     {
-        return new IRConst( bytes_t, b );
+        return new IRConst( new TirBytesT(), b );
     }
 
     static int( n: number | bigint ): IRConst
     {
-        return new IRConst( int_t, BigInt(n) );
+        return new IRConst( new TirIntT(), BigInt(n) );
     }
 
     static str( string: string ): IRConst
     {
-        return new IRConst( string_t, string );
+        return new IRConst( new TirStringT(), string );
     }
 
     static data( d: Data ): IRConst
     {
-        return new IRConst( data_t, d );
+        return new IRConst( new TirDataT(), d );
     }
 
     static listOf( t: TirType ): ( vals: IRConstValue[] ) => IRConst
@@ -215,8 +214,8 @@ function isValueAssignableToType( value: IRConstValue, type: TirType ): boolean
     if( type instanceof TirStringT ) return typeof value === "string";
     if( type instanceof TirPairDataT ) return (
         isIRConstPair( value ) 
-        && isValueAssignableToType( value.fst, data_t )
-        && isValueAssignableToType( value.snd, data_t )
+        && isValueAssignableToType( value.fst, new TirDataT() )
+        && isValueAssignableToType( value.snd, new TirDataT() )
     );
 
     if( type instanceof TirLinearMapT ) {
@@ -230,8 +229,8 @@ function isValueAssignableToType( value: IRConstValue, type: TirType ): boolean
 
     if( type instanceof TirUnConstrDataResultT ) return (
         isIRConstPair( value ) 
-        && isValueAssignableToType( value.fst, int_t )
-        && isValueAssignableToType( value.snd, new TirListT( data_t ) )
+        && isValueAssignableToType( value.fst, new TirIntT() )
+        && isValueAssignableToType( value.snd, new TirListT( new TirDataT() ) )
     );
 
     if(
@@ -308,15 +307,15 @@ function serializeIRConstValue( value: any, type: TirType ): Uint8Array
     if( type instanceof TirPairDataT )
     {
         return concatUint8Arr(
-            serializeIRConstValue( value.fst, data_t ),
-            serializeIRConstValue( value.snd, data_t ),
+            serializeIRConstValue( value.fst, new TirDataT() ),
+            serializeIRConstValue( value.snd, new TirDataT() ),
         );
     }
     if( type instanceof TirUnConstrDataResultT )
     {
         return concatUint8Arr(
-            serializeIRConstValue( BigInt( value.fst ), int_t ),
-            serializeIRConstValue( value.snd, new TirListT( data_t ) )
+            serializeIRConstValue( BigInt( value.fst ), new TirIntT() ),
+            serializeIRConstValue( value.snd, new TirListT( new TirDataT() ) )
         );
     }
     if(

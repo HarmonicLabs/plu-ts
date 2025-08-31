@@ -51,7 +51,7 @@ export function isExpressifyFuncParam( thing: any ): thing is ExpressifyFuncPara
 
 export class ExpressifyCtx
 {
-    readonly hoisted: Map<string, TirHoistedExpr | TirNativeFunc> = new Map();
+    readonly hoisted: Map<string, TirHoistedExpr | TirNativeFunc>;
 
     constructor(
         readonly parent: ExpressifyCtx | undefined,
@@ -66,9 +66,7 @@ export class ExpressifyCtx
         /** var name -> prop name -> constant name (letted field extraction expr or var access for SoP)*/
         readonly properties: Map<string, Map<string, string>> = new Map(),
     ) {
-        this.hoisted = hoisted ?? this.parent?.hoisted!;
-        if( !this.hoisted )
-        throw new Error("hoisted map is not defined in expressify context");
+        this.hoisted = hoisted ?? this.parent?.hoisted ?? new Map();
     }
 
     newChild(): ExpressifyCtx

@@ -4,6 +4,7 @@ import { AstScope } from "../../AstCompiler/scope/AstScope";
 import { UidGenerator } from "../../internalVar";
 import { TirExpr } from "../expressions/TirExpr";
 import { TirFuncExpr } from "../expressions/TirFuncExpr";
+import { TirInlineClosedIR } from "../expressions/TirInlineClosedIR";
 import { isTirType, TirType } from "../types/TirType";
 import { populatePreludeScope, populateStdScope } from "./stdScope/stdScope";
 import { StdTypes } from "./stdScope/StdTypes";
@@ -22,7 +23,7 @@ export class TypedProgram extends DiagnosticEmitter
 {
     readonly constants: Map<string, TirExpr>;
 
-    readonly functions: Map<string, TirFuncExpr>;
+    readonly functions: Map<string, TirFuncExpr | TirInlineClosedIR>;
 
     readonly types: Map<string, TirType>;
     private readonly genericTypes: Map<string, IGenericType>;
@@ -59,13 +60,25 @@ export class TypedProgram extends DiagnosticEmitter
 
         this.filePrefix = new Map();
 
-        this.stdScope = new AstScope( undefined, { isFunctionDeclScope: false, isMethodScope: false } );
+        this.stdScope = new AstScope( undefined, this, { isFunctionDeclScope: false, isMethodScope: false } );
         populateStdScope( this );
 
         this.stdTypes = new StdTypes( this );
 
-        this.preludeScope = new AstScope( this.stdScope, { isFunctionDeclScope: false, isMethodScope: false } );
+        this.preludeScope = new AstScope( this.stdScope, this, { isFunctionDeclScope: false, isMethodScope: false } );
         populatePreludeScope( this );
+    }
+
+    getMainOrThrow(): TirFuncExpr
+    {
+        if( this.contractTirFuncName === "" ) 
+        throw new Error("TypedProgram: main function name not set");
+
+        const mainFuncExpr = this.functions.get( this.contractTirFuncName );
+        if(!( mainFuncExpr instanceof TirFuncExpr ))
+        throw new Error(`TypedProgram: main function '${this.contractTirFuncName}' not found or not a function`);
+
+        return mainFuncExpr;
     }
 
     getFilePrefix( path: string ): string

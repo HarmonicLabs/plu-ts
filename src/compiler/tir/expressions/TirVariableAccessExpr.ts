@@ -1,5 +1,4 @@
 import { SourceRange } from "../../../ast/Source/SourceRange";
-import { IRTerm } from "../../../IR";
 import { IRSelfCall } from "../../../IR/IRNodes/IRSelfCall";
 import { IRVar } from "../../../IR/IRNodes/IRVar";
 import { ResolveValueResult } from "../../AstCompiler/scope/AstScope";

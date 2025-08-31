@@ -1,11 +1,14 @@
 import { SourceRange } from "../../../ast/Source/SourceRange";
-import { IRDelayed, IRError, IRForced, IRNative, IRTerm } from "../../../IR";
+import { IRDelayed } from "../../../IR/IRNodes/IRDelayed";
+import { IRError } from "../../../IR/IRNodes/IRError";
+import { IRForced } from "../../../IR/IRNodes/IRForced";
+import { IRNative } from "../../../IR/IRNodes/IRNative";
+import { IRTerm } from "../../../IR/IRTerm";
 import { _ir_apps } from "../../../IR/tree_utils/_ir_apps";
 import { mergeSortedStrArrInplace } from "../../../utils/array/mergeSortedStrArrInplace";
 import { TirAssertStmt } from "../statements/TirAssertStmt";
 import { TirType } from "../types/TirType";
 import { ITirExpr } from "./ITirExpr";
-import { TirCallExpr } from "./TirCallExpr";
 import { TirExpr } from "./TirExpr";
 import { ToIRTermCtx } from "./ToIRTermCtx";
 

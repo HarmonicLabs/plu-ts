@@ -14,6 +14,7 @@ import { IRRecursive } from "../../../IRNodes/IRRecursive";
 import { IRSelfCall } from "../../../IRNodes/IRSelfCall";
 import { IRError } from "../../../IRNodes";
 import { _ir_let } from "../../../tree_utils/_ir_let";
+import { _ir_lazyChooseList } from "../../../tree_utils/_ir_lazyChooseList";
 
 const hoisted_id = new IRHoisted(
     new IRFunc( 1, new IRVar(0) )
@@ -1014,7 +1015,158 @@ export function nativeToIR( native: IRNative ): IRTerm
             );
         }
         break;
+        case IRNativeTag._amountOfValue: {
+            // ((policy => bool), value, (tokenName => bool)) => amount
+            return hoisted_amountOfValue.clone();
+        }
+        break;
+        case IRNativeTag._isZero: {
+            return hoisted_isZero.clone();
+        }
+        break;
+        case IRNativeTag._sortedValueLovelaces: {
+            return new IRHoisted(
+                new IRFunc( 1, // value
+                    _ir_apps(
+                        IRNative.unIData,
+                        _ir_apps(
+                            IRNative.sndPair,
+                            _ir_apps(
+                                IRNative.headList,
+                                _ir_apps(
+                                    IRNative.unMapData,
+                                    _ir_apps(
+                                        IRNative.sndPair,
+                                        _ir_apps(
+                                            IRNative.headList,
+                                            new IRVar( 0 ) // value
+                                        )
+                                    )
+                                )
+                            )
+                        )
+                    )
+                )
+            )
+        }
+        break;
 
         default: throw new Error("unknown (negative) native calling 'nativeToIR'")
     }
 }
+
+// ((policy => bool), value, (tokenName => bool)) => amount
+const hoisted_amountOfValue = new IRHoisted(
+    new IRFunc( 1, // 0: isPolicy
+        new IRRecursive( // 1: isPolicy, 0: policyLoop
+            new IRFunc( 1, // 2: isPolicy, 1: policyLoop, 0: value
+                new IRForced(_ir_apps(
+                    IRNative.strictChooseList,
+                    new IRVar( 0 ), // value
+                    // case nil
+                    new IRDelayed(
+                        new IRFunc( 1, IRConst.int( 0 ) ) // isTokenName => 0
+                    ),
+                    // case cons
+                    new IRDelayed(
+                        _ir_let(
+                            _ir_apps(
+                                IRNative.headList,
+                                new IRVar( 0 ) // value
+                            ), // 3: isPolicy, 2: policyLoop, 1: value, 0: pairData
+                            new IRForced(_ir_apps(
+                                IRNative.strictIfThenElse,
+                                _ir_apps( // isPolicy( pairData.fst as bytes )
+                                    new IRVar( 3 ), // isPolicy
+                                    _ir_apps(
+                                        IRNative.unBData,
+                                        _ir_apps(
+                                            IRNative.fstPair,
+                                            new IRVar( 0 ) // pairData
+                                        )
+                                    )
+                                ),
+                                // then this is the policy
+                                new IRDelayed(
+                                    new IRFunc( 1, // 4: isPolicy, 3: policyLoop, 2: value, 1: pairData, 0: isTokenName
+                                        _ir_apps(
+                                            new IRRecursive(
+                                                new IRFunc( 1, // 6: isPolicy, 5: policyLoop, 4: value, 3: pairData, 2: isTokenName, 1: tokenNameLoop, 0: tokenMap
+                                                    new IRForced(_ir_apps(
+                                                        IRNative.strictChooseList,
+                                                        new IRVar( 0 ), // tokenMap
+                                                        // case nil
+                                                        new IRDelayed( IRConst.int( 0 ) ),
+                                                        // case cons
+                                                        new IRDelayed(
+                                                            _ir_let(
+                                                                _ir_apps(
+                                                                    IRNative.headList,
+                                                                    new IRVar( 0 ) // tokenMap
+                                                                ), // 7: isPolicy, 6: policyLoop, 5: value, 4: pairData, 3: isTokenName, 2: tokenNameLoop, 1: tokenMap, 0: pairDataToken
+                                                                new IRForced(_ir_apps(
+                                                                    IRNative.strictIfThenElse,
+                                                                    _ir_apps( // isTokenName( pairDataToken.fst as bytes )
+                                                                        new IRVar( 3 ), // isTokenName
+                                                                        _ir_apps(
+                                                                            IRNative.unBData,
+                                                                            _ir_apps(
+                                                                                IRNative.fstPair,
+                                                                                new IRVar( 0 ) // pairDataToken
+                                                                            )
+                                                                        ),
+                                                                        // then return amount
+                                                                        new IRDelayed(
+                                                                            _ir_apps(
+                                                                                IRNative.unIData,
+                                                                                _ir_apps(
+                                                                                    IRNative.sndPair,
+                                                                                    new IRVar( 0 ) // pairDataToken
+                                                                                )
+                                                                            )
+                                                                        ),
+                                                                        // else check next token entry
+                                                                        new IRDelayed(
+                                                                            _ir_apps(
+                                                                                new IRSelfCall( 2 ), // tokenNameLoop
+                                                                                _ir_apps(
+                                                                                    IRNative.tailList,
+                                                                                    new IRVar( 1 ) // tokenMap
+                                                                                )
+                                                                            )
+                                                                        )
+                                                                    ),
+                                                                ))
+                                                            )
+                                                        )
+                                                    ))
+                                                )
+                                            ),
+                                            // tokenMap
+                                            _ir_apps(
+                                                IRNative.unMapData,
+                                                _ir_apps(
+                                                    IRNative.sndPair,
+                                                    new IRVar( 0 ) // pairData
+                                                )
+                                            )
+                                        )
+                                    )
+                                ),
+                                // else check next
+                                new IRDelayed(_ir_apps(
+                                    new IRSelfCall( 2 ), // policyLoop
+                                    _ir_apps(
+                                        IRNative.tailList,
+                                        new IRVar( 1 ) // value
+                                    )
+                                ))
+                            ))
+                        )
+                    )
+                ))
+            )
+        )
+    )
+);
+hoisted_amountOfValue.hash;

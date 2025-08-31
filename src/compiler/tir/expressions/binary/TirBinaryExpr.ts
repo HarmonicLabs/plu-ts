@@ -6,12 +6,15 @@ import { TirType } from "../../types/TirType";
 import { bool_t, bytes_t, int_t } from "../../program/stdScope/stdScope";
 import { mergeSortedStrArrInplace } from "../../../../utils/array/mergeSortedStrArrInplace";
 import { ToIRTermCtx } from "../ToIRTermCtx";
-import { compileIRToUPLC, IRConst, IRNative, IRTerm } from "../../../../IR";
 import { _ir_apps } from "../../../../IR/tree_utils/_ir_apps";
 import { getUnaliased } from "../../types/utils/getUnaliased";
 import { CEKConst, Machine } from "@harmoniclabs/plutus-machine";
 import { TirBytesT } from "../../types/TirNativeType/native/bytes";
 import { TirIntT } from "../../types/TirNativeType/native/int";
+import { IRNative } from "../../../../IR/IRNodes/IRNative";
+import type { IRTerm } from "../../../../IR/IRTerm";
+import { IRConst } from "../../../../IR/IRNodes/IRConst";
+import { compileIRToUPLC } from "../../../../IR/toUPLC/compileIRToUPLC";
 
 
 export type TirBinaryExpr

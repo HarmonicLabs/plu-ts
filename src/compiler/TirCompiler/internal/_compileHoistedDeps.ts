@@ -1,4 +1,5 @@
 import { TirHoistedExpr } from "../../tir/expressions/TirHoistedExpr";
+import { TirInlineClosedIR } from "../../tir/expressions/TirInlineClosedIR";
 import { TirNativeFunc } from "../../tir/expressions/TirNativeFunc";
 import { TypedProgram } from "../../tir/program/TypedProgram";
 import { expressify } from "../expressify/expressify";
@@ -29,7 +30,8 @@ export function _compileHoistedDeps(
                 funcDecl.deps(),
                 depsStack.getNext( depName )
             );
-            const funcExpr = expressify(
+            /*
+            const funcExpr = funcDecl instanceof TirInlineClosedIR ? funcDecl : expressify(
                 funcDecl,
                 undefined, // loopReplacements
                 new ExpressifyCtx(
@@ -38,6 +40,7 @@ export function _compileHoistedDeps(
                     hoistedMap
                 )
             );
+            //*/
             const hoistedExpr = new TirHoistedExpr(
                 depName,
                 funcDecl

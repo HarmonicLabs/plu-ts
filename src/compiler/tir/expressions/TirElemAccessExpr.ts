@@ -1,13 +1,15 @@
-import { CEKConst, isCEKValue, Machine } from "@harmoniclabs/plutus-machine";
-import { HasSourceRange } from "../../../ast/nodes/HasSourceRange";
+import { CEKConst, Machine } from "@harmoniclabs/plutus-machine";
 import { SourceRange } from "../../../ast/Source/SourceRange";
-import { compileIRToUPLC, IRConst, IRNative, IRTerm } from "../../../IR";
+import { IRConst } from "../../../IR/IRNodes/IRConst";
+import { IRNative } from "../../../IR/IRNodes/IRNative";
+import type { IRTerm } from "../../../IR/IRTerm";
 import { mergeSortedStrArrInplace } from "../../../utils/array/mergeSortedStrArrInplace";
 import { TirType } from "../types/TirType";
 import { ITirExpr } from "./ITirExpr";
 import { TirExpr } from "./TirExpr";
 import { ToIRTermCtx } from "./ToIRTermCtx";
 import { _ir_apps } from "../../../IR/tree_utils/_ir_apps";
+import { compileIRToUPLC } from "../../../IR/toUPLC/compileIRToUPLC";
 
 /**
  * `arrLikeExpr[ indexExpr ]`

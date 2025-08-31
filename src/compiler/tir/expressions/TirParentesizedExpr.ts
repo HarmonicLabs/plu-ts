@@ -1,6 +1,6 @@
 import { HasSourceRange } from "../../../ast/nodes/HasSourceRange";
 import { SourceRange } from "../../../ast/Source/SourceRange";
-import { IRTerm } from "../../../IR";
+import type { IRTerm } from "../../../IR/IRTerm";
 import { TirType } from "../types/TirType";
 import { ITirExpr } from "./ITirExpr";
 import { TirExpr } from "./TirExpr";

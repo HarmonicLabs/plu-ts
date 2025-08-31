@@ -1,5 +1,13 @@
 import { SourceRange } from "../../../ast/Source/SourceRange";
-import { IRError, IRNative, IRTerm } from "../../../IR";
+import { IRCase } from "../../../IR/IRNodes/IRCase";
+import { IRConst } from "../../../IR/IRNodes/IRConst";
+import { IRDelayed } from "../../../IR/IRNodes/IRDelayed";
+import { IRError } from "../../../IR/IRNodes/IRError";
+import { IRForced } from "../../../IR/IRNodes/IRForced";
+import { IRFunc } from "../../../IR/IRNodes/IRFunc";
+import { IRNative } from "../../../IR/IRNodes/IRNative";
+import { IRVar } from "../../../IR/IRNodes/IRVar";
+import type { IRTerm } from "../../../IR/IRTerm";
 import { _ir_apps } from "../../../IR/tree_utils/_ir_apps";
 import { TirExpr } from "../expressions/TirExpr";
 import { TirType } from "../types/TirType";

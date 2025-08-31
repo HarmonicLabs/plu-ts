@@ -1,6 +1,8 @@
-import { HasSourceRange } from "../../../ast/nodes/HasSourceRange";
 import { SourceRange } from "../../../ast/Source/SourceRange";
-import { IRDelayed, IRForced, IRNative, IRTerm } from "../../../IR";
+import { IRDelayed } from "../../../IR/IRNodes/IRDelayed";
+import { IRForced } from "../../../IR/IRNodes/IRForced";
+import { IRNative } from "../../../IR/IRNodes/IRNative";
+import type { IRTerm } from "../../../IR/IRTerm";
 import { _ir_apps } from "../../../IR/tree_utils/_ir_apps";
 import { mergeSortedStrArrInplace } from "../../../utils/array/mergeSortedStrArrInplace";
 import { TirType } from "../types/TirType";

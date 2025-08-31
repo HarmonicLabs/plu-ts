@@ -1,5 +1,6 @@
 import { SourceRange } from "../../../ast/Source/SourceRange";
-import { IRLetted, IRTerm } from "../../../IR";
+import { IRLetted } from "../../../IR/IRNodes/IRLetted";
+import type { IRTerm } from "../../../IR/IRTerm";
 import { TirType } from "../types/TirType";
 import { ITirExpr } from "./ITirExpr";
 import { TirExpr } from "./TirExpr";

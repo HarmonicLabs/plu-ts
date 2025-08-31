@@ -1,6 +1,7 @@
 import { SourceRange } from "../../../ast/Source/SourceRange";
-import { IRHoisted, IRTerm } from "../../../IR";
-import { TirType } from "../types/TirType";
+import { IRHoisted } from "../../../IR/IRNodes/IRHoisted";
+import type { IRTerm } from "../../../IR/IRTerm";
+import { TirFuncT } from "../types/TirNativeType";
 import { ITirExpr } from "./ITirExpr";
 import { ToIRTermCtx } from "./ToIRTermCtx";
 
@@ -9,8 +10,14 @@ import { ToIRTermCtx } from "./ToIRTermCtx";
 export class TirInlineClosedIR
     implements ITirExpr
 {
+    sig(): TirFuncT
+    {
+        return this.type;
+    }
+
+
     constructor(
-        readonly type: TirType,
+        readonly type: TirFuncT,
         readonly getIr: ( ctx: ToIRTermCtx ) => IRTerm,
         readonly range: SourceRange
     ) {}

@@ -5,11 +5,12 @@ import { TirType } from "../types/TirType";
 import { TirBlockStmt } from "../statements/TirBlockStmt";
 import { mergeSortedStrArrInplace } from "../../../utils/array/mergeSortedStrArrInplace";
 import { filterSortedStrArrInplace } from "../../../utils/array/filterSortedStrArrInplace";
-import { IRFunc, IRTerm } from "../../../IR";
 import { ToIRTermCtx } from "./ToIRTermCtx";
 import { IRRecursive } from "../../../IR/IRNodes/IRRecursive";
 import { TirReturnStmt } from "../statements/TirReturnStmt";
 import { TirFuncT } from "../types/TirNativeType/native/function";
+import { IRTerm } from "../../../IR/IRTerm";
+import { IRFunc } from "../../../IR/IRNodes/IRFunc";
 
 export class TirFuncExpr
     implements ITirExpr

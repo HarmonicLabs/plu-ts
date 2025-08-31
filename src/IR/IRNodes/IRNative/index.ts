@@ -244,6 +244,8 @@ export class IRNative
     static get _intToBytesBE() { return new IRNative( IRNativeTag._intToBytesBE ); }
     static get _intToBool() { return new IRNative( IRNativeTag._intToBool ); }
     static get _exponentiateInteger() { return new IRNative( IRNativeTag._exponentiateInteger ); }
+    static get _amountOfValue() { return new IRNative( IRNativeTag._amountOfValue ); }
+    static get _sortedValueLovelaces() { return new IRNative( IRNativeTag._sortedValueLovelaces ); }
 
     static equals( type: TirType ): IRTerm
     {

@@ -14,6 +14,15 @@ import { TirDataOptT } from "../../types/TirNativeType/native/Optional/data";
 import { TirSopOptT } from "../../types/TirNativeType/native/Optional/sop";
 import { TirStringT } from "../../types/TirNativeType/native/string";
 import { TirVoidT } from "../../types/TirNativeType/native/void";
+import { PEBBLE_INTERNAL_IDENTIFIER_PREFIX } from "../../../internalVar";
+import { TirFuncExpr } from "../../expressions/TirFuncExpr";
+import { TirSimpleVarDecl } from "../../statements/TirVarDecl/TirSimpleVarDecl";
+import { SourceRange } from "../../../../ast/Source/SourceRange";
+import { TirBlockStmt } from "../../statements/TirBlockStmt";
+import { TirReturnStmt } from "../../statements/TirReturnStmt";
+import { TirInlineClosedIR } from "../../expressions/TirInlineClosedIR";
+import { TirFuncT } from "../../types/TirNativeType";
+import { IRNative } from "../../../../IR/IRNodes/IRNative";
 
 export const void_t = new TirVoidT();
 export const int_t = new TirIntT();
@@ -616,7 +625,25 @@ export function populatePreludeScope( program: TypedProgram ): void
         [ policyId_t, map_tokenName_int_t ]
     );
     if(!map_policyId_map_tokenName_int_t) throw new Error("expected map_policyId_map_tokenName_int_t");
-    const value_t = _defineUnambigousAlias( "Value", map_policyId_map_tokenName_int_t );
+    const valueLovelacesName = PEBBLE_INTERNAL_IDENTIFIER_PREFIX + "sortedValueLovelaces";
+    const value_t = _defineUnambigousAlias(
+        "Value",
+        map_policyId_map_tokenName_int_t,
+        new Map([
+            [
+                "lovelaces",
+                valueLovelacesName
+            ],
+        ])
+    );
+    preludeScope.program.functions.set(
+        valueLovelacesName,
+        new TirInlineClosedIR(
+            new TirFuncT([ value_t ], int_t ),
+            ( ctx ) => IRNative._sortedValueLovelaces,
+            SourceRange.unknown
+        )
+    );
     
     /* // TODO
     untagged struct FlatValueEntry {

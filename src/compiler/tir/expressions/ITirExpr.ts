@@ -1,7 +1,7 @@
-import { HasSourceRange } from "../../../ast/nodes/HasSourceRange";
-import { IRTerm } from "../../../IR";
-import { TirType } from "../types/TirType";
-import { ToIRTermCtx } from "./ToIRTermCtx";
+import type { HasSourceRange } from "../../../ast/nodes/HasSourceRange";
+import type { IRTerm } from "../../../IR/IRTerm";
+import type { TirType } from "../types/TirType";
+import type { ToIRTermCtx } from "./ToIRTermCtx";
 
 
 export interface ITirExpr extends HasSourceRange {

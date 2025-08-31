@@ -5,7 +5,11 @@ import { TirExpr } from "./TirExpr";
 import { bool_t } from "../program/stdScope/stdScope";
 import { TirType } from "../types/TirType";
 import { ToIRTermCtx } from "./ToIRTermCtx";
-import { IRConst, IRDelayed, IRForced, IRNative, IRTerm } from "../../../IR";
+import { IRConst } from "../../../IR/IRNodes/IRConst";
+import { IRDelayed } from "../../../IR/IRNodes/IRDelayed";
+import { IRForced } from "../../../IR/IRNodes/IRForced";
+import { IRNative } from "../../../IR/IRNodes/IRNative";
+import type { IRTerm } from "../../../IR/IRTerm";
 import { _ir_apps } from "../../../IR/tree_utils/_ir_apps";
 
 export class TirTraceIfFalseExpr

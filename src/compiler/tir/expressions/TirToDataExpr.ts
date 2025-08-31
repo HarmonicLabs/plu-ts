@@ -1,6 +1,12 @@
 import { DataConstr } from "@harmoniclabs/plutus-data";
 import { SourceRange } from "../../../ast/Source/SourceRange";
-import { IRCase, IRConst, IRFunc, IRHoisted, IRNative, IRTerm, IRVar } from "../../../IR";
+import { IRCase } from "../../../IR/IRNodes/IRCase";
+import { IRConst } from "../../../IR/IRNodes/IRConst";
+import { IRFunc } from "../../../IR/IRNodes/IRFunc";
+import { IRHoisted } from "../../../IR/IRNodes/IRHoisted";
+import { IRNative } from "../../../IR/IRNodes/IRNative";
+import { IRVar } from "../../../IR/IRNodes/IRVar";
+import type { IRTerm } from "../../../IR/IRTerm";
 import { _ir_apps } from "../../../IR/tree_utils/_ir_apps";
 import { data_t } from "../program/stdScope/stdScope";
 import { TirAliasType } from "../types/TirAliasType";

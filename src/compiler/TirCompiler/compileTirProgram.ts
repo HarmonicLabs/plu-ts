@@ -1,6 +1,8 @@
 import { IRTerm } from "../../IR";
 import { CompilerOptions } from "../../IR/toUPLC/CompilerOptions";
+import { ToIRTermCtx } from "../tir/expressions/ToIRTermCtx";
 import { TypedProgram } from "../tir/program/TypedProgram";
+import { expressify } from "./expressify/expressify";
 import { TirCompilerCtx } from "./TirCompilerCtx";
 
 /**
@@ -13,10 +15,16 @@ export function compileTypedProgram(
     tirProgram: TypedProgram
 ): IRTerm
 {
+    /*
     const ctx = new TirCompilerCtx(
         cfg,
         tirProgram,
     );
-
-    return {} as IRTerm;
+    //*/
+    const mainFuncExpr = tirProgram.getMainOrThrow()
+    void expressify(
+        mainFuncExpr,
+        undefined, // loopReplacements
+    );
+    return mainFuncExpr.toIR( ToIRTermCtx.root() );
 }

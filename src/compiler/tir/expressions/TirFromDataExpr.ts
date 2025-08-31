@@ -1,5 +1,14 @@
 import { SourceRange } from "../../../ast/Source/SourceRange";
-import { IRApp, IRConst, IRConstr, IRDelayed, IRForced, IRFunc, IRHoisted, IRNative, IRTerm, IRVar } from "../../../IR";
+import { IRApp } from "../../../IR/IRNodes/IRApp";
+import { IRConst } from "../../../IR/IRNodes/IRConst";
+import { IRConstr } from "../../../IR/IRNodes/IRConstr";
+import { IRDelayed } from "../../../IR/IRNodes/IRDelayed";
+import { IRForced } from "../../../IR/IRNodes/IRForced";
+import { IRFunc } from "../../../IR/IRNodes/IRFunc";
+import { IRHoisted } from "../../../IR/IRNodes/IRHoisted";
+import { IRNative } from "../../../IR/IRNodes/IRNative";
+import { IRVar } from "../../../IR/IRNodes/IRVar";
+import type { IRTerm } from "../../../IR/IRTerm";
 import { _ir_apps } from "../../../IR/tree_utils/_ir_apps";
 import { _ir_let } from "../../../IR/tree_utils/_ir_let";
 import { TirBoolT } from "../types/TirNativeType/native/bool";
