@@ -131,35 +131,7 @@ export function _compileNamedDeconstructVarDecl(
         decl.range
     );
 
-    if( isTirStructType( namedDestructableType ) )
-    {
-        const finalConstructorDef = namedDestructableType.constructors.find( ctor =>
-            ctor.name === decl.name.text
-        );
-        if( !finalConstructorDef )
-        return ctx.error(
-            DiagnosticCode.Construcotr_0_is_not_part_of_the_definiton_of_1,
-            decl.name.range, decl.name.text, namedDestructableType.toString()
-        );
 
-        const deconstructedFields = _getDeconstructedFields(
-            ctx,
-            decl,
-            finalConstructorDef
-        );
-        if( !deconstructedFields ) return undefined;
-        const [ fieds, rest ] = deconstructedFields;
-
-        return new TirNamedDeconstructVarDecl(
-            decl.name.text,
-            fieds,
-            rest,
-            finalVarType,
-            initExpr,
-            decl.isConst(),
-            decl.range
-        );
-    }
     if( isTirOptType( namedDestructableType ) )
     {
         const optConstrName = decl.name.text;
@@ -184,6 +156,35 @@ export function _compileNamedDeconstructVarDecl(
                     )
                 ] : [],
             )
+        );
+        if( !deconstructedFields ) return undefined;
+        const [ fieds, rest ] = deconstructedFields;
+
+        return new TirNamedDeconstructVarDecl(
+            decl.name.text,
+            fieds,
+            rest,
+            finalVarType,
+            initExpr,
+            decl.isConst(),
+            decl.range
+        );
+    }
+    if( isTirStructType( namedDestructableType ) )
+    {
+        const finalConstructorDef = namedDestructableType.constructors.find( ctor =>
+            ctor.name === decl.name.text
+        );
+        if( !finalConstructorDef )
+        return ctx.error(
+            DiagnosticCode.Construcotr_0_is_not_part_of_the_definiton_of_1,
+            decl.name.range, decl.name.text, namedDestructableType.toString()
+        );
+
+        const deconstructedFields = _getDeconstructedFields(
+            ctx,
+            decl,
+            finalConstructorDef
         );
         if( !deconstructedFields ) return undefined;
         const [ fieds, rest ] = deconstructedFields;

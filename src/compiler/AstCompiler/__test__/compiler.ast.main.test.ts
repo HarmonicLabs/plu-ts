@@ -16,32 +16,30 @@ describe("parseMain", () => {
 export struct MyDatum {}
 `;
 
+
         const fileName = "test.pebble";
         const srcText = `
 import { MyDatum } from "./${myDatumPath}";
 
-function main( param: int, ctx: ScriptContext ): void
+function main( ctx: ScriptContext ): void
 {
-    const { tx, purpose } = ctx;
+    const { tx } = ctx;
 
-    const [ a, b, ...rest ] = tx.inputs;
-
-    const Spend{
-        ref, 
-        optionalDatum: Some{ 
-            value: datum as MyDatum
-        }
-    } = purpose;
-
+    let inputsLength = 0;
     let sumLove = 0;
-
     for( const { resolved: input } of tx.inputs )
     {
         sumLove += input.value.lovelaces();
+        inputsLength += 1;
     }
 
     assert tx.outputs.length() === 1 else "only one output allowed";
-    assert sumLove >= 1_000_000_000;
+    const output = tx.outputs[0];
+
+    const InlineDatum{ datum } = output.datum;
+
+    assert inputsLength >= 2;
+    assert (datum as int) === sumLove / inputsLength;
 }
         `;
 
@@ -63,6 +61,7 @@ function main( param: int, ctx: ScriptContext ): void
         const source = await complier.compileFile( fileName );
         const diagnostics = complier.diagnostics;
 
+        // console.log( diagnostics );
         // console.log( diagnostics.map( d => d.toString() ) );
         expect( diagnostics.length ).toBe( 0 );
     });
