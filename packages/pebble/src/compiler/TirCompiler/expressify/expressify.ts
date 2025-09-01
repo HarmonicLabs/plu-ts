@@ -78,8 +78,7 @@ export function expressifyFuncBody(
 {
     bodyStmts = bodyStmts.slice();
     let stmt: TirStmt;
-    while( stmt = bodyStmts.pop()! ) {
-
+    while( stmt = bodyStmts.shift()! ) {
 
         if( stmt instanceof TirBreakStmt ) {
             if( typeof loopReplacements?.compileBreak !== "function" ) throw new Error("break statement in function body.");

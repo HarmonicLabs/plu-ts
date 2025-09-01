@@ -354,8 +354,10 @@ function getVarAccessFromPropAccess(
 
         const objType = getUnaliased( expr.type );
 
-        if( !isSingleConstrStruct( objType ) )
-        throw new Error("cannot access property on non-struct type");
+        if( !isSingleConstrStruct( objType ) ) {
+            console.log( objType );
+            throw new Error("cannot access property on non-struct type");
+        }
 
         const ctor = objType.constructors[0];
         const fIdx = ctor.fields.findIndex( f => f.name === prop );

@@ -122,7 +122,7 @@ export class AstCompiler extends DiagnosticEmitter
 
         const entrySrc = await this.compileFile( filePath, true );
         if( this.diagnostics.length > 0 || !entrySrc )
-            throw new Error("compilation failed");
+            throw new Error("AstCompiler.compile: compilation failed");
 
         const mainFuncExpr = this.program.functions.get( this.program.contractTirFuncName );
         if( this.program.contractTirFuncName === "" || !mainFuncExpr ) {
@@ -150,7 +150,8 @@ export class AstCompiler extends DiagnosticEmitter
 
         // parse imports first
         await this.compileAllDeps(
-            ResolveStackNode.entry( src )
+            ResolveStackNode.entry( src ),
+            isMain
         );
         
         // if there were errors
@@ -812,7 +813,8 @@ export class AstCompiler extends DiagnosticEmitter
      * @returns `true` if there were no errors. `false` otherwise.
      */
     async compileAllDeps(
-        _resolveStackNode: ResolveStackNode
+        _resolveStackNode: ResolveStackNode,
+        isMain: boolean = false
     ): Promise<boolean>
     {
         const src = _resolveStackNode.dependent; // resolveStackNode instanceof ResolveStackNode ? source.dependent : source;
@@ -852,7 +854,7 @@ export class AstCompiler extends DiagnosticEmitter
             if( !await this.compileAllDeps( nextStack ) ) return false;
         }
 
-        this._compileParsedSource( src );
+        this._compileParsedSource( src, isMain );
 
         return true;
     }

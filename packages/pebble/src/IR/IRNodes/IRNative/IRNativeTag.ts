@@ -7,7 +7,7 @@ import { builtinTagToString } from "@harmoniclabs/uplc";
  * we use negatives for natives of the `std::fn` family
  * since there is no negative `UPLCBuiltin` tag
  */
-export const enum IRNativeTag {
+export enum IRNativeTag {
     // integers monoidal operations
     addInteger                  = 0,  // 0000000
     subtractInteger             = 1,  // 0000001
@@ -160,6 +160,7 @@ export const enum IRNativeTag {
     _isZero               = -42,
     _sortedValueLovelaces = -43,
 }
+Object.freeze( IRNativeTag );
 
 export function nativeTagToString( nativeTag: IRNativeTag ): string
 {

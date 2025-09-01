@@ -135,7 +135,10 @@ export class ExpressifyCtx
             this._getNonHoistedVariable( name )
             ?? this.hoisted.get( name )
         );
-        if( !result ) throw new Error(`variable '${name}' not found in the context`);
+        if( !result ) {
+            console.log( this );
+            throw new Error(`variable '${name}' not found in the context`);
+        }
         return result;
     }
 

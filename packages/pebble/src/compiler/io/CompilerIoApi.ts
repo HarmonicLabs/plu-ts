@@ -1,4 +1,4 @@
-import { toUtf8 } from "@harmoniclabs/uint8array-utils";
+import { fromUtf8, toUtf8 } from "@harmoniclabs/uint8array-utils";
 import { DiagnosticMessage } from "../../diagnostics/DiagnosticMessage";
 import { MaybePromise } from "../../utils/MaybePromise";
 import { ConsoleErrorStream, ConsoleLogStream, IOutputStream, MemoryStream } from "./IOutputStream";
@@ -22,7 +22,7 @@ export interface CompilerIoApi {
     reportDiagnostic: (diagnostic: DiagnosticMessage) => void;
 }
 
-type MemoryFs = Map<string, string>;
+type MemoryFs = Map<string, Uint8Array>;
 
 export interface MemoryCompilerIoApi extends CompilerIoApi {
     /** Memory file system for reading files. */
@@ -42,7 +42,7 @@ export function createMemoryCompilerIoApi({
     sources,
     outputs,
     useConsoleAsOutput
-}: Partial<MemoryCompilerIoApi> = {}): CompilerIoApi
+}: Partial<MemoryCompilerIoApi> = {}): MemoryCompilerIoApi
 {
     if( typeof useConsoleAsOutput !== "boolean" ) useConsoleAsOutput = false;
     if(!(sources instanceof Map)) sources = new Map();
@@ -55,7 +55,9 @@ export function createMemoryCompilerIoApi({
         writeFile: memoryFsWrite.bind( outputs ),
         exsistSync: exsistSync.bind( sources ),
         listFiles: memoryFsList.bind( sources ),
-        reportDiagnostic: defaultReportDiagnostic.bind( stderr )
+        reportDiagnostic: defaultReportDiagnostic.bind( stderr ),
+        sources,
+        outputs
     };
 }
 
@@ -81,7 +83,7 @@ function memoryFsRead(
     filename = memoryFsAdaptFilename( filename );
     while( filename.startsWith( "/" ) ) filename = filename.slice( 1 );
     const result = this.get( filename );
-    return result;
+    return result instanceof Uint8Array ? toUtf8( result ) : undefined;
 }
 
 function memoryFsList(
@@ -98,16 +100,17 @@ function memoryFsWrite(
 ): void
 {
     filename = memoryFsAdaptFilename( filename );
-    if(typeof contents !== "string")
+    if(!( contents instanceof Uint8Array ))
     {
-        if( contents instanceof Uint8Array )
-            contents = toUtf8( contents );
-        else if( typeof (contents as any).toString === "function" )
-            contents = (contents as any).toString()
-        else
-            contents = String( contents );
+        if( typeof contents === "string" ) {
+            contents = fromUtf8( contents );
+        }else if( typeof (contents as any).toString === "function" ) {
+            contents = fromUtf8( (contents as any).toString() );
+        } else {
+            throw new Error("cannot write contents: invalid type");
+        }
     }
-    this.set( filename, contents as string );
+    this.set( filename, contents );
 }
 
 function exsistSync(
