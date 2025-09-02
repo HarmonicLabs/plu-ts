@@ -15,15 +15,10 @@
   "scripts": {
     "buidl": "npm run build",
     "build": "rm -rf ./dist && npm run build:light",
-    "build:light": "npm run genDiagnosticMessages && tsc --project ./tsconfig.json && tsc-alias -p ./tsconfig.json",
-    "genDiagnosticMessages": "node ./scripts/genDiagnosticMessages.js",
-    "test": "jest",
-    "test:debug": "node --nolazy --inspect-brk ./node_modules/jest/bin/jest.js --runInBand --colors --verbose",
-    "clear-jest": "jest --clearCache",
-    "test-watch": "jest --watchman",
-    "test-coverage": "jest --coverage",
-    "ci": "npm i && npm run test && npm run build",
-    "pub": "npm run ci && npm pub"
+    "genVersions": "node ./scripts/genVersions.js",
+    "build:light": "npm run genVersions && tsc --project ./tsconfig.json && tsc-alias -p ./tsconfig.json",
+    "start:light": "node --max-old-space-size=8192 ./dist/index.js",
+    "start": "npm run build && npm run start:light"
   },
   "publishConfig": {
     "registry": "https://registry.npmjs.org"
@@ -50,6 +45,7 @@
     "@harmoniclabs/crypto": "^0.3.0",
     "@harmoniclabs/obj-utils": "^1.0.0",
     "@harmoniclabs/pebble": "./harmoniclabs-pebble-0.1.0-dev0.tgz",
+    "@harmoniclabs/plutus-machine": "^2.1.1",
     "@harmoniclabs/uint8array-utils": "^1.0.4",
     "@harmoniclabs/uplc": "^1.4.0",
     "@inquirer/prompts": "^7.8.4",

@@ -16,7 +16,6 @@ pebble language version: ${PEBBLE_LIB_VERSION}`
 program
     .name("pebble")
     .description("A simple, yet rock solid, functional language with an imperative bias, targeting UPLC")
-    .version( PEBBLE_VERSION )
     .option("-v, --version", "show version number")
     .action(( opts ) => {
         if( opts.version )
@@ -53,5 +52,9 @@ program.command("init")
     .description("Creates a new directory with a fresh pebble project.")
     .action( initPebbleProject );
 
+/*
+// TODO
+program.command("repl");
+//*/
+
 program.parse();
-//# sourceMappingURL=index.js.map
