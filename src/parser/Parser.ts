@@ -48,6 +48,9 @@ import { EmptyStmt } from "../ast/nodes/statements/EmptyStmt";
 import { FuncDecl } from "../ast/nodes/statements/declarations/FuncDecl";
 import { CharCode } from "../utils/CharCode";
 import { FailStmt } from "../ast/nodes/statements/FailStmt";
+import { ContractDecl } from "../ast/nodes/statements/declarations/ContractDecl";
+import { ParamDecl } from "../ast/nodes/statements/declarations/ParamDecl";
+import { ContractPurposeDecl, SpendDecl, MintDecl, CertifyDecl, WithdrawDecl, ProposeDecl, VoteDecl } from "../ast/nodes/statements/declarations/ContractPurposeDecl";
 import { AssertStmt } from "../ast/nodes/statements/AssertStmt";
 import { TestStmt } from "../ast/nodes/statements/TestStmt";
 import { MatchStmt, MatchStmtCase } from "../ast/nodes/statements/MatchStmt";
@@ -250,6 +253,11 @@ export class Parser extends DiagnosticEmitter
             case Token.Struct: {
                 tn.next();
                 statement = this.parseStruct( StructDeclAstFlags.none, flags, startPos );
+                break;
+            }
+            case Token.Contract: {
+                tn.next();
+                statement = this.parseContract(flags, startPos);
                 break;
             }
             case Token.Interface: {
@@ -2837,6 +2845,19 @@ export class Parser extends DiagnosticEmitter
                 statement = this.parseAssertStatement();
                 break;
             };
+            case Token.Param: {
+                statement = this.parseParamDecl();
+                break;
+            }
+            case Token.Spend:
+            case Token.Mint:
+            case Token.Certify:
+            case Token.Withdraw:
+            case Token.Propose:
+            case Token.Vote: {
+                statement = this.parseContractPurpose(token);
+                break;
+            }
             // case Token.Try: {
             //     statement = this.parseTryStatement();
             //     break;
@@ -3718,6 +3739,200 @@ export class Parser extends DiagnosticEmitter
                 // }
             }
         } while (again);
+    }
+
+    parseContract(flags: CommonFlags, startPos: number): ContractDecl | undefined {
+        const tn = this.tn;
+
+        if (!tn.skipIdentifier()) {
+            return this.error(
+                DiagnosticCode.Identifier_expected,
+                tn.range()
+            );
+        }
+
+        const name = new Identifier(tn.readIdentifier(), tn.range());
+
+        if (!tn.skip(Token.OpenBrace)) {
+            return this.error(
+                DiagnosticCode._0_expected,
+                tn.range(), "{"
+            );
+        }
+
+        const body = this.parseContractBody();
+
+        if (!body) return undefined;
+
+        return new ContractDecl(name, body, tn.range(startPos, tn.pos));
+    }
+
+    parseContractBody(): BlockStmt | undefined {
+        const tn = this.tn;
+        const startPos = tn.tokenPos;
+        const statements = new Array<PebbleStmt>();
+
+        while (!tn.skip(Token.CloseBrace)) {
+            let state = tn.mark();
+            let statement = this.parseContractStatement();
+            if (!statement) {
+                if (tn.token === Token.EndOfFile) return undefined;
+                tn.reset(state);
+                this.skipStatement();
+            } else {
+                statements.push(statement);
+            }
+        }
+
+        return new BlockStmt(statements, tn.range(startPos, tn.pos));
+    }
+
+    parseContractStatement(): PebbleStmt | undefined {
+        const tn = this.tn;
+        const state = tn.mark();
+        const token = tn.next();
+
+        switch (token) {
+            case Token.Param: {
+                return this.parseParamDecl();
+            }
+            case Token.Spend:
+            case Token.Mint:
+            case Token.Certify:
+            case Token.Withdraw:
+            case Token.Propose:
+            case Token.Vote: {
+                return this.parseContractPurpose(token);
+            }
+            default: {
+                tn.reset(state);
+                return this.parseStatement({ topLevel: false, isExport: false });
+            }
+        }
+    }
+
+    parseParamDecl(): ParamDecl | undefined {
+        const tn = this.tn;
+        const startPos = tn.tokenPos;
+
+        // We expect 'param' token to be current token
+        if (tn.token !== Token.Param) {
+            return this.error(
+                DiagnosticCode._0_expected,
+                tn.range(), "param"
+            );
+        }
+        tn.next(); // consume 'param'
+
+        if (!tn.skipIdentifier()) {
+            return this.error(
+                DiagnosticCode.Identifier_expected,
+                tn.range()
+            );
+        }
+
+        const name = new Identifier(tn.readIdentifier(), tn.range());
+
+        if (!tn.skip(Token.Colon)) {
+            return this.error(
+                DiagnosticCode._0_expected,
+                tn.range(), ":"
+            );
+        }
+
+        const type = this.parseTypeExpr();
+        if (!type) return undefined;
+
+        tn.skip(Token.Semicolon);
+
+        return new ParamDecl(name, type, tn.range(startPos, tn.pos));
+    }
+
+    parseContractPurpose(purposeToken: Token): ContractPurposeDecl | undefined {
+        const tn = this.tn;
+        const startPos = tn.tokenPos;
+
+        // We expect the purpose token to be current token
+        if (tn.token !== purposeToken) {
+            return this.error(
+                DiagnosticCode.Unexpected_token,
+                tn.range()
+            );
+        }
+        tn.next(); // consume the purpose token
+
+        if (!tn.skipIdentifier()) {
+            return this.error(
+                DiagnosticCode.Identifier_expected,
+                tn.range()
+            );
+        }
+
+        const name = new Identifier(tn.readIdentifier(), tn.range());
+
+        if (!tn.skip(Token.OpenParen)) {
+            return this.error(
+                DiagnosticCode._0_expected,
+                tn.range(), "("
+            );
+        }
+
+        const parameters: SimpleVarDecl[] = [];
+        
+        if (tn.token !== Token.CloseParen) {
+            do {
+                const param = this._parseVarDecl(CommonFlags.None);
+                if (!param) break;
+                if (param instanceof SimpleVarDecl) {
+                    parameters.push(param);
+                } else {
+                    this.error(
+                        DiagnosticCode.Identifier_expected,
+                        param.range
+                    );
+                }
+            } while (tn.skip(Token.Comma));
+        }
+
+        if (!tn.skip(Token.CloseParen)) {
+            return this.error(
+                DiagnosticCode._0_expected,
+                tn.range(), ")"
+            );
+        }
+
+        if (!tn.skip(Token.OpenBrace)) {
+            return this.error(
+                DiagnosticCode._0_expected,
+                tn.range(), "{"
+            );
+        }
+
+        const body = this.parseBlockStmt(false);
+
+        if (!body) return undefined;
+
+        const range = tn.range(startPos, tn.pos);
+
+        switch (purposeToken) {
+            case Token.Spend:
+                return new SpendDecl(name, parameters, body, range);
+            case Token.Mint:
+                return new MintDecl(name, parameters, body, range);
+            case Token.Certify:
+                return new CertifyDecl(name, parameters, body, range);
+            case Token.Withdraw:
+                return new WithdrawDecl(name, parameters, body, range);
+            case Token.Propose:
+                return new ProposeDecl(name, parameters, body, range);
+            case Token.Vote:
+                return new VoteDecl(name, parameters, body, range);
+            default:
+                return this.error(
+                    DiagnosticCode.Unexpected_token,
+                    tn.range()
+                );
+        }
     }
 
     

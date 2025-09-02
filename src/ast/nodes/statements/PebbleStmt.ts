@@ -26,6 +26,8 @@ import { DecrStmt } from "./DecrStmt";
 import { UsingStmt } from "./UsingStmt";
 import { FuncDecl } from "./declarations/FuncDecl";
 import { ExportStmt } from "./ExportStmt";
+import { ParamDecl } from "./declarations/ParamDecl";
+import { ContractPurposeDecl } from "./declarations/ContractPurposeDecl";
 
 /**
  * An expression is a piece of code
@@ -66,6 +68,8 @@ export type PebbleStmt
     | UsingStmt
     | FuncDecl
     | ExportStmt
+    | ParamDecl
+    | ContractPurposeDecl
     ;
 
 
@@ -100,5 +104,7 @@ export function isPebbleStmt( stmt: any ): stmt is PebbleStmt
         || stmt instanceof UsingStmt
         || stmt instanceof FuncDecl
         || stmt instanceof ExportStmt
+        || stmt instanceof ParamDecl
+        || stmt instanceof ContractPurposeDecl
     );
 }

@@ -84,6 +84,16 @@ export enum Token {
 
     Fail,       // fail ("message")?
     Assert,     // assert (condition) (else "message")?
+
+    // contract keywords
+    Contract,       // contract Name { ... }
+    Param,          // param name: Type;
+    Spend,          // spend functionName() { ... }
+    Mint,           // mint functionName() { ... }
+    Certify,        // certify functionName() { ... }
+    Withdraw,       // withdraw functionName() { ... }
+    Propose,        // propose functionName() { ... }
+    Vote,           // vote functionName() { ... }
   
     // punctuation
     
