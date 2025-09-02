@@ -1,3 +1,4 @@
+import { CompilerOptions, defaultOptions } from "@harmoniclabs/pebble";
 import { existsSync, readFileSync } from "node:fs";
 import * as path from "node:path";
 
@@ -12,7 +13,7 @@ export interface CliCompileOptions {
   entry: string;
   outDir: string;
   output?: string;
-  extra?: Record<string, unknown>;
+  config: CompilerOptions;
   configPath?: string;
 }
 
@@ -33,12 +34,15 @@ export function completeCompileOptions(flags: CliCompileFlags): CliCompileOption
   const root = normalizeRoot();
 
   const configPath = path.resolve(root, flags.config ?? "./pebble.config.json");
-  let config: Record<string, unknown> | undefined = undefined;
+  let config: CompilerOptions = defaultOptions;
   if (existsSync(configPath)) {
     try {
-      const txt = flags.config === "-" ? "{}" : readFileSync(configPath, "utf8");
+      const txt = readFileSync(configPath, "utf8");
       const parsed = JSON.parse(txt);
-      if (isRecord(parsed)) config = parsed;
+      if (isRecord(parsed)) config = {
+        ...defaultOptions,
+        ...parsed,
+      } as CompilerOptions;
     } catch {
       // ignore malformed config; proceed with flags/defaults
     }
@@ -60,7 +64,7 @@ export function completeCompileOptions(flags: CliCompileFlags): CliCompileOption
     entry,
     outDir,
     output: desiredOutput,
-    extra: config,
+    config,
     configPath: existsSync(configPath) ? configPath : undefined,
   };
 }

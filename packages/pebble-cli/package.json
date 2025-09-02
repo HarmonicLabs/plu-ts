@@ -16,9 +16,10 @@
     "buidl": "npm run build",
     "build": "rm -rf ./dist && npm run build:light",
     "genVersions": "node ./scripts/genVersions.js",
-    "build:light": "npm run genVersions && tsc --project ./tsconfig.json && tsc-alias -p ./tsconfig.json",
+    "build:light": "npm run --silent genVersions && tsc --project ./tsconfig.json && tsc-alias -p ./tsconfig.json",
     "start:light": "node --max-old-space-size=8192 ./dist/index.js",
-    "start": "npm run build && npm run start:light"
+    "start": "npm run build && npm run start:light",
+    "build-exe": "bun run genVersions && bun build src/index.ts --compile --production --target=node --outfile=out/pebble --packages=bundle"
   },
   "publishConfig": {
     "registry": "https://registry.npmjs.org"
@@ -44,7 +45,7 @@
   "dependencies": {
     "@harmoniclabs/crypto": "^0.3.0",
     "@harmoniclabs/obj-utils": "^1.0.0",
-    "@harmoniclabs/pebble": "./harmoniclabs-pebble-0.1.0-dev0.tgz",
+    "@harmoniclabs/pebble": "^0.1.0-dev5",
     "@harmoniclabs/plutus-machine": "^2.1.1",
     "@harmoniclabs/uint8array-utils": "^1.0.4",
     "@harmoniclabs/uplc": "^1.4.0",

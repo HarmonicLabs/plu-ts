@@ -1,18 +1,8 @@
 import * as path from "node:path";
-import { promises as fsp } from "node:fs";
+import * as fsp from "node:fs/promises";
 import { existsSync } from "node:fs";
 import { CliCompileOptions } from "./completeCompileOptions";
-import { createRequire } from "node:module";
-
-type Io = {
-	stdout: { write: (chunk: string | Uint8Array) => void };
-	stderr: { write: (chunk: string | Uint8Array) => void };
-	readFile: (filename: string, baseDir: string) => Promise<string | undefined> | string | undefined;
-	writeFile: (filename: string, contents: Uint8Array | string, baseDir: string) => Promise<void> | void;
-	exsistSync: (filename: string) => boolean;
-	listFiles: (dirname: string, baseDir: string) => Promise<string[] | undefined> | string[] | undefined;
-	reportDiagnostic: (diagnostic: unknown) => void;
-};
+import { Compiler, CompilerIoApi } from "@harmoniclabs/pebble";
 
 function resolvePath(filename: string, baseDir: string): string {
 	if (!filename) return baseDir;
@@ -20,7 +10,7 @@ function resolvePath(filename: string, baseDir: string): string {
 	return path.resolve(baseDir, filename.replace(/^\/+/, ""));
 }
 
-function createFsIo(root: string): Io {
+function createFsIo(root: string): CompilerIoApi {
     const stdout = process.stdout;
     const stderr = process.stderr;
 
@@ -47,6 +37,8 @@ function createFsIo(root: string): Io {
 		},
 		exsistSync(filename: string) {
 			const full = resolvePath(filename, root);
+            const exsists = existsSync(full);
+            console.log("checking exists:", full, filename, exsists );
 			return existsSync(full);
 		},
 		async listFiles(dirname: string, baseDir: string) {
@@ -65,14 +57,10 @@ function createFsIo(root: string): Io {
 }
 
 export async function compilePebbleProject(opts: CliCompileOptions): Promise<void> {
-	const { root, entry, outDir, output } = opts;
+	const { root, entry, outDir, output, config } = opts;
 	const io = createFsIo(root);
 
-	// Load compiler lazily to avoid build-time module resolution issues
-	const req = createRequire(import.meta.url);
-	const { Compiler } = req("@harmoniclabs/pebble/dist/compiler/Compiler.js");
-
-	const compiler = new Compiler(io);
+	const compiler = new Compiler(io, config);
 	// Mirror test behavior: pass overrides via compile()
 	await compiler.compile({
 		root,

@@ -40,7 +40,7 @@ program.command("version")
     });
 
 program.command("compile")
-    .description("Compile a .pebble file to UPLC")
+    .description("Compiles a pebble project")
     .option("-c, --config <string>", "The config file path", "./pebble.config.json")
     .option("--entry <string>", "The entry file path .pebble file (used only if missing in the configuration)", "./index.pebble")
     .option("-o, --output <string>", "The output file path (used only if missing in the configuration)", "./out.flat")
@@ -49,11 +49,13 @@ program.command("compile")
     });
 
 program.command("init")
-    .description("Creates a new directory with a fresh pebble project.")
+    .description("Creates a new directory with a fresh pebble project")
     .action( initPebbleProject );
 
 /*
 // TODO
+defineVersionManager( program );
+
 program.command("repl");
 //*/
 

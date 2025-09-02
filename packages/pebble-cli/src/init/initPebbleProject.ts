@@ -1,3 +1,4 @@
+/// @ts-ignore Cannot find module '@inquirer/prompts' or its corresponding type declarations.
 import { input, confirm, select, Separator } from "@inquirer/prompts";
 import chalk from "chalk";
 import * as path from "node:path";

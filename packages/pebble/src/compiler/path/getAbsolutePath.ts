@@ -61,6 +61,11 @@ function addExtension(path: string, endsWithSlash: boolean): string {
     return path + extension;
 }
 
+export function isAbsolutePath( path: string ): boolean
+{
+    return path.startsWith( PATH_DELIMITER );
+}
+
 export function getEnvRelativePath( filePath: string, projectRoot: string ): string | undefined
 {
     if(!(
@@ -69,15 +74,15 @@ export function getEnvRelativePath( filePath: string, projectRoot: string ): str
     )) return undefined;
 
     projectRoot = projectRoot.trim();
+    if( !projectRoot.endsWith( PATH_DELIMITER ) ) projectRoot += PATH_DELIMITER;
+
+
+    if( isAbsolutePath( filePath ) ) return filePath;
+
     filePath = getAbsolutePath( filePath.trim(), projectRoot )!;
     if( !filePath ) return undefined;
-    
-    if( !projectRoot.endsWith(PATH_DELIMITER) )
-        projectRoot = projectRoot + PATH_DELIMITER;
 
-    while( filePath.startsWith(PATH_DELIMITER) ) filePath = filePath.slice( PATH_DELIMITER.length );
-
-    return projectRoot + filePath;
+    return filePath.startsWith( projectRoot ) ? filePath : projectRoot + filePath;
 }
 
 /**

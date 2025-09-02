@@ -5,9 +5,15 @@ import { readFile, writeFile } from "node:fs/promises";
 import { existsSync } from "node:fs";
 import path from "node:path";
 
+function isSingleDigit( str )
+{
+    return /^\d$/.test( str );
+}
+
 async function main() {
 	const cliRoot = path.resolve(path.dirname(new URL(import.meta.url).pathname), "..");
 	const cliPkgPath = path.join(cliRoot, "package.json");
+	const cliPkgLockPath = path.join(cliRoot, "package-lock.json");
 	const outPath = path.join(cliRoot, "src", "version.generated.ts");
 
 	let cliVersion = "0.0.0";
@@ -17,6 +23,17 @@ async function main() {
 		const cliPkg = JSON.parse(await readFile(cliPkgPath, "utf8"));
 		cliVersion = cliPkg.version ?? cliVersion;
 
+        const cliPebbleDepVersion = cliPkg.dependencies["@harmoniclabs/pebble"];
+        pebbleVersion = typeof cliPebbleDepVersion === "string" ? cliPebbleDepVersion : pebbleVersion;
+
+		const cliPkgLock = JSON.parse(await readFile(cliPkgLockPath, "utf8"));
+        pebbleVersion = cliPkgLock.packages?.["node_modules/@harmoniclabs/pebble"]?.version ?? pebbleVersion;
+
+        if( pebbleVersion !== "unknown" )
+        {
+            while( !isSingleDigit( pebbleVersion[0] ) ) pebbleVersion = pebbleVersion.slice(1);
+        }
+        /*
 		// Try to read the local monorepo pebble package version first
 		const pebblePkgPath = path.resolve(cliRoot, "..", "pebble", "package.json");
 		if (existsSync(pebblePkgPath)) {
@@ -24,8 +41,9 @@ async function main() {
 			pebbleVersion = pebblePkg.version ?? pebbleVersion;
 		} else if (cliPkg.dependencies && cliPkg.dependencies["@harmoniclabs/pebble"]) {
 			// Fallback to whatever is declared in dependencies (may be a file: tgz path)
-			pebbleVersion = String(cliPkg.dependencies["@harmoniclabs/pebble"]);
+			
 		}
+        //*/
 	} catch (e) {
 		console.error("Failed to read package versions:", e);
 	}

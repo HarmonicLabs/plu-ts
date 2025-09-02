@@ -118,9 +118,19 @@ export class AstCompiler extends DiagnosticEmitter
             throw new Error("entry file not found");
         }
 
+        if( !this.io.exsistSync( filePath ) )
+            throw new Error("AstCompiler.compile: entry file does not exist: " + filePath );
+
         const entrySrc = await this.compileFile( filePath, true );
-        if( this.diagnostics.length > 0 || !entrySrc )
-            throw new Error("AstCompiler.compile: compilation failed");
+        if( this.diagnostics.length > 0 || !entrySrc ) {
+            let msg: DiagnosticMessage;
+            const fstErrorMsg = this.diagnostics[0].toString();
+            const nDiags = this.diagnostics.length;
+            while( msg = this.diagnostics.shift()! ) {
+                this.io.stdout.write( msg.toString() + "\n" );
+            }
+            throw new Error("AstCompiler.compile: failed with " + nDiags + " diagnostic messages; first message: " + fstErrorMsg );
+        }
 
         const mainFuncExpr = this.program.functions.get( this.program.contractTirFuncName );
         if( this.program.contractTirFuncName === "" || !mainFuncExpr ) {
@@ -729,7 +739,6 @@ export class AstCompiler extends DiagnosticEmitter
             )) continue;
 
             const importAbsPath = getAbsolutePath( stmt.fromPath.string, srcAbsPath ) ?? "";
-            // console.log(projAbsoultePath, [ ...this.program.files.keys() ]);
             const importedSymbols = this.program.getExportedSymbols( importAbsPath );
             if( !importedSymbols )
             {

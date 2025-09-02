@@ -30,10 +30,13 @@ export class Compiler
         const program = await astCompiler.compile();
         if( this.diagnostics.length > 0 ) {
             let msg: DiagnosticMessage;
+            globalThis.console && console.log( this.diagnostics );
+            const fstErrorMsg = this.diagnostics[0].toString();
+            const nDiags = this.diagnostics.length;
             while( msg = this.diagnostics.shift()! ) {
                 this.io.stdout.write( msg.toString() + "\n" );
             }
-            throw new Error("compilation failed");
+            throw new Error("compilation failed with " + nDiags + " diagnostic messages; first message: " + fstErrorMsg );
         }
         
         const ir = compileTypedProgram(

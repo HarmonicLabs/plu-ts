@@ -1,3 +1,4 @@
+import { fromUtf8 } from "@harmoniclabs/uint8array-utils";
 import { Source } from "../../../ast/Source/Source";
 import { DiagnosticMessage } from "../../../diagnostics/DiagnosticMessage";
 import { defaultOptions } from "../../../IR/toUPLC/CompilerOptions";
@@ -51,8 +52,8 @@ function main( ctx: ScriptContext ): void
             },
             createMemoryCompilerIoApi({
                 sources: new Map([
-                    [fileName, srcText],
-                    [myDatumPath, myDatumSrc],
+                    [fileName, fromUtf8(srcText)],
+                    [myDatumPath, fromUtf8(myDatumSrc)],
                 ]),
                 useConsoleAsOutput: true,
             }),
