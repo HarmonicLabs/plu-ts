@@ -1,7 +1,6 @@
 <p align="center">
-  <img width="100px" src="./assets/logo/pebble.svg" align="center"/>
-  <h1 align="center">pebble</h1>
-  <p align="center">A simple, yet rock solid, functional language with an imperative bias, targeting UPLC</p>
+  <img width="70%" src="./assets/header.png" align="center"/>
+  <p align="center">A simple, yet rock solid, procedural language with an funcitonal bias, targeting UPLC</p>
 
   <p align="center">
     <img src="https://img.shields.io/github/commit-activity/m/HarmonicLabs/plu-ts?style=for-the-badge" />

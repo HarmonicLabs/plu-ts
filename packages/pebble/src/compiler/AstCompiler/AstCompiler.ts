@@ -11,7 +11,6 @@ import { DiagnosticCode } from "../../diagnostics/diagnosticMessages.generated";
 import { CompilerOptions } from "../../IR/toUPLC/CompilerOptions";
 import { Parser } from "../../parser/Parser";
 import { CompilerIoApi, createMemoryCompilerIoApi } from "../io/CompilerIoApi";
-import { IPebbleCompiler } from "../IPebbleCompiler";
 import { AstFuncName, PossibleTirTypes, AstScope, TirFuncName } from "./scope/AstScope";
 import { TypedProgram } from "../tir/program/TypedProgram";
 import { TirAliasType } from "../tir/types/TirAliasType";
@@ -74,7 +73,6 @@ This typically involves a two-pass system:
  * In short, here is where type checking happens.
  */
 export class AstCompiler extends DiagnosticEmitter
-    implements IPebbleCompiler
 {
     /** 
      * The standard library scope.
