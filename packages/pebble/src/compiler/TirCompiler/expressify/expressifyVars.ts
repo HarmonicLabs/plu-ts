@@ -1,6 +1,7 @@
 import { isUnaryPrefixExpr } from "../../../ast/nodes/expr/unary/UnaryPrefixExpr";
 import { isTirBinaryExpr, TirExponentiationExpr } from "../../tir/expressions/binary/TirBinaryExpr";
 import { TirLitArrExpr } from "../../tir/expressions/litteral/TirLitArrExpr";
+import { TirLitFailExpr } from "../../tir/expressions/litteral/TirLitFailExpr";
 import { TirLitFalseExpr } from "../../tir/expressions/litteral/TirLitFalseExpr";
 import { TirLitHexBytesExpr } from "../../tir/expressions/litteral/TirLitHexBytesExpr";
 import { TirLitIntExpr } from "../../tir/expressions/litteral/TirLitIntExpr";
@@ -63,6 +64,7 @@ export function expressifyVars(
     if(
         // isTirLitteralExpr( expr )
         expr instanceof TirLitVoidExpr
+        || expr instanceof TirLitFailExpr
         || expr instanceof TirLitUndefExpr
         || expr instanceof TirLitTrueExpr
         || expr instanceof TirLitFalseExpr
@@ -246,6 +248,7 @@ function getVarAccessFromPropAccess(
     if(
         expr instanceof TirLitVoidExpr
         || expr instanceof TirLitUndefExpr
+        || expr instanceof TirLitFailExpr
         || expr instanceof TirLitTrueExpr
         || expr instanceof TirLitFalseExpr
         // methods on these should have already been converted to functions

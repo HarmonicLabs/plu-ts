@@ -1,4 +1,5 @@
 import { LitArrExpr } from "./LitArrExpr";
+import { LitFailExpr } from "./LitFailExpr";
 import { LitFalseExpr } from "./LitFalseExpr";
 import { LitHexBytesExpr } from "./LitHexBytesExpr";
 import { LitIntExpr } from "./LitIntExpr";
@@ -22,6 +23,7 @@ export type LitteralExpr
     | LitStrExpr
     | LitIntExpr
     | LitHexBytesExpr
+    | LitFailExpr
 
 export function isLitteralExpr( thing: any ): thing is LitteralExpr
 {
@@ -37,5 +39,6 @@ export function isLitteralExpr( thing: any ): thing is LitteralExpr
         || thing instanceof LitStrExpr
         || thing instanceof LitIntExpr
         || thing instanceof LitHexBytesExpr
+        || thing instanceof LitFailExpr
     );
 }

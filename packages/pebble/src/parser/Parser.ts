@@ -50,7 +50,7 @@ import { AssertStmt } from "../ast/nodes/statements/AssertStmt";
 import { TestStmt } from "../ast/nodes/statements/TestStmt";
 import { MatchStmt, MatchStmtCase } from "../ast/nodes/statements/MatchStmt";
 import { WhileStmt } from "../ast/nodes/statements/WhileStmt";
-import { CaseExpr, CaseExprMatcher } from "../ast/nodes/expr/CaseExpr";
+import { CaseExpr, CaseExprMatcher, CaseWildcardMatcher } from "../ast/nodes/expr/CaseExpr";
 import { StructConstrDecl, StructDecl, StructDeclAstFlags } from "../ast/nodes/statements/declarations/StructDecl";
 import { InterfaceDecl, InterfaceDeclMethod } from "../ast/nodes/statements/declarations/InterfaceDecl";
 import { ImportStarStmt } from "../ast/nodes/statements/ImportStarStmt";
@@ -76,6 +76,8 @@ import { ExportStmt } from "../ast/nodes/statements/ExportStmt";
 import { defaultSymbolForge } from "../compiler/internalVar";
 import { BodyStmt, TopLevelStmt } from "../ast/nodes/statements/PebbleStmt";
 import { Precedence, determinePrecedence } from "./Precedence";
+import { tokenFromKeyword } from "../tokenizer/utils/tokenFromKeyword";
+import { LitFailExpr } from "../ast/nodes/expr/litteral/LitFailExpr";
 
 interface ParseStmtOpts {
     isExport?: boolean;
@@ -1777,11 +1779,13 @@ export class Parser extends DiagnosticEmitter
         const tn = this.tn;
 
         let expr: PebbleExpr = this.parseExprStart()!;
-        if( !expr ) return undefined;
+        if( !expr ) {
+            return undefined;
+        }
 
         const startPos = expr.range.start;
 
-        if( tn.skip( Token.HexBytesLiteral) )
+        if( tn.skip( Token.HexBytesLiteral ) )
         {
             const hexBytes = tn.readHexBytes();
             if( !hexBytes ) return undefined;
@@ -1934,7 +1938,7 @@ export class Parser extends DiagnosticEmitter
                             prop,
                             tn.range( startPos, tn.pos )
                         );
-                        expr = this.tryParseCallExprOrReturnSame( expr );
+                        return this.tryParseCallExprOrReturnSame( expr );
                         break;
                     }
 
@@ -2103,6 +2107,7 @@ export class Parser extends DiagnosticEmitter
             }
             // Special Identifier
             case Token.Void: return new LitVoidExpr( tn.range() );
+            case Token.Fail: return new LitFailExpr( tn.range() );
             case Token.Undefined: return new LitUndefExpr(tn.range());
             case Token.True: return new LitTrueExpr(tn.range());
             case Token.False: return new LitFalseExpr(tn.range());
@@ -2212,7 +2217,16 @@ export class Parser extends DiagnosticEmitter
             }
             case Token.Identifier: {
                 const identifierText = tn.readIdentifier();
-                if (identifierText === "undefined") return new LitUndefExpr(tn.range()); // special
+                // special expressions
+                switch( identifierText )
+                {
+                    case "undefined": return new LitUndefExpr(tn.range());
+                    case "true": return new LitTrueExpr(tn.range());
+                    case "false": return new LitFalseExpr(tn.range());
+                    case "this": return new LitThisExpr(tn.range());
+                    case "void": return new LitVoidExpr(tn.range());
+                    case "fail": return new LitFailExpr(tn.range());
+                }
 
                 const identifier = new Identifier(identifierText, tn.range(startPos, tn.pos));
 
@@ -2307,6 +2321,9 @@ export class Parser extends DiagnosticEmitter
                 const expr = this.parseCaseExpr();
                 if (!expr) return undefined;
             }
+            case Token.Fail: {
+                return new LitFailExpr( tn.range() );
+            }
             // case Token.Class: return this.parseClassPebbleExpr();
             // case Token.Struct: return this.parseStructExpr();
             default: {
@@ -2365,7 +2382,7 @@ export class Parser extends DiagnosticEmitter
     parseCaseExpr(): CaseExpr | undefined
     {
         const tn = this.tn;
-        // at 'case': Expression ('is' VarDecl '=>' Expression)+
+        // at 'case': Expression ('is' VarDecl '=>' Expression)+ ('else' Expression)?
 
         const startPos = tn.tokenPos;
 
@@ -2414,6 +2431,20 @@ export class Parser extends DiagnosticEmitter
             );
         }
 
+        let wildcardCase: CaseWildcardMatcher | undefined = undefined;
+        if( tn.skip( Token.Else ) )
+        {
+            const wildcardStart = tn.tokenPos;
+            const body = this.parseExpr( Precedence.CaseExpr );
+            if( !body ) return undefined;
+            wildcardCase = new CaseWildcardMatcher(
+                body,
+                tn.range( wildcardStart )
+            )
+        }
+
+        tn.skip( Token.Semicolon ); // if any
+
         const finalRange = tn.range( startPos, tn.pos );
 
         if( cases.length < 1 )
@@ -2425,7 +2456,7 @@ export class Parser extends DiagnosticEmitter
         return new CaseExpr(
             expr,
             cases,
-            undefined, // wildcard case
+            wildcardCase,
             finalRange
         );
     }
@@ -2994,7 +3025,9 @@ export class Parser extends DiagnosticEmitter
         const startPos = tn.tokenPos;
         const statements = new Array<BodyStmt>();
 
-        while( !tn.skip( Token.CloseBrace ) )
+        while(
+            !tn.skip( Token.CloseBrace )
+        )
         {
             let state = tn.mark();
             let statement = this.parseStatement({ topLevel, isExport: false });
@@ -3282,12 +3315,12 @@ export class Parser extends DiagnosticEmitter
 
         let expr: PebbleExpr | undefined = undefined;
         if(
-            !tn.skip( Token.Semicolon) &&
+            !tn.skip( Token.Semicolon ) &&
             !tn.isNextTokenOnNewLine()
         ) {
             expr = this.parseExpr();
             if (!expr) return undefined;
-            tn.skip( Token.Semicolon); // if any
+            tn.skip( Token.Semicolon ); // if any
         }
 
         return new ReturnStmt(expr, tn.range(startPos, tn.pos));

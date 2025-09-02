@@ -127,7 +127,12 @@ export class AstCompiler extends DiagnosticEmitter
             const fstErrorMsg = this.diagnostics[0].toString();
             const nDiags = this.diagnostics.length;
             while( msg = this.diagnostics.shift()! ) {
+                //*
                 this.io.stdout.write( msg.toString() + "\n" );
+                /*/
+                console.log( msg );
+                console.log( msg.toString() );
+                //*/
             }
             throw new Error("AstCompiler.compile: failed with " + nDiags + " diagnostic messages; first message: " + fstErrorMsg );
         }

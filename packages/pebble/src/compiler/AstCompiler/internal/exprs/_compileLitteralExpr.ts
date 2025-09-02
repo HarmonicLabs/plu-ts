@@ -1,4 +1,5 @@
 import { LitArrExpr } from "../../../../ast/nodes/expr/litteral/LitArrExpr";
+import { LitFailExpr } from "../../../../ast/nodes/expr/litteral/LitFailExpr";
 import { LitFalseExpr } from "../../../../ast/nodes/expr/litteral/LitFalseExpr";
 import { LitHexBytesExpr } from "../../../../ast/nodes/expr/litteral/LitHexBytesExpr";
 import { LitIntExpr } from "../../../../ast/nodes/expr/litteral/LitIntExpr";
@@ -12,6 +13,7 @@ import { LitUndefExpr } from "../../../../ast/nodes/expr/litteral/LitUndefExpr";
 import { LitVoidExpr } from "../../../../ast/nodes/expr/litteral/LitVoidExpr";
 import { DiagnosticCode } from "../../../../diagnostics/diagnosticMessages.generated";
 import { TirLitArrExpr } from "../../../tir/expressions/litteral/TirLitArrExpr";
+import { TirLitFailExpr } from "../../../tir/expressions/litteral/TirLitFailExpr";
 import { TirLitFalseExpr } from "../../../tir/expressions/litteral/TirLitFalseExpr";
 import { TirLitHexBytesExpr } from "../../../tir/expressions/litteral/TirLitHexBytesExpr";
 import { TirLitIntExpr } from "../../../tir/expressions/litteral/TirLitIntExpr";
@@ -69,9 +71,9 @@ export function _compileLitteralExpr(
     if( expr instanceof LitArrExpr ) return _compileLitteralArrayExpr( ctx, expr, typeHint );
     if( expr instanceof LitObjExpr ) return _compileLitteralObjExpr( ctx, expr, typeHint );
     if( expr instanceof LitNamedObjExpr ) return _compileLitteralNamedObjExpr( ctx, expr, typeHint );
+    if( expr instanceof LitFailExpr ) return new TirLitFailExpr( expr.range );
 
-    // never
-    // expr;
+    const tsEnsureExsautstiveCheck: never = expr;
     throw new Error("unreachable::AstCompiler::_compileLitteralExpr");
 }
 

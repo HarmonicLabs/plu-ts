@@ -7,11 +7,32 @@ export interface IOutputStream {
 }
 
 export class ConsoleLogStream implements IOutputStream {
+    private _pending: string = "";
     write(chunk: Uint8Array | string): void {
-        if (chunk instanceof Uint8Array) {
-            console.log( toUtf8( chunk ) );
-        } else {
-            console.log( chunk.toString() );
+        const newChunk = (chunk instanceof Uint8Array) ? toUtf8( chunk ): chunk.toString()
+        if( newChunk.includes("\n") )
+        {
+            const parts = newChunk.split("\n");
+            if(parts.length === 1)
+            {
+                // only one \n
+                console.log( this._pending + parts[0] );
+                this._pending = "";
+            }
+            else
+            {
+                // multiple \n
+                console.log( this._pending + parts[0] );
+                for( let i = 1; i < parts.length - 1; i++ )
+                {
+                    console.log( parts[i] );
+                }
+                this._pending = parts[ parts.length - 1 ];
+            }
+        }
+        else
+        {
+            this._pending += newChunk;
         }
     }
 }
