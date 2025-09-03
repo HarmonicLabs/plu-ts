@@ -12,7 +12,7 @@ describe("parseMain", () => {
 function main( ctx: ScriptContext ): void
 {
     match( ctx.purpose ) {
-        when Spending{}: {}
+        when Spend{}: {}
         else fail;
     } 
 }
@@ -36,7 +36,7 @@ function main( ctx: ScriptContext ): void
         const output = ioApi.outputs.get("out/out.flat")!;
         expect( output instanceof Uint8Array ).toBe( true );
 
-        // console.log( toHex( output ) );
+        console.log( toHex( output ) );
     });
     
 });

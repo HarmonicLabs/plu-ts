@@ -10,6 +10,7 @@ export class MatchStmt
     constructor(
         readonly matchExpr: PebbleExpr,
         readonly cases: MatchStmtCase[],
+        readonly elseCase: MatchStmtElseCase | undefined,
         readonly range: SourceRange,
     ) {}
 }
@@ -19,6 +20,15 @@ export class MatchStmtCase
 {
     constructor(
         readonly pattern: VarDecl,
+        readonly body: BodyStmt,
+        readonly range: SourceRange,
+    ) {}
+}
+
+export class MatchStmtElseCase
+    implements HasSourceRange
+{
+    constructor(
         readonly body: BodyStmt,
         readonly range: SourceRange,
     ) {}

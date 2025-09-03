@@ -57,7 +57,6 @@ export function _compileMatchStmt(
     );
 
     const cases: TirMatchStmtCase[] = [];
-    let wildcardCase: TirMatchStmtWildcardCase | undefined = undefined;
     const constrNamesAlreadySpecified: string[] = [];
     for( const matchCase of stmt.cases )
     {
@@ -69,11 +68,13 @@ export function _compileMatchStmt(
         );
         if( !branch ) return undefined;
         
+        /*
         if( branch instanceof TirMatchStmtWildcardCase )
         {
             wildcardCase = branch;
             break; // wildcard case catches any branch specified after it
         }
+        //*/
         const indexOfCtor = missingCtors.indexOf( branch.pattern.constrName );
         if( indexOfCtor === -1 )
         {
@@ -84,6 +85,25 @@ export function _compileMatchStmt(
         }
         missingCtors.splice( indexOfCtor, 1 );
         cases.push( branch );
+    }
+
+    let wildcardCase: TirMatchStmtWildcardCase | undefined = undefined;
+    if( stmt.elseCase )
+    {
+        const matchCase = stmt.elseCase;
+        const branchCtx = ctx.newBranchChildScope();
+        const branchBody = wrapManyStatements(
+            _compileStatement(
+                branchCtx,
+                matchCase.body
+            ),
+            matchCase.body.range
+        );
+        if( !branchBody ) return undefined;
+        wildcardCase = new TirMatchStmtWildcardCase(
+            branchBody,
+            matchCase.range
+        );
     }
 
     if( !wildcardCase && cases.length < ctors.length )
@@ -106,12 +126,16 @@ export function _compileTirMatchStmtCase(
     matchCase: MatchStmtCase,
     deconstructableType: DeconstructableTirType,
     constrNamesAlreadySpecified: string[]
-): TirMatchStmtCase | TirMatchStmtWildcardCase | undefined
+): TirMatchStmtCase | undefined
 {
+    /*
     const pattern = _compileVarDecl( ctx, matchCase.pattern, deconstructableType );
     if( !pattern ) return undefined;
+    //*/
+    const pattern = matchCase.pattern;
 
     if( pattern instanceof SimpleVarDecl ) {
+        /*
         if( pattern.name.text === "_" ) {
             const branchCtx = ctx.newBranchChildScope();
             const branchBody = wrapManyStatements(
@@ -127,6 +151,7 @@ export function _compileTirMatchStmtCase(
                 matchCase.range
             );
         }
+        //*/
         return ctx.error(
             DiagnosticCode.The_argument_of_a_match_statement_branch_must_be_deconstructed,
             matchCase.pattern.range
@@ -143,17 +168,15 @@ export function _compileTirMatchStmtCase(
         );
         constrNamesAlreadySpecified.push( deconstructedCtorName );
 
-        if( deconstructableType instanceof TirDataT )
+        if(
+            deconstructableType instanceof TirSoPStructType
+            || deconstructableType instanceof TirDataStructType
+        )
         {
-            if(!(
-                   deconstructedCtorName === "Constr"   // { index, fields, ...rest }
-                || deconstructedCtorName === "Map"      // { map, ...rest }
-                || deconstructedCtorName === "List"     // { list, ...rest }
-                || deconstructedCtorName === "B"        // { bytes, ...rest }
-                || deconstructedCtorName === "I"        // { int, ...rest }
-            )) return ctx.error(
+            const ctorDef = deconstructableType.constructors.find( c => c.name === deconstructedCtorName );
+            if( !ctorDef ) return ctx.error(
                 DiagnosticCode.Unknown_0_constructor_1,
-                pattern.name.range, "data", deconstructedCtorName
+                pattern.name.range, deconstructableType.toString(), deconstructedCtorName
             );
 
             const branchCtx = ctx.newBranchChildScope();
@@ -214,16 +237,18 @@ export function _compileTirMatchStmtCase(
                 branchBody,
                 matchCase.range
             );
-        }
-        else if(
-            deconstructableType instanceof TirSoPStructType
-            || deconstructableType instanceof TirDataStructType
-        )
+        } 
+        else if( deconstructableType instanceof TirDataT )
         {
-            const ctorDef = deconstructableType.constructors.find( c => c.name === deconstructedCtorName );
-            if( !ctorDef ) return ctx.error(
+            if(!(
+                   deconstructedCtorName === "Constr"   // { index, fields, ...rest }
+                || deconstructedCtorName === "Map"      // { map, ...rest }
+                || deconstructedCtorName === "List"     // { list, ...rest }
+                || deconstructedCtorName === "B"        // { bytes, ...rest }
+                || deconstructedCtorName === "I"        // { int, ...rest }
+            )) return ctx.error(
                 DiagnosticCode.Unknown_0_constructor_1,
-                pattern.name.range, deconstructableType.toString(), deconstructedCtorName
+                pattern.name.range, "data", deconstructedCtorName
             );
 
             const branchCtx = ctx.newBranchChildScope();
@@ -342,4 +367,6 @@ export function _compileTirMatchStmtCase(
         );
         //*/
     }
+
+    throw new Error("unreachable::AstCompiler::_compileTirMatchStmtCase");
 }

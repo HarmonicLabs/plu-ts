@@ -48,7 +48,7 @@ import { CharCode } from "../utils/CharCode";
 import { FailStmt } from "../ast/nodes/statements/FailStmt";
 import { AssertStmt } from "../ast/nodes/statements/AssertStmt";
 import { TestStmt } from "../ast/nodes/statements/TestStmt";
-import { MatchStmt, MatchStmtCase } from "../ast/nodes/statements/MatchStmt";
+import { MatchStmt, MatchStmtCase, MatchStmtElseCase } from "../ast/nodes/statements/MatchStmt";
 import { WhileStmt } from "../ast/nodes/statements/WhileStmt";
 import { CaseExpr, CaseExprMatcher, CaseWildcardMatcher } from "../ast/nodes/expr/CaseExpr";
 import { StructConstrDecl, StructDecl, StructDeclAstFlags } from "../ast/nodes/statements/declarations/StructDecl";
@@ -1294,6 +1294,7 @@ export class Parser extends DiagnosticEmitter
      */
     private _parseVarDecl(
         flags: CommonFlags,
+        skipTypeAndInitializer = false
     ): VarDecl | undefined
     {
         const tn = this.tn;
@@ -1305,7 +1306,7 @@ export class Parser extends DiagnosticEmitter
             tn.skip( Token.OpenBrace )
         ) // ConstrName{ ... } || { ... }
         {
-            const unnamed = this.parseSingleDeconstructVarDecl( flags );
+            const unnamed = this.parseSingleDeconstructVarDecl( flags, skipTypeAndInitializer );
             if( !unnamed ) return undefined;
             return renamedField instanceof Identifier ? 
                 // ConstrName{ ... }
@@ -1323,13 +1324,17 @@ export class Parser extends DiagnosticEmitter
                 );
                 return undefined;
             }
-            return this.parseArrayLikeDeconstr( flags );
+            return this.parseArrayLikeDeconstr( flags, skipTypeAndInitializer );
         }
         else if( renamedField instanceof Identifier ) // renamed
         {
-            const [ explicitType, initializer ] = this._parseTypeAndInitializer();
+            let explicitType: AstTypeExpr | undefined = undefined;
+            let initializer: PebbleExpr | undefined = undefined;
+            if( !skipTypeAndInitializer ) {
+                [ explicitType, initializer ] = this._parseTypeAndInitializer();
+            }
+            
             let range = renamedField.range;
-
             if( initializer ) range = SourceRange.join( range, initializer.range );
             else if( explicitType ) range = SourceRange.join( range, explicitType.range );
 
@@ -1344,7 +1349,10 @@ export class Parser extends DiagnosticEmitter
         else return undefined;
     }
 
-    parseSingleDeconstructVarDecl( flags: CommonFlags ): SingleDeconstructVarDecl | undefined
+    parseSingleDeconstructVarDecl(
+        flags: CommonFlags,
+        skipTypeAndInitializer: boolean = false
+    ): SingleDeconstructVarDecl | undefined
     {
         const tn = this.tn;
 
@@ -1457,7 +1465,9 @@ export class Parser extends DiagnosticEmitter
             tn.skip( Token.Comma ); // skip comma if present
         } // while( !tn.skip( Token.CloseBrace ) )
 
-        [ explicitType, initializer ] = this._parseTypeAndInitializer();
+        if( !skipTypeAndInitializer ) {
+            [ explicitType, initializer ] = this._parseTypeAndInitializer();
+        }
 
         return new SingleDeconstructVarDecl(
             elements,
@@ -1469,7 +1479,10 @@ export class Parser extends DiagnosticEmitter
         );
     }
 
-    parseArrayLikeDeconstr( flags: CommonFlags ): ArrayLikeDeconstr | undefined
+    parseArrayLikeDeconstr(
+        flags: CommonFlags,
+        skipTypeAndInitializer: boolean = false
+    ): ArrayLikeDeconstr | undefined
     {
         const tn = this.tn;
 
@@ -1517,7 +1530,7 @@ export class Parser extends DiagnosticEmitter
                 elem.initExpr ? elem.initExpr.range : elem.type!.range
             );
 
-            if( tn.skip( Token.As) )
+            if( tn.skip( Token.As ) )
             {
                 const castType = this.parseTypeExpr();
                 if( !castType )
@@ -1548,7 +1561,11 @@ export class Parser extends DiagnosticEmitter
             }
         }
 
-        const [ explicitType, initializer ] = this._parseTypeAndInitializer();
+        let explicitType: AstTypeExpr | undefined = undefined;
+        let initializer: PebbleExpr | undefined = undefined;
+        if( !skipTypeAndInitializer ) {
+            [ explicitType, initializer ] = this._parseTypeAndInitializer();
+        }
 
         let range = tn.range( startPos, tn.pos );
 
@@ -1593,9 +1610,9 @@ export class Parser extends DiagnosticEmitter
 
         let type: AstTypeExpr | undefined = undefined;
 
-        if( tn.skip( Token.Colon) ) type = this.parseTypeExpr();
+        if( tn.skip( Token.Colon ) ) type = this.parseTypeExpr();
 
-        if( !tn.skip( Token.Equals) ) return [ type, undefined ];
+        if( !tn.skip( Token.Equals ) ) return [ type, undefined ];
 
         if( isRest ){
             this.error(
@@ -3376,16 +3393,21 @@ export class Parser extends DiagnosticEmitter
 
         let noPatternCaseSeen: boolean = false;
         const cases = new Array<MatchStmtCase>();
-        while( !tn.skip( Token.CloseBrace ) )
+        while(
+            !tn.skip( Token.CloseBrace )
+            && tn.peek() !== Token.Else
+        )
         {
-            if( !tn.skip( Token.When ) )
-            return this.error(
-                DiagnosticCode._0_expected,
-                tn.range(), "when"
-            );
+            if( !tn.skip( Token.When ) ) {
+                console.log( "match", cases, Token[ tn.peek() ] );
+                return this.error(
+                    DiagnosticCode._0_expected,
+                    tn.range(), "when"
+                );
+            }
 
             // const startPos = tn.pos;
-            const pattern = this._parseVarDecl( CommonFlags.Const );
+            const pattern = this._parseVarDecl( CommonFlags.Const, true );
 
             if( !pattern )
             return this.error(
@@ -3424,6 +3446,26 @@ export class Parser extends DiagnosticEmitter
             );
         }
 
+        let elseCase: MatchStmtElseCase | undefined = undefined;
+        if( tn.skip( Token.Else ) ) {
+            const body = this.parseStatement({ topLevel: false, isExport: false });
+            if( !body ) return this.error(
+                DiagnosticCode.Statement_expected,
+                tn.range()
+            );
+
+            elseCase = new MatchStmtElseCase(
+                body,
+                tn.range()
+            );
+
+            if( !tn.skip( Token.CloseBrace ) )
+            return this.error(
+                DiagnosticCode._0_expected,
+                tn.range(), "}"
+            );
+        }
+
         if( cases.length < 1 )
         return this.error(
             DiagnosticCode.A_match_statement_must_have_at_least_one_case,
@@ -3433,6 +3475,7 @@ export class Parser extends DiagnosticEmitter
         return new MatchStmt(
             expr,
             cases,
+            elseCase,
             tn.range( startPos, tn.pos )
         );
     }

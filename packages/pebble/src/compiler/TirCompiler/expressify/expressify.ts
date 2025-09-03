@@ -451,7 +451,7 @@ export function expressifyFuncBody(
             // expressify as ternary that returns the SoP type
             return TirAssertAndContinueExpr.fromStmtsAndContinuation(
                 assertions,
-                getFinalStmtCaseExpr(
+                wrapNonTerminatingFinalStmtAsCaseExpr(
                     stmtExpr,
                     sop,
                     ctx,
@@ -510,54 +510,59 @@ export function expressifyFuncBody(
                 // build a SoP type to return
                 const { sop, initState } = getBranchStmtReturnType( reassignsAndReturns, ctx, stmt.range );
 
+                const finalExpression = new TirCaseExpr(
+                    expressifyVars( ctx, stmt.matchExpr ),
+                    stmt.cases.map( _case => {
+                        if( _case.pattern instanceof TirArrayLikeDeconstr )
+                        throw new Error("array-like deconstruction in match statement is not supported");
+
+                        _case.pattern = toNamedDeconstructVarDecl( _case.pattern );
+
+                        const caseCtx = ctx.newChild();
+
+                        flattenSopNamedDeconstructInplace_addTopDestructToCtx_getNestedDeconstruct(
+                            _case.pattern,
+                            caseCtx
+                        );
+
+                        const caseBody = expressifyFuncBody(
+                            caseCtx,
+                            _case.body instanceof TirBlockStmt
+                                ? _case.body.stmts
+                                : [ _case.body ],
+                            loopReplacements,
+                            assertions
+                        );
+
+                        return new TirCaseMatcher(
+                            _case.pattern,
+                            caseBody,
+                            _case.range
+                        );
+                    }),
+                    stmt.wildcardCase ? new TirWildcardCaseMatcher(
+                        expressifyFuncBody(
+                            ctx.newChild(),
+                            stmt.wildcardCase.body instanceof TirBlockStmt
+                                ? stmt.wildcardCase.body.stmts
+                                : [ stmt.wildcardCase.body ],
+                            loopReplacements,
+                            [], // no assertions
+                        ),
+                        stmt.wildcardCase.range
+                    ) : undefined,
+                    ctx.returnType,
+                    stmt.range
+                );
+
                 // expressify as ternary that returns the SoP type
                 return TirAssertAndContinueExpr.fromStmtsAndContinuation(
                     assertions,
-                    getFinalStmtCaseExpr(
-                        new TirCaseExpr(
-                            expressifyVars( ctx, stmt.matchExpr ),
-                            stmt.cases.map( _case => {
-                                if( _case.pattern instanceof TirArrayLikeDeconstr )
-                                throw new Error("array-like deconstruction in match statement is not supported");
-
-                                _case.pattern = toNamedDeconstructVarDecl( _case.pattern );
-
-                                const caseCtx = ctx.newChild();
-
-                                flattenSopNamedDeconstructInplace_addTopDestructToCtx_getNestedDeconstruct(
-                                    _case.pattern,
-                                    caseCtx
-                                );
-
-                                const caseBody = expressifyFuncBody(
-                                    caseCtx,
-                                    _case.body instanceof TirBlockStmt
-                                        ? _case.body.stmts
-                                        : [ _case.body ],
-                                    loopReplacements,
-                                    assertions
-                                );
-
-                                return new TirCaseMatcher(
-                                    _case.pattern,
-                                    caseBody,
-                                    _case.range
-                                );
-                            }),
-                            stmt.wildcardCase ? new TirWildcardCaseMatcher(
-                                expressifyFuncBody(
-                                    ctx.newChild(),
-                                    stmt.wildcardCase.body instanceof TirBlockStmt
-                                        ? stmt.wildcardCase.body.stmts
-                                        : [ stmt.wildcardCase.body ],
-                                    loopReplacements,
-                                    [], // no assertions
-                                ),
-                                stmt.wildcardCase.range
-                            ) : undefined,
-                            ctx.returnType,
-                            stmt.range
-                        ),
+                    // isDirectReturn === true, so we don't need to wrap
+                    finalExpression
+                    /*
+                    true ? finalExpression : wrapNonTerminatingFinalStmtAsCaseExpr(
+                        finalExpression,
                         sop,
                         ctx,
                         stmt.range,
@@ -565,9 +570,11 @@ export function expressifyFuncBody(
                         bodyStmts,
                         loopReplacements
                     )
+                    //*/
                 );
             }
 
+            throw new Error("match statement with multiple non-terminating cases is not implemented yet (sorry)");
         }
         else if( stmt instanceof TirForOfStmt ) {
 
@@ -702,7 +709,7 @@ function getNestedDestructsInSingleSopDestructPattern(
     return result;
 }
 
-function getFinalStmtCaseExpr(
+function wrapNonTerminatingFinalStmtAsCaseExpr(
     finalStmtExpr: TirExpr,
     sop: TirSoPStructType,
     ctx: ExpressifyCtx,

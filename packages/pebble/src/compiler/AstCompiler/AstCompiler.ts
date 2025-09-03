@@ -127,7 +127,7 @@ export class AstCompiler extends DiagnosticEmitter
             const fstErrorMsg = this.diagnostics[0].toString();
             const nDiags = this.diagnostics.length;
             while( msg = this.diagnostics.shift()! ) {
-                //*
+                /*
                 this.io.stdout.write( msg.toString() + "\n" );
                 /*/
                 console.log( msg );
@@ -139,6 +139,7 @@ export class AstCompiler extends DiagnosticEmitter
 
         const mainFuncExpr = this.program.functions.get( this.program.contractTirFuncName );
         if( this.program.contractTirFuncName === "" || !mainFuncExpr ) {
+            console.log( mainFuncExpr, `"${this.program.contractTirFuncName}"` );
             this.error(
                 DiagnosticCode.Main_function_is_missing,
                 undefined

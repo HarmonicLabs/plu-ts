@@ -29,13 +29,16 @@ import { ToIRTermCtx } from "./ToIRTermCtx";
 export class TirCaseExpr
     implements ITirExpr
 {
+    private readonly _creationStack: string | undefined;
     constructor(
         public matchExpr: TirExpr,
         readonly cases: TirCaseMatcher[],
         readonly wildcardCase: TirWildcardCaseMatcher | undefined,
         readonly type: TirType,
         readonly range: SourceRange,
-    ) {}
+    ) {
+        this._creationStack = (new Error()).stack;
+    }
 
     /// @ts-ignore Return type annotation circularly references itself.
     clone(): TirCaseExpr
@@ -79,6 +82,7 @@ export class TirCaseExpr
             || matchExprType instanceof TirDataOptT
         ) return this._dataStructToIR( matchExprType, ctx );
 
+        console.error( this );
         throw new Error(
             "`case` expressions are only supported on Sum-of-Products or Data Struct types; got: "
             + this.matchExpr.type.toString()
