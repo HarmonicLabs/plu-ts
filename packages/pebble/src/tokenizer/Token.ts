@@ -78,12 +78,23 @@ export enum Token {
     Match,          // match( thing ) { ... }
     When,           // when Constr{ ... }: { ... }
 
-    Case,           // case thing is Constr{} => expr is Other{} => expr is _ => expr;
+    Case,           // case thing is Constr{} => expr is Other{} => expr else expr;
 
     Test,           // test "name" { ... }
 
     Fail,       // fail ("message")?
     Assert,     // assert (condition) (else "message")?
+
+    // contract keywords
+    Contract,       // contract Name { ... }
+    Param,          // param name: Type;
+    Spend,          // spend methodName() { ... }
+    Mint,           // mint methodName() { ... }
+    Certify,        // certify methodName() { ... }
+    Withdraw,       // withdraw methodName() { ... }
+    Propose,        // propose methodName() { ... }
+    Vote,           // vote methodName() { ... }
+    Context,        // context (aviable in contract methods (like `arguments` in JS))
   
     // punctuation
     

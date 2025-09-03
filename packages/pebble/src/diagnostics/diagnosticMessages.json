@@ -1,6 +1,7 @@
 {
   "Not implemented: {0}": 100,
   "Main function is missing": 101,
+  "Contract declarations cannot be exported": 102,
 
   "Conversion from type '{0}' to '{1}' requires an explicit cast.": 200,
   "Conversion from type '{0}' to '{1}' will require an explicit cast when switching between 32/64-bit.": 201,
@@ -92,6 +93,8 @@
   "'case' expression must decontructed the inspected value.": 287,
   "for loop initialization variables cannot be destructured. Declare it as a simple variable and move the destructuring in the loop body": 288,
   "Match cases are not exhaustive": 289,
+  "Contract methods must return void or fail": 290,
+  "Contract parameters cannot have an initializer expression": 291, 
   
   "Importing the table disables some indirect call optimizations.": 901,
   "Exporting the table disables some indirect call optimizations.": 902,

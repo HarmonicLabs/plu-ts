@@ -4,6 +4,7 @@
 export enum DiagnosticCode {
     Not_implemented_0 = 100,
     Main_function_is_missing = 101,
+    Contract_declarations_cannot_be_exported = 102,
     Conversion_from_type_0_to_1_requires_an_explicit_cast = 200,
     Conversion_from_type_0_to_1_will_require_an_explicit_cast_when_switching_between_32_64_bit = 201,
     Type_0_cannot_be_changed_to_type_1 = 202,
@@ -94,6 +95,8 @@ export enum DiagnosticCode {
     _case_expression_must_decontructed_the_inspected_value = 287,
     for_loop_initialization_variables_cannot_be_destructured_Declare_it_as_a_simple_variable_and_move_the_destructuring_in_the_loop_body = 288,
     Match_cases_are_not_exhaustive = 289,
+    Contract_methods_must_return_void_or_fail = 290,
+    Contract_parameters_cannot_have_an_initializer_expression = 291,
     Importing_the_table_disables_some_indirect_call_optimizations = 901,
     Exporting_the_table_disables_some_indirect_call_optimizations = 902,
     Expression_compiles_to_a_dynamic_check_at_runtime = 903,
@@ -279,6 +282,7 @@ export function diagnosticCodeToString(code: DiagnosticCode): string {
     switch (code) {
         case 100: return "Not implemented: {0}";
         case 101: return "Main function is missing";
+        case 102: return "Contract declarations cannot be exported";
         case 200: return "Conversion from type '{0}' to '{1}' requires an explicit cast.";
         case 201: return "Conversion from type '{0}' to '{1}' will require an explicit cast when switching between 32/64-bit.";
         case 202: return "Type '{0}' cannot be changed to type '{1}'.";
@@ -369,6 +373,8 @@ export function diagnosticCodeToString(code: DiagnosticCode): string {
         case 287: return "'case' expression must decontructed the inspected value.";
         case 288: return "for loop initialization variables cannot be destructured. Declare it as a simple variable and move the destructuring in the loop body";
         case 289: return "Match cases are not exhaustive";
+        case 290: return "Contract methods must return void or fail";
+        case 291: return "Contract parameters cannot have an initializer expression";
         case 901: return "Importing the table disables some indirect call optimizations.";
         case 902: return "Exporting the table disables some indirect call optimizations.";
         case 903: return "Expression compiles to a dynamic check at runtime.";

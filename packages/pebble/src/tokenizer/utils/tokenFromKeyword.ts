@@ -26,6 +26,10 @@ export function tokenFromKeyword(text: string): Token {
             if (text === "case") return Token.Case;
             if (text === "const") return Token.Const;
             if (text === "continue") return Token.Continue;
+
+            if (text === "contract") return Token.Contract;
+            if (text === "certify") return Token.Certify;
+            if (text === "context") return Token.Context;
             // if (text === "constructor") return Token.Constructor;
             break;
         }
@@ -105,6 +109,7 @@ export function tokenFromKeyword(text: string): Token {
         case CharCode.m: {
             // if (text === "module") return Token.Module;
             if (text === "match") return Token.Match;
+            if (text === "mint") return Token.Mint;
             break;
         }
         case CharCode.n: {
@@ -121,16 +126,18 @@ export function tokenFromKeyword(text: string): Token {
             // if (text === "override") return Token.Override;
             break;
         }
-        // case CharCode.p: {
-        //     if (len === 7) {
-        //         if (text === "private") return Token.Private;
-        //         if (text === "package") return Token.Package;
-        //         break;
-        //     }
-        //     if (text === "public") return Token.Public;
-        //     if (text === "protected") return Token.Protected;
-        //     break;
-        // }
+        case CharCode.p: {
+            // if (len === 7) {
+            //     if (text === "private") return Token.Private;
+            //     if (text === "package") return Token.Package;
+            //     break;
+            // }
+            // if (text === "public") return Token.Public;
+            // if (text === "protected") return Token.Protected;
+            if (text === "param") return Token.Param;
+            if (text === "propose") return Token.Propose;
+            break;
+        }
         case CharCode.r: {
             if (text === "return") return Token.Return;
             if (text === "readonly") return Token.Readonly;
@@ -143,6 +150,7 @@ export function tokenFromKeyword(text: string): Token {
                 if (text === "struct") return Token.Struct;
                 break;
             }
+            if (text === "spend") return Token.Spend;
             // if (text === "set") return Token.Set;
             // if (text === "super") return Token.Super;
             break;
@@ -167,12 +175,14 @@ export function tokenFromKeyword(text: string): Token {
         case CharCode.v: {
             if (text === "var") return Token.Var;
             if (text === "void") return Token.Void;
+            if (text === "vote") return Token.Vote;
             break;
         }
         case CharCode.w: {
             if (text === "while") return Token.While;
             if (text === "when") return Token.When;
             // if (text === "with") return Token.With;
+            if (text === "withdraw") return Token.Withdraw;
             break;
         }
         // case CharCode.y: {

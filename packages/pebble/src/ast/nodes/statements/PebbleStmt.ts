@@ -26,6 +26,7 @@ import { UsingStmt } from "./UsingStmt";
 import { FuncDecl } from "./declarations/FuncDecl";
 import { ExportStmt } from "./ExportStmt";
 import { InterfaceDecl } from "./declarations/InterfaceDecl";
+import { ContractDecl } from "./declarations/ContractDecl";
 
 /* *
  * An expression is a piece of code
@@ -122,6 +123,7 @@ export type TopLevelStmt
     | ImportStarStmt
     | TypeImplementsStmt
     | UsingStmt
+    | ContractDecl
     ;
 
 export function isTopLevelStmt( stmt: any ): stmt is TopLevelStmt
@@ -139,6 +141,7 @@ export function isTopLevelStmt( stmt: any ): stmt is TopLevelStmt
         || stmt instanceof ImportStarStmt
         || stmt instanceof TypeImplementsStmt
         || stmt instanceof UsingStmt
+        || stmt instanceof ContractDecl
     );
 }
 

@@ -78,6 +78,8 @@ import { BodyStmt, TopLevelStmt } from "../ast/nodes/statements/PebbleStmt";
 import { Precedence, determinePrecedence } from "./Precedence";
 import { tokenFromKeyword } from "../tokenizer/utils/tokenFromKeyword";
 import { LitFailExpr } from "../ast/nodes/expr/litteral/LitFailExpr";
+import { ContractDecl } from "../ast/nodes/statements/declarations/ContractDecl";
+import { LitContextExpr } from "../ast/nodes/expr/litteral/LitContextExpr";
 
 interface ParseStmtOpts {
     isExport?: boolean;
@@ -171,6 +173,11 @@ export class Parser extends DiagnosticEmitter
             const exportEnd = tn.pos;
             const stmt = this.parseTopLevelStatement();
             if( !stmt ) return undefined;
+            if( stmt instanceof ContractDecl )
+            return this.error(
+                DiagnosticCode.Contract_declarations_cannot_be_exported,
+                stmt.range
+            );
             return new ExportStmt( stmt, tn.range( startPos, exportEnd ) );
         }
 
@@ -277,6 +284,11 @@ export class Parser extends DiagnosticEmitter
                 statement = this.parseTypeStmt(flags, startPos);
                 break;
             }
+            case Token.Contract: {
+                tn.next(); // skip `contract`
+                statement = this.parseContractDecl( startPos );
+                break;
+            }
             default: {
                 statement = this.parseStatement({ topLevel: true, isExport: false });
             }
@@ -288,6 +300,120 @@ export class Parser extends DiagnosticEmitter
         return statement;
     }
 
+    parseContractDecl( startPos: number ): ContractDecl | undefined
+    {
+        const tn = this.tn;
+        startPos = typeof startPos === "number" ? startPos : tn.tokenPos;
+
+        // at 'contract': Identifier '{' ... '}'
+
+        const contractName = this.parseIdentifier();
+        if( !contractName )
+        return this.error(
+            DiagnosticCode.Identifier_expected,
+            tn.range()
+        );
+
+        if( !tn.skip( Token.OpenBrace ) )
+        return this.error(
+            DiagnosticCode._0_expected,
+            tn.range(), "{"
+        );
+
+        const params: SimpleVarDecl[] = [];
+        const spendMethods: FuncDecl[] = [];
+        const mintMethods: FuncDecl[] = [];
+        const certifyMethods: FuncDecl[] = [];
+        const withdrawMethods: FuncDecl[] = [];
+        const proposeMethods: FuncDecl[] = [];
+        const voteMethods: FuncDecl[] = [];
+        while( !tn.skip( Token.CloseBrace ) )
+        {
+            const thisStartPos = tn.tokenPos;
+
+            const prevState = tn.mark();
+            const nextToken = tn.next();
+            switch( nextToken ) {
+                case Token.Param: {
+                    const varDecl = this._parseVarDecl( CommonFlags.Const );
+                    if( !varDecl ) return undefined;
+                    if(!( varDecl instanceof SimpleVarDecl ))
+                    return this.error(
+                        DiagnosticCode._0_expected,
+                        varDecl.range, "simple variable declaration"
+                    );
+
+                    if( !varDecl.type )
+                    return this.error(
+                        DiagnosticCode._0_expected,
+                        varDecl.range, "Type annotation"
+                    );
+
+                    if( varDecl.initExpr )
+                    return this.error(
+                        DiagnosticCode.Contract_parameters_cannot_have_an_initializer_expression,
+                        varDecl.range
+                    );
+
+                    params.push( varDecl );
+                    continue;
+                }
+                break;
+                // methods
+                case Token.Spend:
+                case Token.Mint: 
+                case Token.Certify: 
+                case Token.Withdraw: 
+                case Token.Propose:
+                case Token.Vote: {
+                    const funcDecl = this.parseFuncDecl(
+                        CommonFlags.None,
+                        thisStartPos,
+                        new AstVoidType( tn.range() )
+                    );
+                    if( !funcDecl ) return undefined;
+                    if(!( funcDecl.expr.signature.returnType instanceof AstVoidType ))
+                    return this.error(
+                        DiagnosticCode.Contract_methods_must_return_void_or_fail,
+                        funcDecl.expr.signature.returnType?.range ?? funcDecl.expr.signature.range
+                    );
+
+                    (
+                        nextToken === Token.Spend ? spendMethods :
+                        nextToken === Token.Mint ? mintMethods :
+                        nextToken === Token.Certify ? certifyMethods :
+                        nextToken === Token.Withdraw ? withdrawMethods :
+                        nextToken === Token.Propose ? proposeMethods :
+                        nextToken === Token.Vote ? voteMethods :
+                        spendMethods // default to spendMethods, should never happen
+                    ).push( funcDecl );
+                    continue;
+                }
+                break;
+
+                default: {
+                    tn.reset( prevState );
+                    return this.error(
+                        DiagnosticCode._0_expected,
+                        tn.range(), "contract member declaration"
+                    );
+                }
+            }
+            continue;
+        }
+
+        return new ContractDecl(
+            contractName,
+            params,
+            spendMethods,
+            mintMethods,
+            certifyMethods,
+            withdrawMethods,
+            proposeMethods,
+            voteMethods,
+            tn.range( startPos, tn.pos )
+        );
+    }
     parseUsingDecl(): UsingStmt | undefined
     {
         const tn = this.tn;
@@ -1028,7 +1154,8 @@ export class Parser extends DiagnosticEmitter
     
     private parseNamedFuncSig(
         flags: CommonFlags = CommonFlags.None,
-        startPos?: number
+        startPos?: number,
+        defaultReturnType?: AstTypeExpr | undefined
     ): [ Identifier, Identifier[] | undefined, AstFuncType ] | undefined
     {
         const tn = this.tn;
@@ -1064,7 +1191,7 @@ export class Parser extends DiagnosticEmitter
         const params = this.parseParameters();
         if( !params ) return undefined;
 
-        let returnType: AstTypeExpr | undefined = undefined;
+        let returnType: AstTypeExpr | undefined = defaultReturnType;
         if( tn.skip( Token.Colon ) )
         {
             returnType = this.parseTypeExpr();
@@ -1084,14 +1211,15 @@ export class Parser extends DiagnosticEmitter
 
     parseFuncDecl(
         flags: CommonFlags,
-        startPos?: number
+        startPos?: number,
+        defaultReturnType?: AstTypeExpr | undefined
     ): FuncDecl | undefined
     {
         const tn = this.tn;
 
         startPos = startPos ?? tn.tokenPos;
 
-        const namedSig = this.parseNamedFuncSig( flags, startPos );
+        const namedSig = this.parseNamedFuncSig( flags, startPos, defaultReturnType );
         if( !namedSig ) return undefined;
 
         const [ name, typeArgs, sig ] = namedSig;
@@ -1291,6 +1419,9 @@ export class Parser extends DiagnosticEmitter
      * 
      * on the contrary in case we are parsing a field of a deconstructed variable declaration
      * an initializer MUST NOT be present NOR a type
+     * 
+     * EDIT:
+     * This method is also used while parsing contract `param`s;
      */
     private _parseVarDecl(
         flags: CommonFlags,
@@ -2129,6 +2260,7 @@ export class Parser extends DiagnosticEmitter
             case Token.True: return new LitTrueExpr(tn.range());
             case Token.False: return new LitFalseExpr(tn.range());
             case Token.This: return new LitThisExpr(tn.range());
+            case Token.Context: return new LitContextExpr(tn.range());
 
             // ParenthesizedPebbleExpr or FunctionPebbleExpr
             case Token.OpenParen: {
