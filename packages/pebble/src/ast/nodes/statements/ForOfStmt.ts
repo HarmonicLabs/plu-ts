@@ -2,6 +2,7 @@ import { PebbleAst } from "../../PebbleAst";
 import { SourceRange } from "../../Source/SourceRange";
 import { PebbleExpr } from "../expr/PebbleExpr";
 import { HasSourceRange } from "../HasSourceRange";
+import { BlockStmt } from "./BlockStmt";
 import { VarDecl } from "./declarations/VarDecl/VarDecl";
 import { VarStmt } from "./VarStmt";
 
@@ -13,8 +14,15 @@ export class ForOfStmt
 {
     constructor(
         readonly elemDeclaration: VarStmt<[VarDecl]>,
-        readonly iterable: PebbleExpr,
-        readonly body: PebbleAst,
+        public iterable: PebbleExpr,
+        public body: PebbleAst,
         readonly range: SourceRange,
     ) {}
+
+    bodyBlock(): BlockStmt
+    {
+        if( this.body instanceof BlockStmt )
+            return this.body;
+        return new BlockStmt( [ this.body ], this.body.range );
+    }
 }

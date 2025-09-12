@@ -58,7 +58,7 @@ export function _compileVarDecl(
     if( decl instanceof ArrayLikeDeconstr )
         return _compileArrayLikeDeconstr( ctx, decl, typeHint );
 
-    const tsEnsureExsautstiveCheck: never = decl;
+    const tsEnsureExhautstiveCheck: never = decl;
     console.error( decl );
     throw new Error("unreachable::AstCompiler::_compileVarDecl");
 }

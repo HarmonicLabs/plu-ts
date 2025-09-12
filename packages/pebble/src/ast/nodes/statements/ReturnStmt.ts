@@ -7,7 +7,7 @@ export class ReturnStmt
     implements HasSourceRange
 {
     constructor(
-        readonly value: PebbleExpr | undefined,
+        public value: PebbleExpr | undefined,
         readonly range: SourceRange,
     ) {}
 }

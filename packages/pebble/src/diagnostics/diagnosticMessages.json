@@ -95,6 +95,12 @@
   "Match cases are not exhaustive": 289,
   "Contract methods must return void or fail": 290,
   "Contract parameters cannot have an initializer expression": 291, 
+  "`context` can only be destructured in a constant declaration.": 292,
+  "`context` can only be accessed in a contract method.": 293, 
+  "`this`, in a contract context, can only be used to read parameters in a contract method.": 293, 
+  "`{0}` is not aviable in this contract method `context`.": 294, 
+  "`context` can only be destructured as an unnamed object.": 295,
+  "'{0}' is not a contract parameter.": 296,
   
   "Importing the table disables some indirect call optimizations.": 901,
   "Exporting the table disables some indirect call optimizations.": 902,
@@ -104,7 +110,6 @@
   "Unnecessary definite assignment.": 906,
   "'NaN' does not compare equal to any other value including itself. Use isNaN(x) instead.": 907,
   "Comparison with -0.0 is sign insensitive. Use Object.is(x, -0.0) if the sign matters.": 908,  
-
 
   "Unterminated string literal.": 1002,
   "Identifier expected.": 1003,

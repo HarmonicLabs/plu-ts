@@ -6,7 +6,7 @@ export class BlockStmt
     implements HasSourceRange
 {
     constructor(
-        readonly stmts: BodyStmt[],
+        public stmts: BodyStmt[],
         readonly range: SourceRange
     ) {}
 }

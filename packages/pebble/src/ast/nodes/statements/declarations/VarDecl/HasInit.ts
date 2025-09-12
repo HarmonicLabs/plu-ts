@@ -2,7 +2,7 @@ import { hasOwn, isObject } from "@harmoniclabs/obj-utils";
 import { isPebbleExpr, PebbleExpr } from "../../../expr/PebbleExpr";
 
 export interface HasInitExpr {
-    readonly initExpr: PebbleExpr | undefined;
+    initExpr: PebbleExpr | undefined;
 }
 
 export function hasInitExpr( thing: any ): thing is HasInitExpr

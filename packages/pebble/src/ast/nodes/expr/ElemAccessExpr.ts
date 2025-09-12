@@ -10,8 +10,8 @@ export class ElemAccessExpr
     implements HasSourceRange
 {
     constructor(
-        readonly arrLikeExpr: PebbleExpr,
-        readonly indexExpr: PebbleExpr,
+        public arrLikeExpr: PebbleExpr,
+        public indexExpr: PebbleExpr,
         readonly range: SourceRange
     ) {}
 }

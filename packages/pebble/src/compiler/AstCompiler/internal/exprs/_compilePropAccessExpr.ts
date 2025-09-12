@@ -28,7 +28,7 @@ export function _compilePropAccessExpr(
     if( expr instanceof NonNullPropAccessExpr ) return _compileNonNullPropAccessExpr( ctx, expr, typeHint );
     if( expr instanceof DotPropAccessExpr ) return _compileDotPropAccessExpr( ctx, expr, typeHint );
 
-    const tsEnsureExsautstiveCheck: never = expr;
+    const tsEnsureExhautstiveCheck: never = expr;
     console.error( expr );
     throw new Error("unreachable::AstCompiler::_compilePropAccessExpr");
 }

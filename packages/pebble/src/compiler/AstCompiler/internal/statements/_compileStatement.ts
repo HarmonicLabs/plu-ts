@@ -62,7 +62,7 @@ export function _compileStatement(
     // if( stmt instanceof ExprStmt ) return _compileExprStmt( ctx, stmt );
     if( stmt instanceof UsingStmt ) return _compileUsingStmt( ctx, stmt );
 
-    const tsEnsureExsautstiveCheck: never = stmt;
+    const tsEnsureExhautstiveCheck: never = stmt;
     console.error( stmt );
     throw new Error("unreachable::AstCompiler::_compileStatement");
 }

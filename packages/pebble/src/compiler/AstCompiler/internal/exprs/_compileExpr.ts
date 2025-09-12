@@ -70,7 +70,7 @@ export function _compileExpr(
         isLitteralExpr( expr )
     ) return _compileLitteralExpr( ctx, expr, typeHint );
 
-    const tsEnsureExsautstiveCheck: never = expr;
+    const tsEnsureExhautstiveCheck: never = expr;
     console.error( expr );
     throw new Error("unreachable::AstCompiler::_compileExpr");
 }

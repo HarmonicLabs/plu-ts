@@ -53,7 +53,7 @@ export class OptionalPropAccessExpr
     implements HasSourceRange
 {
     constructor(
-        readonly object: PebbleExpr,
+        public object: PebbleExpr,
         readonly prop: Identifier,
         readonly range: SourceRange
     ) {}
@@ -63,7 +63,7 @@ export class NonNullPropAccessExpr
     implements HasSourceRange
 {
     constructor(
-        readonly object: PebbleExpr,
+        public object: PebbleExpr,
         readonly prop: Identifier,
         readonly range: SourceRange
     ) {}
@@ -73,7 +73,7 @@ export class DotPropAccessExpr
     implements HasSourceRange
 {
     constructor(
-        readonly object: PebbleExpr,
+        public object: PebbleExpr,
         readonly prop: Identifier,
         readonly range: SourceRange
     ) {}

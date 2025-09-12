@@ -210,7 +210,7 @@ export class ExpAssignmentStmt
 {
     constructor(
         readonly varIdentifier: Identifier,
-        readonly assignedExpr: PebbleExpr,
+        public assignedExpr: PebbleExpr,
         readonly range: SourceRange
     ) {}
 }

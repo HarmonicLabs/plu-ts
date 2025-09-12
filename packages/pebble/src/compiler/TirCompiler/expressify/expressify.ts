@@ -624,7 +624,7 @@ export function expressifyFuncBody(
 
         }
         else {
-            const tsEnsureExsautstiveCheck: never = stmt;
+            const tsEnsureExhautstiveCheck: never = stmt;
             console.error( stmt );
             throw new Error("unreachable::expressify::stmt");
         }

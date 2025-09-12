@@ -31,7 +31,7 @@ export type PebbleExpr
     | TernaryExpr
     | Identifier // variable access
     | BinaryExpr
-    // | PropAccessExpr
+    | PropAccessExpr
     ;
 
 export function isPebbleExpr( thing: any ): thing is PebbleExpr

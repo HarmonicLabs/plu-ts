@@ -7,9 +7,9 @@ export class CaseExpr
     implements HasSourceRange
 {
     constructor(
-        readonly matchExpr: PebbleExpr,
-        readonly cases: CaseExprMatcher[],
-        readonly wildcardCase: CaseWildcardMatcher | undefined,
+        public matchExpr: PebbleExpr,
+        public cases: CaseExprMatcher[],
+        public wildcardCase: CaseWildcardMatcher | undefined,
         readonly range: SourceRange,
     ) {}
 }
@@ -19,7 +19,7 @@ export class CaseExprMatcher
 {
     constructor(
         readonly pattern: VarDecl,
-        readonly body: PebbleExpr,
+        public body: PebbleExpr,
         readonly range: SourceRange,
     ) {}
 }
@@ -28,7 +28,7 @@ export class CaseWildcardMatcher
     implements HasSourceRange
 {
     constructor(
-        readonly body: PebbleExpr,
+        public body: PebbleExpr,
         readonly range: SourceRange,
     ) {}
 }

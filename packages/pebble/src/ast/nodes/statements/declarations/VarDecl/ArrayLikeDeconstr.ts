@@ -14,7 +14,7 @@ export class ArrayLikeDeconstr
         readonly elements: VarDecl[],
         readonly rest: Identifier | undefined,
         public type: AstTypeExpr | undefined, // just for the type checker, or func params, usually this is inferred
-        readonly initExpr: PebbleExpr | undefined,
+        public initExpr: PebbleExpr | undefined,
         public flags: CommonFlags,
         readonly range: SourceRange,
     ) {}

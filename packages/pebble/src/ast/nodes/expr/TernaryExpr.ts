@@ -6,9 +6,9 @@ export class TernaryExpr
     implements HasSourceRange
 {
     constructor(
-        readonly condition: PebbleExpr,
-        readonly ifTrue: PebbleExpr,
-        readonly ifFalse: PebbleExpr,
+        public condition: PebbleExpr,
+        public ifTrue: PebbleExpr,
+        public ifFalse: PebbleExpr,
         readonly range: SourceRange
     ) {}
 }

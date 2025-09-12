@@ -23,7 +23,7 @@ export class SingleDeconstructVarDecl
         readonly fields: Map<Identifier, VarDecl>,
         readonly rest: Identifier | undefined,
         public type: AstTypeExpr | undefined,
-        readonly initExpr: PebbleExpr | undefined,
+        public initExpr: PebbleExpr | undefined,
         public flags: CommonFlags,
         readonly range: SourceRange
     ) {}

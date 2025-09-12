@@ -187,6 +187,6 @@ function replaceReturnStatements(
             continue;
         }
 
-        const tsEnsureExsautstiveCheck: never = stmt;
+        const tsEnsureExhautstiveCheck: never = stmt;
     }
 }

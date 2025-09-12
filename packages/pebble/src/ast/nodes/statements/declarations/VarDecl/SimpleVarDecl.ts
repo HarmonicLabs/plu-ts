@@ -12,7 +12,7 @@ export class SimpleVarDecl
     constructor(
         readonly name: Identifier,
         public type: AstTypeExpr | undefined,
-        readonly initExpr: PebbleExpr | undefined,
+        public initExpr: PebbleExpr | undefined,
         public flags: CommonFlags,
         readonly range: SourceRange,
     ) {}
@@ -32,4 +32,16 @@ export class SimpleVarDecl
             identifier.range
         );
     }
+
+    static onlyNameConst( name: string, range: SourceRange ): SimpleVarDecl
+    {
+        return new SimpleVarDecl(
+            new Identifier( name, range ),
+            undefined, // type
+            undefined, // initExpr
+            CommonFlags.Const,
+            range
+        );
+    }
+
 }

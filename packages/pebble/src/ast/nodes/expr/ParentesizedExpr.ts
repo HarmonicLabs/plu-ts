@@ -6,7 +6,7 @@ export class ParentesizedExpr
     implements HasSourceRange
 {
     constructor(
-        readonly expr: PebbleExpr,
+        public expr: PebbleExpr,
         readonly range: SourceRange
     ) {}
 }

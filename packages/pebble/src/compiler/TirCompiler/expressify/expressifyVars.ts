@@ -230,7 +230,7 @@ export function expressifyVars(
 
     if( expr instanceof TirInlineClosedIR ) return expr;
 
-    const tsEnsureExsautstiveCheck: never = expr;
+    const tsEnsureExhautstiveCheck: never = expr;
     console.error( expr );
     throw new Error("unreachable::expressifyVars");
 }
@@ -406,6 +406,6 @@ function getVarAccessFromPropAccess(
         );
     };
 
-    const tsEnsureExsautstiveCheck: never = expr;
+    const tsEnsureExhautstiveCheck: never = expr;
     throw new Error("Invalid property access expression");
 }

@@ -144,16 +144,16 @@ export function isBinaryExpr( thing: any ): thing is BinaryExpr
 
 export interface IBinaryExpr extends HasSourceRange
 {
-    readonly left: PebbleExpr;
-    readonly right: PebbleExpr;
+    left: PebbleExpr;
+    right: PebbleExpr;
 }
 
 export class ExponentiationExpr
     implements IBinaryExpr
 {
     constructor(
-        readonly left: PebbleExpr,
-        readonly right: PebbleExpr,
+        public left: PebbleExpr,
+        public right: PebbleExpr,
         readonly range: SourceRange
     ) {}
 }
@@ -162,8 +162,8 @@ export class LessThanExpr
     implements IBinaryExpr
 {
     constructor(
-        readonly left: PebbleExpr,
-        readonly right: PebbleExpr,
+        public left: PebbleExpr,
+        public right: PebbleExpr,
         readonly range: SourceRange
     ) {}
 }
@@ -172,8 +172,8 @@ export class GreaterThanExpr
     implements IBinaryExpr
 {
     constructor(
-        readonly left: PebbleExpr,
-        readonly right: PebbleExpr,
+        public left: PebbleExpr,
+        public right: PebbleExpr,
         readonly range: SourceRange
     ) {}
 }
@@ -182,8 +182,8 @@ export class LessThanEqualExpr
     implements IBinaryExpr
 {
     constructor(
-        readonly left: PebbleExpr,
-        readonly right: PebbleExpr,
+        public left: PebbleExpr,
+        public right: PebbleExpr,
         readonly range: SourceRange
     ) {}
 }
@@ -192,8 +192,8 @@ export class GreaterThanEqualExpr
     implements IBinaryExpr
 {
     constructor(
-        readonly left: PebbleExpr,
-        readonly right: PebbleExpr,
+        public left: PebbleExpr,
+        public right: PebbleExpr,
         readonly range: SourceRange
     ) {}
 }
@@ -202,8 +202,8 @@ export class EqualExpr
     implements IBinaryExpr
 {
     constructor(
-        readonly left: PebbleExpr,
-        readonly right: PebbleExpr,
+        public left: PebbleExpr,
+        public right: PebbleExpr,
         readonly range: SourceRange
     ) {}
 }
@@ -212,8 +212,8 @@ export class NotEqualExpr
     implements IBinaryExpr
 {
     constructor(
-        readonly left: PebbleExpr,
-        readonly right: PebbleExpr,
+        public left: PebbleExpr,
+        public right: PebbleExpr,
         readonly range: SourceRange
     ) {}
 }
@@ -222,8 +222,8 @@ export class AddExpr
     implements IBinaryExpr
 {
     constructor(
-        readonly left: PebbleExpr,
-        readonly right: PebbleExpr,
+        public left: PebbleExpr,
+        public right: PebbleExpr,
         readonly range: SourceRange
     ) {}
 }
@@ -232,8 +232,8 @@ export class SubExpr
     implements IBinaryExpr
 {
     constructor(
-        readonly left: PebbleExpr,
-        readonly right: PebbleExpr,
+        public left: PebbleExpr,
+        public right: PebbleExpr,
         readonly range: SourceRange
     ) {}
 }
@@ -242,8 +242,8 @@ export class MultExpr
     implements IBinaryExpr
 {
     constructor(
-        readonly left: PebbleExpr,
-        readonly right: PebbleExpr,
+        public left: PebbleExpr,
+        public right: PebbleExpr,
         readonly range: SourceRange
     ) {}
 }
@@ -252,8 +252,8 @@ export class DivExpr
     implements IBinaryExpr
 {
     constructor(
-        readonly left: PebbleExpr,
-        readonly right: PebbleExpr,
+        public left: PebbleExpr,
+        public right: PebbleExpr,
         readonly range: SourceRange
     ) {}
 }
@@ -262,8 +262,8 @@ export class ModuloExpr
     implements IBinaryExpr
 {
     constructor(
-        readonly left: PebbleExpr,
-        readonly right: PebbleExpr,
+        public left: PebbleExpr,
+        public right: PebbleExpr,
         readonly range: SourceRange
     ) {}
 }
@@ -272,8 +272,8 @@ export class ShiftLeftExpr
     implements IBinaryExpr
 {
     constructor(
-        readonly left: PebbleExpr,
-        readonly right: PebbleExpr,
+        public left: PebbleExpr,
+        public right: PebbleExpr,
         readonly range: SourceRange
     ) {}
 }
@@ -282,8 +282,8 @@ export class ShiftRightExpr
     implements IBinaryExpr
 {
     constructor(
-        readonly left: PebbleExpr,
-        readonly right: PebbleExpr,
+        public left: PebbleExpr,
+        public right: PebbleExpr,
         readonly range: SourceRange
     ) {}
 }
@@ -292,8 +292,8 @@ export class BitwiseAndExpr
     implements IBinaryExpr
 {
     constructor(
-        readonly left: PebbleExpr,
-        readonly right: PebbleExpr,
+        public left: PebbleExpr,
+        public right: PebbleExpr,
         readonly range: SourceRange
     ) {}
 }
@@ -302,8 +302,8 @@ export class BitwiseXorExpr
     implements IBinaryExpr
 {
     constructor(
-        readonly left: PebbleExpr,
-        readonly right: PebbleExpr,
+        public left: PebbleExpr,
+        public right: PebbleExpr,
         readonly range: SourceRange
     ) {}
 }
@@ -312,8 +312,8 @@ export class BitwiseOrExpr
     implements IBinaryExpr
 {
     constructor(
-        readonly left: PebbleExpr,
-        readonly right: PebbleExpr,
+        public left: PebbleExpr,
+        public right: PebbleExpr,
         readonly range: SourceRange
     ) {}
 }
@@ -322,8 +322,8 @@ export class LogicalAndExpr
     implements IBinaryExpr
 {
     constructor(
-        readonly left: PebbleExpr,
-        readonly right: PebbleExpr,
+        public left: PebbleExpr,
+        public right: PebbleExpr,
         readonly range: SourceRange
     ) {}
 }
@@ -332,8 +332,8 @@ export class LogicalOrExpr
     implements IBinaryExpr
 {
     constructor(
-        readonly left: PebbleExpr,
-        readonly right: PebbleExpr,
+        public left: PebbleExpr,
+        public right: PebbleExpr,
         readonly range: SourceRange
     ) {}
 }
@@ -342,8 +342,8 @@ export class OptionalDefaultExpr
     implements IBinaryExpr
 {
     constructor(
-        readonly left: PebbleExpr,
-        readonly right: PebbleExpr,
+        public left: PebbleExpr,
+        public right: PebbleExpr,
         readonly range: SourceRange
     ) {}
 }

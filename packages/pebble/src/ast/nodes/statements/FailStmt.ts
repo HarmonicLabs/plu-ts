@@ -8,7 +8,7 @@ export class FailStmt
 {
     constructor(
         /** must be string (or utf8 bytes) */
-        readonly value: PebbleExpr | undefined,
+        public value: PebbleExpr | undefined,
         readonly range: SourceRange,
     ) {}
 }

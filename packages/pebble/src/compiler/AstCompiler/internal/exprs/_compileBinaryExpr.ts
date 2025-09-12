@@ -52,7 +52,7 @@ export function _compileBinaryExpr(
     if( expr instanceof LogicalOrExpr ) return _compileLogicalOrExpr( ctx, expr, typeHint );
     if( expr instanceof OptionalDefaultExpr ) return _compileOptionalDefaultExpr( ctx, expr, typeHint );
 
-    const tsEnsureExsautstiveCheck: never = expr;
+    const tsEnsureExhautstiveCheck: never = expr;
     console.error( expr );
     throw new Error("unreachable::AstCompiler::_compileBinaryExpr");
 }

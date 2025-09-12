@@ -79,7 +79,7 @@ export function _compileSopEncodedConcreteType(
         return ctx.program.types.get( possibleTirNames.dataTirName );
     }
 
-    const tsEnsureExsautstiveCheck: never = typeExpr;
+    const tsEnsureExhautstiveCheck: never = typeExpr;
     console.error( typeExpr );
     throw new Error("unreachable::AstCompiler::_compileSopEncodedConcreteType");
 }

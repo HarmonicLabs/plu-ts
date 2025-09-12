@@ -8,7 +8,7 @@ export class CallExpr implements HasSourceRange
 {
     constructor(
         /** any expression that yeidls a function */
-        readonly funcExpr: PebbleExpr,
+        public funcExpr: PebbleExpr,
         /** if the function is generic */
         readonly genericTypeArgs: AstTypeExpr[] | undefined,
         readonly args: PebbleExpr[],

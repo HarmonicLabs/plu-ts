@@ -16,7 +16,7 @@ export class NamedDeconstructVarDecl
         readonly fields: Map<Identifier, VarDecl>,
         readonly rest: Identifier | undefined,
         public type: AstTypeExpr | undefined,
-        readonly initExpr: PebbleExpr | undefined, // can be undefined when use ad function parameter
+        public initExpr: PebbleExpr | undefined, // can be undefined when use ad function parameter
         public flags: CommonFlags,
         readonly range: SourceRange,
     ) {}

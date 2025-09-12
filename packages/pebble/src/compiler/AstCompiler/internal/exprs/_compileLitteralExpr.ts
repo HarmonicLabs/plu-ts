@@ -1,4 +1,5 @@
 import { LitArrExpr } from "../../../../ast/nodes/expr/litteral/LitArrExpr";
+import { LitContextExpr } from "../../../../ast/nodes/expr/litteral/LitContextExpr";
 import { LitFailExpr } from "../../../../ast/nodes/expr/litteral/LitFailExpr";
 import { LitFalseExpr } from "../../../../ast/nodes/expr/litteral/LitFalseExpr";
 import { LitHexBytesExpr } from "../../../../ast/nodes/expr/litteral/LitHexBytesExpr";
@@ -73,7 +74,10 @@ export function _compileLitteralExpr(
     if( expr instanceof LitNamedObjExpr ) return _compileLitteralNamedObjExpr( ctx, expr, typeHint );
     if( expr instanceof LitFailExpr ) return new TirLitFailExpr( expr.range );
 
-    const tsEnsureExsautstiveCheck: never = expr;
+    if( expr instanceof LitContextExpr )
+    throw new Error("Litteral `context` should have been handled while desugaring.");
+
+    const tsEnsureExhautstiveCheck: never = expr;
     throw new Error("unreachable::AstCompiler::_compileLitteralExpr");
 }
 

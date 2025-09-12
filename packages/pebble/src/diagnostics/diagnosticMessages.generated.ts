@@ -97,6 +97,12 @@ export enum DiagnosticCode {
     Match_cases_are_not_exhaustive = 289,
     Contract_methods_must_return_void_or_fail = 290,
     Contract_parameters_cannot_have_an_initializer_expression = 291,
+    _context_can_only_be_destructured_in_a_constant_declaration = 292,
+    _context_can_only_be_accessed_in_a_contract_method = 293,
+    _this_in_a_contract_context_can_only_be_used_to_read_parameters_in_a_contract_method = 293,
+    _0_is_not_aviable_in_this_contract_method_context = 294,
+    _context_can_only_be_destructured_as_an_unnamed_object = 295,
+    _0_is_not_a_contract_parameter = 296,
     Importing_the_table_disables_some_indirect_call_optimizations = 901,
     Exporting_the_table_disables_some_indirect_call_optimizations = 902,
     Expression_compiles_to_a_dynamic_check_at_runtime = 903,
@@ -375,6 +381,12 @@ export function diagnosticCodeToString(code: DiagnosticCode): string {
         case 289: return "Match cases are not exhaustive";
         case 290: return "Contract methods must return void or fail";
         case 291: return "Contract parameters cannot have an initializer expression";
+        case 292: return "`context` can only be destructured in a constant declaration.";
+        case 293: return "`context` can only be accessed in a contract method.";
+        case 293: return "`this`, in a contract context, can only be used to read parameters in a contract method.";
+        case 294: return "`{0}` is not aviable in this contract method `context`.";
+        case 295: return "`context` can only be destructured as an unnamed object.";
+        case 296: return "'{0}' is not a contract parameter.";
         case 901: return "Importing the table disables some indirect call optimizations.";
         case 902: return "Exporting the table disables some indirect call optimizations.";
         case 903: return "Expression compiles to a dynamic check at runtime.";

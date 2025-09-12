@@ -8,9 +8,9 @@ export class AssertStmt
 {
     constructor(
         /** must be boolean or Optional */
-        readonly condition: PebbleExpr,
+        public condition: PebbleExpr,
         /** must be string */
-        readonly elseExpr: PebbleExpr | undefined,
+        public elseExpr: PebbleExpr | undefined,
         readonly range: SourceRange,
     ) {}
 }

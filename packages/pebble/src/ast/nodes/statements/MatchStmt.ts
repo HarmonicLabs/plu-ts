@@ -3,14 +3,15 @@ import { VarDecl } from "./declarations/VarDecl/VarDecl";
 import { PebbleExpr } from "../expr/PebbleExpr";
 import { HasSourceRange } from "../HasSourceRange";
 import { BodyStmt } from "./PebbleStmt";
+import { BlockStmt } from "./BlockStmt";
 
 export class MatchStmt
     implements HasSourceRange
 {
     constructor(
-        readonly matchExpr: PebbleExpr,
-        readonly cases: MatchStmtCase[],
-        readonly elseCase: MatchStmtElseCase | undefined,
+        public matchExpr: PebbleExpr,
+        public cases: MatchStmtCase[],
+        public elseCase: MatchStmtElseCase | undefined,
         readonly range: SourceRange,
     ) {}
 }
@@ -20,16 +21,28 @@ export class MatchStmtCase
 {
     constructor(
         readonly pattern: VarDecl,
-        readonly body: BodyStmt,
+        public body: BodyStmt,
         readonly range: SourceRange,
     ) {}
+
+    bodyBlockStmt(): BlockStmt {
+        if( this.body instanceof BlockStmt )
+            return this.body;
+        return new BlockStmt( [ this.body ], this.body.range );
+    }
 }
 
 export class MatchStmtElseCase
     implements HasSourceRange
 {
     constructor(
-        readonly body: BodyStmt,
+        public body: BodyStmt,
         readonly range: SourceRange,
     ) {}
+
+    bodyBlockStmt(): BlockStmt {
+        if( this.body instanceof BlockStmt )
+            return this.body;
+        return new BlockStmt( [ this.body ], this.body.range );
+    }
 }

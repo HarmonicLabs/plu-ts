@@ -28,7 +28,7 @@ import { InterfaceDecl } from "../../ast/nodes/statements/declarations/Interface
 import { AstFuncType } from "../../ast/nodes/types/AstNativeTypeExpr";
 import { FuncDecl } from "../../ast/nodes/statements/declarations/FuncDecl";
 import { InterfaceMethodImpl, TypeImplementsStmt } from "../../ast/nodes/statements/TypeImplementsStmt";
-import { PEBBLE_INTERNAL_IDENTIFIER_PREFIX } from "../internalVar";
+import { getUniqueInternalName, PEBBLE_INTERNAL_IDENTIFIER_PREFIX } from "../internalVar";
 import { AstNamedTypeExpr } from "../../ast/nodes/types/AstNamedTypeExpr";
 import { FuncExpr } from "../../ast/nodes/expr/functions/FuncExpr";
 import { CommonFlags } from "../../common";
@@ -36,7 +36,15 @@ import { SimpleVarDecl } from "../../ast/nodes/statements/declarations/VarDecl/S
 import { Identifier } from "../../ast/nodes/common/Identifier";
 import { ArrowKind } from "../../ast/nodes/expr/functions/ArrowKind";
 import { _compileFuncExpr } from "./internal/exprs/_compileFuncExpr";
-import { TopLevelStmt } from "../../ast/nodes/statements/PebbleStmt";
+import { BodyStmt, TopLevelStmt } from "../../ast/nodes/statements/PebbleStmt";
+import { ContractDecl } from "../../ast/nodes/statements/declarations/ContractDecl";
+import { BlockStmt } from "../../ast/nodes/statements/BlockStmt";
+import { FailStmt } from "../../ast/nodes/statements/FailStmt";
+import { SingleDeconstructVarDecl } from "../../ast/nodes/statements/declarations/VarDecl/SingleDeconstructVarDecl";
+import { VarDecl } from "../../ast/nodes/statements/declarations/VarDecl/VarDecl";
+import { MatchStmt, MatchStmtCase, MatchStmtElseCase } from "../../ast/nodes/statements/MatchStmt";
+import { NamedDeconstructVarDecl } from "../../ast/nodes/statements/declarations/VarDecl/NamedDeconstructVarDecl";
+import { _deriveContractBody } from "./internal/_deriveContractBody/_deriveContractBody";
 
 export interface AstTypeDefCompilationResult {
     sop: TirType | undefined,
@@ -157,7 +165,7 @@ export class AstCompiler extends DiagnosticEmitter
     }
 
     // mutually recursive
-    async compileFile( path: string, isMain = false ): Promise<Source | undefined>
+    async compileFile( path: string, isEntryFile = false ): Promise<Source | undefined>
     {
         const src = await this.getAbsoulteProjPathSource( path );
         if( !src ) return;
@@ -165,13 +173,13 @@ export class AstCompiler extends DiagnosticEmitter
         // parse imports first
         await this.compileAllDeps(
             ResolveStackNode.entry( src ),
-            isMain
+            isEntryFile
         );
         
         // if there were errors
         if( this.diagnostics.length > 0 ) return;
 
-        await this._compileParsedSource( src, isMain );
+        await this._compileParsedSource( src, isEntryFile );
 
         return src;
     }
@@ -181,7 +189,7 @@ export class AstCompiler extends DiagnosticEmitter
      * translates the source AST statements
      * to TIR statements; and saves the result in `this.program`
      */
-    private async _compileParsedSource( src: Source, isMain = false ): Promise<void>
+    private async _compileParsedSource( src: Source, isEntryFile = false ): Promise<void>
     {
         if( this._srcDonelogUids.has( src.uid ) ) return;
 
@@ -218,7 +226,7 @@ export class AstCompiler extends DiagnosticEmitter
             src.uid,
             topLevelScope,
             srcExports,
-            isMain
+            isEntryFile
         );
 
         /*
@@ -243,7 +251,7 @@ export class AstCompiler extends DiagnosticEmitter
         srcUid: string,
         topLevelScope: AstScope,
         srcExports: AstScope,
-        isMain: boolean = false
+        isEntryFile: boolean = false
     ): void
     {
         for( let i = 0; i < stmts.length; i++ )
@@ -269,6 +277,40 @@ export class AstCompiler extends DiagnosticEmitter
                 exportRange ?? stmt.range,
             );
 
+            if( stmt instanceof ContractDecl )
+            {
+                // ignore contract declarations if not in the entry file
+                if( !isEntryFile ) {
+                    // remove from array so we don't process it again
+                    void stmts.splice( i, 1 );
+                    i--;
+                    continue;
+                }
+
+                const funcDeclContract = this._contractDeclToFuncDecl( stmt );
+                if( !funcDeclContract ) {
+                    // remove from array so we don't process it again
+                    void stmts.splice( i, 1 );
+                    i--;
+                    continue;
+                }
+
+                this._collectTopLevelFuncDeclSig(
+                    funcDeclContract,
+                    srcUid,
+                    topLevelScope,
+                    srcExports,
+                    exportRange,
+                    // set main
+                    true // isEntryFile
+                );
+
+                // remove from array so we don't process it again
+                void stmts.splice( i, 1 );
+                i--;
+                continue;
+            }
+
             if( stmt instanceof FuncDecl )
             this._collectTopLevelFuncDeclSig(
                 stmt,
@@ -276,7 +318,8 @@ export class AstCompiler extends DiagnosticEmitter
                 topLevelScope,
                 srcExports,
                 exportRange,
-                isMain
+                // don't set main
+                false // isEntryFile
             );
             else
             this._collectInterfaceImplSigs(
@@ -395,7 +438,7 @@ export class AstCompiler extends DiagnosticEmitter
         topLevelScope: AstScope,
         srcExports: AstScope | undefined = undefined,
         exportRange: SourceRange | undefined = undefined,
-        isMain: boolean = false
+        isEntryFile: boolean = false
     ): void
     {
         const astFuncExpr = stmt.expr;
@@ -450,7 +493,7 @@ export class AstCompiler extends DiagnosticEmitter
         }
 
         if(
-            isMain
+            isEntryFile
             && this.program.contractTirFuncName === ""
             && astFuncExpr.name.text === "main"
         ) this.program.contractTirFuncName = tirFuncName;
@@ -827,7 +870,7 @@ export class AstCompiler extends DiagnosticEmitter
      */
     async compileAllDeps(
         _resolveStackNode: ResolveStackNode,
-        isMain: boolean = false
+        isEntryFile: boolean = false
     ): Promise<boolean>
     {
         const src = _resolveStackNode.dependent; // resolveStackNode instanceof ResolveStackNode ? source.dependent : source;
@@ -867,7 +910,7 @@ export class AstCompiler extends DiagnosticEmitter
             if( !await this.compileAllDeps( nextStack ) ) return false;
         }
 
-        this._compileParsedSource( src, isMain );
+        this._compileParsedSource( src, isEntryFile );
 
         return true;
     }
@@ -949,6 +992,92 @@ export class AstCompiler extends DiagnosticEmitter
             );
             if( last ) break;
         };
+    }
+
+    private _contractDeclToFuncDecl(
+        contractDecl: ContractDecl
+    ): FuncDecl | undefined
+    {
+        const funcName = getUniqueInternalName( contractDecl.name.text );
+
+        const paramsInternalNamesMap = new Map<string, string>();
+        const funcParams: SimpleVarDecl[] = new Array( contractDecl.params.length + 1 );
+        
+        for( const [i,param] of contractDecl.params.entries() )
+        {
+            if( !param.type ) {
+                this.error(
+                    DiagnosticCode.Type_expected,
+                    param.name.range.atEnd()
+                );
+                return undefined;
+            }
+            const astType = param.type;
+
+            const astName = param.name.text;
+            if( paramsInternalNamesMap.has( astName ) ) {
+                this.error(
+                    DiagnosticCode.Duplicate_identifier_0,
+                    param.name.range,
+                    param.name.text
+                );
+                return undefined;
+            }
+
+            const internalName = getUniqueInternalName( param.name.text );
+            paramsInternalNamesMap.set( astName, internalName );
+
+            funcParams[i] = new SimpleVarDecl(
+                new Identifier( internalName, param.name.range ),
+                astType,
+                undefined, // initExpr
+                CommonFlags.Const,
+                param.range
+            );
+        }
+
+        const scriptContextName = getUniqueInternalName("ctx");
+        funcParams[ contractDecl.params.length ] = new SimpleVarDecl(
+            new Identifier( scriptContextName, contractDecl.name.range ),
+            new AstNamedTypeExpr(
+                new Identifier( "ScriptContext", contractDecl.name.range ),
+                [],
+                contractDecl.name.range
+            ),
+            undefined, // initExpr
+            CommonFlags.Const,
+            contractDecl.name.range
+        );
+
+        const funcSig = new AstFuncType(
+            funcParams,
+            new AstNamedTypeExpr(
+                new Identifier( "void", contractDecl.name.range ),
+                [],
+                contractDecl.name.range
+            ),
+            contractDecl.name.range
+        );
+
+        const contractBody = _deriveContractBody(
+            this,
+            contractDecl,
+            paramsInternalNamesMap,
+            scriptContextName
+        );
+        if( !contractBody ) return undefined;
+
+        return new FuncDecl(
+            new FuncExpr(
+                new Identifier( funcName, contractDecl.name.range ),
+                CommonFlags.None,
+                [], // typeParameters
+                funcSig,
+                contractBody,
+                ArrowKind.None,
+                contractDecl.range
+            )
+        );
     }
 }
 
