@@ -25,6 +25,11 @@ export class TirTraceIfFalseExpr
         readonly range: SourceRange,
     ) {}
 
+    toString(): string
+    {
+        return `traceIfFalse( ${this.condition.toString()}, ${this.traceStrExpr.toString()} )`;
+    }
+
     clone(): TirTraceIfFalseExpr
     {
         return new TirTraceIfFalseExpr(

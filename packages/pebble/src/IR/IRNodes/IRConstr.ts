@@ -1,7 +1,7 @@
 import { Cloneable } from "../../utils/Cloneable";
 import { ToJson } from "../../utils/ToJson";
 import { forceBigUInt } from "../../utils/ints";
-import { IRTerm } from "../IRTerm";
+import { IIRTerm, IRTerm } from "../IRTerm";
 import { IHash, IIRParent } from "../interfaces";
 import { concatUint8Arr } from "../utils/concatUint8Arr";
 import { IRParentTerm, isIRParentTerm } from "../utils/isIRParentTerm";
@@ -19,7 +19,7 @@ import { isIRTerm } from "../utils/isIRTerm";
 export interface IRConstrMeta extends BaseIRMetadata {}
 
 export class IRConstr
-    implements Cloneable<IRConstr>, IHash, IIRParent, ToJson
+    implements IIRTerm, Cloneable<IRConstr>, IHash, IIRParent, ToJson
 {
     readonly index!: bigint;
     readonly fields!: MutArrayLike<IRTerm>;
@@ -81,6 +81,10 @@ export class IRConstr
         );
 
         this._hash = isIRHash( _unsafeHash ) ? _unsafeHash : undefined;
+    }
+
+    children(): IRTerm[] {
+        return Array.from( this.fields );
     }
 
     private _hash: IRHash | undefined;

@@ -17,6 +17,11 @@ export class TirLitStrExpr
         readonly range: SourceRange
     ) {}
 
+    toString(): string
+    {
+        return `"${this.string}"`;
+    }
+
     clone(): TirLitStrExpr
     {
         return new TirLitStrExpr(

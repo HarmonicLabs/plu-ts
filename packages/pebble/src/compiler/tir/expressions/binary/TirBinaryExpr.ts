@@ -80,6 +80,11 @@ export class TirExponentiationExpr
         public right: TirExpr,
         readonly range: SourceRange
     ) {}
+
+    toString(): string
+    {
+        return `(${this.left.toString()} ** ${this.right.toString()})`;
+    }
     
     clone(): TirExpr
     {
@@ -118,6 +123,11 @@ export class TirLessThanExpr
         public right: TirExpr,
         readonly range: SourceRange
     ) {}
+
+    toString(): string
+    {
+        return `(${this.left.toString()} < ${this.right.toString()})`;
+    }
     
     clone(): TirExpr
     {
@@ -163,6 +173,11 @@ export class TirGreaterThanExpr
         public right: TirExpr,
         readonly range: SourceRange
     ) {}
+
+    toString(): string
+    {
+        return `(${this.left.toString()} > ${this.right.toString()})`;
+    }
     
     clone(): TirExpr
     {
@@ -209,6 +224,11 @@ export class TirLessThanEqualExpr
         public right: TirExpr,
         readonly range: SourceRange
     ) {}
+
+    toString(): string
+    {
+        return `(${this.left.toString()} <= ${this.right.toString()})`;
+    }
     
     clone(): TirExpr
     {
@@ -254,6 +274,11 @@ export class TirGreaterThanEqualExpr
         public right: TirExpr,
         readonly range: SourceRange
     ) {}
+
+    toString(): string
+    {
+        return `(${this.left.toString()} >= ${this.right.toString()})`;
+    }
     
     clone(): TirExpr
     {
@@ -300,6 +325,11 @@ export class TirEqualExpr
         public right: TirExpr,
         readonly range: SourceRange
     ) {}
+
+    toString(): string
+    {
+        return `(${this.left.toString()} === ${this.right.toString()})`;
+    }
     
     clone(): TirExpr
     {
@@ -338,6 +368,11 @@ export class TirNotEqualExpr
         public right: TirExpr,
         readonly range: SourceRange
     ) {}
+
+    toString(): string
+    {
+        return `(${this.left.toString()} !== ${this.right.toString()})`;
+    }
     
     clone(): TirExpr
     {
@@ -387,6 +422,11 @@ export class TirAddExpr
         public right: TirExpr,
         readonly range: SourceRange
     ) {}
+
+    toString(): string
+    {
+        return `(${this.left.toString()} + ${this.right.toString()})`;
+    }
     
     clone(): TirExpr
     {
@@ -432,6 +472,11 @@ export class TirSubExpr
         public right: TirExpr,
         readonly range: SourceRange
     ) {}
+
+    toString(): string
+    {
+        return `(${this.left.toString()} - ${this.right.toString()})`;
+    }
     
     clone(): TirExpr
     {
@@ -470,6 +515,11 @@ export class TirMultExpr
         public right: TirExpr,
         readonly range: SourceRange
     ) {}
+
+    toString(): string
+    {
+        return `(${this.left.toString()} * ${this.right.toString()})`;
+    }
     
     clone(): TirExpr
     {
@@ -508,6 +558,11 @@ export class TirDivExpr
         public right: TirExpr,
         readonly range: SourceRange
     ) {}
+
+    toString(): string
+    {
+        return `(${this.left.toString()} / ${this.right.toString()})`;
+    }
     
     clone(): TirExpr
     {
@@ -546,6 +601,11 @@ export class TirModuloExpr
         public right: TirExpr,
         readonly range: SourceRange
     ) {}
+
+    toString(): string
+    {
+        return `(${this.left.toString()} % ${this.right.toString()})`;
+    }
     
     clone(): TirExpr
     {
@@ -584,6 +644,11 @@ export class TirShiftLeftExpr
         public right: TirExpr,
         readonly range: SourceRange
     ) {}
+
+    toString(): string
+    {
+        return `(${this.left.toString()} << ${this.right.toString()})`;
+    }
     
     clone(): TirExpr
     {
@@ -623,6 +688,11 @@ export class TirShiftRightExpr
         public right: TirExpr,
         readonly range: SourceRange
     ) {}
+
+    toString(): string
+    {
+        return `(${this.left.toString()} >> ${this.right.toString()})`;
+    }
     
     clone(): TirExpr
     {
@@ -692,6 +762,11 @@ export class TirBitwiseAndExpr
         public right: TirExpr,
         readonly range: SourceRange
     ) {}
+
+    toString(): string
+    {
+        return `(${this.left.toString()} & ${this.right.toString()})`;
+    }
     
     clone(): TirExpr
     {
@@ -730,6 +805,11 @@ export class TirBitwiseXorExpr
         public right: TirExpr,
         readonly range: SourceRange
     ) {}
+
+    toString(): string
+    {
+        return `(${this.left.toString()} ^ ${this.right.toString()})`;
+    }
     
     clone(): TirExpr
     {
@@ -768,6 +848,11 @@ export class TirBitwiseOrExpr
         public right: TirExpr,
         readonly range: SourceRange
     ) {}
+
+    toString(): string
+    {
+        return `(${this.left.toString()} | ${this.right.toString()})`;
+    }
     
     clone(): TirExpr
     {
@@ -806,6 +891,11 @@ export class TirLogicalAndExpr
         public right: TirExpr,
         readonly range: SourceRange
     ) {}
+
+    toString(): string
+    {
+        return `(${this.left.toString()} && ${this.right.toString()})`;
+    }
     
     clone(): TirExpr
     {
@@ -844,6 +934,11 @@ export class TirLogicalOrExpr
         public right: TirExpr,
         readonly range: SourceRange
     ) {}
+
+    toString(): string
+    {
+        return `(${this.left.toString()} || ${this.right.toString()})`;
+    }
     
     clone(): TirExpr
     {

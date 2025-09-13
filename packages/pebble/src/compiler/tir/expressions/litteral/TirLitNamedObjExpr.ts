@@ -40,6 +40,12 @@ export class TirLitNamedObjExpr
         readonly range: SourceRange
     ) {}
 
+    toString(): string
+    {
+        const fields = this.fieldNames.map( (f, i) => `${f.text}: ${this.values[i].toString()}` );
+        return `${this.name.text}{ ${fields.join(", ")} }`;
+    }
+
     clone(): TirLitNamedObjExpr
     {
         return new TirLitNamedObjExpr(

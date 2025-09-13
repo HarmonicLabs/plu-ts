@@ -7,6 +7,7 @@ import { _modifyChildFromTo } from "../toUPLC/_internal/_modifyChildFromTo";
 import { BaseIRMetadata } from "./BaseIRMetadata";
 import { hashIrData, IRHash } from "../IRHash";
 import { IRNodeKind } from "../IRNodeKind";
+import { IIRTerm, IRTerm } from "../IRTerm";
 
 const irErrorBitTag = new Uint8Array([ IRNodeKind.Error ]);
 const errorHash = hashIrData( irErrorBitTag.slice() )
@@ -14,7 +15,7 @@ const errorHash = hashIrData( irErrorBitTag.slice() )
 export interface IRErrorMetadata extends BaseIRMetadata {}
 
 export class IRError
-    implements Cloneable<IRError>, IHash, IIRParent, ToJson
+    implements IIRTerm, Cloneable<IRError>, IHash, IIRParent, ToJson
 {
     readonly meta: IRErrorMetadata
 
@@ -27,6 +28,10 @@ export class IRError
         this.addInfos = addInfos ?? {};
         this.meta = {};
         this._parent = undefined;
+    }
+
+    children(): IRTerm[] {
+        return [];
     }
 
     static get kind(): IRNodeKind.Error { return IRNodeKind.Error; }

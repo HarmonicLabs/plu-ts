@@ -20,6 +20,11 @@ export class TirLettedExpr
         readonly range: SourceRange
     ) {}
 
+    toString(): string
+    {
+        return this.expr.toString();
+    }
+
     deps(): string[] {
         return this.expr.deps();
     }

@@ -39,6 +39,11 @@ export class TirFromDataExpr
         readonly range: SourceRange
     ) {}
 
+    toString(): string
+    {
+        return `fromData(${this.dataExpr.toString()}) as ${this.type.toString()}`;
+    }
+
     clone(): TirFromDataExpr
     {
         return new TirFromDataExpr(
@@ -61,11 +66,6 @@ export class TirFromDataExpr
             this.type,
             this.dataExpr.toIR( ctx )
         );
-    }
-
-    toString(): string
-    {
-        return `fromData(${this.dataExpr.toString()}) as ${this.type.toString()}`;
     }
 
 }

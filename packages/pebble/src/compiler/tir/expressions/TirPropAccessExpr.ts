@@ -18,6 +18,11 @@ export class TirPropAccessExpr
         readonly range: SourceRange
     ) {}
 
+    toString(): string
+    {
+        return `${this.object.toString()}.${this.prop.toString()}`;
+    }
+
     clone(): TirPropAccessExpr
     {
         return new TirPropAccessExpr(

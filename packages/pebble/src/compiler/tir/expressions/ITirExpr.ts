@@ -10,4 +10,5 @@ export interface ITirExpr extends HasSourceRange {
     deps: () => string[];
     toIR: ( ctx: ToIRTermCtx ) => IRTerm;
     clone: () => ITirExpr;
+    toString: () => string;
 }

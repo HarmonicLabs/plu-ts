@@ -16,6 +16,7 @@ import { IRError } from "../../../IRNodes";
 import { _ir_let } from "../../../tree_utils/_ir_let";
 import { _ir_lazyChooseList } from "../../../tree_utils/_ir_lazyChooseList";
 import { _ir_lazyIfThenElse } from "../../../tree_utils/_ir_lazyIfThenElse";
+import { hoisted_drop4, hoisted_drop2, hoisted_drop3 } from "../_comptimeDropN";
 
 const hoisted_id = new IRHoisted(
     new IRFunc( 1, new IRVar(0) )
@@ -33,93 +34,6 @@ const hoisted_not = new IRHoisted(
     )
 );
 hoisted_not.hash;
-
-const hoisted_drop2 = new IRHoisted(
-    new IRFunc( 1, // lst
-        _ir_apps(
-            IRNative.tailList,
-            _ir_apps(
-                IRNative.tailList,
-                new IRVar( 0 ) // lst
-            )
-        )
-    )
-);
-hoisted_drop2.hash;
-
-const hoisted_drop3 = new IRHoisted(
-    new IRFunc( 1, // lst
-        _ir_apps(
-            IRNative.tailList,
-            _ir_apps(
-                IRNative.tailList,
-                _ir_apps(
-                    IRNative.tailList,
-                    new IRVar( 0 ) // lst
-                )
-            )
-        )
-    )
-);
-hoisted_drop3.hash;
-
-const hoisted_drop4 = new IRHoisted(
-    new IRFunc( 1, // lst
-        _ir_apps(
-            IRNative.tailList,
-            _ir_apps(
-                IRNative.tailList,
-                _ir_apps(
-                    IRNative.tailList,
-                    _ir_apps(
-                        IRNative.tailList,
-                        new IRVar( 0 ) // lst
-                    )
-                )
-            )
-        )
-    )
-);
-hoisted_drop4.hash;
-
-const hoisted_drop8 = new IRHoisted(
-    new IRFunc( 1, // lst
-        _ir_apps(
-            hoisted_drop4.clone(),
-            _ir_apps(
-                hoisted_drop4.clone(),
-                new IRVar( 0 ) // lst
-            )
-        )
-    )
-);
-hoisted_drop8.hash;
-
-const hoisted_drop16 = new IRHoisted(
-    new IRFunc( 1, // lst
-        _ir_apps(
-            hoisted_drop8.clone(),
-            _ir_apps(
-                hoisted_drop8.clone(),
-                new IRVar( 0 ) // lst
-            )
-        )
-    )
-);
-hoisted_drop16.hash;
-
-const hoisted_drop32 = new IRHoisted(
-    new IRFunc( 1, // lst
-        _ir_apps(
-            hoisted_drop16.clone(),
-            _ir_apps(
-                hoisted_drop16.clone(),
-                new IRVar( 0 ) // lst
-            )
-        )
-    )
-);
-hoisted_drop32.hash;
 
 const hoisted_incr = new IRHoisted(
     new IRApp( IRNative.addInteger, IRConst.int( 1 ) )

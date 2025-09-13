@@ -31,6 +31,7 @@ export interface ITirStmt extends HasSourceRange {
      * or a non-conditional fail statement (which terminates the entire program)
      */
     definitelyTerminates: () => boolean;
+    toString: () => string;
 }
 
 export type TirStmt

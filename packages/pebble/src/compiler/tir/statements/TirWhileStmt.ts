@@ -11,6 +11,14 @@ export class TirWhileStmt
         readonly range: SourceRange,
     ) {}
 
+    toString(): string
+    {
+        return (
+            `while( ${this.condition.toString()} ) ` +
+            this.body.toString()
+        );
+    }
+
     definitelyTerminates(): boolean
     {
         return this.body.definitelyTerminates();

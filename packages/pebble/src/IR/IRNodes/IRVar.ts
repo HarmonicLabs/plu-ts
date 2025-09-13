@@ -10,11 +10,12 @@ import { _modifyChildFromTo } from "../toUPLC/_internal/_modifyChildFromTo";
 import { BaseIRMetadata } from "./BaseIRMetadata";
 import { hashIrData, IRHash, isIRHash } from "../IRHash";
 import { IRNodeKind } from "../IRNodeKind";
+import { IIRTerm, IRTerm } from "../IRTerm";
 
 export interface IRVarMetadata extends BaseIRMetadata {}
 
 export class IRVar
-    implements Cloneable<IRVar>, IHash, IIRParent, ToJson
+    implements IIRTerm, Cloneable<IRVar>, IHash, IIRParent, ToJson
 {
     private _hash: IRHash | undefined;
     get hash(): IRHash
@@ -106,6 +107,8 @@ export class IRVar
         
         this._parent = undefined;
     }
+
+    children(): IRTerm[] { return []; }
 
     clone(): IRVar
     {

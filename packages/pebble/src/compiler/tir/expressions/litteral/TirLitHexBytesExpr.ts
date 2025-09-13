@@ -4,6 +4,7 @@ import { TirType } from "../../types/TirType";
 import { bytes_t } from "../../program/stdScope/stdScope";
 import { IRTerm, IRConst } from "../../../../IR";
 import { ToIRTermCtx } from "../ToIRTermCtx";
+import { toHex } from "@harmoniclabs/uint8array-utils";
 
 export class TirLitHexBytesExpr
     implements ITirExpr
@@ -15,6 +16,11 @@ export class TirLitHexBytesExpr
         readonly bytes: Uint8Array,
         readonly range: SourceRange
     ) {}
+    
+    toString(): string
+    {
+        return `#${toHex( this.bytes )}`;
+    }
 
     clone(): TirLitHexBytesExpr
     {

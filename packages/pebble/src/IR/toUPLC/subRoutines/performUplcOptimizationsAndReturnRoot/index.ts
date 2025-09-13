@@ -1,5 +1,5 @@
 import { get } from "http";
-import { IRConstr, IRNative } from "../../../IRNodes";
+import { IRConst, IRConstr, IRError, IRNative } from "../../../IRNodes";
 import { IRApp } from "../../../IRNodes/IRApp";
 import { IRCase } from "../../../IRNodes/IRCase";
 import { IRDelayed } from "../../../IRNodes/IRDelayed";
@@ -38,7 +38,6 @@ export function performUplcOptimizationsAndReturnRoot(
     } = opts;
 
     root = expandFuncsAndReturnRoot( root );
-
     const stack: StackEntry[] = [ [ root, 0 ] ];
 
     while( stack.length > 0 )
@@ -153,10 +152,17 @@ export function performUplcOptimizationsAndReturnRoot(
             t instanceof IRHoisted ||
             t instanceof IRLetted ||
             t instanceof IRSelfCall
-        )
-        {
-            throw new Error("Unexpected term while performing uplc optimizations");
-        }
+        ) throw new Error("Unexpected term while performing uplc optimizations");
+
+        if(
+            t instanceof IRVar
+            || t instanceof IRNative
+            || t instanceof IRConstr
+            || t instanceof IRConst
+            || t instanceof IRError
+        ) continue; // leaf nodes
+
+        const tsEnsureExhaustiveCheck: never = t;
     }
 
     return root;

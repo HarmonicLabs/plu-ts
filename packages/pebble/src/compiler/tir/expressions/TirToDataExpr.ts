@@ -52,6 +52,11 @@ export class TirToDataExpr
         readonly range: SourceRange
     ) {}
 
+    toString(): string
+    {
+        return `toData( ${this.expr.toString()} )`;
+    }
+
     clone(): TirToDataExpr
     {
         return new TirToDataExpr(

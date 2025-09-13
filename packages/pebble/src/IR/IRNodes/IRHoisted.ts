@@ -4,7 +4,7 @@ import { Cloneable } from "@harmoniclabs/cbor/dist/utils/Cloneable";
 import { freezeAll } from "@harmoniclabs/obj-utils";
 import { BasePlutsError } from "../../utils/BasePlutsError";
 import { ToJson } from "../../utils/ToJson";
-import { IRTerm } from "../IRTerm";
+import { IIRTerm, IRTerm } from "../IRTerm";
 import { IHash, IIRParent } from "../interfaces";
 import { concatUint8Arr } from "../utils/concatUint8Arr";
 import { isClosedIRTerm } from "../utils/isClosedIRTerm";
@@ -46,7 +46,7 @@ const defaultHoistedMeta: IRHoistedMeta = freezeAll({
 });
 
 export class IRHoisted
-    implements Cloneable<IRHoisted>, IHash, IIRParent, ToJson, IRHoistedMetadata
+    implements IIRTerm, Cloneable<IRHoisted>, IHash, IIRParent, ToJson, IRHoistedMetadata
 {
     readonly meta!: IRHoistedMeta
 
@@ -82,6 +82,10 @@ export class IRHoisted
             ...metadata,
             name: this._hoisted.meta?.name ?? metadata.name
         };
+    }
+
+    children(): IRTerm[] {
+        return [ this.hoisted ];
     }
 
     static get kind(): IRNodeKind.Hoisted { return IRNodeKind.Hoisted; }

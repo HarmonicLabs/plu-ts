@@ -16,6 +16,18 @@ export class TirMatchStmt
         readonly range: SourceRange,
     ) {}
 
+    toString(): string
+    {
+        return (
+            `match ( ${this.matchExpr.toString()} ) { ` +
+            this.cases.map( c =>
+                `when ${c.pattern.toString()}: ${c.body.toString()};`
+            ).join(" ") +
+            ( this.wildcardCase ? ` else ${this.wildcardCase.body.toString()};` : "" ) +
+            ` }`
+        );
+    }
+
     definitelyTerminates(): boolean
     {
         return this.cases.every(({ body }) => body.definitelyTerminates());

@@ -160,7 +160,7 @@ export class AstCompiler extends DiagnosticEmitter
             entrySrc.range.atStart(),
             "main"
         );
-
+        
         return this.program;
     }
 

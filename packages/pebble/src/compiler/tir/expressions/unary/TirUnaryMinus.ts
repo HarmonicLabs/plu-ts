@@ -16,6 +16,11 @@ export class TirUnaryMinus
         readonly range: SourceRange
     ) {}
 
+    toString(): string
+    {
+        return `-${this.operand.toString()}`;
+    }
+
     clone(): TirUnaryMinus
     {
         return new TirUnaryMinus(

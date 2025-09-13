@@ -16,6 +16,11 @@ export class TirCallExpr implements ITirExpr
         readonly range: SourceRange
     ) {}
 
+    toString(): string
+    {
+        return `${this.func.toString()}( ${this.args.map( a => a.toString() ).join(", ")} )`;
+    }
+
     clone(): TirCallExpr
     {
         return new TirCallExpr(

@@ -12,6 +12,11 @@ export class TirAssignmentStmt
         readonly range: SourceRange
     ) {}
 
+    toString(): string
+    {
+        return `${this.varIdentifier.toString()} = ${this.assignedExpr.toString()};`;
+    }
+
     definitelyTerminates(): boolean { return false; }
 
     deps(): string[]

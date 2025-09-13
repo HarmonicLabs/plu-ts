@@ -13,6 +13,15 @@ export class TirIfStmt
         readonly range: SourceRange,
     ) {}
 
+    toString(): string
+    {
+        return (
+            `if( ${this.condition.toString()} ) ` +
+            this.thenBranch.toString() +
+            ( this.elseBranch ? ` else ${this.elseBranch.toString()}` : `` )
+        );
+    }
+
     definitelyTerminates(): boolean
     {
         return (

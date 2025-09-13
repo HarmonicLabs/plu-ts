@@ -37,7 +37,20 @@ export class TirCaseExpr
         readonly type: TirType,
         readonly range: SourceRange,
     ) {
-        this._creationStack = (new Error()).stack;
+        // this._creationStack = (new Error()).stack;
+    }
+
+    toString(): string
+    {
+        const casesStr = this.cases.map( c =>
+            `is ${c.pattern.toString()} => ${c.body.toString()}`
+        ).join(" ");
+
+        const wildcardStr = this.wildcardCase
+            ? `else ${this.wildcardCase.body.toString()}`
+            : "";
+
+        return `(case ${this.matchExpr.toString()} ${casesStr} ${wildcardStr})`;
     }
 
     /// @ts-ignore Return type annotation circularly references itself.

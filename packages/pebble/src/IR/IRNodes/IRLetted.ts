@@ -6,7 +6,7 @@ import { Cloneable } from "@harmoniclabs/cbor/dist/utils/Cloneable";
 import { freezeAll, defineReadOnlyProperty } from "@harmoniclabs/obj-utils";
 import { BasePlutsError } from "../../utils/BasePlutsError";
 import { ToJson } from "../../utils/ToJson";
-import { IRTerm } from "../IRTerm";
+import { IIRTerm, IRTerm } from "../IRTerm";
 import { IHash, IIRParent } from "../interfaces";
 import { concatUint8Arr } from "../utils/concatUint8Arr";
 import { isIRTerm } from "../utils/isIRTerm";
@@ -75,7 +75,7 @@ const defaultLettedMeta: IRLettedMeta = freezeAll({
 let n_hash_access = 0;
 
 export class IRLetted
-    implements Cloneable<IRLetted>, IHash, IIRParent, ToJson, IRLettedMetadata
+    implements IIRTerm, Cloneable<IRLetted>, IHash, IIRParent, ToJson, IRLettedMetadata
 {
     private _hash: IRHash | undefined;
     get hash(): IRHash
@@ -271,6 +271,10 @@ export class IRLetted
             ...metadata,
             // isClosed: metadata.isClosed || this.isClosedAtDbn( 0 )
         };
+    }
+
+    children(): IRTerm[] {
+        return [ this._value ];
     }
 
     static get kind(): IRNodeKind.Letted { return IRNodeKind.Letted; }

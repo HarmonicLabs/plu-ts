@@ -10,6 +10,11 @@ export class TirReturnStmt
         readonly range: SourceRange,
     ) {}
 
+    toString(): string
+    {
+        return `return ${this.value?.toString() ?? ""}`;
+    }
+
     definitelyTerminates(): boolean { return true; }
 
     deps(): string[]

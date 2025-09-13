@@ -16,6 +16,11 @@ export class TirLitUndefExpr implements ITirExpr
         readonly range: SourceRange
     ) {}
 
+    toString(): string
+    {
+        return "undefined";
+    }
+
     clone(): TirLitUndefExpr
     {
         return new TirLitUndefExpr(

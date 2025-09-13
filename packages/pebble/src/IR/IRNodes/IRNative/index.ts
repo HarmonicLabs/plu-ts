@@ -15,7 +15,7 @@ import { IRNodeKind } from "../../IRNodeKind";
 import { TirType } from "../../../compiler/tir/types/TirType";
 import { IRConst, IRFunc, IRHoisted, IRVar } from "..";
 import { _ir_apps } from "../../tree_utils/_ir_apps";
-import { IRTerm } from "../../IRTerm";
+import { IIRTerm, IRTerm } from "../../IRTerm";
 import { getUnaliased } from "../../../compiler/tir/types/utils/getUnaliased";
 import { TirDataStructType, TirSoPStructType } from "../../../compiler/tir/types/TirStructType";
 import { TirAliasType } from "../../../compiler/tir/types/TirAliasType";
@@ -47,7 +47,7 @@ export interface IRNativeMetadata extends BaseIRMetadata {}
  * `IRNative` ⊇ (`Builtins` + `std::fn`)
 **/
 export class IRNative
-    implements Cloneable<IRNative>, IHash, IIRParent, ToJson
+    implements IIRTerm, Cloneable<IRNative>, IHash, IIRParent, ToJson
 {
     readonly tag!: IRNativeTag;
 
@@ -58,6 +58,10 @@ export class IRNative
     constructor( tag: IRNativeTag )
     {
         this.tag = tag;
+    }
+
+    children(): IRTerm[] {
+        return [];
     }
 
     get hash(): IRHash

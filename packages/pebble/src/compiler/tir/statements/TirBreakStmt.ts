@@ -8,6 +8,10 @@ export class TirBreakStmt
         readonly range: SourceRange,
     ) {}
 
+    toString(): string
+    {
+        return `break`;
+    }
     // loops are transoformed into recursive functions
     // and break statements are transformed into return statements
     // so this statement does terminate the function

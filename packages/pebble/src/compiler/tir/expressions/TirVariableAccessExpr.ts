@@ -17,6 +17,11 @@ export class TirVariableAccessExpr
         readonly range: SourceRange
     ) {}
 
+    toString(): string
+    {
+        return this.varName;
+    }
+
     clone(): TirVariableAccessExpr
     {
         return new TirVariableAccessExpr(

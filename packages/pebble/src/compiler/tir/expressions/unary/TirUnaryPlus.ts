@@ -13,6 +13,11 @@ export class TirUnaryPlus
         readonly range: SourceRange
     ) {}
 
+    toString(): string
+    {
+        return `+${this.operand.toString()}`;
+    }
+
     clone(): TirUnaryPlus
     {
         return new TirUnaryPlus(

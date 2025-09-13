@@ -23,6 +23,16 @@ export class TirForStmt
         readonly range: SourceRange,
     ) {}
 
+    toString(): string
+    {
+        return (
+            `for( ${this.init.map( v => v.toString() ).join(", ")}; ` +
+            `${this.condition?.toString() ?? ""}; ` +
+            `${this.update?.map( s => s.toString() ).join(", ") ?? ""} ) ` +
+            `${this.body.toString()}`
+        );
+    }
+
     definitelyTerminates(): boolean
     {
         return this.body.definitelyTerminates() ||  (this.update?.some( stmt => stmt.definitelyTerminates() ) ?? false);

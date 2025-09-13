@@ -24,6 +24,11 @@ export class TirElemAccessExpr
         readonly range: SourceRange
     ) {}
 
+    toString(): string
+    {
+        return `${this.arrLikeExpr.toString()}[ ${this.indexExpr.toString()} ]`;
+    }
+    
     clone(): TirElemAccessExpr
     {
         return new TirElemAccessExpr(

@@ -16,6 +16,11 @@ export class TirUnaryTilde
         readonly range: SourceRange
     ) {}
 
+    toString(): string
+    {
+        return `~${this.operand.toString()}`;
+    }
+
     clone(): TirUnaryTilde
     {
         return new TirUnaryTilde(

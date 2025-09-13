@@ -21,6 +21,11 @@ export class TirTernaryExpr
         readonly range: SourceRange
     ) {}
 
+    toString(): string
+    {
+        return `(${this.condition.toString()} ? ${this.ifTrue.toString()} : ${this.ifFalse.toString()})`;
+    }
+
     clone(): TirTernaryExpr
     {
         return new TirTernaryExpr(

@@ -32,6 +32,7 @@ import { TirDataOptT } from "../../compiler/tir/types/TirNativeType/native/Optio
 import { TirSopOptT } from "../../compiler/tir/types/TirNativeType/native/Optional/sop";
 import { TirStringT } from "../../compiler/tir/types/TirNativeType/native/string";
 import { TirVoidT } from "../../compiler/tir/types/TirNativeType/native/void";
+import { IIRTerm, IRTerm } from "../IRTerm";
 
 export interface IRConstPair {
     fst: IRConstValue;
@@ -60,7 +61,7 @@ export type IRConstValue
 export interface IRConstMetadata extends BaseIRMetadata {}
 
 export class IRConst
-    implements Cloneable<IRConst>, IHash, IIRParent, ToJson
+    implements IIRTerm, Cloneable<IRConst>, IHash, IIRParent, ToJson
 {
     static get kind(): IRNodeKind.Const { return IRNodeKind.Const; }
     get kind(): IRNodeKind.Const { return IRConst.kind; }
@@ -80,6 +81,10 @@ export class IRConst
 
         this._parent = undefined;
         this._hash = isIRHash( _unsafeHash ) ? _unsafeHash : undefined;
+    }
+
+    children(): IRTerm[] {
+        return [];
     }
 
     toUPLC(): UPLCConst

@@ -1,7 +1,7 @@
 import { Cloneable } from "@harmoniclabs/cbor/dist/utils/Cloneable";
 import { BasePlutsError } from "../../utils/BasePlutsError";
 import { ToJson } from "../../utils/ToJson";
-import { IRTerm } from "../IRTerm";
+import { IIRTerm, IRTerm } from "../IRTerm";
 import { IHash } from "../interfaces/IHash";
 import { IIRParent } from "../interfaces/IIRParent";
 import { concatUint8Arr } from "../utils/concatUint8Arr";
@@ -16,7 +16,7 @@ import { IRNodeKind } from "../IRNodeKind";
 export interface IRForcedMetadata extends BaseIRMetadata {}
 
 export class IRForced
-    implements Cloneable<IRForced>, IHash, IIRParent, ToJson
+    implements IIRTerm, Cloneable<IRForced>, IHash, IIRParent, ToJson
 {
     readonly meta: IRForcedMetadata
 
@@ -33,6 +33,10 @@ export class IRForced
         this._forced.parent = this;
 
         this._parent = undefined;
+    }
+
+    children(): IRTerm[] {
+        return [ this._forced ];
     }
 
     private _forced!: IRTerm;

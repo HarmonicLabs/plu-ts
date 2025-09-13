@@ -25,6 +25,11 @@ export class TirTypeConversionExpr
         readonly range: SourceRange
     ) {}
 
+    toString(): string
+    {
+        return `(${this.expr.toString()} as ${this.type.toString()})`;
+    }
+
     deps(): string[]
     {
         return this.expr.deps();

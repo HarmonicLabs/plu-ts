@@ -25,6 +25,11 @@ export class TirAssertAndContinueExpr
         readonly range: SourceRange
     ) {}
 
+    toString(): string
+    {
+        return `assert ${this.conditions.map( c => c.toString() ).join(" && " )} then ${this.continuation.toString()}`;
+    }
+
     /// @ts-ignore Return type annotation circularly references itself.
     clone(): TirAssertAndContinueExpr
     {

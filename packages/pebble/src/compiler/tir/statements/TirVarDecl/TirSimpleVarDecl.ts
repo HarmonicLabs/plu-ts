@@ -15,6 +15,14 @@ export class TirSimpleVarDecl
         readonly range: SourceRange,
     ) {}
 
+    toString(): string
+    {
+        return (
+            `${this.isConst ? "const" : "let"} ${this.name}: ${this.type.toString()}` +
+            ( this.initExpr ? ` = ${this.initExpr.toString()}` : "" )
+        );
+    }
+
     deps(): string[]
     {
         return this.initExpr?.deps() ?? [];

@@ -16,6 +16,11 @@ export class TirLitIntExpr
         readonly range: SourceRange
     ) {}
 
+    toString(): string
+    {
+        return this.integer.toString();
+    }
+
     clone(): TirLitIntExpr
     {
         return new TirLitIntExpr(

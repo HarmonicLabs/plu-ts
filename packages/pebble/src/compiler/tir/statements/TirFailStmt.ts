@@ -12,6 +12,11 @@ export class TirFailStmt
         readonly range: SourceRange,
     ) {}
 
+    toString(): string
+    {
+        return `fail${ this.failMsgExpr ? ` ${this.failMsgExpr.toString()}` : "" }`;
+    }
+
     definitelyTerminates(): boolean { return true; }
 
     deps(): string[]

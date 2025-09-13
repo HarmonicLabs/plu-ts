@@ -15,6 +15,14 @@ export class TirAssertStmt
         readonly range: SourceRange,
     ) {}
 
+    toString(): string
+    {
+        return (
+            `assert ${this.condition.toString()}` +
+            ( this.elseExpr ? ` else ${this.elseExpr.toString()}` : "" )
+        );
+    }
+
     definitelyTerminates(): boolean { return false; }
 
     deps(): string[]

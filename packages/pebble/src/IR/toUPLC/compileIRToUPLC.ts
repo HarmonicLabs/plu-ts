@@ -12,12 +12,13 @@ import { handleHoistedAndReturnRoot } from "./subRoutines/handleHoistedAndReturn
 import { replaceNativesAndReturnRoot } from "./subRoutines/replaceNatives";
 import { replaceClosedLettedWithHoisted } from "./subRoutines/replaceClosedLettedWithHoisted";
 import { hoistForcedNatives } from "./subRoutines/hoistForcedNatives";
-import { handleRecursiveTerms, handleRootRecursiveTerm } from "./subRoutines/handleRecursiveTerms";
+import { handleRootRecursiveTerm } from "./subRoutines/handleRecursiveTerms";
 import { CompilerOptions, completeCompilerOptions, defaultOptions } from "./CompilerOptions";
 import { replaceHoistedWithLetted } from "./subRoutines/replaceHoistedWithLetted";
 import { IRApp, IRCase, IRConstr, IRNative, IRVar } from "../IRNodes";
 import { replaceForcedNativesWithHoisted } from "./subRoutines/replaceForcedNativesWithHoisted";
 import { performUplcOptimizationsAndReturnRoot } from "./subRoutines/performUplcOptimizationsAndReturnRoot";
+import { rewriteNativesAppliedToConstantsAndReturnRoot } from "./subRoutines/rewriteNativesAppliedToConstantsAndReturnRoot";
 
 export function compileIRToUPLC(
     term: IRTerm,
@@ -35,6 +36,9 @@ export function compileIRToUPLC(
     ///////////////////////////////////////////////////////////////////////////////
 
     const options = completeCompilerOptions( paritalOptions );
+
+    // term = preEvaluateDefinedTermsAndReturnRoot( term );
+    term = rewriteNativesAppliedToConstantsAndReturnRoot( term );
 
     // unwrap top level letted and hoisted;
     while( term instanceof IRLetted || term instanceof IRHoisted )

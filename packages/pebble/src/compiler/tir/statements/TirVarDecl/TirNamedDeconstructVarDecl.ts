@@ -20,6 +20,21 @@ export class TirNamedDeconstructVarDecl
         readonly range: SourceRange,
     ) {}
 
+    toString(): string
+    {
+        return (
+            `${this.isConst ? "const" : "let"} ` +
+            `${this.constrName}{ ` +
+            Array.from( this.fields.entries() )
+            .map( ([ name, decl ]) => 
+                `${name}: ${decl.toString()}`
+            ).join(", ") +
+            ( this.rest ? `, ...${this.rest}` : "" ) +
+            ` }` +
+            ( this.initExpr ? ` = ${this.initExpr.toString()}` : "" )
+        );
+    }
+
     deps(): string[]
     {
         return this.initExpr?.deps() ?? [];

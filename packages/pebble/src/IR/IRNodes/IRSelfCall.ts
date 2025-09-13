@@ -11,13 +11,13 @@ import { BaseIRMetadata } from "./BaseIRMetadata";
 import { hashIrData, IRHash, isIRHash } from "../IRHash";
 import { IRNodeKind } from "../IRNodeKind";
 import { IRRecursive } from "./IRRecursive";
-import { IRTerm } from "../IRTerm";
+import { IIRTerm, IRTerm } from "../IRTerm";
 import { IRFunc } from "./IRFunc";
 
 export interface IRSelfCallMetadata extends BaseIRMetadata {}
 
 export class IRSelfCall
-    implements Cloneable<IRSelfCall>, IHash, IIRParent, ToJson
+    implements IIRTerm, Cloneable<IRSelfCall>, IHash, IIRParent, ToJson
 {
     private _hash: IRHash | undefined;
     get hash(): IRHash
@@ -159,6 +159,8 @@ export class IRSelfCall
         
         this._parent = undefined;
     }
+
+    children(): IRTerm[] { return []; }
 
     clone(): IRSelfCall
     {

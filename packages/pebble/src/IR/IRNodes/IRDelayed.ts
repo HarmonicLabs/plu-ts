@@ -1,7 +1,7 @@
 import { Cloneable } from "@harmoniclabs/cbor/dist/utils/Cloneable";
 import { BasePlutsError } from "../../utils/BasePlutsError";
 import { ToJson } from "../../utils/ToJson";
-import { IRTerm } from "../IRTerm";
+import { IIRTerm, IRTerm } from "../IRTerm";
 import { IHash } from "../interfaces/IHash";
 import { IIRParent } from "../interfaces/IIRParent";
 import { concatUint8Arr } from "../utils/concatUint8Arr";
@@ -16,7 +16,7 @@ import { IRNodeKind } from "../IRNodeKind";
 export interface IRDelayedMetadata extends BaseIRMetadata {}
 
 export class IRDelayed
-    implements Cloneable<IRDelayed>, IHash, IIRParent, ToJson
+    implements IIRTerm, Cloneable<IRDelayed>, IHash, IIRParent, ToJson
 {
     readonly meta: IRDelayedMetadata = {};
 
@@ -33,6 +33,10 @@ export class IRDelayed
         this._parent = undefined;
     }
 
+    children(): IRTerm[] {
+        return [ this.delayed ];
+    }
+    
     static get kind(): IRNodeKind.Delayed { return IRNodeKind.Delayed; }
     get kind(): IRNodeKind.Delayed { return IRDelayed.kind; }
     static get tag(): Uint8Array { return new Uint8Array([ IRDelayed.kind ]); }

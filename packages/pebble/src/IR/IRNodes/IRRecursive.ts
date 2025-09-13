@@ -1,7 +1,10 @@
 import { BasePlutsError } from "../../utils/BasePlutsError";
+import { Cloneable } from "../../utils/Cloneable";
+import { ToJson } from "../../utils/ToJson";
+import { IHash, IIRParent } from "../interfaces";
 import { IRHash, isIRHash, hashIrData } from "../IRHash";
 import { IRNodeKind } from "../IRNodeKind";
-import { IRTerm } from "../IRTerm";
+import { IIRTerm, IRTerm } from "../IRTerm";
 import { concatUint8Arr } from "../utils/concatUint8Arr";
 import { shallowEqualIRTermHash } from "../utils/equalIRTerm";
 import { IRParentTerm, isIRParentTerm } from "../utils/isIRParentTerm";
@@ -11,6 +14,7 @@ import { BaseIRMetadata } from "./BaseIRMetadata";
 export interface IRRecursiveMetadata extends BaseIRMetadata {}
 
 export class IRRecursive
+    implements IIRTerm, Cloneable<IRRecursive>, IHash, IIRParent, ToJson
 {
     static get kind(): IRNodeKind.Recursive { return IRNodeKind.Recursive; }
     get kind(): IRNodeKind.Recursive { return IRRecursive.kind; }
@@ -52,6 +56,10 @@ export class IRRecursive
         this._hash = isIRHash( _unsafeHash ) ? _unsafeHash : undefined;
         
         this._parent = undefined;
+    }
+
+    children(): IRTerm[] {
+        return [ this._body ];
     }
 
     private _body!: IRTerm

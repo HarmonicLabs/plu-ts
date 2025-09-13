@@ -18,6 +18,13 @@ export class TirForOfStmt
         readonly range: SourceRange,
     ) {}
 
+    toString(): string {
+        return (
+            `for( ${this.elemDeclaration.toString()} of ${this.iterable.toString()} ) ` +
+            this.body.toString()
+        );
+    }
+
     definitelyTerminates(): boolean {
         return this.body.definitelyTerminates();
     }

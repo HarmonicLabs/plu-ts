@@ -20,7 +20,6 @@ import { TirAssertAndContinueExpr } from "./TirAssertAndContinueExpr";
 import { TirTraceIfFalseExpr } from "./TirTraceIfFalseExpr";
 import { TirNativeFunc } from "./TirNativeFunc";
 import { TirInlineClosedIR } from "./TirInlineClosedIR";
-import { ITirExpr } from "./ITirExpr";
 
 export type TirExpr
     =( TirUnaryPrefixExpr

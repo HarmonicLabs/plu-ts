@@ -23,6 +23,11 @@ export class TirHoistedExpr
         public expr: TirExpr
     ) {}
 
+    toString(): string
+    {
+        return this.expr.toString();
+    }
+
     clone(): TirHoistedExpr
     {
         return new TirHoistedExpr(

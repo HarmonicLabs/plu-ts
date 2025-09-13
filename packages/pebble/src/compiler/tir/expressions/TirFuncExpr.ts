@@ -40,6 +40,16 @@ export class TirFuncExpr
         private readonly _isLoop: boolean = false,
     ) {}
 
+    toString(): string
+    {
+        return (
+            `function ${this.name}` +
+            `( ${this.params.map( p => p.toString() ).join(", ")} )` +
+            `: ${this.returnType.toString()} ` +
+            `${this.body.toString()}`
+        );
+    }
+
     clone(): TirFuncExpr
     {
         return new TirFuncExpr(

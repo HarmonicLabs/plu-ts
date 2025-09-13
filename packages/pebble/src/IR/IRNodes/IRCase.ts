@@ -1,6 +1,6 @@
 import { Cloneable } from "../../utils/Cloneable";
 import { ToJson } from "../../utils/ToJson";
-import { IRTerm } from "../IRTerm";
+import { IIRTerm, IRTerm } from "../IRTerm";
 import { IHash, IIRParent } from "../interfaces";
 import { concatUint8Arr } from "../utils/concatUint8Arr";
 import { IRParentTerm, isIRParentTerm } from "../utils/isIRParentTerm";
@@ -17,7 +17,7 @@ import { isIRTerm } from "../utils/isIRTerm";
 export interface IRCaseMeta extends BaseIRMetadata {}
 
 export class IRCase
-    implements Cloneable<IRCase>, IHash, IIRParent, ToJson
+    implements IIRTerm, Cloneable<IRCase>, IHash, IIRParent, ToJson
 {
     static get kind(): IRNodeKind.Case { return IRNodeKind.Case; }
     get kind(): IRNodeKind.Case { return IRCase.kind; }
@@ -66,6 +66,13 @@ export class IRCase
         );
 
         this._hash = isIRHash( _unsafeHash ) ? _unsafeHash : undefined;
+    }
+
+    children(): IRTerm[] {
+        return [
+            this.constrTerm,
+            ...Array.from( this.continuations )
+        ];
     }
 
     private _hash: IRHash | undefined;

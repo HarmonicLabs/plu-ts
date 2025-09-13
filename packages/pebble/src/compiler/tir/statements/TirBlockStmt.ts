@@ -12,6 +12,15 @@ export class TirBlockStmt
         readonly range: SourceRange
     ) {}
 
+    toString(): string
+    {
+        return (
+            `{ ` +
+            this.stmts.map( s => s.toString() ).join("; ") +
+            ` }`
+        );
+    }
+
     definitelyTerminates(): boolean
     {
         return this.stmts.some( stmt => stmt.definitelyTerminates() );

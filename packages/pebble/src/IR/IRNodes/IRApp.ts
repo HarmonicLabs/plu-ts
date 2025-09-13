@@ -1,4 +1,4 @@
-import { IRTerm } from "../IRTerm";
+import { IIRTerm, IRTerm } from "../IRTerm";
 import { IHash } from "../interfaces/IHash";
 import { IIRParent } from "../interfaces/IIRParent";
 import { concatUint8Arr } from "../utils/concatUint8Arr";
@@ -18,7 +18,7 @@ export interface IRAppMeta extends BaseIRMetadata {
 }
 
 export class IRApp
-    implements Cloneable<IRApp>, IHash, IIRParent, ToJson
+    implements IIRTerm, Cloneable<IRApp>, IHash, IIRParent, ToJson
 {
     constructor(
         _fn_: IRTerm,
@@ -45,6 +45,13 @@ export class IRApp
         this._arg.parent = this;
 
         this._hash = isIRHash( _unsafeHash ) ? _unsafeHash : undefined;
+    }
+
+    children(): IRTerm[] {
+        return [
+            this._fn,
+            this._arg
+        ];
     }
 
     static get kind(): IRNodeKind { return IRNodeKind.App; }

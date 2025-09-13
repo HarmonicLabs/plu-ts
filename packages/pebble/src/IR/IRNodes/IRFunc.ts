@@ -1,7 +1,7 @@
 import { Cloneable } from "@harmoniclabs/cbor/dist/utils/Cloneable";
 import { BasePlutsError } from "../../utils/BasePlutsError";
 import { ToJson } from "../../utils/ToJson";
-import { IRTerm } from "../IRTerm";
+import { IIRTerm, IRTerm } from "../IRTerm";
 import { IHash } from "../interfaces/IHash";
 import { IIRParent } from "../interfaces/IIRParent";
 import { concatUint8Arr } from "../utils/concatUint8Arr";
@@ -18,7 +18,7 @@ import { IRNodeKind } from "../IRNodeKind";
 export interface IRFuncMetadata extends BaseIRMetadata {}
 
 export class IRFunc
-    implements Cloneable<IRFunc>, IHash, IIRParent, ToJson
+    implements IIRTerm, Cloneable<IRFunc>, IHash, IIRParent, ToJson
 {
     readonly arity!: number;
 
@@ -62,6 +62,10 @@ export class IRFunc
         this._hash = isIRHash( _unsafeHash ) ? _unsafeHash : undefined;
         
         this._parent = undefined;
+    }
+
+    children(): IRTerm[] {
+        return [ this._body ];
     }
 
     static get kind(): IRNodeKind.Func { return  IRNodeKind.Func; }

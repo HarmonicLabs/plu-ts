@@ -15,12 +15,16 @@ export class TirInlineClosedIR
         return this.type;
     }
 
-
     constructor(
         readonly type: TirFuncT,
         readonly getIr: ( ctx: ToIRTermCtx ) => IRTerm,
         readonly range: SourceRange
     ) {}
+
+    toString(): string
+    {
+        return `<closed IR> as ${this.type.toString()}`;
+    }
 
     get isConstant(): boolean { return true; }
 

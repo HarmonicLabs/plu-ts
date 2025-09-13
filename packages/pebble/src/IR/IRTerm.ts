@@ -28,3 +28,7 @@ export type IRTerm
     | IRCase
     | IRRecursive
     | IRSelfCall;
+
+export interface IIRTerm {
+    children(): IRTerm[];
+}

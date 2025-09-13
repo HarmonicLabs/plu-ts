@@ -17,6 +17,22 @@ export class TirArrayLikeDeconstr
         readonly range: SourceRange,
     ) {}
 
+
+    toString(): string
+    {
+        return (
+            `${this.isConst ? "const" : "let"} ` +
+            `[ ` +
+            this.elements
+            .map( ( decl ) => 
+                decl.toString()
+            ).join(", ") +
+            ( this.rest ? `, ...${this.rest}` : "" ) +
+            ` }` +
+            ( this.initExpr ? ` = ${this.initExpr.toString()}` : "" )
+        );
+    }
+
     deps(): string[]
     {
         return this.initExpr?.deps() ?? [];

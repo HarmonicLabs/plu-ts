@@ -18,7 +18,12 @@ export class TirNativeFunc
     constructor(
         readonly tag: IRNativeTag,
         readonly type: TirFuncT
-    ) { }
+    ) {}
+
+    toString(): string {
+        return `<native ${IRNativeTag[this.tag]}>`;
+    }
+
 
     toIR(ctx: ToIRTermCtx): IRTerm {
         return new IRNative(this.tag);

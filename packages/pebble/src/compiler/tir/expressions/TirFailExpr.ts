@@ -18,6 +18,11 @@ export class TirFailExpr
         readonly range: SourceRange,
     ) {}
 
+    toString(): string
+    {
+        return `(fail${this.failMsgExpr ? ` ${this.failMsgExpr.toString()}` : ""})`;
+    }
+
     clone(): TirFailExpr
     {
         return new TirFailExpr(

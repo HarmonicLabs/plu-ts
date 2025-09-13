@@ -14,6 +14,11 @@ export class TirLitThisExpr
         readonly range: SourceRange
     ) {}
 
+    toString(): string
+    {
+        return `this`;
+    }
+
     clone(): TirLitThisExpr
     {
         return new TirLitThisExpr(

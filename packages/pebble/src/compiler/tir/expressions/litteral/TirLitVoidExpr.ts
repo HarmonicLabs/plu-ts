@@ -14,6 +14,11 @@ export class TirLitVoidExpr implements ITirExpr
         readonly range: SourceRange
     ) {}
 
+    toString(): string
+    {
+        return "void";
+    }
+
     clone(): TirLitVoidExpr
     {
         return new TirLitVoidExpr(this.range.clone());
