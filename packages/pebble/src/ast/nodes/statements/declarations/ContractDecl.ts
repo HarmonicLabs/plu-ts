@@ -10,7 +10,7 @@ export class ContractDecl
     constructor(
         readonly name: Identifier,
         readonly params: SimpleVarDecl[],
-        readonly spendMathods: FuncDecl[],
+        readonly spendMethods: FuncDecl[],
         readonly mintMethods: FuncDecl[],
         readonly certifyMethods: FuncDecl[],
         readonly withdrawMethods: FuncDecl[],

@@ -2,35 +2,22 @@ import { defaultOptions } from "../../IR/toUPLC/CompilerOptions";
 import { createMemoryCompilerIoApi } from "../io/CompilerIoApi";
 import { Compiler } from "../Compiler";
 import { fromUtf8, toHex } from "@harmoniclabs/uint8array-utils";
-
-
+import { parseUPLC, prettyUPLC } from "@harmoniclabs/uplc";
 
 describe("parseMain", () => {
 
     test("parseMain", async () => {
 
-        const myDatumPath = "my_datum.pebble";
-        const myDatumSrc = `
-export struct MyDatum {}
-`;
-
-
         const fileName = "test.pebble";
-
-
         const srcText = `
-function main( ctx: ScriptContext ): void
-{
-    return case ctx.purpose 
-        is Spending{} => void
-        else fail;
+contract OnlySpend {
+    spend allow() {}
 }
         `;
 
         const ioApi = createMemoryCompilerIoApi({
             sources: new Map([
                 [fileName, fromUtf8(srcText)],
-                [myDatumPath, fromUtf8(myDatumSrc)],
             ]),
             useConsoleAsOutput: true,
         });
@@ -47,6 +34,7 @@ function main( ctx: ScriptContext ): void
         expect( output instanceof Uint8Array ).toBe( true );
 
         // console.log( toHex( output ) );
+        // console.log( prettyUPLC( parseUPLC( output ).body ) )
     });
     
 });

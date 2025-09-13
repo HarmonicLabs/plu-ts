@@ -3,7 +3,7 @@
 /** Enum of available diagnostic codes. */
 export enum DiagnosticCode {
     Not_implemented_0 = 100,
-    Main_function_is_missing = 101,
+    Contract_is_missing = 101,
     Contract_declarations_cannot_be_exported = 102,
     Conversion_from_type_0_to_1_requires_an_explicit_cast = 200,
     Conversion_from_type_0_to_1_will_require_an_explicit_cast_when_switching_between_32_64_bit = 201,
@@ -287,7 +287,7 @@ export enum DiagnosticCode {
 export function diagnosticCodeToString(code: DiagnosticCode): string {
     switch (code) {
         case 100: return "Not implemented: {0}";
-        case 101: return "Main function is missing";
+        case 101: return "Contract is missing";
         case 102: return "Contract declarations cannot be exported";
         case 200: return "Conversion from type '{0}' to '{1}' requires an explicit cast.";
         case 201: return "Conversion from type '{0}' to '{1}' will require an explicit cast when switching between 32/64-bit.";

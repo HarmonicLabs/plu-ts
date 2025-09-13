@@ -528,6 +528,136 @@ export function populatePreludeScope( program: TypedProgram ): void
             }
         }, onlyData
     );
+
+    // struct Vote {
+    //     No {}
+    //     Yes {}
+    //     Abstain {}
+    // }
+    const { data: vote_t } = defineMultiConstructorStruct(
+        "Vote", {
+            No: {},
+            Yes: {},
+            Abstain: {}
+        }, onlyData
+    );
+    // struct Delegatee {
+    //     StakePool { poolKeyHash: PubKeyHash }
+    //     DRep { drep: Credential }
+    //     PoolAndDRep {
+    //         poolKeyHash: PubKeyHash,
+    //         drep: Credential
+    //     }
+    // }
+    const { data: delegatee_t } = defineMultiConstructorStruct(
+        "Delegatee", {
+            StakePool: {
+                poolKeyHash: pubKeyHash_t
+            },
+            DRep: {
+                drep: credential_t
+            },
+            PoolAndDRep: {
+                poolKeyHash: pubKeyHash_t,
+                drep: credential_t
+            }
+        }, onlyData
+    );
+    // struct Certificate {
+    //     StakeRegistration {
+    //         stakeKey: Credential,
+    //         deposit: Optional<int>
+    //     }
+    //     StakeDeRegistration {
+    //         stakeKey: Credential,
+    //         refund: Optional<int>
+    //     }
+    //     Delegation {
+    //         delegator: Credential,
+    //         delegatee: Delegatee
+    //     }
+    //     RegistrationAndDelegation {
+    //         delegator: Credential,
+    //         delegatee: Delegatee,
+    //         lovelacesDeposit: int
+    //     }
+    //     DRepRegistration {
+    //         drep: Credential,
+    //         lovelacesDeposit: int
+    //     }
+    //     DRepUpdate {
+    //         drep: Credential
+    //     }
+    //     DRepDeRegistration {
+    //         drep: Credential,
+    //         refund: int
+    //     }
+    //     PoolRegistration {
+    //         poolId: PubKeyHash,
+    //         poolVRF: PubKeyHash
+    //     }
+    //     PoolRetire {
+    //         poolId: PubKeyHash,
+    //         epoch: int
+    //     }
+    //     CommitteeHotAuthorization {
+    //         cold: Credential,
+    //         hot: Credential
+    //     }
+    //     CommitteeResignation {
+    //         cold: Credential
+    //     }
+    // }
+    const opt_int_t = program.getAppliedGeneric(
+        TirDataOptT.toTirTypeKey(),
+        [ int_t ]
+    )
+    if(!opt_int_t) throw new Error("expected opt_int_t");
+    const { data: certificate_t } = defineMultiConstructorStruct(
+        "Certificate", {
+            StakeRegistration: {
+                stakeKey: credential_t,
+                deposit: opt_int_t
+            },
+            StakeDeRegistration: {
+                stakeKey: credential_t,
+                refund: opt_int_t
+            },
+            Delegation: {
+                delegator: credential_t,
+                delegatee: delegatee_t
+            },
+            RegistrationAndDelegation: {
+                delegator: credential_t,
+                delegatee: delegatee_t,
+                lovelacesDeposit: int_t
+            },
+            DRepRegistration: {
+                drep: credential_t,
+                lovelacesDeposit: int_t
+            },
+            DRepUpdate: {
+                drep: credential_t
+            },
+            DRepDeRegistration: {
+                drep: credential_t,
+                refund: int_t
+            },
+            PoolRegistration: {
+                poolId: pubKeyHash_t,
+                poolVRF: bytes_t
+            },
+            PoolRetire: {
+                poolId: pubKeyHash_t,
+                epoch: int_t
+            },
+            CommitteeHotAuthorization: {
+                cold: credential_t,
+                hot: credential_t
+            },
+            CommitteeResignation: { cold: credential_t }
+        }, onlyData
+    );
     // struct ScriptInfo {
     //     Mint { policy: PolicyId }
     //     Spend {
@@ -567,14 +697,14 @@ export function populatePreludeScope( program: TypedProgram ): void
                 credential: credential_t
             },
             Certificate: {
-                index: int_t,
-                certificate: credential_t
+                certificateIndex: int_t,
+                certificate: certificate_t
             },
             Vote: {
                 voter: voter_t
             },
             Propose: {
-                index: int_t,
+                proposalIndex: int_t,
                 proposal: proposalProcedure_t
             }
         }, onlyData
@@ -744,135 +874,6 @@ export function populatePreludeScope( program: TypedProgram ): void
         "Interval", {
             from: intervalBoundary_t,
             to: intervalBoundary_t
-        }, onlyData
-    );
-    // struct Vote {
-    //     No {}
-    //     Yes {}
-    //     Abstain {}
-    // }
-    const { data: vote_t } = defineMultiConstructorStruct(
-        "Vote", {
-            No: {},
-            Yes: {},
-            Abstain: {}
-        }, onlyData
-    );
-    // struct Delegatee {
-    //     StakePool { poolKeyHash: PubKeyHash }
-    //     DRep { drep: Credential }
-    //     PoolAndDRep {
-    //         poolKeyHash: PubKeyHash,
-    //         drep: Credential
-    //     }
-    // }
-    const { data: delegatee_t } = defineMultiConstructorStruct(
-        "Delegatee", {
-            StakePool: {
-                poolKeyHash: pubKeyHash_t
-            },
-            DRep: {
-                drep: credential_t
-            },
-            PoolAndDRep: {
-                poolKeyHash: pubKeyHash_t,
-                drep: credential_t
-            }
-        }, onlyData
-    );
-    // struct Certificate {
-    //     StakeRegistration {
-    //         stakeKey: Credential,
-    //         deposit: Optional<int>
-    //     }
-    //     StakeDeRegistration {
-    //         stakeKey: Credential,
-    //         refund: Optional<int>
-    //     }
-    //     Delegation {
-    //         delegator: Credential,
-    //         delegatee: Delegatee
-    //     }
-    //     RegistrationAndDelegation {
-    //         delegator: Credential,
-    //         delegatee: Delegatee,
-    //         lovelacesDeposit: int
-    //     }
-    //     DRepRegistration {
-    //         drep: Credential,
-    //         lovelacesDeposit: int
-    //     }
-    //     DRepUpdate {
-    //         drep: Credential
-    //     }
-    //     DRepDeRegistration {
-    //         drep: Credential,
-    //         refund: int
-    //     }
-    //     PoolRegistration {
-    //         poolId: PubKeyHash,
-    //         poolVRF: PubKeyHash
-    //     }
-    //     PoolRetire {
-    //         poolId: PubKeyHash,
-    //         epoch: int
-    //     }
-    //     CommitteeHotAuthorization {
-    //         cold: Credential,
-    //         hot: Credential
-    //     }
-    //     CommitteeResignation {
-    //         cold: Credential
-    //     }
-    // }
-    const opt_int_t = program.getAppliedGeneric(
-        TirDataOptT.toTirTypeKey(),
-        [ int_t ]
-    )
-    if(!opt_int_t) throw new Error("expected opt_int_t");
-    const { data: certificate_t } = defineMultiConstructorStruct(
-        "Certificate", {
-            StakeRegistration: {
-                stakeKey: credential_t,
-                deposit: opt_int_t
-            },
-            StakeDeRegistration: {
-                stakeKey: credential_t,
-                refund: opt_int_t
-            },
-            Delegation: {
-                delegator: credential_t,
-                delegatee: delegatee_t
-            },
-            RegistrationAndDelegation: {
-                delegator: credential_t,
-                delegatee: delegatee_t,
-                lovelacesDeposit: int_t
-            },
-            DRepRegistration: {
-                drep: credential_t,
-                lovelacesDeposit: int_t
-            },
-            DRepUpdate: {
-                drep: credential_t
-            },
-            DRepDeRegistration: {
-                drep: credential_t,
-                refund: int_t
-            },
-            PoolRegistration: {
-                poolId: pubKeyHash_t,
-                poolVRF: bytes_t
-            },
-            PoolRetire: {
-                poolId: pubKeyHash_t,
-                epoch: int_t
-            },
-            CommitteeHotAuthorization: {
-                cold: credential_t,
-                hot: credential_t
-            },
-            CommitteeResignation: { cold: credential_t }
         }, onlyData
     );
     // struct Tx {

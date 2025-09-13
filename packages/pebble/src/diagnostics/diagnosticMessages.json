@@ -1,6 +1,6 @@
 {
   "Not implemented: {0}": 100,
-  "Main function is missing": 101,
+  "Contract is missing": 101,
   "Contract declarations cannot be exported": 102,
 
   "Conversion from type '{0}' to '{1}' requires an explicit cast.": 200,

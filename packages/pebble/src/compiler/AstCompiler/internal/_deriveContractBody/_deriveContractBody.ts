@@ -54,6 +54,7 @@ import { DiagnosticCode } from "../../../../diagnostics/diagnosticMessages.gener
 import { getUniqueInternalName } from "../../../internalVar";
 import { TirDataStructType, TirStructConstr, TirStructField } from "../../../tir/types/TirStructType";
 import { AstCompiler } from "../../AstCompiler";
+import { AstNamedTypeExpr } from "../../../../ast/nodes/types/AstNamedTypeExpr";
 
 /**
  * 
@@ -72,7 +73,7 @@ export function _deriveContractBody(
 
     // no methods is always fail
     if(
-        contractDecl.spendMathods.length === 0
+        contractDecl.spendMethods.length === 0
         && contractDecl.mintMethods.length === 0
         && contractDecl.certifyMethods.length === 0
         && contractDecl.withdrawMethods.length === 0
@@ -110,32 +111,62 @@ export function _deriveContractBody(
     const redeemerUniqueName = getUniqueInternalName("redeemer");
 
     bodyStmts.push(
-        new SingleDeconstructVarDecl(
-            // fields
-            new Map<Identifier, VarDecl>([
-                [
-                    new Identifier( "tx", contractRange ),
-                    SimpleVarDecl.onlyNameConst( txUniqueName, contractRange )
-                ],
-                [
-                    new Identifier( "purpose", contractRange ),
-                    SimpleVarDecl.onlyNameConst( purposeUniqueName, contractRange )
-                ],
-                [
-                    new Identifier( "redeemer", contractRange ),
-                    SimpleVarDecl.onlyNameConst( redeemerUniqueName, contractRange )
-                ],
-            ]),
-            undefined, // rest
-            undefined, // type (inferred from initExpr)
-            new Identifier( scriptContextName, contractRange ), // initExpr
-            CommonFlags.Const,
+        new VarStmt(
+            [new SingleDeconstructVarDecl(
+                // fields
+                new Map<Identifier, VarDecl>([
+                    [
+                        new Identifier( "tx", contractRange ),
+                        SimpleVarDecl.onlyNameConst( txUniqueName, contractRange )
+                    ],
+                    [
+                        new Identifier( "purpose", contractRange ),
+                        SimpleVarDecl.onlyNameConst( purposeUniqueName, contractRange )
+                    ],
+                    [
+                        new Identifier( "redeemer", contractRange ),
+                        SimpleVarDecl.onlyNameConst( redeemerUniqueName, contractRange )
+                    ],
+                ]),
+                undefined, // rest
+                undefined, // type (inferred from initExpr)
+                new Identifier( scriptContextName, contractRange ), // initExpr
+                CommonFlags.Const,
+                contractRange
+            )],
             contractRange
         )
     );
 
+    /*
+    const { data: scriptInfo_t } = defineMultiConstructorStruct(
+        "ScriptInfo", {
+            Mint: {
+                policy: policyId_t
+            },
+            Spend: {
+                ref: txOutRef_t,
+                optionalDatum: opt_data_t
+            },
+            Withdraw: {
+                credential: credential_t
+            },
+            Certificate: {
+                certificateIndex: int_t,
+                certificate: credential_t
+            },
+            Vote: {
+                voter: voter_t
+            },
+            Propose: {
+                proposalIndex: int_t,
+                proposal: proposalProcedure_t
+            }
+        }, onlyData
+    );
+     */
     const purposeMatchCases: MatchStmtCase[] = [];
-    if( contractDecl.spendMathods.length > 0 ) {
+    if( contractDecl.spendMethods.length > 0 ) {
         const spendingRefUniqueName = getUniqueInternalName("spendingRef");
         const optionalDatumUniqueName = getUniqueInternalName("optionalDatum");
         const fields: Map<Identifier, SimpleVarDecl> = new Map([
@@ -148,16 +179,21 @@ export function _deriveContractBody(
                 SimpleVarDecl.onlyNameConst( optionalDatumUniqueName, contractRange )
             ],
         ]);
-        const bodyStmts = _getSpendPurposeBlockStatements(
+
+        const bodyStmts = _getMatchedPurposeBlockStatements(
             compiler,
-            contractDecl.spendMathods,
+            contractDecl.spendMethods,
             paramsInternalNamesMap,
-            scriptContextName,
-            txUniqueName,
-            purposeUniqueName,
-            redeemerUniqueName,
-            spendingRefUniqueName,
-            optionalDatumUniqueName
+            // contextVarsMapping
+            Object.freeze({
+                tx: txUniqueName,
+                purposeData: purposeUniqueName,
+                redeemerData: redeemerUniqueName,
+                spendingRef: spendingRefUniqueName,
+                optionalDatum: optionalDatumUniqueName,
+            }),
+            "SpendRedeemer",
+            contractRange,
         );
         if( !Array.isArray( bodyStmts ) ) return undefined;
 
@@ -178,22 +214,238 @@ export function _deriveContractBody(
                 ),
                 contractRange
             )
-        )
+        );
     }
     if( contractDecl.mintMethods.length > 0 ) {
+        const policyUniqueName = getUniqueInternalName("policy");
+        const fields: Map<Identifier, SimpleVarDecl> = new Map([
+            [
+                new Identifier( "policy", contractRange ),
+                SimpleVarDecl.onlyNameConst( policyUniqueName, contractRange )
+            ],
+        ]);
 
+        const bodyStmts = _getMatchedPurposeBlockStatements(
+            compiler,
+            contractDecl.mintMethods,
+            paramsInternalNamesMap,
+            // contextVarsMapping
+            Object.freeze({
+                tx: txUniqueName,
+                purposeData: purposeUniqueName,
+                redeemerData: redeemerUniqueName,
+                policy: policyUniqueName,
+            }),
+            "MintRedeemer",
+            contractRange,
+        );
+        if( !Array.isArray( bodyStmts ) ) return undefined;
+
+        purposeMatchCases.push(
+            new MatchStmtCase(
+                new NamedDeconstructVarDecl(
+                    new Identifier( "Mint", contractRange ),
+                    fields,
+                    undefined, // rest
+                    undefined, // type (inferred from initExpr)
+                    undefined, // initExpr
+                    CommonFlags.Const,
+                    contractRange
+                ),
+                new BlockStmt(
+                    bodyStmts,
+                    contractRange
+                ),
+                contractRange
+            )
+        )
     }
     if( contractDecl.withdrawMethods.length > 0 ) {
+        const credentialUniqueName = getUniqueInternalName("credential");
+        const fields: Map<Identifier, SimpleVarDecl> = new Map([
+            [
+                new Identifier( "credential", contractRange ),
+                SimpleVarDecl.onlyNameConst( credentialUniqueName, contractRange )
+            ],
+        ]);
 
+        const bodyStmts = _getMatchedPurposeBlockStatements(
+            compiler,
+            contractDecl.withdrawMethods,
+            paramsInternalNamesMap,
+            // contextVarsMapping
+            Object.freeze({
+                tx: txUniqueName,
+                purposeData: purposeUniqueName,
+                redeemerData: redeemerUniqueName,
+                polcredentialicy: credentialUniqueName,
+            }),
+            "WithdrawRedeemer",
+            contractRange,
+        );
+        if( !Array.isArray( bodyStmts ) ) return undefined;
+
+        purposeMatchCases.push(
+            new MatchStmtCase(
+                new NamedDeconstructVarDecl(
+                    new Identifier( "Withdraw", contractRange ),
+                    fields,
+                    undefined, // rest
+                    undefined, // type (inferred from initExpr)
+                    undefined, // initExpr
+                    CommonFlags.Const,
+                    contractRange
+                ),
+                new BlockStmt(
+                    bodyStmts,
+                    contractRange
+                ),
+                contractRange
+            )
+        )
     }
     if( contractDecl.certifyMethods.length > 0 ) {
+        const indexUniqueName = getUniqueInternalName("certificateIndex");
+        const certificateUniqueName = getUniqueInternalName("certificate");
+        const fields: Map<Identifier, SimpleVarDecl> = new Map([
+            [
+                new Identifier( "certificateIndex", contractRange ),
+                SimpleVarDecl.onlyNameConst( indexUniqueName, contractRange )
+            ],
+            [
+                new Identifier( "certificate", contractRange ),
+                SimpleVarDecl.onlyNameConst( certificateUniqueName, contractRange )
+            ],
+        ]);
 
+        const bodyStmts = _getMatchedPurposeBlockStatements(
+            compiler,
+            contractDecl.certifyMethods,
+            paramsInternalNamesMap,
+            // contextVarsMapping
+            Object.freeze({
+                tx: txUniqueName,
+                purposeData: purposeUniqueName,
+                redeemerData: redeemerUniqueName,
+                certificateIndex: indexUniqueName,
+                certificate: certificateUniqueName,
+            }),
+            "CertifyRedeemer",
+            contractRange,
+        );
+        if( !Array.isArray( bodyStmts ) ) return undefined;
+
+        purposeMatchCases.push(
+            new MatchStmtCase(
+                new NamedDeconstructVarDecl(
+                    new Identifier( "Certificate", contractRange ),
+                    fields,
+                    undefined, // rest
+                    undefined, // type (inferred from initExpr)
+                    undefined, // initExpr
+                    CommonFlags.Const,
+                    contractRange
+                ),
+                new BlockStmt(
+                    bodyStmts,
+                    contractRange
+                ),
+                contractRange
+            )
+        );
     }
     if( contractDecl.proposeMethods.length > 0 ) {
+        const indexUniqueName = getUniqueInternalName("proposalIndex");
+        const proposalUniqueName = getUniqueInternalName("proposal");
+        const fields: Map<Identifier, SimpleVarDecl> = new Map([
+            [
+                new Identifier( "proposalIndex", contractRange ),
+                SimpleVarDecl.onlyNameConst( indexUniqueName, contractRange )
+            ],
+            [
+                new Identifier( "proposal", contractRange ),
+                SimpleVarDecl.onlyNameConst( proposalUniqueName, contractRange )
+            ],
+        ]);
 
+        const bodyStmts = _getMatchedPurposeBlockStatements(
+            compiler,
+            contractDecl.proposeMethods,
+            paramsInternalNamesMap,
+            // contextVarsMapping
+            Object.freeze({
+                tx: txUniqueName,
+                purposeData: purposeUniqueName,
+                redeemerData: redeemerUniqueName,
+                proposalIndex: indexUniqueName,
+                proposal: proposalUniqueName,
+            }),
+            "ProposeRedeemer",
+            contractRange,
+        );
+        if( !Array.isArray( bodyStmts ) ) return undefined;
+
+        purposeMatchCases.push(
+            new MatchStmtCase(
+                new NamedDeconstructVarDecl(
+                    new Identifier( "Propose", contractRange ),
+                    fields,
+                    undefined, // rest
+                    undefined, // type (inferred from initExpr)
+                    undefined, // initExpr
+                    CommonFlags.Const,
+                    contractRange
+                ),
+                new BlockStmt(
+                    bodyStmts,
+                    contractRange
+                ),
+                contractRange
+            )
+        );
     }
     if( contractDecl.voteMethods.length > 0 ) {
+        const voterUniqueName = getUniqueInternalName("voter");
+        const fields: Map<Identifier, SimpleVarDecl> = new Map([
+            [
+                new Identifier( "voter", contractRange ),
+                SimpleVarDecl.onlyNameConst( voterUniqueName, contractRange )
+            ],
+        ]);
+        const bodyStmts = _getMatchedPurposeBlockStatements(
+            compiler,
+            contractDecl.voteMethods,
+            paramsInternalNamesMap,
+            // contextVarsMapping
+            Object.freeze({
+                tx: txUniqueName,
+                purposeData: purposeUniqueName,
+                redeemerData: redeemerUniqueName,
+                voter: voterUniqueName,
+            }),
+            "VoteRedeemer",
+            contractRange,
+        );
+        if( !Array.isArray( bodyStmts ) ) return undefined;
 
+        purposeMatchCases.push(
+            new MatchStmtCase(
+                new NamedDeconstructVarDecl(
+                    new Identifier( "Vote", contractRange ),
+                    fields,
+                    undefined, // rest
+                    undefined, // type (inferred from initExpr)
+                    undefined, // initExpr
+                    CommonFlags.Const,
+                    contractRange
+                ),
+                new BlockStmt(
+                    bodyStmts,
+                    contractRange
+                ),
+                contractRange
+            )
+        );
     }
 
     bodyStmts.push(
@@ -208,48 +460,43 @@ export function _deriveContractBody(
         )
     );
 
-    bodyStmts.push( new FailStmt( undefined, contractRange ) ); // placeholder for match stmt
+    bodyStmts.push( new FailStmt( undefined, contractRange ) ); // unreachable in theory (else case)
     return new BlockStmt( bodyStmts, contractRange );
 }
 
-function _getSpendPurposeBlockStatements(
+function _getMatchedPurposeBlockStatements(
     compiler: AstCompiler,
     methods: FuncDecl[],
     paramsInternalNamesMap: Map<string, string>,
-    scriptContextName: string,
-    txUniqueName: string,
-    purposeUniqueName: string,
-    redeemerUniqueName: string,
-    spendingRefUniqueName: string,
-    optionalDatumUniqueName: string,
+    contextVarsMapping: RenamedVariables,
+    baseRedeemerName: string,
+    contractRange: SourceRange,
+    // txUniqueName: string,
+    // purposeUniqueName: string,
+    // redeemerUniqueName: string,
+    // spendingRefUniqueName: string,
+    // optionalDatumUniqueName: string,
 ): BodyStmt[] | undefined
 {
     // usually 0 methods is checked before calling
     // but just in case it is not, we handle it here
     if( methods.length === 0 ) return [
-        new FailStmt( undefined, SourceRange.unknown )
+        new FailStmt( undefined, contractRange )
     ];
 
-    const redeemreTypeDef = _deriveRedeemerTypeDef(
-        "SpendRedeemer",
+    const redeemerTypeDef = _deriveRedeemerTypeDef(
+        baseRedeemerName, // "SpendRedeemer",
         methods,
-        SourceRange.unknown
+        contractRange
     );
 
-    const contextVarsMapping: RenamedVariables = Object.freeze({
-        tx: txUniqueName,
-        purposeData: purposeUniqueName,
-        redeemerData: redeemerUniqueName,
-        spendingRef: spendingRefUniqueName,
-        optionalDatum: optionalDatumUniqueName,
-    });
-    
     // if only one method, we can inline it
     if( methods.length === 1 ) {
         const method = methods[0];
         const stmts = _getRedeemerMethodBlockStatemets(
             compiler,
             method,
+            redeemerTypeDef,
             paramsInternalNamesMap,
             contextVarsMapping
         );
@@ -257,6 +504,68 @@ function _getSpendPurposeBlockStatements(
         
         return stmts;
     }
+
+    // multiple methods, need to match redeemer
+    const redeemerMatchCases: MatchStmtCase[] = [];
+    for( const method of methods ) {
+        const stmts = _getRedeemerMethodBlockStatemets(
+            compiler,
+            method,
+            redeemerTypeDef,
+            paramsInternalNamesMap,
+            contextVarsMapping
+        );
+        if( !Array.isArray( stmts ) ) return undefined;
+
+        redeemerMatchCases.push(
+            new MatchStmtCase(
+                new NamedDeconstructVarDecl(
+                    new Identifier( method.expr.name.text, method.expr.name.range ),
+                    new Map<Identifier, VarDecl>(
+                        redeemerTypeDef.constrs.find( c => c.name.text === method.expr.name.text )!.fields.map(( fieldDef, i ) => {
+                            const param = method.expr.signature.params[i];
+                            const range = param.range;
+
+                            return [
+                                new Identifier( fieldDef.name.text, range ),
+                                param
+                            ];
+                        })
+                    ),
+                    undefined, // rest
+                    undefined, // type (inferred from initExpr)
+                    undefined, // initExpr
+                    CommonFlags.Const,
+                    method.expr.name.range
+                ),
+                new BlockStmt(
+                    stmts,
+                    contractRange
+                ),
+                method.expr.range
+            )
+        );
+    }
+
+    return [
+        new MatchStmt(
+            new TypeConversionExpr(
+                new Identifier( contextVarsMapping.redeemerData, contractRange ),
+                new AstNamedTypeExpr(
+                    new Identifier( redeemerTypeDef.name.text, contractRange ),
+                    [], // typeArgs
+                    contractRange
+                )
+            ),
+            redeemerMatchCases,
+            new MatchStmtElseCase(
+                new FailStmt( undefined, contractRange ),
+                contractRange
+            ),
+            contractRange
+        ),
+        new FailStmt( undefined, contractRange ) // unreachable in theory (else case)
+    ];
 }
 
 type RenamedVariables = Record<string, string>;
@@ -264,6 +573,7 @@ type RenamedVariables = Record<string, string>;
 function _getRedeemerMethodBlockStatemets(
     compiler: AstCompiler,
     method: FuncDecl,
+    redeemerTypeDef: StructDecl,
     paramsInternalNamesMap: Map<string, string>,
     contextVarsMapping: RenamedVariables,
     /**
@@ -272,7 +582,16 @@ function _getRedeemerMethodBlockStatemets(
     renamedVariables: RenamedVariables = {}
 ): BodyStmt[] | undefined
 {
+    const redeemerTypeName = redeemerTypeDef.name.text;
     const methodExpr = method.expr;
+
+    const redeemerTypeConstr = redeemerTypeDef.constrs.find( constr => constr.name.text === method.expr.name.text );
+    if( !redeemerTypeConstr )
+    throw new Error(`unreachable Internal Error: missing redeemer constructor ${method.expr.name.text}`);
+
+    if( redeemerTypeConstr.fields.length !== methodExpr.signature.params.length )
+    throw new Error(`unreachable Internal Error: redeemer constructor ${method.expr.name.text} fields length missmatch with method parameters length`);
+
     const result = _getMatchedRedeemerBlockStatements(
         compiler,
         methodExpr.bodyBlockStmt().stmts,
@@ -281,6 +600,44 @@ function _getRedeemerMethodBlockStatemets(
         renamedVariables
     );
     if( !Array.isArray( result ) ) return undefined;
+
+    // prepend redeemer fields destructuring if single method for this purpose
+    if(
+        redeemerTypeDef.constrs.length === 1
+        && methodExpr.signature.params.length > 0
+    ) {
+        const fields = new Map<Identifier, VarDecl>(
+            redeemerTypeConstr.fields.map(( fieldDef, i ) => {
+                const param = methodExpr.signature.params[i];
+                const range = param.range;
+    
+                return [
+                    new Identifier( fieldDef.name.text, range ),
+                    param
+                ];
+            })
+        );
+
+        result.unshift(
+            new NamedDeconstructVarDecl(
+                method.expr.name,
+                fields,
+                undefined, // rest
+                undefined, // type (inferred from initExpr)
+                new TypeConversionExpr(
+                    new Identifier( redeemerTypeName, method.range ),
+                    new AstNamedTypeExpr(
+                        new Identifier( redeemerTypeName, method.range ),
+                        [], // typeArgs
+                        method.range
+                    )
+                ), // initExpr
+                CommonFlags.Const,
+                method.range
+            )
+        );
+    };
+
     // always add implicit return void (unit) at the end of a method
     result.push(
         new ReturnStmt(
@@ -288,12 +645,7 @@ function _getRedeemerMethodBlockStatemets(
             methodExpr.range.atEnd()
         )
     );
-
-    // prepend redeemer fields destructuring
-    if( methodExpr.signature.params.length > 0 ) {
-
-        // TODO: add a way to signal omitting constr index assertion
-    };
+    return result;
 }
 
 function _getMatchedRedeemerBlockStatements(
@@ -406,7 +758,7 @@ function _getMatchedRedeemerBlockStatements(
             // remove the context destrucuturing statement from the result
             // push new ones if any
             result.splice(i, 1, ...newStmts);
-            i--; // adjust index
+            i--;
 
             continue;
         } // if( stmt instanceof VarStmt )

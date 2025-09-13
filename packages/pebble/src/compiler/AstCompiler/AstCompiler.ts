@@ -25,7 +25,7 @@ import { getAbsolutePath, getEnvRelativePath } from "../path/getAbsolutePath";
 import { TirType } from "../tir/types/TirType";
 import { _compileSopEncodedConcreteType } from "./internal/types/_compileSopEncodedConcreteType";
 import { InterfaceDecl } from "../../ast/nodes/statements/declarations/InterfaceDecl";
-import { AstFuncType } from "../../ast/nodes/types/AstNativeTypeExpr";
+import { AstFuncType, AstVoidType } from "../../ast/nodes/types/AstNativeTypeExpr";
 import { FuncDecl } from "../../ast/nodes/statements/declarations/FuncDecl";
 import { InterfaceMethodImpl, TypeImplementsStmt } from "../../ast/nodes/statements/TypeImplementsStmt";
 import { getUniqueInternalName, PEBBLE_INTERNAL_IDENTIFIER_PREFIX } from "../internalVar";
@@ -147,9 +147,9 @@ export class AstCompiler extends DiagnosticEmitter
 
         const mainFuncExpr = this.program.functions.get( this.program.contractTirFuncName );
         if( this.program.contractTirFuncName === "" || !mainFuncExpr ) {
-            console.log( mainFuncExpr, `"${this.program.contractTirFuncName}"` );
+            console.error( mainFuncExpr, `"${this.program.contractTirFuncName}"` );
             this.error(
-                DiagnosticCode.Main_function_is_missing,
+                DiagnosticCode.Contract_is_missing,
                 undefined
             );
             return this.program;
@@ -257,6 +257,7 @@ export class AstCompiler extends DiagnosticEmitter
         for( let i = 0; i < stmts.length; i++ )
         {
             let stmt = stmts[i];
+
             let exported = false;
             let exportRange: SourceRange | undefined = undefined;
             if( stmt instanceof ExportStmt )
@@ -269,6 +270,7 @@ export class AstCompiler extends DiagnosticEmitter
             if(!(
                 stmt instanceof FuncDecl
                 || stmt instanceof TypeImplementsStmt
+                || stmt instanceof ContractDecl
             )) continue;
 
             if( exported && stmt instanceof TypeImplementsStmt )
@@ -495,7 +497,6 @@ export class AstCompiler extends DiagnosticEmitter
         if(
             isEntryFile
             && this.program.contractTirFuncName === ""
-            && astFuncExpr.name.text === "main"
         ) this.program.contractTirFuncName = tirFuncName;
     }
 
@@ -1051,11 +1052,7 @@ export class AstCompiler extends DiagnosticEmitter
 
         const funcSig = new AstFuncType(
             funcParams,
-            new AstNamedTypeExpr(
-                new Identifier( "void", contractDecl.name.range ),
-                [],
-                contractDecl.name.range
-            ),
+            new AstVoidType( contractDecl.name.range ),
             contractDecl.name.range
         );
 
