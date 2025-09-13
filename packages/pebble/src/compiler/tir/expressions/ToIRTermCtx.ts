@@ -62,16 +62,6 @@ export class ToIRTermCtx
     getVarAccessDbn( name: string ): bigint | undefined {
         const declDbn = this.getVarDeclDbn( name );
         if( typeof declDbn !== "bigint" ) return undefined;
-        console.log("getVarAccessDbn", {
-            allVars: this.allVariables(),
-            varsHere: this.variables.length,
-            parentDbn: this._parentDbn,
-            realParentDbn: this.parent?.dbn,
-            name,
-            thisDbn: this.dbn,
-            declDbn,
-            result: this.dbn - ( declDbn + _1n ),
-        });
         return this.dbn - ( declDbn + _1n );
     }
 

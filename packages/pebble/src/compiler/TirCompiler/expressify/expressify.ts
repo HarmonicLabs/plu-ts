@@ -545,7 +545,7 @@ export function expressifyFuncBody(
                                 ? _case.body.stmts
                                 : [ _case.body ],
                             loopReplacements,
-                            assertions// [], // no assertions (checked before evaluating case expression))
+                            [], // no assertions (checked before evaluating case expression))
                         );
 
                         return new TirCaseMatcher(

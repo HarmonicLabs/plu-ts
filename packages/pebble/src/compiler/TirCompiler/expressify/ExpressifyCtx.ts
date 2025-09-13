@@ -324,7 +324,7 @@ export class ExpressifyCtx
 
         const assertions: TirAssertStmt[] = [];
 
-        if( structType.constructors.length > 0 )
+        if( structType.constructors.length > 1 )
         assertions.push( 
             new TirAssertStmt(
                 new TirEqualExpr(
