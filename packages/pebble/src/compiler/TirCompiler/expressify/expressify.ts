@@ -43,6 +43,7 @@ import { TirLitIntExpr } from "../../tir/expressions/litteral/TirLitIntExpr";
 import { TirVarDecl } from "../../tir/statements/TirVarDecl/TirVarDecl";
 import { TirCallExpr } from "../../tir/expressions/TirCallExpr";
 import { TirNativeFunc } from "../../tir/expressions/TirNativeFunc";
+import { containsKeys } from "@harmoniclabs/obj-utils";
 
 export function expressify(
     func: TirFuncExpr,
@@ -82,6 +83,7 @@ export function expressifyFuncBody(
 
         if( stmt instanceof TirBreakStmt ) {
             if( typeof loopReplacements?.compileBreak !== "function" ) throw new Error("break statement in function body.");
+            
             return TirAssertAndContinueExpr.fromStmtsAndContinuation(
                 assertions,
                 loopReplacements.compileBreak( ctx, stmt )
@@ -89,6 +91,7 @@ export function expressifyFuncBody(
         }
         else if( stmt instanceof TirContinueStmt ) {
             if( typeof loopReplacements?.compileContinue !== "function" ) throw new Error("continue statement in function body.");
+            
             return TirAssertAndContinueExpr.fromStmtsAndContinuation(
                 assertions,
                 loopReplacements.compileContinue( ctx, stmt )
@@ -101,16 +104,18 @@ export function expressifyFuncBody(
                     modifiedExpr = loopReplacements.replaceReturnValue( ctx, stmt );
                 }
                 stmt.value = modifiedExpr;
-
+                
                 return TirAssertAndContinueExpr.fromStmtsAndContinuation(
                     assertions,
                     modifiedExpr
                 );
             }
-            else return TirAssertAndContinueExpr.fromStmtsAndContinuation(
-                assertions,
-                new TirLitVoidExpr( stmt.range )
-            );
+            else {
+                return TirAssertAndContinueExpr.fromStmtsAndContinuation(
+                    assertions,
+                    new TirLitVoidExpr( stmt.range )
+                );
+            }
         }
         // if( isTirVarDecl( stmt ) ) expressifyVarDecl( ctx, stmt );
         else if( stmt instanceof TirSimpleVarDecl ) {
@@ -143,6 +148,7 @@ export function expressifyFuncBody(
                 // nested single constr structs
                 // are added as destructed variables in the matcher body
                 // using `getNestedDestructsInSingleSopDestructPattern`
+                
                 return TirAssertAndContinueExpr.fromStmtsAndContinuation(
                     assertions,
                     new TirCaseExpr(
@@ -205,6 +211,7 @@ export function expressifyFuncBody(
                 // nested single constr structs
                 // are added as destructed variables in the matcher body
                 // using `getNestedDestructsInSingleSopDestructPattern`
+                
                 return TirAssertAndContinueExpr.fromStmtsAndContinuation(
                     assertions,
                     new TirCaseExpr(
@@ -342,6 +349,7 @@ export function expressifyFuncBody(
                 const modifiedExpr = expressifyVars( ctx, stmt.failMsgExpr );
                 stmt.failMsgExpr = modifiedExpr;
 
+                
                 return TirAssertAndContinueExpr.fromStmtsAndContinuation(
                     assertions,
                     new TirFailExpr(
@@ -351,10 +359,13 @@ export function expressifyFuncBody(
                     )
                 );
             }
-            else return TirAssertAndContinueExpr.fromStmtsAndContinuation(
-                assertions,
-                new TirFailExpr( undefined, ctx.returnType, stmt.range )
-            );
+            else {
+                
+                return TirAssertAndContinueExpr.fromStmtsAndContinuation(
+                    assertions,
+                    new TirFailExpr( undefined, ctx.returnType, stmt.range )
+                );
+            }
         }
         else if( stmt instanceof TirAssertStmt ) {
             const condition = expressifyVars( ctx, stmt.condition );
@@ -390,6 +401,7 @@ export function expressifyFuncBody(
                     stmt.elseBranch?.range ?? stmt.thenBranch.range
                 );
 
+                
                 return TirAssertAndContinueExpr.fromStmtsAndContinuation(
                     assertions,
                     expressifyTerminatingIfStmt( ctx, stmt, loopReplacements )
@@ -413,6 +425,7 @@ export function expressifyFuncBody(
                     stmt.thenBranch.range
                 );
 
+                
                 return TirAssertAndContinueExpr.fromStmtsAndContinuation(
                     assertions,
                     expressifyTerminatingIfStmt( ctx, stmt, loopReplacements )
@@ -449,6 +462,7 @@ export function expressifyFuncBody(
             );
 
             // expressify as ternary that returns the SoP type
+            
             return TirAssertAndContinueExpr.fromStmtsAndContinuation(
                 assertions,
                 wrapNonTerminatingFinalStmtAsCaseExpr(
@@ -508,7 +522,7 @@ export function expressifyFuncBody(
             if( isDirectReturn )
             {
                 // build a SoP type to return
-                const { sop, initState } = getBranchStmtReturnType( reassignsAndReturns, ctx, stmt.range );
+                // const { sop, initState } = getBranchStmtReturnType( reassignsAndReturns, ctx, stmt.range );
 
                 const finalExpression = new TirCaseExpr(
                     expressifyVars( ctx, stmt.matchExpr ),
@@ -531,7 +545,7 @@ export function expressifyFuncBody(
                                 ? _case.body.stmts
                                 : [ _case.body ],
                             loopReplacements,
-                            assertions
+                            assertions// [], // no assertions (checked before evaluating case expression))
                         );
 
                         return new TirCaseMatcher(
@@ -547,7 +561,7 @@ export function expressifyFuncBody(
                                 ? stmt.wildcardCase.body.stmts
                                 : [ stmt.wildcardCase.body ],
                             loopReplacements,
-                            [], // no assertions
+                            [], // no assertions (checked before evaluating case expression))
                         ),
                         stmt.wildcardCase.range
                     ) : undefined,
@@ -556,6 +570,7 @@ export function expressifyFuncBody(
                 );
 
                 // expressify as ternary that returns the SoP type
+                
                 return TirAssertAndContinueExpr.fromStmtsAndContinuation(
                     assertions,
                     // isDirectReturn === true, so we don't need to wrap
@@ -635,7 +650,6 @@ export function expressifyFuncBody(
         new TirLitVoidExpr( SourceRange.mock )
     );
 }
-
 
 function getConstrDestructPattern(
     type: TirSoPStructType,

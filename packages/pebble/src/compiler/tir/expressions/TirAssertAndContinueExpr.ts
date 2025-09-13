@@ -47,8 +47,10 @@ export class TirAssertAndContinueExpr
     {
         if( assertions.length <= 0 ) return continuation;
 
+        const correctAssertions = assertions.map( a => a.toSafeCondition() );
+        assertions.length = 0;
         return new TirAssertAndContinueExpr(
-            assertions.map( a => a.toSafeCondition() ),
+            correctAssertions,
             continuation,
             continuation.range
         );

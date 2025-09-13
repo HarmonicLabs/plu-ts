@@ -6,8 +6,12 @@ const _1n = BigInt(1);
 export class ToIRTermCtx
 {
     private readonly variables: string[] = [];
-    private readonly _parentDbn: bigint;
 
+    // MUST BE A GETTER TO REFLECT CHANGES IN PARENT
+    // DO NOT MODIFY
+    private get _parentDbn(): bigint {
+        return this.parent?.dbn ?? BigInt(0);
+    }
     get dbn(): bigint {
         return this._parentDbn + BigInt(this.variables.length);
     }
@@ -22,8 +26,17 @@ export class ToIRTermCtx
          */
         private readonly variableToCtx: Map<string, ToIRTermCtx>
     ) {
-        this._parentDbn = parent ? parent._parentDbn : BigInt(0);
+        // DO NOT SET _parentDbn HERE
+        // it must be a getter to reflect changes in parent
+        // (parent dbn can change)
         this._firstVariableIsRecursive = false;
+    }
+
+    allVariables(): string[] {
+        return (
+            (this.parent?.allVariables() ?? [])
+            .concat( this.variables )
+        );
     }
 
     static root(): ToIRTermCtx {
@@ -49,6 +62,16 @@ export class ToIRTermCtx
     getVarAccessDbn( name: string ): bigint | undefined {
         const declDbn = this.getVarDeclDbn( name );
         if( typeof declDbn !== "bigint" ) return undefined;
+        console.log("getVarAccessDbn", {
+            allVars: this.allVariables(),
+            varsHere: this.variables.length,
+            parentDbn: this._parentDbn,
+            realParentDbn: this.parent?.dbn,
+            name,
+            thisDbn: this.dbn,
+            declDbn,
+            result: this.dbn - ( declDbn + _1n ),
+        });
         return this.dbn - ( declDbn + _1n );
     }
 

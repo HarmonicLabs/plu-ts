@@ -44,6 +44,8 @@ export class TirVariableAccessExpr
     toIR( ctx: ToIRTermCtx ): IRVar | IRSelfCall
     {
         const ir = ctx.getVarAccessIR( this.varName );
+        console.log("TirVariableAccessExpr.toIR all variables", ctx.allVariables() );
+        console.log("TirVariableAccessExpr.toIR", this.varName, "->", ir?.dbn );
         if(!(
             ir instanceof IRVar
             || ir instanceof IRSelfCall
