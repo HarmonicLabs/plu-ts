@@ -314,7 +314,7 @@ export class ExpressifyCtx
         const lettedUnconstr = this.introduceLettedConstant(
             lettedUnconstrName,
             new TirCallExpr(
-                TirNativeFunc.unBData,
+                TirNativeFunc.unConstrData,
                 [ stmt.initExpr ],
                 new TirUnConstrDataResultT(),
                 stmt.range
