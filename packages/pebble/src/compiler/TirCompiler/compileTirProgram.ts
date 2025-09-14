@@ -26,6 +26,5 @@ export function compileTypedProgram(
         mainFuncExpr,
         undefined, // loopReplacements
     );
-    console.log("expressified mainFuncExpr", mainFuncExpr.toString() );
     return mainFuncExpr.toIR( ToIRTermCtx.root() );
 }

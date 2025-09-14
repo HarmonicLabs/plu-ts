@@ -19,6 +19,8 @@ import { IRApp, IRCase, IRConstr, IRNative, IRVar } from "../IRNodes";
 import { replaceForcedNativesWithHoisted } from "./subRoutines/replaceForcedNativesWithHoisted";
 import { performUplcOptimizationsAndReturnRoot } from "./subRoutines/performUplcOptimizationsAndReturnRoot";
 import { rewriteNativesAppliedToConstantsAndReturnRoot } from "./subRoutines/rewriteNativesAppliedToConstantsAndReturnRoot";
+import { removeUnusedVarsAndReturnRoot } from "./subRoutines/removeUnusedVarsAndReturnRoot/removeUnusedVarsAndReturnRoot";
+import { prettyIRJsonStr } from "../utils";
 
 export function compileIRToUPLC(
     term: IRTerm,
@@ -37,9 +39,6 @@ export function compileIRToUPLC(
 
     const options = completeCompilerOptions( paritalOptions );
 
-    // term = preEvaluateDefinedTermsAndReturnRoot( term );
-    term = rewriteNativesAppliedToConstantsAndReturnRoot( term );
-
     // unwrap top level letted and hoisted;
     while( term instanceof IRLetted || term instanceof IRHoisted )
     {
@@ -50,19 +49,21 @@ export function compileIRToUPLC(
         term.parent = undefined;
     }
 
-    // _makeAllNegativeNativesHoisted( term );
 
+    // term = preEvaluateDefinedTermsAndReturnRoot( term );
+    term = rewriteNativesAppliedToConstantsAndReturnRoot( term );
+
+    // removing unused variables BEFORE going into the rest of the compilation
+    // helps letted terms to find a better spot (and possibly be inlined instead of hoisted)
+    term = removeUnusedVarsAndReturnRoot( term );
+
+    // _makeAllNegativeNativesHoisted( term );
 
     ///////////////////////////////////////////////////////////////////////////////
     // ------------------------------------------------------------------------- //
     // ----------------------------- optimizations ----------------------------- //
     // ------------------------------------------------------------------------- //
     ///////////////////////////////////////////////////////////////////////////////
-
-    // --------------------------- optimize natives  --------------------------- //
-
-    // at constant -> head and tails
-    
 
     // --------------------- optimize recursive functions  --------------------- //
     

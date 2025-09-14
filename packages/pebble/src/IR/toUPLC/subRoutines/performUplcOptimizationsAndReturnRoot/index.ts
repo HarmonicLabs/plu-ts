@@ -32,7 +32,7 @@ export function performUplcOptimizationsAndReturnRoot(
 
     const {
         groupApplications,
-        inlineSingleUse,
+        inlineSingleUse: shouldInlineSingleUse,
         simplifyWrappedPartialFuncApps,
         removeForceDelay
     } = opts;

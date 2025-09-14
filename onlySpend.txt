@@ -1,0 +1,28 @@
+function §OnlySpend_7b( const §ctx_8f: ScriptContext ): void { 
+    const {
+        tx: const §tx_7c: Tx, 
+        purpose: const §purpose_6e: ScriptInfo, 
+        redeemer: const §redeemer_07: data
+    } = §ctx_8f;
+
+    match ( §purpose_6e ) { 
+        when const Spend{ 
+            ref: const §spendingRef_d42b: TxOutRef, 
+            optionalDatum: const §optionalDatum_74ff: Optional<data>
+        }: { return void }; 
+        else fail;
+    };
+
+    fail
+}
+
+function §OnlySpend_4f( const §ctx_79: ScriptContext ): void
+{
+    return (case fromData(<native sndPair>( <native unConstrData>( §ctx_79 ) )[ 2 ]) as ScriptInfo
+        is const Spend{
+            ref: const §spendingRef_3f0f: TxOutRef,
+            optionalDatum: const §optionalDatum_8606: Optional<data>
+        } => assert (<native fstPair>( <native unConstrData>( §ctx_79 ) ) === 0) then void
+        else (fail)
+    )
+}

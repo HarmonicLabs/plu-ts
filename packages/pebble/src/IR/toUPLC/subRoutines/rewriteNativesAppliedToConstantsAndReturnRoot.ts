@@ -3,6 +3,7 @@ import { IRNativeTag } from "../../IRNodes/IRNative/IRNativeTag";
 import { IRTerm } from "../../IRTerm";
 import { _ir_apps } from "../../tree_utils/_ir_apps";
 import { _modifyChildFromTo } from "../_internal/_modifyChildFromTo";
+import { getApplicationTerms } from "../utils/getApplicationTerms";
 import { _compTimeDropN } from "./_comptimeDropN";
 
 export function rewriteNativesAppliedToConstantsAndReturnRoot( term: IRTerm ): IRTerm
@@ -15,7 +16,7 @@ export function rewriteNativesAppliedToConstantsAndReturnRoot( term: IRTerm ): I
     {
         const current = stack.pop()!;
         const parent = current.parent;
-        const appTerms = _getApplicationTerms( current );
+        const appTerms = getApplicationTerms( current );
 
         if( !appTerms ) {
             stack.unshift( ...current.children() );
@@ -73,46 +74,6 @@ export function rewriteNativesAppliedToConstantsAndReturnRoot( term: IRTerm ): I
     }
 
     return term;
-}
-
-interface ApplicationTerms {
-    func: IRTerm,
-    args: IRTerm[],
-}
-
-function _getApplicationTerms( term: IRTerm ): ApplicationTerms | undefined
-{
-    const args: IRTerm[] = [];
-    while(
-        term instanceof IRApp
-        || term instanceof IRCase
-        // go "through" letted and hoisted
-        // || term instanceof IRLetted
-        // || term instanceof IRHoisted
-    ) {
-        if( term instanceof IRApp ) {
-            args.unshift( term.arg );
-            term = term.fn;
-            continue;
-        }
-        if( term instanceof IRCase ) {
-            if(!(
-                term.continuations.length === 1
-                && term.constrTerm instanceof IRConstr
-            )) continue;
-
-            term = term.continuations[0];
-            args.push( ...((term as IRCase).constrTerm as IRConstr).fields );
-            continue;
-        }
-        // if( term instanceof IRLetted ) term = term.value;
-        // else if( term instanceof IRHoisted ) term = term.hoisted;
-    }
-    if( args.length === 0 ) return undefined;
-    return {
-        func: term,
-        args,
-    };
 }
 
 function isId( term: IRTerm ): boolean
