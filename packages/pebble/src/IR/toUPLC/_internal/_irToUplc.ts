@@ -60,6 +60,8 @@ export function _irToUplc(
 
     if( ir instanceof IRFunc )
     {
+        if( ir.arity <= 0 ) return _irToUplc( ir.body, srcmap, node_index );
+        
         const { term: body, max_idx } = _irToUplc( ir.body, srcmap, node_index );
 
         let lam: Lambda = new Lambda( body );

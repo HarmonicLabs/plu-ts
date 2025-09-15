@@ -20,7 +20,7 @@ import { replaceForcedNativesWithHoisted } from "./subRoutines/replaceForcedNati
 import { performUplcOptimizationsAndReturnRoot } from "./subRoutines/performUplcOptimizationsAndReturnRoot";
 import { rewriteNativesAppliedToConstantsAndReturnRoot } from "./subRoutines/rewriteNativesAppliedToConstantsAndReturnRoot";
 import { removeUnusedVarsAndReturnRoot } from "./subRoutines/removeUnusedVarsAndReturnRoot/removeUnusedVarsAndReturnRoot";
-import { prettyIRJsonStr } from "../utils";
+import { inlineSingleUseAndReturnRoot } from "./subRoutines/inlineSingleUseAndReturnRoot/inlineSingleUseAndReturnRoot";
 
 export function compileIRToUPLC(
     term: IRTerm,
@@ -151,6 +151,23 @@ export function compileIRToUPLC(
     if( !options.delayHoists ) term = hoistForcedNatives( term );
 
     // at this point we expect the IR to be translable 1:1 to UPLC
+
+    // The loop is needed because after inlining some params, 
+    // new params in outer (or sibling) functions can become 
+    // single‑use; a single bottom‑up pass doesn’t 
+    // “see” those future states.
+    const maxInlineIterations = 3;
+    for(
+        let somethingWasInlined = true,
+            inlineIterations = 0;
+        somethingWasInlined
+        && inlineIterations < maxInlineIterations;
+        inlineIterations++
+    ) {
+        const inlineResult = inlineSingleUseAndReturnRoot( term );
+        term = inlineResult.term;
+        somethingWasInlined = inlineResult.somethingWasInlined;
+    }
 
     term = performUplcOptimizationsAndReturnRoot( term, options );
 

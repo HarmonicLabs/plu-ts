@@ -3,71 +3,56 @@
   [
     (lam _ctxData
       (force 
-        [
-          (lam _purpUnconstrPair
+        (case
+          (constr 0
             [
-              (lam _isPurpIdx
-                (case
-                  (constr 0
-                    [
-                      [
-                        _isPurpIdx 
-                        (con integer 1)
-                      ],
-
-                      (delay 
-                        (con unit ())
-                      ),
-
-                      (delay (error)
-                      )
-                    ]
-                  )
-                  [
-                    (force (builtin ifThenElse))
-                  ]
-
-                )
-              ) 
               [
-                (builtin equalsInteger) 
                 [
-                  (force (force (builtin fstPair))) 
-                  _purpUnconstrPair
-                ]
-              ]
-            ]
-          ) 
-          [
-            (builtin unConstrData) 
-            [
-              (force (builtin headList)) 
-              [
-                (lam _purpUnconstrPair 
+                  (builtin equalsInteger) 
                   [
-                    (lam _isPurpIdx 
+                    (force (force (builtin fstPair))) 
+                    [
+                      (builtin unConstrData) 
                       [
-                        _isPurpIdx 
+                        (force (builtin headList)) 
                         [
-                          _isPurpIdx 
-                          _purpUnconstrPair
+                          (lam _tailList
+                            [
+                              _tailList 
+                              [
+                                _tailList 
+                                [
+                                  (force (force (builtin sndPair))) 
+                                  [
+                                    (builtin unConstrData) 
+                                    _ctxData
+                                  ]
+                                ]
+                              ]
+                            ]
+                          ) 
+                          (force (builtin tailList))
                         ]
                       ]
-                    ) 
-                    (force (builtin tailList))
+                    ]
                   ]
-                ) 
-                [
-                  (force (force (builtin sndPair))) 
-                  [
-                    (builtin unConstrData) 
-                    _ctxData
-                  ]
-                ]
-              ]
+                ] 
+                (con integer 1)
+              ],
+
+              (delay 
+                (con unit ())
+              ),
+
+              (delay (error)
+              )
             ]
+          )
+          [
+            (force (builtin ifThenElse))
           ]
-        ]
+
+        )
       )
     ),
 

@@ -1,5 +1,5 @@
 
-export class RemoveUnusedVarsCtx
+export class InlineSingleUseCtx
 {
     readonly localVarsUseCount: number[];
 
@@ -14,24 +14,24 @@ export class RemoveUnusedVarsCtx
 
     constructor(
         readonly arity: number,
-        readonly parent: RemoveUnusedVarsCtx | undefined,
+        readonly parent: InlineSingleUseCtx | undefined,
     ) {
         // DO NOT SET _parentDbn HERE
         // it must be a getter to reflect changes in parent
         // (parent dbn can change)
 
-        if( arity < 0 ) throw new Error(`Cannot create RemoveUnusedVarsCtx with negative arity (${arity})`);
-        if( !Number.isSafeInteger( arity ) ) throw new Error(`Cannot create RemoveUnusedVarsCtx with non safe integer arity (${arity})`);
+        if( arity < 0 ) throw new Error(`Cannot create InlineSingleUseCtx with negative arity (${arity})`);
+        if( !Number.isSafeInteger( arity ) ) throw new Error(`Cannot create InlineSingleUseCtx with non safe integer arity (${arity})`);
 
         this.localVarsUseCount = new Array( arity ).fill(0);
     }
 
-    static root( arity: number = 0 ): RemoveUnusedVarsCtx {
-        return new RemoveUnusedVarsCtx( arity, undefined );
+    static root( arity: number = 0 ): InlineSingleUseCtx {
+        return new InlineSingleUseCtx( arity, undefined );
     }
 
-    newChild( arity: number ): RemoveUnusedVarsCtx {
-        return new RemoveUnusedVarsCtx( arity, this );
+    newChild( arity: number ): InlineSingleUseCtx {
+        return new InlineSingleUseCtx( arity, this );
     }
 
     incrementVarUse( dbn: bigint | number ): void
@@ -51,4 +51,16 @@ export class RemoveUnusedVarsCtx
         this.localVarsUseCount[ this.localVarsUseCount.length - 1 - dbn ]++;
     }
 
+    forgetUnusedVars(): void
+    {
+        // same as
+        // this.localVarsUseCount = this.localVarsUseCount.filter( u => u > 0 );
+        // but in place
+
+        for( let i = this.localVarsUseCount.length - 1; i >= 0; i-- ) {
+            if( this.localVarsUseCount[i] === 0 ) {
+                this.localVarsUseCount.splice( i, 1 );
+            }
+        }
+    }
 }

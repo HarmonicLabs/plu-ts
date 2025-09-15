@@ -183,4 +183,10 @@ export function _modifyChildFromTo(
         parent.value = newChild;
         return;
     }
+
+    const tsEnsureExhaustiveCheck: never = parent;
+    throw new Error(
+        "unknown parent type in '_modifyChildFromTo': " +
+        (parent as any).constructor?.name
+    );
 }

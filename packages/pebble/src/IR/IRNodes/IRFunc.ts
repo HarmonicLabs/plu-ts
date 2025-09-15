@@ -20,7 +20,21 @@ export interface IRFuncMetadata extends BaseIRMetadata {}
 export class IRFunc
     implements IIRTerm, Cloneable<IRFunc>, IHash, IIRParent, ToJson
 {
-    public arity!: number;
+    private _arity: number;
+    get arity(): number { return this._arity; }
+    set arity( newArity: number )
+    {
+        if( !Number.isSafeInteger( newArity ) && newArity >= 0 )
+        throw new BasePlutsError(
+            "invalid arity for 'IRFunc'"
+        );
+
+        if( this._arity !== newArity )
+        {
+            this._arity = newArity;
+            this.markHashAsInvalid();
+        }
+    }
 
     constructor(
         arity: number,
@@ -37,7 +51,7 @@ export class IRFunc
         if( !isIRTerm( body ) )
         throw new Error("IRFunc body argument was not an IRTerm");
 
-        this.arity = arity;
+        this._arity = arity;
         this.meta = {
             name: typeof func_name === "string" ? func_name : (void 0)
         };

@@ -72,7 +72,6 @@ function _removeUnusedVars( term: IRTerm, ctx: RemoveUnusedVarsCtx ): IRTerm
     // remove vars here
     func.arity -= removedDbns.length;
     const filteredArgs = args.filter(( _arg, idx ) => funcCtx.localVarsUseCount[ idx ] > 0 );
-    funcCtx.forgetUnusedVars();
 
     const decrementedFuncBody = _decrementTermDbns( func.body, removedDbns );
     func.body = decrementedFuncBody;
