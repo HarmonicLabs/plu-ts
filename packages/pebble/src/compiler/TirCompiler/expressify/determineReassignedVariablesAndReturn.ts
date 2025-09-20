@@ -26,7 +26,67 @@ import { ExpressifyCtx, isExpressifyFuncParam } from "./ExpressifyCtx";
 export interface ReassignedVariablesAndReturn {
     reassigned: string[];
     returns: boolean;
+    // TODO: introduce hidden variables for list iteration optimizations?
 }
+
+/* TODO:
+
+list iteration optimization
+
+would see something like:
+```
+for( let i = 0; i < arr.length(); i++ ) {
+   const elem = arr[i];
+   // do stuff with elem
+}
+```
+
+or even just
+```
+for( let i = 0; i < arr.length; i++ ) {
+   // do stuff with arr[i]
+}
+```
+(ie. `arr[i]` is used directly)
+
+and turn it in
+```
+for(
+    let partialList = arr; 
+    !partialList.isEmpty(); 
+    partialList = partialList.tail()
+) {
+    const elem = partialList.head();
+    // do stuff with elem
+}
+```
+
+and would work for potentially multiple list in the same loop
+eg, given:
+```
+for(
+    let i = 0;
+    i < arr1.length();
+    i++
+) {
+    const elem1 = arr1[i];
+    const elem2 = arr2[i];
+}
+```
+would turn it into
+```
+for(
+    let partialList1 = arr1,
+        partialList2 = arr2;
+    !partialList1.isEmpty();
+    partialList1 = partialList1.tail(),
+    partialList2 = partialList2.tail()
+) {
+    const elem1 = partialList1.head();
+    const elem2 = partialList2.head();
+}
+```
+*/
 
 export interface ReassignedVariablesAndFlowInfos extends ReassignedVariablesAndReturn {
     canContinue: boolean;
@@ -58,6 +118,7 @@ export function determineReassignedVariablesAndReturn(
             continue;
         }
 
+        // TODO: can optimize list iterations
         if( stmt instanceof TirAssignmentStmt )
         {
             reassignedSet.add( stmt.varIdentifier.varName );

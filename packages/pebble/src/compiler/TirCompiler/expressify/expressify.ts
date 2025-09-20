@@ -36,14 +36,13 @@ import { expressifyTerminatingIfStmt } from "./expressifyTerminatingIfStmt";
 import { determineReassignedVariablesAndFlowInfos, determineReassignedVariablesAndReturn, getBodyStateType, getBranchStmtReturnType, ReassignedVariablesAndReturn } from "./determineReassignedVariablesAndReturn";
 import { TirTernaryExpr } from "../../tir/expressions/TirTernaryExpr";
 import { expressifyIfBranch } from "./expressifyIfBranch";
-import { expressifyForStmt, whileToFor } from "./expressifyForStmt";
+import { expressifyForStmt, loopToForStmt } from "./expressifyForStmt";
 import { getListTypeArg } from "../../tir/types/utils/getListTypeArg";
 import { TirElemAccessExpr } from "../../tir/expressions/TirElemAccessExpr";
 import { TirLitIntExpr } from "../../tir/expressions/litteral/TirLitIntExpr";
 import { TirVarDecl } from "../../tir/statements/TirVarDecl/TirVarDecl";
 import { TirCallExpr } from "../../tir/expressions/TirCallExpr";
 import { TirNativeFunc } from "../../tir/expressions/TirNativeFunc";
-import { containsKeys } from "@harmoniclabs/obj-utils";
 
 export function expressify(
     func: TirFuncExpr,
@@ -243,6 +242,8 @@ export function expressifyFuncBody(
                 );
                 continue;
             }
+
+            throw new Error("deconstruction of non-struct type" + stmt.type.toString() );
         }
         else if( stmt instanceof TirArrayLikeDeconstr ) {
 
@@ -337,8 +338,10 @@ export function expressifyFuncBody(
             bodyStmts.push( ...nextDeclarations );
             continue;
         }
-        else if( stmt instanceof TirAssignmentStmt ) bodyStmts.unshift( expressifyVarAssignmentStmt( ctx, stmt ) );
-        
+        else if( stmt instanceof TirAssignmentStmt ) {
+            bodyStmts.unshift( expressifyVarAssignmentStmt( ctx, stmt ) );
+            continue;
+        }
         else if( stmt instanceof TirBlockStmt ) {
             // inline the block
             bodyStmts = stmt.stmts.concat( bodyStmts );
@@ -591,40 +594,45 @@ export function expressifyFuncBody(
 
             throw new Error("match statement with multiple non-terminating cases is not implemented yet (sorry)");
         }
-        else if( stmt instanceof TirForOfStmt ) {
-
-            // determine affected variables
-            // determine if we may have an early return
-            // determine if we can break or continue
-            const reassignedAndFlow = determineReassignedVariablesAndFlowInfos( stmt );
-            const {
-                reassigned,
-                returns,
-                canBreak,
-                canContinue
-            } = reassignedAndFlow;
-            const { sop, initState } = getBranchStmtReturnType( reassignedAndFlow, ctx, stmt.range );
-
-            if(
-                !returns
-                && !canBreak
-                // && !canContinue
-            ) {
-                // **only for...of** can be optimized as a simple `.reduce`
-                // producing the new state in this case
-                // (`.reduce` has no way to break or early return (efficiently))
-                // continue is ok, because we only need to pass the state up to that point
-            }
-
-        }
+        // else if( stmt instanceof TirForOfStmt ) {
+        // 
+        //     const definitelyTerminates = stmt.definitelyTerminates();
+        // 
+        //     // determine affected variables
+        //     // determine if we may have an early return
+        //     // determine if we can break or continue
+        //     const reassignedAndFlow = determineReassignedVariablesAndFlowInfos( stmt );
+        //     const {
+        //         reassigned,
+        //         returns,
+        //         canBreak,
+        //         canContinue
+        //     } = reassignedAndFlow;
+        //     const { sop, initState } = getBranchStmtReturnType( reassignedAndFlow, ctx, stmt.range );
+        // 
+        //     if(
+        //         !returns
+        //         && !canBreak
+        //         // && !canContinue
+        //     ) {
+        //         // **only for...of** can be optimized as a simple `.reduce`
+        //         // producing the new state in this case
+        //         // (`.reduce` has no way to break or early return (efficiently))
+        //         // continue is ok, because we only need to pass the state up to that point
+        //     }
+        // 
+        // }
         else if(
             stmt instanceof TirForStmt
             || stmt instanceof TirWhileStmt
+            || stmt instanceof TirForOfStmt
         )
         {
+            const definitelyTerminates = stmt.definitelyTerminates();
+
             const reassignedAndFlow = determineReassignedVariablesAndFlowInfos( stmt );
             const returnTypeAndInvalidInit = getBranchStmtReturnType( reassignedAndFlow, ctx, stmt.range );
-            const forStmt = whileToFor( stmt );
+            const forStmt = loopToForStmt( stmt );
             const { bodyStateType, initState } = getBodyStateType(
                 returnTypeAndInvalidInit,
                 forStmt
@@ -637,12 +645,27 @@ export function expressifyFuncBody(
                 initState
             );
 
+            return TirAssertAndContinueExpr.fromStmtsAndContinuation(
+                assertions,
+                definitelyTerminates ? loopExpr : wrapNonTerminatingFinalStmtAsCaseExpr(
+                    loopExpr,
+                    returnTypeAndInvalidInit.sop,
+                    ctx,
+                    stmt.range,
+                    reassignedAndFlow,
+                    bodyStmts,
+                    loopReplacements
+                )
+            );
         }
         else {
-            const tsEnsureExhautstiveCheck: never = stmt;
-            console.error( stmt );
-            throw new Error("unreachable::expressify::stmt");
+            // const tsEnsureExhautstiveCheck: never = stmt;
+            // console.error( stmt );
+            // throw new Error("unreachable::expressify::stmt");
         }
+        const tsEnsureExhautstiveCheck: never = stmt;
+        console.error( stmt );
+        throw new Error("unreachable::expressify::stmt");
     }
 
     return TirAssertAndContinueExpr.fromStmtsAndContinuation(

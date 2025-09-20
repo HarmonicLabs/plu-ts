@@ -5,23 +5,117 @@ import { TirLitNamedObjExpr } from "../../tir/expressions/litteral/TirLitNamedOb
 import { TirCallExpr } from "../../tir/expressions/TirCallExpr";
 import { TirExpr } from "../../tir/expressions/TirExpr";
 import { TirFuncExpr } from "../../tir/expressions/TirFuncExpr";
+import { TirPropAccessExpr } from "../../tir/expressions/TirPropAccessExpr";
 import { TirVariableAccessExpr } from "../../tir/expressions/TirVariableAccessExpr";
+import { TirUnaryExclamation } from "../../tir/expressions/unary/TirUnaryExclamation";
+import { TirAssignmentStmt } from "../../tir/statements/TirAssignmentStmt";
 import { TirBlockStmt } from "../../tir/statements/TirBlockStmt";
 import { TirBreakStmt } from "../../tir/statements/TirBreakStmt";
 import { TirContinueStmt } from "../../tir/statements/TirContinueStmt";
+import { TirForOfStmt } from "../../tir/statements/TirForOfStmt";
 import { TirForStmt } from "../../tir/statements/TirForStmt";
 import { TirIfStmt } from "../../tir/statements/TirIfStmt";
 import { TirReturnStmt } from "../../tir/statements/TirReturnStmt";
 import { TirSimpleVarDecl } from "../../tir/statements/TirVarDecl/TirSimpleVarDecl";
 import { TirWhileStmt } from "../../tir/statements/TirWhileStmt";
+import { TirBoolT } from "../../tir/types/TirNativeType";
 import { TirFuncT } from "../../tir/types/TirNativeType/native/function";
 import { TirSoPStructType } from "../../tir/types/TirStructType";
+import { getListTypeArg } from "../../tir/types/utils/getListTypeArg";
 import { expressifyFuncBody, LoopReplacements } from "./expressify";
 import { ExpressifyCtx, isExpressifyFuncParam } from "./ExpressifyCtx";
 
-export function whileToFor( stmt: TirWhileStmt | TirForStmt ): TirForStmt
+export function loopToForStmt( stmt: TirWhileStmt | TirForOfStmt | TirForStmt ): TirForStmt
 {
     if(  stmt instanceof TirForStmt ) return stmt;
+
+    if( stmt instanceof TirForOfStmt ) {
+        // convert for of to for
+        const partialListName = getUniqueInternalName("for_of_partial_list");
+        const iterElemType = getListTypeArg( stmt.iterable.type );
+        if( !iterElemType ) throw new Error("Iterable type is not a list");
+
+        const varRange = stmt.elemDeclaration.range;
+
+        const partialListVar = new TirSimpleVarDecl(
+            partialListName, // name
+            stmt.iterable.type, // type
+            stmt.iterable, // initial value
+            false, // is constant
+            varRange // range
+        );
+
+        const partialListVarAccess = new TirVariableAccessExpr(
+            {
+                isDefinedOutsideFuncScope: false,
+                variableInfos: {
+                    name: partialListVar.name,
+                    type: partialListVar.type,
+                    isConstant: false,
+                },
+            },
+            varRange
+        );
+
+        // `!partialList.isEmpty()`
+        const runCondition = new TirUnaryExclamation(
+            new TirCallExpr(
+                new TirPropAccessExpr(
+                    partialListVarAccess.clone(),
+                    new Identifier("isEmpty", varRange ),
+                    new TirFuncT( [], new TirBoolT() ),
+                    varRange
+                ),
+                [], // args
+                new TirBoolT(),
+                varRange
+            ),
+            new TirBoolT(),
+            varRange
+        );
+
+        const updatePartialList = new TirAssignmentStmt(
+            partialListVarAccess.clone(),
+            new TirCallExpr(
+                new TirPropAccessExpr(
+                    partialListVarAccess.clone(),
+                    new Identifier("tail", varRange ),
+                    new TirFuncT( [], stmt.iterable.type ),
+                    varRange
+                ),
+                [], // args
+                stmt.iterable.type,
+                varRange
+            ),
+            varRange
+        );
+
+        let body = stmt.body instanceof TirBlockStmt ? stmt.body : new TirBlockStmt( [ stmt.body ], stmt.range );
+        body = body.shallowClone();
+        const elemDecl = stmt.elemDeclaration;
+        elemDecl.initExpr = new TirCallExpr(
+            new TirPropAccessExpr(
+                partialListVarAccess.clone(),
+                new Identifier("head", varRange ),
+                new TirFuncT( [], iterElemType ),
+                varRange
+            ),
+            [], // args
+            iterElemType,
+            varRange
+        );
+        body.stmts.unshift(
+            elemDecl
+        );
+
+        return new TirForStmt(
+            [ partialListVar ], // init
+            runCondition, // condition
+            [ updatePartialList ], // update
+            body, // loopBody
+            stmt.range, // range
+        );
+    }
 
     // convert while to for
     return new TirForStmt(

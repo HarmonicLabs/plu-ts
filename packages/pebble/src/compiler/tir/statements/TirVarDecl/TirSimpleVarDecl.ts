@@ -15,6 +15,17 @@ export class TirSimpleVarDecl
         readonly range: SourceRange,
     ) {}
 
+    clone(): TirSimpleVarDecl
+    {
+        return new TirSimpleVarDecl(
+            this.name,
+            this.type,
+            this.initExpr?.clone(),
+            this.isConst,
+            this.range
+        );
+    }
+
     toString(): string
     {
         return (

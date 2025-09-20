@@ -21,6 +21,14 @@ export class TirBlockStmt
         );
     }
 
+    shallowClone(): TirBlockStmt
+    {
+        return new TirBlockStmt(
+            this.stmts.slice(), // this.stmts.map( s => s.clone() ),
+            this.range
+        );
+    }
+
     definitelyTerminates(): boolean
     {
         return this.stmts.some( stmt => stmt.definitelyTerminates() );
