@@ -1378,7 +1378,7 @@ export class Parser extends DiagnosticEmitter
         const result = new VarStmt( decls, tn.range( startPos, tn.pos ) );
 
         // if there is no final semicolon (and we are not in a for loop)
-        if( !isFor && !tn.skip( Token.Semicolon) )
+        if( !isFor && !tn.skip( Token.Semicolon ) )
         {
             // check for automatic semicolon insertion
             this.emitErrorIfInvalidAutoSemicolon();

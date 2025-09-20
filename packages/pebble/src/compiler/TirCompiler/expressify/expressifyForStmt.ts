@@ -91,7 +91,6 @@ export function loopToForStmt( stmt: TirWhileStmt | TirForOfStmt | TirForStmt ):
         );
 
         let body = stmt.body instanceof TirBlockStmt ? stmt.body : new TirBlockStmt( [ stmt.body ], stmt.range );
-        body = body.shallowClone();
         const elemDecl = stmt.elemDeclaration;
         elemDecl.initExpr = new TirCallExpr(
             new TirPropAccessExpr(
@@ -135,20 +134,32 @@ export function expressifyForStmt(
     initState: TirLitNamedObjExpr,
 ): TirCallExpr
 {
-    const loopBody = stmt.body instanceof TirBlockStmt ? stmt.body : new TirBlockStmt( [ stmt.body ], stmt.range );
-
-    if( stmt.condition )
-    loopBody.stmts.unshift(
-        new TirIfStmt(
-            stmt.condition,
-            // then
-            loopBody,
-            // else
-            new TirBlockStmt([ new TirBreakStmt( stmt.condition.range ) ], stmt.condition.range ),
-            stmt.condition.range
-        )
+    let loopBody = stmt.body instanceof TirBlockStmt ? stmt.body : new TirBlockStmt( [ stmt.body ], stmt.range );
+    loopBody = new TirBlockStmt(
+        loopBody.stmts.slice(),
+        loopBody.range
     );
 
+    if( stmt.condition ) {
+        loopBody.stmts.push(
+            new TirContinueStmt( loopBody.range.atEnd() )
+        );
+        loopBody = new TirBlockStmt(
+            [
+                new TirIfStmt(
+                    stmt.condition,
+                    // then
+                    loopBody,
+                    // else
+                    new TirBlockStmt([ new TirBreakStmt( stmt.condition.range ) ], stmt.condition.range ),
+                    stmt.condition.range
+                )
+            ],
+            loopBody.range
+        );
+    }
+
+    // ALWAYS add a final `continue;` to the end of the loop body
     loopBody.stmts.push(
         new TirContinueStmt( loopBody.range.atEnd() )
     );
