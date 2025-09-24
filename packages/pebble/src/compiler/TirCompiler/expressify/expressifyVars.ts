@@ -358,8 +358,8 @@ function getVarAccessFromPropAccess(
         const objType = getUnaliased( expr.type );
 
         if( !isSingleConstrStruct( objType ) ) {
-            console.log( objType );
-            throw new Error("cannot access property on non-struct type");
+            console.log( objType, expr.toString() );
+            throw new Error(`cannot access property '${prop}' on non-struct type`);
         }
 
         const ctor = objType.constructors[0];

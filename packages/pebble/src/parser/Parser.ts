@@ -1924,9 +1924,11 @@ export class Parser extends DiagnosticEmitter
         precedence: Precedence = Precedence.Comma
     ): PebbleExpr | undefined
     {
+        console.log("parseExpr");
         const tn = this.tn;
 
         let expr: PebbleExpr = this.parseExprStart()!;
+        console.log("expr start", expr);
         if( !expr ) {
             return undefined;
         }
@@ -1947,9 +1949,18 @@ export class Parser extends DiagnosticEmitter
         // see: http://www.engr.mun.ca/~theo/Misc/exp_parsing.htm#climbing
         let nextPrecedence: Precedence;
         while(
-            (nextPrecedence = determinePrecedence(tn.peek())) >= precedence
+            (
+                nextPrecedence = determinePrecedence(tn.peek()),
+                console.log( Precedence[ nextPrecedence ], Precedence[ precedence ] ),
+                nextPrecedence
+            ) >= precedence
         ) {
             const token = tn.next();
+            console.log(Token[ token ]);
+
+            // DO NOT DIRECTLY RETURN FROM HERE
+            // we need to loop to support right associative operators
+            // and also to support constructs like a.b().c.d()[x]!.e().f.g
             switch( token ) {
                 case Token.As: {
                     if( tn.skip( Token.Const ) )
@@ -2086,7 +2097,7 @@ export class Parser extends DiagnosticEmitter
                             prop,
                             tn.range( startPos, tn.pos )
                         );
-                        return this.tryParseCallExprOrReturnSame( expr );
+                        expr = this.tryParseCallExprOrReturnSame( expr );
                         break;
                     }
 
@@ -2290,7 +2301,7 @@ export class Parser extends DiagnosticEmitter
             // ArrayLiteralPebbleExpr
             case Token.OpenBracket: {
                 const elementPebbleExprs = new Array<PebbleExpr>();
-                while (!tn.skip( Token.CloseBracket))
+                while (!tn.skip( Token.CloseBracket ))
                 {
                     let expr: PebbleExpr | undefined;
                     if (tn.peek() === Token.Comma) {
@@ -3631,6 +3642,7 @@ export class Parser extends DiagnosticEmitter
 
     parseAssertStatement(): AssertStmt | undefined
     {
+        console.log("parseAssertStatement");
         const tn = this.tn;
         const startPos = tn.tokenPos;
 
