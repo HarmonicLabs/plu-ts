@@ -52,15 +52,14 @@ function _isClosedIRTerm( term: IRTerm, dbn: number, parent?: IRTerm ): boolean
     if( term instanceof IRConst ) return true;
     if( term instanceof IRError ) return true;
     if( term instanceof IRNative ) return true;
-    if( term instanceof IRHoisted ) return true;
+    if( term instanceof IRHoisted ) return _isClosedIRTerm( term.hoisted, dbn, term );
     
     if( term instanceof IRLetted ) return _isClosedIRTerm( term.value, dbn, term );
 
     if( term instanceof IRForced ) return _isClosedIRTerm( term.forced, dbn, term );
     if( term instanceof IRDelayed ) return _isClosedIRTerm( term.delayed, dbn, term );
 
-    
-
+    const tsEnsureExhaustiveCheck: never = term;
     // not even an IRTerm
     console.log( parent )
     throw new Error(
@@ -71,4 +70,11 @@ function _isClosedIRTerm( term: IRTerm, dbn: number, parent?: IRTerm ): boolean
 export function isClosedIRTerm( term: IRTerm ): boolean
 {
     return _isClosedIRTerm( term, 0 );
+}
+
+export function _debug_assertClosedIR( term: IRTerm ): void
+{
+    if( !isClosedIRTerm( term ) ) {
+        throw new Error("Term is not closed");
+    }
 }

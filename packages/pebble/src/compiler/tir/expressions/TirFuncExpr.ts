@@ -62,15 +62,15 @@ export class TirFuncExpr
         );
     }
 
-    /**
-     * `true` if the function is guaranteed to never error
-     */
-    readonly isSafe: boolean = false;
-    /**
-     * `true` if, for all cases where the function can error,
-     * there is an alternative implementation that is safe (wrapping the result as `Optional`)
-     */
-    readonly isRecoverable: boolean = false;
+    // / **
+    //  * `true` if the function is guaranteed to never error
+    //  * /
+    // readonly isSafe: boolean = false;
+    // / **
+    //  * `true` if, for all cases where the function can error,
+    //  * there is an alternative implementation that is safe (wrapping the result as `Optional`)
+    //  * /
+    // readonly isRecoverable: boolean = false;
 
     isAnonymous(): boolean
     {

@@ -113,5 +113,5 @@ test("extract purpose", () => {
     expect( prettyIR( result ).text )
     .toEqual( prettyIR( output ).text );
 
-    console.log( prettyIR( result, 2 ).text );
+    // console.log( prettyIR( result, 2 ).text );
 })

@@ -34,9 +34,11 @@ export function _compileHoistedDeps(
             const funcExpr = funcDecl instanceof TirInlineClosedIR ? funcDecl : expressify(
                 funcDecl,
                 undefined, // loopReplacements
+                program,
                 new ExpressifyCtx(
                     undefined,
                     funcDecl.returnType,
+                    program,
                     hoistedMap
                 )
             );
@@ -62,6 +64,7 @@ export function _compileHoistedDeps(
                 new ExpressifyCtx(
                     undefined,
                     constDecl.type,
+                    program,
                     hoistedMap
                 ),
                 constDecl,

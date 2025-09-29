@@ -43,14 +43,16 @@ import { TirLitIntExpr } from "../../tir/expressions/litteral/TirLitIntExpr";
 import { TirVarDecl } from "../../tir/statements/TirVarDecl/TirVarDecl";
 import { TirCallExpr } from "../../tir/expressions/TirCallExpr";
 import { TirNativeFunc } from "../../tir/expressions/TirNativeFunc";
+import { TypedProgram } from "../../tir/program/TypedProgram";
 
 export function expressify(
     func: TirFuncExpr,
     loopReplacements: LoopReplacements | undefined,
+    program: TypedProgram,
     parentCtx: ExpressifyCtx | undefined = undefined,
 ): void
 {
-    const ctx = new ExpressifyCtx( parentCtx, func.returnType );
+    const ctx = new ExpressifyCtx( parentCtx, func.returnType, program );
 
     ctx.introduceFuncParams( func.params );
 

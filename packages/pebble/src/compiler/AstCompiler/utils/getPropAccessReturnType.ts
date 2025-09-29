@@ -133,10 +133,10 @@ function findPropInImpls(
     const tirFuncName = methodsNamesPtr.get( propName );
     if( !tirFuncName ) return undefined;
 
-    const funcInfos = ctx.program.functions.get( tirFuncName );
-    if( !funcInfos ) return undefined;
+    const funcExpr = ctx.program.functions.get( tirFuncName );
+    if( !funcExpr ) return undefined;
 
-    const fullSig = funcInfos.sig();
+    const fullSig = funcExpr.sig();
     const methodSig = new TirFuncT(
         fullSig.argTypes.slice( 1 ),
         fullSig.returnType

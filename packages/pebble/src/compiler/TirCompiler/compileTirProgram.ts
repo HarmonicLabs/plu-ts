@@ -25,6 +25,7 @@ export function compileTypedProgram(
     void expressify(
         mainFuncExpr,
         undefined, // loopReplacements
+        tirProgram
     );
     return mainFuncExpr.toIR( ToIRTermCtx.root() );
 }

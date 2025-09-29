@@ -1924,11 +1924,9 @@ export class Parser extends DiagnosticEmitter
         precedence: Precedence = Precedence.Comma
     ): PebbleExpr | undefined
     {
-        console.log("parseExpr");
         const tn = this.tn;
 
         let expr: PebbleExpr = this.parseExprStart()!;
-        console.log("expr start", expr);
         if( !expr ) {
             return undefined;
         }
@@ -1950,13 +1948,10 @@ export class Parser extends DiagnosticEmitter
         let nextPrecedence: Precedence;
         while(
             (
-                nextPrecedence = determinePrecedence(tn.peek()),
-                console.log( Precedence[ nextPrecedence ], Precedence[ precedence ] ),
-                nextPrecedence
+                nextPrecedence = determinePrecedence(tn.peek())
             ) >= precedence
         ) {
             const token = tn.next();
-            console.log(Token[ token ]);
 
             // DO NOT DIRECTLY RETURN FROM HERE
             // we need to loop to support right associative operators
@@ -3542,7 +3537,6 @@ export class Parser extends DiagnosticEmitter
         )
         {
             if( !tn.skip( Token.When ) ) {
-                console.log( "match", cases, Token[ tn.peek() ] );
                 return this.error(
                     DiagnosticCode._0_expected,
                     tn.range(), "when"
@@ -3642,7 +3636,6 @@ export class Parser extends DiagnosticEmitter
 
     parseAssertStatement(): AssertStmt | undefined
     {
-        console.log("parseAssertStatement");
         const tn = this.tn;
         const startPos = tn.tokenPos;
 

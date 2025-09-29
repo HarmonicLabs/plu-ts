@@ -1,4 +1,4 @@
-import type { UPLCTerm } from "@harmoniclabs/uplc";
+import { prettyUPLC, type UPLCTerm } from "@harmoniclabs/uplc";
 import type { IRTerm } from "../IRTerm";
 import { IRLetted } from "../IRNodes/IRLetted";
 import { IRHoisted } from "../IRNodes/IRHoisted";
@@ -21,6 +21,7 @@ import { performUplcOptimizationsAndReturnRoot } from "./subRoutines/performUplc
 import { rewriteNativesAppliedToConstantsAndReturnRoot } from "./subRoutines/rewriteNativesAppliedToConstantsAndReturnRoot";
 import { removeUnusedVarsAndReturnRoot } from "./subRoutines/removeUnusedVarsAndReturnRoot/removeUnusedVarsAndReturnRoot";
 import { inlineSingleUseAndReturnRoot } from "./subRoutines/inlineSingleUseAndReturnRoot/inlineSingleUseAndReturnRoot";
+import { _debug_assertClosedIR } from "../utils";
 
 export function compileIRToUPLC(
     term: IRTerm,
@@ -39,6 +40,8 @@ export function compileIRToUPLC(
 
     const options = completeCompilerOptions( paritalOptions );
 
+    const debugAsserts = (options as any).debugAsserts ?? true;
+
     // unwrap top level letted and hoisted;
     while( term instanceof IRLetted || term instanceof IRHoisted )
     {
@@ -49,13 +52,18 @@ export function compileIRToUPLC(
         term.parent = undefined;
     }
 
+    debugAsserts && _debug_assertClosedIR( term );
 
     // term = preEvaluateDefinedTermsAndReturnRoot( term );
     term = rewriteNativesAppliedToConstantsAndReturnRoot( term );
 
+    debugAsserts && _debug_assertClosedIR( term );
+
     // removing unused variables BEFORE going into the rest of the compilation
     // helps letted terms to find a better spot (and possibly be inlined instead of hoisted)
     term = removeUnusedVarsAndReturnRoot( term );
+
+    debugAsserts && _debug_assertClosedIR( term );
 
     // _makeAllNegativeNativesHoisted( term );
 
@@ -87,6 +95,8 @@ export function compileIRToUPLC(
 
     term = replaceNativesAndReturnRoot( term );
 
+    debugAsserts && _debug_assertClosedIR( term );
+
     // unwrap top level letted and hoisted;
     // some natives may be converted to hoisted;
     // this is really just an edge case
@@ -106,14 +116,20 @@ export function compileIRToUPLC(
 
     if( options.delayHoists ) replaceForcedNativesWithHoisted( term );
 
+    debugAsserts && _debug_assertClosedIR( term );
+
     if( options.delayHoists ) replaceHoistedWithLetted( term );
     else replaceClosedLettedWithHoisted( term );
+
+    debugAsserts && _debug_assertClosedIR( term );
 
     // handle letted before hoisted because the tree is smaller
     // and we also have less letted dependecies to handle
     term = handleLettedAndReturnRoot( term );
     
     term = handleHoistedAndReturnRoot( term );
+
+    debugAsserts && _debug_assertClosedIR( term );
 
     // replaced hoisted terms might include new letted terms
     while(
@@ -128,6 +144,8 @@ export function compileIRToUPLC(
         term = handleLettedAndReturnRoot( term );
         term = handleHoistedAndReturnRoot( term );
     }
+
+    debugAsserts && _debug_assertClosedIR( term );
 
     ///////////////////////////////////////////////////////////////////////////////
     // ------------------------------------------------------------------------- //
@@ -145,10 +163,14 @@ export function compileIRToUPLC(
     // handle new hoisted terms
     term = handleHoistedAndReturnRoot( term )
 
+    debugAsserts && _debug_assertClosedIR( term );
+
     // strictly necessary to check the options
     // otherwise forced natives where already hoisted
     // will be re-hosited; causeing uselsess evaluations
     if( !options.delayHoists ) term = hoistForcedNatives( term );
+
+    debugAsserts && _debug_assertClosedIR( term );
 
     // at this point we expect the IR to be translable 1:1 to UPLC
 
@@ -156,7 +178,9 @@ export function compileIRToUPLC(
     // new params in outer (or sibling) functions can become 
     // single‑use; a single bottom‑up pass doesn’t 
     // “see” those future states.
-    const maxInlineIterations = 3;
+    //
+    // ALWAYS AT LEAST 1 ITERATION
+    const maxInlineIterations = Math.max( 3, 1 );
     for(
         let somethingWasInlined = true,
             inlineIterations = 0;

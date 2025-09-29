@@ -1,4 +1,5 @@
 import { isUnaryPrefixExpr } from "../../../ast/nodes/expr/unary/UnaryPrefixExpr";
+import { SourceRange } from "../../../ast/Source/SourceRange";
 import { isTirBinaryExpr, TirExponentiationExpr } from "../../tir/expressions/binary/TirBinaryExpr";
 import { TirLitArrExpr } from "../../tir/expressions/litteral/TirLitArrExpr";
 import { TirLitFailExpr } from "../../tir/expressions/litteral/TirLitFailExpr";
@@ -42,6 +43,8 @@ import { TirStmt } from "../../tir/statements/TirStmt";
 import { TirArrayLikeDeconstr } from "../../tir/statements/TirVarDecl/TirArrayLikeDeconstr";
 import { TirNamedDeconstructVarDecl } from "../../tir/statements/TirVarDecl/TirNamedDeconstructVarDecl";
 import { TirSimpleVarDecl } from "../../tir/statements/TirVarDecl/TirSimpleVarDecl";
+import { TirAliasType } from "../../tir/types/TirAliasType";
+import { TirDataStructType, TirSoPStructType } from "../../tir/types/TirStructType";
 import { getUnaliased } from "../../tir/types/utils/getUnaliased";
 import { expressify, expressifyFuncBody, LoopReplacements } from "./expressify";
 import { ExpressifyCtx, isExpressifyFuncParam } from "./ExpressifyCtx";
@@ -87,7 +90,7 @@ export function expressifyVars(
     if( expr instanceof TirPropAccessExpr ) {
         const objectExpr = expressifyVars( ctx, expr.object );
         expr.object = objectExpr;
-        return getVarAccessFromPropAccess( ctx, expr );
+        return expressifyPropAccess( ctx, expr );
     }
 
     if( expr instanceof TirVariableAccessExpr ) {
@@ -120,10 +123,12 @@ export function expressifyVars(
         return expr;
     }
     if( expr instanceof TirFuncExpr ) {
-        expressify( expr, undefined, ctx );
+        expressify( expr, undefined, ctx.program, ctx );
         return expr;
     }
     if( expr instanceof TirCallExpr ) {
+        while( expr.func instanceof TirParentesizedExpr ) expr.func = expr.func.expr;
+        if( expr.func instanceof TirPropAccessExpr ) return expressifyMethodCall( ctx, expr );
         const func = expressifyVars( ctx, expr.func );
         expr.func = func;
         for( let i = 0; i < expr.args.length; i++ ) {
@@ -235,7 +240,7 @@ export function expressifyVars(
     throw new Error("unreachable::expressifyVars");
 }
 
-function getVarAccessFromPropAccess(
+function expressifyPropAccess(
     ctx: ExpressifyCtx,
     propAccessExpr: TirPropAccessExpr
 ): TirExpr
@@ -297,6 +302,7 @@ function getVarAccessFromPropAccess(
         return expr;
     }
 
+    // expressify as normal variable
     if( 
         expr instanceof TirLitObjExpr 
         || expr instanceof TirLitNamedObjExpr 
@@ -358,7 +364,9 @@ function getVarAccessFromPropAccess(
         const objType = getUnaliased( expr.type );
 
         if( !isSingleConstrStruct( objType ) ) {
-            console.log( objType, expr.toString() );
+            // IMPORTANT: we only care about fields here
+            // any methods should have already been converted to functions
+            console.error( objType, expr.toString() );
             throw new Error(`cannot access property '${prop}' on non-struct type`);
         }
 
@@ -408,4 +416,65 @@ function getVarAccessFromPropAccess(
 
     const tsEnsureExhautstiveCheck: never = expr;
     throw new Error("Invalid property access expression");
+}
+
+function expressifyMethodCall(
+    ctx: ExpressifyCtx,
+    methodCall: TirCallExpr
+): TirCallExpr
+{
+    const methodPropAccess = methodCall.func;
+    if(!( methodPropAccess instanceof TirPropAccessExpr ))
+    throw new Error("Invalid method call expression");
+
+    const methodIdentifierProp = methodPropAccess.prop;
+    const methodName = methodIdentifierProp.text;
+
+    const objectExpr = expressifyVars( ctx, methodPropAccess.object );
+    let objectType = objectExpr.type;
+
+    while( objectType instanceof TirAliasType ) {
+        const aliasMethds = objectType.methodsNamesPtr;
+        const tirMethodName = aliasMethds.get( methodName );
+        if( !tirMethodName ) {
+            objectType = objectType.aliased;
+            continue;
+        }
+
+        const funcExpr = ctx.program.functions.get( tirMethodName );
+        if( !funcExpr ) throw new Error(`Definition of method '${methodName}' on type '${objectType.toString()}' is missing.`);
+
+        return new TirCallExpr(
+            funcExpr,
+            [ objectExpr, ...methodCall.args ],
+            methodCall.type,
+            SourceRange.join( methodIdentifierProp.range, methodCall.range.atEnd() )
+        );
+    }
+
+    if(
+        objectType instanceof TirDataStructType
+        || objectType instanceof TirSoPStructType
+    ) {
+        const structMethods = objectType.methodNamesPtr;
+        const tirMethodName = structMethods.get( methodName );
+        if( !tirMethodName ) throw new Error(
+            `Method '${methodName}' does not exist on type '${objectType.toString()}'`
+        );
+
+        const funcExpr = ctx.program.functions.get( tirMethodName );
+        if( !funcExpr ) throw new Error(`Definition of method '${methodName}' on type '${objectType.toString()}' is missing.`);
+
+        return new TirCallExpr(
+            funcExpr,
+            [ objectExpr, ...methodCall.args ],
+            methodCall.type,
+            SourceRange.join( methodIdentifierProp.range, methodCall.range.atEnd() )
+        );
+    }
+
+    throw new Error(`not implemented::expressifyMethodCall for type '${objectType.toString()}'`);
+
+    // const tsEnsureExhautstiveCheck: never = objectType;
+    throw new Error(`Cannot call method '${methodName}' on non-struct type '${objectType.toString()}'`);
 }

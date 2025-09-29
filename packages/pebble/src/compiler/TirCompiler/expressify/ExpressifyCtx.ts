@@ -22,6 +22,7 @@ import { getListTypeArg } from "../../tir/types/utils/getListTypeArg";
 import { toNamedDeconstructVarDecl } from "./toNamedDeconstructVarDecl";
 import { TirUnConstrDataResultT } from "../../tir/types/TirNativeType";
 import { TirListT } from "../../tir/types/TirNativeType/native/list";
+import { TypedProgram } from "../../tir/program/TypedProgram";
 
 /**
  * Static Single Assignment (SSA) variable name.
@@ -56,6 +57,7 @@ export class ExpressifyCtx
     constructor(
         readonly parent: ExpressifyCtx | undefined,
         public returnType: TirType,
+        readonly program: TypedProgram,
         hoisted?: Map<string, TirHoistedExpr | TirNativeFunc>,
         /** var name -> latest constant name */
         readonly variables: Map<string, LatestVarNameSSA> = new Map(),
@@ -71,7 +73,7 @@ export class ExpressifyCtx
 
     newChild(): ExpressifyCtx
     {
-        return new ExpressifyCtx( this, this.returnType );
+        return new ExpressifyCtx( this, this.returnType, this.program );
     }
 
     setNewVariableName(
