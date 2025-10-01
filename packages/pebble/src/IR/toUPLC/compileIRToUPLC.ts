@@ -61,9 +61,8 @@ export function compileIRToUPLC(
 
     // removing unused variables BEFORE going into the rest of the compilation
     // helps letted terms to find a better spot (and possibly be inlined instead of hoisted)
-    term = removeUnusedVarsAndReturnRoot( term );
-
-    debugAsserts && _debug_assertClosedIR( term );
+    // term = removeUnusedVarsAndReturnRoot( term );
+    // debugAsserts && _debug_assertClosedIR( term );
 
     // _makeAllNegativeNativesHoisted( term );
 

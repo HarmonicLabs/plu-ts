@@ -1,196 +1,146 @@
-import { IRApp, IRConst, IRFunc, IRHoisted, IRLetted, IRNative } from "../../../IRNodes";
-import { IRNativeTag } from "../../../IRNodes/IRNative/IRNativeTag";
+import { IRApp } from "../../../IRNodes/IRApp";
+import { IRFunc } from "../../../IRNodes/IRFunc";
+import { IRHoisted } from "../../../IRNodes/IRHoisted";
+import { IRLetted } from "../../../IRNodes/IRLetted";
 import { IRSelfCall } from "../../../IRNodes/IRSelfCall";
 import { IRVar } from "../../../IRNodes/IRVar";
 import { IRTerm } from "../../../IRTerm";
-import { _ir_apps } from "../../../tree_utils/_ir_apps";
-import { prettyIR, prettyIRJsonStr } from "../../../utils";
-import { _modifyChildFromTo } from "../../_internal/_modifyChildFromTo";
 import { getApplicationTerms } from "../../utils/getApplicationTerms";
-import { RemoveUnusedVarsCtx } from "./RemoveUnusedVarsCtx";
 
-// New implementation strategy:
-// 1. Bottom-up traverse IRFunc bodies, computing which parameters are used.
-//    De Bruijn convention assumed by tests:
-//      - A multi-arity IRFunc( n, body ) introduces n binders whose indices are 0..n-1 inside body
-//        (index i refers to the i-th parameter, consistent with tests: (\(a b). b) uses IRVar(1)).
-//      - Nested lambdas add their arity in front of existing indices (standard multi-binder extension).
-// 2. Remove unused parameters by shrinking arity and re-indexing variables in the body:
-//      - For each removed parameter at index p, every variable referring to a later parameter (> p) is decremented by 1.
-//      - Every variable whose index >= originalArity (i.e. refers to an outer binder) is decremented by removedCount.
-//      - Adjust applies recursively to nested functions: inside a nested function of arity a, only variables with index >= a
-//        refer to outer scopes and must be shifted by removedCount; local ( < a ) indices untouched here.
-// 3. After all functions processed, rebuild application chains so that arguments corresponding to removed parameters
-//    are eliminated. We rely on metadata __usedParams stored temporarily on IRFunc nodes during step (1/2).
-// 4. Return possibly new root (if application chain at root was rebuilt).
+// Removed inline metadata; use external WeakMap to preserve object shapes.
+const removedParams = new WeakMap<IRFunc, boolean[]>();
 
-interface FuncMeta {
-    __usedParams?: boolean[]; // original length = original arity; true if kept
-    __originalArity?: number; // keep original for reference (debug)
-}
-
-function markAndShrink(term: IRTerm): void {
-    if (term instanceof IRFunc) {
-        // Recurse first so inner functions already processed
-        markAndShrink(term.body);
-
-        const originalArity = term.arity;
-        if (originalArity === 0) return; // nothing to do
-
-        const used = new Array<boolean>(originalArity).fill(false);
-
-        // Count usages of current function parameters.
-        function countLocal(node: IRTerm, shadow: number) {
-            if (node instanceof IRVar || node instanceof IRSelfCall) {
-                const idx = (node as IRVar | IRSelfCall).dbn;
-                if (idx >= shadow) {
-                    const rel = idx - shadow; // relative to this function's parameters
-                    if (rel < originalArity) used[rel] = true;
-                }
-                return;
-            }
-            if (node instanceof IRFunc) {
-                // Enter nested function: its parameters shadow further lookups.
-                countLocal(node.body, shadow + node.arity);
-                return;
-            }
-            if (node instanceof IRApp) {
-                countLocal(node.fn, shadow);
-                countLocal(node.arg, shadow);
-                return;
-            }
-            // Generic descent for other nodes with children
-            if (typeof (node as any).children === "function") {
-                for (const c of (node as any).children()) countLocal(c, shadow);
-            }
-        }
-
-        countLocal(term.body, 0);
-
-        // Determine if any unused
-        if (used.every(u => u)) {
-            (term as IRFunc & FuncMeta).__usedParams = used;
-            (term as IRFunc & FuncMeta).__originalArity = originalArity;
-            return; // no change
-        }
-
-        const shiftMap: number[] = new Array(originalArity);
-        let removedBefore = 0;
-        let removedCount = 0;
-        for (let i = 0; i < originalArity; i++) {
-            if (used[i]) {
-                shiftMap[i] = i - removedBefore;
-            } else {
-                shiftMap[i] = -1; // removed
-                removedBefore++;
-                removedCount++;
-            }
-        }
-
-        // Adjust indices in body
-        function adjust(node: IRTerm, shadow: number): void {
-            if (node instanceof IRVar || node instanceof IRSelfCall) {
-                let idx = (node as IRVar | IRSelfCall).dbn;
-                if (idx >= shadow) {
-                    const rel = idx - shadow;
-                    if (rel < originalArity) {
-                        const mapped = shiftMap[rel];
-                        if (mapped === -1) {
-                            // Should never occur: variable referencing removed param but marked unused => unreachable variable
-                            // We simply map to an invalid state by throwing.
-                            throw new Error("Invariant broken: found use of supposedly unused parameter");
-                        }
-                        (node as IRVar | IRSelfCall).dbn = shadow + mapped;
-                    } else {
-                        // Outer variable; indices shrink by removedCount
-                        (node as IRVar | IRSelfCall).dbn = idx - removedCount;
-                    }
-                }
-                return;
-            }
-            if (node instanceof IRFunc) {
-                // Nested: its local parameters shadow; only outer refs (>= shadow + node.arity) need shift after we recurse.
-                adjust(node.body, shadow + node.arity);
-                return;
-            }
-            if (node instanceof IRApp) {
-                adjust(node.fn, shadow);
-                adjust(node.arg, shadow);
-                return;
-            }
-            if (typeof (node as any).children === "function") {
-                for (const c of (node as any).children()) adjust(c, shadow);
-            }
-        }
-
-        adjust(term.body, 0);
-
-        // Shrink arity
-        term.arity = originalArity - removedCount;
-        (term as IRFunc & FuncMeta).__usedParams = used; // keep original array for application reconstruction
-        (term as IRFunc & FuncMeta).__originalArity = originalArity;
-        return;
+export function removeUnusedVarsAndReturnRoot( term: IRTerm ): IRTerm {
+    const maxIterations = 3;
+    let nIterations = 0;
+    while(
+        nIterations++ < maxIterations &&
+        hasUnusedParam( term )
+    ) {
+        passRemove( term );
+        term = passRebuildApps( term );
+        // metadata entries will naturally be GC'ed after rebuild deletes them
     }
-
-    // Non-function terms: recurse
-    if (term instanceof IRApp) {
-        markAndShrink(term.fn);
-        markAndShrink(term.arg);
-        return;
-    }
-    if (term instanceof IRVar || term instanceof IRSelfCall) return;
-    if (typeof (term as any).children === "function") {
-        for (const c of (term as any).children()) markAndShrink(c);
-    }
-}
-
-// Rebuild application chains eliminating arguments bound to removed parameters.
-function rebuild(term: IRTerm): IRTerm {
-    if (term instanceof IRApp) {
-        // Collect spine
-        const args: IRTerm[] = [];
-        let head: IRTerm = term;
-        while (head instanceof IRApp) { args.push(head.arg); head = head.fn; }
-        args.reverse(); // now left-to-right
-
-        head = rebuild(head); // rebuild head (might transform inside)
-        for (let i = 0; i < args.length; i++) args[i] = rebuild(args[i]);
-
-        if (head instanceof IRFunc) {
-            const meta = head as IRFunc & FuncMeta;
-            const used = meta.__usedParams;
-            const originalArity = meta.__originalArity ?? head.arity;
-            if (used && used.length === originalArity && originalArity !== head.arity) {
-                // Filter args according to original used array (length = original arity)
-                const filtered: IRTerm[] = [];
-                for (let i = 0; i < used.length && i < args.length; i++) if (used[i]) filtered.push(args[i]);
-                // Rebuild chain according to new arity (head.arity == filtered.length)
-                let newTerm: IRTerm = head;
-                for (const a of filtered) newTerm = new IRApp(newTerm as any, a as any);
-                return newTerm;
-            }
-        }
-
-        // Default: rebuild chain with possibly transformed head/args as they were
-        let rebuilt: IRTerm = head;
-        for (const a of args) rebuilt = new IRApp(rebuilt as any, a as any);
-        return rebuilt;
-    }
-    if (term instanceof IRFunc) {
-        term.body = rebuild(term.body);
-        return term;
-    }
-    if (term instanceof IRVar || term instanceof IRSelfCall) return term;
-    if (typeof (term as any).children === "function") {
-        // Recurse generically but keep same node reference
-        const ch = (term as any).children();
-        for (const c of ch) rebuild(c); // assume children mutate in place if needed
-    }
+    term = passRebuildApps( term );
     return term;
 }
 
-export function removeUnusedVarsAndReturnRoot(term: IRTerm): IRTerm {
-    markAndShrink(term);
-    const newRoot = rebuild(term);
-    return newRoot;
+function hasUnusedParam( node: IRTerm ): boolean {
+    if( node instanceof IRFunc && node.arity > 0 ) {
+        const A = node.arity;
+        const counts = new Array<number>( A ).fill(0);
+        scanUsages( node.body, [A], counts );
+        if( counts.some( c => c === 0 ) ) return true;
+    }
+    if( node instanceof IRHoisted ) return false;
+    const ch = node.children?.() || [];
+    for( const c of ch ) if( hasUnusedParam( c ) ) return true;
+    return false;
+}
+
+function passRemove( node: IRTerm ): void {
+    if( node instanceof IRFunc ) { processFunc( node ); return; }
+    // if( node instanceof IRHoisted ) return;
+    const ch = node.children?.() || [];
+    for( const c of ch ) passRemove( c );
+}
+
+function processFunc( fn: IRFunc ): void {
+    const A = fn.arity;
+    if( A > 0 ) {
+        const counts = new Array<number>( A ).fill(0);
+        scanUsages( fn.body, [A], counts );
+        if( counts.some( c => c === 0 ) ) {
+            const removed: number[] = []; const flags: boolean[] = new Array(A).fill(false);
+            for( let i=0;i<A;i++ ) if( counts[i] === 0 ) { removed.push(i); flags[i] = true; }
+            reindexAfterRemoval( fn.body, removed, A, 0 );
+            fn.arity = A - removed.length;
+            removedParams.set( fn, flags );
+        }
+    }
+    visitNested( fn.body );
+}
+
+function visitNested( t: IRTerm ): void {
+    if( t instanceof IRFunc ) { processFunc( t ); return; }
+    if( t instanceof IRHoisted ) return;
+    const ch = t.children?.() || [];
+    for( const c of ch ) visitNested( c );
+}
+
+function scanUsages( t: IRTerm, stack: number[], counts: number[] ): void {
+    if( t instanceof IRVar || t instanceof IRSelfCall ) {
+        const k = (t as IRVar | IRSelfCall).dbn;
+        let cum = 0;
+        for( let level = stack.length - 1; level >= 0; level-- ) {
+            const ar = stack[level];
+            if( k < cum + ar ) {
+                if( level === 0 ) counts[ k - cum ]++;
+                return;
+            }
+            cum += ar;
+        }
+        return;
+    }
+    if( t instanceof IRFunc ) { stack.push( t.arity ); scanUsages( t.body, stack, counts ); stack.pop(); return; }
+    if( t instanceof IRHoisted ) return;
+    if( t instanceof IRApp ) { scanUsages( t.fn, stack, counts ); scanUsages( t.arg, stack, counts ); return; }
+    const ch = t.children?.();
+    if( ch ) for( const c of ch ) scanUsages( c, stack, counts );
+}
+
+function reindexAfterRemoval( t: IRTerm, removed: number[], originalArity: number, depthShift: number ): void {
+    if( removed.length === 0 ) return;
+    function adjust(k: number): number {
+        if( k < depthShift ) return k;
+        const rel = k - depthShift;
+        if( rel < originalArity ) {
+            let removedBefore = 0;
+            for( const r of removed ) { if( r === rel ) throw new Error("reference to removed parameter"); if( r < rel ) removedBefore++; }
+            return k - removedBefore;
+        }
+        return k - removed.length;
+    }
+    if( t instanceof IRVar ) { t.dbn = adjust(t.dbn); return; }
+    if( t instanceof IRSelfCall ) { t.dbn = adjust(t.dbn); return; }
+    if( t instanceof IRFunc ) { reindexAfterRemoval( t.body, removed, originalArity, depthShift + t.arity ); return; }
+    if( t instanceof IRHoisted ) return;
+    if( t instanceof IRApp ) {
+        reindexAfterRemoval( t.fn, removed, originalArity, depthShift ); 
+        reindexAfterRemoval( t.arg, removed, originalArity, depthShift );
+        return;
+    }
+    const ch = t.children?.();
+    if( ch ) for( const c of ch ) reindexAfterRemoval( c, removed, originalArity, depthShift );
+}
+
+function passRebuildApps( root: IRTerm ): IRTerm {
+    function rebuild(t: IRTerm): IRTerm {
+        if( t instanceof IRApp ) {
+            const args: IRTerm[] = []; let head: IRTerm = t;
+            while( head instanceof IRApp ) { args.push( head.arg ); head = head.fn; }
+            args.reverse();
+            head = rebuild( head );
+            for( let i=0;i<args.length;i++ ) args[i] = rebuild( args[i] );
+            if( head instanceof IRFunc ) {
+                const flags = removedParams.get( head );
+                if( flags ) {
+                    const kept: IRTerm[] = [];
+                    for( let i=0;i<flags.length && i<args.length;i++ ) if( !flags[i] ) kept.push( args[i] );
+                    let acc: IRTerm = head;
+                    for( const a of kept ) acc = new IRApp( acc as any, a as any );
+                    removedParams.delete( head );
+                    return acc;
+                }
+            }
+            let chain: IRTerm = head;
+            for( const a of args ) chain = new IRApp( chain as any, a as any );
+            return chain;
+        }
+        if( t instanceof IRFunc ) { t.body = rebuild( t.body ); return t; }
+        if( t instanceof IRVar || t instanceof IRSelfCall || t instanceof IRHoisted ) return t;
+        const ch = t.children?.(); if( ch ) for( const c of ch ) rebuild( c );
+        return t;
+    }
+    return rebuild( root );
 }

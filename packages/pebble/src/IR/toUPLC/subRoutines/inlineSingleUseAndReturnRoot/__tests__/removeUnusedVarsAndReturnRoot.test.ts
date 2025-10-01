@@ -18,7 +18,6 @@ describe("removeUnusedVarsAndReturnRoot keeps terms closed", () => {
         const f = new IRFunc( 2, new IRVar(1) );
         const term = new IRApp( new IRApp( f, closedId() ), closedId() );
         const optimized = removeUnusedVarsAndReturnRoot( term );
-        console.log( prettyIR( optimized ).text )
         expect( isClosedIRTerm( optimized ) ).toBe( true );
     });
 

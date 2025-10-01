@@ -53,7 +53,10 @@ export function rewriteNativesAppliedToConstantsAndReturnRoot( term: IRTerm ): I
 
         if(
             func.tag === IRNativeTag._dropList
-            && typeof fstArg.value === "bigint"
+            && (
+                typeof fstArg.value === "bigint"
+                || typeof fstArg.value === "number"
+            )
         )
         {
             const newTerm = restArgs.length >= 1 ? _ir_apps(

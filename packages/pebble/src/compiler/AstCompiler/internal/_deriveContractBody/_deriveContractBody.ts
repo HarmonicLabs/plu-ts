@@ -278,7 +278,7 @@ export function _deriveContractBody(
                 tx: txUniqueName,
                 purposeData: purposeUniqueName,
                 redeemerData: redeemerUniqueName,
-                polcredentialicy: credentialUniqueName,
+                policy: credentialUniqueName,
             }),
             "WithdrawRedeemer",
             contractRange,
