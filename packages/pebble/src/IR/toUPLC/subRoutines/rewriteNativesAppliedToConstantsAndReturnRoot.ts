@@ -2,6 +2,7 @@ import { IRApp, IRCase, IRConst, IRConstr, IRFunc, IRHoisted, IRLetted, IRNative
 import { IRNativeTag } from "../../IRNodes/IRNative/IRNativeTag";
 import { IRTerm } from "../../IRTerm";
 import { _ir_apps } from "../../tree_utils/_ir_apps";
+import { prettyIR } from "../../utils";
 import { _modifyChildFromTo } from "../_internal/_modifyChildFromTo";
 import { getApplicationTerms } from "../utils/getApplicationTerms";
 import { _compTimeDropN } from "./_comptimeDropN";
@@ -19,12 +20,6 @@ export function rewriteNativesAppliedToConstantsAndReturnRoot( term: IRTerm ): I
         const appTerms = getApplicationTerms( current );
 
         if( !appTerms ) {
-            stack.unshift( ...current.children() );
-            continue;
-        }
-        if(!(
-            appTerms.func instanceof IRNative
-        )) {
             stack.unshift( ...current.children() );
             continue;
         }
@@ -52,7 +47,7 @@ export function rewriteNativesAppliedToConstantsAndReturnRoot( term: IRTerm ): I
         }
 
         if(
-            func.tag === IRNativeTag._dropList
+            isDropList( func )
             && (
                 typeof fstArg.value === "bigint"
                 || typeof fstArg.value === "number"
@@ -74,9 +69,29 @@ export function rewriteNativesAppliedToConstantsAndReturnRoot( term: IRTerm ): I
             stack.unshift( newTerm );
             continue;
         }
+
+        console.log("applied to const int:", prettyIR( func ).text );
+
+        // const tsEnsureExhaustiveCheck: never = func;
+        stack.unshift( ...current.children() );
     }
 
     return term;
+}
+
+function isDropList( term: IRTerm ): boolean
+{
+    while(
+        term instanceof IRHoisted
+        || term instanceof IRLetted
+    ) {
+        if( term instanceof IRHoisted ) term = term.hoisted;
+        else if( term instanceof IRLetted ) term = term.value;
+    }
+    return (
+        term instanceof IRNative
+        && term.tag === IRNativeTag._dropList
+    )
 }
 
 function isId( term: IRTerm ): boolean
