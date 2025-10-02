@@ -22,6 +22,7 @@ import { rewriteNativesAppliedToConstantsAndReturnRoot } from "./subRoutines/rew
 import { removeUnusedVarsAndReturnRoot } from "./subRoutines/removeUnusedVarsAndReturnRoot/removeUnusedVarsAndReturnRoot";
 import { inlineSingleUseAndReturnRoot } from "./subRoutines/inlineSingleUseAndReturnRoot/inlineSingleUseAndReturnRoot";
 import { _debug_assertClosedIR } from "../utils";
+import { __VERY_UNSAFE_FORGET_IRHASH_ONLY_USE_AT_END_OF_UPLC_COMPILATION } from "../IRHash";
 
 export function compileIRToUPLC(
     term: IRTerm,
@@ -216,5 +217,6 @@ export function compileIRToUPLC(
 
     // console.log( "srcmap", srcmap );
 
+    __VERY_UNSAFE_FORGET_IRHASH_ONLY_USE_AT_END_OF_UPLC_COMPILATION();
     return uplc;
 }

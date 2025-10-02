@@ -8,7 +8,7 @@ import { Cloneable } from "@harmoniclabs/cbor/dist/utils/Cloneable";
 import { IRParentTerm, isIRParentTerm } from "../utils/isIRParentTerm";
 import { _modifyChildFromTo } from "../toUPLC/_internal/_modifyChildFromTo";
 import { BaseIRMetadata } from "./BaseIRMetadata";
-import { equalIrHash, hashIrData, IRHash, isIRHash } from "../IRHash";
+import { equalIrHash, hashIrData, IRHash, irHashToBytes, isIRHash } from "../IRHash";
 import { isObject } from "@harmoniclabs/obj-utils";
 import { shallowEqualIRTermHash } from "../utils/equalIRTerm";
 import { IRNodeKind } from "../IRNodeKind";
@@ -95,8 +95,8 @@ export class IRApp
             this._hash = hashIrData(
                 concatUint8Arr(
                     IRApp.tag,
-                    this._fn.hash,
-                    this._arg.hash
+                    irHashToBytes( this._fn.hash ),
+                    irHashToBytes( this._arg.hash )
                 )
             );
         }

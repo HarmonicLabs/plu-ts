@@ -2,7 +2,7 @@ import { BasePlutsError } from "../../utils/BasePlutsError";
 import { Cloneable } from "../../utils/Cloneable";
 import { ToJson } from "../../utils/ToJson";
 import { IHash, IIRParent } from "../interfaces";
-import { IRHash, isIRHash, hashIrData } from "../IRHash";
+import { IRHash, isIRHash, hashIrData, irHashToBytes } from "../IRHash";
 import { IRNodeKind } from "../IRNodeKind";
 import { IIRTerm, IRTerm } from "../IRTerm";
 import { concatUint8Arr } from "../utils/concatUint8Arr";
@@ -90,7 +90,7 @@ export class IRRecursive
                 concatUint8Arr(
                     IRRecursive.tag,
                     // positiveIntAsBytes( this.arity ),
-                    this._body.hash
+                    irHashToBytes( this._body.hash )
                 )
             );
         }

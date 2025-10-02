@@ -8,7 +8,7 @@ import { BaseIRMetadata } from "./BaseIRMetadata";
 import { mapArrayLike } from "./utils/mapArrayLike";
 import { makeArrayLikeProxy } from "./utils/makeArrayLikeProxy";
 import { MutArrayLike } from "../utils/MutArrayLike";
-import { equalIrHash, hashIrData, IRHash, isIRHash } from "../IRHash";
+import { equalIrHash, hashIrData, IRHash, irHashToBytes, isIRHash } from "../IRHash";
 import { _modifyChildFromTo } from "../toUPLC/_internal/_modifyChildFromTo";
 import { shallowEqualIRTermHash } from "../utils/equalIRTerm";
 import { IRNodeKind } from "../IRNodeKind";
@@ -84,8 +84,8 @@ export class IRCase
             this._hash = hashIrData(
                 concatUint8Arr(
                     IRCase.tag,
-                    this._constrTerm.hash,
-                    ...mapArrayLike( this.continuations, f => f.hash )
+                    irHashToBytes( this._constrTerm.hash ),
+                    ...mapArrayLike( this.continuations, f => irHashToBytes( f.hash ) )
                 )
             );
         }

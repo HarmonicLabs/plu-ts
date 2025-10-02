@@ -16,7 +16,7 @@ import { IRParentTerm, isIRParentTerm } from "../utils/isIRParentTerm";
 import { _modifyChildFromTo } from "../toUPLC/_internal/_modifyChildFromTo";
 import { IRConstr } from "./IRConstr";
 import { IRCase } from "./IRCase";
-import { equalIrHash, hashIrData, IRHash, irHashToHex, isIRHash } from "../IRHash";
+import { equalIrHash, hashIrData, IRHash, irHashToBytes, irHashToHex, isIRHash } from "../IRHash";
 import { shallowEqualIRTermHash } from "../utils/equalIRTerm";
 import { IRNodeKind } from "../IRNodeKind";
 import { IRRecursive } from "./IRRecursive";
@@ -100,7 +100,7 @@ export class IRHoisted
             this._hash = hashIrData(
                 concatUint8Arr(
                     IRHoisted.tag,
-                    this.hoisted.hash
+                    irHashToBytes( this.hoisted.hash )
                 )
             );
         }

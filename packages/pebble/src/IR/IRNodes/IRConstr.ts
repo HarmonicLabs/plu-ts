@@ -10,7 +10,7 @@ import { positiveIntAsBytes } from "../utils/positiveIntAsBytes";
 import { mapArrayLike } from "./utils/mapArrayLike";
 import { makeArrayLikeProxy } from "./utils/makeArrayLikeProxy";
 import { MutArrayLike } from "../utils/MutArrayLike";
-import { equalIrHash, hashIrData, IRHash, isIRHash } from "../IRHash";
+import { equalIrHash, hashIrData, IRHash, irHashToBytes, isIRHash } from "../IRHash";
 import { _modifyChildFromTo } from "../toUPLC/_internal/_modifyChildFromTo";
 import { shallowEqualIRTermHash } from "../utils/equalIRTerm";
 import { IRNodeKind } from "../IRNodeKind";
@@ -97,7 +97,7 @@ export class IRConstr
                 concatUint8Arr(
                     IRConstr.tag,
                     positiveIntAsBytes( this.index ),
-                    ...mapArrayLike( this.fields, f => f.hash )
+                    ...mapArrayLike( this.fields, f => irHashToBytes( f.hash) )
                 )
             );
         }

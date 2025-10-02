@@ -9,7 +9,7 @@ import { isIRTerm } from "../utils/isIRTerm";
 import { IRParentTerm, isIRParentTerm } from "../utils/isIRParentTerm";
 import { _modifyChildFromTo } from "../toUPLC/_internal/_modifyChildFromTo";
 import { BaseIRMetadata } from "./BaseIRMetadata";
-import { equalIrHash, hashIrData, IRHash, isIRHash } from "../IRHash";
+import { equalIrHash, hashIrData, IRHash, irHashToBytes, isIRHash } from "../IRHash";
 import { shallowEqualIRTermHash } from "../utils/equalIRTerm";
 import { IRNodeKind } from "../IRNodeKind";
 
@@ -67,7 +67,7 @@ export class IRForced
             this._hash = hashIrData(
                 concatUint8Arr(
                     IRForced.tag,
-                    this._forced.hash
+                    irHashToBytes( this._forced.hash )
                 )
             );
         }

@@ -11,7 +11,7 @@ import { defineReadOnlyProperty } from "@harmoniclabs/obj-utils";
 import { IRParentTerm, isIRParentTerm } from "../utils/isIRParentTerm";
 import { _modifyChildFromTo } from "../toUPLC/_internal/_modifyChildFromTo";
 import { BaseIRMetadata } from "./BaseIRMetadata";
-import { equalIrHash, hashIrData, IRHash, isIRHash } from "../IRHash";
+import { equalIrHash, hashIrData, IRHash, irHashToBytes, isIRHash } from "../IRHash";
 import { shallowEqualIRTermHash } from "../utils/equalIRTerm";
 import { IRNodeKind } from "../IRNodeKind";
 
@@ -100,7 +100,7 @@ export class IRFunc
                 concatUint8Arr(
                     IRFunc.tag,
                     positiveIntAsBytes( this.arity ),
-                    this._body.hash
+                    irHashToBytes( this._body.hash )
                 )
             );
         }

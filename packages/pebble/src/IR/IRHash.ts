@@ -1,5 +1,5 @@
 import { blake2b_128 } from "@harmoniclabs/crypto";
-import { toBase64, toHex } from "@harmoniclabs/uint8array-utils";
+import { fromHex, toBase64, toHex } from "@harmoniclabs/uint8array-utils";
 
 export type IRHash = number;
 
@@ -8,8 +8,7 @@ export type IRHash = number;
 const MAX_SAFE_INTEGER = Number( globalThis.Number?.MAX_SAFE_INTEGER ?? ((2**53) - 1) );
 const MIN_SAFE_INTEGER = Number( globalThis.Number?.MIN_SAFE_INTEGER ?? -MAX_SAFE_INTEGER );
 
-const _preimage_to_hash: Record<string, IRHash | undefined> = {};
-
+let _preimage_to_hash: Record<string, IRHash | undefined> = {};
 let _next_hash = MIN_SAFE_INTEGER;
 
 function _getNextHash(): IRHash
@@ -18,6 +17,14 @@ function _getNextHash(): IRHash
     throw new Error("ran out of IR hashes");
     return _next_hash++;
 }
+
+export function __VERY_UNSAFE_FORGET_IRHASH_ONLY_USE_AT_END_OF_UPLC_COMPILATION(): void
+{
+    _preimage_to_hash = {};
+    _next_hash = MIN_SAFE_INTEGER;
+}
+
+// HASH UTILS
 
 function _positiveHash( hash: number ): bigint
 {
@@ -32,7 +39,6 @@ function _fromPositiveHash( posHash: bigint ): number
 }
 
 // END HASH GENERATOR
-
 
 export function hashIrData( data: Uint8Array ): IRHash
 {
@@ -84,4 +90,9 @@ export function irHashToHex( hash: IRHash ): string
 export function irHashFromHex( hex: string ): IRHash
 {
     return _fromPositiveHash( BigInt( "0x" + hex ) );
+}
+
+export function irHashToBytes( hash: IRHash ): Uint8Array
+{
+    return fromHex( irHashToHex( hash ) );
 }

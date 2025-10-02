@@ -21,7 +21,7 @@ import { BaseIRMetadata } from "./BaseIRMetadata";
 import { _getMinUnboundDbn } from "../toUPLC/subRoutines/handleLetted/groupByScope";
 import { IRConstr } from "./IRConstr";
 import { IRCase } from "./IRCase";
-import { equalIrHash, hashIrData, IRHash, irHashToHex, isIRHash } from "../IRHash";
+import { equalIrHash, hashIrData, IRHash, irHashToBytes, irHashToHex, isIRHash } from "../IRHash";
 import { shallowEqualIRTermHash } from "../utils/equalIRTerm";
 import { IRNodeKind } from "../IRNodeKind";
 import { IRRecursive } from "./IRRecursive";
@@ -103,7 +103,7 @@ export class IRLetted
                 this._hash = hashIrData(
                     concatUint8Arr(
                         IRLetted.tag,
-                        this._value.hash
+                        irHashToBytes( this._value.hash )
                     )
                 );
             }
@@ -113,7 +113,7 @@ export class IRLetted
                     concatUint8Arr(
                         IRLetted.tag,
                         positiveIntAsBytes( normalized[0] ),
-                        normalized[1].hash
+                        irHashToBytes( normalized[1].hash )
                     )
                 );
                 /*

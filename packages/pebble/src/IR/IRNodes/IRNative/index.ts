@@ -39,7 +39,7 @@ import { TirVoidT } from "../../../compiler/tir/types/TirNativeType/native/void"
  * 
  * but one we get one for a specific tag is not worth it re calculate it
  */
-const nativeHashesCache: { [n: number/*IRNativeTag*/]: IRHash } = {} as any;
+const nativeHashesPreimageCache: { [n: number/*IRNativeTag*/]: Uint8Array } = {} as any;
 
 export interface IRNativeMetadata extends BaseIRMetadata {}
 
@@ -66,20 +66,18 @@ export class IRNative
 
     get hash(): IRHash
     {
-        if(nativeHashesCache[this.tag] === undefined)
+        if(nativeHashesPreimageCache[this.tag] === undefined)
         {
-            nativeHashesCache[this.tag] = hashIrData( 
-                concatUint8Arr( 
-                    IRNative.tag, 
-                    positiveBigIntAsBytes(
-                        UPLCFlatUtils.zigzagBigint(
-                            BigInt( this.tag )
-                        )
+            nativeHashesPreimageCache[this.tag] = concatUint8Arr( 
+                IRNative.tag, 
+                positiveBigIntAsBytes(
+                    UPLCFlatUtils.zigzagBigint(
+                        BigInt( this.tag )
                     )
                 )
             );
         }
-        return nativeHashesCache[this.tag];
+        return hashIrData( nativeHashesPreimageCache[this.tag] );
     }
     markHashAsInvalid(): void 
     { throw new Error("IRNative should never be invalid; 'markHashAsInvalid' called"); }
