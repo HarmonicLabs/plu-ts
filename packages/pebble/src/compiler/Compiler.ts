@@ -1,7 +1,7 @@
 import { compileUPLC, prettyUPLC, UPLCProgram } from "@harmoniclabs/uplc";
 import { DiagnosticEmitter } from "../diagnostics/DiagnosticEmitter"
 import { DiagnosticMessage } from "../diagnostics/DiagnosticMessage";
-import { compileIRToUPLC } from "../IR";
+import { compileIRToUPLC, prettyIRJsonStr } from "../IR";
 import { CompilerOptions, defaultOptions } from "../IR/toUPLC/CompilerOptions";
 import { AstCompiler } from "./AstCompiler/AstCompiler";
 import { CompilerIoApi, createMemoryCompilerIoApi } from "./io/CompilerIoApi";
@@ -38,11 +38,11 @@ export class Compiler
             }
             throw new Error("compilation failed with " + nDiags + " diagnostic messages; first message: " + fstErrorMsg );
         }
-        
         const ir = compileTypedProgram(
             cfg,
             program
         );
+        console.log( "compiled IR:", prettyIRJsonStr( ir ) );
         const uplc = compileIRToUPLC( ir );
         const serialized = compileUPLC(
             new UPLCProgram(

@@ -1,13 +1,15 @@
 import { IRHoisted, IRFunc, IRNative, IRVar } from "../../IRNodes";
 import { _ir_apps } from "../../tree_utils/_ir_apps";
 
+const tailList = new IRHoisted( IRNative.tailList );
+tailList.hash;
 
 export const hoisted_drop2 = new IRHoisted(
     new IRFunc( 1, // lst
         _ir_apps(
-            IRNative.tailList,
+            tailList.clone(),
             _ir_apps(
-                IRNative.tailList,
+                tailList.clone(),
                 new IRVar( 0 ) // lst
             )
         )
@@ -18,11 +20,11 @@ hoisted_drop2.hash;
 export const hoisted_drop3 = new IRHoisted(
     new IRFunc( 1, // lst
         _ir_apps(
-            IRNative.tailList,
+            tailList.clone(),
             _ir_apps(
-                IRNative.tailList,
+                tailList.clone(),
                 _ir_apps(
-                    IRNative.tailList,
+                    tailList.clone(),
                     new IRVar( 0 ) // lst
                 )
             )
@@ -34,13 +36,13 @@ hoisted_drop3.hash;
 export const hoisted_drop4 = new IRHoisted(
     new IRFunc( 1, // lst
         _ir_apps(
-            IRNative.tailList,
+            tailList.clone(),
             _ir_apps(
-                IRNative.tailList,
+                tailList.clone(),
                 _ir_apps(
-                    IRNative.tailList,
+                    tailList.clone(),
                     _ir_apps(
-                        IRNative.tailList,
+                        tailList.clone(),
                         new IRVar( 0 ) // lst
                     )
                 )
@@ -96,7 +98,7 @@ export function _compTimeDropN( bigN: bigint ): IRHoisted | IRNative
     if( n === 0 ) return new IRHoisted(
         new IRFunc( 1, new IRVar( 0 ) )
     );
-    if( n === 1 ) return IRNative.tailList;
+    if( n === 1 ) return tailList.clone();
     if( n === 2 ) return hoisted_drop2;
     if( n === 3 ) return hoisted_drop3;
     if( n === 4 ) return hoisted_drop4;
@@ -130,7 +132,7 @@ export function _compTimeDropN( bigN: bigint ): IRHoisted | IRNative
             case 4: body = _ir_apps( hoisted_drop4.clone(), body ); break;
             case 3: body = _ir_apps( hoisted_drop3.clone(), body ); break;
             case 2: body = _ir_apps( hoisted_drop2.clone(), body ); break;
-            case 1: body = _ir_apps( IRNative.tailList, body ); break;
+            case 1: body = _ir_apps( tailList.clone(), body ); break;
         }
     }
 

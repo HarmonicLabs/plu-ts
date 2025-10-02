@@ -22,7 +22,7 @@ export class TirLettedExpr
 
     toString(): string
     {
-        return this.expr.toString();
+        return `/*letted*/(${this.expr.toString()})`;
     }
 
     deps(): string[] {

@@ -44,7 +44,9 @@ import { TirArrayLikeDeconstr } from "../../tir/statements/TirVarDecl/TirArrayLi
 import { TirNamedDeconstructVarDecl } from "../../tir/statements/TirVarDecl/TirNamedDeconstructVarDecl";
 import { TirSimpleVarDecl } from "../../tir/statements/TirVarDecl/TirSimpleVarDecl";
 import { TirAliasType } from "../../tir/types/TirAliasType";
+import { TirListT } from "../../tir/types/TirNativeType";
 import { TirDataStructType, TirSoPStructType } from "../../tir/types/TirStructType";
+import { getListTypeArg } from "../../tir/types/utils/getListTypeArg";
 import { getUnaliased } from "../../tir/types/utils/getUnaliased";
 import { expressify, expressifyFuncBody, LoopReplacements } from "./expressify";
 import { ExpressifyCtx, isExpressifyFuncParam } from "./ExpressifyCtx";
@@ -473,7 +475,24 @@ function expressifyMethodCall(
         );
     }
 
-    throw new Error(`not implemented::expressifyMethodCall for type '${objectType.toString()}'`);
+    if( objectType instanceof TirListT ) {
+        const elemsType = getListTypeArg( objectType )!;
+        if( !elemsType ) throw new Error("Invalid list type");
+
+        if( methodName === "length" ) {
+            if( methodCall.args.length !== 0 ) throw new Error(
+                `Method 'length' of type 'list' takes 0 arguments, ${methodCall.args.length} provided`
+            );
+            return new TirCallExpr(
+                TirNativeFunc._length( elemsType ),
+                [ objectExpr ],
+                methodCall.type,
+                SourceRange.join( methodIdentifierProp.range, methodCall.range.atEnd() )
+            );
+        }
+    }
+
+    throw new Error(`not implemented::expressifyMethodCall for type '${objectType.toString()}' (method name: '${methodName}')`);
 
     // const tsEnsureExhautstiveCheck: never = objectType;
     throw new Error(`Cannot call method '${methodName}' on non-struct type '${objectType.toString()}'`);

@@ -1,61 +1,59 @@
 import { blake2b_128 } from "@harmoniclabs/crypto";
-import { toHex } from "@harmoniclabs/uint8array-utils";
+import { toBase64, toHex } from "@harmoniclabs/uint8array-utils";
 
-export type IRHash = Readonly<Uint32Array> & { length: 4 };
+export type IRHash = number;
 
-const _hash_cache: Map<string, WeakRef<IRHash>> = new Map();
-// double up to 256; then scale linearly
-const _MAX_DOUBLING_CACHE_SIZE = 256;
-const _MIN_CACHE_SIZE = 32;
-let _cleanSize: number = _MIN_CACHE_SIZE;
+// HASH GENERATOR
 
-function _cleanCache(): void
+const MAX_SAFE_INTEGER = Number( globalThis.Number?.MAX_SAFE_INTEGER ?? ((2**53) - 1) );
+const MIN_SAFE_INTEGER = Number( globalThis.Number?.MIN_SAFE_INTEGER ?? -MAX_SAFE_INTEGER );
+
+const _preimage_to_hash: Record<string, IRHash | undefined> = {};
+
+let _next_hash = MIN_SAFE_INTEGER;
+
+function _getNextHash(): IRHash
 {
-    // scale down
-    if( _hash_cache.size < _cleanSize ) {
-        if( _cleanSize <= _MIN_CACHE_SIZE ) return; // don't clean unitl minimum size
-
-        const halfSize = _cleanSize >= (_MAX_DOUBLING_CACHE_SIZE * 2) ? _cleanSize - _MAX_DOUBLING_CACHE_SIZE : _cleanSize >>> 1;
-        if( _hash_cache.size < halfSize ) _cleanSize = halfSize
-    }
-    
-    // cleaning
-    for( const [ key, ref ] of _hash_cache.entries() )
-    {
-        if( ref.deref() === undefined ) _hash_cache.delete( key );
-    }
-
-    // scale up
-    if( _hash_cache.size >= _cleanSize )
-    {
-        _cleanSize = _cleanSize >= _MAX_DOUBLING_CACHE_SIZE ?
-            _cleanSize + _MAX_DOUBLING_CACHE_SIZE :
-            _cleanSize * 2;
-    }
-
+    if( _next_hash >= MAX_SAFE_INTEGER )
+    throw new Error("ran out of IR hashes");
+    return _next_hash++;
 }
+
+function _positiveHash( hash: number ): bigint
+{
+    return BigInt( hash ) + BigInt( MAX_SAFE_INTEGER ) + BigInt( 1 );
+}
+
+function _fromPositiveHash( posHash: bigint ): number
+{
+    const res = Number( posHash - BigInt( MAX_SAFE_INTEGER ) - BigInt( 1 ) );
+    if( !isIRHash( res ) ) throw new Error("internal error: invalid hash generated");
+    return res;
+}
+
+// END HASH GENERATOR
+
 
 export function hashIrData( data: Uint8Array ): IRHash
 {
-    const hash8 = blake2b_128( data );
-    const key = toHex( hash8 );
-    const cached = _hash_cache.get( key )?.deref();
-    if( isIRHash( cached ) ) return cached;
+    const preimage = toBase64( data );
+    const exsisting = _preimage_to_hash[ preimage ];
+    if( typeof exsisting === "number" ) return exsisting;
 
-    const result = new Uint32Array( hash8.buffer ) as IRHash;
-    _hash_cache.set( key, new WeakRef( result ) );
-    _cleanCache();
-    return result;
+    const nextHash = _getNextHash();
+    _preimage_to_hash[ preimage ] = nextHash;
+    return nextHash;
 }
 
 export function isIRHash( hash: any ): hash is IRHash
 {
     return (
-        // most of the time we are checking an undefined value
-        // we just shortcut here
-        hash !== undefined &&
-        hash instanceof Uint32Array &&
-        hash.length === 4
+        typeof hash === "number"
+        && hash === hash // not NaN
+        && hash <= MAX_SAFE_INTEGER
+        && hash >= MIN_SAFE_INTEGER
+        && BigInt( hash ) <= hash
+        && BigInt( hash ) >= hash
     );
 }
 
@@ -80,23 +78,10 @@ export function equalIrHash( a: IRHash, b: IRHash ): boolean
 
 export function irHashToHex( hash: IRHash ): string
 {
-    return toHex(
-        new Uint8Array(
-            hash.buffer
-        )
-    );
+    return _positiveHash( hash ).toString( 16 );
 }
 
 export function irHashFromHex( hex: string ): IRHash
 {
-    if( hex.length !== 32 && !/^[0-9a-fA-F]$/.test( hex ) )
-    {
-        throw new Error("invalid hex string for IRHash");
-    }
-    return new Uint32Array([
-        parseInt( hex.slice( 0, 8 ), 16 ),
-        parseInt( hex.slice( 8, 16 ), 16 ),
-        parseInt( hex.slice( 16, 24 ), 16 ),
-        parseInt( hex.slice( 24, 32 ), 16 )
-    ]) as any;
+    return _fromPositiveHash( BigInt( "0x" + hex ) );
 }

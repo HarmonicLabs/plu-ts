@@ -124,24 +124,12 @@ export class IRVar
     }
 }
 
-const _bdnVarHashCache: Map<number, WeakRef<IRHash>> = new Map();
-
 function getVarHashAtDbn( dbn: number )
 {
-    const cached = _bdnVarHashCache.get( dbn )?.deref();
-    if( isIRHash( cached ) ) return cached;
-
-    const hash = hashIrData(
+    return hashIrData(
         concatUint8Arr(
             IRVar.tag,
             positiveIntAsBytes( dbn )
         )
     );
-
-    _bdnVarHashCache.set(
-            dbn,
-            new WeakRef<IRHash>( hash )
-        );
-
-    return hash;
 }

@@ -113,7 +113,7 @@ export function compileIRToUPLC(
         term instanceof IRConst // while we are at it
     ) return _irToUplc( term ).term;
 
-    if( options.delayHoists ) replaceForcedNativesWithHoisted( term );
+    replaceForcedNativesWithHoisted( term );
 
     debugAsserts && _debug_assertClosedIR( term );
 
@@ -125,7 +125,6 @@ export function compileIRToUPLC(
     // handle letted before hoisted because the tree is smaller
     // and we also have less letted dependecies to handle
     term = handleLettedAndReturnRoot( term );
-    
     term = handleHoistedAndReturnRoot( term );
 
     debugAsserts && _debug_assertClosedIR( term );
@@ -133,10 +132,10 @@ export function compileIRToUPLC(
     // replaced hoisted terms might include new letted terms
     while(
         includesNode(
-        term,
-        node => 
-            node instanceof IRLetted || 
-            node instanceof IRHoisted
+            term,
+            node => 
+                node instanceof IRLetted
+                || node instanceof IRHoisted
         )
     )
     {
@@ -179,7 +178,8 @@ export function compileIRToUPLC(
     // “see” those future states.
     //
     // ALWAYS AT LEAST 1 ITERATION
-    const maxInlineIterations = Math.max( 3, 1 );
+    // const maxInlineIterations = Math.max( 3, 1 );
+    const maxInlineIterations = 0;
     for(
         let somethingWasInlined = true,
             inlineIterations = 0;

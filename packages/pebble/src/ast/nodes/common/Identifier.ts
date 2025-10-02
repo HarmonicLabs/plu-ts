@@ -9,6 +9,11 @@ export class Identifier
         readonly range: SourceRange,
     ) {}
 
+    toString(): string
+    {
+        return this.text;
+    }
+
     clone(): Identifier
     {
         return new Identifier( this.text, this.range.clone() );

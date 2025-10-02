@@ -70,8 +70,6 @@ export function rewriteNativesAppliedToConstantsAndReturnRoot( term: IRTerm ): I
             continue;
         }
 
-        console.log("applied to const int:", prettyIR( func ).text );
-
         // const tsEnsureExhaustiveCheck: never = func;
         stack.unshift( ...current.children() );
     }

@@ -22,6 +22,7 @@ export function compileTypedProgram(
     );
     //*/
     const mainFuncExpr = tirProgram.getMainOrThrow()
+    // console.log("main func expr:", mainFuncExpr.toString() );
     void expressify(
         mainFuncExpr,
         undefined, // loopReplacements

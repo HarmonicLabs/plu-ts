@@ -226,16 +226,20 @@ export class ExpressifyCtx
         const lettedRawFieldsName = getUniqueInternalName(`${varName}_fields`);
         const lettedFields = this.introduceLettedConstant(
             lettedRawFieldsName,
-            new TirCallExpr(
-                TirNativeFunc.unConstrDataResultFields,
-                [new TirCallExpr(
-                    TirNativeFunc.unConstrData,
-                    [ structExpr ],
-                    new TirUnConstrDataResultT(),
-                    structExpr.range
-                )],
-                new TirListT( data_t ),
-                structExpr.range,
+            new TirLettedExpr(
+                lettedRawFieldsName,
+                new TirCallExpr(
+                    TirNativeFunc.unConstrDataResultFields,
+                    [new TirCallExpr(
+                        TirNativeFunc.unConstrData,
+                        [ structExpr ],
+                        new TirUnConstrDataResultT(),
+                        structExpr.range
+                    )],
+                    new TirListT( data_t ),
+                    structExpr.range,
+                ),
+                structExpr.range
             ),
             structExpr.range
         );
@@ -350,10 +354,14 @@ export class ExpressifyCtx
         const lettedRawFieldsName = getUniqueInternalName(`${varName}_fields`);
         const lettedFields = this.introduceLettedConstant(
             lettedRawFieldsName,
-            new TirCallExpr(
-                TirNativeFunc.unConstrDataResultFields,
-                [ lettedUnconstr ],
-                new TirListT( data_t ),
+            new TirLettedExpr(
+                lettedRawFieldsName,
+                new TirCallExpr(
+                    TirNativeFunc.unConstrDataResultFields,
+                    [ lettedUnconstr ],
+                    new TirListT( data_t ),
+                    stmt.range
+                ),
                 stmt.range
             ),
             stmt.range

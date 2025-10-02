@@ -20,6 +20,10 @@ export class TirPropAccessExpr
 
     toString(): string
     {
+        // const propStr = this.prop.toString();
+        // if( propStr === "[object Object]" ) {
+        //     console.warn("weird prop access:", this.prop);
+        // }
         return `${this.object.toString()}.${this.prop.toString()}`;
     }
 

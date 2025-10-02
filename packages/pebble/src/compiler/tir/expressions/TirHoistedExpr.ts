@@ -25,7 +25,7 @@ export class TirHoistedExpr
 
     toString(): string
     {
-        return this.expr.toString();
+        return `/*hoisted*/(${this.expr.toString()})`;
     }
 
     clone(): TirHoistedExpr
