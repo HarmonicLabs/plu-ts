@@ -26,6 +26,8 @@ import { shallowEqualIRTermHash } from "../utils/equalIRTerm";
 import { IRNodeKind } from "../IRNodeKind";
 import { IRRecursive } from "./IRRecursive";
 import { IRSelfCall } from "./IRSelfCall";
+import { prettyIR, prettyIRInline } from "../utils/showIR";
+import { toHex } from "@harmoniclabs/uint8array-utils";
 
 
 export type LettedSetEntry = {
@@ -46,7 +48,7 @@ export function expandedJsonLettedSetEntry( entry: LettedSetEntry )
 {
     return {
         letted: irHashToHex( entry.letted.hash ),
-        // letted_value: prettyIR( entry.letted.value ).text.split("\n"),
+        letted_value: prettyIR( entry.letted.value ).text.split("\n"),
         nReferences: entry.nReferences
     }
 }
@@ -82,6 +84,7 @@ export class IRLetted
     {
         if(!isIRHash( this._hash ))
         {
+            let preimage: Uint8Array;
             /*
             NOTE TO SELF:
 
@@ -101,7 +104,7 @@ export class IRLetted
                 // just use the value regardless of the
                 // `IRLetted` dbn instantiation
                 this._hash = hashIrData(
-                    concatUint8Arr(
+                    preimage = concatUint8Arr(
                         IRLetted.tag,
                         irHashToBytes( this._value.hash )
                     )
@@ -110,7 +113,7 @@ export class IRLetted
             else
             {
                 this._hash = hashIrData(
-                    concatUint8Arr(
+                    preimage = concatUint8Arr(
                         IRLetted.tag,
                         positiveIntAsBytes( normalized[0] ),
                         irHashToBytes( normalized[1].hash )
@@ -133,6 +136,11 @@ export class IRLetted
                 }
                 //*/
             }
+
+            if( irHashToHex( this._hash ) === "00000000000000ea" ) {
+                console.log("!!! hash of: " + prettyIRInline( this.value ));
+                console.log( toHex( preimage ), irHashToHex( this.hash ) );
+            }
         }
 
         return this._hash;
@@ -149,6 +157,11 @@ export class IRLetted
     get value(): IRTerm { return this._value; }
     set value( newVal: IRTerm )
     {
+        while(
+            newVal instanceof IRLetted
+            || newVal instanceof IRHoisted
+        ) newVal = newVal instanceof IRLetted ? newVal.value : newVal.hoisted;
+
         if( !isIRTerm( newVal ) )
         throw new BasePlutsError("letted term was not IRTerm");
     
@@ -235,6 +248,8 @@ export class IRLetted
         _unsafeHash: IRHash | undefined = undefined
     )
     {
+        _unsafeHash = undefined; // disable unsafe hash for now (debugging)
+
         DeBruijn = typeof DeBruijn === "bigint" ? Number( DeBruijn ) : DeBruijn; 
         if(!(
             Number.isSafeInteger( DeBruijn ) && DeBruijn >= 0 
@@ -243,12 +258,10 @@ export class IRLetted
         );
 
         while(
-            toLet instanceof IRLetted ||
-            toLet instanceof IRHoisted
-        )
-        {
-            toLet = toLet instanceof IRLetted ? toLet.value : toLet.hoisted;
-        }
+            toLet instanceof IRLetted
+            || toLet instanceof IRHoisted
+        ) toLet = toLet instanceof IRLetted ? toLet.value : toLet.hoisted;
+
         if( !isIRTerm( toLet ) )
         throw new BasePlutsError(
             "letted value was not an IRTerm"
@@ -329,17 +342,10 @@ export function getSortedLettedSet( lettedTerms: LettedSetEntry[] ): LettedSetEn
             const thisHash = thisLettedEntry.letted.hash;
 
             const idxInSet = hashesSet.findIndex( hash => equalIrHash( hash, thisHash ) )
-            // if( !hashesSet.includes( hash ) )
-            // "includes" uses standard equality (===)
             if( idxInSet < 0 ) // not present
             {
                 // add dependencies first
                 // dependencies don't have references to the current letted
-                // (of course, wouldn't be much of a dependecy otherwhise)
-                //
-                // don't add dependecies of dependecies since `dependecies` proerty
-                // already calls `getSortedLettedSet( getLettedTerms( _value ) )`
-                // so repeating it here would count deps twice (exponentially for deps of deps)
                 addToSet( getLettedTerms( thisLettedEntry.letted.value ) );
 
                 hashesSet.push( thisHash );
@@ -404,65 +410,20 @@ export function getLettedTerms( irTerm: IRTerm, options?: Partial<GetLettedTerms
     {
         const t = stack.pop() as IRTerm;
 
+        if( t instanceof IRHoisted )
+        {
+            if( includeHoisted ) stack.push( t.hoisted );
+            continue;
+        }
+
         if( t instanceof IRLetted )
         {
             lettedTerms.push({ letted: t, nReferences: 1 });
-            if( all )
-            {
-                stack.push( t.value );
-            }
+            if( all ) stack.push( t.value );
             continue;
         }
 
-        if( t instanceof IRApp )
-        {
-            stack.push( t.fn, t.arg );
-            continue;
-        }
-
-        if( t instanceof IRConstr )
-        {
-            stack.push( ...Array.from( t.fields ) );
-            continue;
-        }
-        if( t instanceof IRCase )
-        {
-            stack.push( t.constrTerm, ...Array.from( t.continuations ) );
-            continue;
-        }
-
-        if( t instanceof IRFunc )
-        {
-            stack.push( t.body );
-            continue;
-        }
-
-        if( t instanceof IRRecursive )
-        {
-            stack.push( t.body );
-            continue;
-        }
-
-        if( t instanceof IRForced )
-        {
-            stack.push( t.forced );
-            continue;
-        }
-
-        if( t instanceof IRDelayed )
-        {
-            stack.push( t.delayed );
-            continue;
-        }
-
-        if( includeHoisted )
-        {
-            if( t instanceof IRHoisted )
-            {
-                stack.push( t.hoisted );
-                continue;
-            }
-        }
+        stack.push( ...t.children() );
     }
 
     return lettedTerms;

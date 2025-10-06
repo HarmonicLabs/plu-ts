@@ -26,29 +26,14 @@ export class IRRecursive
         body: IRTerm,
         func_name?: string | undefined,
         _unsafeHash?: IRHash
-    )
-    {
+    ) {
         if( !isIRTerm( body ) )
         throw new Error("IRRecursive body argument was not an IRTerm");
 
-        Object.defineProperties(
-            this, {
-                arity: {
-                    value: 1,
-                    writable: false,
-                    enumerable: true,
-                    configurable: false
-                },
-                meta: {
-                    value: {
-                        name: typeof func_name === "string" ? func_name : (void 0)
-                    },
-                    writable: true,
-                    enumerable: true,
-                    configurable: false
-                }
-            }
-        );
+        this.arity = 1;
+        this.meta = {
+            name: typeof func_name === "string" ? func_name : (void 0)
+        };
 
         this._body = body;
         this._body.parent = this;

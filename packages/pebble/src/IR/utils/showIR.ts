@@ -77,17 +77,12 @@ export function showIRText( _ir: IRTerm ): string
     return _loop( _ir, 0 );
 }
 
-export function showIR( _ir: IRTerm )
-: { 
-    text: string, 
-    letted: { [hash: string]: string }, 
-    hoisted: { [hash: string]: string } 
-}
+export function showIR( _ir: IRTerm ): PrettiedIR
 {
     const hoistedHashes: IRHash[] = [];
     const hoisted: { [hash: string]: string } = {};
 
-    function addHoisted( h: IRHoisted )
+    function addHoisted( h: IRHoisted ): void
     {
         const hash = h.hash;
         if( !hoistedHashes.some( hoistedHash => equalIrHash( hoistedHash, hash ) ) )
@@ -99,21 +94,14 @@ export function showIR( _ir: IRTerm )
             }
 
             hoistedHashes.push( hash as IRHash);
-            Object.defineProperty(
-                hoisted, irHashToHex( hash ), {
-                    value: showIRText( h.hoisted ),
-                    writable: false,
-                    enumerable: true,
-                    configurable: false
-                }
-            );
+            hoisted[ irHashToHex( hash ) ] = prettyIRText( h.hoisted );
         }
     }
 
     const lettedHashes: IRHash[] = [];
-    const letted: { [hash: string]: string } = {};
+    const letted: { [hash: string]: PrettiedLetted } = {};
 
-    function addLetted( l: IRLetted )
+    function addLetted( l: IRLetted ): void
     {
         const hash = l.hash;
         if( !lettedHashes.some( lettedHash => equalIrHash( lettedHash, hash ) ) )
@@ -129,14 +117,10 @@ export function showIR( _ir: IRTerm )
             
             getHoistedTerms( l.value ).forEach( ({ hoisted }) => addHoisted( hoisted ) );
 
-            Object.defineProperty(
-                letted, irHashToHex( hash ), {
-                    value: showIRText( l.value ),
-                    writable: false,
-                    enumerable: true,
-                    configurable: false
-                }
-            );
+            letted[ irHashToHex( hash ) ] = {
+                dbn: Number( l.dbn ),
+                text: showIRText( l.value )
+            };
         }
     }
 
@@ -189,9 +173,9 @@ export function showIR( _ir: IRTerm )
     }
 }
 
-export function prettyIRText( _ir: IRTerm, _indent = 2 )
+export function prettyIRText( _ir: IRTerm, _indent = 2 ): string
 {
-    if( !Number.isSafeInteger( _indent ) || _indent < 1 ) return showIR( _ir );
+    if( !Number.isSafeInteger( _indent ) || _indent < 1 ) return showIR( _ir ).text;
 
     const indentStr = " ".repeat(_indent);
 
@@ -245,13 +229,21 @@ export function prettyIRText( _ir: IRTerm, _indent = 2 )
     return _loop( _ir, 0, 0 );
 }
 
-export type PrettiedIR = {
+export interface PrettiedIR extends HoistedAndLetted {
     text: string,
-    letted: { [hash: string ]: string },
-    hoisted: { [hash: string ]: string }
 }
 
-export function prettyIR( _ir: IRTerm, _indent = 2 ) : PrettiedIR
+export interface PrettiedLetted {
+    dbn: number,
+    text: string,
+}
+export interface HoistedAndLetted {
+    letted: { [hash: string ]: PrettiedLetted },
+    hoisted: { [hash: string ]: string }
+
+}
+
+export function prettyIR( _ir: IRTerm, _indent = 2 ): PrettiedIR
 {
     if( !Number.isSafeInteger( _indent ) || _indent < 1 ) return showIR( _ir );
 
@@ -260,7 +252,7 @@ export function prettyIR( _ir: IRTerm, _indent = 2 ) : PrettiedIR
     const hoistedHashes: IRHash[] = [];
     const hoisted: { [hash: string]: string } = {};
 
-    function addHoisted( h: IRHoisted )
+    function addHoisted( h: IRHoisted ): void
     {
         const hash = h.hash;
         if( !hoistedHashes.some( hoistedHash => equalIrHash( hoistedHash, hash ) ) )
@@ -272,19 +264,14 @@ export function prettyIR( _ir: IRTerm, _indent = 2 ) : PrettiedIR
             }
 
             hoistedHashes.push( hash as IRHash );
-            const hashStr = irHashToHex( hash );
-            Object.defineProperty(
-                hoisted,
-                hashStr, 
-                { value: prettyIRText( h.hoisted, _indent ), writable: true, enumerable: true }
-            );
+            hoisted[ irHashToHex( hash ) ] = prettyIRText( h.hoisted, _indent );
         }
     }
 
     const lettedHashes: IRHash[] = [];
-    const letted: { [hash: string]: string } = {};
+    const letted: { [hash: string]: PrettiedLetted } = {};
 
-    function addLetted( l: IRLetted )
+    function addLetted( l: IRLetted ): void
     {
         const hash = l.hash;
         if( !lettedHashes.some( lettedHash => equalIrHash( lettedHash, hash ) ) )
@@ -301,13 +288,10 @@ export function prettyIR( _ir: IRTerm, _indent = 2 ) : PrettiedIR
             getHoistedTerms( l.value ).forEach( ({ hoisted }) => addHoisted( hoisted ) );
 
             const hashStr = irHashToHex( hash );
-            Object.defineProperty(
-                letted, hashStr, {
-                    value: prettyIRText( l.value, _indent ),
-                    writable: true,
-                    enumerable: true
-                }
-            );
+            letted[ hashStr ] = {
+                dbn: Number( l.dbn ),
+                text: prettyIRText( l.value, _indent )
+            };
         }
     }
 
@@ -372,7 +356,7 @@ const defaultPrettyIRJsonStrOpts: PrettyIRJsonStrOpts = {
     hoisted: true
 }
 
-export function prettyIRJsonStr( ir: IRTerm, indent = 2, opts: Partial<PrettyIRJsonStrOpts> = {})
+export function prettyIRJsonStr( ir: IRTerm, indent = 2, opts: Partial<PrettyIRJsonStrOpts> = {}): string
 {
     const _opts: PrettyIRJsonStrOpts = {
         ...defaultPrettyIRJsonStrOpts,
@@ -428,7 +412,9 @@ export function prettyIRInline( _ir: IRTerm, _indent = 2 ): string
             // addLetted( ir );
             return (
                 `${indent}(letted${(ir.meta.name ? " {"+ir.meta.name+"}" : "")} ${ir.dbn} ${irHashToHex( ir.hash )}` + 
-                `${_loop( ir.value, dbn, depth + 1 )}`+
+                `${indent+indentStr}{` +
+                `${_loop( ir.value, dbn, depth + 2 )}`+
+                `${indent+indentStr}}` +
                 `${indent})`
             );
         }
@@ -438,7 +424,9 @@ export function prettyIRInline( _ir: IRTerm, _indent = 2 ): string
             // return `${indent}${hoistedToStr(ir)}`;
             return (
                 `${indent}(hoisted${(ir.meta.name ? " {"+ir.meta.name+"}" : "")} ${irHashToHex( ir.hash )}` + 
-                `${_loop( ir.hoisted, dbn, depth + 1 )}`+
+                `${indent+indentStr}{` +
+                `${_loop( ir.hoisted, dbn, depth + 2 )}`+
+                `${indent+indentStr}}` +
                 `${indent})`
             );
         }
@@ -469,4 +457,29 @@ export function prettyIRInline( _ir: IRTerm, _indent = 2 ): string
     const text = _loop( _ir, 0, 0 );
 
     return text;
+}
+
+export function unfromatStr( str: string ): string
+{
+    return str
+    .replace("\n", " ")
+    .replace( /\s+/g, " " );
+}
+
+export function onlyHoistedAndLetted( prettied: PrettiedIR ): HoistedAndLetted
+{
+    const result: HoistedAndLetted = { letted: {}, hoisted: {} };
+
+    Object.keys( prettied.letted ).forEach( k => {
+        const letted = prettied.letted[k];
+        result.letted[k] = {
+            dbn: letted.dbn,
+            text: unfromatStr( letted.text )
+        };
+    });
+    Object.keys( prettied.hoisted ).forEach( k => {
+        result.hoisted[k] = unfromatStr( prettied.hoisted[k] );
+    });
+
+    return result;
 }

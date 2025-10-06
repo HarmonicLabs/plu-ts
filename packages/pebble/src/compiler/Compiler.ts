@@ -1,12 +1,13 @@
 import { compileUPLC, prettyUPLC, UPLCProgram } from "@harmoniclabs/uplc";
 import { DiagnosticEmitter } from "../diagnostics/DiagnosticEmitter"
 import { DiagnosticMessage } from "../diagnostics/DiagnosticMessage";
-import { compileIRToUPLC, prettyIRJsonStr } from "../IR";
+import { compileIRToUPLC, prettyIR, prettyIRJsonStr } from "../IR";
 import { CompilerOptions, defaultOptions } from "../IR/toUPLC/CompilerOptions";
 import { AstCompiler } from "./AstCompiler/AstCompiler";
 import { CompilerIoApi, createMemoryCompilerIoApi } from "./io/CompilerIoApi";
 import { compileTypedProgram } from "./TirCompiler/compileTirProgram";
 import { toHex } from "@harmoniclabs/uint8array-utils";
+import { __VERY_UNSAFE_FORGET_IRHASH_ONLY_USE_AT_END_OF_UPLC_COMPILATION } from "../IR/IRHash";
 
 export class Compiler
     extends DiagnosticEmitter
@@ -42,7 +43,6 @@ export class Compiler
             cfg,
             program
         );
-        console.log( "compiled IR:", prettyIRJsonStr( ir ) );
         const uplc = compileIRToUPLC( ir );
         const serialized = compileUPLC(
             new UPLCProgram(
@@ -55,6 +55,8 @@ export class Compiler
         const outPath = outDir + ( outDir.endsWith("/") ? "" : "/" ) + "out.flat";
         this.io.writeFile( outPath, serialized, cfg.root );
         this.io.stdout.write( `compiled program written to ${outPath}\n` );
+
+        __VERY_UNSAFE_FORGET_IRHASH_ONLY_USE_AT_END_OF_UPLC_COMPILATION();
         return;
     }
 }

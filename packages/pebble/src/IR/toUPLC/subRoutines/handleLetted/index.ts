@@ -1,6 +1,6 @@
 import { IRApp } from "../../../IRNodes/IRApp";
 import { IRFunc } from "../../../IRNodes/IRFunc";
-import { getSortedLettedSet, getLettedTerms, IRLetted } from "../../../IRNodes/IRLetted";
+import { getSortedLettedSet, getLettedTerms, IRLetted, expandedJsonLettedSetEntry } from "../../../IRNodes/IRLetted";
 import { IRVar } from "../../../IRNodes/IRVar";
 import { IRTerm } from "../../../IRTerm";
 import { _addDepths } from "../../_internal/_addDepth";
@@ -8,7 +8,7 @@ import { _modifyChildFromTo } from "../../_internal/_modifyChildFromTo";
 import { findAllNoHoisted } from "../../_internal/findAll";
 import { getDebruijnInTerm } from "../../_internal/getDebruijnInTerm";
 import { _getMinUnboundDbn } from "./groupByScope";
-import { prettyIRInline, prettyIRJsonStr, prettyIRText } from "../../../utils/showIR";
+import { lettedToStr, onlyHoistedAndLetted, prettyIR, prettyIRInline, prettyIRJsonStr, prettyIRText } from "../../../utils/showIR";
 import { IRDelayed } from "../../../IRNodes/IRDelayed";
 import { IRForced } from "../../../IRNodes/IRForced";
 import { lowestCommonAncestor } from "../../_internal/lowestCommonAncestor";
@@ -27,14 +27,17 @@ import { findHighestRecursiveParent } from "./findHighestRecursiveParent";
 import { IRParentTerm } from "../../../utils/isIRParentTerm";
 import { fromHex } from "@harmoniclabs/uint8array-utils";
 import { iterTree } from "../../_internal/iterTree";
+import { IRHoisted } from "../../../IRNodes/IRHoisted";
 
 export function handleLettedAndReturnRoot( term: IRTerm ): IRTerm
 {
-    // console.log(" ------------------------------------------- handleLetted ------------------------------------------- ");
-    // console.log( prettyIRText( term ))
+    console.log(" ------------------------------------------- handleLetted ------------------------------------------- ");
+    console.log( prettyIRText( term ))
     // most of the time we are just compiling small
     // pre-execuded terms (hence constants)
     if( term instanceof IRConst ) return term;
+
+    sanifyTree( term );
     
     // TODO: should probably merge `markRecursiveHoistsAsForced` inside `getLettedTerms` to iter once
     markRecursiveHoistsAsForced( term );
@@ -42,35 +45,38 @@ export function handleLettedAndReturnRoot( term: IRTerm ): IRTerm
     // in case there are no letted terms there is no work to do
     while( true )
     {
+        console.log(` ------------------ letted loop ------------------ `);
+
         const allDirectLetted = getLettedTerms( term, { all: false, includeHoisted: false });
         if( allDirectLetted.length === 0 ) return term;
+
+        // console.log("allDirectLetted", allDirectLetted.map( expandedJsonLettedSetEntry ) );
         
         const sortedLettedSet = getSortedLettedSet( allDirectLetted );
 
+        console.log("sortedLettedSet", sortedLettedSet.map( expandedJsonLettedSetEntry ) );
+
+        // `sortedLettedSet` is sorted from least to most dependencies
+        // so we'll have "0 dependencies" letted terms at the start of the array
+        // and "n dependencies" letted terms at the end of the array
+        // 
+        // we process the "most dependent" terms first
+        // so their values are inlined
+        // and later, its dependencies will be replaced with `IRVar`
+        // whereever these dependent are inlined
+        //
+        // hence why `pop` (and not `shift`)
         const {
             letted,
             nReferences
         } = sortedLettedSet.pop()!;
 
-        /*
-        const _lettedValue_ = letted.value;
-        const shouldLog = (
-            _lettedValue_ instanceof IRApp &&
-            _lettedValue_.fn instanceof IRFunc &&
-            _lettedValue_.fn.arity === 1 &&
-            _lettedValue_.fn.body instanceof IRLetted &&
-            equalIrHash( _lettedValue_.fn.body.hash, new Uint32Array( fromHex("71030a2d7560e563fe25fd782edd847f").buffer ) as IRHash ) &&
-            _lettedValue_.arg instanceof IRLetted &&
-            equalIrHash( _lettedValue_.arg.hash, new Uint32Array( fromHex("82dfb8a2f2703fe59fb25f8372e5e958").buffer ) as IRHash )
-        );
-        //*/
-
         // shouldLog && console.log("nReferences", nReferences);
 
-        // console.log(` ------------------ working with ${lettedToStr(letted)} ------------------ `);
+        console.log(` ------------------ working with ${lettedToStr(letted)} ------------------ `);
         if( nReferences === 1 )
         {
-            // console.log("inlining letted (single reference) with value", prettyIRText( letted.value ) )
+            console.log("inlining letted (single reference) with value", prettyIRText( letted.value ) )
             _modifyChildFromTo(
                 letted.parent,
                 letted,
@@ -78,6 +84,8 @@ export function handleLettedAndReturnRoot( term: IRTerm ): IRTerm
             );
             continue;
         }
+
+        console.log("--------- not inilning ("+ nReferences +" references)");
 
         const maxScope = findLettedMaxScope( letted ) ?? ((): IRTerm => {
             if( letted.meta.isClosed || letted.isClosedAtDbn( 0 ) )
@@ -105,11 +113,13 @@ export function handleLettedAndReturnRoot( term: IRTerm ): IRTerm
                 equalIrHash( node.hash, lettedHash )
         ) as IRLetted[];
 
-        if( sameLettedRefs.length <= 0 )
-        {
+        console.log("sameLettedRefs", sameLettedRefs.length );
+
+        if( sameLettedRefs.length <= 0 ) {
             console.warn(
-                "how did you get here? 0 references found for letted term;\n\n" +
-                "!!! PLEASE OPEN AN ISSUE ON GITHUB (https://github.com/HarmonicLabs/plu-ts/issues) !!!\n\n"
+                "how did you get here? 0 references found for letted term;\n" +
+                "the compiler can easly recover this edge case, but something funny is going on with this contract.\n\n"+
+                "!!! PLEASE OPEN AN ISSUE ON GITHUB (https://github.com/HarmonicLabs/plu-ts/issues) !!!\n"
             );
             continue;
         }
@@ -117,7 +127,7 @@ export function handleLettedAndReturnRoot( term: IRTerm ): IRTerm
         // just in case
         if( sameLettedRefs.length === 1 && !minScope )
         {
-            // console.log("inlining letted (single reference pedantic) with value", prettyIRText( letted.value ) )
+            console.log("inlining letted (single reference pedantic) with value", prettyIRText( letted.value ) )
             _modifyChildFromTo(
                 letted.parent,
                 letted,
@@ -130,9 +140,8 @@ export function handleLettedAndReturnRoot( term: IRTerm ): IRTerm
         if(
             letted.value instanceof IRVar ||
             letted.value instanceof IRSelfCall
-        )
-        {
-            // console.log("inlining letted (value is var) with value", prettyIRText( letted.value ) )
+        ) {
+            console.log("inlining letted (value is var) with value", prettyIRText( letted.value ) )
             for( const elem of sameLettedRefs )
             {
                 // inline
@@ -200,11 +209,18 @@ export function handleLettedAndReturnRoot( term: IRTerm ): IRTerm
             continue;
         }
 
+        console.log("hello", (lettedHash + 1 + Number.MAX_SAFE_INTEGER).toString(16));
+
         const parentNode: IRTerm = lca;
         const parentNodeDirectChild = (
             parentNode instanceof IRFunc ||
             parentNode instanceof IRRecursive
         ) ? parentNode.body : parentNode.delayed;
+
+        // let irJson = prettyIR( term );
+        console.log("before increment",
+            prettyIRInline( term )
+        );
 
         // add 1 to every var's DeBruijn that accesses stuff outside the parent node
         // not including the `parentNode` node
@@ -215,6 +231,11 @@ export function handleLettedAndReturnRoot( term: IRTerm ): IRTerm
             // `shouldNotModifyLetted` arg (given the hash returns `true` if it should NOT modify the term)
             // this callback is ONLY called on LETTED terms
             ({ hash }) => equalIrHash( hash, lettedHash )
+        );
+
+        // irJson = prettyIR( term );
+        console.log("after increment",
+            prettyIRInline( term )
         );
         
         // now we replace
@@ -253,7 +274,7 @@ export function handleLettedAndReturnRoot( term: IRTerm ): IRTerm
         // {
         //     finalMaxScope = (finalMaxScope as any).parent as any
         // }
-        // console.log("final max scope (delayed: " + delayed + ")" , prettyIRText( finalMaxScope ) )
+        // // console.log("final max scope (delayed: " + delayed + ")" , prettyIRText( finalMaxScope ) )
     }
 }
 
@@ -328,14 +349,10 @@ function modifyValueToLetDbns( lettedValue: IRTerm, diffDbn: number ): void
     {
         const { term: t, dbn } = stack.pop() as { term: IRTerm, dbn: number };
 
-        if(
-            (
-                t instanceof IRVar ||
-                t instanceof IRSelfCall
-            ) &&
-            t.dbn > dbn
-        )
-        {
+        if((
+            t instanceof IRVar ||
+            t instanceof IRSelfCall
+        ) && t.dbn > dbn ) {
             t.dbn -= diffDbn;
         }
 
@@ -347,56 +364,20 @@ function modifyValueToLetDbns( lettedValue: IRTerm, diffDbn: number ): void
             continue;
         }
         
-        if( t instanceof IRApp )
-        {
-            stack.push(
-                { term: t.arg, dbn },
-                { term: t.fn, dbn  }
-            );
-            continue;
-        }
-        if( t instanceof IRCase )
-        {
-            stack.push(
-                { term: t.constrTerm, dbn },
-                ...mapArrayLike(
-                    t.continuations,
-                    continuation => ({ term: continuation, dbn })
-                )
-            );
-            continue;
-        }
-        if( t instanceof IRConstr )
-        {
-            stack.push(
-                ...mapArrayLike(
-                    t.fields,
-                    field => ({ term: field, dbn })
-                )
-            );
-            continue
-        }
-        if( t instanceof IRDelayed )
-        {
-            stack.push({ term: t.delayed, dbn })
-            continue;
-        }
-        if( t instanceof IRForced )
-        {
-            stack.push({ term: t.forced, dbn });
-            continue;
-        }
-        if( t instanceof IRFunc )
-        {
+        if(
+            t instanceof IRFunc
+            || t instanceof IRRecursive
+        ) {
+            // new variable in scope
             stack.push({ term: t.body, dbn: dbn + t.arity });
             continue;
         }
-        if( t instanceof IRRecursive )
-        {
-            stack.push({ term: t.body, dbn: dbn + t.arity });
-            continue;
-        }
-        // no hoisted
+
+        if( t instanceof IRHoisted ) { continue; } // skip hoisted since closed
+
+        stack.push(
+            ...t.children().map( term => ({ term, dbn }) )
+        );
     }
 }
 

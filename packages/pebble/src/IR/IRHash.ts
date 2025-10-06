@@ -84,7 +84,11 @@ export function equalIrHash( a: IRHash, b: IRHash ): boolean
 
 export function irHashToHex( hash: IRHash ): string
 {
-    return _positiveHash( hash ).toString( 16 );
+    return _positiveHash( hash )
+    .toString( 16 )
+    // we MUST pad to 16 chars
+    // otherwise, hash concatenation could be ambiguous
+    .padStart( 16, "0" );
 }
 
 export function irHashFromHex( hex: string ): IRHash

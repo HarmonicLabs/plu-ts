@@ -29,25 +29,33 @@ export function markRecursiveHoistsAsForced( _term: IRTerm ): void
     {
         const { term: t, isInRecursiveTerm, isIRAppArg } = stack.pop() as StackElem;
 
+        if(
+            isInRecursiveTerm && (
+                t instanceof IRHoisted
+                || t instanceof IRLetted
+            )
+        ) {
+            t.meta.forceHoist = true;
+            // don't push anything to the stack
+            // hoisted values are handled normally
+            continue;
+        }
+
         if( t instanceof IRApp )
         {
-            // must push the arg first and then the fucntion
-            // so that we can check if the function is the Z combinator before the arg is processed
             stack.push(
+                { term: t.fn, isInRecursiveTerm },
                 { term: t.arg, isIRAppArg: true, isInRecursiveTerm },
-                { term: t.fn, isInRecursiveTerm }
             );
             continue;
         }
         if( t instanceof IRConstr )
         {
-            // must push the arg first and then the fucntion
-            // so that we can check if the function is the Z combinator before the arg is processed
             stack.push(
                 ...Array.from( t.fields )
-                .map( (f, i) => ({
+                .map( f => ({
                     term: f,
-                    isIRAppArg: i > 0,
+                    isIRAppArg: true,
                     isInRecursiveTerm
                 }))
             );
@@ -55,8 +63,6 @@ export function markRecursiveHoistsAsForced( _term: IRTerm ): void
         }
         if( t instanceof IRCase )
         {
-            // must push the arg first and then the fucntion
-            // so that we can check if the function is the Z combinator before the arg is processed
             stack.push(
                 {
                     term: t.constrTerm,
@@ -66,62 +72,15 @@ export function markRecursiveHoistsAsForced( _term: IRTerm ): void
                 ...Array.from( t.continuations )
                 .map( cont => ({
                     term: cont,
-                    isIRAppArg: true,
+                    isIRAppArg: false,
                     isInRecursiveTerm
                 }))
             );
             continue;
         }
 
-        if(
-            t instanceof IRHoisted || 
-            t instanceof IRLetted
-        )
-        {
-            if( isInRecursiveTerm )
-            {
-                t.meta.forceHoist = true;
-                // don't push anything to the stack
-                // hoisted values are handled normally
-                continue;
-            }
-            // otherwhise check in values too
-            else if( t instanceof IRLetted )
-            {
-                stack.push({ term: t.value, isInRecursiveTerm });
-                continue;
-            }
-            else if( t instanceof IRHoisted )
-            {
-                stack.push({ term: t.hoisted, isInRecursiveTerm });
-                continue;
-            }
-        }
-
-        if( t instanceof IRDelayed )
-        {
-            stack.push({ term: t.delayed, isInRecursiveTerm })
-            continue;
-        }
-
-        if( t instanceof IRForced )
-        {
-            stack.push({ term: t.forced, isInRecursiveTerm });
-            continue;
-        }
-
-        if( t instanceof IRFunc )
-        {
-            stack.push({ term: t.body, isInRecursiveTerm });
-            continue;
-        }
-
-        if( t instanceof IRRecursive )
-        {
-            stack.push({ term: t.body, isInRecursiveTerm: true });
-            continue;
-        }
-
-        const tsEnsureExsaustiveCheck: IRVar | IRConst | IRNative | IRError | IRSelfCall = t;
+        stack.push(
+            ...(t.children?.().map( c => ({ term: c, isInRecursiveTerm })) ?? [])
+        );
     }
 }

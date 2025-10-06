@@ -21,8 +21,7 @@ import { performUplcOptimizationsAndReturnRoot } from "./subRoutines/performUplc
 import { rewriteNativesAppliedToConstantsAndReturnRoot } from "./subRoutines/rewriteNativesAppliedToConstantsAndReturnRoot";
 import { removeUnusedVarsAndReturnRoot } from "./subRoutines/removeUnusedVarsAndReturnRoot/removeUnusedVarsAndReturnRoot";
 import { inlineSingleUseAndReturnRoot } from "./subRoutines/inlineSingleUseAndReturnRoot/inlineSingleUseAndReturnRoot";
-import { _debug_assertClosedIR } from "../utils";
-import { __VERY_UNSAFE_FORGET_IRHASH_ONLY_USE_AT_END_OF_UPLC_COMPILATION } from "../IRHash";
+import { _debug_assertClosedIR, onlyHoistedAndLetted, prettyIR } from "../utils";
 
 export function compileIRToUPLC(
     term: IRTerm,
@@ -32,6 +31,14 @@ export function compileIRToUPLC(
     // most of the time we are just compiling small
     // pre-execuded terms (hence constants)
     if( term instanceof IRConst ) return _irToUplc( term ).term;
+
+
+    let irJson = prettyIR( term );
+    console.log(
+        "input IR:",
+        irJson.text,
+        JSON.stringify( onlyHoistedAndLetted( irJson ), null, 2 ),
+    );
 
     ///////////////////////////////////////////////////////////////////////////////
     // ------------------------------------------------------------------------- //
@@ -57,7 +64,6 @@ export function compileIRToUPLC(
 
     // term = preEvaluateDefinedTermsAndReturnRoot( term );
     term = rewriteNativesAppliedToConstantsAndReturnRoot( term );
-
     debugAsserts && _debug_assertClosedIR( term );
 
     // removing unused variables BEFORE going into the rest of the compilation
@@ -116,12 +122,26 @@ export function compileIRToUPLC(
 
     replaceForcedNativesWithHoisted( term );
 
+    irJson = prettyIR( term );
+    console.log(
+        "replace forced natives:",
+        irJson.text,
+        JSON.stringify( onlyHoistedAndLetted( irJson ), null, 2 ),
+    );
+
     debugAsserts && _debug_assertClosedIR( term );
 
     if( options.delayHoists ) replaceHoistedWithLetted( term );
     else replaceClosedLettedWithHoisted( term );
 
     debugAsserts && _debug_assertClosedIR( term );
+
+    irJson = prettyIR( term );
+    console.log(
+        "before hoisted:",
+        irJson.text,
+        JSON.stringify( onlyHoistedAndLetted( irJson ), null, 2 ),
+    );
 
     // handle letted before hoisted because the tree is smaller
     // and we also have less letted dependecies to handle
@@ -138,13 +158,19 @@ export function compileIRToUPLC(
                 node instanceof IRLetted
                 || node instanceof IRHoisted
         )
-    )
-    {
+    ) {
         term = handleLettedAndReturnRoot( term );
         term = handleHoistedAndReturnRoot( term );
     }
 
     debugAsserts && _debug_assertClosedIR( term );
+
+    irJson = prettyIR( term );
+    console.log(
+        "after hoisted:",
+        irJson.text,
+        JSON.stringify( onlyHoistedAndLetted( irJson ), null, 2 ),
+    );
 
     ///////////////////////////////////////////////////////////////////////////////
     // ------------------------------------------------------------------------- //
@@ -217,6 +243,5 @@ export function compileIRToUPLC(
 
     // console.log( "srcmap", srcmap );
 
-    __VERY_UNSAFE_FORGET_IRHASH_ONLY_USE_AT_END_OF_UPLC_COMPILATION();
     return uplc;
 }

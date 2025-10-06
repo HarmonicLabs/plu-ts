@@ -18,12 +18,12 @@ import { _ir_lazyChooseList } from "../../../tree_utils/_ir_lazyChooseList";
 import { _ir_lazyIfThenElse } from "../../../tree_utils/_ir_lazyIfThenElse";
 import { hoisted_drop4, hoisted_drop2, hoisted_drop3 } from "../_comptimeDropN";
 
-const hoisted_id = new IRHoisted(
+export const hoisted_id = new IRHoisted(
     new IRFunc( 1, new IRVar(0) )
 );
 hoisted_id.hash;
 
-const hoisted_not = new IRHoisted(
+export const hoisted_not = new IRHoisted(
     new IRFunc( 1, // someBool
         _ir_apps(
             IRNative.strictIfThenElse,
@@ -35,56 +35,56 @@ const hoisted_not = new IRHoisted(
 );
 hoisted_not.hash;
 
-const hoisted_incr = new IRHoisted(
+export const hoisted_incr = new IRHoisted(
     new IRApp( IRNative.addInteger, IRConst.int( 1 ) )
 );
 hoisted_incr.hash;
 
-const hoisted_decr = new IRHoisted(
+export const hoisted_decr = new IRHoisted(
     new IRApp( IRNative.addInteger, IRConst.int( -1 ) )
 );
 hoisted_decr.hash;
 
-const hoisted_isZero = new IRHoisted(
+export const hoisted_isZero = new IRHoisted(
     new IRApp( IRNative.equalsInteger, IRConst.int( 0 ) )
 );
 hoisted_isZero.hash;
 
-const hoisted_isOne = new IRHoisted(
+export const hoisted_isOne = new IRHoisted(
     new IRApp( IRNative.equalsInteger, IRConst.int( 1 ) )
 );
 hoisted_isZero.hash;
 
-const hoisted_isTwo = new IRHoisted(
+export const hoisted_isTwo = new IRHoisted(
     new IRApp( IRNative.equalsInteger, IRConst.int( 2 ) )
 );
 hoisted_isTwo.hash;
 
-const hoisted_isThree = new IRHoisted(
+export const hoisted_isThree = new IRHoisted(
     new IRApp( IRNative.equalsInteger, IRConst.int( 3 ) )
 );
 
-const hoisted_addOne = new IRHoisted(
+export const hoisted_addOne = new IRHoisted(
     new IRApp( IRNative.addInteger, IRConst.int( 1 ) )
 );
 hoisted_addOne.hash;
 
-const hoisted_subOne = new IRHoisted(
+export const hoisted_subOne = new IRHoisted(
     new IRApp( IRNative.addInteger, IRConst.int( -1 ) )
 );
 hoisted_subOne.hash;
 
-const hoisted_isPositive = new IRHoisted(
+export const hoisted_isPositive = new IRHoisted(
     new IRApp( IRNative.lessThanInteger, IRConst.int( 0 ) )
 );
 hoisted_isPositive.hash;
 
-const hoisted_isNonNegative = new IRHoisted(
+export const hoisted_isNonNegative = new IRHoisted(
     new IRApp( IRNative.lessThanEqualInteger, IRConst.int( 0 ) )
 );
 hoisted_isNonNegative.hash;
 
-const innerZ = new IRFunc( 1, // f
+export const innerZ = new IRFunc( 1, // f
     new IRApp(
         new IRVar( 1 ), // Z
         new IRFunc( 1,
@@ -100,7 +100,7 @@ const innerZ = new IRFunc( 1, // f
 );
 innerZ.hash;
 
-const hoisted_z_comb = new IRHoisted(
+export const hoisted_z_comb = new IRHoisted(
     new IRFunc( 1, // Z
         new IRApp(
             innerZ.clone(),
@@ -110,7 +110,7 @@ const hoisted_z_comb = new IRHoisted(
 );
 hoisted_z_comb.hash;
 
-const hoisted_matchList = new IRHoisted(
+export const hoisted_matchList = new IRHoisted(
     new IRFunc( 3, // delayed_matchNil, matchCons, list
         new IRForced(
             new IRForced(
@@ -138,7 +138,7 @@ const hoisted_matchList = new IRHoisted(
 );
 hoisted_matchList.hash;
 
-const hosited_lazyChooseList = new IRHoisted(
+export const hosited_lazyChooseList = new IRHoisted(
     new IRFunc( 3, // list, delayed_caseNil, delayed_caseCons
         new IRForced(
             _ir_apps(
@@ -153,7 +153,7 @@ const hosited_lazyChooseList = new IRHoisted(
 hosited_lazyChooseList.hash;
 //*/
 
-const hoisted_isMoreThanOrEqualTo4 = new IRHoisted(
+export const hoisted_isMoreThanOrEqualTo4 = new IRHoisted(
     _ir_apps(
         IRNative.lessThanInteger,
         IRConst.int( 4 ),
@@ -161,14 +161,43 @@ const hoisted_isMoreThanOrEqualTo4 = new IRHoisted(
 );
 hoisted_isMoreThanOrEqualTo4.hash;
 
-const hoisted_sub4 = new IRHoisted(
+export const hoisted_sub4 = new IRHoisted(
     _ir_apps(
         IRNative.addInteger,
         IRConst.int( -4 ),
     )
 );
+hoisted_sub4.hash;
 
-const hoisted_dropList = new IRHoisted(
+export const hoisted_length = new IRHoisted(
+    new IRRecursive( // self
+        new IRFunc( 1, // list
+            new IRForced(
+                _ir_apps(
+                    new IRApp(
+                        IRNative.strictChooseList,
+                        new IRVar( 0 )  // list
+                    ),
+                    // then
+                    IRConst.int( 0 ),
+                    // else
+                    _ir_apps(
+                        hoisted_incr.clone(),
+                        new IRApp(
+                            new IRSelfCall( 1 ), // self
+                            new IRApp(      // list.tail
+                                IRNative.tailList,
+                                new IRVar( 0 )  // list
+                            )
+                        )
+                    )
+                )
+            )
+        )
+    )
+);
+
+export const hoisted_dropList = new IRHoisted(
     new IRRecursive( // self,
         new IRFunc( 2, // 2: self, 1: n, 0: lst
             _ir_lazyIfThenElse(
@@ -232,7 +261,7 @@ const hoisted_dropList = new IRHoisted(
 );
 hoisted_dropList.hash;
 
-const hoisted_recursiveList = new IRHoisted(
+export const hoisted_recursiveList = new IRHoisted(
     new IRFunc(2, // matchNil (3), matchCons (2)
         new IRRecursive( // self (1)
             new IRFunc( 1, // lst (0)
@@ -254,7 +283,7 @@ const hoisted_recursiveList = new IRHoisted(
 );
 hoisted_recursiveList.hash;
 
-const hoisted_lazyOr = new IRHoisted(
+export const hoisted_lazyOr = new IRHoisted(
     new IRFunc( 2, // a(1), delayed_b (0)
         new IRForced(
             _ir_apps(
@@ -268,7 +297,7 @@ const hoisted_lazyOr = new IRHoisted(
 );
 hoisted_lazyOr.hash;
 
-const hoisted_lazyAnd = new IRHoisted(
+export const hoisted_lazyAnd = new IRHoisted(
     new IRFunc( 2, // a, b
         new IRForced(
             _ir_apps(
@@ -282,7 +311,7 @@ const hoisted_lazyAnd = new IRHoisted(
 );
 hoisted_lazyAnd.hash;
 
-const hoisted_foldr = new IRHoisted(
+export const hoisted_foldr = new IRHoisted(
     new IRFunc( 2, // reduceFunc, accmulator
         _ir_apps(
             hoisted_recursiveList.clone(),
@@ -308,9 +337,9 @@ const hoisted_foldr = new IRHoisted(
 );
 hoisted_foldr.hash;
 
-const MAX_WORD4 = BigInt( 1 ) << BigInt( 32 );
+export const MAX_WORD4 = BigInt( 1 ) << BigInt( 32 );
 
-const hoisted_sizeofPositiveInt = new IRHoisted(
+export const hoisted_sizeofPositiveInt = new IRHoisted(
     _ir_apps(
         new IRRecursive( // self
             new IRFunc( 2, // count_words, n
@@ -467,33 +496,7 @@ export function nativeToIR( native: IRNative ): IRTerm
             );
         break;
         case IRNativeTag._length        :
-            return new IRHoisted(
-                new IRRecursive( // self
-                    new IRFunc( 1, // list
-                        new IRForced(
-                            _ir_apps(
-                                new IRApp(
-                                    IRNative.strictChooseList,
-                                    new IRVar( 0 )  // list
-                                ),
-                                // then
-                                IRConst.int( 0 ),
-                                // else
-                                _ir_apps(
-                                    hoisted_incr.clone(),
-                                    new IRApp(
-                                        new IRSelfCall( 1 ), // self
-                                        new IRApp(      // list.tail
-                                            IRNative.tailList,
-                                            new IRVar( 0 )  // list
-                                        )
-                                    )
-                                )
-                            )
-                        )
-                    )
-                )
-            );
+            return hoisted_length.clone();
         break;
         case IRNativeTag._some          :
             return new IRHoisted(
@@ -1001,7 +1004,7 @@ export function nativeToIR( native: IRNative ): IRTerm
 }
 
 // ((policy => bool), value, (tokenName => bool)) => amount
-const hoisted_amountOfValue = new IRHoisted(
+export const hoisted_amountOfValue = new IRHoisted(
     new IRFunc( 1, // 0: isPolicy
         new IRRecursive( // 1: isPolicy, 0: policyLoop
             new IRFunc( 1, // 2: isPolicy, 1: policyLoop, 0: value

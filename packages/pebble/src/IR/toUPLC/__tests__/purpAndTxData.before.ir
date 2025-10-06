@@ -1,0 +1,103 @@
+(func  a
+  (force 
+    [
+      (func  purpPair
+        [
+          (func  isPUrpIdx 
+            [
+              [
+                [
+                  (letted 4294967295 ifThenElse) 
+                  [
+                    isPUrpIdx 
+                    (const int 1)
+                  ]
+                ] 
+                (delay 
+                  [
+                    (func  d 
+                      d
+                    ) 
+                    [
+                      (native unConstrData) 
+                      (letted 2 txData)
+                    ]
+                  ]
+                )
+              ] 
+              (delay (error)
+              )
+            ]
+          ) 
+          [
+            (native equalsInteger) 
+            [
+              (letted 4294967295 fst) 
+              purpPair
+            ]
+          ]
+        ]
+      ) 
+      [
+        (native unConstrData) 
+        (letted 1 purpData)
+      ]
+    ]
+  )
+) {
+  "letted": {
+    "ifThenElse": {
+      "dbn": 4294967295,
+      "text": " (native ifThenElse)"
+    },
+    "ctxPair": {
+      "dbn": 2,
+      "text": " [ (native unConstrData) (-2) ]"
+    },
+    "snd": {
+      "dbn": 4294967295,
+      "text": " (native sndPair)"
+    },
+    "snd": {
+      "dbn": 4294967292,
+      "text": " (letted 4294967295 snd)"
+    },
+    "ctxFields": {
+      "dbn": 2,
+      "text": " [ (letted 4294967292 snd) (letted 2 ctxPair) ]"
+    },
+    "head": {
+      "dbn": 4294967295,
+      "text": " (native headList)"
+    },
+    "head": {
+      "dbn": 4294967292,
+      "text": " (letted 4294967295 head)"
+    },
+    "txData": {
+      "dbn": 2,
+      "text": " [ (letted 4294967292 head) (letted 2 ctxFields) ]"
+    },
+    "fst": {
+      "dbn": 4294967295,
+      "text": " (native fstPair)"
+    },
+    "fst": {
+      "dbn": 4294967295,
+      "text": " (letted 4294967295 fst)"
+    },
+    "tail": {
+      "dbn": 4294967295,
+      "text": " (native tailList)"
+    },
+    "drop2": {
+      "dbn": 4294967295,
+      "text": " (func a [ (letted 4294967295 tail) [ (letted 4294967295 tail) a ] ] )"
+    },
+    "purpData": {
+      "dbn": 1,
+      "text": " [ (letted 4294967295 head) [ (letted 4294967295 drop2) (letted 1 ctxFields) ] ]"
+    }
+  },
+  "hoisted": {}
+}

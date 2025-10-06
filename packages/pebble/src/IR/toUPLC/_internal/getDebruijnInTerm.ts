@@ -1,5 +1,5 @@
 import { equalIrHash } from "../../IRHash";
-import { IRCase, IRConstr } from "../../IRNodes";
+import { IRCase, IRConstr, IRHoisted } from "../../IRNodes";
 import { IRApp } from "../../IRNodes/IRApp";
 import { IRDelayed } from "../../IRNodes/IRDelayed";
 import { IRForced } from "../../IRNodes/IRForced";
@@ -22,77 +22,20 @@ export function getDebruijnInTerm( root: IRTerm, termToFind: IRTerm ): number
 
         if( term === termToFind || equalIrHash( term.hash, termTofindHash ) ) return dbn;
 
-        if( term instanceof IRApp )
-        {
-            stack.push(
-                { term: term.fn , dbn },
-                { term: term.arg, dbn },
-            );
+        if(
+            term instanceof IRFunc
+            || term instanceof IRRecursive
+        ) {
+            // new variable in scope
+            stack.push({ term: term.body, dbn: dbn + term.arity });
             continue;
         }
 
-        if( term instanceof IRCase )
-        {
-            stack.push(
-                { term: term.constrTerm, dbn },
-                ...mapArrayLike(
-                    term.continuations,
-                    ( continuation ) => ({ term: continuation, dbn })
-                )
-            );
-            continue;
-        }
+        if( term instanceof IRHoisted ) { continue; } // skip hoisted since closed
 
-        if( term instanceof IRConstr )
-        {
-            stack.push(
-                ...mapArrayLike(
-                    term.fields,
-                    ( field ) => ({ term: field, dbn })
-                )
-            );
-            continue;
-        }
-
-        if( term instanceof IRDelayed )
-        {
-            stack.push(
-                { term: term.delayed, dbn }
-            );
-            continue;
-        }
-
-        if( term instanceof IRForced )
-        {
-            stack.push(
-                { term: term.forced, dbn }
-            );
-            continue;
-        }
-
-        if( term instanceof IRFunc )
-        {
-            stack.push(
-                { term: term.body, dbn: dbn + term.arity }
-            );
-            continue;
-        }
-
-        if( term instanceof IRRecursive )
-        {
-            stack.push(
-                { term: term.body, dbn: dbn + term.arity }
-            );
-            continue;
-        }
-
-        if( term instanceof IRLetted )
-        {
-            stack.push(
-                { term: term.value, dbn }
-            );
-            continue;
-        }
+        stack.push(
+            ...term.children().map( t => ({ term: t, dbn }) )
+        );
     }
 
     return -1;

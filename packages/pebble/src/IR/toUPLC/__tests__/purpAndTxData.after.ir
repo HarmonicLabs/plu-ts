@@ -1,0 +1,94 @@
+(func  ctxData 
+  [
+    (func  head 
+      [
+        (func  snd
+          (force 
+            [
+              (func  purpPair 
+                [
+                  (func  isPurpIdx 
+                    [
+                      [
+                        [
+                          (native ifThenElse) 
+                          [
+                            isPurpIdx 
+                            (const int 1)
+                          ]
+                        ] 
+                        (delay 
+                          [
+                            (func  f 
+                              f
+                            ) 
+                            [
+                              (native unConstrData) 
+                              [
+                                head 
+                                [
+                                  snd 
+                                  [
+                                    (native unConstrData) 
+                                    purpPair
+                                  ]
+                                ]
+                              ]
+                            ]
+                          ]
+                        )
+                      ] 
+                      (delay (error)
+                      )
+                    ]
+                  ) 
+                  [
+                    (native equalsInteger) 
+                    [
+                      (native fstPair) 
+                      purpPair
+                    ]
+                  ]
+                ]
+              ) 
+              [
+                (native unConstrData) 
+                [
+                  head 
+                  [
+                    (func  purpPair 
+                      [
+                        (func  isPurpIdx 
+                          [
+                            isPurpIdx 
+                            [
+                              isPurpIdx 
+                              purpPair
+                            ]
+                          ]
+                        ) 
+                        (native tailList)
+                      ]
+                    ) 
+                    [
+                      snd 
+                      [
+                        (native unConstrData) 
+                        ctxData
+                      ]
+                    ]
+                  ]
+                ]
+              ]
+            ]
+          )
+        ) 
+        (native sndPair)
+      ]
+    ) 
+    (native headList)
+  ]
+) {
+  "letted": {},
+  "hoisted": {}
+}

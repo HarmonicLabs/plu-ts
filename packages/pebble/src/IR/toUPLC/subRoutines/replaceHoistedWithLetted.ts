@@ -17,7 +17,7 @@ export function replaceHoistedWithLetted( term: IRTerm ): void
     {
         const parent = hoisted.parent!;
         const letted = new IRLetted(
-            0x0fffffff, // doesn't matter since closed term
+            0xffffffff, // doesn't matter since closed term (but keep big so we can adjust it in debuijn)
             hoisted.hoisted,
             { isClosed: true }
         );
