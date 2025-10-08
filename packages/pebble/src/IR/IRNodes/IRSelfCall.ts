@@ -13,18 +13,42 @@ import { IRNodeKind } from "../IRNodeKind";
 import { IRRecursive } from "./IRRecursive";
 import { IIRTerm, IRTerm } from "../IRTerm";
 import { IRFunc } from "./IRFunc";
+import { fromUtf8 } from "@harmoniclabs/uint8array-utils";
 
 export interface IRSelfCallMetadata extends BaseIRMetadata {}
 
 export class IRSelfCall
     implements IIRTerm, Cloneable<IRSelfCall>, IHash, IIRParent, ToJson
 {
+    readonly name: string;
+    readonly meta: IRSelfCallMetadata;
+
+    constructor( name: string )
+    {
+        if(!(
+            typeof name === "string"
+            && name.length > 0
+        )) throw new BasePlutsError("invalid name for IRVar");
+        this.name = name;
+
+        this.meta = {};
+        
+        this._hash = undefined;
+        
+        this._parent = undefined;
+    }
+
     private _hash: IRHash | undefined;
     get hash(): IRHash
     {
         if(!isIRHash( this._hash ))
         {
-            this._hash = getSelfCallHashAtDbn( this.dbn );
+            this._hash = hashIrData(
+                concatUint8Arr(
+                    IRSelfCall.tag,
+                    fromUtf8( this.name )
+                )
+            );
         }
         return this._hash;
     }
@@ -38,37 +62,9 @@ export class IRSelfCall
     }
     isHashPresent(): true { return true; }
     
-    private _dbn: number;
-    /**
-     * the IR DeBruijn index is not necessarly the same of the UPLC
-     * ( more ofthen than not it won't be the same )
-     * 
-     * this is because in the IR things like `plet`
-     * are skipping some DeBruijin levels that are instead present
-     * in the final UPLC
-    **/
-    get dbn(): number { return this._dbn; }
-    set dbn( newDbn: number )
-    {
-        if(!(
-            Number.isSafeInteger( newDbn ) && newDbn >= 0 
-        )){
-            throw new BasePlutsError(
-                "invalid index for an `IRSelfCall` instance; new DeBruijn was: " + newDbn
-            );
-        }
-
-        if( newDbn === this._dbn ) return; // everything ok
-
-        this.markHashAsInvalid();
-        this._dbn = newDbn;
-    }
-
     static get kind(): IRNodeKind.SelfCall { return IRNodeKind.SelfCall; }
     get kind(): IRNodeKind.SelfCall { return IRSelfCall.kind; }
     static get tag(): Uint8Array { return new Uint8Array([ IRSelfCall.kind ]); }
-
-    readonly meta: IRSelfCallMetadata
 
     private _definition: IRRecursive | undefined;
     get definition(): IRRecursive
@@ -138,59 +134,18 @@ export class IRSelfCall
         );
     }
 
-    constructor( DeBruijn: number | bigint )
-    {
-
-        Object.defineProperty(
-            this, "meta", {
-                value: {},
-                writable: false,
-                enumerable: true,
-                configurable: false
-            }
-        );
-        
-        this._hash = undefined;
-
-        DeBruijn = typeof DeBruijn === "number" ? DeBruijn : Number( DeBruijn );
-        this._dbn = DeBruijn;
-        // call setter to check for validity
-        this.dbn = DeBruijn;
-        
-        this._parent = undefined;
-    }
-
     children(): IRTerm[] { return []; }
 
     clone(): IRSelfCall
     {
-        return new IRSelfCall( this.dbn );
+        return new IRSelfCall( this.name );
     }
     toJSON() { return this.toJson(); }
     toJson(): any
     {
         return {
             type: "IRSelfCall",
-            dbn: this.dbn
+            name: this.name
         }
     }
-}
-
-const dbnSelfCallCache: { [dbn: number]: IRHash } = {};
-
-function getSelfCallHashAtDbn( dbn: number )
-{
-    if( !isIRHash( dbnSelfCallCache[dbn] ) )
-    {
-        dbnSelfCallCache[dbn] = (
-            hashIrData(
-                concatUint8Arr(
-                    IRSelfCall.tag,
-                    positiveIntAsBytes( dbn )
-                )
-            )
-        );
-    }
-
-    return dbnSelfCallCache[ dbn ];
 }

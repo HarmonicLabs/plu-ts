@@ -16,23 +16,27 @@ export interface IRRecursiveMetadata extends BaseIRMetadata {}
 export class IRRecursive
     implements IIRTerm, Cloneable<IRRecursive>, IHash, IIRParent, ToJson
 {
-    static get kind(): IRNodeKind.Recursive { return IRNodeKind.Recursive; }
-    get kind(): IRNodeKind.Recursive { return IRRecursive.kind; }
-    static get tag(): Uint8Array { return new Uint8Array([ IRRecursive.kind ]); }
+    get arity(): number { return 1; }
+    readonly name: string;
 
-    readonly arity!: number;
+    readonly meta: IRRecursiveMetadata
 
     constructor(
+        name: string,
         body: IRTerm,
-        func_name?: string | undefined,
         _unsafeHash?: IRHash
     ) {
         if( !isIRTerm( body ) )
         throw new Error("IRRecursive body argument was not an IRTerm");
 
-        this.arity = 1;
+        if(!(
+            typeof name === "string"
+            && name.length > 0
+        )) throw new BasePlutsError("invalid name for IRVar");
+        this.name = name;
+        
         this.meta = {
-            name: typeof func_name === "string" ? func_name : (void 0)
+            name
         };
 
         this._body = body;
@@ -46,6 +50,10 @@ export class IRRecursive
     children(): IRTerm[] {
         return [ this._body ];
     }
+
+    static get kind(): IRNodeKind.Recursive { return IRNodeKind.Recursive; }
+    get kind(): IRNodeKind.Recursive { return IRRecursive.kind; }
+    static get tag(): Uint8Array { return new Uint8Array([ IRRecursive.kind ]); }
 
     private _body!: IRTerm
     get body(): IRTerm { return this._body }
@@ -88,9 +96,6 @@ export class IRRecursive
         this.parent?.markHashAsInvalid();
     }
 
-    readonly meta: IRRecursiveMetadata
-    get name(): string | undefined { return this.meta.name };
-
     private _parent: IRParentTerm | undefined;
     get parent(): IRParentTerm | undefined { return this._parent; }
     set parent( newParent: IRTerm | undefined )
@@ -110,8 +115,8 @@ export class IRRecursive
     clone(): IRRecursive
     {
         return new IRRecursive(
+            this.name,
             this._body.clone(),
-            this.meta.name,
             this.isHashPresent() ? this.hash : undefined
         );
     }
