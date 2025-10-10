@@ -2,14 +2,12 @@ import { Cloneable } from "@harmoniclabs/cbor/dist/utils/Cloneable";
 import { IHash } from "../../interfaces/IHash";
 import { IIRParent } from "../../interfaces/IIRParent";
 import { concatUint8Arr } from "../../utils/concatUint8Arr";
-import { positiveBigIntAsBytes } from "../../utils/positiveIntAsBytes";
+import { zigzagBigintAsBytes } from "../../utils/positiveIntAsBytes";
 import { IRNativeTag, nativeTagToString } from "./IRNativeTag";
-import UPLCFlatUtils from "../../../utils/UPLCFlatUtils";
 import { IRParentTerm, isIRParentTerm } from "../../utils/isIRParentTerm";
 import { _modifyChildFromTo } from "../../toUPLC/_internal/_modifyChildFromTo";
 import { BaseIRMetadata } from "../BaseIRMetadata";
 import { ToJson } from "../../../utils/ToJson";
-import { hashIrData, IRHash } from "../../IRHash";
 import { isObject } from "@harmoniclabs/obj-utils";
 import { IRNodeKind } from "../../IRNodeKind";
 import { TirType } from "../../../compiler/tir/types/TirType";
@@ -33,6 +31,7 @@ import { TirDataOptT } from "../../../compiler/tir/types/TirNativeType/native/Op
 import { TirSopOptT } from "../../../compiler/tir/types/TirNativeType/native/Optional/sop";
 import { TirStringT } from "../../../compiler/tir/types/TirNativeType/native/string";
 import { TirVoidT } from "../../../compiler/tir/types/TirNativeType/native/void";
+import { IRHash, isIRHash, hashIrData, irHashToBytes } from "../../IRHash";
 
 /**
  * we might not need all the hashes
@@ -47,7 +46,7 @@ export interface IRNativeMetadata extends BaseIRMetadata {}
  * `IRNative` ⊇ (`Builtins` + `std::fn`)
 **/
 export class IRNative
-    implements IIRTerm, Cloneable<IRNative>, IHash, IIRParent, ToJson
+    implements IIRTerm, Cloneable<IRNative>, IIRParent, ToJson
 {
     readonly tag!: IRNativeTag;
 
@@ -58,30 +57,34 @@ export class IRNative
     constructor( tag: IRNativeTag )
     {
         this.tag = tag;
+                
+        this._hash = undefined;
+    }
+
+    private _hash: IRHash | undefined;
+    get hash(): IRHash
+    {
+        if( isIRHash( this._hash ) ) return this._hash;
+
+        this._hash = hashIrData(
+            concatUint8Arr(
+                IRNative.tag,
+                zigzagBigintAsBytes( BigInt( this.tag ) )
+            )
+        );
+
+        return this._hash;
+    }
+    isHashPresent(): boolean { return isIRHash( this._hash ); }
+    markHashAsInvalid(): void
+    {
+        this._hash = undefined;
+        this.parent?.markHashAsInvalid();
     }
 
     children(): IRTerm[] {
         return [];
     }
-
-    get hash(): IRHash
-    {
-        if(nativeHashesPreimageCache[this.tag] === undefined)
-        {
-            nativeHashesPreimageCache[this.tag] = concatUint8Arr( 
-                IRNative.tag, 
-                positiveBigIntAsBytes(
-                    UPLCFlatUtils.zigzagBigint(
-                        BigInt( this.tag )
-                    )
-                )
-            );
-        }
-        return hashIrData( nativeHashesPreimageCache[this.tag] );
-    }
-    markHashAsInvalid(): void 
-    { throw new Error("IRNative should never be invalid; 'markHashAsInvalid' called"); }
-    isHashPresent(): true { return true; }
 
     private _meta: IRNativeMetadata | undefined;
     get meta(): IRNativeMetadata
@@ -266,29 +269,49 @@ export class IRNative
         if( type instanceof TirListT ) return IRNative.equalListOf( getListTypeArg( type )! );
         if( type instanceof TirLinearMapT ) return IRNative.equalListOf( new TirPairDataT() );
         if( type instanceof TirLinearMapT ) return IRNative.equalListOf( new TirPairDataT() );
-        if( type instanceof TirUnConstrDataResultT ) return new IRHoisted(
-            new IRFunc( 2,
-                _ir_apps(
-                    IRNative.equalsData,
-                    _ir_apps( IRNative.constrData, new IRVar( 0 ) ),
-                    _ir_apps( IRNative.constrData, new IRVar( 1 ) ),
-                )
-            )
-        );
-        // don't even hoist, who is even going to use this?
-        if( type instanceof TirVoidT ) return new IRFunc( 2, IRConst.bool( true ) )
+        if( type instanceof TirUnConstrDataResultT ) return eqUnConstr.clone();
+        if( type instanceof TirVoidT ) return eqVoid.clone();
 
         const tsEnsureExsaustiveCheck: TirSopOptT | TirFuncT | TirSoPStructType | TirTypeParam = type;
         throw new Error("invalid type for std equality");
     }
     static equalListOf( type: TirType ): IRHoisted
     {
-        return new IRHoisted(
-            _ir_apps(
-                IRNative._mkEqualsList,
-                IRNative.equals( type )
-            ),
-            { forceHoist: false, name: `equalsListOf_${type.toString()}` }
-        )
+        const key = type.toTirTypeKey();
+        if(!( eqListNames[ key ] instanceof IRHoisted ))
+        {
+            eqListNames[ key ] = new IRHoisted(
+                _ir_apps(
+                    IRNative._mkEqualsList,
+                    IRNative.equals( type )
+                ),
+                { forceHoist: false, name: `equalsListOf_${type.toString()}` }
+            );
+        }
+        return eqListNames[ key ].clone();
     }
 }
+
+const eqListNames: Record<string, IRHoisted> = {};
+
+const eqUnConstr_a = Symbol("a");
+const eqUnConstr_b = Symbol("b");
+const eqUnConstr_name = Symbol("equalsUnConstrDataResult");
+const eqUnConstr =  new IRHoisted(
+    new IRFunc([ eqUnConstr_a, eqUnConstr_b ],
+        _ir_apps(
+            IRNative.equalsData,
+            _ir_apps( IRNative.constrData, new IRVar( eqUnConstr_a ) ),
+            _ir_apps( IRNative.constrData, new IRVar( eqUnConstr_b ) ),
+        )
+    )
+);
+
+const eqVoid_a = Symbol("a");
+const eqVoid_b = Symbol("b");
+const eqVoid_name = Symbol("equalsVoid");
+const eqVoid =  new IRHoisted(
+    new IRFunc([ eqVoid_a, eqVoid_b ],
+        IRConst.bool( true )
+    )
+);

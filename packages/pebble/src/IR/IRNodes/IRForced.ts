@@ -16,7 +16,7 @@ import { IRNodeKind } from "../IRNodeKind";
 export interface IRForcedMetadata extends BaseIRMetadata {}
 
 export class IRForced
-    implements IIRTerm, Cloneable<IRForced>, IHash, IIRParent, ToJson
+    implements IIRTerm, Cloneable<IRForced>, IIRParent, ToJson
 {
     readonly meta: IRForcedMetadata
 
@@ -24,8 +24,6 @@ export class IRForced
     {
         this.meta = {};
 
-        this._hash = isIRHash( _unsafeHash ) ? _unsafeHash : undefined;
-        
         if( !isIRTerm( forced ) )
         throw new Error("IRForced argument was not an IRTerm");
 
@@ -33,6 +31,29 @@ export class IRForced
         this._forced.parent = this;
 
         this._parent = undefined;
+        
+        this._hash = isIRHash( _unsafeHash ) ? _unsafeHash : undefined;
+    }
+
+    private _hash: IRHash | undefined;
+    get hash(): IRHash
+    {
+        if( isIRHash( this._hash ) ) return this._hash;
+
+        this._hash = hashIrData(
+            concatUint8Arr(
+                IRForced.tag,
+                irHashToBytes( this.forced.hash )
+            )
+        );
+
+        return this._hash;
+    }
+    isHashPresent(): boolean { return isIRHash( this._hash ); }
+    markHashAsInvalid(): void
+    {
+        this._hash = undefined;
+        this.parent?.markHashAsInvalid();
     }
 
     children(): IRTerm[] {
@@ -43,41 +64,17 @@ export class IRForced
     get forced(): IRTerm { return this._forced; }
     set forced( newForced: IRTerm | undefined )
     {
-        if(!isIRTerm( newForced ))
-        {
+        if(!isIRTerm( newForced )) {
             throw new BasePlutsError(
                 "invalid IRTerm to be forced"
             );
         }
-        if( !shallowEqualIRTermHash(this._forced, newForced) )
-        this.markHashAsInvalid();
         
         // keep the parent reference in the old child, useful for compilation
         // _forced.parent = undefined;
         
         this._forced = newForced;
         this._forced.parent = this;
-    }
-
-    private _hash: IRHash | undefined;
-    get hash(): IRHash
-    {
-        if(!isIRHash( this._hash ))
-        {
-            this._hash = hashIrData(
-                concatUint8Arr(
-                    IRForced.tag,
-                    irHashToBytes( this._forced.hash )
-                )
-            );
-        }
-        return this._hash;
-    }
-    isHashPresent(): boolean { return isIRHash( this._hash ); }
-    markHashAsInvalid(): void
-    {
-        this._hash = undefined;
-        this.parent?.markHashAsInvalid();
     }
 
     private _parent: IRParentTerm | undefined;
@@ -104,7 +101,7 @@ export class IRForced
     {
         return new IRForced(
             this.forced.clone(),
-            this.isHashPresent() ? this.hash : undefined
+            this._hash
         );
     }
     toJSON() { return this.toJson(); }

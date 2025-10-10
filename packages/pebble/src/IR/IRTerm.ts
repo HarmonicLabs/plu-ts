@@ -12,6 +12,7 @@ import { IRConstr } from "./IRNodes/IRConstr";
 import { IRCase } from "./IRNodes/IRCase";
 import { IRRecursive } from "./IRNodes/IRRecursive";
 import { IRSelfCall } from "./IRNodes/IRSelfCall";
+import { IHash } from "./interfaces";
 
 export type IRTerm
     = IRVar
@@ -29,6 +30,8 @@ export type IRTerm
     | IRRecursive
     | IRSelfCall;
 
-export interface IIRTerm {
+export interface IIRTerm
+    extends IHash
+{
     children(): IRTerm[];
 }

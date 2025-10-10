@@ -31,8 +31,8 @@ export class TirLitThisExpr
 
     toIR( ctx: ToIRTermCtx ): IRTerm
     {
-        const dbn = ctx.getVarAccessDbn("this");
-        if( typeof dbn !== "bigint" )
+        const dbn = ctx.getVarSym("this");
+        if( typeof dbn !== "symbol" )
         throw new Error("Missing 'this' variable declaration in context");
         return new IRVar( dbn );
     }

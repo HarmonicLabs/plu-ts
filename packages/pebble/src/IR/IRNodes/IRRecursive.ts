@@ -14,37 +14,55 @@ import { BaseIRMetadata } from "./BaseIRMetadata";
 export interface IRRecursiveMetadata extends BaseIRMetadata {}
 
 export class IRRecursive
-    implements IIRTerm, Cloneable<IRRecursive>, IHash, IIRParent, ToJson
+    implements IIRTerm, Cloneable<IRRecursive>, IIRParent, ToJson
 {
     get arity(): number { return 1; }
-    readonly name: string;
+    readonly name: symbol;
 
     readonly meta: IRRecursiveMetadata
 
     constructor(
-        name: string,
+        name: symbol,
         body: IRTerm,
-        _unsafeHash?: IRHash
+        _unsafeHash?: IRHash | undefined,
     ) {
         if( !isIRTerm( body ) )
         throw new Error("IRRecursive body argument was not an IRTerm");
 
         if(!(
-            typeof name === "string"
-            && name.length > 0
+            typeof name === "symbol"
+            && typeof name.description === "string"
+            && name.description.length > 0
         )) throw new BasePlutsError("invalid name for IRVar");
         this.name = name;
+        this._parent = undefined;
         
-        this.meta = {
-            name
-        };
+        this.meta = { name: name.description };
 
         this._body = body;
         this._body.parent = this;
 
         this._hash = isIRHash( _unsafeHash ) ? _unsafeHash : undefined;
-        
-        this._parent = undefined;
+    }
+
+    private _hash: IRHash | undefined;
+    get hash(): IRHash
+    {
+        if( isIRHash( this._hash ) ) return this._hash;
+
+        this._hash = hashIrData(
+            concatUint8Arr(
+                IRRecursive.tag,
+                irHashToBytes( this._body.hash )
+            )
+        );
+
+        return this._hash;
+    }
+    isHashPresent(): boolean { return isIRHash( this._hash ); }
+    markHashAsInvalid(): void {
+        this._hash = undefined;
+        this.parent?.markHashAsInvalid();
     }
 
     children(): IRTerm[] {
@@ -66,34 +84,10 @@ export class IRRecursive
             );
         }
         
-        if(!shallowEqualIRTermHash(this._body, newBody))
-        this.markHashAsInvalid();
         // keep the parent reference in the old child, useful for compilation
         // _body.parent = undefined;
         this._body = newBody;
         this._body.parent = this;
-    }
-
-    private _hash: IRHash | undefined;
-    get hash(): IRHash
-    {
-        if(!isIRHash( this._hash ))
-        {
-            this._hash = hashIrData(
-                concatUint8Arr(
-                    IRRecursive.tag,
-                    // positiveIntAsBytes( this.arity ),
-                    irHashToBytes( this._body.hash )
-                )
-            );
-        }
-        return this._hash;
-    }
-    isHashPresent(): boolean { return isIRHash( this._hash ) }
-    markHashAsInvalid(): void
-    {
-        this._hash = undefined;
-        this.parent?.markHashAsInvalid();
     }
 
     private _parent: IRParentTerm | undefined;
@@ -117,7 +111,7 @@ export class IRRecursive
         return new IRRecursive(
             this.name,
             this._body.clone(),
-            this.isHashPresent() ? this.hash : undefined
+            this._hash
         );
     }
 

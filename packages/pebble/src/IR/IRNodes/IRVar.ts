@@ -12,52 +12,50 @@ import { hashIrData, IRHash, isIRHash } from "../IRHash";
 import { IRNodeKind } from "../IRNodeKind";
 import { IIRTerm, IRTerm } from "../IRTerm";
 import { fromUtf8 } from "@harmoniclabs/uint8array-utils";
+import { hashVarSym } from "./utils/hashVarSym";
 
 export interface IRVarMetadata extends BaseIRMetadata {}
 
 export class IRVar
-    implements IIRTerm, Cloneable<IRVar>, IHash, IIRParent, ToJson
+    implements IIRTerm, Cloneable<IRVar>, IIRParent, ToJson
 {
     readonly meta: IRVarMetadata
-    readonly name: string;
+    readonly name: symbol;
 
-    constructor( name: string )
-    {
+    constructor(
+        name: symbol,
+        _unsafeHash?: IRHash | undefined
+    ) {
         if(!(
-            typeof name === "string"
-            && name.length > 0
+            typeof name === "symbol"
+            && typeof name.description === "string"
+            && name.description.length > 0
         )) throw new BasePlutsError("invalid name for IRVar");
         this.name = name;
+        this._parent = undefined;
 
         this.meta = {};
-        
-        this._hash = undefined;
-        this._parent = undefined;
+        this._hash = isIRHash( _unsafeHash ) ? _unsafeHash : undefined;
     }
 
     private _hash: IRHash | undefined;
-    get hash(): IRHash
-    {
-        if(!isIRHash( this._hash ))
-        {
-            this._hash = hashIrData(
-                concatUint8Arr(
-                    IRVar.tag,
-                    fromUtf8( this.name )
-                )
-            );
-        }
+    get hash(): IRHash {
+        if( isIRHash( this._hash ) ) return this._hash;
+        
+        this._hash = hashIrData(
+            concatUint8Arr(
+                IRVar.tag,
+                hashVarSym( this.name )
+            )
+        );
+
         return this._hash;
     }
-    /**
-     * called inside the dbn setter
-     */
-    markHashAsInvalid(): void
-    {
+    isHashPresent(): boolean { return isIRHash( this._hash ); }
+    markHashAsInvalid(): void {
         this._hash = undefined;
         this.parent?.markHashAsInvalid();
     }
-    isHashPresent(): true { return true; }
     
     static get kind(): IRNodeKind.Var { return IRNodeKind.Var; }
     get kind(): IRNodeKind.Var { return IRVar.kind; }
@@ -84,8 +82,9 @@ export class IRVar
 
     clone(): IRVar
     {
-        return new IRVar( this.name );
+        return new IRVar( this.name, this._hash );
     }
+
     toJSON() { return this.toJson(); }
     toJson(): any
     {

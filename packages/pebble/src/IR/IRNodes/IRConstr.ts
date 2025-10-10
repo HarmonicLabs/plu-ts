@@ -2,27 +2,25 @@ import { Cloneable } from "../../utils/Cloneable";
 import { ToJson } from "../../utils/ToJson";
 import { forceBigUInt } from "../../utils/ints";
 import { IIRTerm, IRTerm } from "../IRTerm";
-import { IHash, IIRParent } from "../interfaces";
-import { concatUint8Arr } from "../utils/concatUint8Arr";
+import { IIRParent } from "../interfaces";
 import { IRParentTerm, isIRParentTerm } from "../utils/isIRParentTerm";
 import { BaseIRMetadata } from "./BaseIRMetadata";
-import { positiveIntAsBytes } from "../utils/positiveIntAsBytes";
 import { mapArrayLike } from "./utils/mapArrayLike";
 import { makeArrayLikeProxy } from "./utils/makeArrayLikeProxy";
-import { MutArrayLike } from "../utils/MutArrayLike";
-import { equalIrHash, hashIrData, IRHash, irHashToBytes, isIRHash } from "../IRHash";
 import { _modifyChildFromTo } from "../toUPLC/_internal/_modifyChildFromTo";
-import { shallowEqualIRTermHash } from "../utils/equalIRTerm";
 import { IRNodeKind } from "../IRNodeKind";
 import { isIRTerm } from "../utils/isIRTerm";
+import { hashIrData, IRHash, irHashToBytes, isIRHash } from "../IRHash";
+import { concatUint8Arr } from "../utils/concatUint8Arr";
+import { positiveIntAsBytes } from "../utils/positiveIntAsBytes";
 
 export interface IRConstrMeta extends BaseIRMetadata {}
 
 export class IRConstr
-    implements IIRTerm, Cloneable<IRConstr>, IHash, IIRParent, ToJson
+    implements IIRTerm, Cloneable<IRConstr>, IIRParent, ToJson
 {
     readonly index!: bigint;
-    readonly fields!: MutArrayLike<IRTerm>;
+    readonly fields!: ArrayLike<IRTerm>;
 
     readonly meta: IRConstrMeta
 
@@ -34,81 +32,62 @@ export class IRConstr
         index: number | bigint,
         fields: ArrayLike<IRTerm>,
         meta: IRConstrMeta = {},
-        _unsafeHash?: IRHash
-    )
-    {
+        _unsafeHash?: IRHash | undefined
+    ) {
         const self = this;
 
         this.meta = meta;
 
         this._parent = undefined;
 
-        Object.defineProperty(
-            this, "index", {
-                value: forceBigUInt( index ),
-                writable: false,
-                enumerable: true,
-                configurable: false
-            }
-        );
-
-        Object.defineProperty(
-            this, "fields", {
-                value: makeArrayLikeProxy<IRTerm>(
-                    fields,
-                    isIRTerm,
-                    // initModifyElem
-                    newElem => {
-                        // newElem = newElem.clone();
-                        newElem.parent = self;
-                        // self.markHashAsInvalid()
-                        return newElem;
-                    },
-                    // modifyElem
-                    // called before setting the new value
-                    // the return value is the value that will be set
-                    (newElem, oldElem) => {
-                        if(!shallowEqualIRTermHash(oldElem, newElem))
-                        self.markHashAsInvalid();
-                        newElem.parent = self;
-                        return newElem;
-                    }
-                ),
-                writable: false,
-                enumerable: true,
-                configurable: false
+        this.index = forceBigUInt( index );
+        this.fields = makeArrayLikeProxy<IRTerm>(
+            fields,
+            isIRTerm,
+            // initModifyElem
+            newElem => {
+                // newElem = newElem.clone();
+                newElem.parent = self;
+                // self.markHashAsInvalid()
+                return newElem;
+            },
+            // modifyElem
+            // called before setting the new value
+            // the return value is the value that will be set
+            (newElem, oldElem) => {
+                newElem.parent = self;
+                return newElem;
             }
         );
 
         this._hash = isIRHash( _unsafeHash ) ? _unsafeHash : undefined;
     }
 
-    children(): IRTerm[] {
-        return Array.from( this.fields );
-    }
-
     private _hash: IRHash | undefined;
     get hash(): IRHash
     {
-        if(!isIRHash( this._hash ))
-        {
-            // basically a merkle tree
-            this._hash = hashIrData(
-                concatUint8Arr(
-                    IRConstr.tag,
-                    positiveIntAsBytes( this.index ),
-                    ...mapArrayLike( this.fields, f => irHashToBytes( f.hash) )
-                )
-            );
-        }
+        if( isIRHash( this._hash ) ) return this._hash;
+
+        this._hash = hashIrData(
+            concatUint8Arr(
+                IRConstr.tag,
+                positiveIntAsBytes( this.index ),
+                ...mapArrayLike( this.fields, f => irHashToBytes( f.hash ) )
+            )
+        );
+
         return this._hash;
     }
+    isHashPresent(): boolean { return isIRHash( this._hash ); }
     markHashAsInvalid(): void
     {
         this._hash = undefined;
         this.parent?.markHashAsInvalid();
     }
-    isHashPresent(): boolean { return isIRHash( this._hash ); }
+
+    children(): IRTerm[] {
+        return Array.from( this.fields );
+    }
 
     private _parent: IRParentTerm | undefined;
     get parent(): IRParentTerm | undefined { return this._parent; }
@@ -132,7 +111,7 @@ export class IRConstr
             this.index,
             mapArrayLike( this.fields, f => f.clone() ),
             { ...this.meta },
-            this.isHashPresent() ? this.hash : undefined
+            this._hash
         );
     }
     toJSON() { return this.toJson(); }

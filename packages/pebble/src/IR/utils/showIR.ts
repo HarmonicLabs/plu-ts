@@ -50,8 +50,8 @@ export function showIRText( _ir: IRTerm ): string
         {
             return hoistedToStr(ir);
         }
-        if( ir instanceof IRVar ) return getVarNameForDbn( dbn - 1 - ir.dbn );
-        if( ir instanceof IRSelfCall ) return "self_" + getVarNameForDbn( dbn - 1 - ir.dbn );
+        if( ir instanceof IRVar ) return ir.name.description!; // return getVarNameForDbn( dbn - 1 - ir.dbn );
+        if( ir instanceof IRSelfCall ) return "self_" + ir.name.description!; // return "self_" + getVarNameForDbn( dbn - 1 - ir.dbn );
         if( ir instanceof IRConst ) return constToString(ir);
         if( ir instanceof IRDelayed ) return `(delay ${_loop( ir.delayed, dbn )})`;
         if( ir instanceof IRForced ) return `(force ${_loop( ir.forced, dbn )})`;

@@ -16,10 +16,9 @@ import { IRParentTerm, isIRParentTerm } from "../utils/isIRParentTerm";
 import { _modifyChildFromTo } from "../toUPLC/_internal/_modifyChildFromTo";
 import { IRConstr } from "./IRConstr";
 import { IRCase } from "./IRCase";
-import { equalIrHash, hashIrData, IRHash, irHashToBytes, irHashToHex, isIRHash } from "../IRHash";
-import { shallowEqualIRTermHash } from "../utils/equalIRTerm";
 import { IRNodeKind } from "../IRNodeKind";
 import { IRRecursive } from "./IRRecursive";
+import { IRHash, isIRHash, hashIrData, irHashToBytes } from "../IRHash";
 
 
 export type HoistedSetEntry = {
@@ -46,26 +45,26 @@ const defaultHoistedMeta: IRHoistedMeta = freezeAll({
 });
 
 export class IRHoisted
-    implements IIRTerm, Cloneable<IRHoisted>, IHash, IIRParent, ToJson, IRHoistedMetadata
+    implements IIRTerm, Cloneable<IRHoisted>, IIRParent, ToJson, IRHoistedMetadata
 {
     readonly meta!: IRHoistedMeta
 
     constructor(
         hoisted: IRTerm, 
         metadata: Partial<IRHoistedMeta> = {},
-        _unsafeHash?: IRHash
-    )
-    {
+        _unsafeHash?: IRHash | undefined
+    ) {
         // unwrap
         // !!! IMPORTANT !!!
         while( hoisted instanceof IRHoisted ) hoisted = hoisted.hoisted;
 
-        if( !isClosedIRTerm( hoisted ) )
-        {
+        if( !isClosedIRTerm( hoisted ) ) {
             throw new BasePlutsError(
                 "only closed terms can be hoisted"
             );
         }
+
+        this._parent = undefined;
         
         // initialize without calling "set"
         this._hoisted = hoisted;
@@ -73,15 +72,35 @@ export class IRHoisted
         
         this._deps = undefined;
 
-        this._hash = isIRHash( _unsafeHash ) ? _unsafeHash : undefined;
-
-        this._parent = undefined;
 
         this.meta = {
             ...defaultHoistedMeta,
             ...metadata,
             name: this._hoisted.meta?.name ?? metadata.name
         };
+                
+        this._hash = isIRHash( _unsafeHash ) ? _unsafeHash : undefined;
+    }
+
+    private _hash: IRHash | undefined;
+    get hash(): IRHash
+    {
+        if( isIRHash( this._hash ) ) return this._hash;
+
+        this._hash = hashIrData(
+            concatUint8Arr(
+                IRHoisted.tag,
+                irHashToBytes( this.hoisted.hash )
+            )
+        );
+
+        return this._hash;
+    }
+    isHashPresent(): boolean { return isIRHash( this._hash ); }
+    markHashAsInvalid(): void
+    {
+        this._hash = undefined;
+        this.parent?.markHashAsInvalid();
     }
 
     children(): IRTerm[] {
@@ -92,32 +111,8 @@ export class IRHoisted
     get kind(): IRNodeKind.Hoisted { return IRHoisted.kind; }
     static get tag(): Uint8Array { return new Uint8Array([ IRHoisted.kind ]); }
 
-    private _hash!: IRHash | undefined;
-    get hash(): IRHash
-    {
-        if(!isIRHash( this._hash ))
-        {
-            this._hash = hashIrData(
-                concatUint8Arr(
-                    IRHoisted.tag,
-                    irHashToBytes( this.hoisted.hash )
-                )
-            );
-        }
-        return this._hash;
-    }
-    markHashAsInvalid()
-    {
-        this._hash = undefined;
-        this._deps = undefined;
-        this.parent?.markHashAsInvalid();
-    }
-    isHashPresent(): boolean
-    {
-        return isIRHash( this._hash );
-    }
-
     private _hoisted!: IRTerm;
+    get value(): IRTerm { return this._hoisted; }
     get hoisted(): IRTerm { return this._hoisted; }
     set hoisted( newHoisted: IRTerm )
     {
@@ -125,8 +120,6 @@ export class IRHoisted
         throw new BasePlutsError(
             "only closed terms can be hoisted"
         );
-        if(!shallowEqualIRTermHash( this._hoisted, newHoisted ))
-        this.markHashAsInvalid();
         
         // dependencies need to be updated EVEN if hash is the same
         // since the terms might be the same but maybe cloned
@@ -165,17 +158,16 @@ export class IRHoisted
     clone(): IRHoisted
     {
         return new IRHoisted(
-            this.hoisted.clone(),
+            this.value.clone(),
             { ...this.meta },
-            this.isHashPresent() ? this.hash : undefined
-        )
+            this._hash
+        );
     }
     toJSON() { return this.toJson(); }
     toJson(): any
     {
         return {
             type: "IRHoisted",
-            hash: irHashToHex( this.hash ),
             hoisted: this.hoisted.toJson()
         }
     }
@@ -191,7 +183,7 @@ export class IRHoisted
 export function getSortedHoistedSet( hoistedTerms: HoistedSetEntry[] ): HoistedSetEntry[]
 {
     const set: HoistedSetEntry[] = [];
-    const hashesSet: IRHash[] = [];
+    const hashesSet: symbol[] = [];
      
     /**
      * **O((n * m) * d)**
@@ -209,7 +201,7 @@ export function getSortedHoistedSet( hoistedTerms: HoistedSetEntry[] ): HoistedS
             const thisHoistedEntry = _terms[i]; 
             const thisHash = thisHoistedEntry.hoisted.hash;
 
-            const idxInSet = hashesSet.findIndex( hash => equalIrHash( hash, thisHash ) )
+            const idxInSet = hashesSet.indexOf( thisHash );
 
             // if( !hashesSet.includes( compiled ) )
             // "includes" uses standard equality (===)

@@ -8,17 +8,19 @@ import { BaseIRMetadata } from "./BaseIRMetadata";
 import { mapArrayLike } from "./utils/mapArrayLike";
 import { makeArrayLikeProxy } from "./utils/makeArrayLikeProxy";
 import { MutArrayLike } from "../utils/MutArrayLike";
-import { equalIrHash, hashIrData, IRHash, irHashToBytes, isIRHash } from "../IRHash";
 import { _modifyChildFromTo } from "../toUPLC/_internal/_modifyChildFromTo";
 import { shallowEqualIRTermHash } from "../utils/equalIRTerm";
 import { IRNodeKind } from "../IRNodeKind";
 import { isIRTerm } from "../utils/isIRTerm";
+import { hashIrData, IRHash, irHashToBytes, isIRHash } from "../IRHash";
 
 export interface IRCaseMeta extends BaseIRMetadata {}
 
 export class IRCase
-    implements IIRTerm, Cloneable<IRCase>, IHash, IIRParent, ToJson
+    implements IIRTerm, Cloneable<IRCase>, IIRParent, ToJson
 {
+    readonly continuations!: ArrayLike<IRTerm>;
+
     static get kind(): IRNodeKind.Case { return IRNodeKind.Case; }
     get kind(): IRNodeKind.Case { return IRCase.kind; }
     static get tag(): Uint8Array { return new Uint8Array([ IRCase.kind ]); }
@@ -27,9 +29,8 @@ export class IRCase
         constrTerm: IRTerm,
         continuations: ArrayLike<IRTerm>,
         meta: IRCaseMeta = {},
-        _unsafeHash?: IRHash
-    )
-    {
+        _unsafeHash?: IRHash | undefined
+    ) {
         const self = this;
 
         this.meta = meta;
@@ -37,35 +38,46 @@ export class IRCase
         this._constrTerm = constrTerm;
         this._constrTerm.parent = self;
 
-        Object.defineProperty(
-            this, "continuations", {
-                value: makeArrayLikeProxy<IRTerm>(
-                    continuations,
-                    isIRTerm,
-                    // initModifyElem
-                    // function called once for each element in the array
-                    // only at element definition
-                    newElem => {
-                        newElem.parent = self;
-                        return newElem;
-                    },
-                    // modifyElem
-                    (newElem, oldElem) => {
-                        // keep the parent reference in the old child, useful for compilation
-                        // oldElem.parent = undefined;
-                        newElem.parent = self;
-                        if(!shallowEqualIRTermHash( oldElem, newElem ))
-                        self.markHashAsInvalid();
-                        return newElem;
-                    }
-                ),
-                writable: false,
-                enumerable: true,
-                configurable: false
+        this.continuations = makeArrayLikeProxy<IRTerm>(
+            continuations,
+            isIRTerm,
+            // initModifyElem
+            // function called once for each element in the array
+            // only at element definition
+            newElem => {
+                newElem.parent = self;
+                return newElem;
+            },
+            // modifyElem
+            (newElem, oldElem) => {
+                // keep the parent reference in the old child, useful for compilation
+                // oldElem.parent = undefined;
+                newElem.parent = self;
+                return newElem;
             }
         );
 
         this._hash = isIRHash( _unsafeHash ) ? _unsafeHash : undefined;
+    }
+
+    private _hash: IRHash | undefined;
+    get hash(): IRHash {
+        if( isIRHash( this._hash ) ) return this._hash;
+
+        this._hash = hashIrData(
+            concatUint8Arr(
+                IRCase.tag,
+                irHashToBytes( this.constrTerm.hash ),
+                ...Array.from( this.continuations, c => irHashToBytes( c.hash ) )
+            )
+        );
+
+        return this._hash;
+    }
+    isHashPresent(): boolean { return isIRHash( this._hash ); }
+    markHashAsInvalid(): void {
+        this._hash = undefined;
+        this.parent?.markHashAsInvalid();
     }
 
     children(): IRTerm[] {
@@ -74,29 +86,6 @@ export class IRCase
             ...Array.from( this.continuations )
         ];
     }
-
-    private _hash: IRHash | undefined;
-    get hash(): IRHash
-    {
-        if(!isIRHash( this._hash ))
-        {
-            // basically a merkle tree
-            this._hash = hashIrData(
-                concatUint8Arr(
-                    IRCase.tag,
-                    irHashToBytes( this._constrTerm.hash ),
-                    ...mapArrayLike( this.continuations, f => irHashToBytes( f.hash ) )
-                )
-            );
-        }
-        return this._hash;
-    }
-    markHashAsInvalid(): void
-    {
-        this._hash = undefined;
-        this.parent?.markHashAsInvalid();
-    }
-    isHashPresent(): boolean { return isIRHash( this._hash ); }
     
     private _constrTerm!: IRTerm;
     get constrTerm(): IRTerm { return this._constrTerm; }
@@ -104,16 +93,12 @@ export class IRCase
     {
         if( !isIRTerm( newConstrTerm ) ) return;
 
-        if(!shallowEqualIRTermHash( this._constrTerm, newConstrTerm ))
-        this.markHashAsInvalid();
-
         // keep the parent reference in the old child, useful for compilation
         // constrTerm.parent = undefined;
         this._constrTerm = newConstrTerm;
         this._constrTerm.parent = this;
     }
 
-    readonly continuations!: MutArrayLike<IRTerm>;
 
     private _parent: IRParentTerm | undefined;
     get parent(): IRParentTerm | undefined { return this._parent; }
@@ -139,7 +124,7 @@ export class IRCase
             this.constrTerm,
             mapArrayLike( this.continuations, f => f.clone() ),
             { ...this.meta },
-            this.isHashPresent() ? this.hash : undefined
+            this._hash
         );
     }
     toJSON() { return this.toJson(); }

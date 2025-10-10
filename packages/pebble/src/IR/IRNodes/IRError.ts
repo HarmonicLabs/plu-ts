@@ -5,17 +5,17 @@ import { IIRParent } from "../interfaces/IIRParent";
 import { IRParentTerm, isIRParentTerm } from "../utils/isIRParentTerm";
 import { _modifyChildFromTo } from "../toUPLC/_internal/_modifyChildFromTo";
 import { BaseIRMetadata } from "./BaseIRMetadata";
-import { hashIrData, IRHash } from "../IRHash";
 import { IRNodeKind } from "../IRNodeKind";
 import { IIRTerm, IRTerm } from "../IRTerm";
+import { hashIrData, IRHash } from "../IRHash";
 
 const irErrorBitTag = new Uint8Array([ IRNodeKind.Error ]);
-const errorHash = hashIrData( irErrorBitTag.slice() )
+const irErrorHash: IRHash = hashIrData( irErrorBitTag );
 
 export interface IRErrorMetadata extends BaseIRMetadata {}
 
 export class IRError
-    implements IIRTerm, Cloneable<IRError>, IHash, IIRParent, ToJson
+    implements IIRTerm, Cloneable<IRError>, IIRParent, ToJson
 {
     readonly meta: IRErrorMetadata
 
@@ -30,6 +30,10 @@ export class IRError
         this._parent = undefined;
     }
 
+    get hash(): IRHash { return irErrorHash; }
+    isHashPresent(): boolean { return true; }
+    markHashAsInvalid(): void { throw new Error("IRError: hash is always present and valid"); }
+
     children(): IRTerm[] {
         return [];
     }
@@ -37,10 +41,6 @@ export class IRError
     static get kind(): IRNodeKind.Error { return IRNodeKind.Error; }
     get kind(): IRNodeKind.Error { return IRError.kind; }
     static get tag(): Uint8Array { return irErrorBitTag.slice(); }
-
-    get hash(): IRHash { return errorHash; }
-    isHashPresent(): boolean { return true; }
-    markHashAsInvalid(): void { throw new Error("IRError.markHashAsInvalid was called but error doesn't have childs") }
 
     private _parent: IRParentTerm | undefined;
     get parent(): IRParentTerm | undefined { return this._parent; }

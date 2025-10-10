@@ -1,33 +1,20 @@
-import { iterTree } from "../toUPLC/_internal/iterTree";
-import { IRVar } from "./IRVar";
-import { positiveIntAsBytes } from "../utils/positiveIntAsBytes";
 import { IRMetadata } from "../interfaces/IRMetadata";
 import { Cloneable } from "@harmoniclabs/cbor/dist/utils/Cloneable";
-import { freezeAll, defineReadOnlyProperty } from "@harmoniclabs/obj-utils";
+import { freezeAll } from "@harmoniclabs/obj-utils";
 import { BasePlutsError } from "../../utils/BasePlutsError";
 import { ToJson } from "../../utils/ToJson";
 import { IIRTerm, IRTerm } from "../IRTerm";
-import { IHash, IIRParent } from "../interfaces";
+import { IIRParent } from "../interfaces";
 import { concatUint8Arr } from "../utils/concatUint8Arr";
 import { isIRTerm } from "../utils/isIRTerm";
-import { IRApp } from "./IRApp";
-import { IRDelayed } from "./IRDelayed";
-import { IRForced } from "./IRForced";
-import { IRFunc } from "./IRFunc";
 import { IRHoisted } from "./IRHoisted";
 import { IRParentTerm, isIRParentTerm } from "../utils/isIRParentTerm";
 import { _modifyChildFromTo } from "../toUPLC/_internal/_modifyChildFromTo";
 import { BaseIRMetadata } from "./BaseIRMetadata";
 import { _getMinUnboundDbn } from "../toUPLC/subRoutines/handleLetted/groupByScope";
-import { IRConstr } from "./IRConstr";
-import { IRCase } from "./IRCase";
-import { equalIrHash, hashIrData, IRHash, irHashToBytes, irHashToHex, isIRHash } from "../IRHash";
-import { shallowEqualIRTermHash } from "../utils/equalIRTerm";
+import { hashIrData, IRHash, irHashToBytes, isIRHash } from "../IRHash";
 import { IRNodeKind } from "../IRNodeKind";
-import { IRRecursive } from "./IRRecursive";
-import { IRSelfCall } from "./IRSelfCall";
-import { prettyIR, prettyIRInline } from "../utils/showIR";
-import { toHex } from "@harmoniclabs/uint8array-utils";
+import { prettyIR } from "../utils/showIR";
 
 
 export type LettedSetEntry = {
@@ -38,7 +25,7 @@ export type LettedSetEntry = {
 function jsonLettedSetEntry( entry: LettedSetEntry )
 {
     return {
-        letted: irHashToHex(entry.letted.hash),
+        letted: entry.letted.name.description,
         nReferences: entry.nReferences
     }
 
@@ -47,7 +34,7 @@ function jsonLettedSetEntry( entry: LettedSetEntry )
 function expandedJsonLettedSetEntry( entry: LettedSetEntry )
 {
     return {
-        letted: irHashToHex( entry.letted.hash ),
+        letted: entry.letted.name.description,
         letted_value: prettyIR( entry.letted.value ).text.split("\n"),
         nReferences: entry.nReferences
     }
@@ -75,22 +62,21 @@ const defaultLettedMeta: IRLettedMeta = freezeAll({
 });
 
 export class IRLetted
-    implements IIRTerm, Cloneable<IRLetted>, IHash, IIRParent, ToJson, IRLettedMetadata
+    implements IIRTerm, Cloneable<IRLetted>, IIRParent, ToJson, IRLettedMetadata
 {
-    readonly name: string;
+    readonly name: symbol;
     readonly meta!: IRLettedMeta
 
     constructor(
-        name: string,
+        name: symbol,
         toLet: IRTerm,
         metadata: Partial<IRLettedMeta> = {},
-        _unsafeHash: IRHash | undefined = undefined
-    )
-    {
-
+        _unsafeHash?: IRHash | undefined
+    ) {
         if(!(
-            typeof name === "string"
-            && name.length > 0
+            typeof name === "symbol"
+            && typeof name.description === "string"
+            && name.description.length > 0
         )) throw new BasePlutsError("invalid name for IRVar");
         this.name = name;
 
@@ -107,9 +93,6 @@ export class IRLetted
         this._value = toLet;
         this._value.parent = this;
 
-        // we need the has before setting dependecies
-        this._hash = isIRHash( _unsafeHash ) ? _unsafeHash : undefined;
-        
         this._deps = undefined;
 
         this._parent = undefined;
@@ -119,29 +102,30 @@ export class IRLetted
             ...metadata,
             // isClosed: metadata.isClosed || this.isClosedAtDbn( 0 )
         };
+        
+        this._hash = isIRHash( _unsafeHash ) ? _unsafeHash : undefined;
     }
 
     private _hash: IRHash | undefined;
     get hash(): IRHash
     {
-        if(!isIRHash( this._hash )) {
-            this._hash = hashIrData(
-                concatUint8Arr(
-                    IRLetted.tag,
-                    irHashToBytes( this._value.hash )
-                )
-            );
-        }
+        if( isIRHash( this._hash ) ) return this._hash;
+
+        this._hash = hashIrData(
+            concatUint8Arr(
+                IRLetted.tag,
+                irHashToBytes( this.value.hash )
+            )
+        );
 
         return this._hash;
     }
-    markHashAsInvalid()
+    isHashPresent(): boolean { return isIRHash( this._hash ); }
+    markHashAsInvalid(): void
     {
         this._hash = undefined;
-        this._deps = undefined;
         this.parent?.markHashAsInvalid();
     }
-    isHashPresent(): boolean { return isIRHash( this._hash ); }
 
     private _value!: IRTerm
     get value(): IRTerm { return this._value; }
@@ -155,9 +139,6 @@ export class IRLetted
         if( !isIRTerm( newVal ) )
         throw new BasePlutsError("letted term was not IRTerm");
     
-        if(!shallowEqualIRTermHash(this._value, newVal))
-        this.markHashAsInvalid();
-        
         // remove deps even if the value is the same
         // newValue might be a clone of the current value
         // and so have different (new) objects
@@ -207,15 +188,15 @@ export class IRLetted
             this.name,
             this.value.clone(),
             { ...this.meta },
-            this.isHashPresent() ? this.hash : undefined
-        )
+            this._hash
+        );
     }
     toJSON() { return this.toJson(); }
     toJson(): any 
     {
         return {
             type: "IRLetted",
-            hash: irHashToHex( this.hash ),
+            name: this.name.description,
             value: this.value.toJson()
         };
     }
@@ -230,7 +211,7 @@ export class IRLetted
 function getSortedLettedSet( lettedTerms: LettedSetEntry[] ): LettedSetEntry[]
 {
     const set: LettedSetEntry[] = [];
-    const hashesSet: IRHash[] = [];
+    const hashesSet: symbol[] = [];
      
     /**
      * **O((n * m) * d)**
@@ -246,9 +227,9 @@ function getSortedLettedSet( lettedTerms: LettedSetEntry[] ): LettedSetEntry[]
         for( let i = 0; i < _terms.length; i++ )
         {
             const thisLettedEntry = _terms[i]; 
-            const thisHash = thisLettedEntry.letted.hash;
+            const thisHash = thisLettedEntry.letted.name;
 
-            const idxInSet = hashesSet.findIndex( hash => equalIrHash( hash, thisHash ) )
+            const idxInSet = hashesSet.indexOf( thisHash )
             if( idxInSet < 0 ) // not present
             {
                 // add dependencies first

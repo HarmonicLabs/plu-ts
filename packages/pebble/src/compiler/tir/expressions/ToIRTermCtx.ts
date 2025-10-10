@@ -5,15 +5,18 @@ const _1n = BigInt(1);
 
 export class ToIRTermCtx
 {
-    private readonly variables: string[] = [];
-
-    // MUST BE A GETTER TO REFLECT CHANGES IN PARENT
-    // DO NOT MODIFY
-    private get _parentDbn(): bigint {
-        return this.parent?.dbn ?? BigInt(0);
-    }
-    get dbn(): bigint {
-        return this._parentDbn + BigInt(this.variables.length);
+    // https://tc39.es/ecma262/multipage/ordinary-and-exotic-objects-behaviours.html#sec-ordinary-object-internal-methods-and-internal-slots-ownpropertykeys
+    // order of `Object.keys` by ECMAScript specification:
+    //
+    // - first, the keys that are integer indices, in ascending numeric order
+    // - then, all other string keys, in the order in which they were added to the object
+    // - finally, all symbol keys, in the order in which they were added to the object
+    //
+    // we know variables names can NEVER start with a number,
+    // so we are safe to assume we always get the variables in the order they were defined
+    private readonly variables: Record<string,symbol> = {};
+    private varNames(): string[] {
+        return Object.keys( this.variables );
     }
 
     private _firstVariableIsRecursive: boolean = false;
@@ -35,7 +38,7 @@ export class ToIRTermCtx
     allVariables(): string[] {
         return (
             (this.parent?.allVariables() ?? [])
-            .concat( this.variables )
+            .concat( Object.keys( this.variables ) )
         );
     }
 
@@ -47,49 +50,44 @@ export class ToIRTermCtx
         return new ToIRTermCtx( this, this.variableToCtx );
     }
 
-    private localVarDbn( name: string ): bigint | undefined {
-        const idx = this.variables.indexOf( name );
-        if( idx < 0 ) return undefined;
-        return this._parentDbn + BigInt(idx);
+    private localVarSym( name: string ): symbol | undefined {
+        const sym = this.variables[ name ];
+        if( typeof sym === "symbol" ) return undefined;
+        return sym;
     }
 
-    getVarDeclDbn( name: string ): bigint | undefined {
+    getVarSym( name: string ): symbol | undefined {
         const ctx = this.variableToCtx.get( name );
         if( !ctx ) return undefined;
-        return ctx.localVarDbn( name );
-    }
-
-    getVarAccessDbn( name: string ): bigint | undefined {
-        const declDbn = this.getVarDeclDbn( name );
-        if( typeof declDbn !== "bigint" ) return undefined;
-        return this.dbn - ( declDbn + _1n );
+        return ctx.localVarSym( name );
     }
 
     getVarAccessIR( name: string ): IRVar | IRSelfCall | undefined {
-        const accessDbn = this.getVarAccessDbn( name );
-        if( typeof accessDbn !== "bigint" ) return undefined;
+        const accessSym = this.getVarSym( name );
+        if( typeof accessSym !== "bigint" ) return undefined;
 
         if(
-            name === this.variables[0]
+            name === this.varNames()[0]
             && this._firstVariableIsRecursive
-        ) return new IRSelfCall( accessDbn );
+        ) return new IRSelfCall( accessSym );
         
-        return new IRVar( accessDbn );
+        return new IRVar( accessSym );
     }
 
     defineVar( name: string ): void {
         if( this.variableToCtx.has( name ) ) {
             const ctx = this.variableToCtx.get( name )!;
-            if( ctx.localVarDbn( name ) !== undefined ) {
+            if( ctx.localVarSym( name ) !== undefined ) {
                 throw new Error(`variable '${name}' already defined in the current scope`);
             }
         }
-        this.variables.push( name );
+        const sym = Symbol(name);
+        this.variables[ name ] = sym;
         this.variableToCtx.set( name, this );
     }
     defineRecursiveVar( name: string ): void {
         if(
-            this.variables.length > 0
+            this.varNames().length > 0
             || this._firstVariableIsRecursive
         ) throw new Error("recursive variable must be the first defined variable in the context");
         this.defineVar( name );
@@ -97,6 +95,15 @@ export class ToIRTermCtx
     }
 
     pushUnusedVar(): void {
-        this.variables.push( "" ); // just to increment dbn
+        // this.variables.push( "" );
+        // just to increment dbn
+
+        // we need a new unique name in the `variables` map
+        // (if we just use empty string, or the same string, it will overwrite the previous "unused" entry)
+        // 
+        // we start with the number so we know it is not a valid variable name
+        // but we add "_unused" so the key is not an integer (which would be sorted first in Object.keys)
+        const name = this.varNames().length;+ "_unused";
+        this.variables[ name ] = Symbol( name );
     }
 }

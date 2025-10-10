@@ -1,4 +1,5 @@
 import { fromHex } from "@harmoniclabs/uint8array-utils";
+import UPLCFlatUtils from "../../utils/UPLCFlatUtils";
 
 /**
  * writes the number in a new `Uint8Array` Big Endian
@@ -38,4 +39,11 @@ export function positiveBigIntAsBytes( n: bigint ): Uint8Array
     let strHex = n.toString(16);
     strHex = strHex.length % 2 === 0 ? strHex : "0" + strHex;
     return fromHex( strHex );
+}
+
+export function zigzagBigintAsBytes( n: bigint ): Uint8Array
+{
+    return positiveBigIntAsBytes(
+        UPLCFlatUtils.zigzagBigint( BigInt( n ) )
+    );
 }

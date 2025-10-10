@@ -11,7 +11,6 @@ import { positiveBigIntAsBytes } from "../utils/positiveIntAsBytes";
 import { IRParentTerm, isIRParentTerm } from "../utils/isIRParentTerm";
 import { _modifyChildFromTo } from "../toUPLC/_internal/_modifyChildFromTo";
 import { BaseIRMetadata } from "./BaseIRMetadata";
-import { hashIrData, IRHash, isIRHash } from "../IRHash";
 import { IRNodeKind } from "../IRNodeKind";
 import { TirType } from "../../compiler/tir/types/TirType";
 import { getUnaliased } from "../../compiler/tir/types/utils/getUnaliased";
@@ -33,6 +32,7 @@ import { TirSopOptT } from "../../compiler/tir/types/TirNativeType/native/Option
 import { TirStringT } from "../../compiler/tir/types/TirNativeType/native/string";
 import { TirVoidT } from "../../compiler/tir/types/TirNativeType/native/void";
 import { IIRTerm, IRTerm } from "../IRTerm";
+import { hashIrData, IRHash, isIRHash } from "../IRHash";
 
 export interface IRConstPair {
     fst: IRConstValue;
@@ -61,7 +61,7 @@ export type IRConstValue
 export interface IRConstMetadata extends BaseIRMetadata {}
 
 export class IRConst
-    implements IIRTerm, Cloneable<IRConst>, IHash, IIRParent, ToJson
+    implements IIRTerm, Cloneable<IRConst>, IIRParent, ToJson
 {
     static get kind(): IRNodeKind.Const { return IRNodeKind.Const; }
     get kind(): IRNodeKind.Const { return IRConst.kind; }
@@ -83,6 +83,28 @@ export class IRConst
         this._hash = isIRHash( _unsafeHash ) ? _unsafeHash : undefined;
     }
 
+    private _hash: IRHash | undefined = undefined;
+    get hash(): IRHash
+    {
+        if( isIRHash( this._hash ) ) return this._hash;
+
+        this._hash =  hashIrData(
+            concatUint8Arr(
+                IRConst.tag,
+                new Uint8Array( this.type.toUplcConstType() ),
+                serializeIRConstValue( this.value, this.type )
+            )
+        );
+
+        return this._hash;
+    }
+    isHashPresent(): boolean { return true; }
+    markHashAsInvalid(): void {
+        this._hash = undefined;
+        this.parent?.markHashAsInvalid();
+    }
+
+
     children(): IRTerm[] {
         return [];
     }
@@ -94,25 +116,6 @@ export class IRConst
             this.value as any
         );
     }
-
-    private _hash: IRHash | undefined;
-    get hash(): IRHash
-    {
-        if(!isIRHash( this._hash ))
-        {
-            this._hash = hashIrData(
-                concatUint8Arr(
-                    IRConst.tag,
-                    new Uint8Array( this.type.toUplcConstType() ),
-                    serializeIRConstValue( this.value, this.type )
-                )
-            )
-        }
-        return this._hash;
-    }
-    markHashAsInvalid(): void
-    { { throw new Error("IRConst `markHashAsInvalid` was called; but a constant doesn't have childs") } }
-    isHashPresent(): boolean { return isIRHash( this._hash ); }
 
     private _meta: IRConstMetadata | undefined = undefined;
     get meta(): IRConstMetadata | undefined
@@ -142,7 +145,7 @@ export class IRConst
         return new IRConst(
             this.type,
             this.value,
-            this.isHashPresent() ? this.hash : undefined
+            this._hash
         );
     }
     toJSON() { return this.toJson(); }

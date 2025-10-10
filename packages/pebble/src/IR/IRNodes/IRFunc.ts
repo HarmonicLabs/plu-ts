@@ -2,48 +2,61 @@ import { Cloneable } from "@harmoniclabs/cbor/dist/utils/Cloneable";
 import { BasePlutsError } from "../../utils/BasePlutsError";
 import { ToJson } from "../../utils/ToJson";
 import { IIRTerm, IRTerm } from "../IRTerm";
-import { IHash } from "../interfaces/IHash";
 import { IIRParent } from "../interfaces/IIRParent";
 import { concatUint8Arr } from "../utils/concatUint8Arr";
 import { isIRTerm } from "../utils/isIRTerm";
 import { positiveIntAsBytes } from "../utils/positiveIntAsBytes";
-import { defineReadOnlyProperty } from "@harmoniclabs/obj-utils";
 import { IRParentTerm, isIRParentTerm } from "../utils/isIRParentTerm";
 import { _modifyChildFromTo } from "../toUPLC/_internal/_modifyChildFromTo";
 import { BaseIRMetadata } from "./BaseIRMetadata";
-import { equalIrHash, hashIrData, IRHash, irHashToBytes, isIRHash } from "../IRHash";
-import { shallowEqualIRTermHash } from "../utils/equalIRTerm";
 import { IRNodeKind } from "../IRNodeKind";
+import { hashIrData, IRHash, irHashToBytes, isIRHash } from "../IRHash";
 
 export interface IRFuncMetadata extends BaseIRMetadata {}
 
 export class IRFunc
-    implements IIRTerm, Cloneable<IRFunc>, IHash, IIRParent, ToJson
+    implements IIRTerm, Cloneable<IRFunc>, IIRParent, ToJson
 {
-    readonly params: string[] = [];
+    readonly params: symbol[] = [];
     get arity(): number { return this.params.length; }
 
     constructor(
-        params: string[],
+        params: symbol[],
         body: IRTerm,
-        func_name?: string | undefined,
-        _unsafeHash?: IRHash
-    )
-    {
+        _unsafeHash?: IRHash | undefined
+    ) {
         if( !isIRTerm( body ) )
         throw new Error("IRFunc body argument was not an IRTerm");
 
         this.params = params.slice();
-        this.meta = {
-            name: typeof func_name === "string" ? func_name : (void 0)
-        };
+        this.meta = {};
 
         this._body = body;
         this._body.parent = this;
 
-        this._hash = isIRHash( _unsafeHash ) ? _unsafeHash : undefined;
-        
         this._parent = undefined;
+        this._hash = isIRHash( _unsafeHash ) ? _unsafeHash : undefined;
+    }
+
+    private _hash: IRHash | undefined;
+    get hash(): IRHash
+    {
+        if( isIRHash( this._hash ) ) return this._hash;
+
+        this._hash = hashIrData(
+            concatUint8Arr(
+                IRFunc.tag,
+                positiveIntAsBytes( this.arity ),
+                irHashToBytes( this._body.hash )
+            )
+        );
+
+        return this._hash;
+    }
+    isHashPresent(): boolean { return isIRHash( this._hash ); }
+    markHashAsInvalid(): void {
+        this._hash = undefined;
+        this.parent?.markHashAsInvalid();
     }
 
     children(): IRTerm[] {
@@ -65,34 +78,10 @@ export class IRFunc
             );
         }
         
-        if(!shallowEqualIRTermHash(this._body, newBody))
-        this.markHashAsInvalid();
         // keep the parent reference in the old child, useful for compilation
         // _body.parent = undefined;
         this._body = newBody;
         this._body.parent = this;
-    }
-
-    private _hash: IRHash | undefined;
-    get hash(): IRHash
-    {
-        if(!isIRHash( this._hash ))
-        {
-            this._hash = hashIrData(
-                concatUint8Arr(
-                    IRFunc.tag,
-                    positiveIntAsBytes( this.arity ),
-                    irHashToBytes( this._body.hash )
-                )
-            );
-        }
-        return this._hash;
-    }
-    isHashPresent(): boolean { return isIRHash( this._hash ) }
-    markHashAsInvalid(): void
-    {
-        this._hash = undefined;
-        this.parent?.markHashAsInvalid();
     }
 
     readonly meta: IRFuncMetadata
@@ -118,10 +107,8 @@ export class IRFunc
     {
         return new IRFunc(
             this.params, // .slice() in constructor
-            this._body.clone(),
-            this.meta.name,
-            this.isHashPresent() ? this.hash : undefined
-        )
+            this._body.clone()
+        );
     }
     toJSON() { return this.toJson(); }
     toJson(): any

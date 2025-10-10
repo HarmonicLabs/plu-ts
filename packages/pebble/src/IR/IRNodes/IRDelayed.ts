@@ -9,28 +9,53 @@ import { isIRTerm } from "../utils/isIRTerm";
 import { IRParentTerm, isIRParentTerm } from "../utils/isIRParentTerm";
 import { _modifyChildFromTo } from "../toUPLC/_internal/_modifyChildFromTo";
 import { BaseIRMetadata } from "./BaseIRMetadata";
-import { equalIrHash, hashIrData, IRHash, irHashToBytes, isIRHash } from "../IRHash";
 import { shallowEqualIRTermHash } from "../utils/equalIRTerm";
 import { IRNodeKind } from "../IRNodeKind";
+import { IRHash, isIRHash, hashIrData, irHashToBytes } from "../IRHash";
+import { positiveIntAsBytes } from "../utils/positiveIntAsBytes";
+import { mapArrayLike } from "./utils/mapArrayLike";
 
 export interface IRDelayedMetadata extends BaseIRMetadata {}
 
 export class IRDelayed
-    implements IIRTerm, Cloneable<IRDelayed>, IHash, IIRParent, ToJson
+    implements IIRTerm, Cloneable<IRDelayed>, IIRParent, ToJson
 {
     readonly meta: IRDelayedMetadata = {};
 
-    constructor( delayed: IRTerm, _unsafeHash?: IRHash )
-    {
+    constructor(
+        delayed: IRTerm,
+        _unsafeHash?: IRHash | undefined
+    ) {
         if( !isIRTerm( delayed ) )
         throw new Error("IRDelayed argument was not an IRTerm");
         
         this._delayed = delayed;
         this._delayed.parent = this;
         
-        this._hash = isIRHash( _unsafeHash ) ? _unsafeHash : undefined;
-
         this._parent = undefined;
+
+        this._hash = isIRHash( _unsafeHash ) ? _unsafeHash : undefined;
+    }
+
+    private _hash: IRHash | undefined;
+    get hash(): IRHash
+    {
+        if( isIRHash( this._hash ) ) return this._hash;
+
+        this._hash = hashIrData(
+            concatUint8Arr(
+                IRDelayed.tag,
+                irHashToBytes( this.delayed.hash )
+            )
+        );
+
+        return this._hash;
+    }
+    isHashPresent(): boolean { return isIRHash( this._hash ); }
+    markHashAsInvalid(): void
+    {
+        this._hash = undefined;
+        this.parent?.markHashAsInvalid();
     }
 
     children(): IRTerm[] {
@@ -45,35 +70,17 @@ export class IRDelayed
     get delayed(): IRTerm { return this._delayed }
     set delayed( newDelayed: IRTerm | undefined)
     {
-        if(!isIRTerm( newDelayed ))
-        {
+        if(!isIRTerm( newDelayed )) {
             throw new BasePlutsError(
                 "invalid IRTerm to be delayed"
             );
         }
-        if(!shallowEqualIRTermHash(this._delayed, newDelayed))
-        this.markHashAsInvalid();
         
         // keep the parent reference in the old child, useful for compilation
         // _delayed.parent = undefined;
         
         this._delayed = newDelayed;
         this._delayed.parent = this;
-    }
-
-    private _hash: IRHash | undefined;
-    get hash(): IRHash
-    {
-        if(!isIRHash( this._hash ))
-        {
-            this._hash = hashIrData(
-                concatUint8Arr(
-                    IRDelayed.tag,
-                    irHashToBytes( this.delayed.hash )
-                )
-            );
-        }
-        return this._hash;
     }
 
     private _parent: IRParentTerm | undefined;
@@ -91,19 +98,13 @@ export class IRDelayed
 
         this._parent = newParent;
     }
-    isHashPresent(): boolean { return isIRHash( this._hash ) }
-    markHashAsInvalid(): void
-    {
-        this._hash = undefined;
-        this._parent?.markHashAsInvalid();
-    }
 
     clone(): IRDelayed
     {
         return new IRDelayed(
             this.delayed.clone(),
-            this.isHashPresent() ? this.hash : undefined
-        )
+            this._hash
+        );
     }
     toJSON() { return this.toJson(); }
     toJson(): any

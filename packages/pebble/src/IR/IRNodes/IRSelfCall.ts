@@ -1,10 +1,8 @@
 import { Cloneable } from "@harmoniclabs/cbor/dist/utils/Cloneable";
 import { BasePlutsError } from "../../utils/BasePlutsError";
 import { ToJson } from "../../utils/ToJson";
-import { IHash } from "../interfaces/IHash";
 import { IIRParent } from "../interfaces/IIRParent";
 import { concatUint8Arr } from "../utils/concatUint8Arr";
-import { positiveIntAsBytes } from "../utils/positiveIntAsBytes";
 import { IRParentTerm, isIRParentTerm } from "../utils/isIRParentTerm";
 import { _modifyChildFromTo } from "../toUPLC/_internal/_modifyChildFromTo";
 import { BaseIRMetadata } from "./BaseIRMetadata";
@@ -14,78 +12,54 @@ import { IRRecursive } from "./IRRecursive";
 import { IIRTerm, IRTerm } from "../IRTerm";
 import { IRFunc } from "./IRFunc";
 import { fromUtf8 } from "@harmoniclabs/uint8array-utils";
+import { hashVarSym } from "./utils/hashVarSym";
 
 export interface IRSelfCallMetadata extends BaseIRMetadata {}
 
 export class IRSelfCall
-    implements IIRTerm, Cloneable<IRSelfCall>, IHash, IIRParent, ToJson
+    implements IIRTerm, Cloneable<IRSelfCall>, IIRParent, ToJson
 {
-    readonly name: string;
+    readonly name: symbol;
     readonly meta: IRSelfCallMetadata;
 
-    constructor( name: string )
-    {
+    constructor(
+        name: symbol,
+        _unsafeHash?: IRHash | undefined 
+    ) {
         if(!(
-            typeof name === "string"
-            && name.length > 0
-        )) throw new BasePlutsError("invalid name for IRVar");
+            typeof name === "symbol"
+            && typeof name.description === "string"
+            && name.description.length > 0
+        )) throw new BasePlutsError("invalid name for IRSelfCall");
         this.name = name;
+        this._parent = undefined;
 
         this.meta = {};
-        
-        this._hash = undefined;
-        
-        this._parent = undefined;
+        this._hash = isIRHash( _unsafeHash ) ? _unsafeHash : undefined;
     }
 
     private _hash: IRHash | undefined;
-    get hash(): IRHash
-    {
-        if(!isIRHash( this._hash ))
-        {
-            this._hash = hashIrData(
-                concatUint8Arr(
-                    IRSelfCall.tag,
-                    fromUtf8( this.name )
-                )
-            );
-        }
+    get hash(): IRHash {
+        if( isIRHash( this._hash ) ) return this._hash;
+        
+        this._hash = hashIrData(
+            concatUint8Arr(
+                IRSelfCall.tag,
+                hashVarSym( this.name )
+            )
+        );
+
         return this._hash;
     }
-    /**
-     * called inside the dbn setter
-     */
-    markHashAsInvalid(): void
-    {
+    isHashPresent(): boolean { return isIRHash( this._hash ); }
+    markHashAsInvalid(): void {
         this._hash = undefined;
         this.parent?.markHashAsInvalid();
     }
-    isHashPresent(): true { return true; }
     
     static get kind(): IRNodeKind.SelfCall { return IRNodeKind.SelfCall; }
     get kind(): IRNodeKind.SelfCall { return IRSelfCall.kind; }
     static get tag(): Uint8Array { return new Uint8Array([ IRSelfCall.kind ]); }
-
-    private _definition: IRRecursive | undefined;
-    get definition(): IRRecursive
-    {
-        if(!( this._definition instanceof IRRecursive ))
-        {
-            this._definition = this._findDefinition();
-        }
-        return this._definition;
-    }
-    set definition( newDefinition: IRRecursive | undefined )
-    {
-        if( newDefinition === undefined )
-        {
-            this._definition = undefined;
-            return;
-        }
-        else throw new Error(
-            "IRSelfCall definition (IRRecursive parent) can't be changed unless set to undefined"
-        );
-    }
 
     private _parent: IRParentTerm | undefined;
     get parent(): IRParentTerm | undefined { return this._parent; }
@@ -104,41 +78,17 @@ export class IRSelfCall
         this._parent = newParent;
 
         // if we change parent, _definition should be recalculated
-        this._definition = undefined;
-    }
-
-    private _findDefinition(): IRRecursive
-    {
-        let node: IRTerm | undefined = this;
-        let dbn = this.dbn;
-        while( node.parent !== undefined )
-        {
-            node = node.parent;
-            if(
-                node instanceof IRRecursive ||
-                node instanceof IRFunc
-            )
-            {
-                if( dbn === 0 )
-                {
-                    if( node.parent instanceof IRRecursive ) return node.parent;
-                    else throw new Error(
-                        "IRSelfCall was pointing to a IRFunc node"
-                    );
-                }
-                dbn -= node.arity;
-            }
-        }
-        throw new Error(
-            "IRSelfCall instance was not inside a IRRecursive instance"
-        );
+        // this._definition = undefined;
     }
 
     children(): IRTerm[] { return []; }
 
     clone(): IRSelfCall
     {
-        return new IRSelfCall( this.name );
+        return new IRSelfCall(
+            this.name,
+            this._hash
+        );
     }
     toJSON() { return this.toJson(); }
     toJson(): any

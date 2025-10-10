@@ -28,6 +28,7 @@ import { TirDataOptT } from "../types/TirNativeType/native/Optional/data";
 import { TirSopOptT } from "../types/TirNativeType/native/Optional/sop";
 import { TirStringT } from "../types/TirNativeType/native/string";
 import { TirVoidT } from "../types/TirNativeType/native/void";
+import { hoisted_constr1_empty } from "../../../IR/toUPLC/common_hoisted";
 
 type TirUnaliasedDataEncodedType = TirDataT | TirDataOptT | TirDataStructType;
 export type TirDataEncodedType = TirUnaliasedDataEncodedType | TirAliasType<TirUnaliasedDataEncodedType>;
@@ -127,23 +128,24 @@ export function _inlineToData(
         const value_t = getOptTypeArg( from_t );
         if( !isTirType( value_t ) ) throw new Error("TirToDataExpr: unreachable");
 
+        const valueName = Symbol("value");
         return new IRCase(
             exprIR, [
                 // case Just{ value }
                 new IRFunc(
-                    1, // value
+                    [ valueName ], // value
                     _ir_apps(
                         IRNative.constrData,
                         IRConst.int( 0 ),
                         _ir_apps(
                             IRNative.mkCons,
-                            _inlineToData( value_t, new IRVar( 0 ) ), // value to data
+                            _inlineToData( value_t, new IRVar( valueName ) ), // value to data
                             IRConst.listOf( data_t )([])
                         )
                     )
                 ),
                 // case Nothing
-                new IRHoisted( IRConst.data( new DataConstr( 1, [] ) ) )
+                hoisted_constr1_empty.clone()
             ]
         );
     }

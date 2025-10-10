@@ -8,17 +8,17 @@ import { Cloneable } from "@harmoniclabs/cbor/dist/utils/Cloneable";
 import { IRParentTerm, isIRParentTerm } from "../utils/isIRParentTerm";
 import { _modifyChildFromTo } from "../toUPLC/_internal/_modifyChildFromTo";
 import { BaseIRMetadata } from "./BaseIRMetadata";
-import { equalIrHash, hashIrData, IRHash, irHashToBytes, isIRHash } from "../IRHash";
 import { isObject } from "@harmoniclabs/obj-utils";
 import { shallowEqualIRTermHash } from "../utils/equalIRTerm";
 import { IRNodeKind } from "../IRNodeKind";
+import { hashIrData, IRHash, irHashToBytes, isIRHash } from "../IRHash";
 
 export interface IRAppMeta extends BaseIRMetadata {
     __src__?: string | undefined
 }
 
 export class IRApp
-    implements IIRTerm, Cloneable<IRApp>, IHash, IIRParent, ToJson
+    implements IIRTerm, Cloneable<IRApp>, IIRParent, ToJson
 {
     constructor(
         _fn_: IRTerm,
@@ -47,6 +47,27 @@ export class IRApp
         this._hash = isIRHash( _unsafeHash ) ? _unsafeHash : undefined;
     }
 
+    private _hash: IRHash | undefined;
+    get hash(): IRHash
+    {
+        if( isIRHash( this._hash ) ) return this._hash;
+
+        this._hash = hashIrData(
+            concatUint8Arr(
+                IRApp.tag,
+                irHashToBytes( this._fn.hash ),
+                irHashToBytes( this._arg.hash )
+            )
+        );
+
+        return this._hash;
+    }
+    isHashPresent(): boolean { return isIRHash( this._hash ); }
+    markHashAsInvalid(): void {
+        this._hash = undefined;
+        this.parent?.markHashAsInvalid();
+    }
+
     children(): IRTerm[] {
         return [
             this._fn,
@@ -63,9 +84,6 @@ export class IRApp
     set fn( newFn: IRTerm ) {
         if( !isIRTerm( newFn ) ) return;
                     
-        if(!shallowEqualIRTermHash( this._fn, newFn ))
-        this.markHashAsInvalid();
-
         // keep the parent reference in the old child, useful for compilation
         // fn.parent = undefined;
         this._fn = newFn;
@@ -78,36 +96,11 @@ export class IRApp
     {
         if( !isIRTerm( newArg ) ) return;
 
-        if(!shallowEqualIRTermHash( this._arg, newArg ))
-        this.markHashAsInvalid();
-
         // keep the parent reference in the old child, useful for compilation
         // arg.parent = undefined;
         this._arg = newArg;
         this._arg.parent = this;
     }
-
-    private _hash: IRHash | undefined;
-    get hash(): IRHash {
-        if(!isIRHash( this._hash ))
-        {
-            // basically a merkle tree
-            this._hash = hashIrData(
-                concatUint8Arr(
-                    IRApp.tag,
-                    irHashToBytes( this._fn.hash ),
-                    irHashToBytes( this._arg.hash )
-                )
-            );
-        }
-        return this._hash;
-    }
-    markHashAsInvalid(): void
-    {
-        this._hash = undefined;
-        this.parent?.markHashAsInvalid();
-    }
-    isHashPresent(): boolean { return isIRHash( this._hash ); }
 
     private _parent: IRParentTerm | undefined;
     get parent(): IRParentTerm | undefined { return this._parent; }
@@ -139,7 +132,7 @@ export class IRApp
             this.fn.clone(),
             this.arg.clone(),
             isObject( this._meta ) ? { ...this._meta } : undefined,
-            this.isHashPresent() ? this.hash : undefined
+            this._hash
         );
     }
     toJSON() { return this.toJson(); }
