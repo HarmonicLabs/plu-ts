@@ -10,7 +10,8 @@ import { IRDelayed } from "../../../IR/IRNodes/IRDelayed";
 import { IRForced } from "../../../IR/IRNodes/IRForced";
 import { IRNative } from "../../../IR/IRNodes/IRNative";
 import type { IRTerm } from "../../../IR/IRTerm";
-import { _ir_apps } from "../../../IR/tree_utils/_ir_apps";
+import { _ir_apps } from "../../../IR/IRNodes/IRApp";
+import { _ir_lazyIfThenElse } from "../../../IR/tree_utils/_ir_lazyIfThenElse";
 
 export class TirTraceIfFalseExpr
     implements ITirExpr
@@ -41,16 +42,18 @@ export class TirTraceIfFalseExpr
 
     toIR( ctx: ToIRTermCtx ): IRTerm
     {
-        return new IRForced( _ir_apps(
-            IRNative.strictIfThenElse,
+        return _ir_lazyIfThenElse(
+            // condition
             this.condition.toIR( ctx ),
-            new IRDelayed( IRConst.bool( true ) ),
-            new IRDelayed( _ir_apps(
+            // then
+            IRConst.bool( true ),
+            // else
+            _ir_apps(
                 IRNative.trace,
                 this.traceStrExpr.toIR( ctx ),
                 IRConst.bool( false )
-            ))
-        ));
+            )
+        );
     }
 
     get isConstant(): boolean { return this.condition.isConstant && this.traceStrExpr.isConstant; }

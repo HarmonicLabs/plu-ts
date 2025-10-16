@@ -7,7 +7,6 @@ import { IRHoisted } from "../../../IR/IRNodes/IRHoisted";
 import { IRNative } from "../../../IR/IRNodes/IRNative";
 import { IRVar } from "../../../IR/IRNodes/IRVar";
 import type { IRTerm } from "../../../IR/IRTerm";
-import { _ir_apps } from "../../../IR/tree_utils/_ir_apps";
 import { data_t } from "../program/stdScope/stdScope";
 import { TirAliasType } from "../types/TirAliasType";
 import { TirDataStructType, TirSoPStructType } from "../types/TirStructType";
@@ -29,6 +28,7 @@ import { TirSopOptT } from "../types/TirNativeType/native/Optional/sop";
 import { TirStringT } from "../types/TirNativeType/native/string";
 import { TirVoidT } from "../types/TirNativeType/native/void";
 import { hoisted_constr1_empty } from "../../../IR/toUPLC/common_hoisted";
+import { _ir_apps } from "../../../IR/IRNodes/IRApp";
 
 type TirUnaliasedDataEncodedType = TirDataT | TirDataOptT | TirDataStructType;
 export type TirDataEncodedType = TirUnaliasedDataEncodedType | TirAliasType<TirUnaliasedDataEncodedType>;

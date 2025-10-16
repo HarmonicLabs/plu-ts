@@ -154,3 +154,17 @@ export class IRApp
         }
     }
 }
+
+export function _ir_apps( ...terms: [ IRTerm, IRTerm, ...IRTerm[] ] ): IRApp
+{
+    // if( terms.length === 1 ) return terms[0] as IRApp;
+    let term = new IRApp( terms[0], terms[1] );
+    for( let i = 2; i < terms.length; i++ )
+    {
+        term = new IRApp(
+            term,
+            terms[i]
+        );
+    }
+    return term;
+}

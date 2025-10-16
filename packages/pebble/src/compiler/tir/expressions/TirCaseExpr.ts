@@ -1,6 +1,6 @@
 import { HasSourceRange } from "../../../ast/nodes/HasSourceRange";
 import { SourceRange } from "../../../ast/Source/SourceRange";
-import { IRApp } from "../../../IR";
+import { IRApp, _ir_apps } from "../../../IR/IRNodes/IRApp";
 import { IRCase } from "../../../IR/IRNodes/IRCase";
 import { IRConst } from "../../../IR/IRNodes/IRConst";
 import { IRDelayed } from "../../../IR/IRNodes/IRDelayed";
@@ -10,7 +10,6 @@ import { IRFunc } from "../../../IR/IRNodes/IRFunc";
 import { IRNative } from "../../../IR/IRNodes/IRNative";
 import { IRVar } from "../../../IR/IRNodes/IRVar";
 import type { IRTerm } from "../../../IR/IRTerm";
-import { _ir_apps } from "../../../IR/tree_utils/_ir_apps";
 import { _ir_lazyIfThenElse } from "../../../IR/tree_utils/_ir_lazyIfThenElse";
 import { _ir_let, _ir_let_sym } from "../../../IR/tree_utils/_ir_let";
 import { filterSortedStrArrInplace } from "../../../utils/array/filterSortedStrArrInplace";

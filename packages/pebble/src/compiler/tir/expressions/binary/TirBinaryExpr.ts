@@ -6,7 +6,6 @@ import { TirType } from "../../types/TirType";
 import { bool_t, bytes_t, int_t } from "../../program/stdScope/stdScope";
 import { mergeSortedStrArrInplace } from "../../../../utils/array/mergeSortedStrArrInplace";
 import { ToIRTermCtx } from "../ToIRTermCtx";
-import { _ir_apps } from "../../../../IR/tree_utils/_ir_apps";
 import { getUnaliased } from "../../types/utils/getUnaliased";
 import { CEKConst, Machine } from "@harmoniclabs/plutus-machine";
 import { TirBytesT } from "../../types/TirNativeType/native/bytes";
@@ -15,7 +14,8 @@ import { IRNative } from "../../../../IR/IRNodes/IRNative";
 import type { IRTerm } from "../../../../IR/IRTerm";
 import { IRConst } from "../../../../IR/IRNodes/IRConst";
 import { compileIRToUPLC } from "../../../../IR/toUPLC/compileIRToUPLC";
-import { IRDelayed, IRForced } from "../../../../IR";
+import { _ir_apps } from "../../../../IR/IRNodes/IRApp";
+import { _ir_lazyIfThenElse } from "../../../../IR/tree_utils/_ir_lazyIfThenElse";
 
 
 export type TirBinaryExpr
@@ -927,13 +927,13 @@ export class TirLogicalAndExpr
 
 export function _ir_and( left: IRTerm, right: IRTerm ): IRTerm
 {
-    return new IRForced(
-        _ir_apps(
-            IRNative.strictIfThenElse,
-            left,
-            new IRDelayed( right ),
-            new IRDelayed( IRConst.bool( false ) )
-        )
+    return _ir_lazyIfThenElse(
+        // condition
+        left,
+        // then
+        right,
+        // else
+        IRConst.bool( false )
     );
 }
 
@@ -981,12 +981,12 @@ export class TirLogicalOrExpr
 
 export function _ir_or( left: IRTerm, right: IRTerm ): IRTerm
 {
-    return new IRForced(
-        _ir_apps(
-            IRNative.strictIfThenElse,
-            left,
-            new IRDelayed( IRConst.bool( true ) ),
-            new IRDelayed( right )
-        )
+    return _ir_lazyIfThenElse(
+        // condition
+        left,
+        // then
+        IRConst.bool( true ),
+        // else
+        right
     );
 }

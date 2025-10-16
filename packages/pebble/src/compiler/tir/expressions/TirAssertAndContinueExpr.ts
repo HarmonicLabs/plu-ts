@@ -1,10 +1,10 @@
 import { SourceRange } from "../../../ast/Source/SourceRange";
+import { _ir_apps } from "../../../IR/IRNodes/IRApp";
 import { IRDelayed } from "../../../IR/IRNodes/IRDelayed";
 import { IRError } from "../../../IR/IRNodes/IRError";
 import { IRForced } from "../../../IR/IRNodes/IRForced";
 import { IRNative } from "../../../IR/IRNodes/IRNative";
-import { IRTerm } from "../../../IR/IRTerm";
-import { _ir_apps } from "../../../IR/tree_utils/_ir_apps";
+import type { IRTerm } from "../../../IR/IRTerm";
 import { mergeSortedStrArrInplace } from "../../../utils/array/mergeSortedStrArrInplace";
 import { TirAssertStmt } from "../statements/TirAssertStmt";
 import { TirType } from "../types/TirType";

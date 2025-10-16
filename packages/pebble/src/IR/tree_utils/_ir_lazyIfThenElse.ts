@@ -1,6 +1,8 @@
-import { IRDelayed, IRForced, IRNative } from "../IRNodes";
+import { _ir_apps } from "../IRNodes/IRApp";
+import { IRDelayed } from "../IRNodes/IRDelayed";
+import { IRForced } from "../IRNodes/IRForced";
+import { IRNative } from "../IRNodes/IRNative";
 import { IRTerm } from "../IRTerm";
-import { _ir_apps } from "./_ir_apps";
 
 export function _ir_lazyIfThenElse(
     condition: IRTerm,

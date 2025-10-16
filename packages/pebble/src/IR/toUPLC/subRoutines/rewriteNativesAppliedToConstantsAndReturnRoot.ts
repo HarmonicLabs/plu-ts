@@ -1,8 +1,12 @@
-import { IRApp, IRCase, IRConst, IRConstr, IRFunc, IRHoisted, IRLetted, IRNative, IRVar } from "../../IRNodes";
+import { _ir_apps } from "../../IRNodes/IRApp";
+import { IRConst } from "../../IRNodes/IRConst";
+import { IRFunc } from "../../IRNodes/IRFunc";
+import { IRHoisted } from "../../IRNodes/IRHoisted";
+import { IRLetted } from "../../IRNodes/IRLetted";
+import { IRNative } from "../../IRNodes/IRNative";
 import { IRNativeTag } from "../../IRNodes/IRNative/IRNativeTag";
+import { IRVar } from "../../IRNodes/IRVar";
 import { IRTerm } from "../../IRTerm";
-import { _ir_apps } from "../../tree_utils/_ir_apps";
-import { prettyIR } from "../../utils";
 import { _modifyChildFromTo } from "../_internal/_modifyChildFromTo";
 import { getApplicationTerms } from "../utils/getApplicationTerms";
 import { _compTimeDropN } from "./_comptimeDropN";

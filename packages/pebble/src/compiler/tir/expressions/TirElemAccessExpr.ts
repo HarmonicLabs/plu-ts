@@ -8,8 +8,8 @@ import { TirType } from "../types/TirType";
 import { ITirExpr } from "./ITirExpr";
 import { TirExpr } from "./TirExpr";
 import { ToIRTermCtx } from "./ToIRTermCtx";
-import { _ir_apps } from "../../../IR/tree_utils/_ir_apps";
 import { compileIRToUPLC } from "../../../IR/toUPLC/compileIRToUPLC";
+import { _ir_apps } from "../../../IR/IRNodes/IRApp";
 
 /**
  * `arrLikeExpr[ indexExpr ]`

@@ -1,7 +1,7 @@
 import { SourceRange } from "../../../ast/Source/SourceRange";
+import { _ir_apps } from "../../../IR/IRNodes/IRApp";
 import { IRNative } from "../../../IR/IRNodes/IRNative";
 import type { IRTerm } from "../../../IR/IRTerm";
-import { _ir_apps } from "../../../IR/tree_utils/_ir_apps";
 import { TirBoolT } from "../types/TirNativeType/native/bool";
 import { TirBytesT } from "../types/TirNativeType/native/bytes";
 import { TirDataT } from "../types/TirNativeType/native/data";

@@ -3,9 +3,10 @@ import { SourceRange } from "../../../../ast/Source/SourceRange";
 import { TirExpr } from "../TirExpr";
 import { ITirUnaryExpression } from "./ITirUnaryExpression";
 import { TirType } from "../../types/TirType";
-import { _ir_apps } from "../../../../IR/tree_utils/_ir_apps";
-import { IRNative, IRTerm } from "../../../../IR";
 import { ToIRTermCtx } from "../ToIRTermCtx";
+import { _ir_apps } from "../../../../IR/IRNodes/IRApp";
+import { IRNative } from "../../../../IR/IRNodes/IRNative";
+import type { IRTerm } from "../../../../IR/IRTerm";
 
 export class TirUnaryTilde
     implements ITirExpr, ITirUnaryExpression

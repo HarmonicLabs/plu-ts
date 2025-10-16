@@ -1,13 +1,13 @@
 import { compileUPLC, prettyUPLC, UPLCProgram } from "@harmoniclabs/uplc";
 import { DiagnosticEmitter } from "../diagnostics/DiagnosticEmitter"
 import { DiagnosticMessage } from "../diagnostics/DiagnosticMessage";
-import { compileIRToUPLC, prettyIR, prettyIRJsonStr } from "../IR";
 import { CompilerOptions, defaultOptions } from "../IR/toUPLC/CompilerOptions";
 import { AstCompiler } from "./AstCompiler/AstCompiler";
 import { CompilerIoApi, createMemoryCompilerIoApi } from "./io/CompilerIoApi";
 import { compileTypedProgram } from "./TirCompiler/compileTirProgram";
 import { toHex } from "@harmoniclabs/uint8array-utils";
 import { __VERY_UNSAFE_FORGET_IRHASH_ONLY_USE_AT_END_OF_UPLC_COMPILATION } from "../IR/IRHash";
+import { compileIRToUPLC } from "../IR/toUPLC/compileIRToUPLC";
 
 export class Compiler
     extends DiagnosticEmitter

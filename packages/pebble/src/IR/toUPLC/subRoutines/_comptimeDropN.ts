@@ -1,5 +1,4 @@
-import { IRHoisted, IRFunc, IRNative, IRVar } from "../../IRNodes";
-import { _ir_apps } from "../../tree_utils/_ir_apps";
+import { IRHoisted, IRFunc, IRNative, IRVar, _ir_apps } from "../../IRNodes";
 
 const tailList = new IRHoisted( IRNative.tailList );
 tailList.hash;

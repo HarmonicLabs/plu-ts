@@ -8,7 +8,6 @@ import { IRNodeKind } from "../IRNodeKind";
 import { IIRTerm, IRTerm } from "../IRTerm";
 import { ToUplcCtx } from "../toUPLC/ctx/ToUplcCtx";
 import { concatUint8Arr } from "../utils/concatUint8Arr";
-import { shallowEqualIRTermHash } from "../utils/equalIRTerm";
 import { IRParentTerm, isIRParentTerm } from "../utils/isIRParentTerm";
 import { isIRTerm } from "../utils/isIRTerm";
 import { BaseIRMetadata } from "./BaseIRMetadata";

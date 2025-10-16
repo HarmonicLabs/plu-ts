@@ -11,8 +11,6 @@ import { ToJson } from "../../../utils/ToJson";
 import { isObject } from "@harmoniclabs/obj-utils";
 import { IRNodeKind } from "../../IRNodeKind";
 import { TirType } from "../../../compiler/tir/types/TirType";
-import { IRConst, IRFunc, IRHoisted, IRVar } from "..";
-import { _ir_apps } from "../../tree_utils/_ir_apps";
 import { IIRTerm, IRTerm } from "../../IRTerm";
 import { getUnaliased } from "../../../compiler/tir/types/utils/getUnaliased";
 import { TirDataStructType, TirSoPStructType } from "../../../compiler/tir/types/TirStructType";
@@ -34,6 +32,11 @@ import { TirVoidT } from "../../../compiler/tir/types/TirNativeType/native/void"
 import { IRHash, isIRHash, hashIrData, irHashToBytes } from "../../IRHash";
 import { Builtin, UPLCBuiltinTag, UPLCTerm } from "@harmoniclabs/uplc";
 import { ToUplcCtx } from "../../toUPLC/ctx/ToUplcCtx";
+import { _ir_apps } from "../IRApp";
+import { IRHoisted } from "../IRHoisted";
+import { IRFunc } from "../IRFunc";
+import { IRVar } from "../IRVar";
+import { IRConst } from "../IRConst";
 
 /**
  * we might not need all the hashes
@@ -277,8 +280,8 @@ export class IRNative
         if( type instanceof TirListT ) return IRNative.equalListOf( getListTypeArg( type )! );
         if( type instanceof TirLinearMapT ) return IRNative.equalListOf( new TirPairDataT() );
         if( type instanceof TirLinearMapT ) return IRNative.equalListOf( new TirPairDataT() );
-        if( type instanceof TirUnConstrDataResultT ) return eqUnConstr.clone();
-        if( type instanceof TirVoidT ) return eqVoid.clone();
+        if( type instanceof TirUnConstrDataResultT ) return getEqUnConstr();
+        if( type instanceof TirVoidT ) return getEqVoid();
 
         const tsEnsureExsaustiveCheck: TirSopOptT | TirFuncT | TirSoPStructType | TirTypeParam = type;
         throw new Error("invalid type for std equality");
@@ -300,26 +303,38 @@ export class IRNative
     }
 }
 
+/// NOTE, wrap in functions to break circular dependencies
+
 const eqListNames: Record<string, IRHoisted> = {};
 
 const eqUnConstr_a = Symbol("a");
 const eqUnConstr_b = Symbol("b");
-const eqUnConstr_name = Symbol("equalsUnConstrDataResult");
-const eqUnConstr =  new IRHoisted(
-    new IRFunc([ eqUnConstr_a, eqUnConstr_b ],
-        _ir_apps(
-            IRNative.equalsData,
-            _ir_apps( IRNative.constrData, new IRVar( eqUnConstr_a ) ),
-            _ir_apps( IRNative.constrData, new IRVar( eqUnConstr_b ) ),
+let _eqUnConstr: IRHoisted | undefined = undefined;
+function getEqUnConstr(): IRHoisted
+{
+    if( _eqUnConstr instanceof IRHoisted ) return _eqUnConstr.clone();
+    _eqUnConstr =  new IRHoisted(
+        new IRFunc([ eqUnConstr_a, eqUnConstr_b ],
+            _ir_apps(
+                IRNative.equalsData,
+                _ir_apps( IRNative.constrData, new IRVar( eqUnConstr_a ) ),
+                _ir_apps( IRNative.constrData, new IRVar( eqUnConstr_b ) ),
+            )
         )
-    )
-);
+    );
+    return _eqUnConstr.clone();
+}
 
 const eqVoid_a = Symbol("a");
 const eqVoid_b = Symbol("b");
-const eqVoid_name = Symbol("equalsVoid");
-const eqVoid =  new IRHoisted(
-    new IRFunc([ eqVoid_a, eqVoid_b ],
-        IRConst.bool( true )
-    )
-);
+let _eqVoid: IRHoisted | undefined = undefined;
+function getEqVoid(): IRHoisted
+{
+    if( _eqVoid instanceof IRHoisted ) return _eqVoid.clone();
+    _eqVoid =  new IRHoisted(
+        new IRFunc([ eqVoid_a, eqVoid_b ],
+            IRConst.bool( true )
+        )
+    );
+    return _eqVoid.clone();
+}

@@ -4,8 +4,9 @@ import { TirExpr } from "../TirExpr";
 import { ITirUnaryExpression } from "./ITirUnaryExpression";
 import { TirType } from "../../types/TirType";
 import { ToIRTermCtx } from "../ToIRTermCtx";
-import { IRNative, IRTerm } from "../../../../IR";
-import { _ir_apps } from "../../../../IR/tree_utils/_ir_apps";
+import { _ir_apps } from "../../../../IR/IRNodes/IRApp";
+import { IRNative } from "../../../../IR/IRNodes/IRNative";
+import type { IRTerm } from "../../../../IR/IRTerm";
 
 export class TirUnaryMinus
     implements ITirExpr, ITirUnaryExpression
