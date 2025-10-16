@@ -5,7 +5,6 @@ import { IRHoisted } from "../IRNodes/IRHoisted";
 import { IRConst } from "../IRNodes/IRConst";
 import { _modifyChildFromTo } from "./_internal/_modifyChildFromTo";
 import { _makeAllNegativeNativesHoisted } from "./_internal/_makeAllNegativeNativesHoisted";
-import { _irToUplc } from "./_internal/_irToUplc";
 import { includesNode } from "./_internal/includesNode";
 import { handleLettedAndReturnRoot } from "./subRoutines/handleLetted";
 import { handleHoistedAndReturnRoot } from "./subRoutines/handleHoistedAndReturnRoot";
@@ -19,9 +18,8 @@ import { IRApp, IRCase, IRConstr, IRNative, IRVar } from "../IRNodes";
 import { replaceForcedNativesWithHoisted } from "./subRoutines/replaceForcedNativesWithHoisted";
 import { performUplcOptimizationsAndReturnRoot } from "./subRoutines/performUplcOptimizationsAndReturnRoot";
 import { rewriteNativesAppliedToConstantsAndReturnRoot } from "./subRoutines/rewriteNativesAppliedToConstantsAndReturnRoot";
-import { removeUnusedVarsAndReturnRoot } from "./subRoutines/removeUnusedVarsAndReturnRoot/removeUnusedVarsAndReturnRoot";
-import { inlineSingleUseAndReturnRoot } from "./subRoutines/inlineSingleUseAndReturnRoot/inlineSingleUseAndReturnRoot";
 import { _debug_assertClosedIR, onlyHoistedAndLetted, prettyIR } from "../utils";
+import { ToUplcCtx } from "./ctx/ToUplcCtx";
 
 export function compileIRToUPLC(
     term: IRTerm,
@@ -30,7 +28,7 @@ export function compileIRToUPLC(
 {
     // most of the time we are just compiling small
     // pre-execuded terms (hence constants)
-    if( term instanceof IRConst ) return _irToUplc( term ).term;
+    if( term instanceof IRConst ) return term.toUPLC();
 
 
     let irJson = prettyIR( term );
@@ -118,7 +116,7 @@ export function compileIRToUPLC(
     if(
         term instanceof IRNative ||
         term instanceof IRConst // while we are at it
-    ) return _irToUplc( term ).term;
+    ) return term.toUPLC();
 
     replaceForcedNativesWithHoisted( term );
 
@@ -206,18 +204,18 @@ export function compileIRToUPLC(
     //
     // ALWAYS AT LEAST 1 ITERATION
     // const maxInlineIterations = Math.max( 3, 1 );
-    const maxInlineIterations = 0;
-    for(
-        let somethingWasInlined = true,
-            inlineIterations = 0;
-        somethingWasInlined
-        && inlineIterations < maxInlineIterations;
-        inlineIterations++
-    ) {
-        const inlineResult = inlineSingleUseAndReturnRoot( term );
-        term = inlineResult.term;
-        somethingWasInlined = inlineResult.somethingWasInlined;
-    }
+    // const maxInlineIterations = 0;
+    // for(
+    //     let somethingWasInlined = true,
+    //         inlineIterations = 0;
+    //     somethingWasInlined
+    //     && inlineIterations < maxInlineIterations;
+    //     inlineIterations++
+    // ) {
+    //     const inlineResult = inlineSingleUseAndReturnRoot( term );
+    //     term = inlineResult.term;
+    //     somethingWasInlined = inlineResult.somethingWasInlined;
+    // }
 
     term = performUplcOptimizationsAndReturnRoot( term, options );
 
@@ -238,8 +236,8 @@ export function compileIRToUPLC(
         );
     }
 
-    const srcmap = {};
-    const uplc = _irToUplc( term, srcmap ).term;
+    // const srcmap = {};
+    const uplc = term.toUPLC( ToUplcCtx.root() );
 
     // console.log( "srcmap", srcmap );
 

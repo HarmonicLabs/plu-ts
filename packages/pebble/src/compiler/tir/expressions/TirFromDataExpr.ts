@@ -124,13 +124,13 @@ export function _inlineFromData(
                 IRNative.unConstrData,
                 dataExprIR
             ),
-            _ir_apps(
+            unConstrDataResultSym => _ir_apps(
                 IRNative.strictIfThenElse,
                 _ir_apps(
                     IRNative.equalsInteger,
                     _ir_apps(
                         IRNative.fstPair,
-                        new IRVar( 0 ) // unConstrData result
+                        new IRVar( unConstrDataResultSym ) // unConstrData result
                     ),
                     IRConst.int( 0 )
                 ),
@@ -142,7 +142,7 @@ export function _inlineFromData(
                             IRNative.headList,
                             _ir_apps(
                                 IRNative.sndPair,
-                                new IRVar( 0 ) // unConstrData result
+                                new IRVar( unConstrDataResultSym ) // unConstrData result
                             )
                         )
                     )
@@ -178,9 +178,9 @@ export function _fromDataUplcFunc(
 
     if( target_t instanceof TirIntT ) return IRNative.unIData;
     if( target_t instanceof TirBytesT ) return IRNative.unBData;
-    if( target_t instanceof TirVoidT ) return _mkUnit;
-    if( target_t instanceof TirBoolT ) return _boolFromData;
-    if( target_t instanceof TirStringT ) return _strFromData;
+    if( target_t instanceof TirVoidT ) return _mkUnit.clone();
+    if( target_t instanceof TirBoolT ) return _boolFromData.clone();
+    if( target_t instanceof TirStringT ) return _strFromData.clone();
 
     if( target_t instanceof TirLinearMapT )
     // linear maps only have pairs as elements
@@ -196,34 +196,14 @@ export function _fromDataUplcFunc(
             || elems_t instanceof TirDataT
         ) return IRNative.unListData;
 
-        return new IRHoisted( new IRFunc(
-            1, // data ( representing list )
-            _ir_apps(
-                IRNative._mkMapList,
-                IRConst.listOf( elems_t )([]),
-                _fromDataUplcFunc( elems_t ),
-                _ir_apps(
-                    IRNative.unListData,
-                    new IRVar( 0 ) // data
-                )
-            )
-        ));
+        return mkMapListFromData( elems_t );
     }
 
     if(
         target_t instanceof TirSopOptT
         || target_t instanceof TirSoPStructType
-    )
-    {
-        return new IRHoisted(
-            new IRFunc(
-                1, // data
-                _inlineFromData(
-                    target_t,
-                    new IRVar( 0 ) // data
-                )
-            )
-        );
+    ) {
+        return mkSopFromData( target_t );
     }
 
     throw new Error(
@@ -231,30 +211,39 @@ export function _fromDataUplcFunc(
     );
 }
 
-const _mkUnit = new IRHoisted( new IRFunc( 1, IRConst.unit, "~_mkUnit") );
+// replace old numeric-arity helpers
+const _unitFromDataSym = Symbol("unit");
+const _mkUnit = new IRHoisted(
+    new IRFunc(
+        [ _unitFromDataSym ],
+        IRConst.unit
+    )
+);
 
+const _boolFromDataDataSym = Symbol("boolData");
 const _boolFromData = new IRHoisted( new IRFunc(
-    1,
+    [ _boolFromDataDataSym ], // data
     _ir_apps(
         IRNative.equalsInteger,
         new IRApp(
             IRNative.fstPair,
             new IRApp(
                 IRNative.unConstrData,
-                new IRVar( 0 )
+                new IRVar( _boolFromDataDataSym )
             )
         ),
         IRConst.int( 0 )
     )
 ));
 
+const _strFromDataDataSym = Symbol("strData");
 const _strFromData = new IRHoisted( new IRFunc(
-    1, // data
+    [ _strFromDataDataSym ], // data
     _ir_apps(
         IRNative.decodeUtf8,
         _ir_apps(
             IRNative.unBData,
-            new IRVar( 0 ) // data
+            new IRVar( _strFromDataDataSym )
         )
     )
 ));
@@ -301,23 +290,24 @@ export function _inilneSingeSopConstrFromData(
                 IRNative.unConstrData,
                 dataExprIR
             )
-        ), // introuduce fields list
-        new IRConstr(
+        ), // introduce fields list
+        fieldsListSym => new IRConstr(
             0,
             constr.fields.map( (field, i) => {
                 const field_t = getUnaliased( field.type );
                 if( !isTirType( field_t ) ) throw new Error("TirFromDataExpr: unreachable");
-    
+
                 return _inlineFromData(
                     field_t,
                     _ir_apps(
                         IRNative.headList,
-                        i === 0 ? new IRVar( 0 ) // fields list
-                        :_ir_apps(
-                            IRNative._dropList,
-                            IRConst.int( i ),
-                            new IRVar( 0 ) // fields list
-                        )
+                        i === 0
+                            ? new IRVar( fieldsListSym )
+                            : _ir_apps(
+                                IRNative._dropList,
+                                IRConst.int( i ),
+                                new IRVar( fieldsListSym )
+                            )
                     )
                 );
             } )
@@ -333,82 +323,129 @@ export function _inlineMultiSopConstrFromData(
     if( sop_t.constructors.length <= 1 )
     return _inilneSingeSopConstrFromData( sop_t, dataExprIR );
 
-    const continuations = sop_t.constructors.map((constr, constrIdx) =>
-    {
-        if( constr.fields.length === 0 )
-        return new IRHoisted( new IRConstr( constrIdx, [] ) );
-    
-        if( constr.fields.length === 1 ) {
-            const value_t = getUnaliased( constr.fields[0].type );
-            if( !isTirType( value_t ) ) throw new Error("TirFromDataExpr: unreachable");
-    
-            return new IRConstr( constrIdx, [
-                _inlineFromData(
-                    value_t,
-                    _ir_apps(
-                        IRNative.headList,
-                        new IRVar( 0 ) // fields list
-                    )
-                )
-            ]);
-        }
-    
-        return new IRConstr(
-            constrIdx,
-            constr.fields.map( (field, i) => {
-                const field_t = getUnaliased( field.type );
-                if( !isTirType( field_t ) ) throw new Error("TirFromDataExpr: unreachable");
-    
-                return _inlineFromData(
-                    field_t,
-                    _ir_apps(
-                        IRNative.headList,
-                        i === 0 ? new IRVar( 0 ) // fields list
-                        : _ir_apps(
-                            IRNative._dropList,
-                            IRConst.int( i ),
-                            new IRVar( 0 ) // fields list
-                        )
-                    )
-                );
-            } )
-        );
-    });
-
-    let finalIfThenElseChain: IRTerm = continuations[ continuations.length - 1 ];
-    for( let i = continuations.length - 2; i >= 0; i-- )
-    {
-        finalIfThenElseChain = new IRForced(_ir_apps(
-            IRNative.strictIfThenElse,
-            _ir_apps(
-                new IRVar( 1 ), // isConstrIdx
-                IRConst.int( i )
-            ),
-            new IRDelayed( continuations[i] ),
-            new IRDelayed( finalIfThenElseChain )
-        ));
-    }
-
     return _ir_let(
         _ir_apps(
             IRNative.unConstrData,
             dataExprIR
-        ), // unConstrData result
-        _ir_let(
+        ), // introduce unConstrData result
+        unConstrDataSym => _ir_let(
             _ir_apps(
                 IRNative.equalsInteger,
                 _ir_apps(
                     IRNative.fstPair,
-                    new IRVar( 0 ) // unConstrData result
+                    new IRVar( unConstrDataSym )
                 )
-            ), // isConstrIdx
-            _ir_let(
+            ), // introduce isConstrIdx predicate (a function expecting an int)
+            isConstrIdxSym => _ir_let(
                 _ir_apps(
                     IRNative.sndPair,
-                    new IRVar( 1 ), // unConstrData result
-                ), // fields list
-                finalIfThenElseChain
+                    new IRVar( unConstrDataSym )
+                ), // introduce fields list
+                fieldsListSym => {
+                    const continuations = sop_t.constructors.map((constr, constrIdx) =>
+                    {
+                        if( constr.fields.length === 0 )
+                        return new IRHoisted( new IRConstr( constrIdx, [] ) );
+
+                        if( constr.fields.length === 1 ) {
+                            const value_t = getUnaliased( constr.fields[0].type );
+                            if( !isTirType( value_t ) ) throw new Error("TirFromDataExpr: unreachable");
+
+                            return new IRConstr( constrIdx, [
+                                _inlineFromData(
+                                    value_t,
+                                    _ir_apps(
+                                        IRNative.headList,
+                                        new IRVar( fieldsListSym )
+                                    )
+                                )
+                            ]);
+                        }
+
+                        return new IRConstr(
+                            constrIdx,
+                            constr.fields.map( (field, i) => {
+                                const field_t = getUnaliased( field.type );
+                                if( !isTirType( field_t ) ) throw new Error("TirFromDataExpr: unreachable");
+
+                                return _inlineFromData(
+                                    field_t,
+                                    _ir_apps(
+                                        IRNative.headList,
+                                        i === 0
+                                            ? new IRVar( fieldsListSym )
+                                            : _ir_apps(
+                                                IRNative._dropList,
+                                                IRConst.int( i ),
+                                                new IRVar( fieldsListSym )
+                                            )
+                                    )
+                                );
+                            } )
+                        );
+                    });
+
+                    let finalIfThenElseChain: IRTerm = continuations[ continuations.length - 1 ];
+                    for( let i = continuations.length - 2; i >= 0; i-- )
+                    {
+                        finalIfThenElseChain = new IRForced(_ir_apps(
+                            IRNative.strictIfThenElse,
+                            _ir_apps(
+                                new IRVar( isConstrIdxSym ),
+                                IRConst.int( i )
+                            ),
+                            new IRDelayed( continuations[i] ),
+                            new IRDelayed( finalIfThenElseChain )
+                        ));
+                    }
+
+                    return finalIfThenElseChain;
+                }
             )
         )
     );
+}
+
+// new cached hoisted helpers (mirroring TirToDataExpr pattern)
+const _mapListFromDataOfType: Record<string, IRHoisted> = {};
+function mkMapListFromData( elems_t: TirType ): IRHoisted
+{
+    const key = elems_t.toTirTypeKey();
+    if( _mapListFromDataOfType[key] ) return _mapListFromDataOfType[key].clone();
+
+    const listDataSym = Symbol("mapListFromData_data");
+    _mapListFromDataOfType[key] = new IRHoisted(new IRFunc(
+        [ listDataSym ], // data (list data)
+        _ir_apps(
+            IRNative._mkMapList,
+            IRConst.listOf( elems_t )([]),
+            _fromDataUplcFunc( elems_t ),
+            _ir_apps(
+                IRNative.unListData,
+                new IRVar( listDataSym ) // data
+            )
+        )
+    ));
+
+    return _mapListFromDataOfType[key].clone();
+}
+
+const _sopFromDataOfType: Record<string, IRHoisted> = {};
+function mkSopFromData( target_t: TirSoPStructType | TirSopOptT ): IRHoisted
+{
+    const key = target_t.toTirTypeKey();
+    if( _sopFromDataOfType[key] ) return _sopFromDataOfType[key].clone();
+
+    const dataSym = Symbol("sop_data");
+    _sopFromDataOfType[key] = new IRHoisted(
+        new IRFunc(
+            [ dataSym ], // data
+            _inlineFromData(
+                target_t,
+                new IRVar( dataSym )
+            )
+        )
+    );
+
+    return _sopFromDataOfType[key].clone();
 }

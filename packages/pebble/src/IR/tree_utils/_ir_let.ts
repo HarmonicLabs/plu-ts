@@ -9,3 +9,15 @@ export function _ir_let( value: IRTerm, mkBody: ( varName: symbol ) => IRTerm ):
         value
     );
 }
+
+export function _ir_let_sym(
+    sym: symbol,
+    value: IRTerm,
+    body: IRTerm
+): IRApp
+{
+    return new IRApp(
+        new IRFunc([ sym ], body),
+        value
+    );
+}

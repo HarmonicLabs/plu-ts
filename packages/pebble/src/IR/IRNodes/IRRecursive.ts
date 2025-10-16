@@ -1,3 +1,4 @@
+import { UPLCTerm } from "@harmoniclabs/uplc";
 import { BasePlutsError } from "../../utils/BasePlutsError";
 import { Cloneable } from "../../utils/Cloneable";
 import { ToJson } from "../../utils/ToJson";
@@ -5,6 +6,7 @@ import { IHash, IIRParent } from "../interfaces";
 import { IRHash, isIRHash, hashIrData, irHashToBytes } from "../IRHash";
 import { IRNodeKind } from "../IRNodeKind";
 import { IIRTerm, IRTerm } from "../IRTerm";
+import { ToUplcCtx } from "../toUPLC/ctx/ToUplcCtx";
 import { concatUint8Arr } from "../utils/concatUint8Arr";
 import { shallowEqualIRTermHash } from "../utils/equalIRTerm";
 import { IRParentTerm, isIRParentTerm } from "../utils/isIRParentTerm";
@@ -18,6 +20,8 @@ export class IRRecursive
 {
     get arity(): number { return 1; }
     readonly name: symbol;
+
+    get params(): symbol[] { return [ this.name ]; }
 
     readonly meta: IRRecursiveMetadata
 
@@ -43,6 +47,13 @@ export class IRRecursive
         this._body.parent = this;
 
         this._hash = isIRHash( _unsafeHash ) ? _unsafeHash : undefined;
+    }
+
+    toUPLC(ctx: ToUplcCtx): UPLCTerm {   
+        throw new Error(
+            "Can't convert 'IRRecursive' to valid UPLC;" +
+            "IRRecursive are expected to be converted before calling '_irToUplc'"
+        ); 
     }
 
     private _hash: IRHash | undefined;

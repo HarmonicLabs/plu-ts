@@ -48,16 +48,18 @@ export function hoistForcedNatives( term: IRTerm ): IRTerm
         const tag = Number( tagStr );
         const nodes = toHoist[tag];
         if( nodes.length <= 0 ) continue; // also single use (might be inside loop)
+
+        const varSym = Symbol( tagStr );
         for( const node of nodes )
         {
             _modifyChildFromTo(
                 node.parent,
                 node,
-                new IRVar( getDbnToRoot( node ) )
+                new IRVar( varSym )
             );
         }
         term = new IRApp(
-            new IRFunc( 1, term ),
+            new IRFunc( [ varSym ], term ),
             new IRNative( tag )
         );
     }

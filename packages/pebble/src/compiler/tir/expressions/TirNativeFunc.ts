@@ -967,27 +967,9 @@ export class TirNativeFunc
             ], bool_t)
         );
     }
-    static get _and(): TirNativeFunc {
-        return new TirNativeFunc(
-            IRNativeTag._and,
-            new TirFuncT([
-                bool_t,
-                bool_t
-            ], bool_t)
-        );
-    }
     static get _strictOr(): TirNativeFunc {
         return new TirNativeFunc(
             IRNativeTag._strictOr,
-            new TirFuncT([
-                bool_t,
-                bool_t
-            ], bool_t)
-        );
-    }
-    static get _or(): TirNativeFunc {
-        return new TirNativeFunc(
-            IRNativeTag._or,
             new TirFuncT([
                 bool_t,
                 bool_t

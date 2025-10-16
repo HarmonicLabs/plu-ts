@@ -14,11 +14,24 @@ export class TirLettedExpr
         return this.expr.type;
     }
 
+    private readonly _irVarSym: symbol;
+
     constructor(
         readonly varName: string,
         public expr: TirExpr,
-        readonly range: SourceRange
-    ) {}
+        readonly range: SourceRange,
+        _unsafeVarSym?: symbol | undefined
+    ) {
+        if(!(
+            typeof varName === "string"
+            && varName.length > 0
+        )) throw new Error("TirLettedExpr: varName must be a non empty string");
+
+        this._irVarSym = (
+            typeof _unsafeVarSym === "symbol"
+            && _unsafeVarSym.description === varName
+        ) ? _unsafeVarSym : Symbol( varName );
+    }
 
     toString(): string
     {
@@ -34,7 +47,8 @@ export class TirLettedExpr
         return new TirLettedExpr(
             this.varName,
             this.expr.clone(),
-            this.range.clone()
+            this.range.clone(),
+            this._irVarSym
         );
     }
     
@@ -43,7 +57,8 @@ export class TirLettedExpr
         return new TirLettedExpr(
             this.varName,
             this.expr, // this.expr.clone(),
-            this.range
+            this.range,
+            this._irVarSym
         );
     }
 
@@ -51,6 +66,9 @@ export class TirLettedExpr
 
     toIR( ctx: ToIRTermCtx ): IRTerm
     {
-        return new IRLetted( ctx.dbn, this.expr.toIR( ctx ) );
+        return new IRLetted(
+            this._irVarSym,
+            this.expr.toIR( ctx )
+        );
     }
 }

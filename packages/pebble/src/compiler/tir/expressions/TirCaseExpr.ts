@@ -1,5 +1,6 @@
 import { HasSourceRange } from "../../../ast/nodes/HasSourceRange";
 import { SourceRange } from "../../../ast/Source/SourceRange";
+import { IRApp } from "../../../IR";
 import { IRCase } from "../../../IR/IRNodes/IRCase";
 import { IRConst } from "../../../IR/IRNodes/IRConst";
 import { IRDelayed } from "../../../IR/IRNodes/IRDelayed";
@@ -10,7 +11,8 @@ import { IRNative } from "../../../IR/IRNodes/IRNative";
 import { IRVar } from "../../../IR/IRNodes/IRVar";
 import type { IRTerm } from "../../../IR/IRTerm";
 import { _ir_apps } from "../../../IR/tree_utils/_ir_apps";
-import { _ir_let } from "../../../IR/tree_utils/_ir_let";
+import { _ir_lazyIfThenElse } from "../../../IR/tree_utils/_ir_lazyIfThenElse";
+import { _ir_let, _ir_let_sym } from "../../../IR/tree_utils/_ir_let";
 import { filterSortedStrArrInplace } from "../../../utils/array/filterSortedStrArrInplace";
 import { mergeSortedStrArrInplace } from "../../../utils/array/mergeSortedStrArrInplace";
 import { TirNamedDeconstructVarDecl } from "../statements/TirVarDecl/TirNamedDeconstructVarDecl";
@@ -115,11 +117,12 @@ export class TirCaseExpr
             const someBranch = this.cases.find(
                 c => c.pattern.constrName === "Some"
             );
+            let someBranchVarSym: symbol = Symbol("some_value_unused");
             if( someBranch ) {
                 const varDecl = someBranch.pattern.fields.values().next().value;
                 if(!( varDecl instanceof TirSimpleVarDecl ))
                 throw new Error("case pattern not expressified.");
-                someBranchCtx.defineVar( varDecl.name );
+                someBranchVarSym = someBranchCtx.defineVar( varDecl.name );
             }
             const someBranchIR = someBranch?.body.toIR( someBranchCtx ) ?? wildcardBodyIR;
 
@@ -130,7 +133,7 @@ export class TirCaseExpr
             return new IRCase(
                 this.matchExpr.toIR( ctx ), [
                     // Some{ value }
-                    new IRFunc( 1, someBranchIR ),
+                    new IRFunc([ someBranchVarSym ], someBranchIR ),
                     // None
                     noneBranchIR
                 ]
@@ -140,35 +143,42 @@ export class TirCaseExpr
         // TirSopStructType
         const wildcardBodyIR = this.wildcardCase?.body.toIR( ctx ) ?? new IRError();
         const branches: IRTerm[] = matchExprType.constructors.map(
-            ctor => {
-                const wrapBody = ctor.fields.length === 0
-                    ? ( body: IRTerm ) => body
-                    : ( body: IRTerm ) => new IRFunc( ctor.fields.length, body );
+            (ctor, ctorIdx) => {
+
+                const nFields = ctor.fields.length;
 
                 const branchCtx = ctx.newChild();
                 const branch = this.cases.find(
                     c => c.pattern.constrName === ctor.name
                 );
-                if( !branch ) return wrapBody( wildcardBodyIR );
+
+                if( !branch ) {
+                    if( nFields <= 0 ) return wildcardBodyIR;
+
+                    const introducedVars = Array( nFields ).fill(0).map(() => branchCtx.pushUnusedVar() );
+                    return new IRFunc( introducedVars, wildcardBodyIR );
+                }
 
                 const pattern = branch.pattern;
-                for( const field of ctor.fields ) {
+                const introducedVars: symbol[] = new Array( nFields );
+                for( let i = 0; i < nFields; i++ ) {
+                    const field = ctor.fields[i];
                     const varDecl = pattern.fields.get( field.name );
                     if( !varDecl ) {
                         // increment debrujin
                         // variable is still introduced, even if unused
-                        branchCtx.pushUnusedVar();
+                        introducedVars[i] = branchCtx.pushUnusedVar();
                         continue;
                     }
                     if(!(varDecl instanceof TirSimpleVarDecl ))
                     throw new Error("case pattern not expressified.");
 
-                    branchCtx.defineVar( varDecl.name );
+                    introducedVars[i] = branchCtx.defineVar( varDecl.name );
                 }
 
-                return wrapBody(
-                    branch.body.toIR( branchCtx )
-                );
+                if( nFields <= 0 ) return branch.body.toIR( branchCtx );
+
+                return new IRFunc( introducedVars, branch.body.toIR( branchCtx ) );
             }
         );
 
@@ -185,9 +195,6 @@ export class TirCaseExpr
         ) : new IRError() ; // all branches fail, so the whole expression fails
     }
 
-    // TODO: optimization
-    // expect data-encoded patterns to be empty after `expressify`
-    // because accessed field should use `IRLetted` instead
     private _dataStructToIR(
         matchExprType: TirDataStructType | TirDataOptT,
         ctx: ToIRTermCtx
@@ -200,31 +207,37 @@ export class TirCaseExpr
 
             const wildcardBodyIR = this.wildcardCase?.body.toIR( stmtCtx ) ?? new IRError();
 
-            const someBranchCtx = stmtCtx.newChild();
             const someBranch = this.cases.find(
                 c => c.pattern.constrName === "Some"
             );
+            let someBranchIR: ( unConstrMatchSym: symbol ) => IRTerm = () => new IRFunc([Symbol("unused_some_value")], wildcardBodyIR);
             if( someBranch ) {
-                const varDecl = someBranch.pattern.fields.values().next().value;
-                if( varDecl === undefined ) {
-                    // increment debrujin
-                    // variable is still introduced, even if unused
-                    someBranchCtx.pushUnusedVar();
-                }
-                else {
-                    if(!( varDecl instanceof TirSimpleVarDecl ))
-                    throw new Error("case pattern not expressified.");
-                    someBranchCtx.defineVar( varDecl.name );
-                }
+
+                const pattern = someBranch.pattern;
+                const valueDecl = pattern.fields.get("value");
+                if(
+                    valueDecl
+                    && !( valueDecl instanceof TirSimpleVarDecl )
+                ) throw new Error("case pattern not expressified.");
+
+                const someBranchCtx = stmtCtx.newChild();
+                const someBranchVarSym: symbol = valueDecl ? someBranchCtx.defineVar( valueDecl.name ) : Symbol("some_value_unused");
+
+                someBranchIR = ( unConstrMatchSym ) =>  new IRApp(
+                    new IRFunc([ someBranchVarSym ], someBranch.body.toIR( someBranchCtx ) ),
+                    _inlineFromData(
+                        getOptTypeArg( matchExprType )!,
+                        _ir_apps(
+                            IRNative.sndPair,
+                            new IRVar( unConstrMatchSym ) // unConstrData result
+                        )
+                    )
+                );
             }
-            const someBranchIR = someBranch?.body.toIR( someBranchCtx ); // ?? wildcardBodyIR;
 
             const noneBranchIR = this.cases.find(
                 c => c.pattern.constrName === "None"
             )?.body.toIR( stmtCtx ) ?? wildcardBodyIR;
-
-            if( someBranchIR instanceof IRError && noneBranchIR instanceof IRError )
-            return new IRError();
 
             return new IRForced(
                 _ir_let(
@@ -232,30 +245,20 @@ export class TirCaseExpr
                         IRNative.unConstrData,
                         this.matchExpr.toIR( ctx )
                     ),
-                    _ir_apps(
-                        IRNative.strictIfThenElse,
+                    unConstrMatchSym => _ir_lazyIfThenElse(
+                        // condition
                         _ir_apps(
                             IRNative.equalsInteger,
                             IRConst.int( 0 ),
                             _ir_apps(
                                 IRNative.fstPair,
-                                new IRVar( 0 ) // unConstrData result
+                                new IRVar( unConstrMatchSym ) // unConstrData result
                             )
                         ),
                         // then Just{ value }
-                        !someBranchIR ? new IRDelayed( wildcardBodyIR ) :
-                        _ir_let(
-                            _inlineFromData(
-                                getOptTypeArg( matchExprType )!,
-                                _ir_apps(
-                                    IRNative.sndPair,
-                                    new IRVar( 0 ) // unConstrData result
-                                )
-                            ),
-                            new IRDelayed( someBranchIR )
-                        ),
+                        someBranchIR( unConstrMatchSym ),
                         // else None
-                        new IRDelayed( noneBranchIR )
+                        noneBranchIR
                     )
                 )
             );
@@ -264,8 +267,8 @@ export class TirCaseExpr
         // TirDataStructType
 
         const stmtCtx = ctx.newChild();
-        stmtCtx.pushUnusedVar(); // unconstrStruct
-        stmtCtx.pushUnusedVar(); // isConstrIdx
+        const unConstrStructSym = stmtCtx.pushUnusedVar(); // unconstrStruct
+        const isConstrIdxSym = stmtCtx.pushUnusedVar(); // isConstrIdx
 
         const noVarsWildcardBodyIR = (
             this.wildcardCase?.body.toIR( stmtCtx )
@@ -299,18 +302,16 @@ export class TirCaseExpr
             );
 
             if( usedFieldsCtorNames.length <= 0 ) {
-                ifThenElseMatchingStatements = _ir_apps(
-                    IRNative.strictIfThenElse,
+                ifThenElseMatchingStatements = _ir_lazyIfThenElse(
+                    // condition
                     _ir_apps(
-                        new IRVar( 0 ), // isConstrIdx
+                        new IRVar( isConstrIdxSym ), // isConstrIdx
                         IRConst.int( ctorIdx )
                     ),
                     // then
-                    new IRDelayed(
-                        body.toIR( stmtCtx )
-                    ),
+                    body.toIR( stmtCtx ),
                     // else
-                    new IRDelayed( ifThenElseMatchingStatements )
+                    ifThenElseMatchingStatements
                 );
                 continue;
             }
@@ -330,9 +331,10 @@ export class TirCaseExpr
                 const patternVarDecl = pattern.fields.get( fName );
                 if(!( patternVarDecl instanceof TirSimpleVarDecl ))
                 throw new Error("case pattern not expressified.");
-                thenCtx.defineVar( patternVarDecl.name );
+                const introVar = thenCtx.defineVar( patternVarDecl.name );
 
-                const thenCase = _ir_let(
+                const thenCase = _ir_let_sym(
+                    introVar,
                     _inlineFromData(
                         patternVarDecl.type,
                         _ir_apps(
@@ -342,38 +344,42 @@ export class TirCaseExpr
                                 IRConst.int( indexOfField( fName ) ), // constr field index
                                 _ir_apps( // fileds as data list
                                     IRNative.sndPair,
-                                    new IRVar( 1 ) // uncostrStruct
+                                    new IRVar( unConstrStructSym ) // unconstrStruct
                                 )
                             )
                         )
                     ),
                     body.toIR( thenCtx )
                 );
-                ifThenElseMatchingStatements = _ir_apps(
-                    IRNative.strictIfThenElse,
+                ifThenElseMatchingStatements = _ir_lazyIfThenElse(
+                    // condition
                     _ir_apps(
-                        new IRVar( 0 ), // isConstrIdx
+                        new IRVar( isConstrIdxSym ), // isConstrIdx
                         IRConst.int( ctorIdx )
                     ),
                     // then
-                    new IRDelayed( thenCase ),
+                    thenCase,
                     // else
-                    new IRDelayed( ifThenElseMatchingStatements )
+                    ifThenElseMatchingStatements
                 );
                 continue;
-            }
+            } // single field used edge case
 
             // multiple fields used
             const thenCtx = stmtCtx.newChild();
+            const fieldsAsDataList = thenCtx.pushUnusedVar(); // fileds as data list
+
             const sortedUsedFields = [ ...usedFieldsCtorNames ].sort((a, b) =>
                 indexOfField( a ) - indexOfField( b )
             );
 
-            for( const fName of sortedUsedFields ) {
+            const introducedVars: symbol[] = new Array( sortedUsedFields.length );
+            for( let fIdx = 0; fIdx < sortedUsedFields.length; fIdx++ ) {
+                const fName = sortedUsedFields[fIdx]
                 const patternVarDecl = pattern.fields.get( fName );
                 if(!( patternVarDecl instanceof TirSimpleVarDecl ))
                 throw new Error("case pattern not expressified.");
-                thenCtx.defineVar( patternVarDecl.name );
+                introducedVars[fIdx] = thenCtx.defineVar( patternVarDecl.name );
             }
 
             const extractedFields: IRTerm[] = sortedUsedFields.map( fName =>
@@ -384,55 +390,56 @@ export class TirCaseExpr
                         _ir_apps(
                             IRNative._dropList,
                             IRConst.int( indexOfField( fName ) ), // constr field index
-                            new IRVar( 0 ) // fileds as data list
+                            new IRVar( fieldsAsDataList ) // fileds as data list
                         )
                     )
                 )
             );
-            const thenCase = _ir_let(
+            const thenCase = _ir_let_sym(
+                fieldsAsDataList,
                 _ir_apps(
                     IRNative.sndPair,
-                    new IRVar( 1 ) // uncostrStruct
+                    new IRVar( unConstrStructSym ) // unconstrStruct
                 ), // fileds as data list
                 _ir_apps(
                     new IRFunc(
-                        sortedUsedFields.length,
+                        introducedVars,
                         body.toIR( thenCtx )
                     ),
                     ...(extractedFields as [IRTerm, IRTerm, ...IRTerm[]])
                 )
             );
-            ifThenElseMatchingStatements = _ir_apps(
-                IRNative.strictIfThenElse,
+            ifThenElseMatchingStatements = _ir_lazyIfThenElse(
+                // condition
                 _ir_apps(
-                    new IRVar( 0 ), // isConstrIdx
+                    new IRVar( isConstrIdxSym ), // isConstrIdx
                     IRConst.int( ctorIdx )
                 ),
                 // then
-                new IRDelayed( thenCase ),
+                thenCase,
                 // else
-                new IRDelayed( ifThenElseMatchingStatements )
+                ifThenElseMatchingStatements
             );
         }
 
-        return new IRForced(
-            _ir_let(
+        return _ir_let_sym(
+            unConstrStructSym,
+            _ir_apps(
+                IRNative.unConstrData,
+                this.matchExpr.toIR( ctx )
+            ), // unconstrStruct
+            _ir_let_sym(
+                isConstrIdxSym,
                 _ir_apps(
-                    IRNative.unConstrData,
-                    this.matchExpr.toIR( ctx )
-                ), // uncostrStruct
-                _ir_let(
+                    IRNative.equalsInteger,
                     _ir_apps(
-                        IRNative.equalsInteger,
-                        _ir_apps(
-                            IRNative.fstPair,
-                            new IRVar( 0 ) // unConstrData result
-                        )
-                    ), // isConstrIdx
-                    ifThenElseMatchingStatements
-                )
+                        IRNative.fstPair,
+                        new IRVar( unConstrStructSym ) // unConstrData result
+                    )
+                ), // isConstrIdx
+                ifThenElseMatchingStatements
             )
-        );
+        )
     }
 }
 

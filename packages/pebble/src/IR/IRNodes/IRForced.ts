@@ -12,6 +12,8 @@ import { BaseIRMetadata } from "./BaseIRMetadata";
 import { equalIrHash, hashIrData, IRHash, irHashToBytes, isIRHash } from "../IRHash";
 import { shallowEqualIRTermHash } from "../utils/equalIRTerm";
 import { IRNodeKind } from "../IRNodeKind";
+import { Force, UPLCTerm } from "@harmoniclabs/uplc";
+import { ToUplcCtx } from "../toUPLC/ctx/ToUplcCtx";
 
 export interface IRForcedMetadata extends BaseIRMetadata {}
 
@@ -33,6 +35,10 @@ export class IRForced
         this._parent = undefined;
         
         this._hash = isIRHash( _unsafeHash ) ? _unsafeHash : undefined;
+    }
+
+    toUPLC(ctx: ToUplcCtx): UPLCTerm {
+        return new Force( this.forced.toUPLC( ctx ) );
     }
 
     private _hash: IRHash | undefined;

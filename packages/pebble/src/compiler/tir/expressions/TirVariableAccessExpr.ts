@@ -9,16 +9,19 @@ import { ToIRTermCtx } from "./ToIRTermCtx";
 export class TirVariableAccessExpr
     implements ITirExpr
 {
+    readonly resolvedValue: Readonly<ResolveValueResult>;
+
     get type(): TirType {
         return this.resolvedValue.variableInfos.type;
     }
     constructor(
-        readonly resolvedValue: ResolveValueResult, 
+        resolvedValue: ResolveValueResult, 
         readonly range: SourceRange
-    ) {}
+    ) {
+        this.resolvedValue = Object.freeze( resolvedValue );
+    }
 
-    toString(): string
-    {
+    toString(): string {
         return this.varName;
     }
 
@@ -36,10 +39,7 @@ export class TirVariableAccessExpr
         return this.resolvedValue.variableInfos.name;
     }
 
-    deps(): string[]
-    {
-        return [ this.varName ];
-    }
+    deps(): string[] { return [ this.varName ]; }
 
     toIR( ctx: ToIRTermCtx ): IRVar | IRSelfCall
     {

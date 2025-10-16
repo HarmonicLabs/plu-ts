@@ -13,6 +13,9 @@ import { isIRTerm } from "../utils/isIRTerm";
 import { hashIrData, IRHash, irHashToBytes, isIRHash } from "../IRHash";
 import { concatUint8Arr } from "../utils/concatUint8Arr";
 import { positiveIntAsBytes } from "../utils/positiveIntAsBytes";
+import { MutArrayLike } from "../utils/MutArrayLike";
+import { Constr, UPLCTerm } from "@harmoniclabs/uplc";
+import { ToUplcCtx } from "../toUPLC/ctx/ToUplcCtx";
 
 export interface IRConstrMeta extends BaseIRMetadata {}
 
@@ -20,7 +23,7 @@ export class IRConstr
     implements IIRTerm, Cloneable<IRConstr>, IIRParent, ToJson
 {
     readonly index!: bigint;
-    readonly fields!: ArrayLike<IRTerm>;
+    readonly fields!: MutArrayLike<IRTerm>;
 
     readonly meta: IRConstrMeta
 
@@ -61,6 +64,16 @@ export class IRConstr
         );
 
         this._hash = isIRHash( _unsafeHash ) ? _unsafeHash : undefined;
+    }
+
+    toUPLC(ctx: ToUplcCtx): UPLCTerm {
+        if( this.fields.length <= 0 ) {
+            return new Constr( this.index, [] );
+        }
+
+        const fields = mapArrayLike( this.fields, f => f.toUPLC( ctx ) );
+        
+        return new Constr( this.index, fields );
     }
 
     private _hash: IRHash | undefined;

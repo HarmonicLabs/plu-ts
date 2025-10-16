@@ -10,13 +10,9 @@ import { IRLetted } from "../../../IRNodes/IRLetted";
 import { IRRecursive } from "../../../IRNodes/IRRecursive";
 import { IRSelfCall } from "../../../IRNodes/IRSelfCall";
 import { IRVar } from "../../../IRNodes/IRVar";
-import { dependsByDbns } from "../../../IRNodes/utils/dependsByDbns";
-import { isClosedAtDbn } from "../../../IRNodes/utils/isClosedAtDbn";
 import { mapArrayLike } from "../../../IRNodes/utils/mapArrayLike";
 import { IRTerm } from "../../../IRTerm";
-import { prettyIRInline } from "../../../utils";
 import { _modifyChildFromTo } from "../../_internal/_modifyChildFromTo";
-import { iterTree } from "../../_internal/iterTree";
 import { CompilerOptions, CompilerUplcOptimizations, isDebugUplcOptimizations } from "../../CompilerOptions";
 import { expandFuncsAndReturnRoot, getExpandedIRFunc } from "./expandFuncsAndReturnRoot";
 
@@ -176,59 +172,6 @@ function isAppLike( term: IRTerm ): term is IRApp | IRCase
     );
 }
 
-/** @experimental still can't figure how to make it work */
-export function groupIndipendentLets( term: IRTerm, dbn: number ): [ args: IRTerm[], body: IRTerm ]
-{
-    let args: IRTerm[] = [];
-    let body: IRTerm = term;
-
-    //*
-    const lettedDbns: number[] = [];
-    while(
-        term instanceof IRApp &&
-        term.fn instanceof IRFunc &&
-        term.fn.arity === 1
-    )
-    {
-        // letted terms
-        // [(lam a [(lam b [(lam c ... ))) c] b] a] :: []
-        // [(lam b [(lam c ... ))) c] b] :: [a]
-        // [(lam c ... ) c] :: [a, b]
-        // ... :: [a, b, c]
-
-        // finally expand:
-        // (lam a (lam b (lam c ... ))) :: [a, b, c]
-
-        // console.log({
-        //     arg: prettyIRInline( term.arg ),
-        //     lettedDbns,
-        //     depends: dependsByDbns( term.arg, lettedDbns ),
-        //     currArgsLen: args.length
-        // });
-        if( !dependsByDbns( term.arg, lettedDbns ) )
-        {
-            args.push( term.arg );
-            term = term.fn.body;
-            // push current dbn
-            // and increment later
-            lettedDbns.push( dbn++ );
-            body = term;
-            continue;
-        }
-        else {
-            term = term.fn.body;
-            break;
-        }
-        continue;
-    }
-    
-    return [
-        args,
-        getExpandedIRFunc( body, args.length )
-    ];
-    //*/
-}
-
 function getMultiAppArgsAndBody( term: IRTerm ): [ args: IRTerm[], body: IRTerm ]
 {
     let args: IRTerm[] = [];
@@ -281,9 +224,9 @@ function isIdLike( term: IRTerm ): boolean
 {
     return (
         term instanceof IRFunc &&
-        term.arity === 1 &&
+        term.params.length === 1 &&
         term.body instanceof IRVar &&
-        Number( term.body.dbn ) === 0
+        term.body.name === term.params[0]
     );
 }
 

@@ -15,6 +15,7 @@ import { IRNative } from "../../../../IR/IRNodes/IRNative";
 import type { IRTerm } from "../../../../IR/IRTerm";
 import { IRConst } from "../../../../IR/IRNodes/IRConst";
 import { compileIRToUPLC } from "../../../../IR/toUPLC/compileIRToUPLC";
+import { IRDelayed, IRForced } from "../../../../IR";
 
 
 export type TirBinaryExpr
@@ -910,8 +911,7 @@ export class TirLogicalAndExpr
     
     toIR( ctx: ToIRTermCtx ): IRTerm
     {
-        return _ir_apps(
-            IRNative._and,
+        return _ir_and(
             this.left.toIR( ctx ),
             this.right.toIR( ctx ),
         );
@@ -923,6 +923,18 @@ export class TirLogicalAndExpr
         mergeSortedStrArrInplace( deps, this.right.deps() );
         return deps;
     }
+}
+
+export function _ir_and( left: IRTerm, right: IRTerm ): IRTerm
+{
+    return new IRForced(
+        _ir_apps(
+            IRNative.strictIfThenElse,
+            left,
+            new IRDelayed( right ),
+            new IRDelayed( IRConst.bool( false ) )
+        )
+    );
 }
 
 export class TirLogicalOrExpr
@@ -953,8 +965,7 @@ export class TirLogicalOrExpr
     
     toIR( ctx: ToIRTermCtx ): IRTerm
     {
-        return _ir_apps(
-            IRNative._or,
+        return _ir_or(
             this.left.toIR( ctx ),
             this.right.toIR( ctx ),
         );
@@ -966,4 +977,16 @@ export class TirLogicalOrExpr
         mergeSortedStrArrInplace( deps, this.right.deps() );
         return deps;
     }
+}
+
+export function _ir_or( left: IRTerm, right: IRTerm ): IRTerm
+{
+    return new IRForced(
+        _ir_apps(
+            IRNative.strictIfThenElse,
+            left,
+            new IRDelayed( IRConst.bool( true ) ),
+            new IRDelayed( right )
+        )
+    );
 }

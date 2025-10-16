@@ -8,6 +8,8 @@ import { BaseIRMetadata } from "./BaseIRMetadata";
 import { IRNodeKind } from "../IRNodeKind";
 import { IIRTerm, IRTerm } from "../IRTerm";
 import { hashIrData, IRHash } from "../IRHash";
+import { ErrorUPLC, UPLCTerm } from "@harmoniclabs/uplc";
+import { ToUplcCtx } from "../toUPLC/ctx/ToUplcCtx";
 
 const irErrorBitTag = new Uint8Array([ IRNodeKind.Error ]);
 const irErrorHash: IRHash = hashIrData( irErrorBitTag );
@@ -28,6 +30,13 @@ export class IRError
         this.addInfos = addInfos ?? {};
         this.meta = {};
         this._parent = undefined;
+    }
+
+    toUPLC(): UPLCTerm {
+        return new ErrorUPLC(
+            this.msg,
+            this.addInfos
+        );
     }
 
     get hash(): IRHash { return irErrorHash; }

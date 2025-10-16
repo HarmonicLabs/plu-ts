@@ -32,6 +32,8 @@ import { TirSopOptT } from "../../../compiler/tir/types/TirNativeType/native/Opt
 import { TirStringT } from "../../../compiler/tir/types/TirNativeType/native/string";
 import { TirVoidT } from "../../../compiler/tir/types/TirNativeType/native/void";
 import { IRHash, isIRHash, hashIrData, irHashToBytes } from "../../IRHash";
+import { Builtin, UPLCBuiltinTag, UPLCTerm } from "@harmoniclabs/uplc";
+import { ToUplcCtx } from "../../toUPLC/ctx/ToUplcCtx";
 
 /**
  * we might not need all the hashes
@@ -59,6 +61,14 @@ export class IRNative
         this.tag = tag;
                 
         this._hash = undefined;
+    }
+
+    toUPLC(): UPLCTerm
+    {
+        if( this.tag < 0 )
+        throw new Error("IRNative tag cannot be negative during uplc translation");
+
+        return new Builtin( this.tag as any as UPLCBuiltinTag );
     }
 
     private _hash: IRHash | undefined;
@@ -227,9 +237,7 @@ export class IRNative
     static get _id() { return new IRNative( IRNativeTag._id ); }
     static get _not() { return new IRNative( IRNativeTag._not ); }
     static get _strictAnd() { return new IRNative( IRNativeTag._strictAnd ); }
-    static get _and() { return new IRNative( IRNativeTag._and ); }
     static get _strictOr() { return new IRNative( IRNativeTag._strictOr ); }
-    static get _or() { return new IRNative( IRNativeTag._or ); }
     static get _gtBS() { return new IRNative( IRNativeTag._gtBS ); }
     static get _gtEqBS() { return new IRNative( IRNativeTag._gtEqBS ); }
     static get _gtInt() { return new IRNative( IRNativeTag._gtInt ); }

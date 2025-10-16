@@ -11,6 +11,9 @@ import { _modifyChildFromTo } from "../toUPLC/_internal/_modifyChildFromTo";
 import { BaseIRMetadata } from "./BaseIRMetadata";
 import { IRNodeKind } from "../IRNodeKind";
 import { hashIrData, IRHash, irHashToBytes, isIRHash } from "../IRHash";
+import { Lambda, UPLCTerm } from "@harmoniclabs/uplc";
+import { ToUplcCtx } from "../toUPLC/ctx/ToUplcCtx";
+import { IRRecursive } from "./IRRecursive";
 
 export interface IRFuncMetadata extends BaseIRMetadata {}
 
@@ -36,6 +39,21 @@ export class IRFunc
 
         this._parent = undefined;
         this._hash = isIRHash( _unsafeHash ) ? _unsafeHash : undefined;
+    }
+
+    toUPLC( ctx: ToUplcCtx ): Lambda {
+        ctx.defineVars( this.params );
+        const arity = this.arity;
+        const irBody = this._body;
+        // IRRecursive not valid for uplc translation
+        const uplcBody = (
+            irBody instanceof IRFunc ? 
+                irBody.toUPLC( ctx ) :
+                irBody.toUPLC( ctx.newChild() )
+        );
+        let result = new Lambda( uplcBody );
+        for( let i = 1; i < arity; i++ ) result = new Lambda( result );
+        return result;
     }
 
     private _hash: IRHash | undefined;

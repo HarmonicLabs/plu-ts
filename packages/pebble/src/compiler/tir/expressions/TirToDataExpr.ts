@@ -191,64 +191,47 @@ export function _toDataUplcFunc( origin_t: TirType ): IRTerm
             || elems_t instanceof TirDataT
         ) return IRNative.listData;
 
-        return new IRHoisted(new IRFunc(
-            1, // list
-            _ir_apps(
-                IRNative.listData,
-                _ir_apps(
-                    IRNative._mkMapList,
-                    IRConst.listOf( elems_t )([]),
-                    _toDataUplcFunc( elems_t ),
-                    new IRVar( 0 ) // list
-                )
-            )
-        ));
+        return mkMapListToData( elems_t );
     }
 
     if(
         from_t instanceof TirSopOptT
         || from_t instanceof TirSoPStructType
-    )
-    {
-        return new IRHoisted(
-            new IRFunc(
-                1, // sop
-                _inlineToData(
-                    from_t,
-                    new IRVar( 0 ) // sop
-                )
-            )
-        );
-    }
+    ) return mkSopToData( from_t );
 
     throw new Error(
         `TirFromDataExpr: cannot convert from Data to type ${from_t.toString()}`
     );
 }
 
-const _mkUnitData = new IRHoisted( new IRFunc( 1, IRConst.data( new DataConstr( 0, [] ) ), "~_mkUnitData") );
+const _mkUnitData = new IRHoisted(
+    new IRFunc(
+        [ Symbol("unit") ],
+        IRConst.data( new DataConstr( 0, [] ) )
+    )
+);
 
+const bool_var_name = Symbol("bool");
 const _boolToData = new IRHoisted( new IRFunc(
-    1, // bool
+    [ bool_var_name ], // bool
     _ir_apps(
         IRNative.strictIfThenElse,
-        new IRVar( 0 ), // bool
+        new IRVar( bool_var_name ), // bool
         new IRHoisted( IRConst.data( new DataConstr( 0, [] ) ) ),
         new IRHoisted( IRConst.data( new DataConstr( 1, [] ) ) )
-    ),
-    "~_boolToData"
+    )
 ));
 
+const str_var_name = Symbol("str");
 const _strToData = new IRHoisted( new IRFunc(
-    1, // string
+    [ str_var_name ], // string
     _ir_apps(
         IRNative.bData,
         _ir_apps(
             IRNative.encodeUtf8,
-            new IRVar( 0 ) // string
+            new IRVar( str_var_name ) // string
         )
-    ),
-    "~_strToData"
+    )
 ));
 
 export function _inlineSingleSopConstrToData(
@@ -287,9 +270,10 @@ export function _inlineSingleSopConstrToData(
     }
 
     let lst: IRTerm = IRConst.listOf( data_t )([]);
-    for( let i = constr.fields.length - 1, fieldDbnIdx = 0 ; i >= 0; i--, fieldDbnIdx++ )
+    const fieldsVarsNames = constr.fields.map( f => Symbol( f.name ) );
+    for( let i = constr.fields.length - 1; i >= 0; i-- )
     {
-        const filedExpr = new IRVar( fieldDbnIdx );
+        const filedExpr = new IRVar( fieldsVarsNames[ i ] );
         const field_t = getUnaliased( constr.fields[i].type );
         if( !isTirType( field_t ) ) throw new Error("TirFromDataExpr: unreachable");
 
@@ -306,7 +290,7 @@ export function _inlineSingleSopConstrToData(
         new IRCase(
             exprIR, [
                 new IRFunc(
-                    constr.fields.length,
+                    fieldsVarsNames,
                     lst
                 )
             ]
@@ -328,9 +312,10 @@ export function _inlineMultiSopConstrToData(
         return new IRHoisted( IRConst.data( new DataConstr( constrIdx, [] ) ) );
 
         let lst: IRTerm = IRConst.listOf( data_t )([]);
-        for( let i = constr.fields.length - 1, fieldDbnIdx = 0 ; i >= 0; i--, fieldDbnIdx++ )
+        const fieldsVarsNames = constr.fields.map( f => Symbol( f.name ) );
+        for( let i = constr.fields.length - 1 ; i >= 0; i-- )
         {
-            const filedExpr = new IRVar( fieldDbnIdx );
+            const filedExpr = new IRVar( fieldsVarsNames[i] );
             const field_t = getUnaliased( constr.fields[i].type );
             if( !isTirType( field_t ) ) throw new Error("TirFromDataExpr: unreachable");
 
@@ -342,7 +327,7 @@ export function _inlineMultiSopConstrToData(
         }
 
         return new IRFunc(
-            constr.fields.length,
+            fieldsVarsNames,
             _ir_apps(
                 IRNative.constrData,
                 IRConst.int( constrIdx ),
@@ -355,4 +340,49 @@ export function _inlineMultiSopConstrToData(
         exprIR,
         cases
     );
+}
+
+
+
+const _mapListToDataOfType: Record<string, IRHoisted> = {};
+function mkMapListToData( elems_t: TirType ): IRHoisted
+{
+    const key = elems_t.toTirTypeKey();
+    if( _mapListToDataOfType[key] ) return _mapListToDataOfType[key].clone();
+
+    const hoisted_mapListToData_lst = Symbol("hoisted_mapListToData_lst");
+    _mapListToDataOfType[key] = new IRHoisted(new IRFunc(
+        [ hoisted_mapListToData_lst ], // list
+        _ir_apps(
+            IRNative.listData,
+            _ir_apps(
+                IRNative._mkMapList,
+                IRConst.listOf( elems_t )([]),
+                _toDataUplcFunc( elems_t ),
+                new IRVar( hoisted_mapListToData_lst ) // list
+            )
+        )
+    ));
+
+    return _mapListToDataOfType[key].clone();
+}
+
+const _sopToDataOfType: Record<string, IRHoisted> = {};
+function mkSopToData( from_t: TirSoPStructType ): IRHoisted
+{
+    const key = from_t.toTirTypeKey();
+    if( _sopToDataOfType[key] ) return _sopToDataOfType[key].clone();
+
+    const sop_var = Symbol("sop");
+    _sopToDataOfType[key] = new IRHoisted(
+        new IRFunc(
+            [ sop_var ], // sop
+            _inlineToData(
+                from_t,
+                new IRVar( sop_var ) // sop
+            )
+        )
+    );
+    
+    return _sopToDataOfType[key].clone();
 }

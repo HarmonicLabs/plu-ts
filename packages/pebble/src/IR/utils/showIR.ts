@@ -50,20 +50,17 @@ export function showIRText( _ir: IRTerm ): string
         {
             return hoistedToStr(ir);
         }
-        if( ir instanceof IRVar ) return ir.name.description!; // return getVarNameForDbn( dbn - 1 - ir.dbn );
-        if( ir instanceof IRSelfCall ) return "self_" + ir.name.description!; // return "self_" + getVarNameForDbn( dbn - 1 - ir.dbn );
+        if( ir instanceof IRVar ) return ir.name.description!;
+        if( ir instanceof IRSelfCall ) return "self_" + ir.name.description!;
         if( ir instanceof IRConst ) return constToString(ir);
         if( ir instanceof IRDelayed ) return `(delay ${_loop( ir.delayed, dbn )})`;
         if( ir instanceof IRForced ) return `(force ${_loop( ir.forced, dbn )})`;
         if( ir instanceof IRError ) return "(error)"
         if( ir instanceof IRFunc )
         {
-            let vars: string[] = new Array( ir.arity );
-            for( let i  = 0; i < ir.arity; i++)
-            {
-                vars[i] = getVarNameForDbn( dbn++ );
-            }
-            return `(func ${typeof ir.name === "string" ? "{"+ir.name+"}" : ""} ${vars.join(" ")} ${_loop( ir.body, dbn )})`
+            const syms: symbol[] = (ir as any).vars;
+            const names = syms.map( s => s.description! );
+            return `(func ${typeof ir.name === "string" ? "{"+ir.name+"}" : ""} ${names.join(" ")} ${_loop( ir.body, dbn + names.length )})`
         }
         if( ir instanceof IRRecursive )
         {
@@ -117,10 +114,7 @@ export function showIR( _ir: IRTerm ): PrettiedIR
             
             getHoistedTerms( l.value ).forEach( ({ hoisted }) => addHoisted( hoisted ) );
 
-            letted[ irHashToHex( hash ) ] = {
-                dbn: Number( l.dbn ),
-                text: showIRText( l.value )
-            };
+            letted[ irHashToHex( hash ) ] = showIRText( l.value );
         }
     }
 
@@ -140,20 +134,17 @@ export function showIR( _ir: IRTerm ): PrettiedIR
             addHoisted( ir );
             return hoistedToStr(ir);
         }
-        if( ir instanceof IRVar ) return getVarNameForDbn( dbn - 1 - ir.dbn );
-        if( ir instanceof IRSelfCall ) return "self_" + getVarNameForDbn( dbn - 1 - ir.dbn );
+        if( ir instanceof IRVar ) return ir.name.description!;
+        if( ir instanceof IRSelfCall ) return "self_" + ir.name.description!;
         if( ir instanceof IRConst ) return constToString(ir);
         if( ir instanceof IRDelayed ) return `(delay ${_loop( ir.delayed, dbn )})`;
         if( ir instanceof IRForced ) return `(force ${_loop( ir.forced, dbn )})`;
         if( ir instanceof IRError ) return "(error)"
         if( ir instanceof IRFunc )
         {
-            let vars: string[] = new Array( ir.arity );
-            for( let i  = 0; i < ir.arity; i++)
-            {
-                vars[i] = getVarNameForDbn( dbn++ );
-            }
-            return `(func ${typeof ir.name === "string" ? "{"+ir.name+"}" : ""} ${vars.join(" ")} ${_loop( ir.body, dbn )})`
+            const syms: symbol[] = (ir as any).vars;
+            const names = syms.map( s => s.description! );
+            return `(func ${typeof ir.name === "string" ? "{"+ir.name+"}" : ""} ${names.join(" ")} ${_loop( ir.body, dbn + names.length )})`
         }
         if( ir instanceof IRRecursive )
         {
@@ -202,20 +193,17 @@ export function prettyIRText( _ir: IRTerm, _indent = 2 ): string
         {
             return `${indent}${hoistedToStr(ir)}`;
         }
-        if( ir instanceof IRVar ) return indent + getVarNameForDbn( dbn - 1 - ir.dbn );
-        if( ir instanceof IRSelfCall ) return indent + "self_" + getVarNameForDbn( dbn - 1 - ir.dbn );
+        if( ir instanceof IRVar ) return indent + ir.name.description!;
+        if( ir instanceof IRSelfCall ) return indent + "self_" + ir.name.description!;
         if( ir instanceof IRConst ) return `${indent}${constToString(ir)}`;
         if( ir instanceof IRDelayed ) return `${indent}(delay ${_loop( ir.delayed, dbn, depth + 1 )}${indent})`;
         if( ir instanceof IRForced ) return `${indent}(force ${_loop( ir.forced, dbn, depth + 1 )}${indent})`;
         if( ir instanceof IRError ) return "(error)"
         if( ir instanceof IRFunc )
         {
-            let vars: string[] = new Array( ir.arity );
-            for( let i  = 0; i < ir.arity; i++)
-            {
-                vars[i] = getVarNameForDbn( dbn++ );
-            }
-            return `${indent}(func ${typeof ir.name === "string" ? "{"+ir.name+"}" : ""} ${vars.join(" ")} ${_loop( ir.body, dbn, depth + 1 )}${indent})`
+            const syms: symbol[] = (ir as any).vars;
+            const names = syms.map( s => s.description! );
+            return `${indent}(func ${typeof ir.name === "string" ? "{"+ir.name+"}" : ""} ${names.join(" ")} ${_loop( ir.body, dbn + names.length, depth + 1 )}${indent})`
         }
         if( ir instanceof IRRecursive )
         {
@@ -233,10 +221,12 @@ export interface PrettiedIR extends HoistedAndLetted {
     text: string,
 }
 
-export interface PrettiedLetted {
+export type PrettiedLetted = string;
+/*{
     dbn: number,
     text: string,
-}
+}*/
+
 export interface HoistedAndLetted {
     letted: { [hash: string ]: PrettiedLetted },
     hoisted: { [hash: string ]: string }
@@ -288,10 +278,7 @@ export function prettyIR( _ir: IRTerm, _indent = 2 ): PrettiedIR
             getHoistedTerms( l.value ).forEach( ({ hoisted }) => addHoisted( hoisted ) );
 
             const hashStr = irHashToHex( hash );
-            letted[ hashStr ] = {
-                dbn: Number( l.dbn ),
-                text: prettyIRText( l.value, _indent )
-            };
+            letted[ hashStr ] = prettyIRText( l.value, _indent );
         }
     }
 
@@ -311,20 +298,17 @@ export function prettyIR( _ir: IRTerm, _indent = 2 ): PrettiedIR
             addHoisted( ir )
             return `${indent}${hoistedToStr(ir)}`;
         }
-        if( ir instanceof IRVar ) return indent + getVarNameForDbn( dbn - 1 - ir.dbn );
-        if( ir instanceof IRSelfCall ) return indent + "self_" + getVarNameForDbn( dbn - 1 - ir.dbn );
+        if( ir instanceof IRVar ) return indent + ir.name.description!;
+        if( ir instanceof IRSelfCall ) return indent + "self_" + ir.name.description!;
         if( ir instanceof IRConst ) return `${indent}${constToString(ir)}`;
         if( ir instanceof IRDelayed ) return `${indent}(delay ${_loop( ir.delayed, dbn, depth + 1 )}${indent})`;
         if( ir instanceof IRForced ) return `${indent}(force ${_loop( ir.forced, dbn, depth + 1 )}${indent})`;
         if( ir instanceof IRError ) return "(error)"
         if( ir instanceof IRFunc )
         {
-            let vars: string[] = new Array( ir.arity );
-            for( let i  = 0; i < ir.arity; i++)
-            {
-                vars[i] = getVarNameForDbn( dbn++ );
-            }
-            return `${indent}(func ${typeof ir.name === "string" ? "{"+ir.name+"}" : ""} ${vars.join(" ")} ${_loop( ir.body, dbn, depth + 1 )}${indent})`
+            const syms: symbol[] = (ir as any).vars;
+            const names = syms.map( s => s.description! );
+            return `${indent}(func ${typeof ir.name === "string" ? "{"+ir.name+"}" : ""} ${names.join(" ")} ${_loop( ir.body, dbn + names.length, depth + 1 )}${indent})`
         }
         if( ir instanceof IRRecursive )
         {
@@ -389,7 +373,7 @@ export function hoistedToStr( ir: IRHoisted ): string
 
 export function lettedToStr( ir: IRLetted ): string
 {
-    return `(letted${(ir.meta.name ? " {"+ir.meta.name+"}" : "")} ${ir.dbn} ${irHashToHex( ir.hash )})`;
+    return `(letted ${ir.name.description} ${irHashToHex( ir.hash )})`;
 }
 
 export function constToString( ir: IRConst ): string
@@ -411,7 +395,7 @@ export function prettyIRInline( _ir: IRTerm, _indent = 2 ): string
         {
             // addLetted( ir );
             return (
-                `${indent}(letted${(ir.meta.name ? " {"+ir.meta.name+"}" : "")} ${ir.dbn} ${irHashToHex( ir.hash )}` + 
+                `${indent}(letted ${ir.name.description}` + 
                 `${indent+indentStr}{` +
                 `${_loop( ir.value, dbn, depth + 2 )}`+
                 `${indent+indentStr}}` +
@@ -430,20 +414,17 @@ export function prettyIRInline( _ir: IRTerm, _indent = 2 ): string
                 `${indent})`
             );
         }
-        if( ir instanceof IRVar ) return indent + getVarNameForDbn( dbn - 1 - ir.dbn );
-        if( ir instanceof IRSelfCall ) return indent + "self_" + getVarNameForDbn( dbn - 1 - ir.dbn );
+        if( ir instanceof IRVar ) return indent + ir.name.description!;
+        if( ir instanceof IRSelfCall ) return indent + "self_" + ir.name.description!;
         if( ir instanceof IRConst ) return `${indent}${constToString(ir)}`;
         if( ir instanceof IRDelayed ) return `${indent}(delay ${_loop( ir.delayed, dbn, depth + 1 )}${indent})`;
         if( ir instanceof IRForced ) return `${indent}(force ${_loop( ir.forced, dbn, depth + 1 )}${indent})`;
         if( ir instanceof IRError ) return "(error)"
         if( ir instanceof IRFunc )
         {
-            let vars: string[] = new Array( ir.arity );
-            for( let i  = 0; i < ir.arity; i++)
-            {
-                vars[i] = getVarNameForDbn( dbn++ );
-            }
-            return `${indent}(func ${typeof ir.name === "string" ? "{"+ir.name+"}" : ""} ${vars.join(" ")} ${_loop( ir.body, dbn, depth + 1 )}${indent})`
+            const syms: symbol[] = (ir as any).vars;
+            const names = syms.map( s => s.description! );
+            return `${indent}(func ${typeof ir.name === "string" ? "{"+ir.name+"}" : ""} ${names.join(" ")} ${_loop( ir.body, dbn + names.length, depth + 1 )}${indent})`
         }
         if( ir instanceof IRRecursive )
         {
@@ -472,10 +453,7 @@ export function onlyHoistedAndLetted( prettied: PrettiedIR ): HoistedAndLetted
 
     Object.keys( prettied.letted ).forEach( k => {
         const letted = prettied.letted[k];
-        result.letted[k] = {
-            dbn: letted.dbn,
-            text: unfromatStr( letted.text )
-        };
+        result.letted[k] = unfromatStr( letted );
     });
     Object.keys( prettied.hoisted ).forEach( k => {
         result.hoisted[k] = unfromatStr( prettied.hoisted[k] );

@@ -107,9 +107,9 @@ function isId( term: IRTerm ): boolean
             && term.tag === IRNativeTag._id
         ) || (
             term instanceof IRFunc
-            && term.arity === 1
+            && term.params.length === 1
             && term.body instanceof IRVar
-            && Number( term.body.dbn ) === 0
+            && term.body.name === term.params[0]
         )
     );
 }

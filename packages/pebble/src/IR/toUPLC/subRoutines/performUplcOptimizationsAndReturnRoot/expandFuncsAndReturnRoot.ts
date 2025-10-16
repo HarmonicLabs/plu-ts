@@ -8,16 +8,15 @@ import { IRHoisted } from "../../../IRNodes/IRHoisted";
 import { IRLetted } from "../../../IRNodes/IRLetted";
 import { IRRecursive } from "../../../IRNodes/IRRecursive";
 import { IRSelfCall } from "../../../IRNodes/IRSelfCall";
-import { IRVar } from "../../../IRNodes/IRVar";
 import { IRTerm } from "../../../IRTerm";
 import { _modifyChildFromTo } from "../../_internal/_modifyChildFromTo";
 
-export function getExpandedIRFunc( body: IRTerm, arity: number ): IRFunc
+export function getExpandedIRFunc( body: IRTerm, params: symbol[] ): IRFunc
 {
-    body = new IRFunc( 1, body );
-    while( --arity > 0 )
+    let introducedParam: symbol;
+    while( introducedParam = params.pop()! )
     {
-        body = new IRFunc( 1, body );
+        body = new IRFunc( [ introducedParam ], body );
     }
     return body as IRFunc;
     // if( arity === 1 ) return new IRFunc( 1, body );
@@ -40,16 +39,10 @@ export function expandFuncsAndReturnRoot( root: IRTerm ): IRTerm
             // all good
             if( t.arity <= 1 ) continue;
 
-            const expanded = getExpandedIRFunc( t.body, t.arity );
+            const expanded = getExpandedIRFunc( t.body, t.params );
 
-            if( t.parent )
-            {
-                _modifyChildFromTo( t.parent, t, expanded );
-            }
-            else
-            {
-                root = expanded;
-            }
+            if( t.parent ) _modifyChildFromTo( t.parent, t, expanded );
+            else root = expanded;
 
             continue;
         }
@@ -87,14 +80,11 @@ export function expandFuncsAndReturnRoot( root: IRTerm ): IRTerm
         }
 
         if(
-            t instanceof IRRecursive ||
-            t instanceof IRHoisted ||
-            t instanceof IRLetted ||
-            t instanceof IRSelfCall
-        )
-        {
-            throw new Error("Unexpected term while performing uplc optimizations");
-        }
+            t instanceof IRRecursive
+            || t instanceof IRHoisted
+            || t instanceof IRLetted
+            || t instanceof IRSelfCall
+        ) throw new Error("Unexpected term while performing uplc optimizations");
     }
 
     return root;

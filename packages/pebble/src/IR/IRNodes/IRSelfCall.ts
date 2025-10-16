@@ -13,6 +13,8 @@ import { IIRTerm, IRTerm } from "../IRTerm";
 import { IRFunc } from "./IRFunc";
 import { fromUtf8 } from "@harmoniclabs/uint8array-utils";
 import { hashVarSym } from "./utils/hashVarSym";
+import { UPLCTerm } from "@harmoniclabs/uplc";
+import { ToUplcCtx } from "../toUPLC/ctx/ToUplcCtx";
 
 export interface IRSelfCallMetadata extends BaseIRMetadata {}
 
@@ -36,6 +38,13 @@ export class IRSelfCall
 
         this.meta = {};
         this._hash = isIRHash( _unsafeHash ) ? _unsafeHash : undefined;
+    }
+
+    toUPLC( ctx: ToUplcCtx ): UPLCTerm {
+        throw new Error(
+            "Can't convert 'IRSelfCall' to valid UPLC;" +
+            "IRSelfCall are expected to be converted before calling '_irToUplc'"
+        );
     }
 
     private _hash: IRHash | undefined;

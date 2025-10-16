@@ -6,24 +6,17 @@ import { IRVar } from "../IRVar";
 /**
  * returns true if the term depends on *ANY* of the deBrujin indices specified
  */
-export function dependsByDbns( term: IRTerm, depsDbns: readonly number[] ): boolean
+export function dependsByVars( term: IRTerm, depsVars: readonly symbol[] ): boolean
 {
-    if( depsDbns.length === 0 ) return false;
+    if( depsVars.length === 0 ) return false;
     let doesDepend = false;
     iterTree( term,
         (node, diff) => {
             if(
-                node instanceof IRVar ||
-                node instanceof IRSelfCall
-            )
-            {
-                doesDepend = doesDepend || depsDbns.some( dbn => {
-                    const realDbn = dbn + diff;
-                    // realDbn === 0 implies no variables are in scope
-                    // so if node.dbn === 0 and realDbn === 1 then the 
-                    // variable is pointing to that definition
-                    return node.dbn === realDbn;
-                });
+                node instanceof IRVar
+                || node instanceof IRSelfCall
+            ) {
+                doesDepend = doesDepend || depsVars.some( sym => node.name === sym );
             }
         },
         // shouldSkipNode

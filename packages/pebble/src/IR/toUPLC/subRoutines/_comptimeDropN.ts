@@ -4,28 +4,32 @@ import { _ir_apps } from "../../tree_utils/_ir_apps";
 const tailList = new IRHoisted( IRNative.tailList );
 tailList.hash;
 
+const drop2_lst = Symbol("lst");
 export const hoisted_drop2 = new IRHoisted(
-    new IRFunc( 1, // lst
+    new IRFunc(
+        [ drop2_lst ], // lst
         _ir_apps(
             tailList.clone(),
             _ir_apps(
                 tailList.clone(),
-                new IRVar( 0 ) // lst
+                new IRVar( drop2_lst ) // lst
             )
         )
     )
 );
 hoisted_drop2.hash;
 
+const drop3_lst = Symbol("lst");
 export const hoisted_drop3 = new IRHoisted(
-    new IRFunc( 1, // lst
+    new IRFunc(
+        [ drop3_lst ], // lst
         _ir_apps(
             tailList.clone(),
             _ir_apps(
                 tailList.clone(),
                 _ir_apps(
                     tailList.clone(),
-                    new IRVar( 0 ) // lst
+                    new IRVar( drop3_lst ) // lst
                 )
             )
         )
@@ -33,8 +37,10 @@ export const hoisted_drop3 = new IRHoisted(
 );
 hoisted_drop3.hash;
 
+const drop4_lst = Symbol("lst");
 export const hoisted_drop4 = new IRHoisted(
-    new IRFunc( 1, // lst
+    new IRFunc( 
+        [ drop4_lst ], // lst
         _ir_apps(
             tailList.clone(),
             _ir_apps(
@@ -43,7 +49,7 @@ export const hoisted_drop4 = new IRHoisted(
                     tailList.clone(),
                     _ir_apps(
                         tailList.clone(),
-                        new IRVar( 0 ) // lst
+                        new IRVar( drop4_lst ) // lst
                     )
                 )
             )
@@ -52,39 +58,47 @@ export const hoisted_drop4 = new IRHoisted(
 );
 hoisted_drop4.hash;
 
+const drop8_lst = Symbol("lst");
 export const hoisted_drop8 = new IRHoisted(
-    new IRFunc( 1, // lst
+    new IRFunc(
+        [ drop8_lst ], // lst
         _ir_apps(
             hoisted_drop4.clone(),
             _ir_apps(
                 hoisted_drop4.clone(),
-                new IRVar( 0 ) // lst
+                new IRVar( drop8_lst ) // lst
             )
         )
     )
 );
 hoisted_drop8.hash;
 
+// replace numeric arity version of drop16 with symbol param
+const drop16_lst = Symbol("lst");
 export const hoisted_drop16 = new IRHoisted(
-    new IRFunc( 1, // lst
+    new IRFunc(
+        [ drop16_lst ],
         _ir_apps(
             hoisted_drop8.clone(),
             _ir_apps(
                 hoisted_drop8.clone(),
-                new IRVar( 0 ) // lst
+                new IRVar( drop16_lst )
             )
         )
     )
 );
 hoisted_drop16.hash;
 
+// replace numeric arity version of drop32 with symbol param
+const drop32_lst = Symbol("lst");
 export const hoisted_drop32 = new IRHoisted(
-    new IRFunc( 1, // lst
+    new IRFunc(
+        [ drop32_lst ],
         _ir_apps(
             hoisted_drop16.clone(),
             _ir_apps(
                 hoisted_drop16.clone(),
-                new IRVar( 0 ) // lst
+                new IRVar( drop32_lst )
             )
         )
     )
@@ -95,9 +109,7 @@ export function _compTimeDropN( bigN: bigint ): IRHoisted | IRNative
 {
     const n = Number( bigN );
     if( n < 0 ) throw new Error(`Cannot drop a negative number of elements from a list`);
-    if( n === 0 ) return new IRHoisted(
-        new IRFunc( 1, new IRVar( 0 ) )
-    );
+    if( n === 0 ) return IRNative._id;
     if( n === 1 ) return tailList.clone();
     if( n === 2 ) return hoisted_drop2;
     if( n === 3 ) return hoisted_drop3;
@@ -121,7 +133,8 @@ export function _compTimeDropN( bigN: bigint ): IRHoisted | IRNative
     }
 
     // Build the composed drop function body by sequential application
-    let body: any = new IRVar( 0 ); // start from the input list (var 0)
+    const lst = Symbol("lst"); // symbol param for composed function
+    let body: any = new IRVar( lst );
     for( const p of parts )
     {
         switch( p )
@@ -136,7 +149,7 @@ export function _compTimeDropN( bigN: bigint ): IRHoisted | IRNative
         }
     }
 
-    const hoisted = new IRHoisted( new IRFunc( 1, body ) );
-    hoisted.hash; // force hash computation / caching as done for predefined ones
+    const hoisted = new IRHoisted( new IRFunc( [ lst ], body ) );
+    hoisted.hash;
     return hoisted;
 }

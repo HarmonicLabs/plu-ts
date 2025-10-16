@@ -5,19 +5,7 @@ const _1n = BigInt(1);
 
 export class ToIRTermCtx
 {
-    // https://tc39.es/ecma262/multipage/ordinary-and-exotic-objects-behaviours.html#sec-ordinary-object-internal-methods-and-internal-slots-ownpropertykeys
-    // order of `Object.keys` by ECMAScript specification:
-    //
-    // - first, the keys that are integer indices, in ascending numeric order
-    // - then, all other string keys, in the order in which they were added to the object
-    // - finally, all symbol keys, in the order in which they were added to the object
-    //
-    // we know variables names can NEVER start with a number,
-    // so we are safe to assume we always get the variables in the order they were defined
-    private readonly variables: Record<string,symbol> = {};
-    private varNames(): string[] {
-        return Object.keys( this.variables );
-    }
+    private readonly localVars: Map<string, symbol> = new Map();
 
     private _firstVariableIsRecursive: boolean = false;
 
@@ -29,6 +17,8 @@ export class ToIRTermCtx
          */
         private readonly variableToCtx: Map<string, ToIRTermCtx>
     ) {
+        this.localVars = new Map();
+
         // DO NOT SET _parentDbn HERE
         // it must be a getter to reflect changes in parent
         // (parent dbn can change)
@@ -38,12 +28,12 @@ export class ToIRTermCtx
     allVariables(): string[] {
         return (
             (this.parent?.allVariables() ?? [])
-            .concat( Object.keys( this.variables ) )
+            .concat([ ...this.localVars.keys() ])
         );
     }
 
     static root(): ToIRTermCtx {
-        return new ToIRTermCtx( undefined, new Map<string, ToIRTermCtx>() );
+        return new ToIRTermCtx( undefined, new Map() );
     }
 
     newChild(): ToIRTermCtx {
@@ -51,50 +41,60 @@ export class ToIRTermCtx
     }
 
     private localVarSym( name: string ): symbol | undefined {
-        const sym = this.variables[ name ];
-        if( typeof sym === "symbol" ) return undefined;
-        return sym;
+        return this.localVars.get( name );
     }
 
-    getVarSym( name: string ): symbol | undefined {
+    getVarAccessSym( name: string ): symbol | undefined {
         const ctx = this.variableToCtx.get( name );
         if( !ctx ) return undefined;
         return ctx.localVarSym( name );
     }
 
     getVarAccessIR( name: string ): IRVar | IRSelfCall | undefined {
-        const accessSym = this.getVarSym( name );
-        if( typeof accessSym !== "bigint" ) return undefined;
+        const accessSym = this.getVarAccessSym( name );
+        if( typeof accessSym !== "symbol" ) return undefined;
 
         if(
-            name === this.varNames()[0]
-            && this._firstVariableIsRecursive
+            this._firstVariableIsRecursive
+            && name === this.localVars.keys().next().value
         ) return new IRSelfCall( accessSym );
         
         return new IRVar( accessSym );
     }
 
-    defineVar( name: string ): void {
-        if( this.variableToCtx.has( name ) ) {
-            const ctx = this.variableToCtx.get( name )!;
-            if( ctx.localVarSym( name ) !== undefined ) {
-                throw new Error(`variable '${name}' already defined in the current scope`);
-            }
-        }
-        const sym = Symbol(name);
-        this.variables[ name ] = sym;
-        this.variableToCtx.set( name, this );
-    }
-    defineRecursiveVar( name: string ): void {
+    /**
+     * @returns the symbol of the defined variable (for eventual `new IRFunc( ... )`)
+    **/
+    defineVar( varName: string | symbol ): symbol
+    {
+        const name = typeof varName === "string" ? varName : varName.description!;
+
+        const exsistingCtx = this.variableToCtx.get( name );
         if(
-            this.varNames().length > 0
+            exsistingCtx
+            && exsistingCtx.localVarSym( name ) !== undefined
+        ) throw new Error(`variable '${name}' already defined in the current scope`);
+
+        const sym = typeof varName === "string" ? Symbol( name ) : varName;
+        this.localVars.set( name, sym );
+        this.variableToCtx.set( name, this );
+        return sym;
+    }
+    /**
+     * @returns the symbol of the defined recursive variable (for eventual `new IRRecursive( ... )`)
+    **/
+    defineRecursiveVar( name: string ): symbol
+    {
+        if(
+            this.localVars.size > 0
             || this._firstVariableIsRecursive
         ) throw new Error("recursive variable must be the first defined variable in the context");
-        this.defineVar( name );
+        
         this._firstVariableIsRecursive = true;
+        return this.defineVar( name );
     }
 
-    pushUnusedVar(): void {
+    pushUnusedVar(): symbol {
         // this.variables.push( "" );
         // just to increment dbn
 
@@ -103,7 +103,9 @@ export class ToIRTermCtx
         // 
         // we start with the number so we know it is not a valid variable name
         // but we add "_unused" so the key is not an integer (which would be sorted first in Object.keys)
-        const name = this.varNames().length;+ "_unused";
-        this.variables[ name ] = Symbol( name );
+        const name = this.localVars.size + "_unused";
+        const sym = Symbol( name );
+        this.localVars.set( name, sym );
+        return sym;
     }
 }

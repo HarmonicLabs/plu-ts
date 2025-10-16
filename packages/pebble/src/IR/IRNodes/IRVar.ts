@@ -13,6 +13,8 @@ import { IRNodeKind } from "../IRNodeKind";
 import { IIRTerm, IRTerm } from "../IRTerm";
 import { fromUtf8 } from "@harmoniclabs/uint8array-utils";
 import { hashVarSym } from "./utils/hashVarSym";
+import { UPLCTerm, UPLCVar } from "@harmoniclabs/uplc";
+import { ToUplcCtx } from "../toUPLC/ctx/ToUplcCtx";
 
 export interface IRVarMetadata extends BaseIRMetadata {}
 
@@ -36,6 +38,11 @@ export class IRVar
 
         this.meta = {};
         this._hash = isIRHash( _unsafeHash ) ? _unsafeHash : undefined;
+    }
+
+    toUPLC( ctx: ToUplcCtx ): UPLCVar
+    {
+        return new UPLCVar( ctx.getVarAccessDbn( this.name ) );
     }
 
     private _hash: IRHash | undefined;
@@ -82,7 +89,10 @@ export class IRVar
 
     clone(): IRVar
     {
-        return new IRVar( this.name, this._hash );
+        return new IRVar(
+            this.name,
+            this._hash
+        );
     }
 
     toJSON() { return this.toJson(); }

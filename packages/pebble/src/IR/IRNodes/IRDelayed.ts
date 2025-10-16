@@ -14,6 +14,8 @@ import { IRNodeKind } from "../IRNodeKind";
 import { IRHash, isIRHash, hashIrData, irHashToBytes } from "../IRHash";
 import { positiveIntAsBytes } from "../utils/positiveIntAsBytes";
 import { mapArrayLike } from "./utils/mapArrayLike";
+import { Delay, UPLCTerm } from "@harmoniclabs/uplc";
+import { ToUplcCtx } from "../toUPLC/ctx/ToUplcCtx";
 
 export interface IRDelayedMetadata extends BaseIRMetadata {}
 
@@ -35,6 +37,10 @@ export class IRDelayed
         this._parent = undefined;
 
         this._hash = isIRHash( _unsafeHash ) ? _unsafeHash : undefined;
+    }
+
+    toUPLC(ctx: ToUplcCtx): UPLCTerm {
+        return new Delay( this.delayed.toUPLC( ctx ) );
     }
 
     private _hash: IRHash | undefined;

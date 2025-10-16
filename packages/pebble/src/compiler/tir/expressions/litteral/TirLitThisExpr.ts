@@ -31,9 +31,9 @@ export class TirLitThisExpr
 
     toIR( ctx: ToIRTermCtx ): IRTerm
     {
-        const dbn = ctx.getVarSym("this");
-        if( typeof dbn !== "symbol" )
+        const sym = ctx.getVarAccessSym("this");
+        if( typeof sym !== "symbol" )
         throw new Error("Missing 'this' variable declaration in context");
-        return new IRVar( dbn );
+        return new IRVar( sym );
     }
 }

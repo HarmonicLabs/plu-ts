@@ -1,12 +1,13 @@
+import { MutArrayLike } from "../../utils/MutArrayLike";
 
 export function makeArrayLikeProxy<T>(
     arr: ArrayLike<T>,
     isValidElem: ( elem: T ) => boolean,
     initModifyElem: ( elem: T ) => T,
     modifyElem: ( elem: T, oldElem: T ) => T
-): ArrayLike<T>
+): MutArrayLike<T>
 {
-    const like = {} as ArrayLike<T>;
+    const like = {} as MutArrayLike<T>;
 
     Object.defineProperty(
         like, "length", {

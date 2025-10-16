@@ -18,7 +18,9 @@ import { IRConstr } from "./IRConstr";
 import { IRCase } from "./IRCase";
 import { IRNodeKind } from "../IRNodeKind";
 import { IRRecursive } from "./IRRecursive";
-import { IRHash, isIRHash, hashIrData, irHashToBytes } from "../IRHash";
+import { IRHash, isIRHash, hashIrData, irHashToBytes, equalIrHash, irHashToHex } from "../IRHash";
+import { UPLCTerm } from "@harmoniclabs/uplc";
+import { ToUplcCtx } from "../toUPLC/ctx/ToUplcCtx";
 
 
 export type HoistedSetEntry = {
@@ -34,6 +36,7 @@ export interface IRHoistedMeta {
     **/
     forceHoist?: boolean,
     name?: string | undefined
+    handled?: boolean
 }
 
 export interface IRHoistedMetadata extends IRMetadata {
@@ -48,6 +51,13 @@ export class IRHoisted
     implements IIRTerm, Cloneable<IRHoisted>, IIRParent, ToJson, IRHoistedMetadata
 {
     readonly meta!: IRHoistedMeta
+    private _name: symbol | undefined = undefined;
+    get name(): symbol {
+        if( typeof this._name === "symbol" ) return this._name;
+        const hash = this.hash;
+        this._name = Symbol( "hoisted_" + irHashToHex( hash ) )
+        return this._name;
+    }
 
     constructor(
         hoisted: IRTerm, 
@@ -82,6 +92,12 @@ export class IRHoisted
         this._hash = isIRHash( _unsafeHash ) ? _unsafeHash : undefined;
     }
 
+    toUPLC(): UPLCTerm {
+        throw new Error(
+            "Can't convert 'IRHoisted' to valid UPLC;"
+        );
+    }
+
     private _hash: IRHash | undefined;
     get hash(): IRHash
     {
@@ -100,6 +116,7 @@ export class IRHoisted
     markHashAsInvalid(): void
     {
         this._hash = undefined;
+        this._name = undefined;
         this.parent?.markHashAsInvalid();
     }
 
@@ -183,7 +200,7 @@ export class IRHoisted
 export function getSortedHoistedSet( hoistedTerms: HoistedSetEntry[] ): HoistedSetEntry[]
 {
     const set: HoistedSetEntry[] = [];
-    const hashesSet: symbol[] = [];
+    const hashesSet: IRHash[] = [];
      
     /**
      * **O((n * m) * d)**
@@ -201,7 +218,7 @@ export function getSortedHoistedSet( hoistedTerms: HoistedSetEntry[] ): HoistedS
             const thisHoistedEntry = _terms[i]; 
             const thisHash = thisHoistedEntry.hoisted.hash;
 
-            const idxInSet = hashesSet.indexOf( thisHash );
+            const idxInSet = hashesSet.findIndex( h => equalIrHash( h, thisHash ) );
 
             // if( !hashesSet.includes( compiled ) )
             // "includes" uses standard equality (===)

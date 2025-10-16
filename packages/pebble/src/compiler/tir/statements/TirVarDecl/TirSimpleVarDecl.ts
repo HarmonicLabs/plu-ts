@@ -13,7 +13,8 @@ export class TirSimpleVarDecl
         public initExpr: TirExpr | undefined, // deconstructed OR function param
         public isConst: boolean,
         readonly range: SourceRange,
-    ) {}
+    ) {
+    }
 
     clone(): TirSimpleVarDecl
     {

@@ -13,16 +13,18 @@ export function handleRecursiveTerms( term: IRTerm ): void
     if( term instanceof IRRecursive )
     {
         const bodyPtr = term.body;
+        const recBody = Symbol("recBody");
+        const self = term.name;
         _modifyChildFromTo(
             term.parent!,
             term,
             new IRApp(
                 new IRHoisted(
-                    new IRFunc( 1,
-                        new IRApp( new IRVar( 0 ), new IRVar( 0 ) )
+                    new IRFunc( [ recBody ],
+                        new IRApp( new IRVar( recBody ), new IRVar( recBody ) )
                     )
                 ),
-                new IRFunc( 1, bodyPtr )
+                new IRFunc( [ self ], bodyPtr )
             )
         );
         handleRecursiveTerms( bodyPtr );
@@ -33,7 +35,7 @@ export function handleRecursiveTerms( term: IRTerm ): void
         _modifyChildFromTo(
             term.parent!,
             term,
-            new IRApp( new IRVar( term.dbn ), new IRVar( term.dbn ) )
+            new IRApp( new IRVar( term.name ), new IRVar( term.name ) )
         );
         return;
     }
@@ -45,13 +47,15 @@ export function handleRootRecursiveTerm( term: IRTerm ): IRTerm
     if( term instanceof IRRecursive )
     {
         const bodyPtr = term.body;
+        const recBody = Symbol("recBody");
+        const self = term.name;
         const newRoot = new IRApp(
             new IRHoisted(
-                new IRFunc( 1,
-                    new IRApp( new IRVar( 0 ), new IRVar( 0 ) )
+                new IRFunc( [ recBody ],
+                    new IRApp( new IRVar( recBody ), new IRVar( recBody ) )
                 )
             ),
-            new IRFunc( 1, bodyPtr )
+            new IRFunc( [ self ], bodyPtr )
         );
         handleRecursiveTerms( bodyPtr );
         return newRoot;

@@ -11,10 +11,10 @@ import { IRHoisted } from "./IRHoisted";
 import { IRParentTerm, isIRParentTerm } from "../utils/isIRParentTerm";
 import { _modifyChildFromTo } from "../toUPLC/_internal/_modifyChildFromTo";
 import { BaseIRMetadata } from "./BaseIRMetadata";
-import { _getMinUnboundDbn } from "../toUPLC/subRoutines/handleLetted/groupByScope";
 import { hashIrData, IRHash, irHashToBytes, isIRHash } from "../IRHash";
 import { IRNodeKind } from "../IRNodeKind";
 import { prettyIR } from "../utils/showIR";
+import { UPLCTerm } from "@harmoniclabs/uplc";
 
 
 export type LettedSetEntry = {
@@ -22,7 +22,7 @@ export type LettedSetEntry = {
     nReferences: number
 };
 
-function jsonLettedSetEntry( entry: LettedSetEntry )
+export function jsonLettedSetEntry( entry: LettedSetEntry )
 {
     return {
         letted: entry.letted.name.description,
@@ -31,7 +31,7 @@ function jsonLettedSetEntry( entry: LettedSetEntry )
 
 }
 
-function expandedJsonLettedSetEntry( entry: LettedSetEntry )
+export function expandedJsonLettedSetEntry( entry: LettedSetEntry )
 {
     return {
         letted: entry.letted.name.description,
@@ -104,6 +104,12 @@ export class IRLetted
         };
         
         this._hash = isIRHash( _unsafeHash ) ? _unsafeHash : undefined;
+    }
+
+    toUPLC(): UPLCTerm {
+        throw new Error(
+            "Can't convert 'IRLetted' to valid UPLC"
+        );
     }
 
     private _hash: IRHash | undefined;
@@ -208,7 +214,7 @@ export class IRLetted
  * @param {LettedSetEntry[]} lettedTerms
  * @returns {LettedSetEntry[]} a **new** array with ```IRLetted```s with no dependencies first, followed by the dependents
  */
-function getSortedLettedSet( lettedTerms: LettedSetEntry[] ): LettedSetEntry[]
+export function getSortedLettedSet( lettedTerms: LettedSetEntry[] ): LettedSetEntry[]
 {
     const set: LettedSetEntry[] = [];
     const hashesSet: symbol[] = [];
@@ -280,7 +286,7 @@ export const default_getLettedTermsOptions: GetLettedTermsOptions = {
  * @param {IRTerm} irTerm term to search in
  * @returns direct letted terms (no possible dependencies)
  */
-function getLettedTerms( irTerm: IRTerm, options?: Partial<GetLettedTermsOptions> ): LettedSetEntry[]
+export function getLettedTerms( irTerm: IRTerm, options?: Partial<GetLettedTermsOptions> ): LettedSetEntry[]
 {
     const {
         all,

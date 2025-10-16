@@ -128,9 +128,7 @@ export enum IRNativeTag {
     _id                 = -15,
     _not                = -16,  
     _strictAnd          = -17,  
-    _and                = -18,  
     _strictOr           = -19,
-    _or                 = -20,
     _gtBS               = -21,
     _gtEqBS             = -22,
     _gtInt              = -23,
@@ -180,9 +178,7 @@ export function nativeTagToString( nativeTag: IRNativeTag ): string
         case IRNativeTag._id            : return "id";
         case IRNativeTag._not           : return "not";
         case IRNativeTag._strictAnd     : return "strictAnd";
-        case IRNativeTag._and           : return "and";
         case IRNativeTag._strictOr      : return "strictOr";
-        case IRNativeTag._or            : return "or";
         case IRNativeTag._gtBS          : return "gtBS";
         case IRNativeTag._gtEqBS        : return "gtEqBS";
         case IRNativeTag._gtInt         : return "gtInt";

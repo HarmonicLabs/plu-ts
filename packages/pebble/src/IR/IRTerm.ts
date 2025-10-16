@@ -13,6 +13,8 @@ import { IRCase } from "./IRNodes/IRCase";
 import { IRRecursive } from "./IRNodes/IRRecursive";
 import { IRSelfCall } from "./IRNodes/IRSelfCall";
 import { IHash } from "./interfaces";
+import { UPLCTerm } from "@harmoniclabs/uplc";
+import { ToUplcCtx } from "./toUPLC/ctx/ToUplcCtx";
 
 export type IRTerm
     = IRVar
@@ -34,4 +36,5 @@ export interface IIRTerm
     extends IHash
 {
     children(): IRTerm[];
+    toUPLC( ctx: ToUplcCtx ): UPLCTerm;
 }

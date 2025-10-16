@@ -26,6 +26,7 @@ export class TirFuncExpr
             this.returnType
         );
     }
+    
     constructor(
         readonly name: string,
         // deconstructions are inlined in the body
@@ -126,12 +127,12 @@ export class TirFuncExpr
         const isRecursive = this.isRecursive();
 
         ctx = ctx.newChild();
-        if( isRecursive ) ctx.defineRecursiveVar( this.name );
-        this.params.forEach( param => ctx.defineVar( param.name ) );
+        let recursiveVarSym: symbol | undefined = undefined;
+        if( isRecursive ) recursiveVarSym = ctx.defineRecursiveVar( this.name );
+        const introuducedVars = this.params.map( param => ctx.defineVar( param.name ) );
 
-
-        let irFunc: IRTerm = new IRFunc( this.params.length, expr.toIR( ctx ), this.name );
-        if( isRecursive ) irFunc = new IRRecursive( irFunc, this.name );
+        let irFunc: IRTerm = new IRFunc( introuducedVars, expr.toIR( ctx ) );
+        if( isRecursive ) irFunc = new IRRecursive( recursiveVarSym!, irFunc );
 
         return irFunc;
     }

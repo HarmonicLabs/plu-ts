@@ -87,21 +87,6 @@ export function handleHoistedAndReturnRoot( term: IRTerm ): IRTerm
     let root: IRTerm = term;
     while( root.parent !== undefined ) root = root.parent;
 
-    function getIRVarForHoistedAtLevel( _hoistedHash: IRHash, level: number ): IRVar
-    {
-        let levelOfTerm = toHoist.findIndex( sortedH => equalIrHash( sortedH.hash, _hoistedHash ) );
-        if( levelOfTerm < 0 )
-        {
-            throw new Error(
-                `missing hoisted with hash ${irHashToHex(_hoistedHash)} between toHoist [\n\t${
-                    toHoist.map( h => irHashToHex( h.hash ) )
-                    .join(",\n\t")
-                }\n]; can't replace with IRVar`
-            );
-        }
-        return new IRVar( level - (levelOfTerm + 1) );
-    }
-
     // adds the actual terms
     // from last to first
     for( let i = toHoist.length - 1; i >= 0; i-- )
@@ -109,7 +94,7 @@ export function handleHoistedAndReturnRoot( term: IRTerm ): IRTerm
         const thisHoisted = toHoist[i];
         root = new IRApp(
             new IRFunc(
-                1,
+                [ thisHoisted.name ],
                 root
             ),
             thisHoisted.hoisted.clone()
@@ -131,13 +116,7 @@ export function handleHoistedAndReturnRoot( term: IRTerm ): IRTerm
             !isHoistedToinline
         )
         {
-            const irvar = getIRVarForHoistedAtLevel( irTermHash, dbn );
-            if( irvar.dbn >= dbn )
-            {
-                throw new Error(
-                    `out of bound hoisted term; hash: ${irHashToHex( irTerm.hash )}; var's DeBruijn: ${irvar.dbn} (starts from 0); tot hoisted in scope: ${dbn}`
-                )
-            }
+            const irvar = new IRVar( irTerm.name ); // getIRVarForHoistedAtLevel( irTermHash, dbn );
 
             // console.log(
             //     showIRText( irTerm.parent as IRTerm ),
@@ -150,14 +129,7 @@ export function handleHoistedAndReturnRoot( term: IRTerm ): IRTerm
                 irvar
             );
         
-            Object.defineProperty(
-                irTerm.meta, "handled", {
-                    value: true,
-                    writable: true,
-                    enumerable: true,
-                    configurable: true
-                }
-            );
+            irTerm.meta.handled = true;
 
             // don't push anything
             // because we just replaced with a variable

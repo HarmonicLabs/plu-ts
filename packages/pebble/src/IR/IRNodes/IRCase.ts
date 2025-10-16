@@ -13,13 +13,15 @@ import { shallowEqualIRTermHash } from "../utils/equalIRTerm";
 import { IRNodeKind } from "../IRNodeKind";
 import { isIRTerm } from "../utils/isIRTerm";
 import { hashIrData, IRHash, irHashToBytes, isIRHash } from "../IRHash";
+import { Case, UPLCTerm } from "@harmoniclabs/uplc";
+import { ToUplcCtx } from "../toUPLC/ctx/ToUplcCtx";
 
 export interface IRCaseMeta extends BaseIRMetadata {}
 
 export class IRCase
     implements IIRTerm, Cloneable<IRCase>, IIRParent, ToJson
 {
-    readonly continuations!: ArrayLike<IRTerm>;
+    readonly continuations!: MutArrayLike<IRTerm>;
 
     static get kind(): IRNodeKind.Case { return IRNodeKind.Case; }
     get kind(): IRNodeKind.Case { return IRCase.kind; }
@@ -58,6 +60,19 @@ export class IRCase
         );
 
         this._hash = isIRHash( _unsafeHash ) ? _unsafeHash : undefined;
+    }
+
+    toUPLC(ctx: ToUplcCtx): UPLCTerm {
+        const constrTermUplc = this.constrTerm.toUPLC( ctx );
+        const continuationsUplc = mapArrayLike(
+            this.continuations,
+            c => c.toUPLC( ctx.newChild() )
+        );
+
+        return new Case(
+            constrTermUplc,
+            continuationsUplc
+        );
     }
 
     private _hash: IRHash | undefined;

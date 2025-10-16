@@ -1,3 +1,4 @@
+import { IRHash, irHashToHex } from "../../IRHash";
 import { IRFunc } from "../../IRNodes";
 import { IRHoisted } from "../../IRNodes/IRHoisted";
 import { IRLetted } from "../../IRNodes/IRLetted";
@@ -8,6 +9,7 @@ import { _modifyChildFromTo } from "../_internal/_modifyChildFromTo";
 import { findAll } from "../_internal/findAll";
 import { sanifyTree } from "./sanifyTree";
 
+const _hoisted_cache = new Map<IRHash, WeakRef<IRLetted>>();
 
 export function replaceHoistedWithLetted( term: IRTerm ): void
 {
@@ -16,12 +18,16 @@ export function replaceHoistedWithLetted( term: IRTerm ): void
     for( const hoisted of allHoisted )
     {
         const parent = hoisted.parent!;
-        const letted = new IRLetted(
-            0xffffffff, // doesn't matter since closed term (but keep big so we can adjust it in debuijn)
-            hoisted.hoisted,
-            { isClosed: true }
-        );
-        letted.hash; // precompute
+        const cached = _hoisted_cache.get( hoisted.hash )?.deref();
+        const letted = (
+            cached ??
+            new IRLetted(
+                hoisted.name,
+                hoisted.hoisted,
+                { isClosed: true }
+            )
+        ).clone();
+        if( !cached ) _hoisted_cache.set( hoisted.hash, new WeakRef( letted ) );
         
         // replace hoisted with letted
         _modifyChildFromTo( parent, hoisted, letted );

@@ -12,6 +12,8 @@ import { isObject } from "@harmoniclabs/obj-utils";
 import { shallowEqualIRTermHash } from "../utils/equalIRTerm";
 import { IRNodeKind } from "../IRNodeKind";
 import { hashIrData, IRHash, irHashToBytes, isIRHash } from "../IRHash";
+import { Application, UPLCTerm } from "@harmoniclabs/uplc";
+import { ToUplcCtx } from "../toUPLC/ctx/ToUplcCtx";
 
 export interface IRAppMeta extends BaseIRMetadata {
     __src__?: string | undefined
@@ -45,6 +47,13 @@ export class IRApp
         this._arg.parent = this;
 
         this._hash = isIRHash( _unsafeHash ) ? _unsafeHash : undefined;
+    }
+
+    toUPLC( ctx: ToUplcCtx ): UPLCTerm {
+        const arg = this._arg.toUPLC( ctx );
+        const fnCtx = ctx.newChild();
+        const fn = this._fn.toUPLC( fnCtx );
+        return new Application( fn, arg );
     }
 
     private _hash: IRHash | undefined;

@@ -14,50 +14,40 @@ import { IRCase } from "../IRNodes/IRCase";
 import { IRRecursive } from "../IRNodes/IRRecursive";
 import { IRSelfCall } from "../IRNodes/IRSelfCall";
 
-function _isClosedIRTerm( term: IRTerm, dbn: number, parent?: IRTerm ): boolean
+function _isClosedIRTerm( term: IRTerm, boundedVars: Set<symbol>, parent?: IRTerm ): boolean
 {
-    if( term instanceof IRVar )
-    {
-        return term.dbn < dbn;
-    }
-    if( term instanceof IRSelfCall )
-    {
-        return term.dbn < dbn;
+    if( term instanceof IRVar ) return boundedVars.has( term.name );
+    if( term instanceof IRSelfCall ) return boundedVars.has( term.name );
+
+    if( term instanceof IRFunc ) {
+        boundedVars = new Set( boundedVars );
+        for( const param of term.params ) boundedVars.add( param );
+        return _isClosedIRTerm( term.body, boundedVars, term );
     }
 
-    if( term instanceof IRFunc )
-    {
-        return _isClosedIRTerm( term.body, dbn + term.arity, term );
+    if( term instanceof IRRecursive ) {
+        boundedVars = new Set( boundedVars );
+        boundedVars.add( term.name );
+        return _isClosedIRTerm( term.body, boundedVars, term );
     }
 
-    if( term instanceof IRRecursive )
-    {
-        return _isClosedIRTerm( term.body, dbn + term.arity, term );
-    }
-
-    if( term instanceof IRApp )
-    {
-        return _isClosedIRTerm( term.fn, dbn, term ) && _isClosedIRTerm( term.arg, dbn, term);
-    }
-    if( term instanceof IRConstr )
-    {
-        return Array.from( term.fields ).every( f => _isClosedIRTerm( f, dbn, term ) );
-    }
-    if( term instanceof IRCase )
-    {
-        return _isClosedIRTerm( term.constrTerm, dbn, term ) &&
-        Array.from( term.continuations ).every( cont => _isClosedIRTerm( cont, dbn, term ) );
-    }
+    if( term instanceof IRApp ) return _isClosedIRTerm( term.fn, boundedVars, term ) && _isClosedIRTerm( term.arg, boundedVars, term);
+    if( term instanceof IRConstr ) return Array.from( term.fields ).every( f => _isClosedIRTerm( f, boundedVars, term ) );
+    if( term instanceof IRCase ) return (
+        _isClosedIRTerm( term.constrTerm, boundedVars, term )
+        && Array.from( term.continuations )
+        .every( cont => _isClosedIRTerm( cont, boundedVars, term ) )
+    );
     
     if( term instanceof IRConst ) return true;
     if( term instanceof IRError ) return true;
     if( term instanceof IRNative ) return true;
-    if( term instanceof IRHoisted ) return _isClosedIRTerm( term.hoisted, dbn, term );
+    if( term instanceof IRHoisted ) return _isClosedIRTerm( term.hoisted, boundedVars, term );
     
-    if( term instanceof IRLetted ) return _isClosedIRTerm( term.value, dbn, term );
+    if( term instanceof IRLetted ) return _isClosedIRTerm( term.value, boundedVars, term );
 
-    if( term instanceof IRForced ) return _isClosedIRTerm( term.forced, dbn, term );
-    if( term instanceof IRDelayed ) return _isClosedIRTerm( term.delayed, dbn, term );
+    if( term instanceof IRForced ) return _isClosedIRTerm( term.forced, boundedVars, term );
+    if( term instanceof IRDelayed ) return _isClosedIRTerm( term.delayed, boundedVars, term );
 
     const tsEnsureExhaustiveCheck: never = term;
     // not even an IRTerm
@@ -69,7 +59,7 @@ function _isClosedIRTerm( term: IRTerm, dbn: number, parent?: IRTerm ): boolean
 
 export function isClosedIRTerm( term: IRTerm ): boolean
 {
-    return _isClosedIRTerm( term, 0 );
+    return _isClosedIRTerm( term, new Set(), undefined );
 }
 
 export function _debug_assertClosedIR( term: IRTerm ): void
