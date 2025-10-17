@@ -27,7 +27,6 @@ export class InlineSingleUseCtx
 
     incrementVarUse( sym: symbol ): void
     {
-        console.log( this.keys(), sym );
         if( typeof this.localVars[sym] !== "number" ) {
             if( this.parent ) this.parent.incrementVarUse( sym );
             else {

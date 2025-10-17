@@ -13,25 +13,27 @@ const _hoisted_cache = new Map<IRHash, WeakRef<IRLetted>>();
 
 export function replaceHoistedWithLetted( term: IRTerm ): void
 {
-    const allHoisted: IRHoisted[] = findAll( term, node => node instanceof IRHoisted ) as IRHoisted[];
+    // children first
+    const children = term.children();
+    for( const c of children ) replaceHoistedWithLetted( c );
     
-    for( const hoisted of allHoisted )
-    {
-        const parent = hoisted.parent!;
-        const cached = _hoisted_cache.get( hoisted.hash )?.deref();
-        const letted = (
-            cached ??
-            new IRLetted(
-                hoisted.name,
-                hoisted.hoisted,
-                { isClosed: true }
-            )
-        ).clone();
-        if( !cached ) _hoisted_cache.set( hoisted.hash, new WeakRef( letted ) );
-        
-        // replace hoisted with letted
-        _modifyChildFromTo( parent, hoisted, letted );
-    }
+    // then check if hoisted
+    if(!( term instanceof IRHoisted )) return;
+    
+    const parent = term.parent!;
+    if( !parent ) throw new Error("hoisted node has no parent");
 
-    // sanifyTree( term );
+    const cached = _hoisted_cache.get( term.hash )?.deref();
+    const letted = (
+        cached ??
+        new IRLetted(
+            term.name,
+            term.hoisted,
+            { isClosed: true }
+        )
+    ).clone();
+    if( !cached ) _hoisted_cache.set( term.hash, new WeakRef( letted ) );
+
+    // replace hoisted with letted
+    _modifyChildFromTo( parent, term, letted );
 }
