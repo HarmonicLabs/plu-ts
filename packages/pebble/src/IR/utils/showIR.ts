@@ -9,7 +9,7 @@ import { IRDelayed } from "../IRNodes/IRDelayed";
 import { IRForced } from "../IRNodes/IRForced";
 import { IRError } from "../IRNodes/IRError";
 import { IRFunc } from "../IRNodes/IRFunc";
-import { showUPLCConstValue } from "@harmoniclabs/uplc";
+import { ConstValue, showUPLCConstValue } from "@harmoniclabs/uplc";
 import { IRConstr } from "../IRNodes/IRConstr";
 import { IRCase } from "../IRNodes/IRCase";
 import { equalIrHash, IRHash, irHashToHex } from "../IRHash";
@@ -58,7 +58,7 @@ export function showIRText( _ir: IRTerm ): string
         if( ir instanceof IRError ) return "(error)"
         if( ir instanceof IRFunc )
         {
-            const syms: symbol[] = (ir as any).vars;
+            const syms: symbol[] = ir.params;
             const names = syms.map( s => s.description! );
             return `(func ${typeof ir.name === "string" ? "{"+ir.name+"}" : ""} ${names.join(" ")} ${_loop( ir.body, dbn + names.length )})`
         }
@@ -142,7 +142,7 @@ export function showIR( _ir: IRTerm ): PrettiedIR
         if( ir instanceof IRError ) return "(error)"
         if( ir instanceof IRFunc )
         {
-            const syms: symbol[] = (ir as any).vars;
+            const syms: symbol[] = ir.params;
             const names = syms.map( s => s.description! );
             return `(func ${typeof ir.name === "string" ? "{"+ir.name+"}" : ""} ${names.join(" ")} ${_loop( ir.body, dbn + names.length )})`
         }
@@ -201,7 +201,7 @@ export function prettyIRText( _ir: IRTerm, _indent = 2 ): string
         if( ir instanceof IRError ) return "(error)"
         if( ir instanceof IRFunc )
         {
-            const syms: symbol[] = (ir as any).vars;
+            const syms: symbol[] = ir.params
             const names = syms.map( s => s.description! );
             return `${indent}(func ${typeof ir.name === "string" ? "{"+ir.name+"}" : ""} ${names.join(" ")} ${_loop( ir.body, dbn + names.length, depth + 1 )}${indent})`
         }
@@ -306,7 +306,7 @@ export function prettyIR( _ir: IRTerm, _indent = 2 ): PrettiedIR
         if( ir instanceof IRError ) return "(error)"
         if( ir instanceof IRFunc )
         {
-            const syms: symbol[] = (ir as any).vars;
+            const syms: symbol[] = ir.params;
             const names = syms.map( s => s.description! );
             return `${indent}(func ${typeof ir.name === "string" ? "{"+ir.name+"}" : ""} ${names.join(" ")} ${_loop( ir.body, dbn + names.length, depth + 1 )}${indent})`
         }
@@ -316,7 +316,19 @@ export function prettyIR( _ir: IRTerm, _indent = 2 ): PrettiedIR
             return `${indent}(recursive ${varName} ${_loop( ir.body, dbn, depth + 1 )}${indent})`;
         }
 
-        return "";
+        if( ir instanceof IRConstr ) return `${indent}(constr ${ir.index.toString()} [${
+            Array.from( ir.fields ).map( f => _loop( f, dbn, depth + 1 )).join(`, `)
+        }${indent}])`;
+
+        if( ir instanceof IRCase ) return `${indent}(case ${
+            _loop( ir.constrTerm, dbn, depth + 1 )
+        } ${indent}[${
+            Array.from( ir.continuations ).map( f => _loop( f, dbn, depth + 1 )).join(", ")
+        }${indent}])`;
+
+        const tsEnsureExhaustiveCheck: never = ir;
+        console.error( ir );
+        throw new Error("unknown IR node found");
     }
 
     const text = _loop( _ir, 0, 0 );
@@ -378,7 +390,7 @@ export function lettedToStr( ir: IRLetted ): string
 
 export function constToString( ir: IRConst ): string
 {
-    return `(const ${ir.type.toString()} ${showUPLCConstValue(ir.value as any)})`;
+    return `(const ${ir.type.toString()} ${showUPLCConstValue(ir.value as ConstValue)})`;
 }
 
 export function prettyIRInline( _ir: IRTerm, _indent = 2 ): string
@@ -422,7 +434,7 @@ export function prettyIRInline( _ir: IRTerm, _indent = 2 ): string
         if( ir instanceof IRError ) return "(error)"
         if( ir instanceof IRFunc )
         {
-            const syms: symbol[] = (ir as any).vars;
+            const syms: symbol[] = ir.params;
             const names = syms.map( s => s.description! );
             return `${indent}(func ${typeof ir.name === "string" ? "{"+ir.name+"}" : ""} ${names.join(" ")} ${_loop( ir.body, dbn + names.length, depth + 1 )}${indent})`
         }

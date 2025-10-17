@@ -21,6 +21,7 @@ export interface IRVarMetadata extends BaseIRMetadata {}
 export class IRVar
     implements IIRTerm, Cloneable<IRVar>, IIRParent, ToJson
 {
+    private readonly _creationStack: string;
     readonly meta: IRVarMetadata
     readonly name: symbol;
 
@@ -38,6 +39,8 @@ export class IRVar
 
         this.meta = {};
         this._hash = isIRHash( _unsafeHash ) ? _unsafeHash : undefined;
+
+        this._creationStack = ( new Error() ).stack ?? "unknown";
     }
 
     toUPLC( ctx: ToUplcCtx ): UPLCVar

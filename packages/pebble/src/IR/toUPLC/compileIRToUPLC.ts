@@ -18,7 +18,7 @@ import { IRApp, IRCase, IRConstr, IRNative, IRVar } from "../IRNodes";
 import { replaceForcedNativesWithHoisted } from "./subRoutines/replaceForcedNativesWithHoisted";
 import { performUplcOptimizationsAndReturnRoot } from "./subRoutines/performUplcOptimizationsAndReturnRoot";
 import { rewriteNativesAppliedToConstantsAndReturnRoot } from "./subRoutines/rewriteNativesAppliedToConstantsAndReturnRoot";
-import { _debug_assertClosedIR, onlyHoistedAndLetted, prettyIR } from "../utils";
+import { _debug_assertClosedIR, onlyHoistedAndLetted, prettyIR, prettyIRJsonStr } from "../utils";
 import { ToUplcCtx } from "./ctx/ToUplcCtx";
 
 export function compileIRToUPLC(
@@ -29,14 +29,6 @@ export function compileIRToUPLC(
     // most of the time we are just compiling small
     // pre-execuded terms (hence constants)
     if( term instanceof IRConst ) return term.toUPLC();
-
-
-    let irJson = prettyIR( term );
-    console.log(
-        "input IR:",
-        irJson.text,
-        JSON.stringify( onlyHoistedAndLetted( irJson ), null, 2 ),
-    );
 
     ///////////////////////////////////////////////////////////////////////////////
     // ------------------------------------------------------------------------- //
@@ -120,13 +112,6 @@ export function compileIRToUPLC(
 
     replaceForcedNativesWithHoisted( term );
 
-    irJson = prettyIR( term );
-    console.log(
-        "replace forced natives:",
-        irJson.text,
-        JSON.stringify( onlyHoistedAndLetted( irJson ), null, 2 ),
-    );
-
     debugAsserts && _debug_assertClosedIR( term );
 
     if( options.delayHoists ) replaceHoistedWithLetted( term );
@@ -134,16 +119,12 @@ export function compileIRToUPLC(
 
     debugAsserts && _debug_assertClosedIR( term );
 
-    irJson = prettyIR( term );
-    console.log(
-        "before hoisted:",
-        irJson.text,
-        JSON.stringify( onlyHoistedAndLetted( irJson ), null, 2 ),
-    );
-
     // handle letted before hoisted because the tree is smaller
     // and we also have less letted dependecies to handle
     term = handleLettedAndReturnRoot( term );
+
+    debugAsserts && _debug_assertClosedIR( term );
+
     term = handleHoistedAndReturnRoot( term );
 
     debugAsserts && _debug_assertClosedIR( term );
@@ -162,13 +143,6 @@ export function compileIRToUPLC(
     }
 
     debugAsserts && _debug_assertClosedIR( term );
-
-    irJson = prettyIR( term );
-    console.log(
-        "after hoisted:",
-        irJson.text,
-        JSON.stringify( onlyHoistedAndLetted( irJson ), null, 2 ),
-    );
 
     ///////////////////////////////////////////////////////////////////////////////
     // ------------------------------------------------------------------------- //
@@ -236,6 +210,16 @@ export function compileIRToUPLC(
         );
     }
 
+    let irJson = prettyIR( term );
+    console.log(
+        term,
+        prettyIRJsonStr( term )
+    );
+    console.log(
+        "final IR:", 
+        irJson.text,
+        JSON.stringify( onlyHoistedAndLetted( irJson ), null, 2 ),
+    );
     // const srcmap = {};
     const uplc = term.toUPLC( ToUplcCtx.root() );
 

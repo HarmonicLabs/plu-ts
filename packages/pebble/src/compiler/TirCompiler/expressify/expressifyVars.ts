@@ -36,6 +36,7 @@ import { TirVariableAccessExpr } from "../../tir/expressions/TirVariableAccessEx
 import { TirUnaryExclamation } from "../../tir/expressions/unary/TirUnaryExclamation";
 import { TirUnaryMinus } from "../../tir/expressions/unary/TirUnaryMinus";
 import { TirUnaryPlus } from "../../tir/expressions/unary/TirUnaryPlus";
+import { isTirUnaryPrefixExpr } from "../../tir/expressions/unary/TirUnaryPrefixExpr";
 import { TirUnaryTilde } from "../../tir/expressions/unary/TirUnaryTilde";
 import { TirBlockStmt } from "../../tir/statements/TirBlockStmt";
 import { TirReturnStmt } from "../../tir/statements/TirReturnStmt";
@@ -111,7 +112,7 @@ export function expressifyVars(
         return resolvedVariable;
     }
 
-    if( isUnaryPrefixExpr( expr ) ) {
+    if( isTirUnaryPrefixExpr( expr ) ) {
         const modifiedExpr = expressifyVars( ctx, expr.operand );
         expr.operand = modifiedExpr;
         return expr;

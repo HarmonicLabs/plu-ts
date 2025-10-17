@@ -61,11 +61,28 @@ const defaultLettedMeta: IRLettedMeta = freezeAll({
     isClosed: false
 });
 
+const _letted_hash_to_symbol: Map<number, WeakRef<Symbol>> = new Map();
+
 export class IRLetted
     implements IIRTerm, Cloneable<IRLetted>, IIRParent, ToJson, IRLettedMetadata
 {
-    readonly name: symbol;
+    private _name: symbol;
     readonly meta!: IRLettedMeta
+
+    get name(): symbol {
+        const hash = this.hash;
+        const cached = _letted_hash_to_symbol.get( hash )?.deref();
+
+        if( typeof cached === "symbol" ) return cached;
+
+        if( typeof this._name !== "symbol" ) throw new Error("IRLetted had invalid name");
+
+        const sym = this._name;
+        /// @ts-ignore Argument of type 'WeakRef<object>' is not assignable to parameter of type 'WeakRef<Symbol>'
+        _letted_hash_to_symbol.set( hash, new WeakRef( sym ) );
+
+        return sym;
+    }
 
     constructor(
         name: symbol,
@@ -78,7 +95,7 @@ export class IRLetted
             && typeof name.description === "string"
             && name.description.length > 0
         )) throw new BasePlutsError("invalid name for IRVar");
-        this.name = name;
+        this._name = name;
 
         while(
             toLet instanceof IRLetted

@@ -3,7 +3,6 @@ import { IRFunc } from "../IRNodes/IRFunc";
 import { IRTerm } from "../IRTerm";
 import { IRApp } from "../IRNodes/IRApp";
 import { IRError } from "../IRNodes/IRError";
-import { IRNative } from "../IRNodes/IRNative";
 import { IRHoisted } from "../IRNodes/IRHoisted";
 import { IRLetted } from "../IRNodes/IRLetted";
 import { IRVar } from "../IRNodes/IRVar";
@@ -13,6 +12,9 @@ import { IRConstr } from "../IRNodes/IRConstr";
 import { IRCase } from "../IRNodes/IRCase";
 import { IRRecursive } from "../IRNodes/IRRecursive";
 import { IRSelfCall } from "../IRNodes/IRSelfCall";
+import { IRNative } from "../IRNodes/IRNative";
+import { getUnboundedIRVars, getUnboundedVars } from "../toUPLC/subRoutines/handleLetted/groupByScope";
+import { prettyIRInline } from "./showIR";
 
 function _isClosedIRTerm( term: IRTerm, boundedVars: Set<symbol>, parent?: IRTerm ): boolean
 {
@@ -65,6 +67,11 @@ export function isClosedIRTerm( term: IRTerm ): boolean
 export function _debug_assertClosedIR( term: IRTerm ): void
 {
     if( !isClosedIRTerm( term ) ) {
+        const unboundedVars = getUnboundedIRVars( term );
+        console.error("unbounded vars:", unboundedVars.map( variab => variab.name ) );
+        console.error("term:", prettyIRInline( term ) );
+        console.error("unbounded parents:", unboundedVars.map( variab => prettyIRInline( variab.parent ?? variab ) ) );
+        console.error("unbounded parents:", unboundedVars.map( variab => (variab as any)._creationStack ) );
         throw new Error("Term is not closed");
     }
 }

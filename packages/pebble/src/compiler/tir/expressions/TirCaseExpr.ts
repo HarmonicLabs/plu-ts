@@ -266,8 +266,8 @@ export class TirCaseExpr
         // TirDataStructType
 
         const stmtCtx = ctx.newChild();
-        const unConstrStructSym = stmtCtx.pushUnusedVar(); // unconstrStruct
-        const isConstrIdxSym = stmtCtx.pushUnusedVar(); // isConstrIdx
+        const unConstrStructSym = stmtCtx.pushUnusedVar("unconstrStruct"); // unconstrStruct
+        const isConstrIdxSym = stmtCtx.pushUnusedVar("isConstrIdx"); // isConstrIdx
 
         const noVarsWildcardBodyIR = (
             this.wildcardCase?.body.toIR( stmtCtx )

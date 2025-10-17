@@ -22,26 +22,29 @@ export struct MyDatum {}
         const srcText = `
 import { MyDatum } from "./${myDatumPath}";
 
-function main( ctx: ScriptContext ): void
-{
-    const { tx } = ctx;
-
-    let inputsLength = 0;
-    let sumLove = 0;
-    for( const { resolved: input } of tx.inputs )
+contract MyContract {
+    spend main(): void
     {
-        sumLove += input.value.lovelaces();
-        inputsLength += 1;
+        const { tx } = ctx;
+    
+        let inputsLength = 0;
+        let sumLove = 0;
+        for( const { resolved: input } of tx.inputs )
+        {
+            sumLove += input.value.lovelaces();
+            inputsLength += 1;
+        }
+    
+        assert tx.outputs.length() === 1 else "only one output allowed";
+        const output = tx.outputs[0];
+    
+        const InlineDatum{ datum } = output.datum;
+    
+        assert inputsLength >= 2;
+        assert (datum as int) === sumLove / inputsLength;
     }
-
-    assert tx.outputs.length() === 1 else "only one output allowed";
-    const output = tx.outputs[0];
-
-    const InlineDatum{ datum } = output.datum;
-
-    assert inputsLength >= 2;
-    assert (datum as int) === sumLove / inputsLength;
 }
+
         `;
 
         const complier = new AstCompiler(

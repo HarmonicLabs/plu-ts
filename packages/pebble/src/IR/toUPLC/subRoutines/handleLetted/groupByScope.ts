@@ -62,6 +62,47 @@ export function getMaxScope( term: IRTerm ): IRTerm | undefined // (undefined is
     throw new Error("Unbounded var not found in any parent term");
 }
 
+export function getUnboundedIRVars( term: IRTerm ): (IRVar | IRSelfCall)[]
+{
+    const accessedVars = new Map<symbol, (IRVar | IRSelfCall)[]>();
+    const boundedVars = new Set<symbol>();
+    const stack: IRTerm[] = [ term ];
+
+    while( stack.length > 0 )
+    {
+        const t = stack.pop()!;
+
+        if(
+            t instanceof IRVar
+            || t instanceof IRSelfCall
+        ) {
+            let vars = accessedVars.get( t.name );
+            if( !Array.isArray( vars ) ) {
+                vars = [];
+                accessedVars.set( t.name, vars );
+            }
+            vars.push( t );
+            continue;
+        }
+
+        if(
+            t instanceof IRFunc
+            || t instanceof IRRecursive
+        ) {
+            for( const param of t.params ) boundedVars.add( param );
+            stack.push( t.body );
+            continue;
+        }
+
+        stack.push( ...t.children() );
+    }
+
+    console.log( "accessedVars", [...new Set( accessedVars.keys() ) ] );
+    console.log( "boundedVars", [...boundedVars] );
+    for( const v of boundedVars ) accessedVars.delete( v );
+    return [ ...accessedVars.values() ].flat();
+}
+
 export function getUnboundedVars( term: IRTerm ): Set<symbol>
 {
     const accessedVars = new Set<symbol>();

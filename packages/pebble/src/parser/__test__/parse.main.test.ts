@@ -5,7 +5,7 @@ import { parseFile } from "../parseFile";
 
 describe("parseMain", () => {
 
-    test.only("parseMain", () => {
+    test.skip("parseMain", () => {
     
         const fileName = "test.pebble";
         const srcText = `

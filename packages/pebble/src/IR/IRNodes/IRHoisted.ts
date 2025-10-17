@@ -47,16 +47,24 @@ const defaultHoistedMeta: IRHoistedMeta = freezeAll({
     forceHoist: false
 });
 
+const _hoisted_hash_to_symbol: Map<number, WeakRef<Symbol>> = new Map();
+
 export class IRHoisted
     implements IIRTerm, Cloneable<IRHoisted>, IIRParent, ToJson, IRHoistedMetadata
 {
     readonly meta!: IRHoistedMeta
-    private _name: symbol | undefined = undefined;
-    get name(): symbol {
-        if( typeof this._name === "symbol" ) return this._name;
+    get name(): symbol
+    {
         const hash = this.hash;
-        this._name = Symbol( "hoisted_" + irHashToHex( hash ) )
-        return this._name;
+        const cached = _hoisted_hash_to_symbol.get( hash )?.deref();
+
+        if( typeof cached === "symbol" ) return cached;
+
+        const sym = Symbol( "hoisted_" + irHashToHex( hash ) );
+        /// @ts-ignore Argument of type 'WeakRef<object>' is not assignable to parameter of type 'WeakRef<Symbol>'
+        _hoisted_hash_to_symbol.set( hash, new WeakRef( sym ) );
+
+        return sym;
     }
 
     constructor(
@@ -116,7 +124,6 @@ export class IRHoisted
     markHashAsInvalid(): void
     {
         this._hash = undefined;
-        this._name = undefined;
         this.parent?.markHashAsInvalid();
     }
 

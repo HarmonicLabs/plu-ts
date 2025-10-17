@@ -94,7 +94,7 @@ export class ToIRTermCtx
         return this.defineVar( name );
     }
 
-    pushUnusedVar(): symbol {
+    pushUnusedVar( postfix?: string ): symbol {
         // this.variables.push( "" );
         // just to increment dbn
 
@@ -103,7 +103,13 @@ export class ToIRTermCtx
         // 
         // we start with the number so we know it is not a valid variable name
         // but we add "_unused" so the key is not an integer (which would be sorted first in Object.keys)
-        const name = this.localVars.size + "_unused";
+        const prefix = this.localVars.size.toString();
+        if(!(
+            typeof postfix === "string"
+            && postfix.length > 0
+        )) postfix = "unused";
+        const name = prefix + "_" + postfix;
+
         const sym = Symbol( name );
         this.localVars.set( name, sym );
         return sym;

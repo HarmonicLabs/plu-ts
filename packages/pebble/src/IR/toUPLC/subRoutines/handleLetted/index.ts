@@ -25,8 +25,8 @@ import { isClosedTerm } from "@harmoniclabs/uplc";
 
 export function handleLettedAndReturnRoot( term: IRTerm ): IRTerm
 {
-    console.log(" ------------------------------------------- handleLetted ------------------------------------------- ");
-    console.log( prettyIRText( term ))
+    // console.log(" ------------------------------------------- handleLetted ------------------------------------------- ");
+    // console.log( prettyIRText( term ))
     // most of the time we are just compiling small
     // pre-execuded terms (hence constants)
     if( term instanceof IRConst ) return term;
@@ -39,16 +39,16 @@ export function handleLettedAndReturnRoot( term: IRTerm ): IRTerm
     // in case there are no letted terms there is no work to do
     while( true )
     {
-        console.log(` ------------------ letted loop ------------------ `);
+        // console.log(` ------------------ letted loop ------------------ `);
 
         const allDirectLetted = getLettedTerms( term, { all: false, includeHoisted: false });
         if( allDirectLetted.length === 0 ) return term;
 
-        // console.log("allDirectLetted", allDirectLetted.map( expandedJsonLettedSetEntry ) );
+        // // console.log("allDirectLetted", allDirectLetted.map( expandedJsonLettedSetEntry ) );
         
         const sortedLettedSet = getSortedLettedSet( allDirectLetted );
 
-        console.log("sortedLettedSet", sortedLettedSet.map( expandedJsonLettedSetEntry ) );
+        // console.log("sortedLettedSet", sortedLettedSet.map( expandedJsonLettedSetEntry ) );
 
         // `sortedLettedSet` is sorted from least to most dependencies
         // so we'll have "0 dependencies" letted terms at the start of the array
@@ -65,12 +65,12 @@ export function handleLettedAndReturnRoot( term: IRTerm ): IRTerm
             nReferences
         } = sortedLettedSet.pop()!;
 
-        // shouldLog && console.log("nReferences", nReferences);
+        // shouldLog && // console.log("nReferences", nReferences);
 
-        console.log(` ------------------ working with ${lettedToStr(letted)} ------------------ `);
+        // console.log(` ------------------ working with ${lettedToStr(letted)} ------------------ `);
         if( nReferences === 1 )
         {
-            console.log("inlining letted (single reference) with value", prettyIRText( letted.value ) )
+            // console.log("inlining letted (single reference) with value", prettyIRText( letted.value ) )
             _modifyChildFromTo(
                 letted.parent,
                 letted,
@@ -79,7 +79,7 @@ export function handleLettedAndReturnRoot( term: IRTerm ): IRTerm
             continue;
         }
 
-        console.log("--------- not inilning ("+ nReferences +" references)");
+        // console.log("--------- not inilning ("+ nReferences +" references)");
 
         const maxScope = getMaxScope( letted ) ?? term;
         // const maxScope = getMaxScope( letted ) ?? ((): IRTerm => {
@@ -108,7 +108,7 @@ export function handleLettedAndReturnRoot( term: IRTerm ): IRTerm
                 equalIrHash( node.hash, lettedHash )
         ) as IRLetted[];
 
-        console.log("sameLettedRefs", sameLettedRefs.length );
+        // console.log("sameLettedRefs", sameLettedRefs.length );
 
         if( sameLettedRefs.length <= 0 ) {
             console.warn(
@@ -122,7 +122,7 @@ export function handleLettedAndReturnRoot( term: IRTerm ): IRTerm
         // just in case
         if( sameLettedRefs.length === 1 && !minScope )
         {
-            console.log("inlining letted (single reference pedantic) with value", prettyIRText( letted.value ) )
+            // console.log("inlining letted (single reference pedantic) with value", prettyIRText( letted.value ) )
             _modifyChildFromTo(
                 letted.parent,
                 letted,
@@ -136,7 +136,7 @@ export function handleLettedAndReturnRoot( term: IRTerm ): IRTerm
             letted.value instanceof IRVar ||
             letted.value instanceof IRSelfCall
         ) {
-            console.log("inlining letted (value is var) with value", prettyIRText( letted.value ) )
+            // console.log("inlining letted (value is var) with value", prettyIRText( letted.value ) )
             for( const elem of sameLettedRefs )
             {
                 // inline
@@ -244,7 +244,7 @@ export function handleLettedAndReturnRoot( term: IRTerm ): IRTerm
         // {
         //     finalMaxScope = (finalMaxScope as any).parent as any
         // }
-        // // console.log("final max scope (delayed: " + delayed + ")" , prettyIRText( finalMaxScope ) )
+        // // // console.log("final max scope (delayed: " + delayed + ")" , prettyIRText( finalMaxScope ) )
     }
 }
 
