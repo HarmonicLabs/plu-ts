@@ -20,6 +20,7 @@ import { performUplcOptimizationsAndReturnRoot } from "./subRoutines/performUplc
 import { rewriteNativesAppliedToConstantsAndReturnRoot } from "./subRoutines/rewriteNativesAppliedToConstantsAndReturnRoot";
 import { _debug_assertClosedIR, onlyHoistedAndLetted, prettyIR, prettyIRJsonStr } from "../utils";
 import { ToUplcCtx } from "./ctx/ToUplcCtx";
+import { removeUnusedVarsAndReturnRoot } from "./subRoutines/removeUnusuedVarsAndReturnRoot/removeUnusuedVarsAndReturnRoot";
 
 export function compileIRToUPLC(
     term: IRTerm,
@@ -58,10 +59,10 @@ export function compileIRToUPLC(
 
     // removing unused variables BEFORE going into the rest of the compilation
     // helps letted terms to find a better spot (and possibly be inlined instead of hoisted)
-    // term = removeUnusedVarsAndReturnRoot( term );
-    // debugAsserts && _debug_assertClosedIR( term );
+    term = removeUnusedVarsAndReturnRoot( term );
+    debugAsserts && _debug_assertClosedIR( term );
 
-    // _makeAllNegativeNativesHoisted( term );
+    _makeAllNegativeNativesHoisted( term );
 
     ///////////////////////////////////////////////////////////////////////////////
     // ------------------------------------------------------------------------- //
@@ -178,7 +179,6 @@ export function compileIRToUPLC(
     //
     // ALWAYS AT LEAST 1 ITERATION
     // const maxInlineIterations = Math.max( 3, 1 );
-    // const maxInlineIterations = 0;
     // for(
     //     let somethingWasInlined = true,
     //         inlineIterations = 0;

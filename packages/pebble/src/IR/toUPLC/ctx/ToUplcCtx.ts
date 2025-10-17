@@ -46,6 +46,7 @@ export class ToUplcCtx
     {
         if( this._frozen ) throw new Error("Context is frozen");
         if( this.ctxMap.has( sym ) ) {
+            console.error( sym );
             throw new Error("Variable already defined in context");
         }
         this.ctxMap.set( sym, this );

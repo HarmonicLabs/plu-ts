@@ -21,6 +21,8 @@ import { IRRecursive } from "./IRRecursive";
 import { IRHash, isIRHash, hashIrData, irHashToBytes, equalIrHash, irHashToHex } from "../IRHash";
 import { UPLCTerm } from "@harmoniclabs/uplc";
 import { ToUplcCtx } from "../toUPLC/ctx/ToUplcCtx";
+import { IRNative } from "./IRNative";
+import { IRNativeTag, nativeTagToString } from "./IRNative/IRNativeTag";
 
 
 export type HoistedSetEntry = {
@@ -60,7 +62,8 @@ export class IRHoisted
 
         if( typeof cached === "symbol" ) return cached;
 
-        const sym = Symbol( "hoisted_" + irHashToHex( hash ) );
+        const sym = Symbol( tryInferName( this ) ?? "hoisted_" + irHashToHex( hash ) );
+        
         /// @ts-ignore Argument of type 'WeakRef<object>' is not assignable to parameter of type 'WeakRef<Symbol>'
         _hoisted_hash_to_symbol.set( hash, new WeakRef( sym ) );
 
@@ -343,4 +346,12 @@ export function cloneHoistedSetEntry({hoisted, nReferences}: HoistedSetEntry ): 
         hoisted: hoisted.clone(),
         nReferences
     };
+}
+
+function tryInferName( hoisted: IRHoisted ): string | undefined
+{
+    const value = hoisted.hoisted;
+    if( value instanceof IRNative ) return nativeTagToString( value.tag );
+
+    return undefined;
 }

@@ -211,6 +211,7 @@ export function prettyIRText( _ir: IRTerm, _indent = 2 ): string
             return `${indent}(recursive ${varName} ${_loop( ir.body, dbn, depth + 1 )}${indent})`;
         }
 
+        const tsEnsureExhaustiveCheck: never = ir;
         return "";
     }
 

@@ -9,8 +9,7 @@ describe("parseMain", () => {
 
         const fileName = "test.pebble";
         const srcText = `
-struct HelloWorldDatum
-{
+struct HelloWorldDatum {
     owner: bytes
 }
 
