@@ -94,6 +94,12 @@ export class ToIRTermCtx
         return this.defineVar( name );
     }
 
+    private _parentDbn: number | undefined = undefined;
+    get dbn(): number {
+        if( typeof this._parentDbn !== "number" ) this._parentDbn = this.parent instanceof ToIRTermCtx ? this.parent.dbn : 0;
+        return this.localVars.size + this._parentDbn;
+    }
+
     pushUnusedVar( postfix?: string ): symbol {
         // this.variables.push( "" );
         // just to increment dbn
@@ -103,7 +109,7 @@ export class ToIRTermCtx
         // 
         // we start with the number so we know it is not a valid variable name
         // but we add "_unused" so the key is not an integer (which would be sorted first in Object.keys)
-        const prefix = this.localVars.size.toString();
+        const prefix = this.dbn.toString();
         if(!(
             typeof postfix === "string"
             && postfix.length > 0

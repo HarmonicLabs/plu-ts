@@ -160,77 +160,21 @@ export function handleHoistedAndReturnRoot( term: IRTerm ): IRTerm
             continue;
         }
 
-        if( irTerm instanceof IRApp )
-        {
-            stack.push(
-                { irTerm: irTerm.fn , dbn },
-                { irTerm: irTerm.arg, dbn },
-            );
-            continue;
-        }
 
-        if( irTerm instanceof IRCase )
-        {
-            stack.push(
-                { irTerm: irTerm.constrTerm , dbn },
-                ...mapArrayLike(
-                    irTerm.continuations,
-                    ( continuation ) => ({ irTerm: continuation, dbn })
-                )
-            );
-            continue;
-        }
-
-        if( irTerm instanceof IRConstr )
-        {
-            stack.push(
-                ...mapArrayLike(
-                    irTerm.fields,
-                    ( field ) => ({ irTerm: field, dbn })
-                )
-            );
-            continue;
-        }
-
-        if( irTerm instanceof IRDelayed )
-        {
-            stack.push(
-                { irTerm: irTerm.delayed, dbn }
-            );
-            continue;
-        }
-
-        if( irTerm instanceof IRForced )
-        {
-            stack.push(
-                { irTerm: irTerm.forced, dbn }
-            );
-            continue;
-        }
-
-        if( irTerm instanceof IRFunc )
-        {
+        if(
+            irTerm instanceof IRFunc
+            || irTerm instanceof IRRecursive
+        ) {
             stack.push(
                 { irTerm: irTerm.body, dbn: dbn + irTerm.arity }
             );
             continue;
         }
 
-        if( irTerm instanceof IRRecursive )
-        {
-            stack.push(
-                { irTerm: irTerm.body, dbn: dbn + irTerm.arity }
-            );
-            continue;
-        }
-
-        if( irTerm instanceof IRLetted )
-        {
-            stack.push(
-                { irTerm: irTerm.value, dbn }
-            );
-            continue;
-        }
+        stack.push(
+            ...irTerm.children()
+            .map( child => ({ irTerm: child, dbn }))
+        );
     }
 
     return root;

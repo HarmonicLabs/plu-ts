@@ -103,10 +103,17 @@ export function getUnboundedIRVars( term: IRTerm ): (IRVar | IRSelfCall)[]
     return [ ...accessedVars.values() ].flat();
 }
 
-export function getUnboundedVars( term: IRTerm ): Set<symbol>
+export function getUnboundedVars( term: IRTerm, knownVars?: Set<symbol> | undefined ): Set<symbol>
 {
     const accessedVars = new Set<symbol>();
     const boundedVars = new Set<symbol>();
+
+    if( knownVars instanceof Set ) {
+        for( const v of knownVars ) {
+            if( typeof v === "symbol" ) boundedVars.add( v );
+        }
+    }
+
     const stack: IRTerm[] = [ term ];
 
     while( stack.length > 0 )

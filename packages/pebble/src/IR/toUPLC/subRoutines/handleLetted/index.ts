@@ -1,14 +1,12 @@
 import { IRApp } from "../../../IRNodes/IRApp";
 import { IRFunc } from "../../../IRNodes/IRFunc";
-import { getSortedLettedSet, getLettedTerms, IRLetted, expandedJsonLettedSetEntry } from "../../../IRNodes/IRLetted";
+import { getSortedLettedSet, getLettedTerms, IRLetted } from "../../../IRNodes/IRLetted";
 import { IRVar } from "../../../IRNodes/IRVar";
 import { IRTerm } from "../../../IRTerm";
 import { _addDepths } from "../../_internal/_addDepth";
 import { _modifyChildFromTo } from "../../_internal/_modifyChildFromTo";
 import { findAllNoHoisted } from "../../_internal/findAll";
-import { getDebruijnInTerm } from "../../_internal/getDebruijnInTerm";
 import { getMaxScope } from "./groupByScope";
-import { lettedToStr, prettyIRInline, prettyIRText } from "../../../utils/showIR";
 import { IRDelayed } from "../../../IRNodes/IRDelayed";
 import { lowestCommonAncestor } from "../../_internal/lowestCommonAncestor";
 import { isIRTerm } from "../../../utils/isIRTerm";
@@ -20,8 +18,8 @@ import { IRRecursive } from "../../../IRNodes/IRRecursive";
 import { IRSelfCall } from "../../../IRNodes/IRSelfCall";
 import { findHighestRecursiveParent } from "./findHighestRecursiveParent";
 import { IRParentTerm } from "../../../utils/isIRParentTerm";
-import { IRHoisted } from "../../../IRNodes/IRHoisted";
-import { isClosedTerm } from "@harmoniclabs/uplc";
+import { IRNative } from "../../../IRNodes/IRNative";
+import { isForcedNativeTag } from "../../../IRNodes/IRNative/isForcedNative";
 
 export function handleLettedAndReturnRoot( term: IRTerm ): IRTerm
 {
@@ -133,8 +131,12 @@ export function handleLettedAndReturnRoot( term: IRTerm ): IRTerm
 
         // always inline letted vars
         if(
-            letted.value instanceof IRVar ||
-            letted.value instanceof IRSelfCall
+            letted.value instanceof IRVar
+            || letted.value instanceof IRSelfCall
+            || (
+                letted.value instanceof IRNative
+                && !isForcedNativeTag( letted.value.tag )
+            )
         ) {
             // console.log("inlining letted (value is var) with value", prettyIRText( letted.value ) )
             for( const elem of sameLettedRefs )

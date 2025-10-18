@@ -41,18 +41,13 @@ export class IRFunc
         this._hash = isIRHash( _unsafeHash ) ? _unsafeHash : undefined;
     }
 
-    toUPLC( ctx: ToUplcCtx ): Lambda {
+    toUPLC( ctx: ToUplcCtx ): UPLCTerm {
         ctx.defineVars( this.params );
-        const arity = this.arity;
+        const arity = this.params.length;
         const irBody = this._body;
         // IRRecursive not valid for uplc translation
-        const uplcBody = (
-            irBody instanceof IRFunc ? 
-                irBody.toUPLC( ctx ) :
-                irBody.toUPLC( ctx.newChild() )
-        );
-        let result = new Lambda( uplcBody );
-        for( let i = 1; i < arity; i++ ) result = new Lambda( result );
+        let result = irBody.toUPLC( ctx );
+        for( let i = 0; i < arity; i++ ) result = new Lambda( result );
         return result;
     }
 

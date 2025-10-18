@@ -2,7 +2,7 @@ import { IRNative } from "./index";
 import { IRTerm } from "../../IRTerm";
 import { IRNativeTag } from "./IRNativeTag";
 
-function isForcedNativeTag( tag: IRNativeTag ): boolean
+export function isForcedNativeTag( tag: IRNativeTag ): boolean
 {
     return (
         tag === IRNativeTag.strictIfThenElse    ||

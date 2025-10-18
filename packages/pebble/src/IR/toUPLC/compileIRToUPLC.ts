@@ -1,4 +1,4 @@
-import { prettyUPLC, type UPLCTerm } from "@harmoniclabs/uplc";
+import { isClosedTerm, prettyUPLC, type UPLCTerm } from "@harmoniclabs/uplc";
 import type { IRTerm } from "../IRTerm";
 import { IRLetted } from "../IRNodes/IRLetted";
 import { IRHoisted } from "../IRNodes/IRHoisted";
@@ -16,7 +16,7 @@ import { CompilerOptions, completeCompilerOptions, defaultOptions } from "./Comp
 import { replaceHoistedWithLetted } from "./subRoutines/replaceHoistedWithLetted";
 import { IRApp, IRCase, IRConstr, IRFunc, IRNative, IRVar } from "../IRNodes";
 import { replaceForcedNativesWithHoisted } from "./subRoutines/replaceForcedNativesWithHoisted";
-import { performUplcOptimizationsAndReturnRoot } from "./subRoutines/performUplcOptimizationsAndReturnRoot";
+import { performUplcOptimizationsAndReturnRoot } from "./subRoutines/performUplcOptimizationsAndReturnRoot/performUplcOptimizationsAndReturnRoot";
 import { rewriteNativesAppliedToConstantsAndReturnRoot } from "./subRoutines/rewriteNativesAppliedToConstantsAndReturnRoot";
 import { _debug_assertClosedIR, onlyHoistedAndLetted, prettyIR, prettyIRJsonStr } from "../utils";
 import { ToUplcCtx } from "./ctx/ToUplcCtx";
@@ -116,8 +116,6 @@ export function compileIRToUPLC(
 
     debugAsserts && _debug_assertions( term );
 
-    console.log({ options })
-
     if( options.delayHoists ) replaceHoistedWithLetted( term );
     else replaceClosedLettedWithHoisted( term );
 
@@ -202,6 +200,7 @@ export function compileIRToUPLC(
     //     somethingWasInlined = inlineResult.somethingWasInlined;
     // }
 
+    term = removeUnusedVarsAndReturnRoot( term );
     term = performUplcOptimizationsAndReturnRoot( term, options );
 
     if(
@@ -223,16 +222,25 @@ export function compileIRToUPLC(
 
     let irJson = prettyIR( term );
     console.log(
-        term,
-        prettyIRJsonStr( term )
-    );
-    console.log(
-        "final IR:", 
+        "final IR before UPLC translation:\n",
         irJson.text,
-        JSON.stringify( onlyHoistedAndLetted( irJson ), null, 2 ),
+        JSON.stringify( onlyHoistedAndLetted( irJson ) )
     );
+
+    debugAsserts && _debug_assertions( term );
+
     // const srcmap = {};
     const uplc = term.toUPLC( ToUplcCtx.root() );
+
+    if( !isClosedTerm( uplc ) ) {
+        console.log(
+            prettyUPLC( uplc ),
+        );
+        throw new Error(
+            "compileIRToUPLC: final UPLC term is not closed:\n" +
+            "This is a compiler internal error; please open an issue on github so we can fix this."
+        );
+    }
 
     // console.log( "srcmap", srcmap );
 
