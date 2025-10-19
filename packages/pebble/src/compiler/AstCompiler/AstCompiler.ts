@@ -711,7 +711,6 @@ export class AstCompiler extends DiagnosticEmitter
                                 AstCompilationCtx.fromScope( compiler.program, topLevelScope ),
                                 field.type
                             );
-                            console.log(field.type, fieldType)
                             if( !fieldType ) {
                                 canEncodeToData = false;
                                 return undefined;
@@ -743,10 +742,6 @@ export class AstCompiler extends DiagnosticEmitter
                 );
         }
 
-        console.log("hello",{
-            sop,
-            data
-        });
         return (sop || data) ? { sop, data, methodsNames } : undefined;
     }
 
