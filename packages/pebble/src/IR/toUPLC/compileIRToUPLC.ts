@@ -40,7 +40,7 @@ export function compileIRToUPLC(
 
     const options = completeCompilerOptions( paritalOptions );
 
-    const debugAsserts = (options as any).debugAsserts ?? true;
+    const debugAsserts = (options as any).debugAsserts ?? false;
 
     // unwrap top level letted and hoisted;
     while( term instanceof IRLetted || term instanceof IRHoisted )
@@ -220,12 +220,12 @@ export function compileIRToUPLC(
         );
     }
 
-    let irJson = prettyIR( term );
-    console.log(
-        "final IR before UPLC translation:\n",
-        irJson.text,
-        JSON.stringify( onlyHoistedAndLetted( irJson ) )
-    );
+    // let irJson = prettyIR( term );
+    // console.log(
+    //     "final IR before UPLC translation:\n",
+    //     irJson.text,
+    //     JSON.stringify( onlyHoistedAndLetted( irJson ) )
+    // );
 
     debugAsserts && _debug_assertions( term );
 

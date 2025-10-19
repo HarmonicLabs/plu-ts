@@ -6,10 +6,11 @@ describe("IRFunc.body", () => {
 
     test("same body", () => {
 
-        const body = new IRVar(0);
+        const sym = Symbol("x");
+        const body = new IRVar(sym);
 
         const func = new IRFunc(
-            1,
+            [ sym ],
             body
         );
 

@@ -10,11 +10,12 @@ describe("getLettedTerms", () => {
 
     test("single letted", () => {
 
+        const sym = Symbol("x");
         const root = new IRForced(
             new IRDelayed(
                 new IRApp(
                     new IRLetted(
-                        0,
+                        sym,
                         new IRApp(
                             new IRNative( IRNativeTag.addInteger ),
                             IRConst.int( 2 )

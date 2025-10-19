@@ -266,8 +266,7 @@ export function expressifyForStmt(
     loopCompilationCtx.setFuncParam( loopFuncName, loopFuncType );
 
     // define loop function parameters
-    for( const { name, type } of bodyStateType.constructors[0].fields )
-    {
+    for( const { name, type } of bodyStateType.constructors[0].fields ) {
         loopCompilationCtx.setFuncParam( name, type );
     }
 

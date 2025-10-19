@@ -37,7 +37,6 @@ contract HelloWorld
 
         assert message == "Hello pebble";
     }
-
 }
         `;
 

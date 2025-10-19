@@ -400,9 +400,16 @@ export function getBodyStateType(
         if( !initExpr )
         throw new Error("loop init variable requires initialization expression");
 
-        // TODO: optimize for `isConst`
-
-        const uniqueFieldName = getUniqueInternalName( name );
+        // using `getUniqueInternalName` here messes up variable access later
+        // due to how for statements are expressified (see piece of code from expressifyForStmt)
+        // ```
+        // // define loop function parameters
+        // for( const { name, type } of bodyStateType.constructors[0].fields ) {
+        //     loopCompilationCtx.setFuncParam( name, type );
+        // }
+        // ```
+        // the introduced vars are taken from the bodyStateType that we derive here
+        const uniqueFieldName = name; // getUniqueInternalName( name );
         bodyStateConstr.fields.push(
             new TirStructField(
                 uniqueFieldName,

@@ -62,7 +62,7 @@ export class IRHoisted
 
         if( typeof cached === "symbol" ) return cached;
 
-        const sym = Symbol( tryInferName( this ) ?? "hoisted_" + irHashToHex( hash ) );
+        const sym = Symbol( tryInferName( this.hoisted ) ?? "hoisted_" + irHashToHex( hash ) );
         
         /// @ts-ignore Argument of type 'WeakRef<object>' is not assignable to parameter of type 'WeakRef<Symbol>'
         _hoisted_hash_to_symbol.set( hash, new WeakRef( sym ) );
@@ -348,9 +348,8 @@ export function cloneHoistedSetEntry({hoisted, nReferences}: HoistedSetEntry ): 
     };
 }
 
-function tryInferName( hoisted: IRHoisted ): string | undefined
+export function tryInferName( value: IRTerm ): string | undefined
 {
-    const value = hoisted.hoisted;
     if( value instanceof IRNative ) return nativeTagToString( value.tag );
 
     return undefined;

@@ -8,6 +8,7 @@ import { IRHoisted } from "../../IRNodes/IRHoisted";
 import { IRLetted } from "../../IRNodes/IRLetted";
 import { IRRecursive } from "../../IRNodes/IRRecursive";
 import { IRTerm } from "../../IRTerm";
+import { sanifyTree } from "../subRoutines/sanifyTree";
 
 export function iterTree(
     _term: IRTerm,
@@ -48,10 +49,6 @@ export function iterTree(
         
         if( t instanceof IRApp )
         {
-            // sanifyTree as we go
-            if( t.fn.parent !== t ) t.fn = t.fn.clone();
-            if( t.arg.parent !== t ) t.arg = t.arg.clone();
-
             stack.push(
                 { term: t.fn, dbn  },
                 { term: t.arg, dbn, shouldPopIfParentIsModified: true }
@@ -61,13 +58,6 @@ export function iterTree(
 
         if( t instanceof IRCase )
         {
-            // sanifyTree as we go
-            if( t.constrTerm.parent !== t ) t.constrTerm = t.constrTerm.clone();
-            for( let i = 0; i < t.continuations.length; i++ )
-            {
-                if( t.continuations[ i ].parent !== t ) t.continuations[ i ] = t.continuations[ i ].clone();
-            }
-
             stack.push(
                 { term: t.constrTerm, dbn },
                 ...Array.from( t.continuations ).map( cont => 
@@ -78,11 +68,6 @@ export function iterTree(
         }
         if( t instanceof IRConstr )
         {
-            // sanifyTree as we go
-            for( let i = 0; i < t.fields.length; i++ )
-            {
-                if( t.fields[ i ].parent !== t ) t.fields[ i ] = t.fields[ i ].clone();
-            }
             stack.push(
                 ...Array.from( t.fields ).map(( f, i ) => 
                     ({ term: f, dbn, shouldPopIfParentIsModified: i !== 0 })
@@ -131,5 +116,8 @@ export function iterTree(
             stack.push({ term: t.value, dbn });
             continue;
         }
+
+        stack.push(...t.children().map( c => ({ term: c, dbn }) ) );
     }
+    sanifyTree( _term );
 }

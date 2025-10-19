@@ -1,5 +1,6 @@
-import { IRApp, IRFunc, IRLetted, IRHoisted, IRDelayed, IRForced, IRConstr, IRCase } from "../../IRNodes";
+import { IRApp, IRFunc, IRLetted, IRHoisted, IRDelayed, IRForced, IRConstr, IRCase, IRConst, IRError, IRNative, IRVar } from "../../IRNodes";
 import { IRRecursive } from "../../IRNodes/IRRecursive";
+import { IRSelfCall } from "../../IRNodes/IRSelfCall";
 import { IRTerm } from "../../IRTerm";
 
 /**
@@ -78,4 +79,6 @@ export function sanifyTree(ir: IRTerm): void
         }
         return;
     }
+
+    const tsEnsureExhaustiveCheck: IRVar | IRConst | IRNative | IRError | IRSelfCall = ir;
 }

@@ -15,13 +15,10 @@ contract SumInputLove {
 
         let totalInput = 0;
         for( const { resolved: input } of tx.inputs ) {
-            const inputValue = input.value;
-            totalInput += inputValue.lovelaces();
+            totalInput += input.value.lovelaces();
         }
 
-        const outs = tx.outputs;
-        const fstOut = outs[0];
-        const InlineDatum{ datum } = fstOut.datum;
+        const InlineDatum{ datum } = tx.outputs[0].datum;
 
         assert (datum as int) === totalInput;
     }
