@@ -3,6 +3,7 @@ import { isAssignmentStmt } from "../../../../ast/nodes/statements/AssignmentStm
 import { BlockStmt } from "../../../../ast/nodes/statements/BlockStmt";
 import { BreakStmt } from "../../../../ast/nodes/statements/BreakStmt";
 import { ContinueStmt } from "../../../../ast/nodes/statements/ContinueStmt";
+import { isVarDecl } from "../../../../ast/nodes/statements/declarations/VarDecl/VarDecl";
 import { EmptyStmt } from "../../../../ast/nodes/statements/EmptyStmt";
 import { FailStmt } from "../../../../ast/nodes/statements/FailStmt";
 import { ForOfStmt } from "../../../../ast/nodes/statements/ForOfStmt";
@@ -45,6 +46,7 @@ export function _compileStatement(
 ): TirStmt[] | undefined
 {
     if( stmt instanceof IfStmt ) return _compileIfStmt( ctx, stmt );
+    if( isVarDecl( stmt ) ) stmt = new VarStmt([ stmt ], stmt.range ); // sometime these slip through
     if( stmt instanceof VarStmt ) return _compileVarStmt( ctx, stmt );
     if( stmt instanceof ForStmt ) return _compileForStmt( ctx, stmt );
     if( stmt instanceof ForOfStmt ) return _compileForOfStmt( ctx, stmt );

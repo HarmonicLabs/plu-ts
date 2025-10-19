@@ -223,13 +223,16 @@ export class Parser extends DiagnosticEmitter
                 break;
             }
             case Token.Data: {
-                // skips `data` keyword
+                // `next()` skips `data` keyword
+                tn.next();
                 // positions on (expected) `struct` keyword
-                if( tn.next() !== Token.Struct )
-                return this.error(
-                    DiagnosticCode._0_expected,
-                    tn.range(), "struct"
-                );
+                if( tn.peek() !== Token.Struct ) {
+                    console.error( Token[ tn.peek() ]);
+                    return this.error(
+                        DiagnosticCode._0_expected,
+                        tn.range(), "struct"
+                    );
+                }
                 tn.next(); // skip `struct`
                 statement = this.parseStruct(
                     StructDeclAstFlags.onlyDataEncoding,
@@ -239,13 +242,15 @@ export class Parser extends DiagnosticEmitter
                 break;
             }
             case Token.Runtime: {
-                // skips `runtime` keyword
+                // `next()` skips `runtime` keyword
+                tn.next();
                 // positions on (expected) `struct` keyword
-                if( tn.next() !== Token.Struct )
-                return this.error(
-                    DiagnosticCode._0_expected,
-                    tn.range(), "struct"
-                );
+                if( tn.peek() !== Token.Struct ) {
+                    return this.error(
+                        DiagnosticCode._0_expected,
+                        tn.range(), "struct"
+                    );
+                }
                 tn.next(); // skip `struct`
                 statement = this.parseStruct(
                     StructDeclAstFlags.onlySopEncoding,
@@ -1001,7 +1006,7 @@ export class Parser extends DiagnosticEmitter
                         range
                     )
                 ],
-                structDeclFlags & StructDeclAstFlags.untaggedSingleConstructor,
+                structDeclFlags | StructDeclAstFlags.untaggedSingleConstructor,
                 range.clone()
             );
         }
@@ -1044,7 +1049,7 @@ export class Parser extends DiagnosticEmitter
                         tn.range( startPos, tn.pos )
                     )
                 ],
-                structDeclFlags & StructDeclAstFlags.untaggedSingleConstructor,
+                structDeclFlags | StructDeclAstFlags.untaggedSingleConstructor,
                 tn.range( startPos, tn.pos )
             );
         }

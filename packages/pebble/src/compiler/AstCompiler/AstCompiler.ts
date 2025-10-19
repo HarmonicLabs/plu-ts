@@ -45,6 +45,7 @@ import { VarDecl } from "../../ast/nodes/statements/declarations/VarDecl/VarDecl
 import { MatchStmt, MatchStmtCase, MatchStmtElseCase } from "../../ast/nodes/statements/MatchStmt";
 import { NamedDeconstructVarDecl } from "../../ast/nodes/statements/declarations/VarDecl/NamedDeconstructVarDecl";
 import { _deriveContractBody } from "./internal/_deriveContractBody/_deriveContractBody";
+import { DiagnosticCategory } from "../../diagnostics/DiagnosticCategory";
 
 export interface AstTypeDefCompilationResult {
     sop: TirType | undefined,
@@ -177,7 +178,7 @@ export class AstCompiler extends DiagnosticEmitter
         );
         
         // if there were errors
-        if( this.diagnostics.length > 0 ) return;
+        if( this.diagnostics.some( d => d.category === DiagnosticCategory.Error ) ) return;
 
         await this._compileParsedSource( src, isEntryFile );
 
@@ -541,6 +542,18 @@ export class AstCompiler extends DiagnosticEmitter
         }
     }
 
+    registerInternalTypeDecl(
+        decl: StructDecl | TypeAliasDecl
+    ): void
+    {
+        this._collectTypeDeclarations(
+            [ decl ],
+            "",
+            this.preludeScope,
+            this.preludeScope
+        );
+    }
+
     private _collectTypeDeclarations(
         stmts: TopLevelStmt[],
         srcUid: string,
@@ -574,8 +587,8 @@ export class AstCompiler extends DiagnosticEmitter
             ) continue; // ignore type decl
 
             // define on program
-            if( tirTypes.sop  ) this.program.types.set( tirTypes.sop.toConcreteTirTypeName(), tirTypes.sop );
-            if( tirTypes.data ) this.program.types.set( tirTypes.data.toConcreteTirTypeName(), tirTypes.data );
+            if( tirTypes.sop  ) this.program.registerType( tirTypes.sop  );
+            if( tirTypes.data ) this.program.registerType( tirTypes.data );
 
             const sopTirName = tirTypes.sop?.toTirTypeKey() ?? tirTypes.data!.toTirTypeKey();
             const dataTirName = tirTypes.data?.toTirTypeKey();
@@ -698,6 +711,7 @@ export class AstCompiler extends DiagnosticEmitter
                                 AstCompilationCtx.fromScope( compiler.program, topLevelScope ),
                                 field.type
                             );
+                            console.log(field.type, fieldType)
                             if( !fieldType ) {
                                 canEncodeToData = false;
                                 return undefined;
@@ -729,7 +743,11 @@ export class AstCompiler extends DiagnosticEmitter
                 );
         }
 
-        return sop || data ? { sop, data, methodsNames } : undefined;
+        console.log("hello",{
+            sop,
+            data
+        });
+        return (sop || data) ? { sop, data, methodsNames } : undefined;
     }
 
     private _compileTypeAliasDecl(

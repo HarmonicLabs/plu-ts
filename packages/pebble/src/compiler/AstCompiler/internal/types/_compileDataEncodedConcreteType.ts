@@ -70,6 +70,7 @@ export function _compileDataEncodedConcreteType(
     if( typeExpr instanceof AstNamedTypeExpr ) // struct, aliases and respective params
     {
         const possibleTirNames = ctx.scope.resolveType( typeExpr.name.text );
+        console.log("yo", typeExpr, possibleTirNames)
         if( !possibleTirNames ) return ctx.error(
             DiagnosticCode._0_is_not_defined,
             typeExpr.name.range, typeExpr.name.text

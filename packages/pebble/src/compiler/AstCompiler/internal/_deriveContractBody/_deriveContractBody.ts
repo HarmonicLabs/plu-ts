@@ -490,6 +490,8 @@ function _getMatchedPurposeBlockStatements(
         contractRange
     );
 
+    compiler.registerInternalTypeDecl( redeemerTypeDef );
+
     // if only one method, we can inline it
     if( methods.length === 1 ) {
         const method = methods[0];

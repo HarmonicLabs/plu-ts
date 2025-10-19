@@ -69,6 +69,15 @@ export class TypedProgram extends DiagnosticEmitter
         populatePreludeScope( this );
     }
 
+    registerType( tirType: TirType ): boolean
+    {
+        if( !isTirType( tirType ) ) return false;
+        const tirTypeName = tirType.toConcreteTirTypeName();
+        if( this.types.has( tirTypeName ) ) return false;
+        this.types.set( tirTypeName, tirType );
+        return true;
+    }
+
     getMainOrThrow(): TirFuncExpr
     {
         if( this.contractTirFuncName === "" ) 

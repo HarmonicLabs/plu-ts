@@ -42,6 +42,7 @@ export function tokenFromKeyword(text: string): Token {
             // if (text === "do") return Token.Do;
             // if (text === "delete") return Token.Delete;
             if (text === "debugger") return Token.Debugger;
+            if (text === "data") return Token.Data;
             break;
         }
         case CharCode.e: {
@@ -141,6 +142,7 @@ export function tokenFromKeyword(text: string): Token {
         case CharCode.r: {
             if (text === "return") return Token.Return;
             if (text === "readonly") return Token.Readonly;
+            if (text === "runtime") return Token.Runtime;
             break;
         }
         case CharCode.s: {

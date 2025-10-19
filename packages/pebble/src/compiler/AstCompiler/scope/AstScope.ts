@@ -171,7 +171,7 @@ export class AstScope
 
         this.types.set( name, {
             sopTirName: tirTypeKey,
-            dataTirName: allowsDataEncoding ? undefined : tirTypeKey,
+            dataTirName: allowsDataEncoding ? tirTypeKey : undefined,
             allTirNames: new Set([ tirTypeKey ]),
             methodsNames,
             isGeneric: false

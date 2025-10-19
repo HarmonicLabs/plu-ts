@@ -36,7 +36,7 @@ export abstract class DiagnosticEmitter {
     ): void
     {
         const originalStackLimit = Error.stackTraceLimit;
-        Error.stackTraceLimit = 6;
+        Error.stackTraceLimit = 10;
         let emitStack = new Error().stack;
         Error.stackTraceLimit = originalStackLimit;
 
