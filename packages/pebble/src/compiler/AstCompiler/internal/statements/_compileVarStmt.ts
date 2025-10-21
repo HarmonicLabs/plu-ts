@@ -366,7 +366,7 @@ export function _getVarDeclTypeAndExpr(
     //     //     stmtIdx
     //     // )
     // );
-    const typeHint = deconstructTypeHint ?? declarationType;
+    const typeHint = declarationType ?? deconstructTypeHint;
 
     // even in deconstructions
     // we allow for `as` type assertions

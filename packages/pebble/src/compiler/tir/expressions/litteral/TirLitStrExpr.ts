@@ -5,6 +5,7 @@ import { bytes_t } from "../../program/stdScope/stdScope";
 import { ToIRTermCtx } from "../ToIRTermCtx";
 import { IRConst, IRTerm } from "../../../../IR";
 import { fromUtf8 } from "@harmoniclabs/uint8array-utils";
+import { TirExpr } from "../TirExpr";
 
 export class TirLitStrExpr
     implements ITirExpr
@@ -17,12 +18,13 @@ export class TirLitStrExpr
         readonly range: SourceRange
     ) {}
 
+    pretty(): string { return this.toString(); }
     toString(): string
     {
         return `"${this.string}"`;
     }
 
-    clone(): TirLitStrExpr
+    clone(): TirExpr
     {
         return new TirLitStrExpr(
             this.string,

@@ -15,6 +15,7 @@ export function expressifyVarDecl(
 ): void
 {
     const isConst = stmt.isConst;
+    console.log("expressifyVarDecl", stmt);
 
     if( stmt.initExpr ) expressifyVars( ctx, stmt.initExpr );
 

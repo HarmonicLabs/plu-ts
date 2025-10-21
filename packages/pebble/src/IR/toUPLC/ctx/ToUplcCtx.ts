@@ -4,6 +4,9 @@ export class ToUplcCtx
     readonly parent: ToUplcCtx | undefined;
     readonly ctxMap: Map<symbol, ToUplcCtx>;
 
+    private readonly _creationStack: string | undefined;
+    private _freezeStack: string | undefined;
+
     private readonly _variables: symbol[];
 
     private get _parentDbn(): number {
@@ -18,6 +21,7 @@ export class ToUplcCtx
     constructor(
         parent: ToUplcCtx | undefined
     ) {
+        this._creationStack = new Error().stack;
         parent?.freeze();
         this.parent = parent;
         this.ctxMap = this.parent?.ctxMap ?? new Map();
@@ -35,6 +39,8 @@ export class ToUplcCtx
     }
 
     private freeze(): void {
+        if( this._frozen ) return;
+        this._freezeStack = new Error().stack;
         this._frozen = true;
     }
 
@@ -45,7 +51,11 @@ export class ToUplcCtx
 
     defineVar( sym: symbol ): void
     {
-        if( this._frozen ) throw new Error("Context is frozen");
+        if( this._frozen ) {
+            console.log( this._freezeStack );
+            console.log( this._creationStack );
+            throw new Error("Context is frozen");
+        } 
         if( this.ctxMap.has( sym ) ) {
             console.error( sym );
             throw new Error("Variable already defined in context");

@@ -237,11 +237,11 @@ export function expressifyFuncBody(
                 );
             }
             else if( stmt.type instanceof TirDataStructType ) {
-                assertions.push(
-                    ...ctx.introduceDeconstrDataLettedFields(
-                        toNamedDeconstructVarDecl( stmt )
-                    )
+                const { implicitAssertions, nestedDeconstructs } = ctx.introduceDeconstrDataLettedFields(
+                    toNamedDeconstructVarDecl( stmt )
                 );
+                assertions.push( ...implicitAssertions );
+                bodyStmts.unshift( ...nestedDeconstructs );
                 continue;
             }
 

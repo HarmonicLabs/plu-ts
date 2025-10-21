@@ -22,11 +22,17 @@ export class TirFailExpr
     {
         return `(fail${this.failMsgExpr ? ` ${this.failMsgExpr.toString()}` : ""})`;
     }
+    pretty( indent: number ): string
+    {
+        const singleIndent = "  ";
+        const indent_base = singleIndent.repeat(indent);
+        return `${indent_base}(fail${this.failMsgExpr ? ` ${this.failMsgExpr.pretty(indent)}` : ""})`;
+    }
 
-    clone(): TirFailExpr
+    clone(): TirExpr
     {
         return new TirFailExpr(
-            this.failMsgExpr?.clone(),
+            this.failMsgExpr?.clone() as any,
             this.type.clone(),
             this.range.clone()
         );

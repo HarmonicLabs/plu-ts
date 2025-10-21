@@ -3,6 +3,7 @@ import { IRConst, IRTerm } from "../../../../IR";
 import { void_t } from "../../program/stdScope/stdScope";
 import { TirType } from "../../types/TirType";
 import { ITirExpr } from "../ITirExpr";
+import { TirExpr } from "../TirExpr";
 import { ToIRTermCtx } from "../ToIRTermCtx";
 
 export class TirLitVoidExpr implements ITirExpr
@@ -14,12 +15,13 @@ export class TirLitVoidExpr implements ITirExpr
         readonly range: SourceRange
     ) {}
 
+    pretty(): string { return this.toString(); }
     toString(): string
     {
         return "void";
     }
 
-    clone(): TirLitVoidExpr
+    clone(): TirExpr
     {
         return new TirLitVoidExpr(this.range.clone());
     }

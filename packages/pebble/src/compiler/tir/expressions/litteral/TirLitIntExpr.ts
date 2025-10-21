@@ -4,6 +4,7 @@ import { TirType } from "../../types/TirType";
 import { int_t } from "../../program/stdScope/stdScope";
 import { ToIRTermCtx } from "../ToIRTermCtx";
 import { IRConst, IRTerm } from "../../../../IR";
+import type { TirExpr } from "../TirExpr";
 
 export class TirLitIntExpr
     implements ITirExpr
@@ -16,12 +17,13 @@ export class TirLitIntExpr
         readonly range: SourceRange
     ) {}
 
+    pretty(): string { return this.toString(); }
     toString(): string
     {
         return this.integer.toString();
     }
 
-    clone(): TirLitIntExpr
+    clone(): TirExpr
     {
         return new TirLitIntExpr(
             this.integer,

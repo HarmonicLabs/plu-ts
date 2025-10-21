@@ -11,4 +11,5 @@ export interface ITirExpr extends HasSourceRange {
     toIR: ( ctx: ToIRTermCtx ) => IRTerm;
     clone: () => ITirExpr;
     toString: () => string;
+    pretty: ( indent: number ) => string;
 }

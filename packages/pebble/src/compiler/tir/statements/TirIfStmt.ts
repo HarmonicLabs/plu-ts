@@ -24,6 +24,20 @@ export class TirIfStmt
             ( this.elseBranch ? ` else ${this.elseBranch.toString()}` : `` )
         );
     }
+    pretty( indent: number ): string
+    {
+        const singleIndent = "  ";
+        const indent_base = singleIndent.repeat( indent );
+        const indent_0 = "\n" + indent_base;
+        const indent_1 = indent_0 + singleIndent;
+        return (
+            `${indent_base}if(` +
+            indent_1 + this.condition.pretty( indent + 1 ) +
+            `${indent_0}) ` +
+            this.thenBranch.pretty( indent ) +
+            ( this.elseBranch ? ` else ${this.elseBranch.pretty( indent )}` : "" )
+        );
+    }
 
     definitelyTerminates(): boolean
     {

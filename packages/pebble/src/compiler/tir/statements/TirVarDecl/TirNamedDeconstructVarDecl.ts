@@ -14,7 +14,7 @@ export class TirNamedDeconstructVarDecl
         readonly constrName: string,
         readonly fields: Map<string, TirVarDecl>,
         readonly rest: string | undefined,
-        readonly type: TirType,
+        public type: TirType,
         public initExpr: TirExpr | undefined,
         public isConst: boolean,
         readonly range: SourceRange,
@@ -32,6 +32,37 @@ export class TirNamedDeconstructVarDecl
             ( this.rest ? `, ...${this.rest}` : "" ) +
             ` }` +
             ( this.initExpr ? ` = ${this.initExpr.toString()}` : "" )
+        );
+    }
+    pretty( indent: number ): string
+    {
+        const singleIndent = "  ";
+        const indent_base = singleIndent.repeat( indent );
+        const indent_0 = "\n" + indent_base;
+        const indent_1 = indent_0 + singleIndent;
+
+        const fieldEntries = Array.from( this.fields.entries() ).map(
+            ([ name, decl ]) => `${name}: ${decl.pretty( indent + 1 )}`
+        );
+
+        const fieldsPart =
+            fieldEntries.length === 0
+            ? ""
+            : indent_1 + fieldEntries.join(`,${indent_1}`);
+
+        const restPart =
+            this.rest
+            ? ( fieldEntries.length === 0 ? indent_1 : `,${indent_1}` ) + `...${this.rest}`
+            : "";
+
+        const closing = fieldEntries.length === 0 && !this.rest ? " { }" : `${indent_0}}`;
+
+        return (
+            `${indent_base}${this.isConst ? "const" : "let"} ${this.constrName}{` +
+            fieldsPart +
+            restPart +
+            closing +
+            ( this.initExpr ? ` = ${this.initExpr.pretty( indent )}` : "" )
         );
     }
 

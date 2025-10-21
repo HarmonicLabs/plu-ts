@@ -1,0 +1,42 @@
+function §HelloWorld_f9(
+    const §ctx_da: ScriptContext
+): void {
+
+    const {
+    tx:     const §tx_39: Tx,
+    purpose:     const §purpose_7a: ScriptInfo,
+    redeemer:     const §redeemer_0c: data
+  } =   §ctx_da;
+    match (
+        §purpose_7a
+  ) {
+    when     const Spend{
+      ref:       const §spendingRef_eaaa: TxOutRef,
+      optionalDatum:       const §optionalDatum_8d6a: Optional<data>
+    }:     {
+
+            const helloWorld{
+        inputIdx:         const inputIdx: int,
+        message:         const message: bytes
+      } =       (      §redeemer_0c as §SpendRedeemer_c4fe);
+            const {
+        resolved:         const spendingInput: TxOut,
+        ref:         const inputSpendingRef: TxOutRef
+      } =       §tx_39.inputs[       inputIdx ];
+            assert       (      inputSpendingRef ===       §spendingRef_eaaa);
+            const InlineDatum{
+        datum:         const datum: data
+      } =       spendingInput.datum;
+            const {
+        owner:         const owner: bytes
+      } =       (      datum as HelloWorldDatum);
+            assert       §tx_39.requiredSigners.includes(
+                owner
+      );
+            assert       (      message === "Hello pebble");
+            return void
+    };
+    else     fail;
+  };
+    fail
+}

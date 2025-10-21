@@ -4,6 +4,7 @@ import { TirType } from "../../types/TirType";
 import { bool_t } from "../../program/stdScope/stdScope";
 import { IRConst, IRTerm } from "../../../../IR";
 import { ToIRTermCtx } from "../ToIRTermCtx";
+import { TirExpr } from "../TirExpr";
 
 export class TirLitTrueExpr implements ITirExpr
 {
@@ -14,12 +15,13 @@ export class TirLitTrueExpr implements ITirExpr
         readonly range: SourceRange
     ) {}
 
+    pretty(): string { return this.toString(); }
     toString(): string
     {
         return "true";
     }
 
-    clone(): TirLitTrueExpr
+    clone(): TirExpr
     {
         return new TirLitTrueExpr(this.range.clone());
     }

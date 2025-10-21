@@ -838,7 +838,7 @@ export function populatePreludeScope( program: TypedProgram ): void
     // }
     const { data: txIn_t } = defineSingleConstructorStruct(
         "TxIn", {
-            txOutRef: txOutRef_t,
+            ref: txOutRef_t,
             resolved: txOut_t
         }, onlyData
     );
@@ -972,5 +972,5 @@ export function populatePreludeScope( program: TypedProgram ): void
         }, onlyData
     );
 
-    preludeScope.readonly();
+    // preludeScope.readonly();
 }

@@ -23,8 +23,23 @@ export class TirTernaryExpr
     {
         return `(${this.condition.toString()} ? ${this.ifTrue.toString()} : ${this.ifFalse.toString()})`;
     }
+    pretty( indent: number ): string
+    {
+        const singleIndent = "  ";
+        const indent_base = singleIndent.repeat(indent);
+        const indent_0 = "\n" + indent_base;
+        const indent_1 = indent_0 + singleIndent;
 
-    clone(): TirTernaryExpr
+        return (
+            `${indent_base}(` +
+            `${this.condition.pretty(indent)} ?` +
+            `${indent_1}${this.ifTrue.pretty(indent + 1)} :` +
+            `${indent_1}${this.ifFalse.pretty(indent + 1)}` +
+            `${indent_base})`
+        );
+    }
+
+    clone(): TirExpr
     {
         return new TirTernaryExpr(
             this.condition.clone(),

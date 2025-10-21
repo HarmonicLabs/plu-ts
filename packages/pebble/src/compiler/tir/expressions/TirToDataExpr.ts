@@ -57,8 +57,14 @@ export class TirToDataExpr
     {
         return `toData( ${this.expr.toString()} )`;
     }
+    pretty( indent: number ): string
+    {
+        const singleIndent = "  ";
+        const indent_base = singleIndent.repeat(indent);
+        return `${indent_base}toData(${this.expr.pretty(indent)})`;
+    }
 
-    clone(): TirToDataExpr
+    clone(): TirExpr
     {
         return new TirToDataExpr(
             this.expr.clone(),

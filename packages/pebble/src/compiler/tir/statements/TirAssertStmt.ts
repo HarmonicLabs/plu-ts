@@ -22,6 +22,15 @@ export class TirAssertStmt
             ( this.elseExpr ? ` else ${this.elseExpr.toString()}` : "" )
         );
     }
+    pretty( indent: number ): string
+    {
+        const singleIndent = "  ";
+        const indent_base = singleIndent.repeat( indent );
+        return (
+            `${indent_base}assert ${this.condition.pretty( indent )}` +
+            ( this.elseExpr ? ` else ${this.elseExpr.pretty( indent )}` : "" )
+        );
+    }
 
     definitelyTerminates(): boolean { return false; }
 

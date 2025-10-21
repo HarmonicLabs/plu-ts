@@ -20,17 +20,19 @@ export class TirPropAccessExpr
 
     toString(): string
     {
-        // const propStr = this.prop.toString();
-        // if( propStr === "[object Object]" ) {
-        //     console.warn("weird prop access:", this.prop);
-        // }
         return `${this.object.toString()}.${this.prop.toString()}`;
     }
+    pretty( indent: number ): string
+    {
+        const singleIndent = "  ";
+        const indent_base = singleIndent.repeat(indent);
+        return `${this.object.pretty(indent)}.${this.prop.toString()}`;
+    }
 
-    clone(): TirPropAccessExpr
+    clone(): TirExpr
     {
         return new TirPropAccessExpr(
-            this.object.clone(),
+            this.object.clone() as TirExpr,
             this.prop.clone(),
             this.type.clone(),
             this.range.clone()
@@ -52,6 +54,7 @@ export class TirPropAccessExpr
     
     toIR( ctx: ToIRTermCtx ): IRTerm
     {
+        console.log( this );
         throw new Error("property access cannot be translated to IR");
     }
 }

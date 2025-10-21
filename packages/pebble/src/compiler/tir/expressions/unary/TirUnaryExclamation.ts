@@ -21,12 +21,15 @@ export class TirUnaryExclamation
     {
         return `!${this.operand.toString()}`;
     }
+    pretty( indent: number ): string
+    {
+        return `!${this.operand.pretty( indent )}`;
+    }
 
-    /// @ts-ignore Return type annotation circularly references itself
-    clone(): TirUnaryExclamation
+    clone(): TirExpr
     {
         return new TirUnaryExclamation(
-            this.operand.clone(),
+            this.operand.clone() as any,
             this.type.clone(),
             this.range.clone()
         );

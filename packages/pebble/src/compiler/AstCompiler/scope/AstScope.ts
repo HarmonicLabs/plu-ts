@@ -184,7 +184,9 @@ export class AstScope
         possibleTirTypes: PossibleTirTypes
     ): boolean
     {
-        if( this._isReadonly ) return false;
+        if( this._isReadonly ) {
+            throw new Error("Cannot define type on readonly scope");
+        }
 
         if( invalidSymbolNames.has( name ) ) return false;
         if( this.types.has( name ) ) return false; // already defined

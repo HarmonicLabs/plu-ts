@@ -28,8 +28,14 @@ export class TirElemAccessExpr
     {
         return `${this.arrLikeExpr.toString()}[ ${this.indexExpr.toString()} ]`;
     }
+    pretty( indent: number ): string
+    {
+        const singleIndent = "  ";
+        const indent_base = singleIndent.repeat(indent);
+        return `${this.arrLikeExpr.pretty(indent)}[ ${this.indexExpr.pretty(indent)} ]`;
+    }
     
-    clone(): TirElemAccessExpr
+    clone(): TirExpr
     {
         return new TirElemAccessExpr(
             this.arrLikeExpr.clone(),

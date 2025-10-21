@@ -21,8 +21,12 @@ export class TirUnaryTilde
     {
         return `~${this.operand.toString()}`;
     }
+    pretty( indent: number ): string
+    {
+        return `~${this.operand.pretty( indent )}`;
+    }
 
-    clone(): TirUnaryTilde
+    clone(): TirExpr
     {
         return new TirUnaryTilde(
             this.operand.clone(),

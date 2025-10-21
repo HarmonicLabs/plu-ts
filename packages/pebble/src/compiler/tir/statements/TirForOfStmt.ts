@@ -24,6 +24,19 @@ export class TirForOfStmt
             this.body.toString()
         );
     }
+    pretty( indent: number ): string
+    {
+        const singleIndent = "  ";
+        const indent_base = singleIndent.repeat( indent );
+        const indent_0 = "\n" + indent_base;
+        const indent_1 = indent_0 + singleIndent;
+        return (
+            `${indent_base}for(` +
+            indent_1 + this.elemDeclaration.pretty( indent + 1 ) + ` of ` + this.iterable.pretty( indent + 1 ) +
+            `${indent_0}) ` +
+            this.body.pretty( indent )
+        );
+    }
 
     definitelyTerminates(): boolean {
         return this.body.definitelyTerminates();

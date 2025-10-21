@@ -3,13 +3,15 @@ import { IRSelfCall } from "../../../IR/IRNodes/IRSelfCall";
 import { IRVar } from "../../../IR/IRNodes/IRVar";
 import { ResolveValueResult } from "../../AstCompiler/scope/AstScope";
 import { TirType } from "../types/TirType";
-import { ITirExpr } from "./ITirExpr";
+import type { ITirExpr } from "./ITirExpr";
+import type { TirExpr } from "./TirExpr";
 import { ToIRTermCtx } from "./ToIRTermCtx";
 
 export class TirVariableAccessExpr
     implements ITirExpr
 {
     readonly resolvedValue: Readonly<ResolveValueResult>;
+    private readonly _creationStack: string | undefined;
 
     get type(): TirType {
         return this.resolvedValue.variableInfos.type;
@@ -19,13 +21,19 @@ export class TirVariableAccessExpr
         readonly range: SourceRange
     ) {
         this.resolvedValue = Object.freeze( resolvedValue );
+        this._creationStack = (new Error()).stack;
     }
 
     toString(): string {
         return this.varName;
     }
+    pretty( indent: number ): string {
+        const singleIndent = "  ";
+        const indent_base = singleIndent.repeat(indent);
+        return `${indent_base}${this.varName}`;
+    }
 
-    clone(): TirVariableAccessExpr
+    clone(): TirExpr
     {
         return new TirVariableAccessExpr(
             this.resolvedValue,
@@ -47,7 +55,10 @@ export class TirVariableAccessExpr
         if(!(
             ir instanceof IRVar
             || ir instanceof IRSelfCall
-        )) throw new Error("Invalid variable access context");
+        )) {
+            console.log( this.resolvedValue );
+            throw new Error(`variable '${this.varName}' is missing`);
+        }
         return ir;
     }
 }

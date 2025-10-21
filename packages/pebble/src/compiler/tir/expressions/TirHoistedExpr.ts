@@ -25,10 +25,16 @@ export class TirHoistedExpr
 
     toString(): string
     {
-        return `/*hoisted*/(${this.expr.toString()})`;
+        return `/*hoisted '${this.varName}'*/(${this.expr.toString()})`;
+    }
+    pretty( indent: number ): string
+    {
+        const singleIndent = "  ";
+        const indent_base = singleIndent.repeat(indent);
+        return `${indent_base}/*hoisted '${this.varName}'*/(${this.expr.pretty(indent)})`;
     }
 
-    clone(): TirHoistedExpr
+    clone(): TirExpr
     {
         return new TirHoistedExpr(
             this.varName,

@@ -65,6 +65,7 @@ function getListMethods( elemsType: TirType ): { [x: string]: TirFuncT | undefin
     const mapReturnT = new TirTypeParam("T")
     return {
         length: new TirFuncT( [], int_t ),
+        isEmpty: new TirFuncT( [], bool_t ),
         show: new TirFuncT( [], bytes_t ),
         head: new TirFuncT( [], elemsType ),
         tail: new TirFuncT( [], new TirListT( elemsType ) ),
@@ -84,7 +85,8 @@ function getListMethods( elemsType: TirType ): { [x: string]: TirFuncT | undefin
         ], bool_t ),
         some: new TirFuncT([
             new TirFuncT( [elemsType], bool_t )
-        ], bool_t )
+        ], bool_t ),
+        includes: new TirFuncT([ elemsType ], bool_t ),
     };
 }
 

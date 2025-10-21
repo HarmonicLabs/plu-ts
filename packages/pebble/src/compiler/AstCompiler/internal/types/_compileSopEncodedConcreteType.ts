@@ -77,6 +77,9 @@ export function _compileSopEncodedConcreteType(
         if( typeof possibleTirNames.dataTirName !== "string" ) return undefined;
 
         return ctx.program.types.get( possibleTirNames.dataTirName );
+        // const result = ctx.program.types.get( possibleTirNames.dataTirName );
+        // console.log( "possibleTirNames", possibleTirNames, result );
+        // return result;
     }
 
     const tsEnsureExhautstiveCheck: never = typeExpr;

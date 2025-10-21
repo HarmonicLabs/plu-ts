@@ -17,7 +17,21 @@ export class TirBlockStmt
         return (
             `{ ` +
             this.stmts.map( s => s.toString() ).join("; ") +
-            ` }`
+            `}`
+        );
+    }
+
+    pretty( indent: number ): string
+    {
+        const singleIndent = "  ";
+        const indent_base = singleIndent.repeat( indent );
+        const indent_0 = "\n" + indent_base;
+        const indent_1 = indent_0 + singleIndent;
+        if( this.stmts.length === 0 ) return `${indent_0}{ }`;
+        return (
+            `${indent_base}{` +
+            "\n" + indent_1 + this.stmts.map( s => s.pretty( indent + 1 ) ).join(`;${indent_1}`) +
+            `${indent_0}}`
         );
     }
 

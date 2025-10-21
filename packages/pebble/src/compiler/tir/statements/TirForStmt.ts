@@ -32,6 +32,26 @@ export class TirForStmt
             `${this.body.toString()}`
         );
     }
+    pretty( indent: number ): string
+    {
+        const singleIndent = "  ";
+        const indent_base = singleIndent.repeat( indent );
+        const indent_0 = "\n" + indent_base;
+        const indent_1 = indent_0 + singleIndent;
+
+        const initPart = this.init.map( v => v.pretty( indent + 1 ) ).join(`,${indent_1}`);
+        const condPart = this.condition ? this.condition.pretty( indent + 1 ) : "";
+        const updatePart = (this.update ?? []).map( s => s.pretty( indent + 1 ) ).join(`,${indent_1}`);
+
+        return (
+            `${indent_base}for(` +
+            indent_1 + initPart + `;` +
+            indent_1 + condPart + `;` +
+            indent_1 + updatePart +
+            `${indent_0}) ` +
+            this.body.pretty( indent )
+        );
+    }
 
     definitelyTerminates(): boolean
     {

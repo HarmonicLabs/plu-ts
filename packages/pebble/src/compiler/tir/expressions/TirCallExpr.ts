@@ -20,8 +20,25 @@ export class TirCallExpr implements ITirExpr
     {
         return `${this.func.toString()}( ${this.args.map( a => a.toString() ).join(", ")} )`;
     }
+    pretty( indent: number ): string
+    {
+        const singleIndent = "  ";
+        const indent_base = singleIndent.repeat( indent );
+        const indent_0 = "\n" + indent_base;
+        const indent_1 = indent_0 + singleIndent;
 
-    clone(): TirCallExpr
+        if (this.args.length === 0) {
+            return `${this.func.pretty(indent)}()`;
+        }
+
+        return (
+            `${this.func.pretty(indent)}(` +
+            indent_1 + this.args.map(arg => arg.pretty(indent + 1)).join(`,${indent_1}`) +
+            `${indent_0})`
+        );
+    }
+
+    clone(): TirExpr
     {
         return new TirCallExpr(
             this.func.clone(),

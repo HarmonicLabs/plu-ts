@@ -3,6 +3,7 @@ import { IRHoisted } from "../../../IR/IRNodes/IRHoisted";
 import type { IRTerm } from "../../../IR/IRTerm";
 import { TirFuncT } from "../types/TirNativeType";
 import { ITirExpr } from "./ITirExpr";
+import { TirExpr } from "./TirExpr";
 import { ToIRTermCtx } from "./ToIRTermCtx";
 
 
@@ -25,10 +26,16 @@ export class TirInlineClosedIR
     {
         return `<closed IR> as ${this.type.toString()}`;
     }
+    pretty( indent: number ): string
+    {
+        const singleIndent = "  ";
+        const indent_base = singleIndent.repeat(indent);
+        return `${indent_base}<closed IR> as ${this.type.toString()}`;
+    }
 
     get isConstant(): boolean { return true; }
 
-    clone(): ITirExpr
+    clone(): TirExpr
     {
         return new TirInlineClosedIR(
             this.type.clone(),

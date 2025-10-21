@@ -11,12 +11,8 @@ export class ToIRTermCtx
 
     constructor(
         readonly parent: ToIRTermCtx | undefined,
-        /**
-         * quick access from a variable name to its context
-         * used to resolve the variables in 0(1) time
-         */
-        private readonly variableToCtx: Map<string, ToIRTermCtx>
     ) {
+        console.log("ToIRTermCtx :: new context created; parent vars:", parent?.allVariables() );
         this.localVars = new Map();
 
         // DO NOT SET _parentDbn HERE
@@ -33,11 +29,11 @@ export class ToIRTermCtx
     }
 
     static root(): ToIRTermCtx {
-        return new ToIRTermCtx( undefined, new Map() );
+        return new ToIRTermCtx( undefined );
     }
 
     newChild(): ToIRTermCtx {
-        return new ToIRTermCtx( this, this.variableToCtx );
+        return new ToIRTermCtx( this );
     }
 
     private localVarSym( name: string ): symbol | undefined {
@@ -45,9 +41,10 @@ export class ToIRTermCtx
     }
 
     getVarAccessSym( name: string ): symbol | undefined {
-        const ctx = this.variableToCtx.get( name );
-        if( !ctx ) return undefined;
-        return ctx.localVarSym( name );
+        return (
+            this.localVarSym( name )
+            ?? this.parent?.getVarAccessSym( name )
+        );
     }
 
     getVarAccessIR( name: string ): IRVar | IRSelfCall | undefined {
@@ -67,17 +64,22 @@ export class ToIRTermCtx
     **/
     defineVar( varName: string | symbol ): symbol
     {
+        console.log("ToIRTermCtx :: defining var: ", varName );
         const name = typeof varName === "string" ? varName : varName.description!;
 
-        const exsistingCtx = this.variableToCtx.get( name );
-        if(
-            exsistingCtx
-            && exsistingCtx.localVarSym( name ) !== undefined
-        ) throw new Error(`variable '${name}' already defined in the current scope`);
+        // allow shadowing
+        // const exsistingCtx = this.variableToCtx.get( name );
+        // if(
+        //     exsistingCtx
+        //     && exsistingCtx.localVarSym( name ) !== undefined
+        // ) throw new Error(`variable '${name}' already defined in the current scope`);
+        if( this.localVars.has( name ) ) {
+            throw new Error(`variable '${name}' already defined in the current scope`);
+        }
 
         const sym = typeof varName === "string" ? Symbol( name ) : varName;
         this.localVars.set( name, sym );
-        this.variableToCtx.set( name, this );
+        // this.variableToCtx.set( name, this );
         return sym;
     }
     /**

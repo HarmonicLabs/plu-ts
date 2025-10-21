@@ -33,6 +33,7 @@ import { TirStringT } from "../../compiler/tir/types/TirNativeType/native/string
 import { TirVoidT } from "../../compiler/tir/types/TirNativeType/native/void";
 import { IIRTerm, IRTerm } from "../IRTerm";
 import { hashIrData, IRHash, isIRHash } from "../IRHash";
+import { ByteString } from "@harmoniclabs/bytestring";
 
 export interface IRConstPair {
     fst: IRConstValue;
@@ -111,8 +112,16 @@ export class IRConst
 
     toUPLC(): UPLCConst
     {
+        const type = getUnaliased( this.type );
+        if( type instanceof TirBytesT && this.value instanceof Uint8Array ) {
+            // make a copy to prevent external mutation
+            return new UPLCConst(
+                tirTypeToUplcType( type ),
+                new ByteString( this.value )
+            );
+        }
         return new UPLCConst(
-            tirTypeToUplcType( getUnaliased( this.type ) ),
+            tirTypeToUplcType( type ),
             this.value as any
         );
     }

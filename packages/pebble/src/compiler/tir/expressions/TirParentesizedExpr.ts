@@ -20,7 +20,12 @@ export class TirParentesizedExpr
         return `(${this.expr.toString()})`;
     }
 
-    clone(): TirParentesizedExpr
+    pretty( indent: number ): string
+    {
+        return `(${this.expr.pretty( indent )})`;
+    }
+
+    clone(): TirExpr
     {
         return new TirParentesizedExpr(
             this.expr.clone(),

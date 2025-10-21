@@ -55,6 +55,7 @@ import { getUniqueInternalName } from "../../../internalVar";
 import { TirDataStructType, TirStructConstr, TirStructField } from "../../../tir/types/TirStructType";
 import { AstCompiler } from "../../AstCompiler";
 import { AstNamedTypeExpr } from "../../../../ast/nodes/types/AstNamedTypeExpr";
+import { NonNullExpr } from "../../../../ast/nodes/expr/unary/NonNullExpr";
 
 /**
  * 
@@ -489,7 +490,6 @@ function _getMatchedPurposeBlockStatements(
         methods,
         contractRange
     );
-
     compiler.registerInternalTypeDecl( redeemerTypeDef );
 
     // if only one method, we can inline it
@@ -627,7 +627,7 @@ function _getRedeemerMethodBlockStatemets(
                 undefined, // rest
                 undefined, // type (inferred from initExpr)
                 new TypeConversionExpr(
-                    new Identifier( redeemerTypeName, method.range ),
+                    new Identifier( contextVarsMapping.redeemerData, method.range ),
                     new AstNamedTypeExpr(
                         new Identifier( redeemerTypeName, method.range ),
                         [], // typeArgs
@@ -1062,7 +1062,10 @@ function _exprReplaceParamsAndAssertNoLitContext(
         if( renamed ) return new Identifier( renamed, expr.range );
         return expr;
     }
-    if( isUnaryPrefixExpr( expr ) ) {
+    if(
+        isUnaryPrefixExpr( expr )
+        || expr instanceof NonNullExpr
+    ) {
         const newOperand = _exprReplaceParamsAndAssertNoLitContext(
             compiler,
             expr.operand,
@@ -1285,6 +1288,7 @@ function _exprReplaceParamsAndAssertNoLitContext(
     }
 
     const tsEnsureExhaustiveCheck: never = expr;
+    console.log(expr);
     throw new Error("unreachable::_exprReplaceParamsAndAssertNoLitContext");
 }
 

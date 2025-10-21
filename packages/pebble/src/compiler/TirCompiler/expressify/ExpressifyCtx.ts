@@ -23,6 +23,7 @@ import { toNamedDeconstructVarDecl } from "./toNamedDeconstructVarDecl";
 import { TirUnConstrDataResultT } from "../../tir/types/TirNativeType";
 import { TirListT } from "../../tir/types/TirNativeType/native/list";
 import { TypedProgram } from "../../tir/program/TypedProgram";
+import { TirVarDecl } from "../../tir/statements/TirVarDecl/TirVarDecl";
 
 /**
  * Static Single Assignment (SSA) variable name.
@@ -299,8 +300,10 @@ export class ExpressifyCtx
 
     introduceDeconstrDataLettedFields(
         stmt: TirNamedDeconstructVarDecl
-    ): TirAssertStmt[]
-    {
+    ): {
+        implicitAssertions: TirAssertStmt[],
+        nestedDeconstructs: TirVarDecl[]
+    } {
         const structType = stmt.type;
         if(!( stmt.initExpr )) throw new Error("expected init expr in deconstruct data statement");
         if(!( structType instanceof TirDataStructType )) throw new Error("expected data struct type in deconstruct data statement");
@@ -312,7 +315,7 @@ export class ExpressifyCtx
         if( constrIdx < 0 ) throw new Error(`constructor ${constrName} not found in data struct ${structType.name}`);
 
         const constr = structType.constructors[constrIdx];
-        if( constr.fields.length === 0 ) return []; // no fields to extract, no assertions
+        if( constr.fields.length === 0 ) return { implicitAssertions: [], nestedDeconstructs: [] }; // no fields to extract, no assertions
 
         const structExpr = stmt.initExpr;
 
@@ -371,11 +374,12 @@ export class ExpressifyCtx
         const hasRest = typeof stmt.rest === "string";
 
         const fieldsMap: Map<string, string> = new Map();
+        const nestedDeconstructs: TirVarDecl[] = [];
         for( let i = 0; i < constr.fields.length; i++ )
         {
             const field = constr.fields[i];
             const fieldName = field.name;
-            const fieldType = field.type;
+            let fieldType = field.type;
 
             const isFieldToIntroduce = fieldsToIntroduce.includes( fieldName )
             if( !hasRest && !isFieldToIntroduce ) continue; // skip unused field
@@ -422,47 +426,10 @@ export class ExpressifyCtx
                     { latestName: lettedField.varName }
                 );
             }
-
-            // data structs cannot have sop-encoded fields (thanks god)
-            // recursively introduce letted fields for nested single-constructor data structs
-            if(!( fieldType instanceof TirDataStructType )) continue; 
-
-            // if the field is simply introduced but still a single constr struct
-            // we need to introduce its fields as well
-            if(
-                fieldVarDecl instanceof TirSimpleVarDecl
-                && fieldType.constructors.length === 1
-            )
-            {
-                this.introduceSingleConstrDataLettedFields(
-                    fieldVarName,
-                    lettedField,
-                    fieldType
-                );
-            }
-            else if(
-                fieldVarDecl instanceof TirNamedDeconstructVarDecl
-                || fieldVarDecl instanceof TirSingleDeconstructVarDecl
-            )
-            {
-                // if the field is destructured, we need to introduce its fields as well
-                const namedVarDecl = toNamedDeconstructVarDecl( fieldVarDecl );
-                namedVarDecl.initExpr = lettedField;
-                assertions.push(
-                    ...this.introduceDeconstrDataLettedFields(
-                        namedVarDecl
-                    )
-                );
-            }
-            else if( fieldVarDecl instanceof TirArrayLikeDeconstr )
-            {
+            else {
+                // fieldVarDecl.type ??= fieldType;
                 fieldVarDecl.initExpr = lettedField;
-                assertions.push(
-                    ...this.introduceArrayDeconstr(
-                        fieldVarDecl,
-                        true // is destructured field
-                    )
-                );
+                nestedDeconstructs.push( fieldVarDecl );
             }
         }
 
@@ -472,20 +439,25 @@ export class ExpressifyCtx
             fieldsMap
         );
 
-        return assertions;
+        return {
+            implicitAssertions: assertions,
+            nestedDeconstructs
+        };
     }
 
     introduceArrayDeconstr(
         stmt: TirArrayLikeDeconstr,
         isDestructuredField: boolean = false
-    ): TirAssertStmt[]
+    ): {
+        implicitAssertions: TirAssertStmt[],
+        nestedDeconstructs: TirVarDecl[]
+    }
     {
         if(!( stmt.initExpr )) throw new Error("expected init expr in array-like deconstruct statement");
 
         const elemsType = getListTypeArg( stmt.type );
         if( !elemsType )
         throw new Error("expected list type in array-like deconstruct statement");
-
 
         let lettedArrayExpr: TirLettedExpr;
         if( stmt.initExpr instanceof TirLettedExpr )
@@ -503,6 +475,7 @@ export class ExpressifyCtx
         }
 
         const assertions: TirAssertStmt[] = [];
+        const nestedDeconstructs: TirVarDecl[] = [];
 
         const nElems = stmt.elements.length;
         for( let i = 0; i < nElems; i++ )
@@ -559,21 +532,21 @@ export class ExpressifyCtx
             {
                 const namedVarDecl = toNamedDeconstructVarDecl( elemVarDecl );
                 namedVarDecl.initExpr = lettedElem;
-                assertions.push(
-                    ...this.introduceDeconstrDataLettedFields(
-                        namedVarDecl
-                    )
-                );
+                const introduceFieldsResult = this.introduceDeconstrDataLettedFields(
+                    namedVarDecl
+                )
+                assertions.push( ...introduceFieldsResult.implicitAssertions );
+                nestedDeconstructs.push( ...introduceFieldsResult.nestedDeconstructs );
             }
             else if( elemVarDecl instanceof TirArrayLikeDeconstr )
             {
                 elemVarDecl.initExpr = lettedElem;
-                assertions.push(
-                    ...this.introduceArrayDeconstr(
-                        elemVarDecl,
-                        true // is destructured field
-                    )
+                const introduceFieldsResult = this.introduceArrayDeconstr(
+                    elemVarDecl,
+                    true // is destructured field
                 );
+                assertions.push( ...introduceFieldsResult.implicitAssertions );
+                nestedDeconstructs.push( ...introduceFieldsResult.nestedDeconstructs );
             }
         }
 
@@ -603,6 +576,9 @@ export class ExpressifyCtx
             );
         }
 
-        return assertions;
+        return {
+            implicitAssertions: assertions,
+            nestedDeconstructs
+        };
     }
 }

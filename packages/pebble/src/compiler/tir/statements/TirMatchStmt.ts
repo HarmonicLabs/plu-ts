@@ -27,6 +27,41 @@ export class TirMatchStmt
             ` }`
         );
     }
+    pretty( indent: number ): string
+    {
+        const singleIndent = "  ";
+        const indent_base = singleIndent.repeat( indent );
+        const indent_0 = "\n" + indent_base;
+        const indent_1 = indent_0 + singleIndent;
+
+        const caseParts = this.cases.map(
+            c => `when ${c.pattern.pretty( indent + 1 )}: ${c.body.pretty( indent + 1 )}`
+        );
+        const casesPart = caseParts.length > 0
+            ? indent_1 + caseParts.join(`;${indent_1}`) + ";"
+            : "";
+        const wildcardPart = this.wildcardCase
+            ? indent_1 + `else ${this.wildcardCase.body.pretty( indent + 1 )};`
+            : "";
+
+        if( caseParts.length === 0 && !this.wildcardCase )
+        {
+            return (
+                `${indent_base}match (` +
+                indent_1 + this.matchExpr.pretty( indent + 1 ) +
+                `${indent_0}) { }`
+            );
+        }
+
+        return (
+            `${indent_base}match (` +
+            indent_1 + this.matchExpr.pretty( indent + 1 ) +
+            `${indent_0}) {` +
+            casesPart +
+            wildcardPart +
+            `${indent_0}}`
+        );
+    }
 
     definitelyTerminates(): boolean
     {

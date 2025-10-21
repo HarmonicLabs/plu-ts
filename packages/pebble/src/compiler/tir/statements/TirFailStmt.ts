@@ -16,6 +16,12 @@ export class TirFailStmt
     {
         return `fail${ this.failMsgExpr ? ` ${this.failMsgExpr.toString()}` : "" }`;
     }
+    pretty( indent: number ): string
+    {
+        const singleIndent = "  ";
+        const indent_base = singleIndent.repeat( indent );
+        return `${indent_base}fail${ this.failMsgExpr ? ` ${this.failMsgExpr.pretty( indent )}` : "" }`;
+    }
 
     definitelyTerminates(): boolean { return true; }
 

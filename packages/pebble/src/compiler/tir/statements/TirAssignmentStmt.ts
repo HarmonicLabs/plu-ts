@@ -16,6 +16,12 @@ export class TirAssignmentStmt
     {
         return `${this.varIdentifier.toString()} = ${this.assignedExpr.toString()};`;
     }
+    pretty( indent: number ): string
+    {
+        const singleIndent = "  ";
+        const indent_base = singleIndent.repeat( indent );
+        return `${indent_base}${this.varIdentifier.pretty( indent )} = ${this.assignedExpr.pretty( indent )}`;
+    }
 
     definitelyTerminates(): boolean { return false; }
 

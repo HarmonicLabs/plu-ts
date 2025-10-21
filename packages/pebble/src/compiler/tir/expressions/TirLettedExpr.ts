@@ -35,18 +35,25 @@ export class TirLettedExpr
 
     toString(): string
     {
-        return `/*letted*/(${this.expr.toString()})`;
+        return `/*letted '${this.varName}'*/(${this.expr.toString()})`;
+    }
+    pretty( indent: number ): string
+    {
+        const singleIndent = "  ";
+        const indent_base = singleIndent.repeat(indent);
+        const indent_0 = "\n" + indent_base;
+        return `${indent_base}/*letted '${this.varName}'*/(${indent_0}${this.expr.pretty(indent)}${indent_0})`;
     }
 
     deps(): string[] {
         return this.expr.deps();
     }
 
-    clone(): TirLettedExpr
+    clone(): TirExpr
     {
         return new TirLettedExpr(
             this.varName,
-            this.expr.clone(),
+            this.expr.clone() as any,
             this.range.clone(),
             this._irVarSym
         );

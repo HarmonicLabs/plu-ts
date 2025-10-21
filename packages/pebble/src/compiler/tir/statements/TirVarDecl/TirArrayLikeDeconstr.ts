@@ -32,6 +32,40 @@ export class TirArrayLikeDeconstr
             ( this.initExpr ? ` = ${this.initExpr.toString()}` : "" )
         );
     }
+    pretty( indent: number ): string
+    {
+        const singleIndent = "  ";
+        const indent_base = singleIndent.repeat( indent );
+        const indent_0 = "\n" + indent_base;
+        const indent_1 = indent_0 + singleIndent;
+
+        const elemEntries = this.elements.map(
+            ( decl ) => decl.pretty( indent + 1 )
+        );
+
+        const elemsPart =
+            elemEntries.length === 0
+            ? ""
+            : indent_1 + elemEntries.join(`,${indent_1}`);
+
+        const restPart =
+            this.rest
+            ? ( elemEntries.length === 0 ? indent_1 : `,${indent_1}` ) + `...${this.rest}`
+            : "";
+
+        const closing =
+            elemEntries.length === 0 && !this.rest
+            ? " [ ]"
+            : `${indent_0}]`;
+
+        return (
+            `${indent_base}${this.isConst ? "const" : "let"} [` +
+            elemsPart +
+            restPart +
+            closing +
+            ( this.initExpr ? ` = ${this.initExpr.pretty( indent )}` : "" )
+        );
+    }
 
     deps(): string[]
     {

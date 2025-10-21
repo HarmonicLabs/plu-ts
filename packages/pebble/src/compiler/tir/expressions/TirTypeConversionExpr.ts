@@ -30,6 +30,15 @@ export class TirTypeConversionExpr
         return `(${this.expr.toString()} as ${this.type.toString()})`;
     }
 
+    pretty( indent: number ): string
+    {
+        const singleIndent = "  ";
+        const indent_base = singleIndent.repeat( indent );
+        return (
+            `${indent_base}(${this.expr.pretty( indent )} as ${this.type.toString()})`
+        );
+    }
+
     deps(): string[]
     {
         return this.expr.deps();
@@ -37,7 +46,7 @@ export class TirTypeConversionExpr
 
     get isConstant(): boolean { return this.expr.isConstant; }
 
-    clone(): TirTypeConversionExpr
+    clone(): TirExpr
     {
         return new TirTypeConversionExpr(
             this.expr.clone(),

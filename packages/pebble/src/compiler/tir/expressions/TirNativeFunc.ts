@@ -6,11 +6,17 @@ import type { IRTerm } from "../../../IR/IRTerm";
 import { bool_t, bytes_t, data_t, int_t, void_t } from "../program/stdScope/stdScope";
 import { TirType } from "../types/TirType";
 import { ToIRTermCtx } from "./ToIRTermCtx";
-import { TirUnConstrDataResultT, TirPairDataT } from "../types/TirNativeType";
+import { TirUnConstrDataResultT, TirPairDataT, TirIntT, TirBytesT, TirDataT, TirBoolT } from "../types/TirNativeType";
 import { TirFuncT } from "../types/TirNativeType/native/function";
 import { TirLinearMapT } from "../types/TirNativeType/native/linearMap";
 import { TirListT } from "../types/TirNativeType/native/list";
 import { TirDataOptT } from "../types/TirNativeType/native/Optional/data";
+import { TirDataStructType } from "../types/TirStructType";
+import { getUnaliased } from "../types/utils/getUnaliased";
+import { getListTypeArg } from "../types/utils/getListTypeArg";
+import { TirHoistedExpr } from "./TirHoistedExpr";
+import { TirCallExpr } from "./TirCallExpr";
+import { TirExpr } from "./TirExpr";
 
 export class TirNativeFunc
     implements ITirExpr
@@ -23,13 +29,18 @@ export class TirNativeFunc
     toString(): string {
         return `<native ${IRNativeTag[this.tag]}>`;
     }
+    pretty(indent: number): string {
+        const singleIndent = "  ";
+        const indent_base = singleIndent.repeat(indent);
+        return `${indent_base}<native ${IRNativeTag[this.tag]}>`;
+    }
 
 
     toIR(ctx: ToIRTermCtx): IRTerm {
         return new IRNative(this.tag);
     }
 
-    clone(): TirNativeFunc {
+    clone(): TirExpr {
         return new TirNativeFunc(this.tag, this.type);
     }
 
@@ -906,11 +917,9 @@ export class TirNativeFunc
         return new TirNativeFunc(
             IRNativeTag._some,
             new TirFuncT([
-                // predicate
-                new TirFuncT([
-                    elemT
-                ], bool_t),
-                // list
+                // predicate ((elemT) => bool)
+                new TirFuncT([ elemT ], bool_t),
+                // list<elemT>
                 new TirListT(elemT)
             ], bool_t)
         );
@@ -1046,27 +1055,67 @@ export class TirNativeFunc
             ], bool_t)
         );
     }
-    static get _equalPairData(): TirNativeFunc {
-        return new TirNativeFunc(
-            IRNativeTag._equalPairData,
-            new TirFuncT([
-                // pairA
-                new TirPairDataT(),
-                // pairB
-                new TirPairDataT()
-            ], bool_t)
+    static get _equalPairData(): TirHoistedExpr {
+        return new TirHoistedExpr(
+            "equal_pair_data",
+            new TirNativeFunc(
+                IRNativeTag._equalPairData,
+                new TirFuncT([
+                    // pairA
+                    new TirPairDataT(),
+                    // pairB
+                    new TirPairDataT()
+                ], bool_t)
+            )
         );
     }
-    static get _equalBoolean(): TirNativeFunc {
-        return new TirNativeFunc(
-            IRNativeTag._equalBoolean,
-            new TirFuncT([
-                // a
-                bool_t,
-                // b
-                bool_t
-            ], bool_t)
+    static get _equalBoolean(): TirHoistedExpr {
+        return new TirHoistedExpr(
+            "equal_boolean",
+            new TirNativeFunc(
+                IRNativeTag._equalBoolean,
+                new TirFuncT([
+                    // a
+                    bool_t,
+                    // b
+                    bool_t
+                ], bool_t)
+            )
         );
+    }
+    static _equals( t: TirType ): TirExpr {
+        t = getUnaliased( t );
+        if( t instanceof TirIntT ) return this.equalsInteger;
+        if( t instanceof TirBytesT ) return this.equalsByteString;
+        if( t instanceof TirPairDataT ) return this._equalPairData;
+        if( t instanceof TirBoolT ) return this._equalBoolean;
+        if(
+            t instanceof TirDataT
+            || t instanceof TirDataOptT
+            || t instanceof TirDataStructType
+        ) return this.equalsData;
+        if( t instanceof TirListT ) {
+            const elemT = getListTypeArg( t );
+            if( !elemT ) throw new Error(`Could not get element type of list type ${t.toString()}`);
+            const elemName = elemT.toConcreteTirTypeName();
+            const funcName = `equal_list_of_${elemName}`;
+            return new TirHoistedExpr(
+                funcName,
+                new TirCallExpr(
+                    this._mkEqualsList( elemT ),
+                    [ this._equals( elemT ) ],
+                    new TirFuncT([
+                        // listA
+                        new TirListT(elemT),
+                        // listB
+                        new TirListT(elemT)
+                    ], bool_t),
+                    SourceRange.unknown
+                )
+            );
+        }
+
+        throw new Error(`No native equals function for type ${t.toString()}`);
     }
     static get _negateInt(): TirNativeFunc {
         return new TirNativeFunc(

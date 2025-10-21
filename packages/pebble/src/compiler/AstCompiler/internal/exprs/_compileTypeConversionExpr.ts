@@ -16,11 +16,14 @@ export function _compileTypeConversionExpr(
     const data_t = ctx.program.stdTypes.data;
 
     const possibleTargetTypeTirNames = ctx.scope.resolveType( ast.asType.toAstName() )
-    if( !possibleTargetTypeTirNames ) return ctx. error(
-        DiagnosticCode._0_is_not_defined,
-        ast.asType.range,
-        ast.asType.toAstName()
-    );
+    if( !possibleTargetTypeTirNames ) {
+        console.log(ctx.scope)
+        return ctx.error(
+            DiagnosticCode._0_is_not_defined,
+            ast.asType.range,
+            ast.asType.toAstName()
+        );
+    }
 
     const sopTargetType = ctx.program.types.get( possibleTargetTypeTirNames.sopTirName );
     if( !sopTargetType ) return ctx.error(

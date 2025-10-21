@@ -30,8 +30,21 @@ export class TirTraceIfFalseExpr
     {
         return `traceIfFalse( ${this.condition.toString()}, ${this.traceStrExpr.toString()} )`;
     }
+    pretty( indent: number ): string
+    {
+        const singleIndent = "  ";
+        const indent_base = singleIndent.repeat(indent);
+        const indent_1 = indent_base + singleIndent;
 
-    clone(): TirTraceIfFalseExpr
+        return (
+            `${indent_base}traceIfFalse(` +
+            `\n${indent_1}${this.condition.pretty(indent + 1)},` +
+            `\n${indent_1}${this.traceStrExpr.pretty(indent + 1)}` +
+            `\n${indent_base})`
+        );
+    }
+
+    clone(): TirExpr
     {
         return new TirTraceIfFalseExpr(
             this.condition.clone(),

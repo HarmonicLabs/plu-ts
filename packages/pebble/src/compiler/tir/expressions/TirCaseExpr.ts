@@ -54,8 +54,31 @@ export class TirCaseExpr
         return `(case ${this.matchExpr.toString()} ${casesStr} ${wildcardStr})`;
     }
 
+    pretty( indent: number ): string
+    {
+        const singleIndent = "  ";
+        const indent_base = singleIndent.repeat(indent);
+        const indent_0 = "\n" + indent_base;
+        const indent_1 = indent_0 + singleIndent;
+
+        const casesPart = this.cases.map(
+            c => `${indent_1}is ${c.pattern.pretty(indent + 1)} => ${c.body.pretty(indent + 1)}`
+        ).join("");
+
+        const wildcardPart = this.wildcardCase
+            ? `${indent_1}else ${this.wildcardCase.body.pretty(indent + 1)}`
+            : "";
+
+        return (
+            `${indent_base}(case ${this.matchExpr.pretty(indent + 1)}` +
+            casesPart +
+            wildcardPart +
+            `${indent_0})`
+        );
+    }
+
     /// @ts-ignore Return type annotation circularly references itself.
-    clone(): TirCaseExpr
+    clone(): TirExpr
     {
         return new TirCaseExpr(
             this.matchExpr.clone(),
@@ -464,6 +487,13 @@ export class TirCaseMatcher
         filterSortedStrArrInplace( deps, nonDeps );
         return deps;
     }
+
+    pretty(indent: number): string
+    {
+        const singleIndent = "  ";
+        const indent_base = singleIndent.repeat(indent);
+        return `${indent_base}is ${this.pattern.pretty(indent)} => ${this.body.pretty(indent)}`;
+    }
 }
 
 export class TirWildcardCaseMatcher
@@ -477,5 +507,12 @@ export class TirWildcardCaseMatcher
     deps(): string[]
     {
         return this.body.deps();
+    }
+
+    pretty(indent: number): string
+    {
+        const singleIndent = "  ";
+        const indent_base = singleIndent.repeat(indent);
+        return `${indent_base}else ${this.body.pretty(indent)}`;
     }
 }

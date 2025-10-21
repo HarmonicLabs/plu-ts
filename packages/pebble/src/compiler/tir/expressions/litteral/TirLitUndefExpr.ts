@@ -5,6 +5,7 @@ import { ToIRTermCtx } from "../ToIRTermCtx";
 import { DataConstr } from "@harmoniclabs/plutus-data";
 import { TirDataOptT } from "../../types/TirNativeType/native/Optional/data";
 import { TirSopOptT } from "../../types/TirNativeType/native/Optional/sop";
+import { TirExpr } from "../TirExpr";
 
 export class TirLitUndefExpr implements ITirExpr
 {
@@ -16,12 +17,13 @@ export class TirLitUndefExpr implements ITirExpr
         readonly range: SourceRange
     ) {}
 
+    pretty(): string { return this.toString(); }
     toString(): string
     {
         return "undefined";
     }
 
-    clone(): TirLitUndefExpr
+    clone(): TirExpr
     {
         return new TirLitUndefExpr(
             this.type.clone(),

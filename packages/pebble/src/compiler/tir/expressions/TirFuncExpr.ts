@@ -11,6 +11,7 @@ import { TirReturnStmt } from "../statements/TirReturnStmt";
 import { TirFuncT } from "../types/TirNativeType/native/function";
 import { IRTerm } from "../../../IR/IRTerm";
 import { IRFunc } from "../../../IR/IRNodes/IRFunc";
+import type { TirExpr } from "./TirExpr";
 
 export class TirFuncExpr
     implements ITirExpr
@@ -50,8 +51,22 @@ export class TirFuncExpr
             `${this.body.toString()}`
         );
     }
+    
+    pretty( indent: number ): string
+    {
+        const singleIndent = "  ";
+        const indent_base = singleIndent.repeat( indent );
+        const indent_0 = "\n" + indent_base;
+        const indent_1 = indent_0 + singleIndent;
+        return (
+            `${indent_base}function ${this.name}(` +
+            indent_1 + this.params.map( p => p.pretty( indent + 1 ) ).join( `,${indent_1}` ) +
+            `${indent_0}): ${this.returnType.toString()} ` +
+            this.body.pretty( indent )
+        );
+    }
 
-    clone(): TirFuncExpr
+    clone(): TirExpr
     {
         return new TirFuncExpr(
             this.name,

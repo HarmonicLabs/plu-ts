@@ -23,10 +23,12 @@ export function compileTypedProgram(
     //*/
     const mainFuncExpr = tirProgram.getMainOrThrow()
     // console.log("main func expr:", mainFuncExpr.toString() );
+    console.log( "before", mainFuncExpr.pretty(0) )
     void expressify(
         mainFuncExpr,
         undefined, // loopReplacements
         tirProgram
     );
+    console.log( "after", mainFuncExpr.pretty(0) )
     return mainFuncExpr.toIR( ToIRTermCtx.root() );
 }

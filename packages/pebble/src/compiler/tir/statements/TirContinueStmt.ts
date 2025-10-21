@@ -12,6 +12,12 @@ export class TirContinueStmt
     {
         return `continue`;
     }
+    pretty( indent: number ): string
+    {
+        const singleIndent = "  ";
+        const indent_base = singleIndent.repeat( indent );
+        return `${indent_base}continue`;
+    }
 
     // loops are transoformed into recursive functions
     // and continue statements are transformed into return statements

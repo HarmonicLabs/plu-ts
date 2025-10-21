@@ -86,6 +86,12 @@ export class TirExponentiationExpr
     {
         return `(${this.left.toString()} ** ${this.right.toString()})`;
     }
+    pretty( indent: number ): string
+    {
+        const singleIndent = "  ";
+        const indent_base = singleIndent.repeat(indent);
+        return `${indent_base}(${this.left.pretty(indent)} ** ${this.right.pretty(indent)})`;
+    }
     
     clone(): TirExpr
     {
@@ -128,6 +134,12 @@ export class TirLessThanExpr
     toString(): string
     {
         return `(${this.left.toString()} < ${this.right.toString()})`;
+    }
+    pretty( indent: number ): string
+    {
+        const singleIndent = "  ";
+        const indent_base = singleIndent.repeat(indent);
+        return `${indent_base}(${this.left.pretty(indent)} < ${this.right.pretty(indent)})`;
     }
     
     clone(): TirExpr
@@ -178,6 +190,12 @@ export class TirGreaterThanExpr
     toString(): string
     {
         return `(${this.left.toString()} > ${this.right.toString()})`;
+    }
+    pretty( indent: number ): string
+    {
+        const singleIndent = "  ";
+        const indent_base = singleIndent.repeat(indent);
+        return `${indent_base}(${this.left.pretty(indent)} > ${this.right.pretty(indent)})`;
     }
     
     clone(): TirExpr
@@ -230,6 +248,12 @@ export class TirLessThanEqualExpr
     {
         return `(${this.left.toString()} <= ${this.right.toString()})`;
     }
+    pretty( indent: number ): string
+    {
+        const singleIndent = "  ";
+        const indent_base = singleIndent.repeat(indent);
+        return `${indent_base}(${this.left.pretty(indent)} <= ${this.right.pretty(indent)})`;
+    }
     
     clone(): TirExpr
     {
@@ -279,6 +303,12 @@ export class TirGreaterThanEqualExpr
     toString(): string
     {
         return `(${this.left.toString()} >= ${this.right.toString()})`;
+    }
+    pretty( indent: number ): string
+    {
+        const singleIndent = "  ";
+        const indent_base = singleIndent.repeat(indent);
+        return `${indent_base}(${this.left.pretty(indent)} >= ${this.right.pretty(indent)})`;
     }
     
     clone(): TirExpr
@@ -331,6 +361,12 @@ export class TirEqualExpr
     {
         return `(${this.left.toString()} === ${this.right.toString()})`;
     }
+    pretty( indent: number ): string
+    {
+        const singleIndent = "  ";
+        const indent_base = singleIndent.repeat(indent);
+        return `${indent_base}(${this.left.pretty(indent)} === ${this.right.pretty(indent)})`;
+    }
     
     clone(): TirExpr
     {
@@ -373,6 +409,12 @@ export class TirNotEqualExpr
     toString(): string
     {
         return `(${this.left.toString()} !== ${this.right.toString()})`;
+    }
+    pretty( indent: number ): string
+    {
+        const singleIndent = "  ";
+        const indent_base = singleIndent.repeat(indent);
+        return `${indent_base}(${this.left.pretty(indent)} !== ${this.right.pretty(indent)})`;
     }
     
     clone(): TirExpr
@@ -428,6 +470,12 @@ export class TirAddExpr
     {
         return `(${this.left.toString()} + ${this.right.toString()})`;
     }
+    pretty( indent: number ): string
+    {
+        const singleIndent = "  ";
+        const indent_base = singleIndent.repeat(indent);
+        return `${indent_base}(${this.left.pretty(indent)} + ${this.right.pretty(indent)})`;
+    }
     
     clone(): TirExpr
     {
@@ -478,6 +526,12 @@ export class TirSubExpr
     {
         return `(${this.left.toString()} - ${this.right.toString()})`;
     }
+    pretty( indent: number ): string
+    {
+        const singleIndent = "  ";
+        const indent_base = singleIndent.repeat(indent);
+        return `${indent_base}(${this.left.pretty(indent)} - ${this.right.pretty(indent)})`;
+    }
     
     clone(): TirExpr
     {
@@ -520,6 +574,12 @@ export class TirMultExpr
     toString(): string
     {
         return `(${this.left.toString()} * ${this.right.toString()})`;
+    }
+    pretty( indent: number ): string
+    {
+        const singleIndent = "  ";
+        const indent_base = singleIndent.repeat(indent);
+        return `${indent_base}(${this.left.pretty(indent)} * ${this.right.pretty(indent)})`;
     }
     
     clone(): TirExpr
@@ -564,6 +624,12 @@ export class TirDivExpr
     {
         return `(${this.left.toString()} / ${this.right.toString()})`;
     }
+    pretty( indent: number ): string
+    {
+        const singleIndent = "  ";
+        const indent_base = singleIndent.repeat(indent);
+        return `${indent_base}(${this.left.pretty(indent)} / ${this.right.pretty(indent)})`;
+    }
     
     clone(): TirExpr
     {
@@ -606,6 +672,12 @@ export class TirModuloExpr
     toString(): string
     {
         return `(${this.left.toString()} % ${this.right.toString()})`;
+    }
+    pretty( indent: number ): string
+    {
+        const singleIndent = "  ";
+        const indent_base = singleIndent.repeat(indent);
+        return `${indent_base}(${this.left.pretty(indent)} % ${this.right.pretty(indent)})`;
     }
     
     clone(): TirExpr
@@ -650,6 +722,12 @@ export class TirShiftLeftExpr
     {
         return `(${this.left.toString()} << ${this.right.toString()})`;
     }
+    pretty( indent: number ): string
+    {
+        const singleIndent = "  ";
+        const indent_base = singleIndent.repeat(indent);
+        return `${indent_base}(${this.left.pretty(indent)} << ${this.right.pretty(indent)})`;
+    }
     
     clone(): TirExpr
     {
@@ -693,6 +771,12 @@ export class TirShiftRightExpr
     toString(): string
     {
         return `(${this.left.toString()} >> ${this.right.toString()})`;
+    }
+    pretty( indent: number ): string
+    {
+        const singleIndent = "  ";
+        const indent_base = singleIndent.repeat(indent);
+        return `${indent_base}(${this.left.pretty(indent)} >> ${this.right.pretty(indent)})`;
     }
     
     clone(): TirExpr
@@ -768,6 +852,12 @@ export class TirBitwiseAndExpr
     {
         return `(${this.left.toString()} & ${this.right.toString()})`;
     }
+    pretty( indent: number ): string
+    {
+        const singleIndent = "  ";
+        const indent_base = singleIndent.repeat(indent);
+        return `${indent_base}(${this.left.pretty(indent)} & ${this.right.pretty(indent)})`;
+    }
     
     clone(): TirExpr
     {
@@ -810,6 +900,12 @@ export class TirBitwiseXorExpr
     toString(): string
     {
         return `(${this.left.toString()} ^ ${this.right.toString()})`;
+    }
+    pretty( indent: number ): string
+    {
+        const singleIndent = "  ";
+        const indent_base = singleIndent.repeat(indent);
+        return `${indent_base}(${this.left.pretty(indent)} ^ ${this.right.pretty(indent)})`;
     }
     
     clone(): TirExpr
@@ -854,6 +950,12 @@ export class TirBitwiseOrExpr
     {
         return `(${this.left.toString()} | ${this.right.toString()})`;
     }
+    pretty( indent: number ): string
+    {
+        const singleIndent = "  ";
+        const indent_base = singleIndent.repeat(indent);
+        return `${indent_base}(${this.left.pretty(indent)} | ${this.right.pretty(indent)})`;
+    }
     
     clone(): TirExpr
     {
@@ -896,6 +998,12 @@ export class TirLogicalAndExpr
     toString(): string
     {
         return `(${this.left.toString()} && ${this.right.toString()})`;
+    }
+    pretty( indent: number ): string
+    {
+        const singleIndent = "  ";
+        const indent_base = singleIndent.repeat(indent);
+        return `${indent_base}(${this.left.pretty(indent)} && ${this.right.pretty(indent)})`;
     }
     
     clone(): TirExpr
@@ -950,6 +1058,12 @@ export class TirLogicalOrExpr
     toString(): string
     {
         return `(${this.left.toString()} || ${this.right.toString()})`;
+    }
+    pretty( indent: number ): string
+    {
+        const singleIndent = "  ";
+        const indent_base = singleIndent.repeat(indent);
+        return `${indent_base}(${this.left.pretty(indent)} || ${this.right.pretty(indent)})`;
     }
     
     clone(): TirExpr

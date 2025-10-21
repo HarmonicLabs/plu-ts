@@ -3,6 +3,7 @@ import { SourceRange } from "../../../../ast/Source/SourceRange";
 import { TirType } from "../../types/TirType";
 import { ToIRTermCtx } from "../ToIRTermCtx";
 import { IRTerm, IRVar } from "../../../../IR";
+import { TirExpr } from "../TirExpr";
 
 export class TirLitThisExpr
     implements ITirExpr
@@ -14,12 +15,13 @@ export class TirLitThisExpr
         readonly range: SourceRange
     ) {}
 
+    pretty(): string { return this.toString(); }
     toString(): string
     {
         return `this`;
     }
 
-    clone(): TirLitThisExpr
+    clone(): TirExpr
     {
         return new TirLitThisExpr(
             this.type.clone(),

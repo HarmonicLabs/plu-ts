@@ -21,8 +21,12 @@ export class TirUnaryMinus
     {
         return `-${this.operand.toString()}`;
     }
+    pretty( indent: number ): string
+    {
+        return `-${this.operand.pretty( indent )}`;
+    }
 
-    clone(): TirUnaryMinus
+    clone(): TirExpr
     {
         return new TirUnaryMinus(
             this.operand.clone(),

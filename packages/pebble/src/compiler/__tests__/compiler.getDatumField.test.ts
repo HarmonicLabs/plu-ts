@@ -15,22 +15,17 @@ struct HelloWorldDatum {
 
 contract HelloWorld
 {
-    spend helloWorld(
-        inputIdx: int,
-        message: bytes
-    ) {
-        const { tx, spendingRef } = context;
+    spend getDatumField() {
+        const { tx } = context;
 
-        const { resolved: spendingInput, ref: inputSpendingRef } = tx.inputs[inputIdx];
+        const { resolved: spendingInput } = tx.inputs[0];
 
-        assert inputSpendingRef === spendingRef;
+        const InlineDatum{
+            datum: { owner } as HelloWorldDatum
+        } = spendingInput.datum;
+        // const { owner } = datum as HelloWorldDatum;
 
-        const InlineDatum{ datum } = spendingInput.datum;
-        const owner = (datum as HelloWorldDatum).owner;
-
-        assert tx.requiredSigners.includes( owner );
-
-        assert message === "Hello pebble";
+        assert owner == "owner_bytes";
     }
 }
         `;

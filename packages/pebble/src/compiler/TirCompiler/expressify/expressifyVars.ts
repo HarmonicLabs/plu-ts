@@ -38,6 +38,7 @@ import { TirUnaryMinus } from "../../tir/expressions/unary/TirUnaryMinus";
 import { TirUnaryPlus } from "../../tir/expressions/unary/TirUnaryPlus";
 import { isTirUnaryPrefixExpr } from "../../tir/expressions/unary/TirUnaryPrefixExpr";
 import { TirUnaryTilde } from "../../tir/expressions/unary/TirUnaryTilde";
+import { bool_t } from "../../tir/program/stdScope/stdScope";
 import { TirBlockStmt } from "../../tir/statements/TirBlockStmt";
 import { TirReturnStmt } from "../../tir/statements/TirReturnStmt";
 import { TirStmt } from "../../tir/statements/TirStmt";
@@ -45,7 +46,7 @@ import { TirArrayLikeDeconstr } from "../../tir/statements/TirVarDecl/TirArrayLi
 import { TirNamedDeconstructVarDecl } from "../../tir/statements/TirVarDecl/TirNamedDeconstructVarDecl";
 import { TirSimpleVarDecl } from "../../tir/statements/TirVarDecl/TirSimpleVarDecl";
 import { TirAliasType } from "../../tir/types/TirAliasType";
-import { TirListT } from "../../tir/types/TirNativeType";
+import { TirFuncT, TirListT } from "../../tir/types/TirNativeType";
 import { TirDataStructType, TirSoPStructType } from "../../tir/types/TirStructType";
 import { getListTypeArg } from "../../tir/types/utils/getListTypeArg";
 import { getUnaliased } from "../../tir/types/utils/getUnaliased";
@@ -477,24 +478,137 @@ function expressifyMethodCall(
     }
 
     if( objectType instanceof TirListT ) {
-        const elemsType = getListTypeArg( objectType )!;
-        if( !elemsType ) throw new Error("Invalid list type");
-
-        if( methodName === "length" ) {
-            if( methodCall.args.length !== 0 ) throw new Error(
-                `Method 'length' of type 'list' takes 0 arguments, ${methodCall.args.length} provided`
-            );
-            return new TirCallExpr(
-                TirNativeFunc._length( elemsType ),
-                [ objectExpr ],
-                methodCall.type,
-                SourceRange.join( methodIdentifierProp.range, methodCall.range.atEnd() )
-            );
-        }
+        const result = expressifyListMethodCall(
+            ctx,
+            objectExpr,
+            methodCall,
+            methodName,
+            objectType,
+            SourceRange.join( methodIdentifierProp.range, methodCall.range.atEnd() )
+        );
+        if( result ) return result;
     }
 
     throw new Error(`not implemented::expressifyMethodCall for type '${objectType.toString()}' (method name: '${methodName}')`);
 
     // const tsEnsureExhautstiveCheck: never = objectType;
     throw new Error(`Cannot call method '${methodName}' on non-struct type '${objectType.toString()}'`);
+}
+
+function expressifyListMethodCall(
+    ctx: ExpressifyCtx,
+    objectExpr: TirExpr,
+    methodCall: TirCallExpr,
+    methodName: string,
+    listType: TirListT,
+    exprRange: SourceRange,
+): TirCallExpr | undefined
+{
+    const elemsType = getListTypeArg( listType )!;
+    if( !elemsType ) throw new Error("Invalid list type");
+
+    if( methodName === "length" ) {
+        if( methodCall.args.length !== 0 ) throw new Error(
+            `Method 'length' of type 'list' takes 0 arguments, ${methodCall.args.length} provided`
+        );
+        return new TirCallExpr(
+            TirNativeFunc._length( elemsType ),
+            [ objectExpr ],
+            methodCall.type,
+            exprRange
+        );
+    }
+    if( methodName === "some" ) {
+        if( methodCall.args.length !== 1 ) throw new Error(
+            `Method 'includes' of type 'list' takes 1 argument, ${methodCall.args.length} provided`
+        );
+        return new TirCallExpr(
+            TirNativeFunc._some( elemsType ),
+            [ methodCall.args[0], objectExpr ],
+            methodCall.type,
+            exprRange
+        );
+    }
+    if( methodName === "every" ) {
+        if( methodCall.args.length !== 1 ) throw new Error(
+            `Method 'every' of type 'list' takes 1 argument, ${methodCall.args.length} provided`
+        );
+        return new TirCallExpr(
+            TirNativeFunc._every( elemsType ),
+            [ methodCall.args[0], objectExpr ],
+            methodCall.type,
+            exprRange
+        );
+    }
+    if( methodName === "includes" ) {
+        if( methodCall.args.length !== 1 ) throw new Error(
+            `Method 'includes' of type 'list' takes 1 argument, ${methodCall.args.length} provided`
+        );
+        return new TirCallExpr(
+            TirNativeFunc._some( elemsType ),
+            [
+                new TirCallExpr(
+                    TirNativeFunc._equals( elemsType ),
+                    [ methodCall.args[0] ],
+                    new TirFuncT([ elemsType ], bool_t ),
+                    methodCall.args[0].range
+                ),
+                objectExpr
+            ],
+            methodCall.type,
+            exprRange
+        );
+    }
+    if( methodName === "head" ) {
+        if( methodCall.args.length !== 0 ) throw new Error(
+            `Method 'head' of type 'list' takes 0 arguments, ${methodCall.args.length} provided`
+        );
+        return new TirCallExpr(
+            TirNativeFunc.headList( elemsType ),
+            [ objectExpr ],
+            methodCall.type,
+            exprRange
+        );
+    }
+    if( methodName === "tail" ) {
+        if( methodCall.args.length !== 0 ) throw new Error(
+            `Method 'tail' of type 'list' takes 0 arguments, ${methodCall.args.length} provided`
+        );
+        return new TirCallExpr(
+            TirNativeFunc.tailList( elemsType ),
+            [ objectExpr ],
+            methodCall.type,
+            exprRange
+        );
+    }
+    if( methodName === "isEmpty" ) {
+        if( methodCall.args.length !== 0 ) throw new Error(
+            `Method 'isEmpty' of type 'list' takes 0 arguments, ${methodCall.args.length} provided`
+        );
+        return new TirCallExpr(
+            TirNativeFunc.nullList( elemsType ),
+            [ objectExpr ],
+            methodCall.type,
+            exprRange
+        );
+    }
+
+    // TODO
+    /*
+    {
+        isEmpty: new TirFuncT( [], bool_t ),
+        show: new TirFuncT( [], bytes_t ),
+        reverse: new TirFuncT( [], new TirListT( elemsType ) ),
+        find: new TirFuncT([
+            new TirFuncT( [elemsType], bool_t )
+        ], new TirSopOptT( elemsType ) ),
+        filter: new TirFuncT([
+            new TirFuncT( [elemsType], bool_t )
+        ], new TirListT( elemsType ) ),
+        prepend: new TirFuncT( [elemsType], new TirListT( elemsType ) ),
+        map: new TirFuncT([
+            new TirFuncT([ elemsType ], mapReturnT )
+        ], new TirListT( mapReturnT ) ),
+    };
+    */
 }

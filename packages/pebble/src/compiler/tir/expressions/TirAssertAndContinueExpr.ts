@@ -29,9 +29,25 @@ export class TirAssertAndContinueExpr
     {
         return `assert ${this.conditions.map( c => c.toString() ).join(" && " )} then ${this.continuation.toString()}`;
     }
+    pretty( indent: number ): string
+    {
+        const singleIndent = "  ";
+        const indent_base = singleIndent.repeat(indent);
+        const indent_0 = "\n" + indent_base;
+        const indent_1 = indent_0 + singleIndent;
+
+        const conditionsPart = this.conditions.map(
+            c => c.pretty(indent)
+        ).join(` &&${indent_1}`);
+
+        return (
+            `${indent_base}assert ${conditionsPart}` +
+            `${indent_0}then ${this.continuation.pretty(indent)}`
+        );
+    }
 
     /// @ts-ignore Return type annotation circularly references itself.
-    clone(): TirAssertAndContinueExpr
+    clone(): TirExpr
     {
         return new TirAssertAndContinueExpr(
             this.conditions.map( c => c.clone() ),

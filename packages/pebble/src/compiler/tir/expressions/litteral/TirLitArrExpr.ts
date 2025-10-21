@@ -27,12 +27,13 @@ export class TirLitArrExpr
         readonly range: SourceRange,
     ) {}
 
+    pretty(): string { return this.toString(); }
     toString(): string
     {
         return `[ ${this.elems.map( e => e.toString() ).join(", ")} ]`;
     }
 
-    clone(): TirLitArrExpr
+    clone(): TirExpr
     {
         return new TirLitArrExpr(
             this.elems.map( e => e.clone() ),
