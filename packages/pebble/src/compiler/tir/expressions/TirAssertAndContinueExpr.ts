@@ -41,7 +41,7 @@ export class TirAssertAndContinueExpr
         ).join(` &&${indent_1}`);
 
         return (
-            `${indent_base}assert ${conditionsPart}` +
+            `assert ${conditionsPart}` +
             `${indent_0}then ${this.continuation.pretty(indent)}`
         );
     }

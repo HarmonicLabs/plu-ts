@@ -32,7 +32,7 @@ export class TirNativeFunc
     pretty(indent: number): string {
         const singleIndent = "  ";
         const indent_base = singleIndent.repeat(indent);
-        return `${indent_base}<native ${IRNativeTag[this.tag]}>`;
+        return `<native ${IRNativeTag[this.tag]}>`;
     }
 
 

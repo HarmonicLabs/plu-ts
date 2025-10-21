@@ -30,7 +30,7 @@ export class TirVariableAccessExpr
     pretty( indent: number ): string {
         const singleIndent = "  ";
         const indent_base = singleIndent.repeat(indent);
-        return `${indent_base}${this.varName}`;
+        return `${this.varName}`;
     }
 
     clone(): TirExpr

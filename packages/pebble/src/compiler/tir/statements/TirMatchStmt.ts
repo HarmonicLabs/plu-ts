@@ -47,14 +47,14 @@ export class TirMatchStmt
         if( caseParts.length === 0 && !this.wildcardCase )
         {
             return (
-                `${indent_base}match (` +
+                `match (` +
                 indent_1 + this.matchExpr.pretty( indent + 1 ) +
                 `${indent_0}) { }`
             );
         }
 
         return (
-            `${indent_base}match (` +
+            `match (` +
             indent_1 + this.matchExpr.pretty( indent + 1 ) +
             `${indent_0}) {` +
             casesPart +

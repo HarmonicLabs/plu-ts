@@ -31,7 +31,7 @@ export class TirForOfStmt
         const indent_0 = "\n" + indent_base;
         const indent_1 = indent_0 + singleIndent;
         return (
-            `${indent_base}for(` +
+            `for(` +
             indent_1 + this.elemDeclaration.pretty( indent + 1 ) + ` of ` + this.iterable.pretty( indent + 1 ) +
             `${indent_0}) ` +
             this.body.pretty( indent )

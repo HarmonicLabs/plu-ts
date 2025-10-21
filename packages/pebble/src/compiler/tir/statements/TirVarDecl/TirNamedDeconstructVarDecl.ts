@@ -58,7 +58,7 @@ export class TirNamedDeconstructVarDecl
         const closing = fieldEntries.length === 0 && !this.rest ? " { }" : `${indent_0}}`;
 
         return (
-            `${indent_base}${this.isConst ? "const" : "let"} ${this.constrName}{` +
+            `${this.isConst ? "const" : "let"} ${this.constrName}{` +
             fieldsPart +
             restPart +
             closing +

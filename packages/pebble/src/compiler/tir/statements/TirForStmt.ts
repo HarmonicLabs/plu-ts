@@ -44,7 +44,7 @@ export class TirForStmt
         const updatePart = (this.update ?? []).map( s => s.pretty( indent + 1 ) ).join(`,${indent_1}`);
 
         return (
-            `${indent_base}for(` +
+            `for(` +
             indent_1 + initPart + `;` +
             indent_1 + condPart + `;` +
             indent_1 + updatePart +

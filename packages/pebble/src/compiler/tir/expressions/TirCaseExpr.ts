@@ -70,7 +70,7 @@ export class TirCaseExpr
             : "";
 
         return (
-            `${indent_base}(case ${this.matchExpr.pretty(indent + 1)}` +
+            `(case ${this.matchExpr.pretty(indent + 1)}` +
             casesPart +
             wildcardPart +
             `${indent_0})`
@@ -492,7 +492,7 @@ export class TirCaseMatcher
     {
         const singleIndent = "  ";
         const indent_base = singleIndent.repeat(indent);
-        return `${indent_base}is ${this.pattern.pretty(indent)} => ${this.body.pretty(indent)}`;
+        return `is ${this.pattern.pretty(indent)} => ${this.body.pretty(indent)}`;
     }
 }
 
@@ -513,6 +513,6 @@ export class TirWildcardCaseMatcher
     {
         const singleIndent = "  ";
         const indent_base = singleIndent.repeat(indent);
-        return `${indent_base}else ${this.body.pretty(indent)}`;
+        return `else ${this.body.pretty(indent)}`;
     }
 }

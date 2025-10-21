@@ -39,7 +39,7 @@ export class TirSimpleVarDecl
         const singleIndent = "  ";
         const indent_base = singleIndent.repeat( indent );
         return (
-            `${indent_base}${this.isConst ? "const" : "let"} ${this.name}: ${this.type.toString()}` +
+            `${this.isConst ? "const" : "let"} ${this.name}: ${this.type.toString()}` +
             ( this.initExpr ? ` = ${this.initExpr.pretty( indent )}` : "" )
         );
     }

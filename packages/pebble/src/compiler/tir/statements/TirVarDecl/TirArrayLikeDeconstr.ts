@@ -59,7 +59,7 @@ export class TirArrayLikeDeconstr
             : `${indent_0}]`;
 
         return (
-            `${indent_base}${this.isConst ? "const" : "let"} [` +
+            `${this.isConst ? "const" : "let"} [` +
             elemsPart +
             restPart +
             closing +

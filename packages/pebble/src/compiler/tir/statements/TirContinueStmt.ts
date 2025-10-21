@@ -16,7 +16,7 @@ export class TirContinueStmt
     {
         const singleIndent = "  ";
         const indent_base = singleIndent.repeat( indent );
-        return `${indent_base}continue`;
+        return `continue`;
     }
 
     // loops are transoformed into recursive functions

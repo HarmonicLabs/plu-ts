@@ -31,11 +31,11 @@ export class TirTernaryExpr
         const indent_1 = indent_0 + singleIndent;
 
         return (
-            `${indent_base}(` +
+            `(` +
             `${this.condition.pretty(indent)} ?` +
             `${indent_1}${this.ifTrue.pretty(indent + 1)} :` +
             `${indent_1}${this.ifFalse.pretty(indent + 1)}` +
-            `${indent_base})`
+            `)`
         );
     }
 

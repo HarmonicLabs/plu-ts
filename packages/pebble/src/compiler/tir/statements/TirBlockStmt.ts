@@ -29,7 +29,7 @@ export class TirBlockStmt
         const indent_1 = indent_0 + singleIndent;
         if( this.stmts.length === 0 ) return `${indent_0}{ }`;
         return (
-            `${indent_base}{` +
+            `{` +
             "\n" + indent_1 + this.stmts.map( s => s.pretty( indent + 1 ) ).join(`;${indent_1}`) +
             `${indent_0}}`
         );

@@ -30,7 +30,7 @@ export class TirInlineClosedIR
     {
         const singleIndent = "  ";
         const indent_base = singleIndent.repeat(indent);
-        return `${indent_base}<closed IR> as ${this.type.toString()}`;
+        return `<closed IR> as ${this.type.toString()}`;
     }
 
     get isConstant(): boolean { return true; }

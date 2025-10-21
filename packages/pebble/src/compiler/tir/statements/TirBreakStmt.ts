@@ -16,7 +16,7 @@ export class TirBreakStmt
     {
         const singleIndent = "  ";
         const indent_base = singleIndent.repeat( indent );
-        return `${indent_base}break`;
+        return `break`;
     }
     // loops are transoformed into recursive functions
     // and break statements are transformed into return statements

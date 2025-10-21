@@ -12,7 +12,6 @@ export class ToIRTermCtx
     constructor(
         readonly parent: ToIRTermCtx | undefined,
     ) {
-        console.log("ToIRTermCtx :: new context created; parent vars:", parent?.allVariables() );
         this.localVars = new Map();
 
         // DO NOT SET _parentDbn HERE
@@ -64,7 +63,6 @@ export class ToIRTermCtx
     **/
     defineVar( varName: string | symbol ): symbol
     {
-        console.log("ToIRTermCtx :: defining var: ", varName );
         const name = typeof varName === "string" ? varName : varName.description!;
 
         // allow shadowing

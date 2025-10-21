@@ -1,42 +1,36 @@
-function §HelloWorld_f9(
-    const §ctx_da: ScriptContext
+function §HelloWorld_52(
+  const §ctx_0b: ScriptContext
 ): void {
 
-    const {
-    tx:     const §tx_39: Tx,
-    purpose:     const §purpose_7a: ScriptInfo,
-    redeemer:     const §redeemer_0c: data
-  } =   §ctx_da;
-    match (
-        §purpose_7a
-  ) {
-    when     const Spend{
-      ref:       const §spendingRef_eaaa: TxOutRef,
-      optionalDatum:       const §optionalDatum_8d6a: Optional<data>
-    }:     {
+  const {
+    tx: const §tx_5c: Tx,
+    purpose: const §purpose_f8: ScriptInfo,
+    redeemer: const §redeemer_17: data
+  } = §ctx_0b;
 
-            const helloWorld{
-        inputIdx:         const inputIdx: int,
-        message:         const message: bytes
-      } =       (      §redeemer_0c as §SpendRedeemer_c4fe);
-            const {
-        resolved:         const spendingInput: TxOut,
-        ref:         const inputSpendingRef: TxOutRef
-      } =       §tx_39.inputs[       inputIdx ];
-            assert       (      inputSpendingRef ===       §spendingRef_eaaa);
-            const InlineDatum{
-        datum:         const datum: data
-      } =       spendingInput.datum;
-            const {
-        owner:         const owner: bytes
-      } =       (      datum as HelloWorldDatum);
-            assert       §tx_39.requiredSigners.includes(
-                owner
+  match (
+    §purpose_f8
+  ) {
+    when const Spend{
+      ref: const §spendingRef_37d7: TxOutRef,
+      optionalDatum: const §optionalDatum_2d18: Optional<data>
+    }: {
+
+      const {
+        owner: const owner: bytes
+      } = ((case §optionalDatum_2d18
+        is const Some{
+          value: const value: data
+        } => value
+        is const None{ { } => (fail)
+      ) as HelloWorldDatum);
+      assert §tx_5c.requiredSigners.includes(
+        owner
       );
-            assert       (      message === "Hello pebble");
-            return void
+      return void
     };
-    else     fail;
+    else fail;
   };
-    fail
+  
+  fail
 }

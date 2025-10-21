@@ -27,7 +27,7 @@ export class TirAssertStmt
         const singleIndent = "  ";
         const indent_base = singleIndent.repeat( indent );
         return (
-            `${indent_base}assert ${this.condition.pretty( indent )}` +
+            `assert ${this.condition.pretty( indent )}` +
             ( this.elseExpr ? ` else ${this.elseExpr.pretty( indent )}` : "" )
         );
     }

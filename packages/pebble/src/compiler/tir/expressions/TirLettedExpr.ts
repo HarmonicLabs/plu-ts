@@ -42,7 +42,7 @@ export class TirLettedExpr
         const singleIndent = "  ";
         const indent_base = singleIndent.repeat(indent);
         const indent_0 = "\n" + indent_base;
-        return `${indent_base}/*letted '${this.varName}'*/(${indent_0}${this.expr.pretty(indent)}${indent_0})`;
+        return `/*letted '${this.varName}'*/(${indent_0}${this.expr.pretty(indent)}${indent_0})`;
     }
 
     deps(): string[] {

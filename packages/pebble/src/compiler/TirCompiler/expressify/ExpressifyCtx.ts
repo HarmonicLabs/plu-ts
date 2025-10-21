@@ -72,6 +72,15 @@ export class ExpressifyCtx
         this.hoisted = hoisted ?? this.parent?.hoisted ?? new Map();
     }
 
+    allVariables(): string[]
+    {
+        const thisVars = new Set([
+            ...this.variables.keys(),
+            ...this.lettedConstants.keys()
+        ]);
+        return (this.parent?.allVariables() ?? []).concat( ...thisVars )
+    }
+
     newChild(): ExpressifyCtx
     {
         return new ExpressifyCtx( this, this.returnType, this.program );
@@ -299,32 +308,38 @@ export class ExpressifyCtx
     }
 
     introduceDeconstrDataLettedFields(
-        stmt: TirNamedDeconstructVarDecl
+        stmt: TirNamedDeconstructVarDecl,
+        lettedInitExpr: TirLettedExpr
     ): {
         implicitAssertions: TirAssertStmt[],
         nestedDeconstructs: TirVarDecl[]
     } {
+        const isEdgeCase = stmt.fields.size === 1 && stmt.fields.has("owner");
+        console.log("ctx.introduceDeconstrDataLettedFields", {isEdgeCase})
+        
         const structType = stmt.type;
         if(!( stmt.initExpr )) throw new Error("expected init expr in deconstruct data statement");
         if(!( structType instanceof TirDataStructType )) throw new Error("expected data struct type in deconstruct data statement");
 
-        const varName = getUniqueInternalName( structType.toString().toLowerCase() );
+        const varName = lettedInitExpr.varName ?? getUniqueInternalName( structType.toString().toLowerCase() );
+        if( isEdgeCase ) console.log( "varName:", varName );
 
         const constrName = stmt.constrName;
         const constrIdx = structType.constructors.findIndex( c => c.name === constrName );
         if( constrIdx < 0 ) throw new Error(`constructor ${constrName} not found in data struct ${structType.name}`);
 
         const constr = structType.constructors[constrIdx];
+        if( isEdgeCase ) console.log( "using constr:", constr, "nFields:", constr.fields.length );
         if( constr.fields.length === 0 ) return { implicitAssertions: [], nestedDeconstructs: [] }; // no fields to extract, no assertions
 
-        const structExpr = stmt.initExpr;
+        const structExpr = lettedInitExpr ?? stmt.initExpr;
 
         const lettedUnconstrName = getUniqueInternalName(`${varName}_unconstrPair`);
         const lettedUnconstr = this.introduceLettedConstant(
             lettedUnconstrName,
             new TirCallExpr(
                 TirNativeFunc.unConstrData,
-                [ stmt.initExpr ],
+                [ structExpr ],
                 new TirUnConstrDataResultT(),
                 stmt.range
             ),
@@ -332,7 +347,9 @@ export class ExpressifyCtx
         );
 
         const assertions: TirAssertStmt[] = [];
+        const nestedDeconstructs: TirVarDecl[] = [];
 
+        if( isEdgeCase ) console.log( "type:", structType, "nConstructors", structType.constructors.length );
         if( structType.constructors.length > 1 )
         assertions.push( 
             new TirAssertStmt(
@@ -369,17 +386,21 @@ export class ExpressifyCtx
             ),
             stmt.range
         );
+        if( isEdgeCase ) console.log( lettedRawFieldsName, "ctx after letted fields", this.allVariables() );
 
         const fieldsToIntroduce: string[] = [ ...stmt.fields.keys() ]
         const hasRest = typeof stmt.rest === "string";
 
+        if( isEdgeCase ) console.log( "fieldsToIntroduce:", fieldsToIntroduce, "hasRest:", hasRest );
+
         const fieldsMap: Map<string, string> = new Map();
-        const nestedDeconstructs: TirVarDecl[] = [];
         for( let i = 0; i < constr.fields.length; i++ )
         {
             const field = constr.fields[i];
             const fieldName = field.name;
             let fieldType = field.type;
+
+            if( isEdgeCase ) console.log( "processing field:", fieldName, "introduced:", fieldsToIntroduce.includes( fieldName ) );
 
             const isFieldToIntroduce = fieldsToIntroduce.includes( fieldName )
             if( !hasRest && !isFieldToIntroduce ) continue; // skip unused field
@@ -407,6 +428,8 @@ export class ExpressifyCtx
                 structExpr.range,
             );
 
+            if( isEdgeCase ) console.log( "lettedField:", fieldVarName );
+
             if( hasRest )
             fieldsMap.set(
                 fieldName,
@@ -421,6 +444,7 @@ export class ExpressifyCtx
  
             if( fieldVarDecl instanceof TirSimpleVarDecl )
             {
+                if(isEdgeCase) console.log( "introducing simple var decl for field:", fieldName, "as", lettedField.varName );
                 this.variables.set(
                     fieldVarDecl.name,
                     { latestName: lettedField.varName }
@@ -533,7 +557,8 @@ export class ExpressifyCtx
                 const namedVarDecl = toNamedDeconstructVarDecl( elemVarDecl );
                 namedVarDecl.initExpr = lettedElem;
                 const introduceFieldsResult = this.introduceDeconstrDataLettedFields(
-                    namedVarDecl
+                    namedVarDecl,
+                    lettedElem
                 )
                 assertions.push( ...introduceFieldsResult.implicitAssertions );
                 nestedDeconstructs.push( ...introduceFieldsResult.nestedDeconstructs );

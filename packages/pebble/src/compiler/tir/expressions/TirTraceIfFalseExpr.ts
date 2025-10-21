@@ -37,7 +37,7 @@ export class TirTraceIfFalseExpr
         const indent_1 = indent_base + singleIndent;
 
         return (
-            `${indent_base}traceIfFalse(` +
+            `traceIfFalse(` +
             `\n${indent_1}${this.condition.pretty(indent + 1)},` +
             `\n${indent_1}${this.traceStrExpr.pretty(indent + 1)}` +
             `\n${indent_base})`

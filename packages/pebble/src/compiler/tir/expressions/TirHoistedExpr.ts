@@ -31,7 +31,7 @@ export class TirHoistedExpr
     {
         const singleIndent = "  ";
         const indent_base = singleIndent.repeat(indent);
-        return `${indent_base}/*hoisted '${this.varName}'*/(${this.expr.pretty(indent)})`;
+        return `/*hoisted '${this.varName}'*/(${this.expr.pretty(indent)})`;
     }
 
     clone(): TirExpr

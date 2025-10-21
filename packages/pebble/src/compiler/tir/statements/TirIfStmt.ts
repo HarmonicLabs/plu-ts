@@ -31,7 +31,7 @@ export class TirIfStmt
         const indent_0 = "\n" + indent_base;
         const indent_1 = indent_0 + singleIndent;
         return (
-            `${indent_base}if(` +
+            `if(` +
             indent_1 + this.condition.pretty( indent + 1 ) +
             `${indent_0}) ` +
             this.thenBranch.pretty( indent ) +

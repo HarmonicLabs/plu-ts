@@ -26,7 +26,7 @@ export class TirFailExpr
     {
         const singleIndent = "  ";
         const indent_base = singleIndent.repeat(indent);
-        return `${indent_base}(fail${this.failMsgExpr ? ` ${this.failMsgExpr.pretty(indent)}` : ""})`;
+        return `(fail${this.failMsgExpr ? ` ${this.failMsgExpr.pretty(indent)}` : ""})`;
     }
 
     clone(): TirExpr

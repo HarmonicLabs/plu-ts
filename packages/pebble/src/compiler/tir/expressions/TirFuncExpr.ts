@@ -59,7 +59,7 @@ export class TirFuncExpr
         const indent_0 = "\n" + indent_base;
         const indent_1 = indent_0 + singleIndent;
         return (
-            `${indent_base}function ${this.name}(` +
+            `function ${this.name}(` +
             indent_1 + this.params.map( p => p.pretty( indent + 1 ) ).join( `,${indent_1}` ) +
             `${indent_0}): ${this.returnType.toString()} ` +
             this.body.pretty( indent )

@@ -18,7 +18,7 @@ export class TirReturnStmt
     {
         const singleIndent = "  ";
         const indent_base = singleIndent.repeat( indent );
-        return `${indent_base}return ${this.value.pretty( indent )}`;
+        return `return ${this.value.pretty( indent )}`;
     }
     definitelyTerminates(): boolean { return true; }
 

@@ -35,7 +35,7 @@ export class TirTypeConversionExpr
         const singleIndent = "  ";
         const indent_base = singleIndent.repeat( indent );
         return (
-            `${indent_base}(${this.expr.pretty( indent )} as ${this.type.toString()})`
+            `(${this.expr.pretty( indent )} as ${this.type.toString()})`
         );
     }
 
