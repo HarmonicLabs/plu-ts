@@ -68,13 +68,6 @@ export function expressifyVars(
     expr: TirExpr
 ): TirExpr
 {
-    const isEdgeCase = (
-        expr instanceof TirCallExpr
-        && expr.args.length === 1
-        && expr.args[0] instanceof TirVariableAccessExpr
-        && expr.args[0].varName === "owner"
-    );
-    if( isEdgeCase ) console.log( "expressifyVars called on edge case expr:", expr.toString() );
     if(
         // isTirLitteralExpr( expr )
         expr instanceof TirLitVoidExpr

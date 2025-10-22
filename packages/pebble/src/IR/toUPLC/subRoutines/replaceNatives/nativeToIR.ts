@@ -18,6 +18,16 @@ import { _ir_lazyChooseList } from "../../../tree_utils/_ir_lazyChooseList";
 import { _ir_lazyIfThenElse } from "../../../tree_utils/_ir_lazyIfThenElse";
 import { hoisted_drop4, hoisted_drop2, hoisted_drop3 } from "../_comptimeDropN";
 
+function _ir_strictAnd( left: IRTerm, right: IRTerm ): IRTerm
+{
+    return _ir_apps(
+        IRNative.strictIfThenElse,
+        left,
+        right,
+        IRConst.bool( false )
+    );
+}
+
 const id_arg_sym = Symbol("id_arg");
 export const hoisted_id = new IRHoisted(
     new IRFunc( [ id_arg_sym ], new IRVar( id_arg_sym ) )
@@ -827,12 +837,115 @@ export function nativeToIR( native: IRNative ): IRTerm
         case IRNativeTag._isZero: return hoisted_isZero.clone();
         case IRNativeTag._sortedValueLovelaces: return hoisted_sortedValueLovelaces.clone?.() ?? (()=>{throw new Error("_sortedValueLovelaces hoisted const missing")})();
         case IRNativeTag._dropList: return hoisted_dropList.clone();
-        default: throw new Error(
+        case IRNativeTag._mkMapList: return hoisted_mkMapList.clone();
+        // case IRNativeTag._mkEqualsList: return hoisted_mkEqualsList.clone();
+        default:
+        throw new Error(
             "unknown (negative) native calling 'nativeToIR'; "+
             "number: " + native.tag + "; name: " + IRNativeTag[ native.tag ]
         );
     }
 }
+
+// ( a => b => bool ) => [a] => [b] => bool
+const eqList_eqFunc = Symbol("elemEq");
+const eqList_self = Symbol("eqList_self");
+const eqList_listA = Symbol("listA");
+const eqList_listB = Symbol("listB");
+export const hoisted_mkEqualsList = new IRHoisted(
+    new IRFunc(
+        [ eqList_eqFunc ],
+        new IRRecursive(
+            eqList_self,
+            new IRFunc(
+                [ eqList_listA, eqList_listB ],
+                _ir_lazyChooseList(
+                    new IRVar( eqList_listA ),
+                    // case nil: check if listB is also nil
+                    _ir_apps(
+                        IRNative.nullList,
+                        new IRVar( eqList_listB )
+                    ),
+                    // case cons
+                    _ir_lazyChooseList(
+                        new IRVar( eqList_listB ),
+                        // listB is nil => false
+                        IRConst.bool( false ),
+                        // both lists are cons
+                        _ir_strictAnd(
+                            _ir_apps(
+                                new IRVar( eqList_eqFunc ),
+                                new IRApp(
+                                    IRNative.headList,
+                                    new IRVar( eqList_listA )
+                                ),
+                                new IRApp(
+                                    IRNative.headList,
+                                    new IRVar( eqList_listB )
+                                )
+                            ),
+                            _ir_apps(
+                                new IRSelfCall( eqList_self ),
+                                new IRApp(
+                                    IRNative.tailList,
+                                    new IRVar( eqList_listA )
+                                ),
+                                new IRApp(
+                                    IRNative.tailList,
+                                    new IRVar( eqList_listB )
+                                )
+                            )
+                        )
+                    )
+                )
+            )
+        )
+    )
+);
+hoisted_mkEqualsList.hash;
+
+// (nil of type) => ( a => b ) => [a] => [b]
+const mkMap_nil = Symbol("nilOfType");
+const mkMap_mapFunc = Symbol("mapFunc");
+const mkMap_map = Symbol("map_self");
+const mkMap_list = Symbol("list");
+export const hoisted_mkMapList = new IRHoisted(
+    new IRFunc(
+        [ mkMap_nil, mkMap_mapFunc ],
+        new IRRecursive(
+            mkMap_map,
+            new IRFunc(
+                [ mkMap_list ],
+                _ir_lazyChooseList(
+                    new IRVar( mkMap_list ),
+                    // case nil: return nil of type
+                    new IRVar( mkMap_nil ),
+                    // case cons
+                    _ir_apps(
+                        IRNative.mkCons,
+                        // mapFunc( head list )
+                        _ir_apps(
+                            new IRVar( mkMap_mapFunc ),
+                            new IRApp(
+                                IRNative.headList,
+                                new IRVar( mkMap_list )
+                            )
+                        ),
+                        // recurse tail
+                        _ir_apps(
+                            new IRSelfCall( mkMap_map ),
+                            new IRApp(
+                                IRNative.tailList,
+                                new IRVar( mkMap_list )
+                            )
+                        )
+                    )
+                )
+            )
+        )
+    )
+);
+hoisted_mkMapList.hash;
 
 // If _sortedValueLovelaces was previously inline, hoist it:
 const sorted_value = Symbol("value");

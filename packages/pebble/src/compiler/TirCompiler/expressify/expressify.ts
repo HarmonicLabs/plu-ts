@@ -52,7 +52,6 @@ export function expressify(
     parentCtx: ExpressifyCtx | undefined = undefined,
 ): void
 {
-    console.dir(func, {depth: 1})
     const ctx = new ExpressifyCtx( parentCtx, func.returnType, program );
 
     ctx.introduceFuncParams( func.params );
@@ -79,11 +78,9 @@ export function expressifyFuncBody(
     assertions: TirAssertStmt[] = [],
 ): TirExpr
 {
-    console.log("epxressifyFuncBody");
     bodyStmts = bodyStmts.slice();
     let stmt: TirStmt;
     while( stmt = bodyStmts.shift()! ) {
-        console.dir( [ stmt, ...bodyStmts ].map( s => s.toString()), { depth: 1 } );
 
         if( stmt instanceof TirBreakStmt ) {
             if( typeof loopReplacements?.compileBreak !== "function" ) throw new Error("break statement in function body.");
@@ -195,14 +192,9 @@ export function expressifyFuncBody(
             else if( stmt instanceof TirContinueStmt ) throw new Error("unreachable");
             else if( stmt instanceof TirSingleDeconstructVarDecl ) throw new Error("unreachable");
 
-            const isEdgeCase = stmt.fields.size === 1 && stmt.fields.has("owner");
-            if( isEdgeCase ) console.log( "expressifying owner", stmt.initExpr?.toString() );
-
             if( !stmt.initExpr ) throw new Error("simple var decl without init expr");
             const initExpr = expressifyVars( ctx, stmt.initExpr );
             stmt.initExpr = initExpr;
-
-            if( isEdgeCase ) console.log( stmt.initExpr.toString() );
 
             const lettedName = getUniqueInternalName( stmt.type.toString().toLowerCase() );
             const lettedExpr = ctx.introduceLettedConstant(
@@ -210,12 +202,6 @@ export function expressifyFuncBody(
                 initExpr,
                 stmt.range
             );
-
-            if( isEdgeCase ) {
-                console.log( "__owner:", lettedName );
-                console.dir( ctx.allVariables() );
-                console.dir( stmt.type, { depth: 1 } );
-            }
 
             if( stmt.type instanceof TirSoPStructType )
             {
@@ -252,11 +238,6 @@ export function expressifyFuncBody(
             }
             else if( stmt.type instanceof TirDataStructType ) {
                 const { implicitAssertions, nestedDeconstructs } = ctx.introduceDeconstrDataLettedFields( stmt, lettedExpr );
-                if( isEdgeCase ) {
-                    console.log( "ouside introduce", ctx.allVariables() );
-                    console.log( "implicitAssertions:", implicitAssertions.map( a => a.toString() ) );
-                    console.log( "nestedDeconstructs:", nestedDeconstructs.map( a => a.toString() ) );
-                }
                 assertions.push( ...implicitAssertions );
                 bodyStmts.unshift( ...nestedDeconstructs );
                 continue;
@@ -390,10 +371,8 @@ export function expressifyFuncBody(
             }
         }
         else if( stmt instanceof TirAssertStmt ) {
-            console.log("processing explicit assertion:", stmt.condition.toString());
             const condition = expressifyVars( ctx, stmt.condition );
             stmt.condition = condition;
-            console.log("processing explicit assertion (final condition):", stmt.condition.toString());
 
             if( stmt.elseExpr ) {
                 const elseExpr = expressifyVars( ctx, stmt.elseExpr );

@@ -52,8 +52,6 @@ export class ToUplcCtx
     defineVar( sym: symbol ): void
     {
         if( this._frozen ) {
-            console.log( this._freezeStack );
-            console.log( this._creationStack );
             throw new Error("Context is frozen");
         } 
         if( this.ctxMap.has( sym ) ) {

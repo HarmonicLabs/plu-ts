@@ -28,9 +28,14 @@ export function getApplicationTerms( term: IRTerm ): ApplicationTerms | undefine
             term = term.fn;
             continue;
         }
-        if( term instanceof IRCase ) {
+        if(
+            term instanceof IRCase
+            && term.continuations.length === 1
+            && term.constrTerm instanceof IRConstr
+            && Number( term.constrTerm.index ) === 0
+        ) {
+            args.push( ...term.constrTerm.fields );
             term = term.continuations[0];
-            args.push( ...((term as IRCase).constrTerm as IRConstr).fields );
             continue;
         }
         // if( term instanceof IRLetted ) term = term.value;
