@@ -42,7 +42,7 @@ export class IRFunc
     }
 
     toUPLC( ctx: ToUplcCtx ): UPLCTerm {
-        ctx.defineVars( this.params );
+        ctx = ctx.newChild( this.params );
         const arity = this.params.length;
         const irBody = this._body;
         // IRRecursive not valid for uplc translation

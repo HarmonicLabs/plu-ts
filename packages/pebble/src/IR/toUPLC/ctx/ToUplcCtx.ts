@@ -4,9 +4,6 @@ export class ToUplcCtx
     readonly parent: ToUplcCtx | undefined;
     readonly ctxMap: Map<symbol, ToUplcCtx>;
 
-    private readonly _creationStack: string | undefined;
-    private _freezeStack: string | undefined;
-
     private readonly _variables: symbol[];
 
     private get _parentDbn(): number {
@@ -19,47 +16,21 @@ export class ToUplcCtx
     private _frozen: boolean;
     
     constructor(
-        parent: ToUplcCtx | undefined
+        parent: ToUplcCtx | undefined,
+        variables: symbol[],
     ) {
-        this._creationStack = new Error().stack;
-        parent?.freeze();
         this.parent = parent;
         this.ctxMap = this.parent?.ctxMap ?? new Map();
-        this._variables = [];
-        this._frozen = false;
+        this._variables = variables;
+        for( const v of variables ) this.ctxMap.set( v, this );
     }
 
     static root(): ToUplcCtx {
-        return new ToUplcCtx( undefined );
+        return new ToUplcCtx( undefined, [] );
     }
 
-    newChild(): ToUplcCtx {
-        this.freeze();
-        return new ToUplcCtx( this );
-    }
-
-    private freeze(): void {
-        if( this._frozen ) return;
-        this._freezeStack = new Error().stack;
-        this._frozen = true;
-    }
-
-    defineVars( syms: symbol[] ): void
-    {
-        for( const s of syms ) this.defineVar( s );
-    }
-
-    defineVar( sym: symbol ): void
-    {
-        if( this._frozen ) {
-            throw new Error("Context is frozen");
-        } 
-        if( this.ctxMap.has( sym ) ) {
-            console.error( sym );
-            throw new Error("Variable already defined in context");
-        }
-        this.ctxMap.set( sym, this );
-        this._variables.push( sym );
+    newChild( variables: symbol[] ): ToUplcCtx {
+        return new ToUplcCtx( this, variables );
     }
 
     getVarDeclDbn( sym: symbol ): number
@@ -67,7 +38,7 @@ export class ToUplcCtx
         const ctx = this.ctxMap.get( sym );
         const idx = ctx?._variables.indexOf( sym ) ?? -1;
         if( idx <= -1 ) {
-            console.error( sym );
+            console.log( sym, ctx?.allVars() );
             throw new Error("Variable not found in its defining context");
         }
         const declDbn = ctx!._parentDbn + idx + 1;

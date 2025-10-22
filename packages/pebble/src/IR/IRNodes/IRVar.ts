@@ -45,20 +45,6 @@ export class IRVar
 
     toUPLC( ctx: ToUplcCtx ): UPLCVar
     {
-        const vars = ctx.allVars();
-        const accessDbn = ctx.getVarAccessDbn( this.name );
-        if( accessDbn >= vars.length ) {
-            console.log("yo");
-            const expectedDbn = vars.length - 1 - vars.lastIndexOf( this.name );
-            console.log({
-                vars: vars,
-                name: this.name,
-                accessDbn: accessDbn,
-                expectedDbn,
-                declDbn: ctx.getVarDeclDbn( this.name ),
-                ctxDbn: ctx.dbn
-            });
-        }
         return new UPLCVar( ctx.getVarAccessDbn( this.name ) );
     }
 

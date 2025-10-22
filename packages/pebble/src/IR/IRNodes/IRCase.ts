@@ -66,7 +66,7 @@ export class IRCase
         const constrTermUplc = this.constrTerm.toUPLC( ctx );
         const continuationsUplc = mapArrayLike(
             this.continuations,
-            c => c.toUPLC( ctx.newChild() )
+            c => c.toUPLC( ctx )
         );
 
         return new Case(

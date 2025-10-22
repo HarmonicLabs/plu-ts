@@ -22,7 +22,7 @@ function §HelloWorld_52(
         is const Some{
           value: const value: data
         } => value
-        is const None{ { } => (fail)
+        is const None{} => (fail)
       ) as HelloWorldDatum);
       assert §tx_5c.requiredSigners.includes(
         owner
@@ -31,6 +31,6 @@ function §HelloWorld_52(
     };
     else fail;
   };
-  
+
   fail
 }

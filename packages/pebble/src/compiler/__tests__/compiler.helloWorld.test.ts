@@ -53,8 +53,8 @@ contract HelloWorld
         const output = ioApi.outputs.get("out/out.flat")!;
         expect( output instanceof Uint8Array ).toBe( true );
 
-        console.log( toHex( output ) );
-        console.log( prettyUPLC( parseUPLC( output ).body, 2 ) )
+        // console.log( toHex( output ) );
+        // console.log( prettyUPLC( parseUPLC( output ).body, 2 ) )
     });
     
 });

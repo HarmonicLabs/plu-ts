@@ -50,8 +50,8 @@ export class IRApp
     }
 
     toUPLC( ctx: ToUplcCtx ): UPLCTerm {
-        const arg = this._arg.toUPLC( ctx.newChild() );
-        const fn = this._fn.toUPLC( ctx.newChild() );
+        const arg = this._arg.toUPLC( ctx );
+        const fn = this._fn.toUPLC( ctx );
         return new Application( fn, arg );
     }
 
