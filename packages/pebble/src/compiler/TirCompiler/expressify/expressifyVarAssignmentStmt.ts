@@ -15,7 +15,7 @@ export function expressifyVarAssignmentStmt(
     const originalName = stmt.varIdentifier.resolvedValue.variableInfos.name;
     const latestVarNameSSA = ctx.variables.get( originalName );
     if( !latestVarNameSSA ) {
-        throw new Error("re-assigning constant variable");
+        throw new Error("re-assigning constant variable '" + originalName + "'");
     }
 
     const newUniqueName = getUniqueInternalName( originalName );

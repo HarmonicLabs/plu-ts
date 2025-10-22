@@ -82,6 +82,9 @@ export function expressifyFuncBody(
     let stmt: TirStmt;
     while( stmt = bodyStmts.shift()! ) {
 
+        // console.log([stmt, ...bodyStmts].map(s => s.toString()));
+        // console.log( stmt );
+
         if( stmt instanceof TirBreakStmt ) {
             if( typeof loopReplacements?.compileBreak !== "function" ) throw new Error("break statement in function body.");
             
@@ -129,6 +132,10 @@ export function expressifyFuncBody(
                 initExpr,
                 stmt.range
             );
+            if( !stmt.isConst ) {
+                // console.log("setting variable")
+                ctx.setNewVariableName( stmt.name, lettedExpr.varName );
+            }
 
             if( !isSingleConstrStruct( stmt.type ) ) continue;
 
