@@ -75,7 +75,7 @@ export function loopToForStmt( stmt: TirWhileStmt | TirForOfStmt | TirForStmt ):
         );
 
         const updatePartialList = new TirAssignmentStmt(
-            partialListVarAccess.clone(),
+            partialListVarAccess.clone() as TirVariableAccessExpr,
             new TirCallExpr(
                 new TirPropAccessExpr(
                     partialListVarAccess.clone(),
