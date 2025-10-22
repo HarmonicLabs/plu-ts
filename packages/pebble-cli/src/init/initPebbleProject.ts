@@ -186,10 +186,39 @@ ${includeOffchain ? "- `offchain/`: optional offchain scaffolding\n" : ""}
     // src/index.pebble template
     const indexPebblePath = path.join(srcDir, "index.pebble");
     const indexPebble = (
-`function main( ctx: ScriptContext ): void
-{
-    // alsways fail
-    fail;
+`
+// if no methods are defined
+// a simple always failing contract is generated
+contract MyContract {
+
+    param owner: PubKeyHash;
+
+    spend ownerAllowsIt() {
+        const { tx } = context;
+
+        assert tx.signatories.includes( this.owner );
+    }
+
+    spend sendToOwner( amount: int ) {
+        const { tx } = context;
+
+        assert tx.outputs.length() === 1;
+
+        const output = tx.outputs[0];
+
+        assert output.address.credential.hash() == this.owner;
+        assert output.value.lovelaces() >= amount;
+    }
+
+    // mint mintOrBurnTokens() {}
+    
+    // cert validateCertificateSubmission() {}
+
+    // withdraw getStakingRewards() {}
+
+    // vote voteOnProposal() {}
+
+    // propose proposeGovernanceAction () {}
 }`
     );
     await writeFile(indexPebblePath, indexPebble);
