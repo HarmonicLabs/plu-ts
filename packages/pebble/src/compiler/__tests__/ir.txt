@@ -1,36 +1,51 @@
-function §HelloWorld_52(
-  const §ctx_0b: ScriptContext
-): void {
+function §SumInputLove_1(
+    const §ctx_2: ScriptContext
+  ): void {
 
-  const {
-    tx: const §tx_5c: Tx,
-    purpose: const §purpose_f8: ScriptInfo,
-    redeemer: const §redeemer_17: data
-  } = §ctx_0b;
+    return (case /*letted '§scriptcontext_9_purpose_e'*/(
+      fromData(/*letted '§scriptcontext_9_fields_b'*/(
+      /*letted '§scriptcontext_9_fields_b'*/(
+      <native sndPair>(
+        /*letted '§scriptcontext_9_unconstrPair_a'*/(
+        <native unConstrData>(
+          /*letted '§scriptcontext_9'*/(
+          §ctx_2
+          )
+        )
+        )
+      )
+      )
+      )[ 2 ]) as ScriptInfo
+      )
+      is const Spend{
+        ref: const §spendingRef_6: TxOutRef,
+        optionalDatum: const §optionalDatum_7: Optional<data>
+      } => (case function §loop_i(
+          let tot: int,
+          let i: int
+        ): §__StmtSideEffects_h {
 
-  match (
-    §purpose_f8
-  ) {
-    when const Spend{
-      ref: const §spendingRef_37d7: TxOutRef,
-      optionalDatum: const §optionalDatum_2d18: Optional<data>
-    }: {
-
-      const {
-        owner: const owner: bytes
-      } = ((case §optionalDatum_2d18
-        is const Some{
-          value: const value: data
-        } => value
-        is const None{} => (fail)
-      ) as HelloWorldDatum);
-      assert §tx_5c.requiredSigners.includes(
-        owner
-      );
-      return void
-    };
-    else fail;
-  };
-
-  fail
-}
+          return ((i <= 10) ?
+            §loop_i(
+              /*letted '§tot_j'*/(
+              (/*letted '§tot_j'*/(
+              (§tot_k + 1)
+              ) + 1)
+              ),
+              i
+            ) :
+            Reassigns{ tot: tot })
+        }(
+          /*letted 'tot'*/(
+          0
+          ),
+          1
+        )
+        is let Reassigns{
+          tot: const §tot_k: int
+        } => assert (§tot_k === 55)
+        then void
+      )
+      else (fail)
+    )
+  }

@@ -33,6 +33,7 @@ export interface ITirStmt extends HasSourceRange {
     definitelyTerminates: () => boolean;
     toString: () => string;
     pretty: ( indent: number ) => string;
+    // clone: () => TirStmt;
 }
 
 export type TirStmt

@@ -24,6 +24,7 @@ export function keepSortedStrArrInplace( target: string[], source: string[] ): s
                 target.length = i + 1; // truncate target to current index
                 return target; // no more elements to keep
             }
+            continue; // element is in source, check next without removing this
         }
 
         // not equal, remove the element

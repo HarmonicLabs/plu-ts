@@ -40,13 +40,13 @@ export class TirFromDataExpr
 
     toString(): string
     {
-        return `fromData(${this.dataExpr.toString()}) as ${this.type.toString()}`;
+        return `fromData<${this.type.toString()}>(${this.dataExpr.toString()})`;
     }
     pretty( indent: number ): string
     {
         const singleIndent = "  ";
         const indent_base = singleIndent.repeat(indent);
-        return `fromData(${this.dataExpr.pretty(indent)}) as ${this.type.toString()}`;
+        return `fromData<${this.type.toString()}>(${this.dataExpr.pretty(indent)})`;
     }
 
     clone(): TirExpr

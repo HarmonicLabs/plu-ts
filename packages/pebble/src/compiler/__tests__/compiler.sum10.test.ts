@@ -10,18 +10,12 @@ describe("parseMain", () => {
         const fileName = "test.pebble";
         const srcText = `
 contract SumInputLove {
-    spend rememberTotInput() {
-        const { tx } = context;
-
-        let totalInput = 0;
-        totalInput = 1;
-        for( const { resolved: input } of tx.inputs ) {
-            totalInput += input.value.lovelaces();
+    spend sum10() {
+        let tot = 0;
+        for( let i = 1; i <= 10; i += 1 ) {
+            tot += i;
         }
-
-        const InlineDatum{ datum } = tx.outputs[0].datum;
-
-        assert (datum as int) === totalInput;
+        assert tot === 55;
     }
 }
         `;

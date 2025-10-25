@@ -20,6 +20,7 @@
     "build-and-replace": "npm run build && cp -r ./dist ../pebble-cli/node_modules/@harmoniclabs/pebble",
     "genDiagnosticMessages": "node ./scripts/genDiagnosticMessages.js",
     "test": "jest",
+    "test-dbg": "node --nolazy --inspect-brk ./node_modules/jest/bin/jest.js --runInBand --colors --verbose",
     "test:debug": "node --nolazy --inspect-brk ./node_modules/jest/bin/jest.js --runInBand --colors --verbose",
     "clear-jest": "jest --clearCache",
     "test-watch": "jest --watchman",

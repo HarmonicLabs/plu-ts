@@ -13,23 +13,19 @@ export function expressifyVarAssignmentStmt(
     const assignedExpr = expressifyVars( ctx, stmt.assignedExpr );
 
     const originalName = stmt.varIdentifier.resolvedValue.variableInfos.name;
-    const latestVarNameSSA = ctx.variables.get( originalName );
+    const latestVarNameSSA = ctx.getVariableSSA( originalName );
     if( !latestVarNameSSA ) {
+        console.log( originalName, ctx.allVariablesNoLetted() );
         throw new Error("re-assigning constant variable '" + originalName + "'");
     }
 
     const newUniqueName = getUniqueInternalName( originalName );
-    latestVarNameSSA.latestName = newUniqueName;
-
+    ctx.setNewVariableName( originalName, newUniqueName );
     // point to the same object
-    ctx.variables.set( newUniqueName, latestVarNameSSA );
-    ctx.lettedConstants.set(
+    ctx.introduceLettedConstant(
         newUniqueName,
-        new TirLettedExpr(
-            newUniqueName,
-            assignedExpr,
-            stmt.range
-        )
+        assignedExpr,
+        stmt.range
     );
     
     // will replace re-assignment in body

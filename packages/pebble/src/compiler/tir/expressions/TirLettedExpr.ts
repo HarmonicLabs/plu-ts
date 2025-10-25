@@ -6,10 +6,10 @@ import { ITirExpr } from "./ITirExpr";
 import { TirExpr } from "./TirExpr";
 import { ToIRTermCtx } from "./ToIRTermCtx";
 
-
 export class TirLettedExpr
     implements ITirExpr
 {
+    private _creationStack: string | undefined = undefined;
     get type(): TirType {
         return this.expr.type;
     }
@@ -20,12 +20,15 @@ export class TirLettedExpr
         readonly varName: string,
         public expr: TirExpr,
         readonly range: SourceRange,
-        _unsafeVarSym?: symbol | undefined
+        _unsafeVarSym?: symbol | undefined,
+        _creationStack?: string | undefined,
     ) {
         if(!(
             typeof varName === "string"
             && varName.length > 0
         )) throw new Error("TirLettedExpr: varName must be a non empty string");
+
+        // this._creationStack = _creationStack ?? (new Error()).stack;
 
         this._irVarSym = (
             typeof _unsafeVarSym === "symbol"
@@ -55,7 +58,8 @@ export class TirLettedExpr
             this.varName,
             this.expr.clone() as any,
             this.range.clone(),
-            this._irVarSym
+            this._irVarSym,
+            this._creationStack
         );
     }
     
@@ -65,7 +69,8 @@ export class TirLettedExpr
             this.varName,
             this.expr, // this.expr.clone(),
             this.range,
-            this._irVarSym
+            this._irVarSym,
+            this._creationStack
         );
     }
 

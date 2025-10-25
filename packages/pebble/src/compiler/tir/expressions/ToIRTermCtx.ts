@@ -5,13 +5,19 @@ const _1n = BigInt(1);
 
 export class ToIRTermCtx
 {
+    readonly _creationStack?: string | undefined;
     private readonly localVars: Map<string, symbol> = new Map();
 
     private _firstVariableIsRecursive: boolean = false;
 
+    _children: ToIRTermCtx[] = [];
+
     constructor(
         readonly parent: ToIRTermCtx | undefined,
     ) {
+        this.parent?._children.push( this );
+
+        this._creationStack = new Error().stack;
         this.localVars = new Map();
 
         // DO NOT SET _parentDbn HERE
@@ -20,10 +26,13 @@ export class ToIRTermCtx
         this._firstVariableIsRecursive = false;
     }
 
+    localVariables(): string[] {
+        return [ ...this.localVars.keys() ];
+    }
     allVariables(): string[] {
         return (
             (this.parent?.allVariables() ?? [])
-            .concat([ ...this.localVars.keys() ])
+            .concat([ ...this.localVariables() ])
         );
     }
 

@@ -11,7 +11,6 @@ export class TirVariableAccessExpr
     implements ITirExpr
 {
     readonly resolvedValue: Readonly<ResolveValueResult>;
-    private readonly _creationStack: string | undefined;
 
     get type(): TirType {
         return this.resolvedValue.variableInfos.type;
@@ -21,7 +20,6 @@ export class TirVariableAccessExpr
         readonly range: SourceRange
     ) {
         this.resolvedValue = Object.freeze( resolvedValue );
-        this._creationStack = (new Error()).stack;
     }
 
     toString(): string {
@@ -36,7 +34,14 @@ export class TirVariableAccessExpr
     clone(): TirExpr
     {
         return new TirVariableAccessExpr(
-            this.resolvedValue,
+            {
+                ...this.resolvedValue,
+                variableInfos: {
+                    ...this.resolvedValue.variableInfos,
+                    type: this.resolvedValue.variableInfos.type.clone()
+                },
+                // isDefinedOutsideFuncScope: this.resolvedValue.isDefinedOutsideFuncScope
+            },
             this.range.clone()
         );
     }
@@ -56,7 +61,14 @@ export class TirVariableAccessExpr
             ir instanceof IRVar
             || ir instanceof IRSelfCall
         )) {
-            console.log( this.resolvedValue );
+            console.log(
+                this.resolvedValue,
+                ctx.allVariables(),
+                ctx.localVariables(),
+                ctx.parent?._children.filter( c => c !== ctx )[0].localVariables(),
+                // ctx._creationStack,
+                new Error().stack
+            );
             throw new Error(`variable '${this.varName}' is missing`);
         }
         return ir;

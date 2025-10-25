@@ -448,23 +448,27 @@ export class TirNotEqualExpr
     }
 }
 
+let n_logs = 0;
+
 export class TirAddExpr
     implements ITirBinaryExpr
 {
+    private _creationStack: string | undefined;
     get type(): TirType
     {
         const leftType = getUnaliased( this.left.type );
         if(
             leftType instanceof TirIntT
             || leftType instanceof TirBytesT
-        ) return this.type;
+        ) return leftType;
         throw new Error("invalid type for addition");
     }
     constructor(
         public left: TirExpr,
         public right: TirExpr,
         readonly range: SourceRange
-    ) {}
+    ) {
+    }
 
     toString(): string
     {
@@ -472,6 +476,8 @@ export class TirAddExpr
     }
     pretty( indent: number ): string
     {
+        n_logs++;
+        if(!(n_logs % 100))console.log( this );
         const singleIndent = "  ";
         const indent_base = singleIndent.repeat(indent);
         return `(${this.left.pretty(indent)} + ${this.right.pretty(indent)})`;

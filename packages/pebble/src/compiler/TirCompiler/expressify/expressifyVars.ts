@@ -103,14 +103,18 @@ export function expressifyVars(
         
         if( !resolvedVariable ) return expr; // variable not found, keep the original expression
         
+        // if variable was shadowed
         if( isExpressifyFuncParam( resolvedVariable ) ) {
-            // variable was shadowed
+            // !!! IMPORTANT !!!
+            // we must clone the expression to avoid modifying other instances of it elsewhere
+            // THIS IS CRUCIAL I SPENT A DAY DEBUGGING THIS
+            expr = expr.clone() as TirVariableAccessExpr;
             expr.resolvedValue.variableInfos.name = resolvedVariable.name;
             return expr;
         }
 
         // resovledVariable instanceof TirVariableAccessExpr
-        return resolvedVariable;
+        return resolvedVariable.clone() as (TirLettedExpr | TirNativeFunc | TirHoistedExpr);
     }
 
     if( isTirUnaryPrefixExpr( expr ) ) {
@@ -292,7 +296,7 @@ function expressifyPropAccess(
         if( !varName ) throw new Error(
             `Property '${prop}' does not exist on 'this'`
         );
-        varName = ctx.variables.get( varName )?.latestName ?? varName;
+        varName = ctx.getVariableSSA( varName )?.latestName ?? varName;
 
         const expr = ctx.getVariable( varName );
         if( isExpressifyFuncParam( expr ) ) {
@@ -347,7 +351,7 @@ function expressifyPropAccess(
         ) {
             let varName = ctx.properties.get( expr.varName )?.get( prop );
             if( varName ) {
-                varName = ctx.variables.get( varName )?.latestName ?? varName;
+                varName = ctx.getVariableSSA( varName )?.latestName ?? varName;
     
                 const result = ctx.getVariable( varName );
                 if( isExpressifyFuncParam( result ) ) {

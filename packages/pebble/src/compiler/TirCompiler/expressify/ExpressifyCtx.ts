@@ -61,17 +61,23 @@ export class ExpressifyCtx
         readonly program: TypedProgram,
         hoisted?: Map<string, TirHoistedExpr | TirNativeFunc>,
         /** var name -> latest constant name */
-        readonly variables: Map<string, LatestVarNameSSA> = new Map(),
+        private readonly variables: Map<string, LatestVarNameSSA> = new Map(),
         /** constant name -> func param name (to build var access) */
         readonly funcParams: Map<string, ExpressifyFuncParam> = new Map(),
         /** constant name -> letted expr */
-        readonly lettedConstants: Map<string, TirLettedExpr> = new Map(),
+        private readonly lettedConstants: Map<string, TirLettedExpr> = new Map(),
         /** var name -> prop name -> constant name (letted field extraction expr or var access for SoP)*/
         readonly properties: Map<string, Map<string, string>> = new Map(),
     ) {
         this.hoisted = hoisted ?? this.parent?.hoisted ?? new Map();
     }
 
+    allVariablesNoLetted(): string[]
+    {
+        return (
+            this.parent?.allVariablesNoLetted() ?? []
+        ).concat( ...this.variables.keys() );
+    }
     allVariables(): string[]
     {
         const thisVars = new Set([
@@ -93,7 +99,13 @@ export class ExpressifyCtx
     {
         let latestNameSSA = this.variables.get( oldName );
         if( !latestNameSSA ) this.variables.set( oldName, { latestName: newName } );
-        else latestNameSSA.latestName = newName;
+        else {
+            const prevName = latestNameSSA.latestName;
+            if( prevName === newName ) return; // no change
+            latestNameSSA.latestName = newName;
+            this.setNewVariableName( prevName, newName );
+            this.setNewVariableName( newName, newName );
+        }
     }
 
     setFuncParam(
@@ -101,7 +113,7 @@ export class ExpressifyCtx
         type: TirType
     ): void
     {
-        this.variables.set( name, { latestName: name } );
+        this.setNewVariableName( name, name );
         this.funcParams.set( name, { name, type } );
     }
 
@@ -110,14 +122,14 @@ export class ExpressifyCtx
      */
     getLocalVariable( name: string ): TirLettedExpr | ExpressifyFuncParam | undefined
     {
-        // declared as constant shortcut
-        const constResult = this.lettedConstants.get( name );
-        if( constResult ) return constResult;
-
         // declared as variable or param
         const latestConstName = this.variables.get( name )?.latestName;
-        // no such variable
-        if( !latestConstName ) return undefined;
+        // no such variable (mutable at least)
+        if( !latestConstName ) {
+            // try to get var declared as constant
+            // return undefined if not present
+            return this.lettedConstants.get( name );
+        };
 
         return (
             this.lettedConstants.get( latestConstName )
@@ -136,6 +148,14 @@ export class ExpressifyCtx
         return (
             this.getLocalVariable( name )
             ?? this.parent?._getNonHoistedVariable( name )
+        );
+    }
+
+    getVariableSSA( name : string ): LatestVarNameSSA | undefined
+    {
+        return (
+            this.variables.get( name )
+            ?? this.parent?.getVariableSSA( name )
         );
     }
 
@@ -170,6 +190,9 @@ export class ExpressifyCtx
         declRange: SourceRange
     ): TirLettedExpr
     {
+        // if( this.lettedConstants.has( name ) ) throw new Error(`constant '${name}' already introduced in the context`);
+        const existing = this.lettedConstants.get( name );
+        if( existing ) return existing.clone() as TirLettedExpr;
         const result = new TirLettedExpr(
             name,
             lettedExpr,
@@ -368,14 +391,10 @@ export class ExpressifyCtx
         const lettedRawFieldsName = getUniqueInternalName(`${varName}_fields`);
         const lettedFields = this.introduceLettedConstant(
             lettedRawFieldsName,
-            new TirLettedExpr(
-                lettedRawFieldsName,
-                new TirCallExpr(
-                    TirNativeFunc.unConstrDataResultFields,
-                    [ lettedUnconstr ],
-                    new TirListT( data_t ),
-                    stmt.range
-                ),
+            new TirCallExpr(
+                TirNativeFunc.unConstrDataResultFields,
+                [ lettedUnconstr ],
+                new TirListT( data_t ),
                 stmt.range
             ),
             stmt.range
@@ -431,9 +450,9 @@ export class ExpressifyCtx
  
             if( fieldVarDecl instanceof TirSimpleVarDecl )
             {
-                this.variables.set(
+                this.setNewVariableName(
                     fieldVarDecl.name,
-                    { latestName: lettedField.varName }
+                    lettedField.varName
                 );
             }
             else {
@@ -516,9 +535,9 @@ export class ExpressifyCtx
 
             if( elemVarDecl instanceof TirSimpleVarDecl )
             {
-                this.variables.set(
+                this.setNewVariableName(
                     elemVarDecl.name,
-                    { latestName: lettedElem.varName }
+                    lettedElem.varName
                 );
 
                 if(

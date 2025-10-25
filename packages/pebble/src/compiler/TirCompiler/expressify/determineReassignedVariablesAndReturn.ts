@@ -245,6 +245,7 @@ export function determineReassignedVariablesAndFlowInfos(
             || stmt instanceof TirWhileStmt
         ) {
             const reassignedAndReturn = determineReassignedVariablesAndReturn( stmt.body );
+            console.log( "loop reassigned", reassignedAndReturn );
             for( const varName of reassignedAndReturn.reassigned ) {
                 reassignedSet.add( varName );
             }
@@ -253,8 +254,11 @@ export function determineReassignedVariablesAndFlowInfos(
         }
 
         const tsEnsureExsaustiveCheck: never = stmt;
+        console.log("unexpected", stmt);
+        throw new Error("unexpected statement type");
     }
 
+    
     let reassigned = [ ...reassignedSet ].sort();
     reassigned = keepSortedStrArrInplace( reassigned, originalStmtDeps );
     return {

@@ -29,6 +29,7 @@ export function flattenSopNamedDeconstructInplace_addTopDestructToCtx_getNestedD
                 varDecl.name
             );
             ctx.introduceFuncParams([ varDecl ]);
+            ctx.setNewVariableName( fName, varDecl.name ); // added to fix reassigned variables on non-terminating statements
             if( isSingleConstrStruct( varDecl.type ) )
             {
                 const structType = getUnaliased( varDecl.type ) as (TirDataStructType | TirSoPStructType);

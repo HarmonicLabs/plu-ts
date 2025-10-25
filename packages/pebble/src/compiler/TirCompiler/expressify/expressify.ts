@@ -82,8 +82,9 @@ export function expressifyFuncBody(
     let stmt: TirStmt;
     while( stmt = bodyStmts.shift()! ) {
 
-        // console.log([stmt, ...bodyStmts].map(s => s.toString()));
-        // console.log( stmt );
+        const isEdgeCase = stmt instanceof TirForStmt || stmt instanceof TirForOfStmt || stmt instanceof TirWhileStmt;
+        if( isEdgeCase ) console.log([stmt, ...bodyStmts].map(s => s.toString()));
+        if( isEdgeCase ) console.log( stmt );
 
         if( stmt instanceof TirBreakStmt ) {
             if( typeof loopReplacements?.compileBreak !== "function" ) throw new Error("break statement in function body.");
@@ -127,13 +128,12 @@ export function expressifyFuncBody(
             const initExpr = expressifyVars( ctx, stmt.initExpr );
             stmt.initExpr = initExpr;
 
-            const lettedExpr = ctx.introduceLettedConstant(
+            const lettedExpr = initExpr instanceof TirLettedExpr ? initExpr : ctx.introduceLettedConstant(
                 stmt.name,
                 initExpr,
                 stmt.range
             );
             if( !stmt.isConst ) {
-                // console.log("setting variable")
                 ctx.setNewVariableName( stmt.name, lettedExpr.varName );
             }
 
@@ -638,21 +638,24 @@ export function expressifyFuncBody(
             const definitelyTerminates = stmt.definitelyTerminates();
 
             const reassignedAndFlow = determineReassignedVariablesAndFlowInfos( stmt );
+            console.log( "expressifyLoop", reassignedAndFlow );
             const returnTypeAndInvalidInit = getBranchStmtReturnType( reassignedAndFlow, ctx, stmt.range );
             const forStmt = loopToForStmt( stmt );
             const { bodyStateType, initState } = getBodyStateType(
                 returnTypeAndInvalidInit,
                 forStmt
             );
+            const loopExprCtx = ctx.newChild();
             const loopExpr = expressifyForStmt(
-                ctx.newChild(),
+                loopExprCtx,
                 forStmt,
                 returnTypeAndInvalidInit.sop,
                 bodyStateType,
                 initState
             );
+            console.log("expressified loopExpr:", loopExpr.pretty());
 
-            return TirAssertAndContinueExpr.fromStmtsAndContinuation(
+            const result = TirAssertAndContinueExpr.fromStmtsAndContinuation(
                 assertions,
                 definitelyTerminates ? loopExpr : wrapNonTerminatingFinalStmtAsCaseExpr(
                     loopExpr,
@@ -664,6 +667,9 @@ export function expressifyFuncBody(
                     loopReplacements
                 )
             );
+
+            console.log("expressify::loop result:", result.pretty(1));
+            return result;
         }
         else {
             // const tsEnsureExhautstiveCheck: never = stmt;
@@ -763,11 +769,15 @@ function wrapNonTerminatingFinalStmtAsCaseExpr(
     loopReplacements: LoopReplacements | undefined
 ): TirCaseExpr
 {
+    nextBodyStmts = nextBodyStmts.slice();
+    console.log( nextBodyStmts.map(s => s.pretty(1) ) );
     const continuations: TirCaseMatcher[] = [];
 
     const contBranchCtx = ctx.newChild();
     const contConstr = sop.constructors[0];
     const contFields = contConstr.fields;
+
+    console.log( 1, "finalStmtExpr", finalStmtExpr.pretty(1) );
 
     const contPattern = new TirNamedDeconstructVarDecl(
         sop.constructors[0].name,
@@ -790,24 +800,35 @@ function wrapNonTerminatingFinalStmtAsCaseExpr(
         stmtRange
     );
 
+    console.log( 2, "finalStmtExpr", finalStmtExpr.pretty(1) );
+
     const nestedDeconstructs = flattenSopNamedDeconstructInplace_addTopDestructToCtx_getNestedDeconstruct(
         contPattern,
         contBranchCtx
     );
+    console.log( 3, "finalStmtExpr", finalStmtExpr.pretty(1) );
+
+    const mainContStmts = (nestedDeconstructs as TirStmt[]).concat( nextBodyStmts );
+    console.log( mainContStmts.map(s => s.pretty(1) ) );
+
+    const mainContinuaiton = expressifyFuncBody(
+        contBranchCtx,
+        (nestedDeconstructs as TirStmt[])
+        .concat( nextBodyStmts ),
+        loopReplacements,
+        [] // assertions are added before if statement exectution
+    ); 
+
+    console.log( 4, "finalStmtExpr", finalStmtExpr.pretty(1) );
 
     continuations.push(
         new TirCaseMatcher(
             contPattern,
-            expressifyFuncBody(
-                contBranchCtx,
-                (nestedDeconstructs as TirStmt[])
-                .concat( nextBodyStmts ),
-                loopReplacements,
-                [] // assertions are added before if statement exectution
-            ),
+            mainContinuaiton,
             stmtRange
         )
     );
+
 
     if( reassignsAndReturns.returns ) {
         const earlyRetConstr = sop.constructors[1];

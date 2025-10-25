@@ -40,15 +40,15 @@ export function _compileAssignmentStmt(
             stmt.varIdentifier.range,
         );
         return ([ new TirAssignmentStmt(
-            varAccessExpr,
+            varAccessExpr.clone() as TirVariableAccessExpr,
             stmt instanceof IncrStmt ?
                 new TirAddExpr(
-                    varAccessExpr,
+                    varAccessExpr.clone(),
                     new TirLitIntExpr( BigInt( 1 ), stmt.range ),
                     stmt.range
                 ) :
                 new TirSubExpr(
-                    varAccessExpr,
+                    varAccessExpr.clone(),
                     new TirLitIntExpr( BigInt( 1 ), stmt.range ),
                     stmt.range
                 ),
@@ -63,7 +63,7 @@ export function _compileAssignmentStmt(
     }
     else
     {
-        const tsEnsureExhautstiveCheck: never = stmt;
+        // const tsEnsureExhautstiveCheck: never = stmt;
         console.error( stmt );
         throw new Error("unreachable::AstCompiler::_compileForUpdateStmts");
     }
@@ -110,8 +110,8 @@ export function _compileExplicitAssignmentStmt(
         expr = __getBinOpAssignmentLeftArg( ctx, stmt, varType, int_t );
         if( !expr ) return undefined;
         expr = new TirAddExpr(
-            varAccessExpr,
-            expr,
+            varAccessExpr.clone(),
+            expr.clone(),
             stmt.range
         );
     }
@@ -120,8 +120,8 @@ export function _compileExplicitAssignmentStmt(
         expr = __getBinOpAssignmentLeftArg( ctx, stmt, varType, int_t );
         if( !expr ) return undefined;
         expr = new TirSubExpr(
-            varAccessExpr,
-            expr,
+            varAccessExpr.clone(),
+            expr.clone(),
             stmt.range
         );
     }
@@ -242,7 +242,7 @@ export function _compileExplicitAssignmentStmt(
     }
 
     return new TirAssignmentStmt(
-        varAccessExpr,
+        varAccessExpr.clone() as TirVariableAccessExpr,
         expr,
         stmt.range
     );

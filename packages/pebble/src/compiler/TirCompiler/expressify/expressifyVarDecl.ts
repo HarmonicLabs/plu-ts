@@ -22,18 +22,14 @@ export function expressifyVarDecl(
     if(
         stmt instanceof TirSimpleVarDecl
     ) {
-        if( stmt.isConst ) {
-            void ctx.variables.set( stmt.name, { latestName: stmt.name } );
-            /// @ts-ignore Cannot assign to 'isConst' because it is a read-only property.
-            stmt.isConst = true;
+        if( !stmt.isConst ) {
+            void ctx.setNewVariableName( stmt.name, stmt.name );
+            // stmt.isConst = true;
         }
-        ctx.lettedConstants.set(
+        ctx.introduceLettedConstant(
             stmt.name,
-            new TirLettedExpr(
-                stmt.name,
-                stmt.initExpr!,
-                stmt.range
-            )
+            stmt.initExpr!,
+            stmt.range
         );
     }
     if(
@@ -41,12 +37,12 @@ export function expressifyVarDecl(
         || stmt instanceof TirSingleDeconstructVarDecl
     ) {
         for( const [ _field, varDecl ] of stmt.fields ) expressifyVarDecl( ctx, varDecl );
-        if( stmt.rest ) ctx.variables.set( stmt.rest, { latestName: stmt.rest } );
+        if( stmt.rest ) ctx.setNewVariableName( stmt.rest, stmt.rest );
         return;
     }
     if( stmt instanceof TirArrayLikeDeconstr ) {
         for( const varDecl of stmt.elements ) expressifyVarDecl( ctx, varDecl );
-        if( stmt.rest ) ctx.variables.set( stmt.rest, { latestName: stmt.rest } );
+        if( stmt.rest ) ctx.setNewVariableName( stmt.rest, stmt.rest );
         return;
     }
 }

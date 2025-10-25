@@ -52,7 +52,7 @@ export class TirFuncExpr
         );
     }
     
-    pretty( indent: number ): string
+    pretty( indent: number = 1 ): string
     {
         const singleIndent = "  ";
         const indent_base = singleIndent.repeat( indent );

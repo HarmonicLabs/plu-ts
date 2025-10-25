@@ -1,5 +1,6 @@
 import { HasSourceRange } from "../../../ast/nodes/HasSourceRange";
 import { SourceRange } from "../../../ast/Source/SourceRange";
+import { prettyIRInline, prettyIRText } from "../../../IR";
 import { IRApp, _ir_apps } from "../../../IR/IRNodes/IRApp";
 import { IRCase } from "../../../IR/IRNodes/IRCase";
 import { IRConst } from "../../../IR/IRNodes/IRConst";
@@ -108,6 +109,7 @@ export class TirCaseExpr
 
     toIR( ctx: ToIRTermCtx ): IRTerm
     {
+        // console.log( this.pretty(2) );
         const matchExprType = getUnaliased( this.matchExpr.type );
         if(
             matchExprType instanceof TirSoPStructType
@@ -197,6 +199,8 @@ export class TirCaseExpr
 
                     introducedVars[i] = branchCtx.defineVar( varDecl.name );
                 }
+
+                // console.log( nFields, introducedVars, branchCtx.allVariables() );
 
                 if( nFields <= 0 ) return branch.body.toIR( branchCtx );
 

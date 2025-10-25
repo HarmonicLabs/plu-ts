@@ -140,10 +140,17 @@ export function expressifyForStmt(
         loopBody.range
     );
 
+    // add final loop updates
+    if( Array.isArray( stmt.update ) ) for( const updateStmt of stmt.update ) {
+        loopBody.stmts.push( updateStmt );
+    }
+
+    // ALWAYS add a final `continue;` to the end of the loop body
+    loopBody.stmts.push(
+        new TirContinueStmt( loopBody.range.atEnd() )
+    );
+
     if( stmt.condition ) {
-        loopBody.stmts.push(
-            new TirContinueStmt( loopBody.range.atEnd() )
-        );
         loopBody = new TirBlockStmt(
             [
                 new TirIfStmt(
@@ -158,11 +165,6 @@ export function expressifyForStmt(
             loopBody.range
         );
     }
-
-    // ALWAYS add a final `continue;` to the end of the loop body
-    loopBody.stmts.push(
-        new TirContinueStmt( loopBody.range.atEnd() )
-    );
 
     const loopFuncName = getUniqueInternalName("loop");
 
@@ -272,7 +274,8 @@ export function expressifyForStmt(
 
     return new TirCallExpr(
         new TirFuncExpr(
-            loopFuncName,
+            loopFuncName, // func name
+            // func params
             bodyStateType.constructors[0].fields.map( f => new TirSimpleVarDecl(
                 f.name,
                 f.type,
@@ -280,7 +283,9 @@ export function expressifyForStmt(
                 false, // is constant
                 stmt.range
             )),
+            // func return type
             returnType,
+            // func body
             new TirBlockStmt([
                 new TirReturnStmt(
                     expressifyFuncBody(
@@ -293,9 +298,11 @@ export function expressifyForStmt(
                 )
             ], stmt.range
             ),
+            // func range
             stmt.range,
             true // is loop
         ),
+        // loop call init args
         initState.values,
         returnType,
         stmt.range
