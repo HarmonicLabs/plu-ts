@@ -28,7 +28,7 @@ export class TirLettedExpr
             && varName.length > 0
         )) throw new Error("TirLettedExpr: varName must be a non empty string");
 
-        // this._creationStack = _creationStack ?? (new Error()).stack;
+        this._creationStack = _creationStack ?? (new Error()).stack;
 
         this._irVarSym = (
             typeof _unsafeVarSym === "symbol"
@@ -42,6 +42,7 @@ export class TirLettedExpr
     }
     pretty( indent: number ): string
     {
+        console.log("prettying letted:", this.varName, this._creationStack);
         const singleIndent = "  ";
         const indent_base = singleIndent.repeat(indent);
         const indent_0 = "\n" + indent_base;
@@ -63,17 +64,6 @@ export class TirLettedExpr
         );
     }
     
-    unsafeClone(): TirLettedExpr
-    {
-        return new TirLettedExpr(
-            this.varName,
-            this.expr, // this.expr.clone(),
-            this.range,
-            this._irVarSym,
-            this._creationStack
-        );
-    }
-
     get isConstant(): boolean { return this.expr.isConstant; }
 
     toIR( ctx: ToIRTermCtx ): IRTerm

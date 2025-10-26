@@ -97,8 +97,6 @@ export function getUnboundedIRVars( term: IRTerm ): (IRVar | IRSelfCall)[]
         stack.push( ...t.children() );
     }
 
-    console.log( "accessedVars", [...new Set( accessedVars.keys() ) ] );
-    console.log( "boundedVars", [...boundedVars] );
     for( const v of boundedVars ) accessedVars.delete( v );
     return [ ...accessedVars.values() ].flat();
 }

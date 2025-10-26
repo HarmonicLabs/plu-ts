@@ -1288,7 +1288,7 @@ function _exprReplaceParamsAndAssertNoLitContext(
     }
 
     const tsEnsureExhaustiveCheck: never = expr;
-    console.log(expr);
+    console.error(expr);
     throw new Error("unreachable::_exprReplaceParamsAndAssertNoLitContext");
 }
 

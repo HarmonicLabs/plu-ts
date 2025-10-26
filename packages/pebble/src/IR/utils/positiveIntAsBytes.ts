@@ -13,8 +13,6 @@ export function positiveIntAsBytes( n: number | bigint ): Uint8Array
     
     if( !Number.isSafeInteger( n ) || n < 0 )
     {
-        console.log( n );
-        console.trace(); // some help
         throw new Error(
             "how did you end up here? the name of the function explicitly says 'positiveIntAsBytes'"
         );
@@ -29,8 +27,6 @@ export function positiveBigIntAsBytes( n: bigint ): Uint8Array
 {
     if( n < 0 || typeof n !== "bigint" )
     {
-        console.log( n );
-        console.trace();  // some help
         throw new Error(
             "how did you end up here? the name of the function explicitly says 'positiveBigIntAsBytes'"
         );

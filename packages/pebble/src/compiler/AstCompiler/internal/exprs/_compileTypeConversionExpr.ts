@@ -17,7 +17,6 @@ export function _compileTypeConversionExpr(
 
     const possibleTargetTypeTirNames = ctx.scope.resolveType( ast.asType.toAstName() )
     if( !possibleTargetTypeTirNames ) {
-        console.log(ctx.scope)
         return ctx.error(
             DiagnosticCode._0_is_not_defined,
             ast.asType.range,

@@ -10,12 +10,14 @@ export function expressifyVarAssignmentStmt(
     stmt: TirAssignmentStmt
 ): TirSimpleVarDecl
 {
-    const assignedExpr = expressifyVars( ctx, stmt.assignedExpr );
+    // DO NOT expressifyVars( ctx, stmt.assignedExpr );
+    // the expression will be RE-PROCESSED when processing the resulting `TirSimpleVarDecl` that we return here
+    // expressifying vars here would "double wrap" mutable variables accessed (BIG FAT BUG)
+    const assignedExpr = stmt.assignedExpr;
 
     const originalName = stmt.varIdentifier.resolvedValue.variableInfos.name;
     const latestVarNameSSA = ctx.getVariableSSA( originalName );
     if( !latestVarNameSSA ) {
-        console.log( originalName, ctx.allVariablesNoLetted() );
         throw new Error("re-assigning constant variable '" + originalName + "'");
     }
 

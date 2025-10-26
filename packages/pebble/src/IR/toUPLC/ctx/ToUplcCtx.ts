@@ -38,20 +38,10 @@ export class ToUplcCtx
         const ctx = this.ctxMap.get( sym );
         const idx = ctx?._variables.indexOf( sym ) ?? -1;
         if( idx <= -1 ) {
-            console.log( sym, ctx?.allVars() );
+            console.error( sym, ctx?.allVars() );
             throw new Error("Variable not found in its defining context");
         }
-        const declDbn = ctx!._parentDbn + idx + 1;
-        if(
-            declDbn === 5
-            && sym.description === "tailList"
-        ) {
-            console.log({
-                ctxDbn: ctx!.dbn,
-                idx
-            });
-        }
-        return declDbn;
+        return ctx!._parentDbn + idx + 1;
     }
 
     getVarAccessDbn( sym: symbol ): number

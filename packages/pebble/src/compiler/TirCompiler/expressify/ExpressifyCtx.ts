@@ -202,7 +202,7 @@ export class ExpressifyCtx
             name,
             result
         );
-        return result.unsafeClone();
+        return result.clone() as TirLettedExpr;
     }
 
     introduceSopConstrFieldsAsProperties(

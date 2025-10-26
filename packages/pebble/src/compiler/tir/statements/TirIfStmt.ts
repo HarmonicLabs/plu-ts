@@ -6,14 +6,12 @@ import { ITirStmt, Termination, TirStmt } from "./TirStmt";
 export class TirIfStmt
     implements ITirStmt
 {
-    private _creationStack?: string;
     constructor(
         readonly condition: TirExpr,
         public thenBranch: TirStmt,
         public elseBranch: TirStmt | undefined,
         readonly range: SourceRange,
     ) {
-        this._creationStack = new Error().stack;
     }
 
     toString(): string
@@ -41,7 +39,6 @@ export class TirIfStmt
 
     definitelyTerminates(): boolean
     {
-        console.log(this._creationStack);
         return (
             this.thenBranch.definitelyTerminates()
             && (this.elseBranch?.definitelyTerminates() ?? false)

@@ -61,15 +61,7 @@ export class TirVariableAccessExpr
             ir instanceof IRVar
             || ir instanceof IRSelfCall
         )) {
-            console.log(
-                this.resolvedValue,
-                ctx.allVariables(),
-                ctx.localVariables(),
-                ctx.parent?._children.filter( c => c !== ctx )[0].localVariables(),
-                // ctx._creationStack,
-                new Error().stack
-            );
-            throw new Error(`variable '${this.varName}' is missing`);
+            throw new Error(`variable '${this.varName}' is missing in [${ctx.allVariables().join(", ")}]`);
         }
         return ir;
     }

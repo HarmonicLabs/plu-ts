@@ -53,7 +53,7 @@ function _isClosedIRTerm( term: IRTerm, boundedVars: Set<symbol>, parent?: IRTer
 
     const tsEnsureExhaustiveCheck: never = term;
     // not even an IRTerm
-    console.log( parent )
+    console.error( parent )
     throw new Error(
         "`isClosedIRTerm` called on non-IR argument"
     );

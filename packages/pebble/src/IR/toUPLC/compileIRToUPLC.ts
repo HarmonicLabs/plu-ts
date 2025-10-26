@@ -233,7 +233,7 @@ export function compileIRToUPLC(
     const uplc = term.toUPLC( ToUplcCtx.root() );
 
     if( !isClosedTerm( uplc ) ) {
-        console.log(
+        console.error(
             prettyUPLC( uplc ),
         );
         throw new Error(
