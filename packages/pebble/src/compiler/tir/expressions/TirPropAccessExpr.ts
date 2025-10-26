@@ -54,6 +54,6 @@ export class TirPropAccessExpr
     
     toIR( ctx: ToIRTermCtx ): IRTerm
     {
-        throw new Error("property access cannot be translated to IR (missed expressify). Expr: " + this.prop.toString() );
+        throw new Error("property access cannot be translated to IR (missed expressify). Expr: " + this.toString() );
     }
 }

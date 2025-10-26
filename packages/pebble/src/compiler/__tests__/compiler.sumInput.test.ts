@@ -14,14 +14,13 @@ contract SumInputLove {
         const { tx } = context;
 
         let totalInput = 0;
-        totalInput = 1;
         for( const { resolved: input } of tx.inputs ) {
             totalInput += input.value.lovelaces();
         }
 
-        const InlineDatum{ datum } = tx.outputs[0].datum;
+        const InlineDatum{ datum: nextTotal as int } = tx.outputs[0].datum;
 
-        assert (datum as int) === totalInput;
+        assert nextTotal === totalInput;
     }
 }
         `;
@@ -44,8 +43,8 @@ contract SumInputLove {
         const output = ioApi.outputs.get("out/out.flat")!;
         expect( output instanceof Uint8Array ).toBe( true );
 
-        // console.log( toHex( output ) );
-        // console.log( prettyUPLC( parseUPLC( output ).body, 2 ) )
+        console.log( output.length, toHex( output ) );
+        console.log( prettyUPLC( parseUPLC( output ).body, 2 ) )
     });
     
 });

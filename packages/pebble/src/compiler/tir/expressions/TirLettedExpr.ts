@@ -42,7 +42,6 @@ export class TirLettedExpr
     }
     pretty( indent: number ): string
     {
-        console.log("prettying letted:", this.varName, this._creationStack);
         const singleIndent = "  ";
         const indent_base = singleIndent.repeat(indent);
         const indent_0 = "\n" + indent_base;

@@ -24,6 +24,7 @@ import { TirSoPStructType } from "../../tir/types/TirStructType";
 import { getListTypeArg } from "../../tir/types/utils/getListTypeArg";
 import { expressifyFuncBody, LoopReplacements } from "./expressify";
 import { ExpressifyCtx, isExpressifyFuncParam } from "./ExpressifyCtx";
+import { expressifyVars } from "./expressifyVars";
 
 export function loopToForStmt( stmt: TirWhileStmt | TirForOfStmt | TirForStmt ): TirForStmt
 {
@@ -272,38 +273,39 @@ export function expressifyForStmt(
         loopCompilationCtx.setFuncParam( name, type );
     }
 
-    return new TirCallExpr(
-        new TirFuncExpr(
-            loopFuncName, // func name
-            // func params
-            bodyStateType.constructors[0].fields.map( f => new TirSimpleVarDecl(
-                f.name,
-                f.type,
-                undefined, // no initial value
-                false, // is constant
+    const loopFuncExpr = new TirFuncExpr(
+        loopFuncName, // func name
+        // func params
+        bodyStateType.constructors[0].fields.map( f => new TirSimpleVarDecl(
+            f.name,
+            f.type,
+            undefined, // no initial value
+            false, // is constant
+            stmt.range
+        )),
+        // func return type
+        returnType,
+        // func body
+        new TirBlockStmt([
+            new TirReturnStmt(
+                expressifyFuncBody(
+                    loopCompilationCtx,
+                    loopBody.stmts,
+                    loopReplacements,
+                    [] // assertions
+                ),
                 stmt.range
-            )),
-            // func return type
-            returnType,
-            // func body
-            new TirBlockStmt([
-                new TirReturnStmt(
-                    expressifyFuncBody(
-                        loopCompilationCtx,
-                        loopBody.stmts,
-                        loopReplacements,
-                        [] // assertions
-                    ),
-                    stmt.range
-                )
-            ], stmt.range
-            ),
-            // func range
-            stmt.range,
-            true // is loop
+            )
+        ], stmt.range
         ),
+        // func range
+        stmt.range,
+        true // is loop
+    );
+    return new TirCallExpr(
+        loopFuncExpr,
         // loop call init args
-        initState.values,
+        initState.values.map( v => expressifyVars( ctx, v.clone() ) ),
         returnType,
         stmt.range
     );

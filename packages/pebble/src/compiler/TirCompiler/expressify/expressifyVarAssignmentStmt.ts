@@ -8,12 +8,14 @@ import { expressifyVars } from "./expressifyVars";
 export function expressifyVarAssignmentStmt(
     ctx: ExpressifyCtx,
     stmt: TirAssignmentStmt
-): TirSimpleVarDecl
+): void
 {
-    // DO NOT expressifyVars( ctx, stmt.assignedExpr );
-    // the expression will be RE-PROCESSED when processing the resulting `TirSimpleVarDecl` that we return here
-    // expressifying vars here would "double wrap" mutable variables accessed (BIG FAT BUG)
-    const assignedExpr = stmt.assignedExpr;
+    // since we no longer return a new TirSimpleVarDecl,
+    // we need to expressify the assigned expression here
+    // 
+    // !!! IMPORTANT !!! we MUST NOT do it if we instead returned a new TirSimpleVarDecl,
+    // otherwise it would be re-processed, casing bugs
+    const assignedExpr = expressifyVars( ctx, stmt.assignedExpr );
 
     const originalName = stmt.varIdentifier.resolvedValue.variableInfos.name;
     const latestVarNameSSA = ctx.getVariableSSA( originalName );
@@ -31,11 +33,11 @@ export function expressifyVarAssignmentStmt(
     );
     
     // will replace re-assignment in body
-    return new TirSimpleVarDecl(
-        newUniqueName,
-        stmt.varIdentifier.resolvedValue.variableInfos.type,
-        assignedExpr,
-        true, // isConst
-        stmt.range,
-    );
+    // return new TirSimpleVarDecl(
+    //     newUniqueName,
+    //     stmt.varIdentifier.resolvedValue.variableInfos.type,
+    //     assignedExpr,
+    //     true, // isConst
+    //     stmt.range,
+    // );
 }
