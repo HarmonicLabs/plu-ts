@@ -76,6 +76,10 @@ export interface CompilerOptions {
      */
     readonly outDir: string;
     /**
+     * if `true` silences all compiler output
+     */
+    readonly silent: boolean;
+    /**
      * uplc version (encoded in the script)
      */
     targetUplcVersion: UPLCVersion;
@@ -119,6 +123,7 @@ export const extremeOptions: CompilerOptions = Object.freeze({
     entry: "./src/index.pebble",
     root: ".",
     outDir: "./out",
+    silent: false,
     targetUplcVersion: defaultUplcVersion,
     removeTraces: true,
     delayHoists: true,
@@ -130,6 +135,7 @@ export const productionOptions: CompilerOptions = Object.freeze({
     entry: "./src/index.pebble",
     root: ".",
     outDir: "./out",
+    silent: false,
     targetUplcVersion: defaultUplcVersion,
     removeTraces: true,
     delayHoists: true,
@@ -141,6 +147,7 @@ export const debugOptions: CompilerOptions = Object.freeze({
     entry: "./src/index.pebble",
     root: ".",
     outDir: "./out",
+    silent: false,
     targetUplcVersion: defaultUplcVersion,
     removeTraces: false,
     delayHoists: false,
@@ -148,7 +155,10 @@ export const debugOptions: CompilerOptions = Object.freeze({
     addMarker: false
 });
 
-export const defaultOptions: CompilerOptions = productionOptions;
+export const defaultOptions: CompilerOptions = Object.freeze({
+    ...productionOptions,
+    silent: true
+});
 
 export const defulatCompilerOptions = defaultOptions;
 

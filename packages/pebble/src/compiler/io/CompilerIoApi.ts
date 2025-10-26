@@ -7,7 +7,7 @@ import { getAbsolutePath } from "../path/getAbsolutePath";
 /** Compiler API options. */
 export interface CompilerIoApi {
     /** Standard output stream to use. */
-    readonly stdout: IOutputStream;
+    stdout: IOutputStream;
     /** Standard error stream to use. */
     readonly stderr: IOutputStream;
     /** Reads a file from disk (or memory). */

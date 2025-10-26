@@ -19,6 +19,9 @@ export class Compiler
     )
     {
         super( diagnostics );
+        if( cfg.silent === true ) {
+            this.io.stdout = { write() {} };
+        }
     }
     
     async compile( config?: Partial<CompilerOptions> ): Promise<void>
