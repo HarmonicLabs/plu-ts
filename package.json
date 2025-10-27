@@ -1,5 +1,8 @@
 {
   "scripts": {
+    "buidl": "npm run build",
+    "build": "cd packages/pebble && npm run build:light && cd ../pebble-cli && npm run build:light",
+    "test": "jest"
   },
   "author": "Harmonic Labs",
   "license": "Apache-2.0",

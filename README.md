@@ -30,9 +30,3 @@ npm install @harmoniclabs/pebble
 ```
 
 ## Get started
-
-## Sponsors ❤️
-
-## Project Catalyst
-
-a collection of all proposals made in the past is in the [```catalyst-proposals.md```](./catalyst-proposals.md) file
