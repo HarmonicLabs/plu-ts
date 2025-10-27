@@ -3174,6 +3174,22 @@ export class Parser extends DiagnosticEmitter
                     tn.range(), "??="
                 )
             }
+            case Token.Plus_Plus: {
+                return makeAssignmentStmt(
+                    varIdentifier,
+                    Token.Plus_Equals,
+                    new LitIntExpr( BigInt( 1 ), tn.range() ),
+                    tn.range( startPos, tn.pos )
+                );
+            }
+            case Token.Minus_Minus: {
+                return makeAssignmentStmt(
+                    varIdentifier,
+                    Token.Minus_Equals,
+                    new LitIntExpr( BigInt( 1 ), tn.range() ),
+                    tn.range( startPos, tn.pos )
+                );
+            }
             default: {
                 return this.error(
                     DiagnosticCode._0_expected,

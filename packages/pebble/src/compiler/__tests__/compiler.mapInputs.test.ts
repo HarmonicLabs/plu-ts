@@ -10,7 +10,7 @@ describe("parseMain", () => {
         const fileName = "test.pebble";
         const srcText = `
 contract MapInputs {
-    spend mapInputToOutDatums() {
+    mint mapInputToOutDatums() {
         const { tx } = context;
 
         let restOuts = tx.outputs;
@@ -24,7 +24,6 @@ contract MapInputs {
             const InlineDatum{ datum: nextAmt as int } = restOuts[0].datum;
 
             assert input.value.lovelaces() === nextAmt;
-            // restOuts = restOuts.tail()
         }
 
         assert restOuts.isEmpty();
@@ -50,7 +49,7 @@ contract MapInputs {
         const output = ioApi.outputs.get("out/out.flat")!;
         expect( output instanceof Uint8Array ).toBe( true );
 
-        // console.log( output.length, toHex( output ) );
+        console.log( output.length, toHex( output ) );
         // console.log( prettyUPLC( parseUPLC( output ).body, 2 ) )
     });
     
