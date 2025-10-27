@@ -9,15 +9,28 @@ describe("parseMain", () => {
 
         const fileName = "test.pebble";
         const srcText = `
-contract SumInputLove {
-    spend sum10() {
-        let tot = 0;
-        for( let i = 1; i <= 10; i++ ) {
-            tot = tot + i;
+contract MapInputs {
+    spend mapInputToOutDatums() {
+        const { tx } = context;
+
+        let restOuts = tx.outputs;
+        for(
+            let inputs = tx.inputs;
+            !inputs.isEmpty();
+            inputs = inputs.tail(),
+            restOuts = restOuts.tail()
+        ) {
+            const { resolved: input } = inputs[0];
+            const InlineDatum{ datum: nextAmt as int } = restOuts[0].datum;
+
+            assert input.value.lovelaces() === nextAmt;
+            // restOuts = restOuts.tail()
         }
-        assert tot === 55;
+
+        assert restOuts.isEmpty();
     }
-}`;
+}
+        `;
 
         const ioApi = createMemoryCompilerIoApi({
             sources: new Map([

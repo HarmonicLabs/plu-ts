@@ -10,7 +10,7 @@ import { DiagnosticEmitter } from "../diagnostics/DiagnosticEmitter";
 import { DiagnosticMessage } from "../diagnostics/DiagnosticMessage";
 import { DiagnosticCode } from "../diagnostics/diagnosticMessages.generated";
 import { Token } from "../tokenizer/Token";
-import { Tokenizer } from "../tokenizer/Tokenizer";
+import { Tokenizer, TokenizerState } from "../tokenizer/Tokenizer";
 import { isNonEmpty } from "../utils/isNonEmpty";
 import { PebbleExpr } from "../ast/nodes/expr/PebbleExpr";
 import { SourceRange } from "../ast/Source/SourceRange";
@@ -1951,11 +1951,13 @@ export class Parser extends DiagnosticEmitter
         // precedence climbing
         // see: http://www.engr.mun.ca/~theo/Misc/exp_parsing.htm#climbing
         let nextPrecedence: Precedence;
-        while(
+        let prevState: TokenizerState;
+        outer_while: while(
             (
                 nextPrecedence = determinePrecedence(tn.peek())
             ) >= precedence
         ) {
+            prevState = tn.mark();
             const token = tn.next();
 
             // DO NOT DIRECTLY RETURN FROM HERE
@@ -2196,7 +2198,13 @@ export class Parser extends DiagnosticEmitter
                     );
                     break;
                 }
+                // comma operator handled in caller (only valid in for statements)
+                case Token.Comma: {
+                    tn.reset( prevState );
+                    break outer_while;
+                }
                 default: {
+                    // console.log(Token[token]);
                     return this.error(
                         DiagnosticCode.Expression_expected,
                         tn.range()
@@ -3407,11 +3415,14 @@ export class Parser extends DiagnosticEmitter
             } while( tn.skip( Token.Comma ) );  // comma expression (allowed only in for update part)
 
 
-            if( !tn.skip( Token.CloseParen ) )
-            return this.error(
-                DiagnosticCode._0_expected,
-                tn.range(), ")"
-            );
+            if( !tn.skip( Token.CloseParen ) ) {
+                const next = tn.peek();
+                console.log( 'next token after for updates:', Token[ next ] );
+                return this.error(
+                    DiagnosticCode._0_expected,
+                    tn.range(), ")"
+                );
+            }
         }
 
         const body = this.parseStatement();
