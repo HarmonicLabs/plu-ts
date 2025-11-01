@@ -46,8 +46,9 @@ export function _compileVarDecl(
     typeHint: TirType | undefined, // coming from deconstructing
 ): TirVarDecl | undefined
 {
-    if( decl instanceof SimpleVarDecl )
+    if( decl instanceof SimpleVarDecl ) {
         return _compileSimpleVarDecl( ctx, decl, typeHint );
+    }
 
     if( decl instanceof NamedDeconstructVarDecl )
         return _compileNamedDeconstructVarDecl( ctx, decl, typeHint );

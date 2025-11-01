@@ -11,10 +11,13 @@ export function _compileVarAccessExpr(
 ): TirVariableAccessExpr | undefined
 {
     const resolvedValue = ctx.scope.resolveValue( expr.text );
-    if( !resolvedValue ) return ctx.error(
-        DiagnosticCode._0_is_not_defined,
-        expr.range, expr.text
-    );
+    if( !resolvedValue ) {
+        console.trace( ctx.scope.allVariables(), expr.text );
+        return ctx.error(
+            DiagnosticCode._0_is_not_defined,
+            expr.range, expr.text
+        );
+    }
     // const { variableInfos, isDefinedOutsideFuncScope } = resolvedValue;
     return new TirVariableAccessExpr(
         resolvedValue,

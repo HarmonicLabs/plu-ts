@@ -91,6 +91,7 @@ export function determinePrecedence(kind: Token): Precedence
         case Token.Plus_Plus:
         case Token.Minus_Minus: return Precedence.UnaryPostfix;
         case Token.Dot:
+        case Token.Exclamation_Dot:
         case Token.Question_Dot:
         case Token.OpenBracket:
         case Token.Exclamation: return Precedence.MemberAccess;

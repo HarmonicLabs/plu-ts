@@ -314,6 +314,7 @@ export function populatePreludeScope( program: TypedProgram ): void
             index: int_t
         }, onlyData
     );
+    const getCredentialHashFuncName = PEBBLE_INTERNAL_IDENTIFIER_PREFIX + "getCredentialHash";
     const { data: credential_t } = defineMultiConstructorStruct(
         "Credential", {
             PubKey: {
@@ -322,7 +323,21 @@ export function populatePreludeScope( program: TypedProgram ): void
             Script: {
                 hash: scriptHash_t
             }
-        }, onlyData
+        }, onlyData,
+        new Map([
+            [
+                "hash",
+                getCredentialHashFuncName
+            ],
+        ])
+    );
+    preludeScope.program.functions.set(
+        getCredentialHashFuncName,
+        new TirInlineClosedIR(
+            new TirFuncT([ credential_t ], hash28_t ),
+            ( ctx ) => IRNative._getCredentialsHash,
+            SourceRange.unknown
+        )
     );
     // TODO: 
     // understand how to describe function impls

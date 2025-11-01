@@ -42,6 +42,7 @@ export class Compiler
             }
             throw new Error("compilation failed with " + nDiags + " diagnostic messages; first message: " + fstErrorMsg );
         }
+        // backend starts here
         const ir = compileTypedProgram(
             cfg,
             program

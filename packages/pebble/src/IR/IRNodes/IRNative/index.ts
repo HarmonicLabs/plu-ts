@@ -262,6 +262,7 @@ export class IRNative
     static get _exponentiateInteger() { return new IRNative( IRNativeTag._exponentiateInteger ); }
     static get _amountOfValue() { return new IRNative( IRNativeTag._amountOfValue ); }
     static get _sortedValueLovelaces() { return new IRNative( IRNativeTag._sortedValueLovelaces ); }
+    static get _getCredentialsHash() { return new IRNative( IRNativeTag._getCredentialsHash ); }
 
     static equals( type: TirType ): IRTerm
     {

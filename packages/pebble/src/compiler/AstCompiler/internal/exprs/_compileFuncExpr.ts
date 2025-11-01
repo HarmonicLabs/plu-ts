@@ -112,7 +112,8 @@ export function _compileFuncExpr(
 
     const destructuredParamsResult = _getDestructuredParamsAsVarDecls(
         funcCtx,
-        expr
+        expr,
+        expectedFuncType
     );
     if( !destructuredParamsResult ) return undefined;
     const { blockInitStmts, params } = destructuredParamsResult;
@@ -145,17 +146,21 @@ export function _compileFuncExpr(
 
 function _getDestructuredParamsAsVarDecls(
     funcCtx: AstCompilationCtx,
-    expr: FuncExpr
+    expr: FuncExpr,
+    expectedFuncType: TirFuncT
 ): { blockInitStmts: TirStmt[], params: TirSimpleVarDecl[] } | undefined
 {
     const blockInitStmts: TirStmt[] = [];
     const params: TirSimpleVarDecl[] = [];
-    for( const astParam of expr.signature.params )
+    const nParams = expr.signature.params.length;
+    for( let i = 0; i < nParams; i++ )
     {
+        const astParam = expr.signature.params[ i ];
+        const paramTypeHint = expectedFuncType.argTypes[ i ];
         const tirParam = _compileVarDecl(
             funcCtx,
             astParam,
-            undefined
+            paramTypeHint
         );
         if( !tirParam ) return undefined;
 

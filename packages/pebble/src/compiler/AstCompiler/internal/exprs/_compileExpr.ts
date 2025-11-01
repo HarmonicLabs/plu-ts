@@ -12,7 +12,7 @@ import { TernaryExpr } from "../../../../ast/nodes/expr/TernaryExpr";
 import { TypeConversionExpr } from "../../../../ast/nodes/expr/TypeConversionExpr";
 import { NonNullExpr } from "../../../../ast/nodes/expr/unary/NonNullExpr";
 import { isUnaryPrefixExpr } from "../../../../ast/nodes/expr/unary/UnaryPrefixExpr";
-import { TirExpr } from "../../../tir/expressions/TirExpr";
+import { isTirExpr, TirExpr } from "../../../tir/expressions/TirExpr";
 import { TirType } from "../../../tir/types/TirType";
 import { AstCompilationCtx } from "../../AstCompilationCtx";
 import { _compileBinaryExpr } from "./_compileBinaryExpr";
@@ -50,6 +50,9 @@ export function _compileExpr(
     typeHint: TirType | undefined
 ): TirExpr | undefined
 {
+    // already compiled (TODO: how did we get here?)
+    if( isTirExpr( expr ) ) return expr;
+
     if( expr instanceof Identifier ) return _compileVarAccessExpr( ctx, expr, typeHint );
     if( isUnaryPrefixExpr( expr ) ) return _compileUnaryPrefixExpr( ctx, expr, typeHint );
     if( expr instanceof NonNullExpr ) return _compileNonNullExpr( ctx, expr, typeHint );

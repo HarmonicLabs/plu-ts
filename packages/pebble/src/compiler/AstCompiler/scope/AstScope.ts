@@ -123,6 +123,7 @@ export class AstScope
 
     defineValue( valueInfos: IVariableInfos ): boolean
     {
+        if( valueInfos.name === "§tx_3" ) console.log( "Defining variable tx3" );
         if( this._isReadonly ) return false;
 
         if(
@@ -155,6 +156,13 @@ export class AstScope
         }
 
         return undefined;
+    }
+
+    allVariables(): string[]
+    {
+        return ( this.parent?.allVariables() ?? [] ).concat(
+            Array.from( this.variables.keys() )
+        );
     }
 
     defineUnambigousType(

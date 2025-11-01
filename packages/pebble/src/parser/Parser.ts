@@ -2204,7 +2204,6 @@ export class Parser extends DiagnosticEmitter
                     break outer_while;
                 }
                 default: {
-                    // console.log(Token[token]);
                     return this.error(
                         DiagnosticCode.Expression_expected,
                         tn.range()
@@ -3433,7 +3432,7 @@ export class Parser extends DiagnosticEmitter
 
             if( !tn.skip( Token.CloseParen ) ) {
                 const next = tn.peek();
-                console.log( 'next token after for updates:', Token[ next ] );
+                console.error( 'next token after for updates:', Token[ next ] );
                 return this.error(
                     DiagnosticCode._0_expected,
                     tn.range(), ")"

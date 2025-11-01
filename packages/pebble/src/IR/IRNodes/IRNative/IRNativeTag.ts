@@ -157,6 +157,7 @@ export enum IRNativeTag {
     _amountOfValue        = -41,
     _isZero               = -42,
     _sortedValueLovelaces = -43,
+    _getCredentialsHash   = -44,
 }
 Object.freeze( IRNativeTag );
 
@@ -200,6 +201,7 @@ export function nativeTagToString( nativeTag: IRNativeTag ): string
         case IRNativeTag._amountOfValue : return "amountOfValue";
         case IRNativeTag._isZero        : return "isZero";
         case IRNativeTag._sortedValueLovelaces : return "sortedValueLovelaces";
+        case IRNativeTag._getCredentialsHash : return "getCredentialHash";
 
         default: return ""
     }

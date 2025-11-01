@@ -835,7 +835,8 @@ export function nativeToIR( native: IRNative ): IRTerm
         case IRNativeTag._exponentiateInteger: return hoisted_exponentiateInteger.clone();
         case IRNativeTag._amountOfValue: return hoisted_amountOfValue.clone();
         case IRNativeTag._isZero: return hoisted_isZero.clone();
-        case IRNativeTag._sortedValueLovelaces: return hoisted_sortedValueLovelaces.clone?.() ?? (()=>{throw new Error("_sortedValueLovelaces hoisted const missing")})();
+        case IRNativeTag._sortedValueLovelaces: return hoisted_sortedValueLovelaces.clone();
+        case IRNativeTag._getCredentialsHash: return hoisted_getCredentialsHash.clone();
         case IRNativeTag._dropList: return hoisted_dropList.clone();
         case IRNativeTag._mkMapList: return hoisted_mkMapList.clone();
         // case IRNativeTag._mkEqualsList: return hoisted_mkEqualsList.clone();
@@ -946,6 +947,27 @@ export const hoisted_mkMapList = new IRHoisted(
     )
 );
 hoisted_mkMapList.hash;
+
+const credHash_credentials = Symbol("credentials");
+export const hoisted_getCredentialsHash = new IRHoisted(
+    new IRFunc(
+        [ credHash_credentials ],
+        _ir_apps(
+            IRNative.unBData,
+            _ir_apps(
+                IRNative.headList,
+                _ir_apps(
+                    IRNative.sndPair,
+                    _ir_apps(
+                        IRNative.unConstrData,
+                        new IRVar( credHash_credentials )
+                    )
+                )
+            )
+        )
+    )
+);
+hoisted_getCredentialsHash.hash;
 
 // If _sortedValueLovelaces was previously inline, hoist it:
 const sorted_value = Symbol("value");
