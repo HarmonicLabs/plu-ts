@@ -36,7 +36,7 @@ export function getPropAccessReturnType(
 
         const result = findPropInImpls( ctx, objType.methodsNamesPtr, propName );
         if( result ) return result;
-        
+
         objType = objType.aliased;
     }
     // if( objType instanceof TirAliasType ) return findPropInImpls( objType.impls, propName ) ?? getPropAccessReturnType( objType.aliased, propId );
@@ -123,6 +123,7 @@ function getStructPropAccessReturnType(
         const field = constr.fields.find( f => f.name === propName );
         if( field ) return field.type;
     }
+    console.log("struct methods", structType.toString(), [...structType.methodNamesPtr.keys()]);
     return findPropInImpls( ctx, structType.methodNamesPtr, propName );
 }
 

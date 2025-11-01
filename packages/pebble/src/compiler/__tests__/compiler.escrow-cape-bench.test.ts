@@ -1,4 +1,4 @@
-import { defaultOptions } from "../../IR/toUPLC/CompilerOptions";
+import { defaultOptions, testOptions } from "../../IR/toUPLC/CompilerOptions";
 import { createMemoryCompilerIoApi } from "../io/CompilerIoApi";
 import { Compiler } from "../Compiler";
 import { fromUtf8, toHex } from "@harmoniclabs/uint8array-utils";
@@ -22,7 +22,7 @@ const deadline = 1_800_000; // 30 minutes after deposit (1800 seconds)
 //     Refunded{}
 // }
 
-data struct EscrowDautum {
+data struct EscrowDatum {
     state: int,
     depositTime: int,
 }
@@ -104,7 +104,7 @@ contract EscrowCapeBench {
             ]),
             useConsoleAsOutput: true,
         });
-        const complier = new Compiler( ioApi );
+        const complier = new Compiler( ioApi, testOptions );
     
         await complier.compile({ entry: fileName, root: "/" });
         const diagnostics = complier.diagnostics;

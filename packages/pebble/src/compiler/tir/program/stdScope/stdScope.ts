@@ -282,7 +282,7 @@ export function populatePreludeScope( program: TypedProgram ): void
         methodsNames: Map<AstFuncName, TirFuncName> = new Map()
     ): { sop: TirSoPStructType, data: TirDataStructType }
     {
-        const { sop, data } = mkMultiConstructorStruct( name, constrs );
+        const { sop, data } = mkMultiConstructorStruct( name, constrs, methodsNames );
         const sop_key = sop.toTirTypeKey();
         const data_key = data.toTirTypeKey();
         if( opts.sop ) program.types.set( sop_key, sop );
@@ -323,7 +323,8 @@ export function populatePreludeScope( program: TypedProgram ): void
             Script: {
                 hash: scriptHash_t
             }
-        }, onlyData,
+        },
+        onlyData,
         new Map([
             [
                 "hash",
@@ -339,27 +340,6 @@ export function populatePreludeScope( program: TypedProgram ): void
             SourceRange.unknown
         )
     );
-    // TODO: 
-    // understand how to describe function impls
-    // const credential_t_impl = new TirInterfaceType(
-    //     undefined,
-    //     [],
-    //     []
-    // )
-    // credential_t_impl.methods.push(
-    //     new TirInterfaceMethod(
-    //         credential_t_impl,
-    //         "hash",
-    //         [],
-    //         hash28_t
-    //     )
-    // );
-    // credential_t.impls.push(
-    //     new TirInterfaceImpl(
-    //         credential_t,
-    //         credential_t_impl
-    //     )
-    // );
     
     const changeParams_t = _defineUnambigousAlias( "ChangedParameters", map_int_data_t );
     const { data: rational_t } = defineSingleConstructorStruct(

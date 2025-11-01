@@ -1,4 +1,4 @@
-import { defaultOptions } from "../../IR/toUPLC/CompilerOptions";
+import { defaultOptions, testOptions } from "../../IR/toUPLC/CompilerOptions";
 import { createMemoryCompilerIoApi } from "../io/CompilerIoApi";
 import { Compiler } from "../Compiler";
 import { fromUtf8, toHex } from "@harmoniclabs/uint8array-utils";
@@ -24,7 +24,7 @@ contract MultiPropAccess {
             ]),
             useConsoleAsOutput: true,
         });
-        const complier = new Compiler( ioApi );
+        const complier = new Compiler( ioApi, testOptions );
     
         await complier.compile({ entry: fileName, root: "/" });
         const diagnostics = complier.diagnostics;
