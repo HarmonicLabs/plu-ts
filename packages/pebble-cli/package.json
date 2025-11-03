@@ -1,6 +1,6 @@
 {
   "name": "@harmoniclabs/pebble-cli",
-  "version": "0.1.0-dev1",
+  "version": "0.1.0-dev2",
   "description": "A simple, yet rock solid, functional language with an imperative bias, targeting UPLC",
   "bin": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -45,7 +45,7 @@
   "dependencies": {
     "@harmoniclabs/crypto": "^0.3.0",
     "@harmoniclabs/obj-utils": "^1.0.0",
-    "@harmoniclabs/pebble": "^0.1.0-dev6",
+    "@harmoniclabs/pebble": "^0.1.0-dev7",
     "@harmoniclabs/plutus-machine": "^2.1.1",
     "@harmoniclabs/uint8array-utils": "^1.0.4",
     "@harmoniclabs/uplc": "^1.4.0",
