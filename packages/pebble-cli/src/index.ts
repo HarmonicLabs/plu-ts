@@ -1,7 +1,7 @@
 #!/usr/bin/env node --max-old-space-size=8192
 
 import { Command } from "commander";
-import { PEBBLE_VERSION, PEBBLE_LIB_VERSION } from "./version.generated";
+import { PEBBLE_VERSION, PEBBLE_LIB_VERSION, PEBBLE_COMMIT_HASH } from "./version.generated";
 import { initPebbleProject } from "./init/initPebbleProject";
 import { compilePebbleProject } from "./compile/compilePebbleProject";
 import { completeCompileOptions } from "./compile/completeCompileOptions";
@@ -10,7 +10,8 @@ const program = new Command();
 
 const versionOutput = (
 `pebble-cli version:      ${PEBBLE_VERSION}
-pebble language version: ${PEBBLE_LIB_VERSION}`
+pebble language version: ${PEBBLE_LIB_VERSION}
+commit hash:             ${PEBBLE_COMMIT_HASH}`
 )
 
 program

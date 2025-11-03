@@ -6,7 +6,7 @@ import type { IRTerm } from "../../../IR/IRTerm";
 import { bool_t, bytes_t, data_t, int_t, void_t } from "../program/stdScope/stdScope";
 import { TirType } from "../types/TirType";
 import { ToIRTermCtx } from "./ToIRTermCtx";
-import { TirUnConstrDataResultT, TirPairDataT, TirIntT, TirBytesT, TirDataT, TirBoolT } from "../types/TirNativeType";
+import { TirUnConstrDataResultT, TirPairDataT, TirIntT, TirBytesT, TirDataT, TirBoolT, TirSopOptT } from "../types/TirNativeType";
 import { TirFuncT } from "../types/TirNativeType/native/function";
 import { TirLinearMapT } from "../types/TirNativeType/native/linearMap";
 import { TirListT } from "../types/TirNativeType/native/list";
@@ -902,6 +902,17 @@ export class TirNativeFunc
                 // List<elem>
                 new TirListT(elems_t)
             ], new TirDataOptT(elems_t))
+        );
+    }
+    static _findSopOptional(elems_t: TirType): TirNativeFunc {
+        return new TirNativeFunc(
+            IRNativeTag._findSopOptional,
+            new TirFuncT([
+                // predicate: (elemT) => bool
+                new TirFuncT([ elems_t ], bool_t),
+                // list<elemT>
+                new TirListT(elems_t)
+            ], new TirSopOptT(elems_t))
         );
     }
     static _length(elemT: TirType): TirNativeFunc {

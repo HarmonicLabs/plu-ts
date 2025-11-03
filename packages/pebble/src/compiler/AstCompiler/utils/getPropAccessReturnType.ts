@@ -123,7 +123,6 @@ function getStructPropAccessReturnType(
         const field = constr.fields.find( f => f.name === propName );
         if( field ) return field.type;
     }
-    console.log("struct methods", structType.toString(), [...structType.methodNamesPtr.keys()]);
     return findPropInImpls( ctx, structType.methodNamesPtr, propName );
 }
 

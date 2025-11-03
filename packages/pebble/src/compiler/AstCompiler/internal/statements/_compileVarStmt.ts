@@ -70,7 +70,7 @@ export function _compileSimpleVarDecl(
     // useful to infer variable type by usage
     // sameLevelStmts: readonly PebbleStmt[],
     // stmtIdx: number
-): TirVarDecl | undefined
+): TirSimpleVarDecl | undefined
 {
     const typeAndExpr = _getVarDeclTypeAndExpr( ctx, decl, typeHint );
     if( !typeAndExpr ) return undefined;

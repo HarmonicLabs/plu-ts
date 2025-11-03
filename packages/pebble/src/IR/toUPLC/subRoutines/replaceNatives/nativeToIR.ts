@@ -17,6 +17,7 @@ import { _ir_let } from "../../../tree_utils/_ir_let";
 import { _ir_lazyChooseList } from "../../../tree_utils/_ir_lazyChooseList";
 import { _ir_lazyIfThenElse } from "../../../tree_utils/_ir_lazyIfThenElse";
 import { hoisted_drop4, hoisted_drop2, hoisted_drop3 } from "../_comptimeDropN";
+import { IRCase, IRConstr } from "../../../IRNodes";
 
 function _ir_strictAnd( left: IRTerm, right: IRTerm ): IRTerm
 {
@@ -362,6 +363,50 @@ const hoiseted_foldl = new IRHoisted(
     )
 );
 hoiseted_foldl.hash;
+
+// hoisted _findSopOptional
+// (predicate: (a -> Bool)) -> (list: [a]) -> Optional<a>
+const findSop_predicate = Symbol("predicate");
+const findSop_self = Symbol("findOpt_self");
+const findSop_list = Symbol("list");
+const findSop_head = Symbol("head");
+export const hoisted_findSopOptional = new IRHoisted(
+    new IRFunc(
+        [ findSop_predicate ],
+        new IRRecursive(
+            findSop_self,
+            new IRFunc(
+                [ findSop_list ],
+                _ir_lazyChooseList(
+                    new IRVar( findSop_list ),
+                    // case nil
+                    new IRConstr( 1, [] ), // None
+                    // case cons
+                    new IRFunc(
+                        [ findSop_head ],
+                        _ir_lazyIfThenElse(
+                            _ir_apps(
+                                new IRVar( findSop_predicate ),
+                                new IRVar( findSop_head )
+                            ),
+                            // then => Some(head)
+                            new IRConstr( 1, [ new IRVar( findSop_head ) ] ), // Some{ head }
+                            // else => self(tail)
+                            _ir_apps(
+                                new IRSelfCall( findSop_self ),
+                                _ir_apps(
+                                    IRNative.tailList,
+                                    new IRVar( findSop_list )
+                                )
+                            )
+                        )
+                    )
+                )
+            )
+        )
+    )
+);
+hoisted_findSopOptional.hash;
 
 // hoisted _mkFindDataOptional
 const mkFind_elemToData = Symbol("elemToData");
@@ -813,6 +858,7 @@ export function nativeToIR( native: IRNative ): IRTerm
         case IRNativeTag._foldr: return hoisted_foldr.clone();
         case IRNativeTag._foldl: return hoiseted_foldl.clone();
         case IRNativeTag._mkFindDataOptional: return hoisted_mkFindDataOptional.clone();
+        case IRNativeTag._findSopOptional: return hoisted_findSopOptional.clone();
         case IRNativeTag._length: return hoisted_length.clone();
         case IRNativeTag._some: return hoisted_some.clone();
         case IRNativeTag._every: return hoisted_every.clone();

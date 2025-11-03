@@ -69,7 +69,17 @@ export class ExpressifyCtx
         /** var name -> prop name -> constant name (letted field extraction expr or var access for SoP)*/
         readonly properties: Map<string, Map<string, string>> = new Map(),
     ) {
-        this.hoisted = hoisted ?? this.parent?.hoisted ?? new Map();
+        this.hoisted = (
+            hoisted
+            ?? this.parent?.hoisted
+            ?? new Map(
+                [ ...program.constants.entries() ].map(([ name, decl ]) => {
+                    if( !decl.initExpr ) throw new Error(`expected init expr in hoisted constant '${name}'`);
+                    const expr = decl.initExpr instanceof TirHoistedExpr ? decl.initExpr : new TirHoistedExpr( name, decl.initExpr );
+                    return [ name, expr ];
+                })
+            )
+        );
     }
 
     allVariablesNoLetted(): string[]
@@ -82,7 +92,8 @@ export class ExpressifyCtx
     {
         const thisVars = new Set([
             ...this.variables.keys(),
-            ...this.lettedConstants.keys()
+            ...this.lettedConstants.keys(),
+            ...this.hoisted.keys(),
         ]);
         return (this.parent?.allVariables() ?? []).concat( ...thisVars )
     }
@@ -151,14 +162,6 @@ export class ExpressifyCtx
         );
     }
 
-    getVariableSSA( name : string ): LatestVarNameSSA | undefined
-    {
-        return (
-            this.variables.get( name )
-            ?? this.parent?.getVariableSSA( name )
-        );
-    }
-
     getVariable(
         name: string
     ): ExpressifyFuncParam | TirHoistedExpr | TirNativeFunc | TirLettedExpr
@@ -168,10 +171,18 @@ export class ExpressifyCtx
             ?? this.hoisted.get( name )
         );
         if( !result ) {
-            // console.log( this );
+            console.log( this.allVariables() );
             throw new Error(`variable '${name}' not found in the context`);
         }
         return result;
+    }
+
+    getVariableSSA( name : string ): LatestVarNameSSA | undefined
+    {
+        return (
+            this.variables.get( name )
+            ?? this.parent?.getVariableSSA( name )
+        );
     }
 
     introduceFuncParams(

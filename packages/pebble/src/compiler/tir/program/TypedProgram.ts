@@ -5,6 +5,7 @@ import { UidGenerator } from "../../internalVar";
 import { TirExpr } from "../expressions/TirExpr";
 import { TirFuncExpr } from "../expressions/TirFuncExpr";
 import { TirInlineClosedIR } from "../expressions/TirInlineClosedIR";
+import { TirSimpleVarDecl } from "../statements/TirVarDecl/TirSimpleVarDecl";
 import { isTirType, TirType } from "../types/TirType";
 import { populatePreludeScope, populateStdScope } from "./stdScope/stdScope";
 import { StdTypes } from "./stdScope/StdTypes";
@@ -21,7 +22,7 @@ export interface IGenericType {
  */
 export class TypedProgram extends DiagnosticEmitter
 {
-    readonly constants: Map<string, TirExpr>;
+    readonly constants: Map<string, TirSimpleVarDecl>;
 
     readonly functions: Map<string, TirFuncExpr | TirInlineClosedIR>;
 

@@ -49,7 +49,7 @@ contract EscrowCapeBench {
         assert fstOut.address.payment.hash() == ownHash;
         assert fstOut.value.lovelaces() == payAmount;
 
-        const Finite{ n: currentTime } = tx.validityInterval.from.bound;
+        const Finite{ n: currentTime } = tx.validityInterval.from.boundary;
         assert depositTime == currentTime;
     }
 
@@ -85,7 +85,7 @@ contract EscrowCapeBench {
 
         const buyerOut = tx.outputs.head();
 
-        const Finite{ n: currentTime } = tx.validityInterval.from.bound;
+        const Finite{ n: currentTime } = tx.validityInterval.from.boundary;
         assert currentTime >= depositTime + deadline;
 
         assert state == 0; // Deposited
@@ -116,7 +116,7 @@ contract EscrowCapeBench {
         const output = ioApi.outputs.get("out/out.flat")!;
         expect( output instanceof Uint8Array ).toBe( true );
 
-        console.log( output.length, toHex( output ) );
+        // console.log( output.length, toHex( output ) );
         // console.log( prettyUPLC( parseUPLC( output ).body, 2 ) )
     });
     

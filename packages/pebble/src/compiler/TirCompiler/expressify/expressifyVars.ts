@@ -603,6 +603,20 @@ function expressifyListMethodCall(
         );
     }
 
+    if( methodName === "find" ) {
+        if( methodCall.args.length !== 1 ) throw new Error(
+            `Method 'find' of type 'list' takes 1 argument, ${methodCall.args.length} provided`
+        );
+        // const finalType = getUnaliased( methodCall.type );
+        // console.log( finalType );
+        return new TirCallExpr(
+            TirNativeFunc._findSopOptional( elemsType ),
+            [ methodCall.args[0], objectExpr ],
+            methodCall.type,
+            exprRange
+        );
+    }
+
     // TODO
     /*
     {

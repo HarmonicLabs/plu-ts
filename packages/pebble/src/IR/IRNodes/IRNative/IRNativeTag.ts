@@ -158,6 +158,7 @@ export enum IRNativeTag {
     _isZero               = -42,
     _sortedValueLovelaces = -43,
     _getCredentialsHash   = -44,
+    _findSopOptional      = -45
 }
 Object.freeze( IRNativeTag );
 
@@ -170,6 +171,7 @@ export function nativeTagToString( nativeTag: IRNativeTag ): string
         case IRNativeTag._foldr         : return "foldr";
         case IRNativeTag._foldl         : return "foldl";
         case IRNativeTag._mkFindDataOptional          : return "mkFind";
+        case IRNativeTag._findSopOptional      : return "findSopOptional";
         case IRNativeTag._length        : return "length";
         case IRNativeTag._some          : return "some";
         case IRNativeTag._every         : return "every";

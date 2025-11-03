@@ -2,3 +2,4 @@
 
 export const PEBBLE_VERSION = "0.1.0-dev1";
 export const PEBBLE_LIB_VERSION = "0.1.0-dev6";
+export const PEBBLE_COMMIT_HASH = "3df96b6080d7ef87e67f59b22d319e3ff4c86430";

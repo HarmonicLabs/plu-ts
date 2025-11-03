@@ -46,6 +46,8 @@ import { MatchStmt, MatchStmtCase, MatchStmtElseCase } from "../../ast/nodes/sta
 import { NamedDeconstructVarDecl } from "../../ast/nodes/statements/declarations/VarDecl/NamedDeconstructVarDecl";
 import { _deriveContractBody } from "./internal/_deriveContractBody/_deriveContractBody";
 import { DiagnosticCategory } from "../../diagnostics/DiagnosticCategory";
+import { VarStmt } from "../../ast/nodes/statements/VarStmt";
+import { _compileSimpleVarDecl } from "./internal/statements/_compileVarStmt";
 
 export interface AstTypeDefCompilationResult {
     sop: TirType | undefined,
@@ -255,7 +257,7 @@ export class AstCompiler extends DiagnosticEmitter
         isEntryFile: boolean = false
     ): void
     {
-        for( let i = 0; i < stmts.length; i++ )
+        top_level_stmts_iter: for( let i = 0; i < stmts.length; i++ )
         {
             let stmt = stmts[i];
 
@@ -272,7 +274,44 @@ export class AstCompiler extends DiagnosticEmitter
                 stmt instanceof FuncDecl
                 || stmt instanceof TypeImplementsStmt
                 || stmt instanceof ContractDecl
+                || stmt instanceof VarStmt
             )) continue;
+
+            if( stmt instanceof VarStmt )
+            {
+                const nDecl = stmt.declarations.length;
+                for( let dI = 0; dI < nDecl; dI++ )
+                {
+                    const decl = stmt.declarations[dI] as SimpleVarDecl;
+                    if(!(
+                        decl.isConst()
+                        && decl instanceof SimpleVarDecl
+                    )) {
+                        this.error(
+                            DiagnosticCode.Only_constants_can_be_declared_outside_of_a_function,
+                            stmt.range
+                        );
+                        // remove from array so we don't process it again
+                        void stmts.splice( i, 1 );
+                        i--;
+                        continue top_level_stmts_iter;
+                    }
+
+                    this._collectTopLevelConst(
+                        decl,
+                        srcUid,
+                        topLevelScope,
+                        srcExports,
+                        exportRange,
+                        isEntryFile
+                    );
+                }
+
+                // remove from array so we don't process it again
+                void stmts.splice( i, 1 );
+                i--;
+                continue;
+            }
 
             if( exported && stmt instanceof TypeImplementsStmt )
             this.error(
@@ -433,6 +472,40 @@ export class AstCompiler extends DiagnosticEmitter
             );
         }
 
+    }
+
+    private _collectTopLevelConst(
+        decl: SimpleVarDecl,
+        srcUid: string,
+        topLevelScope: AstScope,
+        srcExports: AstScope | undefined = undefined,
+        exportRange: SourceRange | undefined = undefined,
+        isEntryFile: boolean = false
+    ): void
+    {
+        const astName = decl.name.text;
+        // const tirConstName = PEBBLE_INTERNAL_IDENTIFIER_PREFIX + astName + "_" + srcUid;
+        const declContext = AstCompilationCtx.fromScope( this.program, topLevelScope );
+
+        const tirVarDecl = _compileSimpleVarDecl(
+            declContext,
+            decl,
+            undefined // type hint (extracted from init expr if explicit, or inferred from expression)
+        );
+        if( !tirVarDecl ) return undefined;
+        if( !tirVarDecl.initExpr ) return this.error(
+            DiagnosticCode._const_declarations_must_be_initialized,
+            tirVarDecl.range,
+        );
+
+        if( this.program.constants.has( astName ) ) {
+            throw new Error("not_implemented::AstCompiler::_collectTopLevelConst::const_redefinition_check");
+        }
+
+        this.program.constants.set(
+            astName,
+            tirVarDecl
+        );
     }
 
     private _collectTopLevelFuncDeclSig(
