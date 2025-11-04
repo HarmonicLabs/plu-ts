@@ -66,7 +66,7 @@ export interface CompilerOptions {
     /**
      * path to the entry file
      */
-    readonly entry: string;
+    entry: string;
     /**
      * path of the root of the project
      */

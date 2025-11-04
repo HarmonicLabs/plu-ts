@@ -171,7 +171,7 @@ export class ExpressifyCtx
             ?? this.hoisted.get( name )
         );
         if( !result ) {
-            console.log( this.allVariables() );
+            console.log( "[error log]: allVariables", this.allVariables() );
             throw new Error(`variable '${name}' not found in the context`);
         }
         return result;

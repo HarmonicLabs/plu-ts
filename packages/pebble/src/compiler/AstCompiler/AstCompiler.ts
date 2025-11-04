@@ -48,6 +48,7 @@ import { _deriveContractBody } from "./internal/_deriveContractBody/_deriveContr
 import { DiagnosticCategory } from "../../diagnostics/DiagnosticCategory";
 import { VarStmt } from "../../ast/nodes/statements/VarStmt";
 import { _compileSimpleVarDecl } from "./internal/statements/_compileVarStmt";
+import { isIdentifier } from "../../utils/text";
 
 export interface AstTypeDefCompilationResult {
     sop: TirType | undefined,
@@ -110,6 +111,27 @@ export class AstCompiler extends DiagnosticEmitter
     {
         super( diagnostics );
         this.program = new TypedProgram( this.diagnostics );
+        this._isExporting = false;
+    }
+
+    private _isExporting: boolean;
+    async export( funcName: string, modulePath?: string ): Promise<TypedProgram>
+    {
+        this._isExporting = true;
+        if( typeof funcName !== "string" ) throw new Error("AstCompiler.export: funcName must be a string" );
+
+        funcName = funcName.trim();
+        if( funcName === "" || !isIdentifier( funcName ) ) throw new Error("AstCompiler.export: funcName must be a valid function identifier" );
+
+        if( typeof modulePath === "string" ) {
+            const nextEntryPath = modulePath;
+            if( !nextEntryPath ) throw new Error("AstCompiler.export: modulePath not found: " + modulePath );
+            this.cfg.entry = nextEntryPath;
+        }
+
+        this.program.contractTirFuncName = funcName;
+
+        return await this.compile();
     }
 
     /**
@@ -150,6 +172,7 @@ export class AstCompiler extends DiagnosticEmitter
 
         const mainFuncExpr = this.program.functions.get( this.program.contractTirFuncName );
         if( this.program.contractTirFuncName === "" || !mainFuncExpr ) {
+            console.log( [...this.program.functions.keys()])
             console.error( mainFuncExpr, `"${this.program.contractTirFuncName}"` );
             this.error(
                 DiagnosticCode.Contract_is_missing,
@@ -321,8 +344,12 @@ export class AstCompiler extends DiagnosticEmitter
 
             if( stmt instanceof ContractDecl )
             {
-                // ignore contract declarations if not in the entry file
-                if( !isEntryFile ) {
+                if(!(
+                    // ignore contract declarations if not in the entry file
+                    isEntryFile
+                    // ignore contract decalarations if we are exporting a specific function
+                    || this._isExporting
+                )) {
                     // remove from array so we don't process it again
                     void stmts.splice( i, 1 );
                     i--;
@@ -520,6 +547,11 @@ export class AstCompiler extends DiagnosticEmitter
         const astFuncExpr = stmt.expr;
         const astFuncName = astFuncExpr.name.text;
         const tirFuncName = PEBBLE_INTERNAL_IDENTIFIER_PREFIX + astFuncName + "_" + srcUid;
+
+        if( this._isExporting && astFuncName === this.program.contractTirFuncName )
+        {
+            this.program.contractTirFuncName = tirFuncName;
+        }
         
         const declContext = AstCompilationCtx.fromScope( this.program, topLevelScope );
 
@@ -530,7 +562,7 @@ export class AstCompiler extends DiagnosticEmitter
             false // isMethod
         );
         if( !funcExpr ) return undefined;
-        
+
         this.program.functions.set(
             tirFuncName,
             funcExpr

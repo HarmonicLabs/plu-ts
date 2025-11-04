@@ -101,6 +101,12 @@ export function _compileFuncExpr(
     const returnType = expectedFuncType.returnType;
 
     const funcCtx = ctx.newFunctionChildScope( returnType, isMethod );
+    // define value in case of recursion
+    funcCtx.scope.defineValue({
+        name: expr.name.text,
+        type: expectedFuncType,
+        isConstant: true,
+    });
 
     // if( _hasDuplicateTypeParams( ctx, expr.typeParams ) ) return undefined;
     if( expr.typeParams.length > 0 )

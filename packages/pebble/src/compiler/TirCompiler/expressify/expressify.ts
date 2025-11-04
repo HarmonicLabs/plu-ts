@@ -54,6 +54,8 @@ export function expressify(
 {
     const ctx = new ExpressifyCtx( parentCtx, func.returnType, program );
 
+    // define in case of recursion
+    ctx.setFuncParam( func.name, func.type  );
     ctx.introduceFuncParams( func.params );
 
     func.body.stmts = [

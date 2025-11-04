@@ -8,6 +8,7 @@ import { compileTypedProgram } from "./TirCompiler/compileTirProgram";
 import { toHex } from "@harmoniclabs/uint8array-utils";
 import { __VERY_UNSAFE_FORGET_IRHASH_ONLY_USE_AT_END_OF_UPLC_COMPILATION } from "../IR/IRHash";
 import { compileIRToUPLC } from "../IR/toUPLC/compileIRToUPLC";
+import { config } from "process";
 
 export class Compiler
     extends DiagnosticEmitter
@@ -24,7 +25,7 @@ export class Compiler
         }
     }
     
-    async compile( config?: Partial<CompilerOptions> ): Promise<void>
+    async compile( config?: Partial<CompilerOptions> ): Promise<Uint8Array>
     {
         const cfg = {
             ...this.cfg,
@@ -61,6 +62,60 @@ export class Compiler
         this.io.stdout.write( `compiled program written to ${outPath}\n` );
 
         __VERY_UNSAFE_FORGET_IRHASH_ONLY_USE_AT_END_OF_UPLC_COMPILATION();
-        return;
+        return serialized;
     }
+
+    async export( config: Partial<ExportOptions> & HasFuncitonName ): Promise<Uint8Array>
+    {
+        const cfg: ExportOptions = {
+            ...this.cfg,
+            ...config,
+            // NEVER generate markers when exporting a function
+            addMarker: false,
+        };
+        if( typeof cfg.functionName !== "string" || cfg.functionName.length === 0 ) {
+            throw new Error("Compiler::export - invalid function name in export options");
+        }
+
+        const astCompiler = new AstCompiler( cfg, this.io, this.diagnostics );
+        const program = await astCompiler.export( cfg.functionName, cfg.entry );
+        if( this.diagnostics.length > 0 ) {
+            let msg: DiagnosticMessage;
+            globalThis.console && console.log( this.diagnostics );
+            const fstErrorMsg = this.diagnostics[0].toString();
+            const nDiags = this.diagnostics.length;
+            while( msg = this.diagnostics.shift()! ) {
+                this.io.stdout.write( msg.toString() + "\n" );
+            }
+            throw new Error("compilation failed with " + nDiags + " diagnostic messages; first message: " + fstErrorMsg );
+        }
+        // backend starts here
+        const ir = compileTypedProgram(
+            cfg,
+            program
+        );
+        const uplc = compileIRToUPLC( ir, cfg );
+        const serialized = compileUPLC(
+            new UPLCProgram(
+                cfg.targetUplcVersion,
+                uplc
+            )
+        ).toBuffer().buffer;
+
+        const outDir = cfg.outDir;
+        const outPath = outDir + ( outDir.endsWith("/") ? "" : "/" ) + "out.flat";
+        this.io.writeFile( outPath, serialized, cfg.root );
+        this.io.stdout.write( `compiled program written to ${outPath}\n` );
+
+        __VERY_UNSAFE_FORGET_IRHASH_ONLY_USE_AT_END_OF_UPLC_COMPILATION();
+        return serialized;
+    }
+}
+
+interface HasFuncitonName {
+    functionName: string;
+}
+
+export interface ExportOptions extends CompilerOptions, HasFuncitonName {
+    // functionName: string;
 }
