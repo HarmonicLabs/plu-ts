@@ -189,6 +189,9 @@ export function handleLettedAndReturnRoot( term: IRTerm ): IRTerm
 
         if( wasSingleReferenceButRecursive )
         {
+            // OPTIMIZATION:
+            // TODO:
+            // see the general case below
             const unbounded = getUnboundedVars( letted.value );
             if( unbounded.size === 0 ) {
                 // if closed
@@ -210,6 +213,12 @@ export function handleLettedAndReturnRoot( term: IRTerm ): IRTerm
                 continue;
             }
             // else find highest common ancestor where all unbounded vars are defined
+
+            // OPTIMIZATION:
+            // TODO:
+            // only hoist outside the highest, but fully defined, IRRecursive
+            // and NOT the highest overall
+            // otherwise we risk paying for introducing stuff we don't use
             let tmp = lca;
             while( tmp = tmp.parent! )
             {
