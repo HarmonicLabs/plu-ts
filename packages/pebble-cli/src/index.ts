@@ -5,6 +5,9 @@ import { PEBBLE_VERSION, PEBBLE_LIB_VERSION, PEBBLE_COMMIT_HASH } from "./versio
 import { initPebbleProject } from "./init/initPebbleProject";
 import { compilePebbleProject } from "./compile/compilePebbleProject";
 import { completeCompileOptions } from "./compile/completeCompileOptions";
+import { completeExportOptions } from "./export/completeExportOptions";
+import { exportPebbleFunction } from "./export/exportPebbleFunction";
+import { prettyPrintUplcFromFile } from "./uplc/pretty/prettyPrintUplcFromFile";
 
 const program = new Command();
 
@@ -48,6 +51,35 @@ program.command("compile")
     .action(async ( opts ) => {
         await compilePebbleProject( completeCompileOptions( opts ) );
     });
+
+program.command("export")
+    .description("Compiles and exports a single function from a pebble project")
+    .option("--function-name <string>", "The name of the function to export")
+    .option("-c, --config <string>", "The config file path", "./pebble.config.json")
+    .option("--entry <string>", "The entry file path .pebble file (will overwrite if present in the configuration)")
+    .option("-o, --output <string>", "The output file path (will overwrite if present in the configuration)")
+    .action( async ( opts ) => {
+        await exportPebbleFunction( completeExportOptions( opts ) );
+    });
+
+const uplcSubcommand = program.command("uplc")
+    .description("Utilities for UPLC programs stored in flat-encoded files");
+
+uplcSubcommand.command("pretty")
+    .description("Pretty prints a UPLC program from a flat UPLC file")
+    .option("-i, --input <string>", "The input flat-encoded UPLC file path", "./out/out.flat")
+    .option("-o, --output <string>", "The output file path (extension: .uplc) (if missing, prints to console)")
+    .action( prettyPrintUplcFromFile );
+
+/*
+TODO:
+
+uplcSubcommand.command("apply")
+    .description("Applies arguments to a UPLC program from a flat-encoded UPLC file")
+
+uplcSubcommand.command("eval")
+    .description("Evaluates a UPLC program from a flat-encoded UPLC file")
+*/
 
 program.command("init")
     .description("Creates a new directory with a fresh pebble project")

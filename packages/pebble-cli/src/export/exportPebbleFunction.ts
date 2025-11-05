@@ -1,21 +1,21 @@
 import * as path from "node:path";
 import * as fsp from "node:fs/promises";
-import { existsSync } from "node:fs";
-import { CliCompileOptions } from "./completeCompileOptions";
-import { Compiler, CompilerIoApi } from "@harmoniclabs/pebble";
+import { Compiler } from "@harmoniclabs/pebble";
 import { createFsIo } from "../utils/crateFsIo";
+import { CliExportOptions } from "./completeExportOptions";
 
-export async function compilePebbleProject(opts: CliCompileOptions): Promise<void> {
-	const { root, entry, outDir, output, config } = opts;
+export async function exportPebbleFunction(opts: CliExportOptions): Promise<void> {
+	const { root, entry, functionName, outDir, output, config } = opts;
 	const io = createFsIo(root);
 
 	const compiler = new Compiler(io, config);
 	// Mirror test behavior: pass overrides via compile()
-	await compiler.compile({
+	await compiler.export({
+		functionName,
 		root,
 		entry,
 		outDir
-	} as any);
+	});
 
 	if (output && output !== "./out.flat") {
 		const generated = path.resolve(root, outDir, "out.flat");

@@ -1,25 +1,32 @@
 import { CompilerOptions, defaultOptions, productionOptions } from "@harmoniclabs/pebble";
-import { existsSync, readFileSync } from "node:fs";
 import * as path from "node:path";
 import { normalizeRoot, isRecord } from "../utils/miscellaneous";
+import { existsSync, readFileSync } from "node:fs";
 
-export interface CliCompileFlags {
+export interface CliExportFlags {
     config?: string;
     entry?: string;
     output?: string;
+    functionName?: string;
 }
 
-export interface CliCompileOptions {
+export interface CliExportOptions {
     root: string;
     entry: string;
+    functionName: string;
     outDir: string;
     output?: string;
     config: CompilerOptions;
     configPath?: string;
 }
 
-export function completeCompileOptions(flags: CliCompileFlags): CliCompileOptions {
+export function completeExportOptions(flags: CliExportFlags): CliExportOptions {
     const root = normalizeRoot();
+
+    if( typeof flags.functionName !== "string" )
+    throw new Error("exported function name must be provided via '--function-name <name>' flag");
+
+    const functionName = flags.functionName.trim();
 
     const configPath = path.resolve(root, flags.config ?? "./pebble.config.json");
     let config: CompilerOptions = productionOptions;
@@ -41,7 +48,7 @@ export function completeCompileOptions(flags: CliCompileFlags): CliCompileOption
     }
 
     const cfgEntry = typeof config?.entry === "string" ? String(config!.entry) : undefined;
-    const entry = cfgEntry ?? (flags.entry ?? "./src/index.pebble");
+    const entry = (flags.entry ?? (cfgEntry ?? "./src/index.pebble")).trim();
 
     const desiredOutput = flags.output;
     const cfgOutDir = typeof config?.outDir === "string" ? String(config!.outDir) : undefined;
@@ -54,6 +61,7 @@ export function completeCompileOptions(flags: CliCompileFlags): CliCompileOption
     return {
         root,
         entry,
+        functionName,
         outDir,
         output: desiredOutput,
         config,
