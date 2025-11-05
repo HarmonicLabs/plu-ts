@@ -18,6 +18,7 @@
     "test": "jest",
     "genVersions": "node ./scripts/genVersions.js",
     "build:light": "npm run --silent genVersions && tsc --project ./tsconfig.json && tsc-alias -p ./tsconfig.json",
+    "build:no-gen": "tsc --project ./tsconfig.json && tsc-alias -p ./tsconfig.json",
     "start:light": "node --max-old-space-size=8192 ./dist/index.js",
     "start": "npm run build && npm run start:light",
     "build-exe": "bun run genVersions && bun build src/index.ts --compile --production --target=node --outfile=out/pebble --packages=bundle"

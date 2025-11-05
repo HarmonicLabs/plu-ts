@@ -21,7 +21,7 @@ jobs:
         run: cd packages/pebble && npm i && cd ../pebble-cli && npm i && cd ../..
 
       - name: Build
-        run: cd packages/pebble && npm run build && cd ../pebble-cli && npm run build && cd ../..
+        run: cd packages/pebble && npm run build && cd ../pebble-cli && npm run build:no-gen && cd ../..
 
       - name: Run tests
         run: cd packages/pebble && npm run test && cd ../..
