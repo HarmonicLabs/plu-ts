@@ -4,7 +4,6 @@ import { Data, isData, dataToCbor } from "@harmoniclabs/plutus-data";
 import { fromUtf8, toHex } from "@harmoniclabs/uint8array-utils";
 import { BasePlutsError } from "../../utils/BasePlutsError";
 import { ToJson } from "../../utils/ToJson";
-import UPLCFlatUtils from "../../utils/UPLCFlatUtils";
 import { IHash, IIRParent } from "../interfaces";
 import { concatUint8Arr } from "../utils/concatUint8Arr";
 import { positiveBigIntAsBytes } from "../utils/positiveIntAsBytes";
@@ -34,6 +33,7 @@ import { TirVoidT } from "../../compiler/tir/types/TirNativeType/native/void";
 import { IIRTerm, IRTerm } from "../IRTerm";
 import { hashIrData, IRHash, isIRHash } from "../IRHash";
 import { ByteString } from "@harmoniclabs/bytestring";
+import { UPLCFlatUtils } from "../../utils/UPLCFlatUtils";
 
 export interface IRConstPair {
     fst: IRConstValue;

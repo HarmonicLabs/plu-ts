@@ -1,6 +1,6 @@
 {
   "name": "@harmoniclabs/pebble",
-  "version": "0.1.0-dev7",
+  "version": "0.1.0-dev8",
   "description": "A simple, yet rock solid, functional language with an imperative bias, targeting UPLC",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -52,14 +52,14 @@
   "dependencies": {
     "@harmoniclabs/bigint-utils": "^1.0.0",
     "@harmoniclabs/bytestring": "^1.0.0",
-    "@harmoniclabs/cbor": "^1.6.0",
-    "@harmoniclabs/crypto": "^0.2.5",
+    "@harmoniclabs/cbor": "^1.6.6",
+    "@harmoniclabs/crypto": "^0.3.0",
     "@harmoniclabs/obj-utils": "^1.0.0",
     "@harmoniclabs/pair": "^1.0.0",
-    "@harmoniclabs/plutus-data": "^1.2.4",
-    "@harmoniclabs/plutus-machine": "^2.1.0",
+    "@harmoniclabs/plutus-data": "^1.2.6",
+    "@harmoniclabs/plutus-machine": "^2.1.1",
     "@harmoniclabs/uint8array-utils": "^1.0.4",
-    "@harmoniclabs/uplc": "^1.4.0"
+    "@harmoniclabs/uplc": "^1.4.1"
   },
   "devDependencies": {
     "@babel/preset-env": "^7.18.6",

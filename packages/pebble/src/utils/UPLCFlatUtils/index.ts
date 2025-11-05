@@ -1,6 +1,6 @@
 import { BitStream } from "@harmoniclabs/bitstream";
-import BitUtils from "../BitUtils";
 import { assert } from "../assert";
+import { BitUtils } from "../BitUtils";
 
 export type InByteOffset = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7;
 export function isInByteOffset( offset: InByteOffset ): boolean
@@ -25,7 +25,7 @@ export interface BitStreamPadToByteOptions {
 /**
  * @static
  */
-export default class UPLCFlatUtils
+export class UPLCFlatUtils
 {
     /**
      * @deprecated this is a @static class, it is not supposed to have instances

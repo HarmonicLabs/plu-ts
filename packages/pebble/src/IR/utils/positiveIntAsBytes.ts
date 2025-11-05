@@ -1,5 +1,5 @@
 import { fromHex } from "@harmoniclabs/uint8array-utils";
-import UPLCFlatUtils from "../../utils/UPLCFlatUtils";
+import { UPLCFlatUtils } from "../../utils/UPLCFlatUtils";
 
 /**
  * writes the number in a new `Uint8Array` Big Endian

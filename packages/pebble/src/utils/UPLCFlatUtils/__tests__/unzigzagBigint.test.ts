@@ -1,5 +1,4 @@
-import UPLCFlatUtils from ".."
-
+import { UPLCFlatUtils } from "..";
 
 describe( "UPLCFlatUtils.zigzagBigint", () => {
 

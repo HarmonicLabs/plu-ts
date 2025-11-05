@@ -6,6 +6,4 @@ type SingleKeyObj<K extends string | number | symbol, V = any> = {
         : never
 }[K];
 
-export default SingleKeyObj;
-
 export type IsSingleKey<Obj extends object> = Obj extends SingleKeyObj<keyof Obj> ? true : false;

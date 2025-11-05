@@ -2,7 +2,7 @@
 /**
  * @static
  */
-export default class BitUtils
+export class BitUtils
 {
     private constructor () {}
 

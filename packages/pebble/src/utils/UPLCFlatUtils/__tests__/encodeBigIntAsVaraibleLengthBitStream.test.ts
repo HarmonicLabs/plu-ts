@@ -1,6 +1,5 @@
 import { BitStream } from "@harmoniclabs/bitstream";
-import UPLCFlatUtils from ".."
-
+import { UPLCFlatUtils } from "..";
 
 describe( "UPLCFlatUtils.encodeBigIntAsVariableLengthBitStream", () => {
 
