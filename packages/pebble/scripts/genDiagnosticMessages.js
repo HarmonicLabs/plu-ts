@@ -1,15 +1,8 @@
 import * as fs from "fs";
 import * as path from "path";
+import { fileURLToPath } from "url";
 
-const dirname = ((path) => {
-    path = path.trim();
-    if (path.startsWith("file:")) path = path.slice("file:".length);
-    while( path.startsWith("/") ) path = path.slice(1);
-    path = path.trim();
-    path = "/" + path;
-    while( path.endsWith("/") ) path = path.slice(0, -1).trim();
-    return path.trim();
-})(globalThis.__dirname ?? path.dirname(import.meta.url));
+const dirname = globalThis.__dirname ?? path.dirname(fileURLToPath(import.meta.url));
 
 void function main() {
 
