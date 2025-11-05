@@ -230,11 +230,11 @@ export class IRNative
     static get _dropList() { return new IRNative( IRNativeTag._dropList ); }
     static get _foldr() { return new IRNative( IRNativeTag._foldr ); }
     static get _foldl() { return new IRNative( IRNativeTag._foldl ); }
-    static get _mkFindDataOptional() { return new IRNative( IRNativeTag._mkFindDataOptional ); }
+    // static get _mkFindDataOptional() { return new IRNative( IRNativeTag._mkFindDataOptional ); }
     static get _length() { return new IRNative( IRNativeTag._length ); }
     static get _some() { return new IRNative( IRNativeTag._some ); }
     static get _every() { return new IRNative( IRNativeTag._every ); }
-    static get _mkFilter() { return new IRNative( IRNativeTag._mkFilter ); }
+    static get _filter() { return new IRNative( IRNativeTag._filter ); }
     // static get _fstPair() { return new IRNative( IRNativeTag._fstPair ); }
     // static get _sndPair() { return new IRNative( IRNativeTag._sndPair ); }
     static get _id() { return new IRNative( IRNativeTag._id ); }

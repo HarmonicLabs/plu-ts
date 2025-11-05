@@ -220,10 +220,12 @@ export function handleLettedAndReturnRoot( term: IRTerm ): IRTerm
             // and NOT the highest overall
             // otherwise we risk paying for introducing stuff we don't use
             let tmp = lca;
+            // let lowestOutsideRecursive: IRTerm = lca;
             while( tmp = tmp.parent! )
             {
                 if( tmp instanceof IRDelayed ) {
                     lca = tmp;
+                    // lowestOutsideRecursive = tmp;
                     continue;
                 }
                 if( tmp instanceof IRFunc || tmp instanceof IRRecursive ) {
@@ -233,8 +235,10 @@ export function handleLettedAndReturnRoot( term: IRTerm ): IRTerm
                         break;
                     }
                     else lca = tmp;
+                    // else lowestOutsideRecursive = tmp;
                 }
             }
+            // lca = lowestOutsideRecursive;
         }
 
 

@@ -514,7 +514,7 @@ function expressifyListMethodCall(
     exprRange: SourceRange,
 ): TirCallExpr | undefined
 {
-    const elemsType = getListTypeArg( listType )!;
+    const elemsType = getUnaliased( getListTypeArg( listType )! );
     if( !elemsType ) throw new Error("Invalid list type");
 
     if( methodName === "length" ) {
@@ -617,22 +617,85 @@ function expressifyListMethodCall(
         );
     }
 
+    if( methodName === "filter" ) {
+        if( methodCall.args.length !== 1 ) throw new Error(
+            `Method 'filter' of type 'list' takes 1 argument, ${methodCall.args.length} provided`
+        );
+
+        return new TirCallExpr(
+            TirNativeFunc._filter( elemsType ),
+            [ methodCall.args[0], objectExpr ],
+            methodCall.type,
+            exprRange
+        );
+    }
+
+    if( methodName === "prepend" ) {
+        if( methodCall.args.length !== 1 ) throw new Error(
+            `Method 'prepend' of type 'list' takes 1 argument, ${methodCall.args.length} provided`
+        );
+
+        return new TirCallExpr(
+            TirNativeFunc.mkCons( elemsType ),
+            [ methodCall.args[0], objectExpr ],
+            methodCall.type,
+            exprRange
+        );
+    }
+
+    if( methodName === "map" ) {
+        if( methodCall.args.length !== 1 ) throw new Error(
+            `Method 'map' of type 'list' takes 1 argument, ${methodCall.args.length} provided`
+        );
+
+        const arg = methodCall.args[0];
+        const argFuncType = getUnaliased( arg.type );
+        if( !( argFuncType instanceof TirFuncT ) ) throw new Error(
+            `Argument 1 of method 'map' of type 'list' must be a function, got '${arg.type.toString()}'`
+        );
+        const mapReturnT = argFuncType.returnType;
+
+        const elemTypeTirName = elemsType.toTirTypeKey(); 
+        let base_mapToType = _base_mapToType_cache.get( elemTypeTirName )?.clone() as TirHoistedExpr;
+        if( !base_mapToType ) {
+            base_mapToType = new TirHoistedExpr(
+                "_map_to_list_of_" + elemTypeTirName,
+                new TirCallExpr(
+                    TirNativeFunc._mkMap( elemsType, mapReturnT ),
+                    [ new TirLitArrExpr([], new TirListT( mapReturnT ), SourceRange.unknown ) ],
+                    new TirFuncT([
+                        // mapping function
+                        new TirFuncT([
+                            elemsType
+                        ], mapReturnT),
+                        // list to map over
+                        new TirListT(elemsType)
+                    ], new TirListT(mapReturnT)),
+                    SourceRange.unknown
+                )
+            );
+            base_mapToType.varName; // precompute hash and symbol
+            _base_mapToType_cache.set(
+                elemTypeTirName,
+                base_mapToType.clone() as TirHoistedExpr
+            );
+        }
+
+        return new TirCallExpr(
+            base_mapToType,
+            [ methodCall.args[0], objectExpr ],
+            methodCall.type,
+            exprRange
+        );
+    }
+
     // TODO
     /*
     {
-        isEmpty: new TirFuncT( [], bool_t ),
         show: new TirFuncT( [], bytes_t ),
         reverse: new TirFuncT( [], new TirListT( elemsType ) ),
-        find: new TirFuncT([
-            new TirFuncT( [elemsType], bool_t )
-        ], new TirSopOptT( elemsType ) ),
-        filter: new TirFuncT([
-            new TirFuncT( [elemsType], bool_t )
-        ], new TirListT( elemsType ) ),
-        prepend: new TirFuncT( [elemsType], new TirListT( elemsType ) ),
-        map: new TirFuncT([
-            new TirFuncT([ elemsType ], mapReturnT )
-        ], new TirListT( mapReturnT ) ),
     };
     */
 }
+
+const _base_mapToType_cache: Map<string, TirHoistedExpr> = new Map();

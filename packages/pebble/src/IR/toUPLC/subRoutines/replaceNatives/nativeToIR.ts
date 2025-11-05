@@ -13,7 +13,7 @@ import { IRRecursive } from "../../../IRNodes/IRRecursive";
 import { IRSelfCall } from "../../../IRNodes/IRSelfCall";
 import { IRError } from "../../../IRNodes/IRError";
 import { _ir_apps } from "../../../IRNodes/IRApp";
-import { _ir_let } from "../../../tree_utils/_ir_let";
+import { _ir_let, _ir_let_sym } from "../../../tree_utils/_ir_let";
 import { _ir_lazyChooseList } from "../../../tree_utils/_ir_lazyChooseList";
 import { _ir_lazyIfThenElse } from "../../../tree_utils/_ir_lazyIfThenElse";
 import { hoisted_drop4, hoisted_drop2, hoisted_drop3 } from "../_comptimeDropN";
@@ -563,41 +563,59 @@ export const hoisted_every = new IRHoisted(
 );
 hoisted_every.hash;
 
-// hoisted _mkFilter
-const filt_pnil = Symbol("pnilOfType");
+// hoisted _filter
 const filt_pred = Symbol("predicate");
+const filt_self = Symbol("filter_self");
+const filt_list = Symbol("list");
 const filt_elem = Symbol("elem");
-const filt_acc = Symbol("accum");
-export const hoisted_mkFilter = new IRHoisted(
+export const hoisted_filter = new IRHoisted(
     new IRFunc(
-        [ filt_pnil, filt_pred ],
-        _ir_apps(
-            hoisted_foldr.clone(),
+        [ filt_pred ],
+        new IRRecursive(
+            filt_self,
             new IRFunc(
-                [ filt_elem, filt_acc ],
-                new IRForced(
-                    _ir_apps(
-                        IRNative.strictIfThenElse,
-                        new IRApp(
-                            new IRVar( filt_pred ),
-                            new IRVar( filt_elem )
-                        ),
-                        new IRDelayed(
+                [ filt_list ],
+                _ir_lazyChooseList(
+                    new IRVar( filt_list ),
+                    // case nil
+                    new IRVar( filt_list ), // nil
+                    // case cons
+                    _ir_let_sym(
+                        filt_elem,
+                        _ir_apps( IRNative.headList, new IRVar( filt_list ) ),
+                        _ir_lazyIfThenElse(
+                            _ir_apps(
+                                new IRVar( filt_pred ),
+                                new IRVar( filt_elem )
+                            ),
+                            // then => cons(elem, self(tail))
                             _ir_apps(
                                 IRNative.mkCons,
                                 new IRVar( filt_elem ),
-                                new IRVar( filt_acc )
+                                _ir_apps(
+                                    new IRSelfCall( filt_self ),
+                                    _ir_apps(
+                                        IRNative.tailList,
+                                        new IRVar( filt_list )
+                                    )
+                                )
+                            ),
+                            // else => self(tail)
+                            _ir_apps(
+                                new IRSelfCall( filt_self ),
+                                _ir_apps(
+                                    IRNative.tailList,
+                                    new IRVar( filt_list )
+                                )
                             )
-                        ),
-                        new IRDelayed( new IRVar( filt_acc ) )
+                        )
                     )
-                ),
-            ),
-            new IRVar( filt_pnil )
+                )
+            )
         )
     )
 );
-hoisted_mkFilter.hash;
+hoisted_filter.hash;
 
 // comparison & conversion hoisted (previously inline)
 const gtbs_a = Symbol("a"), gtbs_b = Symbol("b");
@@ -857,12 +875,12 @@ export function nativeToIR( native: IRNative ): IRTerm
     {
         case IRNativeTag._foldr: return hoisted_foldr.clone();
         case IRNativeTag._foldl: return hoiseted_foldl.clone();
-        case IRNativeTag._mkFindDataOptional: return hoisted_mkFindDataOptional.clone();
+        // case IRNativeTag._mkFindDataOptional: return hoisted_mkFindDataOptional.clone();
         case IRNativeTag._findSopOptional: return hoisted_findSopOptional.clone();
         case IRNativeTag._length: return hoisted_length.clone();
         case IRNativeTag._some: return hoisted_some.clone();
         case IRNativeTag._every: return hoisted_every.clone();
-        case IRNativeTag._mkFilter: return hoisted_mkFilter.clone();
+        case IRNativeTag._filter: return hoisted_filter.clone();
         case IRNativeTag._id: return hoisted_id.clone();
         case IRNativeTag._not: return hoisted_not.clone();
         case IRNativeTag._strictAnd: return hoisted_strictAnd.clone();
@@ -953,7 +971,7 @@ export const hoisted_mkEqualsList = new IRHoisted(
 );
 hoisted_mkEqualsList.hash;
 
-// (nil of type) => ( a => b ) => [a] => [b]
+// (nil of type) [b] => ( a => b ) => [a] => [b]
 const mkMap_nil = Symbol("nilOfType");
 const mkMap_mapFunc = Symbol("mapFunc");
 const mkMap_map = Symbol("map_self");

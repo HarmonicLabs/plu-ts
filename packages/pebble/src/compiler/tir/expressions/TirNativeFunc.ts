@@ -891,19 +891,19 @@ export class TirNativeFunc
             ], returnT)
         );
     }
-    static _mkFindDataOptional(elems_t: TirType): TirNativeFunc {
-        return new TirNativeFunc(
-            IRNativeTag._mkFindDataOptional,
-            new TirFuncT([
-                // elem -> data
-                new TirFuncT([ elems_t ], data_t),
-                // elem -> bool (predicate)
-                new TirFuncT([ elems_t ], bool_t),
-                // List<elem>
-                new TirListT(elems_t)
-            ], new TirDataOptT(elems_t))
-        );
-    }
+    // static _mkFindDataOptional(elems_t: TirType): TirNativeFunc {
+    //     return new TirNativeFunc(
+    //         IRNativeTag._mkFindDataOptional,
+    //         new TirFuncT([
+    //             // elem -> data
+    //             new TirFuncT([ elems_t ], data_t),
+    //             // elem -> bool (predicate)
+    //             new TirFuncT([ elems_t ], bool_t),
+    //             // List<elem>
+    //             new TirListT(elems_t)
+    //         ], new TirDataOptT(elems_t))
+    //     );
+    // }
     static _findSopOptional(elems_t: TirType): TirNativeFunc {
         return new TirNativeFunc(
             IRNativeTag._findSopOptional,
@@ -948,12 +948,10 @@ export class TirNativeFunc
             ], bool_t)
         );
     }
-    static _mkFilter(elemT: TirType): TirNativeFunc {
+    static _filter(elemT: TirType): TirNativeFunc {
         return new TirNativeFunc(
-            IRNativeTag._mkFilter,
+            IRNativeTag._filter,
             new TirFuncT([
-                // pnilOfType: an empty list with the right element type
-                new TirListT(elemT),
                 // predicate
                 new TirFuncT([
                     elemT
@@ -961,6 +959,21 @@ export class TirNativeFunc
                 // list to filter
                 new TirListT(elemT)
             ], new TirListT(elemT))
+        );
+    }
+    static _mkMap(elemT: TirType, returnElemT: TirType): TirNativeFunc {
+        return new TirNativeFunc(
+            IRNativeTag._mkMapList,
+            new TirFuncT([
+                // nil of return elem type
+                new TirListT(returnElemT),
+                // mapping function
+                new TirFuncT([
+                    elemT
+                ], returnElemT),
+                // list to map over
+                new TirListT(elemT)
+            ], new TirListT(returnElemT))
         );
     }
     static _id(t: TirType): TirNativeFunc {

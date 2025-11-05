@@ -61,7 +61,7 @@ export function compileIRToUPLC(
     ///////////////////////////////////////////////////////////////////////////////
 
     // term = preEvaluateDefinedTermsAndReturnRoot( term );
-    term = rewriteNativesAppliedToConstantsAndReturnRoot( term );
+    // term = rewriteNativesAppliedToConstantsAndReturnRoot( term );
     // debugAsserts && _debug_assertions( term );
 
     // removing unused variables BEFORE going into the rest of the compilation
@@ -71,20 +71,9 @@ export function compileIRToUPLC(
 
     _makeAllNegativeNativesHoisted( term );
 
-    // ----------------------- optimize normal functions ----------------------- //
-
-    // avoid passing whole structs
-
-    // reorganize function arguments to take advantage of partial applicaiton
-
-
-    ///////////////////////////////////////////////////////////////////////////////
-    // ------------------------------------------------------------------------- //
-    // ------------------------------ final steps ------------------------------ //
-    // ------------------------------------------------------------------------- //
-    ///////////////////////////////////////////////////////////////////////////////
-
     term = replaceNativesAndReturnRoot( term );
+    // re-call rewrite to optimize introduced hoisted
+    term = rewriteNativesAppliedToConstantsAndReturnRoot( term );
 
     // debugAsserts && _debug_assertions( term );
 
@@ -105,6 +94,13 @@ export function compileIRToUPLC(
         term instanceof IRConst // while we are at it
     ) return term.toUPLC();
 
+    ///////////////////////////////////////////////////////////////////////////////
+    // ------------------------------------------------------------------------- //
+    // ------------------------------- hoisting -------------------------------- //
+    // ------------------------------------------------------------------------- //
+    ///////////////////////////////////////////////////////////////////////////////
+
+    // hoist `(force (builtin ifThenElse))` or `(force (force (builtin fstPair)))` etc
     replaceForcedNativesWithHoisted( term );
 
     // debugAsserts && _debug_assertions( term );

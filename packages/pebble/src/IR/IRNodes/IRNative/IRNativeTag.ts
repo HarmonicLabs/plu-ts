@@ -118,11 +118,11 @@ export enum IRNativeTag {
     _dropList          = -4,
     _foldr              = -6,
     _foldl              = -7,
-    _mkFindDataOptional               = -8,
+//     _mkFindDataOptional               = -8,
     _length             = -9,
     _some               = -10,
     _every              = -11,
-    _mkFilter             = -12,
+    _filter             = -12,
     // _fstPair            = -13,
     // _sndPair            = -14,
     _id                 = -15,
@@ -172,12 +172,12 @@ export function nativeTagToString( nativeTag: IRNativeTag ): string
         case IRNativeTag._dropList      : return "dropList";
         case IRNativeTag._foldr         : return "foldr";
         case IRNativeTag._foldl         : return "foldl";
-        case IRNativeTag._mkFindDataOptional          : return "mkFind";
+        // case IRNativeTag._mkFindDataOptional          : return "mkFind";
         case IRNativeTag._findSopOptional      : return "findSopOptional";
         case IRNativeTag._length        : return "length";
         case IRNativeTag._some          : return "some";
         case IRNativeTag._every         : return "every";
-        case IRNativeTag._mkFilter        : return "mkFilter";
+        case IRNativeTag._filter        : return "mkFilter";
         // case IRNativeTag._fstPair       : return "fstPair";
         // case IRNativeTag._sndPair       : return "sndPair";
         case IRNativeTag._id            : return "id";
