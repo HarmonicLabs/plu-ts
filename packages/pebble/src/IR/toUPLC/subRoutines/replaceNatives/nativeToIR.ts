@@ -885,6 +885,8 @@ export function nativeToIR( native: IRNative ): IRTerm
         case IRNativeTag._getCredentialsHash: return hoisted_getCredentialsHash.clone();
         case IRNativeTag._dropList: return hoisted_dropList.clone();
         case IRNativeTag._mkMapList: return hoisted_mkMapList.clone();
+        case IRNativeTag._increment: return hoisted_addOne.clone();
+        case IRNativeTag._decrement: return hoisted_subOne.clone();
         // case IRNativeTag._mkEqualsList: return hoisted_mkEqualsList.clone();
         default:
         throw new Error(

@@ -9,11 +9,11 @@ describe("parseMain", () => {
 
         const fileName = "test.pebble";
         const srcText = `
-function factorial( n: int ): int {
+function fibonacci( n: int ): int {
     if( n <= 1 ) {
-        return 1;
+        return n;
     } else {
-        return n * factorial( n - 1 );
+        return fibonacci( n - 1 ) + fibonacci( n - 2 );
     }
 }
 `;
@@ -27,7 +27,7 @@ function factorial( n: int ): int {
         // const complier = new Compiler( ioApi, defaultOptions );
         const complier = new Compiler( ioApi, testOptions );
     
-        await complier.export({ functionName: "factorial", entry: fileName, root: "/" });
+        await complier.export({ functionName: "fibonacci", entry: fileName, root: "/" });
         const diagnostics = complier.diagnostics;
 
         // console.log( diagnostics );

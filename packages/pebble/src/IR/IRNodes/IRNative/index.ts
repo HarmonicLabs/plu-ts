@@ -263,6 +263,10 @@ export class IRNative
     static get _amountOfValue() { return new IRNative( IRNativeTag._amountOfValue ); }
     static get _sortedValueLovelaces() { return new IRNative( IRNativeTag._sortedValueLovelaces ); }
     static get _getCredentialsHash() { return new IRNative( IRNativeTag._getCredentialsHash ); }
+    static get _increment() { return new IRNative( IRNativeTag._increment ); }
+    static get _decrement() { return new IRNative( IRNativeTag._decrement ); }
+    static get _isZero() { return new IRNative( IRNativeTag._isZero ); }
+
 
     static equals( type: TirType ): IRTerm
     {

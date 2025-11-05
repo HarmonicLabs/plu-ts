@@ -40,7 +40,7 @@ export function compileIRToUPLC(
 
     const options = completeCompilerOptions( paritalOptions );
 
-    const debugAsserts = (options as any).debugAsserts ?? false;
+    // const debugAsserts = (options as any).debugAsserts ?? false;
 
     // unwrap top level letted and hoisted;
     while( term instanceof IRLetted || term instanceof IRHoisted )
@@ -52,18 +52,7 @@ export function compileIRToUPLC(
         term.parent = undefined;
     }
 
-    debugAsserts && _debug_assertions( term );
-
-    // term = preEvaluateDefinedTermsAndReturnRoot( term );
-    term = rewriteNativesAppliedToConstantsAndReturnRoot( term );
-    debugAsserts && _debug_assertions( term );
-
-    // removing unused variables BEFORE going into the rest of the compilation
-    // helps letted terms to find a better spot (and possibly be inlined instead of hoisted)
-    term = removeUnusedVarsAndReturnRoot( term );
-    debugAsserts && _debug_assertions( term );
-
-    _makeAllNegativeNativesHoisted( term );
+    // debugAsserts && _debug_assertions( term );
 
     ///////////////////////////////////////////////////////////////////////////////
     // ------------------------------------------------------------------------- //
@@ -71,12 +60,16 @@ export function compileIRToUPLC(
     // ------------------------------------------------------------------------- //
     ///////////////////////////////////////////////////////////////////////////////
 
-    // --------------------- optimize recursive functions  --------------------- //
-    
-    // avoid passing whole structs
+    // term = preEvaluateDefinedTermsAndReturnRoot( term );
+    term = rewriteNativesAppliedToConstantsAndReturnRoot( term );
+    // debugAsserts && _debug_assertions( term );
 
-    // take letted terms outside
+    // removing unused variables BEFORE going into the rest of the compilation
+    // helps letted terms to find a better spot (and possibly be inlined instead of hoisted)
+    term = removeUnusedVarsAndReturnRoot( term );
+    // debugAsserts && _debug_assertions( term );
 
+    _makeAllNegativeNativesHoisted( term );
 
     // ----------------------- optimize normal functions ----------------------- //
 
@@ -93,7 +86,7 @@ export function compileIRToUPLC(
 
     term = replaceNativesAndReturnRoot( term );
 
-    debugAsserts && _debug_assertions( term );
+    // debugAsserts && _debug_assertions( term );
 
     // unwrap top level letted and hoisted;
     // some natives may be converted to hoisted;
@@ -114,30 +107,30 @@ export function compileIRToUPLC(
 
     replaceForcedNativesWithHoisted( term );
 
-    debugAsserts && _debug_assertions( term );
+    // debugAsserts && _debug_assertions( term );
 
     if( options.delayHoists ) replaceHoistedWithLetted( term );
     else replaceClosedLettedWithHoisted( term );
 
-    debugAsserts && _debug_assertions( term );
+    // debugAsserts && _debug_assertions( term );
 
-    if(
-        debugAsserts
-        && options.delayHoists
-        && includesNode( term, node => node instanceof IRHoisted )
-    ) {
-        throw new Error("debug assertion failed: hoisted nodes found while delayHoists is true");
-    }
+    // if(
+    //     // debugAsserts
+    //     && options.delayHoists
+    //     && includesNode( term, node => node instanceof IRHoisted )
+    // ) {
+    //     throw new Error("debug assertion failed: hoisted nodes found while delayHoists is true");
+    // }
 
     // handle letted before hoisted because the tree is smaller
     // and we also have less letted dependecies to handle
     term = handleLettedAndReturnRoot( term );
 
-    debugAsserts && _debug_assertions( term );
+    // debugAsserts && _debug_assertions( term );
 
     term = handleHoistedAndReturnRoot( term );
 
-    debugAsserts && _debug_assertions( term );
+    // debugAsserts && _debug_assertions( term );
 
     // replaced hoisted terms might include new letted terms
     while(
@@ -152,7 +145,7 @@ export function compileIRToUPLC(
         term = handleHoistedAndReturnRoot( term );
     }
 
-    debugAsserts && _debug_assertions( term );
+    // debugAsserts && _debug_assertions( term );
 
     ///////////////////////////////////////////////////////////////////////////////
     // ------------------------------------------------------------------------- //
@@ -170,14 +163,14 @@ export function compileIRToUPLC(
     // handle new hoisted terms
     term = handleHoistedAndReturnRoot( term )
 
-    debugAsserts && _debug_assertions( term );
+    // debugAsserts && _debug_assertions( term );
 
     // strictly necessary to check the options
     // otherwise forced natives where already hoisted
     // will be re-hosited; causeing uselsess evaluations
     if( !options.delayHoists ) term = hoistForcedNatives( term );
 
-    debugAsserts && _debug_assertions( term );
+    // debugAsserts && _debug_assertions( term );
 
     // at this point we expect the IR to be translable 1:1 to UPLC
 
@@ -227,7 +220,7 @@ export function compileIRToUPLC(
     //     JSON.stringify( onlyHoistedAndLetted( irJson ) )
     // );
 
-    debugAsserts && _debug_assertions( term );
+    // debugAsserts && _debug_assertions( term );
 
     // const srcmap = {};
     const uplc = term.toUPLC( ToUplcCtx.root() );

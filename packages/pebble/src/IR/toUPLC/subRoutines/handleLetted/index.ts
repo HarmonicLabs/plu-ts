@@ -6,7 +6,7 @@ import { IRTerm } from "../../../IRTerm";
 import { _addDepths } from "../../_internal/_addDepth";
 import { _modifyChildFromTo } from "../../_internal/_modifyChildFromTo";
 import { findAllNoHoisted } from "../../_internal/findAll";
-import { getMaxScope } from "./groupByScope";
+import { getMaxScope, getUnboundedVars } from "./groupByScope";
 import { IRDelayed } from "../../../IRNodes/IRDelayed";
 import { lowestCommonAncestor } from "../../_internal/lowestCommonAncestor";
 import { isIRTerm } from "../../../utils/isIRTerm";
@@ -20,6 +20,8 @@ import { findHighestRecursiveParent } from "./findHighestRecursiveParent";
 import { IRParentTerm } from "../../../utils/isIRParentTerm";
 import { IRNative } from "../../../IRNodes/IRNative";
 import { isForcedNativeTag } from "../../../IRNodes/IRNative/isForcedNative";
+import { lettedToStr, prettyIRInline } from "../../../utils/showIR";
+import { IRNativeTag } from "../../../IRNodes/IRNative/IRNativeTag";
 
 export function handleLettedAndReturnRoot( term: IRTerm ): IRTerm
 {
@@ -63,11 +65,26 @@ export function handleLettedAndReturnRoot( term: IRTerm ): IRTerm
             nReferences
         } = sortedLettedSet.pop()!;
 
+        // const shouldLog = (
+        //     letted.value instanceof IRApp
+        //     && letted.value.fn instanceof IRNative
+        //     && letted.value.fn.tag === IRNativeTag.addInteger
+        //     && letted.value.arg instanceof IRConst
+        //     && letted.value.arg.value === -1n
+        // )
         // shouldLog && // console.log("nReferences", nReferences);
 
         // console.log(` ------------------ working with ${lettedToStr(letted)} ------------------ `);
-        if( nReferences === 1 )
-        {
+        // console.log(` ------------------ working with ${lettedToStr(letted)} ------------------ `);
+        // if( shouldLog ) {
+        //     console.log( prettyIRInline( letted ) );
+        // }
+
+        const wasSingleReferenceButRecursive = nReferences <= 1;
+        if(
+            wasSingleReferenceButRecursive // nReferences <= 1
+            && !someParentIsRecursive( letted )
+        ) {
             // console.log("inlining letted (single reference) with value", prettyIRText( letted.value ) )
             _modifyChildFromTo(
                 letted.parent,
@@ -76,6 +93,7 @@ export function handleLettedAndReturnRoot( term: IRTerm ): IRTerm
             );
             continue;
         }
+
 
         // console.log("--------- not inilning ("+ nReferences +" references)");
 
@@ -118,7 +136,11 @@ export function handleLettedAndReturnRoot( term: IRTerm ): IRTerm
         }
 
         // just in case
-        if( sameLettedRefs.length === 1 && !minScope )
+        if(
+            sameLettedRefs.length === 1
+            && !minScope
+            && !wasSingleReferenceButRecursive
+        )
         {
             // console.log("inlining letted (single reference pedantic) with value", prettyIRText( letted.value ) )
             _modifyChildFromTo(
@@ -164,6 +186,48 @@ export function handleLettedAndReturnRoot( term: IRTerm ): IRTerm
                 lca = prevLca;
             };
         }
+
+        if( wasSingleReferenceButRecursive )
+        {
+            const unbounded = getUnboundedVars( letted.value );
+            if( unbounded.size === 0 ) {
+                // if closed
+                // handle as hoisted
+                for( const ref of sameLettedRefs ) {
+                    _modifyChildFromTo(
+                        ref.parent,
+                        ref,
+                        new IRVar( ref.name )
+                    );
+                }
+                term = new IRApp(
+                    new IRFunc(
+                        [ letted.name ],
+                        term
+                    ),
+                    letted.value,
+                ) 
+                continue;
+            }
+            // else find highest common ancestor where all unbounded vars are defined
+            let tmp = lca;
+            while( tmp = tmp.parent! )
+            {
+                if( tmp instanceof IRDelayed ) {
+                    lca = tmp;
+                    continue;
+                }
+                if( tmp instanceof IRFunc || tmp instanceof IRRecursive ) {
+                    if( tmp.params.some( p => unbounded.has( p ) ) ) {
+                        // some parameter is defined here
+                        // so we stop
+                        break;
+                    }
+                    else lca = tmp;
+                }
+            }
+        }
+
 
         if( !isIRTerm( lca ) )
         {
@@ -300,4 +364,14 @@ function handleLettedAsHoistedAndReturnRoot(
     }
 
     return currentRoot;
+}
+
+function someParentIsRecursive( term: IRTerm ): boolean
+{
+    let parent: IRParentTerm;;
+    while( parent = term.parent! ) {
+        if( parent instanceof IRRecursive ) return true;
+        term = parent;
+    }
+    return false;
 }

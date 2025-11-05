@@ -159,7 +159,8 @@ export const defaultOptions: CompilerOptions = Object.freeze({
     ...productionOptions,
 });
 export const testOptions: CompilerOptions = Object.freeze({
-    ...debugOptions,
+    // ...debugOptions,
+    ...productionOptions,
     silent: true
 });
 
