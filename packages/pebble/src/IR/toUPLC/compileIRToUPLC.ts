@@ -61,7 +61,7 @@ export function compileIRToUPLC(
     ///////////////////////////////////////////////////////////////////////////////
 
     // term = preEvaluateDefinedTermsAndReturnRoot( term );
-    // term = rewriteNativesAppliedToConstantsAndReturnRoot( term );
+    term = rewriteNativesAppliedToConstantsAndReturnRoot( term );
     // debugAsserts && _debug_assertions( term );
 
     // removing unused variables BEFORE going into the rest of the compilation

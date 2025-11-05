@@ -36,6 +36,7 @@ function factorial( n: int ): int {
 
         const output = ioApi.outputs.get("out/out.flat")!;
         expect( output instanceof Uint8Array ).toBe( true );
+        expect( output.length ).toBe( 45 );
 
         // console.log( output.length, toHex( output ) );
         // console.log( prettyUPLC( parseUPLC( output ).body, 2 ) )
