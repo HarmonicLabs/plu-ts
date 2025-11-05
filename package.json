@@ -1,4 +1,5 @@
 {
+  "description": "A simple, yet rock solid, functional language with an imperative bias, targeting UPLC",
   "scripts": {
     "buidl": "npm run build",
     "build": "cd packages/pebble && npm run build && cd ../pebble-cli && npm run build",
