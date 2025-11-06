@@ -26,6 +26,7 @@ program
         {
             console.log( versionOutput );
             process.exit(0);
+            return;
         }
         program.help();
     });
