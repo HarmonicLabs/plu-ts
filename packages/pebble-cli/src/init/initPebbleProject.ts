@@ -186,9 +186,8 @@ ${includeOffchain ? "- `offchain/`: optional offchain scaffolding\n" : ""}
     // src/index.pebble template
     const indexPebblePath = path.join(srcDir, "index.pebble");
     const indexPebble = (
-`
-// if no methods are defined
-// a simple always failing contract is generated
+`// if no methods are defined
+// the contract is interpreted as always failing
 contract MyContract {
 
     param owner: PubKeyHash;
@@ -196,7 +195,7 @@ contract MyContract {
     spend ownerAllowsIt() {
         const { tx } = context;
 
-        assert tx.signatories.includes( this.owner );
+        assert tx.requiredSigners.includes( this.owner );
     }
 
     spend sendToOwner( amount: int ) {
@@ -206,7 +205,7 @@ contract MyContract {
 
         const output = tx.outputs[0];
 
-        assert output.address.credential.hash() == this.owner;
+        assert output.address.payment.hash() == this.owner;
         assert output.value.lovelaces() >= amount;
     }
 

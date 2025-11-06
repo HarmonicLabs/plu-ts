@@ -334,6 +334,8 @@ export class Parser extends DiagnosticEmitter
         const voteMethods: FuncDecl[] = [];
         while( !tn.skip( Token.CloseBrace ) )
         {
+            tn.skip( Token.Semicolon ); // if any
+            
             const thisStartPos = tn.tokenPos;
 
             const prevState = tn.mark();
@@ -398,6 +400,7 @@ export class Parser extends DiagnosticEmitter
 
                 default: {
                     tn.reset( prevState );
+                    console.log( Token[ nextToken ] );
                     return this.error(
                         DiagnosticCode._0_expected,
                         tn.range(), "contract member declaration"

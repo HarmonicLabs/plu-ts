@@ -1,4 +1,5 @@
-#!/usr/bin/env node --max-old-space-size=8192
+#!/bin/sh
+':' //# ; command -v bun >/dev/null 2>&1 && exec bun "$0" "$@" || exec node "$0" "$@"
 
 import { Command } from "commander";
 import { PEBBLE_VERSION, PEBBLE_LIB_VERSION, PEBBLE_COMMIT_HASH } from "./version.generated";

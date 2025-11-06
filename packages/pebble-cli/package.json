@@ -1,8 +1,11 @@
 {
   "name": "@harmoniclabs/pebble-cli",
-  "version": "0.1.0",
+  "version": "0.1.1-dev0",
   "description": "A simple, yet rock solid, functional language with an imperative bias, targeting UPLC",
-  "bin": "./dist/index.js",
+  "bin": {
+    "pebble": "./dist/index.js",
+    "pebble-cli": "./dist/index.js"
+  },
   "types": "./dist/index.d.ts",
   "engines": {
     "node": ">=22",
