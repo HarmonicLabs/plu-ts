@@ -27,15 +27,15 @@ export function performUplcOptimizationsAndReturnRoot(
     options: CompilerOptions
 ): IRTerm
 {
-    const opts = options.uplcOptimizations;
-    if( isDebugUplcOptimizations( opts ) ) return root;
+    // const opts = options.uplcOptimizations;
+    // if( isDebugUplcOptimizations( opts ) ) return root;
 
-    const {
-        groupApplications,
-        inlineSingleUse: shouldInlineSingleUse,
-        simplifyWrappedPartialFuncApps,
-        removeForceDelay
-    } = opts;
+    // const {
+    //     groupApplications,
+    //     inlineSingleUse: shouldInlineSingleUse,
+    //     simplifyWrappedPartialFuncApps,
+    //     removeForceDelay
+    // } = opts;
 
     root = expandFuncsAndReturnRoot( root );
     const stack: StackEntry[] = [ root ];
@@ -63,6 +63,33 @@ export function performUplcOptimizationsAndReturnRoot(
             continue;
         }
 
+        // group 3 or more consecutive applications into a case
+        const consecutiveAppTerms = getApplicationTerms( t );
+        if( consecutiveAppTerms )
+        {
+            const { func, args } = consecutiveAppTerms;
+
+            if( args.length > 2 ) {
+                const newTerm = new IRCase(
+                    new IRConstr( 0, args ),
+                    [ func ]
+                );
+                if( t.parent ) _modifyChildFromTo(
+                    t.parent,
+                    t,
+                    newTerm
+                );
+                else root = newTerm;
+
+                stack.push( ...args, func );
+                continue;
+            }
+
+            // else normal application traversing
+            stack.push( ...args, func );
+            continue;
+        }
+
         if(
             t instanceof IRRecursive ||
             t instanceof IRHoisted ||
@@ -70,7 +97,7 @@ export function performUplcOptimizationsAndReturnRoot(
             t instanceof IRSelfCall
         ) throw new Error("Unexpected term while performing uplc optimizations");
 
-        stack.push( ...t.children() )
+        stack.push( ...t.children() );
     }
 
     return root;
