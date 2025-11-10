@@ -1,6 +1,6 @@
 
 struct Order {
-    ownerPaymentCreds: Credential,
+    ownerPaymentCreds: PubKeyHash,
     // token to receive
     policy: bytes,
     tokenName: bytes,
@@ -39,7 +39,7 @@ contract SimpleOrderBook
         } = spendingInput.datum;
 
         // prevents double satisfaction
-        const ownInputs = tx.inputs.filter( input => input.resolved.address.credential.hash() === ownHash );
+        const ownInputs = tx.inputs.filter( input => input.resolved.address.payment.hash() === ownHash );
         assert ownInputs.length() === 1;
 
         const userOutput = tx.outputs[ outputIdx ];
@@ -64,7 +64,7 @@ contract SimpleOrderBook
         assert case ownerPaymentCreds
             is PubKeyHash{ hash } => tx.signatories.includes( hash ) 
             is Validator{ hash } => tx.inputs.some(({ resolved: input }) => 
-                input.credential.hash() === hash
+                input.payment.hash() === hash
             );
     }
 }

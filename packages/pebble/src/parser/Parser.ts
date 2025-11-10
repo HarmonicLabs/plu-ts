@@ -80,6 +80,7 @@ import { tokenFromKeyword } from "../tokenizer/utils/tokenFromKeyword";
 import { LitFailExpr } from "../ast/nodes/expr/litteral/LitFailExpr";
 import { ContractDecl } from "../ast/nodes/statements/declarations/ContractDecl";
 import { LitContextExpr } from "../ast/nodes/expr/litteral/LitContextExpr";
+import { tokenIsAlsoIdentifier } from "../tokenizer/utils/tokenIsAlsoIdentifier";
 
 interface ParseStmtOpts {
     isExport?: boolean;
@@ -92,8 +93,7 @@ export class Parser extends DiagnosticEmitter
     constructor(
         tokenizer: Tokenizer,
         diagnostics: DiagnosticMessage[] | undefined = undefined
-    )
-    {
+    ) {
         super( diagnostics );
         this.tn = tokenizer;
     }
@@ -1439,6 +1439,18 @@ export class Parser extends DiagnosticEmitter
         const tn = this.tn;
 
         // ConstrName{ ... } || renamed
+        const identifierToken = tn.peek();
+        if(
+            identifierToken !== Token.Identifier
+            && identifierToken !== Token.OpenBrace // valid var destructuring (single constr obj)
+            && identifierToken !== Token.OpenBracket // valid var destructuring (array-like)
+            && !tokenIsAlsoIdentifier( identifierToken )
+        ) return this.error(
+            DiagnosticCode._0_keyword_cannot_be_used_here,
+            tn.range( tn.nextTokenPos, tn.nextToken ),
+            Token[ identifierToken ]
+        );
+
         const renamedField: Identifier | undefined = this.parseIdentifier();
 
         if(

@@ -11,8 +11,18 @@ describe("parseFile", () => {
         });
     }
 
+    function testParseFailure( src: string, log: boolean = false )
+    {
+        test(src, () => {
+            let result: any;
+            expect(() => result = parseFile( "test.pebble", src )).toThrow();
+            log && console.log( result );
+        });
+    }
+
     describe("simple var decls", () => {
         testParse( "const a = 1;" );
+        testParseFailure( "const const = 1;", true );
         testParse( "let a = 1;" );
         testParse( "var a = 1;" );
     });
@@ -32,7 +42,7 @@ describe("parseFile", () => {
         testParse( "const a = tx.inputs;" );
     });
 
-    describe.only("for loop", () => {
+    describe("for loop", () => {
         testParse( "for( const a of b ) {}" );
     });
 
